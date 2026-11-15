@@ -2316,6 +2316,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   of type 8 over the second window, its first epoch, step and number of states those of the second grid. A single
   propagation writes the same SPK as before, bit for bit.
 
+- **A star off whole and half days from J2000 was that of an epoch up to 2 µs away** (fourth round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). `Star.GetEquatorialCoordinates`,
+  `GetRightAscensionSigma` and `GetDeclinationSigma` took dt, the Julian years from the catalog epoch, from the
+  difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day, about 40 µs) before the
+  subtraction, against the remark of `Time.ToJulianDate`. dt now comes from the exact difference of the ticks, rounded
+  once to a double, then divided by the days of a Julian year, in each time's own calendar as before (a UTC catalog epoch
+  and a UTC epoch still difference their UTC calendars). Measured on the star of `StarTests` (1 rad, 0.1 rad/yr, catalog
+  epoch 2001-01-01 TDB) against the closed form, dt from the tick difference in `decimal` (28 digits) rounded once: at
+  the 744 hourly epochs of March 2001, at 199 epochs 1234567 ticks apart and at 99 epochs before the catalog epoch, the
+  right ascension and the declination were 6.328e-14 rad away, the position 7.287e-14 relative from CSPICE's `latrec_c`
+  of the closed form (20 times the 3.6e-15 the star moves in 1 µs); now 2.220e-16 rad and 3.711e-16 (4.441e-16 rad and
+  4.657e-16 for a star of 0.01 rad/yr 40 years after its catalog epoch, 6.4e-15 rad before), the sigmas 3.469e-16
+  relative (3.930e-12 before). The error is proportional to the proper motion: about 1e-16 relative and below for the
+  proper motions of real stars. At epochs whole or half days from J2000, whose Julian dates are exact, nothing moves, bit
+  for bit, nor any other test or measurement of the suite. `StarTests` checks the angles and the sigmas against the
+  closed form on every platform (thresholds 8.9e-16 rad and 7.0e-16 relative, provisional, twice the Linux worst) and
+  the position against `latrec_c` in the Validation category (9.4e-16, provisional).
+
 - **A `CentralBodyPropagator` given an integrator with its forces threw `NullReferenceException` unless its caller
   initialized the integrator** (second round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructors

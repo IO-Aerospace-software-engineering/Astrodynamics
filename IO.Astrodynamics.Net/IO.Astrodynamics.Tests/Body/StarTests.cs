@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -323,6 +324,194 @@ public class StarTests
             "StarTests.PropagateAsync_AfterPropagate", _output);
         double bound = CatalogMotionInOneMicrosecond(star, kept);
         Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
+    }
+
+    /// <summary>
+    /// An exact decimal of <paramref name="value"/> (its 28 significant digits), so that the closed forms below take the
+    /// proper motions of the star as the doubles it holds.
+    /// </summary>
+    private static decimal ExactDecimal(double value) =>
+        decimal.Parse(value.ToString("E27", CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// The Julian years from the catalog epoch of <paramref name="star"/> to <paramref name="epoch"/>, from the exact
+    /// difference of their ticks, divided in <see cref="decimal"/> (28 digits): the dt of the catalog motion, before any
+    /// rounding to a double.
+    /// </summary>
+    private static decimal JulianYearsFromCatalogEpoch(Star star, TimeSystem.Time epoch) =>
+        (decimal)(epoch.DateTime.Ticks - star.Epoch.DateTime.Ticks) / TimeSpan.TicksPerDay / 365.25m;
+
+    /// <summary>The closed form of the catalog motion, a + μ dt, in <see cref="decimal"/> and rounded once to a double.</summary>
+    private static double ClosedFormAngle(double angleAtEpoch, double properMotion, Star star, TimeSystem.Time epoch) =>
+        (double)(ExactDecimal(angleAtEpoch) + ExactDecimal(properMotion) * JulianYearsFromCatalogEpoch(star, epoch));
+
+    /// <summary>
+    /// The closed form of a sigma at an epoch, √(σ² + (dt σ_μ)²): its square in <see cref="decimal"/>, rounded once to a
+    /// double, and the correctly rounded square root of IEEE 754.
+    /// </summary>
+    private static double ClosedFormSigma(double sigma, double sigmaProperMotion, Star star, TimeSystem.Time epoch)
+    {
+        decimal s = ExactDecimal(sigma);
+        decimal motion = ExactDecimal(sigmaProperMotion) * JulianYearsFromCatalogEpoch(star, epoch);
+        return System.Math.Sqrt((double)(s * s + motion * motion));
+    }
+
+    /// <summary>
+    /// Epochs off whole and half days from the catalog epoch, whose Julian dates are not exact doubles (a Julian date near
+    /// 2.45e6 resolves 4.66e-10 day, about 40 µs): each star with its epochs. The star of <see cref="NewStar"/> (1 rad
+    /// and 0.1 rad/yr, catalog epoch 2001-01-01 TDB) at the 744 hourly epochs of March 2001, at 199 epochs 1234567 ticks
+    /// apart from 2001-03-01 and at 99 epochs 7654321 ticks apart from 2000-06-01, before its catalog epoch; a star of
+    /// 0.01 rad/yr at 99 epochs 1234567 ticks apart 40 years after its catalog epoch, a tick difference above 2^53.
+    /// </summary>
+    private static IEnumerable<(string Label, Star Star, double ProperMotion, List<TimeSystem.Time> Epochs)> OffHalfDayCases(Star fast, Star slow)
+    {
+        var march = new TimeSystem.Time(2001, 3, 1);
+        yield return ("hourly", fast, 0.1, Enumerable.Range(0, 744).Select(i => march + TimeSpan.FromHours(i)).ToList());
+        yield return ("ticks", fast, 0.1, Enumerable.Range(1, 199).Select(i => march + TimeSpan.FromTicks(i * 1234567L)).ToList());
+        var june = new TimeSystem.Time(2000, 6, 1);
+        yield return ("before", fast, 0.1, Enumerable.Range(1, 99).Select(i => june + TimeSpan.FromTicks(i * 7654321L)).ToList());
+        var later = new TimeSystem.Time(2041, 1, 1);
+        yield return ("40 years", slow, 0.01, Enumerable.Range(1, 99).Select(i => later + TimeSpan.FromTicks(i * 1234567L)).ToList());
+    }
+
+    private static Star SlowStar(int catalogNumber, TimeSystem.Time epoch) =>
+        new(catalogNumber, $"star{catalogNumber}", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.01, 0.01, 0, 0, 0, 0, epoch);
+
+    // The record of the right ascension and the declination off half days against their closed form, IEEE 754 arithmetic
+    // alone (no sine nor cosine), so the same on every platform: twice the worst (4.441e-16 rad, 2 ulp of a + μ dt near
+    // 1.4 rad, the slow star 40 years after its epoch; 2.220e-16 for the fast star; Linux, 2026-11-15), provisional.
+    // Before the fix, the Julian dates rounded before their difference put the fast star 6.328e-14 rad away, the position
+    // of an epoch up to 2 µs away
+    internal const double ClosedFormAngleTolerance = 8.9e-16;
+
+    [Fact]
+    public void GetEquatorialCoordinates_OffHalfDays_IsTheClosedForm()
+    {
+        // Arrange: before, dt was the difference of the two Julian dates, each rounded to a double
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var fast = NewStar(668021, epoch);
+        var slow = SlowStar(668022, epoch);
+        double worstAngle = 0.0;
+        double worstPosition = 0.0;
+        double bound = double.PositiveInfinity;
+
+        foreach (var (label, star, properMotion, epochs) in OffHalfDayCases(fast, slow))
+        {
+            double worstOfCase = 0.0;
+            foreach (var at in epochs)
+            {
+                // Act
+                var coordinates = star.GetEquatorialCoordinates(at);
+
+                // Assert: the closed form, dt from the exact difference of the ticks
+                double expected = ClosedFormAngle(1.0, properMotion, star, at);
+                worstOfCase = System.Math.Max(worstOfCase, System.Math.Abs(coordinates.RightAscension - expected));
+                worstOfCase = System.Math.Max(worstOfCase, System.Math.Abs(coordinates.Declination - expected));
+                if (ReferenceEquals(star, fast))
+                {
+                    var catalog = CatalogPosition(star, at);
+                    worstPosition = System.Math.Max(worstPosition, (coordinates.ToCartesian() - catalog).Magnitude() / catalog.Magnitude());
+                }
+            }
+
+            if (ReferenceEquals(star, fast))
+            {
+                bound = System.Math.Min(bound, CatalogMotionInOneMicrosecond(star, epochs));
+            }
+
+            _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays ({label}): worst angle {worstOfCase:E3} rad");
+            worstAngle = System.Math.Max(worstAngle, worstOfCase);
+        }
+
+        _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays: worst angle {worstAngle:E3} rad, worst relative position {worstPosition:E3} (bound {bound:E3})");
+        Assert.True(worstAngle <= ClosedFormAngleTolerance, $"{worstAngle:E3}");
+        // The position of the fast star within the distance it moves in 1 µs, the resolution of the library's epochs
+        Assert.True(worstPosition <= bound, $"{worstPosition:E3} > {bound:E3}");
+    }
+
+    // The record of the right ascension and declination sigmas off half days against their closed form, IEEE 754
+    // arithmetic alone, so the same on every platform: twice the worst relative difference (3.469e-16, Linux, 2026-11-15),
+    // provisional. Before the fix, the rounded Julian dates moved them by 3.930e-12 relative
+    internal const double ClosedFormSigmaTolerance = 7.0e-16;
+
+    [Fact]
+    public void GetRightAscensionSigma_And_GetDeclinationSigma_OffHalfDays_AreTheClosedForm()
+    {
+        // Arrange: stars whose sigmas grow with their sigma proper motion, which dominates past a few hours
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var fast = new Star(668023, "star668023", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 1e-7, 2e-7, 1e-3, 2e-3, epoch);
+        var slow = new Star(668024, "star668024", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.01, 0.01, 1e-7, 2e-7, 1e-3, 2e-3, epoch);
+        double worstRightAscension = 0.0;
+        double worstDeclination = 0.0;
+
+        foreach (var (label, star, _, epochs) in OffHalfDayCases(fast, slow))
+        {
+            double worstOfCase = 0.0;
+            foreach (var at in epochs)
+            {
+                // Act
+                double rightAscension = star.GetRightAscensionSigma(at);
+                double declination = star.GetDeclinationSigma(at);
+
+                // Assert
+                double expectedRightAscension = ClosedFormSigma(2e-7, 2e-3, star, at);
+                double expectedDeclination = ClosedFormSigma(1e-7, 1e-3, star, at);
+                double rightAscensionDelta = System.Math.Abs(rightAscension - expectedRightAscension) / expectedRightAscension;
+                double declinationDelta = System.Math.Abs(declination - expectedDeclination) / expectedDeclination;
+                worstRightAscension = System.Math.Max(worstRightAscension, rightAscensionDelta);
+                worstDeclination = System.Math.Max(worstDeclination, declinationDelta);
+                worstOfCase = System.Math.Max(worstOfCase, System.Math.Max(rightAscensionDelta, declinationDelta));
+            }
+
+            _output.WriteLine($"MEASURE StarTests.GetSigmas_OffHalfDays ({label}): worst relative sigma {worstOfCase:E3}");
+        }
+
+        _output.WriteLine(
+            $"MEASURE StarTests.GetSigmas_OffHalfDays: worst relative right ascension sigma {worstRightAscension:E3}, declination sigma {worstDeclination:E3}");
+        Assert.True(worstRightAscension <= ClosedFormSigmaTolerance, $"{worstRightAscension:E3}");
+        Assert.True(worstDeclination <= ClosedFormSigmaTolerance, $"{worstDeclination:E3}");
+    }
+
+    // The record of the position off half days against CSPICE's latrec_c (the radrec_c of SPICE) of the closed form of
+    // the right ascension and the declination: twice the worst (4.657e-16, the slow star 40 years after its epoch;
+    // 3.711e-16 for the fast star; Linux, 2026-11-15), provisional, asserted by the Validation test, which runs on Linux
+    // alone (7.287e-14 before the fix). A record of its own: CatalogPositionTolerance, the SPK read at half-day epochs,
+    // does not move
+    internal const double ClosedFormPositionTolerance = 9.4e-16;
+
+    // latrec_c through CspiceDirect, which the Windows DLL does not export (Linux, Validation); the cross-platform test
+    // above asserts the angles and the 1 µs bound of the position
+    [Fact]
+    [Trait("Category", "Validation")]
+    public void GetEquatorialCoordinates_OffHalfDays_IsLatrecOfTheClosedForm()
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var fast = NewStar(668025, epoch);
+        var slow = SlowStar(668026, epoch);
+        double worst = 0.0;
+
+        foreach (var (label, star, properMotion, epochs) in OffHalfDayCases(fast, slow))
+        {
+            double worstOfCase = 0.0;
+            foreach (var at in epochs)
+            {
+                // Act
+                var position = star.GetEquatorialCoordinates(at).ToCartesian();
+
+                // Assert
+                double angle = ClosedFormAngle(1.0, properMotion, star, at);
+                var expected = CspiceDirect.Radrec(star.Distance, angle, angle);
+                var reference = new Vector3(expected[0], expected[1], expected[2]);
+                worstOfCase = System.Math.Max(worstOfCase, (position - reference).Magnitude() / reference.Magnitude());
+            }
+
+            _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays_IsLatrecOfTheClosedForm ({label}): worst relative position {worstOfCase:E3}");
+            worst = System.Math.Max(worst, worstOfCase);
+        }
+
+        _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays_IsLatrecOfTheClosedForm: worst relative position {worst:E3}");
+        Assert.True(worst <= ClosedFormPositionTolerance, $"{worst:E3}");
     }
 
     // The segment of the SPK is read through CspiceDirect (dafus, dafgda), which the Windows DLL does not export
