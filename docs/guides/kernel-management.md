@@ -62,7 +62,9 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   whose search goes through the binary PCKs first, even for a deleted PCK never unloaded; for a CK, the reads at epochs
   not already read. For an SPK the orphan handle stayed open, but the reads of the Moon (301), L1 (391), L2 (392) and
   Mars (4) after 25 more DAFs did not fail in the measured layout (measured with CSPICE N0067). The data of a deleted kernel are therefore no longer readable after the
-  next load, unload or native write; `GetLoadedKernels` lists its path until it is unloaded, which then does nothing. The
+  next load, unload or native write, and `GetLoadedKernels` no longer lists it from then on (a directory whose files were
+  all dropped leaves the listing, one with remaining files stays listed); a later unload of its path does nothing.
+  Before the fourth round of #668 the listing kept its path until it was unloaded. The
   file is tested by the name SPICE holds, which `LoadKernels` gives as a full path, and only for a name SPICE holds as an
   absolute path. A meta-kernel's `KERNELS_TO_LOAD` may name its files relative to the working directory of its load, and
   a direct C++ caller of `LoadKernelsProxy` may pass a relative name: SPICE holds them under that relative name, which no

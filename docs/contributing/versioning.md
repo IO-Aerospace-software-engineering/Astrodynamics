@@ -2644,12 +2644,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   longer throws for a deleted SPK, CK, binary PCK or EK (it still throws for a deleted text kernel, meta-kernel or DSK),
   and the kernels of the kind keep their precedence: the unload of a PCK while another PCK of the same frame class loaded
   before a deleted one returns and leaves the PCK loaded last in precedence, where it threw and gave the earlier one
-  precedence until the deleted one was unloaded. `GetLoadedKernels` lists the deleted path until it is unloaded, which
-  then does nothing. Only a kernel SPICE holds under an absolute name is concerned: one a meta-kernel names relative to
+  precedence until the deleted one was unloaded. `GetLoadedKernels` no longer lists a deleted SPK, CK, binary PCK or EK
+  after the next native load, unload or write, which drops it in SPICE (fourth round: it listed it until it was
+  unloaded, a file SPICE no longer held; a directory whose files were all dropped leaves the listing, one with
+  remaining files stays listed, and a later unload of the dropped path does nothing). Only a kernel SPICE holds under an absolute name is concerned: one a meta-kernel names relative to
   the working directory of its load is left to SPICE as before, deleted or not, and a deleted one can still stay open.
   Migration: keep a kernel file on disk until it is unloaded; restarting the process after deleting one is no longer
   needed; name the files of a meta-kernel by absolute paths (or an absolute `PATH_VALUES`) to have their deletion
-  covered. No numerical result moves for kernels that exist.
+  covered; a deleted SPK, CK, binary PCK or EK leaves `GetLoadedKernels` at the next native load, unload or write, so do
+  not expect it there. No numerical result moves for kernels that exist, whose listing is unchanged.
 - **Breaking: `WriteEphemeris` and `WriteOrientation` throw when the last unload of their native writer fails** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
   fourth round, Fixed above). `SpiceAPI.WriteEphemeris` and `WriteOrientation`, and so `Star.WriteEphemeris`,
   `Site.WriteEphemeris`, `Spacecraft.WriteOrientation` and the Cosmographia export, throw `InvalidOperationException`
