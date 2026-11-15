@@ -42,6 +42,7 @@ SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```csharp
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
@@ -51,7 +52,7 @@ var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0);
 
-var stateVector = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None)
+var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
 Console.WriteLine($"Position: {stateVector.Position}");
@@ -67,15 +68,15 @@ var earth = PlanetsAndMoons.EARTH_BODY;
 var epoch = new Time(2024, 1, 1, 0, 0, 0);
 
 var orbit = new KeplerianElements(
-    a: 7000000.0,
-    e: 0.001,
-    i: 51.6 * Constants.Deg2Rad,
-    raan: 100.0 * Constants.Deg2Rad,
-    aop: 90.0 * Constants.Deg2Rad,
-    m: 0.0,
+    7000000.0,                 // semi-major axis, m
+    0.001,                     // eccentricity
+    51.6 * Constants.Deg2Rad,  // inclination, rad
+    100.0 * Constants.Deg2Rad, // right ascension of the ascending node, rad
+    90.0 * Constants.Deg2Rad,  // argument of periapsis, rad
+    0.0,                       // mean anomaly, rad
     observer: earth,
     epoch: epoch,
-    frame: Frames.Frame.ICRF
+    frame: Frame.ICRF
 );
 
 Console.WriteLine($"Period: {orbit.Period().TotalHours:F2} hours");
@@ -109,12 +110,12 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     using IO.Astrodynamics.Propagator.Integrators;
 
     var spacecraft = new Spacecraft(
-        id: -1001,
-        name: "MySat",
-        mass: 500.0,
-        initialOrbitalParameters: orbit,
-        fuelTank: fuelTank,
-        engine: engine);
+        -1001,                         // NAIF id
+        "MySat",
+        500.0,                         // mass, kg
+        1000.0,                        // maximum operating mass, kg
+        new Clock("MySatClock", 256),  // on-board clock, 256 ticks per second
+        orbit);
 
     var window = new Window(epoch, epoch.AddHours(2));
 

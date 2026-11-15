@@ -8,7 +8,7 @@ as observer). An eclipse is the occultation of the Sun.
 var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 var sun = new CelestialBody(Stars.Sun);
 // spacecraft: propagated, from a TLE, or from the kernels
-var options = new OccultationSearchOptions { FrontFrame = new Frames.Frame("IAU_EARTH") };
+var options = new OccultationSearchOptions { FrontFrame = new Frame("IAU_EARTH") };
 var penumbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
     OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0), options);
 var umbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,

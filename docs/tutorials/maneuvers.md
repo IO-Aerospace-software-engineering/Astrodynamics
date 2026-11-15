@@ -53,11 +53,11 @@ This eliminates roll ambiguity.
 
 ```csharp
 // Primary: spacecraft -Z toward Earth (nadir pointing)
-// Secondary: spacecraft +X, the solar panel axis, toward Sun (+Z, opposite to -Z, would leave the roll undetermined:
-// the body vectors must be at least 5 degrees apart)
+// Secondary: spacecraft +X toward Sun, which sets the roll about nadir (+Z, opposite to -Z, would leave the roll
+// undetermined: the body vectors must be at least 5 degrees apart)
 var triad = new TriadAttitude(epoch, TimeSpan.FromHours(1.5),
     Spacecraft.Down, earth,    // Primary: nadir pointing
-    Spacecraft.Right, sun,     // Secondary: solar panels toward Sun
+    Spacecraft.Right, sun,     // Secondary: +X toward the Sun
     engine);
 ```
 
@@ -75,7 +75,7 @@ var moonTarget = new CelestialAttitudeTarget(moon, Aberration.LT);
 var triad = new TriadAttitude(earth, epoch, duration,
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
     Spacecraft.Up, moonTarget,
-    engine, 0.0);
+    engine);
 ```
 
 Factory methods create common attitude profiles in one call. They point the axes of the spacecraft that carries the

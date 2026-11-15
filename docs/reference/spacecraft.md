@@ -428,7 +428,7 @@ spacecraft the observer (the `observer` argument is not used). It computes what 
 
 ```csharp
 var camera = spacecraft.Instruments.First();
-var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frames.Frame("ITRF93"),
+var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frame("ITRF93"),
     ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromSeconds(60.0));
 ```
 

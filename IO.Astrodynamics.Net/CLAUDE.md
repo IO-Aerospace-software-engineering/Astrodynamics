@@ -736,12 +736,12 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 
 *Earth Observation with Sun Tracking*
 ```csharp
-// Keep nadir sensor pointed at Earth while orienting solar panels toward Sun (Up, opposite to Down, would be
+// Keep nadir sensor pointed at Earth, the roll about nadir set by the Sun (Up, opposite to Down, would be
 // rejected: the body vectors must be at least 5 degrees apart)
 var earthObservation = new TriadAttitude(
     epoch, TimeSpan.FromMinutes(30),
     Spacecraft.Down, earth,    // Primary: nadir pointing
-    Spacecraft.Right, sun,     // Secondary: solar panel axis toward Sun
+    Spacecraft.Right, sun,     // Secondary: +X toward the Sun, as near as nadir pointing allows
     engine);
 ```
 

@@ -9,6 +9,7 @@ The most direct way to define an orbit is with position and velocity vectors:
 ```csharp
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
@@ -20,7 +21,7 @@ var epoch = new Time(2024, 6, 21, 12, 0, 0);
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),
     new Vector3(0.0, 8000.0, 0.0),
-    earth, epoch, Frames.Frame.ICRF);
+    earth, epoch, Frame.ICRF);
 ```
 
 Position is in meters, velocity in meters per second. The observer (central body), epoch, and reference frame complete the orbit definition.
@@ -46,22 +47,22 @@ Create an orbit from classical elements (a, e, i, RAAN, AoP, M):
 
 ```csharp
 var kep = new KeplerianElements(
-    a: 7000000.0,
-    e: 0.001,
-    i: 51.6 * Constants.Deg2Rad,
-    raan: 100.0 * Constants.Deg2Rad,
-    aop: 90.0 * Constants.Deg2Rad,
-    m: 0.0,
+    7000000.0,                 // semi-major axis, m
+    0.001,                     // eccentricity
+    51.6 * Constants.Deg2Rad,  // inclination, rad
+    100.0 * Constants.Deg2Rad, // right ascension of the ascending node, rad
+    90.0 * Constants.Deg2Rad,  // argument of periapsis, rad
+    0.0,                       // mean anomaly, rad
     observer: earth,
     epoch: epoch,
-    frame: Frames.Frame.ICRF);
+    frame: Frame.ICRF);
 
 // Convert to Cartesian
 var svFromKep = kep.ToStateVector();
 Console.WriteLine($"Position: {svFromKep.Position}");
 ```
 
-The anomaly parameter `m` is the mean anomaly in radians. All angles follow the convention: radians in, radians out.
+The sixth argument is the mean anomaly in radians. All angles follow the convention: radians in, radians out.
 
 ## Two-Body Propagation with AtEpoch
 
@@ -129,7 +130,7 @@ Generate an SSO for a given altitude and eccentricity:
 var ssoOrbit = earth.HelioSynchronousOrbit(
     semiMajorAxis: 7000000.0,
     eccentricity: 0.001,
-    epoch: epoch);
+    epochAtDescendingNode: epoch);
 
 Console.WriteLine($"SSO inclination: {ssoOrbit.Inclination() * Constants.Rad2Deg:F4} deg");
 ```

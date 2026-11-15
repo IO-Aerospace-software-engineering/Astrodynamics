@@ -140,7 +140,7 @@ public class ClaudeMdExamplesTests
         {
             case "net:1": Assert.NotNull(ClaudeMdExamples.Net01(Earth, Epoch)); break;
             case "net:2": Assert.NotNull(ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21))); break;
-            case "net:8": Assert.NotNull(ClaudeMdExamples.Net08(SpacecraftWithEngine(-6701, out _, "2024-001A"))); break;
+            case "net:8": Assert.Single(ClaudeMdExamples.Net08(PropagatedWithImpulse(-6701, out _)).Data.Maneuvers); break;
             case "net:9": Assert.NotNull(ClaudeMdExamples.Net09(Orbit().ToStateVector())); break;
             case "net:10": Assert.NotNull(ClaudeMdExamples.Net10(Orbit().ToStateVector())); break;
             case "net:11": ClaudeMdExamples.Net11(); break;
@@ -243,6 +243,48 @@ public class ClaudeMdExamplesTests
         Assert.Equal(1.0e-6, ClaudeMdExamples.Net10(state).Covariance.CxX);
     }
 
+    /// <summary>
+    /// The maneuver export block runs on what its opening comment names, a propagated spacecraft with a COSPAR id, here one
+    /// whose apogee raise (to 7000 km from the Earth's centre, at the first perigee of a two-hour window) executed: the
+    /// loop of the block then exports it, and the OPM of <c>ToOpm(includeManeuvers: true)</c> carries it in the units of
+    /// CCSDS 502.0-B-3, Δv in km/s (the Δv in m/s divided by 1000), the expelled mass negative, the duration in seconds and
+    /// the ignition epoch in UTC. On 608bcf6 <c>Block_Runs</c> passed an unpropagated spacecraft, so the loop ran zero
+    /// times.
+    /// </summary>
+    [Fact]
+    public void ManeuverExportBlock_ExportsTheExecutedImpulse()
+    {
+        var spacecraft = PropagatedWithImpulse(-6733, out var impulse);
+        Assert.Contains(spacecraft.ExecutedManeuvers, m => m is ImpulseManeuver i && i.ThrustWindow.HasValue);
+        Assert.Same(impulse, Assert.Single(spacecraft.ExecutedManeuvers.OfType<ImpulseManeuver>()));
+
+        var opm = ClaudeMdExamples.Net08(spacecraft);
+        var exported = Assert.Single(opm.Data.Maneuvers);
+        Assert.Equal(impulse.DeltaV.X / 1000.0, exported.ManDv1);
+        Assert.Equal(impulse.DeltaV.Y / 1000.0, exported.ManDv2);
+        Assert.Equal(impulse.DeltaV.Z / 1000.0, exported.ManDv3);
+        Assert.True(impulse.FuelBurned > 0.0);
+        Assert.Equal(-impulse.FuelBurned, exported.ManDeltaMass);
+        Assert.Equal(impulse.ThrustWindow!.Value.Length.TotalSeconds, exported.ManDuration);
+        Assert.Equal(impulse.ThrustWindow.Value.StartDate.ToUTC().DateTime, exported.ManEpochIgnition);
+
+        // The input of 608bcf6: unpropagated, no executed maneuver, nothing exported
+        var unpropagated = SpacecraftWithEngine(-6734, out _, "2024-001A");
+        Assert.Empty(unpropagated.ExecutedManeuvers);
+        Assert.Empty(ClaudeMdExamples.Net08(unpropagated).Data.Maneuvers ?? []);
+    }
+
+    // A spacecraft of the given id with a COSPAR id, propagated over two hours about a point-mass Earth with an apogee raise
+    // to 7000 km from the Earth's centre, which fires at the first perigee
+    private static Spacecraft PropagatedWithImpulse(int naifId, out ImpulseManeuver impulse)
+    {
+        var spacecraft = SpacecraftWithEngine(naifId, out var engine, "2024-001A");
+        impulse = new ApogeeHeightManeuver(Earth, Epoch, TimeSpan.Zero, 7000000.0, engine);
+        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.Propagate(new Window(Epoch, Epoch.AddHours(2.0)), [Earth], false, false, TimeSpan.FromSeconds(60.0));
+        return spacecraft;
+    }
+
     // U.S. Standard Atmosphere 1976 (NASA-TM-X-74335), table I at 10 km of geometric altitude: 4.1351e-1 kg/m³; the
     // library's documented agreement with its table I, 4.2e-4 relative
     private const double StandardDensityAt10Km = 4.1351e-1;
@@ -303,7 +345,7 @@ public class ClaudeMdExamplesTests
 
     /// <summary>
     /// The corrected Earth observation block points <c>Spacecraft.Down</c> at nadir, −r/|r| (the closed form), and
-    /// <c>Spacecraft.Right</c>, the solar panel axis, at the component of the Sun direction perpendicular to nadir (TRIAD's
+    /// <c>Spacecraft.Right</c> (+X) at the component of the Sun direction perpendicular to nadir (TRIAD's
     /// secondary), the Sun's geometric state from the Earth read from SPICE (<c>SpiceAPI.ReadEphemeris</c>), over 24 epochs
     /// 4 min apart of a LEO.
     /// </summary>

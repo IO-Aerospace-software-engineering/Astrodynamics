@@ -2352,28 +2352,41 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `docs/reference/keplerian-elements.md` now says too); `GuideMethodTables_NameMembersOfTheLibrary` checks that every
   method of the guide's member tables is a public method or constructor of the type of its heading, its bases or the
   library's extension methods, with an overload of the written argument count. No library result moves.
-- **The C# examples of the two `CLAUDE.md` files did not compile or threw** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), third round). 11 of the 27
-  blocks of `IO.Astrodynamics.Net/CLAUDE.md` failed against the library: the TLE example read `newTle`, which it never
-  declared; the OMM example saved with `wrapInNdm` and `indent`, parameters of `Opm.SaveToFile` that `Omm.SaveToFile`
-  does not take; the OMM ↔ TLE, OPM ↔ Spacecraft, OPM ↔ StateVector and atmosphere examples declared the same locals
-  twice; the maneuver export called a `CreateSpacecraftWithManeuvers()` that does not exist and an undeclared
-  `maneuver`; the user-defined parameters and covariance examples built an `OpmData` from a `StateVector` (it takes an
-  `OpmStateVector`, from `OpmStateVector.FromStateVector`); the geopotential and drag examples wrote `Frames.Frame`, which
-  does not resolve in an application's namespace. Two more threw: the Earth observation TRIAD pointed `Spacecraft.Down`
-  at the Earth and `Spacecraft.Up`, opposite to it, at the Sun, which `TriadAttitude` rejects (its body vectors at
-  least 5 degrees apart), now `Spacecraft.Right`, the solar panel axis, as in `DEVELOPER_GUIDE.md`; and the geopotential
-  example, read with an orbit about `EARTH_BODY`, listed an Earth of another gravitational field, which a propagation
-  rejects (#674), now with its orbit built on the degree-10 Earth. The same TRIAD of opposite vectors, passed a
-  minimum separation of 0 so as not to throw, stood in `docs/tutorials/maneuvers.md`, where its roll was not toward the
-  Sun. Every block now compiles: each is the region of a method of
+- **The C# examples of the two `CLAUDE.md` files and of several pages of `docs/` did not compile or threw** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), third round).
+  12 of the 27 blocks of `IO.Astrodynamics.Net/CLAUDE.md` failed against the library: the TLE example read `newTle`,
+  which it never declared; the OMM example saved with `wrapInNdm` and `indent`, parameters of `Opm.SaveToFile` that
+  `Omm.SaveToFile` does not take; the OMM ↔ TLE, OPM ↔ Spacecraft, OPM ↔ StateVector and atmosphere examples declared
+  the same locals twice; the maneuver export called a `CreateSpacecraftWithManeuvers()` that does not exist and an
+  undeclared `maneuver`; the user-defined parameters and covariance examples built an `OpmData` from a `StateVector`
+  (it takes an `OpmStateVector`, from `OpmStateVector.FromStateVector`); the geopotential and drag examples wrote
+  `Frames.Frame`, which does not resolve in an application's namespace; the name-shadowing example was three bare
+  member accesses, not statements. Two more threw: the Earth observation TRIAD pointed `Spacecraft.Down` at the Earth
+  and `Spacecraft.Up`, opposite to it, at the Sun, which `TriadAttitude` rejects (its body vectors at least 5 degrees
+  apart), now `Spacecraft.Right` (+X), which sets the roll about nadir (the solar panels stay on `Up`, as in the
+  prograde examples and `CreateProgradeWithSunTracking`); and the geopotential example, read with an orbit about
+  `EARTH_BODY`, listed an Earth of another gravitational field, which a propagation rejects (#674), now with its orbit
+  built on the degree-10 Earth. The root `CLAUDE.md`'s in-memory provider example now says it runs in a child process
+  in `IO.Astrodynamics.Tests`. Every block now compiles: each is the region of a method of
   `IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs` (the root `CLAUDE.md`'s blocks too), and
   `ClaudeMdExamplesTests` checks that each block equals its region, compares the declared `IIntegrator` with the
-  library's by reflection, runs the 20 blocks that need only `Data/SolarSystem`, and checks what they state: the
-  catalog number of the TLE text, the mean motion of the OMM in rad/s, the OPM state in km and km/s, the 1976 standard
-  atmosphere at 10 km against its table I, and the Earth observation attitude, Down on the nadir and Right on the Sun's
-  direction perpendicular to it (2.5e-16 and 6.5e-16 rad on Linux x64; bounds 5.0e-16 and 1.3e-15 rad, provisional,
-  twice the Linux x64 worst until the three platforms' CI). The block and region reading of `DeveloperGuideExamplesTests`
-  is shared (`DocumentationCodeBlocks`). Documentation only: no library result moves.
+  library's by reflection, runs the 20 blocks that need only `Data/SolarSystem` (the maneuver export on a spacecraft
+  propagated through an apogee raise, so that its loop exports the impulse), and checks what they state: the catalog
+  number of the TLE text, the mean motion of the OMM in rad/s, the OPM state and the exported impulse in the units of
+  CCSDS 502.0-B-3, the 1976 standard atmosphere at 10 km against its table I, and the Earth observation attitude, Down
+  on the nadir and Right on the Sun's direction perpendicular to it (2.5e-16 and 6.5e-16 rad on Linux x64; bounds
+  5.0e-16 and 1.3e-15 rad, provisional, twice the Linux x64 worst until the three platforms' CI). The same TRIAD of
+  opposite vectors, passed a minimum separation of 0 so as not to throw, stood in `docs/tutorials/maneuvers.md`, where
+  its roll was not toward the Sun, and a second TRIAD of that page passed 0 too, which turned off the guard on
+  collinear reference vectors; both keep the default 5 degrees. `docs/` wrote `Frames.Frame` 14 times in 8 pages
+  (`get-started`, the orbit-creation and ephemeris-queries tutorials, the force-models, celestial-bodies,
+  state-vector, occultations and spacecraft references), now `Frame` with `using IO.Astrodynamics.Frames;`; and,
+  compiled whole with their own using directives, `get-started` and the orbit-creation and ephemeris-queries tutorials
+  failed on named arguments the constructors do not have (`KeplerianElements(a:, e:, ...)`, `Spacecraft(id:, ...,
+  fuelTank:, engine:)`, `HelioSynchronousOrbit(..., epoch:)`) and on `Position` read from the `OrbitalParameters` of a
+  window's ephemeris, now corrected. `DocumentationPagesTests` checks the csharp blocks of `docs/` and `README.md` for
+  a type named through a namespace relative to `IO.Astrodynamics` and for a `TriadAttitude` of minimum separation 0.
+  The block and region reading of `DeveloperGuideExamplesTests` is shared (`DocumentationCodeBlocks`). Documentation
+  only: no library result moves.
 
 **Changed**
 
