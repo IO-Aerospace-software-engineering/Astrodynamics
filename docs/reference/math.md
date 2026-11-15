@@ -59,7 +59,7 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 |-------------|-------------|
 | `Quaternion()` | Default (identity) |
 | `Quaternion(double w, Vector3 vectorPart)` | Scalar + vector |
-| `Quaternion(Vector3 axis, double angle)` | Axis-angle |
+| `Quaternion(Vector3 axis, double angle)` | Axis-angle: the rotation by `angle` about the direction of `axis`, which is divided by its magnitude (#688; a unit axis gives the same quaternion bit for bit); `ArgumentException` for a zero axis or a component that is not finite |
 | `Quaternion(double w, double x, double y, double z)` | All components |
 
 ### Members

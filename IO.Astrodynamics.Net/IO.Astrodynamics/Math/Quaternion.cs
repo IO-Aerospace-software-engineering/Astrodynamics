@@ -23,12 +23,64 @@ namespace IO.Astrodynamics.Math
         }
 
 
+        /// <summary>
+        /// The unit quaternion of the rotation by <paramref name="angle"/> about the direction of <paramref name="axis"/>:
+        /// (cos(a/2), k sin(a/2)), k = axis / |axis| (the Euler-Rodrigues parameters, a unit quaternion only for a unit k).
+        /// </summary>
+        /// <param name="axis">The direction of the rotation axis, of any finite non-zero length; a vector rotated by the
+        /// quaternion turns by <paramref name="angle"/> about it, positive counterclockwise seen from its tip.</param>
+        /// <param name="angle">The rotation angle, in radians.</param>
+        /// <remarks>
+        /// The axis is divided by its magnitude (#688; before 11.0.0 it was taken as it was, so a non-unit axis gave a
+        /// non-unit quaternion, whose rotation of a vector was scaled by |q|² and turned by another angle). A unit axis
+        /// (|axis| = 1 exactly) gives the same quaternion bit for bit; an axis outside about 1e-150 to 1e150 is scaled by
+        /// its largest component first, so that its magnitude is represented.
+        /// </remarks>
+        /// <exception cref="ArgumentException">The axis is zero or has a component that is not finite (NaN or infinite): it
+        /// has no direction (#688).</exception>
         public Quaternion(Vector3 axis, double angle)
         {
+            var unitAxis = UnitAxis(axis);
             double c = System.Math.Cos(angle * 0.5);
             double s = System.Math.Sin(angle * 0.5);
             W = c;
-            VectorPart = new Vector3(s * axis.X, s * axis.Y, s * axis.Z);
+            VectorPart = new Vector3(s * unitAxis.X, s * unitAxis.Y, s * unitAxis.Z);
+        }
+
+        /// <summary>
+        /// The quaternion (cos(a/2), axis sin(a/2)) of an axis taken as it is, unchecked: the library's own axis-angle
+        /// quaternions, bit for bit the former public constructor (#688). Its axes are unit vectors, or the zero vector of a
+        /// zero angular velocity at a zero angle, which gives the identity.
+        /// </summary>
+        internal static Quaternion FromAxisAngle(in Vector3 axis, double angle)
+        {
+            double c = System.Math.Cos(angle * 0.5);
+            double s = System.Math.Sin(angle * 0.5);
+            return new Quaternion(c, s * axis.X, s * axis.Y, s * axis.Z);
+        }
+
+        // The unit vector of a finite non-zero axis; its magnitude is computed on the axis scaled by its largest component
+        // when the squares of its components would overflow or lose their digits below the normal range
+        private static Vector3 UnitAxis(in Vector3 axis)
+        {
+            if (!double.IsFinite(axis.X) || !double.IsFinite(axis.Y) || !double.IsFinite(axis.Z))
+            {
+                throw new ArgumentException($"The rotation axis {axis} has a component that is not finite and no direction.", nameof(axis));
+            }
+
+            double largest = System.Math.Max(System.Math.Abs(axis.X), System.Math.Max(System.Math.Abs(axis.Y), System.Math.Abs(axis.Z)));
+            if (largest == 0.0)
+            {
+                throw new ArgumentException("The rotation axis is the zero vector and has no direction.", nameof(axis));
+            }
+
+            if (largest > 1e-150 && largest < 1e150)
+            {
+                return axis / axis.Magnitude();
+            }
+
+            var scaled = axis / largest;
+            return scaled / scaled.Magnitude();
         }
 
         public Quaternion(double w, double x, double y, double z)
@@ -189,7 +241,7 @@ namespace IO.Astrodynamics.Math
 
             double angle = 2.0 * System.Math.Atan2(sinHalf, delta.W);
             var axis = delta.VectorPart / sinHalf;
-            return ((new Quaternion(axis, angle * fraction) * q0).NormalizeOrZero(), axis, angle);
+            return ((FromAxisAngle(axis, angle * fraction) * q0).NormalizeOrZero(), axis, angle);
         }
 
         /// <summary>

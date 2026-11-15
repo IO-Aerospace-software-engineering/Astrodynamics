@@ -303,5 +303,132 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.True(worstNorm <= NormTolerance, $"{worstNorm:E3}");
             Assert.True(worstRotation <= RotationTolerance, $"{worstRotation:E3}");
         }
-    }
+    
+        // #688: the axis of an axis-angle quaternion is a direction; a zero or non-finite one is no rotation
+        [Theory]
+        [InlineData(0.0, 0.0, 0.0, 90.0)]
+        [InlineData(0.0, 0.0, 0.0, 180.0)]
+        [InlineData(0.0, 0.0, 0.0, 0.0)]
+        [InlineData(double.NaN, 0.0, 1.0, 90.0)]
+        [InlineData(0.0, double.PositiveInfinity, 0.0, 90.0)]
+        [InlineData(0.0, 0.0, double.NegativeInfinity, 90.0)]
+        public void AxisAngle_ZeroOrNonFiniteAxis_ThrowsNamingTheAxis(double x, double y, double z, double angleDegrees)
+        {
+            var exception = Assert.Throws<ArgumentException>(() => new Quaternion(new Vector3(x, y, z), angleDegrees * IO.Astrodynamics.Constants.Deg2Rad));
+            Assert.Equal("axis", exception.ParamName);
+        }
+
+        // #688, the table of the issue: an axis along z of any length rotates X by 90° about z to Y, as the unit axis does
+        // (the closed form (cos 90°, sin 90°, 0) of the rotation; (0, 0, 2) gave (-1.5, 2, 0), a non-unit quaternion)
+        [Theory]
+        [InlineData(1.0)]
+        [InlineData(2.0)]
+        [InlineData(1e-3)]
+        [InlineData(1e10)]
+        public void AxisAngle_AxisAlongZOfAnyLength_RotatesXToY(double length)
+        {
+            var q = new Quaternion(new Vector3(0.0, 0.0, length), IO.Astrodynamics.Constants.PI2);
+            var rotated = Vector3.VectorX.Rotate(q);
+            Assert.True(System.Math.Abs(q.Magnitude() - 1.0) <= AxisAngleNormTolerance, $"{q.Magnitude()}");
+            Assert.True((rotated - Vector3.VectorY).Magnitude() <= AxisAngleRotationAngleTolerance, $"{rotated}");
+        }
+
+        // #688: the worst angle between the rotated vector and Rodrigues' formula over 10 000 random axes of 1e-10 to 1e10,
+        // MEASURE 6.350e-16 rad against Rodrigues and 6.163e-16 against SPICE vrotv (Linux x64, 2026-11-15); twice the worst, rounded up at the second significant digit,
+        // provisional until the three platforms are read from the CI logs
+        private const double AxisAngleRotationAngleTolerance = 1.3e-15;
+
+        // #688: the worst | |v'| / |v_Rodrigues| - 1 |, MEASURE 9.992e-16 against Rodrigues and 8.882e-16 against vrotv (Linux x64,
+        // 2026-11-15); provisional, as above
+        private const double AxisAngleLengthTolerance = 2.0e-15;
+
+        // #688: the worst | |q| - 1 |, MEASURE 3.331e-16 (Linux x64, 2026-11-15); provisional, as above
+        private const double AxisAngleNormTolerance = 6.7e-16;
+
+        // #688: the worst element of the rotation matrix of the quaternion against SPICE axisar, MEASURE 8.882e-16
+        // (Linux x64, 2026-11-15); provisional, as above
+        private const double AxisAngleMatrixTolerance = 1.8e-15;
+
+        private static (Vector3 Axis, double Angle, Vector3 V) RandomAxisAngle(Random random)
+        {
+            Vector3 direction;
+            do
+            {
+                direction = new Vector3(random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0);
+            } while (direction.Magnitude() < 1e-3);
+
+            var axis = direction * System.Math.Pow(10.0, random.NextDouble() * 20.0 - 10.0);
+            double angle = (random.NextDouble() * 2.0 - 1.0) * IO.Astrodynamics.Constants._2PI;
+            var v = new Vector3(random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0) * 7.0e6;
+            return (axis, angle, v);
+        }
+
+        private static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+
+        // #688: new Quaternion(axis, angle) is the rotation by angle about the direction of axis, whatever its length:
+        // Rodrigues' formula v' = v cos a + (k × v) sin a + k (k · v)(1 - cos a), k = axis / |axis|, in plain doubles
+        [Fact]
+        public void AxisAngle_AnyNonZeroAxis_IsTheRotationOfRodrigues()
+        {
+            var random = new Random(688);
+            double worstAngle = 0.0, worstLength = 0.0, worstNorm = 0.0;
+            for (int i = 0; i < 10000; i++)
+            {
+                var (axis, angle, v) = RandomAxisAngle(random);
+                var q = new Quaternion(axis, angle);
+
+                double m = System.Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y + axis.Z * axis.Z);
+                var k = new Vector3(axis.X / m, axis.Y / m, axis.Z / m);
+                var expected = v * System.Math.Cos(angle) + k.Cross(v) * System.Math.Sin(angle) + k * ((k * v) * (1.0 - System.Math.Cos(angle)));
+                var rotated = v.Rotate(q);
+
+                worstAngle = System.Math.Max(worstAngle, AngleBetween(rotated, expected));
+                worstLength = System.Math.Max(worstLength, System.Math.Abs(rotated.Magnitude() / expected.Magnitude() - 1.0));
+                worstNorm = System.Math.Max(worstNorm, System.Math.Abs(q.Magnitude() - 1.0));
+            }
+
+            _output.WriteLine($"MEASURE #688 axis-angle rotation angle against Rodrigues: {worstAngle:E3} rad");
+            _output.WriteLine($"MEASURE #688 axis-angle | |v'| / |v_Rodrigues| - 1 |: {worstLength:E3}");
+            _output.WriteLine($"MEASURE #688 axis-angle | |q| - 1 |: {worstNorm:E3}");
+            Assert.True(worstAngle <= AxisAngleRotationAngleTolerance, $"{worstAngle:E3}");
+            Assert.True(worstLength <= AxisAngleLengthTolerance, $"{worstLength:E3}");
+            Assert.True(worstNorm <= AxisAngleNormTolerance, $"{worstNorm:E3}");
+        }
+
+        // #688: the same axes against SPICE: the rotated vector against vrotv, the rotation matrix of the quaternion against
+        // axisar (CSPICE N0067, which take any non-zero axis), through CspiceDirect (Linux, Validation)
+        [Fact]
+        [Trait("Category", "Validation")]
+        public void AxisAngle_AnyNonZeroAxis_IsTheRotationOfSpice()
+        {
+            IO.Astrodynamics.Tests.TestKernels.EnsureSolarSystem();
+            var random = new Random(6880);
+            double worstAngle = 0.0, worstLength = 0.0, worstMatrix = 0.0;
+            for (int i = 0; i < 10000; i++)
+            {
+                var (axis, angle, v) = RandomAxisAngle(random);
+                var q = new Quaternion(axis, angle);
+                double[] axisArray = [axis.X, axis.Y, axis.Z];
+
+                var spiceV = IO.Astrodynamics.Tests.Body.CspiceDirect.Vrotv([v.X, v.Y, v.Z], axisArray, angle);
+                var expected = new Vector3(spiceV[0], spiceV[1], spiceV[2]);
+                var rotated = v.Rotate(q);
+                worstAngle = System.Math.Max(worstAngle, AngleBetween(rotated, expected));
+                worstLength = System.Math.Max(worstLength, System.Math.Abs(rotated.Magnitude() / expected.Magnitude() - 1.0));
+
+                var spiceM = IO.Astrodynamics.Tests.Body.CspiceDirect.Axisar(axisArray, angle);
+                var matrix = Matrix.FromQuaternion(q);
+                for (int r = 0; r < 3; r++)
+                for (int c = 0; c < 3; c++)
+                    worstMatrix = System.Math.Max(worstMatrix, System.Math.Abs(matrix.Get(r, c) - spiceM[3 * r + c]));
+            }
+
+            _output.WriteLine($"MEASURE #688 axis-angle rotation angle against SPICE vrotv: {worstAngle:E3} rad");
+            _output.WriteLine($"MEASURE #688 axis-angle | |v'| / |v_vrotv| - 1 |: {worstLength:E3}");
+            _output.WriteLine($"MEASURE #688 axis-angle matrix against SPICE axisar: {worstMatrix:E3}");
+            Assert.True(worstAngle <= AxisAngleRotationAngleTolerance, $"{worstAngle:E3}");
+            Assert.True(worstLength <= AxisAngleLengthTolerance, $"{worstLength:E3}");
+            Assert.True(worstMatrix <= AxisAngleMatrixTolerance, $"{worstMatrix:E3}");
+        }
+}
 }

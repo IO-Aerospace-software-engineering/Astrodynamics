@@ -2010,6 +2010,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with System.Xml.Linq, independently of the readers, and reach every path: `Load*` with and without schema
   validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
   `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
+- **`new Quaternion(axis, angle)` took its axis as it was** ([#688](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/688)). The constructor returned
+  (cos(a/2), sin(a/2) axis) without checking or normalising the axis: Euler-Rodrigues parameters are a unit quaternion
+  only for a unit axis, and a vector rotated by q p q* is scaled by |q|², so `new Quaternion((0, 0, 2), π/2)` had a
+  magnitude of 1.58 and turned X to (−1.5, 2, 0), 126.87° instead of 90°, and a zero axis gave a quaternion of
+  magnitude 0.707 that turned X to (0.5, 0, 0), whose `Normalize()` was the identity; a NaN component gave a NaN
+  quaternion. The constructor now divides the axis by its magnitude (scaled by its largest component outside about
+  1e-150 to 1e150) and throws `ArgumentException` (parameter `axis`) for a zero axis or a component that is not finite.
+  The library's own axis-angle quaternions (`Instrument`'s Euler angles, `PlaneAlignmentManeuver`, the SLERP of the
+  attitude record, `StateOrientation.AtDate`, whose zero angular velocity is a zero axis at a zero angle) go through an
+  internal factory, bit for bit as before. `QuaternionTests` checks 10 000 random axes of 1e-10 to 1e10 and angles in
+  [−2π, 2π) against Rodrigues' formula (worst 6.4e-16 rad, |q| within 3.3e-16 of 1) and against CSPICE `vrotv` and
+  `axisar` (rotation matrix within 8.9e-16), the table of the issue, and the zero and non-finite axes.
 
 **Changed**
 
@@ -2681,6 +2693,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `NotEqual` is split at the crossings added. No call throws and no edge found before moves; the quantity is
   evaluated about 1.2 times as often at a step where nothing is hidden. Migration: none to find every window; a caller
   who relied on a coarse step to pass over short windows filters the result by length.
+- **Breaking: `new Quaternion(axis, angle)` normalises its axis and throws for a zero or non-finite one** ([#688](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/688), Fixed
+  above): a finite non-zero axis of any length gives the unit quaternion of the rotation by `angle` about its direction,
+  where a non-unit axis gave a non-unit quaternion turning by another angle; a zero axis, or one with a NaN or infinite
+  component, throws `ArgumentException` (parameter `axis`) where it returned a quaternion that was no rotation. A unit
+  axis (|axis| = 1 exactly) gives the same quaternion bit for bit; an axis that is unit only to rounding (`v.Normalize()`)
+  can move it by an ulp. Nothing the library computes moves. Migration: pass any non-zero direction; check the magnitude
+  of a vector that can be zero (a zero angular velocity) before passing it, and use `Quaternion.Identity` for no
+  rotation.
 
 **Removed**
 
@@ -2929,16 +2949,15 @@ not listed.
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
 - **Degenerate geometry kept by the library's normalizations**
-  ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), [#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687), [#688](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/688)). The library's own
-  normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides three degenerate cases:
+  ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), [#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)). The library's own
+  normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides two degenerate cases:
   `PerigeeVector()` and `ApogeeVector()` are the zero vector when the eccentricity vector rounds to zero (139 of 10 000
-  random circular elements), `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix, and
-  `new Quaternion(axis, angle)` neither checks nor normalises its axis (a zero axis gives a non-unit quaternion). The
+  random circular elements), and `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix. The
   public methods that normalize their own argument or result the same way return silently too:
   `Matrix.FromQuaternion` of the zero quaternion is the identity, `Quaternion.Lerp` from q to −q at t = 0.5 the zero
   quaternion, and `Vector3.Angle(vector, plane)` with a zero plane normal 0 or π, the unsigned angle's sign lost. Give
-  near-circular elements a non-zero eccentricity for their apsides, a unit axis to the quaternion, and non-zero
-  quaternions and normals to these methods.
+  near-circular elements a non-zero eccentricity for their apsides, and non-zero quaternions and normals to these
+  methods.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.
