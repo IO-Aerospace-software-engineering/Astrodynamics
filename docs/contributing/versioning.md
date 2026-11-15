@@ -2415,8 +2415,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   library propagated to TCA, `EncounterCase.ToCdm` wrote `SOLAR_RAD_PRESSURE` from the reflectivity coefficient of a
   spacecraft, `YES` for a `SolarRadiationCoeff` above 0 (1.0 by default), whether or not any solar radiation pressure
   was modeled: for a manual encounter never propagated, a covariance given at TCA or held in RTN, and a participant
-  propagated without solar radiation pressure, where CCSDS 508.0-B-1 Cor. 2 (Table 3-3; wording to be verified by
-  S. Guillet) defines it, as `INTRACK_THRUST` (#684), as whether that perturbation was used for the OD of the object.
+  propagated without solar radiation pressure, where CCSDS 508.0-B-1 Cor. 2 (Table 3-3; wording confirmed by
+  S. Guillet, 2026-11-15) defines it, as `INTRACK_THRUST` (#684), as whether that perturbation was used for the OD of the object.
   Under the same signatures, the keyword is `YES` or `NO` from the forces of the propagation of a covariance the library
   propagated, as before, and omitted otherwise, as `GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS`,
   `INTRACK_THRUST` and `EARTH_TIDES` are; a value given in `ProtectedParticipantMetadata`/`SecondaryParticipantMetadata`
