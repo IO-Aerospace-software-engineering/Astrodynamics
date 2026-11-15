@@ -3,11 +3,19 @@ using System.Text;
 using IO.Astrodynamics.CLI.Commands;
 using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.TimeSystem;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.CLI.Tests;
 
 public class EphemerisTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public EphemerisTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Fact]
     public void CallWithAllOptions()
     {
@@ -236,6 +244,8 @@ public class EphemerisTests
                     var xyz = System.Text.RegularExpressions.Regex.Matches(line, @"(?<=X : |Y : |Z: )-?[0-9.E+-]+").Take(3)
                         .Select(m => double.Parse(m.Value, CultureInfo.InvariantCulture)).ToArray();
                     var printed = new Math.Vector3(xyz[0], xyz[1], xyz[2]);
+                    _output.WriteLine($"MEASURE CLI site ephemeris against SpiceAPI.ReadEphemeris: X {System.Math.Abs(printed.X - expected.Position.X):E3} m, " +
+                                      $"relative {(printed - expected.Position).Magnitude() / expected.Position.Magnitude():E3}");
                     Assert.True((printed - expected.Position).Magnitude() < 5e-16 * expected.Position.Magnitude(),
                         $"{printed} against {expected.Position}");
                 }

@@ -64,7 +64,7 @@ public class OccultationSearchTests
         var expected = JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/OccultationReference/occultation_reference.json"))[reference]
             .Select(w => new Window(TimeSystem.Time.CreateTDB(w[0]), TimeSystem.Time.CreateTDB(w[1]))).ToArray();
         double worst = WorstEdge(managed, expected);
-        _output.WriteLine($"MEASURE #277 dss65_2005 point {(targetShape == ShapeType.Point ? "back" : "front")} {type}: {expected.Length} windows, worst {worst:E2} s");
+        _output.WriteLine($"MEASURE #277 dss65_2005 point {(targetShape == ShapeType.Point ? "back" : "front")} {type}: {expected.Length} windows, worst {worst:E3} s");
         Assert.Single(expected);
         Assert.True(worst < GfocltThreshold, $"{worst:E2} s");
     }

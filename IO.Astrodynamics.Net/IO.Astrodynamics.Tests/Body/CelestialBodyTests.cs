@@ -9,13 +9,17 @@ using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Body;
 
 public class CelestialBodyTests
 {
-    public CelestialBodyTests()
+    private readonly ITestOutputHelper _output;
+
+    public CelestialBodyTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
     }
 
@@ -355,6 +359,9 @@ public class CelestialBodyTests
         var sv = orbit.ToStateVector();
         var position = new Vector3(-7546190.0544189948, 41483396.976059448, 15115.963054568274);
         var velocity = new Vector3(-3025.0109437580854, -550.27796615719915, 6.0743057843516786);
+        _output.WriteLine($"MEASURE geosynchronous 001 against CSPICE: a {System.Math.Abs(orbit.SemiMajorAxis() - 42164172.439443049):E3} m, " +
+                          $"position {(sv.Position - position).Magnitude():E3} m, velocity {(sv.Velocity - velocity).Magnitude():E3} m/s, " +
+                          $"i {System.Math.Abs(orbit.Inclination() - 0.0020078681590275779):E3} rad, RAAN {System.Math.Abs(orbit.AscendingNode() - 1.5712262609961554):E3} rad");
         Assert.True((sv.Position - position).Magnitude() < 7e-8, $"position delta {(sv.Position - position).Magnitude()} m");
         Assert.True((sv.Velocity - velocity).Magnitude() < 5e-12, $"velocity delta {(sv.Velocity - velocity).Magnitude()} m/s");
         Assert.Equal(0.0020078681590275779, orbit.Inclination(), 3e-17);

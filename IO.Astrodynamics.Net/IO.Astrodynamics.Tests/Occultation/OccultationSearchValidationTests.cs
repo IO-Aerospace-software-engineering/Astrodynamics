@@ -151,7 +151,7 @@ public class OccultationSearchValidationTests
             type, aberration, gfocltStep, frontFrame, null).ToArray();
         double worstGfoclt = WorstEdge(Search(OccultationSearchOptions.DefaultConvergenceTolerance), gfoclt);
         _output.WriteLine($"MEASURE #277 {scenario}, {type}, {aberration}, {referenceFrame}, step {step.TotalSeconds} s, {count} windows: " +
-                          $"worst |managed (100 ns) - gfoclt (1e-9 s)| {worstReference:E2} s, |managed (1 us) - gfoclt (1 us)| {worstGfoclt:E2} s");
+                          $"worst |managed (100 ns) - gfoclt (1e-9 s)| {worstReference:E3} s, |managed (1 us) - gfoclt (1 us)| {worstGfoclt:E3} s");
         bool lightTime = aberration != Aberration.None;
         Assert.True(worstReference < (lightTime ? LightTimeReferenceThreshold : ReferenceThreshold), $"{worstReference:E2} s");
         Assert.True(worstGfoclt < (lightTime ? LightTimeGfocltThreshold : GfocltThreshold), $"{worstGfoclt:E2} s");
@@ -313,8 +313,8 @@ public class OccultationSearchValidationTests
             (any[0].StartDate - gfocltAny[0].StartDate).TotalSeconds, (any[0].EndDate - gfocltAny[0].EndDate).TotalSeconds,
             (full[0].StartDate - gfocltFull[0].StartDate).TotalSeconds, (full[0].EndDate - gfocltFull[0].EndDate).TotalSeconds
         }.Max(System.Math.Abs);
-        _output.WriteLine($"MEASURE #277 eclipse_001 propagated (kernel GM, 10 s output) - gfoclt (GMAT GM): first eclipse {firstEclipse:E2} s, " +
-                          $"worst over 12 h, Any {worstAny:E2} s, Full {worstFull:E2} s; search of Any over 12 h at 60 s: {elapsed.TotalMilliseconds:F0} ms");
+        _output.WriteLine($"MEASURE #277 eclipse_001 propagated (kernel GM, 10 s output) - gfoclt (GMAT GM): first eclipse {firstEclipse:E3} s, " +
+                          $"worst over 12 h, Any {worstAny:E3} s, Full {worstFull:E3} s; search of Any over 12 h at 60 s: {elapsed.TotalMilliseconds:F0} ms");
 
         double[] gmat =
         [
@@ -323,7 +323,7 @@ public class OccultationSearchValidationTests
             any[0].Length.TotalSeconds - full[0].Length.TotalSeconds - GmatPenumbraDuration, full[0].Length.TotalSeconds - GmatUmbraDuration
         ];
         _output.WriteLine("MEASURE #277 eclipse_001 propagated - GMAT (penumbra entry, umbra entry, umbra exit, penumbra exit, penumbra duration, " +
-                          $"umbra duration): {string.Join(", ", gmat.Select(x => x.ToString("E2")))} s");
+                          $"umbra duration): {string.Join(", ", gmat.Select(x => x.ToString("E3")))} s");
         Assert.True(firstEclipse < 5.2e-5, $"{firstEclipse:E2} s");
         Assert.True(worstAny < 6.4e-4 && worstFull < 6.4e-4, $"{worstAny:E2} s, {worstFull:E2} s");
         Assert.All(gmat, x => Assert.True(System.Math.Abs(x) < 9.7e-4, $"{x:E2} s"));
