@@ -151,7 +151,7 @@ var meanKep = tle.ToMeanKeplerianElements();
 Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 
 // NORAD catalog number, decoded from Alpha-5 when applicable
-Assert.Equal(25544, newTle.NoradCatalogId);
+Assert.Equal(25544, tle.NoradCatalogId);
 ```
 
 **NORAD Catalog Numbers (Alpha-5)**
@@ -219,7 +219,7 @@ Console.WriteLine($"COSPAR ID: {omm.ObjectId}");  // Format: "1998-067A"
 Console.WriteLine($"Mean Motion: {omm.Data.MeanElements.MeanMotion} rev/day");
 
 // Save OMM to file
-omm.SaveToFile("output.omm", validateBeforeSave: true, wrapInNdm: true, indent: true);
+omm.SaveToFile("output.omm", validateBeforeSave: true);
 ```
 
 **OMM ↔ TLE Bidirectional Conversion**
@@ -233,9 +233,9 @@ if (omm.IsTleCompatible)
 }
 
 // TLE to OMM (for archiving/sharing)
-var tle = new TLE("ISS", line1, line2);
-var omm = tle.ToOmm(originator: "My Organization");
-omm.SaveToFile("iss.omm");
+var issTle = new TLE("ISS", line1, line2);
+var issOmm = issTle.ToOmm(originator: "My Organization");
+issOmm.SaveToFile("iss.omm");
 ```
 
 **COSPAR ID Format Handling**
@@ -297,8 +297,8 @@ var opm = spacecraft.ToOpm(
 opm.SaveToFile("iss.opm");
 
 // OPM to Spacecraft (for mission operations)
-var opm = Opm.LoadFromFile("iss.opm");
-var spacecraft = opm.ToSpacecraft(
+var restoredOpm = Opm.LoadFromFile("iss.opm");
+var restored = restoredOpm.ToSpacecraft(
     naifId: -1000,
     maximumOperatingMass: 500000.0,
     clock: new Clock("OnboardClock", 256),
@@ -313,24 +313,25 @@ var stateVector = opm.ToStateVector(observer: earth);
 // Units converted: km → m, km/s → m/s
 
 // StateVector to OPM
-var opm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
+var newOpm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
     originator: "Mission Control");
 ```
 
 **Maneuver Integration**
 ```csharp
+// spacecraft: a propagated spacecraft with a COSPAR id
 // Executed maneuvers are automatically included in ToOpm()
-var spacecraft = CreateSpacecraftWithManeuvers();
-// ... propagate and execute maneuvers ...
-
 var opm = spacecraft.ToOpm(includeManeuvers: true);
 // OPM will contain OpmManeuverParameters for each executed ImpulseManeuver
 
 // Manual maneuver export from ImpulseManeuver
-if (maneuver is ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
+foreach (var maneuver in spacecraft.ExecutedManeuvers)
 {
-    var opmManeuver = impulseManeuver.ToOpmManeuverParameters(referenceFrame: "EME2000");
-    // Contains: epoch, duration, delta-mass, delta-V (km/s)
+    if (maneuver is ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
+    {
+        var opmManeuver = impulseManeuver.ToOpmManeuverParameters(referenceFrame: "EME2000");
+        // Contains: epoch, duration, delta-mass, delta-V (km/s)
+    }
 }
 ```
 
@@ -345,7 +346,7 @@ var userParams = new OpmUserDefinedParameters(
     },
     comments: new[] { "Custom mission parameters" });
 
-var data = new OpmData(stateVector, userDefinedParameters: userParams);
+var data = new OpmData(OpmStateVector.FromStateVector(stateVector), userDefinedParameters: userParams);
 ```
 
 **Covariance Matrix Support**
@@ -358,7 +359,7 @@ var covariance = new CovarianceMatrix(
     czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
     referenceFrame: "ICRF");
 
-var data = new OpmData(stateVector, covariance: covariance);
+var data = new OpmData(OpmStateVector.FromStateVector(stateVector), covariance: covariance);
 ```
 
 **Unit Handling**
@@ -423,17 +424,17 @@ var atmosphere = model.GetAtmosphere(context);
 // atmosphere.Temperature, .Pressure, .Density, .Details (null for simple models)
 
 // Full context with NRLMSISE-00
-var context = AtmosphericContext.FromPlanetodetic(
+var fullContext = AtmosphericContext.FromPlanetodetic(
     altitude: 400000,                           // 400 km
     geodeticLatitude: 45 * Constants.Deg2Rad,
     geodeticLongitude: -75 * Constants.Deg2Rad,
     epoch: new Time(2024, 6, 21, 12, 0, 0)
 );
-var model = new Nrlmsise00Model(SpaceWeather.Nominal);
-var atmosphere = model.GetAtmosphere(context);
+var nrlmsise = new Nrlmsise00Model(SpaceWeather.Nominal);
+var thermosphere = nrlmsise.GetAtmosphere(fullContext);
 
 // Access model-specific details via pattern matching
-if (atmosphere.Details is NrlmsiseDetails details)
+if (thermosphere.Details is NrlmsiseDetails details)
 {
     var o2Density = details.MolecularOxygenDensity;  // m⁻³
     var exoTemp = details.ExosphericTemperature;     // K
@@ -443,7 +444,7 @@ if (atmosphere.Details is NrlmsiseDetails details)
 // full context, the atmosphere of its drag (#674), and the U.S. Standard Atmosphere 1976, its base atmosphere, with an
 // altitude only or a partial context (decided by S. Guillet, 2026-11-14)
 var earth = PlanetsAndMoons.EARTH_BODY;
-var atm = earth.GetAtmosphere(context);  // NRLMSISE-00 nominal: EARTH_BODY has no model
+var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EARTH_BODY has no model
 var low = earth.GetAtmosphere(10000.0);  // U.S. Standard Atmosphere 1976: an altitude only
 ```
 
@@ -474,8 +475,13 @@ The framework supports spherical harmonic gravity modeling using EGM2008 coeffic
 **Usage**
 ```csharp
 // Create Earth with degree-10 geopotential
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+
+// A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
+// (#674): the orbit is built on this earth
+var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, epoch, Frame.ICRF);
+var spacecraft = new Spacecraft(-1000, "Sat", 100.0, 10000.0, clock, orbit);
 
 // The propagator automatically uses the geopotential model when present
 var propagator = new CentralBodyPropagator(window, spacecraft,
@@ -498,7 +504,7 @@ The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturb
 ```csharp
 // Atmospheric drag reads the body's atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without
 // one; another body without a model throws (#674)
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     geopotentialParams, new EarthStandardAtmosphere());
 var drag = new AtmosphericDrag(spacecraft, earth);
 ```
@@ -730,11 +736,12 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 
 *Earth Observation with Sun Tracking*
 ```csharp
-// Keep nadir sensor pointed at Earth while orienting solar panels toward Sun
+// Keep nadir sensor pointed at Earth while orienting solar panels toward Sun (Up, opposite to Down, would be
+// rejected: the body vectors must be at least 5 degrees apart)
 var earthObservation = new TriadAttitude(
     epoch, TimeSpan.FromMinutes(30),
     Spacecraft.Down, earth,    // Primary: nadir pointing
-    Spacecraft.Up, sun,        // Secondary: solar panel toward Sun
+    Spacecraft.Right, sun,     // Secondary: solar panel axis toward Sun
     engine);
 ```
 
@@ -783,14 +790,18 @@ one class reads is loaded by a class fixture and unloaded in its `Dispose` (#668
 
 Test data files are in `Data/SolarSystem/` and copied to output directory.
 
+The C# blocks of this file and of the root `CLAUDE.md` are compiled regions of
+`IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs`, which `ClaudeMdExamplesTests` compares with them and runs
+where they need only `Data/SolarSystem`: change a block and its region together (#668, third round).
+
 **Name shadowing in test namespaces.** `IO.Astrodynamics.Tests` contains the sub-namespaces `Frame`
 and `Time`, and a local `Constants` class. Inside any `IO.Astrodynamics.Tests.*` namespace these
 shadow the library types of the same name, so always qualify them:
 
 ```csharp
-Frames.Frame.ICRF                  // not Frame.ICRF
-TimeSystem.Time.J2000TDB           // not Time.J2000TDB
-IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test helper)
+var icrf = Frames.Frame.ICRF;                     // not Frame.ICRF
+var j2000 = TimeSystem.Time.J2000TDB;             // not Time.J2000TDB
+var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that is the test helper)
 ```
 
 ## Development Guidelines

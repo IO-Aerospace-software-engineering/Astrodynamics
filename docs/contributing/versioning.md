@@ -2352,6 +2352,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `docs/reference/keplerian-elements.md` now says too); `GuideMethodTables_NameMembersOfTheLibrary` checks that every
   method of the guide's member tables is a public method or constructor of the type of its heading, its bases or the
   library's extension methods, with an overload of the written argument count. No library result moves.
+- **The C# examples of the two `CLAUDE.md` files did not compile or threw** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), third round). 11 of the 27
+  blocks of `IO.Astrodynamics.Net/CLAUDE.md` failed against the library: the TLE example read `newTle`, which it never
+  declared; the OMM example saved with `wrapInNdm` and `indent`, parameters of `Opm.SaveToFile` that `Omm.SaveToFile`
+  does not take; the OMM ↔ TLE, OPM ↔ Spacecraft, OPM ↔ StateVector and atmosphere examples declared the same locals
+  twice; the maneuver export called a `CreateSpacecraftWithManeuvers()` that does not exist and an undeclared
+  `maneuver`; the user-defined parameters and covariance examples built an `OpmData` from a `StateVector` (it takes an
+  `OpmStateVector`, from `OpmStateVector.FromStateVector`); the geopotential and drag examples wrote `Frames.Frame`, which
+  does not resolve in an application's namespace. Two more threw: the Earth observation TRIAD pointed `Spacecraft.Down`
+  at the Earth and `Spacecraft.Up`, opposite to it, at the Sun, which `TriadAttitude` rejects (its body vectors at
+  least 5 degrees apart), now `Spacecraft.Right`, the solar panel axis, as in `DEVELOPER_GUIDE.md`; and the geopotential
+  example, read with an orbit about `EARTH_BODY`, listed an Earth of another gravitational field, which a propagation
+  rejects (#674), now with its orbit built on the degree-10 Earth. Every block now compiles: each is the region of a method of
+  `IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs` (the root `CLAUDE.md`'s blocks too), and
+  `ClaudeMdExamplesTests` checks that each block equals its region, compares the declared `IIntegrator` with the
+  library's by reflection, runs the 20 blocks that need only `Data/SolarSystem`, and checks what they state: the
+  catalog number of the TLE text, the mean motion of the OMM in rad/s, the OPM state in km and km/s, the 1976 standard
+  atmosphere at 10 km against its table I, and the Earth observation attitude, Down on the nadir and Right on the Sun's
+  direction perpendicular to it (2.5e-16 and 6.5e-16 rad on Linux x64; bounds 5.0e-16 and 1.3e-15 rad, provisional,
+  twice the Linux x64 worst until the three platforms' CI). The block and region reading of `DeveloperGuideExamplesTests`
+  is shared (`DocumentationCodeBlocks`). Documentation only: no library result moves.
 
 **Changed**
 

@@ -265,6 +265,16 @@
       <None Include="Documentation\DeveloperGuideExamples.cs" Link="Docs\DeveloperGuideExamples.cs">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <!-- The two CLAUDE.md files and their compiled examples, compared by ClaudeMdExamplesTests (#668, third round). -->
+      <None Include="..\..\CLAUDE.md" Link="Docs\CLAUDE.root.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="..\CLAUDE.md" Link="Docs\CLAUDE.net.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="Documentation\ClaudeMdExamples.cs" Link="Docs\ClaudeMdExamples.cs">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <!-- Reconstructed LRO trajectory, used by the tracking-data tests. -->
       <None Remove="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp" />
       <Content Include="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">

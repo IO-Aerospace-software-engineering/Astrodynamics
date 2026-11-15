@@ -100,7 +100,7 @@ The C++ proxy layer uses a `bool` return + `GetLastErrorProxy()` pattern instead
 // Default: SPICE kernel files
 Configuration.Instance.SetDataProvider(new SpiceDataProvider());
 
-// Testing: in-memory, no kernel files required
+// In-memory, no kernel files required (in IO.Astrodynamics.Tests, in a child process only)
 Configuration.Instance.SetDataProvider(new MemoryDataProvider());
 ```
 
@@ -110,6 +110,7 @@ TestKernels.EnsureSolarSystem();
 ```
 No test of that process unloads `Data/SolarSystem`, calls `ClearKernels` or sets the global data provider (a child process instead, as `ColdStartTests` and `MemoryDataProviderBodyTests`, #631, #680), and no kernel a test loads may redefine what `Data/SolarSystem` defines; `KernelReloadGuardTests` and `KernelShadowingTests` check both. A test's own kernels are loaded with `LoadKernels` and unloaded in `finally` or `Dispose` (a class fixture's `Dispose` for a kernel only its class reads, as `KernelWindowSearchKernels` and `FieldOfViewReferenceKernels`). Two more sets are loaded once per process by the same mechanism and never unloaded, under the same guard: `Data/LRO` (`TestKernels.EnsureLro()`, the LRO SPK several classes read) and `Data/OccultationReference` (`TestKernels.EnsureOccultationReference()`) (#668, second round).
 Test data files live in `Data/SolarSystem/` and are copied to the output directory.
+The C# blocks of this file and of `IO.Astrodynamics.Net/CLAUDE.md` are compiled regions of `IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs`, which `ClaudeMdExamplesTests` compares with them and runs where they need only `Data/SolarSystem`: change a block and its region together (#668, third round).
 
 ## Critical Domain Rules
 
