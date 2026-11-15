@@ -34,8 +34,10 @@ the others dropped, a whole second segment included. Split such a document into 
 `validateSchema` and `OmmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
 505.0-B-3) in its form, as SANA publishes them: a root `ndm` or `omm` without a namespace, every element unqualified (the
 form of Space-Track and of the writer, SANA's `ndmxml_unqualified` set) or every element below the root in the
-namespace `urn:ccsds:schema:ndmxml` (the qualified set). Any other root is an error. A root in the namespace, the
-library's earlier form of a bare message, is checked as before, against the OMM schema with that root declared in the
+namespace `urn:ccsds:schema:ndmxml` (the qualified set). Any other root is an error, and so is an `ndm` that holds no
+`omm` child (an empty `ndm`, or one of other messages only), which the NDM master accepts but in which the reader
+finds no OMM (`OMM007`; reported valid before 11.0.0, `Load*` then throwing `OmmParseException`).
+A root in the namespace, the library's earlier form of a bare message, is checked as before, against the OMM schema with that root declared in the
 namespace (an `ndm` root in the namespace has no declaration and is rejected, by SANA too). The unqualified set is the
 embedded one with its `elementFormDefault` set to `unqualified`, the one difference between the two sets SANA publishes.
 

@@ -132,4 +132,29 @@ public class OpmValidatorTests
         Assert.False(_validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(NdmDocuments.TwoSegmentOpm(minimal), "opm")).IsValid);
         Assert.False(_validator.ValidateSchemaFromXml(SatelliteComplete).IsValid);
     }
+
+    // An <ndm> that the NDM/XML 4.0.0 master accepts but that holds no OPM: empty, or holding only an OMM (lxml 6.1.3 with
+    // SANA's unqualified set accepts both). The reader finds no OPM in it, so it is not an OPM document (third round of #668:
+    // valid with no issue before, Opm.LoadFromString throwing OpmParseException)
+    [Theory]
+    [InlineData(null)]
+    [InlineData("unqualified-ndm")]
+    [InlineData("qualified-ndm")]
+    public void ValidateSchema_NdmWithoutOpm_IsInvalid(string? ommForm)
+    {
+        var xml = ommForm == null ? "<ndm/>" : NdmDocuments.InForm(File.ReadAllText(NdmDocuments.IssOmmPath), "omm", ommForm);
+        var parse = Assert.Throws<OpmParseException>(() => new OpmReader().ReadFromString(xml));
+        Assert.Equal("Could not find OPM element in document.", parse.Message);
+
+        var result = _validator.ValidateSchemaFromXml(xml);
+
+        Assert.False(result.IsValid);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal("OPM006", error.Code);
+        Assert.Contains("<opm>", error.Message);
+        Assert.Empty(result.Warnings);
+        var ex = Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+        Assert.Equal(error.Message, Assert.Single(ex.ValidationResult.Errors).Message);
+        NdmDocuments.WithTempFile(xml, file => Assert.Contains(_validator.ValidateFile(file).Errors, e => e.Message == error.Message));
+    }
 }

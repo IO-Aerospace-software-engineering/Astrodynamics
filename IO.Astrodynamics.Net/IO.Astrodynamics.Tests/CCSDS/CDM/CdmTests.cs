@@ -220,6 +220,40 @@ public class CdmTests
         }
     }
 
+    // An <ndm> that the NDM/XML 4.0.0 schema accepts but that holds no CDM: empty, or holding only an OMM (lxml 6.1.3 with
+    // SANA's unqualified set accepts both), without a namespace or in the namespace, whose root the CDM validator checks
+    // against the NDM schema. The reader finds no CDM in it, so it is not a CDM document (third round of #668: valid with
+    // no issue before)
+    [Theory]
+    [InlineData("empty")]
+    [InlineData("unqualified-ndm")]
+    [InlineData("qualified-ndm")]
+    [InlineData("namespace, empty")]
+    [InlineData("namespace, omm")]
+    public void ValidateSchema_NdmWithoutCdm_IsInvalid(string document)
+    {
+        var issOmm = File.ReadAllText(NdmDocuments.IssOmmPath);
+        var xml = document switch
+        {
+            "empty" => "<ndm/>",
+            "namespace, empty" => $"<ndm xmlns=\"{NdmDocuments.NdmNamespace}\"/>",
+            "namespace, omm" => new XElement(XName.Get("ndm", NdmDocuments.NdmNamespace),
+                XElement.Parse(NdmDocuments.QualifiedMessage(issOmm, "omm"))).ToString(),
+            _ => NdmDocuments.InForm(issOmm, "omm", document)
+        };
+        var parse = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        Assert.Equal("Could not find CDM element in document.", parse.Message);
+
+        var result = Cdm.ValidateSchemaFromXml(xml);
+
+        Assert.False(result.IsValid);
+        var error = Assert.Single(result.Issues);
+        Assert.Equal(CdmValidationSeverity.Error, error.Severity);
+        Assert.Equal("CDM001", error.Code);
+        Assert.Contains("<cdm>", error.Message);
+        NdmDocuments.WithTempFile(xml, file => Assert.Equal(error.Message, Assert.Single(Cdm.ValidateSchema(file).Issues).Message));
+    }
+
     [Fact]
     public void ReadFromString_ParsesQualifiedAndUnqualifiedDocuments()
     {

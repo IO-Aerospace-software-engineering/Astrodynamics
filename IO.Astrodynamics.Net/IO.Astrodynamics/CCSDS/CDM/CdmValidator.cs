@@ -52,8 +52,10 @@ public sealed class CdmValidator
     /// A root without a namespace, <c>ndm</c> or <c>cdm</c>, is validated against the NDM/XML 4.0.0 schemas of its form
     /// (CCSDS 505.0-B-3), as SANA publishes them: the unqualified set when no element is in the NDM/XML namespace, the
     /// qualified set otherwise (the elements below the root in the namespace); any other root without a namespace, or in
-    /// another namespace, is a CDM001 error. A root in the NDM/XML namespace, the form <see cref="CdmWriter"/> writes
-    /// (#615), is validated as before, against the CDM schema with that root declared in the namespace. Before the third
+    /// another namespace, is a CDM001 error, and so is an <c>ndm</c>, without a namespace or in it, that holds no <c>cdm</c>
+    /// child (empty, or of other messages only), which the NDM schema accepts but in which the reader finds no CDM (valid
+    /// before the fix of the third round of #668). A root in the NDM/XML namespace, the form <see cref="CdmWriter"/> writes
+    /// (#615), is otherwise validated as before, against the CDM schema with that root declared in the namespace. Before the third
     /// round of #668 a standard form matched no declaration and was reported valid, with a warning per element and nothing
     /// below its root checked (#614).
     /// </remarks>
@@ -76,6 +78,15 @@ public sealed class CdmValidator
 
             XmlSchemaSet schemaSet;
             var root = document.Root!;
+
+            // An <ndm>, without a namespace or in the namespace, that holds no CDM: a valid NDM, not a CDM document (third
+            // round of #668)
+            var messageError = NdmXmlStandardForms.MessageError(root, "cdm");
+            if (messageError != null)
+            {
+                result.AddError(SchemaValidationCode, messageError, $"Line {((IXmlLineInfo)root).LineNumber}");
+            }
+
             if (root.Name.NamespaceName == CcsdsNamespace)
             {
                 // A root in the namespace, the form CdmWriter writes (#615): the synthetic root, as before

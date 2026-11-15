@@ -557,11 +557,14 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             {
                 var result = new OpmValidator().ValidateFile(file);
 
-                // The schema rejects the second segment (third round of #668: the reader's "2 segment elements" before)
+                // The schema rejects the second segment (third round of #668: the reader's "2 segment elements" before,
+                // reported under the path "Parser" as "Failed to parse OPM: ...", the schema then checking no unqualified file)
                 Assert.False(result.IsValid);
                 var error = Assert.Single(result.Errors);
                 Assert.Equal("OPM006", error.Code);
-                Assert.Contains("segment", error.Message);
+                Assert.Contains("'segment'", error.Message);
+                Assert.DoesNotContain("Failed to parse", error.Message);
+                Assert.StartsWith("Line ", error.Path);
             });
         }
 

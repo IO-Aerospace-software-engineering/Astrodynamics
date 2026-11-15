@@ -42,11 +42,14 @@ public class OmmValidatorTests
         {
             var result = _validator.ValidateFile(file);
 
-            // The schema rejects the second segment (third round of #668: the reader's "2 segment elements" before)
+            // The schema rejects the second segment (third round of #668: the reader's "2 segment elements" before, reported
+            // under the path "Parser" as "Failed to parse OMM: ...", the schema then checking no unqualified file)
             Assert.False(result.IsValid);
             var error = Assert.Single(result.Errors);
             Assert.Equal("OMM007", error.Code);
-            Assert.Contains("segment", error.Message);
+            Assert.Contains("'segment'", error.Message);
+            Assert.DoesNotContain("Failed to parse", error.Message);
+            Assert.StartsWith("Line ", error.Path);
         });
     }
 
@@ -159,6 +162,31 @@ public class OmmValidatorTests
             var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromString(xml));
             Assert.False(ex.ValidationResult.IsValid);
         }
+    }
+
+    // An <ndm> that the NDM/XML 4.0.0 master accepts but that holds no OMM: empty, or holding only an OPM (lxml 6.1.3 with
+    // SANA's unqualified set accepts both). The reader finds no OMM in it, so it is not an OMM document (third round of #668:
+    // valid with no issue before, Omm.LoadFromString throwing OmmParseException)
+    [Theory]
+    [InlineData(null)]
+    [InlineData("unqualified-ndm")]
+    [InlineData("qualified-ndm")]
+    public void ValidateSchema_NdmWithoutOmm_IsInvalid(string? opmForm)
+    {
+        var xml = opmForm == null ? "<ndm/>" : NdmDocuments.InForm(OPM.OpmReaderTests.FullOpm().ToXmlString(), "opm", opmForm);
+        var parse = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+        Assert.Equal("Could not find OMM element in document.", parse.Message);
+
+        var result = _validator.ValidateSchemaFromXml(xml);
+
+        Assert.False(result.IsValid);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal("OMM007", error.Code);
+        Assert.Contains("<omm>", error.Message);
+        Assert.Empty(result.Warnings);
+        var ex = Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
+        Assert.Equal(error.Message, Assert.Single(ex.ValidationResult.Errors).Message);
+        NdmDocuments.WithTempFile(xml, file => Assert.Contains(_validator.ValidateFile(file).Errors, e => e.Message == error.Message));
     }
 
     #endregion

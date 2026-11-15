@@ -2368,8 +2368,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the embedded files with their single `elementFormDefault` set to `unqualified`, which is SANA's `ndmxml_unqualified`
   set (measured: the 14 files differ by that attribute alone); the qualified set otherwise (every element below the root
   in the namespace). A root other than `ndm` or the message's, or one in another namespace, is an error (`OMM007`,
-  `OPM006`, `CDM001`). A root in the NDM/XML namespace, IO's earlier form of a bare message and the form `CdmWriter`
-  writes (#615), is validated as before, bit for bit. The verdicts were measured against lxml 6.1.3 (libxml2) on SANA's
+  `OPM006`, `CDM001`), and so is an `ndm` that holds no child of the validator's message, which the NDM master accepts
+  (lxml 6.1.3 on SANA's unqualified set accepts an empty `ndm` and one of an OPM only) but in which the reader finds no
+  message: `OmmValidator` reported `<ndm/>` or an NDM of one OPM valid with no issue, `Omm.LoadFromString` then throwing
+  `OmmParseException`, `OpmValidator` an NDM of one OMM, and the CDM validator the same, its `ndm` root in the namespace
+  included (`NdmXmlStandardForms.MessageError`; `ValidateSchema_NdmWithout{Omm,Opm,Cdm}_IsInvalid`). A root in the
+  NDM/XML namespace, IO's earlier form of a bare message and the form `CdmWriter` writes (#615), is validated as before,
+  bit for bit, but for that CDM `ndm`. The verdicts were measured against lxml 6.1.3 (libxml2) on SANA's
   unqualified set (sanaregistry.org/files/ndmxml_unqualified/, read 2026-11-15, SHA-256 of omm-3.0 e54622ea…2a1a,
   opm-3.0 193e2eff…9519, common-4.0 3ae25a91…dcde, master-4.0 2abc69ce…df36) and on the qualified set: a prototype of
   this rule agreed with lxml on the 67 documents of the measurement (iss.omm, H2ADEB.omm, iss_minimal.xml and
@@ -3114,10 +3119,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   valid with a warning per element: `OmmValidator`/`OpmValidator.ValidateSchema` and `Cdm.ValidateSchema*` report the
   error, `ValidateFile` reports the file invalid, `Omm`/`Opm.LoadFrom*` with the default `validateSchema: true` throw
   `OmmValidationException` or `OpmValidationException` (where they loaded, or threw a parse exception or an
-  `ArgumentOutOfRangeException`), and `TryLoadFromFile` returns false with the schema error. A valid document,
-  Space-Track's and the writers' output included, stays valid, now without warnings. A root in the NDM/XML namespace,
-  and every read with `validateSchema: false`, are unchanged, bit for bit. Migration: fix the document, or pass
-  `validateSchema: false` to read it as before.
+  `ArgumentOutOfRangeException`), and `TryLoadFromFile` returns false with the schema error. An `ndm` that holds no
+  message of the validator's type (empty, or of other messages only) is invalid too, without a namespace or, for the CDM,
+  in it: `Omm`/`Opm.LoadFrom*` throw the validation exception where they threw `OmmParseException` or `OpmParseException`
+  ("Could not find ... element in document"). A valid document,
+  Space-Track's and the writers' output included, stays valid, now without warnings. A root in the NDM/XML namespace
+  but a CDM `ndm` without a CDM, and every read with `validateSchema: false`, are unchanged, bit for bit. Migration: fix
+  the document, or pass `validateSchema: false` to read it as before; catch the validation exception for an NDM without
+  the message.
 - **Breaking: the managed threshold searches return the windows, gaps and crossings shorter than the step**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678), Fixed above). Under the same signatures, the searches the library
   runs (`FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and `FindWindowsOnIlluminationConstraint`

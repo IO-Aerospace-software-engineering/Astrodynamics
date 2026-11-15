@@ -82,7 +82,9 @@ public class OpmValidator
     /// A root without a namespace, <c>ndm</c> or <c>opm</c>, is validated against the NDM/XML 4.0.0 schemas of its form
     /// (CCSDS 505.0-B-3), as SANA publishes them: the unqualified set when no element is in the NDM/XML namespace (the form
     /// of Space-Track and of the writer), the qualified set otherwise (the elements below the root in the namespace); any
-    /// other root without a namespace, or in another namespace, is a OPM006 error. A root in the NDM/XML namespace is
+    /// other root without a namespace, or in another namespace, is a OPM006 error, and so is an <c>ndm</c> that holds no
+    /// <c>opm</c> child (empty, or of other messages only), which the NDM master accepts but in which the reader finds no
+    /// OPM (valid before the fix of the third round of #668, the reader then throwing its parse exception). A root in the NDM/XML namespace is
     /// validated as before, against the OPM schema with that root declared in the namespace. Before the third round of
     /// #668 an unqualified document matched no declaration and was reported valid, with a warning per element and nothing
     /// below its root checked.
@@ -119,6 +121,13 @@ public class OpmValidator
                 {
                     result.AddError(SchemaValidation, rootError, $"Line {((IXmlLineInfo)root).LineNumber}");
                     return result;
+                }
+
+                // An <ndm> that holds no OPM: a valid NDM, not an OPM document (third round of #668)
+                var messageError = NdmXmlStandardForms.MessageError(root, "opm");
+                if (messageError != null)
+                {
+                    result.AddError(SchemaValidation, messageError, $"Line {((IXmlLineInfo)root).LineNumber}");
                 }
 
                 schemaSet = NdmXmlStandardForms.For(document);

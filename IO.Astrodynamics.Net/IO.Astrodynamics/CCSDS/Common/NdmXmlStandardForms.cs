@@ -65,6 +65,32 @@ internal static class NdmXmlStandardForms
                string.Join(" and ", acceptedRoots.Select(r => $"<{r}>")) + " without a namespace.";
     }
 
+    /// <summary>
+    /// The message of the error for an <c>ndm</c> root, without a namespace or in the NDM/XML namespace, that holds no
+    /// <paramref name="messageName"/> child, or <c>null</c> for any other root or an <c>ndm</c> that holds one.
+    /// </summary>
+    /// <remarks>
+    /// The NDM/XML 4.0.0 master accepts an <c>ndm</c> of any messages, or of none: an empty <c>ndm</c>, or one that holds an
+    /// OPM only, is a valid NDM (lxml 6.1.3 on SANA's unqualified set accepts both), but not a document of the message the
+    /// validator checks, in which the reader finds no message (its parse exception, "Could not find ... element in
+    /// document"). Before the fix of the third round of #668 such a document was reported valid with no issue. The child is
+    /// read in either namespace, the schema checking the one of its form.
+    /// </remarks>
+    internal static string? MessageError(XElement root, string messageName)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        bool InForm(XName name) => name.Namespace == XNamespace.None || name.NamespaceName == Namespace;
+        if (root.Name.LocalName != "ndm" || !InForm(root.Name) ||
+            root.Elements().Any(e => e.Name.LocalName == messageName && InForm(e.Name)))
+        {
+            return null;
+        }
+
+        var type = messageName.ToUpperInvariant();
+        return $"The <ndm> root holds no <{messageName}> message: it is not an NDM/XML {type} document, which is an " +
+               $"<{messageName}> root or an <ndm> holding an <{messageName}> (NDM/XML 4.0.0, CCSDS 505.0-B-3).";
+    }
+
     private static XmlSchemaSet Build(bool unqualified)
     {
         var resolver = new Resolver(unqualified);
