@@ -82,7 +82,15 @@ Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipan
   `ProtectedParticipantMetadata.IntrackThrust` or `SecondaryParticipantMetadata.IntrackThrust` to state the value of an
   OD; `null` keeps the inferred value
   ([#684](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/684), decided by S. Guillet,
-  2026-11-13: `YES` for a spacecraft with an engine and `NO` for one without before).
+  2026-11-13: `YES` for a spacecraft with an engine and `NO` for one without before);
+- `SOLAR_RAD_PRESSURE` is omitted, as `GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS` and `EARTH_TIDES`
+  are: it states whether solar radiation pressure perturbations were used for the orbit determination of the object
+  (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional; wording to be verified by S. Guillet), not whether the spacecraft has a
+  reflectivity coefficient. For a covariance the library propagated it is `YES` or `NO` from the forces of the
+  propagation (below). Set `ProtectedParticipantMetadata.SolarRadPressure` or
+  `SecondaryParticipantMetadata.SolarRadPressure` to state the value of an OD; `null` keeps the inferred value (third
+  round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): `YES` for a
+  spacecraft whose `SolarRadiationCoeff` is above 0 before, whether or not any solar radiation pressure was modeled).
 
 ### Propagated covariance
 
@@ -97,7 +105,8 @@ For a participant whose covariance was propagated (`CovarianceSource.Propagated`
   EGM2008, its default; `GEOPOTENTIAL: nD nO` for harmonics evaluated with other constants, given to
   `GeopotentialModelParameters` or those of another body; `POINT MASS` otherwise), `ATMOSPHERIC_MODEL` (`NRLMSISE-00`,
   `US STANDARD ATMOSPHERE 1976`, `MARS STANDARD ATMOSPHERE`, `NONE` without drag), `N_BODY_PERTURBATIONS` (the third
-  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` describe the forces the propagation actually used. The library
+  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` (`YES` or `NO`, whatever the `SolarRadiationCoeff` of the
+  spacecraft) describe the forces the propagation actually used. The library
   does not know the name of a model whose constants are given; set it through `ProtectedParticipantMetadata` or
   `SecondaryParticipantMetadata` (`GravityModel = "EGM-96: 36D 36O"`), which take precedence;
 - `INTRACK_THRUST` is `NO`, whatever the engines of the spacecraft: the forces of the propagation hold no thrust model.

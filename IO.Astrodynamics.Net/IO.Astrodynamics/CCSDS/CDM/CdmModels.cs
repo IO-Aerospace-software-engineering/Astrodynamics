@@ -102,6 +102,18 @@ public sealed record CdmParticipantMetadata
 
     public string? NBodyPerturbations { get; init; }
 
+    /// <summary>
+    /// <c>SOLAR_RAD_PRESSURE</c>: whether solar radiation pressure perturbations were used for the orbit determination of the
+    /// object (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional), not whether the object has a reflectivity coefficient.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="IO.Astrodynamics.SSA.EncounterCase.ToCdm"/> infers it from the forces of the propagation for a participant
+    /// whose covariance the library propagated to TCA, as it fills the other force-model keywords; otherwise it infers
+    /// nothing and the keyword is omitted, the library running no orbit determination. Set it in
+    /// <see cref="CdmExportOptions.ProtectedParticipantMetadata"/> or <see cref="CdmExportOptions.SecondaryParticipantMetadata"/>
+    /// to state the value of an OD; <c>null</c> keeps the inferred value (<c>true</c> for a spacecraft whose reflectivity
+    /// coefficient is above 0 before).
+    /// </remarks>
     public bool? SolarRadPressure { get; init; }
 
     public bool? EarthTides { get; init; }

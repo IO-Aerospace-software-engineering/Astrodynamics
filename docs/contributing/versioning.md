@@ -2313,6 +2313,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the issue (an engine on both spacecraft: no `INTRACK_THRUST` element, `MANEUVERABLE` still `YES`, schema-valid, read
   back null) and each override of either object; `CdmPropagatedCovarianceTests` checks `NO` for two propagated
   covariances, a secondary with an engine included, and the keyword omitted for the covariance held in RTN.
+- **The CDM wrote `SOLAR_RAD_PRESSURE = YES` for a covariance it did not propagate** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). Outside a covariance the
+  library propagated to TCA, `EncounterCase.ToCdm` wrote `SOLAR_RAD_PRESSURE` from the reflectivity coefficient of a
+  spacecraft, `YES` for a `SolarRadiationCoeff` above 0 (1.0 by default), whether or not any solar radiation pressure
+  was modeled: for a manual encounter never propagated, a covariance given at TCA or held in RTN, and a participant
+  propagated without solar radiation pressure, where CCSDS 508.0-B-1 Cor. 2 (Table 3-3; wording to be verified by
+  S. Guillet) defines it, as `INTRACK_THRUST` (#684), as whether that perturbation was used for the OD of the object.
+  Under the same signatures, the keyword is `YES` or `NO` from the forces of the propagation of a covariance the library
+  propagated, as before, and omitted otherwise, as `GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS`,
+  `INTRACK_THRUST` and `EARTH_TIDES` are; a value given in `ProtectedParticipantMetadata`/`SecondaryParticipantMetadata`
+  is written, `null` keeping the inferred one. `CdmTests` checks the manual encounter (no element, read back null) and
+  each override of either object; `CdmPropagatedCovarianceTests` checks `NO` for two covariances propagated in RK7(8)
+  without solar radiation pressure and a Cr of 1.5, and the keyword omitted for Velocity-Verlet and for the covariance
+  held in RTN.
 - **A message with two segments loaded its first one silently** (second round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The OMM and OPM readers found
   the header, body, segment, metadata and data of a message by their first element (`FirstOrDefault`), so an OMM whose
@@ -3045,6 +3059,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   omitted, and `Metadata.IntrackThrust` of the result of `ToCdm` is null, where a spacecraft with an engine got `YES`
   and one without `NO`; for a propagated covariance it is `NO`, even with engines. Migration: set
   `CdmExportOptions.ProtectedParticipantMetadata.IntrackThrust` or `SecondaryParticipantMetadata.IntrackThrust` to
+  state the value of an OD.
+- **Breaking: the CDM writes `SOLAR_RAD_PRESSURE` only for a covariance the library propagated** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): the text of an
+  exported CDM changes. For a participant whose covariance the library did not propagate the keyword is omitted, and
+  `Metadata.SolarRadPressure` of the result of `ToCdm` is null, where a spacecraft got `YES` (`NO` for a
+  `SolarRadiationCoeff` of 0); an export with a propagated covariance is unchanged, bit for bit. Migration: set
+  `CdmExportOptions.ProtectedParticipantMetadata.SolarRadPressure` or `SecondaryParticipantMetadata.SolarRadPressure` to
   state the value of an OD.
 - **Breaking: a message with several segments, or a repeated structural element, throws** (second round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): an OMM or OPM

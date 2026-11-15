@@ -369,8 +369,10 @@ internal static class CdmExporter
             GravityModel = forceModel?.GravityModel,
             AtmosphericModel = forceModel?.AtmosphericModel,
             NBodyPerturbations = forceModel?.NBodyPerturbations,
-            SolarRadPressure = forceModel?.SolarRadiationPressure ??
-                               (source is Spacecraft spacecraft ? spacecraft.SolarRadiationCoeff > 0.0 : null),
+            // Whether solar radiation pressure was used for the OD (CCSDS 508.0-B-1 Cor. 2, Table 3-3), as the other
+            // force-model keywords: YES or NO from the forces of the propagation of a covariance this library propagated,
+            // omitted otherwise (YES from a reflectivity coefficient above 0, a capability, before)
+            SolarRadPressure = forceModel?.SolarRadiationPressure,
             // Whether in-track thrust modeling was used for the OD (CCSDS 508.0-B-1 Cor. 2, Table 3-3), not the capability
             // MANEUVERABLE states: NO for a covariance this library propagated, whose force model holds no thrust; omitted
             // otherwise, the library running no OD (#684, decided by S. Guillet, 2026-11-13: YES for a spacecraft with an

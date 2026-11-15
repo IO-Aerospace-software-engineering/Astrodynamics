@@ -84,7 +84,11 @@ public class CdmTests
         Assert.Equal(CdmManeuverable.Yes, protectedSegment.Metadata.Maneuverable);
         Assert.Equal("EARTH", protectedSegment.Metadata.OrbitCenter);
         Assert.Equal(CdmReferenceFrame.Gcrf, protectedSegment.Metadata.ReferenceFrame);
-        Assert.True(protectedSegment.Metadata.SolarRadPressure);
+        // No OD and no propagated covariance: whether solar radiation pressure was used for the OD is not stated (CCSDS
+        // 508.0-B-1 Cor. 2, Table 3-3; YES from Cr > 0, a capability, before)
+        Assert.Null(protectedSegment.Metadata.SolarRadPressure);
+        Assert.Null(secondarySegment.Metadata!.SolarRadPressure);
+        Assert.DoesNotContain(XDocument.Parse(cdm.WriteToString()).Descendants(), e => e.Name.LocalName == "SOLAR_RAD_PRESSURE");
         // No OD and no propagated covariance: whether in-track thrust was modeled for the OD is not stated (#684; NO, from
         // the absent engines, before)
         Assert.Null(protectedSegment.Metadata.IntrackThrust);
@@ -567,6 +571,46 @@ public class CdmTests
         var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
         Assert.Equal(value, Cdm.ReadFromString(xml).Segments[given].Metadata!.IntrackThrust);
+    }
+
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(1, false)]
+    [InlineData(1, null)]
+    [InlineData(2, true)]
+    [InlineData(2, false)]
+    [InlineData(2, null)]
+    public void ToCdm_SolarRadPressureOverride_SetsEitherValueAndNullKeepsTheDefault(int participant, bool? value)
+    {
+        // Arrange: the value of one participant given, the caller stating that of its OD; a null override keeps the default,
+        // omitted without a propagated covariance
+        var encounter = CreateManualEncounterCase();
+        var metadata = new CdmParticipantMetadata { SolarRadPressure = value };
+        var options = new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 30, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-SRP-OVERRIDE",
+            ProtectedParticipantMetadata = participant == 1 ? metadata : null,
+            SecondaryParticipantMetadata = participant == 2 ? metadata : null
+        };
+
+        // Act
+        var cdm = encounter.ToCdm(options);
+        var xml = cdm.WriteToString();
+
+        // Assert: YES or NO as given, read back; omitted for null; the other participant omitted; the CDM schema-valid (the
+        // keyword is optional, minOccurs 0 in ndmxml-4.0.0-cdm-1.0.xsd)
+        int given = participant - 1;
+        Assert.Equal(value, cdm.Segments[given].Metadata!.SolarRadPressure);
+        Assert.Null(cdm.Segments[1 - given].Metadata!.SolarRadPressure);
+        var written = XDocument.Parse(xml).Descendants().Where(e => e.Name.LocalName == "SOLAR_RAD_PRESSURE")
+            .Select(e => e.Value).ToArray();
+        Assert.Equal(value switch { true => new[] { "YES" }, false => new[] { "NO" }, _ => Array.Empty<string>() }, written);
+        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
+        Assert.True(cdm.Validate().IsValid);
+        Assert.Equal(value, Cdm.ReadFromString(xml).Segments[given].Metadata!.SolarRadPressure);
     }
 
     [Fact]

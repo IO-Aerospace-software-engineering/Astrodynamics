@@ -240,6 +240,71 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         Assert.Null(heldCdm.Segments[1].Metadata.IntrackThrust);
     }
 
+    [Theory]
+    [InlineData("RK7(8)")]
+    [InlineData("Velocity-Verlet")]
+    public void ToCdm_PropagationWithoutSolarRadiationPressure_StatesNoOrOmitsIt(string integrator)
+    {
+        // Arrange: both participants propagated with drag and without solar radiation pressure, their Cr 1.5 (a capability)
+        var protectedCraft = IO.Astrodynamics.Tests.Propagators.Variational.ReferenceCase.NewSpacecraft(
+            integrator == "RK7(8)" ? -6321 : -6331, _case.PointMassProtectedStart, reflectivityCoefficient: 1.5);
+        var secondaryCraft = IO.Astrodynamics.Tests.Propagators.Variational.ReferenceCase.NewSpacecraft(
+            integrator == "RK7(8)" ? -6322 : -6332, _case.PointMassSecondaryStart, reflectivityCoefficient: 1.5);
+        var window = new Window(CdmPropagatedCovarianceCase.Start, CdmPropagatedCovarianceCase.Start.AddHours(3.0));
+        foreach (var craft in new[] { protectedCraft, secondaryCraft })
+        {
+            if (integrator == "RK7(8)")
+            {
+                craft.Propagate(window, _case.PointMassBodies, new RK78Integrator(1e-11, 1e-11), true, false,
+                    TimeSpan.FromSeconds(60.0));
+            }
+            else
+            {
+                craft.Propagate(window, _case.PointMassBodies, true, false, TimeSpan.FromSeconds(1.0));
+            }
+        }
+
+        var export = new CdmExportOptions { AllowStaleCovariance = true };
+
+        // Act and assert: an RK7(8) covariance propagated to TCA states the forces of its propagation, NO (CCSDS 508.0-B-1
+        // Cor. 2, Table 3-3: whether solar radiation pressure was used; YES from Cr before)
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            CdmPropagatedCovarianceCase.AnalysisWindow);
+        var cdm = encounter.ToCdm(export);
+        if (integrator == "RK7(8)")
+        {
+            Assert.Equal(CovarianceSource.Propagated, encounter.ProtectedCovariance.Source);
+            Assert.Equal(CovarianceSource.Propagated, encounter.SecondaryCovariance.Source);
+            Assert.False(cdm.Segments[0].Metadata.SolarRadPressure);
+            Assert.False(cdm.Segments[1].Metadata.SolarRadPressure);
+            Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(cdm.WriteToString(),
+                "<SOLAR_RAD_PRESSURE>NO</SOLAR_RAD_PRESSURE>").Count);
+        }
+        else
+        {
+            // Velocity-Verlet propagates no covariance: the covariance held in RTN, nothing stated
+            Assert.NotEqual(CovarianceSource.Propagated, encounter.ProtectedCovariance.Source);
+            AssertOmitted(cdm);
+        }
+
+        // The covariance held in RTN was not propagated: omitted, as the other force-model keywords (YES from Cr before)
+        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+        AssertOmitted(held.ToCdm(export));
+
+        static void AssertOmitted(Cdm cdm)
+        {
+            Assert.Null(cdm.Segments[0].Metadata.SolarRadPressure);
+            Assert.Null(cdm.Segments[1].Metadata.SolarRadPressure);
+            Assert.Null(cdm.Segments[0].Metadata.GravityModel);
+            var xml = cdm.WriteToString();
+            Assert.DoesNotContain("SOLAR_RAD_PRESSURE", xml);
+            var schema = Cdm.ValidateSchemaFromXml(xml);
+            Assert.True(schema.IsValid, string.Join("; ", schema.Issues.Select(i => i.Message)));
+            Assert.True(cdm.Validate().IsValid);
+        }
+    }
+
     private static Spacecraft ReferenceSpacecraft(int naifId, StateVector start) =>
         IO.Astrodynamics.Tests.Propagators.Variational.ReferenceCase.NewSpacecraft(naifId, start);
 
