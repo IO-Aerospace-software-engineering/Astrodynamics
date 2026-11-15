@@ -569,6 +569,63 @@ namespace IO.Astrodynamics.Tests.Mission
 
 
         [Fact]
+        public async Task SimulateAsync_PropagatesTheStar_AndItsSpkHoldsTheCatalogPositionWithProperMotion()
+        {
+            // Arrange: IsPropagated was always false before (it read an output directory no code set)
+            var start = new TimeSystem.Time(2001, 1, 1);
+            var end = start.AddDays(365 * 4);
+            var star = new Star(668005, "star668005", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
+                start);
+            var scenario = new Scenario("scn668", new Astrodynamics.Mission.Mission("mission668"), new Window(start, end));
+            scenario.AddStar(star);
+            var step = TimeSpan.FromDays(365.0);
+            Assert.False(star.IsPropagated);
+
+            // Act
+            await scenario.SimulateAsync(false, false, step);
+
+            // Assert: the stored states exist, and SPICE reads them back from the SPK the star writes, against the catalog
+            // position moved by its proper motion, written here: after k steps of 365 days, dt = 365 k / 365.25 Julian
+            // years, the declination and the right ascension 1 + 0.1 dt rad (no wrap over the window: at most 1.40 rad),
+            // and the position at the star's distance by CSPICE (latrec_c, the computation of radrec_c)
+            Assert.True(star.IsPropagated);
+            var directory = Directory.CreateTempSubdirectory("star668");
+            var spk = new FileInfo(Path.Combine(directory.FullName, "star668005.bsp"));
+            star.WriteEphemeris(spk);
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                double worst = 0.0;
+                int k = 0;
+                for (var epoch = start; epoch <= end; epoch += step, k++)
+                {
+                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None)
+                        .ToStateVector();
+                    double dt = 365.0 * k / 365.25;
+                    double angle = 1.0 + 0.1 * dt;
+                    var rectangular = IO.Astrodynamics.Tests.Body.CspiceDirect.Radrec(star.Distance, angle, angle);
+                    var catalog = new Vector3(rectangular[0], rectangular[1], rectangular[2]);
+                    double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
+                    _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: step {k}, relative position {relative:E3}");
+                    worst = System.Math.Max(worst, relative);
+                }
+
+                Assert.Equal(5, k);
+
+                // Provisional: twice the Linux worst against latrec_c (1.982e-16, 2026-11-15), to be read again on Windows and
+                // macOS arm64. The distance is the star's own (Distance, from its parallax): the parsec of the library is
+                // not what this test measures
+                _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: worst relative position {worst:E3}");
+                Assert.True(worst <= 4.0e-16, $"{worst:E3}");
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                directory.Delete(true);
+            }
+        }
+
+        [Fact]
         public void Equality()
         {
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission02");

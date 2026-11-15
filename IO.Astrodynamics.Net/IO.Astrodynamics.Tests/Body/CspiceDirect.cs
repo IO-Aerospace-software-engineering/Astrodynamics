@@ -102,6 +102,25 @@ internal static class CspiceDirect
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void oscltx_c([In] double[] state, double et, double mu, [Out] double[] elts);
 
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void latrec_c(double radius, double longitude, double latitude, [Out] double[] rectan);
+
+    /// <summary>
+    /// The rectangular coordinates of a range, right ascension and declination: <c>latrec_c</c> of the range, the right
+    /// ascension as longitude and the declination as latitude, what CSPICE's <c>radrec_c</c> computes (radrec_c is not
+    /// exported by the native library).
+    /// </summary>
+    internal static double[] Radrec(double range, double rightAscension, double declination)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var rectan = new double[3];
+            latrec_c(range, rightAscension, declination, rectan);
+            Check("latrec");
+            return rectan;
+        }
+    }
+
     /// <summary>The planetographic coordinates of a body-fixed point (<c>recpgr_c</c>): the longitude in [0, 2π] in the
     /// sense of the body (the kernel pool's), the latitude and the altitude on the spheroid of <paramref name="re"/> and
     /// <paramref name="f"/>, in the units of the point.</summary>

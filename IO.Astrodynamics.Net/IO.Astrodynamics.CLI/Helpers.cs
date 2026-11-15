@@ -23,7 +23,8 @@ public class Helpers
 {
     /// <summary>
     /// The degree of the embedded EGM2008 model of the Earth, <c>Data/EGM2008_to100_TideFree.txt</c>, whose last line holds
-    /// n = m = 100: a field pads the degrees beyond its file with zeros, so a degree above it is an argument error.
+    /// n = m = 100, complete from degree 2: a degree above it is an argument error, checked by the command before anything
+    /// is loaded (the field also rejects a degree above its file, #689).
     /// </summary>
     internal const ushort EarthGeopotentialMaximumDegree = 100;
 

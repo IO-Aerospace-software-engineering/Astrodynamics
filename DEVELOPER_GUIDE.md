@@ -1590,7 +1590,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)
 
 **Integrator Interface (`IIntegrator`):**
-- `Initialize(StateVector initialState)` — set observer, frame, workspace
+- `Initialize(StateVector initialState)` — set observer, frame, workspace; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), and after each event
 - `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`
 - Default: `VVIntegrator` (Velocity-Verlet, fixed-step, event detection at step boundaries)
 - `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)
@@ -1696,7 +1696,7 @@ Computes the full 3D gravitational acceleration including spherical harmonic per
 **Normalization convention:** Geodesy (fully-normalized) without Condon-Shortley phase:
 `P_bar_nm = sqrt((2 - delta_0m)(2n+1)(n-m)!/(n+m)!) * P_nm`
 
-**Supported model file:** EGM2008 (tide-free), included as `Data/SolarSystem/EGM2008_to70_TideFree`. The file provides coefficients C_nm and S_nm from degree 2 to degree 70.
+**Supported model file:** EGM2008 (tide-free), included as `Data/SolarSystem/EGM2008_to70_TideFree`. The file provides coefficients C_nm and S_nm from degree 2 to degree 70. The degree of a field is at most the highest degree of its file, whose every coefficient (n, m) with 2 ≤ n ≤ degree must be present: a degree above the file throws `ArgumentOutOfRangeException` (`maxDegrees`), a missing coefficient `ArgumentException`, when the body or the field is built (#689; before 11.0.0 both were read as zeros). Degrees 0 and 1, absent from the file, are the point mass.
 
 **Thread safety:** `GeopotentialGravitationalField` is **not** thread-safe. Pre-allocated buffers (`_P`, `_dP` Legendre tables and `_cosMLambda`, `_sinMLambda` trig arrays) are overwritten on every acceleration evaluation. Create a separate `CelestialBody` instance per thread when propagating concurrently.
 
@@ -2094,6 +2094,14 @@ S. Guillet, 2026-11-14): a frame never added, and the information of an identifi
 `CelestialItem.Create`, which builds it from its state without reading its information: its missing state throws
 `InvalidOperationException`, as on SPICE. A body whose barycentre's data, information included, the provider lacks builds
 with `InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
+
+The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
+provider at the first read of a member that needs its data, not in their type initializer: a provider set before their
+first read and lacking their data makes each such read throw the provider's exception until the data are there, where
+the type initializer threw before 11.0.0 a `TypeInitializationException` kept for the life of the process. Each read
+goes to the provider set at its time: the data may be added to that provider, or another provider set in its place. Once
+read, an object keeps the provider it read its data from, for its data and its ephemeris. Their identifiers, names and
+predicates need no data.
 
 ---
 

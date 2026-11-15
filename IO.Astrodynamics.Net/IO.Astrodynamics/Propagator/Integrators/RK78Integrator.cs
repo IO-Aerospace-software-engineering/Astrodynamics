@@ -99,7 +99,8 @@ public sealed class RK78Integrator : Integrator
     /// <summary>
     /// Create an adaptive RK7(8) integrator.
     /// Forces are added externally via <see cref="Integrator.AddForce"/>;
-    /// call <see cref="Initialize"/> with the initial state before propagation.
+    /// a <see cref="CentralBodyPropagator"/> calls <see cref="Initialize"/> with its initial state; call it yourself only
+    /// to integrate without a propagator.
     /// </summary>
     public RK78Integrator(
         double absoluteTolerance = 1e-9,

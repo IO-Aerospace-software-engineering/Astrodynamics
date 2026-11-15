@@ -1722,9 +1722,9 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   `Helpers.ConvertToOrbitalParameters` that forwards no degree, so the default 10 reached `GeopotentialModelParameters`
   on the `-s`, `-k` and `-q` paths alike, and the SPKs of `-n 2`, `-n 10` and `-n 50` were byte-identical. The degree
   now reaches the Earth of the run, which is the library run of the same scenario with `GeopotentialModelParameters` of
-  that degree. A degree above 100, the last degree of the embedded EGM2008 model, is an argument error whatever the centre (the field pads
-  the degrees beyond its file with zeros, so a wired `-n 150` would have run at degree 100); 0 and 1 remain the point
-  mass. The help text, whose parenthesis was not closed, reads "Degree of the Earth geopotential (EGM2008), at most
+  that degree. A degree above 100, the last degree of the embedded EGM2008 model, is an argument error whatever the centre, checked
+  before anything is loaded (the field then padded the degrees beyond its file with zeros, so a wired `-n 150` would have
+  run at degree 100; since #689 it throws too); 0 and 1 remain the point mass. The help text, whose parenthesis was not closed, reads "Degree of the Earth geopotential (EGM2008), at most
   100". `PropagateTests.EarthGeopotentialDegree_IsTheDegreeOfTheRun` reads the exported SPK at the end of a 600 s window
   (n = 2 and 50 on `-s`, n = 2 on `-k` from ECLIPJ2000 and on `-q`) against the library run of that degree, within
   3.8e-9 m (twice the worst over Linux, Windows and macOS arm64, 1.04e-9, 1.86e-9 and 1.04e-9 m, CI run 43595592229),
@@ -2159,6 +2159,91 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   DSS-13 and GOLDSTONE, renamed so that it redefines nothing of `Data/SolarSystem`, and reads its rotation to
   `DSS-13_TOPO` by `pxform` (2.1e-16 rad, threshold 5.0e-16 rad provisional; 7.76e-8 rad before), and rejects a site
   frame defined relative to J2000.
+
+- **A geopotential degree above its model file ran at the file's degree, and a missing harmonic was read as zero**
+  ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689)). `GeopotentialGravitationalField`
+  set its degree to the one asked whatever the file held and caught the missing coefficients of every degree as zeros:
+  `GeopotentialModelParameters(path, 80)` on `EGM2008_to70_TideFree` built a field of degree 80 whose acceleration at
+  6678.137 km was that of degree 70, bit for bit, and a file without its (2, 0) row built a field without J2, 2.648e-2
+  m/s² from the full file at the pole at 6678.137 km (the closed form 3 J2 μ Re²/r⁴). The reader now records the
+  highest degree of its file (internal `GeopotentialModelReader.MaximumDegree`), and the field, which both public paths
+  reach, rejects a degree above it and a missing (n, m) with 2 ≤ n ≤ degree, when the body (or the field) is built, so
+  that the parameters still read their file once (#674); degrees 0 and 1 stay the point mass. A complete file gives the
+  same table, bit for bit, for every degree it covers. `GeopotentialModelDegreeTests` builds degrees 71, 80 and 100 from
+  `EGM2008_to70_TideFree` through the field, a path and a stream; the file without its (2, 0) row at degree 10 (and its
+  (10, 10) row) throws naming the pair, and at degrees 0 and 1 builds and gives GM/r² along −r to 1e-15, bit for bit
+  the full file's; the file followed by explicit zero rows to degree 80 gives the degree-70 field bit for bit over 2000
+  directions at 300 km. The fields of degrees 120 and 130 of `GeopotentialPartialsTests` are built from such a file
+  (results unchanged, bit for bit). The model files the library, the command line and the conformance runner use are
+  complete: `EGM2008_to70_TideFree` (2553 rows, Σ (n + 1) for n = 2 to 70), the CLI's `EGM2008_to100_TideFree` (5148)
+  and the suite's `GMM2B_to20` and `LP165P_to20` (228 each).
+
+- **`Star.Propagate` and `Star.PropagateAsync` never returned for a step of zero or less** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The loop `epoch += stepSize` never
+  passed the end of the window, and a negative step stored a state at every turn, without bound; #674 had guarded
+  `Scenario.SimulateAsync` before its stars, not the star's own methods. Both now apply the step rule of the library
+  (`PropagatorBase.RequirePositiveStep`, #674) first, `PropagateAsync` before it creates its task, and store nothing.
+  `StarTests` checks a step of 0, −1 tick and −1 s on both methods (the base needed a watchdog: a step of 0 had not
+  ended after 5 s).
+
+- **`Star.IsPropagated` was always false** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). It read `PropagationOutput`, the
+  output directory of an older design, which no code sets, while `Propagate` keeps its states in memory. It now reads
+  the stored states, as `Spacecraft.IsPropagated` does: true after `Propagate`, `PropagateAsync` or
+  `Scenario.SimulateAsync`. `PropagationOutput` stays, documented as always null. `StarTests` and `ScenarioTests` check
+  each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
+  catalog position moved by the proper motion, written in the test (right ascension and declination plus the proper
+  motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
+  relative over four years (threshold 4.0e-16, provisional, twice the Linux worst).
+
+- **A `CentralBodyPropagator` given an integrator with its forces threw `NullReferenceException` unless its caller
+  initialized the integrator** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructors
+  `(window, spacecraft, IIntegrator, deltaT)` and `(…, covariancePropagation)` ended without
+  `integrator.Initialize(InitialState)`, which the force-building constructors and the internal one of the avoidance
+  options call: the integrator had no observer, frame, evaluation state nor RK7(8) stages (RK7(8) failed in
+  `RK78Stepper.Step`, Velocity-Verlet in `Integrator.UpdateEvalState`), and no document told the caller to initialize
+  it. Both now initialize it with the initial state of the propagation (about the central body, the Sun in SSB mode, in
+  the inertial frame of the propagation, at the TDB start of the window), before the covariance propagation is enabled,
+  the order of the force-building path; the default Velocity-Verlet constructor, whose integrator its own constructor
+  initializes, chains past that call. `IntegratorInitializationTests` runs both constructors, RK7(8) (with and without
+  the state transition matrix) and Velocity-Verlet, without any `Initialize` by the caller, against the two-body closed
+  form over the TT seconds of the hour about the Earth (9.95e-5 m in RK7(8) at 1e-10, 15.9 m by Velocity-Verlet at 1 s,
+  its truncation), about the Sun in SSB mode over the TDB seconds of a day (1.22e-4 m), from an ECLIPJ2000 state
+  integrated in ECLIPJ2000 (9.95e-5 m) (thresholds provisional, twice the Linux worst); bit for bit the run the caller
+  initializes after construction, with and without an impulse, and the force-building constructor with the same single
+  force; a recording `IIntegrator` sees one `Initialize`, by the constructor, with the central body, the frame and the
+  TDB start of a UTC window.
+
+- **A static solar system object read on a `MemoryDataProvider` without its data left its class unusable for the life
+  of the process** (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
+  The type initializers of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) built
+  their objects with the natural-body constructors, which read the provider: with a provider holding only the Earth's
+  information, `CelestialItem.Create(391)` threw a `TypeInitializationException` for `Barycenters` (the information of
+  the barycentre 0), and still did once the data were added, the runtime keeping the exception; the library's own paths
+  that read those classes (the observer resolution, `LagrangePoint`, `Star`, the Sun of SSB mode, the radiation forces)
+  failed with it. The objects now read no provider data when their class is initialized: their identifier, name and
+  predicates need none, and their other members are read at the first read of one of them, exactly as the natural-body
+  constructors read them, through one internal object published with a compare-exchange, never under a lock held
+  across the provider call (#623); a read that throws caches nothing and the next read tries again, on the provider set
+  at its time, so that a read that failed on one provider succeeds once the data exist on that provider or on another
+  set since (a `SpiceDataProvider` with its kernels after a `MemoryDataProvider`); once read, an object keeps the provider
+  it read its data from, for its data and its ephemeris. The objects users build are unchanged, bit for bit. In fresh
+  processes (`MemoryDataProviderBodyTests`, modes `static-bodies-memory`, `static-bodies-spice` and
+  `static-bodies-switch` of the cold-start child): on a memory provider holding the Earth's information only,
+  `CelestialItem.Create(391)` throws the provider's `InvalidOperationException` naming 391 and
+  `SOLAR_SYSTEM_BARYCENTER.GM` its `ArgumentException` naming `naifId`, twice; once the information and the states are
+  added, the GM are those given and the orbits of L1, the Earth barycentre, `EARTH_BODY` and `SUN_BODY` the exact
+  differences of the stored states; on SPICE, the kernels loaded first, the names and GM of the ten barycentres, the GM,
+  equatorial radius, J2, name and frame of `EARTH_BODY` and the GM of `SUN_BODY` and `MOON_BODY` equal SPICE's body
+  information, and the orbit of `EARTH_BODY` `spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB, exactly; read
+  first on an empty memory provider (the `ArgumentException` of each), then after `SetDataProvider(new
+  SpiceDataProvider())` and `LoadKernels`, the GM of the solar system barycentre, the Earth barycentre, `EARTH_BODY` and
+  `SUN_BODY`, the frame and orbit of `EARTH_BODY`, the orbit of the Earth barycentre and its ephemeris about the solar
+  system barycentre are SPICE's, exactly, and stay SPICE's once another memory provider is set (before this, the retry
+  went back to the provider of the type initializer: the objects threw the memory provider's `ArgumentException` for the
+  process while `SpiceAPI.GetCelestialBodyInfo(0)` answered). On SPICE, reading those data before `LoadKernels` still
+  keeps the zeros SPICE answers (its own issue).
 
 **Changed**
 
@@ -2925,6 +3010,49 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   coordinates, build the site from them, `new Site(id, name, body, kernelSite.Planetodetic)`; its frame kernel is that
   of the former writer, under the name `<NAME>_TOPO`.
 
+- **Breaking: a geopotential degree above its model file, or a file missing a harmonic, throws**
+  ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689), Fixed above). A degree of 2 or more
+  above the highest degree of the model file throws `ArgumentOutOfRangeException` (parameter `maxDegrees`, the message
+  naming the degree asked and the file's), from `new GeopotentialGravitationalField(file, degree)` and from the
+  constructor of a `CelestialBody` given `GeopotentialModelParameters`; it ran silently at the file's degree. A file
+  without a coefficient (n, m) with 2 ≤ n ≤ degree throws `ArgumentException` naming n and m; the term was zero. The
+  check runs when the body or the field is built, not in the constructor of `GeopotentialModelParameters`, which reads
+  nothing. Migration: pass a degree of at most 70 with `EGM2008_to70_TideFree` (`astro propagate -n`: at most 100, as
+  before), or give a complete model file. No result moves for a degree the file covers.
+
+- **Breaking: a step of zero or less of `Star.Propagate` and `Star.PropagateAsync` throws** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above):
+  `ArgumentOutOfRangeException`, parameter `stepSize`, from the call itself for `PropagateAsync` (no task is created),
+  where the call never returned and a negative step exhausted the memory. Migration: pass a positive step. No result
+  moves for a positive step.
+
+- **Breaking: `Star.IsPropagated` becomes true once the star is propagated** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above), after `Propagate`,
+  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput` stays null. Migration: code that
+  relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
+
+- **Breaking: the constructors of `CentralBodyPropagator` that take an integrator with its forces initialize it**
+  (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above) with
+  the initial state of the propagation. A run that threw `NullReferenceException` now propagates. An `Initialize` the
+  caller made before construction with another observer or frame (the spacecraft's state about the solar system
+  barycentre in SSB mode, for instance) is replaced by the propagator's; one made after construction still wins.
+  Migration: drop the explicit `Initialize`, or keep it after construction with the propagator's initial state. No
+  result moves for a caller who initialized with the central body and the frame of the propagation.
+
+- **Breaking: the static objects of `Barycenters`, `PlanetsAndMoons` and `Stars` read their provider data at first use**
+  (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above). With
+  a provider lacking a static object's data, the first read of a member that needs them (GM, mass, orbit, radii, J2 to
+  J4, frame, sphere of influence) throws the provider's own exception (`ArgumentException` naming `naifId` for missing
+  information, `InvalidOperationException` for a missing state), at each read until the data exist, where the first read
+  of the class threw a `TypeInitializationException` that never cleared. The provider is reached at that first read,
+  not when the class is initialized: each read goes to the provider set at its time, and an object that has read its
+  data keeps that provider for its data and its ephemeris, where before it kept the provider of the type initializer
+  for both; the identifiers, names and predicates need no data, and `ExtendedInformation` is
+  null until the data are read. On SPICE with the kernels loaded nothing moves. The `#623` deadlock needed a type
+  initializer that read SPICE: none does now. Migration: catch `ArgumentException` or `InvalidOperationException`
+  instead of `TypeInitializationException`; set the provider a static object should read before its first read of
+  data, since a provider set afterwards does not reach it.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -2952,11 +3080,6 @@ not listed.
   or a coverage gap returns no window, SPICE's message on standard output only. On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
   returns no window. Check that the kernels cover the search before trusting an empty result.
-- **A geopotential degree above the degree of its model file runs at the file's degree**
-  ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), found on the way).
-  `GeopotentialGravitationalField` reads the coefficients a file does not hold as zeros, so
-  `GeopotentialModelParameters(path, 80)` on `EGM2008_to70_TideFree` silently runs at degree 70. The command line
-  rejects a degree above its embedded model (100); in the library, pass a degree the file holds.
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter

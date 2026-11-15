@@ -25,7 +25,11 @@ namespace IO.Astrodynamics.DataProvider;
 /// 2026-11-14: a bad argument gives <see cref="ArgumentException"/>), except <see cref="CelestialItem.Create"/> of a
 /// Lagrange point (391 to 395), which reads the point's state, not its information: a missing state throws
 /// <see cref="InvalidOperationException"/>, as on SPICE. A body whose barycentre's information the provider
-/// lacks still builds without an orbit, as on SPICE, which names every barycentre.
+/// lacks still builds without an orbit, as on SPICE, which names every barycentre. The static objects of
+/// <see cref="SolarSystemObjects.Barycenters"/>, <see cref="SolarSystemObjects.PlanetsAndMoons"/> and
+/// <see cref="SolarSystemObjects.Stars"/> read the provider at the first read of a member that needs its data: a provider
+/// set before their first read and lacking their data makes each such read throw its exception, until the data are added
+/// (before 11.0.0 their type initializers threw a <see cref="TypeInitializationException"/> kept for the process).
 /// </remarks>
 public class MemoryDataProvider : IDataProvider
 {

@@ -62,6 +62,25 @@ var titan = new CelestialBody(PlanetsAndMoons.TITAN);
 | `NEPTUNE_BARYCENTER` | Neptune system barycenter |
 | `PLUTO_BARYCENTER` | Pluto system barycenter |
 
+## Data of the static objects
+
+`EARTH_BODY`, `MOON_BODY`, `SUN_BODY` and the ten barycentres are built when their class is first read without any read
+of the data provider: their NAIF identifier, their name and the predicates (`IsBarycenter`, `IsPlanet`, ...) need no
+data. Their other members, the GM, the mass, `InitialOrbitalParameters` (at J2000 TDB in ECLIPJ2000, about the
+barycentre of their system) and, for a body, the radii, flattening, J2 to J4, frame and sphere of influence, are read
+from the provider at the first read of one of them, exactly as `new CelestialBody(naifObject)` or `new Barycenter(id)`
+reads them. A read the provider cannot answer throws its exception (`ArgumentException` naming `naifId` for missing
+information, `InvalidOperationException` for a missing state) and caches nothing: the next read tries again, on the
+provider set at its time (`Configuration.Instance.SetDataProvider`), and succeeds once that provider has the data, the
+same provider completed or another one set since. Once its data are read, an object keeps the provider it read them
+from, for its data and for its ephemeris, as an object built by a constructor keeps the provider of its construction:
+a provider set later does not reach it. The data read are published once, with no lock held across the provider call, so a read
+never waits for another thread (#623). Before 11.0.0 the type initializers read the provider: a missing datum threw a
+`TypeInitializationException` kept for the life of the process, and every later use of the class failed.
+
+On SPICE the provider answers with zeros for the data of a body before its kernels are loaded: read a static object's
+data after `LoadKernels`, or the zeros are kept for the process.
+
 ## SolarSystemObjects.Stars
 
 | Constant | Description |

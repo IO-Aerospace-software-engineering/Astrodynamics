@@ -65,6 +65,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
   - `SpiceDataProvider`: Default, uses SPICE kernel files
   - `MemoryDataProvider`: In-memory for testing
 - Configured via `Configuration.Instance.SetDataProvider()`
+- The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read, on the provider set at that time; once read, an object keeps the provider it read its data from, for its data and its ephemeris
 
 **Key Namespaces**
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
@@ -466,7 +467,7 @@ The framework supports spherical harmonic gravity modeling using EGM2008 coeffic
 **Conventions**
 - Geodesy normalization: `sqrt((2-delta_0m)(2n+1)(n-m)!/(n+m)!)` — no Condon-Shortley phase
 - Coefficients: fully-normalized C_nm and S_nm from EGM2008 (tide-free)
-- Model file starts at degree 2 (degrees 0 and 1 are absent; handled as zeros)
+- Model file starts at degree 2 (degrees 0 and 1 are absent; handled as zeros); the degree is at most the file's highest, every (n, m) with 2 ≤ n ≤ degree present, or the body (or field) throws when it is built (#689)
 - Constants: the file carries none; the harmonics take EGM2008's GM and reference radius for the Earth by default (the kernel GM for the central term), the kernel constants for another body, or explicit ones (#410)
 - Central term: the kernel GM by default; the model GM with `GeopotentialModelParameters.CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (opt-in, decision 18 of #457), so that the whole field takes the model's constants as GMAT applies a `.cof` header, in the acceleration and the partials alike
 
@@ -569,6 +570,8 @@ public interface IIntegrator
         IReadOnlyList<IEventDetector> eventDetectors = null);
 }
 ```
+
+Every `CentralBodyPropagator` constructor calls `Initialize` with the initial state of the propagation (about the central body, in the inertial frame of the propagation, at the TDB start of the window), those that take an integrator with its forces included; a later `Initialize` by the caller replaces it.
 
 VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV) or with sub-step bisection refinement (RK78) on states computed by shortened RK7(8) steps; the RK7(8) restart after a maneuver uses the same shortened step, never the cubic Hermite interpolation, which is off by up to ~100 m in LEO (#363).
 
@@ -832,6 +835,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
    - `GeopotentialGravitationalField` is NOT thread-safe — one instance per thread
    - Legendre functions use geodesy normalization without Condon-Shortley phase
    - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally; a field of degree 0 or 1 is the point mass of its central term in the frame of the state, without the body's orientation
+   - A degree above the model file throws `ArgumentOutOfRangeException` (`maxDegrees`), a file missing a harmonic (n, m) with 2 ≤ n ≤ degree `ArgumentException`, when the body or the field is built (#689)
    - The harmonics take the constants of the model (#410): EGM2008's GM 3.986004415e14 m³/s² and radius 6378136.3 m for the Earth by default, the kernel GM and equatorial radius for another body, or those given to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`; the central term takes the GM of the kernels by default, or the GM of the model with `CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (GMAT's `.cof` convention; acceleration and partials alike; `CelestialItem.GM` unchanged)
 12. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3

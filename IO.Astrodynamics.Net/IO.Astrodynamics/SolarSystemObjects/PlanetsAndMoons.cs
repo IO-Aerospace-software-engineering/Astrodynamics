@@ -173,7 +173,9 @@ public static class PlanetsAndMoons
     
     static PlanetsAndMoons()
     {
-        EARTH_BODY = new CelestialBody(EARTH);
-        MOON_BODY = new CelestialBody(MOON);
+        // No provider data read here: at the first read of a member that needs them, retried on failure (second round of
+        // #668)
+        EARTH_BODY = CelestialBody.CreateDeferred(EARTH);
+        MOON_BODY = CelestialBody.CreateDeferred(MOON);
     }
 }

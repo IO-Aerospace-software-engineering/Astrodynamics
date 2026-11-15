@@ -8,6 +8,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
@@ -121,14 +122,19 @@ public class Star : CelestialBody
     public double DeclinationSigmaProperMotion { get; }
 
     /// <summary>
-    /// Gets the directory for propagation output.
+    /// Always null: the directory of an older design that wrote the propagation to files. A star keeps its propagated
+    /// states in memory and writes them only through <see cref="WriteEphemeris"/>, to the file its caller gives.
     /// </summary>
     public DirectoryInfo PropagationOutput { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether the star has been propagated.
+    /// Gets a value indicating whether the star holds propagated states: true once <see cref="Propagate"/>,
+    /// <see cref="PropagateAsync"/> or <c>Scenario.SimulateAsync</c> stored them.
     /// </summary>
-    public bool IsPropagated => PropagationOutput != null;
+    /// <remarks>
+    /// Before 11.0.0 it read <see cref="PropagationOutput"/>, which no code sets, and was always false.
+    /// </remarks>
+    public bool IsPropagated => !_propagatedStates.IsEmpty;
 
     /// <summary>
     /// Gets the equatorial coordinates of the star at a specific epoch.
@@ -241,10 +247,14 @@ public class Star : CelestialBody
     /// Propagates the star asynchronously.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
-    /// <param name="stepSize">The step size for propagation.</param>
+    /// <param name="stepSize">The step size for propagation, positive.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative: thrown by the call
+    /// itself, before any task is created, and nothing is stored. Before 11.0.0 the task never ended (a negative step also
+    /// stored states without bound).</exception>
     public Task PropagateAsync(Window timeWindow, TimeSpan stepSize)
     {
+        PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
         return Task.Run(() =>
         {
             Propagate(timeWindow, stepSize);
@@ -255,9 +265,13 @@ public class Star : CelestialBody
     /// Propagates the star.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
-    /// <param name="stepSize">The step size for propagation.</param>
+    /// <param name="stepSize">The step size for propagation, positive.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative, the rule of every
+    /// step of the library (#674); nothing is stored. Before 11.0.0 the call never returned (a negative step also stored
+    /// states without bound).</exception>
     public void Propagate(Window timeWindow, TimeSpan stepSize)
     {
+        PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
         for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();

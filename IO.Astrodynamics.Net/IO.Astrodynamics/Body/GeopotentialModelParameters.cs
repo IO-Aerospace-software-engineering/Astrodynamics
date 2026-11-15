@@ -113,6 +113,13 @@ namespace IO.Astrodynamics.Body
         /// <summary>
         /// Gets the degree of the geopotential model.
         /// </summary>
+        /// <remarks>
+        /// At most the highest degree of the model file (70 for EGM2008_to70_TideFree), whose every coefficient (n, m) with
+        /// 2 ≤ n ≤ degree must be present. It is checked when a body is built from these parameters, which reads the file
+        /// once (#674): the body's constructor throws <see cref="ArgumentOutOfRangeException"/> (<c>maxDegrees</c>) for a
+        /// degree above the file, and <see cref="ArgumentException"/> for a missing coefficient (#689; before 11.0.0 both
+        /// were read as zeros).
+        /// </remarks>
         public ushort GeopotentialDegree { get; }
 
         /// <summary>

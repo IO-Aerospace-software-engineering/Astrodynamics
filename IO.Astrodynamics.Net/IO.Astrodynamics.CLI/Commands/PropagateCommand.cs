@@ -43,7 +43,7 @@ public class PropagateCommand
         int[] celestialBodies = null
     )
     {
-        // The embedded model ends at degree 100, and a field pads the degrees beyond its file with zeros (#681); checked
+        // The embedded model ends at degree 100 (#681), which the field would also reject when it is built (#689); checked
         // whatever the centre, before anything is loaded or written
         if (earthGeopotentialDegree > Helpers.EarthGeopotentialMaximumDegree)
         {
