@@ -64,7 +64,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// on the provider set at that time; so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before
     /// <c>LoadKernels</c>), with <see cref="InvalidOperationException"/> naming the missing variable (third round of #668:
     /// before, those zeros were kept for the life of the process); once read, the object keeps the provider it read its
-    /// data from.
+    /// data from. On the <see cref="SpiceDataProvider"/> the data are read again at the first read after each
+    /// <see cref="SpiceAPI.LoadKernels"/>, <see cref="SpiceAPI.UnloadKernels"/> or <see cref="SpiceAPI.ClearKernels"/>, so
+    /// that they follow the kernel pool (a J2, a frame association or an SPK loaded after the first read; before the third
+    /// round of #668, the data of the first read were kept for the life of the process); data equal to those held keep the
+    /// instances held.
     /// </remarks>
     public double Mass => _deferred == null ? _mass : Resolved.Mass;
 
@@ -119,6 +123,36 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         internal double GM { get; set; }
         internal GravitationalField GravitationalField { get; set; }
         internal OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; set; }
+
+        /// <summary>
+        /// The generation of the kernel pool the data were read at (<see cref="SpiceAPI.KernelPoolGeneration"/>) for the
+        /// <see cref="SpiceDataProvider"/>, -1 for any other provider, whose data are read once.
+        /// </summary>
+        internal long Generation;
+
+        /// <summary>Whether the data hold: read from another provider than SPICE, or at the current generation of its pool.</summary>
+        internal bool IsCurrent
+        {
+            get
+            {
+                long generation = Volatile.Read(ref Generation);
+                return generation < 0 || generation == SpiceAPI.KernelPoolGeneration;
+            }
+        }
+
+        /// <summary>
+        /// Whether <paramref name="other"/> holds the same values: the information (NaN equal to NaN), the mass, the GM
+        /// and the orbit; a <see cref="CelestialBody"/> adds its members.
+        /// </summary>
+        internal virtual bool HasSameValues(ProviderData other) =>
+            SameInformation(Information, other.Information) && Mass.Equals(other.Mass) && GM.Equals(other.GM)
+            && Equals(InitialOrbitalParameters, other.InitialOrbitalParameters);
+
+        private static bool SameInformation(in DTO.CelestialBody a, in DTO.CelestialBody b) =>
+            a.Id == b.Id && a.CenterOfMotionId == b.CenterOfMotionId && a.BarycenterOfMotionId == b.BarycenterOfMotionId
+            && a.Name == b.Name && a.Radii.X.Equals(b.Radii.X) && a.Radii.Y.Equals(b.Radii.Y) && a.Radii.Z.Equals(b.Radii.Z)
+            && a.GM.Equals(b.GM) && a.FrameName == b.FrameName && a.FrameId == b.FrameId && a.J2.Equals(b.J2)
+            && a.J3.Equals(b.J3) && a.J4.Equals(b.J4);
     }
 
     // The provider data of a deferred item, once read; published once, never under a lock (#623)
@@ -131,17 +165,40 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// The provider data of a deferred item: read at the first call from the global provider of that time, built exactly
     /// as the natural-body constructor builds them, once the provider gives a GM and, for a body, radii
     /// (<see cref="RequireKernelData"/>); a read that throws caches nothing, so that the next call tries again,
-    /// on the global provider of its own time. The data are published with a
-    /// compare-exchange, never under a lock held across the provider call, so that a thread holding the SPICE lock never
-    /// waits for another (#623); two threads that read at once may both read, and the first published is kept.
+    /// on the global provider of its own time. Once read, the item keeps its provider; on the <see cref="SpiceDataProvider"/>
+    /// its data hold for the generation of the kernel pool they were read at (<see cref="SpiceAPI.KernelPoolGeneration"/>),
+    /// and the first call after a <c>LoadKernels</c>, <c>UnloadKernels</c> or <c>ClearKernels</c> reads them again: data
+    /// equal to those held keep the objects held (the frame, the orbit), other data replace them, and a read that throws
+    /// (the kernels unloaded) keeps nothing new, so that the next call tries again (third round of #668: before, the data
+    /// of the first read were kept for the life of the process, those of a partial load included). The data are published
+    /// with a compare-exchange, never under a lock held across the provider call, so that a thread holding the SPICE lock
+    /// never waits for another (#623); two threads that read at once may both read, and the first published is kept.
     /// </summary>
-    private protected ProviderData Resolved => Volatile.Read(ref _resolved) ?? Resolve();
-
-    private ProviderData Resolve()
+    private protected ProviderData Resolved
     {
-        var data = ReadProviderData(Configuration.Instance.DataProvider, _deferred.Frame, _deferred.Epoch);
-        var published = Interlocked.CompareExchange(ref _resolved, data, null);
-        if (published != null)
+        get
+        {
+            var data = Volatile.Read(ref _resolved);
+            return data != null && data.IsCurrent ? data : Resolve(data);
+        }
+    }
+
+    private ProviderData Resolve(ProviderData held)
+    {
+        // The generation before the reads: a change of the pool during them leaves the data to be read again
+        var provider = held?.Provider ?? Configuration.Instance.DataProvider;
+        long generation = provider is SpiceDataProvider ? SpiceAPI.KernelPoolGeneration : -1;
+        var data = ReadProviderData(provider, _deferred.Frame, _deferred.Epoch);
+        data.Generation = generation;
+        if (held != null && data.HasSameValues(held))
+        {
+            // The same values: the objects held stay, so that a read gives the instances an earlier one gave
+            Volatile.Write(ref held.Generation, generation);
+            return Volatile.Read(ref _resolved);
+        }
+
+        var published = Interlocked.CompareExchange(ref _resolved, data, held);
+        if (published != held)
         {
             return published;
         }

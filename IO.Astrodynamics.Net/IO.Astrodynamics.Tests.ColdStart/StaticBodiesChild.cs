@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
@@ -257,7 +258,10 @@ internal static class StaticBodiesChild
     /// exactly; with a GM kernel alone, the read of a body throws naming its missing <c>BODYnnn_RADII</c>. Before, the
     /// first read cached the zeros SPICE answered (GM 0, radii 0, no orbit, the built-in frame <c>IAU_EARTH</c>) for the
     /// life of the process; the solar system barycentre, whose GM is the sum of <c>BODY1_GM</c> to <c>BODY10_GM</c>, kept
-    /// a GM of 0.
+    /// a GM of 0. After a partial load (the leap seconds, the GMs and the PCK) the members are what SPICE gives then (J2
+    /// NaN, <c>IAU_EARTH</c>, <c>IAU_MOON</c>, no orbit), and they follow each later change of the kernel pool: SPICE's
+    /// once the kernels are loaded (before, the data of the partial load were kept for the process), the same instances
+    /// after a reload that changes none of them, an exception naming <c>BODY399_GM</c> after <c>ClearKernels</c>.
     /// </summary>
     internal static int RunBeforeKernels(string kernels)
     {
@@ -300,7 +304,35 @@ internal static class StaticBodiesChild
             Expect<InvalidOperationException>("MOON_BODY.Frame with the GM kernel alone", () => PlanetsAndMoons.MOON_BODY.Frame);
             SpiceAPI.Instance.UnloadKernels(gmKernel);
 
-            // The kernels
+            // A partial load: the leap seconds, the GMs and the PCK, without geophysical.ker (BODY399_J2), the frame
+            // associations (OBJECT_EARTH_FRAME, OBJECT_MOON_FRAME) nor an SPK. The data are complete for the check (GM and
+            // radii): the members are what SPICE gives at that time, J2 NaN, the built-in frames, no orbit
+            var partial = new[] { "latest_leapseconds.tls", "gm_de440.tpc", "pck00011.tpc" }
+                .Select(x => new FileInfo(Path.Combine(kernels, x))).ToArray();
+            foreach (var kernel in partial)
+            {
+                SpiceAPI.Instance.LoadKernels(kernel);
+            }
+
+            var partialEarth = SpiceAPI.Instance.GetCelestialBodyInfo(399);
+            var partialMoon = SpiceAPI.Instance.GetCelestialBodyInfo(301);
+            var early = PlanetsAndMoons.EARTH_BODY;
+            Check($"EARTH_BODY.J2 after a partial load {early.J2:R}, SPICE {partialEarth.J2:R}", early.J2.Equals(partialEarth.J2));
+            Check($"EARTH_BODY.Frame after a partial load {early.Frame.Name}, SPICE {partialEarth.FrameName}",
+                early.Frame.Name == partialEarth.FrameName && early.Frame.Name == "IAU_EARTH");
+            Check($"MOON_BODY.Frame after a partial load {PlanetsAndMoons.MOON_BODY.Frame.Name}, SPICE {partialMoon.FrameName}",
+                PlanetsAndMoons.MOON_BODY.Frame.Name == partialMoon.FrameName && partialMoon.FrameName == "IAU_MOON");
+            Check("EARTH_BODY has no orbit after a partial load", early.InitialOrbitalParameters == null
+                                                                 && double.IsPositiveInfinity(early.SphereOfInfluence));
+
+            // A load that changes none of its data keeps the objects an item gave (its frame), as the orientation cache of
+            // a propagation is keyed by its frame instance
+            var partialFrame = early.Frame;
+            SpiceAPI.Instance.LoadKernels(partial[2]);
+            Check("EARTH_BODY.Frame after the reload of the PCK is the same instance", ReferenceEquals(early.Frame, partialFrame));
+
+            // The kernels: the directory unloads the files loaded inside it first. Before, the data of the partial load were
+            // kept for the life of the process (J2 NaN, IAU_EARTH, no orbit)
             SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
 
             var ssbInfo = SpiceAPI.Instance.GetCelestialBodyInfo(0);
@@ -330,6 +362,27 @@ internal static class StaticBodiesChild
             Check($"SOLAR_SYSTEM_BARYCENTER.GM after the kernels {Barycenters.SOLAR_SYSTEM_BARYCENTER.GM:R}, SPICE {ssbInfo.GM:R}",
                 Barycenters.SOLAR_SYSTEM_BARYCENTER.GM == ssbInfo.GM && ssbInfo.GM > 0.0);
             Check("SOLAR_SYSTEM_BARYCENTER has no orbit", Barycenters.SOLAR_SYSTEM_BARYCENTER.InitialOrbitalParameters == null);
+            Check($"MOON_BODY.Frame after the kernels {PlanetsAndMoons.MOON_BODY.Frame.Name}, SPICE {moonInfo.FrameName}",
+                PlanetsAndMoons.MOON_BODY.Frame.Name == moonInfo.FrameName && moonInfo.FrameName == "MOON_ME");
+
+            // The reload of a kernel of the directory changes none of the data: the same instances
+            var frame = earth.Frame;
+            var orbit = earth.InitialOrbitalParameters;
+            SpiceAPI.Instance.LoadKernels(new FileInfo(Path.Combine(kernels, "pck00011.tpc")));
+            Check("EARTH_BODY's frame and orbit after the reload of a kernel are the same instances",
+                ReferenceEquals(earth.Frame, frame) && ReferenceEquals(earth.InitialOrbitalParameters, orbit));
+
+            // ClearKernels: the data follow the kernel pool, the next read throws naming the missing variable, at each read
+            SpiceAPI.Instance.ClearKernels();
+            for (int i = 1; i <= 2; i++)
+            {
+                var cleared = Expect<InvalidOperationException>($"EARTH_BODY.GM after ClearKernels, read {i}", () => earth.GM);
+                Check($"read {i}: the message names BODY399_GM ({cleared.Message})", cleared.Message.Contains("BODY399_GM"));
+            }
+
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+            Check($"EARTH_BODY.GM after the kernels are loaded again {earth.GM:R}, SPICE {earthInfo.GM:R}", earth.GM == earthInfo.GM);
+            Check("EARTH_BODY.J2 and Frame after the kernels are loaded again", earth.J2.Equals(earthInfo.J2) && earth.Frame.Name == "ITRF93");
             return 0;
         }
         catch (Exception e)

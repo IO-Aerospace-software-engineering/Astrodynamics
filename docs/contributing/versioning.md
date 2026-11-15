@@ -2266,8 +2266,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   propagate twice over different windows and steps (`Propagate` then `Propagate`, `Propagate` then `PropagateAsync`, two
   scenarios over different windows): SPICE (`spkezr` through `SpiceAPI`) reads the SPK at each epoch of the second grid
   at the catalog position moved by the proper motion, written in the tests (the epochs whole half days from the catalog
-  epoch), to 1.39e-16 relative (threshold 2.8e-16, provisional, twice the Linux worst), and throws at the epochs of the
-  first window and between the two; the Validation test reads the segment with CSPICE (`dafus`, `dafgda`): one segment
+  epoch), to 1.39e-16 relative on Linux, closer than the star moves in 1 µs (3.6e-15 relative, the bound of the tests
+  that run on every platform), and throws at the epochs of the first window and between the two; the Validation test,
+  which runs on Linux alone, holds the noise-level record (threshold 2.8e-16, twice the Linux worst) and reads the
+  segment with CSPICE (`dafus`, `dafgda`): one segment
   of type 8 over the second window, its first epoch, step and number of states those of the second grid. A single
   propagation writes the same SPK as before, bit for bit.
 
@@ -2337,9 +2339,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and the GM of `MOON_BODY` throw; with `gm_de440.tpc` alone, the GM of `EARTH_BODY` throws naming `BODY399_RADII`
   (twice) and the frame of `MOON_BODY` throws; after `LoadKernels` the GM, radii, J2 (finite) and frame (`ITRF93`) of
   `EARTH_BODY`, its orbit (`spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB), the GM of the two barycentres
-  and of `MOON_BODY` and the radius and GM of `SUN_BODY` are SPICE's (`SpiceAPI.GetCelestialBodyInfo`), exactly. An orbit
-  the provider cannot give at the first complete read (an SPK loaded after the GM and radii kernels) is still kept as
-  absent, as a body the kernels do not chain to its barycentre.
+  and of `MOON_BODY` and the radius and GM of `SUN_BODY` are SPICE's (`SpiceAPI.GetCelestialBodyInfo`), exactly.
+  A first read after a partial load kept its data for the process too: with `latest_leapseconds.tls`, `gm_de440.tpc` and
+  `pck00011.tpc` loaded (GM and radii defined), `EARTH_BODY` had a J2 of NaN (`BODY399_J2` is in `geophysical.ker`), the
+  frame `IAU_EARTH` (`OBJECT_EARTH_FRAME` is in `earth_assoc_itrf93.tf`; `IAU_EARTH` is 8.49e-4 rad from `ITRF93` on
+  2001-06-01 and 1.46e-3 rad on 2025-06-01, 5.4 to 9.3 km at the equator, which geodetic coordinates, sites and drag
+  read), no orbit and an infinite sphere of influence, `MOON_BODY` the frame `IAU_MOON`, all unchanged after
+  `LoadKernels` of the whole set. On the `SpiceDataProvider` the data of a static object now hold for the generation of
+  the kernel pool they were read at: each `LoadKernels`, `UnloadKernels` and `ClearKernels` raises it (internal
+  `SpiceAPI.KernelPoolGeneration`), and the first read after reads the data again; data equal to those held keep the
+  objects held (the frame and orbit instances, which the orientation cache of a propagation is keyed by), other data
+  replace them, and a read that throws keeps nothing new. Another provider is read once, as before. The same child: after
+  the partial load the J2 (NaN), the frames (`IAU_EARTH`, `IAU_MOON`) and the absent orbit are SPICE's, the reload of the
+  PCK keeps the frame instance; after `LoadKernels` of the directory the J2, frames (`ITRF93`, `MOON_ME`) and orbit are
+  SPICE's, exactly (red before: J2 NaN); the reload of a kernel keeps the frame and orbit instances; after
+  `ClearKernels` the GM throws naming `BODY399_GM` (twice), and after `LoadKernels` again the GM, J2 and frame are
+  SPICE's.
 - **The CDM wrote `INTRACK_THRUST` from the engines of a spacecraft** ([#684](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/684)). `EncounterCase.ToCdm` set
   `INTRACK_THRUST` of either object to `YES` for a spacecraft with an engine and `NO` for one without, its capability,
   where CCSDS 508.0-B-1 Cor. 2 (Table 3-3) defines it as whether in-track thrust modeling was used for the OD of the
@@ -3248,8 +3263,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   barycentre, `BODYnnn_RADII` for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`), when its provider gives a GM or radii of 0
   (SPICE without the kernels that define them, a `MemoryDataProvider` record holding zeros), and keeps nothing, where it
   returned the zeros, J2 NaN and no orbit and kept them for the process. On SPICE with the kernels loaded nothing moves.
-  Migration: load the kernels (a GM kernel and a PCK) before the first read of a static object's data, or give a
-  `MemoryDataProvider` record its GM and radii; `new CelestialBody(id)` still reads whatever the kernels give.
+  Migration: load the kernels before the first read of a static object's data, or give a `MemoryDataProvider` record its
+  GM and radii; `new CelestialBody(id)` still reads whatever the kernels give.
+
+- **Breaking: on SPICE the static solar system objects follow the kernel pool** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above). After a
+  `LoadKernels`, `UnloadKernels` or `ClearKernels`, the next read of a member of a static object of `Barycenters`,
+  `PlanetsAndMoons` or `Stars` read on the `SpiceDataProvider` reads its data again: a kernel loaded later that defines
+  its J2 (`geophysical.ker`), its frame (`earth_assoc_itrf93.tf`, `moon_assoc_me.tf`), its orbit (an SPK) or another GM
+  changes it, where the data of the first read were kept for the process, and after the kernels that define its GM or
+  radii are unloaded (`ClearKernels`) a read throws `InvalidOperationException` naming the variable until they are loaded
+  again, where the data of the first read were returned. Data equal to those held keep the instances held, so that with
+  kernels that redefine nothing of `Data/SolarSystem` nothing moves, bit for bit. Migration: to keep a body's data across
+  changes of the pool, build it (`new CelestialBody(id)`), which reads the kernels once.
 
 - **Breaking: a propagation of a star replaces its states** (third round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): `Star.Propagate`,

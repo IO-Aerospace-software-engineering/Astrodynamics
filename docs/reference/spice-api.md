@@ -140,7 +140,9 @@ read goes to the provider set at its time, so that the data may be added to that
 its place (a `SpiceDataProvider` and `LoadKernels`, for instance). Once read, an object keeps the provider it read its
 data from, for its data and its ephemeris. A provider that gives one of them a GM or, for a body, radii of 0 (SPICE
 before `LoadKernels`) makes the read throw `InvalidOperationException` naming the missing variable, and nothing is kept
-(third round of #668). Before
+(third round of #668). On the `SpiceDataProvider` their data hold for the kernel pool they were read from: the first read
+after each `LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again (data equal to those held keep the
+instances held), so that a kernel loaded later, or unloaded, reaches them (third round of #668). Before
 11.0.0 their type initializers read the provider, and one missing datum threw a `TypeInitializationException` that the
 runtime keeps for the life of the process.
 

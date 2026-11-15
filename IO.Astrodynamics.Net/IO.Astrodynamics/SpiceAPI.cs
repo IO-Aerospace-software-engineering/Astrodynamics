@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Body;
@@ -183,6 +184,17 @@ public class SpiceAPI
     // conversions build, the frames of a read in TEME, CIRS or TIRS) and the enumeration of the states given to
     // WriteEphemeris or WriteOrientation also run under it.
     private static object lockObject = new object();
+
+    // The generation of the kernel pool: raised, under the lock, by each LoadKernels, UnloadKernels and ClearKernels, so
+    // that the static objects of Barycenters, PlanetsAndMoons and Stars read their data again after a change of the pool
+    // (third round of #668)
+    private static long _kernelPoolGeneration;
+
+    /// <summary>
+    /// The generation of the kernel pool, raised by each call of <see cref="LoadKernels"/>, <see cref="UnloadKernels"/> and
+    /// <see cref="ClearKernels"/>, failed or not: data read from SPICE at a generation hold while it is the current one.
+    /// </summary>
+    internal static long KernelPoolGeneration => Interlocked.Read(ref _kernelPoolGeneration);
 
     /// <summary>
     /// The name SPICE knows the axes of an inertial frame by. GCRF is not a SPICE frame: it has the axes of ICRF
@@ -386,6 +398,11 @@ public class SpiceAPI
     /// <see cref="UnloadKernels"/> does (#668, second round); a kernel SPICE holds under a relative name, from a meta-kernel,
     /// is left to SPICE.
     /// </para>
+    /// <para>
+    /// Each call, as each <see cref="UnloadKernels"/> and <see cref="ClearKernels"/>, raises the generation of the kernel
+    /// pool: the static objects of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> and <see cref="Stars"/> read on
+    /// SPICE read their data again at their next read (third round of #668).
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
     /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is loaded, unloaded
@@ -395,45 +412,58 @@ public class SpiceAPI
         if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
-            // Before any unload or reload, so that a failed call changes nothing; not the cached Exists of the instance,
-            // which a reload of a stored entry would trust after a deletion
-            if (!Exists(path))
+            try
             {
-                throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
+                LoadKernelsLocked(path);
             }
-
-            var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
-            if (containing.Length > 0)
+            finally
             {
-                foreach (var entry in containing)
-                {
-                    UnloadKernels(entry.Path);
-                    LoadKernels(entry.Path);
-                }
-
-                return;
+                Interlocked.Increment(ref _kernelPoolGeneration);
             }
-
-            foreach (var inside in _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray())
-            {
-                UnloadKernels(inside.Path);
-            }
-
-            var files = new List<KernelFile>();
-            foreach (var kernel in KernelFiles(path))
-            {
-                if (!LoadKernelsProxy(kernel))
-                {
-                    throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
-                }
-
-                // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
-                var (reads, mayFailOn) = UnloadRereads(kernel);
-                files.Add(new KernelFile(kernel, reads, mayFailOn));
-            }
-
-            _kernels.Add(new KernelEntry(path, files.ToArray()));
         }
+    }
+
+    // LoadKernels under the lock
+    private void LoadKernelsLocked(FileSystemInfo path)
+    {
+        // Before any unload or reload, so that a failed call changes nothing; not the cached Exists of the instance,
+        // which a reload of a stored entry would trust after a deletion
+        if (!Exists(path))
+        {
+            throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
+        }
+
+        var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
+        if (containing.Length > 0)
+        {
+            foreach (var entry in containing)
+            {
+                UnloadKernels(entry.Path);
+                LoadKernels(entry.Path);
+            }
+
+            return;
+        }
+
+        foreach (var inside in _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray())
+        {
+            UnloadKernels(inside.Path);
+        }
+
+        var files = new List<KernelFile>();
+        foreach (var kernel in KernelFiles(path))
+        {
+            if (!LoadKernelsProxy(kernel))
+            {
+                throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
+            }
+
+            // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
+            var (reads, mayFailOn) = UnloadRereads(kernel);
+            files.Add(new KernelFile(kernel, reads, mayFailOn));
+        }
+
+        _kernels.Add(new KernelEntry(path, files.ToArray()));
     }
 
     /// <summary>Whether the path is a file or a directory on disk now, whatever the type of <paramref name="path"/>.</summary>
@@ -741,48 +771,61 @@ public class SpiceAPI
         if (path == null) return;
         lock (lockObject)
         {
-            bool matched = false;
-            var unrepaired = new List<KernelFile>();
-            for (int i = 0; i < _kernels.Count; i++)
+            try
             {
-                var entry = _kernels[i];
-                // The registry follows SPICE's list first: SPICE drops a file from it even when it reports a failure
-                if (IsSameOrInside(entry.Path.FullName, path.FullName))
-                {
-                    _kernels.RemoveAt(i--);
-                    matched = true;
-                    UnloadFiles(entry.Files, unrepaired);
-                    continue;
-                }
+                UnloadKernelsLocked(path);
+            }
+            finally
+            {
+                Interlocked.Increment(ref _kernelPoolGeneration);
+            }
+        }
+    }
 
-                if (!IsSameOrInside(path.FullName, entry.Path.FullName))
-                {
-                    continue;
-                }
-
-                var removed = entry.Files.Where(x => IsSameOrInside(x.Name, path.FullName)).ToArray();
-                if (removed.Length == 0)
-                {
-                    continue;
-                }
-
-                var remaining = entry.Files.Except(removed).Select(x => new KernelEntry(new FileInfo(x.Name), [x])).ToArray();
-                _kernels.RemoveAt(i);
-                _kernels.InsertRange(i, remaining);
-                i += remaining.Length - 1;
+    // UnloadKernels under the lock
+    private void UnloadKernelsLocked(FileSystemInfo path)
+    {
+        bool matched = false;
+        var unrepaired = new List<KernelFile>();
+        for (int i = 0; i < _kernels.Count; i++)
+        {
+            var entry = _kernels[i];
+            // The registry follows SPICE's list first: SPICE drops a file from it even when it reports a failure
+            if (IsSameOrInside(entry.Path.FullName, path.FullName))
+            {
+                _kernels.RemoveAt(i--);
                 matched = true;
-                UnloadFiles(removed, unrepaired);
+                UnloadFiles(entry.Files, unrepaired);
+                continue;
             }
 
-            if (!matched && !UnloadKernelsProxy(path.FullName))
+            if (!IsSameOrInside(path.FullName, entry.Path.FullName))
             {
-                throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+                continue;
             }
 
-            if (unrepaired.Count > 0)
+            var removed = entry.Files.Where(x => IsSameOrInside(x.Name, path.FullName)).ToArray();
+            if (removed.Length == 0)
             {
-                throw new InvalidOperationException($"Kernel {unrepaired[0].Name} can't be unloaded. You can have more details on standard output");
+                continue;
             }
+
+            var remaining = entry.Files.Except(removed).Select(x => new KernelEntry(new FileInfo(x.Name), [x])).ToArray();
+            _kernels.RemoveAt(i);
+            _kernels.InsertRange(i, remaining);
+            i += remaining.Length - 1;
+            matched = true;
+            UnloadFiles(removed, unrepaired);
+        }
+
+        if (!matched && !UnloadKernelsProxy(path.FullName))
+        {
+            throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+        }
+
+        if (unrepaired.Count > 0)
+        {
+            throw new InvalidOperationException($"Kernel {unrepaired[0].Name} can't be unloaded. You can have more details on standard output");
         }
     }
 
@@ -825,8 +868,15 @@ public class SpiceAPI
     {
         lock (lockObject)
         {
-            KClearProxy();
-            _kernels.Clear();
+            try
+            {
+                KClearProxy();
+                _kernels.Clear();
+            }
+            finally
+            {
+                Interlocked.Increment(ref _kernelPoolGeneration);
+            }
         }
     }
 

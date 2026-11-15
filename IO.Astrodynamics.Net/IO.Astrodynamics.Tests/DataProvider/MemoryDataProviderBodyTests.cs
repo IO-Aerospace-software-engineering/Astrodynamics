@@ -163,7 +163,10 @@ public class MemoryDataProviderBodyTests
     /// object whose data need them throws <see cref="InvalidOperationException"/> naming the missing variable, at each read;
     /// once the kernels are loaded, the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <c>SpiceAPI</c>), exactly.
     /// Before, the first read cached the zeros SPICE answered (GM 0, radii 0, J2 NaN, no orbit, the frame IAU_EARTH) for the
-    /// life of the process.
+    /// life of the process. A first read after a partial load (the leap seconds, the GMs and the PCK) gives what SPICE gives
+    /// then (J2 NaN, IAU_EARTH, IAU_MOON, no orbit), and the members follow each later change of the kernel pool: SPICE's
+    /// once the kernels are loaded (before, the partial data were kept for the life of the process), the same instances
+    /// after a load that changes none of them, an exception after <c>ClearKernels</c>.
     /// </summary>
     [Fact]
     public void StaticBodies_ReadBeforeTheKernels_ThrowAndCacheNothing_ThenAreTheKernelValues()
@@ -177,6 +180,10 @@ public class MemoryDataProviderBodyTests
         Assert.Contains("OK EARTH_BODY.GM before the kernels, read 2: InvalidOperationException", output);
         Assert.Contains("OK EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
         Assert.Contains("OK EARTH_BODY.Frame after the kernels ITRF93, SPICE ITRF93", output);
+        Assert.Contains("OK EARTH_BODY.Frame after a partial load IAU_EARTH, SPICE IAU_EARTH", output);
+        Assert.Contains("OK EARTH_BODY's frame and orbit after the reload of a kernel are the same instances", output);
+        Assert.Contains("OK EARTH_BODY.GM after ClearKernels, read 2: InvalidOperationException", output);
+        Assert.Contains("OK EARTH_BODY.J2 and Frame after the kernels are loaded again", output);
     }
 
     public static IEnumerable<object[]> LagrangeIdPaths() =>

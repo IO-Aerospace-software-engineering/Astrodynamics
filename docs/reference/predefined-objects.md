@@ -84,9 +84,18 @@ An object keeps its data only when the provider gives the data the kernels give 
 variable no loaded kernel defines: a read before `LoadKernels`, or with a GM kernel and no PCK, throws
 `InvalidOperationException` naming the missing variable and keeps nothing, so that the read after `LoadKernels` gives
 the kernel values. Before the third round of #668 such a read kept the zeros for the life of the process (a GM of 0,
-radii of 0, J2 NaN, the built-in frame `IAU_EARTH` for the Earth, no orbit). The orbit is not required: one the
-provider cannot give at the first complete read (an SPK loaded after the GM and radii kernels) stays null, as for a body
-the kernels do not chain to its barycentre: read a static object's data after `LoadKernels`.
+radii of 0, J2 NaN, the built-in frame `IAU_EARTH` for the Earth, no orbit).
+
+On the `SpiceDataProvider` the data of an object hold for the kernel pool they were read from: the first read after each
+`LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again. A kernel loaded after the first read therefore
+reaches the object: `geophysical.ker` its J2 (`BODY399_J2`), `earth_assoc_itrf93.tf` and `moon_assoc_me.tf` the frames
+`ITRF93` and `MOON_ME` in place of SPICE's built-in `IAU_EARTH` and `IAU_MOON` (`IAU_EARTH` is 8.5e-4 rad from `ITRF93`
+in 2001, 1.5e-3 rad in 2025, several kilometres at the equator), an SPK its orbit and sphere of influence. Data equal to
+those held keep the instances held (the frame, the orbit), so that loading a kernel that changes none of them changes
+nothing. After the kernels that define its GM or radii are unloaded (`ClearKernels`), a read throws until they are
+loaded again. Before the third round of #668 the data of the first read were kept for the process, those of a partial
+load included (a GM kernel and a PCK: J2 NaN, `IAU_EARTH`, no orbit). To keep a body's data across changes of the pool,
+build it: `new CelestialBody(399)` reads the kernels once.
 
 ## SolarSystemObjects.Stars
 
