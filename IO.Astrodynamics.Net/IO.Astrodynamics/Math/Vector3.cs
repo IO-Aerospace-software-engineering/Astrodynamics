@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace IO.Astrodynamics.Math
 {
@@ -20,11 +21,45 @@ namespace IO.Astrodynamics.Math
             Z = z;
         }
 
+        // The sums of squares of the ordinary path: a vector whose sum of squares lies in [OrdinaryLowest, double.MaxValue]
+        // is computed bit for bit as before 11.0.0; outside it (a component above about 1.34e154 or all below about
+        // 1e-150, or a component that is not finite) the vector is scaled by the power of two of its largest component
+        internal const double OrdinaryLowest = 1e-300;
+
+        /// <summary>
+        /// The Euclidean length of this vector, √(x² + y² + z²).
+        /// </summary>
+        /// <remarks>
+        /// A vector whose squared components would overflow or lose their digits below the normal range (a component above
+        /// about 1.34e154, or all below about 1e-150) is first scaled by the power of two of its largest component, exactly,
+        /// so its magnitude is the representable one: +Infinity only above <see cref="double.MaxValue"/>, 0 only for the
+        /// zero vector (third round of #668: +Infinity for (1e200, 0, 0) and 0 for (1e-170, 0, 0) before 11.0.0). Every
+        /// other vector gives the unscaled √(x² + y² + z²), bit for bit. A NaN component gives NaN, an infinite one
+        /// +Infinity.
+        /// </remarks>
         public double Magnitude()
         {
-            return System.Math.Sqrt(MagnitudeSquared());
+            double s = MagnitudeSquared();
+            if (s >= OrdinaryLowest && s <= double.MaxValue)
+            {
+                return System.Math.Sqrt(s);
+            }
+
+            return ScaledMagnitude(s);
         }
-        
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private double ScaledMagnitude(double s)
+        {
+            if (!IsFinite(this) || IsZero(this))
+            {
+                return System.Math.Sqrt(s);
+            }
+
+            int k = System.Math.ILogB(LargestComponent(this));
+            return System.Math.ScaleB(System.Math.Sqrt(ScaleB(this, -k).MagnitudeSquared()), k);
+        }
+
         public double MagnitudeSquared()
         {
             return X * X + Y * Y + Z * Z;
@@ -33,35 +68,104 @@ namespace IO.Astrodynamics.Math
         /// <summary>
         /// The unit vector of this vector.
         /// </summary>
-        /// <exception cref="InvalidOperationException">The magnitude is 0 (#680; the vector itself was returned before
-        /// 11.0.0): a zero vector, or one whose components are all too small for their squares to be represented (below about
-        /// 1.5e-162), since the magnitude is not scaled. A vector of magnitude 0 has no direction.</exception>
+        /// <remarks>
+        /// Every finite non-zero vector has one: a vector whose squared components would overflow or lose their digits (a
+        /// component above about 1.34e154, or all below about 1e-150) is first scaled by the power of two of its largest
+        /// component, exactly (third round of #668: such vectors gave the zero vector, a vector off by up to 5.5e-6, or
+        /// threw, before 11.0.0). Every other vector gives the vector over its unscaled magnitude, bit for bit.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The vector is zero (#680; the vector itself was returned before
+        /// 11.0.0), or has a component that is not finite (third round of #668; NaN components were returned before 11.0.0):
+        /// it has no direction.</exception>
         public Vector3 Normalize()
         {
-            var m = Magnitude();
-            if (m == 0)
+            double s = MagnitudeSquared();
+            if (s >= OrdinaryLowest && s <= double.MaxValue)
+            {
+                return this / System.Math.Sqrt(s);
+            }
+
+            if (!IsFinite(this))
+            {
+                throw new InvalidOperationException($"The vector {this} has a component that is not finite and no direction.");
+            }
+
+            if (IsZero(this))
             {
                 throw new InvalidOperationException($"The vector {this} has a magnitude of 0 and no direction.");
             }
 
-            return this / m;
+            return ScaledUnit();
         }
 
         /// <summary>
-        /// The unit vector of this vector, or this vector when its magnitude is 0: the library's own normalizations, whose
+        /// The unit vector of this vector, or this vector when it is zero: the library's own normalizations, whose
         /// degenerate cases rely on the zero vector (a zero angular velocity rotates nothing, a coincident target is at
         /// angle 0, the transfer plane of collinear positions has no z component), bit for bit the former
-        /// <see cref="Normalize"/> (#680).
+        /// <see cref="Normalize"/> (#680) on every vector whose sum of squares lies in [1e-300, double.MaxValue]; a vector
+        /// with a component that is not finite keeps its former result (NaN components), and any other finite non-zero
+        /// vector is scaled as <see cref="Normalize"/> does (third round of #668).
         /// </summary>
         internal Vector3 NormalizeOrZero()
         {
-            var m = Magnitude();
-            if (m == 0)
+            double s = MagnitudeSquared();
+            if (s >= OrdinaryLowest && s <= double.MaxValue || !IsFinite(this))
+            {
+                return this / System.Math.Sqrt(s);
+            }
+
+            if (IsZero(this))
             {
                 return this;
             }
 
-            return this / m;
+            return ScaledUnit();
+        }
+
+        // The unit vector of a finite non-zero vector, scaled first by the power of two of its largest component (exact),
+        // so that its sum of squares lies in [1, 3]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private Vector3 ScaledUnit()
+        {
+            var scaled = ScaleB(this, -System.Math.ILogB(LargestComponent(this)));
+            return scaled / System.Math.Sqrt(scaled.MagnitudeSquared());
+        }
+
+        private static Vector3 ScaleB(in Vector3 v, int n)
+        {
+            return new Vector3(System.Math.ScaleB(v.X, n), System.Math.ScaleB(v.Y, n), System.Math.ScaleB(v.Z, n));
+        }
+
+        private static bool IsFinite(in Vector3 v)
+        {
+            return double.IsFinite(v.X) && double.IsFinite(v.Y) && double.IsFinite(v.Z);
+        }
+
+        private static bool IsZero(in Vector3 v)
+        {
+            return v.X == 0.0 && v.Y == 0.0 && v.Z == 0.0;
+        }
+
+        // Whether both sums of squares lie in [1e-300, 1e300], where the magnitudes and their product are represented
+        // without loss: the ordinary path of the cosine, bit for bit as before 11.0.0
+        private static bool IsOrdinaryPair(double s1, double s2)
+        {
+            return s1 >= OrdinaryLowest && s1 <= 1e300 && s2 >= OrdinaryLowest && s2 <= 1e300;
+        }
+
+        /// <summary>
+        /// The cosine of the angle between two finite non-zero vectors, clamped to [-1, 1]: (a · b) / (|a| |b|) when both
+        /// sums of squares lie in [1e-300, 1e300] (bit for bit the former quotient, the clamp changing only a quotient
+        /// rounded past ±1), otherwise the dot product of their unit vectors scaled as <see cref="Normalize"/> does.
+        /// </summary>
+        internal static double Cosine(in Vector3 a, in Vector3 b)
+        {
+            double s1 = a.MagnitudeSquared();
+            double s2 = b.MagnitudeSquared();
+            double cosine = IsOrdinaryPair(s1, s2)
+                ? (a * b) / (System.Math.Sqrt(s1) * System.Math.Sqrt(s2))
+                : a.Normalize() * b.Normalize();
+            return System.Math.Clamp(cosine, -1.0, 1.0);
         }
 
         public Vector3 Cross(in Vector3 vector)
@@ -69,31 +173,37 @@ namespace IO.Astrodynamics.Math
             return new Vector3((Y * vector.Z) - (Z * vector.Y), (Z * vector.X) - (X * vector.Z), (X * vector.Y) - (Y * vector.X));
         }
 
+        /// <summary>
+        /// The angle between this vector and <paramref name="vector"/>, in [0, π]; 0 by convention when either is zero.
+        /// </summary>
+        /// <remarks>
+        /// Vectors whose sums of squares lie outside [1e-300, 1e300] are compared through their unit vectors, scaled as
+        /// <see cref="Normalize"/> does (third round of #668: two vectors below about 1e-154 gave 0 and two above about
+        /// 1e154 NaN before 11.0.0); every other pair gives the former acos((a · b) / (|a| |b|)), clamped, bit for bit. A
+        /// vector with a component that is not finite gives NaN.
+        /// </remarks>
         public double Angle(in Vector3 vector)
         {
-            var mag1 = Magnitude();
-            var mag2 = vector.Magnitude();
-            
             // Handle zero vectors
-            if (mag1 == 0.0 || mag2 == 0.0)
+            if (IsZero(this) || IsZero(vector))
             {
                 return 0.0; // Angle is undefined, return 0 by convention
             }
-            
-            var dotProduct = (this * vector) / (mag1 * mag2);
-            
-            // Clamp to [-1, 1] to handle floating-point precision errors
-            dotProduct = System.Math.Clamp(dotProduct, -1.0, 1.0);
-            
-            return System.Math.Acos(dotProduct);
+
+            if (!IsFinite(this) || !IsFinite(vector))
+            {
+                return double.NaN;
+            }
+
+            return System.Math.Acos(Cosine(this, vector));
         }
 
         /// <summary>
         /// The signed angle from this vector to <paramref name="vector"/>, positive counterclockwise about the normal of
         /// <paramref name="plane"/>, in (−π, π]: atan2((a × b) · n̂, a · b).
         /// </summary>
-        /// <exception cref="ArgumentException">The normal of <paramref name="plane"/> has a magnitude of 0, or a component or
-        /// a magnitude that is not finite (#680's known limitation).</exception>
+        /// <exception cref="ArgumentException">The normal of <paramref name="plane"/> is zero or has a component that is not
+        /// finite (#680's known limitation).</exception>
         public double Angle(in Vector3 vector, in Plane plane)
         {
             return Angle(vector, plane.Normal);
@@ -102,25 +212,44 @@ namespace IO.Astrodynamics.Math
         /// <summary>
         /// The signed angle from this vector to <paramref name="vector"/>, positive counterclockwise about
         /// <paramref name="plane"/>, the normal of the plane of the angle, of any finite non-zero length, in (−π, π]:
-        /// atan2((a × b) · n̂, a · b). A zero vector gives 0, as the unsigned <see cref="Angle(in Vector3)"/> does.
+        /// atan2((a × b) · n̂, a · b). A zero vector gives 0 and a vector with a component that is not finite NaN, as the
+        /// unsigned <see cref="Angle(in Vector3)"/> does.
         /// </summary>
-        /// <exception cref="ArgumentException"><paramref name="plane"/> has a magnitude of 0 (a zero normal, or components all
-        /// below about 1.5e-162), or a component or a magnitude that is not finite: it orients no plane (#680's known
-        /// limitation; before 11.0.0 the unsigned 0 or π was returned, its sign lost).</exception>
+        /// <remarks>
+        /// Two finite non-zero vectors whose sums of squares are not both in [1e-300, 1e300] are first scaled by the
+        /// powers of two of their largest components, exactly, so their products neither overflow nor lose their digits
+        /// (third round of #668: from (1e200, 0, 0) to (1e200, 2e200, 0) gave π/4 instead of atan 2, most such pairs NaN,
+        /// and vectors below about 1e-154 gave 0); every other pair gives the former atan2, bit for bit.
+        /// </remarks>
+        /// <exception cref="ArgumentException"><paramref name="plane"/> is the zero vector or has a component that is not
+        /// finite: it orients no plane (#680's known limitation; before 11.0.0 the unsigned 0 or π was returned, its sign
+        /// lost). A tiny or huge finite normal orients its plane (third round of #668: below about 1.5e-162 or above about
+        /// 1.34e154 it threw).</exception>
         public double Angle(in Vector3 vector, in Vector3 plane)
         {
-            if (!double.IsFinite(plane.X) || !double.IsFinite(plane.Y) || !double.IsFinite(plane.Z))
+            if (!IsFinite(plane))
             {
                 throw new ArgumentException($"The plane normal {plane} has a component that is not finite and orients no plane.", nameof(plane));
             }
 
-            double m = plane.Magnitude();
-            if (!(m > 0.0) || !double.IsFinite(m))
+            if (IsZero(plane))
             {
-                throw new ArgumentException($"The plane normal {plane} has a magnitude of 0 or one that is not finite, and orients no plane.", nameof(plane));
+                throw new ArgumentException($"The plane normal {plane} has a magnitude of 0 and orients no plane.", nameof(plane));
             }
 
-            return double.Atan2(Cross(vector) * (plane / m), this * vector);
+            var n = plane.Normalize();
+            double s1 = MagnitudeSquared();
+            double s2 = vector.MagnitudeSquared();
+            if (IsOrdinaryPair(s1, s2) || !IsFiniteNonZero(this) || !IsFiniteNonZero(vector))
+            {
+                return double.Atan2(Cross(vector) * n, this * vector);
+            }
+
+            // Vectors whose products would overflow or lose their digits: both scaled by the powers of two of their largest
+            // components (exact), which multiplies (a × b) · n̂ and a · b by the same power of two and leaves the angle
+            var a = ScaleB(this, -System.Math.ILogB(LargestComponent(this)));
+            var b = ScaleB(vector, -System.Math.ILogB(LargestComponent(vector)));
+            return double.Atan2(a.Cross(b) * n, a * b);
         }
 
         /// <summary>
@@ -211,9 +340,9 @@ namespace IO.Astrodynamics.Math
             return RotationTo(vector);
         }
 
-        private static bool IsFiniteNonZero(in Vector3 v)
+        internal static bool IsFiniteNonZero(in Vector3 v)
         {
-            return double.IsFinite(v.X) && double.IsFinite(v.Y) && double.IsFinite(v.Z) && (v.X != 0.0 || v.Y != 0.0 || v.Z != 0.0);
+            return IsFinite(v) && !IsZero(v);
         }
 
         private static double LargestComponent(in Vector3 v)

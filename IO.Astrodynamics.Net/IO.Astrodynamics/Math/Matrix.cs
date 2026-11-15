@@ -426,9 +426,10 @@ public readonly record struct Matrix
     /// </summary>
     /// <param name="q">The quaternion representing the rotation, of any finite non-zero magnitude.</param>
     /// <returns>A 3x3 rotation matrix.</returns>
-    /// <exception cref="ArgumentException"><paramref name="q"/> has a magnitude of 0 (a zero quaternion, or components all
-    /// below about 1.5e-162), or a component or a magnitude that is not finite: it is no rotation (#680's known limitation;
-    /// the identity was returned for the zero quaternion before 11.0.0).</exception>
+    /// <exception cref="ArgumentException"><paramref name="q"/> is the zero quaternion or has a component that is not
+    /// finite: it is no rotation (#680's known limitation; the identity was returned for the zero quaternion before
+    /// 11.0.0). Every finite non-zero quaternion is a rotation, its magnitude scaled as <see cref="Quaternion.Normalize"/>
+    /// does (third round of #668: outside about 1e-154 to 1e154 it threw before 11.0.0).</exception>
     public static Matrix FromQuaternion(Quaternion q)
     {
         return RotationMatrix(q, nameof(q));
@@ -531,9 +532,10 @@ public readonly record struct Matrix
     /// use for any frame change of a state carrying a covariance.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentException">Thrown when covariance is not 6x6, or when <paramref name="rotation"/> has a
-    /// magnitude of 0 or a component or a magnitude that is not finite (#680's known limitation; the covariance was returned
-    /// unrotated for the zero quaternion before 11.0.0).</exception>
+    /// <exception cref="ArgumentException">Thrown when covariance is not 6x6, or when <paramref name="rotation"/> is the zero
+    /// quaternion or has a component that is not finite (#680's known limitation; the covariance was returned unrotated for
+    /// the zero quaternion before 11.0.0). Every finite non-zero quaternion is a rotation (third round of #668: outside
+    /// about 1e-154 to 1e154 it threw before 11.0.0).</exception>
     public static Matrix TransformCovariance(Matrix covariance, Quaternion rotation)
     {
         if (covariance.Rows != 6 || covariance.Columns != 6)

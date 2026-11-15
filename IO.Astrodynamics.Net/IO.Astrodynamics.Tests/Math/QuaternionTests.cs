@@ -277,7 +277,7 @@ namespace IO.Astrodynamics.Tests.Math
         {
             Assert.Throws<InvalidOperationException>(() => new Quaternion(0.0, 0.0, 0.0, 0.0).Normalize());
             Assert.Throws<InvalidOperationException>(() => Vector3.VectorX.Rotate(new Quaternion(0.0, 0.0, 0.0, 0.0).Normalize()));
-            Assert.Throws<InvalidOperationException>(() => new Quaternion(1e-170, 0.0, -1e-170, 0.0).Normalize());
+            Assert.Throws<InvalidOperationException>(() => new Quaternion(-0.0, 0.0, -0.0, 0.0).Normalize());
 
             // A non-zero quaternion: a unit quaternion, which rotates VectorX like the rotation matrix of the same quaternion,
             // whose first column is (1 - 2(y² + z²), 2(xy + wz), 2(xz - wy)) (Shuster 1993, the active rotation q p q*)
@@ -486,5 +486,144 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.Throws<InvalidOperationException>(() => zero.SLERP(Quaternion.Identity, 0.5));
             Assert.Throws<InvalidOperationException>(() => new Quaternion(double.NaN, 0.0, 0.0, 0.0).SLERP(Quaternion.Identity, 0.5));
         }
-}
+
+        // Third round of #668: the magnitude was not scaled, so a quaternion with a component above about 1.34e154
+        // normalized to the zero quaternion, one with every component below about 1.5e-162 threw "magnitude of 0", and a NaN
+        // or infinite component gave NaN components silently. The closed form: (1, 2, 2, 4) has magnitude 5, so (1, 2, 2, 4)
+        // 2^k normalizes to (0.2, 0.4, 0.4, 0.8), each correctly rounded, at any k (the scaling by a power of two is exact)
+        [Theory]
+        [InlineData(0)]
+        [InlineData(600)]
+        [InlineData(1000)]
+        [InlineData(-600)]
+        [InlineData(-1000)]
+        [InlineData(-1070)]
+        public void Normalize_ExtremeFiniteQuaternions_AreExactUnitQuaternions(int k)
+        {
+            var u = new Quaternion(System.Math.ScaleB(1.0, k), System.Math.ScaleB(-2.0, k), System.Math.ScaleB(2.0, k), System.Math.ScaleB(4.0, k)).Normalize();
+            Assert.Equal(new Quaternion(1.0 / 5.0, -2.0 / 5.0, 2.0 / 5.0, 4.0 / 5.0), u);
+        }
+
+        [Theory]
+        [InlineData(1e200)]
+        [InlineData(1e-170)]
+        [InlineData(double.MaxValue)]
+        [InlineData(4.9e-324)]
+        public void Normalize_ExtremeEqualComponents_IsTheirUnitQuaternion(double c)
+        {
+            var u = new Quaternion(c, c, 0.0, 0.0).Normalize();
+            double ulp = System.Math.BitIncrement(System.Math.Sqrt(0.5)) - System.Math.Sqrt(0.5);
+            Assert.True(System.Math.Abs(u.W - System.Math.Sqrt(0.5)) <= ulp, $"{u}");
+            Assert.Equal(u.W, u.VectorPart.X);
+            Assert.Equal(0.0, u.VectorPart.Y);
+            Assert.Equal(0.0, u.VectorPart.Z);
+        }
+
+        [Theory]
+        [InlineData(double.NaN, 0.0, 0.0, 0.0)]
+        [InlineData(double.PositiveInfinity, 0.0, 0.0, 0.0)]
+        [InlineData(1.0, 0.0, double.NegativeInfinity, 0.0)]
+        [InlineData(1.0, 0.0, 0.0, double.NaN)]
+        public void Normalize_NonFinite_Throws(double w, double x, double y, double z)
+        {
+            Assert.Throws<InvalidOperationException>(() => new Quaternion(w, x, y, z).Normalize());
+        }
+
+        // The magnitude was not scaled: +Infinity above about 1.34e154, 0 below about 1.5e-162. Closed form: |(1, 2, 2, 4)| = 5
+        // times any power of two, exactly; ordinary quaternions bit for bit the unscaled magnitude
+        [Fact]
+        public void Magnitude_ExtremeFiniteQuaternions()
+        {
+            Assert.Equal(System.Math.ScaleB(5.0, 1000), new Quaternion(System.Math.ScaleB(1.0, 1000), System.Math.ScaleB(2.0, 1000), System.Math.ScaleB(2.0, 1000), System.Math.ScaleB(4.0, 1000)).Magnitude());
+            Assert.Equal(System.Math.ScaleB(5.0, -1060), new Quaternion(System.Math.ScaleB(1.0, -1060), System.Math.ScaleB(2.0, -1060), System.Math.ScaleB(2.0, -1060), System.Math.ScaleB(4.0, -1060)).Magnitude());
+            Assert.Equal(1e-170, new Quaternion(0.0, 0.0, 0.0, -1e-170).Magnitude());
+            Assert.Equal(double.PositiveInfinity, new Quaternion(double.MaxValue, double.MaxValue, 0.0, 0.0).Magnitude());
+            Assert.Equal(0.0, new Quaternion(0.0, 0.0, 0.0, 0.0).Magnitude());
+            Assert.True(double.IsNaN(new Quaternion(double.NaN, 0.0, 0.0, 0.0).Magnitude()));
+
+            var random = new Random(668);
+            for (int i = 0; i < 10000; i++)
+            {
+                var q = new Quaternion(random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0,
+                    random.NextDouble() * 2.0 - 1.0) * System.Math.Pow(10.0, random.NextDouble() * 300.0 - 150.0);
+                double w = q.W, x = q.VectorPart.X, y = q.VectorPart.Y, z = q.VectorPart.Z;
+                Assert.Equal(System.Math.Sqrt(w * w + x * x + y * y + z * z), q.Magnitude());
+            }
+        }
+
+        // The worst element of FromQuaternion((1e200, 1e200, 0, 0)) against the closed form of Rx(90°), and of the SLERP
+        // of the identity times 2^1000 and Rx(90°) times 2^-1000 at 0.5 against Rx(45°) = (cos π/8, sin π/8, 0, 0): MEASURE
+        // 2.220e-16 and 0 (Linux x64, 2026-11-15); twice the worst, rounded up at the second significant digit, provisional
+        // until the three platforms are read from the CI logs
+        private const double ExtremeRotationTolerance = 4.5e-16;
+
+        // Third round of #668: FromQuaternion, SLERP and Lerp required a magnitude that was neither 0 nor infinite, unscaled,
+        // so a finite non-zero quaternion outside about 1e-154 to 1e154 threw; Lerp's chord could overflow too
+        [Fact]
+        public void FromQuaternion_Lerp_Slerp_AcceptFiniteExtremeQuaternions()
+        {
+            var m = Matrix.FromQuaternion(new Quaternion(1e200, 1e200, 0.0, 0.0));
+            double[,] rx90 = { { 1.0, 0.0, 0.0 }, { 0.0, 0.0, -1.0 }, { 0.0, 1.0, 0.0 } };
+            double worstMatrix = 0.0;
+            for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                worstMatrix = System.Math.Max(worstMatrix, System.Math.Abs(m.Get(i, j) - rx90[i, j]));
+
+            var from = Quaternion.Identity * System.Math.ScaleB(1.0, 1000);
+            var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2) * System.Math.ScaleB(1.0, -1000);
+            var s = from.SLERP(to, 0.5);
+            double cw = System.Math.Cos(System.Math.PI / 8.0), cx = System.Math.Sin(System.Math.PI / 8.0);
+            double worstSlerp = System.Math.Max(System.Math.Max(System.Math.Abs(s.W - cw), System.Math.Abs(s.VectorPart.X - cx)),
+                System.Math.Max(System.Math.Abs(s.VectorPart.Y), System.Math.Abs(s.VectorPart.Z)));
+
+            _output.WriteLine($"MEASURE FromQuaternion((1e200, 1e200, 0, 0)) against Rx(90°): {worstMatrix:E3}");
+            _output.WriteLine($"MEASURE SLERP(2^1000 I, 2^-1000 Rx(90°), 0.5) against Rx(45°): {worstSlerp:E3}");
+            Assert.True(worstMatrix <= ExtremeRotationTolerance, $"{worstMatrix:E3}");
+            Assert.True(worstSlerp <= ExtremeRotationTolerance, $"{worstSlerp:E3}");
+
+            // The chord from (1e308, 0, 0, 0) to (-1e308, 1e308, 0, 0) overflows (-2e308); its midpoint is (0, 0.5e308, 0, 0),
+            // whose unit quaternion is (0, 1, 0, 0) exactly
+            Assert.Equal(new Quaternion(0.0, 1.0, 0.0, 0.0), new Quaternion(1e308, 0.0, 0.0, 0.0).Lerp(new Quaternion(-1e308, 1e308, 0.0, 0.0), 0.5));
+            // Tiny quaternions: the chord from 2^-1060 (1, 0, 0, 0) to 2^-1060 (0, 1, 0, 0) at 0.5 is (1, 1, 0, 0) 2^-1061
+            var tiny = new Quaternion(System.Math.ScaleB(1.0, -1060), 0.0, 0.0, 0.0).Lerp(new Quaternion(0.0, System.Math.ScaleB(1.0, -1060), 0.0, 0.0), 0.5);
+            Assert.Equal(tiny.W, tiny.VectorPart.X);
+            Assert.True(System.Math.Abs(tiny.W - System.Math.Sqrt(0.5)) <= ExtremeRotationTolerance, $"{tiny}");
+        }
+
+        // Lerp computed the chord q + t (q2 − q) of tiny quaternions unscaled, so its products rounded into the subnormal
+        // range: from s (1, 0, 0, 0) to s (0, 1, 0, 0) at 4.9e-324 any t gave (1, 0, 0, 0), at 1e-320 the components were
+        // off by up to 6.8e-4. The closed form: (1 − t, t, 0, 0) / √((1 − t)² + t²) at any scale s, over 1000 draws of t
+        // per scale. The worst component, MEASURE 3.331e-16 (1e-160; 0 to 2.220e-16 at the other scales; Linux x64,
+        // 2026-11-15; before the fix 0.707 at 4.9e-324, 3.99e-4 at 1e-320, 3.99e-14 at 1e-310); twice the worst, rounded
+        // up at the second significant digit, provisional until the three platforms are read from the CI logs
+        [Theory]
+        [InlineData(4.9e-324)]
+        [InlineData(1e-320)]
+        [InlineData(1e-310)]
+        [InlineData(2.2250738585072014e-308)]
+        [InlineData(1e-300)]
+        [InlineData(1e-160)]
+        public void Lerp_TinyQuaternions_InterpolateAsTheirDirections(double s)
+        {
+            var q = new Quaternion(s, 0.0, 0.0, 0.0);
+            var q2 = new Quaternion(0.0, s, 0.0, 0.0);
+            var random = new Random(668);
+            double worst = 0.0;
+            for (int i = 0; i < 1000; i++)
+            {
+                double t = i == 0 ? 0.3 : i == 1 ? 1.0 / 3.0 : random.NextDouble();
+                double norm = System.Math.Sqrt((1.0 - t) * (1.0 - t) + t * t);
+                var expected = new Quaternion((1.0 - t) / norm, t / norm, 0.0, 0.0);
+                var lerp = q.Lerp(q2, t);
+                worst = System.Math.Max(worst, System.Math.Max(System.Math.Abs(lerp.W - expected.W), System.Math.Abs(lerp.VectorPart.X - expected.VectorPart.X)));
+                Assert.Equal(0.0, lerp.VectorPart.Y);
+                Assert.Equal(0.0, lerp.VectorPart.Z);
+            }
+
+            _output.WriteLine($"MEASURE Lerp of s (1, 0, 0, 0) to s (0, 1, 0, 0) at s = {s:E3}, worst component: {worst:E3}");
+            Assert.True(worst <= TinyLerpTolerance, $"{worst:E3}");
+        }
+
+        private const double TinyLerpTolerance = 6.7e-16;
+    }
 }

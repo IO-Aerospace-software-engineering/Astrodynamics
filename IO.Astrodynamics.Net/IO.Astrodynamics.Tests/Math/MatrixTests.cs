@@ -1,11 +1,19 @@
 using System;
 using IO.Astrodynamics.Math;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Math;
 
 public class MatirxTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public MatirxTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Fact]
     public void CreateMatrix()
     {
@@ -1143,6 +1151,37 @@ public class MatirxTests
         }
     }
 
+    // Third round of #668: the rotation's magnitude was not scaled, so a finite quaternion with a component above about
+    // 1.34e154 threw ArgumentException (rotation). (1e200, 1e200, 0, 0) is Rx(90°), which sends y to z and z to -y: the
+    // closed form of R P Rᵀ for P = diag(4, 1, 9, 0.04, 0.01, 0.09) is diag(4, 9, 1, 0.04, 0.09, 0.01). The worst element,
+    // MEASURE 3.553e-15 (two ulps of 9; Linux x64, 2026-11-15) at 1e200 and 1e-170 alike; twice the worst rounded up at the
+    // second significant digit, provisional until the three platforms are read from the CI logs
+    private const double ExtremeRotationCovarianceTolerance = 7.2e-15;
+
+    [Theory]
+    [InlineData(1e200)]
+    [InlineData(1e-170)]
+    public void TransformCovariance_ExtremeFiniteRotation_IsTheRotationOfItsUnitQuaternion(double c)
+    {
+        var P = new Matrix(6, 6);
+        double[] diagonal = { 4.0, 1.0, 9.0, 0.04, 0.01, 0.09 };
+        for (int i = 0; i < 6; i++) P.Set(i, i, diagonal[i]);
+        double[] expected = { 4.0, 9.0, 1.0, 0.04, 0.09, 0.01 };
+
+        var result = Matrix.TransformCovariance(P, new Quaternion(c, c, 0.0, 0.0));
+
+        double worst = 0.0;
+        for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 6; j++)
+            worst = System.Math.Max(worst, System.Math.Abs(result.Get(i, j) - (i == j ? expected[i] : 0.0)));
+        _output.WriteLine($"MEASURE TransformCovariance by ({c:E1}, {c:E1}, 0, 0) against Rx(90°) P Rx(90°)ᵀ: {worst:E3}");
+        Assert.True(worst <= ExtremeRotationCovarianceTolerance, $"{worst:E3}");
+
+        // The zero and non-finite rotations still throw
+        Assert.Equal("rotation", Assert.Throws<ArgumentException>(() => Matrix.TransformCovariance(P, new Quaternion(0.0, 0.0, 0.0, 0.0))).ParamName);
+        Assert.Equal("rotation", Assert.Throws<ArgumentException>(() => Matrix.TransformCovariance(P, new Quaternion(double.NaN, 0.0, 0.0, 0.0))).ParamName);
+    }
+
     #endregion
 
     #region Add
@@ -1311,12 +1350,14 @@ public class MatirxTests
 
     // The known limitation of #680: FromQuaternion normalised its argument leniently, so the zero quaternion gave the
     // identity and TransformCovariance returned the covariance unrotated; a zero or non-finite quaternion is no rotation
+    // (a tiny non-zero one, which threw until the third round of #668, is a rotation: see
+    // TransformCovariance_ExtremeFiniteRotation_IsTheRotationOfItsUnitQuaternion)
     [Theory]
     [InlineData(0.0, 0.0, 0.0, 0.0)]
+    [InlineData(-0.0, 0.0, -0.0, 0.0)]
     [InlineData(double.NaN, 0.0, 0.0, 0.0)]
     [InlineData(1.0, double.PositiveInfinity, 0.0, 0.0)]
     [InlineData(0.0, 0.0, double.NegativeInfinity, 1.0)]
-    [InlineData(1e-170, 0.0, -1e-170, 0.0)]
     public void FromQuaternion_ZeroOrNonFiniteQuaternion_Throws(double w, double x, double y, double z)
     {
         var q = new Quaternion(w, x, y, z);
