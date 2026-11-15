@@ -482,9 +482,10 @@ Classical Keplerian orbital elements (osculating or mean).
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
 | `Period()` | Get orbital period |
 | `PerigeeRadius()` | Get perigee radius (m) |
-| `ApogeeRadius()` | Get apogee radius (m) |
 | `PerigeeVector()` | Get perigee position vector |
-| `ApogeeVector()` | Get apogee position vector |
+| `ApogeeVector()` | Get apogee position vector (its `Magnitude()` is the apogee radius, m, a(1 + e)) |
+| `PerigeeVelocity()` | Get the speed at perigee (m/s) |
+| `ApogeeVelocity()` | Get the speed at apogee (m/s) |
 | `IsCircular()` | Check if orbit is circular (e ≈ 0) |
 | `IsElliptical()` | Check if orbit is elliptical |
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |

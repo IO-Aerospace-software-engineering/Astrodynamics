@@ -38,7 +38,7 @@
 | `AtEpoch(Time)` | Two-body propagation to new epoch |
 | `EccentricAnomaly()` / `TrueAnomaly()` | From M, on an ellipse or a hyperbola by Kepler's equation: Newton's method from an upper bound of the root, to its rounding floor, at most 50 iterations; a non-finite M or e throws `InvalidOperationException` (#453). On a parabola, Barker's closed form |
 | `Period()` | Orbital period |
-| `PerigeeRadius()` / `ApogeeRadius()` | Apse radii (m) |
+| `PerigeeRadius()` / `ApogeeVector().Magnitude()` | Apse radii (m) |
 | `IsCircular()` / `IsElliptical()` / `IsParabolic()` / `IsHyperbolic()` | Orbit type checks |
 
 ## EquinoctialElements

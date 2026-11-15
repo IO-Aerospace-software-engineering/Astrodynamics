@@ -181,6 +181,103 @@ public class DeveloperGuideExamplesTests
         return parts.Length == 2 ? Term(parts[0]) / Term(parts[1]) : Term(expression);
     }
 
+    // The methods of the guide's member tables: the type of the heading above (#### Name, its first word), each
+    // `Name(arguments)` of a row's first cell, its argument count as the row writes it ("..." standing for any further
+    // arguments), and the line
+    private static List<(string Type, string Name, int Arguments, bool Open, int Line)> GuideMethodRows()
+    {
+        var lines = File.ReadAllLines(GuidePath);
+        var rows = new List<(string, string, int, bool, int)>();
+        string heading = null;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var title = Regex.Match(lines[i], @"^#### (\w+)");
+            if (title.Success)
+            {
+                heading = title.Groups[1].Value;
+                continue;
+            }
+
+            int end = lines[i].IndexOf("` |", StringComparison.Ordinal);
+            if (heading == null || !lines[i].StartsWith("| `", StringComparison.Ordinal) || end < 0)
+            {
+                continue;
+            }
+
+            foreach (Match member in Regex.Matches(lines[i][..(end + 1)], @"`(\w+)\(([^`]*)\)`"))
+            {
+                // The arguments split at the commas outside brackets and generic arguments
+                var arguments = new List<string>();
+                int depth = 0, start = 0;
+                var text = member.Groups[2].Value;
+                for (int k = 0; k <= text.Length; k++)
+                {
+                    if (k == text.Length || (text[k] == ',' && depth == 0))
+                    {
+                        arguments.Add(text[start..k].Trim());
+                        start = k + 1;
+                    }
+                    else if (text[k] is '(' or '<' or '[') depth++;
+                    else if (text[k] is ')' or '>' or ']') depth--;
+                }
+
+                arguments.RemoveAll(a => a.Length == 0);
+                bool open = arguments.Remove("...");
+                rows.Add((heading, member.Groups[1].Value, arguments.Count, open, i + 1));
+            }
+        }
+
+        return rows;
+    }
+
+    /// <summary>
+    /// Every method row of the guide's member tables names a public method (a constructor when it is the type's name) of
+    /// the type of its heading, its bases or the library's extension methods, with an overload that takes the row's
+    /// argument count, so a table cannot list a member that does not exist: red on 9a99acc, whose KeplerianElements
+    /// table lists <c>ApogeeRadius()</c>, which the library never declared (#668, second round).
+    /// </summary>
+    [Fact]
+    public void GuideMethodTables_NameMembersOfTheLibrary()
+    {
+        var assembly = typeof(IO.Astrodynamics.Constants).Assembly;
+        var types = assembly.GetExportedTypes();
+        var extensions = types.Where(t => t.IsAbstract && t.IsSealed)
+            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Static))
+            .Where(m => m.IsDefined(typeof(System.Runtime.CompilerServices.ExtensionAttribute), false)).ToList();
+        var rows = GuideMethodRows();
+        Assert.NotEmpty(rows);
+        var misses = new List<string>();
+        foreach (var (typeName, name, arguments, open, line) in rows)
+        {
+            var candidates = types.Where(t => (t.IsGenericType ? t.Name[..t.Name.IndexOf('`')] : t.Name) == typeName).ToList();
+            if (candidates.Count == 0)
+            {
+                misses.Add($"line {line}: no public type {typeName}");
+                continue;
+            }
+
+            bool Accepts(ParameterInfo[] parameters, int skip)
+            {
+                var own = parameters.Skip(skip).ToArray();
+                int required = own.Count(p => !p.IsOptional && !p.IsDefined(typeof(ParamArrayAttribute), false));
+                bool unbounded = own.Length > 0 && own[^1].IsDefined(typeof(ParamArrayAttribute), false);
+                return (open || arguments >= required) && (unbounded || arguments <= own.Length);
+            }
+
+            bool found = candidates.Any(type =>
+                (name == typeName && type.GetConstructors().Any(c => Accepts(c.GetParameters(), 0)))
+                || type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                    .Any(m => m.Name == name && Accepts(m.GetParameters(), 0))
+                || extensions.Any(m => m.Name == name && m.GetParameters()[0].ParameterType.IsAssignableFrom(type) && Accepts(m.GetParameters(), 1)));
+            if (!found)
+            {
+                misses.Add($"line {line}: {typeName}.{name} with {arguments} argument(s){(open ? " or more" : "")}");
+            }
+        }
+
+        Assert.True(misses.Count == 0, string.Join(Environment.NewLine, misses));
+    }
+
     #endregion
 
     #region The spacecraft section
