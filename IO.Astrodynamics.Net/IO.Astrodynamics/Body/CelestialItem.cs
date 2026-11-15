@@ -946,8 +946,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="value">The distance, m.</param>
     /// <param name="aberration"></param>
     /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-    /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-    /// than the shortest interval where the quantity is monotone.</param>
+    /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+    /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+    /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+    /// shorter than the shortest interval where the quantity is monotone.</param>
     /// <returns></returns>
     /// <remarks>When both objects come from the kernels and one of them is a spacecraft, CSPICE's <c>gfdist_c</c>
     /// searches; otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
@@ -1055,8 +1057,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="adjustValue"></param>
     /// <param name="aberration"></param>
     /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-    /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-    /// than the shortest interval where the quantity is monotone.</param>
+    /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+    /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+    /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+    /// shorter than the shortest interval where the quantity is monotone.</param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
