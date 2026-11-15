@@ -33,8 +33,6 @@ public class DeveloperGuideExamplesTests
     private static readonly string GuidePath = Path.Combine(AppContext.BaseDirectory, "Docs", "DEVELOPER_GUIDE.md");
     private static readonly string ExamplesPath = Path.Combine(AppContext.BaseDirectory, "Docs", "DeveloperGuideExamples.cs");
 
-    private static readonly Regex UsingDirective = new(@"^using [A-Za-z0-9_.]+( = [A-Za-z0-9_.]+)?;$");
-
     private readonly ITestOutputHelper _output;
 
     public DeveloperGuideExamplesTests(ITestOutputHelper output)
@@ -46,81 +44,7 @@ public class DeveloperGuideExamplesTests
     #region The guide against the compiled regions
 
     // The csharp blocks of the guide, in order
-    private static List<List<string>> GuideBlocks()
-    {
-        var lines = File.ReadAllLines(GuidePath);
-        var blocks = new List<List<string>>();
-        for (int i = 0; i < lines.Length; i++)
-        {
-            if (lines[i].Trim() != "```csharp")
-            {
-                continue;
-            }
-
-            var block = new List<string>();
-            for (i++; lines[i].Trim() != "```"; i++)
-            {
-                block.Add(lines[i]);
-            }
-
-            blocks.Add(block);
-        }
-
-        return blocks;
-    }
-
-    // The regions guide:<n> of the examples, by n
-    private static SortedDictionary<int, List<string>> Regions()
-    {
-        var lines = File.ReadAllLines(ExamplesPath);
-        var regions = new SortedDictionary<int, List<string>>();
-        for (int i = 0; i < lines.Length; i++)
-        {
-            var match = Regex.Match(lines[i].Trim(), @"^#region guide:(\d+)$");
-            if (!match.Success)
-            {
-                continue;
-            }
-
-            var region = new List<string>();
-            for (i++; lines[i].Trim() != "#endregion"; i++)
-            {
-                region.Add(lines[i]);
-            }
-
-            regions.Add(int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture), region);
-        }
-
-        return regions;
-    }
-
-    // The leading using directives of a block, which the examples file holds once
-    private static (List<string> Usings, List<string> Code) SplitUsings(List<string> block)
-    {
-        var usings = new List<string>();
-        int start = 0;
-        while (start < block.Count && (UsingDirective.IsMatch(block[start].Trim()) || block[start].Trim().Length == 0))
-        {
-            if (block[start].Trim().Length > 0)
-            {
-                usings.Add(block[start].Trim());
-            }
-
-            start++;
-        }
-
-        return (usings, block.Skip(start).ToList());
-    }
-
-    // Indentation normalized: the common indentation removed, the trailing blanks and blank edge lines dropped
-    private static List<string> Normalize(IEnumerable<string> lines)
-    {
-        var list = lines.Select(l => l.TrimEnd()).ToList();
-        while (list.Count > 0 && list[0].Length == 0) list.RemoveAt(0);
-        while (list.Count > 0 && list[^1].Length == 0) list.RemoveAt(list.Count - 1);
-        int indent = list.Where(l => l.Length > 0).Select(l => l.Length - l.TrimStart().Length).DefaultIfEmpty(0).Min();
-        return list.Select(l => l.Length >= indent ? l[indent..] : l).ToList();
-    }
+    private static List<List<string>> GuideBlocks() => DocumentationCodeBlocks.Blocks(GuidePath);
 
     /// <summary>
     /// Every csharp block of the guide but the excerpt of <c>Constants</c> equals its region of
@@ -130,30 +54,7 @@ public class DeveloperGuideExamplesTests
     [Fact]
     public void GuideBlocks_EqualTheirCompiledRegions()
     {
-        var blocks = GuideBlocks();
-        var regions = Regions();
-        Assert.Equal(blocks.Count - 1, regions.Count);
-        Assert.Equal(Enumerable.Range(1, blocks.Count - 1), regions.Keys);
-        var namespaces = typeof(IO.Astrodynamics.Constants).Assembly.GetTypes().Select(t => t.Namespace).Where(n => n != null).ToHashSet();
-        for (int n = 1; n < blocks.Count; n++)
-        {
-            var (usings, code) = SplitUsings(blocks[n]);
-            foreach (var directive in usings)
-            {
-                // A block's using directives name namespaces of the library (the examples file holds them)
-                var name = directive["using ".Length..^1];
-                Assert.True(namespaces.Contains(name) || name.StartsWith("System", StringComparison.Ordinal), $"block {n}: {directive}");
-            }
-
-            var expected = Normalize(code);
-            var actual = Normalize(regions[n]);
-            for (int i = 0; i < System.Math.Min(expected.Count, actual.Count); i++)
-            {
-                Assert.True(expected[i] == actual[i], $"block {n}, line {i + 1}: the guide has \"{expected[i]}\", the region \"{actual[i]}\"");
-            }
-
-            Assert.True(expected.Count == actual.Count, $"block {n}: {expected.Count} lines in the guide, {actual.Count} in the region");
-        }
+        DocumentationCodeBlocks.AssertBlocksEqualRegions("DEVELOPER_GUIDE.md", GuideBlocks(), 1, DocumentationCodeBlocks.Regions(ExamplesPath, "guide"));
     }
 
     /// <summary>The excerpt of <c>Constants</c> in the guide (its first csharp block) gives the library's values.</summary>

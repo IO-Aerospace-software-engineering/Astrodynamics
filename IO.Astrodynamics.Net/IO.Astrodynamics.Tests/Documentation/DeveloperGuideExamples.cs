@@ -1708,13 +1708,13 @@ internal static class DeveloperGuideExamples
 
         // Configure TRIAD attitude:
         // - Primary: Spacecraft Down (-Z) points at Earth (nadir)
-        // - Secondary: Spacecraft Right (+X), the solar panel axis, oriented toward Sun (a vector at 5 degrees at least from the
-        //   primary: Up, opposite to Down, would be rejected)
+        // - Secondary: Spacecraft Right (+X) oriented toward Sun, which sets the roll about nadir (a vector at 5 degrees at
+        //   least from the primary: Up, opposite to Down, would be rejected)
         var triadManeuver = new TriadAttitude(
             start,                          // Start time
             TimeSpan.FromHours(1.5),        // Hold duration
             Spacecraft.Down, earth,         // Primary constraint: nadir pointing
-            Spacecraft.Right, sun,          // Secondary constraint: solar panel toward Sun
+            Spacecraft.Right, sun,          // Secondary constraint: +X toward the Sun
             engine
         );
 

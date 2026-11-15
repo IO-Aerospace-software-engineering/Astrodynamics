@@ -9,6 +9,7 @@ Load SPICE kernels before calling any ephemeris function:
 ```csharp
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
@@ -33,7 +34,7 @@ var epoch = new Time(2024, 6, 21, 12, 0, 0);
 Retrieve the Earth-Sun state vector in the ICRF frame at one instant:
 
 ```csharp
-var stateVector = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None)
+var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
 Console.WriteLine($"Position: {stateVector.Position} m");
@@ -48,12 +49,12 @@ Generate a sequence of states over a time window at a fixed step size:
 
 ```csharp
 var window = new Window(epoch, epoch.AddDays(1));
-var states = moon.GetEphemeris(window, earth, Frames.Frame.ICRF, Aberration.LT,
+var states = moon.GetEphemeris(window, earth, Frame.ICRF, Aberration.LT,
     TimeSpan.FromHours(1));
 
 foreach (var sv in states)
 {
-    Console.WriteLine($"{sv.Epoch}  range = {sv.Position.Magnitude():F0} m");
+    Console.WriteLine($"{sv.Epoch}  range = {sv.ToStateVector().Position.Magnitude():F0} m");
 }
 ```
 
@@ -72,8 +73,8 @@ The `Aberration` parameter controls light-time and stellar aberration correction
 Use `None` for propagation and force-model queries. Use `LT` or `LTS` for observational geometry (e.g., where does the Moon appear from Earth?).
 
 ```csharp
-var geometric = earth.GetEphemeris(epoch, moon, Frames.Frame.ICRF, Aberration.None);
-var apparent = earth.GetEphemeris(epoch, moon, Frames.Frame.ICRF, Aberration.LTS);
+var geometric = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.None);
+var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LTS);
 ```
 
 ## Angular Separation

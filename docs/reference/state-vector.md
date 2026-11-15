@@ -8,7 +8,7 @@
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),
     new Vector3(0.0, 8000.0, 0.0),
-    earth, epoch, Frames.Frame.ICRF);
+    earth, epoch, Frame.ICRF);
 ```
 
 An optional 6x6 covariance matrix can be attached:
