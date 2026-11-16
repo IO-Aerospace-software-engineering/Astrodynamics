@@ -488,10 +488,11 @@ public class DocumentationPagesExamplesTests
         return r0 * lagrangeF + v0 * lagrangeG;
     }
 
-    // Twice the worst on Linux x64 and Windows x64 (CI run 43906476725; MEASURE lines below), rounded up at the second significant
-    // digit, provisional until set again with the macOS arm64 CI log: the arrival of the two-body motion from the departure
-    // with each Lambert velocity, against the arrival position: 3.217e-7 m at worst on Windows, 3.062e-7 m on Linux (one
-    // revolution, right branch; 2 revolutions and less, over 5 h), the solver's; the closed form resolves about 1e-8 m (the rounding of the flight time, 1e-16 of 1.8e4 s)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (CI runs 43906476725 and 43926830045; MEASURE lines
+    // below), rounded up at the second significant digit: the arrival of the two-body motion from the departure with
+    // each Lambert velocity, against the arrival position: 3.217e-7 m at worst on Windows, 3.062e-7 m on Linux and
+    // macOS arm64 (one revolution, right branch; 2 revolutions and less, over 5 h), the solver's; the closed form
+    // resolves about 1e-8 m (the rounding of the flight time, 1e-16 of 1.8e4 s)
     private const double LambertArrivalLimit = 6.5e-7;
 
     /// <summary>
@@ -531,9 +532,9 @@ public class DocumentationPagesExamplesTests
     // The obliquity of ECLIPJ2000, the IAU 1976 value at J2000 (84381.448 arcseconds; NAIF, Frames Required Reading)
     private const double ObliquityJ2000 = 84381.448 / 3600.0 * IO.Astrodynamics.Constants.Deg2Rad;
 
-    // Twice the worst on Linux x64 and Windows x64 (the same on both), provisional as above: the ecliptic state of the tutorial against the
-    // rotation by the obliquity, 9.313e-10 m and 1.819e-12 m/s, rounding (1.4e-16 of the position); the CIRS round trip
-    // against the ICRF position, 1.370e-16 relative to its magnitude
+    // Twice the worst over the three platforms (the same on all three), as above: the ecliptic state of the tutorial
+    // against the rotation by the obliquity, 9.313e-10 m and 1.819e-12 m/s, rounding (1.4e-16 of the position); the
+    // CIRS round trip against the ICRF position, 1.370e-16 relative to its magnitude
     private const double EclipticPositionLimit = 1.9e-9;
     private const double EclipticVelocityLimit = 3.7e-12;
     private const double CirsRoundTripLimit = 2.8e-16;

@@ -78,10 +78,10 @@ public class StarTests
         Assert.Equal(star.Distance, res.Distance);
     }
 
-    // The record of GetEquatorialCoordinates2 against its closed form: twice the worst on Linux x64 and Windows x64,
-    // rounded up at the second digit (2.132e-14 rad on Windows and locally on Linux, 1.421e-14 rad on the Linux runner,
-    // CI run 43906476725), PROVISIONAL, to be set again with the macOS arm64 CI log: its angles are about 40 rad before their reduction, whose ulp is
-    // 7.1e-15 rad. Before the fix (#709), 3.142 rad
+    // The record of GetEquatorialCoordinates2 against its closed form: twice the worst over Linux x64, Windows x64 and
+    // macOS arm64, rounded up at the second digit (2.132e-14 rad on Windows and locally on Linux, 1.421e-14 rad on the
+    // Linux and macOS arm64 runners, CI runs 43906476725 and 43926830045): its angles are about 40 rad before their
+    // reduction, whose ulp is 7.1e-15 rad. Before the fix (#709), 3.142 rad
     internal const double LargeAngleTolerance = 4.3e-14;
 
     [Fact]
@@ -842,12 +842,14 @@ public class StarTests
         Assert.True(worstStep <= PoleDirectionTolerance, $"{worstStep:E3}");
     }
 
-    // The records of the crossing against its closed form, twice the worst on Linux x64 and Windows x64, rounded up at the
-    // second digit (CI run 43906476725), PROVISIONAL, to be set again with the macOS arm64 CI log (the direction goes through the
-    // platform's sines and cosines): the angles 9.992e-15 rad on Windows and locally on Linux, 1.776e-15 rad on the Linux
-    // runner (the star of 1 rad/yr, its declination 8 rad after 8 yr, whose rounding the reduction carries; 3.553e-15 rad
-    // for the others), the directions 1.555e-15 on Windows, 1.539e-15 on Linux (3.446e-16 for the others); a step between consecutive epochs longer than the arc of the angles by 0.000e+00 rad. Before the fix (#709),
-    // 3.142 rad (the right ascension not turned), a direction 2.0 away and a jump of 1.569 rad over 0.01 yr
+    // The records of the crossing against its closed form, twice the worst over Linux x64, Windows x64 and macOS arm64,
+    // rounded up at the second digit (CI runs 43906476725 and 43926830045; the direction goes through the platform's
+    // sines and cosines): the angles 9.992e-15 rad on Windows and locally on Linux, 1.776e-15 rad on the Linux and
+    // macOS arm64 runners (the star of 1 rad/yr, its declination 8 rad after 8 yr, whose rounding the reduction
+    // carries; 3.553e-15 rad for the others), the directions 1.555e-15 on Windows, 1.539e-15 on Linux and macOS arm64
+    // (3.446e-16 for the others); a step between consecutive epochs longer than the arc of the angles by 0.000e+00 rad.
+    // Before the fix (#709), 3.142 rad (the right ascension not turned), a direction 2.0 away and a jump of 1.569 rad
+    // over 0.01 yr
     internal const double PoleAngleTolerance = 2.0e-14;
     internal const double PoleDirectionTolerance = 3.2e-15;
 
@@ -951,10 +953,11 @@ public class StarTests
 
     // The record of the sigmas above π/2 and 2π against their closed form (GetDeclinationSigma, GetRightAscensionSigma,
     // Sigmas_AboveAnAngleRange_AreNotReduced: 2, 2.828, 7, 7.280, 10.013 and 11.416 rad): twice the worst relative
-    // difference on Linux x64, rounded up at the second digit (1.269e-16, the right ascension sigma of 7 rad at the catalog
-    // epoch, where the library returns 7 exactly: the closed form's conversion of 49 with 28 decimals from decimal to
-    // double; 0.000e+00 for the others; the same on Windows x64, CI run 43906476725), PROVISIONAL, to be set again with the macOS arm64 CI log
-    // (System.Math.Pow is the platform's libm). Before the fix (#709), the sigmas were reduced: 0.588, 5.133, 0.429 rad
+    // difference over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit (1.269e-16 on all three,
+    // CI runs 43906476725 and 43926830045: the right ascension sigma of 7 rad at the catalog epoch, where the library
+    // returns 7 exactly, the closed form's conversion of 49 with 28 decimals from decimal to double; 0.000e+00 for the
+    // others; System.Math.Pow is the platform's libm). Before the fix (#709), the sigmas were reduced: 0.588, 5.133,
+    // 0.429 rad
     internal const double LargeSigmaTolerance = 2.6e-16;
 
     /// <summary>

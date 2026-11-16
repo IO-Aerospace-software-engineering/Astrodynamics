@@ -306,17 +306,17 @@ public class DeveloperGuideExamplesTests
         return (position, velocity);
     }
 
-    // Twice the worst on Linux x64 and Windows x64 (the same on both, CI run 43906476725; MEASURE lines below), rounded up at the
-    // second significant digit, provisional until set again with the macOS arm64 CI log: the example's Velocity-Verlet propagation
-    // at 5 min against the reference with GM_Earth + GM_Moon after 25 days, 4.684e2 m and 1.197e-3 m/s, the integrator's own
-    // error (second order; the reference's own spread over its steps, 600 to 60 s, is about 1e-4 m)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on all three, CI runs 43906476725 and
+    // 43926830045; MEASURE lines below), rounded up at the second significant digit: the example's Velocity-Verlet
+    // propagation at 5 min against the reference with GM_Earth + GM_Moon after 25 days, 4.684e2 m and 1.197e-3 m/s, the
+    // integrator's own error (second order; the reference's own spread over its steps, 600 to 60 s, is about 1e-4 m)
     private const double DeepSpaceExamplePositionLimit = 9.4e2;
     private const double DeepSpaceExampleVelocityLimit = 2.4e-3;
 
-    // Twice the worst on Linux x64 and Windows x64 (the same on both), provisional as above: the reference with GM_Earth + GM_Moon against the
-    // Moon's SPK (de440s) after 25 days, 1.514e3 m, the perturbations the reference leaves out (the Earth's and the
-    // Moon's figures, the other planets, relativity), and the example's propagated Moon against the SPK, 1.972e3 m, both
-    // errors together
+    // Twice the worst over the three platforms (the same on all three), as above: the reference with GM_Earth + GM_Moon
+    // against the Moon's SPK (de440s) after 25 days, 1.514e3 m, the perturbations the reference leaves out (the Earth's
+    // and the Moon's figures, the other planets, relativity), and the example's propagated Moon against the SPK,
+    // 1.972e3 m, both errors together
     private const double DeepSpaceMoonMassLimit = 3.1e3;
     private const double DeepSpaceExampleMoonLimit = 4.0e3;
 
