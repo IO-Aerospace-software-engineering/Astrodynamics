@@ -1532,6 +1532,24 @@ namespace
         return sv;
     }
 
+#if !defined(_WIN32)
+    // Whether SPICE has an error pending, which is then reset (failed_c and reset_c bind to the library's CSPICE on Linux and
+    // macOS, where the shared library exports the CSPICE routines it contains)
+    bool TakePendingSpiceError()
+    {
+        const bool pending = failed_c();
+        reset_c();
+        return pending;
+    }
+#else
+    // The Windows DLL exports no CSPICE routine, so the pending error is checked on Linux and macOS only; the proxy's result,
+    // its message and the file are checked on every platform
+    bool TakePendingSpiceError()
+    {
+        return false;
+    }
+#endif
+
     // Calls the writer of an SPK and expects it to return false without an exception, nothing pending, nothing written, and
     // the message to contain the given text
     void ExpectEphemerisRejected(std::vector<IO::Astrodynamics::API::DTO::StateVectorDTO> sv, const std::string &name,
@@ -1542,9 +1560,8 @@ namespace
         bool written = true;
         EXPECT_NO_THROW(written = WriteEphemerisProxy(file.string().c_str(), -1999701, sv.data(),
                                                       static_cast<unsigned int>(sv.size())));
-        const bool pending = failed_c();
         const std::string message = GetLastErrorProxy();
-        reset_c();
+        const bool pending = TakePendingSpiceError();
         EXPECT_FALSE(written);
         EXPECT_FALSE(pending);
         EXPECT_NE(std::string::npos, message.find(text)) << message;
@@ -1572,9 +1589,8 @@ namespace
         const auto file = folder / "o.bc";
         bool written = true;
         EXPECT_NO_THROW(written = WriteOrientationProxy(file.string().c_str(), -175, so.data(), size));
-        const bool pending = failed_c();
         const std::string message = GetLastErrorProxy();
-        reset_c();
+        const bool pending = TakePendingSpiceError();
         EXPECT_FALSE(written);
         EXPECT_FALSE(pending);
         EXPECT_NE(std::string::npos, message.find(text)) << message;
