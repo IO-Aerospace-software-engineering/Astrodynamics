@@ -910,12 +910,15 @@ TEST(API, UnloadKernelsProxyOfADeletedFile)
     std::filesystem::remove(file);
     ASSERT_TRUE(UnloadKernelsProxy(file.string().c_str()));
 
-    // The frame is no longer known: the failed transformation is the zero quaternion (#454)
+    // The frame is no longer known: the failed transformation is a NaN rotation with SPICE's message (#714; the zero
+    // quaternion with no message before, #454)
     auto res = TransformFrameProxy("IOA_F02_CPP_A", "J2000", 0.0);
-    ASSERT_EQ(0.0, res.Rotation.w);
-    ASSERT_EQ(0.0, res.Rotation.x);
-    ASSERT_EQ(0.0, res.Rotation.y);
-    ASSERT_EQ(0.0, res.Rotation.z);
+    ASSERT_TRUE(std::isnan(res.Rotation.w));
+    ASSERT_TRUE(std::isnan(res.Rotation.x));
+    ASSERT_TRUE(std::isnan(res.Rotation.y));
+    ASSERT_TRUE(std::isnan(res.Rotation.z));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "The frame IOA_F02_CPP_A was not recognized as a known reference frame."))
+        << GetLastErrorProxy();
 }
 
 TEST(API, UnloadKernelsProxyOfANameNotLoaded)
@@ -2496,4 +2499,37 @@ TEST(API, ConvertStateVectorToConicOrbitalElementProxyAsTheFirstCallReturnsNaN)
             std::exit(IsNaN(res) && message.find("non-positive gravitational parameter") != std::string::npos ? 0 : 2);
         },
         ::testing::ExitedWithCode(0), "");
+}
+
+// #714: TransformFrameProxy did not check SPICE after sxform_c: the unwritten matrix went on to the quaternion and xf2rav_c,
+// then SPICE was reset without its message and the zero quaternion returned, so that the .NET layer could only name a
+// cause of its own. It now returns a NaN rotation and angular velocity with SPICE's message. The references are SPICE's
+// messages: SPICE(UNKNOWNFRAME) of a frame name SPICE does not know (FRAMEX), SPICE(FRAMEDATANOTFOUND) of ITRF93 outside the
+// coverage of earth_latest_high_prec.bpc (PCKMAT)
+namespace
+{
+    void ExpectTransformationFails(const char *from, const char *to, double epoch, const std::string &text)
+    {
+        IO::Astrodynamics::API::DTO::FrameTransformationDTO res;
+        EXPECT_NO_THROW(res = TransformFrameProxy(from, to, epoch));
+        std::cout << "MESSAGE #714 TransformFrameProxy from " << from << " to " << to << ": " << GetLastErrorProxy() << std::endl;
+        ExpectFailureReported(text);
+        EXPECT_TRUE(std::isnan(res.Rotation.w));
+        EXPECT_TRUE(std::isnan(res.Rotation.x));
+        EXPECT_TRUE(std::isnan(res.Rotation.y));
+        EXPECT_TRUE(std::isnan(res.Rotation.z));
+        EXPECT_TRUE(std::isnan(res.AngularVelocity.x));
+        EXPECT_TRUE(std::isnan(res.AngularVelocity.y));
+        EXPECT_TRUE(std::isnan(res.AngularVelocity.z));
+    }
+}
+
+TEST(API, TransformFrameProxyOfAnUnknownFrameReturnsNaNWithSpicesMessage)
+{
+    ExpectTransformationFails("J2000", "NOT_A_FRAME", 0.0, "The frame NOT_A_FRAME was not recognized as a known reference frame.");
+}
+
+TEST(API, TransformFrameProxyOutsideTheCoverageOfAPckReturnsNaNWithSpicesMessage)
+{
+    ExpectTransformationFails("J2000", "ITRF93", 6.3e9, "PCK data required to compute the orientation of the body-fixed frame ITRF93");
 }

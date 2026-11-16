@@ -923,40 +923,64 @@ char *HandleError()
     return msg;
 }
 
+// No failure is silent and no C++ exception crosses P/Invoke (#714): a failed sxform_c (SPICE(UNKNOWNFRAME) of a frame SPICE does
+// not know, SPICE(FRAMEDATANOTFOUND) outside the coverage of the frame data) gives a NaN rotation and angular velocity with
+// SPICE's message in lastError, SPICE reset, before the unwritten matrix reaches the quaternion and xf2rav_c. Before, SPICE
+// was checked only after xf2rav_c, then reset without its message, and the zero quaternion returned (#454)
 IO::Astrodynamics::API::DTO::FrameTransformationDTO
 TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
 {
     ActivateErrorManagement();
     ClearLastError();
-    IO::Astrodynamics::Frames::Frames from{fromFrame};
-    IO::Astrodynamics::Frames::Frames to{toFrame};
-    IO::Astrodynamics::Time::TDB tdb((std::chrono::duration<double>(epoch)));
-    auto mtx = from.ToFrame6x6(to, tdb);
-    IO::Astrodynamics::Math::Quaternion q(mtx);
-    auto rawData = mtx.GetRawData();
-
-    //Initialize data
-    SpiceDouble rotation[3][3]{};
-    SpiceDouble av[3]{};
-    SpiceDouble convertedMtx[6][6];
-    for (int i = 0; i < 6; ++i)
-    {
-        for (int j = 0; j < 6; ++j)
-        {
-            convertedMtx[i][j] = rawData[i][j];
-        }
-    }
-
     IO::Astrodynamics::API::DTO::FrameTransformationDTO frameTransformationDto;
-    xf2rav_c(convertedMtx, rotation, av);
-    if (failed_c())
+    auto failed = [&frameTransformationDto]
     {
-        HandleError();
+        const double nan = std::nan("");
+        frameTransformationDto.Rotation.w = frameTransformationDto.Rotation.x = nan;
+        frameTransformationDto.Rotation.y = frameTransformationDto.Rotation.z = nan;
+        frameTransformationDto.AngularVelocity.x = frameTransformationDto.AngularVelocity.y = frameTransformationDto.AngularVelocity.z = nan;
+        return frameTransformationDto;
+    };
+    try
+    {
+        IO::Astrodynamics::Frames::Frames from{fromFrame};
+        IO::Astrodynamics::Frames::Frames to{toFrame};
+        IO::Astrodynamics::Time::TDB tdb((std::chrono::duration<double>(epoch)));
+        auto mtx = from.ToFrame6x6(to, tdb);
+        if (!ReportNativeErrors({}))
+        {
+            return failed();
+        }
+
+        IO::Astrodynamics::Math::Quaternion q(mtx);
+        auto rawData = mtx.GetRawData();
+
+        //Initialize data
+        SpiceDouble rotation[3][3]{};
+        SpiceDouble av[3]{};
+        SpiceDouble convertedMtx[6][6];
+        for (int i = 0; i < 6; ++i)
+        {
+            for (int j = 0; j < 6; ++j)
+            {
+                convertedMtx[i][j] = rawData[i][j];
+            }
+        }
+
+        xf2rav_c(convertedMtx, rotation, av);
+        if (!ReportNativeErrors({}))
+        {
+            return failed();
+        }
+        frameTransformationDto.Rotation = ToQuaternionDTO(q);
+        frameTransformationDto.AngularVelocity = ToVector3DDTO(av);
         return frameTransformationDto;
     }
-    frameTransformationDto.Rotation = ToQuaternionDTO(q);
-    frameTransformationDto.AngularVelocity = ToVector3DDTO(av);
-    return frameTransformationDto;
+    catch (const std::exception &e)
+    {
+        ReportException(e);
+        return failed();
+    }
 }
 
 // No C++ exception crosses P/Invoke and no failure is silent (#711): an exception (the native Earth, the TLE), or a SPICE error

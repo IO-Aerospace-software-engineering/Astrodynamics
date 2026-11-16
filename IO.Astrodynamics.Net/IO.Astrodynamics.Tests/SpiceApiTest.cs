@@ -1844,4 +1844,51 @@ public class SpiceApiTest
         Assert.Equal(elements[9], converted.A);
         AssertNothingPending();
     }
+
+    // #714: a transformation SPICE cannot give threw the same message whatever the cause, "the frame data (a PCK, CK or frame
+    // kernel) does not cover this epoch or is not loaded", since TransformFrameProxy dropped SPICE's message (measured on
+    // a80f6a5). The message keeps the frames and the epoch and gives SPICE's: SPICE(UNKNOWNFRAME) of a frame SPICE does not
+    // know, SPICE(FRAMEDATANOTFOUND) of ITRF93 past the coverage of earth_latest_high_prec.bpc (6.3e9 s TDB is 2199-08-22)
+    private const string UnknownFrameMessage = "The frame NOT_A_FRAME was not recognized as a known reference frame.";
+    private const string Itrf93NotCoveredMessage =
+        "PCK data required to compute the orientation of the body-fixed frame ITRF93 for epoch 2199 AUG 22 04:00:00.000 TDB were not found.";
+
+    [Fact]
+    void TransformFrame_ThatSpiceCannotGive_ThrowsSpicesMessage()
+    {
+        var unknown = Assert.Throws<InvalidOperationException>(() =>
+            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
+        _output.WriteLine($"MESSAGE #714 {unknown.Message}");
+        Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to NOT_A_FRAME at {TimeSystem.Time.J2000TDB}: ", unknown.Message);
+        Assert.EndsWith(UnknownFrameMessage, unknown.Message);
+
+        var epoch = TimeSystem.Time.CreateTDB(6.3e9);
+        var itrf93 = new Frames.Frame("ITRF93");
+        var uncovered = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, itrf93));
+        _output.WriteLine($"MESSAGE #714 {uncovered.Message}");
+        Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to ITRF93 at {epoch}: ", uncovered.Message);
+        Assert.Contains(Itrf93NotCoveredMessage, uncovered.Message);
+
+        // Through the data provider, the frames reversed
+        var provider = Assert.Throws<InvalidOperationException>(() => Frames.Frame.ICRF.ToFrame(itrf93, epoch));
+        Assert.Contains(Itrf93NotCoveredMessage, provider.Message);
+        AssertNothingPending();
+    }
+
+    // The message SpiceAPI gives is that of a direct sxform_c call
+    [Fact]
+    [Trait("Category", "Validation")]
+    void TransformFrame_ThatSpiceCannotGive_ThrowsTheMessageOfSxform()
+    {
+        foreach (var (to, et) in new[] { ("NOT_A_FRAME", 0.0), ("ITRF93", 6.3e9) })
+        {
+            var expected = Body.CspiceDirect.SxformError("J2000", to, et);
+            Assert.False(string.IsNullOrEmpty(expected));
+            var error = Assert.Throws<InvalidOperationException>(() =>
+                SpiceAPI.Instance.TransformFrame(TimeSystem.Time.CreateTDB(et), Frames.Frame.ICRF, new Frames.Frame(to)));
+            Assert.EndsWith(": " + expected, error.Message);
+        }
+
+        AssertNothingPending();
+    }
 }

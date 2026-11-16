@@ -1638,8 +1638,8 @@ public class SpiceAPI
             : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame);
     }
 
-    // The bound of | |q| − 1 | of a rotation from the native layer, a unit quaternion to rounding; the zero quaternion of a
-    // failed transformation is 1 away (#454)
+    // The bound of | |q| − 1 | of a rotation from the native layer, a unit quaternion to rounding; the NaN rotation of a
+    // failed transformation (#714; the zero quaternion before, 1 away, #454) fails the comparison
     private const double UnitQuaternionTolerance = 1.0e-9;
 
     /// <summary>
@@ -2041,12 +2041,16 @@ public class SpiceAPI
     /// handed its name, <c>Name + "_TOPO"</c>, to SPICE, which does not know it, and threw). The frame of a site whose frame
     /// the kernels define is that kernel frame, read by SPICE, and the frame of a spacecraft is SPICE's by name, which reads
     /// the frame kernel and the C-kernel loaded for it. CIRS and TIRS are not composed: SPICE does not know them, and the
-    /// call throws (#656). SPICE must give a rotation: outside the coverage of
-    /// the frame data the native layer returns the zero quaternion and drops the SPICE message, and the call throws (#454;
-    /// before 11.0.0 the zero quaternion was returned, except on the TEME path).
+    /// call throws (#656). SPICE must give a rotation: for a frame SPICE does not know, or outside the coverage of the frame
+    /// data, the native layer returns a NaN rotation with SPICE's message, and the call throws with it (#714; before, the zero
+    /// quaternion and a message of the library's that named the coverage whatever the cause, #454; before 11.0.0 the zero
+    /// quaternion was returned, except on the TEME path).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE gives no rotation between the frames at this epoch: a quaternion
-    /// whose norm differs from 1 by more than 1e-9.</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no rotation between the frames at this epoch (a quaternion
+    /// whose norm differs from 1 by more than 1e-9, or NaN): the message names the frames and the epoch, then gives SPICE's,
+    /// such as <c>SPICE(UNKNOWNFRAME)</c>'s "The frame NOT_A_FRAME was not recognized as a known reference frame." or
+    /// <c>SPICE(FRAMEDATANOTFOUND)</c>'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for
+    /// epoch ... were not found."</exception>
     public OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame)
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
@@ -2069,13 +2073,13 @@ public class SpiceAPI
         {
             var res = TransformFrameProxy(SpiceFrameName(fromFrame), SpiceFrameName(toFrame), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
-            // A failed transformation returns the zero quaternion, its SPICE message printed and dropped by the native layer
-            // (#454): a rotation is a unit quaternion
+            // A failed transformation returns a NaN rotation with SPICE's message (#714; the zero quaternion with no message
+            // before, #454): a rotation is a unit quaternion. Read before any other native call
             var rotation = new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z);
             if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
             {
                 throw new InvalidOperationException(
-                    $"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}: the frame data (a PCK, CK or frame kernel) does not cover this epoch or is not loaded.");
+                    $"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}: {LastProxyError()}");
             }
 
             return new OrbitalParameters.StateOrientation(

@@ -14,7 +14,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
 /// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); <c>getfov_c</c>, the
 /// reference of the fields of view an instrument may hold (#707), and <c>reclat_c</c>, that of a star's crossing of a pole
-/// (#709); <c>prop2b_c</c> and <c>oscltx_c</c>, the references of the two-body proxies' errors (#714); the list of the
+/// (#709); <c>prop2b_c</c>, <c>oscltx_c</c> and <c>sxform_c</c>, the references of the errors of the two-body proxies and of a
+/// frame transformation (#714); the list of the
 /// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
 /// reference of the kernel registry and of the type of a text kernel (#673), with their handles and the files of open DAF
 /// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
@@ -107,6 +108,9 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void oscltx_c([In] double[] state, double et, double mu, [Out] double[] elts);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void sxform_c(string from, string to, double et, [Out] double[] xform);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void prop2b_c(double gm, [In] double[] pvinit, double dt, [Out] double[] pvprop);
@@ -307,6 +311,17 @@ internal static class CspiceDirect
             oscltx_c(state, et, mu, elements);
             var (shortMessage, longMessage) = TakeError();
             return (shortMessage == null ? elements : null, shortMessage, longMessage);
+        }
+    }
+
+    /// <summary>The long message of the error <c>sxform_c</c> signals for a transformation between two frames, or null when it
+    /// gives one; SPICE is reset (#714).</summary>
+    internal static string SxformError(string from, string to, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            sxform_c(from, to, et, new double[36]);
+            return TakeError().Long;
         }
     }
 
