@@ -198,6 +198,91 @@ namespace IO.Astrodynamics.Tests.CCSDS.Common
             Assert.Equal("Covariance from OD solution", covariance.Comments[0]);
         }
 
+        // The 21 terms in the order of the constructor, the parameter name of each and its (row, column) in the 6x6 matrix
+        private static readonly (string Name, int Row, int Column)[] Terms =
+        {
+            ("cxX", 0, 0),
+            ("cyX", 1, 0), ("cyY", 1, 1),
+            ("czX", 2, 0), ("czY", 2, 1), ("czZ", 2, 2),
+            ("cxDotX", 3, 0), ("cxDotY", 3, 1), ("cxDotZ", 3, 2), ("cxDotXDot", 3, 3),
+            ("cyDotX", 4, 0), ("cyDotY", 4, 1), ("cyDotZ", 4, 2), ("cyDotXDot", 4, 3), ("cyDotYDot", 4, 4),
+            ("czDotX", 5, 0), ("czDotY", 5, 1), ("czDotZ", 5, 2), ("czDotXDot", 5, 3), ("czDotYDot", 5, 4), ("czDotZDot", 5, 5)
+        };
+
+        public static TheoryData<int, double> NonFiniteTerms()
+        {
+            var data = new TheoryData<int, double>();
+            for (int i = 0; i < 21; i++)
+            foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+                data.Add(i, value);
+            return data;
+        }
+
+        private static double[,] SampleFullMatrix(int term, double value)
+        {
+            var matrix = CreateSampleCovariance().ToFullMatrix();
+            var (_, row, column) = Terms[term];
+            matrix[row, column] = value;
+            matrix[column, row] = value;
+            return matrix;
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteTerms))]
+        public void Constructor_NonFiniteTerm_ThrowsArgumentOutOfRangeException(int term, double value)
+        {
+            // Each of the 21 terms is an xsd:double the library reads as a real number (#708, #717); before, a NaN or
+            // infinite term built, a covariance (CY_X ...) passed Validate() and SaveToFile wrote NaN, Infinity or -Infinity
+            var t = CreateSampleCovariance().ToLowerTriangularArray();
+            t[term] = value;
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new CovarianceMatrix(
+                t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10],
+                t[11], t[12], t[13], t[14], t[15], t[16], t[17], t[18], t[19], t[20], "RTN"));
+            Assert.Equal(Terms[term].Name, ex.ParamName);
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteTerms))]
+        public void FromFullMatrix_NonFiniteTerm_ThrowsArgumentOutOfRangeException(int term, double value)
+        {
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => CovarianceMatrix.FromFullMatrix(SampleFullMatrix(term, value)));
+            Assert.Equal(Terms[term].Name, ex.ParamName);
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteTerms))]
+        public void FromMatrix_NonFiniteTerm_ThrowsArgumentOutOfRangeException(int term, double value)
+        {
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                CovarianceMatrix.FromMatrix(new IO.Astrodynamics.Math.Matrix(SampleFullMatrix(term, value))));
+            Assert.Equal(Terms[term].Name, ex.ParamName);
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteTerms))]
+        public void FromMatrixWithUnitConversion_NonFiniteTerm_ThrowsArgumentOutOfRangeException(int term, double value)
+        {
+            // A StateVector's covariance (m², m²/s, m²/s²) holds any value; Opm.FromStateVector converts it here
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                CovarianceMatrix.FromMatrixWithUnitConversion(new IO.Astrodynamics.Math.Matrix(SampleFullMatrix(term, value))));
+            Assert.Equal(Terms[term].Name, ex.ParamName);
+        }
+
+        [Fact]
+        public void Constructor_LargestFiniteTerms_AreStoredAsGiven()
+        {
+            // The finite bounds of a double are real numbers, and a negative covariance builds (the validators report a
+            // negative variance, the constructors check finiteness only)
+            var covariance = new CovarianceMatrix(
+                double.MaxValue, -double.MaxValue, double.Epsilon, -double.Epsilon, 0, -1.0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            Assert.Equal(double.MaxValue, covariance.CxX);
+            Assert.Equal(-double.MaxValue, covariance.CyX);
+            Assert.Equal(double.Epsilon, covariance.CyY);
+            Assert.Equal(-double.Epsilon, covariance.CzX);
+            Assert.Equal(-1.0, covariance.CzZ);
+        }
+
         private static CovarianceMatrix CreateSampleCovariance()
         {
             return new CovarianceMatrix(
