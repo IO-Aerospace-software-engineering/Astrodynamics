@@ -315,11 +315,18 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
 
             //Get orientation and angular velocity
             ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
-            if (failed_c())
+            if (failed_c() || !found)
             {
-                // CK segment may not carry angular velocity (e.g. Type 1 CK).
-                // Reset the error and fall back to rotation-only query; av stays zero.
-                reset_c();
+                // ckgpav_c skips a segment without angular velocity (a type-1 CK, a type-2 or type-3 CK written without
+                // rates) and returns found = false with no error (ckgpav_c.c, Restrictions 1), so the pointing is read by
+                // ckgp_c, with a zero angular velocity (#714: before, only a failed ckgpav_c fell back, and such a CK gave "No
+                // orientation found"). A failed ckgpav_c (no CK loaded, an unknown frame) falls back too, and ckgp_c's error
+                // is then reported
+                if (failed_c())
+                {
+                    reset_c();
+                }
+                av[0] = av[1] = av[2] = 0.0;
                 found = SPICEFALSE;
                 ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
                 // The fallback fails too (no CK loaded, an unknown frame): SPICE's message, SPICE reset (#712: before, "No

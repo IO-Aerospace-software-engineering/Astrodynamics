@@ -1675,7 +1675,9 @@ public class SpiceAPI
     ///     source (<c>vectorInSpacecraft = vectorInReference.Rotate(Rotation)</c>), and the angular velocity of the
     ///     spacecraft relative to <paramref name="referenceFrame"/>, expressed in <paramref name="referenceFrame"/>: the
     ///     convention of <see cref="Frame.ToFrame"/> (<c>xf2rav_c</c>) for that rotation, and that of
-    ///     <see cref="Body.Spacecraft.Spacecraft.GetOrientation"/>.
+    ///     <see cref="Body.Spacecraft.Spacecraft.GetOrientation"/>. A record read from a segment without angular velocity
+    ///     (a type-1 CK, or a type-2 or type-3 CK written without rates) has a zero angular velocity: <c>ckgpav_c</c> skips
+    ///     such a segment, and its pointing is read by <c>ckgp_c</c> (#714: before, the call threw "No orientation found").
     /// </returns>
     /// <remarks>
     ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,

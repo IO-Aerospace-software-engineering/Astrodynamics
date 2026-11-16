@@ -2537,3 +2537,102 @@ TEST(API, TransformFrameProxyOutsideTheCoverageOfAPckReturnsNaNWithSpicesMessage
 {
     ExpectTransformationFails("J2000", "ITRF93", 6.3e9, "PCK data required to compute the orientation of the body-fixed frame ITRF93");
 }
+
+// #714: ReadOrientationProxy fell back to ckgp_c only when ckgpav_c failed, but ckgpav_c skips a segment without angular
+// velocity and returns found = false with no error (ckgpav_c.c, Restrictions 1: "Segments containing only pointing data will
+// be skipped over"), so that a CK written without rates (a type-1 CK, a type-2 or type-3 CK with avflag false) gave "No
+// orientation found". The proxy now reads such a record through ckgp_c, with a zero angular velocity. A type-3 CK written by
+// ckw03_c without rates: 11 records 100 s apart, a rotation about z at 1e-3 rad/s (C-matrix of the SPICE quaternion
+// (cos(wt/2), 0, 0, sin(wt/2))), the clock of the native spacecraft; the references are ckgp_c at each epoch and the closed
+// form. The CSPICE writers are not exported by the Windows DLL
+#if !defined(_WIN32)
+namespace
+{
+    // The angle of the rotation between two quaternions of the library, rad (the sign of a quaternion is free)
+    double AngleBetween(const IO::Astrodynamics::Math::Quaternion &a, const IO::Astrodynamics::Math::Quaternion &b)
+    {
+        const auto d = a.Conjugate() * b;
+        const double v = std::sqrt(d.GetQ1() * d.GetQ1() + d.GetQ2() * d.GetQ2() + d.GetQ3() * d.GetQ3());
+        return 2.0 * std::atan2(v, std::abs(d.GetQ0()));
+    }
+
+    IO::Astrodynamics::Math::Quaternion QuaternionOf(SpiceDouble cmat[3][3])
+    {
+        IO::Astrodynamics::Math::Matrix mat(cmat);
+        return IO::Astrodynamics::Math::Quaternion(mat);
+    }
+}
+
+// Twice the worst over Linux x64 of the angles between a record and ckgp_c (0 rad) and the closed form (1.110e-16 rad, the
+// MEASURE line), rounded up: provisional, to be set again from the macOS arm64 CI log
+constexpr double CkWithoutRatesAngleLimit = 2.23e-16;
+
+TEST(API, ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing)
+{
+    constexpr int spacecraftId = -1999715;
+    constexpr double rate = 1.0e-3;
+    auto folder = FreshFolder("ioa_714_cpp_ck_without_rates");
+    {
+        const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbit = std::make_unique<
+            IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                               IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                               IO::Astrodynamics::Time::TDB(0.0s),
+                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+        IO::Astrodynamics::Body::Spacecraft::Spacecraft spacecraft(spacecraftId, "IOA714CK", 1000.0, 3000.0, folder.string(),
+                                                                   std::move(orbit));
+        const auto ck = folder / "norates.bc";
+        SpiceDouble sclk[11], quats[11][4], avvs[11][3]{};
+        for (int i = 0; i < 11; ++i)
+        {
+            sce2c_c(spacecraftId, 100.0 * i, &sclk[i]);
+            const double angle = rate * 100.0 * i;
+            quats[i][0] = std::cos(angle / 2.0);
+            quats[i][1] = 0.0;
+            quats[i][2] = 0.0;
+            quats[i][3] = std::sin(angle / 2.0);
+        }
+        SpiceInt handle{};
+        ckopn_c(ck.string().c_str(), "IOA714", 0, &handle);
+        ckw03_c(handle, sclk[0], sclk[10], spacecraftId * 1000, "J2000", SPICEFALSE, "NO RATES", 11, sclk, quats, avvs, 1, sclk);
+        ckcls_c(handle);
+        ASSERT_FALSE(TakePendingSpiceError());
+        ASSERT_TRUE(LoadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+
+        IO::Astrodynamics::API::DTO::WindowDTO window{};
+        window.start = 0.0;
+        window.end = 1000.0;
+        IO::Astrodynamics::API::DTO::StateOrientationDTO so[11];
+        bool res{false};
+        EXPECT_NO_THROW(res = ReadOrientationProxy(window, spacecraftId, 1.0, "J2000", 100.0, so));
+        EXPECT_TRUE(res) << GetLastErrorProxy();
+        EXPECT_STREQ("", GetLastErrorProxy());
+        double worstSpice{}, worstClosedForm{};
+        for (int i = 0; i < 11 && res; ++i)
+        {
+            const IO::Astrodynamics::Math::Quaternion record(so[i].orientation.w, so[i].orientation.x, so[i].orientation.y,
+                                                             so[i].orientation.z);
+            SpiceDouble cmat[3][3]{}, clkout{};
+            SpiceBoolean found{SPICEFALSE};
+            ckgp_c(spacecraftId * 1000, sclk[i], 0.0, "J2000", cmat, &clkout, &found);
+            ASSERT_TRUE(found);
+            const double angle = rate * 100.0 * i;
+            SpiceDouble closedForm[3][3]{{std::cos(angle), -std::sin(angle), 0.0}, {std::sin(angle), std::cos(angle), 0.0}, {0.0, 0.0, 1.0}};
+            worstSpice = std::max(worstSpice, AngleBetween(record, QuaternionOf(cmat)));
+            worstClosedForm = std::max(worstClosedForm, AngleBetween(record, QuaternionOf(closedForm)));
+            EXPECT_NEAR(100.0 * i, so[i].epoch, 1.0e-3);
+            EXPECT_EQ(0.0, so[i].angularVelocity.x);
+            EXPECT_EQ(0.0, so[i].angularVelocity.y);
+            EXPECT_EQ(0.0, so[i].angularVelocity.z);
+            EXPECT_STREQ("J2000", so[i].frame);
+        }
+        std::printf("MEASURE #714 CK without rates: worst angle to ckgp_c %.3E rad, to the closed form %.3E rad\n", worstSpice,
+                    worstClosedForm);
+        EXPECT_LE(worstSpice, CkWithoutRatesAngleLimit);
+        EXPECT_LE(worstClosedForm, CkWithoutRatesAngleLimit);
+        EXPECT_FALSE(TakePendingSpiceError());
+        EXPECT_TRUE(UnloadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+    }
+    std::filesystem::remove_all(folder);
+}
+#endif

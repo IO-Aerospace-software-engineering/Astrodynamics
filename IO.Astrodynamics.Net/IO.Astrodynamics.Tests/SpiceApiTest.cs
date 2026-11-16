@@ -1953,4 +1953,94 @@ public class SpiceApiTest
         Assert.Null(nanError);
         Assert.True(nan.All(double.IsNaN));
     }
+
+    // #714: ReadOrientation threw "No orientation found" for a CK segment without angular velocity: ckgpav_c skips it with no
+    // error (ckgpav_c.c, Restrictions 1), and the native layer fell back to ckgp_c only on an error. A type-3 CK written by
+    // ckw03_c with and without rates (11 records 100 s apart, a rotation about z at 1e-3 rad/s, the SPICE quaternion
+    // (cos(wt/2), 0, 0, sin(wt/2))), the clock written by Clock.WriteAsync: each record is ckgp_c's C-matrix and the closed form
+    // R_z(1e-3 t), with a zero angular velocity without rates and (0, 0, 1e-3) rad/s with them. ckw03_c is not exported by the
+    // Windows DLL
+    // Twice the worst over Linux x64 of the angle of a record to ckgp_c and to the closed form (the MEASURE lines, 1.570e-16
+    // rad for both CKs), rounded up: provisional, to be set again from the macOS arm64 CI log
+    private const double CkRecordAngleLimit = 3.15e-16;
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    [Trait("Category", "Validation")]
+    async Task ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing(bool withRates)
+    {
+        const double rate = 1.0e-3;
+        int id = withRates ? -1999717 : -1999716;
+        var dir = Directory.CreateTempSubdirectory("ioa714ck");
+        var clockFile = new FileInfo(Path.Combine(dir.FullName, "clock.tsc"));
+        var ckFile = new FileInfo(Path.Combine(dir.FullName, "pointing.bc"));
+        var orbit = new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var spacecraft = new Spacecraft(id, $"IOA714CK{-id}", 1000.0, 10000.0, new Clock($"IOA714CLOCK{-id}", 65536), orbit);
+        await spacecraft.Clock.WriteAsync(clockFile);
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        try
+        {
+            var sclk = new double[11];
+            var quaternions = new double[44];
+            var angularVelocities = new double[33];
+            for (int i = 0; i < 11; i++)
+            {
+                sclk[i] = Body.CspiceDirect.Sce2c(id, 100.0 * i);
+                double angle = rate * 100.0 * i;
+                quaternions[4 * i] = System.Math.Cos(angle / 2.0);
+                quaternions[4 * i + 3] = System.Math.Sin(angle / 2.0);
+                angularVelocities[3 * i + 2] = rate;
+            }
+
+            Body.CspiceDirect.WriteType3Ck(ckFile.FullName, id * 1000, "J2000", withRates, sclk, quaternions, angularVelocities);
+            SpiceAPI.Instance.LoadKernels(ckFile);
+            try
+            {
+                var records = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)), id,
+                    TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(100.0)).ToArray();
+                Assert.Equal(11, records.Length);
+                double worstSpice = 0.0, worstClosedForm = 0.0;
+                for (int i = 0; i < records.Length; i++)
+                {
+                    var q = records[i].Rotation;
+                    var matrix = Body.CspiceDirect.Q2m(q.W, q.VectorPart.X, q.VectorPart.Y, q.VectorPart.Z);
+                    var cmat = Body.CspiceDirect.Ckgp(id * 1000, sclk[i], 0.0, "J2000");
+                    Assert.NotNull(cmat);
+                    double t = (records[i].Epoch - TimeSystem.Time.J2000TDB).TotalSeconds;
+                    double c = System.Math.Cos(rate * t), s = System.Math.Sin(rate * t);
+                    worstSpice = System.Math.Max(worstSpice, RotationAngle(matrix, cmat));
+                    worstClosedForm = System.Math.Max(worstClosedForm, RotationAngle(matrix, [c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0]));
+                    Assert.Equal(withRates ? new Vector3(0.0, 0.0, rate) : Vector3.Zero, records[i].AngularVelocity);
+                    Assert.Equal(Frames.Frame.ICRF, records[i].ReferenceFrame);
+                }
+
+                _output.WriteLine($"MEASURE #714 CK {(withRates ? "with" : "without")} rates: worst angle to ckgp_c {worstSpice:E3} rad, to the closed form {worstClosedForm:E3} rad");
+                Assert.True(worstSpice <= CkRecordAngleLimit, $"{worstSpice:E3} rad");
+                Assert.True(worstClosedForm <= CkRecordAngleLimit, $"{worstClosedForm:E3} rad");
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(ckFile);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(clockFile);
+            dir.Delete(true);
+        }
+    }
+
+    // The angle of the rotation between two rotation matrices (row-major): ||A - B||_F = 2 sqrt(2) sin(θ / 2), exact near 0
+    private static double RotationAngle(double[] a, double[] b)
+    {
+        double sum = 0.0;
+        for (int k = 0; k < 9; k++)
+        {
+            sum += (a[k] - b[k]) * (a[k] - b[k]);
+        }
+
+        return 2.0 * System.Math.Asin(System.Math.Min(1.0, System.Math.Sqrt(sum) / (2.0 * System.Math.Sqrt(2.0))));
+    }
 }
