@@ -161,5 +161,62 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region Non-finite and boundary values (#708)
+
+        public static TheoryData<string, double> NonFiniteSpacecraftParameters()
+        {
+            var data = new TheoryData<string, double>();
+            foreach (var parameter in new[] { "mass", "solarRadiationPressureArea", "solarRadiationCoefficient", "dragArea", "dragCoefficient" })
+            {
+                data.Add(parameter, double.NaN);
+                data.Add(parameter, double.PositiveInfinity);
+                data.Add(parameter, double.NegativeInfinity);
+            }
+
+            return data;
+        }
+
+        private OpmData BuildWith(string parameter, double value) => new(
+            new OpmStateVector(_testEpoch, 6778.0, 0.0, 0.0, 0.0, 7.5, 0.0),
+            mass: parameter == "mass" ? value : 1500.0,
+            solarRadiationPressureArea: parameter == "solarRadiationPressureArea" ? value : 20.0,
+            solarRadiationCoefficient: parameter == "solarRadiationCoefficient" ? value : 1.3,
+            dragArea: parameter == "dragArea" ? value : 20.0,
+            dragCoefficient: parameter == "dragCoefficient" ? value : 2.2);
+
+        [Theory]
+        [MemberData(nameof(NonFiniteSpacecraftParameters))]
+        public void Constructor_NonFiniteSpacecraftParameter_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // Each is a finite value of 0 or more (massType, areaType and nonNegativeDouble of ndmxml-4.0.0-common-4.0.xsd);
+            // NaN and +Infinity passed the checks before (#708)
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => BuildWith(parameter, value));
+            Assert.Equal(parameter, ex.ParamName);
+        }
+
+        [Theory]
+        [InlineData("mass")]
+        [InlineData("solarRadiationPressureArea")]
+        [InlineData("solarRadiationCoefficient")]
+        [InlineData("dragArea")]
+        [InlineData("dragCoefficient")]
+        public void Constructor_ZeroSpacecraftParameter_IsStoredAsGiven(string parameter)
+        {
+            // MASS 0 is a massType value (nonNegativeDouble, minInclusive 0.0), as SpacecraftParameters accepts it for the
+            // OMM: before #708 OpmData required a mass above 0
+            var data = BuildWith(parameter, 0.0);
+            double? stored = parameter switch
+            {
+                "mass" => data.Mass,
+                "solarRadiationPressureArea" => data.SolarRadiationPressureArea,
+                "solarRadiationCoefficient" => data.SolarRadiationCoefficient,
+                "dragArea" => data.DragArea,
+                _ => data.DragCoefficient
+            };
+            Assert.Equal(0.0, stored);
+        }
+
+        #endregion
     }
 }

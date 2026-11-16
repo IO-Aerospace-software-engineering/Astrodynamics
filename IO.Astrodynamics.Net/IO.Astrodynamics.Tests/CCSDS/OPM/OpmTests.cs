@@ -864,6 +864,44 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(0.0, sv.Velocity.Z, 0);
         }
 
+        /// <summary>
+        /// Retrograde equatorial orbits (i = 180°) at their periapsis, the velocity perpendicular to the position and above
+        /// the circular velocity (√(μ/r) ≈ 7.67 km/s at 6778 km): the true anomaly is 0 and the periapsis is the position,
+        /// at an argument of pericenter, counted from the x axis in the sense of the motion (clockwise seen from +Z), of 0°
+        /// for a periapsis on +X and 90° for one on -Y (closed forms of the conic). The state's argument of periapsis of such
+        /// an orbit reaches 2π and 5π/2 (2π − atan2 of the periapsis), which the KeplerianElements that ToOpm converts
+        /// normalize to [0, 2π): a guard (green before #708) that the angles ToOpm writes stay inside angleRange, which the
+        /// OPM's Keplerian elements check since #708, and that the document is schema-valid.
+        /// </summary>
+        [Theory]
+        [InlineData(6778137.0, 0.0, 0.0, -7800.0, 0.0)] // periapsis on +X, h along -Z
+        [InlineData(0.0, -6778137.0, -7800.0, 0.0, 90.0)] // periapsis on -Y, h along -Z
+        public void ToOpm_RetrogradeEquatorialOrbit_WritesAnglesInSchemaRange(double x, double y, double vx, double vy, double expectedAop)
+        {
+            var epoch = new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame);
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var sv = new StateVector(new Vector3(x, y, 0.0), new Vector3(vx, vy, 0.0), earth, epoch, Frames.Frame.ICRF);
+            Assert.Equal(System.Math.PI, sv.Inclination(), 12);
+            var spacecraft = new Spacecraft(-1000, "RETRO", 1000.0, 5000.0, new Clock("OnboardClock", 256), sv, 1.0, 2.2, "2024-001A", 1.0);
+
+            var opm = spacecraft.ToOpm(includeSpacecraftParameters: false, includeManeuvers: false);
+            var kep = opm.Data.KeplerianElements;
+            foreach (var angle in new[] { kep.RightAscensionOfAscendingNode, kep.ArgumentOfPericenter, kep.TrueAnomaly!.Value })
+            {
+                Assert.InRange(angle, 0.0, System.Math.BitDecrement(360.0));
+            }
+
+            Assert.Equal(expectedAop, kep.ArgumentOfPericenter, 9);
+            Assert.True(kep.TrueAnomaly.Value < 1e-9 || kep.TrueAnomaly.Value > 360.0 - 1e-9, $"TRUE_ANOMALY {kep.TrueAnomaly.Value}");
+            Assert.Equal(180.0, kep.Inclination, 9);
+
+            // The schema is the oracle of the written document, which reads back
+            var xml = opm.ToXmlString();
+            var schema = new OpmValidator().ValidateSchemaFromXml(xml);
+            Assert.True(schema.IsValid, string.Join("; ", System.Linq.Enumerable.Select(schema.Errors, e => e.Message)));
+            Assert.Equal(kep.ArgumentOfPericenter, Opm.LoadFromString(xml).Data.KeplerianElements.ArgumentOfPericenter, 9);
+        }
+
         [Fact]
         public void ToSpacecraft_RoundTrip_PreservesData()
         {
@@ -1365,13 +1403,13 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         #region Keywords out of their range
 
         // Rows of OpmReaderTests.OpmKeywordsOutOfRange: one the schema rejects, and those it accepts though the data model
-        // refuses them (distanceType xsd:double, massType nonNegativeDouble, MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR
-        // xsd:string)
+        // refuses them (distanceType xsd:double, MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR xsd:string)
         [Theory]
         [InlineData("ECCENTRICITY", "-0.5", null, true)]
+        [InlineData("RA_OF_ASC_NODE", "1000", null, true)] // angleRange [-360, 360): loaded without the schema before #708
+        [InlineData("TRUE_ANOMALY", "-720", null, true)]
         [InlineData("SEMI_MAJOR_AXIS", "-6878.137", null, false)]
         [InlineData("SEMI_MAJOR_AXIS", "7000", "ECCENTRICITY=1.5", false)]
-        [InlineData("MASS", "0", null, false)]
         [InlineData("MAN_REF_FRAME", "", null, false)]
         [InlineData("OBJECT_NAME", "", null, false)]
         [InlineData("ORIGINATOR", "", null, false)]
@@ -1415,6 +1453,62 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
                     Assert.Equal("PARSE_ERROR", error.Code);
                     Assert.Contains(keyword, error.Message);
                     Assert.Contains($"'{value}'", error.Message);
+                }
+            });
+        }
+
+        #endregion
+
+        #region Non-finite values (#708)
+
+        [Theory]
+        [MemberData(nameof(OpmReaderTests.OpmNonFiniteValues), MemberType = typeof(OpmReaderTests))]
+        public void LoadFromString_NonFiniteValue_DoesNotLoad_WithDefaultValidation(string keyword, string value)
+        {
+            var xml = OpmReaderTests.OpmWithKeyword(keyword, value);
+
+            // .NET's schema validator accepts NaN against the bound facets and Infinity or 1e400 as xsd:double, so the
+            // schema step stops only some rows; the reader stops the others
+            bool schemaRejects = !new OpmValidator().ValidateSchemaFromXml(xml).IsValid;
+
+            // Before: every row loaded with the defaults, the keyword NaN or ±Infinity
+            NdmDocuments.WithTempFile(xml, file =>
+            {
+                if (schemaRejects)
+                {
+                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file));
+                }
+                else
+                {
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml)), keyword, value);
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromFile(file)), keyword, value);
+                    using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromStream(stream)), keyword, value);
+                }
+
+                // Without the schema, and without the content validation: the reader's exception
+                OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() =>
+                    Opm.LoadFromString(xml, validateSchema: false)), keyword, value);
+                OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() =>
+                    Opm.LoadFromString(xml, validateSchema: false, validateContent: false)), keyword, value);
+
+                // TryLoadFromFile: false, one PARSE_ERROR naming the keyword
+                foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
+                {
+                    Assert.False(Opm.TryLoadFromFile(file, out var opm, out var result, validateSchema));
+                    Assert.Null(opm);
+                    var error = Assert.Single(result.Errors);
+                    Assert.Equal("PARSE_ERROR", error.Code);
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(new Exception(error.Message), keyword, value);
+                }
+
+                // ValidateFile: invalid (before: valid), the parser's error naming the keyword where the schema passes
+                var validation = new OpmValidator().ValidateFile(file);
+                Assert.False(validation.IsValid);
+                if (!schemaRejects)
+                {
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(new Exception(Assert.Single(validation.Errors).Message), keyword, value);
                 }
             });
         }

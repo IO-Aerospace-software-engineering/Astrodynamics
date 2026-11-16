@@ -584,8 +584,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         /// The keywords of the OPM whose value the data model refuses, with that value, a second keyword set with it
         /// ("KEYWORD=value", or null), and whether the NDM/XML 4.0.0 schema rejects the document (CCSDS 502.0-B-3; the facets
         /// of ndmxml-4.0.0-common-4.0.xsd and -opm-3.0.xsd). The schema-valid rows are those where the schema type is wider
-        /// than the data model: distanceType is xsd:double (the sign of SEMI_MAJOR_AXIS against ECCENTRICITY), massType
-        /// nonNegativeDouble (OpmData requires a mass above 0), MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR xsd:string.
+        /// than the data model: distanceType is xsd:double (the sign of SEMI_MAJOR_AXIS against ECCENTRICITY), MAN_REF_FRAME,
+        /// OBJECT_NAME and ORIGINATOR xsd:string. MASS 0, a massType value (nonNegativeDouble), is read since #708.
         /// </summary>
         public static TheoryData<string, string, string?, bool> OpmKeywordsOutOfRange() => new()
         {
@@ -593,12 +593,14 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             { "SEMI_MAJOR_AXIS", "-6878.137", null, false }, // distanceType: xsd:double; e < 1 needs a > 0
             { "SEMI_MAJOR_AXIS", "0", null, false },
             { "SEMI_MAJOR_AXIS", "7000", "ECCENTRICITY=1.5", false }, // e > 1 needs a < 0
+            { "RA_OF_ASC_NODE", "360", null, true }, // angleType: angleRange [-360, 360) (#708: read before)
+            { "ARG_OF_PERICENTER", "-360.5", null, true },
+            { "TRUE_ANOMALY", "1000", null, true },
             { "INCLINATION", "-1", null, true }, // inclinationRange [0, 180]
             { "INCLINATION", "181", null, true },
             { "GM", "-1", null, true }, // gmType: positiveDouble
             { "GM", "0", null, true },
-            { "MASS", "0", null, false }, // massType: nonNegativeDouble
-            { "MASS", "-1", null, true },
+            { "MASS", "-1", null, true }, // massType: nonNegativeDouble
             { "SOLAR_RAD_AREA", "-1", null, true }, // areaType: nonNegativeDouble
             { "SOLAR_RAD_COEFF", "-1", null, true }, // nonNegativeDouble
             { "DRAG_AREA", "-1", null, true },
@@ -647,6 +649,50 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(1500.0, Opm.LoadFromString(xml).Data.Mass);
         }
 
+        [Fact]
+        public void ReadFromString_MassZero_ReadsZero()
+        {
+            // massType of ndmxml-4.0.0-common-4.0.xsd extends nonNegativeDouble (minInclusive 0.0); the schema, the oracle,
+            // accepts the document. Before #708: OpmParseException "Mass must be positive", the data model requiring a mass
+            // above 0 where the OMM's SpacecraftParameters, for the same keyword of the same type, accepts 0
+            var xml = OpmWithKeyword("MASS", "0");
+            Assert.True(new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            Assert.Equal(0.0, _reader.ReadFromString(xml).Data.Mass);
+            Assert.Equal(0.0, Opm.LoadFromString(xml).Data.Mass);
+            Assert.Equal(0.0, Opm.LoadFromString(xml, validateSchema: true, validateContent: false).Data.Mass);
+            NdmDocuments.WithTempFile(xml, file =>
+            {
+                Assert.True(Opm.TryLoadFromFile(file, out var opm, out var result));
+                Assert.Equal(0.0, opm.Data.Mass);
+                Assert.True(result.IsValid);
+                Assert.True(new OpmValidator().ValidateFile(file).IsValid);
+            });
+
+            // A spacecraft of mass 0, which CelestialItem allows
+            var spacecraft = Opm.LoadFromString(xml).ToSpacecraft(-1000, 1000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("OnboardClock", 256),
+                new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH));
+            Assert.Equal(0.0, spacecraft.Mass);
+        }
+
+        [Theory]
+        [InlineData("360")]
+        [InlineData("-720")]
+        public void ReadFromString_MeanAnomalyOutOfSchemaRange_ThrowsOpmParseExceptionNamingKeyword(string value)
+        {
+            // The base document with its TRUE_ANOMALY renamed MEAN_ANOMALY (the choice of keplerianElementsType):
+            // angleType, so the schema, the oracle, rejects 360 and -720, which the reader read before #708
+            var xml = NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", value, renameTo: "MEAN_ANOMALY");
+            Assert.False(new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
+            Assert.True(new OpmValidator().ValidateSchemaFromXml(
+                NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", "-10", renameTo: "MEAN_ANOMALY")).IsValid);
+
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)), "MEAN_ANOMALY", value);
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml, validateSchema: false)), "MEAN_ANOMALY", value);
+            Assert.Equal(-10.0, Opm.LoadFromString(
+                NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", "-10", renameTo: "MEAN_ANOMALY")).Data.KeplerianElements.MeanAnomaly);
+        }
+
         [Theory]
         [MemberData(nameof(OpmKeywordsOutOfRange))]
         public void ReadFromString_KeywordOutOfRange_ThrowsOpmParseExceptionNamingKeywordAndValue(
@@ -664,6 +710,86 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromStream(stream)), keyword, value, with);
             NdmDocuments.WithTempFile(xml, file =>
                 AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromFile(file)), keyword, value, with));
+        }
+
+        #endregion
+
+        #region Non-finite values (#708)
+
+        /// <summary>
+        /// Keywords of the OPM with a text that double.TryParse (NumberStyles.Float, the invariant culture) reads as NaN or
+        /// ±Infinity ("NaN", "Infinity" in any case, an overflow such as "1e400"). NaN and ±Infinity are not real numbers
+        /// (IEEE 754), and the values of an OPM are real numbers in their units (CCSDS 502.0-B-3; to be verified by
+        /// S. Guillet): the reader refuses them, as #708 expects. The rows cover the state vector, the Keplerian elements,
+        /// the spacecraft parameters, the covariance and the maneuvers, ranged or not by the data model.
+        /// </summary>
+        public static TheoryData<string, string> OpmNonFiniteValues() => new()
+        {
+            { "X", "NaN" },
+            { "X", "Infinity" },
+            { "X_DOT", "Infinity" },
+            { "Z_DOT", "-Infinity" },
+            { "SEMI_MAJOR_AXIS", "NaN" },
+            { "SEMI_MAJOR_AXIS", "Infinity" },
+            { "ECCENTRICITY", "NaN" },
+            { "INCLINATION", "NaN" },
+            { "TRUE_ANOMALY", "NaN" },
+            { "GM", "NaN" },
+            { "GM", "Infinity" },
+            { "MASS", "NaN" },
+            { "MASS", "infinity" },
+            { "DRAG_COEFF", "1e400" },
+            { "CX_X", "NaN" },
+            { "CY_X", "NaN" },
+            { "MAN_DURATION", "NaN" },
+            { "MAN_DELTA_MASS", "NaN" },
+            { "MAN_DV_1", "NaN" },
+            { "MAN_DV_1", "1e400" }
+        };
+
+        /// <summary>The parse exception names the keyword and its text, and says that the value is not finite.</summary>
+        internal static void AssertNamesNonFiniteKeyword(Exception ex, string keyword, string value)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            Assert.Contains("not a finite number", ex.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(OpmNonFiniteValues))]
+        public void ReadFromString_NonFiniteValue_ThrowsOpmParseExceptionNamingKeywordAndValue(string keyword, string value)
+        {
+            var xml = OpmWithKeyword(keyword, value);
+
+            // Before: the document loaded, the keyword holding NaN or ±Infinity, which every range check passed
+            AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)), keyword, value);
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromStream(stream)), keyword, value);
+            NdmDocuments.WithTempFile(xml, file =>
+                AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromFile(file)), keyword, value));
+        }
+
+        [Theory]
+        [InlineData("X", "INF")] // the lexical INF of xsd:double, which double.TryParse rejects (as before)
+        [InlineData("MASS", "-INF")]
+        public void ReadFromString_XsdInfinityLiteral_StillThrowsOpmParseException(string keyword, string value)
+        {
+            var ex = Assert.Throws<OpmParseException>(() => _reader.ReadFromString(OpmWithKeyword(keyword, value)));
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+        }
+
+        [Theory]
+        [InlineData("X", "-0")]
+        [InlineData("X", "1.0e-300")]
+        [InlineData("X", "4.9e-324")] // the least subnormal, finite
+        [InlineData("X_DOT", "-1.7976931348623157e308")] // -double.MaxValue, finite
+        public void ReadFromString_FiniteExtremeValue_ReadsTheValueOfTheText(string keyword, string value)
+        {
+            var opm = _reader.ReadFromString(OpmWithKeyword(keyword, value));
+            double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+            double actual = keyword == "X" ? opm.Data.StateVector.X : opm.Data.StateVector.XDot;
+            Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual));
         }
 
         #endregion

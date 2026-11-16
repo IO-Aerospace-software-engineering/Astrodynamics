@@ -40,9 +40,24 @@ negative, a negative spacecraft parameter, an empty `OBJECT_NAME`, `OBJECT_ID`, 
 `ArgumentOutOfRangeException` or `ArgumentException` of the data model's constructor crossed the reader, naming its
 parameter. With `validateSchema` the schema rejects most of these values first (`OmmValidationException`), but not those
 its types allow: `MEAN_MOTION` and `SEMI_MAJOR_AXIS` are `xsd:double` and the metadata strings `xsd:string`, so a
-`MEAN_MOTION` of 0 or an empty `OBJECT_NAME` throws `OmmParseException` with the default validation too.
+`MEAN_MOTION` of 0 or an empty `OBJECT_NAME` throws `OmmParseException` with the default validation too. These rules
+go beyond the schema: a = (μ / n²)^(1/3) is infinite for a mean motion of 0 and no mean motion or semi-major axis below
+0 describes an orbit, and CCSDS 502.0-B-3 makes `OBJECT_NAME` and the other metadata mandatory; whether the readers
+should accept these schema-valid values is left open by [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708) (a decision of S. Guillet), and they are refused as
+before.
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error, both naming the keyword.
-The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`.
+The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`; a ranged
+parameter of `MeanElements` (a, n, e, i, the three angles, GM) or `SpacecraftParameters` refuses NaN and ±Infinity with
+its `ArgumentOutOfRangeException`, and so does `TLE.ToOmm`, which builds them, for such a value, where it wrote `NaN` ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)).
+
+A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
+case, or a value beyond the range of a `double` such as `1e400`, which .NET rounds to ±Infinity) throws
+`OmmParseException` naming the keyword and the text, for every numeric keyword of the message ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), for example
+`Failed to parse numeric value 'NaN' for field 'ECCENTRICITY': not a finite number.` Before 11.0.0 the document loaded
+with the value, which every range check passed, the comparisons with NaN being false. The schema step does not stop
+these values: .NET's schema validator accepts NaN against the bound facets of NDM/XML 4.0.0 and `Infinity` or an
+overflow as an `xsd:double`. `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error,
+both naming the keyword. The lexical `INF` and `-INF` of `xsd:double` throw the parse exception, as before.
 
 ### Schema validation
 
@@ -63,6 +78,18 @@ nothing below its root was checked: an OMM with `ECCENTRICITY` -0.5 threw `Argum
 makes `Load*` throw `OmmValidationException`; fix the document, or pass `validateSchema: false` to read it without the
 schema step, where a keyword out of its range, as that `ECCENTRICITY`, throws `OmmParseException` since the fourth round
 (above). A valid document, the writer's output included, validates without a warning.
+
+### Content validation
+
+`validateContent`, `Validate()` and `OmmValidator.Validate` check the physical constraints of the data model's values. Each
+error check is the negation of its admitted range, so that NaN, in no range, is an error (`OMM002`), as is an infinite
+value where the range is half-open: a covariance variance must be finite and non-negative, which the covariance
+constructors, without a range, do not check ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN variance was valid). The warnings and the
+information levels (an unusual drag coefficient, a large eccentricity) are unchanged. `RA_OF_ASC_NODE`,
+`ARG_OF_PERICENTER` and `MEAN_ANOMALY` are checked against [-360, 360), the `angleRange` of the schema and the range of
+`MeanElements` (#708: [0, 360) before 11.0.0, so the default `Load*` threw `OmmValidationException` for a schema-valid
+negative angle); `ToTle` writes a negative angle as its value in [0, 360). A `MASS` of 0, a `massType` value, is
+valid, as for the other spacecraft parameters (#708: an error before 11.0.0).
 
 ### Saving
 

@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using Xunit;
 
@@ -32,7 +33,6 @@ public class OpmValidatorTests
     // and its value (before: the data model's message, naming its constructor parameter)
     [Theory]
     [InlineData("SEMI_MAJOR_AXIS", "-6878.137")]
-    [InlineData("MASS", "0")]
     [InlineData("MAN_REF_FRAME", "")]
     [InlineData("OBJECT_NAME", "")]
     [InlineData("ORIGINATOR", "")]
@@ -179,4 +179,53 @@ public class OpmValidatorTests
         Assert.Equal(error.Message, Assert.Single(ex.ValidationResult.Errors).Message);
         NdmDocuments.WithTempFile(xml, file => Assert.Contains(_validator.ValidateFile(file).Errors, e => e.Message == error.Message));
     }
+
+    #region Ranges of NDM/XML 4.0.0 and non-finite values (#708)
+
+    private static OpmData DataWith(OpmData data, double? mass, CovarianceMatrix covariance) => new(
+        data.StateVector, data.KeplerianElements, mass, data.SolarRadiationPressureArea, data.SolarRadiationCoefficient,
+        data.DragArea, data.DragCoefficient, covariance, data.Maneuvers, data.UserDefinedParameters, data.SpacecraftComments,
+        data.Comments);
+
+    [Theory]
+    [InlineData("CX_X")]
+    [InlineData("CY_Y")]
+    [InlineData("CZ_Z")]
+    [InlineData("CX_DOT_X_DOT")]
+    [InlineData("CY_DOT_Y_DOT")]
+    [InlineData("CZ_DOT_Z_DOT")]
+    public void Validate_NaNVariance_ReportsError(string keyword)
+    {
+        // A variance is non-negative, and NaN is not (before: valid, the check "< 0" being false for NaN). The covariance
+        // constructors do not range-check their terms, so the validator is the check of a programmatic covariance
+        double V(string name, double value) => name == keyword ? value : 1.0e-6;
+        CovarianceMatrix Covariance(double value) => new(
+            V("CX_X", value), 0, V("CY_Y", value),
+            0, 0, V("CZ_Z", value),
+            0, 0, 0, V("CX_DOT_X_DOT", value),
+            0, 0, 0, 0, V("CY_DOT_Y_DOT", value),
+            0, 0, 0, 0, 0, V("CZ_DOT_Z_DOT", value), "ICRF");
+
+        var read = Opm.LoadFromString(OpmReaderTests.KeywordBaseOpm());
+        var opm = new Opm(read.Header, read.Metadata, DataWith(read.Data, read.Data.Mass, Covariance(double.NaN)));
+        var error = Assert.Single(_validator.Validate(opm).Errors);
+        Assert.Equal("OPM002", error.Code);
+        Assert.Equal($"Data.Covariance.{keyword}", error.Path);
+
+        var finite = new Opm(read.Header, read.Metadata, DataWith(read.Data, read.Data.Mass, Covariance(0.0)));
+        Assert.Empty(_validator.Validate(finite).Errors);
+    }
+
+    [Fact]
+    public void Validate_MassZero_NoError()
+    {
+        // massType of ndmxml-4.0.0-common-4.0.xsd extends nonNegativeDouble (minInclusive 0.0), the type of the MASS of the
+        // OMM too: an Opm built with mass 0 is valid (before: OpmData threw, and the validator reported "Mass must be positive")
+        var read = Opm.LoadFromString(OpmReaderTests.KeywordBaseOpm());
+        var opm = new Opm(read.Header, read.Metadata, DataWith(read.Data, 0.0, read.Data.Covariance));
+        Assert.Equal(0.0, opm.Data.Mass);
+        Assert.Empty(_validator.Validate(opm).Errors);
+    }
+
+    #endregion
 }

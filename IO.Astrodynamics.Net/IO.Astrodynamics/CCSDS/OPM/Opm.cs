@@ -521,8 +521,9 @@ public class Opm
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>True if the OPM was loaded successfully with no errors, false otherwise.</returns>
     /// <remarks>A document that holds several OPM messages (#679), or an OPM with several segments, headers, bodies,
-    /// metadata or data sections, or blocks of a data section, or a keyword whose value the data model refuses, is not
-    /// loaded: false, with a <c>PARSE_ERROR</c>, which names that keyword and its value (fourth round of #668).</remarks>
+    /// metadata or data sections, or blocks of a data section, or a keyword whose value the data model refuses, or a numeric
+    /// keyword whose value is not finite (#708), is not loaded: false, with a <c>PARSE_ERROR</c>, which names that keyword
+    /// and its value (fourth round of #668).</remarks>
     public static bool TryLoadFromFile(
         string filePath,
         out Opm opm,

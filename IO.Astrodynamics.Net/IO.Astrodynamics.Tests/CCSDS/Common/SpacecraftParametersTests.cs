@@ -113,5 +113,55 @@ namespace IO.Astrodynamics.Tests.CCSDS.Common
             Assert.Contains("10", result);
             Assert.Contains("2.2", result);
         }
+
+        public static TheoryData<string, double> NonFiniteParameters()
+        {
+            var data = new TheoryData<string, double>();
+            foreach (var parameter in new[] { "mass", "solarRadArea", "solarRadCoeff", "dragArea", "dragCoeff" })
+            {
+                data.Add(parameter, double.NaN);
+                data.Add(parameter, double.PositiveInfinity);
+                data.Add(parameter, double.NegativeInfinity);
+            }
+
+            return data;
+        }
+
+        private static SpacecraftParameters BuildWith(string parameter, double value) => new(
+            mass: parameter == "mass" ? value : 420000.0,
+            solarRadArea: parameter == "solarRadArea" ? value : 2500.0,
+            solarRadCoeff: parameter == "solarRadCoeff" ? value : 1.2,
+            dragArea: parameter == "dragArea" ? value : 2500.0,
+            dragCoeff: parameter == "dragCoeff" ? value : 2.2);
+
+        [Theory]
+        [MemberData(nameof(NonFiniteParameters))]
+        public void Constructor_NonFiniteParameter_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // Each is a finite value of 0 or more (nonNegativeDouble, massType and areaType of ndmxml-4.0.0-common-4.0.xsd);
+            // NaN and +Infinity passed the check "< 0" before (#708)
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => BuildWith(parameter, value));
+            Assert.Equal(parameter, ex.ParamName);
+        }
+
+        [Theory]
+        [InlineData("mass")]
+        [InlineData("solarRadArea")]
+        [InlineData("solarRadCoeff")]
+        [InlineData("dragArea")]
+        [InlineData("dragCoeff")]
+        public void Constructor_ZeroParameter_IsStoredAsGiven(string parameter)
+        {
+            var parameters = BuildWith(parameter, 0.0);
+            double? stored = parameter switch
+            {
+                "mass" => parameters.Mass,
+                "solarRadArea" => parameters.SolarRadArea,
+                "solarRadCoeff" => parameters.SolarRadCoeff,
+                "dragArea" => parameters.DragArea,
+                _ => parameters.DragCoeff
+            };
+            Assert.Equal(0.0, stored);
+        }
     }
 }

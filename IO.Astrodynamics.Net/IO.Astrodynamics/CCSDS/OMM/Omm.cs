@@ -544,8 +544,9 @@ public class Omm
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>True if the OMM was loaded successfully with no errors, false otherwise.</returns>
     /// <remarks>A document that holds several OMM messages (#679), or an OMM with several segments, headers, bodies,
-    /// metadata or data sections, or blocks of a data section, or a keyword whose value the data model refuses, is not
-    /// loaded: false, with a <c>PARSE_ERROR</c>, which names that keyword and its value (fourth round of #668).</remarks>
+    /// metadata or data sections, or blocks of a data section, or a keyword whose value the data model refuses, or a numeric
+    /// keyword whose value is not finite (#708), is not loaded: false, with a <c>PARSE_ERROR</c>, which names that keyword
+    /// and its value (fourth round of #668).</remarks>
     public static bool TryLoadFromFile(
         string filePath,
         out Omm omm,

@@ -2707,7 +2707,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the wrong sign for its `ECCENTRICITY`, `MAN_DELTA_MASS` of 1; an empty `OBJECT_NAME`, `ORIGINATOR` or
   `MAN_REF_FRAME`), and with the default validation for the values the NDM/XML 4.0.0 schema accepts: an OMM
   `MEAN_MOTION` or `SEMI_MAJOR_AXIS` not above 0 (`revType` and `distanceType` are `xsd:double`), the OPM
-  `SEMI_MAJOR_AXIS` sign and `MASS` 0 (`massType` is a `nonNegativeDouble`, `OpmData` requires a mass above 0), and the
+  `SEMI_MAJOR_AXIS` sign and `MASS` 0 (`massType` is a `nonNegativeDouble`, `OpmData` required a mass above 0, read since #708), and the
   empty strings (`xsd:string`). The CDM reader, which has no schema step, let the `FormatException` of
   `CdmEnumExtensions` cross every read for an `OBJECT` of `OBJECT3`, a `REF_FRAME` of `TEME`, a `COVARIANCE_METHOD`,
   `MANEUVERABLE`, `SCREEN_VOLUME_FRAME`, `SCREEN_VOLUME_SHAPE`, `SOLAR_RAD_PRESSURE`, `EARTH_TIDES` or `INTRACK_THRUST`
@@ -2809,6 +2809,99 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` of `LoadKernels` and `UnloadKernels` carries it ("Kernel ... can't be unloaded:
   SPICE(FILENOTFOUND) ...") where it said "You can have more details on standard output". The exception types are
   unchanged.
+- **The CCSDS readers loaded NaN and infinite values** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The `ParseDouble` of `OmmReader`, `OpmReader` and
+  `CdmReader` used `double.TryParse` with the invariant culture, which reads `NaN`, `Infinity` and `-Infinity` in any
+  case and, since .NET Core 3.0, rounds an overflow (`1e400`) to ±Infinity; nothing checked the result, and every range
+  check of the data model and of the validators (`x < 0`) is false for NaN. With the default `validateSchema` and
+  `validateContent`, an OMM with `ECCENTRICITY`, `MEAN_MOTION`, `INCLINATION`, `RA_OF_ASC_NODE`, `BSTAR` or
+  `MEAN_MOTION_DOT` of `NaN` loaded, so did an OPM with `ECCENTRICITY`, `MASS`, `SEMI_MAJOR_AXIS`, `X`, `GM`, `CX_X`,
+  `MAN_DURATION` or `DRAG_COEFF` of `NaN` or `Infinity`, and a CDM with a `MISS_DISTANCE`, `X` or `CR_R` of `NaN`,
+  `Infinity` or `1e400`, which `Cdm.Validate` reported valid: .NET's schema validator accepts NaN against the bound
+  facets of NDM/XML 4.0.0 (`nonNegativeDouble`, `inclinationRange`, `angleRange`) and `Infinity` or an overflow as an
+  `xsd:double` (libxml2 rejects `Infinity`). Each `ParseDouble` now throws the reader's parse exception for a value that
+  is not finite, naming the keyword and the text (`Failed to parse numeric value 'NaN' for field 'ECCENTRICITY': not a
+  finite number.`; for the CDM `Invalid numeric value for MISS_DISTANCE: 'NaN' is not a finite number.`), for every
+  numeric keyword of the three messages, and so `Load*`, `TryLoadFromFile` (a `PARSE_ERROR`) and `ValidateFile`. A
+  finite document reads bit for bit as before, and `INF` and `-INF` throw the parse exception as before
+  (`OmmReaderTests`, `OpmReaderTests`, `OmmTests`, `OpmTests` and `CdmTests`
+  `*_NonFiniteValue_*`, through every entry point, red on 46e6975). The CDM reader checks the value it holds after its
+  conversion to m or m/s as well: a finite text in km or km/s above about 1.8e305 (`1e306` for `X`, `Z`, `X_DOT`,
+  `MISS_DISTANCE`, `RELATIVE_POSITION_R`, `RELATIVE_VELOCITY_T`) became ±Infinity by its product by 1000 (IEEE 754), which
+  `Cdm.Validate` reported valid; it throws `CdmParseException` naming the keyword, its text and its unit
+  (`Invalid numeric value for X: '1e306' km is not a finite number in SI units.`), and 1e305 km reads as before, bit for
+  bit (`CdmTests.ReadFromString_FiniteValueOverflowingInSiUnits_ThrowsCdmParseException`, red on the first fix of #708;
+  `ReadFromString_LargestValueFiniteInSiUnits_ReadsTheProduct`).
+- **An OPM `MASS` of 0 threw** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OpmData` required a mass above 0 and `OpmValidator` reported "Mass must be
+  positive.", where NDM/XML 4.0.0 types `MASS` as `massType`, a `nonNegativeDouble` (`minInclusive` 0.0), the type of
+  the OMM's `MASS` too, which `SpacecraftParameters` accepts at 0: a schema-valid OPM with a `MASS` of 0 threw
+  `OpmParseException` (`MASS '0' in spacecraftParameters is invalid: Mass must be positive.`) with or without schema
+  validation. `OpmData` and `OpmValidator` now take a mass of 0 or more, so the OPM loads, `Data.Mass` 0 exactly, and
+  `Opm.ToSpacecraft` builds a spacecraft of mass 0, as `CelestialItem` allows (`OpmReaderTests.ReadFromString_MassZero_ReadsZero`,
+  `OpmValidatorTests.Validate_MassZero_NoError`, red on 46e6975, the schema their oracle).
+- **The messages of the `MeanElements` angles misstated their range** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The checks of `RA_OF_ASC_NODE`,
+  `ARG_OF_PERICENTER` and `MEAN_ANOMALY` take [-360, 360), the `angleRange` of NDM/XML 4.0.0 (`minInclusive` -360.0,
+  `maxExclusive` 360.0), but the messages said "between -360 and 360 degrees", which 360, refused, is; the reader
+  carried that text into its `OmmParseException`. They now say "RAAN must be in [-360, 360) degrees." (and likewise for
+  the argument of pericenter and the mean anomaly), and the XML documentation of the three properties, which said
+  "0 to 360", states [-360, 360). No value is accepted or refused differently
+  (`MeanElementsTests.Constructor_AngleAt360_MessageStatesHalfOpenRange`,
+  `OmmReaderTests.ReadFromString_AngleAt360_MessageStatesHalfOpenRange`, red on 46e6975).
+- **The constructors of the CCSDS data model accepted NaN and infinite values** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). Each range check was the
+  complement of the range (`x < 0`, `x < -360 || x >= 360`), false for NaN, and the half-open ranges took +Infinity:
+  `MeanElements.CreateWithMeanMotion` accepted an eccentricity or a mean motion of NaN and an eccentricity of +∞,
+  `new SpacecraftParameters(mass: NaN)`, `OpmKeplerianElements.CreateWithTrueAnomaly(semiMajorAxis: NaN, ...)` and
+  `new OpmManeuverParameters(manDuration: NaN, ...)` built, against their documented ranges. Each check is now the
+  negation of the admitted range, with a finite value where the range is half-open: `MeanElements` (a and n finite and
+  above 0, e finite and 0 or more, i in [0, 180], the three angles in [-360, 360), GM finite and above 0),
+  `SpacecraftParameters` and `OpmData` (the five spacecraft parameters finite and 0 or more, through the internal
+  `CcsdsValues.IsNullOrFiniteNonNegative`), `OpmKeplerianElements` (e finite and 0 or more, a finite, i in [0, 180], GM
+  finite and above 0) and `OpmManeuverParameters` (`manDuration` finite and 0 or more, `manDeltaMass` finite and 0 or
+  less), the same `ArgumentOutOfRangeException` naming the parameter. The parameters without a range (the state
+  vector, the covariance, the ΔV components, the TLE parameters, the CDM records) are unchanged. Finite values build bit
+  for bit as before (`MeanElementsTests`, `SpacecraftParametersTests`, `OpmDataTests`, `OpmKeplerianElementsTests` and
+  `OpmManeuverParametersTests` `*_NonFinite*`, NaN, +∞ and −∞ in each ranged parameter, red on 46e6975; the bounds
+  e 0 and −0, i 0 and 180, the angles −360, a mass and a delta mass of 0 stored as given).
+- **The CCSDS content validators reported NaN valid** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The error checks of `OmmValidator`, `OpmValidator` and
+  `CdmValidator` were the complement of their range (`CxX < 0`, `MissDistanceMeters < 0.0`, ...), false for NaN: a
+  covariance built with `new CovarianceMatrix(...)` or `CovarianceMatrix.FromMatrix` with a NaN variance, which the
+  covariance constructors do not range-check, and a `CdmRelativeMetadataData` with a NaN miss distance were reported
+  valid, against the validators' own rules ("must be non-negative"). Each error check is now the negation of its
+  admitted range, with a finite value where the range is half-open, so NaN is an `InvalidRange` error (`OMM002`,
+  `OPM002`) or a CDM content error naming its value (`Variance CX_X must be finite and non-negative, got NaN.`); the
+  warnings and the information levels are unchanged (`OmmValidatorTests` and `OpmValidatorTests`
+  `Validate_NaNVariance_ReportsError`, each variance; `CdmTests.Validate_NaNMissDistance_IsInvalid`; red on 46e6975).
+- **The OMM content validation refused a negative angle the schema accepts** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OmmValidator` checked
+  `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` and `MEAN_ANOMALY` against [0, 360) ("must be 0-360 degrees"), where the
+  `angleRange` of NDM/XML 4.0.0 and `MeanElements` take [-360, 360): `Omm.LoadFrom*` with the default `validateContent`
+  threw `OmmValidationException` for a schema-valid angle of -360 or -10, which `validateContent: false` loaded. The
+  three checks now take [-360, 360) ("must be in [-360, 360) degrees"), NaN refused. `Omm.ToTle` writes such an angle
+  as its value in [0, 360) (-10 as 350.0000, measured) (`OmmValidatorTests.Validate_NegativeAngleInSchemaRange_NoError`,
+  -360, -10 and -0 for each angle, the schema its oracle, red on 46e6975 for -360 and -10).
+- **The OMM content validation refused a `MASS` of 0** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OmmValidator` reported "MASS must be positive",
+  where `massType` of NDM/XML 4.0.0 is a `nonNegativeDouble` and `SpacecraftParameters` accepts 0: the default
+  `Omm.LoadFrom*` threw `OmmValidationException` for a schema-valid OMM that `validateContent: false` loaded. The check
+  now reports a mass that is not a finite value of 0 or more ("MASS must be non-negative"), as for the other spacecraft
+  parameters and the OPM (`OmmValidatorTests.Validate_MassZero_NoError`, the schema its oracle, red on 46e6975;
+  `OmmReaderTests.ReadFromString_KeywordAtRangeBoundary_Parses` now loads its bounds, `RA_OF_ASC_NODE` -360 and `MASS`
+  0 included, with the default validation).
+- **The angles of an OPM had no range** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER`, `TRUE_ANOMALY` and
+  `MEAN_ANOMALY` are `ndm:angleType` in ndmxml-4.0.0-opm-3.0.xsd, `angleRange` [-360, 360) (`minInclusive` -360.0,
+  `maxExclusive` 360.0), the range `MeanElements` checks for the OMM, and the XML documentation of
+  `OpmKeplerianElements` said "-360 to 360", but nothing checked them: `CreateWithTrueAnomaly(..., raan: NaN, aop: +∞,
+  trueAnomaly: NaN, ...)` built and `OpmValidator` reported it valid, and `Opm.LoadFrom*` with `validateSchema: false`
+  loaded an angle of 1000, -720 or 360, which the schema rejects. `OpmKeplerianElements.CreateWithTrueAnomaly` and
+  `CreateWithMeanAnomaly` now throw `ArgumentOutOfRangeException` naming `raan`, `aop`, `trueAnomaly` or `meanAnomaly`
+  for an angle outside [-360, 360), NaN and ±Infinity included ("RAAN must be in [-360, 360) degrees."), and the reader
+  `OpmParseException` naming the keyword and its text; -360, -0, -10 and the largest double below 360 are stored as
+  given. `FromKeplerianElements` writes each angle as its value in [0, 360): for an angle of 2π, which the [0, 2π)
+  normalization of `KeplerianElements` gives for -1e-17 rad, it wrote 360, now 0 (an angle in [0, 360) bit for bit as
+  before); `Spacecraft.ToOpm` builds its elements through it, its output unchanged
+  (`OpmKeplerianElementsTests.Create_AngleOutOfSchemaRange_ThrowsArgumentOutOfRangeException`, 28 rows,
+  `FromKeplerianElements_AngleAtTwoPi_WritesItsValueInZeroTo360`, `OpmReaderTests` rows `RA_OF_ASC_NODE` 360,
+  `ARG_OF_PERICENTER` -360.5, `TRUE_ANOMALY` 1000 and `ReadFromString_MeanAnomalyOutOfSchemaRange_*`, `OpmTests` rows
+  without the schema, red on the first fix of #708, the schema their oracle; `Create_AngleAtSchemaBounds_StoresTheValueGiven`,
+  `OpmTests.ToOpm_RetrogradeEquatorialOrbit_WritesAnglesInSchemaRange`, guards). `OpmValidator` checks no angle: the
+  constructor refuses one out of range, so no `Opm` holds it.
 
 - **An element conversion about a centre the native layer cannot read ended the process or returned a zero state** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655)). The native conversions build the centre of the elements as a celestial body, which threw a C++
@@ -3912,6 +4005,51 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`SpiceAPI.TransformFrame` composes the frame of a site only the library holds through ICRF** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
   Fixed above), where it threw `InvalidOperationException`. Not breaking for a valid use: every other pair of frames is
   unchanged, bit for bit. Migration: none; code that caught the exception gets the transform.
+- **Breaking: a non-finite numeric value throws the reader's parse exception** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
+  `Omm`/`Opm.LoadFromFile`, `LoadFromString` and `LoadFromStream`, `OmmReader`/`OpmReader`/`CdmReader.ReadFrom*` and
+  `Cdm.ReadFrom*` throw `OmmParseException`, `OpmParseException` or `CdmParseException` for a numeric keyword of
+  `NaN`, `Infinity`, `-Infinity` (any case) or an overflowing value such as `1e400`, and the CDM readers for a value in
+  km or km/s whose value in m or m/s overflows (`1e306` km), where they loaded the document with a NaN or infinite value; `TryLoadFromFile` returns false with a `PARSE_ERROR`, and `ValidateFile` reports the
+  document invalid. Migration: correct the producer of the document; a NaN or infinite value carried no orbit. Finite
+  documents load bit for bit as before.
+- **An OPM `MASS` of 0 is accepted** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `Opm.LoadFrom*`, `OpmReader.ReadFrom*` and
+  `TryLoadFromFile` read it, where they threw `OpmParseException`; `new OpmData(stateVector, mass: 0)` builds, where it
+  threw `ArgumentOutOfRangeException`; and `OpmValidator` reports no error for it, where it reported "Mass must be
+  positive.". Migration: a caller that relied on the refusal checks `Data.Mass > 0` itself. No result moves for a
+  positive mass.
+- **The message of an angle of `MeanElements` out of its range states [-360, 360)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): the
+  `ArgumentOutOfRangeException` of `MeanElements` for `raan`, `argOfPericenter` or `meanAnomaly`, and so the
+  `OmmParseException` of the reader for `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` or `MEAN_ANOMALY`, say "must be in
+  [-360, 360) degrees" where they said "must be between -360 and 360 degrees". Migration: none, unless a caller parses
+  the message.
+- **Breaking: the constructors of the CCSDS data model refuse non-finite values** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
+  `MeanElements` (both constructors and both factories), `SpacecraftParameters`, `OpmData`,
+  `OpmKeplerianElements.CreateWith*` and `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming the
+  parameter for NaN, and for +Infinity or −Infinity, in a range-checked parameter, where they accepted it; so do
+  `TLE.ToOmm` and `Spacecraft.ToOpm`, which build them, for such a value, where they wrote `NaN`. Migration: pass finite values; a
+  non-finite element or spacecraft parameter carried no orbit. Finite values build bit for bit as before.
+- **The CCSDS content validators report a NaN variance or miss distance** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator`,
+  `OpmValidator` and `CdmValidator.Validate` (and `Cdm.Validate`) report an error for a NaN or infinite covariance
+  variance or CDM miss distance, where they reported the object valid, and their range messages now name the finite
+  rule (`must be finite and non-negative`, `must be finite and positive`). Only an object built programmatically with
+  such a value is affected: the readers refuse it. Migration: none for finite data.
+- **The OMM content validation accepts an angle in [-360, 0)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator.Validate`,
+  `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER`
+  and `MEAN_ANOMALY` in [-360, 0), where they reported an `InvalidRange` error (`OMM002`) and threw
+  `OmmValidationException`. Migration: none; a caller that wants [0, 360) normalizes the angle. No result moves for
+  angles in [0, 360).
+- **Breaking: the angles of `OpmKeplerianElements` are in [-360, 360)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
+  `OpmKeplerianElements.CreateWithTrueAnomaly` and `CreateWithMeanAnomaly` throw `ArgumentOutOfRangeException` naming
+  `raan`, `aop`, `trueAnomaly` or `meanAnomaly` for an angle outside [-360, 360) (NaN and ±Infinity included), where
+  they built; `Opm.LoadFrom*`, `OpmReader.ReadFrom*` and `TryLoadFromFile` with `validateSchema: false` throw
+  `OpmParseException` (a `PARSE_ERROR`) for such an angle, where they loaded it (with the default validation the schema
+  rejected it already, `OpmValidationException`, unchanged); `FromKeplerianElements` writes an angle of 2π as 0, where
+  it wrote 360. Migration: pass an angle in [-360, 360), for example its value in [0, 360). An angle inside the range
+  is stored as before, bit for bit, and `Spacecraft.ToOpm` writes the same document.
+- **The OMM content validation accepts a `MASS` of 0** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator.Validate`,
+  `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept it, where they reported an
+  `InvalidRange` error (`OMM002`) and threw `OmmValidationException`. Migration: none; a caller that needs a positive
+  mass checks it.
 
 **Deprecated**
 

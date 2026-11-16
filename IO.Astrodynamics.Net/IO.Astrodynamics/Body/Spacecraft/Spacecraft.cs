@@ -1087,18 +1087,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
             OpmKeplerianElements keplerianElements = null;
             if (includeKeplerianElements)
             {
-                var kep = stateVector.ToKeplerianElements();
-                // GM in km³/s² (framework uses m³/s², so divide by 1e9)
-                var gmKm3S2 = kep.Observer.GM / 1e9;
-
-                keplerianElements = OpmKeplerianElements.CreateWithTrueAnomaly(
-                    semiMajorAxis: kep.SemiMajorAxis() / 1000.0, // m to km
-                    eccentricity: kep.Eccentricity(),
-                    inclination: kep.Inclination() * Constants.Rad2Deg,
-                    raan: kep.AscendingNode() * Constants.Rad2Deg,
-                    aop: kep.ArgumentOfPeriapsis() * Constants.Rad2Deg,
-                    trueAnomaly: kep.TrueAnomaly() * Constants.Rad2Deg,
-                    gm: gmKm3S2);
+                // km, degrees (each angle in [0, 360), angleRange of NDM/XML 4.0.0, #708) and km³/s², with the true anomaly
+                keplerianElements = OpmKeplerianElements.FromKeplerianElements(stateVector.ToKeplerianElements());
             }
 
             // Convert covariance from framework units (m²) to CCSDS units (km²)

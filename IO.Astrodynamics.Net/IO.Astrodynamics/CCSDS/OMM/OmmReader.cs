@@ -26,7 +26,10 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// negative ECCENTRICITY, an INCLINATION outside [0, 180], an empty OBJECT_NAME, ...) throws <see cref="OmmParseException"/> naming the
 /// keyword, its value and the rule, the data model's exception as inner exception, where before 11.0.0 the
 /// <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/> of its constructor crossed the reader; the
-/// schema rejects some of these values first, not those its types allow (fourth round of #668).
+/// schema rejects some of these values first, not those its types allow (fourth round of #668). A numeric value that is
+/// not finite (NaN, Infinity or -Infinity in any case, an overflow such as 1e400) throws <see cref="OmmParseException"/> naming the
+/// keyword and its text, where before 11.0.0 it was read, every range check passing NaN; the schema validator of .NET does
+/// not stop these values (#708).
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OmmReader
@@ -503,12 +506,17 @@ public class OmmReader
         throw new OmmParseException($"Failed to parse datetime value '{value}' for field '{fieldName}'.");
     }
 
+    // A value is a real number (#708): the text double.TryParse reads as NaN or ±Infinity
+    // ("NaN", "Infinity" in any case, an overflow such as "1e400") is refused, as the lexical INF of xsd:double it rejects
     private double ParseDouble(string value, string fieldName)
     {
-        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
-            return result;
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
+            throw new OmmParseException($"Failed to parse numeric value '{value}' for field '{fieldName}'.");
 
-        throw new OmmParseException($"Failed to parse numeric value '{value}' for field '{fieldName}'.");
+        if (!double.IsFinite(result))
+            throw new OmmParseException($"Failed to parse numeric value '{value}' for field '{fieldName}': not a finite number.");
+
+        return result;
     }
 
     private int ParseInt(string value, string fieldName)

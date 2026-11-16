@@ -26,7 +26,10 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// negative ECCENTRICITY, an INCLINATION outside [0, 180], an empty OBJECT_NAME, ...) throws <see cref="OpmParseException"/> naming the
 /// keyword, its value and the rule, the data model's exception as inner exception, where before 11.0.0 the
 /// <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/> of its constructor crossed the reader; the
-/// schema rejects some of these values first, not those its types allow (fourth round of #668).
+/// schema rejects some of these values first, not those its types allow (fourth round of #668). A numeric value that is
+/// not finite (NaN, Infinity or -Infinity in any case, an overflow such as 1e400) throws <see cref="OpmParseException"/> naming the
+/// keyword and its text, where before 11.0.0 it was read, every range check passing NaN; the schema validator of .NET does
+/// not stop these values (#708).
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OpmReader
@@ -295,8 +298,10 @@ public class OpmReader
         var sma = ParseDouble(smaStr, "SEMI_MAJOR_AXIS");
         var ecc = ParseDouble(eccStr, "ECCENTRICITY");
         var inc = ParseDouble(incStr, "INCLINATION");
-        var raan = ParseDouble(GetRequiredElementValue(element, "RA_OF_ASC_NODE"), "RA_OF_ASC_NODE");
-        var aop = ParseDouble(GetRequiredElementValue(element, "ARG_OF_PERICENTER"), "ARG_OF_PERICENTER");
+        var raanStr = GetRequiredElementValue(element, "RA_OF_ASC_NODE");
+        var raan = ParseDouble(raanStr, "RA_OF_ASC_NODE");
+        var aopStr = GetRequiredElementValue(element, "ARG_OF_PERICENTER");
+        var aop = ParseDouble(aopStr, "ARG_OF_PERICENTER");
 
         // Either TRUE_ANOMALY or MEAN_ANOMALY (choice)
         var trueAnomalyStr = GetOptionalElementValue(element, "TRUE_ANOMALY");
@@ -318,7 +323,11 @@ public class OpmReader
             new CcsdsKeyword("semiMajorAxis", "SEMI_MAJOR_AXIS", smaStr, $"ECCENTRICITY '{eccStr}'"),
             new CcsdsKeyword("eccentricity", "ECCENTRICITY", eccStr),
             new CcsdsKeyword("inclination", "INCLINATION", incStr),
-            new CcsdsKeyword("gm", "GM", gmStr)
+            new CcsdsKeyword("gm", "GM", gmStr),
+            new CcsdsKeyword("raan", "RA_OF_ASC_NODE", raanStr),
+            new CcsdsKeyword("aop", "ARG_OF_PERICENTER", aopStr),
+            new CcsdsKeyword("trueAnomaly", "TRUE_ANOMALY", trueAnomalyStr),
+            new CcsdsKeyword("meanAnomaly", "MEAN_ANOMALY", meanAnomalyStr)
         };
 
         if (!string.IsNullOrEmpty(trueAnomalyStr))
@@ -476,12 +485,17 @@ public class OpmReader
         throw new OpmParseException($"Failed to parse datetime value '{value}' for field '{fieldName}'.");
     }
 
+    // A value is a real number (#708): the text double.TryParse reads as NaN or ±Infinity
+    // ("NaN", "Infinity" in any case, an overflow such as "1e400") is refused, as the lexical INF of xsd:double it rejects
     private double ParseDouble(string value, string fieldName)
     {
-        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
-            return result;
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
+            throw new OpmParseException($"Failed to parse numeric value '{value}' for field '{fieldName}'.");
 
-        throw new OpmParseException($"Failed to parse numeric value '{value}' for field '{fieldName}'.");
+        if (!double.IsFinite(result))
+            throw new OpmParseException($"Failed to parse numeric value '{value}' for field '{fieldName}': not a finite number.");
+
+        return result;
     }
 
     #endregion

@@ -119,16 +119,18 @@ public class OpmData
     {
         StateVector = stateVector ?? throw new ArgumentNullException(nameof(stateVector));
 
-        if (mass.HasValue && mass.Value <= 0)
-            throw new ArgumentOutOfRangeException(nameof(mass), "Mass must be positive.");
-        if (solarRadiationPressureArea.HasValue && solarRadiationPressureArea.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(solarRadiationPressureArea), "SRP area cannot be negative.");
-        if (solarRadiationCoefficient.HasValue && solarRadiationCoefficient.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(solarRadiationCoefficient), "SRP coefficient cannot be negative.");
-        if (dragArea.HasValue && dragArea.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(dragArea), "Drag area cannot be negative.");
-        if (dragCoefficient.HasValue && dragCoefficient.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(dragCoefficient), "Drag coefficient cannot be negative.");
+        // massType of NDM/XML 4.0.0 is a nonNegativeDouble, as for the MASS of an OMM (#708: above 0 before), and each
+        // parameter a finite value (#708: NaN and +Infinity passed the checks)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(mass))
+            throw new ArgumentOutOfRangeException(nameof(mass), "Mass must be finite and cannot be negative.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(solarRadiationPressureArea))
+            throw new ArgumentOutOfRangeException(nameof(solarRadiationPressureArea), "SRP area must be finite and cannot be negative.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(solarRadiationCoefficient))
+            throw new ArgumentOutOfRangeException(nameof(solarRadiationCoefficient), "SRP coefficient must be finite and cannot be negative.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(dragArea))
+            throw new ArgumentOutOfRangeException(nameof(dragArea), "Drag area must be finite and cannot be negative.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(dragCoefficient))
+            throw new ArgumentOutOfRangeException(nameof(dragCoefficient), "Drag coefficient must be finite and cannot be negative.");
 
         KeplerianElements = keplerianElements;
         Mass = mass;

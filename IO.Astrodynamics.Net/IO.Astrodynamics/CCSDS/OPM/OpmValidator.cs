@@ -438,14 +438,15 @@ public class OpmValidator
         if (!ValidatePhysicalConstraints)
             return;
 
+        // Each error check is the negation of the admitted range, so that NaN, in no range, is an error (#708)
         // Eccentricity must be >= 0
-        if (keplerian.Eccentricity < 0)
+        if (!(keplerian.Eccentricity >= 0))
         {
             result.AddError(InvalidRange, "Eccentricity cannot be negative.", "Data.KeplerianElements.Eccentricity");
         }
 
         // Inclination must be 0-180 degrees
-        if (keplerian.Inclination < 0 || keplerian.Inclination > 180)
+        if (!(keplerian.Inclination >= 0 && keplerian.Inclination <= 180))
         {
             result.AddError(InvalidRange,
                 $"Inclination ({keplerian.Inclination}°) must be between 0 and 180 degrees.",
@@ -469,10 +470,10 @@ public class OpmValidator
         }
 
         // GM must be positive
-        if (keplerian.GravitationalParameter <= 0)
+        if (!(double.IsFinite(keplerian.GravitationalParameter) && keplerian.GravitationalParameter > 0))
         {
             result.AddError(InvalidRange,
-                "Gravitational parameter (GM) must be positive.",
+                "Gravitational parameter (GM) must be finite and positive.",
                 "Data.KeplerianElements.GM");
         }
     }
@@ -482,31 +483,32 @@ public class OpmValidator
         if (!ValidatePhysicalConstraints)
             return;
 
-        if (data.Mass.HasValue && data.Mass.Value <= 0)
+        // Finite values of 0 or more, NaN an error (#708)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(data.Mass))
         {
-            result.AddError(InvalidRange, "Mass must be positive.", "Data.SpacecraftParameters.Mass");
+            result.AddError(InvalidRange, "Mass must be finite and cannot be negative.", "Data.SpacecraftParameters.Mass");
         }
 
-        if (data.DragArea.HasValue && data.DragArea.Value < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(data.DragArea))
         {
-            result.AddError(InvalidRange, "Drag area cannot be negative.", "Data.SpacecraftParameters.DragArea");
+            result.AddError(InvalidRange, "Drag area must be finite and cannot be negative.", "Data.SpacecraftParameters.DragArea");
         }
 
-        if (data.DragCoefficient.HasValue && data.DragCoefficient.Value < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(data.DragCoefficient))
         {
-            result.AddError(InvalidRange, "Drag coefficient cannot be negative.", "Data.SpacecraftParameters.DragCoeff");
+            result.AddError(InvalidRange, "Drag coefficient must be finite and cannot be negative.", "Data.SpacecraftParameters.DragCoeff");
         }
 
-        if (data.SolarRadiationPressureArea.HasValue && data.SolarRadiationPressureArea.Value < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(data.SolarRadiationPressureArea))
         {
-            result.AddError(InvalidRange, "Solar radiation pressure area cannot be negative.", "Data.SpacecraftParameters.SolarRadArea");
+            result.AddError(InvalidRange, "Solar radiation pressure area must be finite and cannot be negative.", "Data.SpacecraftParameters.SolarRadArea");
         }
 
         if (data.SolarRadiationCoefficient.HasValue)
         {
-            if (data.SolarRadiationCoefficient.Value < 0)
+            if (!CcsdsValues.IsNullOrFiniteNonNegative(data.SolarRadiationCoefficient))
             {
-                result.AddError(InvalidRange, "Solar radiation coefficient cannot be negative.", "Data.SpacecraftParameters.SolarRadCoeff");
+                result.AddError(InvalidRange, "Solar radiation coefficient must be finite and cannot be negative.", "Data.SpacecraftParameters.SolarRadCoeff");
             }
             else if (data.SolarRadiationCoefficient.Value > 2.5)
             {
@@ -522,19 +524,19 @@ public class OpmValidator
         if (!ValidatePhysicalConstraints)
             return;
 
-        // Diagonal elements (variances) must be non-negative
-        if (covariance.CxX < 0)
-            result.AddError(InvalidRange, "Variance CX_X cannot be negative.", "Data.Covariance.CX_X");
-        if (covariance.CyY < 0)
-            result.AddError(InvalidRange, "Variance CY_Y cannot be negative.", "Data.Covariance.CY_Y");
-        if (covariance.CzZ < 0)
-            result.AddError(InvalidRange, "Variance CZ_Z cannot be negative.", "Data.Covariance.CZ_Z");
-        if (covariance.CxDotXDot < 0)
-            result.AddError(InvalidRange, "Variance CX_DOT_X_DOT cannot be negative.", "Data.Covariance.CX_DOT_X_DOT");
-        if (covariance.CyDotYDot < 0)
-            result.AddError(InvalidRange, "Variance CY_DOT_Y_DOT cannot be negative.", "Data.Covariance.CY_DOT_Y_DOT");
-        if (covariance.CzDotZDot < 0)
-            result.AddError(InvalidRange, "Variance CZ_DOT_Z_DOT cannot be negative.", "Data.Covariance.CZ_DOT_Z_DOT");
+        // Diagonal elements (variances) must be finite and non-negative (#708: a NaN variance was valid)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CxX))
+            result.AddError(InvalidRange, $"Variance CX_X must be finite and cannot be negative, got {covariance.CxX}.", "Data.Covariance.CX_X");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CyY))
+            result.AddError(InvalidRange, $"Variance CY_Y must be finite and cannot be negative, got {covariance.CyY}.", "Data.Covariance.CY_Y");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CzZ))
+            result.AddError(InvalidRange, $"Variance CZ_Z must be finite and cannot be negative, got {covariance.CzZ}.", "Data.Covariance.CZ_Z");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CxDotXDot))
+            result.AddError(InvalidRange, $"Variance CX_DOT_X_DOT must be finite and cannot be negative, got {covariance.CxDotXDot}.", "Data.Covariance.CX_DOT_X_DOT");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CyDotYDot))
+            result.AddError(InvalidRange, $"Variance CY_DOT_Y_DOT must be finite and cannot be negative, got {covariance.CyDotYDot}.", "Data.Covariance.CY_DOT_Y_DOT");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CzDotZDot))
+            result.AddError(InvalidRange, $"Variance CZ_DOT_Z_DOT must be finite and cannot be negative, got {covariance.CzDotZDot}.", "Data.Covariance.CZ_DOT_Z_DOT");
     }
 
     private void ValidateCovarianceFrameConsistency(OpmMetadata metadata, CovarianceMatrix covariance, OpmValidationResult result)
@@ -562,14 +564,14 @@ public class OpmValidator
         if (!ValidatePhysicalConstraints)
             return;
 
-        if (maneuver.ManDuration < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(maneuver.ManDuration))
         {
-            result.AddError(InvalidRange, "Maneuver duration cannot be negative.", $"{basePath}.ManDuration");
+            result.AddError(InvalidRange, "Maneuver duration must be finite and cannot be negative.", $"{basePath}.ManDuration");
         }
 
-        if (maneuver.ManDeltaMass > 0)
+        if (!(double.IsFinite(maneuver.ManDeltaMass) && maneuver.ManDeltaMass <= 0))
         {
-            result.AddError(InvalidRange, "Maneuver delta mass must be <= 0 (mass is expelled).", $"{basePath}.ManDeltaMass");
+            result.AddError(InvalidRange, "Maneuver delta mass must be finite and <= 0 (mass is expelled).", $"{basePath}.ManDeltaMass");
         }
 
         // Warn on unusually large delta-V

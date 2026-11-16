@@ -954,4 +954,102 @@ public class OmmValidatorTests
     }
 
     #endregion
+
+    #region Ranges of NDM/XML 4.0.0 and non-finite values (#708)
+
+    private static CovarianceMatrix CovarianceWithVariance(string term, double value)
+    {
+        double V(string name) => name == term ? value : 1.0e-6;
+        return new CovarianceMatrix(
+            V("CX_X"), 0, V("CY_Y"),
+            0, 0, V("CZ_Z"),
+            0, 0, 0, V("CX_DOT_X_DOT"),
+            0, 0, 0, 0, V("CY_DOT_Y_DOT"),
+            0, 0, 0, 0, 0, V("CZ_DOT_Z_DOT"), "TEME");
+    }
+
+    [Theory]
+    [InlineData("CX_X", "CxX")]
+    [InlineData("CY_Y", "CyY")]
+    [InlineData("CZ_Z", "CzZ")]
+    [InlineData("CX_DOT_X_DOT", "CxDotXDot")]
+    [InlineData("CY_DOT_Y_DOT", "CyDotYDot")]
+    [InlineData("CZ_DOT_Z_DOT", "CzDotZDot")]
+    public void Validate_NaNVariance_ReportsError(string keyword, string property)
+    {
+        // A variance is non-negative, and NaN is not (before: valid, the check "< 0" being false for NaN). The covariance
+        // constructors do not range-check their terms, so the validator is the check of a programmatic covariance
+        var read = _reader.ReadFromString(OmmReaderTests.KeywordBaseOmm());
+        var data = read.Data;
+        var omm = new Omm(read.Header, read.Metadata, new OmmData(data.MeanElements, data.SpacecraftParameters,
+            data.TleParameters, CovarianceWithVariance(keyword, double.NaN), data.UserDefinedParameters, data.Comments));
+
+        var error = Assert.Single(_validator.Validate(omm).Errors);
+        Assert.Equal("OMM002", error.Code);
+        Assert.Equal($"Data.CovarianceMatrix.{property}", error.Path);
+        Assert.Contains(keyword, error.Message);
+
+        // A finite non-negative variance is still valid
+        var finite = new Omm(read.Header, read.Metadata, new OmmData(data.MeanElements, data.SpacecraftParameters,
+            data.TleParameters, CovarianceWithVariance(keyword, 0.0), data.UserDefinedParameters, data.Comments));
+        Assert.Empty(_validator.Validate(finite).Errors);
+    }
+
+    [Theory]
+    [InlineData("RA_OF_ASC_NODE", "-360")]
+    [InlineData("RA_OF_ASC_NODE", "-10")]
+    [InlineData("RA_OF_ASC_NODE", "-0")]
+    [InlineData("ARG_OF_PERICENTER", "-360")]
+    [InlineData("ARG_OF_PERICENTER", "-10")]
+    [InlineData("ARG_OF_PERICENTER", "-0")]
+    [InlineData("MEAN_ANOMALY", "-360")]
+    [InlineData("MEAN_ANOMALY", "-10")]
+    [InlineData("MEAN_ANOMALY", "-0")]
+    public void Validate_NegativeAngleInSchemaRange_NoError(string keyword, string value)
+    {
+        // angleRange of ndmxml-4.0.0-common-4.0.xsd is [-360, 360) (minInclusive -360.0, maxExclusive 360.0), the range of
+        // MeanElements too; the schema, the oracle, accepts the document. Before: the default content validation refused
+        // [-360, 0) ("must be 0-360 degrees"), so the default LoadFromString threw OmmValidationException
+        var xml = OmmReaderTests.OmmWithKeyword(keyword, value);
+        Assert.True(_validator.ValidateSchemaFromXml(xml).IsValid);
+
+        var omm = Omm.LoadFromString(xml);
+        double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+        double actual = keyword switch
+        {
+            "RA_OF_ASC_NODE" => omm.Data.MeanElements.RightAscensionOfAscendingNode,
+            "ARG_OF_PERICENTER" => omm.Data.MeanElements.ArgumentOfPericenter,
+            _ => omm.Data.MeanElements.MeanAnomaly
+        };
+        Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual));
+        Assert.Empty(_validator.Validate(omm).Errors);
+        NdmDocuments.WithTempFile(xml, file => Assert.True(_validator.ValidateFile(file).IsValid));
+    }
+
+    [Fact]
+    public void Validate_MassZero_NoError()
+    {
+        // massType of ndmxml-4.0.0-common-4.0.xsd extends nonNegativeDouble (minInclusive 0.0), and SpacecraftParameters
+        // accepts 0; the schema, the oracle, accepts the document. Before: the default content validation refused it
+        // ("MASS must be positive"), so the default LoadFromString threw OmmValidationException
+        var xml = OmmReaderTests.OmmWithKeyword("MASS", "0");
+        Assert.True(_validator.ValidateSchemaFromXml(xml).IsValid);
+
+        var omm = Omm.LoadFromString(xml);
+        Assert.Equal(0.0, omm.Data.SpacecraftParameters.Mass);
+        Assert.Empty(_validator.Validate(omm).Errors);
+        NdmDocuments.WithTempFile(xml, file => Assert.True(_validator.ValidateFile(file).IsValid));
+    }
+
+    [Fact]
+    public void Validate_NegativeMass_StillReportsError()
+    {
+        // A negative mass cannot reach the validator through SpacecraftParameters; its check stays for a mass below 0,
+        // which the reader of a document refuses first (the schema rejects it)
+        var xml = OmmReaderTests.OmmWithKeyword("MASS", "-1");
+        Assert.False(_validator.ValidateSchemaFromXml(xml).IsValid);
+        Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
+    }
+
+    #endregion
 }
