@@ -2831,6 +2831,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   validation. `OpmData` and `OpmValidator` now take a mass of 0 or more, so the OPM loads, `Data.Mass` 0 exactly, and
   `Opm.ToSpacecraft` builds a spacecraft of mass 0, as `CelestialItem` allows (`OpmReaderTests.ReadFromString_MassZero_ReadsZero`,
   `OpmValidatorTests.Validate_MassZero_NoError`, red on 46e6975, the schema their oracle).
+- **The messages of the `MeanElements` angles misstated their range** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The checks of `RA_OF_ASC_NODE`,
+  `ARG_OF_PERICENTER` and `MEAN_ANOMALY` take [-360, 360), the `angleRange` of NDM/XML 4.0.0 (`minInclusive` -360.0,
+  `maxExclusive` 360.0), but the messages said "between -360 and 360 degrees", which 360, refused, is; the reader
+  carried that text into its `OmmParseException`. They now say "RAAN must be in [-360, 360) degrees." (and likewise for
+  the argument of pericenter and the mean anomaly), and the XML documentation of the three properties, which said
+  "0 to 360", states [-360, 360). No value is accepted or refused differently
+  (`MeanElementsTests.Constructor_AngleAt360_MessageStatesHalfOpenRange`,
+  `OmmReaderTests.ReadFromString_AngleAt360_MessageStatesHalfOpenRange`, red on 46e6975).
 
 **Changed**
 
@@ -3852,6 +3860,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   threw `ArgumentOutOfRangeException`; and `OpmValidator` reports no error for it, where it reported "Mass must be
   positive.". Migration: a caller that relied on the refusal checks `Data.Mass > 0` itself. No result moves for a
   positive mass.
+- **The message of an angle of `MeanElements` out of its range states [-360, 360)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): the
+  `ArgumentOutOfRangeException` of `MeanElements` for `raan`, `argOfPericenter` or `meanAnomaly`, and so the
+  `OmmParseException` of the reader for `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` or `MEAN_ANOMALY`, say "must be in
+  [-360, 360) degrees" where they said "must be between -360 and 360 degrees". Migration: none, unless a caller parses
+  the message.
 
 **Deprecated**
 

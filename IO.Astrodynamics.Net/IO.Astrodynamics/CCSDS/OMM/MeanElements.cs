@@ -40,17 +40,17 @@ public class MeanElements
     public double Inclination { get; }
 
     /// <summary>
-    /// Gets the right ascension of the ascending node in degrees (0 to 360).
+    /// Gets the right ascension of the ascending node in degrees, in [-360, 360) (angleRange of NDM/XML 4.0.0).
     /// </summary>
     public double RightAscensionOfAscendingNode { get; }
 
     /// <summary>
-    /// Gets the argument of pericenter in degrees (0 to 360).
+    /// Gets the argument of pericenter in degrees, in [-360, 360) (angleRange of NDM/XML 4.0.0).
     /// </summary>
     public double ArgumentOfPericenter { get; }
 
     /// <summary>
-    /// Gets the mean anomaly in degrees (0 to 360).
+    /// Gets the mean anomaly in degrees, in [-360, 360) (angleRange of NDM/XML 4.0.0).
     /// </summary>
     public double MeanAnomaly { get; }
 
@@ -199,13 +199,13 @@ public class MeanElements
             throw new ArgumentOutOfRangeException(nameof(inclination), "Inclination must be between 0 and 180 degrees.");
 
         if (raan < -360 || raan >= 360)
-            throw new ArgumentOutOfRangeException(nameof(raan), "RAAN must be between -360 and 360 degrees.");
+            throw new ArgumentOutOfRangeException(nameof(raan), "RAAN must be in [-360, 360) degrees.");
 
         if (argOfPericenter < -360 || argOfPericenter >= 360)
-            throw new ArgumentOutOfRangeException(nameof(argOfPericenter), "Argument of pericenter must be between -360 and 360 degrees.");
+            throw new ArgumentOutOfRangeException(nameof(argOfPericenter), "Argument of pericenter must be in [-360, 360) degrees.");
 
         if (meanAnomaly < -360 || meanAnomaly >= 360)
-            throw new ArgumentOutOfRangeException(nameof(meanAnomaly), "Mean anomaly must be between -360 and 360 degrees.");
+            throw new ArgumentOutOfRangeException(nameof(meanAnomaly), "Mean anomaly must be in [-360, 360) degrees.");
     }
 
     private static void ValidateGravitationalParameter(double? gm)

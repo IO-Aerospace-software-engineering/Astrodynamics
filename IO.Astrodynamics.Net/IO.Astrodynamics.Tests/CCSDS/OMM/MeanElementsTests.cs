@@ -195,5 +195,47 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.Equal(eccentricity, elements.Eccentricity);
             Assert.Equal(inclination, elements.Inclination);
         }
+
+        #region Angle ranges (#708)
+
+        /// <summary>The ISS-like elements of the tests with one parameter replaced, through the factory of the semi-major
+        /// axis (or of the mean motion for meanMotion), and through both for the parameters they share.</summary>
+        private IEnumerable<Func<MeanElements>> BuildWith(string parameter, double value)
+        {
+            double V(string name, double nominal) => name == parameter ? value : nominal;
+            if (parameter != "meanMotion")
+            {
+                yield return () => MeanElements.CreateWithSemiMajorAxis(_testEpoch, V("semiMajorAxis", 6778.0), V("eccentricity", 0.0005),
+                    V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), V("gm", 398600.4418));
+                yield return () => new MeanElements(_testEpoch, V("semiMajorAxis", 6778.0), V("eccentricity", 0.0005),
+                    V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), V("gm", 398600.4418));
+            }
+
+            if (parameter != "semiMajorAxis")
+            {
+                yield return () => MeanElements.CreateWithMeanMotion(_testEpoch, V("meanMotion", 15.5), V("eccentricity", 0.0005),
+                    V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), V("gm", 398600.4418));
+                yield return () => new MeanElements(_testEpoch, V("meanMotion", 15.5), V("eccentricity", 0.0005),
+                    V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), true, V("gm", 398600.4418));
+            }
+        }
+
+        [Theory]
+        [InlineData("raan")]
+        [InlineData("argOfPericenter")]
+        [InlineData("meanAnomaly")]
+        public void Constructor_AngleAt360_MessageStatesHalfOpenRange(string parameter)
+        {
+            // The range is [-360, 360) (angleRange of ndmxml-4.0.0-common-4.0.xsd: minInclusive -360, maxExclusive 360);
+            // before, the message said "between -360 and 360", which 360 is
+            foreach (var build in BuildWith(parameter, 360.0))
+            {
+                var ex = Assert.Throws<ArgumentOutOfRangeException>(() => build());
+                Assert.Equal(parameter, ex.ParamName);
+                Assert.Contains("[-360, 360)", ex.Message);
+            }
+        }
+
+        #endregion
     }
 }

@@ -682,6 +682,21 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         }
 
         [Theory]
+        [InlineData("RA_OF_ASC_NODE")]
+        [InlineData("ARG_OF_PERICENTER")]
+        [InlineData("MEAN_ANOMALY")]
+        public void ReadFromString_AngleAt360_MessageStatesHalfOpenRange(string keyword)
+        {
+            // angleRange of ndmxml-4.0.0-common-4.0.xsd: minInclusive -360.0, maxExclusive 360.0; the schema rejects 360,
+            // and the message states the range (before: "must be between -360 and 360 degrees", which 360 is)
+            var xml = OmmWithKeyword(keyword, "360");
+            Assert.False(new OmmValidator().ValidateSchemaFromXml(xml).IsValid);
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+            AssertNamesKeyword(ex, keyword, "360");
+            Assert.Contains("[-360, 360)", ex.Message);
+        }
+
+        [Theory]
         [InlineData("ECCENTRICITY", "0")]
         [InlineData("INCLINATION", "0")]
         [InlineData("INCLINATION", "180")]
