@@ -75,8 +75,15 @@ internal static class Program
     internal const string ManagedReplacerOfAMetaKernelFileRelative =
         "SpacecraftWriteEphemeris_ReplacingAFileAMetaKernelHolds_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile";
 
+    internal const string ConicAboutASpacecraftWithAGm = "ConvertConicElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException";
+    internal const string EquinoctialAboutASpacecraftWithAGm = "ConvertEquinoctialElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException";
+    internal const string ConicAboutABodyNoLongerNamed = "ConvertConicElementsToStateVector_AboutABodyNoLongerNamed_ThrowsArgumentException";
+    internal const string OrientationWithNoCk = "ReadOrientation_WithNoCkLoaded_ThrowsSpicesMessage_AndLeavesNothingPending";
+    internal const string OrientationWithoutAClock = "ReadOrientation_WithoutAClock_ThrowsSpicesMessage";
+
     private static readonly string[] Scenarios =
     [
+        ConicAboutASpacecraftWithAGm, EquinoctialAboutASpacecraftWithAGm, ConicAboutABodyNoLongerNamed, OrientationWithNoCk, OrientationWithoutAClock,
         FolderOfTwoPcks, PckOfAFolder, MetaKernelOfAPck, FolderOfTwoDeletedPcks, DeletedSpk, DeletedPckNeverUnloaded, DeletedCk, WriterOfAnSpk,
         WriterOfACk, RelativeName, FolderOfADeletedSpk, ManagedWriterOfAnSpk, WriterOfAnSpkRelative, WriterOfACkRelative,
         ReplacerOfAnSpkRelative, ReplacerOfACkRelative, NoNativeCall, DanglingLink, WriterOfOneState, WriterOfTwoStates, WriterOfTwoFrames,
@@ -188,6 +195,21 @@ internal static class Program
                     break;
                 case ManagedReplacerOfAMetaKernelFileRelative:
                     ReplaceAFileAMetaKernelHoldsWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(root, kernels);
+                    break;
+                case ConicAboutASpacecraftWithAGm:
+                    ConvertAboutASpacecraftWithAGm(root, equinoctial: false);
+                    break;
+                case EquinoctialAboutASpacecraftWithAGm:
+                    ConvertAboutASpacecraftWithAGm(root, equinoctial: true);
+                    break;
+                case ConicAboutABodyNoLongerNamed:
+                    ConvertAboutABodyNoLongerNamed(root);
+                    break;
+                case OrientationWithNoCk:
+                    ReadOrientationWithNoCk(root);
+                    break;
+                case OrientationWithoutAClock:
+                    ReadOrientationWithoutAClock(root);
                     break;
                 default:
                     LoadAfterTheWorkingDirectoryChanged(root);
@@ -751,12 +773,6 @@ internal static class Program
         SpiceAPI.Instance.LoadKernels(clockFile);
         var identity = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
-        // Another CK of the spacecraft, outside the epochs read, stays loaded: with no CK loaded at all, a failed read leaves
-        // SPICE's CKBSS error pending for the next call (ReadOrientationProxy, outside #706)
-        var keep = new FileInfo(Path.Combine(folder.FullName, "keep.bc"));
-        SpiceAPI.Instance.WriteOrientation(keep, spacecraft.NaifId, Enumerable.Range(100, 3)
-            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray());
-        SpiceAPI.Instance.LoadKernels(keep);
         var turned = new Quaternion(Vector3.VectorZ, System.Math.PI / 2.0);
         var written = Enumerable.Range(0, 5)
             .Select(i => new StateOrientation(turned, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
@@ -767,19 +783,127 @@ internal static class Program
 
         SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, written);
 
-        Check(Listed(root).SequenceEqual([clockFile.FullName, keep.FullName]), $"the clock and the other CK are listed ({string.Join(", ", Listed(root))})");
-        CheckRegistryFollowsKeeper(root, clockFile, keep, c);
+        Check(Listed(root).SequenceEqual([clockFile.FullName]), $"the clock is listed ({string.Join(", ", Listed(root))})");
+        CheckRegistryFollowsKeeper(root, clockFile, c);
         CheckClosed(c, handle);
-        Throws(() => ReadOrientationAt(spacecraft.NaifId, 1.0));
+        // No CK is loaded: the read throws SPICE's CKBSS message and leaves nothing pending, so that the load below succeeds
+        // (#712; before, a second CK stayed loaded for that load not to throw the stale message)
+        var noCk = Throws(() => ReadOrientationAt(spacecraft.NaifId, 1.0));
+        Check(noCk.Message.Contains("At least one CK file must be loaded by CKLPF"), $"the read gives SPICE's message ({noCk.Message})");
         SpiceAPI.Instance.LoadKernels(c);
         var q = ReadOrientationAt(spacecraft.NaifId, 4.0).Rotation.Conjugate() * turned;
         double angle = 2.0 * System.Math.Atan2(q.VectorPart.Magnitude(), System.Math.Abs(q.W));
         Console.WriteLine($"MEASURE #706 CK replaced while loaded (child): angle between the record written and the one read {angle:E3} rad");
         Check(angle <= CkRecordAngleBound, $"the new file gives the record written ({angle:E3} rad)");
         SpiceAPI.Instance.UnloadKernels(c);
-        SpiceAPI.Instance.UnloadKernels(keep);
         SpiceAPI.Instance.UnloadKernels(clockFile);
         Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // #711. Elements about a spacecraft whose GM a text kernel gives: the native conversions built the centre as a celestial
+    // body (CelestialBody(int)), whose name SPICE does not know, and threw SDKException across P/Invoke: the process ended
+    // (exit code 134, measured on 46e6975). SpiceAPI now rejects a centre that is not a celestial body with an
+    // ArgumentException naming the elements, before the native call, and the process goes on
+    private static void ConvertAboutASpacecraftWithAGm(DirectoryInfo root, bool equinoctial)
+    {
+        var before = ReadMoon();
+        var gm = WriteTextKernel(root, "gm.tpc", "BODY-1999820_GM = ( 1.0E-10 )");
+        SpiceAPI.Instance.LoadKernels(gm);
+        var spacecraft = new Spacecraft(-1999820, "IOA_711_SPC", 3000.0, 10000.0, new Clock("IOA_711_CLOCK", 65536), EarthStates()[0]);
+        var elements = new KeplerianElements(7.0e6, 0.01, 0.2, 0.3, 0.4, 0.5, spacecraft, Epoch, Frame.ICRF);
+
+        var error = equinoctial
+            ? ThrowsArgument(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(elements.ToEquinoctial()))
+            : ThrowsArgument(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+
+        string parameter = equinoctial ? "equinoctialElements" : "keplerianElements";
+        Check(error.ParamName == parameter, $"the exception names {parameter} ({error.ParamName}: {error.Message})");
+        SpiceAPI.Instance.UnloadKernels(gm);
+        CheckSameMoon(before, "the read after the rejected conversion");
+        CheckMoonAsSpice("the read after the rejected conversion");
+    }
+
+    // A body SPICE named when it was built (its frame J2000, OBJECT_1999821_FRAME, Frames Required Reading), then no longer:
+    // the kernel of its name and frame unloaded, the kernel of its GM kept. The
+    // native conversion read its GM and threw SDKException for its name (exit code 134 on 46e6975); SpiceAPI now rejects an
+    // identifier SPICE does not name with the ArgumentException of #680, naming the elements, before the native call
+    private static void ConvertAboutABodyNoLongerNamed(DirectoryInfo root)
+    {
+        var before = ReadMoon();
+        var name = WriteTextKernel(root, "name.tpc", "NAIF_BODY_NAME += ( 'IOA_711_BODY' )\nNAIF_BODY_CODE += ( 1999821 )\nOBJECT_1999821_FRAME = 'J2000'");
+        var gm = WriteTextKernel(root, "gm.tpc", "BODY1999821_GM = ( 1.0 )");
+        SpiceAPI.Instance.LoadKernels(name);
+        SpiceAPI.Instance.LoadKernels(gm);
+        var body = new global::IO.Astrodynamics.Body.CelestialBody(1999821);
+        var elements = new KeplerianElements(7.0e6, 0.01, 0.2, 0.3, 0.4, 0.5, body, Epoch, Frame.ICRF);
+        SpiceAPI.Instance.UnloadKernels(name);
+
+        var error = ThrowsArgument(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+
+        Check(error.ParamName == "keplerianElements", $"the exception names keplerianElements ({error.ParamName}: {error.Message})");
+        SpiceAPI.Instance.UnloadKernels(gm);
+        CheckSameMoon(before, "the read after the rejected conversion");
+        CheckMoonAsSpice("the read after the rejected conversion");
+    }
+
+    // #712. A spacecraft's clock written and loaded, no CK at all (Data/SolarSystem holds none): ckgpav_c, then ckgp_c, fail
+    // with CKBSS's SPICE(NOLOADEDFILES). Before, the read threw "No orientation found" and left that error pending, so that
+    // the next native call, an unrelated load, threw it (measured on 46e6975). The read now throws SPICE's message and
+    // leaves nothing pending: KEEPER's failed_c through CspiceDirect on Linux, and the next load and read on every platform
+    private static void ReadOrientationWithNoCk(DirectoryInfo root)
+    {
+        var clock = new Clock("IOA_712_CLOCK", 65536);
+        var spacecraft = new Spacecraft(-1999801, "IOA_712_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var clockFile = new FileInfo(Path.Combine(root.FullName, "clock.tsc"));
+        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        Check(SpiceAPI.Instance.GetLoadedKernels().All(k => !k.Extension.Equals(".bc", StringComparison.OrdinalIgnoreCase)), "no CK is loaded");
+
+        var error = Throws(() => ReadOrientationAt(spacecraft.NaifId, 0.0));
+
+        Check(error.Message.Contains("At least one CK file must be loaded by CKLPF before beginning a search."),
+            $"the exception gives SPICE's message ({error.Message})");
+        CheckNothingPendingThenNextCallsSucceed(root);
+        SpiceAPI.Instance.UnloadKernels(clockFile);
+    }
+
+    // No clock for the spacecraft: sce2c_c fails with SCTY01's KERNELVARNOTFOUND, which the fallback reset and lost
+    private static void ReadOrientationWithoutAClock(DirectoryInfo root)
+    {
+        var error = Throws(() => ReadOrientationAt(-1999802, 0.0));
+
+        Check(error.Message.Contains("SCLK_DATA_TYPE_1999802"), $"the exception gives SPICE's message ({error.Message})");
+        CheckNothingPendingThenNextCallsSucceed(root);
+    }
+
+    // Nothing pending (failed_c through CspiceDirect, Linux only), then a load of a text kernel and a read of the Moon, the
+    // state spkezr_c gives on Linux, succeed on every platform
+    private static void CheckNothingPendingThenNextCallsSucceed(DirectoryInfo root)
+    {
+        if (OperatingSystem.IsLinux()) Check(!CspiceDirect.ErrorPending(), "no SPICE error is pending");
+        var text = WriteTextKernel(root, "after.tpc", "IOA_712_VALUE = ( 1.0 )");
+        SpiceAPI.Instance.LoadKernels(text);
+        SpiceAPI.Instance.UnloadKernels(text);
+        CheckMoonAsSpice("the read after the failed read");
+    }
+
+    // The Moon from the Earth in J2000 at the epoch: on Linux, the state of spkezr_c through CspiceDirect, bit for bit; on
+    // every platform, a finite state
+    private static void CheckMoonAsSpice(string what)
+    {
+        var moon = ReadMoon();
+        Check(double.IsFinite(moon.Position.Magnitude()) && moon.Position.Magnitude() > 0.0, $"{what}: the Moon is read ({moon.Position})");
+        if (!OperatingSystem.IsLinux()) return;
+        var spice = CspiceDirect.Spkezr("301", Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, "J2000", "NONE", "399");
+        var expected = new Vector3(spice[0], spice[1], spice[2]) * 1000.0;
+        Check(moon.Position == expected, $"{what}: the Moon is spkezr_c's state ({moon.Position} against {expected})");
+    }
+
+    private static FileInfo WriteTextKernel(DirectoryInfo root, string name, string data)
+    {
+        var file = new FileInfo(Path.Combine(root.FullName, name));
+        File.WriteAllText(file.FullName, "KPL/PCK\n\\begindata\n" + data + "\n\\begintext\n");
+        return file;
     }
 
     // The bound of the angle between a CK record written and the one read back at its epoch: twice the worst over Linux x64,

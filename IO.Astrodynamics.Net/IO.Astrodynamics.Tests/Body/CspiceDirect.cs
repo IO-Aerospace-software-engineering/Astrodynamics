@@ -234,6 +234,16 @@ internal static class CspiceDirect
         }
     }
 
+    /// <summary>Whether SPICE has an error pending (<c>failed_c</c>), which a failed proxy must not leave for the next call
+    /// (#712); nothing is reset.</summary>
+    internal static bool ErrorPending()
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            return failed_c() != 0;
+        }
+    }
+
     /// <summary>The TT seconds past J2000 of a TDB epoch given in seconds past J2000 (<c>unitim_c(et, "TDB", "TT")</c>,
     /// the leapseconds kernel loaded).</summary>
     internal static double TdbToTt(double tdbSecondsPastJ2000)

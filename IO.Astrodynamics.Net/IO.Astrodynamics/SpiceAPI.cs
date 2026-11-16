@@ -2137,11 +2137,13 @@ public class SpiceAPI
     /// </para>
     /// <para>
     /// The state is in <see cref="Frame.TEME"/>, the managed TEME (#451). An SGP4 error (a decayed or suborbital orbit, an
-    /// eccentricity out of range) gives a zero state from the native layer, which keeps the SPICE message on stdout only:
-    /// it throws here instead (#454 on the TLE path). No valid state has r = 0.
+    /// eccentricity out of range), and a read before the kernels are loaded (the Earth's <c>BODY399_GM</c> missing), give a
+    /// NaN state from the native layer with SPICE's message, which this method throws (#711; before, a zero state, its
+    /// message on stdout only, #454 on the TLE path). A zero state, which no valid one has, throws too.
     /// </para>
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SGP4 failed at this epoch.</exception>
+    /// <exception cref="InvalidOperationException">SGP4 failed at this epoch, or at the epoch of the TLE, or the kernels the
+    /// native layer reads (the Earth's GM, the leapseconds) are not loaded; the message is SPICE's.</exception>
     public OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
         Time epoch)
     {
@@ -2171,11 +2173,18 @@ public class SpiceAPI
             res = ConvertTLEToStateVectorProxy(name, line1, line2, et);
         }
 
+        // A failure of the native layer is a NaN state with its message (#711: the Earth's GM missing before the kernels are
+        // loaded, SGP4's error); a zero state, which no valid one has, is still refused
         var position = res.Position.Convert();
+        if (!IsFinite(res))
+        {
+            throw new InvalidOperationException($"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: {LastProxyError()}");
+        }
+
         if (position.Magnitude() == 0.0)
         {
             throw new InvalidOperationException(
-                $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state (see the SPICE message on the standard output).");
+                $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state.");
         }
 
         return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
@@ -2190,12 +2199,92 @@ public class SpiceAPI
     /// <param name="name">The name of the object.</param>
     /// <param name="line1">Line 1 of the TLE.</param>
     /// <param name="line2">Line 2 of the TLE.</param>
+    /// <exception cref="InvalidOperationException">The native layer could not read the TLE: the Earth's GM missing (no kernel
+    /// loaded), or SGP4 failing at the epoch of the TLE; the message is SPICE's (#711: before, the epoch <c>getelm_c</c>
+    /// never wrote was returned).</exception>
     internal double ReadTleEpoch(string name, string line1, string line2)
     {
         lock (lockObject)
         {
-            return GetTLEElementsProxy(name, line1, line2).Epoch;
+            double epoch = GetTLEElementsProxy(name, line1, line2).Epoch;
+            if (!double.IsFinite(epoch))
+            {
+                throw new InvalidOperationException($"The TLE {name} ({line1}) cannot be read: {LastProxyError()}");
+            }
+
+            return epoch;
         }
+    }
+
+    private static bool IsFinite(StateVector state) =>
+        double.IsFinite(state.Position.X) && double.IsFinite(state.Position.Y) && double.IsFinite(state.Position.Z) &&
+        double.IsFinite(state.Velocity.X) && double.IsFinite(state.Velocity.Y) && double.IsFinite(state.Velocity.Z);
+
+    /// <summary>
+    /// Rejects the centre of elements the native conversions cannot read (#711): they build it as a celestial body
+    /// (<c>CelestialBody(int)</c>), which threw a C++ exception across P/Invoke, ending the process, for a centre SPICE does
+    /// not name (a spacecraft whose GM a kernel gives). The centre must be a <see cref="CelestialItem"/> of
+    /// <see cref="IsCelestialBodyId"/> (not a spacecraft nor a site), checked here, and an identifier SPICE names, checked
+    /// under the lock by <see cref="ReadCelestialBodyInfo"/> (#680's rule).
+    /// </summary>
+    private static void ThrowIfNotACelestialCentre(ILocalizable observer, string paramName)
+    {
+        if (observer is not CelestialItem || !IsCelestialBodyId(observer.NaifId))
+        {
+            throw new ArgumentException(
+                $"The centre of motion of the elements, {observer.Name} ({observer.NaifId}), is not a celestial body: a barycenter " +
+                "(0 to 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or an identifier above 1000, not a " +
+                "spacecraft nor a site.", paramName);
+        }
+    }
+
+    // The domain of EQNCPV (eqncpv.c: SPICE(BADSEMIAXIS) for a semi-major axis not above 0, SPICE(ECCOUTOFRANGE) for an
+    // eccentricity sqrt(h^2 + k^2) above 0.9), checked before the native call: elements outside it are a bad argument (#711:
+    // before, a zero state was returned)
+    private static void ThrowIfOutsideEqncpvDomain(OrbitalParameters.EquinoctialElements equinoctialElements, string paramName)
+    {
+        var a = equinoctialElements.SemiMajorAxis();
+        if (!(a > 0.0) || double.IsInfinity(a))
+        {
+            throw new ArgumentException($"The semi-major axis of the elements, {a} m, is not finite and above 0, as EQNCPV requires.", paramName);
+        }
+
+        var e = System.Math.Sqrt(equinoctialElements.G * equinoctialElements.G + equinoctialElements.F * equinoctialElements.F);
+        if (!(e <= 0.9))
+        {
+            throw new ArgumentException($"The eccentricity of the elements, {e}, is above 0.9, the limit of EQNCPV; use EquinoctialElements.ToStateVector().",
+                paramName);
+        }
+    }
+
+    // The domain of CONICS (conics.c: SPICE(BADPERIAPSEVALUE) for a periapsis radius not above 0, an ellipse of negative
+    // semi-major axis or a hyperbola of positive one; the eccentricity, never negative, is checked by KeplerianElements),
+    // checked before the native call: elements outside it are a bad argument (#711: before, a zero state was returned)
+    private static void ThrowIfOutsideConicsDomain(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
+    {
+        var rp = keplerianElements.PerigeeRadius();
+        if (!(rp > 0.0) || double.IsInfinity(rp))
+        {
+            throw new ArgumentException(
+                $"The periapsis radius of the elements, {rp} m (a = {keplerianElements.A} m, e = {keplerianElements.E}), is not finite and above 0, as CONICS requires.",
+                paramName);
+        }
+    }
+
+    // The GM given to CONICS (conics.c: SPICE(BADGM) for a GM not above 0), finite: a GM outside it is a bad argument when the
+    // caller gives it (#711: before, conics_c's error was left pending for the next native call)
+    private static bool IsConicsGravitationalParameter(double gm) => gm > 0.0 && !double.IsInfinity(gm);
+
+    // The state of a native conversion, or the InvalidOperationException of its failure: a NaN state with SPICE's message,
+    // a centre whose GM the kernel pool lacks (#711: before, the zero state, silently)
+    private static OrbitalParameters.StateVector ConvertedState(StateVector state)
+    {
+        if (!IsFinite(state))
+        {
+            throw new InvalidOperationException($"The elements cannot be converted to a state vector: {LastProxyError()}");
+        }
+
+        return state.Convert();
     }
 
     public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
@@ -2218,16 +2307,44 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    /// The state of equinoctial elements, through CSPICE's <c>eqncpv_c</c> in the native layer.
+    /// </summary>
+    /// <exception cref="ArgumentException">The centre of the elements is not a celestial body SPICE names: a spacecraft, a
+    /// site, or an identifier no loaded kernel names (#711: before, the native layer ended the process for a centre with a
+    /// GM, and the conversion of the result threw for the others).</exception>
+    /// <exception cref="ArgumentException">The elements are outside the domain of <c>EQNCPV</c>: a semi-major axis that is not
+    /// above 0, or an eccentricity above 0.9 (#711: before, a zero state was returned).</exception>
+    /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
+    /// returned); the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
     {
+        if (equinoctialElements == null) throw new ArgumentNullException(nameof(equinoctialElements));
+        ThrowIfOutsideEqncpvDomain(equinoctialElements, nameof(equinoctialElements));
+        ThrowIfNotACelestialCentre(equinoctialElements.Observer, nameof(equinoctialElements));
         lock (lockObject)
         {
-            return ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()).Convert();
+            ReadCelestialBodyInfo(equinoctialElements.Observer.NaifId, nameof(equinoctialElements));
+            return ConvertedState(ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()));
         }
     }
 
+    /// <summary>
+    /// The state of Keplerian elements at their epoch: an ellipse through the native conic elements, an open orbit through
+    /// CSPICE's <c>conics_c</c> (<see cref="ConvertConicElementsToStateVector(OrbitalParameters.KeplerianElements, Time)"/>).
+    /// </summary>
+    /// <exception cref="ArgumentException">For an ellipse, the centre of the elements is not a celestial body SPICE names: a
+    /// spacecraft, a site, or an identifier no loaded kernel names (#711: before, the native layer ended the process for a
+    /// centre with a GM, and the conversion of the result threw for the others).</exception>
+    /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
+    /// <c>CONICS</c>: an ellipse of negative semi-major axis, a hyperbola of positive one (#711: before, a zero state was
+    /// returned).</exception>
+    /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
+    /// returned for an ellipse, and an open orbit threw an unrelated message); for an ellipse the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
+        if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
         // The native conic elements solve the elliptic Kepler equation when they are built, an iteration that may never
         // end on an open orbit (#372): an open orbit goes to SPICE CONICS at the epoch of its elements, as the other
         // overloads
@@ -2236,30 +2353,62 @@ public class SpiceAPI
             return ConvertConicElementsToStateVector(keplerianElements, keplerianElements.Epoch);
         }
 
+        ThrowIfNotACelestialCentre(keplerianElements.Observer, nameof(keplerianElements));
         lock (lockObject)
         {
-            return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();
+            ReadCelestialBodyInfo(keplerianElements.Observer.NaifId, nameof(keplerianElements));
+            return ConvertedState(ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()));
         }
     }
 
+    /// <summary>
+    /// The state of Keplerian elements at an epoch, through CSPICE's <c>conics_c</c> with the GM of their observer.
+    /// </summary>
+    /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
+    /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
+    /// kernel pool lacks (#711: before, <c>conics_c</c>'s error was left pending and an unrelated message thrown).</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
     {
-        return ConvertConicElementsToStateVector(keplerianElements, epoch, keplerianElements.Observer.GM);
+        if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
+        var observer = keplerianElements.Observer;
+        var gm = observer.GM;
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new InvalidOperationException(
+                $"The centre of motion of the elements, {observer.Name} ({observer.NaifId}), has a GM of {gm} m^3/s^2, where CONICS needs one finite and " +
+                $"above 0: for a body read from the kernels, the kernel pool holds no BODY{observer.NaifId}_GM.");
+        }
+
+        return ConvertConicElementsToStateVector(keplerianElements, epoch, gm);
     }
 
     /// <summary>
-    /// Convert Keplerian elements to state vector at a given epoch with an explicit GM value.
+    /// Convert Keplerian elements to state vector at a given epoch with an explicit GM value, through CSPICE's
+    /// <c>conics_c</c>.
     /// </summary>
     /// <param name="keplerianElements"></param>
     /// <param name="epoch"></param>
     /// <param name="gm">Gravitational parameter (m^3/s^2)</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
+    /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#711: before,
+    /// <c>conics_c</c>'s error was left pending for the next native call and an unrelated message thrown).</exception>
+    /// <exception cref="InvalidOperationException"><c>conics_c</c> failed; the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch, double gm)
     {
+        if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to CONICS must be finite and above 0.");
+        }
+
         lock (lockObject)
         {
-            return ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, gm)
-                .Convert();
+            return ConvertedState(ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, gm));
         }
     }
 

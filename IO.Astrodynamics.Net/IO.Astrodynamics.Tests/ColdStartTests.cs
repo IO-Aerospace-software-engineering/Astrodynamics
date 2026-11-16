@@ -4,8 +4,10 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests;
 
@@ -56,6 +58,12 @@ public class ColdStartTests
     // busy by 4 other processes (180 children); a deadlock never ends. The limit is more than 100 times the slowest child,
     // for a slow CI machine
     private static readonly TimeSpan ChildTimeout = TimeSpan.FromSeconds(60);
+    private readonly ITestOutputHelper _output;
+
+    public ColdStartTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
 
     [Theory]
     [InlineData("direct")]
@@ -87,6 +95,19 @@ public class ColdStartTests
         Assert.DoesNotContain("SPICE(", output);
         Assert.DoesNotContain("Toolkit", output);
         Assert.Equal(string.Empty, output.Trim());
+    }
+
+    [Fact]
+    public void Tle_ReadBeforeItsKernels_ThrowsSpicesError_AndWorksOnceTheyAreLoaded()
+    {
+        // A child that loads its kernels after the first read (#711): the read throws SPICE's KERNELVARNOTFOUND of BODY399_GM
+        // (before, "SGP4 failed ... zero state"), and the same TLE instance gives the state of tools/sgp4_reference once the
+        // kernels are loaded (before, it kept the epoch of the failed read and threw for its life); each checked by the child
+        string output = RunChild("tle-before-kernels");
+        foreach (var line in output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
+        {
+            _output.WriteLine(line.TrimEnd('\r'));
+        }
     }
 
     // Runs the child with the mode, and the schedule and hold when given; returns its standard output

@@ -1298,6 +1298,111 @@ public class SpiceApiTest
         Assert.Equal(ke.Observer, ke2.Observer);
     }
 
+    // ELARA (507): named by SPICE, no BODY507_GM in gm_de440.tpc (the kernel text, KernelTextValues). Before #711 the native
+    // conversions returned the zero state silently (the found flag of their centre read undefined after the failed GM read);
+    // they now return a NaN state with SPICE's message, which SpiceAPI throws
+    [Fact]
+    void ConvertConicElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
+        Assert.Contains("BODY507_GM", error.Message);
+    }
+
+    [Fact]
+    void ConvertEquinoctialElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, 0.1, 0.0, 0.5, new IO.Astrodynamics.Body.CelestialBody(507),
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        Assert.Contains("BODY507_GM", error.Message);
+    }
+
+    // An open orbit goes to conics_c with the GM of its observer, 0 for Elara (no BODY507_GM in gm_de440.tpc). Before the
+    // review of #711, conics_c's SPICE(BADGM) was left pending and the conversion of the result threw "Celestial celestialItem
+    // name can't be defined" (measured on a77531f)
+    [Fact]
+    void ConvertConicElementsToStateVector_OfAnOpenOrbitAboutABodyWithoutGm_ThrowsInvalidOperationException()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var elara = new IO.Astrodynamics.Body.CelestialBody(507);
+        var ke = new KeplerianElements(-7.0e6, 1.5, 0.2, 0.3, 0.4, 0.5, elara, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
+        Assert.Contains("BODY507_GM", error.Message);
+        error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB));
+        Assert.Contains("BODY507_GM", error.Message);
+        AssertNothingPending();
+    }
+
+    // CONICS needs a GM above 0 (conics.c, SPICE(BADGM)); a GM the caller gives outside it, or not finite, is a bad argument.
+    // Before the review of #711, a GM of 0 or below left conics_c's error pending, the conversion of the result throwing
+    // "Celestial celestialItem name can't be defined", and a GM not finite returned a state that is not finite (measured on
+    // a77531f)
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-3.986e14)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    void ConvertConicElementsToStateVector_WithAGmNotFiniteAndAboveZero_ThrowsArgumentOutOfRangeException(double gm)
+    {
+        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm));
+        Assert.Equal("gm", error.ParamName);
+        AssertNothingPending();
+    }
+
+    // CONICS needs a periapsis radius above 0 (conics.c, SPICE(BADPERIAPSEVALUE)): an ellipse of negative semi-major axis, a
+    // hyperbola of positive one, a bad argument on every overload. Before #711 the zero state was returned silently, then
+    // InvalidOperationException with SPICE's message (measured on 46e6975 and a77531f)
+    [Theory]
+    [InlineData(-7.0e6, 0.1)]
+    [InlineData(7.0e6, 1.5)]
+    void ConvertConicElementsToStateVector_OfAPeriapsisNotAboveZero_ThrowsArgumentException(double a, double e)
+    {
+        var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        Assert.True(ke.PerigeeRadius() < 0.0);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        foreach (var conversion in new Func<IO.Astrodynamics.OrbitalParameters.StateVector>[]
+                 {
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke),
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB),
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm)
+                 })
+        {
+            var error = Assert.Throws<ArgumentException>(conversion);
+            Assert.Equal("keplerianElements", error.ParamName);
+        }
+
+        AssertNothingPending();
+    }
+
+    // EQNCPV needs a semi-major axis above 0 (SPICE(BADSEMIAXIS)) and an eccentricity sqrt(h^2 + k^2) of 0.9 or less
+    // (SPICE(ECCOUTOFRANGE)), eqncpv.c. Before #711 the zero state was returned silently, then InvalidOperationException with
+    // SPICE's message (measured on 46e6975 and a77531f)
+    [Theory]
+    [InlineData(-7.0e6, 0.01)]
+    [InlineData(7.0e6, 0.95)]
+    void ConvertEquinoctialElementsToStateVector_OutsideTheDomainOfEqncpv_ThrowsArgumentException(double p, double f)
+    {
+        var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(p, f, 0.0, 0.1, 0.0, 0.5, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        Assert.True(eq.SemiMajorAxis() < 0.0 || f > 0.9);
+        var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        Assert.Equal("equinoctialElements", error.ParamName);
+        AssertNothingPending();
+    }
+
+    // The next native call reads the Earth: a SPICE error left pending makes GetCelestialBodyInfoProxy return the record of
+    // Id -1, which GetCelestialBodyInfo throws for
+    private static void AssertNothingPending()
+    {
+        var earth = SpiceAPI.Instance.GetCelestialBodyInfo(399);
+        Assert.Equal(399, earth.Id);
+        Assert.Equal("EARTH", earth.Name);
+    }
+
     [Fact]
     void ConvertConicHyperbolicToState()
     {
