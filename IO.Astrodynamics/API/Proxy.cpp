@@ -102,8 +102,10 @@ namespace
 {
     // The failure of a native writer: the message of its writing, taken (and SPICE reset) before its kernel object is
     // destroyed, then that of the destruction, whose unload of the written file opens the other loaded kernels of its kind
-    // again (fourth round of #668). Copied into lastError; true when there is none
-    bool ReportWriterErrors(std::string writing)
+    // again (fourth round of #668). Copied into lastError; true when there is none. The kernel loaders report the same way,
+    // the message of a C++ exception then SPICE's (#706: they reset SPICE without keeping its message, so that the .NET layer
+    // could not name the cause)
+    bool ReportNativeErrors(std::string writing)
     {
         std::string message = std::move(writing);
         if (failed_c())
@@ -119,6 +121,17 @@ namespace
         lastError[sizeof(lastError) - 1] = '\0';
         return false;
     }
+
+    // Appends SPICE's message to the writing's, and resets SPICE, so that a kernel object is destroyed on a clean SPICE
+    // state whether its writing failed through SPICE or through a C++ exception
+    void TakeSpiceError(std::string &writing)
+    {
+        if (failed_c())
+        {
+            if (!writing.empty()) writing += " ";
+            writing += HandleError();
+        }
+    }
 }
 
 // The kernel object lives in an inner scope: its destructor unloads the written file (Kernel::~Kernel), and that unload_c
@@ -126,69 +139,90 @@ namespace
 // relative name, left to KEEPER by KernelsLoader. Before the fourth round of #668 the destructor ran after the return, so
 // that failure was left pending into the next proxy while this one returned true. The writing's error is taken first, so
 // that the destructor unloads on a clean SPICE state, as it did before
+//
+// No C++ exception crosses P/Invoke (#706): the writer's own rules (EphemerisKernel::WriteData: three states or more, in one
+// frame), the centre of motion (CelestialBody) and the throwing std::filesystem calls of the kernel object (a symbolic-link
+// loop, a removal Windows refuses) threw out of the proxy, which ended the host process (std::terminate). The writing is
+// caught inside the kernel object's scope, so that its destructor still unloads on a clean SPICE state, and the construction
+// of the kernel object outside it; each reports its message through lastError
 bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO *sv,
                          unsigned int size)
 {
     ActivateErrorManagement();
     std::string writing;
+    try
     {
         IO::Astrodynamics::Kernels::EphemerisKernel kernel(filePath, objectId);
-
-        std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> states;
-        states.reserve(size);
-        std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
-
-
-        for (unsigned int i = 0; i < size; ++i)
+        try
         {
-            if (celestialBodies.find(sv[i].centerOfMotionId) == celestialBodies.end())
+            std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> states;
+            states.reserve(size);
+            std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
+
+            for (unsigned int i = 0; i < size; ++i)
             {
-                celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-                        sv[i].centerOfMotionId);
+                if (celestialBodies.find(sv[i].centerOfMotionId) == celestialBodies.end())
+                {
+                    celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
+                            sv[i].centerOfMotionId);
+                }
+                states.emplace_back(celestialBodies[sv[i].centerOfMotionId], ToVector3D(sv[i].position),
+                                    ToVector3D(sv[i].velocity),
+                                    IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
+                                    IO::Astrodynamics::Frames::Frames(sv[i].inertialFrame));
             }
-            states.emplace_back(celestialBodies[sv[i].centerOfMotionId], ToVector3D(sv[i].position),
-                                ToVector3D(sv[i].velocity),
-                                IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
-                                IO::Astrodynamics::Frames::Frames(sv[i].inertialFrame));
-        }
 
-        kernel.WriteData(states);
-        if (failed_c())
-        {
-            writing = HandleError();
+            kernel.WriteData(states);
         }
+        catch (const std::exception &e)
+        {
+            writing = e.what();
+        }
+        TakeSpiceError(writing);
     }
-    return ReportWriterErrors(std::move(writing));
+    catch (const std::exception &e)
+    {
+        writing = e.what();
+    }
+    return ReportNativeErrors(std::move(writing));
 }
 
 // The CK analog of WriteEphemerisProxy: the destructor's unload of the written CK opens the other loaded CKs again
-// (unload_c --> UNLOAD --> CKLPF)
+// (unload_c --> UNLOAD --> CKLPF); no C++ exception crosses P/Invoke either (#706)
 bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateOrientationDTO *so,
                            unsigned int size)
 {
     ActivateErrorManagement();
     std::string writing;
+    try
     {
         IO::Astrodynamics::Kernels::OrientationKernel kernel(filePath, objectId, objectId * 1000);
-
-        std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> states;
-        states.emplace_back();
-
-        states.back().reserve(size);
-
-        for (unsigned int i = 0; i < size; ++i)
+        try
         {
-            states.back().emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
-                                       IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
-                                       IO::Astrodynamics::Frames::Frames(so[i].frame));
+            std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> states;
+            states.emplace_back();
+
+            states.back().reserve(size);
+
+            for (unsigned int i = 0; i < size; ++i)
+            {
+                states.back().emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
+                                           IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
+                                           IO::Astrodynamics::Frames::Frames(so[i].frame));
+            }
+            kernel.WriteOrientations(states);
         }
-        kernel.WriteOrientations(states);
-        if (failed_c())
+        catch (const std::exception &e)
         {
-            writing = HandleError();
+            writing = e.what();
         }
+        TakeSpiceError(writing);
     }
-    return ReportWriterErrors(std::move(writing));
+    catch (const std::exception &e)
+    {
+        writing = e.what();
+    }
+    return ReportNativeErrors(std::move(writing));
 }
 
 bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
@@ -281,28 +315,64 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
     }
 }
 
+// No C++ exception crosses P/Invoke (#706): the throwing std::filesystem calls of KernelsLoader (is_regular_file of a
+// symbolic-link loop, a directory_iterator that fails) ended the host process. SPICE's message of a failed load or unload is
+// kept for GetLastErrorProxy (#706; before, it was reset and lost)
 bool LoadKernelsProxy(const char *path)
 {
     ActivateErrorManagement();
-    IO::Astrodynamics::Kernels::KernelsLoader::Load(path);
-    if (failed_c())
+    std::string message;
+    try
     {
-        HandleError();
-        return false;
+        IO::Astrodynamics::Kernels::KernelsLoader::Load(path);
     }
-    return true;
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    return ReportNativeErrors(std::move(message));
 }
 
 bool UnloadKernelsProxy(const char *path)
 {
     ActivateErrorManagement();
-    IO::Astrodynamics::Kernels::KernelsLoader::Unload(path);
-    if (failed_c())
+    std::string message;
+    try
     {
-        HandleError();
+        IO::Astrodynamics::Kernels::KernelsLoader::Unload(path);
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    return ReportNativeErrors(std::move(message));
+}
+
+bool UnloadEveryLoadProxy(const char *path)
+{
+    ActivateErrorManagement();
+    std::string message;
+    try
+    {
+        IO::Astrodynamics::Kernels::KernelsLoader::UnloadEveryLoad(path);
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    return ReportNativeErrors(std::move(message));
+}
+
+bool KernelNameResolvesThroughProxy(const char *name, const char *path)
+{
+    try
+    {
+        return IO::Astrodynamics::Kernels::KernelsLoader::ResolvesThrough(name, path);
+    }
+    catch (const std::exception &)
+    {
         return false;
     }
-    return true;
 }
 
 bool GetFrameNameProxy(int frameId, char name[33])

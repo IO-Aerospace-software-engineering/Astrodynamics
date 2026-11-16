@@ -158,3 +158,93 @@ void IO::Astrodynamics::Kernels::KernelsLoader::UnloadFile(const std::string &pa
     UnloadDeletedBinaryKernels();
     unload_c(path.c_str());
 }
+
+void IO::Astrodynamics::Kernels::KernelsLoader::UnloadEveryLoad(const std::string &path)
+{
+    UnloadDeletedBinaryKernels();
+    SpiceInt count{};
+    ktotal_c("ALL", &count);
+    // At most one unload per entry KEEPER holds: each unload_c removes one entry of the name, and the list is read again
+    // after each, its order changed
+    for (SpiceInt unloads = 0; unloads <= count && !failed_c(); ++unloads)
+    {
+        std::string found;
+        SpiceInt total{};
+        ktotal_c("ALL", &total);
+        for (SpiceInt i = 0; i < total && !failed_c(); ++i)
+        {
+            SpiceChar file[FileLength]{};
+            SpiceChar type[TypeLength]{};
+            SpiceChar source[FileLength]{};
+            SpiceInt handle{};
+            SpiceBoolean held{};
+            kdata_c(i, "ALL", FileLength, TypeLength, FileLength, file, type, source, &handle, &held);
+            if (held && ResolvesThrough(file, path))
+            {
+                found = file;
+                break;
+            }
+        }
+
+        if (failed_c() || found.empty())
+        {
+            return;
+        }
+        unload_c(found.c_str());
+    }
+}
+
+bool IO::Astrodynamics::Kernels::KernelsLoader::ResolvesThrough(const std::string &name, const std::string &path)
+{
+    if (name == path)
+    {
+        return true;
+    }
+
+    std::error_code error;
+    const std::filesystem::path target(path);
+    std::filesystem::path current(name);
+    if (!current.is_absolute() || !target.has_filename())
+    {
+        return false;
+    }
+
+    // The entry the writer replaces: its directory with every link resolved, its own name kept
+    const auto entry = std::filesystem::weakly_canonical(std::filesystem::absolute(target, error).parent_path(), error) /
+                       target.filename();
+    if (error)
+    {
+        return false;
+    }
+
+    // The entries the name passes through, one link at a time: each the directory of the step resolved and the name of the
+    // step, up to 40 links (the SYMLOOP_MAX of POSIX is at least 8; Linux follows 40)
+    for (int links = 0; links <= 40; ++links)
+    {
+        current = current.lexically_normal();
+        if (!current.has_filename())
+        {
+            return false;
+        }
+        const auto step = std::filesystem::canonical(current.parent_path(), error) / current.filename();
+        if (error)
+        {
+            return false;
+        }
+        if (step == entry)
+        {
+            return true;
+        }
+        if (!std::filesystem::is_symlink(step, error) || error)
+        {
+            return false;
+        }
+        const auto link = std::filesystem::read_symlink(step, error);
+        if (error)
+        {
+            return false;
+        }
+        current = link.is_absolute() ? link : step.parent_path() / link;
+    }
+    return false;
+}

@@ -47,7 +47,8 @@ MODULE_API const char *GetSpiceVersionProxy();
  * @param objectId ID of the object
  * @param sv Array of state vectors
  * @param size Size of the state vector array
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, the message in GetLastErrorProxy: fewer than three states, several frames,
+ * a centre that is not a celestial body, a path the file system rejects (#706: these threw a C++ exception across P/Invoke)
  */
 MODULE_API bool
 WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000],
@@ -59,7 +60,8 @@ WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::
  * @param objectId ID of the object
  * @param so Array of state orientations
  * @param size Size of the state orientation array
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, the message in GetLastErrorProxy: no record, several frames, a path the file
+ * system rejects (#706: these threw a C++ exception across P/Invoke, or read an empty array)
  */
 MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId,
                                       IO::Astrodynamics::API::DTO::StateOrientationDTO so[100000], unsigned int size);
@@ -117,16 +119,37 @@ MODULE_API bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
 /**
  * Load kernels
  * @param path Directory path to the kernels
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, with SPICE's message or that of a path the file system rejects in
+ * GetLastErrorProxy (#706)
  */
 MODULE_API bool LoadKernelsProxy(const char *path);
 
 /**
  * Unload kernels
  * @param path Directory path to the kernels
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, with SPICE's message or that of a path the file system rejects in
+ * GetLastErrorProxy (#706)
  */
 MODULE_API bool UnloadKernelsProxy(const char *path);
+
+/**
+ * Unload every load of a file a writer replaces: each name SPICE holds that resolves through it (KernelsLoader::
+ * ResolvesThrough: the same name, or an absolute name whose symbolic links reach it), after the deleted binary kernels.
+ * The managed writer of SPKs of the .NET layer unloads this way the file it replaces, as the native writers do (review of
+ * #706: KEEPER's list, which only native code reads, is needed to find every load)
+ * @param path Full path of the file
+ * @return true if successful, false otherwise, with SPICE's message in GetLastErrorProxy
+ */
+MODULE_API bool UnloadEveryLoadProxy(const char *path);
+
+/**
+ * Whether a kernel name resolves through a file a writer replaces (KernelsLoader::ResolvesThrough), for the registry of
+ * the .NET layer, which follows the names the native writers unload (review of #706); no SPICE call
+ * @param name A kernel name, as the registry holds it
+ * @param path Full path of the file the writer replaces
+ * @return true when the name is the path, or an absolute name whose symbolic links, followed one at a time, reach its entry
+ */
+MODULE_API bool KernelNameResolvesThroughProxy(const char *name, const char *path);
 
 /**
  * Get the name SPICE gives to a frame id (frmnam_c), from its built-in frames and the loaded frame kernels

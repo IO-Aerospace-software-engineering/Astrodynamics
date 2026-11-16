@@ -67,6 +67,17 @@ public class SpiceAPI
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool UnloadKernelsProxy(string directoryPath);
 
+    // Every load of a file a writer replaces: each name KEEPER holds that resolves through it (review of #706)
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool UnloadEveryLoadProxy(string path);
+
+    // Whether a kernel name resolves through a file a writer replaces, the native rule of UnloadEveryLoadProxy (review of
+    // #706); no SPICE call
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool KernelNameResolvesThroughProxy(string name, string path);
+
     // frmnam_c: the name SPICE gives to a frame id, false when it knows none (#676)
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -444,6 +455,12 @@ public class SpiceAPI
     /// SPICE still holds the file; a symbolic link counts as deleted once its target is, as the native layer tests it. A text
     /// kernel, a meta-kernel or a DSK stays listed until it is unloaded.
     /// </para>
+    /// <para>
+    /// A file a writer replaces (<see cref="WriteEphemeris"/>, <see cref="WriteOrientation"/>, <c>Spacecraft.WriteEphemeris</c>
+    /// and the writers that call them) leaves the listing before the write, unloaded as <see cref="UnloadKernels"/> unloads
+    /// it, a directory being replaced by its remaining files; the new file is not loaded (#706: before, the native writers
+    /// left it listed and SPICE read the replaced data, the managed one left it listed while SPICE no longer held it).
+    /// </para>
     /// </remarks>
     public IEnumerable<FileSystemInfo> GetLoadedKernels()
     {
@@ -485,6 +502,9 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
     /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is loaded, unloaded
     /// or reloaded. Before 11.0.0 such a path loaded nothing and the call returned.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to load a file, or the native file system calls rejected its
+    /// path (a loop of symbolic links); the message is SPICE's or the file system's (#706: before, the message referred to
+    /// the standard output, and a path the file system rejected ended the process).</exception>
     public void LoadKernels(FileSystemInfo path)
     {
         if (path == null) throw new ArgumentNullException(nameof(path));
@@ -535,7 +555,7 @@ public class SpiceAPI
         {
             if (!LoadKernelNative(kernel))
             {
-                throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
+                throw new InvalidOperationException($"Kernel {kernel} can't be loaded: {LastProxyError()}");
             }
 
             // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
@@ -565,6 +585,13 @@ public class SpiceAPI
     {
         _nativeKernelCalls++;
         return UnloadKernelsProxy(path);
+    }
+
+    // The native unload of every load of a file a writer replaces, counted (_nativeKernelCalls)
+    private static bool UnloadEveryLoadNative(string path)
+    {
+        _nativeKernelCalls++;
+        return UnloadEveryLoadProxy(path);
     }
 
     /// <summary>
@@ -919,8 +946,8 @@ public class SpiceAPI
     /// and <see cref="GetLoadedKernels"/> no longer lists it once the call returns: a directory whose files were all dropped
     /// leaves the listing, one with remaining files stays listed, and a later unload of the dropped path does nothing (fourth
     /// round of #668; before, the path was listed until it was unloaded). <see cref="WriteEphemeris"/>,
-    /// <see cref="WriteOrientation"/> and <c>Spacecraft.WriteEphemeris</c>, when it replaces a file, do the same before the
-    /// unloads of their writer. The file is tested by the name
+    /// <see cref="WriteOrientation"/> and <c>Spacecraft.WriteEphemeris</c>, when they replace a file, do the same before the
+    /// unloads of their writer, and first unload the file through this method when a load of this class holds it (#706). The file is tested by the name
     /// SPICE holds: a kernel a meta-kernel names relative to the working directory of its load is left to SPICE, deleted or
     /// not, since that name no longer reaches its file once the working directory changed; name the files of a meta-kernel
     /// by absolute paths to have them covered.
@@ -930,8 +957,9 @@ public class SpiceAPI
     /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
     /// again, and that of a DSK opens the other loaded DSKs again; each fails on a kernel of those kinds deleted since its
     /// load, until a later unload that reads the same kernels again succeeds (#673). A deleted SPK, CK, binary PCK or EK
-    /// SPICE holds under an absolute name no longer makes an unload fail (#668, second round). Every matched entry is unloaded and removed before the
-    /// exception.</exception>
+    /// SPICE holds under an absolute name no longer makes an unload fail (#668, second round), but one SPICE holds under a
+    /// relative name does. Every matched entry is unloaded and removed before the exception, whose message is SPICE's for
+    /// the first failure no later unload repaired (#706: before, it referred to the standard output).</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
         if (path == null) return;
@@ -954,7 +982,7 @@ public class SpiceAPI
     private void UnloadKernelsLocked(FileSystemInfo path)
     {
         bool matched = false;
-        var unrepaired = new List<KernelFile>();
+        var unrepaired = new List<(KernelFile File, string Error)>();
         for (int i = 0; i < _kernels.Count; i++)
         {
             var entry = _kernels[i];
@@ -988,12 +1016,12 @@ public class SpiceAPI
 
         if (!matched && !UnloadKernelNative(path.FullName))
         {
-            throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+            throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded: {LastProxyError()}");
         }
 
         if (unrepaired.Count > 0)
         {
-            throw new InvalidOperationException($"Kernel {unrepaired[0].Name} can't be unloaded. You can have more details on standard output");
+            throw new InvalidOperationException($"Kernel {unrepaired[0].File.Name} can't be unloaded: {unrepaired[0].Error}");
         }
     }
 
@@ -1006,20 +1034,22 @@ public class SpiceAPI
     /// at the highest priority, and the files after the deleted one are not loaded again).
     /// A later unload that succeeds has read again every kernel of its kinds, which repairs the failures that came from
     /// those kinds only (#673). The failures no later unload of the call repaired are left in <paramref name="unrepaired"/>,
-    /// in their order. Since the second round of #668 the native unload first closes and unloads the deleted SPKs, CKs,
-    /// binary PCKs and EKs, so only text kernels, meta-kernels and DSKs still fail this way.
+    /// in their order, each with SPICE's message of its failure (#706). Since the second round of #668 the native unload first
+    /// closes and unloads the deleted SPKs, CKs, binary PCKs and EKs, so only text kernels, meta-kernels and DSKs still fail
+    /// this way, and the binary kernels SPICE holds under a relative name.
     /// </summary>
-    private static void UnloadFiles(KernelFile[] files, List<KernelFile> unrepaired)
+    private static void UnloadFiles(KernelFile[] files, List<(KernelFile File, string Error)> unrepaired)
     {
         foreach (var file in files)
         {
             if (!UnloadKernelNative(file.Name))
             {
-                unrepaired.Add(file);
+                // SPICE's message, kept by the native layer since #706, taken at the failing call
+                unrepaired.Add((file, LastProxyError()));
             }
             else
             {
-                unrepaired.RemoveAll(x => (x.MayFailOn & ~file.Reads) == KernelRereads.None);
+                unrepaired.RemoveAll(x => (x.File.MayFailOn & ~file.Reads) == KernelRereads.None);
             }
         }
     }
@@ -1676,7 +1706,11 @@ public class SpiceAPI
     /// Writes the arcs of states of an object as an SPK of type 9, one segment per arc, through the managed writer
     /// (<see cref="Kernels.SpkWriter"/>, #540), in J2000: the native writer writes one segment per file. As the
     /// native writer, it unloads and replaces an existing file, creates its directory when needed, and leaves the new file
-    /// unloaded (the native kernel unloads the file it wrote when it is destroyed, at the end of its proxy).
+    /// unloaded (the native kernel unloads the file it wrote when it is destroyed, at the end of its proxy). A file
+    /// <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/> does, so that
+    /// <see cref="GetLoadedKernels"/> no longer lists it (#706: before, it stayed listed while SPICE no longer held it), then
+    /// every other load of it SPICE holds, under the names <see cref="WriteEphemeris"/> finds (review of #706: before, a
+    /// single unload, which left a second load, a meta-kernel's, holding the replaced data).
     /// </summary>
     /// <param name="filePath">The SPK; the caller's <see cref="FileInfo"/> is refreshed once the file is written.</param>
     /// <param name="naifId">The NAIF identifier of the object.</param>
@@ -1685,6 +1719,9 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"><paramref name="filePath"/> or <paramref name="arcs"/> is null.</exception>
     /// <exception cref="ArgumentException">No arc, an arc of fewer than two states, or epochs not strictly increasing; an
     /// existing file is then left as it was.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to unload the file it replaces (the reopening of the other
+    /// loaded SPKs, on a deleted one SPICE holds under a relative name); the message is SPICE's, and the file is left on
+    /// disk as it was, no longer loaded, nothing written (#706: before, the failure was ignored and the file replaced).</exception>
     internal void WriteEphemerisArcs(FileInfo filePath, int naifId, IReadOnlyList<OrbitalParameters.StateVector[]> arcs)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
@@ -1693,12 +1730,23 @@ public class SpiceAPI
         {
             // The file is built and checked first: an argument it cannot write leaves an existing file as it was
             var bytes = Kernels.SpkWriter.BuildType9(naifId, 1, arcs);
+            UnloadReplacedKernel(filePath);
 
             // File.Exists, not FileInfo.Exists: the caller's FileInfo must not cache the state of the file before the write
             if (File.Exists(filePath.FullName))
             {
-                UnloadKernelNative(filePath.FullName);
+                // Every load SPICE holds of the file, under its name or a name that resolves through it, as the native writers
+                // unload it (review of #706: a single unload left a second load, a meta-kernel's, holding the replaced file).
+                // A failed unload (the reopening of the other SPKs, on a deleted one SPICE holds under a relative name) keeps
+                // the file as it was, as the native writers do; before #706 its result was ignored and the file replaced
+                bool unloaded = UnloadEveryLoadNative(filePath.FullName);
                 ForgetDroppedKernels();
+                if (!unloaded)
+                {
+                    throw new InvalidOperationException(
+                        $"An error occurred while writing ephemeris: the file it replaces could not be unloaded: {LastProxyError()}");
+                }
+
                 File.Delete(filePath.FullName);
             }
 
@@ -1730,12 +1778,25 @@ public class SpiceAPI
     /// written by then. A file the call replaces is unloaded before its removal, and that unload fails the same way: the
     /// file is then left on disk as it was, no longer loaded, and nothing is written (review of the fourth round of #668;
     /// before, it was removed and nothing written in its place).
+    /// A file it replaces that <see cref="LoadKernels"/> loaded, by itself or in a loaded directory, is first unloaded as
+    /// <see cref="UnloadKernels"/> does, and the native writer unloads every other load of the file (a meta-kernel's): SPICE
+    /// no longer reads the replaced data, <see cref="GetLoadedKernels"/> no longer lists the file, and the new file is left
+    /// unloaded (#706: before, the caller's load stayed in SPICE, which held the replaced file open and read its data). A
+    /// load is found under the path or under an absolute name whose symbolic links, followed one at a time, resolve through
+    /// it (a link to the file, the file in a directory loaded through a link; review of #706). A hard link to the file and
+    /// the file a symbolic link given as <paramref name="filePath"/> names keep what they name and stay loaded; a relative
+    /// name other than the path (a meta-kernel's) is not found, and SPICE goes on reading the replaced data through it.
     /// </remarks>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
     /// then failed).</exception>
+    /// <exception cref="ArgumentException">Fewer than three states, states not all in the frame of the first one (compared
+    /// by name, ordinal), or a centre of motion that is not a celestial body (<see cref="IsCelestialBodyId"/>; a spacecraft or
+    /// a site): the native writer rejects them or cannot read the centre; nothing is written, an existing file kept (#706:
+    /// before, a C++ exception crossed P/Invoke and ended the process).</exception>
     /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
-    /// the file once written (the reopening of the other loaded SPKs); the message is SPICE's.</exception>
+    /// the file once written (the reopening of the other loaded SPKs); the message is SPICE's. Or the native file system calls
+    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended).</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
@@ -1747,10 +1808,12 @@ public class SpiceAPI
             var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
             if (!enumerable.Any())
                 throw new ArgumentException("Value cannot be an empty collection.", nameof(stateVectors));
+            ThrowIfNativeWriterRejects(enumerable);
+            UnloadReplacedKernel(filePath);
             bool res;
             try
             {
-                res = WriteEphemerisProxy(filePath.FullName, naifId, stateVectors.Select(x => x.Convert()).ToArray(),
+                res = WriteEphemerisProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(),
                     (uint)enumerable.Length);
             }
             finally
@@ -1793,10 +1856,13 @@ public class SpiceAPI
     /// and the next kernel call failed with a wrong error). A new file is written by then. A file the call replaces is
     /// unloaded before its removal, and that unload fails the same way: the file is then left on disk as it was, no longer
     /// loaded, and nothing is written (review of the fourth round of #668; before, it was removed and nothing written in its
-    /// place).
+    /// place). A file it replaces that <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/>
+    /// does, and the native writer unloads every other load of the file, under the names <see cref="WriteEphemeris"/>
+    /// finds (#706 and its review).
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
-    /// the file once written (the reopening of the other loaded CKs); the message is SPICE's.</exception>
+    /// the file once written (the reopening of the other loaded CKs); the message is SPICE's. Or the native file system calls
+    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended).</exception>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
@@ -1818,6 +1884,7 @@ public class SpiceAPI
                 throw new ArgumentException(
                     $"Every orientation must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.ReferenceFrame.Name}.",
                     nameof(stateOrientations));
+            UnloadReplacedKernel(filePath);
             bool res;
             try
             {
@@ -1835,6 +1902,67 @@ public class SpiceAPI
             }
 
             return true;
+        }
+    }
+
+    /// <summary>
+    /// Rejects the states the native writer of SPKs rejects or cannot read (#706): it writes three states or more
+    /// (<c>EphemerisKernel::WriteData</c>), all in one frame, compared by name ordinally as the native layer compares them,
+    /// and reads the centre of motion of each as a celestial body (<see cref="IsCelestialBodyId"/>, a barycenter, a body or
+    /// a star the library builds, not a spacecraft nor a site). Each threw a C++ exception across P/Invoke, which ended the
+    /// process, or, for a spacecraft centre, read the uninitialised GM of a failed read.
+    /// </summary>
+    private static void ThrowIfNativeWriterRejects(OrbitalParameters.StateVector[] stateVectors)
+    {
+        if (stateVectors.Length < 3)
+        {
+            throw new ArgumentException(
+                $"The native writer of SPKs writes three states or more; {stateVectors.Length} given.", nameof(stateVectors));
+        }
+
+        string frame = stateVectors[0].Frame.Name;
+        var other = stateVectors.FirstOrDefault(x => !string.Equals(x.Frame.Name, frame, StringComparison.Ordinal));
+        if (other != null)
+        {
+            throw new ArgumentException(
+                $"Every state must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.Frame.Name}.",
+                nameof(stateVectors));
+        }
+
+        var centre = stateVectors.FirstOrDefault(x => x.Observer is not CelestialItem || !IsCelestialBodyId(x.Observer.NaifId));
+        if (centre != null)
+        {
+            throw new ArgumentException(
+                $"The centre of motion of every state must be a celestial body: the one at {centre.Epoch} is relative to " +
+                $"{centre.Observer.Name} ({centre.Observer.NaifId}), which is not a celestial body: a barycenter (0 to 9), the Sun (10), " +
+                "a planet, a moon or a Lagrange point (101 to 999), or an identifier above 1000, not a spacecraft nor a site.",
+                nameof(stateVectors));
+        }
+    }
+
+    /// <summary>
+    /// Unloads, as <see cref="UnloadKernels"/> does, a file a writer is about to replace when it was loaded through
+    /// <see cref="LoadKernels"/>, by itself or in a loaded directory, under its own name or a name whose symbolic links
+    /// resolve through it (a link to the file, or the file in a directory loaded through a link; #706 and its review):
+    /// <see cref="GetLoadedKernels"/> no longer lists it, a directory being replaced by its remaining files, and SPICE no
+    /// longer holds it. A hard link names the replaced data, which stay on disk, and is kept, as is the file a symbolic link
+    /// given as the target names: the writer replaces the link. Before, the native writers unloaded
+    /// the file once after loading it once more, so the caller's load stayed in SPICE, which held the replaced file open and
+    /// read its data, and the managed writer unloaded it in SPICE but left it listed. Nothing is done for a file the
+    /// registry does not hold; a failed unload throws the <see cref="InvalidOperationException"/> of
+    /// <see cref="UnloadKernels"/> before anything is written, the file kept on disk as it was. Called under the lock.
+    /// </summary>
+    private void UnloadReplacedKernel(FileInfo target)
+    {
+        // Each file of the registry whose name resolves through the target: the target itself, or, while it exists, a name
+        // whose symbolic links reach it (KernelNameResolvesThroughProxy, the rule of the native writers' unload)
+        bool exists = File.Exists(target.FullName);
+        var names = _kernels.SelectMany(x => x.Files).Select(f => f.Name)
+            .Where(n => IsSameOrInside(n, target.FullName) || exists && KernelNameResolvesThroughProxy(n, target.FullName))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        foreach (var name in names)
+        {
+            UnloadKernels(new FileInfo(name));
         }
     }
 

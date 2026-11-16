@@ -28,6 +28,14 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
         throw IO::Astrodynamics::Exception::SDKException("Orientations array is empty");
     }
 
+    // Before the frame of the first record is read: front() of an empty interval is undefined behaviour, which ended the
+    // process (a segmentation fault) for a WriteOrientationProxy of no record (#706)
+    for (auto &interval: orientations) {
+        if (interval.empty()) {
+            throw IO::Astrodynamics::Exception::InvalidArgumentException("Orientation array is empty");
+        }
+    }
+
     auto frame = orientations.front().front().GetFrame();
     for (auto &&orientation: orientations) {
         for (auto &&orientationPart: orientation) {
@@ -67,10 +75,6 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
     size_t minSize{std::numeric_limits<size_t>::max()};
 
     for (auto &interval: orientations) {
-        if (interval.empty()) {
-            throw IO::Astrodynamics::Exception::InvalidArgumentException("Orientation array is empty");
-        }
-
         //Add interval start date
         intervalsStarts.push_back(SpacecraftClockKernel::ConvertToEncodedClock(m_spacecraftId, interval.begin()->GetEpoch()));
 
@@ -92,7 +96,8 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
     }
 
     if (std::filesystem::exists(m_filePath)) {
-        KernelsLoader::UnloadFile(m_filePath);
+        // Every load of the file, the kernel object's and any other of the same name (#706), as EphemerisKernel::WriteData
+        KernelsLoader::UnloadEveryLoad(m_filePath);
         m_isLoaded = false;
         // The unload opens the other loaded CKs again (unload_c --> UNLOAD --> CKLPF), which fails on a deleted CK
         // SPICE holds under a relative name, left to KEEPER by KernelsLoader. The file is then kept as it was: removed, it

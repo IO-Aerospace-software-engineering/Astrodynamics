@@ -2,7 +2,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests;
 
@@ -21,6 +23,12 @@ public class KernelUnloadChildTests
 {
     // A child that ends takes about 1 s (Linux x64, 3 cores); the limit is 60 times that, for a slow CI machine
     private static readonly TimeSpan ChildTimeout = TimeSpan.FromSeconds(60);
+    private readonly ITestOutputHelper _output;
+
+    public KernelUnloadChildTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
 
     /// <summary>
     /// The scenarios in which a loaded binary kernel (PCK, SPK, CK) is deleted, each run in the child process
@@ -50,7 +58,38 @@ public class KernelUnloadChildTests
     [InlineData("WriteOrientation_ReplacingAFile_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile")]
     [InlineData("LoadKernels_WithoutANativeCall_KeepsListingADeletedSpkSpiceStillHolds")]
     [InlineData("LoadKernels_WhenTheTargetOfALinkedSpkWasDeleted_NoLongerListsTheLink")]
+    [InlineData("SpacecraftWriteEphemeris_ReplacingALoadedFile_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile")]
+    [InlineData("SpacecraftWriteEphemeris_ReplacingAFileAMetaKernelHolds_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile")]
     public void DeletedBinaryKernel_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
+
+    /// <summary>
+    /// The calls of the kernel writers that ended the process with a C++ exception across P/Invoke (#706, exit code 134 on
+    /// c533a6e): fewer than three states, states in several frames, a centre that is not a celestial body, a site whose
+    /// window gives two states. Each now throws an <see cref="ArgumentException"/> before the native call and the child goes
+    /// on. Run in a child process so that a library without the check ends the child, not the test host. Then the writers
+    /// that replace a file loaded through <see cref="SpiceAPI.LoadKernels"/>, which left it loaded, its replaced data read
+    /// (the native writers) or its path listed (the managed one), and now unload it first, as
+    /// <see cref="SpiceAPI.UnloadKernels"/> does (#706).
+    /// </summary>
+    [Theory]
+    [InlineData("WriteEphemeris_OfOneState_ThrowsArgumentException")]
+    [InlineData("WriteEphemeris_OfTwoStates_ThrowsArgumentException")]
+    [InlineData("WriteEphemeris_InTwoFrames_ThrowsArgumentException")]
+    [InlineData("WriteEphemeris_AboutASpacecraft_ThrowsArgumentException")]
+    [InlineData("SiteWriteEphemeris_OverAWindowOfTwoStates_ThrowsArgumentException")]
+    [InlineData("WriteEphemeris_ReplacingAFileOfALoadedFolder_UnloadsIt")]
+    [InlineData("WriteOrientation_ReplacingALoadedFile_UnloadsIt")]
+    [InlineData("SpacecraftWriteEphemeris_ReplacingALoadedFile_UnloadsIt")]
+    public void KernelWriter_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
+
+    /// <summary>
+    /// A loop of symbolic links given to the writers and to <see cref="SpiceAPI.LoadKernels"/>: the native layer's
+    /// <c>std::filesystem</c> calls threw <c>filesystem_error</c> (ELOOP) across P/Invoke, which ended the process (#706, exit
+    /// code 134 on c533a6e). Each now throws an <see cref="InvalidOperationException"/> with that message.
+    /// </summary>
+    [NotOnWindowsTheory("Creating a symbolic link needs a privilege on Windows")]
+    [InlineData("WritersAndLoadKernels_OfASymbolicLinkLoop_ThrowInvalidOperationException")]
+    public void SymbolicLinkLoop_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
 
     /// <summary>
     /// A meta-kernel that names its SPK relative to the working directory of its load, then a change of the working directory:
@@ -61,7 +100,8 @@ public class KernelUnloadChildTests
     public void LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively_InAChildProcess() =>
         RunKernelUnloadChild("LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively");
 
-    private static void RunKernelUnloadChild(string scenario)
+    // Runs a scenario in the child, whose MEASURE lines are written to the test output
+    private void RunKernelUnloadChild(string scenario)
     {
         string child = ChildProcess.AssemblyPath("KernelUnload", "IO.Astrodynamics.Tests.KernelUnload.dll");
         Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");
@@ -69,6 +109,11 @@ public class KernelUnloadChildTests
         var result = ChildProcess.Run(child, ChildTimeout, Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"), scenario);
 
         Assert.True(result.HasValue, $"The child ({scenario}) did not end within {ChildTimeout.TotalSeconds} s.");
+        foreach (var line in result.Value.Output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
+        {
+            _output.WriteLine(line.TrimEnd('\r'));
+        }
+
         Assert.True(result.Value.ExitCode == 0,
             $"The child ({scenario}) exited {result.Value.ExitCode}. Output: {result.Value.Output} Error: {result.Value.Error}");
     }

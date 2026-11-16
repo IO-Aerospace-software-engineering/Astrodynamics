@@ -58,7 +58,7 @@ void IO::Astrodynamics::Kernels::EphemerisKernel::WriteData(const std::vector<Or
 {
 
     if (states.size() <= 2) {
-        throw IO::Astrodynamics::Exception::InvalidArgumentException("State vector set must have 2 items or more");
+        throw IO::Astrodynamics::Exception::InvalidArgumentException("State vector set must have 3 items or more");
     }
 
     auto frame = states.front().GetFrame();
@@ -69,7 +69,9 @@ void IO::Astrodynamics::Kernels::EphemerisKernel::WriteData(const std::vector<Or
     }
 
     if (std::filesystem::exists(m_filePath)) {
-        KernelsLoader::UnloadFile(m_filePath);
+        // Every load of the file, the kernel object's and any other of the same name (#706): one left in KEEPER would hold
+        // the replaced file open and SPICE would go on reading its data, and on Windows the removal would fail
+        KernelsLoader::UnloadEveryLoad(m_filePath);
         m_isLoaded = false;
         // The unload opens the other loaded SPKs again (unload_c --> UNLOAD --> SPKLEF), which fails on a deleted SPK
         // SPICE holds under a relative name, left to KEEPER by KernelsLoader. The file is then kept as it was: removed, it

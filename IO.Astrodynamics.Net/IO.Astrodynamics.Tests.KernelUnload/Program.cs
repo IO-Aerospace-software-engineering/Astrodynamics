@@ -4,9 +4,11 @@ using System;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 
@@ -59,12 +61,27 @@ internal static class Program
     internal const string ReplacerOfACkRelative = "WriteOrientation_ReplacingAFile_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile";
     internal const string NoNativeCall = "LoadKernels_WithoutANativeCall_KeepsListingADeletedSpkSpiceStillHolds";
     internal const string DanglingLink = "LoadKernels_WhenTheTargetOfALinkedSpkWasDeleted_NoLongerListsTheLink";
+    internal const string WriterOfOneState = "WriteEphemeris_OfOneState_ThrowsArgumentException";
+    internal const string WriterOfTwoStates = "WriteEphemeris_OfTwoStates_ThrowsArgumentException";
+    internal const string WriterOfTwoFrames = "WriteEphemeris_InTwoFrames_ThrowsArgumentException";
+    internal const string WriterAboutASpacecraft = "WriteEphemeris_AboutASpacecraft_ThrowsArgumentException";
+    internal const string SiteWriterOfTwoStates = "SiteWriteEphemeris_OverAWindowOfTwoStates_ThrowsArgumentException";
+    internal const string LinkLoop = "WritersAndLoadKernels_OfASymbolicLinkLoop_ThrowInvalidOperationException";
+    internal const string ReplacerOfALoadedFolderFile = "WriteEphemeris_ReplacingAFileOfALoadedFolder_UnloadsIt";
+    internal const string ReplacerOfALoadedCk = "WriteOrientation_ReplacingALoadedFile_UnloadsIt";
+    internal const string ManagedReplacerOfALoadedFile = "SpacecraftWriteEphemeris_ReplacingALoadedFile_UnloadsIt";
+    internal const string ManagedReplacerOfALoadedFileRelative =
+        "SpacecraftWriteEphemeris_ReplacingALoadedFile_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile";
+    internal const string ManagedReplacerOfAMetaKernelFileRelative =
+        "SpacecraftWriteEphemeris_ReplacingAFileAMetaKernelHolds_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile";
 
     private static readonly string[] Scenarios =
     [
         FolderOfTwoPcks, PckOfAFolder, MetaKernelOfAPck, FolderOfTwoDeletedPcks, DeletedSpk, DeletedPckNeverUnloaded, DeletedCk, WriterOfAnSpk,
         WriterOfACk, RelativeName, FolderOfADeletedSpk, ManagedWriterOfAnSpk, WriterOfAnSpkRelative, WriterOfACkRelative,
-        ReplacerOfAnSpkRelative, ReplacerOfACkRelative, NoNativeCall, DanglingLink
+        ReplacerOfAnSpkRelative, ReplacerOfACkRelative, NoNativeCall, DanglingLink, WriterOfOneState, WriterOfTwoStates, WriterOfTwoFrames,
+        WriterAboutASpacecraft, SiteWriterOfTwoStates, LinkLoop, ReplacerOfALoadedFolderFile, ReplacerOfALoadedCk, ManagedReplacerOfALoadedFile,
+        ManagedReplacerOfALoadedFileRelative, ManagedReplacerOfAMetaKernelFileRelative
     ];
 
     // More DAFs than the 23 logical units of CSPICE's handle manager, with those of Data/SolarSystem
@@ -138,6 +155,39 @@ internal static class Program
                     break;
                 case DanglingLink:
                     LoadWhenTheTargetOfALinkedSpkWasDeleted(root);
+                    break;
+                case WriterOfOneState:
+                    WriteEphemerisRejected(root, EarthStates().Take(1).ToArray());
+                    break;
+                case WriterOfTwoStates:
+                    WriteEphemerisRejected(root, EarthStates().Take(2).ToArray());
+                    break;
+                case WriterOfTwoFrames:
+                    WriteEphemerisRejected(root, EarthStatesInTwoFrames());
+                    break;
+                case WriterAboutASpacecraft:
+                    WriteEphemerisRejected(root, StatesAboutASpacecraft());
+                    break;
+                case SiteWriterOfTwoStates:
+                    WriteSiteEphemerisOfTwoStates(root);
+                    break;
+                case LinkLoop:
+                    WriteAndLoadASymbolicLinkLoop(root);
+                    break;
+                case ReplacerOfALoadedFolderFile:
+                    ReplaceAFileOfALoadedFolder(root);
+                    break;
+                case ReplacerOfALoadedCk:
+                    ReplaceALoadedCk(root);
+                    break;
+                case ManagedReplacerOfALoadedFile:
+                    ReplaceALoadedFileWithTheManagedWriter(root);
+                    break;
+                case ManagedReplacerOfALoadedFileRelative:
+                    ReplaceALoadedFileWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(root, kernels);
+                    break;
+                case ManagedReplacerOfAMetaKernelFileRelative:
+                    ReplaceAFileAMetaKernelHoldsWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(root, kernels);
                     break;
                 default:
                     LoadAfterTheWorkingDirectoryChanged(root);
@@ -568,6 +618,282 @@ internal static class Program
         CheckSameMoon(before, "the second read after the writer");
     }
 
+    // #706. The native writer rejected fewer than three states, states in several frames and a centre it cannot read as a
+    // celestial body with a C++ exception across P/Invoke: the process ended (std::terminate, exit code 134, measured on
+    // c533a6e). SpiceAPI.WriteEphemeris now rejects them with an ArgumentException naming stateVectors before the native
+    // call: nothing is written, and the process goes on (the Moon read after it, bit for bit as before)
+    private static void WriteEphemerisRejected(DirectoryInfo root, StateVector[] states)
+    {
+        var before = ReadMoon();
+        var file = new FileInfo(Path.Combine(root.FullName, "rejected.bsp"));
+
+        var error = ThrowsArgument(() => SpiceAPI.Instance.WriteEphemeris(file, -1999705, states));
+
+        Check(error.ParamName == "stateVectors", $"the exception names stateVectors ({error.ParamName}: {error.Message})");
+        Check(!File.Exists(file.FullName), "nothing is written");
+        CheckSameMoon(before, "the read after the rejected writer");
+    }
+
+    // Three states of EarthStates, the last one in ECLIPJ2000
+    private static StateVector[] EarthStatesInTwoFrames()
+    {
+        var states = EarthStates();
+        states[2] = new StateVector(states[2].Position, states[2].Velocity, states[2].Observer, states[2].Epoch, Frame.ECLIPTIC_J2000);
+        return states;
+    }
+
+    // Three states about a spacecraft: the native writer reads its centre as a celestial body (CelestialBody(int)), whose GM
+    // read failed and returned an uninitialised value (measured on c533a6e: an InvalidOperationException through that path)
+    private static StateVector[] StatesAboutASpacecraft()
+    {
+        var spacecraft = new Spacecraft(-1999902, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        return EarthStates().Select(x => new StateVector(x.Position, x.Velocity, spacecraft, x.Epoch, Frame.ICRF)).ToArray();
+    }
+
+    // A site over 90 s: its 1-minute step gives two states, which the native writer rejected (exit code 134, measured on
+    // c533a6e). The ArgumentException of SpiceAPI.WriteEphemeris reaches the caller of the site
+    private static void WriteSiteEphemerisOfTwoStates(DirectoryInfo root)
+    {
+        var before = ReadMoon();
+        var site = new Site(339, "S339", new global::IO.Astrodynamics.Body.CelestialBody(399),
+            new Planetodetic(30.0 * Constants.Deg2Rad, 10.0 * Constants.Deg2Rad, 1000.0));
+        var file = new FileInfo(Path.Combine(root.FullName, "site.bsp"));
+
+        var error = ThrowsArgument(() => site.WriteEphemeris(new Window(Epoch, Epoch.AddSeconds(90.0)), file));
+
+        Check(error.ParamName == "stateVectors", $"the exception names stateVectors ({error.ParamName}: {error.Message})");
+        Check(!File.Exists(file.FullName), "nothing is written");
+        CheckSameMoon(before, "the read after the rejected writer");
+    }
+
+    // A loop of symbolic links a.bsp -> b.bsp -> a.bsp: the native layer's std::filesystem calls (exists in the kernel
+    // objects, is_regular_file in KernelsLoader) threw filesystem_error (ELOOP) across P/Invoke, which ended the process
+    // (exit code 134, measured on c533a6e). The writers and LoadKernels now throw InvalidOperationException with that
+    // message; nothing is loaded, and the process goes on
+    private static void WriteAndLoadASymbolicLinkLoop(DirectoryInfo root)
+    {
+        var before = ReadMoon();
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Loop"));
+        var a = new FileInfo(Path.Combine(folder.FullName, "a.bsp"));
+        var b = new FileInfo(Path.Combine(folder.FullName, "b.bsp"));
+        File.CreateSymbolicLink(a.FullName, b.FullName);
+        File.CreateSymbolicLink(b.FullName, a.FullName);
+        var records = Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+
+        var spk = Throws(() => SpiceAPI.Instance.WriteEphemeris(a, -1999706, EarthStates()));
+        var ck = Throws(() => SpiceAPI.Instance.WriteOrientation(a, -1999706, records));
+        var load = Throws(() => SpiceAPI.Instance.LoadKernels(a));
+
+        foreach (var (error, what) in new[] { (spk, "WriteEphemeris"), (ck, "WriteOrientation"), (load, "LoadKernels") })
+        {
+            Check(error.Message.Contains("symbolic links"), $"{what}: the exception gives the file system's error ({error.Message})");
+        }
+
+        Check(Listed(root).Length == 0, "nothing is listed");
+        CheckRegistryFollowsKeeper(root, a);
+        CheckSameMoon(before, "the read after the writers");
+    }
+
+    // Three states of a circular orbit 5 km farther than EarthStates, and one more, 60 s later: a coverage the file it
+    // replaces does not have
+    private static StateVector[] OtherEarthStates()
+    {
+        var earth = new global::IO.Astrodynamics.Body.CelestialBody(399);
+        return Enumerable.Range(0, 4).Select(i => new StateVector(new Vector3(6805000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth,
+            Epoch.AddSeconds(60.0 * i), Frame.ICRF)).ToArray();
+    }
+
+    // The folder [U, V] of two SPKs the native writer wrote, loaded, then U written again by the native writer. Its kernel
+    // object loaded U once more and WriteData unloaded it once: the folder's load was left in KEEPER, which held the replaced
+    // U, deleted but open, and read its data, while the registry listed the folder (measured on c533a6e: the replaced
+    // states read until U was unloaded). The writer now unloads a file loaded through LoadKernels first, as UnloadKernels
+    // does: the folder is replaced by V, KEEPER no longer holds U and its handle is closed, U's object is not read until U
+    // is loaded again, and then it is read from the new file: the states written. References: KEEPER (CspiceDirect, Linux)
+    // and the states written
+    private static void ReplaceAFileOfALoadedFolder(DirectoryInfo root)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Folder"));
+        var u = new FileInfo(Path.Combine(folder.FullName, "u.bsp"));
+        var v = new FileInfo(Path.Combine(folder.FullName, "v.bsp"));
+        SpiceAPI.Instance.WriteEphemeris(u, -1999707, EarthStates());
+        SpiceAPI.Instance.WriteEphemeris(v, -1999708, EarthStates());
+        SpiceAPI.Instance.LoadKernels(folder);
+        var handle = KeeperHandle(u);
+        var written = OtherEarthStates();
+
+        SpiceAPI.Instance.WriteEphemeris(u, -1999707, written);
+
+        Check(Listed(root).SequenceEqual([v.FullName]), $"the folder is replaced by V ({string.Join(", ", Listed(root))})");
+        CheckRegistryFollowsKeeper(root, u, v);
+        CheckClosed(u, handle);
+        Throws(() => ReadObject(-1999707));
+        SpiceAPI.Instance.LoadKernels(u);
+        var read = ReadObject(-1999707);
+        Check(read.Position == written[1].Position && read.Velocity == written[1].Velocity,
+            $"the new file gives the state written ({read.Position} against {written[1].Position})");
+        SpiceAPI.Instance.UnloadKernels(u);
+        SpiceAPI.Instance.UnloadKernels(v);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // The CK analog: a CK C of identity records, loaded, then written again with five records of 90° about z. Before, the
+    // load was left in KEEPER, which read the replaced identity records (measured on c533a6e). C is now unloaded first: it
+    // is no longer listed, no orientation is read until it is loaded again, and then the 90° records. References: KEEPER and
+    // the records written, compared as a rotation angle
+    private static void ReplaceALoadedCk(DirectoryInfo root)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Ck"));
+        var clock = new Clock("IOA_K1_CLOCK", 65536);
+        var spacecraft = new Spacecraft(-1999709, "IOA_K1_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
+        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        var identity = Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+        // Another CK of the spacecraft, outside the epochs read, stays loaded: with no CK loaded at all, a failed read leaves
+        // SPICE's CKBSS error pending for the next call (ReadOrientationProxy, outside #706)
+        var keep = new FileInfo(Path.Combine(folder.FullName, "keep.bc"));
+        SpiceAPI.Instance.WriteOrientation(keep, spacecraft.NaifId, Enumerable.Range(100, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray());
+        SpiceAPI.Instance.LoadKernels(keep);
+        var turned = new Quaternion(Vector3.VectorZ, System.Math.PI / 2.0);
+        var written = Enumerable.Range(0, 5)
+            .Select(i => new StateOrientation(turned, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bc"));
+        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, identity);
+        SpiceAPI.Instance.LoadKernels(c);
+        var handle = KeeperHandle(c);
+
+        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, written);
+
+        Check(Listed(root).SequenceEqual([clockFile.FullName, keep.FullName]), $"the clock and the other CK are listed ({string.Join(", ", Listed(root))})");
+        CheckRegistryFollowsKeeper(root, clockFile, keep, c);
+        CheckClosed(c, handle);
+        Throws(() => ReadOrientationAt(spacecraft.NaifId, 1.0));
+        SpiceAPI.Instance.LoadKernels(c);
+        var q = ReadOrientationAt(spacecraft.NaifId, 4.0).Rotation.Conjugate() * turned;
+        double angle = 2.0 * System.Math.Atan2(q.VectorPart.Magnitude(), System.Math.Abs(q.W));
+        Console.WriteLine($"MEASURE #706 CK replaced while loaded (child): angle between the record written and the one read {angle:E3} rad");
+        Check(angle <= CkRecordAngleBound, $"the new file gives the record written ({angle:E3} rad)");
+        SpiceAPI.Instance.UnloadKernels(c);
+        SpiceAPI.Instance.UnloadKernels(keep);
+        SpiceAPI.Instance.UnloadKernels(clockFile);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // The bound of the angle between a CK record written and the one read back at its epoch: twice the worst over Linux x64,
+    // Windows and macOS arm64, rounded up at two significant digits (MEASURE lines of CI run 43851568556: 0.000E+000 rad on
+    // Linux and macOS arm64, 2.220E-016 rad on Windows, in process and in the child; review of #706: before, 1e-9° taken
+    // from other tests)
+    private const double CkRecordAngleBound = 4.5e-16;
+
+    private static StateOrientation ReadOrientationAt(int naifId, double seconds) => SpiceAPI.Instance
+        .ReadOrientation(new Window(Epoch.AddSeconds(seconds), Epoch.AddSeconds(seconds)), naifId, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0))
+        .Single();
+
+    // A spacecraft's SPK C, written by the managed writer and loaded, then written again by it: the managed writer unloaded C
+    // natively, but the registry went on listing C, which SPICE no longer held (measured on c533a6e). C is now unloaded as
+    // UnloadKernels does: no longer listed, its object not read until it is loaded again
+    private static void ReplaceALoadedFileWithTheManagedWriter(DirectoryInfo root)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Managed"));
+        var spacecraft = new Spacecraft(-1999710, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        spacecraft.AddPropagatedStates(EarthStates());
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        spacecraft.WriteEphemeris(c);
+        SpiceAPI.Instance.LoadKernels(c);
+        var handle = KeeperHandle(c);
+
+        spacecraft.WriteEphemeris(c);
+
+        Check(Listed(root).Length == 0, $"C is no longer listed ({string.Join(", ", Listed(root))})");
+        CheckRegistryFollowsKeeper(root, c);
+        CheckClosed(c, handle);
+        Throws(() => ReadObject(-1999710));
+        SpiceAPI.Instance.LoadKernels(c);
+        var read = ReadObject(-1999710);
+        Check(read.Position == EarthStates()[1].Position, $"the new file gives the state written ({read.Position})");
+        SpiceAPI.Instance.UnloadKernels(c);
+    }
+
+    // A spacecraft's SPK C, loaded, a meta-kernel that names an SPK X relatively, X deleted, then C written again by the
+    // managed writer. C's unload opens the other SPKs again (unload_c --> UNLOAD --> SPKLEF) and fails on X, left to SPICE (a
+    // relative name). The writer unloads C as UnloadKernels does, which throws with SPICE's message, before anything is
+    // written: C is on disk as it was, no longer listed nor held, and the Moon is read bit for bit as before (measured on
+    // c533a6e: the call returned and replaced C, the failure reported only on the standard output)
+    private static void ReplaceALoadedFileWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "ManagedRelative"));
+        var spacecraft = new Spacecraft(-1999711, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        spacecraft.AddPropagatedStates(EarthStates());
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        spacecraft.WriteEphemeris(c);
+        var bytes = File.ReadAllBytes(c.FullName);
+        SpiceAPI.Instance.LoadKernels(c);
+        var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
+        LoadRelativeMetaKernel(folder, "x.bsp");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var error = Throws(() => spacecraft.WriteEphemeris(c));
+
+        Check(error.Message.Contains("x.bsp"), $"the exception names x.bsp ({error.Message})");
+        Check(File.Exists(c.FullName) && File.ReadAllBytes(c.FullName).SequenceEqual(bytes), "the SPK it would replace is on disk as it was");
+        Check(!Listed(root).Contains(c.FullName), "C is no longer listed");
+        Check(CspiceDirectHolds(c) != true, "KEEPER does not hold the SPK it would replace");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // The same with C held by the meta-kernel, by its absolute path: the registry lists the meta-kernel only, so the writer
+    // unloads C natively, whose failure it ignored (measured on c533a6e: the call returned and replaced C). It now throws
+    // with SPICE's message and keeps C as it was, as the native writers do
+    private static void ReplaceAFileAMetaKernelHoldsWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "MetaRelative"));
+        var spacecraft = new Spacecraft(-1999712, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        spacecraft.AddPropagatedStates(EarthStates());
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        spacecraft.WriteEphemeris(c);
+        var bytes = File.ReadAllBytes(c.FullName);
+        var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
+        LoadMetaKernel(folder, "x.bsp", c.FullName);
+        Check(CspiceDirectHolds(c) != false, "KEEPER holds C");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var error = Throws(() => spacecraft.WriteEphemeris(c));
+
+        Check(error.Message.Contains("x.bsp"), $"the exception names x.bsp ({error.Message})");
+        Check(File.Exists(c.FullName) && File.ReadAllBytes(c.FullName).SequenceEqual(bytes), "the SPK it would replace is on disk as it was");
+        Check(CspiceDirectHolds(c) != true, "KEEPER does not hold the SPK it would replace");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // Loads the meta-kernel mk.tm of the folder, which names a file relatively and another by its absolute path (written in
+    // pieces of at most 40 characters joined by the continuation marker +, a string of a text kernel holding 80 at most),
+    // with the working directory set to the folder
+    private static void LoadMetaKernel(DirectoryInfo folder, string relative, string absolute)
+    {
+        var pieces = Enumerable.Range(0, (absolute.Length + 39) / 40).Select(i => absolute.Substring(40 * i, System.Math.Min(40, absolute.Length - 40 * i)))
+            .ToArray();
+        var absoluteName = string.Join("\n", pieces.Select((piece, i) => $"'{piece}{(i < pieces.Length - 1 ? "+" : "")}'"));
+        var metaKernel = new FileInfo(Path.Combine(folder.FullName, "mk.tm"));
+        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '{relative}'\n{absoluteName} )\n\\begintext\n");
+        var workingDirectory = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(folder.FullName);
+            SpiceAPI.Instance.LoadKernels(metaKernel);
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(workingDirectory);
+        }
+    }
+
     // An SPK S of an object the library writes, loaded by its full path, then deleted: SPICE still holds it, open, and reads
     // its object until a native load, unload or write drops it. Two calls that make no native call, the load of a path that
     // does not exist (ArgumentException) and the load and unload of an empty directory, leave it so: before the review of the
@@ -870,6 +1196,20 @@ internal static class Program
         }
 
         throw new InvalidOperationException("expected an InvalidOperationException, none was thrown");
+    }
+
+    private static ArgumentException ThrowsArgument(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (ArgumentException e)
+        {
+            return e;
+        }
+
+        throw new InvalidOperationException("expected an ArgumentException, none was thrown");
     }
 
     private static void Check(bool condition, string what)

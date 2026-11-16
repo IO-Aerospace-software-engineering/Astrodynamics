@@ -2765,9 +2765,70 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   both overloads and the root `CLAUDE.md` did not say. They now do, with the workaround for `Aberration.None`: read with
   the site as target and negate the state. Documentation only: no behaviour changes
   (`SpiceApiTest.ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks` pins it).
+- **A kernel writer or loader given a bad argument or an odd path ended the process** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). The native
+  writers and loaders let a C++ exception cross P/Invoke (`std::terminate`, exit code 134, measured on c533a6e):
+  `SpiceAPI.WriteEphemeris` with one or two states (the native rule is three or more, its message said "2 items or
+  more"), or states in two frames, `Site.WriteEphemeris` over a window its 1-minute step samples twice,
+  `WriteEphemeris`, `WriteOrientation` and `LoadKernels` of a loop of symbolic links (`filesystem_error`, `ELOOP`), and,
+  on Windows, from the code (not measured), a native writer replacing a file SPICE still held open; a CK of no record read an empty array (a
+  segmentation fault, at the native level only, the .NET layer rejecting it since #560). The four proxies now catch
+  every C++ exception and return false with its message (a native change for a technical reason, no signature changed),
+  and `SpiceAPI.WriteEphemeris` rejects the states the native writer cannot write before the call (Changed, Breaking,
+  below). The C++ tests `API.WriteEphemerisProxyOf*`, `API.WriteOrientationProxyOf*` and
+  `API.KernelProxiesOfASymbolicLinkLoopReturnFalse`, and the child scenarios of `KernelUnloadChildTests`, exit 134 or
+  fail on c533a6e. Writes of three states or more in one frame about a celestial body are unchanged, bit for bit.
+- **A native writer that replaced a loaded file left SPICE reading the replaced data** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). The writer's kernel
+  object loaded the file once more and unloaded it once; `furnsh_c` of a loaded file adds a KEEPER entry of the same
+  handle, so the caller's load stayed, holding the replaced file, deleted but open: `GetLoadedKernels` listed it and every
+  read returned the replaced states (measured on c533a6e: x = 6800.001 km at +60 s where the new file holds 6805 km, and
+  no data in the new coverage), until the file was unloaded. `WriteEphemeris`, `WriteOrientation`, `Star.WriteEphemeris`,
+  `Site.WriteEphemeris` and `Spacecraft.WriteOrientation` now unload a target `LoadKernels` loaded, as `UnloadKernels`
+  does, and the native layer every other load of its name (`KernelsLoader::UnloadEveryLoad`) (Changed, Breaking, below).
+  `Spacecraft.WriteEphemeris` unloaded the file in SPICE but left it listed; `GetLoadedKernels` no longer lists it
+  (`KernelRegistryTests.*_ReplacingALoadedFile_*`, red on c533a6e).
+- **A writer left a second load, or a load through a symbolic link, of the file it replaced** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
+  review). `Spacecraft.WriteEphemeris` made one native unload of its target, so a file two meta-kernels held kept a KEEPER
+  entry, and every writer compared names as strings, so a load under a symbolic link to the target (or in a directory
+  loaded through a link) stayed in SPICE and listed: SPICE read the replaced data (measured on 9338a40: x = 6800 km at
+  +60 s, no state at +180 s that only the new file holds). Every writer now unloads each name KEEPER holds and each file
+  of the registry whose name resolves through the target, the same string or an absolute name whose symbolic links,
+  followed one at a time, reach the target's entry (`KernelsLoader::ResolvesThrough`, through the new proxies
+  `UnloadEveryLoadProxy` and `KernelNameResolvesThroughProxy`, a native change for a technical reason: KEEPER's list is
+  read by native code only, and the .NET registry follows the native rule). A hard link and the file a link given to the
+  writer names keep what they name and stay loaded; a relative name other than the path (a meta-kernel's) is not found
+  (C++ tests `API.*ThroughSymbolicLinks*`, `API.*ThroughASymbolicLink*`, `API.UnloadEveryLoadProxy*`,
+  `API.KernelNameResolvesThroughProxy`; `KernelRegistryTests.Writers_ReplacingAFileTwoMetaKernelsHold_UnloadEveryLoad`
+  and `Writers_ReplacingAFileLoadedThroughASymbolicLink_UnloadIt`, red on 9338a40).
+- **`Spacecraft.WriteEphemeris` ignored a failed unload of the file it replaced** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). When the unload of the
+  target failed (KEEPER's reopening of the other SPKs, on a deleted one SPICE holds under a relative name), it replaced
+  the file all the same and reported nothing, SPICE printing `SPICE(FILENOTFOUND)` on the standard output. It now
+  throws `InvalidOperationException` with SPICE's message and keeps the file as it was, as the native writers do
+  (child scenarios `SpacecraftWriteEphemeris_Replacing*_WhenAnSpkHeldUnderARelativeNameWasDeleted_*`). `LoadKernelsProxy`
+  and `UnloadKernelsProxy` reset SPICE without keeping its message; they keep it for `GetLastErrorProxy`, and the
+  `InvalidOperationException` of `LoadKernels` and `UnloadKernels` carries it ("Kernel ... can't be unloaded:
+  SPICE(FILENOTFOUND) ...") where it said "You can have more details on standard output". The exception types are
+  unchanged.
 
 **Changed**
 
+- **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
+  Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
+  centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)
+  throw `ArgumentException` (parameter `stateVectors`) before anything is written, where the process ended, or, for a
+  spacecraft centre, `InvalidOperationException` came through the native read of an uninitialised GM.
+  `Star.WriteEphemeris` and `Site.WriteEphemeris` inherit it: a site's window shorter than two minutes throws. A path the
+  native file system calls reject (a loop of symbolic links) makes `WriteEphemeris`, `WriteOrientation` and
+  `LoadKernels` throw `InvalidOperationException` with the file system's message, where the process ended. Migration:
+  pass three states or more, in one frame, relative to a celestial body; catch the exceptions.
+- **Breaking: a writer that replaces a file `LoadKernels` loaded unloads it first** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706), Fixed above).
+  `WriteEphemeris`, `WriteOrientation`, `Star.WriteEphemeris`, `Site.WriteEphemeris`, `Spacecraft.WriteOrientation` and
+  `Spacecraft.WriteEphemeris` unload such a target as `UnloadKernels` does, and every other load of it, under its path or
+  an absolute name whose symbolic links resolve through it (a meta-kernel's load, a link to it): `GetLoadedKernels` no
+  longer lists them (a loaded directory is replaced by its remaining files), and the new file is left unloaded, as the writers leave every
+  file they write, so a read of its object fails until it is loaded again, where the native writers went on reading the
+  replaced data. A failed unload throws the `InvalidOperationException` of `UnloadKernels` before anything is written,
+  the file kept as it was. Files that were not loaded are written as before, bit for bit. Migration: `LoadKernels` the
+  file again after writing it.
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
   above). `CosmographiaExporter.ExportAsync` and `astro propagate` throw for an output directory (parameter
   `outputDirectory`), or a system temporary directory (no parameter), whose kernels would have a full path longer than

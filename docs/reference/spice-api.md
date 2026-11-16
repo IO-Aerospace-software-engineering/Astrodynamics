@@ -9,12 +9,12 @@
 | `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |
 | `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673); a deleted SPK, CK, binary PCK or EK already dropped by an earlier native call is no longer listed, and its unload does nothing (#668) |
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
-| `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668) |
+| `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
 | `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
-| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668) |
-| `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668) |
+| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
+| `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
@@ -70,6 +70,38 @@ with SPICE's message and leave no error pending (fourth round of #668; before, t
 failed with a wrong error). A new file is written by then; a file the call replaces is unloaded before its removal, an
 unload that fails the same way, and is then left on disk as it was, no longer loaded, nothing written (before, it was
 removed and nothing written in its place). See [Kernel Management](../guides/kernel-management.md).
+
+No C++ exception of the native writers or loaders crosses P/Invoke any more (#706): before 11.0.0 each ended the process
+(`std::terminate`, exit code 134). `WriteEphemeris` (and so `Star.WriteEphemeris` and `Site.WriteEphemeris`) throws
+`ArgumentException` naming `stateVectors`, before anything is written, for what the native writer rejects or cannot read:
+fewer than three states (its own rule, whose message said "2 items or more"), states not all in the frame of the first
+one (compared by name, ordinal), or a centre of motion that is not a celestial body (`IsCelestialBodyId`: a barycenter, the
+Sun, a planet, a moon, a Lagrange point or an identifier above 1000; not a spacecraft nor a site), whose GM the native layer
+read from a failed read. A site's 1-minute step gives three states over two minutes, so `Site.WriteEphemeris` over a
+shorter window throws. A path the native file system calls reject, a loop of symbolic links, makes the writers and
+`LoadKernels` throw `InvalidOperationException` with the file system's message (POSIX `ELOOP`, "Too many levels of
+symbolic links"). `LoadKernels` and `UnloadKernels` give SPICE's message of a failed native call in their
+`InvalidOperationException` (#706; before, "You can have more details on standard output").
+
+A writer that replaces a file `LoadKernels` loaded, by itself or in a loaded directory, first unloads it as
+`UnloadKernels` does (#706): `GetLoadedKernels` no longer lists it, a directory being replaced by its remaining files, and
+the new file is left unloaded, as the writers leave every file they write: load it again to read it. Before 11.0.0 the
+native writers (`WriteEphemeris`, `WriteOrientation`, `Star.WriteEphemeris`, `Site.WriteEphemeris`,
+`Spacecraft.WriteOrientation`) unloaded the file once after loading it once more, so the caller's load stayed in SPICE,
+which held the replaced file, deleted but open, and read its data until the file was unloaded (on Windows, from the code,
+not measured, the removal of the open file ended the process); `Spacecraft.WriteEphemeris` unloaded it in SPICE but left it listed. Every
+writer now also unloads every other load of the file before the removal (a meta-kernel's, a direct C++ caller's, two
+meta-kernels' included; `Spacecraft.WriteEphemeris` made one unload, which left the second load holding the replaced
+data), whether its name is the writer's path or an absolute name whose symbolic links resolve through it, followed one
+at a time: a symbolic link to the file, or the file in a directory loaded through a link, unloaded and no longer listed
+(a directory replaced by its remaining files). Kept, as they still name what they named: a hard link to the file (the
+replaced data stay on disk under it) and the file a symbolic link given to the writer names (the writer replaces the
+link). Not found, so still loaded, and the replaced data still read: a relative name other than the writer's path (a
+meta-kernel's `KERNELS_TO_LOAD` without an absolute path; relative to the working directory of its load) and a name that
+differs only by the case of its letters on a file system that ignores it. A failed unload
+of the file (the reopening of the other SPKs or CKs, on a deleted one SPICE holds under a relative name) throws
+`InvalidOperationException` with SPICE's message and keeps the file on disk as it was, no longer loaded, nothing written:
+`Spacecraft.WriteEphemeris` ignored that failure and replaced the file before #706.
 
 `TransformFrame` composes a TEME end through ICRF (#451), and so the frame of a site built from coordinates or of a site
 from the kernels whose frame id no loaded kernel defines, the frame only the library holds, whose orientation is
