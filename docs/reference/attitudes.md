@@ -17,7 +17,7 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 
 **Constructor** (used by all concrete attitude types):
 
-```csharp
+```csharp-signature
 Attitude(CelestialItem maneuverCenter, Time minimumEpoch,
          TimeSpan maneuverHoldDuration, Engine engine)
 ```
@@ -38,6 +38,7 @@ These attitudes constrain one spacecraft body axis to a geometric direction, lea
 All six types share the same constructor signature:
 
 ```csharp
+// Inputs: maneuverCenter (CelestialItem), minimumEpoch (Time), holdDuration (TimeSpan), engine (Engine)
 new ProgradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
 new RetrogradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
 new NadirAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
@@ -56,6 +57,7 @@ Points an instrument boresight at a celestial target: the minimal rotation that 
 | `Target` | The `ILocalizable` target to track |
 
 ```csharp
+// Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody), engine (Engine)
 var pointing = new InstrumentPointingToAttitude(
     minimumEpoch, holdDuration, camera, moon, engine);
 ```
@@ -82,6 +84,8 @@ var pointing = new InstrumentPointingToAttitude(
 **Single instrument** — uses instrument boresight as primary body vector and reference vector as secondary, both in the spacecraft frame through the Euler angles of the frame kernel ([Instrument orientation](spacecraft.md#instrument-orientation)), so that the boresight the field-of-view search and SPICE see is the one aimed:
 
 ```csharp
+// Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), primaryTarget and secondaryTarget
+//   (ILocalizable), engine (Engine)
 var attitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     camera, primaryTarget, secondaryTarget, engine);
@@ -90,6 +94,8 @@ var attitude = new TriadAttitude(
 **Dual instruments** — different instruments for primary and secondary pointing:
 
 ```csharp
+// Inputs: primaryInstrument and secondaryInstrument (Instrument), primaryTarget and secondaryTarget (ILocalizable),
+//   engine (Engine), minimumEpoch (Time), holdDuration (TimeSpan)
 var attitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     primaryInstrument, primaryTarget,
@@ -99,6 +105,7 @@ var attitude = new TriadAttitude(
 **Explicit body vectors + ILocalizable targets** — direct spacecraft-frame vectors with celestial body targets:
 
 ```csharp
+// Inputs: minimumEpoch (Time), holdDuration (TimeSpan), moon and sun (CelestialBody), engine (Engine)
 var attitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     Spacecraft.Front, moon,       // Primary: Front points at Moon
@@ -109,6 +116,7 @@ var attitude = new TriadAttitude(
 **Explicit body vectors + IAttitudeTarget targets** — supports orbital directions and celestial bodies:
 
 ```csharp
+// Inputs: earth and sun (CelestialBody), minimumEpoch (Time), holdDuration (TimeSpan), engine (Engine)
 var attitude = new TriadAttitude(
     earth, minimumEpoch, holdDuration,
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
@@ -131,6 +139,7 @@ a spacecraft whose front is +X or +Z (#677); for that attitude, pass the static 
 OrbitalDirectionTarget.Prograde, engine)`.
 
 ```csharp
+// Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
 var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
@@ -250,6 +259,7 @@ Wraps an `ILocalizable` (celestial body, site) for use as an attitude target.
 - **`Aberration.LT`** — light-time corrected apparent direction, for photon-based scenarios (e.g., optical sensors observing distant targets).
 
 ```csharp
+// Inputs: sun and moon (CelestialBody)
 // Default: geometric (Aberration.None)
 var sunTarget = new CelestialAttitudeTarget(sun);
 
@@ -262,6 +272,7 @@ var moonTarget = new CelestialAttitudeTarget(moon, Aberration.LT);
 ### Single-vector attitude
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
 var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
 spacecraft.SetStandbyManeuver(nadir);
 ```
@@ -269,6 +280,7 @@ spacecraft.SetStandbyManeuver(nadir);
 ### Instrument pointing
 
 ```csharp
+// Inputs: epoch (Time), telescope (Instrument), targetStar (ILocalizable), engine (Engine), spacecraft (Spacecraft)
 var pointing = new InstrumentPointingToAttitude(
     epoch, TimeSpan.FromHours(2), telescope, targetStar, engine);
 spacecraft.SetStandbyManeuver(pointing);
@@ -277,6 +289,7 @@ spacecraft.SetStandbyManeuver(pointing);
 ### TRIAD with orbital directions and celestial target
 
 ```csharp
+// Inputs: earth and sun (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
 var attitude = new TriadAttitude(
     earth, epoch, TimeSpan.FromHours(1.5),
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
@@ -288,6 +301,7 @@ spacecraft.SetStandbyManeuver(attitude);
 ### LVLH factory
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine), spacecraft (Spacecraft)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 spacecraft.SetStandbyManeuver(lvlh);
 ```

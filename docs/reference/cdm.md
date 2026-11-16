@@ -187,6 +187,7 @@ Standards-compliant CDM export requires covariance for both participants, so the
 ```csharp
 using IO.Astrodynamics.CCSDS.CDM;
 
+// Inputs: encounter (EncounterCase)
 var cdm = encounter.ToCdm(new CdmExportOptions
 {
     Originator = "MyOpsCenter",

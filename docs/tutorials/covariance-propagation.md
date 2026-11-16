@@ -51,6 +51,7 @@ m², m²/s and m²/s², rows and columns x, y, z, vx, vy, vz in the frame of the
 window. A covariance known in RTN, from an orbit determination or a CDM, is rotated to that frame first:
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 var orbit = new KeplerianElements(6778137.0, 0.0005, 51.6 * Constants.Deg2Rad, 20.0 * Constants.Deg2Rad,
     15.0 * Constants.Deg2Rad, 0.0, earth, epoch, Frame.ICRF).ToStateVector();
 
@@ -73,6 +74,7 @@ var t = epoch.AddHours(6.0);
 ## The state transition matrix only
 
 ```csharp
+// Inputs: spacecraft (Spacecraft), window (Window), bodies (CelestialItem[]), t (Time)
 var stm = spacecraft.Propagate(window, bodies, new RK78Integrator(1e-11, 1e-11), true, true,
     TimeSpan.FromSeconds(600.0),
     new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly });
@@ -96,6 +98,7 @@ The same options are taken by the builder (`CentralBodyPropagatorBuilder.WithCov
 ## The covariance
 
 ```csharp
+// Inputs: spacecraft (Spacecraft), window (Window), bodies (CelestialItem[]), t (Time)
 var options = new CovariancePropagationOptions
 {
     Mode = CovariancePropagationMode.Covariance,
@@ -130,6 +133,7 @@ P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q, in the inertial frame of the propagation:
 of the magnitude, along ΔV, and a fixed and a proportional pointing error, across it.
 
 ```csharp
+// Inputs: initialState (StateVector), earth (CelestialBody), epoch (Time), window (Window), bodies (CelestialItem[])
 var tank = new FuelTank("TANK", "model", "sn1", 50.0, 50.0);
 var engine = new Engine("ENGINE", "model", "sn1", 300.0, 1.0, tank);
 var maneuvering = new Spacecraft(-1002, "SAT2", 100.0, 1000.0, new Clock("SAT2_CLK", 65536), initialState,
@@ -172,6 +176,7 @@ written as −1.0001 for example. `StateVector.WithRemediatedCovariance()` remed
 propagation, by the eigenvalue clipping of the conjunction analysis (Hall, Hejduk and Johnson, AAS 17-567):
 
 ```csharp
+// Inputs: initialState (StateVector), earth (CelestialBody), epoch (Time), window (Window), bodies (CelestialItem[])
 var rounded = new Matrix(6, 6);
 for (int i = 0; i < 3; i++)
 {
@@ -206,11 +211,22 @@ gives the values of a propagation with the covariance, bit for bit. Two particip
 secondary passing 200 m from the protected one 24 h after the start (the case of the validation):
 
 ```csharp
+// Inputs: protectedOrbit and secondaryOrbit (StateVector)
 var start = new Time(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
 var tca = start.AddHours(24.0);
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-// protectedOrbit, a LEO at 700 km; secondaryOrbit, 120 m radial and 160 m normal from it at tca, its velocity turned
-// by 70° about the radial direction; each with a covariance in RTN, as above (see the smoke test for the geometry)
+// protectedOrbit, a LEO at 700 km about earth; secondaryOrbit, 120 m radial and 160 m normal from it at tca, its
+// velocity turned by 70° about the radial direction (see the smoke test for the geometry); each given its covariance in
+// RTN, as above, by this helper
+static StateVector WithRtnCovariance(StateVector orbit, double[] sigma)
+{
+    var rtn = new Matrix(6, 6);
+    for (int i = 0; i < 6; i++)
+        rtn.Set(i, i, sigma[i] * sigma[i]);
+    return new StateVector(orbit.Position, orbit.Velocity, orbit.Observer, orbit.Epoch, orbit.Frame,
+        orbit.RotateCovarianceFromRtn(rtn));
+}
+
 var protectedCraft = new Spacecraft(-2001, "PROTECTED", 100.0, 1000.0, new Clock("P_CLK", 65536),
     WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 }), sectionalArea: 10.0);
 var secondaryCraft = new Spacecraft(-2002, "SECONDARY", 100.0, 1000.0, new Clock("S_CLK", 65536),
@@ -245,6 +261,7 @@ var source = encounter.EncounterState.ProtectedCovariance.Source;   // Covarianc
 ## The CDM
 
 ```csharp
+// Inputs: encounter (EncounterCase)
 var cdm = encounter.ToCdm(new CdmExportOptions { Originator = "MyOpsCenter", MessageId = "CDM-001" });
 cdm.WriteToFile("encounter.cdm.xml");
 ```

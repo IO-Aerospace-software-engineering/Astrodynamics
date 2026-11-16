@@ -8,7 +8,7 @@ Force models compute accelerations applied to a spacecraft during numerical prop
 
 Central-body two-body gravity. Always present as the primary force.
 
-```csharp
+```csharp-signature
 new GravitationalAcceleration(centralBody)
 ```
 
@@ -16,7 +16,7 @@ new GravitationalAcceleration(centralBody)
 
 Third-body gravitational perturbation using Battin's numerically stable formula to avoid catastrophic cancellation when the perturbing body is distant.
 
-```csharp
+```csharp-signature
 new ThirdBodyPerturbation(perturbingBody, centralBody)
 ```
 
@@ -24,7 +24,7 @@ new ThirdBodyPerturbation(perturbingBody, centralBody)
 
 Atmosphere-relative velocity with co-rotation of the central body's atmosphere.
 
-```csharp
+```csharp-signature
 new AtmosphericDrag(spacecraft, celestialBody)
 ```
 
@@ -53,7 +53,7 @@ body has an atmosphere.
 
 Cannonball SRP model with configurable reflectivity coefficient and continuous shadow fraction for penumbra transitions.
 
-```csharp
+```csharp-signature
 new SolarRadiationPressure(spacecraft, occultingBodies)
 ```
 
@@ -121,6 +121,7 @@ the kernels (6378136.6 m), 7.9e-8 of the harmonics away from EGM2008
 ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
 
 ```csharp
+// Inputs: epoch (Time)
 // A model other than EGM2008, in the same file format, with its own constants
 var mars = new CelestialBody(PlanetsAndMoons.MARS, Frame.ICRF, epoch,
     new GeopotentialModelParameters("mars_model", 20, 4.282837362069909e13, 3396000.0));
@@ -158,6 +159,7 @@ keep the GM of the kernels. For a body whose harmonics take the kernel GM (any b
 other than the Earth without constants of the model), both choices give the same field, bit for bit.
 
 ```csharp
+// Inputs: epoch (Time)
 // EGM2008 with its own GM in the central term too, as GMAT evaluates EGM2008 from a .cof header
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
@@ -186,7 +188,7 @@ a = (L_sun / 4*pi*c) * alpha * Cr * (A/m) * (2/3*pi) * (R_body / r_sun)^2 * f(ph
 
 Where `f(phi) = (pi - phi) * cos(phi) + sin(phi)` is the Lambertian visibility function. Acceleration is zero on the dark side.
 
-```csharp
+```csharp-signature
 new AlbedoRadiationPressure(spacecraft, reflectingBody)
 ```
 
@@ -207,7 +209,7 @@ Models infrared radiation emitted by a celestial body using an isotropic emitter
 a = Cr * (A/m) * epsilon * sigma * T_eff^4 * R^2 / (c * r^2)
 ```
 
-```csharp
+```csharp-signature
 new ThermalRadiationPressure(spacecraft, emittingBody)
 ```
 

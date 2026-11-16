@@ -2745,18 +2745,26 @@ var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
 High-fidelity propagation including gravitational effects from multiple bodies:
 
 ```csharp
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB);
 var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000TDB);
 var sun = new CelestialBody(Stars.Sun);
+
+// The Moon moves about the Earth under the attraction of both masses, so the Earth's central term is GM_Earth + GM_Moon:
+// a field of degree 0 with the GM of the model is a point mass of that GM. With the Earth's GM alone, a massless probe
+// started at the Moon's state would end about 54 310 km from the Moon after 25 days
+double gmEarthMoon = PlanetsAndMoons.EARTH_BODY.GM + moon.GM;
+var earthMoonField = new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 0, gmEarthMoon, 6378136.3)
+{
+    CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+};
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB, earthMoonField);
 
 var start = Time.J2000TDB;
 var end = start.AddDays(25);
 
 var mission = new Mission("DeepSpaceTest");
-var scenario = new Scenario("LunarFlyby", mission, new Window(start, end));
+var scenario = new Scenario("LunarOrbit", mission, new Window(start, end));
 
-// Start at the Moon's position and velocity. A massless probe does not stay with the Moon, whose own mass adds about
-// 1.2 % to the attraction of their relative motion: they drift tens of thousands of km apart in 25 days
+// Start at the Moon's position and velocity
 var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
@@ -2771,26 +2779,32 @@ scenario.AddCelestialItem(earth);
 scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
 scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
 
-// Propagate with 5-minute step for accuracy
+// Propagate at a 5-minute step. Velocity-Verlet, the default integrator, is of the second order: it ends about 470 m
+// from an exact integration of these forces after 25 days
 var summary = await scenario.SimulateAsync(
     includeAtmosphericDrag: false,
     includeSolarRadiationPressure: false,
     TimeSpan.FromMinutes(5)
 );
 
-// Compare spacecraft to Moon position at end
-var spcFinal = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
+// Compare the propagated Moon with the Moon of the ephemeris (DE440)
+var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
-var moonFinal = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
+var ephemerisMoon = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
-var positionError = (spcFinal.Position - moonFinal.Position).Magnitude();
-var velocityError = (spcFinal.Velocity - moonFinal.Velocity).Magnitude();
+var positionDifference = (propagatedMoon.Position - ephemerisMoon.Position).Magnitude();
+var velocityDifference = (propagatedMoon.Velocity - ephemerisMoon.Velocity).Magnitude();
 
-Console.WriteLine($"Probe - Moon after 25 days:");
-Console.WriteLine($"  Position difference: {positionError:F1} m");
-Console.WriteLine($"  Velocity difference: {velocityError:F4} m/s");
+Console.WriteLine($"Propagated Moon - DE440 Moon after 25 days:");
+Console.WriteLine($"  Position difference: {positionDifference:F1} m");
+Console.WriteLine($"  Velocity difference: {velocityDifference:F4} m/s");
 ```
+
+The propagated Moon ends about 2.0 km from the Moon of DE440 after 25 days: 1.5 km are the forces the example leaves
+out (the figures of the Earth and the Moon, the other planets, relativity), which an independent integration of the
+example's forces (point masses with the kernel GMs, the bodies read from SPICE) ends at, and the rest is the error of
+Velocity-Verlet at 5 minutes, 470 m from that integration (#704).
 
 ### High-Fidelity LEO Propagation with Geopotential
 

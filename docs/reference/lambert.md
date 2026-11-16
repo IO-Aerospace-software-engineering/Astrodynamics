@@ -8,11 +8,11 @@ The Lambert solver computes transfer orbits between two positions and a time of 
 
 ### Solve Method
 
-```csharp
+```csharp-signature
 public LambertResult Solve(
     bool isRetrograde,
     OrbitalParameters initialOrbitalParameters,
-    OrbitalParameters targetObjectOrbitalParameters,
+    OrbitalParameters targetOjectOrbitalParameters,
     CelestialItem centerOfMotion,
     ushort maxRevolution)
 ```
@@ -21,7 +21,7 @@ public LambertResult Solve(
 |-----------|------|-------------|
 | `isRetrograde` | `bool` | Whether the transfer is retrograde |
 | `initialOrbitalParameters` | `OrbitalParameters` | Spacecraft state at departure |
-| `targetObjectOrbitalParameters` | `OrbitalParameters` | Target state at arrival |
+| `targetOjectOrbitalParameters` | `OrbitalParameters` | Target state at arrival |
 | `centerOfMotion` | `CelestialItem` | Central body for the transfer |
 | `maxRevolution` | `ushort` | Maximum number of full revolutions |
 
@@ -52,13 +52,14 @@ Each solution contains the velocity vectors and delta-V information for one tran
 ## Example
 
 ```csharp
+// Inputs: departureState and arrivalState (StateVector), earth (CelestialBody)
 var solver = new LambertSolver();
 var result = solver.Solve(
-    isRetrograde: false,
-    initialOrbitalParameters: departureState,
-    targetObjectOrbitalParameters: arrivalState,
-    centerOfMotion: earth,
-    maxRevolution: 0);
+    false,             // isRetrograde: a prograde transfer
+    departureState,    // initialOrbitalParameters
+    arrivalState,      // the target's orbital parameters at arrival
+    earth,             // centerOfMotion
+    0);                // maxRevolution
 
 var solution = result.GetZeroRevolutionSolution();
 var transferOrbit = new StateVector(

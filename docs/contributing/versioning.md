@@ -1366,7 +1366,7 @@ release are listed under **Known limitations**.
   tutorial names `Lower` and the negations. `DeveloperGuideExamplesSmokeTests` runs both examples on the packed package:
   the Moon's range within 1e-3 m of `spkcpo` (3.1e-5 m on Linux), and the TLE example's windows found. The other C#
   blocks of the guide and of `docs/` that do not compile (100 lines in 62 blocks: the `Frames.Frame` qualifier, members
-  that do not exist) are [#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662), under **Known limitations**.
+  that do not exist) were [#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662), fixed by #668 for the guide and by #705 for `docs/` (below).
 
 - **The equinoctial snippet of the orbit-creation tutorial did not compile, and two pages called the elements free of
   singularity for every equatorial orbit** ([#465](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/465)). The
@@ -3009,6 +3009,59 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`StarTests.Sigmas_AboveAnAngleRange_AreNotReduced`; the snapshots of `GetDeclinationSigma` and
   `GetRightAscensionSigma`, 0.588 and 5.133 rad, are replaced by their closed forms, 10.013 and 11.416 rad). Sigmas
   below π/2 and 2π are unchanged, bit for bit.
+- **The deep space example of the developer guide measured nothing** ([#704](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/704)). "Deep Space Propagation
+  with Multiple Perturbations" compared a massless probe started at the Moon's state with the Moon after 25 days, which
+  the probe cannot follow (the Moon's own mass, about 1.2 % of the attraction of their relative motion), so its 54 310 km
+  said nothing of the propagation, and its test only ran the block. The example now propagates the Moon: its Earth's
+  central term is GM_Earth + GM_Moon (a field of degree 0 with the model's GM, `GeopotentialCentralTerm.ModelGravitationalParameter`),
+  and it prints its difference to the Moon of DE440, about 2.0 km. `DeveloperGuideExamplesTests` checks it against an
+  independent integration of the same forces (point masses with the kernel GMs, the Sun and the barycentres of Jupiter
+  and Saturn read from SPICE at the TDB of the TT argument, RK4 at 300 s, converged to about 1e-4 m): 468.4 m and
+  1.197e-3 m/s, the error of Velocity-Verlet at the example's 5 min, that integration against the Moon of de440s,
+  1.514 km (the forces it leaves out), and the example against it, 1.972 km (bounds 9.4e2 m, 2.4e-3 m/s, 3.1e3 m and
+  4.0e3 m, twice the Linux worst, provisional); with the Earth's GM alone the integration ends 54 310 km from the Moon.
+  The comment of the 5 min step states what the step costs where it said "for accuracy". The library is unchanged
+  (`DeepSpaceExample_FollowsTheMoonOfTheEphemeris`, red on 46e6975: the block returned nothing to compare; with the
+  Earth's GM alone, 5.431e7 m from the reference).
+- **The C# blocks of `docs/` and `README.md` were not compiled, and 34 of their lines did not compile** ([#705](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/705)).
+  Compiled each in its own method with its inputs declared, the blocks of 12 pages failed against the library: the TLE
+  tutorial read `tle.NoradId` (now `NoradCatalogId`) and multiplied the method `Inclination` (now the field
+  `MeanInclination`); the mission design tutorial passed `shortWay:` and `nRevolutions:` to `LambertSolver.Solve`, whose
+  first argument is the direction of motion (`isRetrograde`, the prose reworded: prograde or retrograde, 0 to N
+  revolutions, two branches each), and read `DepartureVelocity`, `ArrivalVelocity` and `TotalDeltaV` (now `V1`, `V2`,
+  `DeltaV`); the coordinate conversions tutorial read `Position` on the `OrbitalParameters` of `ToFrame` (now
+  `.ToStateVector()`), used `positionCirs` before declaring it (here and in `standards-and-units.md`: the example now
+  starts from an ICRF position) and named `Planetodetic`'s arguments in camelCase; the geometry tutorial called
+  `FindWindowsOnOccultationConstraint` on the observer with `occultingBody:` and `occultedBody:`, which it does not have
+  (now on the target, the observer and the front body as arguments, as the occultations reference) and built a TLE
+  spacecraft with the kernel-backed constructor; the batch tutorial passed a lambda to `BatchOptions.Progress`, an
+  `IProgress<BatchProgress>`, and read a per-task `ElapsedTime` (the batch's `BatchResult.ElapsedTime`); the
+  thread-safety guide called an `AtEpoch` of three arguments, which does not exist, for the state on each task's Earth
+  (now rebuilt on it: the pattern it stood for, a state about a shared Earth without the geopotential, fails every task
+  with `ArgumentException`, #674) and elided the required members of `MonteCarloConfiguration`; the Monte Carlo tutorial
+  read `MeanRssPosition` and `StdRssPosition`, which `EpochStatistics` does not have; the numerical propagation tutorial
+  gave `Clock` its period instead of its ticks per second, read `Position` on the tuple of `InterpolateAt` and listed
+  `PlanetsAndMoons.JUPITER_BODY` (now `Barycenters.JUPITER_BARYCENTER`); the Lambert reference named the third argument
+  of `Solve` `targetObjectOrbitalParameters`, which the library spells `targetOjectOrbitalParameters` (the example passes
+  its arguments by position, the listing shows the library's name); the SPICE API reference listed
+  `AddCelestialBodyInfo(params CelestialBody[])`, whose type is `IO.Astrodynamics.DTO.CelestialBody`; the covariance
+  tutorial called a helper `WithRtnCovariance` defined nowhere (now in the block). Every csharp block is now the region
+  of a method of the page's file under `IO.Astrodynamics.Tests/Documentation/Pages/`, its inputs the method's parameters
+  named by its first comment (`// Inputs: ...`), and `DocumentationPagesExamplesTests` checks that each block equals its
+  region, that every page with csharp blocks has its file, that each block declaring using directives compiles with
+  those of its page alone and a console application's implicit ones, as a reader who copies it compiles it (the first
+  blocks of the TLE and coordinate conversion tutorials lacked `IO.Astrodynamics.OrbitalParameters.TLE`, and
+  `IO.Astrodynamics.OrbitalParameters` and `IO.Astrodynamics.SolarSystemObjects`), and runs the 18 blocks that need only
+  `Data/SolarSystem`, the first TLE block so compiled (its printed catalog number and inclination against the columns of
+  its lines), and the Lambert, frame, lunar eclipse, batch and thread-safety blocks with their inputs: the Lambert velocities
+  against the two-body closed form (3.1e-7 m at arrival), the ecliptic state against the rotation by the obliquity of
+  ECLIPJ2000 (9.3e-10 m), the CIRS round trip (1.4e-16), the eclipse of 2024-03-25 bracketed within 60 s by the discs of
+  the Earth and the Moon as the Sun sees them (bounds twice the Linux worst, provisional). The 12 signature listings and
+  fragments that are not statements are fenced `csharp-signature` (highlighted as C# through `mkdocs.yml`, and checked
+  against the library's constructors and methods by reflection), or written out in full; the excerpt of `Constants` that
+  opens `docs/standards-and-units.md`, declarations fenced `csharp` with no region (region 1 of that page is its second
+  csharp block), is checked by value. A block's leading using alias may name a public type of the library. This lifts the known
+  limitation of #662. Documentation and tests only: no library result moves.
 
 **Changed**
 
@@ -4454,9 +4507,6 @@ not listed.
   `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do
   not exist, and its `RA/DEC` and `RIGHT ASCENSION` are rejected: pass the member names (`RaDec`, `RightAscension`).
   `ephemeris` labels ICRF states `j2000` on the SPICE path and `J2000` from a site observer, the numbers the same.
-- **Documentation examples** ([#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662)).
-  100 lines in 62 C# blocks of `DEVELOPER_GUIDE.md` and `docs/` still do not compile (the `Frames.Frame` qualifier,
-  members that do not exist, such as `tle.NoradId` for `NoradCatalogId`), and no CI job compiles the blocks.
 
 ### 10.2.0-preview-1
 

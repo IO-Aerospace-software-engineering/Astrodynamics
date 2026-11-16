@@ -7,6 +7,7 @@
 Creates a spacecraft for numerical propagation.
 
 ```csharp
+// Inputs: orbit (StateVector)
 var spacecraft = new Spacecraft(
     naifId: -1001, name: "MySat",
     mass: 500.0, maximumOperatingMass: 2000.0,
@@ -364,6 +365,7 @@ J2000), its CK is not (`InvalidOperationException`).
 | `FuelTank` | Associated fuel tank; a maneuver on the engine is propagated with the spacecraft that holds this tank, and with no other (#676, #586) |
 
 ```csharp
+// Inputs: tank (FuelTank)
 var engine = new Engine("MainEngine", "RS-25", "SN001",
     isp: 366.0, fuelFlow: 0.5, fuelTank: tank);
 ```
@@ -437,6 +439,7 @@ instrument frame is rotated by −z about Z, then by −y about Y, then by −x 
 spacecraft the observer (the `observer` argument is not used). It computes what CSPICE's `gftfov` computes.
 
 ```csharp
+// Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
 var camera = spacecraft.Instruments.First();
 var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frame("ITRF93"),
     ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromSeconds(60.0));

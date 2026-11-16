@@ -95,6 +95,7 @@ atmosphere used for drag). For a geopotential and an atmosphere of your choice, 
 Earth that carries them:
 
 ```csharp
+// Inputs: window (Window), tle (TLE)
 var start = window.StartDate.ToTDB();
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal));

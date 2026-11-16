@@ -5,6 +5,7 @@ observer sees them. It is a method of the target (`CelestialItem`, the observer 
 as observer). An eclipse is the occultation of the Sun.
 
 ```csharp
+// Inputs: window (Window), spacecraft (Spacecraft)
 var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 var sun = new CelestialBody(Stars.Sun);
 // spacecraft: propagated, from a TLE, or from the kernels

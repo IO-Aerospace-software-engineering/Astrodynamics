@@ -102,6 +102,7 @@ When conjunction assessment follows propagation, pass `PropagationSolution` dire
 `TLEPropagator` provides SGP4/SDP4 propagation for TLE-driven workflows. Use it for catalog screening or when working with mean-element data sources.
 
 ```csharp
+// Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
 var propagator = new TLEPropagator(window, spacecraft, deltaT);
 var solution = propagator.Propagate();
 ```
@@ -124,6 +125,7 @@ SGP4 fails within 1 s of an end of the window throws, before the spacecraft rece
 `BatchPropagator` propagates multiple spacecraft in parallel with fault isolation, cancellation support, and progress reporting.
 
 ```csharp
+// Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
 var tasks = new List<PropagationTask>
 {
     new PropagationTask(spacecraft1, window,
@@ -220,6 +222,7 @@ Sampling uses Cholesky decomposition with Box-Muller random generation. A fixed 
 ### Example
 
 ```csharp
+// Inputs: spacecraft (Spacecraft)
 var config = new MonteCarloConfiguration
 {
     RunCount = 100,

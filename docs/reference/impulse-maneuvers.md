@@ -202,6 +202,8 @@ one on another spacecraft's tank burnt that spacecraft's fuel.
 ## Example
 
 ```csharp
+// Inputs: earth (CelestialBody), engine (Engine), spacecraft (Spacecraft), window (Window), perturbingBodies
+//   (CelestialItem[]), deltaT (TimeSpan)
 // Raise the apogee radius to 42,164 km (meters), at the first perigee after J2000 TDB.
 var maneuver = new ApogeeHeightManeuver(
     earth,

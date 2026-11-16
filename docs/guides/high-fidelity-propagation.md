@@ -5,6 +5,7 @@ The `CentralBodyPropagatorBuilder` fluent API assembles a propagator with the fu
 ## Full Force Model Assembly
 
 ```csharp
+// Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
 // Central body with geopotential, atmosphere, albedo, and thermal properties
 var earth = new CelestialBody(PlanetsAndMoons.EARTH,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
