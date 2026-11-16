@@ -569,6 +569,112 @@ namespace IO.Astrodynamics.Tests.Mission
 
 
         [Fact]
+        public async Task SimulateAsync_PropagatesTheStar_IsPropagated()
+        {
+            // Arrange: IsPropagated was always false before (it read an output directory no code set); the SPK of the star
+            // against CSPICE is the Validation test below
+            var start = new TimeSystem.Time(2001, 1, 1);
+            var end = start.AddDays(365 * 4);
+            var star = new Star(668006, "star668006", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
+                start);
+            var scenario = new Scenario("scn668b", new Astrodynamics.Mission.Mission("mission668b"), new Window(start, end));
+            scenario.AddStar(star);
+            Assert.False(star.IsPropagated);
+
+            // Act
+            await scenario.SimulateAsync(false, false, TimeSpan.FromDays(365.0));
+
+            // Assert
+            Assert.True(star.IsPropagated);
+        }
+
+        [Fact]
+        public async Task SimulateAsync_OfAStarPropagatedBefore_ReplacesItsStates()
+        {
+            // Arrange: one star in two scenarios over different windows, their steps different; before, the second
+            // simulation added its states to the first's, so that the SPK of the star covered both windows and the gap
+            var star = IO.Astrodynamics.Tests.Body.StarTests.NewStar(668014, new TimeSystem.Time(2001, 1, 1));
+            var firstWindow = new Window(new TimeSystem.Time(2001, 1, 1), new TimeSystem.Time(2001, 1, 5));
+            var secondWindow = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 3));
+            var first = new Scenario("scn668c", new Astrodynamics.Mission.Mission("mission668c"), firstWindow);
+            var second = new Scenario("scn668d", new Astrodynamics.Mission.Mission("mission668d"), secondWindow);
+            first.AddStar(star);
+            second.AddStar(star);
+
+            // Act: the star's step is the propagator's step here (the window over 1000 is shorter)
+            await first.SimulateAsync(false, false, TimeSpan.FromDays(1.0));
+            await second.SimulateAsync(false, false, TimeSpan.FromHours(12.0));
+
+            // Assert: the second simulation's states alone, as Spacecraft.Propagate replaces its states
+            var replaced = IO.Astrodynamics.Tests.Body.StarTests.Grid(firstWindow, TimeSpan.FromDays(1.0))
+                .Append(new TimeSystem.Time(2001, 2, 1));
+            var kept = IO.Astrodynamics.Tests.Body.StarTests.Grid(secondWindow, TimeSpan.FromHours(12.0));
+            double worst = IO.Astrodynamics.Tests.Body.StarTests.CheckSpkHoldsOnly(star, kept, replaced,
+                "ScenarioTests.SimulateAsync_OfAStarPropagatedBefore", _output);
+            double bound = IO.Astrodynamics.Tests.Body.StarTests.CatalogMotionInOneMicrosecond(star, kept);
+            Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
+        }
+
+        // The reference position is CSPICE's latrec_c through CspiceDirect, which the Windows DLL does not export (Linux, Validation)
+        [Fact]
+        [Trait("Category", "Validation")]
+        public async Task SimulateAsync_PropagatesTheStar_AndItsSpkHoldsTheCatalogPositionWithProperMotion()
+        {
+            // Arrange: IsPropagated was always false before (it read an output directory no code set)
+            var start = new TimeSystem.Time(2001, 1, 1);
+            var end = start.AddDays(365 * 4);
+            var star = new Star(668005, "star668005", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
+                start);
+            var scenario = new Scenario("scn668", new Astrodynamics.Mission.Mission("mission668"), new Window(start, end));
+            scenario.AddStar(star);
+            var step = TimeSpan.FromDays(365.0);
+            Assert.False(star.IsPropagated);
+
+            // Act
+            await scenario.SimulateAsync(false, false, step);
+
+            // Assert: the stored states exist, and SPICE reads them back from the SPK the star writes, against the catalog
+            // position moved by its proper motion, written here: after k steps of 365 days, dt = 365 k / 365.25 Julian
+            // years, the declination and the right ascension 1 + 0.1 dt rad (no wrap over the window: at most 1.40 rad),
+            // and the position at the star's distance by CSPICE (latrec_c, the computation of radrec_c)
+            Assert.True(star.IsPropagated);
+            var directory = Directory.CreateTempSubdirectory("star668");
+            var spk = new FileInfo(Path.Combine(directory.FullName, "star668005.bsp"));
+            star.WriteEphemeris(spk);
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                double worst = 0.0;
+                int k = 0;
+                for (var epoch = start; epoch <= end; epoch += step, k++)
+                {
+                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None)
+                        .ToStateVector();
+                    double dt = 365.0 * k / 365.25;
+                    double angle = 1.0 + 0.1 * dt;
+                    var rectangular = IO.Astrodynamics.Tests.Body.CspiceDirect.Radrec(star.Distance, angle, angle);
+                    var catalog = new Vector3(rectangular[0], rectangular[1], rectangular[2]);
+                    double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
+                    _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: step {k}, relative position {relative:E3}");
+                    worst = System.Math.Max(worst, relative);
+                }
+
+                Assert.Equal(5, k);
+
+                // Twice the worst against latrec_c, rounded up at the second digit (1.982e-16, Validation category, Linux only,
+                // CI run 43773937161, 2026-11-15). The distance is the star's own (Distance, from its parallax): the parsec of
+                // the library is not what this test measures
+                _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: worst relative position {worst:E3}");
+                Assert.True(worst <= 4.0e-16, $"{worst:E3}");
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                directory.Delete(true);
+            }
+        }
+
+        [Fact]
         public void Equality()
         {
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission02");
@@ -735,6 +841,41 @@ namespace IO.Astrodynamics.Tests.Mission
                 Assert.Equal(expectedState.Position, actualState.Position);
                 Assert.Equal(expectedState.Velocity, actualState.Velocity);
             }
+        }
+
+        /// <summary>
+        /// A plane alignment whose target is in ECLIPJ2000, built before its tank is on a spacecraft propagated in ICRF, is
+        /// rejected when the simulation builds the propagation of that spacecraft, as by <see cref="Spacecraft.Propagate(Window, System.Collections.Generic.IEnumerable{CelestialItem}, bool, bool, TimeSpan)"/> (#685):
+        /// it burned 2807 m/s for a plane change of 2° (263 m/s), the target's components read in ICRF.
+        /// </summary>
+        [Fact]
+        public async Task SimulateAsync_TargetOrbitInAnotherFrame_IsRejected()
+        {
+            // Arrange
+            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2.0));
+            var earth = TestHelpers.EarthAtJ2000;
+            var orbit = new KeplerianElements(7000000.0, 0.0, 30.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
+                Frames.Frame.ICRF);
+            var target = new KeplerianElements(7000000.0, 0.0, 32.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
+                Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000);
+            var tank = new FuelTank("ft685", "ftA", "sn685", 1000.0, 900.0);
+            var engine = new Engine("eng685", "engmk1", "sn685", 450, 50, tank);
+            var maneuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, target, engine);
+            var spacecraft = new Spacecraft(-6855, "Scenario685", 1000.0, 3000.0, new Clock("clk685", 65536), orbit);
+            spacecraft.AddFuelTank(tank);
+            spacecraft.AddEngine(engine);
+            spacecraft.SetStandbyManeuver(maneuver);
+            var scenario = new Scenario("scn685", new Astrodynamics.Mission.Mission("mission685"), window);
+            scenario.AddSpacecraft(spacecraft);
+
+            // Act
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0)));
+
+            // Assert
+            Assert.Equal("spacecraft", exception.ParamName);
+            Assert.Contains("ToFrame(Frame.ICRF)", exception.Message);
+            Assert.False(spacecraft.IsPropagated);
+            Assert.Null(maneuver.ThrustWindow);
         }
 
         [Fact]

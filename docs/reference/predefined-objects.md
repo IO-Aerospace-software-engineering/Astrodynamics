@@ -62,6 +62,41 @@ var titan = new CelestialBody(PlanetsAndMoons.TITAN);
 | `NEPTUNE_BARYCENTER` | Neptune system barycenter |
 | `PLUTO_BARYCENTER` | Pluto system barycenter |
 
+## Data of the static objects
+
+`EARTH_BODY`, `MOON_BODY`, `SUN_BODY` and the ten barycentres are built when their class is first read without any read
+of the data provider: their NAIF identifier, their name and the predicates (`IsBarycenter`, `IsPlanet`, ...) need no
+data. Their other members, the GM, the mass, `InitialOrbitalParameters` (at J2000 TDB in ECLIPJ2000, about the
+barycentre of their system) and, for a body, the radii, flattening, J2 to J4, frame and sphere of influence, are read
+from the provider at the first read of one of them, exactly as `new CelestialBody(naifObject)` or `new Barycenter(id)`
+reads them. A read the provider cannot answer throws its exception (`ArgumentException` naming `naifId` for missing
+information, `InvalidOperationException` for a missing state) and caches nothing: the next read tries again, on the
+provider set at its time (`Configuration.Instance.SetDataProvider`), and succeeds once that provider has the data, the
+same provider completed or another one set since. Once its data are read, an object keeps the provider it read them
+from, for its data and for its ephemeris, as an object built by a constructor keeps the provider of its construction:
+a provider set later does not reach it. The data read are published once, with no lock held across the provider call, so a read
+never waits for another thread (#623). Before 11.0.0 the type initializers read the provider: a missing datum threw a
+`TypeInitializationException` kept for the life of the process, and every later use of the class failed.
+
+An object keeps its data only when the provider gives the data the kernels give each of them: a GM (on SPICE
+`BODYnnn_GM`; for the solar system barycentre the sum of `BODY1_GM` to `BODY10_GM`) and, for `EARTH_BODY`, `MOON_BODY` and
+`SUN_BODY`, radii (`BODYnnn_RADII`). SPICE names the bodies without kernels and answers a GM or radii of 0 for a
+variable no loaded kernel defines: a read before `LoadKernels`, or with a GM kernel and no PCK, throws
+`InvalidOperationException` naming the missing variable and keeps nothing, so that the read after `LoadKernels` gives
+the kernel values. Before the third round of #668 such a read kept the zeros for the life of the process (a GM of 0,
+radii of 0, J2 NaN, the built-in frame `IAU_EARTH` for the Earth, no orbit).
+
+On the `SpiceDataProvider` the data of an object hold for the kernel pool they were read from: the first read after each
+`LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again. A kernel loaded after the first read therefore
+reaches the object: `geophysical.ker` its J2 (`BODY399_J2`), `earth_assoc_itrf93.tf` and `moon_assoc_me.tf` the frames
+`ITRF93` and `MOON_ME` in place of SPICE's built-in `IAU_EARTH` and `IAU_MOON` (`IAU_EARTH` is 8.5e-4 rad from `ITRF93`
+in 2001, 1.5e-3 rad in 2025, several kilometres at the equator), an SPK its orbit and sphere of influence. Data equal to
+those held keep the instances held (the frame, the orbit), so that loading a kernel that changes none of them changes
+nothing. After the kernels that define its GM or radii are unloaded (`ClearKernels`), a read throws until they are
+loaded again. Before the third round of #668 the data of the first read were kept for the process, those of a partial
+load included (a GM kernel and a PCK: J2 NaN, `IAU_EARTH`, no orbit). To keep a body's data across changes of the pool,
+build it: `new CelestialBody(399)` reads the kernels once.
+
 ## SolarSystemObjects.Stars
 
 | Constant | Description |

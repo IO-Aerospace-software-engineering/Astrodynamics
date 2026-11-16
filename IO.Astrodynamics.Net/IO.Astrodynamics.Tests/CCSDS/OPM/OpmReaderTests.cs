@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using Xunit;
 
@@ -17,6 +18,20 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public OpmReaderTests()
         {
             TestKernels.EnsureSolarSystem();
+        }
+
+        [Fact]
+        public void LoadFromString_PositionInMeters_ThrowsValidationException()
+        {
+            // An OPM states its position in km (positionUnits, ndmxml-4.0.0-common-4.0.xsd): X in m is rejected by the
+            // schema under default validation (before: loaded, 6778.137 read as km)
+            var xml = NdmDocuments.Mutated(OpmReaderTests.FullOpm().ToXmlString(), "opm", "X units=m");
+
+            var ex = Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+            Assert.Contains(ex.ValidationResult.Errors, e => e.Message.Contains("units", StringComparison.Ordinal));
+            NdmDocuments.WithTempFile(xml, file => Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file)));
+            Assert.Throws<OpmValidationException>(() => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))));
+            Assert.Equal(6778.137, Opm.LoadFromString(xml, validateSchema: false).Data.StateVector.X);
         }
 
         [Fact]
@@ -400,6 +415,255 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             var ex = Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml));
             Assert.Contains("2 OPM messages", ex.Message);
+        }
+
+        #endregion
+
+        #region Several segments or structural elements
+
+        // An OPM holds one header and one body, the body one segment, the segment one metadata and one data section, and
+        // the data at most one of each block but the maneuvers (NDM/XML 4.0.0, ndmxml-4.0.0-opm-3.0.xsd: opmType, opmBody,
+        // opmSegment, opmData; CCSDS 502.0-B-3)
+        private static readonly DateTime OpmEpoch = new(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+
+        private static Opm MinimalOpm() =>
+            Opm.CreateMinimal("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC", new OpmStateVector(OpmEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0));
+
+        internal static Opm FullOpm()
+        {
+            var stateVector = new OpmStateVector(OpmEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var keplerian = OpmKeplerianElements.CreateWithTrueAnomaly(6778.137, 0.001, 51.6, 120.0, 90.0, 45.0, 398600.4418);
+            var covariance = new CovarianceMatrix(
+                cxX: 1.0e-6,
+                cyX: 0.0, cyY: 1.0e-6,
+                czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+                cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+                cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+                czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9);
+            var maneuvers = new[]
+            {
+                new OpmManeuverParameters(OpmEpoch.AddHours(1.0), 10.0, -1.0, "RSW", 0.001, 0.0, 0.0),
+                new OpmManeuverParameters(OpmEpoch.AddHours(2.0), 10.0, -1.0, "RSW", 0.002, 0.0, 0.0)
+            };
+            var data = new OpmData(stateVector, keplerian, mass: 100.0, dragArea: 1.0, dragCoefficient: 2.2,
+                covariance: covariance, maneuvers: maneuvers,
+                userDefinedParameters: new OpmUserDefinedParameters(new System.Collections.Generic.Dictionary<string, string> { ["COLOR"] = "BLUE" }));
+            return new Opm(CcsdsHeader.Create("TEST"), new OpmMetadata("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC"), data);
+        }
+
+        [Fact]
+        public void TwoSegmentOpm_SchemaBoundsTheSegmentToOne()
+        {
+            // The qualified copy is rejected by the embedded SANA NDM/XML 4.0.0 schema, its one-segment original accepted
+            var validator = new OpmValidator();
+            var original = validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(MinimalOpm().ToXmlString(), "opm"));
+            Assert.True(original.IsValid, string.Join("; ", original.Errors.Select(e => e.Message)));
+            var qualified = validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(NdmDocuments.TwoSegmentOpm(MinimalOpm()), "opm"));
+            Assert.False(qualified.IsValid);
+            Assert.Contains(qualified.Errors, e => e.Message.Contains("segment"));
+
+            // The unqualified document, the writer's form, is rejected by SANA's unqualified set too (third round of #668;
+            // before, it matched no declaration and passed with warnings, the reader rejecting it)
+            var unqualified = validator.ValidateSchemaFromXml(NdmDocuments.TwoSegmentOpm(MinimalOpm()));
+            Assert.False(unqualified.IsValid);
+            Assert.Contains(unqualified.Errors, e => e.Message.Contains("segment"));
+        }
+
+        [Theory]
+        [InlineData("OpmReader.ReadFromString")]
+        [InlineData("Opm.LoadFromString")]
+        [InlineData("Opm.LoadFromString without schema validation")]
+        [InlineData("Opm.LoadFromFile")]
+        [InlineData("Opm.LoadFromStream")]
+        [InlineData("OpmReader.ReadFromFile")]
+        [InlineData("OpmReader.ReadFromStream")]
+        public void Read_OpmWithTwoSegments_Throws(string path)
+        {
+            var xml = NdmDocuments.TwoSegmentOpm(MinimalOpm());
+
+            Action read = path switch
+            {
+                "OpmReader.ReadFromString" => () => _reader.ReadFromString(xml),
+                "Opm.LoadFromString" => () => Opm.LoadFromString(xml),
+                "Opm.LoadFromFile" => () => NdmDocuments.WithTempFile(xml, file => Opm.LoadFromFile(file)),
+                "Opm.LoadFromStream" => () => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
+                "OpmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
+                "OpmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
+                _ => () => Opm.LoadFromString(xml, validateSchema: false)
+            };
+
+            // Before: the first segment, OPM SAT, the second dropped. Under default validation the schema rejects it first
+            // (third round of #668); without it, and through the reader, the reader does
+            if (path is "Opm.LoadFromString" or "Opm.LoadFromFile" or "Opm.LoadFromStream")
+            {
+                var validation = Assert.Throws<OpmValidationException>(read);
+                Assert.Contains(validation.ValidationResult.Errors, e => e.Message.Contains("segment"));
+                return;
+            }
+
+            var ex = Assert.Throws<OpmParseException>(read);
+            Assert.Contains("2 segment elements", ex.Message);
+        }
+
+        [Theory]
+        [InlineData("header")]
+        [InlineData("body")]
+        [InlineData("body/segment/metadata")]
+        [InlineData("body/segment/data")]
+        [InlineData("body/segment/data/stateVector")]
+        [InlineData("body/segment/data/keplerianElements")]
+        [InlineData("body/segment/data/spacecraftParameters")]
+        [InlineData("body/segment/data/covarianceMatrix")]
+        [InlineData("body/segment/data/userDefinedParameters")]
+        public void Read_OpmWithDuplicateStructuralElement_Throws(string path)
+        {
+            var xml = FullOpm().ToXmlString();
+            Assert.Equal(2, _reader.ReadFromString(xml).Data.Maneuvers.Count);
+            var duplicated = NdmDocuments.WithDuplicatedElement(xml, "opm", path);
+
+            var ex = Assert.Throws<OpmParseException>(() => _reader.ReadFromString(duplicated));
+            Assert.Contains($"2 {path.Split('/')[^1]} elements", ex.Message);
+            var exLoad = Assert.Throws<OpmParseException>(() => Opm.LoadFromString(duplicated, validateSchema: false, validateContent: false));
+            Assert.Contains($"2 {path.Split('/')[^1]} elements", exLoad.Message);
+        }
+
+        [Fact]
+        public void TryLoadFromFile_OpmWithTwoSegments_ReturnsFalseWithSchemaOrParseError()
+        {
+            NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOpm(MinimalOpm()), file =>
+            {
+                // The schema rejects the second segment (third round of #668: a PARSE_ERROR of the reader before)
+                var loaded = Opm.TryLoadFromFile(file, out var opm, out var result);
+
+                Assert.False(loaded);
+                Assert.Null(opm);
+                Assert.Contains(result.Errors, e => e.Code == "OPM006" && e.Message.Contains("segment"));
+
+                // Without schema validation, the reader rejects it
+                loaded = Opm.TryLoadFromFile(file, out opm, out result, validateSchema: false);
+
+                Assert.False(loaded);
+                Assert.Null(opm);
+                var error = Assert.Single(result.Errors);
+                Assert.Equal("PARSE_ERROR", error.Code);
+                Assert.Contains("2 segment elements", error.Message);
+            });
+        }
+
+        [Fact]
+        public void ValidateFile_OpmWithTwoSegments_IsInvalid()
+        {
+            NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOpm(MinimalOpm()), file =>
+            {
+                var result = new OpmValidator().ValidateFile(file);
+
+                // The schema rejects the second segment (third round of #668: the reader's "2 segment elements" before,
+                // reported under the path "Parser" as "Failed to parse OPM: ...", the schema then checking no unqualified file)
+                Assert.False(result.IsValid);
+                var error = Assert.Single(result.Errors);
+                Assert.Equal("OPM006", error.Code);
+                Assert.Contains("'segment'", error.Message);
+                Assert.DoesNotContain("Failed to parse", error.Message);
+                Assert.StartsWith("Line ", error.Path);
+            });
+        }
+
+        #endregion
+
+        #region Keywords out of their range
+
+        /// <summary>satellite_complete.xml unqualified (its namespace removed), which the NDM/XML 4.0.0 schema accepts.</summary>
+        internal static string KeywordBaseOpm()
+        {
+            return NdmDocuments.InForm(
+                File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CCSDS", "OPM", "satellite_complete.xml")),
+                "opm", "unqualified-ndm");
+        }
+
+        /// <summary>
+        /// The keywords of the OPM whose value the data model refuses, with that value, a second keyword set with it
+        /// ("KEYWORD=value", or null), and whether the NDM/XML 4.0.0 schema rejects the document (CCSDS 502.0-B-3; the facets
+        /// of ndmxml-4.0.0-common-4.0.xsd and -opm-3.0.xsd). The schema-valid rows are those where the schema type is wider
+        /// than the data model: distanceType is xsd:double (the sign of SEMI_MAJOR_AXIS against ECCENTRICITY), massType
+        /// nonNegativeDouble (OpmData requires a mass above 0), MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR xsd:string.
+        /// </summary>
+        public static TheoryData<string, string, string?, bool> OpmKeywordsOutOfRange() => new()
+        {
+            { "ECCENTRICITY", "-0.5", null, true }, // nonNegativeDouble
+            { "SEMI_MAJOR_AXIS", "-6878.137", null, false }, // distanceType: xsd:double; e < 1 needs a > 0
+            { "SEMI_MAJOR_AXIS", "0", null, false },
+            { "SEMI_MAJOR_AXIS", "7000", "ECCENTRICITY=1.5", false }, // e > 1 needs a < 0
+            { "INCLINATION", "-1", null, true }, // inclinationRange [0, 180]
+            { "INCLINATION", "181", null, true },
+            { "GM", "-1", null, true }, // gmType: positiveDouble
+            { "GM", "0", null, true },
+            { "MASS", "0", null, false }, // massType: nonNegativeDouble
+            { "MASS", "-1", null, true },
+            { "SOLAR_RAD_AREA", "-1", null, true }, // areaType: nonNegativeDouble
+            { "SOLAR_RAD_COEFF", "-1", null, true }, // nonNegativeDouble
+            { "DRAG_AREA", "-1", null, true },
+            { "DRAG_COEFF", "-1", null, true },
+            { "MAN_DURATION", "-1", null, true }, // durationType: nonNegativeDouble
+            { "MAN_DELTA_MASS", "1", null, true }, // deltamassTypeZ: nonPositiveDouble
+            { "MAN_REF_FRAME", "", null, false }, // xsd:string
+            { "OBJECT_NAME", "", null, false },
+            { "ORIGINATOR", "", null, false }
+        };
+
+        /// <summary>The base document with the keyword's value replaced, and the second keyword's when given.</summary>
+        internal static string OpmWithKeyword(string keyword, string value, string? with = null)
+        {
+            var xml = NdmDocuments.WithElementValue(KeywordBaseOpm(), keyword, value);
+            if (with != null)
+            {
+                var parts = with.Split('=');
+                xml = NdmDocuments.WithElementValue(xml, parts[0], parts[1]);
+            }
+
+            return xml;
+        }
+
+        /// <summary>The parse exception names the keyword and its value (and the second keyword's), and holds the data model's exception.</summary>
+        internal static void AssertNamesKeyword(Exception ex, string keyword, string value, string? with = null)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            if (with != null)
+            {
+                var parts = with.Split('=');
+                Assert.Contains(parts[0], ex.Message);
+                Assert.Contains($"'{parts[1]}'", ex.Message);
+            }
+
+            Assert.IsAssignableFrom<ArgumentException>(ex.InnerException);
+        }
+
+        [Fact]
+        public void KeywordBaseDocument_IsSchemaValidAndReads()
+        {
+            var xml = KeywordBaseOpm();
+            var schema = new OpmValidator().ValidateSchemaFromXml(xml);
+            Assert.True(schema.IsValid, string.Join("; ", schema.Errors.Select(e => e.Message)));
+            Assert.Equal(1500.0, Opm.LoadFromString(xml).Data.Mass);
+        }
+
+        [Theory]
+        [MemberData(nameof(OpmKeywordsOutOfRange))]
+        public void ReadFromString_KeywordOutOfRange_ThrowsOpmParseExceptionNamingKeywordAndValue(
+            string keyword, string value, string? with, bool schemaRejects)
+        {
+            var xml = OpmWithKeyword(keyword, value, with);
+
+            // The schema is the oracle of the value's validity where it has a facet; where it is wider the document is
+            // schema-valid, and only the data model refuses it
+            Assert.Equal(schemaRejects, !new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            // Before: the ArgumentOutOfRangeException or ArgumentException of the data model's constructor
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)), keyword, value, with);
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromStream(stream)), keyword, value, with);
+            NdmDocuments.WithTempFile(xml, file =>
+                AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromFile(file)), keyword, value, with));
         }
 
         #endregion

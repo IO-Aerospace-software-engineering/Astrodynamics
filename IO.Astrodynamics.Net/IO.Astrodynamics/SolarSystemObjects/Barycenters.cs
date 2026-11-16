@@ -19,17 +19,20 @@ public static class Barycenters
     public static readonly Barycenter NEPTUNE_BARYCENTER;
     public static readonly Barycenter PLUTO_BARYCENTER;
 
+    // The names SPICE gives the barycentres 0 to 9 (NAIF Integer ID codes, bodc2n): their objects read no provider data
+    // here, but at the first read of a member that needs them, retried on failure, so that a provider without their data
+    // does not leave the type unusable for the life of the process (second round of #668)
     static Barycenters()
     {
-        SOLAR_SYSTEM_BARYCENTER = new Barycenter(0);
-        MERCURY_BARYCENTER = new Barycenter(1);
-        VENUS_BARYCENTER = new Barycenter(2);
-        EARTH_BARYCENTER = new Barycenter(3);
-        MARS_BARYCENTER = new Barycenter(4);
-        JUPITER_BARYCENTER = new Barycenter(5);
-        SATURN_BARYCENTER = new Barycenter(6);
-        URANUS_BARYCENTER = new Barycenter(7);
-        NEPTUNE_BARYCENTER = new Barycenter(8);
-        PLUTO_BARYCENTER = new Barycenter(9);
+        SOLAR_SYSTEM_BARYCENTER = Barycenter.CreateDeferred(0, "SOLAR SYSTEM BARYCENTER");
+        MERCURY_BARYCENTER = Barycenter.CreateDeferred(1, "MERCURY BARYCENTER");
+        VENUS_BARYCENTER = Barycenter.CreateDeferred(2, "VENUS BARYCENTER");
+        EARTH_BARYCENTER = Barycenter.CreateDeferred(3, "EARTH BARYCENTER");
+        MARS_BARYCENTER = Barycenter.CreateDeferred(4, "MARS BARYCENTER");
+        JUPITER_BARYCENTER = Barycenter.CreateDeferred(5, "JUPITER BARYCENTER");
+        SATURN_BARYCENTER = Barycenter.CreateDeferred(6, "SATURN BARYCENTER");
+        URANUS_BARYCENTER = Barycenter.CreateDeferred(7, "URANUS BARYCENTER");
+        NEPTUNE_BARYCENTER = Barycenter.CreateDeferred(8, "NEPTUNE BARYCENTER");
+        PLUTO_BARYCENTER = Barycenter.CreateDeferred(9, "PLUTO BARYCENTER");
     }
 }

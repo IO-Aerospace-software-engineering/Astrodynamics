@@ -77,7 +77,8 @@ negations `LowerOrEqual`, `GreaterOrEqual` and `NotEqual`, and the extremes
 - **Step.** The step samples the quantity; a window, a gap or a crossing
   shorter than the step is found when the step is at most half the time
   between two extremes of the quantity (the library's search, for a
-  propagated spacecraft or a site built from its coordinates). CSPICE, which
+  propagated spacecraft or a site built from its coordinates), down to a few
+  microseconds: about 2.5 µs at a 1 min step, 19 µs at 10 min. CSPICE, which
   searches objects of the kernels, asks the step to be shorter than the
   shortest interval where the quantity is monotone. The same rule holds for
   the coordinate and illumination constraints; see
@@ -111,7 +112,8 @@ the windows of CSPICE's `gftfov`, to 1 µs.
   Sites, spacecraft and stars are points.
 - **Step.** The step samples a continuous margin of the target in the field; a
   window or a gap shorter than the step is found when the step is at most half
-  the time between the extremes of that margin. CSPICE, which searches when the
+  the time between the extremes of that margin, down to a few microseconds
+  (about 2.5 µs at a 1 min step, 19 µs at 10 min). CSPICE, which searches when the
   spacecraft and the target both come from kernels, asks the step to be
   shorter than every window and gap.
 - **Accuracy.** Within a few microseconds of `gftfov`, except where the field

@@ -160,8 +160,9 @@ MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
  * @param windows Array to store the time windows
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
-MODULE_API void
+MODULE_API bool
 FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                                      const char *relationalOperator, double value, const char *aberration,
                                      double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
@@ -180,8 +181,9 @@ FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO sear
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
  * @param windows Array to store the time windows
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
-MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
+MODULE_API bool FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
                                                         int observerId,
                                                         int targetId, const char *targetFrame,
                                                         const char *targetShape,
@@ -204,8 +206,9 @@ MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
  * @param windows Array to store the time windows
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
-MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
+MODULE_API bool FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
                                                        int observerId,
                                                        int targetId, const char *frame, const char *coordinateSystem,
                                                        const char *coordinate, const char *relationalOperator,
@@ -229,8 +232,9 @@ MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::D
  * @param stepSize Step size for the search
  * @param method Method for the search
  * @param windows Array to store the time windows
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
-MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
+MODULE_API bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
                                                          int observerId,
                                                          const char *illuminationSource, int targetBody,
                                                          const char *fixedFrame,
@@ -252,8 +256,9 @@ MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API:
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
  * @param windows Array to store the time windows
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
-MODULE_API void
+MODULE_API bool
 FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                         int instrumentId,
                                         int targetId, const char *targetFrame, const char *targetShape,

@@ -85,6 +85,19 @@ public class KernelsPathTests : IDisposable
     }
 
     [Fact]
+    public void AMissingKernelsPath_IsAnArgumentError()
+    {
+        // Before, a kernels path that does not exist loaded nothing, and the command failed later on the unknown frame
+        using (Configuration.Lock())
+        {
+            var missing = Path.Combine(_folder.FullName, "missing");
+            var e = Assert.Throws<ArgumentException>(() => { _ = Convert(missing); });
+            Assert.Contains(missing, e.Message);
+            Assert.Equal("path", e.ParamName);
+        }
+    }
+
+    [Fact]
     public void FrameConverter_WithAMetaKernel_LoadsItsFiles()
     {
         using (Configuration.Lock())

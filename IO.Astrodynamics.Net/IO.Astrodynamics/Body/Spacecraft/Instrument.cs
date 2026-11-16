@@ -156,8 +156,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </para>
         /// <para>
         /// <b>Step.</b> <c>gftfov</c> finds every window and gap longer than the step. The managed search finds every window
-        /// and gap, however short, when the step is at most half the time between the extremes of the margin; with a step
-        /// longer than an event, the two paths may then differ, the managed one finding the event.
+        /// and gap shorter than the step when the step is at most half the time between the extremes of the margin, down to
+        /// the resolution of Brent's <c>localmin</c>: one narrower than about 2 √ε h + 2τ/3 (h the step, τ the 1 µs
+        /// tolerance; 2.5 µs at 1 min, 19 µs at 10 min) can be missed, and a tangency between samples is not found (#668);
+        /// with a step longer than an event, the two paths may then differ, the managed one finding the event.
         /// </para>
         /// <para>
         /// <b>Target frame.</b> Used as given for an ellipsoid, without a check of its center; <c>gftfov</c> requires a
@@ -184,7 +186,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// or, on the managed path, the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
         /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
-        /// is inside the ellipsoid of the target.</exception>
+        /// is inside the ellipsoid of the target; or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no
+        /// instrument kernel defines the field of view, a body or an epoch without ephemeris data, an epoch outside the coverage
+        /// of the frame data or of the C-kernel), with SPICE's message (fourth round of #668; before 11.0.0 the search returned
+        /// no window).</exception>
         public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {
@@ -231,7 +236,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 return Quaternion.Identity;
             }
 
-            return (new Quaternion(Vector3.VectorX, -orientation.X) * new Quaternion(Vector3.VectorY, -orientation.Y) * new Quaternion(Vector3.VectorZ, -orientation.Z)).NormalizeOrZero();
+            return (Quaternion.FromAxisAngle(Vector3.VectorX, -orientation.X) * Quaternion.FromAxisAngle(Vector3.VectorY, -orientation.Y) * Quaternion.FromAxisAngle(Vector3.VectorZ, -orientation.Z)).NormalizeOrZero();
         }
 
         public Vector3 GetBoresightInICRFFrame(in Time date)

@@ -10,8 +10,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
 {
     public class KeplerianElementsTests
     {
-        public KeplerianElementsTests()
+        private readonly Xunit.Abstractions.ITestOutputHelper _output;
+
+        public KeplerianElementsTests(Xunit.Abstractions.ITestOutputHelper output)
         {
+            _output = output;
             TestKernels.EnsureSolarSystem();
         }
 
@@ -535,6 +538,163 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var expectedApogeeTime = epoch + 0.5 * orbitalPeriod;
             var perigeeRadius = ke.PerigeeVector().Magnitude();
             Assert.Equal(expectedApogeeTime, ke.TimeToRadius(perigeeRadius), TestHelpers.TimeComparer);
+        }
+
+        // #686: the eccentricities of the apsis tests, from the circular orbit through the rounding level of the
+        // eccentricity vector (|e| about 1e-16, where v × h / GM − r̂ cancels) to a high ellipse, and the semi-major axes
+        internal static readonly double[] ApsisEccentricities = [0.0, 1e-18, 1e-17, 1e-16, 2e-16, 1e-15, 1e-12, 1e-9, 1e-6, 1e-3, 0.1, 0.7, 0.95];
+        internal static readonly double[] ApsisSemiMajorAxes = [6800e3, 7000e3, 7178e3, 8000e3, 42164e3];
+
+        // Seeded random elements of an eccentricity: the first two equatorial (prograde and retrograde), the others at
+        // random angles; the mean anomaly is random too, the apsides do not depend on it
+        internal static System.Collections.Generic.IEnumerable<KeplerianElements> RandomApsisElements(double e, int seed, int count)
+        {
+            var random = new Random(seed);
+            for (int k = 0; k < count; k++)
+            {
+                double i = k == 0 ? 0.0 : k == 1 ? System.Math.PI : random.NextDouble() * System.Math.PI;
+                double raan = random.NextDouble() * IO.Astrodynamics.Constants._2PI;
+                double aop = random.NextDouble() * IO.Astrodynamics.Constants._2PI;
+                double m = random.NextDouble() * IO.Astrodynamics.Constants._2PI;
+                yield return new KeplerianElements(ApsisSemiMajorAxes[k % ApsisSemiMajorAxes.Length], e, i, raan, aop, m, TestHelpers.EarthAtJ2000,
+                    TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            }
+        }
+
+        // The position of the conic of the elements at a mean anomaly, by SPICE conics (N0067), the reference of the apsides
+        internal static Vector3 SpiceConicPosition(double a, double e, double i, double raan, double aop, double meanAnomaly)
+        {
+            var ke = new KeplerianElements(a, e, i, raan, aop, meanAnomaly, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            return SpiceAPI.Instance.ConvertConicElementsToStateVector(ke).Position;
+        }
+
+        internal static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+
+        // #686: the worst angle between an apsis vector of the elements and its reference: the perigee against the SPICE
+        // conic at M = 0, the apogee against the opposite direction (the apoapsis of the conic is −a(1 + e) P̂; conics at
+        // M = π propagates half an orbit and resolves only 6e-15 to 1.3e-14 rad), over 13 eccentricities from 0 to 0.95 and
+        // 2000 sets of angles each, MEASURE 3.412e-16, 3.640e-16 and 3.565e-16 rad on Linux x64, Windows x64 and macOS arm64
+        // (CI run 43745883709, 2026-11-15); twice the worst, rounded up at the second significant digit. On main: zero
+        // vectors and angles up to 3.14 rad at e <= 2e-16, 8.6e-7 rad at 1e-9
+        internal const double ApsisAngleTolerance = 7.3e-16;
+
+        // #686: the worst | |r_p| / |r_p,SPICE| − 1 | and | |r_a| / (a (1 + e)) − 1 |, MEASURE 4.441e-16 on each of the three
+        // platforms (CI run 43745883709, 2026-11-15); twice the worst, as above
+        internal const double ApsisLengthTolerance = 8.9e-16;
+
+        // #686: the worst | v_apsis / √(GM (2 / r − 1 / a)) − 1 |, r = a(1 ∓ e), MEASURE 7.105e-15, 7.438e-15 and 7.105e-15
+        // on Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15), the ulp of the radius amplified by
+        // the cancellation of 2 / r − 1 / a at the apogee of e = 0.95; twice the worst, as above
+        internal const double ApsisVelocityTolerance = 1.5e-14;
+
+        // The angle of each apsis against its reference, and the relative error of its radius, for orbital parameters whose
+        // periapsis is the SPICE conic position spicePerigee, of semi-major axis a and eccentricity e
+        internal static (double Angle, double Length) ApsisErrors(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit, in Vector3 spicePerigee,
+            double a, double e)
+        {
+            var perigee = orbit.PerigeeVector();
+            var apogee = orbit.ApogeeVector();
+            double angle = System.Math.Max(AngleBetween(perigee, spicePerigee), AngleBetween(apogee, spicePerigee.Inverse()));
+            double length = System.Math.Max(System.Math.Abs(perigee.Magnitude() / spicePerigee.Magnitude() - 1.0),
+                System.Math.Abs(apogee.Magnitude() / (a * (1.0 + e)) - 1.0));
+            return (angle, length);
+        }
+
+        // #686: PerigeeVector and ApogeeVector are the conic at periapsis and apoapsis, r(ν = 0) = a(1 − e) P̂ and
+        // r(ν = π) = −a(1 + e) P̂, P̂ the first column of R3(−Ω) R1(−i) R3(−ω) (D. A. Vallado, Fundamentals of Astrodynamics
+        // and Applications, 4th ed., 2013, algorithm 10 COE2RV; confirmed by S. Guillet, 2026-11-15), at every eccentricity, the
+        // circular orbit included, where the periapsis lies at ω from the node; SPICE conics the reference of P̂
+        [Fact]
+        public void PerigeeAndApogeeVectors_AreTheConicAtPeriapsisAndApoapsisOfSpice_AtEveryEccentricity()
+        {
+            double worstAngle = 0.0, worstLength = 0.0, worstVelocity = 0.0;
+            foreach (double e in ApsisEccentricities)
+            {
+                double worstAngleE = 0.0;
+                foreach (var ke in RandomApsisElements(e, 6860 + System.Array.IndexOf(ApsisEccentricities, e), 2000))
+                {
+                    var spicePerigee = SpiceConicPosition(ke.A, ke.E, ke.I, ke.RAAN, ke.AOP, 0.0);
+                    var (angle, length) = ApsisErrors(ke, spicePerigee, ke.A, ke.E);
+                    worstAngleE = System.Math.Max(worstAngleE, angle);
+                    worstLength = System.Math.Max(worstLength, length);
+
+                    double gm = ke.Observer.GM;
+                    double vp = System.Math.Sqrt(gm * (2.0 / (ke.A * (1.0 - ke.E)) - 1.0 / ke.A));
+                    double va = System.Math.Sqrt(gm * (2.0 / (ke.A * (1.0 + ke.E)) - 1.0 / ke.A));
+                    worstVelocity = System.Math.Max(worstVelocity, System.Math.Max(System.Math.Abs(ke.PerigeeVelocity() / vp - 1.0),
+                        System.Math.Abs(ke.ApogeeVelocity() / va - 1.0)));
+                }
+
+                _output.WriteLine($"MEASURE #686 elements e = {e:E1}: worst apsis angle against SPICE conics {worstAngleE:E3} rad");
+                worstAngle = System.Math.Max(worstAngle, worstAngleE);
+            }
+
+            _output.WriteLine($"MEASURE #686 elements: worst apsis angle {worstAngle:E3} rad, apsis radius {worstLength:E3}, apsis velocity {worstVelocity:E3}");
+            Assert.True(worstAngle <= ApsisAngleTolerance, $"{worstAngle:E3}");
+            Assert.True(worstLength <= ApsisLengthTolerance, $"{worstLength:E3}");
+            Assert.True(worstVelocity <= ApsisVelocityTolerance, $"{worstVelocity:E3}");
+        }
+
+        // Review of #686: mean elements have no position, so no apsis vector. The apsides went through the eccentricity
+        // vector of the state, which throws for mean elements (ToStateVector, "Cannot convert mean elements directly to a
+        // state vector"); the perifocal axis of #686 had made them return a mean apsis silently, and PerigeeHeightManeuver,
+        // ApogeeHeightManeuver and Launch accept a mean target orbit through them. They throw again, at every eccentricity,
+        // as EccentricityVector of the same elements does
+        [Theory]
+        [InlineData(0.0)]
+        [InlineData(0.01)]
+        [InlineData(0.7)]
+        public void ApsisVectors_OfMeanElements_Throw_AsTheirEccentricityVectorDoes(double e)
+        {
+            var mean = new KeplerianElements(7000e3, e, 0.5, 1.0, 2.0, 0.3, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
+                null, null, null, OrbitalElementsType.Mean);
+            var meanEquinoctial = new EquinoctialElements(7000e3 * (1.0 - e * e), e * System.Math.Cos(3.0), e * System.Math.Sin(3.0),
+                System.Math.Tan(0.25) * System.Math.Cos(1.0), System.Math.Tan(0.25) * System.Math.Sin(1.0), 3.3, TestHelpers.EarthAtJ2000,
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null, OrbitalElementsType.Mean);
+
+            foreach (IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit in new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[] { mean, meanEquinoctial })
+            {
+                Assert.Throws<InvalidOperationException>(() => orbit.EccentricityVector());
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.PerigeeVector()).Message);
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.ApogeeVector()).Message);
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.PerigeeVelocity()).Message);
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.ApogeeVelocity()).Message);
+            }
+
+            // The magnitude alone stays available, a(1 − e) of the elements
+            Assert.Equal(7000e3 * (1.0 - e), mean.PerigeeRadius());
+        }
+
+        // Review of #686: a TLE holds mean elements, but its semi-major axis, eccentricity and angles are those of its
+        // osculating elements at its epoch (SGP4/SDP4), so its apsides are those of its osculating orbit and do not throw
+        // with the mean elements above. Reference: the periapsis of the SGP4 state by SPICE oscelt then conics at M = 0
+        // (N0067); the radii are a(1 ∓ e) of the same elements. MEASURE (ISS, e about 1e-3 osculating; e = 0.72) 1.460e-13 and
+        // 1.279e-16 rad on Linux x64, 1.844e-13 and 1.137e-16 on Windows x64, 1.459e-13 and 1.279e-16 on macOS arm64 (CI run
+        // 43745883709, 2026-11-15); twice the worst, rounded up at the second significant digit
+        private const double TleApsisAngleTolerance = 3.7e-13;
+
+        [Theory]
+        [InlineData("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703")]
+        [InlineData("CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
+            "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468")]
+        public void ApsisVectors_OfATle_AreAlongThePeriapsisOfItsSgp4State(string name, string line1, string line2)
+        {
+            var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE(name, line1, line2);
+            var state = tle.ToStateVector();
+            var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+            var spicePerigee = SpiceConicPosition(osculating.A, osculating.E, osculating.I, osculating.RAAN, osculating.AOP, 0.0);
+
+            double perigeeAngle = AngleBetween(tle.PerigeeVector(), spicePerigee);
+            double apogeeAngle = AngleBetween(tle.ApogeeVector(), spicePerigee.Inverse());
+            _output.WriteLine($"MEASURE review of #686 TLE {name}: apsis angle against SPICE oscelt + conics of its SGP4 state {System.Math.Max(perigeeAngle, apogeeAngle):E3} rad");
+            Assert.True(perigeeAngle <= TleApsisAngleTolerance, $"{perigeeAngle:E3}");
+            Assert.True(apogeeAngle <= TleApsisAngleTolerance, $"{apogeeAngle:E3}");
+
+            double a = tle.SemiMajorAxis();
+            double e = tle.Eccentricity();
+            Assert.Equal(a * (1.0 - e), tle.PerigeeVector().Magnitude(), a * 1e-15);
+            Assert.Equal(a * (1.0 + e), tle.ApogeeVector().Magnitude(), a * 1e-15);
         }
     }
 }

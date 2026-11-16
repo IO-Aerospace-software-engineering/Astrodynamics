@@ -27,10 +27,19 @@ namespace IO.Astrodynamics.Occultation;
 /// <c>localmin</c> locates it between its neighbors and, when it crosses zero, adds it as a sample; the first and last
 /// intervals are searched the same way when the samples beyond them leave room for an extreme. If m is monotone over
 /// every interval of more than twice the step, each such bracket holds at most one extreme, so every window and every
-/// gap is found, however short: an event shorter than the step is not missed. The rule is on the time between the
-/// extremes of the margin, not on the duration of the events (CSPICE's <c>gfoclt</c> asks the step to be shorter than
-/// every event and every gap): for an eclipse of a satellite, the margins have one maximum and one minimum per orbit,
-/// so a step up to a quarter of the period finds a penumbra of a few seconds.
+/// gap is found down to the resolution of <c>localmin</c>: an event shorter than the step is not missed. The rule is on
+/// the time between the extremes of the margin, not on the duration of the events (CSPICE's <c>gfoclt</c> asks the step
+/// to be shorter than every event and every gap): for an eclipse of a satellite, the margins have one maximum and one
+/// minimum per orbit, so a step up to a quarter of the period finds a penumbra of a few seconds.
+/// </para>
+/// <para>
+/// <b>Resolution.</b> <c>localmin</c> locates an extreme to its abscissa tolerance √ε |x| + τ/3, |x| up to the step h
+/// from the middle of its bracket, and the search stops only at a margin strictly on the other side of zero: a window or a
+/// gap narrower than about 2 √ε h + 2τ/3 (τ the convergence tolerance; 2.5 µs at a 1 min step, 19 µs at 10 min, 41 µs at
+/// 22.5 min with τ = 1 µs) can be missed, and a tangency between two samples (an extreme exactly at zero) is not found.
+/// The bound scales with the convergence tolerance (<see cref="OccultationSearchOptions.ConvergenceTolerance"/>). On a
+/// closed-form margin of period 5400 s, every window was found down to 0.3 µs at 1 min and 10 µs at 10 and 22.5 min,
+/// every gap down to 0.3 µs, 1 µs and 10 µs (#668, <c>OccultationFinderResolutionTests</c>, Linux x64).
 /// </para>
 /// <para>
 /// <b>Transitions.</b> Each sign change between two consecutive samples is located by Brent's <c>zero</c> to the

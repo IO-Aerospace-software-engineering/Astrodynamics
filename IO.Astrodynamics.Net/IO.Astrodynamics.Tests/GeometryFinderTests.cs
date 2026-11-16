@@ -531,6 +531,61 @@ public class GeometryFinderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, CoordinateSystem.Planetographic,
             Coordinate.Declination, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, Step).ToArray());
     }
+
+    #region Resolution of the windows between samples (#668)
+
+    // The public search of the closed-form margin of ShortWindowMargin against zero, in seconds from its start
+    private static Func<Func<double, double>, double, IReadOnlyList<(double Start, double End)>> PublicSearch(RelationnalOperator relation) =>
+        (margin, step) =>
+        {
+            var start = Start;
+            var window = new Window(start, start.AddSeconds(Occultation.ShortWindowMargin.SearchLength));
+            return new GeometryFinder().FindWindowsWithCondition(window, t => margin((t - start).TotalSeconds), relation, 0.0, TimeSpan.FromSeconds(step))
+                .Select(w => ((w.StartDate - start).TotalSeconds, (w.EndDate - start).TotalSeconds))
+                .ToArray();
+        };
+
+    public static IEnumerable<object[]> ResolutionCases() =>
+        from relation in new[] { RelationnalOperator.Greater, RelationnalOperator.GreaterOrEqual }
+        from step in new[] { 60.0, 600.0, 1350.0 }
+        select new object[] { relation, step };
+
+    /// <summary>
+    /// The windows and gaps of a double quantity between samples (#678's search) on the closed form of
+    /// <c>ShortWindowMargin</c>, through the public <see cref="GeometryFinder.FindWindowsWithCondition{T}(Window, Func{TimeSystem.Time, T}, RelationnalOperator, T, TimeSpan)"/>:
+    /// with the step at most half the time between the extremes, every window and gap at least 2 √ε h + 2τ/3 wide is
+    /// found (τ = 1 µs; 2.5 µs at 1 min, 19 µs at 10 min, 41 µs at 22.5 min), its edges within 1 µs and half a tick of the
+    /// closed form; a tangency gives no window. #678 stated "down to about 1 µs", which longer steps do not reach (#668).
+    /// Passes on the base: the docs were wrong, not the search.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(ResolutionCases))]
+    public void WindowsAndGaps_AtLeastTheResolutionBound_AreFound(RelationnalOperator relation, double step)
+    {
+        var search = PublicSearch(relation);
+        double bound = Occultation.ShortWindowMargin.ResolutionBound(step);
+        var asserted = new[] { bound, 2.0 * bound, 10.0 * bound, 1.0e-3 };
+        foreach (bool gaps in new[] { false, true })
+        {
+            foreach (var row in Occultation.ShortWindowMargin.Ladder(search, step, asserted, gaps, 25, gaps ? 674 : 673))
+            {
+                Assert.True(row.Failed == 0, $"{relation}, step {step} s, {(gaps ? "gap" : "window")} {row.Width:E3} s: {row.Failed} of {row.Runs} runs");
+            }
+
+            var measured = Occultation.ShortWindowMargin.Summary(
+                Occultation.ShortWindowMargin.Ladder(search, step, Occultation.ShortWindowMargin.MeasuredWidths, gaps, 25, gaps ? 676 : 675));
+            _output.WriteLine($"MEASURE #668 GeometryFinder {relation} {(gaps ? "gaps" : "windows")}, step {step} s: bound {bound:E3} s, " +
+                              $"narrowest width found every time {measured.NarrowestFound:E1} s, widest missed at least once {measured.WidestMissed:E1} s");
+        }
+
+        var random = new Random(677);
+        for (int k = 0; k < 8; k++)
+        {
+            Assert.Empty(search(Occultation.ShortWindowMargin.Tangency(Occultation.ShortWindowMargin.RandomCentre(random)), step));
+        }
+    }
+
+    #endregion
 }
 
 /// <summary>
@@ -541,11 +596,16 @@ internal static class GeometryReference
 {
     // Twice the worst value over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI of #596 at cde5d3f5,
     // 2026-11-07), the managed search at 1 µs against CSPICE at 1e-9 s. Crossings and threshold edges: 2.38e-7 s (the Moon from
-    // DSS-13 beyond 400 000 km); the Earth-Moon distance extremes at a 1-day step: 4.81e-7 s (LOCMIN); the Moon's
-    // elevation extremes from DSS-13 at a 60 s step: 4.51e-9 s (LOCMAX)
+    // DSS-13 beyond 400 000 km); the Earth-Moon distance extremes at a 1-day step: 4.81e-7 s (LOCMIN). The Moon's elevation
+    // extremes from DSS-13 at a 60 s step: the managed extreme is the tick (100 ns) nearest its root, so the reference can
+    // lie up to 5e-8 s from it. In DSS-13_TOPO, the frame of the kernel site since #690, both extremes are the tick nearest
+    // the reference on Linux x64 and Windows x64, 2.712e-8 s (LOCMAX) and 3.865e-8 s (LOCMIN) from it; on macOS arm64 the
+    // LOCMAX is the next tick, 7.287e-8 s from it (1e-7 s less 2.712e-8 s), the LOCMIN 3.865e-8 s (CI run 43745883709,
+    // 2026-11-15); twice the worst, rounded up at the second significant digit (the former reference, in the frame the
+    // library built, fell 4.51e-9 s from a tick, and its threshold, 1e-8 s, below the 5e-8 s of a tick)
     internal const double ThresholdCrossing = 4.8e-7;
     internal const double ThresholdDistanceExtreme = 1.0e-6;
-    internal const double ThresholdElevationExtreme = 1.0e-8;
+    internal const double ThresholdElevationExtreme = 1.5e-7;
 
     private static readonly Lazy<Dictionary<string, double[][]>> Windows = new(() =>
         JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/GeometryReference/geometry_reference.json")));

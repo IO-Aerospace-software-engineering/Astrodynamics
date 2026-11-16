@@ -15,6 +15,7 @@
     <ItemGroup>
         <ProjectReference Include="..\IO.Astrodynamics\IO.Astrodynamics.csproj" />
         <Compile Include="..\IO.Astrodynamics.Tests\TestKernelWriter.cs" Link="TestKernelWriter.cs" />
+        <Compile Include="..\IO.Astrodynamics.Tests\Body\CspiceDirect.cs" Link="CspiceDirect.cs" />
     </ItemGroup>
 
 </Project>

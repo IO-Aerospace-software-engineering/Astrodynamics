@@ -3,15 +3,18 @@
 using System;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Tests.KernelUnload;
 
 /// <summary>
-/// The child process of <c>KernelRegistryTests</c> (#673): one scenario of <see cref="SpiceAPI.UnloadKernels"/> in which
-/// SPICE fails to open a deleted binary PCK again, run in a process of its own.
+/// The child process of <c>KernelRegistryTests</c> (#673): one scenario of <see cref="SpiceAPI.LoadKernels"/> or
+/// <see cref="SpiceAPI.UnloadKernels"/> while a loaded binary kernel was deleted, run in a process of its own.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -21,7 +24,14 @@ namespace IO.Astrodynamics.Tests.KernelUnload;
 /// (measured with CSPICE N0067). Once more than the 23 logical units of CSPICE's handle manager are in use, its unit is
 /// released, and every later search of the PCKs (<c>TISBOD --&gt; PCKSFS --&gt; DAFBBS --&gt; ZZDDHHLU</c>, each IAU
 /// frame) fails to reconnect it: in the shared test process the IAU frames of other test classes failed intermittently
-/// (CI of 725ee1a and a993265 on Linux and macOS arm64). Run here, the scenario leaves nothing behind.
+/// (CI of 725ee1a and a993265 on Linux and macOS arm64). A deleted PCK never unloaded does the same once its unit is
+/// released. Since the second round of #668 each native load and unload, those of the native writers included, first
+/// closes every SPK, CK, binary PCK and EK whose file was deleted by the handle KEEPER holds, then unloads it
+/// (<c>KernelsLoader</c>), a kernel held under a relative name, from a meta-kernel, left to SPICE: the scenarios check that
+/// nothing stays open (KEEPER's list and the DAF handles through <see cref="CspiceDirect"/>, on Linux, where the native
+/// library exports CSPICE) and that the IAU_EARTH rotation and the Moon's state are bit for bit those read before, once 25
+/// more DAFs are loaded. Run here, the scenarios leave nothing behind, and still run in the shared test process on a native
+/// library without that unload.
 /// </para>
 /// <para>
 /// Arguments: the kernel directory (<c>Data/SolarSystem</c>), loaded first as in the test process, and the scenario, the
@@ -32,16 +42,41 @@ namespace IO.Astrodynamics.Tests.KernelUnload;
 internal static class Program
 {
     internal const string FolderOfTwoPcks = "UnloadKernels_OfAFolderOfTwoPcks_WhoseSecondIsDeleted_RestoresThePrecedence";
-    internal const string PckOfAFolder = "UnloadKernels_OfAPck_WhenSpiceCannotOpenAnotherPckAgain_Throws_AndThePcksLoadedBeforeTakePrecedence";
-    internal const string MetaKernelOfAPck = "UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenSpiceCannotOpenAnotherPckAgain_Throws";
+    internal const string PckOfAFolder = "UnloadKernels_OfAPck_WhenAnotherPckWasDeleted_ClosesIt_AndKeepsThePrecedence";
+    internal const string MetaKernelOfAPck = "UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenAnotherPckWasDeleted_DoesNotThrow";
+    internal const string FolderOfTwoDeletedPcks = "UnloadKernels_OfAFolderOfTwoPcks_BothDeleted_ClosesThem";
+    internal const string DeletedSpk = "UnloadKernels_OfAnSpk_WhenAnotherSpkWasDeleted_ClosesIt";
+    internal const string DeletedPckNeverUnloaded = "LoadKernels_WhenAPckWasDeletedAndNeverUnloaded_ClosesIt";
+    internal const string DeletedCk = "UnloadKernels_OfACk_WhenAnotherCkWasDeleted_ClosesIt";
+    internal const string WriterOfAnSpk = "WriteEphemeris_WhenAnSpkWasDeleted_ClosesIt";
+    internal const string WriterOfACk = "WriteOrientation_WhenACkWasDeleted_ClosesIt";
+    internal const string RelativeName = "LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively";
+    internal const string FolderOfADeletedSpk = "LoadKernels_WhenAnSpkOfALoadedFolderWasDeleted_ListsTheFolderUntilItsLastFileIsDropped";
+    internal const string ManagedWriterOfAnSpk = "SpacecraftWriteEphemeris_ReplacingAFile_WhenAnSpkWasDeleted_NoLongerListsIt";
+    internal const string WriterOfAnSpkRelative = "WriteEphemeris_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending";
+    internal const string WriterOfACkRelative = "WriteOrientation_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending";
+    internal const string ReplacerOfAnSpkRelative = "WriteEphemeris_ReplacingAFile_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile";
+    internal const string ReplacerOfACkRelative = "WriteOrientation_ReplacingAFile_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile";
+    internal const string NoNativeCall = "LoadKernels_WithoutANativeCall_KeepsListingADeletedSpkSpiceStillHolds";
+    internal const string DanglingLink = "LoadKernels_WhenTheTargetOfALinkedSpkWasDeleted_NoLongerListsTheLink";
+
+    private static readonly string[] Scenarios =
+    [
+        FolderOfTwoPcks, PckOfAFolder, MetaKernelOfAPck, FolderOfTwoDeletedPcks, DeletedSpk, DeletedPckNeverUnloaded, DeletedCk, WriterOfAnSpk,
+        WriterOfACk, RelativeName, FolderOfADeletedSpk, ManagedWriterOfAnSpk, WriterOfAnSpkRelative, WriterOfACkRelative,
+        ReplacerOfAnSpkRelative, ReplacerOfACkRelative, NoNativeCall, DanglingLink
+    ];
+
+    // More DAFs than the 23 logical units of CSPICE's handle manager, with those of Data/SolarSystem
+    private const int ManyDafs = 25;
 
     private static readonly Time Epoch = new(2024, 1, 1);
 
     private static int Main(string[] args)
     {
-        if (args.Length != 2 || !Directory.Exists(args[0]) || args[1] is not (FolderOfTwoPcks or PckOfAFolder or MetaKernelOfAPck))
+        if (args.Length != 2 || !Directory.Exists(args[0]) || !Scenarios.Contains(args[1]))
         {
-            Console.Error.WriteLine($"Usage: <kernel directory> <{FolderOfTwoPcks} | {PckOfAFolder} | {MetaKernelOfAPck}>");
+            Console.Error.WriteLine($"Usage: <kernel directory> <{string.Join(" | ", Scenarios)}>");
             return 2;
         }
 
@@ -57,10 +92,55 @@ internal static class Program
                     UnloadFolderOfTwoPcks(root, moonPck);
                     break;
                 case PckOfAFolder:
-                    UnloadPckOfAFolder(root, moonPck);
+                    UnloadPckOfAFolder(root, kernels, moonPck);
+                    break;
+                case MetaKernelOfAPck:
+                    UnloadMetaKernelOfAPck(root, moonPck);
+                    break;
+                case FolderOfTwoDeletedPcks:
+                    UnloadFolderOfTwoDeletedPcks(root, kernels, moonPck);
+                    break;
+                case DeletedSpk:
+                    UnloadSpkWhenAnotherIsDeleted(root, kernels);
+                    break;
+                case DeletedPckNeverUnloaded:
+                    LoadWhenAPckWasDeleted(root, kernels, moonPck);
+                    break;
+                case DeletedCk:
+                    UnloadCkWhenAnotherIsDeleted(root, kernels);
+                    break;
+                case WriterOfAnSpk:
+                    WriteSpkWhenAnotherIsDeleted(root, kernels);
+                    break;
+                case WriterOfACk:
+                    WriteCkWhenAnotherIsDeleted(root, kernels);
+                    break;
+                case FolderOfADeletedSpk:
+                    LoadWhenAnSpkOfAFolderWasDeleted(root, kernels);
+                    break;
+                case ManagedWriterOfAnSpk:
+                    ReplaceWithTheManagedWriterWhenAnSpkWasDeleted(root, kernels);
+                    break;
+                case WriterOfAnSpkRelative:
+                    WriteSpkWhenAnSpkHeldRelativelyIsDeleted(root, kernels);
+                    break;
+                case WriterOfACkRelative:
+                    WriteCkWhenACkHeldRelativelyIsDeleted(root, kernels);
+                    break;
+                case ReplacerOfAnSpkRelative:
+                    ReplaceSpkWhenAnSpkHeldRelativelyIsDeleted(root, kernels);
+                    break;
+                case ReplacerOfACkRelative:
+                    ReplaceCkWhenACkHeldRelativelyIsDeleted(root);
+                    break;
+                case NoNativeCall:
+                    LoadWithoutANativeCallWhenAnSpkWasDeleted(root);
+                    break;
+                case DanglingLink:
+                    LoadWhenTheTargetOfALinkedSpkWasDeleted(root);
                     break;
                 default:
-                    UnloadMetaKernelOfAPck(root, moonPck);
+                    LoadAfterTheWorkingDirectoryChanged(root);
                     break;
             }
 
@@ -92,25 +172,603 @@ internal static class Program
         CheckSameRotation(withQ, "IOA_F02_PCK_A", "Q takes precedence over P again");
     }
 
-    // P, the folder [X, D] and Q, D deleted after the load: the unload of X opens P again, then fails on D, before Q, and P
-    // takes precedence over Q, loaded after it, until a PCK unload succeeds (measured with CSPICE N0067)
-    private static void UnloadPckOfAFolder(DirectoryInfo root, string moonPck)
+    // P, the folder [X, D] and Q, D deleted after the load. Before the second round of #668, the unload of X opened P again,
+    // then failed on D, before Q: it threw, P took precedence over Q until a PCK unload succeeded, and D stayed open in SPICE
+    // (measured with CSPICE N0067). The unload first closes D by its handle and unloads it: it returns, Q keeps its
+    // precedence, nothing holds D, and the PCK searches of IAU_EARTH no longer reach it
+    private static void UnloadPckOfAFolder(DirectoryInfo root, DirectoryInfo kernels, string moonPck)
     {
-        var (folder, x, d, withP, withQ) = LoadPcksAroundAFolder(root, moonPck, 1999958, "IOA_F02_PCK_B");
+        var before = SearchesBefore();
+        var (folder, x, d, _, withQ) = LoadPcksAroundAFolder(root, moonPck, 1999958, "IOA_F02_PCK_B");
+        var handle = KeeperHandle(d);
         File.Delete(d.FullName);
 
-        var exception = Throws(() => SpiceAPI.Instance.UnloadKernels(x));
-        Check(exception.Message.Contains(x.FullName), $"the failure names X: {exception.Message}");
-        CheckSameRotation(withP, "IOA_F02_PCK_B", "P takes precedence over Q after the failure");
+        SpiceAPI.Instance.UnloadKernels(x);
 
+        CheckSameRotation(withQ, "IOA_F02_PCK_B", "Q keeps its precedence over P");
+        // The native unload dropped D: the registry no longer lists it (fourth round of #668; before, until it was unloaded)
+        Check(!Listed(root).Contains(d.FullName) && !Listed(root).Contains(folder.FullName), "the folder and D are no longer listed");
+        CheckRegistryFollowsKeeper(root, x, d);
+        CheckClosed(d, handle);
+        CheckSearchesAfterManyDafs(root, kernels, before);
+        var listed = Listed(root);
         SpiceAPI.Instance.UnloadKernels(d);
+        Check(Listed(root).SequenceEqual(listed), "the unload of the dropped D changes nothing");
+        CheckSameRotation(withQ, "IOA_F02_PCK_B", "Q keeps its precedence over P once D is unloaded");
+    }
+
+    // P, the folder [X, D] and Q, X and D both deleted after the load. Before the second round of #668, the unload of X failed
+    // on D, which then stayed open in SPICE, and the unload of D repaired the precedence: the folder's unload returned, and
+    // the PCK searches of IAU_EARTH later failed on D. Both are now closed first
+    private static void UnloadFolderOfTwoDeletedPcks(DirectoryInfo root, DirectoryInfo kernels, string moonPck)
+    {
+        var before = SearchesBefore();
+        var (folder, x, d, _, withQ) = LoadPcksAroundAFolder(root, moonPck, 1999966, "IOA_G4_PCK_C");
+        var handleX = KeeperHandle(x);
+        var handleD = KeeperHandle(d);
+        File.Delete(x.FullName);
+        File.Delete(d.FullName);
+
+        SpiceAPI.Instance.UnloadKernels(folder);
+
         Check(!Listed(root).Contains(folder.FullName), "the folder is no longer listed");
-        CheckSameRotation(withQ, "IOA_F02_PCK_B", "Q takes precedence over P once D is unloaded");
+        CheckRegistryFollowsKeeper(root, x, d);
+        CheckSameRotation(withQ, "IOA_G4_PCK_C", "Q keeps its precedence over P");
+        CheckClosed(x, handleX);
+        CheckClosed(d, handleD);
+        CheckSearchesAfterManyDafs(root, kernels, before);
+    }
+
+    // Two copies A and B of the L2 SPK of Data/SolarSystem, B deleted after the load. Before the second round of #668, the
+    // unload of A failed on B (unload_c --> UNLOAD --> SPKLEF --> DAFOPR), which stayed open in SPICE
+    private static void UnloadSpkWhenAnotherIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var before = SearchesBefore();
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Spks"));
+        var a = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "a.bsp");
+        var b = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "b.bsp");
+        SpiceAPI.Instance.LoadKernels(a);
+        SpiceAPI.Instance.LoadKernels(b);
+        var handle = KeeperHandle(b);
+        File.Delete(b.FullName);
+
+        SpiceAPI.Instance.UnloadKernels(a);
+
+        Check(Listed(root).Length == 0, "nothing is listed once the unload of A dropped B");
+        CheckRegistryFollowsKeeper(root, a, b);
+        CheckClosed(b, handle);
+        CheckSearchesAfterManyDafs(root, kernels, before);
+        SpiceAPI.Instance.UnloadKernels(b);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // A PCK P of a frame class Data/SolarSystem does not define, deleted after its load and never unloaded. Before the second
+    // round of #668, it stayed open, and once its logical unit was released the PCK searches of IAU_EARTH failed on it. The
+    // next load, of an unrelated text kernel, closes it
+    private static void LoadWhenAPckWasDeleted(DirectoryInfo root, DirectoryInfo kernels, string moonPck)
+    {
+        var before = SearchesBefore();
+        var p = TestKernelWriter.WritePck(moonPck, new DirectoryInfo(Path.Combine(root.FullName, "Pck")), "p.bpc", 1999967);
+        SpiceAPI.Instance.LoadKernels(p);
+        var handle = KeeperHandle(p);
+        File.Delete(p.FullName);
+
+        var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999968, "IOA_G4_TEXT", 90.0);
+        SpiceAPI.Instance.LoadKernels(text);
+
+        Check(Listed(root).SequenceEqual([text.FullName]), "only the text kernel is listed once the load dropped P");
+        CheckRegistryFollowsKeeper(root, p, text);
+        Check(System.Math.Abs(RotationAngleDeg("IOA_G4_TEXT") - 90.0) < 1e-12, "the text kernel's frame is rotated by 90°");
+        CheckClosed(p, handle);
+        CheckSearchesAfterManyDafs(root, kernels, before);
+        SpiceAPI.Instance.UnloadKernels(text);
+        SpiceAPI.Instance.UnloadKernels(p);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // Two copies A and B of the CK of Data/CLPS, B deleted after the load. Before the second round of #668, the unload of A
+    // failed on B (unload_c --> UNLOAD --> CKLPF --> DAFOPR), which stayed open in SPICE
+    private static void UnloadCkWhenAnotherIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var before = SearchesBefore();
+        var ck = Path.Combine(kernels.Parent!.FullName, "CLPS", "clps_to2ab_apm1_cru_rec_240108_240118_v02.bc");
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Cks"));
+        var a = Copy(ck, folder, "a.bc");
+        var b = Copy(ck, folder, "b.bc");
+        SpiceAPI.Instance.LoadKernels(a);
+        SpiceAPI.Instance.LoadKernels(b);
+        var handle = KeeperHandle(b);
+        File.Delete(b.FullName);
+
+        SpiceAPI.Instance.UnloadKernels(a);
+
+        Check(Listed(root).Length == 0, "nothing is listed once the unload of A dropped B");
+        CheckRegistryFollowsKeeper(root, a, b);
+        CheckClosed(b, handle);
+        CheckSearchesAfterManyDafs(root, kernels, before);
+        SpiceAPI.Instance.UnloadKernels(b);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // Two copies A and B of the L2 SPK of Data/SolarSystem, B deleted after the load, then an SPK C written twice. The native
+    // writer unloads the file it writes when its kernel object is destroyed, and the file it replaces before writing, each an
+    // SPK unload that opens the other SPKs again (unload_c --> UNLOAD --> SPKLEF). Before the second round of
+    // #668 those unloads did not close the deleted kernels first: the reopening failed on B, which stayed open in SPICE, and
+    // the failure was left pending, so that the next kernel call threw it
+    private static void WriteSpkWhenAnotherIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var before = SearchesBefore();
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Spks"));
+        var a = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "a.bsp");
+        var b = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "b.bsp");
+        SpiceAPI.Instance.LoadKernels(a);
+        SpiceAPI.Instance.LoadKernels(b);
+        var handle = KeeperHandle(b);
+        File.Delete(b.FullName);
+
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        SpiceAPI.Instance.WriteEphemeris(c, -1999971, EarthStates());
+
+        Check(Listed(root).SequenceEqual([a.FullName]), "only A is listed once the writer dropped B");
+        CheckRegistryFollowsKeeper(root, a, b);
+        CheckClosed(b, handle);
+        SpiceAPI.Instance.WriteEphemeris(c, -1999971, EarthStates());
+        SpiceAPI.Instance.UnloadKernels(a);
+        CheckSearchesAfterManyDafs(root, kernels, before);
+        SpiceAPI.Instance.UnloadKernels(b);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // Two CKs A and B of a spacecraft, written by the library and loaded, B deleted after the load, then a CK C written. The
+    // native writer unloads the CK it writes when its kernel object is destroyed, which opens the other CKs again
+    // (unload_c --> UNLOAD --> CKLPF): before the second round of #668 the reopening failed on B, which stayed open in SPICE,
+    // and the failure was left pending, so that the next kernel call threw it
+    private static void WriteCkWhenAnotherIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var before = SearchesBefore();
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Cks"));
+        var clock = new Clock("IOA_G4_CLOCK", 65536);
+        var spacecraft = new Spacecraft(-1979, "IOA_G4_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
+        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        var records = Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+        var a = new FileInfo(Path.Combine(folder.FullName, "a.bc"));
+        var b = new FileInfo(Path.Combine(folder.FullName, "b.bc"));
+        SpiceAPI.Instance.WriteOrientation(a, spacecraft.NaifId, records);
+        SpiceAPI.Instance.WriteOrientation(b, spacecraft.NaifId, records);
+        SpiceAPI.Instance.LoadKernels(a);
+        SpiceAPI.Instance.LoadKernels(b);
+        var handle = KeeperHandle(b);
+        File.Delete(b.FullName);
+
+        SpiceAPI.Instance.WriteOrientation(new FileInfo(Path.Combine(folder.FullName, "c.bc")), spacecraft.NaifId, records);
+
+        Check(Listed(root).SequenceEqual([clockFile.FullName, a.FullName]), "only the clock and A are listed once the writer dropped B");
+        CheckRegistryFollowsKeeper(root, clockFile, a, b);
+        CheckClosed(b, handle);
+        SpiceAPI.Instance.UnloadKernels(a);
+        CheckSearchesAfterManyDafs(root, kernels, before);
+        SpiceAPI.Instance.UnloadKernels(b);
+        SpiceAPI.Instance.UnloadKernels(clockFile);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // A meta-kernel that names its SPK relative to the working directory of its load, as NAIF's examples do: SPICE holds the
+    // SPK under that relative name. Once the working directory changed, the name no longer reaches the file, which still exists
+    // and which SPICE holds open. Tested by that name, the next load of any kernel would take the SPK for deleted and unload it
+    // (the first version of the cleanup of the second round of #668 did). The relative name is left to SPICE: the object of the SPK, written by the library, is read
+    // bit for bit after the load as before it, KEEPER keeps its handle open, and the meta-kernel's unload unloads it
+    private static void LoadAfterTheWorkingDirectoryChanged(DirectoryInfo root)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Relative"));
+        var spk = new FileInfo(Path.Combine(folder.FullName, "x.bsp"));
+        SpiceAPI.Instance.WriteEphemeris(spk, -1999972, EarthStates());
+        var metaKernel = new FileInfo(Path.Combine(folder.FullName, "mk.tm"));
+        File.WriteAllText(metaKernel.FullName, "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( 'x.bsp' )\n\\begintext\n");
+        var workingDirectory = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(folder.FullName);
+            SpiceAPI.Instance.LoadKernels(metaKernel);
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(workingDirectory);
+        }
+
+        var handle = OperatingSystem.IsLinux() ? CspiceDirect.LoadedKernelHandle("x.bsp") : null;
+        Check(!OperatingSystem.IsLinux() || handle is > 0, $"KEEPER holds the SPK under its relative name ({handle})");
+        var read = ReadRelativeObject();
+
+        var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999973, "IOA_G4_REL", 90.0);
+        SpiceAPI.Instance.LoadKernels(text);
+
+        var after = ReadRelativeObject();
+        Check(after.Position == read.Position && after.Velocity == read.Velocity,
+            $"the SPK's object after the load is the state read before ({after.Position} against {read.Position})");
+        if (OperatingSystem.IsLinux())
+        {
+            Check(CspiceDirect.LoadedKernelHandle("x.bsp") == handle, "KEEPER still holds the SPK with its handle");
+            Check(CspiceDirect.OpenDafFile(handle!.Value) != null, $"the handle {handle} of the SPK is still open");
+        }
+
+        SpiceAPI.Instance.UnloadKernels(text);
+        SpiceAPI.Instance.UnloadKernels(metaKernel);
+        Check(Throws(() => ReadRelativeObject()) != null, "the SPK's object is no longer known once the meta-kernel is unloaded");
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // A loaded folder [X, D] of two copies of the L2 SPK, D deleted, then an unrelated text kernel loaded: the native load
+    // drops D (closed by its handle, then unloaded). Before the fourth round of #668 the registry still held D in the folder's
+    // entry, so that the unload of D split the folder; it now follows the native drop: the folder stays listed while X is
+    // loaded, the unload of D does nothing, and the folder's unload unloads X. A folder [Y, Z] whose two files are deleted is
+    // no longer listed after the next native call
+    private static void LoadWhenAnSpkOfAFolderWasDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Folder"));
+        var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
+        var d = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "d.bsp");
+        SpiceAPI.Instance.LoadKernels(folder);
+        var handle = KeeperHandle(d);
+        File.Delete(d.FullName);
+
+        var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999975, "IOA_J1_TEXT", 90.0);
+        SpiceAPI.Instance.LoadKernels(text);
+
+        Check(Listed(root).SequenceEqual([folder.FullName, text.FullName]), "the folder is still listed while X is loaded");
+        CheckRegistryFollowsKeeper(root, x, d, text);
+        CheckClosed(d, handle);
+        SpiceAPI.Instance.UnloadKernels(d);
+        Check(Listed(root).SequenceEqual([folder.FullName, text.FullName]), "the unload of the dropped D changes nothing");
+        SpiceAPI.Instance.UnloadKernels(folder);
+        Check(Listed(root).SequenceEqual([text.FullName]), "the folder's unload unloads X");
+        Check(CspiceDirectHolds(x) != true, "KEEPER no longer holds X");
+
+        var both = Directory.CreateDirectory(Path.Combine(root.FullName, "Both"));
+        var y = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), both, "y.bsp");
+        var z = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), both, "z.bsp");
+        SpiceAPI.Instance.LoadKernels(both);
+        File.Delete(y.FullName);
+        File.Delete(z.FullName);
+        SpiceAPI.Instance.UnloadKernels(text);
+        Check(Listed(root).Length == 0, "the folder whose two files were dropped is no longer listed");
+        CheckRegistryFollowsKeeper(root, y, z);
+    }
+
+    // Two copies A and B of the L2 SPK of Data/SolarSystem, B deleted after the load, then an SPK C the managed writer
+    // (Spacecraft.WriteEphemeris) replaces: its unload of the file it replaces (UnloadKernelsProxy) drops B, which the
+    // registry no longer lists (fourth round of #668)
+    private static void ReplaceWithTheManagedWriterWhenAnSpkWasDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Spks"));
+        var a = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "a.bsp");
+        var b = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "b.bsp");
+        var spacecraft = new Spacecraft(-1976, "IOA_J1_SPC", 3000.0, 10000.0, new Clock("IOA_J1_CLOCK", 65536), EarthStates()[0]);
+        spacecraft.AddPropagatedStates(EarthStates());
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        spacecraft.WriteEphemeris(c);
+        SpiceAPI.Instance.LoadKernels(a);
+        SpiceAPI.Instance.LoadKernels(b);
+        var handle = KeeperHandle(b);
+        File.Delete(b.FullName);
+
+        spacecraft.WriteEphemeris(c);
+
+        Check(Listed(root).SequenceEqual([a.FullName]), "only A is listed once the managed writer dropped B");
+        CheckRegistryFollowsKeeper(root, a, b);
+        CheckClosed(b, handle);
+        SpiceAPI.Instance.UnloadKernels(a);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // A meta-kernel that names an SPK X relative to the working directory of its load, X deleted, then an SPK written by
+    // the native writer, whose kernel object unloads the file it wrote when it is destroyed: that unload opens the other SPKs
+    // again (unload_c --> UNLOAD --> SPKLEF --> DAFOPR) and fails on X, which the native drop leaves to SPICE (a relative
+    // name). Before the fourth round of #668 the failure came after the proxy's last check: WriteEphemeris returned, and the
+    // next kernel call, the read of the Moon, threw "Celestial celestialItem name can't be defined". WriteEphemeris now throws
+    // SPICE's message and leaves nothing pending: the Moon is read bit for bit as before, twice
+    private static void WriteSpkWhenAnSpkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "RelativeSpk"));
+        var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
+        LoadRelativeMetaKernel(folder, "x.bsp");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var error = Throws(() => SpiceAPI.Instance.WriteEphemeris(new FileInfo(Path.Combine(folder.FullName, "c.bsp")), -1999976, EarthStates()));
+
+        Check(error.Message.Contains("x.bsp"), $"the exception names x.bsp ({error.Message})");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // The CK analog: a meta-kernel that names a CK X relatively, X deleted, then a CK written by the native writer, whose
+    // kernel object's unload of the written CK opens the other CKs again (unload_c --> UNLOAD --> CKLPF) and fails on X
+    private static void WriteCkWhenACkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "RelativeCk"));
+        var clock = new Clock("IOA_J1_CLOCK", 65536);
+        var spacecraft = new Spacecraft(-1977, "IOA_J1_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
+        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        var records = Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+        var x = new FileInfo(Path.Combine(folder.FullName, "x.bc"));
+        SpiceAPI.Instance.WriteOrientation(x, spacecraft.NaifId, records);
+        LoadRelativeMetaKernel(folder, "x.bc");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var error = Throws(() =>
+            SpiceAPI.Instance.WriteOrientation(new FileInfo(Path.Combine(folder.FullName, "c.bc")), spacecraft.NaifId, records));
+
+        Check(error.Message.Contains("x.bc"), $"the exception names x.bc ({error.Message})");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // An SPK C written, then a meta-kernel that names an SPK X relatively, X deleted, then C written again by the native
+    // writer, with another object: its kernel object loads C, and WriteData unloads C before removing it. That unload opens the
+    // other SPKs again (unload_c --> UNLOAD --> SPKLEF) and fails on X, left to SPICE (a relative name). Before the review of
+    // the fourth round of #668 the writer still removed C, then wrote nothing on the pending error: the call threw with C
+    // gone. It now stops before the removal: C is on disk as it was (its bytes before the call), KEEPER no longer holds it,
+    // and the Moon is read bit for bit as before, twice
+    private static void ReplaceSpkWhenAnSpkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "ReplaceRelativeSpk"));
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        SpiceAPI.Instance.WriteEphemeris(c, -1999985, EarthStates());
+        var bytes = File.ReadAllBytes(c.FullName);
+        var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
+        LoadRelativeMetaKernel(folder, "x.bsp");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var error = Throws(() => SpiceAPI.Instance.WriteEphemeris(c, -1999986, EarthStates()));
+
+        Check(error.Message.Contains("x.bsp"), $"the exception names x.bsp ({error.Message})");
+        Check(File.Exists(c.FullName) && File.ReadAllBytes(c.FullName).SequenceEqual(bytes), "the SPK it would replace is on disk as it was");
+        Check(CspiceDirectHolds(c) != true, "KEEPER does not hold the SPK it would replace");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // The CK analog: a CK C written, a meta-kernel that names a CK X relatively, X deleted, then C written again with other
+    // records: WriteOrientations unloads C (unload_c --> UNLOAD --> CKLPF), fails on X, and keeps C as it was
+    private static void ReplaceCkWhenACkHeldRelativelyIsDeleted(DirectoryInfo root)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "ReplaceRelativeCk"));
+        var clock = new Clock("IOA_J1_CLOCK", 65536);
+        var spacecraft = new Spacecraft(-1978, "IOA_J1_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
+        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        var records = Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bc"));
+        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, records);
+        var bytes = File.ReadAllBytes(c.FullName);
+        var x = new FileInfo(Path.Combine(folder.FullName, "x.bc"));
+        SpiceAPI.Instance.WriteOrientation(x, spacecraft.NaifId, records);
+        LoadRelativeMetaKernel(folder, "x.bc");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var turned = Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(new Quaternion(0.0, 1.0, 0.0, 0.0), Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+        var error = Throws(() => SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, turned));
+
+        Check(error.Message.Contains("x.bc"), $"the exception names x.bc ({error.Message})");
+        Check(File.Exists(c.FullName) && File.ReadAllBytes(c.FullName).SequenceEqual(bytes), "the CK it would replace is on disk as it was");
+        Check(CspiceDirectHolds(c) != true, "KEEPER does not hold the CK it would replace");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // An SPK S of an object the library writes, loaded by its full path, then deleted: SPICE still holds it, open, and reads
+    // its object until a native load, unload or write drops it. Two calls that make no native call, the load of a path that
+    // does not exist (ArgumentException) and the load and unload of an empty directory, leave it so: before the review of the
+    // fourth round of #668 the registry forgot S after each of them all the same, while KEEPER still held it. It is listed
+    // until the next native call, the load of a text kernel, which drops it in SPICE (its object no longer known)
+    private static void LoadWithoutANativeCallWhenAnSpkWasDeleted(DirectoryInfo root)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "NoNativeCall"));
+        var s = new FileInfo(Path.Combine(folder.FullName, "s.bsp"));
+        SpiceAPI.Instance.WriteEphemeris(s, -1999987, EarthStates());
+        SpiceAPI.Instance.LoadKernels(s);
+        var read = ReadObject(-1999987);
+        File.Delete(s.FullName);
+
+        bool rejected = false;
+        try
+        {
+            SpiceAPI.Instance.LoadKernels(new FileInfo(Path.Combine(folder.FullName, "nope.bsp")));
+        }
+        catch (ArgumentException)
+        {
+            rejected = true;
+        }
+
+        Check(rejected, "the load of a path that does not exist throws ArgumentException");
+        Check(Listed(root).SequenceEqual([s.FullName]), "S is listed after a load that made no native call");
+        CheckRegistryFollowsKeeper(root, s);
+        CheckSameObject(read, -1999987, "S's object after the rejected load");
+
+        var empty = Directory.CreateDirectory(Path.Combine(folder.FullName, "Empty"));
+        SpiceAPI.Instance.LoadKernels(empty);
+        Check(Listed(root).SequenceEqual([s.FullName, empty.FullName]), "S is listed after the load of an empty directory");
+        CheckRegistryFollowsKeeper(root, s);
+        SpiceAPI.Instance.UnloadKernels(empty);
+        Check(Listed(root).SequenceEqual([s.FullName]), "S is listed after the unload of the empty directory");
+        CheckRegistryFollowsKeeper(root, s);
+        CheckSameObject(read, -1999987, "S's object after the empty directory");
+
+        var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999983, "IOA_J1_NONATIVE", 90.0);
+        SpiceAPI.Instance.LoadKernels(text);
+        Check(Listed(root).SequenceEqual([text.FullName]), "S is no longer listed once the native load dropped it");
+        CheckRegistryFollowsKeeper(root, s, text);
+        Check(Throws(() => ReadObject(-1999987)) != null, "S's object is no longer known once the native load dropped S");
+        SpiceAPI.Instance.UnloadKernels(text);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // A symbolic link L to an SPK R, and a link K to an SPK Q, both loaded by the links, then R deleted: L dangles. The native
+    // layer tests the name SPICE holds with std::filesystem::exists, which follows the link: it drops L at the next native
+    // call, the load of a text kernel, and keeps K. Before the review of the fourth round of #668 the registry tested L by
+    // its own entry (lstat), which a dangling link still has, and listed L until it was unloaded. The references are
+    // KEEPER's list (Linux) and the objects of the two SPKs: L's no longer known, K's read bit for bit as before
+    private static void LoadWhenTheTargetOfALinkedSpkWasDeleted(DirectoryInfo root)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Links"));
+        var r = new FileInfo(Path.Combine(folder.FullName, "r.bsp"));
+        var q = new FileInfo(Path.Combine(folder.FullName, "q.bsp"));
+        SpiceAPI.Instance.WriteEphemeris(r, -1999988, EarthStates());
+        SpiceAPI.Instance.WriteEphemeris(q, -1999984, EarthStates());
+        var l = new FileInfo(Path.Combine(folder.FullName, "l.bsp"));
+        var k = new FileInfo(Path.Combine(folder.FullName, "k.bsp"));
+        File.CreateSymbolicLink(l.FullName, r.FullName);
+        File.CreateSymbolicLink(k.FullName, q.FullName);
+        SpiceAPI.Instance.LoadKernels(l);
+        SpiceAPI.Instance.LoadKernels(k);
+        var kept = ReadObject(-1999984);
+        File.Delete(r.FullName);
+
+        var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999984, "IOA_J1_LINK", 90.0);
+        SpiceAPI.Instance.LoadKernels(text);
+
+        Check(Listed(root).SequenceEqual([k.FullName, text.FullName]), "the dangling link L is no longer listed, K is");
+        CheckRegistryFollowsKeeper(root, l, k, text);
+        Check(Throws(() => ReadObject(-1999988)) != null, "L's object is no longer known once the native load dropped L");
+        CheckSameObject(kept, -1999984, "K's object after the load");
+        SpiceAPI.Instance.UnloadKernels(k);
+        SpiceAPI.Instance.UnloadKernels(text);
+        Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    private static StateVector ReadObject(int naifId) =>
+        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, naifId, Frame.ICRF, Aberration.None).ToStateVector();
+
+    private static void CheckSameObject(StateVector before, int naifId, string what)
+    {
+        var after = ReadObject(naifId);
+        Check(after.Position == before.Position && after.Velocity == before.Velocity,
+            $"{what}: the state read before ({after.Position} against {before.Position})");
+    }
+
+    // Loads the meta-kernel mk.tm of the folder, which names the file relatively, with the working directory set to the folder
+    private static void LoadRelativeMetaKernel(DirectoryInfo folder, string name)
+    {
+        var metaKernel = new FileInfo(Path.Combine(folder.FullName, "mk.tm"));
+        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '{name}' )\n\\begintext\n");
+        var workingDirectory = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(folder.FullName);
+            SpiceAPI.Instance.LoadKernels(metaKernel);
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(workingDirectory);
+        }
+    }
+
+    private static StateVector ReadMoon() => SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector();
+
+    private static void CheckSameMoon(StateVector before, string what)
+    {
+        var moon = ReadMoon();
+        Check(moon.Position == before.Position && moon.Velocity == before.Velocity,
+            $"{what}: the Moon is the state read before ({moon.Position} against {before.Position})");
+    }
+
+    // SPICE's own list as the reference of the registry (Linux only): a file listed by its own path is held by KEEPER, and a
+    // file KEEPER holds is listed, by its path or by a directory that holds it
+    private static void CheckRegistryFollowsKeeper(DirectoryInfo root, params FileInfo[] files)
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        var listed = Listed(root);
+        foreach (var file in files)
+        {
+            bool held = CspiceDirect.LoadedKernelType(file.FullName) != null;
+            Check(!listed.Contains(file.FullName) || held, $"{file.Name}, listed by its path, is held by KEEPER");
+            Check(!held || listed.Any(p => p == file.FullName || file.FullName.StartsWith(p + Path.DirectorySeparatorChar, StringComparison.Ordinal)),
+                $"{file.Name}, held by KEEPER, is listed");
+        }
+    }
+
+    private static StateVector ReadRelativeObject() =>
+        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, -1999972, Frame.ICRF, Aberration.None).ToStateVector();
+
+    // Three states of a circular orbit about the Earth in ICRF, 60 s apart from the epoch
+    private static StateVector[] EarthStates()
+    {
+        var earth = new global::IO.Astrodynamics.Body.CelestialBody(399);
+        return Enumerable.Range(0, 3).Select(i => new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), earth,
+            Epoch.AddSeconds(60.0 * i), Frame.ICRF)).ToArray();
+    }
+
+    private static FileInfo Copy(string source, DirectoryInfo folder, string name)
+    {
+        var file = new FileInfo(Path.Combine(folder.FullName, name));
+        File.Copy(source, file.FullName);
+        return file;
+    }
+
+    // The handle KEEPER holds for a loaded file, read through CSPICE on Linux only (0 elsewhere)
+    private static int KeeperHandle(FileInfo file)
+    {
+        if (!OperatingSystem.IsLinux()) return 0;
+        var handle = CspiceDirect.LoadedKernelHandle(file.FullName);
+        Check(handle is > 0, $"KEEPER holds {file.Name} with a handle ({handle})");
+        return handle!.Value;
+    }
+
+    // KEEPER no longer holds the file, and its handle is no longer an open DAF (Linux only)
+    private static void CheckClosed(FileInfo file, int handle)
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        Check(CspiceDirect.LoadedKernelHandle(file.FullName) == null, $"KEEPER no longer holds {file.Name}");
+        Check(CspiceDirect.OpenDafFile(handle) == null, $"the handle {handle} of {file.Name} is no longer open");
+    }
+
+    // The IAU_EARTH rotation (its PCK search goes through every binary PCK) and the state of the Moon from the Earth (de440s,
+    // loaded before every kernel of the scenarios, so that its search passes every SPK loaded after it)
+    private static (Quaternion IauEarth, StateVector Moon) SearchesBefore() =>
+        (SpiceAPI.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation,
+            SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector());
+
+    // Loads 25 copies of the L1 SPK, then reads IAU_EARTH and the Moon: bit for bit what they were before the scenario
+    private static void CheckSearchesAfterManyDafs(DirectoryInfo root, DirectoryInfo kernels, (Quaternion IauEarth, StateVector Moon) before)
+    {
+        var many = Directory.CreateDirectory(Path.Combine(root.FullName, "Many"));
+        for (int i = 0; i < ManyDafs; i++)
+        {
+            Copy(Path.Combine(kernels.FullName, "L1_de431.bsp"), many, $"x{i:D2}.bsp");
+        }
+
+        SpiceAPI.Instance.LoadKernels(many);
+        try
+        {
+            var q = SpiceAPI.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation;
+            Check(q.W == before.IauEarth.W && q.VectorPart == before.IauEarth.VectorPart,
+                $"IAU_EARTH after {ManyDafs} more DAFs is the rotation read before ({q} against {before.IauEarth})");
+            var moon = SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector();
+            Check(moon.Position == before.Moon.Position && moon.Velocity == before.Moon.Velocity,
+                $"the Moon after {ManyDafs} more DAFs is the state read before ({moon.Position} against {before.Moon.Position})");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(many);
+        }
     }
 
     // A binary PCK D, deleted after its load, and a folder of a meta-kernel that names another PCK, listed before a text
-    // kernel. The meta-kernel's unload unloads that PCK, which opens D again and fails; the text kernel's unload reads the
-    // text kernels again, not the PCKs, and repairs nothing (measured with CSPICE N0067)
+    // kernel. Before the second round of #668, the meta-kernel's unload unloaded that PCK, which opened D again and failed,
+    // and the text kernel's unload, which reads the text kernels again, not the PCKs, repaired nothing: the unload threw
+    // (measured with CSPICE N0067). D is now closed and unloaded first, and the unload returns
     private static void UnloadMetaKernelOfAPck(DirectoryInfo root, string moonPck)
     {
         var gone = TestKernelWriter.WritePck(moonPck, new DirectoryInfo(Path.Combine(root.FullName, "Deleted")), "d.bpc", 1999952);
@@ -122,14 +780,19 @@ internal static class Program
         SpiceAPI.Instance.LoadKernels(gone);
         SpiceAPI.Instance.LoadKernels(folder);
         Check(System.Math.Abs(RotationAngleDeg("IOA_F02_MKP_X") - 90.0) < 1e-12, "the text kernel's frame is rotated by 90°");
+
+        var handle = KeeperHandle(gone);
         File.Delete(gone.FullName);
 
-        // Before, the text kernel's success was taken for a repair of the meta-kernel's failure
-        var exception = Throws(() => SpiceAPI.Instance.UnloadKernels(folder));
-        Check(exception.Message.Contains(metaKernel.FullName), $"the failure names the meta-kernel: {exception.Message}");
-        Check(Listed(root).SequenceEqual([gone.FullName]), "only the deleted PCK is listed");
+        SpiceAPI.Instance.UnloadKernels(folder);
 
-        // The unload of the deleted PCK opens the others again without it
+        // The native unload dropped the deleted PCK: nothing is listed (fourth round of #668; before, it was until unloaded)
+        Check(Listed(root).Length == 0, "nothing is listed");
+        CheckRegistryFollowsKeeper(root, gone, pck, text);
+        CheckClosed(gone, handle);
+        Check(CspiceDirectHolds(metaKernel) != true, "KEEPER no longer holds the meta-kernel");
+
+        // The unload of the deleted PCK, which SPICE no longer holds, does nothing
         SpiceAPI.Instance.UnloadKernels(gone);
         Check(Listed(root).Length == 0, "nothing is listed");
         Check(Throws(() => RotationAngleDeg("IOA_F02_MKP_X")) != null, "the text kernel's frame is unknown");
@@ -163,6 +826,10 @@ internal static class Program
         Check(AngleBetweenDeg(withP, withQ) > 20.0, "P and Q give rotations about 23.4° apart");
         return (folder, x, d, withP, withQ);
     }
+
+    // Whether KEEPER holds the file (Linux only; null elsewhere)
+    private static bool? CspiceDirectHolds(FileInfo file) =>
+        OperatingSystem.IsLinux() ? CspiceDirect.LoadedKernelHandle(file.FullName) != null : null;
 
     private static Quaternion Rotation(string frameName) => SpiceAPI.Instance.TransformFrame(Epoch, new Frame(frameName), Frame.ICRF).Rotation;
 

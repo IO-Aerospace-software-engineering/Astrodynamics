@@ -17,7 +17,16 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// <remarks>
 /// Supports both standalone OMM documents and OMM messages wrapped in NDM containers. A document holds one OMM message:
 /// one that holds several (a catalog NDM) throws <see cref="OmmParseException"/>, as before 11.0.0 it returned the first
-/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored.
+/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored. The message holds one header and one
+/// body, the body one segment, the segment one metadata and one data section, and the data at most one of each block
+/// (NDM/XML 4.0.0; CCSDS 502.0-B-3): a second one throws <see cref="OmmParseException"/>, where before 11.0.0 the
+/// first was read and the others dropped, a whole second segment included. The reader is the guard without schema
+/// validation; the schema of NDM/XML 4.0.0, which the validator checks in the document's form (third round of #668),
+/// rejects these elements too, but not several messages of an NDM. A keyword whose value the data model refuses (a
+/// negative ECCENTRICITY, an INCLINATION outside [0, 180], an empty OBJECT_NAME, ...) throws <see cref="OmmParseException"/> naming the
+/// keyword, its value and the rule, the data model's exception as inner exception, where before 11.0.0 the
+/// <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/> of its constructor crossed the reader; the
+/// schema rejects some of these values first, not those its types allow (fourth round of #668).
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OmmReader
@@ -31,7 +40,9 @@ public class OmmReader
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentException">Thrown when the file path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
-    /// <exception cref="OmmParseException">Thrown when the file cannot be parsed, or holds several OMM messages.</exception>
+    /// <exception cref="OmmParseException">Thrown when the file cannot be parsed, holds several OMM messages, or an OMM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section, or a keyword whose
+    /// value the data model refuses, naming the keyword and its value (fourth round of #668).</exception>
     public Omm ReadFromFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -50,7 +61,9 @@ public class OmmReader
     /// <param name="stream">The stream containing the OMM XML.</param>
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
-    /// <exception cref="OmmParseException">Thrown when the stream cannot be parsed, or holds several OMM messages.</exception>
+    /// <exception cref="OmmParseException">Thrown when the stream cannot be parsed, holds several OMM messages, or an OMM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section, or a keyword whose
+    /// value the data model refuses, naming the keyword and its value (fourth round of #668).</exception>
     public Omm ReadFromStream(Stream stream)
     {
         if (stream == null)
@@ -73,7 +86,9 @@ public class OmmReader
     /// <param name="xml">The XML string containing the OMM.</param>
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentException">Thrown when XML string is null or empty.</exception>
-    /// <exception cref="OmmParseException">Thrown when the XML cannot be parsed, or holds several OMM messages.</exception>
+    /// <exception cref="OmmParseException">Thrown when the XML cannot be parsed, holds several OMM messages, or an OMM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section, or a keyword whose
+    /// value the data model refuses, naming the keyword and its value (fourth round of #668).</exception>
     public Omm ReadFromString(string xml)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -143,11 +158,12 @@ public class OmmReader
         var classification = GetOptionalElementValue(headerElement, "CLASSIFICATION");
         var messageId = GetOptionalElementValue(headerElement, "MESSAGE_ID");
 
-        return new CcsdsHeader(creationDate, originator, comments)
-        {
-            Classification = classification,
-            MessageId = messageId
-        };
+        return Construct(() => new CcsdsHeader(creationDate, originator, comments)
+            {
+                Classification = classification,
+                MessageId = messageId
+            }, "header",
+            new CcsdsKeyword("originator", "ORIGINATOR", originator));
     }
 
     private OmmMetadata ParseMetadata(XElement metadataElement)
@@ -167,9 +183,15 @@ public class OmmReader
         if (!string.IsNullOrEmpty(refFrameEpochStr))
             refFrameEpoch = ParseDateTime(refFrameEpochStr, "REF_FRAME_EPOCH");
 
-        return new OmmMetadata(
-            objectName, objectId, centerName, refFrame, timeSystem, meanElementTheory,
-            refFrameEpoch, comments);
+        return Construct(() => new OmmMetadata(
+                objectName, objectId, centerName, refFrame, timeSystem, meanElementTheory,
+                refFrameEpoch, comments), "metadata",
+            new CcsdsKeyword("objectName", "OBJECT_NAME", objectName),
+            new CcsdsKeyword("objectId", "OBJECT_ID", objectId),
+            new CcsdsKeyword("centerName", "CENTER_NAME", centerName),
+            new CcsdsKeyword("referenceFrame", "REF_FRAME", refFrame),
+            new CcsdsKeyword("timeSystem", "TIME_SYSTEM", timeSystem),
+            new CcsdsKeyword("meanElementTheory", "MEAN_ELEMENT_THEORY", meanElementTheory));
     }
 
     private OmmData ParseData(XElement dataElement)
@@ -182,25 +204,25 @@ public class OmmReader
 
         // Parse optional spacecraft parameters
         SpacecraftParameters spacecraftParams = null;
-        var spacecraftElement = GetOptionalElement(dataElement, "spacecraftParameters");
+        var spacecraftElement = GetOptionalBlock(dataElement, "spacecraftParameters");
         if (spacecraftElement != null)
             spacecraftParams = ParseSpacecraftParameters(spacecraftElement);
 
         // Parse optional TLE parameters
         TleParameters tleParams = null;
-        var tleElement = GetOptionalElement(dataElement, "tleParameters");
+        var tleElement = GetOptionalBlock(dataElement, "tleParameters");
         if (tleElement != null)
             tleParams = ParseTleParameters(tleElement);
 
         // Parse optional covariance matrix
         CovarianceMatrix covariance = null;
-        var covarianceElement = GetOptionalElement(dataElement, "covarianceMatrix");
+        var covarianceElement = GetOptionalBlock(dataElement, "covarianceMatrix");
         if (covarianceElement != null)
             covariance = ParseCovarianceMatrix(covarianceElement);
 
         // Parse optional user-defined parameters
         UserDefinedParameters userDefined = null;
-        var userDefinedElement = GetOptionalElement(dataElement, "userDefinedParameters");
+        var userDefinedElement = GetOptionalBlock(dataElement, "userDefinedParameters");
         if (userDefinedElement != null)
             userDefined = ParseUserDefinedParameters(userDefinedElement);
 
@@ -221,11 +243,16 @@ public class OmmReader
         if (string.IsNullOrEmpty(smaStr) && string.IsNullOrEmpty(meanMotionStr))
             throw new OmmParseException("Either SEMI_MAJOR_AXIS or MEAN_MOTION must be specified in meanElements.");
 
-        var eccentricity = ParseDouble(GetRequiredElementValue(element, "ECCENTRICITY"), "ECCENTRICITY");
-        var inclination = ParseDouble(GetRequiredElementValue(element, "INCLINATION"), "INCLINATION");
-        var raan = ParseDouble(GetRequiredElementValue(element, "RA_OF_ASC_NODE"), "RA_OF_ASC_NODE");
-        var argOfPericenter = ParseDouble(GetRequiredElementValue(element, "ARG_OF_PERICENTER"), "ARG_OF_PERICENTER");
-        var meanAnomaly = ParseDouble(GetRequiredElementValue(element, "MEAN_ANOMALY"), "MEAN_ANOMALY");
+        var eccentricityStr = GetRequiredElementValue(element, "ECCENTRICITY");
+        var inclinationStr = GetRequiredElementValue(element, "INCLINATION");
+        var raanStr = GetRequiredElementValue(element, "RA_OF_ASC_NODE");
+        var argOfPericenterStr = GetRequiredElementValue(element, "ARG_OF_PERICENTER");
+        var meanAnomalyStr = GetRequiredElementValue(element, "MEAN_ANOMALY");
+        var eccentricity = ParseDouble(eccentricityStr, "ECCENTRICITY");
+        var inclination = ParseDouble(inclinationStr, "INCLINATION");
+        var raan = ParseDouble(raanStr, "RA_OF_ASC_NODE");
+        var argOfPericenter = ParseDouble(argOfPericenterStr, "ARG_OF_PERICENTER");
+        var meanAnomaly = ParseDouble(meanAnomalyStr, "MEAN_ANOMALY");
 
         // Optional GM
         var gmStr = GetOptionalElementValue(element, "GM");
@@ -233,17 +260,30 @@ public class OmmReader
         if (!string.IsNullOrEmpty(gmStr))
             gm = ParseDouble(gmStr, "GM");
 
+        // A value the data model refuses throws OmmParseException naming its keyword (fourth round of #668)
+        var keywords = new[]
+        {
+            new CcsdsKeyword("semiMajorAxis", "SEMI_MAJOR_AXIS", smaStr),
+            new CcsdsKeyword("meanMotion", "MEAN_MOTION", meanMotionStr),
+            new CcsdsKeyword("eccentricity", "ECCENTRICITY", eccentricityStr),
+            new CcsdsKeyword("inclination", "INCLINATION", inclinationStr),
+            new CcsdsKeyword("raan", "RA_OF_ASC_NODE", raanStr),
+            new CcsdsKeyword("argOfPericenter", "ARG_OF_PERICENTER", argOfPericenterStr),
+            new CcsdsKeyword("meanAnomaly", "MEAN_ANOMALY", meanAnomalyStr),
+            new CcsdsKeyword("gm", "GM", gmStr)
+        };
+
         if (!string.IsNullOrEmpty(smaStr))
         {
             var sma = ParseDouble(smaStr, "SEMI_MAJOR_AXIS");
-            return MeanElements.CreateWithSemiMajorAxis(
-                epoch, sma, eccentricity, inclination, raan, argOfPericenter, meanAnomaly, gm, comments);
+            return Construct(() => MeanElements.CreateWithSemiMajorAxis(
+                epoch, sma, eccentricity, inclination, raan, argOfPericenter, meanAnomaly, gm, comments), "meanElements", keywords);
         }
         else
         {
             var meanMotion = ParseDouble(meanMotionStr, "MEAN_MOTION");
-            return MeanElements.CreateWithMeanMotion(
-                epoch, meanMotion, eccentricity, inclination, raan, argOfPericenter, meanAnomaly, gm, comments);
+            return Construct(() => MeanElements.CreateWithMeanMotion(
+                epoch, meanMotion, eccentricity, inclination, raan, argOfPericenter, meanAnomaly, gm, comments), "meanElements", keywords);
         }
     }
 
@@ -265,7 +305,13 @@ public class OmmReader
         if (!string.IsNullOrEmpty(dragAreaStr)) dragArea = ParseDouble(dragAreaStr, "DRAG_AREA");
         if (!string.IsNullOrEmpty(dragCoeffStr)) dragCoeff = ParseDouble(dragCoeffStr, "DRAG_COEFF");
 
-        return new SpacecraftParameters(mass, solarRadArea, solarRadCoeff, dragArea, dragCoeff, comments);
+        return Construct(() => new SpacecraftParameters(mass, solarRadArea, solarRadCoeff, dragArea, dragCoeff, comments),
+            "spacecraftParameters",
+            new CcsdsKeyword("mass", "MASS", massStr),
+            new CcsdsKeyword("solarRadArea", "SOLAR_RAD_AREA", solarRadAreaStr),
+            new CcsdsKeyword("solarRadCoeff", "SOLAR_RAD_COEFF", solarRadCoeffStr),
+            new CcsdsKeyword("dragArea", "DRAG_AREA", dragAreaStr),
+            new CcsdsKeyword("dragCoeff", "DRAG_COEFF", dragCoeffStr));
     }
 
     private TleParameters ParseTleParameters(XElement element)
@@ -301,33 +347,38 @@ public class OmmReader
         bool usesBStar = !string.IsNullOrEmpty(bstarStr);
         bool usesDDot = !string.IsNullOrEmpty(meanMotionDDotStr);
 
+        // A value the data model refuses throws OmmParseException naming its keyword (fourth round of #668)
+        TleParameters Build(Func<TleParameters> create) => Construct(create, "tleParameters",
+            new CcsdsKeyword("elementSetNumber", "ELEMENT_SET_NO", elementSetNoStr),
+            new CcsdsKeyword("revNumber", "REV_AT_EPOCH", revAtEpochStr));
+
         if (usesBStar && usesDDot)
         {
             var bstar = ParseDouble(bstarStr, "BSTAR");
             var ddot = ParseDouble(meanMotionDDotStr, "MEAN_MOTION_DDOT");
-            return TleParameters.CreateWithBStarAndDDot(
-                bstar, meanMotionDot, ddot, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments);
+            return Build(() => TleParameters.CreateWithBStarAndDDot(
+                bstar, meanMotionDot, ddot, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments));
         }
         else if (usesBStar && !usesDDot)
         {
             var bstar = ParseDouble(bstarStr, "BSTAR");
             var agom = ParseDouble(agomStr, "AGOM");
-            return TleParameters.CreateWithBStarAndAGom(
-                bstar, meanMotionDot, agom, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments);
+            return Build(() => TleParameters.CreateWithBStarAndAGom(
+                bstar, meanMotionDot, agom, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments));
         }
         else if (!usesBStar && usesDDot)
         {
             var bterm = ParseDouble(btermStr, "BTERM");
             var ddot = ParseDouble(meanMotionDDotStr, "MEAN_MOTION_DDOT");
-            return TleParameters.CreateWithBTermAndDDot(
-                bterm, meanMotionDot, ddot, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments);
+            return Build(() => TleParameters.CreateWithBTermAndDDot(
+                bterm, meanMotionDot, ddot, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments));
         }
         else
         {
             var bterm = ParseDouble(btermStr, "BTERM");
             var agom = ParseDouble(agomStr, "AGOM");
-            return TleParameters.CreateWithBTermAndAGom(
-                bterm, meanMotionDot, agom, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments);
+            return Build(() => TleParameters.CreateWithBTermAndAGom(
+                bterm, meanMotionDot, agom, ephemerisType, classificationStr, noradCatId, elementSetNo, revAtEpoch, comments));
         }
     }
 
@@ -380,7 +431,8 @@ public class OmmReader
 
             if (!string.IsNullOrEmpty(paramName) && paramValue != null)
             {
-                parameters.Add(new UserDefinedParameter(paramName, paramValue));
+                parameters.Add(Construct(() => new UserDefinedParameter(paramName, paramValue), "userDefinedParameters",
+                    new CcsdsKeyword("name", "USER_DEFINED parameter", paramName)));
             }
         }
 
@@ -389,12 +441,27 @@ public class OmmReader
 
     #region Helper Methods
 
-    private XElement GetRequiredElement(XElement parent, string localName)
+    // Builds a data-model object; a value it refuses throws OmmParseException naming its keyword and its text, not the
+    // ArgumentException of the constructor (fourth round of #668)
+    private static T Construct<T>(Func<T> construct, string block, params CcsdsKeyword[] keywords)
     {
-        var element = GetOptionalElement(parent, localName);
+        return CcsdsValues.Construct(construct, block, (message, inner) => new OmmParseException(message, inner), keywords);
+    }
+
+    // A header, body, segment, metadata, data section or required data block: one, which the schema bounds to one; none
+    // or several throw, a second one no longer dropped silently
+    private static XElement GetRequiredElement(XElement parent, string localName)
+    {
+        var element = GetOptionalBlock(parent, localName);
         if (element == null)
             throw new OmmParseException($"Required element '{localName}' not found in '{parent.Name.LocalName}'.");
         return element;
+    }
+
+    // An optional data block, which the schema bounds to one: null for none, several throw
+    private static XElement GetOptionalBlock(XElement parent, string localName)
+    {
+        return CcsdsElements.AtMostOne(parent, localName, "OMM", message => new OmmParseException(message));
     }
 
     private XElement GetOptionalElement(XElement parent, string localName)

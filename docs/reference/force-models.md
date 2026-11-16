@@ -87,6 +87,12 @@ propagator can pass its whole body list, Sun included.
 
 EGM2008 spherical harmonics up to degree 70 with geodesy-normalized Legendre functions (no Condon-Shortley phase).
 
+The degree is at most the highest degree of the model file, which must hold every coefficient (n, m) with
+2 ≤ n ≤ degree: a degree above the file throws `ArgumentOutOfRangeException` (parameter `maxDegrees`, the message naming
+the degree asked and the file's), a missing coefficient `ArgumentException` naming n and m, when the field or the body
+is built (#689; before 11.0.0 both were read as zeros, so a degree above the file ran at the file's degree). Degrees 0
+and 1, absent from the models, are the point mass.
+
 The coefficients of a model are normalized to its own GM and reference radius, which the coefficient file does not
 carry. The harmonics are evaluated with them, and the central term with the GM of the SPICE kernels:
 
@@ -116,7 +122,7 @@ the kernels (6378136.6 m), 7.9e-8 of the harmonics away from EGM2008
 
 ```csharp
 // A model other than EGM2008, in the same file format, with its own constants
-var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, epoch,
+var mars = new CelestialBody(PlanetsAndMoons.MARS, Frame.ICRF, epoch,
     new GeopotentialModelParameters("mars_model", 20, 4.282837362069909e13, 3396000.0));
 ```
 
@@ -153,7 +159,7 @@ other than the Earth without constants of the model), both choices give the same
 
 ```csharp
 // EGM2008 with its own GM in the central term too, as GMAT evaluates EGM2008 from a .cof header
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
     {
         CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter

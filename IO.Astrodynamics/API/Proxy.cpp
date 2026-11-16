@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <iostream>
 #include <filesystem>
+#include <cstring>
+#include <string>
 
 
 #include <Proxy.h>
@@ -96,66 +98,97 @@ bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     }
 }
 
+namespace
+{
+    // The failure of a native writer: the message of its writing, taken (and SPICE reset) before its kernel object is
+    // destroyed, then that of the destruction, whose unload of the written file opens the other loaded kernels of its kind
+    // again (fourth round of #668). Copied into lastError; true when there is none
+    bool ReportWriterErrors(std::string writing)
+    {
+        std::string message = std::move(writing);
+        if (failed_c())
+        {
+            if (!message.empty()) message += " ";
+            message += HandleError();
+        }
+        if (message.empty())
+        {
+            return true;
+        }
+        std::strncpy(lastError, message.c_str(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
+    }
+}
+
+// The kernel object lives in an inner scope: its destructor unloads the written file (Kernel::~Kernel), and that unload_c
+// opens the other loaded SPKs again (unload_c --> UNLOAD --> SPKLEF), which fails on a deleted SPK SPICE holds under a
+// relative name, left to KEEPER by KernelsLoader. Before the fourth round of #668 the destructor ran after the return, so
+// that failure was left pending into the next proxy while this one returned true. The writing's error is taken first, so
+// that the destructor unloads on a clean SPICE state, as it did before
 bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO *sv,
                          unsigned int size)
 {
     ActivateErrorManagement();
-    IO::Astrodynamics::Kernels::EphemerisKernel kernel(filePath, objectId);
-
-    std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> states;
-    states.reserve(size);
-    std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
-
-
-    for (unsigned int i = 0; i < size; ++i)
+    std::string writing;
     {
-        if (celestialBodies.find(sv[i].centerOfMotionId) == celestialBodies.end())
+        IO::Astrodynamics::Kernels::EphemerisKernel kernel(filePath, objectId);
+
+        std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> states;
+        states.reserve(size);
+        std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
+
+
+        for (unsigned int i = 0; i < size; ++i)
         {
-            celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-                    sv[i].centerOfMotionId);
+            if (celestialBodies.find(sv[i].centerOfMotionId) == celestialBodies.end())
+            {
+                celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
+                        sv[i].centerOfMotionId);
+            }
+            states.emplace_back(celestialBodies[sv[i].centerOfMotionId], ToVector3D(sv[i].position),
+                                ToVector3D(sv[i].velocity),
+                                IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
+                                IO::Astrodynamics::Frames::Frames(sv[i].inertialFrame));
         }
-        states.emplace_back(celestialBodies[sv[i].centerOfMotionId], ToVector3D(sv[i].position),
-                            ToVector3D(sv[i].velocity),
-                            IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
-                            IO::Astrodynamics::Frames::Frames(sv[i].inertialFrame));
-    }
 
-    kernel.WriteData(states);
-    if (failed_c())
-    {
-        HandleError();
-        return false;
+        kernel.WriteData(states);
+        if (failed_c())
+        {
+            writing = HandleError();
+        }
     }
-    return true;
+    return ReportWriterErrors(std::move(writing));
 }
 
+// The CK analog of WriteEphemerisProxy: the destructor's unload of the written CK opens the other loaded CKs again
+// (unload_c --> UNLOAD --> CKLPF)
 bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateOrientationDTO *so,
                            unsigned int size)
 {
     ActivateErrorManagement();
-    std::filesystem::path path(filePath);
-    std::filesystem::path parentPath = path.parent_path();
-    IO::Astrodynamics::Kernels::OrientationKernel kernel(filePath, objectId, objectId * 1000);
-
-    std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> states;
-    states.emplace_back();
-
-    states.back().reserve(size);
-    std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
-
-    for (unsigned int i = 0; i < size; ++i)
+    std::string writing;
     {
-        states.back().emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
-                                   IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
-                                   IO::Astrodynamics::Frames::Frames(so[i].frame));
+        IO::Astrodynamics::Kernels::OrientationKernel kernel(filePath, objectId, objectId * 1000);
+
+        std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> states;
+        states.emplace_back();
+
+        states.back().reserve(size);
+
+        for (unsigned int i = 0; i < size; ++i)
+        {
+            states.back().emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
+                                       IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
+                                       IO::Astrodynamics::Frames::Frames(so[i].frame));
+        }
+        kernel.WriteOrientations(states);
+        if (failed_c())
+        {
+            writing = HandleError();
+        }
     }
-    kernel.WriteOrientations(states);
-    if (failed_c())
-    {
-        HandleError();
-        return false;
-    }
-    return true;
+    return ReportWriterErrors(std::move(writing));
 }
 
 bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
@@ -356,32 +389,51 @@ bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
     }
 }
 
-void FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
+bool FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                           int targetId,
                                           const char *relationalOperator, double value, const char *aberration,
                                           double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000])
 {
-    ActivateErrorManagement();
-    auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
-    auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
+    // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
+    // before, the error was printed and dropped and the search returned no window)
+    try
+    {
+        ActivateErrorManagement();
+        auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+        auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
 
-    auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(
-            ToTDBWindow(searchWindow),
-            observerId, targetId,
-            relationalOpe, value, abe,
-            IO::Astrodynamics::Time::TimeSpan(stepSize));
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        if (i >= 1000) break;
-        windows[i] = ToWindowDTO(res[i]);
+        auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(
+                ToTDBWindow(searchWindow),
+                observerId, targetId,
+                relationalOpe, value, abe,
+                IO::Astrodynamics::Time::TimeSpan(stepSize));
+        if (failed_c())
+        {
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+            if (i >= 1000) break;
+            windows[i] = ToWindowDTO(res[i]);
+        }
+        return true;
     }
-    if (failed_c())
+    catch (const std::exception &e)
     {
-        HandleError();
+        if (failed_c())
+        {
+            HandleError();
+        }
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 
-void
+bool
 FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                         int targetId,
                                         const char *targetFrame, const char *targetShape, int frontBodyId,
@@ -389,31 +441,49 @@ FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         const char *aberration, double stepSize,
                                         IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    ActivateErrorManagement();
-    auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
-    auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(
-            ToTDBWindow(searchWindow),
-            observerId, targetId,
-            targetFrame, targetShape,
-            frontBodyId,
-            frontFrame, frontShape,
-            IO::Astrodynamics::OccultationType::ToOccultationType(
-                    occultationType), abe,
-            IO::Astrodynamics::Time::TimeSpan(
-                    stepSize));
+    // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
+    // before, the error was printed and dropped and the search returned no window)
+    try
+    {
+        ActivateErrorManagement();
+        auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
+        auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(
+                ToTDBWindow(searchWindow),
+                observerId, targetId,
+                targetFrame, targetShape,
+                frontBodyId,
+                frontFrame, frontShape,
+                IO::Astrodynamics::OccultationType::ToOccultationType(
+                        occultationType), abe,
+                IO::Astrodynamics::Time::TimeSpan(
+                        stepSize));
+        if (failed_c())
+        {
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
 
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        if (i >= 1000) break;
-        windows[i] = ToWindowDTO(res[i]);
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+            if (i >= 1000) break;
+            windows[i] = ToWindowDTO(res[i]);
+        }
+        return true;
     }
-    if (failed_c())
+    catch (const std::exception &e)
     {
-        HandleError();
+        if (failed_c())
+        {
+            HandleError();
+        }
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 
-void
+bool
 FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                        int targetId,
                                        const char *frame, const char *coordinateSystem,
@@ -422,32 +492,50 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
                                        const char *aberration, double stepSize,
                                        IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    ActivateErrorManagement();
-    auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
-    auto systemType = IO::Astrodynamics::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
-    auto coordinateType = IO::Astrodynamics::Coordinate::ToCoordinateType(coordinate);
-    auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
-    auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(
-            ToTDBWindow(searchWindow),
-            observerId, targetId, frame,
-            systemType, coordinateType,
-            relationalOpe, value,
-            adjustValue, abe,
-            IO::Astrodynamics::Time::TimeSpan(
-                    stepSize));
+    // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
+    // before, the error was printed and dropped and the search returned no window)
+    try
+    {
+        ActivateErrorManagement();
+        auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
+        auto systemType = IO::Astrodynamics::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
+        auto coordinateType = IO::Astrodynamics::Coordinate::ToCoordinateType(coordinate);
+        auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+        auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(
+                ToTDBWindow(searchWindow),
+                observerId, targetId, frame,
+                systemType, coordinateType,
+                relationalOpe, value,
+                adjustValue, abe,
+                IO::Astrodynamics::Time::TimeSpan(
+                        stepSize));
+        if (failed_c())
+        {
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
 
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        if (i >= 1000) break;
-        windows[i] = ToWindowDTO(res[i]);
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+            if (i >= 1000) break;
+            windows[i] = ToWindowDTO(res[i]);
+        }
+        return true;
     }
-    if (failed_c())
+    catch (const std::exception &e)
     {
-        HandleError();
+        if (failed_c())
+        {
+            HandleError();
+        }
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 
-void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
+bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                               const char *illuminationSource, int targetBody, const char *fixedFrame,
                                               IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic,
                                               const char *illuminationType,
@@ -456,38 +544,57 @@ void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
                                               const char *aberration, double stepSize, const char *method,
                                               IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    ActivateErrorManagement();
-    double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
+    // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
+    // before, the error was printed and dropped and the search returned no window)
+    try
+    {
+        ActivateErrorManagement();
+        double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
 
-    IO::Astrodynamics::Body::CelestialBody body(targetBody);
-    SpiceDouble bodyFixedLocation[3];
-    georec_c(geodetic.longitude, geodetic.latitude, geodetic.altitude, body.GetRadius().GetX() * 0.001,
-             body.GetFlattening(),
-             bodyFixedLocation);
-    auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
-    auto illumination = IO::Astrodynamics::IlluminationAngle::ToIlluminationAngleType(illuminationType);
-    auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
-    auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(
-            ToTDBWindow(searchWindow),
-            observerId, illuminationSource,
-            targetBody, fixedFrame,
-            bodyFixedLocation,
-            illumination, relationalOpe,
-            value, adjustValue, abe,
-            IO::Astrodynamics::Time::TimeSpan(
-                    stepSize), method);
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        if (i >= 1000) break;
-        windows[i] = ToWindowDTO(res[i]);
+        IO::Astrodynamics::Body::CelestialBody body(targetBody);
+        SpiceDouble bodyFixedLocation[3];
+        georec_c(geodetic.longitude, geodetic.latitude, geodetic.altitude, body.GetRadius().GetX() * 0.001,
+                 body.GetFlattening(),
+                 bodyFixedLocation);
+        auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
+        auto illumination = IO::Astrodynamics::IlluminationAngle::ToIlluminationAngleType(illuminationType);
+        auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+        auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(
+                ToTDBWindow(searchWindow),
+                observerId, illuminationSource,
+                targetBody, fixedFrame,
+                bodyFixedLocation,
+                illumination, relationalOpe,
+                value, adjustValue, abe,
+                IO::Astrodynamics::Time::TimeSpan(
+                        stepSize), method);
+        if (failed_c())
+        {
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+            if (i >= 1000) break;
+            windows[i] = ToWindowDTO(res[i]);
+        }
+        return true;
     }
-    if (failed_c())
+    catch (const std::exception &e)
     {
-        HandleError();
+        if (failed_c())
+        {
+            HandleError();
+        }
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 
-void
+bool
 FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                         int instrumentId,
                                         int targetId, const char *targetFrame,
@@ -495,23 +602,42 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         const char *aberration, double stepSize,
                                         IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    ActivateErrorManagement();
-    auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
-    auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(
-            ToTDBWindow(searchWindow),
-            observerId, instrumentId,
-            targetId, targetFrame,
-            targetShape,
-            abe, IO::Astrodynamics::Time::TimeSpan(
-                    stepSize));
-    for (size_t i = 0; i < res.size(); ++i)
+    // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
+    // before, the error was printed and dropped and the search returned no window)
+    try
     {
-        if (i >= 1000) break;
-        windows[i] = ToWindowDTO(res[i]);
+        ActivateErrorManagement();
+        auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
+        auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(
+                ToTDBWindow(searchWindow),
+                observerId, instrumentId,
+                targetId, targetFrame,
+                targetShape,
+                abe, IO::Astrodynamics::Time::TimeSpan(
+                        stepSize));
+        if (failed_c())
+        {
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+            if (i >= 1000) break;
+            windows[i] = ToWindowDTO(res[i]);
+        }
+        return true;
     }
-    if (failed_c())
+    catch (const std::exception &e)
     {
-        HandleError();
+        if (failed_c())
+        {
+            HandleError();
+        }
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 

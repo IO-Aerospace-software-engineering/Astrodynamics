@@ -3,11 +3,19 @@ using System.Text;
 using IO.Astrodynamics.CLI.Commands;
 using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.TimeSystem;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.CLI.Tests;
 
 public class EphemerisTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public EphemerisTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Fact]
     public void CallWithAllOptions()
     {
@@ -112,6 +120,172 @@ public class EphemerisTests
                 }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : 318401024.1503668 Y : 201190109.75510025 Z: 78495998.30144708 Velocity : X : -524.1437266303659 Y : 374.538327456151 Z: 423.00558627606205 Frame : J2000{
                     Environment.NewLine}"
                 , res);
+        }
+    }
+
+    /// <summary>
+    /// An observer identifier from 100001 to 999998 is read as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// reads it (cli-site-rule of #668's second round): a site by the library's rule (<see cref="SpiceAPI.IsSiteId"/>, the
+    /// rule of <c>Site.NaifId</c>) built from the kernels under its SPICE name, anything else (x000, a body of at most 100,
+    /// a Lagrange point) a celestial item. Before, the CLI kept its own rule (100001 to 999998) and built the site
+    /// <c>site&lt;id&gt;</c> of any of them, which failed otherwise: <c>ArgumentOutOfRangeException</c> from
+    /// <c>Site(0, ...)</c> for 399000, "391 has no name" for 391013, "100 is not a celestial body" for 100500, and for
+    /// 301001, a site of the Moon by the rule that the kernels do not name, no ephemeris data instead of the missing name.
+    /// </summary>
+    [Theory]
+    [InlineData(391013)]
+    [InlineData(399000)]
+    [InlineData(100500)]
+    [InlineData(301001)]
+    [InlineData(395013)]
+    public void Ephemeris_FromAnIdentifierThatIsNotASite_FailsAsTheLibrary(int observerId)
+    {
+        using (Configuration.Lock())
+        {
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+            var command = new EphemerisCommand();
+            Console.SetOut(new StringWriter(new StringBuilder()));
+            var fromCli = Record.Exception(() =>
+            {
+                _ = command.Ephemeris("Data", 301, observerId, new WindowParameters
+                {
+                    Begin = begin.ToString(),
+                    End = begin.AddSeconds(60.0).ToString()
+                }, TimeSpan.FromMinutes(1));
+            });
+
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, observerId, 301, Frames.Frame.ICRF, Aberration.None));
+
+            Assert.Equal(observerId == 301001, SpiceAPI.IsSiteId(observerId));
+            Assert.NotNull(fromLibrary);
+            Assert.NotNull(fromCli);
+            Assert.IsType(fromLibrary.GetType(), fromCli);
+            Assert.Equal((fromLibrary as ArgumentException)?.ParamName, (fromCli as ArgumentException)?.ParamName);
+            Assert.Equal(fromLibrary.Message, fromCli.Message);
+        }
+    }
+
+    /// <summary>
+    /// A site observer is named by its SPICE name, as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// names it (DSS-13 for 399013), and its states do not move: <see cref="CallFromASite"/>.
+    /// </summary>
+    [Fact]
+    public void ASiteObserver_IsTheSiteOfTheLibrary()
+    {
+        using (Configuration.Lock())
+        {
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+
+            // The observer the ephemeris command builds (Helpers.CreateLocalizable, internal to the CLI)
+            var createLocalizable = typeof(EphemerisCommand).Assembly.GetType("IO.Astrodynamics.CLI.Helpers")!
+                .GetMethod("CreateLocalizable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+            var site = Assert.IsType<Surface.Site>(createLocalizable.Invoke(null, [399013, begin]));
+            var fromLibrary = SpiceAPI.Instance.ReadEphemeris(begin, 399013, 301, Frames.Frame.ICRF, Aberration.None);
+
+            Assert.Equal("DSS-13", site.Name);
+            Assert.Equal(399013, site.NaifId);
+            var librarySite = Assert.IsType<Surface.Site>(fromLibrary.Observer);
+            Assert.Equal(librarySite.Name, site.Name);
+            Assert.Equal(librarySite.NaifId, site.NaifId);
+        }
+    }
+
+    /// <summary>
+    /// A site whose SPK is loaded without a kernel that names it (the SPK <c>Site.WriteEphemeris</c> writes, the name being
+    /// in the frame kernel of <c>Site.WriteFrameAsync</c>) fails as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// fails, "has no name in SPICE" (cli-site-rule of #668's second round; before, the CLI built it as <c>site&lt;id&gt;</c>);
+    /// with the kernel that names it loaded, its frame kernel, the CLI reads it under that name, the states of
+    /// <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>: the migration of the Breaking entry.
+    /// </summary>
+    [Fact]
+    public async Task Ephemeris_FromASiteTheKernelsDoNotName_FailsAsTheLibrary_AndReadsOnceNamed()
+    {
+        using (Configuration.Lock())
+        {
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var begin = Time.J2000TDB;
+            var directory = Directory.CreateTempSubdirectory("clisite-");
+            var spk = new FileInfo(Path.Combine(directory.FullName, "site777.bsp"));
+            var frameKernel = new FileInfo(Path.Combine(directory.FullName, "site777.tf"));
+            var site = new Surface.Site(777, "CLISITE", new Body.CelestialBody(399), new Coordinates.Planetodetic(0.1, 0.6, 100.0));
+            site.WriteEphemeris(new Window(begin.AddDays(-1.0), begin.AddDays(1.0)), spk);
+            await site.WriteFrameAsync(frameKernel);
+            var window = new WindowParameters { Begin = begin.ToString(), End = begin.AddSeconds(60.0).ToString() };
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                // Without the kernel that names it
+                var command = new EphemerisCommand();
+                Console.SetOut(new StringWriter(new StringBuilder()));
+                var fromCli = Record.Exception(() => { _ = command.Ephemeris("Data", 301, 399777, window, TimeSpan.FromMinutes(1)); });
+                var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None));
+                Assert.NotNull(fromLibrary);
+                Assert.NotNull(fromCli);
+                Assert.IsType(fromLibrary.GetType(), fromCli);
+                Assert.Equal(fromLibrary.Message, fromCli.Message);
+                Assert.Contains("399777 has no name in SPICE", fromCli.Message);
+
+                // With it
+                SpiceAPI.Instance.LoadKernels(frameKernel);
+                try
+                {
+                    var sb = new StringBuilder();
+                    Console.SetOut(new StringWriter(sb));
+                    await command.Ephemeris("Data", 301, 399777, window, TimeSpan.FromMinutes(1));
+                    var expected = SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    Assert.Equal("CLISITE", expected.Observer.Name);
+                    // The command reads through GetEphemeris: the position of the library's read to its last digit (5.960e-8 m
+                    // in X, 1.487e-16 relative, the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161,
+                    // 2026-11-15); threshold twice that, rounded up at the second digit
+                    var line = sb.ToString().Split(Environment.NewLine)[0];
+                    Assert.StartsWith($"Epoch : {begin} Position : ", line);
+                    var xyz = System.Text.RegularExpressions.Regex.Matches(line, @"(?<=X : |Y : |Z: )-?[0-9.E+-]+").Take(3)
+                        .Select(m => double.Parse(m.Value, CultureInfo.InvariantCulture)).ToArray();
+                    var printed = new Math.Vector3(xyz[0], xyz[1], xyz[2]);
+                    _output.WriteLine($"MEASURE CLI site ephemeris against SpiceAPI.ReadEphemeris: X {System.Math.Abs(printed.X - expected.Position.X):E3} m, " +
+                                      $"relative {(printed - expected.Position).Magnitude() / expected.Position.Magnitude():E3}");
+                    Assert.True((printed - expected.Position).Magnitude() < 3.0e-16 * expected.Position.Magnitude(),
+                        $"{printed} against {expected.Position}");
+                }
+                finally
+                {
+                    SpiceAPI.Instance.UnloadKernels(frameKernel);
+                }
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                directory.Delete(true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// sub-point takes an identifier that is not a site by the library's rule for a celestial item, as
+    /// <see cref="CelestialItem.Create"/> does: it no longer calls 391013, 399000 or 100500 a site.
+    /// </summary>
+    [Theory]
+    [InlineData(391013)]
+    [InlineData(399000)]
+    [InlineData(100500)]
+    public void SubPoint_OfAnIdentifierThatIsNotASite_IsACelestialItem(int objectId)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new EphemerisCommand();
+            Console.SetOut(new StringWriter(new StringBuilder()));
+            var fromCli = Record.Exception(() => { _ = command.SubPoint("Data", objectId, 399, new EpochParameters { Epoch = "0.0" }); });
+
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var fromLibrary = Record.Exception(() => Body.CelestialItem.Create(objectId));
+
+            Assert.NotNull(fromLibrary);
+            Assert.NotNull(fromCli);
+            Assert.DoesNotContain("is a site", fromCli.Message);
+            Assert.IsType(fromLibrary.GetType(), fromCli);
+            Assert.Equal(fromLibrary.Message, fromCli.Message);
         }
     }
 

@@ -60,6 +60,41 @@ public sealed class TestKernelsTests : IDisposable
     }
 
     [Fact]
+    public void TwoInstances_DoNotSeeEachOthersAnchors()
+    {
+        // Arrange: a second set with its own anchor, as TestKernels.Lro beside TestKernels.SolarSystem
+        var otherSet = _root.CreateSubdirectory("other");
+        var other = new SharedKernels(otherSet, new DirectoryInfo(Path.Combine(_root.FullName, "otheranchor")));
+        try
+        {
+            // Act: each loaded once, in turn, then each ensured again
+            _kernels.Ensure();
+            other.Ensure();
+            _kernels.Ensure();
+            other.Ensure();
+
+            // Assert: one load each, each before its own anchor, the second set's load after the first's anchor seen by
+            // neither as a reload
+            var loaded = Loaded();
+            Assert.Equal(1, _kernels.Loads);
+            Assert.Equal(1, other.Loads);
+            Assert.Single(loaded, k => k == _set.FullName);
+            Assert.Single(loaded, k => k == otherSet.FullName);
+            Assert.True(Array.IndexOf(loaded, _set.FullName) < Array.IndexOf(loaded, _anchor.FullName));
+            Assert.True(Array.IndexOf(loaded, otherSet.FullName) < Array.IndexOf(loaded, other.Anchor.FullName));
+            Assert.False(_kernels.ReloadObserved);
+            Assert.False(other.ReloadObserved);
+            Assert.False(_kernels.RemovalObserved);
+            Assert.False(other.RemovalObserved);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(new DirectoryInfo(otherSet.FullName));
+            SpiceAPI.Instance.UnloadKernels(new DirectoryInfo(other.Anchor.FullName));
+        }
+    }
+
+    [Fact]
     public void Ensure_AfterARemoval_LoadsAgain()
     {
         // Arrange

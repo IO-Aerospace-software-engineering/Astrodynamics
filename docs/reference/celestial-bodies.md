@@ -73,7 +73,7 @@ of GM 0 and frame `DSS-13_TOPO`, classed as an asteroid around the Sun
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
-var state = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
 ```
 
 ## CelestialItem

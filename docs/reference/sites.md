@@ -32,7 +32,7 @@ Ground-based observation or tracking site.
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows ([Occultations](occultations.md)) |
 | `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source ([Illumination](#illumination)) |
 | `FindDayWindows(Window, double)` | Find daylight windows |
-| `WriteFrameAsync(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676) |
+| `WriteFrameAsync(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676). For a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name, as a TK matrix of the body frame; one not fixed in the body frame throws `InvalidOperationException` (#690) |
 
 ### Window searches
 
@@ -48,8 +48,9 @@ does ([Occultations](occultations.md)): where three consecutive samples show an 
 reach the value, Brent's `localmin` locates it between their two neighbors (the first and last intervals likewise), and
 an extreme beyond the value becomes a sample. Every window, gap and crossing is therefore found when the step is at most
 half the time between two extremes of the quantity, a jump of a branch cut (a right ascension, a longitude, an azimuth)
-counting as one, down to the about 1 µs to which `localmin` locates an extreme (a narrower window or gap can be missed,
-and a tangency between two samples, an extreme exactly at the value, is not found): the 2 passes of about 3 min of a LEO
+counting as one, down to the resolution of `localmin`, about 2 √ε h + 2τ/3 for a step h and τ = 1 µs (2.5 µs at a
+1 min step, 19 µs at 10 min, 41 µs at 22.5 min: a narrower window or gap can be missed, and a tangency between two
+samples, an extreme exactly at the value, is not found; #668): the 2 passes of about 3 min of a LEO
 above 30° from DSS-13 at a 20 min step, as CSPICE finds them. CSPICE asks for a step shorter than the shortest interval
 where the quantity is monotone ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html),
 Particulars, "The Search Process" and "Step Size"; the same in `gfposc_c` and `gfilum_c`, where a longitude or a right
@@ -127,8 +128,46 @@ A site built from coordinates has a frame only the library holds (`SiteFrame`): 
 J2000 and rotated by it, from any observer ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682), as [TEME, CIRS and TIRS](frames.md#teme)); before 11.0.0
 a read from an observer other than the site's body threw SPICE(UNKNOWNFRAME). The rotation is that of the site's own
 coordinates, also when its name is that of a station whose frame a loaded kernel defines (`new Site(13, "DSS-13",
-earth, coordinates)` and `DSS-13_TOPO`); the CSPICE coordinate search in that frame (a kernel spacecraft taking part)
-returns no window ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)).
+earth, coordinates)` and `DSS-13_TOPO`). A coordinate search in that frame is the library's, also when a kernel
+spacecraft takes part (third review of [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690); before, CSPICE's `gfposc_c` got the frame by name and returned
+no window, or for a site named as a kernel frame searched in that kernel frame, [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)), and
+`SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it unless a loaded kernel defines its id
+under its name. `SpiceAPI.TransformFrame` with it is the library's frame composed through ICRF, as for TEME: the
+orientation `ToFrame` uses, bit for bit, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's `sxform_c` in the frame kernel
+`WriteFrameAsync` writes for the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161; fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), before, it threw).
+
+A site from the kernels (`new Site(13, "DSS-13", earth)`) has the frame the loaded kernels define for its id,
+1000000 + NaifId (`DSS-13_TOPO`, 1399013, of `earth_topo_201023.tf`), on every path
+([#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)): SPICE reads it by the name the
+kernels give that id, whatever the name of the site (`new Site(13, "GOLDSTONE", earth)` reads `DSS-13_TOPO`), and the
+library rotates by it (`ToFrame(site.Frame)`, `GetHorizontalCoordinates`, the managed coordinate searches), read from
+SPICE at each call. Before 11.0.0 the library rotated by a frame it built from `Planetodetic`, the position of the
+station at J2000 TDB on the `pck00011` ellipsoid, while SPICE read the kernel frame by name: the two departed by
+7.8e-8 rad for DSS-13, most of it the epoch (0.41 m of plate motion between J2000 and the 2020-10-23 of the frame
+kernel, 0.47 m by 2024), 2.1e-9 rad of it the spheroid; a site named otherwise than its kernel frame threw
+SPICE(UNKNOWNFRAME) on a read by name. A site from the kernels whose frame no loaded kernel defines keeps the frame of
+its `Planetodetic`, and an ephemeris read in it is read in J2000 and rotated by that frame, as for a site built from
+coordinates (third review of #690; before, its own name, `Name + "_TOPO"`, reached `spkezr_c`, which threw
+SPICE(UNKNOWNFRAME), while `ToFrame` and `GetHorizontalCoordinates` used that frame): within 7.4e-16 in position and
+5.9e-16 rad in frame of SPICE in a frame kernel of NAIF's topocentric convention on its `Planetodetic` (measured on Linux
+x64). The choice is made at each read, so a frame kernel of its id loaded later is read by name. A coordinate search
+in that frame is the library's, also when a kernel spacecraft takes part, as in the frame of a site built from
+coordinates: within 5.0e-7 s of `gfposc_c` in that frame kernel for a site at DSS-13's coordinates seen from a LEO
+(measured on Linux x64; before, `gfposc_c` got the site's own name and returned no window), and CSPICE's once a frame
+kernel of its id is loaded; `SpiceAPI.FindWindowsOnCoordinateConstraint` with it throws `ArgumentException`, and
+`SpiceAPI.TransformFrame` with it composes that frame through ICRF, as for a site built from coordinates (fourth round
+of #668; before, it threw). `Planetodetic` and the illumination
+angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
+`Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
+zenith of the kernel frame. `WriteFrameAsync` of such a site writes that kernel frame: its name and id in the
+kernels, and its rotation to the frame of the body read from SPICE, as `TKFRAME_<id>_MATRIX` (column order, one column
+per line, CSPICE reading 132 characters of a line), so that the file defines the frame the kernels define to the
+rounding of the matrix (2.1e-16 rad for DSS-13); loaded beside those kernels it assigns their frame again. A kernel
+frame not fixed in the frame of the body (read at J2000 TDB and 6 h later) cannot be written as a TK frame of the body
+and throws `InvalidOperationException`. Before 11.0.0 the writer wrote the frame of `Planetodetic` under the kernel's
+id, 7.76e-8 rad from `DSS-13_TOPO`, and for a site named otherwise renamed the frame of that id. To keep the frame of
+the coordinates at J2000, build the site from them: `new Site(id, name, body, kernelSite.Planetodetic)`.
 
 ### Example
 
@@ -163,9 +202,10 @@ normal to the ellipsoid through the point, and the altitude is measured along it
 are covered; the flattening must be below 1. The conversion from Cartesian coordinates is the closed form of Vermeille
 (2002) with the changes of Karney (2011), without iteration; both directions agree with CSPICE `georec_c`/`recgeo_c` to
 about 1e-15 (see [Validation](../guides/validation.md#reference-validations)). A custom site is placed by this
-conversion on the ellipsoid of its body; the topocentric frame of a site is built from its geodetic coordinates on that
-same ellipsoid, so it can differ slightly from a frame kernel built on another spheroid (DSS-13: 9.5e-7° in latitude
-between the `pck00011` ellipsoid and the WGS84 spheroid of `earth_topo_201023.tf`).
+conversion on the ellipsoid of its body; the topocentric frame of a site built from coordinates is built from them on
+that same ellipsoid, so it can differ slightly from a frame kernel built on another spheroid (DSS-13: 9.5e-7° in
+latitude between the `pck00011` ellipsoid and the WGS84 spheroid of `earth_topo_201023.tf`, 2.1e-9 rad of the axes). A
+site from the kernels has the kernel frame of its id ([Reads in the site's frame](#reads-in-the-sites-frame), #690).
 
 ### Horizontal
 

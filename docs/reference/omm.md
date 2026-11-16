@@ -21,6 +21,49 @@ another type beside it are ignored). A document that holds several OMMs, such as
 `OmmValidator.ValidateFile` reports it invalid (#679); before 11.0.0 the first one was read. Split such a document into
 one OMM per document.
 
+The OMM itself holds one header and one body, the body one segment, the segment one metadata and one data section, and
+the data at most one of each block (NDM/XML 4.0.0, `ndmxml-4.0.0-omm-3.0.xsd`; CCSDS 502.0-B-3). An OMM
+with a second segment, or a second header, body, metadata, data section or block, throws `OmmParseException` naming
+the element and its count without `validateSchema`; with it the schema rejects the document first, an
+`OmmValidationException` (`TryLoadFromFile` returns false with the schema error and `OmmValidator.ValidateFile` reports it
+invalid; without schema validation, a `PARSE_ERROR` and the reader's error). Before 11.0.0 the first one was read and
+the others dropped, a whole second segment included. Split such a document into one message per segment.
+
+A keyword whose value the data model refuses throws `OmmParseException` naming the keyword, its value, its block and the
+rule, the data model's exception as `InnerException` (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ECCENTRICITY` negative,
+`INCLINATION` outside [0, 180], `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` or `MEAN_ANOMALY` outside [-360, 360),
+`MEAN_MOTION` or `SEMI_MAJOR_AXIS` not above 0, `GM` not above 0, `ELEMENT_SET_NO` outside [0, 9999], `REV_AT_EPOCH`
+negative, a negative spacecraft parameter, an empty `OBJECT_NAME`, `OBJECT_ID`, `CENTER_NAME`, `REF_FRAME`,
+`TIME_SYSTEM`, `MEAN_ELEMENT_THEORY` or `ORIGINATOR`, or a blank `USER_DEFINED` parameter name, for example
+`ECCENTRICITY '-0.5' in meanElements is invalid: Eccentricity must be non-negative.` Before 11.0.0 the
+`ArgumentOutOfRangeException` or `ArgumentException` of the data model's constructor crossed the reader, naming its
+parameter. With `validateSchema` the schema rejects most of these values first (`OmmValidationException`), but not those
+its types allow: `MEAN_MOTION` and `SEMI_MAJOR_AXIS` are `xsd:double` and the metadata strings `xsd:string`, so a
+`MEAN_MOTION` of 0 or an empty `OBJECT_NAME` throws `OmmParseException` with the default validation too.
+`TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error, both naming the keyword.
+The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`.
+
+### Schema validation
+
+`validateSchema` and `OmmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
+505.0-B-3) in its form, as SANA publishes them: a root `ndm` or `omm` without a namespace, every element unqualified (the
+form of Space-Track and of the writer, SANA's `ndmxml_unqualified` set) or every element below the root in the
+namespace `urn:ccsds:schema:ndmxml` (the qualified set). Any other root is an error, and so is an `ndm` that holds no
+`omm` child (an empty `ndm`, or one of other messages only), which the NDM master accepts but in which the reader
+finds no OMM (`OMM007`; reported valid before 11.0.0, `Load*` then throwing `OmmParseException`).
+A root in the namespace, the library's earlier form of a bare message, is checked as before, against the OMM schema with that root declared in the
+namespace (an `ndm` root in the namespace has no declaration and is rejected, by SANA too). The unqualified set is the
+embedded one with its `elementFormDefault` set to `unqualified`, the one difference between the two sets SANA publishes.
+
+Before the third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) an
+unqualified document matched no declaration of the validator, so it was reported valid with a warning per element and
+nothing below its root was checked: an OMM with `ECCENTRICITY` -0.5 threw `ArgumentOutOfRangeException` from
+`MeanElements` and one with `INCLINATION` in `rad` loaded, and undeclared elements were ignored. Such a document now
+makes `Load*` throw `OmmValidationException`; fix the document, or pass `validateSchema: false` to read it without the
+schema step, where a keyword out of its range, as that `ECCENTRICITY`, throws `OmmParseException` since the fourth round
+(above). A valid document, the writer's output included, validates without a warning.
+
 ### Saving
 
 | Method | Description |

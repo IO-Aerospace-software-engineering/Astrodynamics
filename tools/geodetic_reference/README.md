@@ -48,10 +48,11 @@ with `external-lib/cspice.a` alone:
 
 | Program | What it prints | Consumed by |
 |---|---|---|
-| `dss13_topo.c` | The Moon from DSS-13 in `DSS-13_TOPO` (`earth_topo_201023.tf`, built on the WGS84 spheroid) and in the frame the library builds from the geodetic coordinates of the station on the `pck00011` ellipsoid; the angles of the Sun and of the Moon to that zenith; the geodetic coordinates of the station | `SiteTests.GetHorizontalCoordinates*`, `SiteTests.Illumination*` |
+| `dss13_topo.c` | The Moon from DSS-13 in `DSS-13_TOPO` (`earth_topo_201023.tf`, built on the WGS84 spheroid), the frame of the kernel site (#690), and in the frame of the geodetic coordinates of the station at J2000 on the `pck00011` ellipsoid, that of a site built from them; the angles of the Sun and of the Moon to that zenith, the ellipsoid normal of the illumination angles; the geodetic coordinates of the station | `SiteTests.GetHorizontalCoordinates*`, `SiteTests.Illumination*` |
 | `iod_observations.c` | A reference orbit (two-body, `prop2b_c`, GM of `gm_de440.tpc`) seen from the site of the COBE observations (University of Maryland) on the `pck00011` ellipsoid, turned from ITRF93 to J2000 (`earth_latest_high_prec.bpc`): the site positions and the geometric right ascension, declination and range (`recrad_c`) at the three epochs of the test, then at 90, 45 and 22.5 s from the middle one | `InitialOrbitDeterminationTests.FromTheExactSite*` |
 | `test_values_ref.c` | `recgeo_c` of the planetocentric point of `PlanetocentricTests`, `georec_c` and `reclat_c` of the geodetic point of `PlanetodeticTests`, and the geodetic coordinates of the sub-Moon point at J2000 TDB with the kernels of the CLI tests | `PlanetocentricTests.ToPlanetodetic`, `PlanetodeticTests.ToPlanetocentric`, `EphemerisTests.SubPointPlanetodetic` |
 
-The library agrees with the frame it builds to the last digits (117.89632135112616° in both, DSS-13, 2000-01-01); it
-departs from `DSS-13_TOPO` by up to 6.5e-6° in azimuth, the difference between the two ellipsoids (9.5e-7° in the
-latitude of the station).
+The kernel site DSS-13 agrees with `DSS-13_TOPO` to 1.6e-16 rad (117.89631808999324°, 2000-01-01, #690); before 11.0.0
+it took the frame of its coordinates at J2000 on `pck00011` (117.89632135112616°), up to 6.5e-6° away in azimuth, the
+plate motion between J2000 and 2020-10-23 and the difference between the two ellipsoids (9.5e-7° in the latitude of
+the station). A site built from these coordinates still takes their frame.

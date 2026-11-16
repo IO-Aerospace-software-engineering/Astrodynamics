@@ -100,7 +100,7 @@ namespace IO.Astrodynamics.Maneuver
 
         private double GetTheta(StateVector stateVector)
         {
-            var res = stateVector.PerigeeVector().Angle(TargetOrbit.PerigeeVector(), stateVector.SpecificAngularMomentum());
+            var res = stateVector.PerigeeVector().AngleAboutNormalOrZero(TargetOrbit.PerigeeVector(), stateVector.SpecificAngularMomentum());
             if (res < 0.0)
             {
                 res += Constants._2PI;

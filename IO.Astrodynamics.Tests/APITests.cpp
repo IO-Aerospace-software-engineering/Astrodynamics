@@ -43,9 +43,9 @@ TEST(API, FindWindowsOnCoordinateConstraintProxy)
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 730036800.0;
     searchWindow.end = 730123200;
-    FindWindowsOnCoordinateConstraintProxy(searchWindow, 399013, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">",
+    ASSERT_TRUE(FindWindowsOnCoordinateConstraintProxy(searchWindow, 399013, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">",
                                            0.0, 0.0, "NONE", 60.0,
-                                           windows);
+                                           windows));
 
     ASSERT_STREQ("2023-02-19 14:33:08.917987 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
@@ -57,7 +57,7 @@ TEST(API, FindWindowsOnDistanceConstraintProxy)
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::Astrodynamics::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
     searchWindow.end = IO::Astrodynamics::Time::TDB("2007 APR 1").GetSecondsFromJ2000().count();
-    FindWindowsOnDistanceConstraintProxy(searchWindow, 399, 301, ">", 400000000, "NONE", 86400.0, windows);
+    ASSERT_TRUE(FindWindowsOnDistanceConstraintProxy(searchWindow, 399, 301, ">", 400000000, "NONE", 86400.0, windows));
 
     ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2007-01-13 06:37:47.948144 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
@@ -73,11 +73,11 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy)
     searchWindow.end = IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB").GetSecondsFromJ2000().count();
     IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD,
                                                           48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
-    FindWindowsOnIlluminationConstraintProxy(searchWindow, 10, "SUN", 399, "IAU_EARTH",
+    ASSERT_TRUE(FindWindowsOnIlluminationConstraintProxy(searchWindow, 10, "SUN", 399, "IAU_EARTH",
                                              geodetic, "INCIDENCE", "<",
                                              IO::Astrodynamics::Constants::PI2 -
                                              IO::Astrodynamics::Constants::OfficialTwilight, 0.0,
-                                             "CN+S", 4.5 * 60 * 60, "Ellipsoid", windows);
+                                             "CN+S", 4.5 * 60 * 60, "Ellipsoid", windows));
 
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-05-17 19:34:33.699813 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
@@ -91,11 +91,103 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::Astrodynamics::Time::TDB("2001 DEC 13").GetSecondsFromJ2000().count();
     searchWindow.end = IO::Astrodynamics::Time::TDB("2001 DEC 15").GetSecondsFromJ2000().count();
-    FindWindowsOnOccultationConstraintProxy(searchWindow, 399, 10, "IAU_SUN", "ELLIPSOID", 301, "IAU_MOON", "ELLIPSOID",
-                                            "ANY", "LT", 3600.0, windows);
+    ASSERT_TRUE(FindWindowsOnOccultationConstraintProxy(searchWindow, 399, 10, "IAU_SUN", "ELLIPSOID", 301, "IAU_MOON", "ELLIPSOID",
+                                            "ANY", "LT", 3600.0, windows));
 
     ASSERT_STREQ("2001-12-14 20:10:15.410588 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
+}
+
+
+// A search SPICE cannot run returns false with SPICE's message, and writes no window (fourth round of #668: before, the
+// proxies printed the error, dropped it and returned no window, which a caller could not tell from a condition that never
+// holds)
+namespace
+{
+    IO::Astrodynamics::API::DTO::WindowDTO SearchWindow(const char *start, const char *end)
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO window{};
+        window.start = IO::Astrodynamics::Time::TDB(start).GetSecondsFromJ2000().count();
+        window.end = IO::Astrodynamics::Time::TDB(end).GetSecondsFromJ2000().count();
+        return window;
+    }
+
+    // Windows pre-filled with a sentinel, which a failed search must leave as it is
+    void FillWindows(IO::Astrodynamics::API::DTO::WindowDTO windows[1000])
+    {
+        for (int i = 0; i < 1000; ++i)
+        {
+            windows[i].start = -1.0;
+            windows[i].end = -1.0;
+        }
+    }
+
+    void AssertNoWindowWritten(const IO::Astrodynamics::API::DTO::WindowDTO windows[1000])
+    {
+        for (int i = 0; i < 1000; ++i)
+        {
+            ASSERT_EQ(-1.0, windows[i].start);
+            ASSERT_EQ(-1.0, windows[i].end);
+        }
+    }
+}
+
+TEST(API, FindWindowsOnCoordinateConstraintProxyUnknownFrame)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    FillWindows(windows);
+    ASSERT_FALSE(FindWindowsOnCoordinateConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), 399, 301, "NOT_A_FRAME_668",
+                                                        "RECTANGULAR", "Z", ">", 0.0, 0.0, "NONE", 3600.0, windows));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "NOT_A_FRAME_668"));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "not recognized"));
+    AssertNoWindowWritten(windows);
+    // The error is reset: a valid search after it runs
+    ASSERT_TRUE(FindWindowsOnCoordinateConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), 399, 301, "J2000",
+                                                       "RECTANGULAR", "Z", "<", 0.0, 0.0, "NONE", 3600.0, windows));
+}
+
+TEST(API, FindWindowsOnDistanceConstraintProxyOutOfCoverage)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    FillWindows(windows);
+    ASSERT_FALSE(FindWindowsOnDistanceConstraintProxy(SearchWindow("2160 MAR 1", "2160 MAR 10"), 399, 301, ">", 400000000.0,
+                                                      "NONE", 3600.0, windows));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "Insufficient ephemeris data"));
+    AssertNoWindowWritten(windows);
+}
+
+TEST(API, FindWindowsOnOccultationConstraintProxyOutOfCoverage)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    FillWindows(windows);
+    ASSERT_FALSE(FindWindowsOnOccultationConstraintProxy(SearchWindow("2160 MAR 1", "2160 MAR 10"), 399, 10, "IAU_SUN", "ELLIPSOID",
+                                                         301, "IAU_MOON", "ELLIPSOID", "ANY", "LT", 3600.0, windows));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "2160"));
+    AssertNoWindowWritten(windows);
+}
+
+TEST(API, FindWindowsOnIlluminationConstraintProxyUnknownFrame)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    FillWindows(windows);
+    IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD,
+                                                          48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
+    ASSERT_FALSE(FindWindowsOnIlluminationConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), 301, "SUN", 399,
+                                                          "NOT_A_FRAME_668", geodetic, "INCIDENCE", "<",
+                                                          IO::Astrodynamics::Constants::PI2, 0.0, "NONE", 3600.0, "Ellipsoid",
+                                                          windows));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "NOT_A_FRAME_668"));
+    AssertNoWindowWritten(windows);
+}
+
+TEST(API, FindWindowsInFieldOfViewConstraintProxyWithoutIk)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    FillWindows(windows);
+    ASSERT_FALSE(FindWindowsInFieldOfViewConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), -999, -999123, 301,
+                                                         "IAU_MOON", "ELLIPSOID", "NONE", 3600.0, windows));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "INS-999123_FOV_FRAME"));
+    AssertNoWindowWritten(windows);
 }
 
 
@@ -308,11 +400,14 @@ TEST(API, GetBodyInformationWithoutJ)
     ASSERT_TRUE(std::isnan(res.J4));
 }
 
-// The CSPICE calls of these tests reach the library's kernel pool on Linux and macOS only: on Windows the DLL exports none
-// of cspice.lib, so the test executable links its own copy of CSPICE, whose kernel pool is empty and whose error state is its
-// own (#672). What the library reads from the pool is therefore checked against the text of the kernels of Data/SolarSystem,
-// as KernelTextValues does in the .NET tests, and CSPICE is called directly only for what any copy holds without a kernel:
-// its built-in body names and frames.
+// What the library reads from the kernel pool is checked against the text of the kernels of Data/SolarSystem, as
+// KernelTextValues does in the .NET tests (#672). The test executable links no CSPICE of its own (IO.Astrodynamics links it
+// PRIVATE, #668 second round; before, on Windows, where the DLL exports none of cspice.lib, it linked its own copy, whose
+// kernel pool was empty and whose error state was its own). The built-in body names and frames these tests expect are NAIF's
+// (Frames Required Reading, PCK-based frames built into SPICE; NAIF IDs Required Reading), asserted as literals on every
+// platform; on Linux and macOS, where the shared library exports the CSPICE routines it contains, they are also read through
+// cnmfrm_c and bodc2n_c, which bind to the library's own CSPICE. The Windows DLL exports only the proxies, so these calls are
+// not compiled there.
 
 // The values of a kernel variable in the data of a text kernel of Data/SolarSystem, read without SPICE: an assignment "="
 // replaces them, "+=" appends to them; the values, in parentheses or not, separated by blanks or commas, a Fortran exponent
@@ -420,6 +515,7 @@ static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameN
     const auto gm = KernelTextValues("gm_de431.tpc", "BODY" + std::to_string(id) + "_GM");
     ASSERT_EQ(1u, gm.size());
     ASSERT_TRUE(KernelTextValues("pck00011.tpc", "BODY" + std::to_string(id) + "_RADII").empty());
+#if !defined(_WIN32)
     SpiceInt frcode{};
     SpiceChar frname[32]{};
     SpiceBoolean frameFound{false};
@@ -427,6 +523,7 @@ static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameN
     ASSERT_TRUE(frameFound);
     ASSERT_STREQ(frameName, frname);
     ASSERT_EQ(frameId, frcode);
+#endif
 
     auto res = GetCelestialBodyInfoProxy(id);
     ASSERT_EQ(id, res.Id);
@@ -437,8 +534,8 @@ static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameN
     ASSERT_EQ(0.0, res.Radii.x);
     ASSERT_EQ(0.0, res.Radii.y);
     ASSERT_EQ(0.0, res.Radii.z);
-    ASSERT_STREQ(frname, res.FrameName);
-    ASSERT_EQ(frcode, res.FrameId);
+    ASSERT_STREQ(frameName, res.FrameName);
+    ASSERT_EQ(frameId, res.FrameId);
 }
 
 TEST(API, GetBodyInformationGmWithoutRadii)
@@ -453,11 +550,15 @@ TEST(API, GetBodyInformationRadiiWithoutGm)
     // BODY507_RADII = (40 40 40) km in pck00011.tpc, no BODY507_GM in gm_de431.tpc
     ASSERT_TRUE(KernelTextValues("gm_de431.tpc", "BODY507_GM").empty());
     ASSERT_EQ((std::vector<double>{40.0, 40.0, 40.0}), KernelTextValues("pck00011.tpc", "BODY507_RADII"));
+#if !defined(_WIN32)
     SpiceInt frcode{};
     SpiceChar frname[32]{};
     SpiceBoolean frameFound{false};
     cnmfrm_c("ELARA", 32, &frcode, frname, &frameFound);
     ASSERT_TRUE(frameFound);
+    ASSERT_STREQ("IAU_ELARA", frname);
+    ASSERT_EQ(10029, frcode);
+#endif
 
     auto res = GetCelestialBodyInfoProxy(507);
     ASSERT_EQ(507, res.Id);
@@ -466,10 +567,8 @@ TEST(API, GetBodyInformationRadiiWithoutGm)
     ASSERT_EQ(40000.0, res.Radii.x);
     ASSERT_EQ(40000.0, res.Radii.y);
     ASSERT_EQ(40000.0, res.Radii.z);
-    ASSERT_STREQ("IAU_ELARA", frname);
-    ASSERT_STREQ(frname, res.FrameName);
-    ASSERT_EQ(10029, frcode);
-    ASSERT_EQ(frcode, res.FrameId);
+    ASSERT_STREQ("IAU_ELARA", res.FrameName);
+    ASSERT_EQ(10029, res.FrameId);
 }
 
 TEST(API, GetBodyInformationSolarSystemBarycenterGm)
@@ -494,11 +593,13 @@ TEST(API, GetBodyInformationSolarSystemBarycenterGm)
 
 TEST(API, GetBodyInformationBarycenter)
 {
+#if !defined(_WIN32)
     SpiceInt frcode{};
     SpiceChar frname[32]{};
     SpiceBoolean frameFound{true};
     cnmfrm_c("EARTH BARYCENTER", 32, &frcode, frname, &frameFound);
     ASSERT_FALSE(frameFound);
+#endif
 
     // A named body first, so that the stack holds its frame name
     auto earth = GetCelestialBodyInfoProxy(399);
@@ -514,10 +615,12 @@ TEST(API, GetBodyInformationInvalidId)
 {
     for (int id: {398, 12345678})
     {
+#if !defined(_WIN32)
         SpiceChar name[32]{};
         SpiceBoolean found{true};
         bodc2n_c(id, 32, name, &found);
         ASSERT_FALSE(found);
+#endif
 
         // A named body first, so that the stack holds its name and frame name
         auto earth = GetCelestialBodyInfoProxy(399);
@@ -646,10 +749,10 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
-    double inc = 10.0 * rpd_c();
-    double m0 = 45.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -827,4 +930,582 @@ TEST(API, UnloadKernelsProxyOfANameNotLoaded)
 
     ASSERT_TRUE(UnloadKernelsProxy(file.string().c_str()));
     std::filesystem::remove(file);
+}
+
+namespace
+{
+    // A folder of its own under the temporary directory, emptied
+    std::filesystem::path FreshFolder(const std::string &name)
+    {
+        auto folder = std::filesystem::temp_directory_path() / name;
+        std::filesystem::remove_all(folder);
+        std::filesystem::create_directories(folder);
+        return folder;
+    }
+
+    // Copies of the L1 SPK of Data/SolarSystem, loaded: more DAFs in use than the 23 logical units of CSPICE's handle
+    // manager, so that a later search reconnects the units it released (ZZDDHHLU)
+    std::vector<std::filesystem::path> LoadSpkCopies(const std::filesystem::path &folder, int count)
+    {
+        std::vector<std::filesystem::path> files;
+        for (int i = 0; i < count; ++i)
+        {
+            auto file = folder / ("x" + std::to_string(i) + ".bsp");
+            std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L1_de431.bsp", file);
+            EXPECT_TRUE(LoadKernelsProxy(file.string().c_str()));
+            files.push_back(file);
+        }
+        return files;
+    }
+
+    void UnloadAll(const std::vector<std::filesystem::path> &files)
+    {
+        for (const auto &file: files)
+        {
+            UnloadKernelsProxy(file.string().c_str());
+        }
+    }
+
+    void ExpectSameRotation(const IO::Astrodynamics::API::DTO::FrameTransformationDTO &expected,
+                            const IO::Astrodynamics::API::DTO::FrameTransformationDTO &actual)
+    {
+        EXPECT_EQ(expected.Rotation.w, actual.Rotation.w);
+        EXPECT_EQ(expected.Rotation.x, actual.Rotation.x);
+        EXPECT_EQ(expected.Rotation.y, actual.Rotation.y);
+        EXPECT_EQ(expected.Rotation.z, actual.Rotation.z);
+    }
+}
+
+// KEEPER's UNLOAD opens again the other loaded kernels of the kind it unloads (unload_c -> UNLOAD -> PCKLOF). Before the
+// second round of #668, a PCK deleted since its load failed that reopening (SPICE(FILENOTFOUND)) and stayed open in the DAF
+// and PCK tables while KEEPER stored the handle 0 for it: no later unload or kclear_c closed it, and once its logical unit was
+// released, every IAU frame failed to reconnect it (SPICE(FILEOPENFAIL), measured with CSPICE N0067). The reference is the
+// IAU_EARTH rotation SPICE gives before the scenario, bit for bit
+TEST(API, UnloadKernelsProxyWhenAnotherPckIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto before = TransformFrameProxy("J2000", "IAU_EARTH", 0.0);
+    ASSERT_NE(0.0, before.Rotation.w);
+    auto folder = FreshFolder("ioa_g4_cpp_pck");
+    auto a = folder / "a.bpc";
+    auto b = folder / "b.bpc";
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/moon_pa_de421_1900-2050.bpc", a);
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/moon_pa_de421_1900-2050.bpc", b);
+    ASSERT_TRUE(LoadKernelsProxy(a.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(b.string().c_str()));
+    std::filesystem::remove(b);
+
+    EXPECT_TRUE(UnloadKernelsProxy(a.string().c_str()));
+    auto copies = LoadSpkCopies(folder, 25);
+    ExpectSameRotation(before, TransformFrameProxy("J2000", "IAU_EARTH", 0.0));
+    EXPECT_TRUE(UnloadKernelsProxy(b.string().c_str()));
+
+    UnloadAll(copies);
+    std::filesystem::remove_all(folder);
+    ExpectSameRotation(before, TransformFrameProxy("J2000", "IAU_EARTH", 0.0));
+#endif
+}
+
+// The SPK analog, two deleted SPKs among four: whichever is unloaded first, KEEPER reopens the other one. The reference is
+// the state of the Moon from the Earth SPICE gives before the scenario, bit for bit: its segments are in de440s.bsp, loaded
+// before the copies, so its search passes every SPK loaded after it (SPKSFS searches the files from the last loaded)
+TEST(API, UnloadKernelsProxyOfTwoDeletedSpks)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto before = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    ASSERT_FALSE(std::isnan(before.position.x));
+    auto folder = FreshFolder("ioa_g4_cpp_spk");
+    std::vector<std::filesystem::path> files;
+    for (const char *name: {"a.bsp", "b.bsp", "c.bsp", "d.bsp"})
+    {
+        files.push_back(folder / name);
+        std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", files.back());
+        ASSERT_TRUE(LoadKernelsProxy(files.back().string().c_str()));
+    }
+    std::filesystem::remove(files[1]);
+    std::filesystem::remove(files[2]);
+
+    EXPECT_TRUE(UnloadKernelsProxy(files[0].string().c_str()));
+    auto copies = LoadSpkCopies(folder, 25);
+    const auto after = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    EXPECT_EQ(before.position.x, after.position.x);
+    EXPECT_EQ(before.position.y, after.position.y);
+    EXPECT_EQ(before.position.z, after.position.z);
+    EXPECT_EQ(before.velocity.x, after.velocity.x);
+    EXPECT_EQ(before.velocity.y, after.velocity.y);
+    EXPECT_EQ(before.velocity.z, after.velocity.z);
+
+    UnloadAll(copies);
+    UnloadAll(files);
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+#if !defined(_WIN32)
+extern "C" int dafhfn_(SpiceInt *handle, char *fname, int fnameLength);
+
+namespace
+{
+    // The handle KEEPER holds for a file, -1 when KEEPER does not hold it (kdata_c binds to the library's CSPICE on Linux and
+    // macOS, where the shared library exports the CSPICE routines it contains)
+    SpiceInt KeeperHandle(const std::filesystem::path &file)
+    {
+        SpiceInt count{};
+        ktotal_c("ALL", &count);
+        for (SpiceInt i = 0; i < count; ++i)
+        {
+            SpiceChar name[256]{};
+            SpiceChar type[32]{};
+            SpiceChar source[256]{};
+            SpiceInt handle{};
+            SpiceBoolean found{};
+            kdata_c(i, "ALL", 256, 32, 256, name, type, source, &handle, &found);
+            if (found && file.string() == name)
+            {
+                return handle;
+            }
+        }
+        return -1;
+    }
+
+    // Whether a DAF handle is still open (dafhfn_ signals SPICE(NOSUCHHANDLE) for a closed one; DAF handles are not reused)
+    bool DafHandleOpen(SpiceInt handle)
+    {
+        char name[256]{};
+        dafhfn_(&handle, name, sizeof(name));
+        if (failed_c())
+        {
+            reset_c();
+            return false;
+        }
+        return true;
+    }
+}
+#endif
+
+// The native writers unload kernels too: the writer's kernel object unloads the file it writes when it is destroyed, and the
+// file it replaces before writing (Kernel::~Kernel, EphemerisKernel::WriteData), and each such unload_c of an SPK opens the
+// other loaded SPKs again (unload_c -> UNLOAD -> SPKLEF). Before the second round of #668, those unloads did not first
+// close the deleted binary kernels: the reopening failed on a deleted SPK, which stayed open with KEEPER's handle 0,
+// and the failure was left pending after the proxy returned true, so that the next unload of an SPK failed. The references
+// are KEEPER's list (kdata_c) and the DAF handles (dafhfn_) of the library's CSPICE
+TEST(API, WriteEphemerisProxyWhenAnotherSpkIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    auto folder = FreshFolder("ioa_g4_cpp_write_spk");
+    auto a = folder / "a.bsp";
+    auto b = folder / "b.bsp";
+    auto c = folder / "c.bsp";
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", a);
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", b);
+    ASSERT_TRUE(LoadKernelsProxy(a.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(b.string().c_str()));
+    const SpiceInt handle = KeeperHandle(b);
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(b);
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        sv[i].position = {6800000.0 + i, 0.0, 0.0};
+        sv[i].velocity = {0.0, 8000.0, 0.0};
+        sv[i].epoch = i;
+        sv[i].centerOfMotionId = 399;
+        sv[i].SetFrame("J2000");
+    }
+
+    // Written twice: the second write replaces the file, which unloads it in WriteData
+    EXPECT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999971, sv, 3));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(b));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    ASSERT_TRUE(LoadKernelsProxy(c.string().c_str()));
+    EXPECT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999971, sv, 3));
+    EXPECT_FALSE(failed_c());
+    EXPECT_TRUE(UnloadKernelsProxy(a.string().c_str()));
+    EXPECT_TRUE(UnloadKernelsProxy(c.string().c_str()));
+    EXPECT_EQ(-1, KeeperHandle(a));
+    EXPECT_EQ(-1, KeeperHandle(c));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The CK analog: the writer's kernel object unloads the CK it writes when it is destroyed, which opens the other loaded CKs
+// again (unload_c -> UNLOAD -> CKLPF). Two CKs of the spacecraft -175 written by the proxy itself, loaded, the second deleted
+TEST(API, WriteOrientationProxyWhenAnotherCkIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
+        IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                           IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                           IO::Astrodynamics::Time::TDB(0.0s),
+                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                                        std::move(orbitalParams));
+    IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        so[i].orientation = {1.0, 0.0, 0.0, 0.0};
+        so[i].angularVelocity = {0.0, 0.0, 0.0};
+        so[i].epoch = i;
+        so[i].SetFrame("J2000");
+    }
+
+    auto folder = FreshFolder("ioa_g4_cpp_write_ck");
+    auto a = folder / "a.bc";
+    auto b = folder / "b.bc";
+    auto c = folder / "c.bc";
+    ASSERT_TRUE(WriteOrientationProxy(a.string().c_str(), -175, so, 3));
+    ASSERT_TRUE(WriteOrientationProxy(b.string().c_str(), -175, so, 3));
+    ASSERT_TRUE(LoadKernelsProxy(a.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(b.string().c_str()));
+    const SpiceInt handle = KeeperHandle(b);
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(b);
+
+    EXPECT_TRUE(WriteOrientationProxy(c.string().c_str(), -175, so, 3));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(b));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    EXPECT_TRUE(UnloadKernelsProxy(a.string().c_str()));
+    EXPECT_EQ(-1, KeeperHandle(a));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// A meta-kernel that names its SPK relative to the working directory of its load: SPICE holds the SPK under that relative
+// name, and once the working directory changed the name no longer reaches the file, which still exists. Tested by that
+// name, the next load of any kernel would take it for deleted, close it and unload it (the first version of the cleanup of
+// the second round of #668 did). A relative name is left to SPICE: KEEPER keeps the SPK with its handle open. The references are KEEPER's list and the DAF handles
+TEST(API, LoadKernelsProxyAfterTheWorkingDirectoryChangedKeepsAnSpkAMetaKernelNamesRelatively)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "KEEPER's list is read through the CSPICE routines the shared library exports on Linux and macOS only";
+#else
+    auto folder = FreshFolder("ioa_g4_cpp_relative");
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", folder / "x.bsp");
+    {
+        std::ofstream metaKernel(folder / "mk.tm");
+        metaKernel << "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( 'x.bsp' )\n\\begintext\n";
+        std::ofstream text(folder / "t.tk");
+        text << "KPL/PCK\n\\begindata\nIOA_G4_RELATIVE = 1\n\\begintext\n";
+    }
+    const auto workingDirectory = std::filesystem::current_path();
+    std::filesystem::current_path(folder);
+    const bool loaded = LoadKernelsProxy((folder / "mk.tm").string().c_str());
+    std::filesystem::current_path(workingDirectory);
+    ASSERT_TRUE(loaded);
+    const SpiceInt handle = KeeperHandle("x.bsp");
+    ASSERT_GT(handle, 0);
+
+    EXPECT_TRUE(LoadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_EQ(handle, KeeperHandle("x.bsp"));
+    EXPECT_TRUE(DafHandleOpen(handle));
+
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
+    EXPECT_EQ(-1, KeeperHandle("x.bsp"));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// A direct C++ caller that loads an SPK by a name relative to the working directory: SPICE holds it under that name, and once
+// the working directory changed the name no longer tells whether the file was deleted. The native drop of the deleted binary
+// kernels tests only the names SPICE holds as absolute paths, so it leaves this one to SPICE, as it does a meta-kernel's
+// relative names (fourth round of #668). The references are KEEPER's list (kdata_c) and the DAF handles (dafhfn_)
+TEST(API, LoadKernelsProxyAfterTheWorkingDirectoryChangedKeepsAnSpkLoadedByARelativeName)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "KEEPER's list is read through the CSPICE routines the shared library exports on Linux and macOS only";
+#else
+    auto folder = FreshFolder("ioa_j1_cpp_relative_direct");
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", folder / "y.bsp");
+    {
+        std::ofstream text(folder / "t.tk");
+        text << "KPL/PCK\n\\begindata\nIOA_J1_RELATIVE = 1\n\\begintext\n";
+    }
+    // The working directory is restored before any other kernel call: the harness loads Data/SolarSystem by relative names,
+    // which KEEPER opens again by those names
+    const auto workingDirectory = std::filesystem::current_path();
+    std::filesystem::current_path(folder);
+    const bool loaded = LoadKernelsProxy("y.bsp");
+    std::filesystem::current_path(workingDirectory);
+    ASSERT_TRUE(loaded);
+    const SpiceInt handle = KeeperHandle("y.bsp");
+    ASSERT_GT(handle, 0);
+
+    EXPECT_TRUE(LoadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_EQ(handle, KeeperHandle("y.bsp"));
+    EXPECT_TRUE(DafHandleOpen(handle));
+
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_TRUE(UnloadKernelsProxy("y.bsp"));
+    EXPECT_EQ(-1, KeeperHandle("y.bsp"));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+#if !defined(_WIN32)
+namespace
+{
+    // Loads the meta-kernel mk.tm of the folder, which names the file relatively, with the working directory set to the
+    // folder, restored at once (the harness loads Data/SolarSystem by relative names, which KEEPER opens again by those names)
+    bool LoadRelativeMetaKernel(const std::filesystem::path &folder, const std::string &name)
+    {
+        {
+            std::ofstream metaKernel(folder / "mk.tm");
+            metaKernel << "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '" << name << "' )\n\\begintext\n";
+        }
+        const auto workingDirectory = std::filesystem::current_path();
+        std::filesystem::current_path(folder);
+        const bool loaded = LoadKernelsProxy((folder / "mk.tm").string().c_str());
+        std::filesystem::current_path(workingDirectory);
+        return loaded;
+    }
+
+    void ExpectSameState(const IO::Astrodynamics::API::DTO::StateVectorDTO &expected,
+                         const IO::Astrodynamics::API::DTO::StateVectorDTO &actual)
+    {
+        EXPECT_EQ(expected.position.x, actual.position.x);
+        EXPECT_EQ(expected.position.y, actual.position.y);
+        EXPECT_EQ(expected.position.z, actual.position.z);
+        EXPECT_EQ(expected.velocity.x, actual.velocity.x);
+        EXPECT_EQ(expected.velocity.y, actual.velocity.y);
+        EXPECT_EQ(expected.velocity.z, actual.velocity.z);
+    }
+}
+#endif
+
+// The writer's kernel object unloads the SPK it wrote when it is destroyed (Kernel::~Kernel), which opens the other loaded
+// SPKs again (unload_c -> UNLOAD -> SPKLEF -> DAFOPR). An SPK SPICE holds under a relative name is left to KEEPER by the
+// native drop of the deleted kernels, so once its file is deleted that reopening fails (SPICE(FILENOTFOUND)). Before the
+// fourth round of #668 the failure came after the proxy's last check: the proxy returned true and left it pending, and the
+// next proxy, an unrelated read, failed with it (a NaN state). The proxy now reports it and leaves nothing pending. The
+// reference is the state of the Moon from the Earth SPICE gives before the scenario, bit for bit, and failed_c
+TEST(API, WriteEphemerisProxyWhenAnSpkHeldUnderARelativeNameIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto before = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    ASSERT_FALSE(std::isnan(before.position.x));
+    auto folder = FreshFolder("ioa_j1_cpp_write_relative_spk");
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", folder / "x.bsp");
+    ASSERT_TRUE(LoadRelativeMetaKernel(folder, "x.bsp"));
+    const SpiceInt handle = KeeperHandle("x.bsp");
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(folder / "x.bsp");
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        sv[i].position = {6800000.0 + i, 0.0, 0.0};
+        sv[i].velocity = {0.0, 8000.0, 0.0};
+        sv[i].epoch = i;
+        sv[i].centerOfMotionId = 399;
+        sv[i].SetFrame("J2000");
+    }
+
+    const bool written = WriteEphemerisProxy((folder / "c.bsp").string().c_str(), -1999981, sv, 3);
+    const bool pending = failed_c();
+    const std::string message = GetLastErrorProxy();
+    reset_c();
+    EXPECT_FALSE(written);
+    EXPECT_FALSE(pending);
+    EXPECT_NE(std::string::npos, message.find("x.bsp")) << message;
+    ExpectSameState(before, ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE"));
+
+    // The orphan, still open under the handle the failed reopening left, is closed by that handle
+    spkuef_c(handle);
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
+    reset_c();
+    ExpectSameState(before, ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE"));
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The CK analog: the writer's kernel object unloads the CK it wrote when it is destroyed, which opens the other loaded CKs
+// again (unload_c -> UNLOAD -> CKLPF -> DAFOPR), and fails on a deleted CK SPICE holds under a relative name
+TEST(API, WriteOrientationProxyWhenACkHeldUnderARelativeNameIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
+        IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                           IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                           IO::Astrodynamics::Time::TDB(0.0s),
+                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                                        std::move(orbitalParams));
+    IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        so[i].orientation = {1.0, 0.0, 0.0, 0.0};
+        so[i].angularVelocity = {0.0, 0.0, 0.0};
+        so[i].epoch = i;
+        so[i].SetFrame("J2000");
+    }
+
+    const auto before = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    ASSERT_FALSE(std::isnan(before.position.x));
+    auto folder = FreshFolder("ioa_j1_cpp_write_relative_ck");
+    ASSERT_TRUE(WriteOrientationProxy((folder / "x.bc").string().c_str(), -175, so, 3));
+    ASSERT_TRUE(LoadRelativeMetaKernel(folder, "x.bc"));
+    const SpiceInt handle = KeeperHandle("x.bc");
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(folder / "x.bc");
+
+    const bool written = WriteOrientationProxy((folder / "c.bc").string().c_str(), -175, so, 3);
+    const bool pending = failed_c();
+    const std::string message = GetLastErrorProxy();
+    reset_c();
+    EXPECT_FALSE(written);
+    EXPECT_FALSE(pending);
+    EXPECT_NE(std::string::npos, message.find("x.bc")) << message;
+    ExpectSameState(before, ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE"));
+
+    ckupf_c(handle);
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+#if !defined(_WIN32)
+namespace
+{
+    std::string FileBytes(const std::filesystem::path &file)
+    {
+        std::ifstream stream(file, std::ios::binary);
+        return {std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
+    }
+}
+#endif
+
+// The writer replaces an existing SPK: its kernel object loads that file, and WriteData unloads it before removing it. That
+// unload opens the other loaded SPKs again (unload_c -> UNLOAD -> SPKLEF -> DAFOPR) and fails on a deleted SPK SPICE holds
+// under a relative name. Before the review of the fourth round of #668 the writer went on: it removed the file, spkopn_c
+// returned at once on the pending error, and the call failed with the old file gone and no new one written. The writer now
+// stops before the removal: the old file is left on disk as it was, unloaded (KEEPER's unload closed it before reopening the
+// others), and the failure is reported, nothing pending. References: the file's own bytes before the call, KEEPER's list
+// (kdata_c), failed_c, and the Moon state SPICE gives before the scenario, bit for bit
+TEST(API, WriteEphemerisProxyReplacingAFileWhenAnSpkHeldUnderARelativeNameIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto before = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    ASSERT_FALSE(std::isnan(before.position.x));
+    auto folder = FreshFolder("ioa_j1_cpp_replace_relative_spk");
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        sv[i].position = {6800000.0 + i, 0.0, 0.0};
+        sv[i].velocity = {0.0, 8000.0, 0.0};
+        sv[i].epoch = i;
+        sv[i].centerOfMotionId = 399;
+        sv[i].SetFrame("J2000");
+    }
+    const auto c = folder / "c.bsp";
+    ASSERT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999982, sv, 3));
+    const std::string written = FileBytes(c);
+    ASSERT_FALSE(written.empty());
+
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", folder / "x.bsp");
+    ASSERT_TRUE(LoadRelativeMetaKernel(folder, "x.bsp"));
+    const SpiceInt handle = KeeperHandle("x.bsp");
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(folder / "x.bsp");
+
+    sv[0].position.x = 6900000.0;
+    const bool replaced = WriteEphemerisProxy(c.string().c_str(), -1999982, sv, 3);
+    const bool pending = failed_c();
+    const std::string message = GetLastErrorProxy();
+    reset_c();
+    EXPECT_FALSE(replaced);
+    EXPECT_FALSE(pending);
+    EXPECT_NE(std::string::npos, message.find("x.bsp")) << message;
+    ASSERT_TRUE(std::filesystem::exists(c));
+    EXPECT_EQ(written, FileBytes(c));
+    EXPECT_EQ(-1, KeeperHandle(c));
+    ExpectSameState(before, ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE"));
+
+    spkuef_c(handle);
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
+    reset_c();
+    ExpectSameState(before, ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE"));
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The CK analog: WriteOrientations unloads the CK it replaces (unload_c -> UNLOAD -> CKLPF) before removing it, and that
+// unload fails on a deleted CK SPICE holds under a relative name; the old CK is left on disk as it was
+TEST(API, WriteOrientationProxyReplacingAFileWhenACkHeldUnderARelativeNameIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
+        IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                           IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                           IO::Astrodynamics::Time::TDB(0.0s),
+                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                                        std::move(orbitalParams));
+    IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        so[i].orientation = {1.0, 0.0, 0.0, 0.0};
+        so[i].angularVelocity = {0.0, 0.0, 0.0};
+        so[i].epoch = i;
+        so[i].SetFrame("J2000");
+    }
+
+    const auto before = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    ASSERT_FALSE(std::isnan(before.position.x));
+    auto folder = FreshFolder("ioa_j1_cpp_replace_relative_ck");
+    const auto c = folder / "c.bc";
+    ASSERT_TRUE(WriteOrientationProxy(c.string().c_str(), -175, so, 3));
+    const std::string written = FileBytes(c);
+    ASSERT_FALSE(written.empty());
+    ASSERT_TRUE(WriteOrientationProxy((folder / "x.bc").string().c_str(), -175, so, 3));
+    ASSERT_TRUE(LoadRelativeMetaKernel(folder, "x.bc"));
+    const SpiceInt handle = KeeperHandle("x.bc");
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(folder / "x.bc");
+
+    so[0].orientation = {0.0, 1.0, 0.0, 0.0};
+    const bool replaced = WriteOrientationProxy(c.string().c_str(), -175, so, 3);
+    const bool pending = failed_c();
+    const std::string message = GetLastErrorProxy();
+    reset_c();
+    EXPECT_FALSE(replaced);
+    EXPECT_FALSE(pending);
+    EXPECT_NE(std::string::npos, message.find("x.bc")) << message;
+    ASSERT_TRUE(std::filesystem::exists(c));
+    EXPECT_EQ(written, FileBytes(c));
+    EXPECT_EQ(-1, KeeperHandle(c));
+    ExpectSameState(before, ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE"));
+
+    ckupf_c(handle);
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
 }

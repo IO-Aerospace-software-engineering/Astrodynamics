@@ -149,5 +149,18 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(7667.02685, secondWindow.InertialInsertionVelocity, 6);
             Assert.Equal(7381.3088265255128, secondWindow.NonInertialInsertionVelocity, 6);
         }
-    }
+
+        // #686: the insertion velocity of the issue's near-circular target is the circular velocity √(GM / r) of 7178 km
+        // (PerigeeHeightManeuverTests.Issue686Elements); it was infinite
+        [Fact]
+        public void GetInertialInsertionVelocity_NearCircularTarget_IsTheCircularVelocity()
+        {
+            LaunchSite site = new LaunchSite(33, "l1", TestHelpers.EarthAtJ2000, new Planetodetic(1.0, 2.0, 3.0), default, new AzimuthRange(1.0, 2.0));
+            Site recoverySite = new Site(34, "l2", TestHelpers.EarthAtJ2000, new Planetodetic(1.0, 2.0, 3.0));
+            var launch = new Launch(site, recoverySite, PerigeeHeightManeuverTests.Issue686Elements(), IO.Astrodynamics.Constants.CivilTwilight, true);
+            double error = System.Math.Abs(launch.GetInertialInsertionVelocity() / System.Math.Sqrt(TestHelpers.EarthAtJ2000.GM / 7178e3) - 1.0);
+            System.Console.WriteLine($"MEASURE #686 issue elements: insertion velocity against sqrt(GM/r) {error:E3}");
+            Assert.True(error <= PerigeeHeightManeuverTests.Issue686Tolerance, $"{error:E3}");
+        }
+}
 }

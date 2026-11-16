@@ -56,7 +56,11 @@ public sealed class Cdm
     /// <summary>
     /// Reads the CDM of a file (see <see cref="CdmReader"/>).
     /// </summary>
-    /// <exception cref="CdmParseException">The document cannot be parsed, or holds several CDM messages (#679).</exception>
+    /// <exception cref="CdmParseException">The document cannot be parsed, holds several CDM messages (#679), or a CDM whose
+    /// body does not hold two segments or that repeats an element the schema bounds to one, or an enumerated keyword whose
+    /// value is not one of its own (OBJECT, REF_FRAME, COVARIANCE_METHOD, MANEUVERABLE, SCREEN_VOLUME_FRAME,
+    /// SCREEN_VOLUME_SHAPE, SOLAR_RAD_PRESSURE, EARTH_TIDES, INTRACK_THRUST; CCSDS 508.0-B-1 table 3-3), naming the keyword
+    /// and its value; before 11.0.0 a <see cref="FormatException"/> (fourth round of #668).</exception>
     public static Cdm ReadFromFile(string filePath)
     {
         return DefaultReader.ReadFromFile(filePath);
@@ -65,7 +69,11 @@ public sealed class Cdm
     /// <summary>
     /// Reads the CDM of a stream (see <see cref="CdmReader"/>).
     /// </summary>
-    /// <exception cref="CdmParseException">The document cannot be parsed, or holds several CDM messages (#679).</exception>
+    /// <exception cref="CdmParseException">The document cannot be parsed, holds several CDM messages (#679), or a CDM whose
+    /// body does not hold two segments or that repeats an element the schema bounds to one, or an enumerated keyword whose
+    /// value is not one of its own (OBJECT, REF_FRAME, COVARIANCE_METHOD, MANEUVERABLE, SCREEN_VOLUME_FRAME,
+    /// SCREEN_VOLUME_SHAPE, SOLAR_RAD_PRESSURE, EARTH_TIDES, INTRACK_THRUST; CCSDS 508.0-B-1 table 3-3), naming the keyword
+    /// and its value; before 11.0.0 a <see cref="FormatException"/> (fourth round of #668).</exception>
     public static Cdm ReadFromStream(Stream stream)
     {
         return DefaultReader.ReadFromStream(stream);
@@ -74,7 +82,11 @@ public sealed class Cdm
     /// <summary>
     /// Reads the CDM of a XML string (see <see cref="CdmReader"/>).
     /// </summary>
-    /// <exception cref="CdmParseException">The document cannot be parsed, or holds several CDM messages (#679).</exception>
+    /// <exception cref="CdmParseException">The document cannot be parsed, holds several CDM messages (#679), or a CDM whose
+    /// body does not hold two segments or that repeats an element the schema bounds to one, or an enumerated keyword whose
+    /// value is not one of its own (OBJECT, REF_FRAME, COVARIANCE_METHOD, MANEUVERABLE, SCREEN_VOLUME_FRAME,
+    /// SCREEN_VOLUME_SHAPE, SOLAR_RAD_PRESSURE, EARTH_TIDES, INTRACK_THRUST; CCSDS 508.0-B-1 table 3-3), naming the keyword
+    /// and its value; before 11.0.0 a <see cref="FormatException"/> (fourth round of #668).</exception>
     public static Cdm ReadFromString(string xml)
     {
         return DefaultReader.ReadFromString(xml);

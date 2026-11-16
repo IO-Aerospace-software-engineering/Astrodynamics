@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 
 /// <summary>
 /// The bodies of <see cref="GeopotentialPartialsTests"/>: Earths with EGM2008 to degree 2, 10, 70, at the guard degree
-/// of the partials and above it (the coefficients missing from the file are zeros), and to degree 2, 10 and 70 with the
+/// of the partials and above it (the file followed by explicit zero rows beyond 70), and to degree 2, 10 and 70 with the
 /// GM of the model in the central term.
 /// </summary>
 /// <remarks>
@@ -30,11 +30,18 @@ public sealed class GeopotentialPartialsBodies
     public GeopotentialPartialsBodies()
     {
         TestKernels.EnsureSolarSystem();
-        foreach (int degree in new[] { 2, 10, 70, GeopotentialGravitationalField.MaxPartialsDegree,
-                     GeopotentialGravitationalField.MaxPartialsDegree + 10 })
+        foreach (int degree in new[] { 2, 10, 70 })
         {
             Earths[degree] = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch,
                 new GeopotentialModelParameters(Model, (ushort)degree));
+        }
+
+        // Above 70 the file of the model followed by explicit zero rows: a degree above its file throws (#689)
+        foreach (int degree in new[] { GeopotentialGravitationalField.MaxPartialsDegree,
+                     GeopotentialGravitationalField.MaxPartialsDegree + 10 })
+        {
+            Earths[degree] = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch,
+                new GeopotentialModelParameters(IO.Astrodynamics.Tests.Body.GeopotentialTestModels.PaddedTo(degree), (ushort)degree));
         }
 
         foreach (int degree in new[] { 2, 10, 70 })
@@ -345,8 +352,8 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
         // coefficients beyond 70 are zeros, so that every table entry is still computed
         int guard = GeopotentialGravitationalField.MaxPartialsDegree;
         var earth = _bodies.Earths[guard];
-        var field = new GeopotentialGravitationalField(new StreamReader(GeopotentialPartialsBodies.Model),
-            (ushort)guard);
+        var field = new GeopotentialGravitationalField(
+            new StreamReader(IO.Astrodynamics.Tests.Body.GeopotentialTestModels.PaddedTo(guard)), (ushort)guard);
         var state = new StateVector(new Vector3(earth.EquatorialRadius, 0.0, 0.0), new Vector3(0.0, 7.9e3, 0.0),
             earth, PartialsTestCases.Epoch, earth.Frame);
         var dadr = new double[9];

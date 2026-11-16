@@ -98,7 +98,7 @@ propagated spacecraft's throws (#676). The `TriadAttitude` constructors take lit
 | `Spacecraft.Up` | Zenith-facing | +Z |
 | `Spacecraft.Down` | Nadir-facing | -Z |
 
-Instance-level overrides can be set via constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be orthogonal and right-handed.
+Instance-level overrides can be set via constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be finite, non-zero, orthogonal and right-handed; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it.
 
 ## Methods
 
@@ -428,7 +428,7 @@ spacecraft the observer (the `observer` argument is not used). It computes what 
 
 ```csharp
 var camera = spacecraft.Instruments.First();
-var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frames.Frame("ITRF93"),
+var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frame("ITRF93"),
     ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromSeconds(60.0));
 ```
 
@@ -473,8 +473,11 @@ aspect ratio up to 1.0034 (the Earth, the Moon, the Sun) and fields of aspect ra
 elongated target stretches the limb of the field by its own aspect ratio.
 
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
-gap shorter than the step as long as the step is at most half the time between the extremes of the margin: with a step
-longer than an event, the managed path may find a window that `gftfov` misses.
+gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the
+resolution of the search of an extreme between samples (Brent's `localmin`): an event or a gap narrower than about
+2 √ε h + 2τ/3 (h the step, τ the 1 µs tolerance; 2.5 µs at 1 min, 19 µs at 10 min) can be missed, and a tangency between
+samples is not found (#668; see `docs/reference/occultations.md`, "Resolution"). With a step longer than an event, the
+managed path may find a window that `gftfov` misses.
 
 **Aberration.** The light time of `spkltc` (`LT`, `CN` and their transmission forms `XLT`, `XCN`); for the `+S`
 corrections, the stellar aberration of `stelab` (`stlabx` for transmission), as `gftfov` applies them. A `Star` is a
@@ -503,8 +506,10 @@ its attitude record is empty: never propagated and with no orientation added, bu
 `TLEPropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
 `spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`, held from
 then on ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the identity of ICRF was searched). This check comes after those of the
-arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, a
-coverage) gives no window, no exception (the native layer drops it).
+arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, an
+epoch outside the coverage of the kernels) throws `InvalidOperationException` with SPICE's message (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, the native layer dropped it
+and the search returned no window).
 
 `IsInFOV` is the `POINT` condition with the same field and corrections, and the same field and attitude errors
 (`InvalidOperationException`) and target error (`ArgumentException`, the instrument's own spacecraft); the search does

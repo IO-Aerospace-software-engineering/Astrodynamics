@@ -22,16 +22,17 @@ public class EpochAtMeanAnomalyTests
     private const double Au = 149597870700.0;
 
     // The comet of the issue: one ulp of its mean anomaly near 2π (8.9e-16 rad) is 4.5e-3 s of its mean motion (1.99e-13
-    // rad/s). Provisional, twice the worst on Linux x64 (3.43e-3 s, 2026-11-11) rounded up, until the CI of the three
-    // platforms has printed its MEASURE lines; the Earth orbits within half a tick (4.5e-8 s), twice that
-    private const double CometTolerance = 7.0e-3;
+    // rad/s). Twice the worst over Linux x64, Windows x64 and macOS arm64 (3.428e-3 s on each, the comet 300 years later;
+    // CI run 43745883709, 2026-11-15), rounded up at the second significant digit; the Earth orbits within half a tick
+    // (4.5e-8 s), twice that
+    private const double CometTolerance = 6.9e-3;
     private const double EarthTolerance = 1.0e-7;
 
     // Near e = 1 the true anomaly at the sphere of influence (a = 5e7 m about the Moon) is 1.0e-3 rad from π, where one ulp
     // of cos ν = (p / r − 1) / e (1.1e-16, IEEE arithmetic) moves the time by 2.2e-5 s and one ulp of ν by 8.9e-8 s
-    // (mpmath): −1.35e-5 s on Linux x64 (2026-11-11). Provisional, twice that rounded up, until the CI of the three
-    // platforms has printed its MEASURE lines
-    private const double MoonSoiTolerance = 3.0e-5;
+    // (mpmath): −1.348e-5 s on each of Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15); twice
+    // that, rounded up at the second significant digit
+    private const double MoonSoiTolerance = 2.7e-5;
 
     private readonly ITestOutputHelper _output;
 

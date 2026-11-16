@@ -87,8 +87,9 @@ public class EphemerisCommand
         [Option(shortName: 'c', Description = "Display result as planetocentric cartesian coordinates")]
         bool cartesian = false)
     {
-        // A site has no sub-observer point: before #681 it was cast to a celestial item, null, then dereferenced
-        if (Helpers.IsSiteIdentifier(objectId))
+        // A site has no sub-observer point: before #681 it was cast to a celestial item, null, then dereferenced. A site by
+        // the library's rule (SpiceAPI.IsSiteId), which the CLI follows since 11.0.0
+        if (SpiceAPI.IsSiteId(objectId))
         {
             throw new ArgumentException(
                 $"sub-point projects a celestial body or a spacecraft given by its NAIF identifier; {objectId} is a site", nameof(objectId));

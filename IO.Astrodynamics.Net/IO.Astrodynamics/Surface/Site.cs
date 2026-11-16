@@ -31,7 +31,8 @@ namespace IO.Astrodynamics.Surface
         /// The planetodetic coordinates of the site: longitude and latitude in rad, altitude in m above the ellipsoid of
         /// its body. For a site from the kernels, those of its position at J2000 TDB, which a search of
         /// <see cref="FindWindowsOnIlluminationConstraint"/> and <see cref="FindDayWindows"/> by CSPICE takes as the
-        /// site (#488).
+        /// site (#488), and whose ellipsoid normal the illumination angles take. The frame of a site from the kernels is
+        /// not built from them when a loaded kernel defines the frame of its id (<see cref="SiteFrame"/>, #690).
         /// </summary>
         public Planetodetic Planetodetic { get; }
 
@@ -253,11 +254,16 @@ namespace IO.Astrodynamics.Surface
         /// <param name="value">The distance, m.</param>
         /// <param name="aberration"></param>
         /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-        /// than the shortest interval where the quantity is monotone.</param>
+        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+        /// shorter than the shortest interval where the quantity is monotone.</param>
         /// <returns></returns>
         /// <remarks>For a site from the kernels and a spacecraft from the kernels, CSPICE's <c>gfdist_c</c> searches;
         /// otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfdist_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
@@ -285,6 +291,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns>The windows, in TDB.</returns>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
@@ -308,6 +317,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="stepSize"></param>
         /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
         /// <returns>The windows, in TDB.</returns>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize, OccultationSearchOptions options)
         {
@@ -334,13 +346,26 @@ namespace IO.Astrodynamics.Surface
         /// <param name="adjustValue"></param>
         /// <param name="aberration"></param>
         /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-        /// than the shortest interval where the quantity is monotone.</param>
+        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+        /// shorter than the shortest interval where the quantity is monotone.</param>
         /// <returns></returns>
+        /// <remarks>
+        /// CSPICE's <c>gfposc_c</c> searches when the site is from the kernels, the observer a spacecraft from the kernels and
+        /// the frame one SPICE reads as the library does; in a frame whose reads are the library's (TEME, CIRS, TIRS, the
+        /// frame of a site built from coordinates, of a site from the kernels whose frame id no loaded kernel defines, of a
+        /// managed spacecraft with an attitude record) the library searches, on the reads in that frame (third review of
+        /// #690; before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
-            if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked && ci3.IsSpacecraft)
+            // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
+            if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked && ci3.IsSpacecraft && !SpiceAPI.IsManagedFrame(frame))
             {
                 bool isDistanceCoord = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z
                     or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;
@@ -430,8 +455,10 @@ namespace IO.Astrodynamics.Surface
         /// <param name="adjustValue"></param>
         /// <param name="aberration"></param>
         /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-        /// than the shortest interval where the quantity is monotone.</param>
+        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+        /// shorter than the shortest interval where the quantity is monotone.</param>
         /// <param name="illuminationSource"></param>
         /// <param name="method">ELLIPSOID, the only method, whatever its case and its leading or trailing whitespace
         /// (<c>gfilum_c</c> Detailed_Input <c>method</c>, #682).</param>
@@ -440,6 +467,9 @@ namespace IO.Astrodynamics.Surface
         /// <see cref="IlluminationAngle.Phase"/>, which need an observer; or <paramref name="method"/> is not ELLIPSOID, which
         /// before 11.0.0 gave no window on the path of <c>gfilum_c</c> and was ignored on the managed one (#682).</exception>
         /// <exception cref="ArgumentNullException"><paramref name="method"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, IlluminationAngle illuminationType,
             RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
             string method = "Ellipsoid")
@@ -468,28 +498,49 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Get illumination emission angle
+        /// The emission angle at the site: the angle between the direction of <paramref name="observer"/> and the normal to
+        /// the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for the site
+        /// (<see cref="FindWindowsOnIlluminationConstraint"/>, #488).
         /// </summary>
-        /// <param name="date"></param>
-        /// <param name="observer"></param>
-        /// <param name="aberration"></param>
-        /// <returns></returns>
+        /// <param name="date">The epoch.</param>
+        /// <param name="observer">The observer.</param>
+        /// <param name="aberration">The aberration correction of the direction.</param>
+        /// <returns>The emission angle, rad.</returns>
+        /// <remarks>
+        /// For a site from coordinates the normal is the Z axis of <see cref="Frame"/>. A site from the kernels whose frame
+        /// kernel is loaded has the kernel frame (#690), whose zenith departs from that normal (7.8e-8 rad for DSS-13): the
+        /// angle keeps the normal at <see cref="Planetodetic"/>, so that it agrees with the illumination searches.
+        /// </remarks>
         public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
         {
-            return observer.GetEphemeris(date, this, Frame, aberration).ToStateVector().Position.Angle(Vector3.VectorZ);
+            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position.Angle(EllipsoidNormalInIcrf(date));
         }
 
         /// <summary>
-        /// Get illumination incidence angle
+        /// The incidence angle at the site: the angle between the direction of <paramref name="illuminationSource"/> and the
+        /// normal to the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for
+        /// the site (<see cref="FindWindowsOnIlluminationConstraint"/>, #488).
         /// </summary>
-        /// <param name="date"></param>
-        /// <param name="illuminationSource"></param>
-        /// <param name="aberration"></param>
-        /// <returns></returns>
+        /// <param name="date">The epoch.</param>
+        /// <param name="illuminationSource">The source of illumination.</param>
+        /// <param name="aberration">The aberration correction of the direction.</param>
+        /// <returns>The incidence angle, rad.</returns>
+        /// <remarks>As <see cref="IlluminationEmission"/>: the normal at <see cref="Planetodetic"/>, the Z axis of
+        /// <see cref="Frame"/> for a site from coordinates (#690).</remarks>
         public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, this.Frame, aberration).ToStateVector().Position;
-            return Vector3.VectorZ.Angle(illuminationPosition);
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
+            return EllipsoidNormalInIcrf(date).Angle(illuminationPosition);
+        }
+
+        // The normal to the ellipsoid of the body at the planetodetic coordinates of the site, fixed in the frame of the body,
+        // in ICRF at the epoch
+        private Vector3 EllipsoidNormalInIcrf(in Time date)
+        {
+            double cosLatitude = System.Math.Cos(Planetodetic.Latitude);
+            var normal = new Vector3(cosLatitude * System.Math.Cos(Planetodetic.Longitude), cosLatitude * System.Math.Sin(Planetodetic.Longitude),
+                System.Math.Sin(Planetodetic.Latitude));
+            return normal.Rotate(CelestialBody.Frame.ToFrame(Frames.Frame.ICRF, date).Rotation);
         }
 
         /// <summary>
@@ -525,9 +576,12 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Write frame data
+        /// Writes the frame kernel of the topocentric frame of the site (<see cref="SiteFrame.WriteAsync"/>): the frame of
+        /// <see cref="Planetodetic"/>, or for a site from the kernels whose frame id the loaded kernels define, that kernel
+        /// frame under its kernel name (#690).
         /// </summary>
-        /// <param name="outputFile"></param>
+        /// <param name="outputFile">The frame kernel to write.</param>
+        /// <exception cref="InvalidOperationException">See <see cref="SiteFrame.WriteAsync"/>; nothing is written.</exception>
         public async Task WriteFrameAsync(FileInfo outputFile)
         {
             await Frame.WriteAsync(outputFile);
@@ -551,6 +605,9 @@ namespace IO.Astrodynamics.Surface
         /// <remarks>For a site from the kernels CSPICE's <c>gfilum_c</c> searches; for a site built from its coordinates
         /// the library does (<see cref="GeometryFinder"/>), and a day or a night shorter than the minute (the Sun grazing
         /// the twilight angle) is found as an extreme of the incidence between two samples (#678).</remarks>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             var sun = Stars.SUN_BODY;

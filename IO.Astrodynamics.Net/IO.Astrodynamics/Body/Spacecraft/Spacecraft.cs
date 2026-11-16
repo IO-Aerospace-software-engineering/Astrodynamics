@@ -128,16 +128,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="dragCoeff">Drag coefficient (Cd), default 2.2 for satellites in free-molecular flow</param>
         /// <param name="cosparId">COSPAR international designator (e.g., "1998-067A")</param>
         /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr), default 1.0</param>
-        /// <param name="bodyFront">Instance body front axis (default: +Y). Must be orthogonal to bodyRight and bodyUp.</param>
-        /// <param name="bodyRight">Instance body right axis (default: +X). Must be orthogonal to bodyFront and bodyUp.</param>
-        /// <param name="bodyUp">Instance body up axis (default: +Z). Must be orthogonal to bodyFront and bodyRight.</param>
+        /// <param name="bodyFront">Instance body front axis (default: +Y). Finite and non-zero; must be orthogonal to bodyRight and bodyUp.</param>
+        /// <param name="bodyRight">Instance body right axis (default: +X). Finite and non-zero; must be orthogonal to bodyFront and bodyUp.</param>
+        /// <param name="bodyUp">Instance body up axis (default: +Z). Finite and non-zero; must be orthogonal to bodyFront and bodyRight.</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
         /// (#676), or a mass, coefficient, area or radius is out of its range.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, when a body axis
-        /// has a magnitude of 0 (the exception names it, #680), or when <paramref name="clock"/> is attached to a spacecraft
+        /// has a magnitude of 0 (the exception names it, #680) or a component that is not finite (the exception names it,
+        /// the first of front, right and up; fourth round of #668), or when <paramref name="clock"/> is attached to a spacecraft
         /// of another NAIF id (#676: an SCLK identifies one spacecraft id).</exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
             double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
@@ -262,12 +263,19 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         // The unit vector of a given body axis, or the default; an axis of magnitude 0 has no direction (#680: zero axes were
-        // accepted when the dot products of ValidateBodyAxes all vanished)
+        // accepted when the dot products of ValidateBodyAxes all vanished), nor has an axis with a component that is not
+        // finite (fourth round of #668: it was normalized to NaN components, which every comparison of ValidateBodyAxes let
+        // through)
         private static Vector3 BodyAxis(Vector3? axis, Vector3 defaultAxis, string paramName)
         {
             if (!axis.HasValue)
             {
                 return defaultAxis;
+            }
+
+            if (!double.IsFinite(axis.Value.X) || !double.IsFinite(axis.Value.Y) || !double.IsFinite(axis.Value.Z))
+            {
+                throw new ArgumentException("A body axis must have finite components.", paramName);
             }
 
             if (axis.Value.Magnitude() == 0.0)
@@ -667,6 +675,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return Task.Run(() => Propagate(window, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
         }
 
+        /// <summary>
+        /// Propagate the spacecraft with the default integrator (Velocity-Verlet at <paramref name="propagatorStepSize"/>).
+        /// </summary>
+        /// <param name="window">The propagation window.</param>
+        /// <param name="celestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP.</param>
+        /// <param name="includeAtmosphericDrag">Whether to include atmospheric drag.</param>
+        /// <param name="includeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
+        /// <param name="propagatorStepSize">The step of the output states.</param>
+        /// <returns>The solution.</returns>
+        /// <exception cref="ArgumentException">The target orbit of an impulse of the maneuver chain is not in the frame the
+        /// spacecraft is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685), GCRF and ICRF
+        /// counting as one frame, whose axes they share (third review of #685); nothing changes.</exception>
+        /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive.</exception>
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
@@ -712,8 +734,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// is not an <see cref="RK78Integrator"/>.</exception>
         /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a
         /// consider parameter without its force; the integrator already holds forces or was already used by a
-        /// propagation that builds its forces; or listed bodies of one NAIF identifier, the observer's included, have
-        /// different models.</exception>
+        /// propagation that builds its forces; listed bodies of one NAIF identifier, the observer's included, have
+        /// different models; or the target orbit of an impulse of the maneuver chain is not in the frame the spacecraft
+        /// is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685), GCRF and ICRF
+        /// counting as one frame, whose axes they share (third review of #685).</exception>
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
         /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
         /// or carry one that is not symmetric and positive semi-definite; or drag is asked about a central body other

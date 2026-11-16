@@ -20,6 +20,27 @@ public class OmmValidatorTests
         _reader = new OmmReader();
     }
 
+    // A schema-valid document whose value the data model refuses: ValidateFile reports the parse error naming the keyword
+    // and its value (before: the data model's message, naming its constructor parameter)
+    [Theory]
+    [InlineData("MEAN_MOTION", "0")]
+    [InlineData("SEMI_MAJOR_AXIS", "-7000")]
+    [InlineData("OBJECT_NAME", "")]
+    [InlineData("ORIGINATOR", "")]
+    public void ValidateFile_SchemaValidKeywordOutOfRange_ReportsKeyword(string keyword, string value)
+    {
+        var xml = OmmReaderTests.OmmWithKeyword(keyword, value);
+
+        NdmDocuments.WithTempFile(xml, file =>
+        {
+            var result = _validator.ValidateFile(file);
+            Assert.False(result.IsValid);
+            var error = Assert.Single(result.Errors);
+            Assert.Contains(keyword, error.Message);
+            Assert.Contains($"'{value}'", error.Message);
+        });
+    }
+
     #region Several messages (#679)
 
     [Fact]
@@ -33,6 +54,160 @@ public class OmmValidatorTests
             var error = Assert.Single(result.Errors);
             Assert.Contains("2 OMM messages", error.Message);
         });
+    }
+
+    [Fact]
+    public void ValidateFile_OmmWithTwoSegments_IsInvalid()
+    {
+        NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOmm(), file =>
+        {
+            var result = _validator.ValidateFile(file);
+
+            // The schema rejects the second segment (third round of #668: the reader's "2 segment elements" before, reported
+            // under the path "Parser" as "Failed to parse OMM: ...", the schema then checking no unqualified file)
+            Assert.False(result.IsValid);
+            var error = Assert.Single(result.Errors);
+            Assert.Equal("OMM007", error.Code);
+            Assert.Contains("'segment'", error.Message);
+            Assert.DoesNotContain("Failed to parse", error.Message);
+            Assert.StartsWith("Line ", error.Path);
+        });
+    }
+
+    #endregion
+
+    #region Standard forms (third round of #668)
+
+    private static readonly string[] FormNames = { "unqualified-ndm", "unqualified-message", "qualified-ndm", "qualified-message" };
+
+    public static TheoryData<string> Forms() => new(FormNames);
+
+    public static TheoryData<string, string, string> FormsAndMutations()
+    {
+        // The mutation and a fragment of the error that names its element. The verdicts are those of lxml 6.1.3 against the
+        // SANA NDM/XML 4.0.0 schemas (sanaregistry.org/files/ndmxml_unqualified/ for the unqualified forms, the qualified set
+        // IO embeds for the qualified ones), which reject each mutation in each form
+        var mutations = new (string Mutation, string Names)[]
+        {
+            ("ECCENTRICITY=-0.5", "ECCENTRICITY"), // nonNegativeDouble, ndmxml-4.0.0-omm-3.0.xsd
+            ("remove OBJECT_NAME", "OBJECT_NAME"), // required in ommMetadata
+            ("EPOCH=2026-DDDT05:00:55", "EPOCH"), // epochType pattern, ndmxml-4.0.0-common-4.0.xsd
+            ("INCLINATION units=rad", "units"), // angleUnits: deg only
+            ("FOO", "FOO"), // undeclared
+            ("segment twice", "segment"), // ommBody holds one segment
+            ("root foo", "foo") // no global declaration
+        };
+        var data = new TheoryData<string, string, string>();
+        foreach (var form in FormNames)
+        {
+            foreach (var (mutation, names) in mutations)
+            {
+                data.Add(form, mutation, names);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(FormsAndMutations))]
+    public void ValidateSchema_StandardFormRejectedBySana_IsInvalid(string form, string mutation, string names)
+    {
+        var xml = NdmDocuments.Mutated(NdmDocuments.InForm(System.IO.File.ReadAllText(NdmDocuments.IssOmmPath), "omm", form),
+            "omm", mutation);
+
+        var result = _validator.ValidateSchemaFromXml(xml);
+
+        // Before: valid, with a warning per element (no declaration matched an unqualified root)
+        Assert.False(result.IsValid, $"{form}, {mutation}: reported valid");
+        Assert.Contains(result.Errors, e => e.Message.Contains(names, StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [MemberData(nameof(Forms))]
+    public void ValidateSchema_SpaceTrackOmmInStandardForm_IsValidWithoutWarning(string form)
+    {
+        foreach (var path in new[] { NdmDocuments.IssOmmPath, "CCSDS/H2ADEB.omm" })
+        {
+            var result = _validator.ValidateSchemaFromXml(NdmDocuments.InForm(System.IO.File.ReadAllText(path), "omm", form));
+
+            // No warning: the schema ran on every element (before: valid, with a warning per element)
+            Assert.True(result.IsValid, string.Join("; ", result.Errors.Select(e => e.Message)));
+            Assert.Empty(result.Warnings);
+        }
+    }
+
+    [Fact]
+    public void ValidateSchema_SpaceTrackFiles_AreValidWithoutWarning()
+    {
+        foreach (var path in new[] { NdmDocuments.IssOmmPath, "CCSDS/H2ADEB.omm" })
+        {
+            var result = _validator.ValidateSchema(path);
+
+            Assert.True(result.IsValid, string.Join("; ", result.Errors.Select(e => e.Message)));
+            Assert.Empty(result.Warnings);
+        }
+    }
+
+    [Fact]
+    public void ValidateSchema_RootInAnotherNamespace_IsInvalid()
+    {
+        var xml = NdmDocuments.InForm(System.IO.File.ReadAllText(NdmDocuments.IssOmmPath), "omm", "unqualified-message")
+            .Replace("<omm ", "<omm xmlns=\"urn:example:other\" ");
+
+        var result = _validator.ValidateSchemaFromXml(xml);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Message.Contains("urn:example:other", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ValidateSchema_QualifiedRootOmm_KeepsItsVerdict()
+    {
+        // IO's form of a bare message, every element in the namespace: valid, its two-segment copy invalid, as before
+        var valid = _validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(System.IO.File.ReadAllText(NdmDocuments.IssOmmPath), "omm"));
+        Assert.True(valid.IsValid, string.Join("; ", valid.Errors.Select(e => e.Message)));
+        var invalid = _validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(NdmDocuments.TwoSegmentOmm(), "omm"));
+        Assert.False(invalid.IsValid);
+    }
+
+    [Fact]
+    public void LoadFromString_StandardFormRejectedBySana_ThrowsValidationException()
+    {
+        // ECCENTRICITY -0.5 threw ArgumentOutOfRangeException from MeanElements, INCLINATION in rad loaded
+        var issOmm = System.IO.File.ReadAllText(NdmDocuments.IssOmmPath);
+        foreach (var mutation in new[] { "ECCENTRICITY=-0.5", "INCLINATION units=rad", "FOO", "root foo" })
+        {
+            var xml = NdmDocuments.Mutated(issOmm, "omm", mutation);
+
+            var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromString(xml));
+            Assert.False(ex.ValidationResult.IsValid);
+        }
+    }
+
+    // An <ndm> that the NDM/XML 4.0.0 master accepts but that holds no OMM: empty, or holding only an OPM (lxml 6.1.3 with
+    // SANA's unqualified set accepts both). The reader finds no OMM in it, so it is not an OMM document (third round of #668:
+    // valid with no issue before, Omm.LoadFromString throwing OmmParseException)
+    [Theory]
+    [InlineData(null)]
+    [InlineData("unqualified-ndm")]
+    [InlineData("qualified-ndm")]
+    public void ValidateSchema_NdmWithoutOmm_IsInvalid(string? opmForm)
+    {
+        var xml = opmForm == null ? "<ndm/>" : NdmDocuments.InForm(OPM.OpmReaderTests.FullOpm().ToXmlString(), "opm", opmForm);
+        var parse = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+        Assert.Equal("Could not find OMM element in document.", parse.Message);
+
+        var result = _validator.ValidateSchemaFromXml(xml);
+
+        Assert.False(result.IsValid);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal("OMM007", error.Code);
+        Assert.Contains("<omm>", error.Message);
+        Assert.Empty(result.Warnings);
+        var ex = Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
+        Assert.Equal(error.Message, Assert.Single(ex.ValidationResult.Errors).Message);
+        NdmDocuments.WithTempFile(xml, file => Assert.Contains(_validator.ValidateFile(file).Errors, e => e.Message == error.Message));
     }
 
     #endregion

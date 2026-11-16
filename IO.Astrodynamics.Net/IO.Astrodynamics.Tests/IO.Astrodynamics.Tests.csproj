@@ -258,6 +258,30 @@
       <Content Include="Data\FieldOfViewReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <!-- The developer guide and its compiled examples, compared by DeveloperGuideExamplesTests (#668). -->
+      <None Include="..\..\DEVELOPER_GUIDE.md" Link="Docs\DEVELOPER_GUIDE.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="Documentation\DeveloperGuideExamples.cs" Link="Docs\DeveloperGuideExamples.cs">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <!-- The two CLAUDE.md files and their compiled examples, compared by ClaudeMdExamplesTests (#668, third round). -->
+      <None Include="..\..\CLAUDE.md" Link="Docs\CLAUDE.root.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="..\CLAUDE.md" Link="Docs\CLAUDE.net.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="Documentation\ClaudeMdExamples.cs" Link="Docs\ClaudeMdExamples.cs">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <!-- The pages of docs/ and the README, whose csharp blocks DocumentationPagesTests reads (#668, third round). -->
+      <None Include="..\..\docs\**\*.md" LinkBase="Docs\pages">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="..\..\README.md" Link="Docs\README.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <!-- Reconstructed LRO trajectory, used by the tracking-data tests. -->
       <None Remove="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp" />
       <Content Include="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">

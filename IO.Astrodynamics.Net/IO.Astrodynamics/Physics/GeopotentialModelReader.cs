@@ -13,6 +13,11 @@ public class GeopotentialModelReader
     public StreamReader ModelFile { get; }
     private Dictionary<(ushort nidx, ushort midx), GeopotentialCoefficient> _geopotentialCoefficients = new();
 
+    /// <summary>
+    /// The highest degree n of the coefficients read, or -1 when the file holds none (#689).
+    /// </summary>
+    internal int MaximumDegree { get; } = -1;
+
     public GeopotentialModelReader(StreamReader modelFile)
     {
         ModelFile = modelFile;
@@ -32,6 +37,7 @@ public class GeopotentialModelReader
                 var coeff = new GeopotentialCoefficient(ushort.Parse(tmp[0],CultureInfo.InvariantCulture), ushort.Parse(tmp[1],CultureInfo.InvariantCulture), double.Parse(tmp[2],CultureInfo.InvariantCulture), double.Parse(tmp[3],CultureInfo.InvariantCulture), double.Parse(tmp[4],CultureInfo.InvariantCulture),
                     double.Parse(tmp[5],CultureInfo.InvariantCulture));
                 _geopotentialCoefficients[(coeff.N, coeff.M)] = coeff;
+                MaximumDegree = System.Math.Max(MaximumDegree, coeff.N);
             }
         }
     }

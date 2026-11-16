@@ -58,13 +58,14 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - P/Invoke wrapper around native SPICE toolkit (NASA's CSPICE)
 - Platform-specific libraries: `IO.Astrodynamics.dll` (Windows), `libIO.Astrodynamics.so` (Linux)
 - Thread-safe access through lock synchronization
-- Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
+- Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` and the five `FindWindows*` proxies of the CSPICE window searches (fourth round of #668; before, they dropped SPICE's error and returned no window) return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
 
 **Data Provider Pattern**
 - `IDataProvider` interface with implementations:
   - `SpiceDataProvider`: Default, uses SPICE kernel files
   - `MemoryDataProvider`: In-memory for testing
 - Configured via `Configuration.Instance.SetDataProvider()`
+- The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read, on the provider set at that time, and so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before `LoadKernels`), with `InvalidOperationException` naming the missing variable (third round of #668); once read, an object keeps the provider it read its data from, for its data and its ephemeris; on SPICE its data are read again at the first read after each `LoadKernels`, `UnloadKernels` or `ClearKernels`, data equal to those held keeping the instances held (third round of #668)
 
 **Key Namespaces**
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
@@ -72,7 +73,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert)
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
-- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`)
+- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
 - `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451)
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
@@ -84,7 +85,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.Propagator.MonteCarlo`: MonteCarloPropagator, StateSampler, StatisticsAggregator, per-epoch statistics and RSS percentiles
 - `IO.Astrodynamics.SSA`: ConjunctionAssessment (Screen, Analyze, AnalyzeAll, EvaluateAvoidance), Foster 2D collision probability, maximum probability, encounter quality flags; the covariance at TCA propagated for participants propagated in RK7(8) with an initial covariance (replay of the variational equations, `ConjunctionAnalysisOptions.CovariancePropagation`, on by default), its source per participant (`CovarianceSource`, `ParticipantCovariance`) and the non-linearity index; avoidance options propagated numerically from the covariance at their burn, and without it with the force model of the participant's propagation (RK7(8) or Velocity-Verlet), the two-body orbit stated by `AvoidanceOption.Trajectory` without one; CDM export of the consider parameters (`CDRG_*`, `CSRP_*`) and of the force model
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
-- `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions
+- `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions; the public methods that normalize (`Normalize()` of `Vector3` and `Quaternion`, `Matrix.FromQuaternion`, `TransformCovariance`, `Lerp`, `SLERP`, the axis-angle constructor, `Vector3.To`, the plane normal of the signed `Angle`, `Plane.GetAngle`) throw for a zero or non-finite input and accept every finite non-zero one, scaled outside the ordinary range of its squares (by the power of two of its largest component, `Vector3.To` by its largest component; the ranges in the root `CLAUDE.md`), bit for bit inside it; the vectors of `Angle(Vector3)` and the signed `Angle` are scaled likewise, 0 when zero, NaN when not finite (third round of #668)
 - `IO.Astrodynamics.Physics`: Geopotential model reader, coefficients
 
 **External Dependencies**
@@ -150,7 +151,7 @@ var meanKep = tle.ToMeanKeplerianElements();
 Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 
 // NORAD catalog number, decoded from Alpha-5 when applicable
-Assert.Equal(25544, newTle.NoradCatalogId);
+Assert.Equal(25544, tle.NoradCatalogId);
 ```
 
 **NORAD Catalog Numbers (Alpha-5)**
@@ -218,7 +219,7 @@ Console.WriteLine($"COSPAR ID: {omm.ObjectId}");  // Format: "1998-067A"
 Console.WriteLine($"Mean Motion: {omm.Data.MeanElements.MeanMotion} rev/day");
 
 // Save OMM to file
-omm.SaveToFile("output.omm", validateBeforeSave: true, wrapInNdm: true, indent: true);
+omm.SaveToFile("output.omm", validateBeforeSave: true);
 ```
 
 **OMM ↔ TLE Bidirectional Conversion**
@@ -232,9 +233,9 @@ if (omm.IsTleCompatible)
 }
 
 // TLE to OMM (for archiving/sharing)
-var tle = new TLE("ISS", line1, line2);
-var omm = tle.ToOmm(originator: "My Organization");
-omm.SaveToFile("iss.omm");
+var issTle = new TLE("ISS", line1, line2);
+var issOmm = issTle.ToOmm(originator: "My Organization");
+issOmm.SaveToFile("iss.omm");
 ```
 
 **COSPAR ID Format Handling**
@@ -296,8 +297,8 @@ var opm = spacecraft.ToOpm(
 opm.SaveToFile("iss.opm");
 
 // OPM to Spacecraft (for mission operations)
-var opm = Opm.LoadFromFile("iss.opm");
-var spacecraft = opm.ToSpacecraft(
+var restoredOpm = Opm.LoadFromFile("iss.opm");
+var restored = restoredOpm.ToSpacecraft(
     naifId: -1000,
     maximumOperatingMass: 500000.0,
     clock: new Clock("OnboardClock", 256),
@@ -312,24 +313,25 @@ var stateVector = opm.ToStateVector(observer: earth);
 // Units converted: km → m, km/s → m/s
 
 // StateVector to OPM
-var opm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
+var newOpm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
     originator: "Mission Control");
 ```
 
 **Maneuver Integration**
 ```csharp
+// spacecraft: a propagated spacecraft with a COSPAR id
 // Executed maneuvers are automatically included in ToOpm()
-var spacecraft = CreateSpacecraftWithManeuvers();
-// ... propagate and execute maneuvers ...
-
 var opm = spacecraft.ToOpm(includeManeuvers: true);
 // OPM will contain OpmManeuverParameters for each executed ImpulseManeuver
 
 // Manual maneuver export from ImpulseManeuver
-if (maneuver is ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
+foreach (var maneuver in spacecraft.ExecutedManeuvers)
 {
-    var opmManeuver = impulseManeuver.ToOpmManeuverParameters(referenceFrame: "EME2000");
-    // Contains: epoch, duration, delta-mass, delta-V (km/s)
+    if (maneuver is ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
+    {
+        var opmManeuver = impulseManeuver.ToOpmManeuverParameters(referenceFrame: "EME2000");
+        // Contains: epoch, duration, delta-mass, delta-V (km/s)
+    }
 }
 ```
 
@@ -344,7 +346,7 @@ var userParams = new OpmUserDefinedParameters(
     },
     comments: new[] { "Custom mission parameters" });
 
-var data = new OpmData(stateVector, userDefinedParameters: userParams);
+var data = new OpmData(OpmStateVector.FromStateVector(stateVector), userDefinedParameters: userParams);
 ```
 
 **Covariance Matrix Support**
@@ -357,7 +359,7 @@ var covariance = new CovarianceMatrix(
     czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
     referenceFrame: "ICRF");
 
-var data = new OpmData(stateVector, covariance: covariance);
+var data = new OpmData(OpmStateVector.FromStateVector(stateVector), covariance: covariance);
 ```
 
 **Unit Handling**
@@ -422,17 +424,17 @@ var atmosphere = model.GetAtmosphere(context);
 // atmosphere.Temperature, .Pressure, .Density, .Details (null for simple models)
 
 // Full context with NRLMSISE-00
-var context = AtmosphericContext.FromPlanetodetic(
+var fullContext = AtmosphericContext.FromPlanetodetic(
     altitude: 400000,                           // 400 km
     geodeticLatitude: 45 * Constants.Deg2Rad,
     geodeticLongitude: -75 * Constants.Deg2Rad,
     epoch: new Time(2024, 6, 21, 12, 0, 0)
 );
-var model = new Nrlmsise00Model(SpaceWeather.Nominal);
-var atmosphere = model.GetAtmosphere(context);
+var nrlmsise = new Nrlmsise00Model(SpaceWeather.Nominal);
+var thermosphere = nrlmsise.GetAtmosphere(fullContext);
 
 // Access model-specific details via pattern matching
-if (atmosphere.Details is NrlmsiseDetails details)
+if (thermosphere.Details is NrlmsiseDetails details)
 {
     var o2Density = details.MolecularOxygenDensity;  // m⁻³
     var exoTemp = details.ExosphericTemperature;     // K
@@ -442,7 +444,7 @@ if (atmosphere.Details is NrlmsiseDetails details)
 // full context, the atmosphere of its drag (#674), and the U.S. Standard Atmosphere 1976, its base atmosphere, with an
 // altitude only or a partial context (decided by S. Guillet, 2026-11-14)
 var earth = PlanetsAndMoons.EARTH_BODY;
-var atm = earth.GetAtmosphere(context);  // NRLMSISE-00 nominal: EARTH_BODY has no model
+var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EARTH_BODY has no model
 var low = earth.GetAtmosphere(10000.0);  // U.S. Standard Atmosphere 1976: an altitude only
 ```
 
@@ -466,15 +468,20 @@ The framework supports spherical harmonic gravity modeling using EGM2008 coeffic
 **Conventions**
 - Geodesy normalization: `sqrt((2-delta_0m)(2n+1)(n-m)!/(n+m)!)` — no Condon-Shortley phase
 - Coefficients: fully-normalized C_nm and S_nm from EGM2008 (tide-free)
-- Model file starts at degree 2 (degrees 0 and 1 are absent; handled as zeros)
+- Model file starts at degree 2 (degrees 0 and 1 are absent; handled as zeros); the degree is at most the file's highest, every (n, m) with 2 ≤ n ≤ degree present, or the body (or field) throws when it is built (#689)
 - Constants: the file carries none; the harmonics take EGM2008's GM and reference radius for the Earth by default (the kernel GM for the central term), the kernel constants for another body, or explicit ones (#410)
 - Central term: the kernel GM by default; the model GM with `GeopotentialModelParameters.CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (opt-in, decision 18 of #457), so that the whole field takes the model's constants as GMAT applies a `.cof` header, in the acceleration and the partials alike
 
 **Usage**
 ```csharp
 // Create Earth with degree-10 geopotential
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+
+// A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
+// (#674): the orbit is built on this earth
+var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, epoch, Frame.ICRF);
+var spacecraft = new Spacecraft(-1000, "Sat", 100.0, 10000.0, clock, orbit);
 
 // The propagator automatically uses the geopotential model when present
 var propagator = new CentralBodyPropagator(window, spacecraft,
@@ -497,7 +504,7 @@ The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturb
 ```csharp
 // Atmospheric drag reads the body's atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without
 // one; another body without a model throws (#674)
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     geopotentialParams, new EarthStandardAtmosphere());
 var drag = new AtmosphericDrag(spacecraft, earth);
 ```
@@ -570,6 +577,8 @@ public interface IIntegrator
 }
 ```
 
+Every `CentralBodyPropagator` constructor calls `Initialize` with the initial state of the propagation (about the central body, in the inertial frame of the propagation, at the TDB start of the window), those that take an integrator with its forces included; a later `Initialize` by the caller replaces it.
+
 VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV) or with sub-step bisection refinement (RK78) on states computed by shortened RK7(8) steps; the RK7(8) restart after a maneuver uses the same shortened step, never the cubic Hermite interpolation, which is off by up to ~100 m in LEO (#363).
 
 ### Event Detection System
@@ -624,7 +633,7 @@ The `TriadAttitude` class implements the TRIAD algorithm for fully-constrained 3
 **Key Concepts**
 - **Primary constraint**: Aligns a spacecraft body vector with the direction to a primary target
 - **Secondary constraint**: Constrains roll by orienting a secondary body vector toward a secondary target (as much as possible while maintaining primary constraint)
-- **Minimum vector separation**: Default 5 degrees; prevents numerical instability from near-collinear vectors
+- **Minimum vector separation**: Default 5 degrees, in [1e-14, π/2] rad (another separation throws `ArgumentOutOfRangeException`); prevents numerical instability from near-collinear vectors, tested as the sine of their angle, so collinear vectors (to the rounding of their components: a sine of at most about 4.9e-16), zero and non-finite vectors throw at every separation allowed (fourth round of #668)
 
 **Spacecraft Body Frame Convention**
 
@@ -638,7 +647,7 @@ Default body axes (static fields, backward-compatible):
 - `BodyFront`, `BodyRight`, `BodyUp` — instance properties (default to static values)
 - `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
 - Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
-- Validation enforces orthogonality and right-handedness when custom axes are provided
+- Validation enforces orthogonality and right-handedness when custom axes are provided; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming `bodyFront`, `bodyRight` or `bodyUp` (#680, fourth round of #668)
 - The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft (a read outside a propagation only: a propagation whose maneuver's tank is not the propagated spacecraft's throws, `Spacecraft.CheckManeuverEngines`, #676): the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()`, `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through the one rule of `Maneuver.GetBodyAxis` (`private protected`, no public surface) (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
 
 ```csharp
@@ -727,11 +736,12 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 
 *Earth Observation with Sun Tracking*
 ```csharp
-// Keep nadir sensor pointed at Earth while orienting solar panels toward Sun
+// Keep nadir sensor pointed at Earth, the roll about nadir set by the Sun (Up, opposite to Down, would be
+// rejected: the body vectors must be at least 5 degrees apart)
 var earthObservation = new TriadAttitude(
     epoch, TimeSpan.FromMinutes(30),
     Spacecraft.Down, earth,    // Primary: nadir pointing
-    Spacecraft.Up, sun,        // Secondary: solar panel toward Sun
+    Spacecraft.Right, sun,     // Secondary: +X toward the Sun, as near as nadir pointing allows
     engine);
 ```
 
@@ -774,23 +784,31 @@ Test classes load the solar system kernels in their constructor through `TestKer
 TestKernels.EnsureSolarSystem();
 ```
 
+A class that reads LRO calls `TestKernels.EnsureLro()`, and one that reads the occultation references
+`TestKernels.EnsureOccultationReference()`: those sets are loaded once per process too and never unloaded; a kernel only
+one class reads is loaded by a class fixture and unloaded in its `Dispose` (#668, second round).
+
 Test data files are in `Data/SolarSystem/` and copied to output directory.
+
+The C# blocks of this file and of the root `CLAUDE.md` are compiled regions of
+`IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs`, which `ClaudeMdExamplesTests` compares with them and runs
+where they need only `Data/SolarSystem`: change a block and its region together (#668, third round).
 
 **Name shadowing in test namespaces.** `IO.Astrodynamics.Tests` contains the sub-namespaces `Frame`
 and `Time`, and a local `Constants` class. Inside any `IO.Astrodynamics.Tests.*` namespace these
 shadow the library types of the same name, so always qualify them:
 
 ```csharp
-Frames.Frame.ICRF                  // not Frame.ICRF
-TimeSystem.Time.J2000TDB           // not Time.J2000TDB
-IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test helper)
+var icrf = Frames.Frame.ICRF;                     // not Frame.ICRF
+var j2000 = TimeSystem.Time.J2000TDB;             // not Time.J2000TDB
+var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that is the test helper)
 ```
 
 ## Development Guidelines
 
 1. **Thread Safety**: CSPICE operations are not thread-safe - all API calls must use the shared lock object
 2. **Kernel Management**: Load/unload SPICE kernels appropriately to avoid memory leaks
-3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy`) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `InvalidOperationException` with the native message.
+3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy`, and the five `FindWindows*` proxies of the CSPICE window searches) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `InvalidOperationException` with the native message.
 4. **Native Resources**: Properly free unmanaged memory returned from native calls
 5. **Time Systems**: Be explicit about time frames when working with epochs
 6. **Coordinate Systems**: Always specify reference frames for state vectors and transformations
@@ -802,12 +820,16 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:
    - Use `Omm.LoadFromFile()` with validation for production code
+   - A document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `omm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OmmValidationException`, but not several OMMs of an NDM; split it into one message per segment. An `ndm` without an OMM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OmmValidationException` where the reader's `OmmParseException` came before
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OmmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Check `IsTleCompatible` (TLE parameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH) before calling `ToTle()`, which otherwise throws naming the keywords at fault (#679)
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
    - `ToTle()` throws when `NORAD_CAT_ID` (> 339999) or `REV_AT_EPOCH` (> 99999) exceeds TLE capacity
 9. **CCSDS OPM Handling**: When working with OPM files:
    - Use `Opm.LoadFromFile()` with validation for production code
+   - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
    - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId, clock, maxMass)
    - Use `Opm.ToStateVector()` for simple state vector extraction
@@ -818,9 +840,9 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)
    - Use single-vector attitudes (`NadirAttitude`, `ProgradeAttitude`, `NormalAttitude`, etc.) only when roll is unconstrained
    - Use `NormalAttitude` / `AntiNormalAttitude` for plane-change burns (h = r × v)
-   - Ensure body vectors and reference vectors are not collinear (minimum 5 degrees separation)
+   - Ensure body vectors and reference vectors are not collinear (`MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
-   - Custom body axes must be orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
+   - Custom body axes must be finite, non-zero, orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
    - The single-vector attitudes and the impulse attitude use `GetBodyFront()`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the engine's spacecraft with static fallback outside a propagation (in one, the tank is the propagated spacecraft's, #676); the `TriadAttitude` constructors take literal vectors
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
    - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
@@ -832,6 +854,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
    - `GeopotentialGravitationalField` is NOT thread-safe — one instance per thread
    - Legendre functions use geodesy normalization without Condon-Shortley phase
    - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally; a field of degree 0 or 1 is the point mass of its central term in the frame of the state, without the body's orientation
+   - A degree above the model file throws `ArgumentOutOfRangeException` (`maxDegrees`), a file missing a harmonic (n, m) with 2 ≤ n ≤ degree `ArgumentException`, when the body or the field is built (#689)
    - The harmonics take the constants of the model (#410): EGM2008's GM 3.986004415e14 m³/s² and radius 6378136.3 m for the Earth by default, the kernel GM and equatorial radius for another body, or those given to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`; the central term takes the GM of the kernels by default, or the GM of the model with `CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (GMAT's `.cof` convention; acceleration and partials alike; `CelestialItem.GM` unchanged)
 12. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3

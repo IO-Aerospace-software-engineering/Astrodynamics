@@ -75,16 +75,25 @@ namespace IO.Astrodynamics.Maneuver
 
         /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
         /// <exception cref="ArgumentException">The target orbit is defined neither in the frame of the initial orbit of the
-        /// spacecraft of the engine nor in the frame it is propagated in (ICRF for a TLE or a TEME state, #675).</exception>
+        /// spacecraft of the engine nor in the frame it is propagated in (ICRF for a TLE or a TEME state, #675), GCRF and
+        /// ICRF counting as one frame, whose axes the library shares (third review of #685).</exception>
         /// <remarks>
         /// On a spacecraft whose initial orbit is a TLE or a TEME state, the propagation integrates in ICRF and takes the
-        /// target in ICRF: a target in TEME is accepted here, as before, and rejected when the propagation is built.
+        /// target in ICRF: a target in TEME is accepted here, as before, and rejected when the propagation is built. This
+        /// check runs only when the tank of the engine is on a spacecraft, against the initial orbit it has then; the
+        /// propagation checks every target again when it is built, on every spacecraft (#685), so that a maneuver built
+        /// before its tank is attached, or whose spacecraft gets another initial orbit, is rejected there
+        /// (<see cref="ArgumentException"/>) when its target is not in the frame of the propagation. A target in GCRF is
+        /// taken on a spacecraft propagated in ICRF, and one in ICRF on a spacecraft propagated in GCRF: the library gives
+        /// the two frames the same axes (<see cref="Frames.GcrfFrame"/>, the identity rotation), so the components of the
+        /// target are those the integration reads (third review of #685; before, the comparison by name rejected them).
         /// </remarks>
         protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
             RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, engine)
         {
             var initial = engine.FuelTank.Spacecraft?.InitialOrbitalParameters;
-            if (initial != null && initial.Frame != targetOrbit.Frame && PropagatorBase.PropagationFrame(initial) != targetOrbit.Frame)
+            if (initial != null && !PropagatorBase.SameAxes(initial.Frame, targetOrbit.Frame) &&
+                !PropagatorBase.SameAxes(PropagatorBase.PropagationFrame(initial), targetOrbit.Frame))
             {
                 throw new ArgumentException("Spacecraft and target orbit must be defined in the same frame");
             }
@@ -161,11 +170,13 @@ namespace IO.Astrodynamics.Maneuver
             Engine.FuelTank.Spacecraft.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
 
             //return computed state vector and state orientation
-            //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535)
+            //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535); a zero delta-V (a target
+            //already reached) keeps the identity, as the attitude record holds for no attitude, bit for bit as before 11.0.0,
+            //through the internal path of Vector3.To, which throws for a zero target (review of #680's known limitation)
             var deltaVInIcrf = stateVector.Frame == Frames.Frame.ICRF
                 ? DeltaV
                 : DeltaV.Rotate(stateVector.Frame.ToFrame(Frames.Frame.ICRF, stateVector.Epoch).Rotation);
-            return (after, new StateOrientation(GetBodyFront().To(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
+            return (after, new StateOrientation(GetBodyFront().ToOrIdentity(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
         }
 
         internal override void Reset()

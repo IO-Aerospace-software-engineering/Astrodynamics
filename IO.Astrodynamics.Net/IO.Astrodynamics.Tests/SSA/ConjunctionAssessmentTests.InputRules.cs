@@ -361,11 +361,11 @@ public partial class ConjunctionAssessmentTests
             Assert.NotNull(result.CollisionRisk.ProbabilityOfCollision);
             double error = RelativeError(result.CollisionRisk.ProbabilityOfCollision.Value, exact.GetProperty("pc"));
             worst = System.Math.Max(worst, error);
-            _output.WriteLine($"MEASURE #683 split radius {name}: relative error {error:E2}");
-            Assert.True(error <= DesignedEncounterAnalyzePcBound, $"{name}: {error:E2}");
+            _output.WriteLine($"MEASURE #683 split radius {name}: relative error {error:E3}");
+            Assert.True(error <= DesignedEncounterAnalyzePcBound, $"{name}: {error:E3}");
         }
 
-        _output.WriteLine($"MEASURE #683 split radius worst {worst:E2}");
+        _output.WriteLine($"MEASURE #683 split radius worst {worst:E3} ({worst:R})");
     }
 
     public static IEnumerable<object[]> SelfSecondaryRows()

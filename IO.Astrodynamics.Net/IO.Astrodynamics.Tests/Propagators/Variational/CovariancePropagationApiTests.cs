@@ -627,12 +627,20 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         var q = new double[21];
         solution.EvaluateVariational(epoch, y, q);
 
-        // Act
+        // Act: the least of three calls, the steady state. A static body read on this thread after another class's
+        // LoadKernels or UnloadKernels reads its data again once (third round of #668), which a single call counts:
+        // 3272 B more for StateAndCovarianceAt on Linux (CI run 43748944804, 2026-11-15)
         long Allocated(Action action)
         {
-            long before = GC.GetAllocatedBytesForCurrentThread();
-            action();
-            return GC.GetAllocatedBytesForCurrentThread() - before;
+            long least = long.MaxValue;
+            for (int i = 0; i < 3; i++)
+            {
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                action();
+                least = System.Math.Min(least, GC.GetAllocatedBytesForCurrentThread() - before);
+            }
+
+            return least;
         }
 
         long withCovariance = Allocated(() => solution.StateAndCovarianceAt(epoch));

@@ -8,7 +8,7 @@
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),
     new Vector3(0.0, 8000.0, 0.0),
-    earth, epoch, Frames.Frame.ICRF);
+    earth, epoch, Frame.ICRF);
 ```
 
 An optional 6x6 covariance matrix can be attached:
@@ -23,7 +23,7 @@ state.
 | Operation | What happens to the covariance |
 |-----------|--------------------------------|
 | `ToFrame(frame)` | Transformed with the Jacobian of the state transformation, `P' = J P Jᵀ`, symmetrized. Towards a rotating frame (ITRF93, TIRS, body-fixed frames) `J` includes the angular velocity term, so the velocity covariance also depends on the position covariance. See [Frames](frames.md#states-and-covariance). |
-| `RotateCovarianceToRtn(covariance)` / `RotateCovarianceFromRtn(covariance)` | Pure rotation `diag(R, R)` into or out of RTN; the rotation rate of the RTN frame is not applied. This is the convention of the conjunction analysis and of the CDM export. |
+| `RotateCovarianceToRtn(covariance)` / `RotateCovarianceFromRtn(covariance)` | Pure rotation `diag(R, R)` into or out of RTN; the rotation rate of the RTN frame is not applied. This is the convention of the conjunction analysis and of the CDM export. A rectilinear state (r × v = 0) has no RTN frame: they throw `InvalidOperationException` (#687). |
 | `ToStateVector(epoch)`, `ToStateVector(trueAnomaly)` | At the instant of the state's own epoch, in any time frame, the state itself, position, velocity and covariance unchanged, tagged as `epoch` is (#551). At any other instant, the two-body motion without a covariance: moving the covariance would take the state transition matrix, which this conversion does not compute; a covariance at another epoch is the one of a [covariance propagation](covariance-propagation.md). |
 | `Matrix.TransformCovariance(covariance, rotation)` | Pure rotation `diag(R, R)`, valid only between inertial frames. |
 | `WithRemediatedCovariance()` | The covariance made positive semi-definite by eigenvalue clipping when rounding made it indefinite, before a propagation ([below](#covariance-indefinite-from-rounding)) |
@@ -74,8 +74,30 @@ conjunction analysis; see
 | `SpecificOrbitalEnergy()` | Vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Angular momentum vector |
 | `EccentricityVector()` | Eccentricity vector |
-| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors |
+| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂: P̂ the perifocal axis of the elements (Ω, ω, i), defined at e = 0 (at ω from the node); for a state, the part of its eccentricity vector in its orbit plane, normalized, or its unit node vector when that part is zero, x̂ for an equatorial orbit (#686); for a TLE, the axis of its osculating elements at its epoch; mean elements throw, as `ToStateVector()` and `EccentricityVector()` do |
 | `PerigeeVelocity()` / `ApogeeVelocity()` | Apse velocities (m/s) |
+
+A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
+no RTN frame, and every member that reads the plane throws `InvalidOperationException` (#687; SPICE `oscltx` signals
+`SPICE(DEGENERATECASE)` on the same states):
+
+- the RTN frame: `CreateRtnRotation()`, `ToRtn`, `FromRtn`, `RotateCovarianceToRtn`, `RotateCovarianceFromRtn` (a matrix
+  with zero rows before 11.0.0);
+- the plane: `Inclination()`, `AscendingNode()`, `ArgumentOfPeriapsis()`, `AscendingNodeVector()`,
+  `DescendingNodeVector()`, `TrueLongitude()`, `TrueLongitude(Time)`, `MeanLongitude()` (0, 0, π, x̂, −x̂, 0 and a
+  number, or NaN, before);
+- the elements and the two-body motion: `ToKeplerianElements()`, `ToKeplerianElements(Time)`, `ToEquinoctial()`,
+  `AtEpoch(Time)`, `TrueAnomaly(Time)` and `ToStateVector(Time)` at another instant, the two-body ephemeris of a
+  spacecraft that is not propagated (equatorial elements, NaN or a NaN state before);
+- at the centre (r = 0), whose eccentricity vector is zero, so that its anomalies count from the node and its periapsis
+  lies along it: also `TrueAnomaly()`, `MeanAnomaly()`, `EccentricAnomaly()`, `EpochAtMeanAnomaly(double)`,
+  `ToStateVector(double)`, `PerigeeVector()`, `ApogeeVector()`, `PerigeeVelocity()` and `ApogeeVelocity()` (0, the
+  epoch, the state itself, the zero vector or NaN before); and `MeanAnomaly()` of a non-finite state (the message of an
+  empty `Nullable` before).
+
+A moving state off the centre keeps `Eccentricity()` (1) and `TrueAnomaly()` (π), the limits of every nearby orbit, and
+the members that read no plane. Only r × v = 0 exactly throws: a state near it is ill-conditioned, its plane that of a
+small angular momentum.
 
 ## Conversion Methods
 

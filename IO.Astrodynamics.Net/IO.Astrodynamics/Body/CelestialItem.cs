@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
@@ -18,7 +19,21 @@ namespace IO.Astrodynamics.Body;
 
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
+    /// <summary>
+    /// The data provider of the item, the global one when it was built. A static object of <see cref="Barycenters"/>,
+    /// <see cref="PlanetsAndMoons"/> or <see cref="Stars"/> reads through <see cref="ItemProvider"/> instead: the provider
+    /// it read its data from, or the global provider of the time of the read until its data are read.
+    /// </summary>
     protected readonly IDataProvider _dataProvider;
+
+    /// <summary>
+    /// The provider the item reads through: <see cref="_dataProvider"/> for an item built by a constructor; for a static
+    /// object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>, the provider it read its
+    /// data from, and until it has read them the global provider of the time of the read, so that a read that failed on
+    /// one provider is tried again on the provider set since.
+    /// </summary>
+    private protected IDataProvider ItemProvider =>
+        _deferred == null ? _dataProvider : Volatile.Read(ref _resolved)?.Provider ?? Configuration.Instance.DataProvider;
 
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
@@ -33,20 +48,39 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     public string Name { get; }
 
+    private readonly double _mass;
+    private readonly double _gm;
+    private readonly GravitationalField _gravitationalField;
+    private OrbitalParameters.OrbitalParameters _initialOrbitalParameters;
+
     /// <summary>
     /// Gets the mass of the celestial item.
     /// </summary>
-    public double Mass { get; }
+    /// <remarks>
+    /// For a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>, read from
+    /// the data provider at the first read, as <see cref="GM"/>, <see cref="InitialOrbitalParameters"/> and the
+    /// provider-backed members of a <see cref="CelestialBody"/>: a read the provider cannot answer throws its exception
+    /// (<see cref="ArgumentException"/> naming <c>naifId</c> for missing information) and is tried again at the next read,
+    /// on the provider set at that time; so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before
+    /// <c>LoadKernels</c>), with <see cref="InvalidOperationException"/> naming the missing variable (third round of #668:
+    /// before, those zeros were kept for the life of the process); once read, the object keeps the provider it read its
+    /// data from. On the <see cref="SpiceDataProvider"/> the data are read again at the first read after each
+    /// <see cref="SpiceAPI.LoadKernels"/>, <see cref="SpiceAPI.UnloadKernels"/> or <see cref="SpiceAPI.ClearKernels"/>, so
+    /// that they follow the kernel pool (a J2, a frame association or an SPK loaded after the first read; before the third
+    /// round of #668, the data of the first read were kept for the life of the process); data equal to those held keep the
+    /// instances held.
+    /// </remarks>
+    public double Mass => _deferred == null ? _mass : Resolved.Mass;
 
     /// <summary>
     /// Gets the standard gravitational parameter (GM) of the celestial item.
     /// </summary>
-    public double GM { get; }
+    public double GM => _deferred == null ? _gm : Resolved.GM;
 
     /// <summary>
     /// Gets the gravitational field of the celestial item.
     /// </summary>
-    protected GravitationalField GravitationalField { get; }
+    protected GravitationalField GravitationalField => _deferred == null ? _gravitationalField : Resolved.GravitationalField;
 
     /// <summary>The gravitational field of the body, for the description of a force model (CDM export).</summary>
     internal GravitationalField Field => GravitationalField;
@@ -54,7 +88,180 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Gets or sets the initial orbital parameters of the celestial item.
     /// </summary>
-    public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; internal set; }
+    public OrbitalParameters.OrbitalParameters InitialOrbitalParameters
+    {
+        get => _deferred == null ? _initialOrbitalParameters : Resolved.InitialOrbitalParameters;
+        internal set
+        {
+            if (_deferred != null)
+            {
+                throw new InvalidOperationException("The orbit of a static solar system object is read from its data provider.");
+            }
+
+            _initialOrbitalParameters = value;
+        }
+    }
+
+    /// <summary>
+    /// The epoch and the frame of the orbit of a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/>
+    /// or <see cref="Stars"/>, whose provider data are read at the first read of a member that needs them; null for any
+    /// other item, whose constructor reads them.
+    /// </summary>
+    private readonly DeferredData _deferred;
+
+    private sealed record DeferredData(Frame Frame, Time Epoch);
+
+    /// <summary>
+    /// The provider data of an item built by the natural-body constructor: the body information, the mass, the GM, the
+    /// gravitational field and the orbit about the barycentre of its system.
+    /// </summary>
+    private protected class ProviderData
+    {
+        internal IDataProvider Provider { get; init; }
+        internal DTO.CelestialBody Information { get; set; }
+        internal double Mass { get; set; }
+        internal double GM { get; set; }
+        internal GravitationalField GravitationalField { get; set; }
+        internal OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; set; }
+
+        /// <summary>
+        /// The generation of the kernel pool the data were read at (<see cref="SpiceAPI.KernelPoolGeneration"/>) for the
+        /// <see cref="SpiceDataProvider"/>, -1 for any other provider, whose data are read once.
+        /// </summary>
+        internal long Generation;
+
+        /// <summary>Whether the data hold: read from another provider than SPICE, or at the current generation of its pool.</summary>
+        internal bool IsCurrent
+        {
+            get
+            {
+                long generation = Volatile.Read(ref Generation);
+                return generation < 0 || generation == SpiceAPI.KernelPoolGeneration;
+            }
+        }
+
+        /// <summary>
+        /// Whether <paramref name="other"/> holds the same values: the information (NaN equal to NaN), the mass, the GM
+        /// and the orbit; a <see cref="CelestialBody"/> adds its members.
+        /// </summary>
+        internal virtual bool HasSameValues(ProviderData other) =>
+            SameInformation(Information, other.Information) && Mass.Equals(other.Mass) && GM.Equals(other.GM)
+            && Equals(InitialOrbitalParameters, other.InitialOrbitalParameters);
+
+        private static bool SameInformation(in DTO.CelestialBody a, in DTO.CelestialBody b) =>
+            a.Id == b.Id && a.CenterOfMotionId == b.CenterOfMotionId && a.BarycenterOfMotionId == b.BarycenterOfMotionId
+            && a.Name == b.Name && a.Radii.X.Equals(b.Radii.X) && a.Radii.Y.Equals(b.Radii.Y) && a.Radii.Z.Equals(b.Radii.Z)
+            && a.GM.Equals(b.GM) && a.FrameName == b.FrameName && a.FrameId == b.FrameId && a.J2.Equals(b.J2)
+            && a.J3.Equals(b.J3) && a.J4.Equals(b.J4);
+    }
+
+    // The provider data of a deferred item, once read; published once, never under a lock (#623)
+    private ProviderData _resolved;
+
+    /// <summary>Whether the item is a static object whose provider data are read at first use.</summary>
+    private protected bool IsDeferred => _deferred != null;
+
+    /// <summary>
+    /// The provider data of a deferred item: read at the first call from the global provider of that time, built exactly
+    /// as the natural-body constructor builds them, once the provider gives a GM and, for a body, radii
+    /// (<see cref="RequireKernelData"/>); a read that throws caches nothing, so that the next call tries again,
+    /// on the global provider of its own time. Once read, the item keeps its provider; on the <see cref="SpiceDataProvider"/>
+    /// its data hold for the generation of the kernel pool they were read at (<see cref="SpiceAPI.KernelPoolGeneration"/>),
+    /// and the first call after a <c>LoadKernels</c>, <c>UnloadKernels</c> or <c>ClearKernels</c> reads them again: data
+    /// equal to those held keep the objects held (the frame, the orbit), other data replace them, and a read that throws
+    /// (the kernels unloaded) keeps nothing new, so that the next call tries again (third round of #668: before, the data
+    /// of the first read were kept for the life of the process, those of a partial load included). The data are published
+    /// with a compare-exchange, never under a lock held across the provider call, so that a thread holding the SPICE lock
+    /// never waits for another (#623); two threads that read at once may both read, and the first published is kept.
+    /// </summary>
+    private protected ProviderData Resolved
+    {
+        get
+        {
+            var data = Volatile.Read(ref _resolved);
+            return data != null && data.IsCurrent ? data : Resolve(data);
+        }
+    }
+
+    private ProviderData Resolve(ProviderData held)
+    {
+        // The generation before the reads: a change of the pool during them leaves the data to be read again
+        var provider = held?.Provider ?? Configuration.Instance.DataProvider;
+        long generation = provider is SpiceDataProvider ? SpiceAPI.KernelPoolGeneration : -1;
+        var data = ReadProviderData(provider, _deferred.Frame, _deferred.Epoch);
+        data.Generation = generation;
+        if (held != null && data.HasSameValues(held))
+        {
+            // The same values: the objects held stay, so that a read gives the instances an earlier one gave
+            Volatile.Write(ref held.Generation, generation);
+            return Volatile.Read(ref _resolved);
+        }
+
+        var published = Interlocked.CompareExchange(ref _resolved, data, held);
+        if (published != held)
+        {
+            return published;
+        }
+
+        // Listed by the observer of its orbit, as the natural-body constructor lists its item
+        ExtendedInformation = data.Information;
+        (data.InitialOrbitalParameters?.Observer as CelestialItem)?.AddSatellite(this);
+        return data;
+    }
+
+    /// <summary>
+    /// Reads the provider data of a deferred item from <paramref name="provider"/>; a <see cref="CelestialBody"/> adds its own.
+    /// </summary>
+    private protected virtual ProviderData ReadProviderData(IDataProvider provider, Frame frame, in Time epoch) =>
+        ReadItemData(new ProviderData { Provider = provider }, frame, epoch);
+
+    /// <summary>
+    /// Fills <paramref name="data"/> as the natural-body constructor reads its item: the information of its provider,
+    /// the GM and mass, the point-mass field and the orbit about the barycentre of the system.
+    /// </summary>
+    private protected T ReadItemData<T>(T data, Frame frame, in Time epoch) where T : ProviderData
+    {
+        var information = data.Provider.GetCelestialBodyInfo(NaifId);
+        if (string.IsNullOrEmpty(information.Name))
+        {
+            throw new InvalidOperationException(
+                "Celestial celestialItem name can't be defined, please check if you have loaded associated kernels");
+        }
+
+        RequireKernelData(information);
+        data.Information = information;
+        data.Mass = information.GM / Constants.G;
+        data.GM = information.GM;
+        data.GravitationalField = CreateGravitationalField(NaifId, information.GM, null);
+        data.InitialOrbitalParameters = NaifId != 0 && (IsPlanet || IsMoon || IsBarycenter || IsSun)
+            ? ReadStateAboutBarycenter(epoch, frame)
+            : null;
+        return data;
+    }
+
+    /// <summary>
+    /// Checks that the information a deferred item read holds the data the kernels give each static object, before its
+    /// orbit is read: a GM (on SPICE <c>BODYnnn_GM</c>, for the solar system barycentre the sum of <c>BODY1_GM</c> to
+    /// <c>BODY10_GM</c>); a <see cref="CelestialBody"/> adds its radii.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The provider gives no such datum (a GM or radii of 0, which SPICE answers
+    /// for a variable no loaded kernel defines): the message names the variable. Nothing is kept, so that the next read
+    /// tries again (third round of #668: before, a read before <c>LoadKernels</c> kept the zeros SPICE answered for the
+    /// life of the process).</exception>
+    private protected virtual void RequireKernelData(DTO.CelestialBody information)
+    {
+        if (!(information.GM > 0.0))
+        {
+            throw MissingKernelData("GM", NaifId == 0 ? "any of BODY1_GM to BODY10_GM" : $"BODY{NaifId}_GM",
+                "a GM kernel such as gm_de440.tpc");
+        }
+    }
+
+    /// <summary>The exception of a static object whose provider gives no <paramref name="datum"/>.</summary>
+    private protected InvalidOperationException MissingKernelData(string datum, string variables, string kernel) =>
+        new($"The data provider gives no {datum} for {Name} ({NaifId}), a static object of Barycenters, PlanetsAndMoons or " +
+            $"Stars: on SPICE, no loaded kernel defines {variables} ({kernel}). Its data are not kept: the next read tries " +
+            "again, on the provider set at that time.");
 
     /// <summary>
     /// The satellites orbiting the celestial item, held weakly, by instance (#676).
@@ -83,6 +290,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Used for performance improvement and to avoid duplicated calls in the CelestialItem API.
     /// </summary>
+    /// <remarks>
+    /// Null for a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/> until
+    /// its provider data are read, at the first read of a member that needs them.
+    /// </remarks>
     protected DTO.CelestialBody ExtendedInformation;
 
     private readonly GeometryFinder _geometryFinder = new GeometryFinder();
@@ -163,9 +374,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 "Celestial celestialItem name can't be defined, please check if you have loaded associated kernels")
             : ExtendedInformation.Name;
 
-        Mass = ExtendedInformation.GM / Constants.G;
-        GM = ExtendedInformation.GM;
-        GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
+        _mass = ExtendedInformation.GM / Constants.G;
+        _gm = ExtendedInformation.GM;
+        _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
 
         BarycenterOfMotionId = FindBarycenterOfMotionId(this);
         CenterOfMotionId = FindCenterOfMotionId(this);
@@ -173,6 +384,28 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
             InitialOrbitalParameters = ReadStateAboutBarycenter(epoch, frame);
+    }
+
+    /// <summary>
+    /// A static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>: its identifiers
+    /// and the name of its <paramref name="knownObject"/>, without any read of the data provider, whose data (information,
+    /// GM, orbit about the barycentre at <paramref name="epoch"/> in <paramref name="frame"/>) are read at the first read
+    /// of a member that needs them (<see cref="Resolved"/>), with the point-mass field.
+    /// </summary>
+    /// <remarks>
+    /// Before, the static classes built their objects with the natural-body constructor, which read the provider in their
+    /// type initializer: a missing datum threw a <see cref="TypeInitializationException"/> that the runtime keeps for the
+    /// life of the process, so that every later use failed, even once the data existed.
+    /// </remarks>
+    private protected CelestialItem(NaifObject knownObject, Frame frame, in Time epoch)
+    {
+        _dataProvider = Configuration.Instance.DataProvider;
+        _listedByAnyObserver = true;
+        _deferred = new DeferredData(frame, epoch);
+        NaifId = knownObject.NaifId;
+        Name = knownObject.Name;
+        BarycenterOfMotionId = FindBarycenterOfMotionId(this);
+        CenterOfMotionId = FindCenterOfMotionId(this);
     }
 
     // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
@@ -229,10 +462,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         NaifId = naifId;
         Name = name;
-        Mass = mass;
-        GM = mass * Constants.G;
+        _mass = mass;
+        _gm = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
-        GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
+        _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
     }
 
     // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants, and
@@ -355,7 +588,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         // Sites are not CelestialItems and handle their own SPICE delegation in Site.GetEphemeris.
         if (observer is CelestialItem && observer.IsSpiceBacked)
         {
-            return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
+            return ItemProvider.GetEphemeris(epoch, this, observer, frame, aberration);
         }
 
         // Reference-body approach for non-SPICE observers
@@ -381,7 +614,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         if (NaifId == referenceBody.NaifId)
             return new StateVector(Vector3.Zero, Vector3.Zero, referenceBody, epoch, Frame.ICRF);
-        return _dataProvider.GetEphemeris(epoch, this, referenceBody, Frame.ICRF, Aberration.None).ToStateVector();
+        return ItemProvider.GetEphemeris(epoch, this, referenceBody, Frame.ICRF, Aberration.None).ToStateVector();
     }
 
     /// <summary>
@@ -583,7 +816,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     internal virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return _dataProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None).ToStateVector();
+        return ItemProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None).ToStateVector();
     }
 
     /// <summary>
@@ -946,11 +1179,16 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="value">The distance, m.</param>
     /// <param name="aberration"></param>
     /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-    /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-    /// than the shortest interval where the quantity is monotone.</param>
+    /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+    /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+    /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+    /// shorter than the shortest interval where the quantity is monotone.</param>
     /// <returns></returns>
     /// <remarks>When both objects come from the kernels and one of them is a spacecraft, CSPICE's <c>gfdist_c</c>
     /// searches; otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
+    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfdist_c</c>, SPICE cannot run the search (a
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
     public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
@@ -979,6 +1217,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="aberration">The aberration correction.</param>
     /// <param name="stepSize">The step of the search.</param>
     /// <returns>The windows, in TDB.</returns>
+    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
@@ -1009,8 +1250,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// root finder to <see cref="OccultationSearchOptions.ConvergenceTolerance"/>; it reads the states and the
     /// orientations, never writes a kernel, and keeps no state, so searches on separate propagations may run
     /// concurrently. Its step rule: every window, even shorter than the step, is found when the step is at most half the
-    /// time between the extremes of the margins (a quarter of the period for the eclipses of a satellite); see the
-    /// reference page on occultations.
+    /// time between the extremes of the margins (a quarter of the period for the eclipses of a satellite), down to the
+    /// resolution of Brent's <c>localmin</c>: a window or a gap narrower than about 2 √ε h + 2τ/3 (h the step, τ the
+    /// convergence tolerance; 19 µs at a 10 min step with τ = 1 µs) can be missed, and a tangency between samples is not
+    /// found (#668); see the reference page on occultations.
     /// </para>
     /// </remarks>
     /// <param name="searchWindow">The search window.</param>
@@ -1025,6 +1268,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
     /// <returns>The windows, in TDB.</returns>
     /// <exception cref="ArgumentException">Both bodies are points, or a body modeled as an ellipsoid has no radii.</exception>
+    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize,
         OccultationSearchOptions options)
@@ -1053,16 +1299,29 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="adjustValue"></param>
     /// <param name="aberration"></param>
     /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-    /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-    /// than the shortest interval where the quantity is monotone.</param>
+    /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+    /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+    /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+    /// shorter than the shortest interval where the quantity is monotone.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// CSPICE's <c>gfposc_c</c> searches when the item and the observer are from the kernels, one of them a spacecraft, and
+    /// the frame is one SPICE reads as the library does; in a frame whose reads are the library's (TEME, CIRS, TIRS, the
+    /// frame of a site built from coordinates, of a site from the kernels whose frame id no loaded kernel defines, of a
+    /// managed spacecraft with an attitude record) the library searches, on the reads in that frame (third review of #690;
+    /// before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
+    /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
     public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
         CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         in TimeSpan stepSize)
     {
+        // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
         if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked
-            && (IsSpacecraft || ci3.IsSpacecraft))
+            && (IsSpacecraft || ci3.IsSpacecraft) && !SpiceAPI.IsManagedFrame(frame))
         {
             // SPICE uses km for distance coordinates; framework uses m. Angles are radians in both.
             bool isDistanceCoord = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z

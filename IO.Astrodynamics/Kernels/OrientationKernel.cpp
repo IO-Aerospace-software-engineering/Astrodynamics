@@ -5,6 +5,7 @@
 #include <Spacecraft.h>
 #include <Builder.h>
 #include <InvalidArgumentException.h>
+#include <KernelsLoader.h>
 
 
 IO::Astrodynamics::Kernels::OrientationKernel::OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId) : IO::Astrodynamics::Kernels::Kernel(
@@ -91,8 +92,15 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
     }
 
     if (std::filesystem::exists(m_filePath)) {
-        unload_c(m_filePath.c_str());
+        KernelsLoader::UnloadFile(m_filePath);
         m_isLoaded = false;
+        // The unload opens the other loaded CKs again (unload_c --> UNLOAD --> CKLPF), which fails on a deleted CK
+        // SPICE holds under a relative name, left to KEEPER by KernelsLoader. The file is then kept as it was: removed, it
+        // would be lost, since nothing is written while the error is pending (review of the fourth round of #668); the
+        // error is left signalled for the writer proxy, which reports it
+        if (failed_c()) {
+            return;
+        }
         std::filesystem::remove(m_filePath);
         m_fileExists = false;
     }

@@ -9,13 +9,17 @@ using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Body;
 
 public class CelestialBodyTests
 {
-    public CelestialBodyTests()
+    private readonly ITestOutputHelper _output;
+
+    public CelestialBodyTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
     }
 
@@ -348,17 +352,21 @@ public class CelestialBodyTests
         // CSPICE N0067 (spiceypy), the method of the geosynchronous study of Astrodynamics#457 with the radius of the
         // declared period, on the kernels of Data/SolarSystem (gm_de440.tpc, earth_latest_high_prec.bpc),
         // computed 2026-10-27: a = 42164.172439443049 km, r and v in J2000 below, i = 0.0020078681590275779 rad,
-        // RAAN = 1.5712262609961554 rad. Deltas measured on Linux (2026-10-27): a 2.2e-8 m, position 3.3e-8 m,
-        // velocity 2.3e-12 m/s, i 1.3e-17 rad, RAAN 3.6e-15 rad; thresholds provisional at twice these, until the CI
-        // logs of Windows and macOS arm64.
-        Assert.Equal(42164172.439443049, orbit.SemiMajorAxis(), 5e-8);
+        // RAAN = 1.5712262609961554 rad. Worst deltas over Linux x64, Windows x64 and macOS arm64 (CI run 43773937161,
+        // 2026-11-15): a 2.980e-8 m (Windows; 2.235e-8 on Linux and macOS), position 3.840e-8 m (Windows; 3.332e-8),
+        // velocity 2.449e-12 m/s (Windows; 2.274e-12), i 1.258e-17 rad and RAAN 3.553e-15 rad on the three; thresholds
+        // twice these, rounded up at the second digit.
+        Assert.Equal(42164172.439443049, orbit.SemiMajorAxis(), 6.0e-8);
         var sv = orbit.ToStateVector();
         var position = new Vector3(-7546190.0544189948, 41483396.976059448, 15115.963054568274);
         var velocity = new Vector3(-3025.0109437580854, -550.27796615719915, 6.0743057843516786);
-        Assert.True((sv.Position - position).Magnitude() < 7e-8, $"position delta {(sv.Position - position).Magnitude()} m");
-        Assert.True((sv.Velocity - velocity).Magnitude() < 5e-12, $"velocity delta {(sv.Velocity - velocity).Magnitude()} m/s");
-        Assert.Equal(0.0020078681590275779, orbit.Inclination(), 3e-17);
-        Assert.Equal(1.5712262609961554, orbit.AscendingNode(), 8e-15);
+        _output.WriteLine($"MEASURE geosynchronous 001 against CSPICE: a {System.Math.Abs(orbit.SemiMajorAxis() - 42164172.439443049):E3} m, " +
+                          $"position {(sv.Position - position).Magnitude():E3} m, velocity {(sv.Velocity - velocity).Magnitude():E3} m/s, " +
+                          $"i {System.Math.Abs(orbit.Inclination() - 0.0020078681590275779):E3} rad, RAAN {System.Math.Abs(orbit.AscendingNode() - 1.5712262609961554):E3} rad");
+        Assert.True((sv.Position - position).Magnitude() < 7.7e-8, $"position delta {(sv.Position - position).Magnitude()} m");
+        Assert.True((sv.Velocity - velocity).Magnitude() < 4.9e-12, $"velocity delta {(sv.Velocity - velocity).Magnitude()} m/s");
+        Assert.Equal(0.0020078681590275779, orbit.Inclination(), 2.6e-17);
+        Assert.Equal(1.5712262609961554, orbit.AscendingNode(), 7.2e-15);
     }
 
     [Fact]

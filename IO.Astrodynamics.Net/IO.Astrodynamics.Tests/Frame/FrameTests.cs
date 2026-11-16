@@ -6,6 +6,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Frame;
 
@@ -16,9 +17,135 @@ public class FrameTests
     // by 4e-11 rad/s, well within the 1e-9 rad/s of VelocityVectorComparer.
     private static Frames.Frame SpiceDss13TopocentricFrame => new("DSS-13_TOPO");
 
-    public FrameTests()
+    private readonly ITestOutputHelper _output;
+
+    public FrameTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
+    }
+
+    // #690: the frame of a site from the kernels against SPICE's frame of its id, DSS-13_TOPO (1399013), and against the
+    // closed form of TKFRAME_1399013_ANGLES. Measured: 0 against SPICE on the three platforms; against the closed form
+    // 2.978e-16 rad (2000-01-02) and 1.262e-16 rad (2024-03-01) on Linux x64 and Windows x64, 3.043e-16 and 3.126e-16 rad
+    // on macOS arm64 (CI run 43745883709, 2026-11-15); threshold twice the worst, rounded up at the second significant digit
+    private const double KernelSiteFrameThreshold = 6.3e-16;
+
+    // The rotation angle of a rotation matrix, from its axis vector and its trace, precise at small angles
+    private static double RotationAngle(double[,] r)
+    {
+        double x = r[2, 1] - r[1, 2], y = r[0, 2] - r[2, 0], z = r[1, 0] - r[0, 1];
+        return System.Math.Atan2(0.5 * System.Math.Sqrt(x * x + y * y + z * z), 0.5 * (r[0, 0] + r[1, 1] + r[2, 2] - 1.0));
+    }
+
+    // The angle between two rotations given as the images of the axes e1, e2, e3 (rows of a and b)
+    private static double AngleBetween(Vector3[] a, Vector3[] b)
+    {
+        var r = new double[3, 3];
+        for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+        {
+            // r = Aᵀ B with the columns of A and B the images of the axes
+            r[i, j] = a[i] * b[j];
+        }
+
+        return RotationAngle(r);
+    }
+
+    private static Vector3[] AxesInIcrf(StateOrientation toIcrf) =>
+        [Vector3.VectorX.Rotate(toIcrf.Rotation), Vector3.VectorY.Rotate(toIcrf.Rotation), Vector3.VectorZ.Rotate(toIcrf.Rotation)];
+
+    // The frame rotation [θ]_axis of SPICE (rotate.c): the matrix that takes the components of a vector to a frame turned
+    // by θ about the axis
+    private static double[,] FrameRotation(double angle, int axis)
+    {
+        double c = System.Math.Cos(angle), s = System.Math.Sin(angle);
+        return axis switch
+        {
+            2 => new[,] { { c, 0.0, -s }, { 0.0, 1.0, 0.0 }, { s, 0.0, c } },
+            3 => new[,] { { c, s, 0.0 }, { -s, c, 0.0 }, { 0.0, 0.0, 1.0 } },
+            _ => throw new ArgumentOutOfRangeException(nameof(axis))
+        };
+    }
+
+    private static double[,] Multiply(double[,] a, double[,] b)
+    {
+        var r = new double[3, 3];
+        for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+        for (int k = 0; k < 3; k++)
+            r[i, j] += a[i, k] * b[k, j];
+        return r;
+    }
+
+    /// <summary>
+    /// The frame of a site from the kernels is the frame the loaded kernels define for its id, 1000000 + NaifId (#690):
+    /// DSS-13_TOPO of earth_topo_201023.tf, built on the coordinates of the station at 2020-10-23 on the WGS84 spheroid,
+    /// where the library built it from the coordinates of the station at J2000 TDB on the ellipsoid of pck00011, 7.76e-8 rad
+    /// away (0.41 m of plate motion between J2000 and 2020-10-23, and the spheroid). Against SPICE's transformation of
+    /// DSS-13_TOPO by name and against the closed form of its TK definition, TKFRAME_1399013_ANGLES (-243.2055372852376°,
+    /// -54.7528364565405°, 180°) about the axes (3, 2, 3) relative to EARTH_FIXED (ITRF93): DSS-13_TOPO to ITRF93 is
+    /// [a1]_3 [a2]_2 [a3]_3, SPICE's eul2m_c of the angles in their order (checked against pxform_c, 0 rad); its angular
+    /// velocity is that of sxform_c.
+    /// </summary>
+    [Theory]
+    [InlineData("2000-01-02T00:00:00")]
+    [InlineData("2024-03-01T00:00:00")]
+    public void KernelSiteFrameIsTheKernelFrame(string date)
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time(date + " TDB");
+        var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
+        var spice = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF);
+        var itrf93 = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
+        var topoToItrf93 = Multiply(Multiply(FrameRotation(-243.2055372852376 * IO.Astrodynamics.Constants.Deg2Rad, 3),
+            FrameRotation(-54.7528364565405 * IO.Astrodynamics.Constants.Deg2Rad, 2)), FrameRotation(System.Math.PI, 3));
+        var closedForm = new Vector3[3];
+        for (int i = 0; i < 3; i++)
+        {
+            closedForm[i] = new Vector3(topoToItrf93[0, i], topoToItrf93[1, i], topoToItrf93[2, i]).Rotate(itrf93.Rotation);
+        }
+
+        // Act
+        var actual = site.Frame.GetStateOrientationToICRF(epoch);
+
+        // Assert
+        double againstSpice = AngleBetween(AxesInIcrf(spice), AxesInIcrf(actual));
+        double againstClosedForm = AngleBetween(closedForm, AxesInIcrf(actual));
+        double angularVelocity = (actual.AngularVelocity - spice.AngularVelocity).Magnitude();
+        _output.WriteLine($"MEASURE kernel site frame {date}: against SPICE {againstSpice:E3} rad, against the closed form " +
+                          $"{againstClosedForm:E3} rad, angular velocity {angularVelocity:E3} rad/s");
+        Assert.True(againstSpice <= KernelSiteFrameThreshold, $"against SPICE {againstSpice:E3} rad");
+        Assert.True(againstClosedForm <= KernelSiteFrameThreshold, $"against the closed form {againstClosedForm:E3} rad");
+        Assert.True(angularVelocity < 1e-16, $"Angular velocity difference {angularVelocity:E3} rad/s");
+    }
+
+    /// <summary>
+    /// A site from the kernels whose name is not that of its kernel frame reads the frame of its id (#690): Site(13,
+    /// "GOLDSTONE") is DSS-13 (399013), whose frame the kernels name DSS-13_TOPO; it was handed to SPICE as GOLDSTONE_TOPO,
+    /// which SPICE does not know (InvalidOperationException). The Moon seen from it in its frame, against spkezr_c in
+    /// DSS-13_TOPO by name.
+    /// </summary>
+    [Fact]
+    public void KernelSiteNamedOtherwise_ReadsItsKernelFrame()
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time("2024-03-01T00:00:00 TDB");
+        var site = new Site(13, "GOLDSTONE", PlanetsAndMoons.EARTH_BODY);
+        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None).ToStateVector();
+
+        // Act
+        var byName = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, site, site.Frame, Aberration.None).ToStateVector();
+        var rotated = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, site, Frames.Frame.ICRF, Aberration.None).ToFrame(site.Frame).ToStateVector();
+
+        // Assert: the direction to 1e-15 rad, the position to 1e-12 relative
+        foreach (var actual in new[] { byName, rotated })
+        {
+            double angle = System.Math.Atan2(actual.Position.Cross(expected.Position).Magnitude(), actual.Position * expected.Position);
+            _output.WriteLine($"MEASURE GOLDSTONE: direction {angle:E3} rad");
+            Assert.True(angle < 1e-15, $"direction {angle:E3} rad");
+            Assert.True((actual.Position - expected.Position).Magnitude() < 1e-12 * expected.Position.Magnitude());
+        }
     }
 
     [Fact]

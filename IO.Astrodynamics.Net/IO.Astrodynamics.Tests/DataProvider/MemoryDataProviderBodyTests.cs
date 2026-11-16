@@ -95,6 +95,97 @@ public class MemoryDataProviderBodyTests
             ChildOutput.Value);
     }
 
+    /// <summary>
+    /// The static objects of <c>Barycenters</c>, <c>PlanetsAndMoons</c> and <c>Stars</c> on a memory provider set before any
+    /// static class is read, holding the Earth's information only: <c>CelestialItem.Create(391)</c> throws the provider's
+    /// <see cref="InvalidOperationException"/> for the missing state of L1, a provider-backed member of a static object the
+    /// provider's <see cref="ArgumentException"/> naming <c>naifId</c> at each read; once the data are added, the members
+    /// are the data given, combined by exact subtractions. Before, the first read of <c>Barycenters</c> threw a
+    /// <see cref="TypeInitializationException"/> that the runtime kept for the life of the process.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_OnAMemoryProvider_ResolveAtFirstRead_AndRetryOnFailure()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-memory)", "static-bodies-memory");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK CelestialItem.Create(391) without its state: InvalidOperationException", output);
+        Assert.Contains("OK SOLAR_SYSTEM_BARYCENTER.GM without its information, read 2: ArgumentException", output);
+        Assert.Contains("OK L1's state is the stored state of 391 minus that of the Earth barycentre", output);
+        Assert.Contains("OK SUN_BODY's orbit is its state about the solar system barycentre", output);
+    }
+
+    /// <summary>
+    /// The static objects on SPICE, the kernels loaded before any read, against SPICE through <c>SpiceAPI</c> (the body
+    /// information of <c>bodvrd</c>, the state of <c>spkezr</c>), exactly.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_OnSpice_AreTheKernelValues()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-spice)", "static-bodies-spice");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK EARTH_BODY's orbit is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK SOLAR_SYSTEM_BARYCENTER has no orbit", output);
+    }
+
+    /// <summary>
+    /// The static objects first read on an empty memory provider, then on a SPICE provider set afterwards with the kernels
+    /// loaded: each read retries on the provider set at that time, and the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c>
+    /// through <c>SpiceAPI</c>), exactly; once read, an object keeps the provider it read its data from, for its data and its
+    /// ephemeris. Before, the retry went back to the provider current when the class was initialized: the objects threw
+    /// the memory provider's <see cref="ArgumentException"/> for the life of the process.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_ReadFirstOnAMemoryProvider_ResolveOnTheProviderSetAtTheirNextRead()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-switch)", "static-bodies-switch");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK SUN_BODY.GM on the empty memory provider: ArgumentException", output);
+        Assert.Contains("OK EARTH_BODY's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK EARTH_BARYCENTER's ephemeris after the switch is spkezr's state of 3 about 0 in ICRF", output);
+        Assert.Contains("OK EARTH_BARYCENTER's ephemeris, once its data are read, stays SPICE's under a later provider", output);
+    }
+
+    /// <summary>
+    /// The static objects read on SPICE before any kernel is loaded, then after <c>LoadKernels</c>, in a fresh process: SPICE
+    /// names the bodies without kernels but gives no <c>BODYnnn_GM</c> nor <c>BODYnnn_RADII</c>, and a read of a static
+    /// object whose data need them throws <see cref="InvalidOperationException"/> naming the missing variable, at each read;
+    /// once the kernels are loaded, the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <c>SpiceAPI</c>), exactly.
+    /// Before, the first read cached the zeros SPICE answered (GM 0, radii 0, J2 NaN, no orbit, the frame IAU_EARTH) for the
+    /// life of the process. A first read after a partial load (the leap seconds, the GMs and the PCK) gives what SPICE gives
+    /// then (J2 NaN, IAU_EARTH, IAU_MOON, no orbit), and the members follow each later change of the kernel pool: SPICE's
+    /// once the kernels are loaded (before, the partial data were kept for the life of the process), the same instances
+    /// after a load that changes none of them, an exception after <c>ClearKernels</c>.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_ReadBeforeTheKernels_ThrowAndCacheNothing_ThenAreTheKernelValues()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-before-kernels)", "static-bodies-before-kernels");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK EARTH_BODY.GM before the kernels, read 2: InvalidOperationException", output);
+        Assert.Contains("OK EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK EARTH_BODY.Frame after the kernels ITRF93, SPICE ITRF93", output);
+        Assert.Contains("OK EARTH_BODY.Frame after a partial load IAU_EARTH, SPICE IAU_EARTH", output);
+        Assert.Contains("OK EARTH_BODY's frame and orbit after the reload of a kernel are the same instances", output);
+        Assert.Contains("OK EARTH_BODY.GM after ClearKernels, read 2: InvalidOperationException", output);
+        Assert.Contains("OK EARTH_BODY.J2 and Frame after the kernels are loaded again", output);
+    }
+
     public static IEnumerable<object[]> LagrangeIdPaths() =>
         from id in MemoryDataProviderTests.LagrangeIdValues
         from path in new[] { "GetCelestialBodyInfo", "new CelestialBody", "CelestialItem.Create" }

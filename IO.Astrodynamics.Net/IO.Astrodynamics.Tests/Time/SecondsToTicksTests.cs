@@ -28,14 +28,13 @@ namespace IO.Astrodynamics.Tests.Time;
 public class SecondsToTicksTests
 {
     private const string ReferencePath = "Data/SecondsToTicksReference/seconds_to_ticks_reference.json";
-    private const string LroKernel = "Data/LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp";
     private readonly ITestOutputHelper _output;
 
     public SecondsToTicksTests(ITestOutputHelper output)
     {
         _output = output;
-        TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(new FileInfo(LroKernel));
+        // Data/LRO, loaded once per process (#668, second round)
+        TestKernels.EnsureLro();
     }
 
     private static JsonElement Reference() => JsonDocument.Parse(File.ReadAllText(ReferencePath)).RootElement;

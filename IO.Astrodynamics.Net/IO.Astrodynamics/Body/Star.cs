@@ -1,13 +1,13 @@
 ﻿﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
@@ -18,7 +18,8 @@ namespace IO.Astrodynamics.Body;
 /// </summary>
 public class Star : CelestialBody
 {
-    private readonly ConcurrentDictionary<Time, StateVector> _propagatedStates = new();
+    // The states of the last propagation, in the order of their epochs; replaced as a whole by each propagation
+    private StateVector[] _propagatedStates = Array.Empty<StateVector>();
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -121,23 +122,45 @@ public class Star : CelestialBody
     public double DeclinationSigmaProperMotion { get; }
 
     /// <summary>
-    /// Gets the directory for propagation output.
+    /// Always null: the directory of an older design that wrote the propagation to files. A star keeps its propagated
+    /// states in memory and writes them only through <see cref="WriteEphemeris"/>, to the file its caller gives.
+    /// Obsolete since 11.0.0: read <see cref="IsPropagated"/>, and write the states with <see cref="WriteEphemeris"/>.
     /// </summary>
+    [Obsolete("Always null: a star keeps its propagated states in memory. Read IsPropagated to know whether it holds them, and write them with WriteEphemeris.")]
     public DirectoryInfo PropagationOutput { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether the star has been propagated.
+    /// Gets a value indicating whether the star holds propagated states: true once <see cref="Propagate"/>,
+    /// <see cref="PropagateAsync"/> or <c>Scenario.SimulateAsync</c> stored them.
     /// </summary>
-    public bool IsPropagated => PropagationOutput != null;
+    /// <remarks>
+    /// Before 11.0.0 it read <see cref="PropagationOutput"/>, which no code sets, and was always false.
+    /// </remarks>
+    public bool IsPropagated => Volatile.Read(ref _propagatedStates).Length > 0;
 
     /// <summary>
-    /// Gets the equatorial coordinates of the star at a specific epoch.
+    /// The Julian years from the catalog epoch to <paramref name="epoch"/>, the calendars of the two times as they are
+    /// (as <see cref="Time.ToJulianDate"/> reads them), from the exact difference of their ticks rounded once to a double.
+    /// </summary>
+    /// <remarks>
+    /// Before 11.0.0 it was the difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day,
+    /// about 40 µs) before the subtraction: off whole and half days from J2000 the star was that of an epoch up to about
+    /// 20 µs away, half that resolution.
+    /// </remarks>
+    private double JulianYearsFromCatalogEpoch(Time epoch)
+    {
+        return (epoch.DateTime.Ticks - Epoch.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JULIAN_YEAR;
+    }
+
+    /// <summary>
+    /// Gets the equatorial coordinates of the star at a specific epoch: those of the catalog epoch plus the proper motions
+    /// times dt, the Julian years from the catalog epoch, from the exact difference of the ticks.
     /// </summary>
     /// <param name="epoch">The epoch time for the coordinates.</param>
     /// <returns>The equatorial coordinates at the specified epoch.</returns>
     public Equatorial GetEquatorialCoordinates(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
+        var dt = JulianYearsFromCatalogEpoch(epoch);
         var dec = (EquatorialCoordinatesAtEpoch.Declination + dt * DeclinationProperMotion) % Constants.PI2;
 
         var ra = (EquatorialCoordinatesAtEpoch.RightAscension + dt * RightAscensionProperMotion) % Constants._2PI;
@@ -150,24 +173,26 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Gets the sigma value for right ascension at a specific epoch.
+    /// Gets the sigma value for right ascension at a specific epoch, dt the Julian years from the catalog epoch, from the
+    /// exact difference of the ticks.
     /// </summary>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for right ascension at the specified epoch.</returns>
     public double GetRightAscensionSigma(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
+        var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(RightAscensionSigma, 2) + System.Math.Pow(dt * RightAscensionSigmaProperMotion, 2)) % Constants._2PI;
     }
 
     /// <summary>
-    /// Gets the sigma value for declination at a specific epoch.
+    /// Gets the sigma value for declination at a specific epoch, dt the Julian years from the catalog epoch, from the exact
+    /// difference of the ticks.
     /// </summary>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for declination at the specified epoch.</returns>
     public double GetDeclinationSigma(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
+        var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(DeclinationSigma, 2) + System.Math.Pow(dt * DeclinationSigmaProperMotion, 2)) % Constants.PI2;
     }
 
@@ -230,21 +255,26 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Write star ephemeris from propagated states.
+    /// Write star ephemeris from propagated states: those of its last propagation.
     /// </summary>
     public override void WriteEphemeris(FileInfo outputFile)
     {
-        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray());
+        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, Volatile.Read(ref _propagatedStates));
     }
 
     /// <summary>
     /// Propagates the star asynchronously.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
-    /// <param name="stepSize">The step size for propagation.</param>
+    /// <param name="stepSize">The step size for propagation, positive.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
+    /// <remarks>The states of the propagation replace those the star held, see <see cref="Propagate"/>.</remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative: thrown by the call
+    /// itself, before any task is created, and nothing is stored. Before 11.0.0 the task never ended (a negative step also
+    /// stored states without bound).</exception>
     public Task PropagateAsync(Window timeWindow, TimeSpan stepSize)
     {
+        PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
         return Task.Run(() =>
         {
             Propagate(timeWindow, stepSize);
@@ -255,13 +285,27 @@ public class Star : CelestialBody
     /// Propagates the star.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
-    /// <param name="stepSize">The step size for propagation.</param>
+    /// <param name="stepSize">The step size for propagation, positive.</param>
+    /// <remarks>
+    /// The states of the propagation replace those the star held, as <c>Spacecraft.Propagate</c> replaces the states of a
+    /// spacecraft: a state at the start of the window and every <paramref name="stepSize"/> up to its end, published at once
+    /// when they are all computed. Before 11.0.0 each propagation added its states to those of the previous ones (the
+    /// first state of an epoch kept), so that <see cref="WriteEphemeris"/> wrote every window ever propagated, the gaps
+    /// between them interpolated.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative, the rule of every
+    /// step of the library (#674); nothing is stored. Before 11.0.0 the call never returned (a negative step also stored
+    /// states without bound).</exception>
     public void Propagate(Window timeWindow, TimeSpan stepSize)
     {
+        PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
+        var states = new List<StateVector>();
         for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
-            _propagatedStates.TryAdd(epoch, new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
+            states.Add(new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
         }
+
+        Volatile.Write(ref _propagatedStates, states.ToArray());
     }
 }

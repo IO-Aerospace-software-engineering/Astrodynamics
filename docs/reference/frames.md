@@ -86,10 +86,13 @@ by name (a CCSDS file, the CLI) takes the identity shortcut of `ToFrame` and pas
 propagation as the static frame does. The name does not carry the Earth orientation parameters of a `TirsFrame` or a
 `TemeFrame` built with a provider: it equals `Frame.TIRS` or `Frame.TEME`, so `ToFrame` between them is the identity.
 Nor does it carry the definition of a `SiteFrame` or a `SpacecraftFrame`: each equals any frame of its name, a kernel
-frame included, whatever its axes. A site named DSS-13 has the frame `DSS-13_TOPO`, the name of the kernel frame of the
-real station (`earth_topo_201023.tf`): if its coordinates differ, `new Frame("DSS-13_TOPO").ToFrame(site.Frame, t)` is
-the identity, not the rotation between the two topocentric frames. Give a site or a spacecraft a name no loaded kernel
-uses for another frame.
+frame included, whatever its axes. A site built from coordinates and named DSS-13 has the frame `DSS-13_TOPO`, the name
+of the kernel frame of the real station (`earth_topo_201023.tf`): if its coordinates differ, `new
+Frame("DSS-13_TOPO").ToFrame(site.Frame, t)` is the identity, not the rotation between the two topocentric frames. Give a
+site from coordinates or a spacecraft a name no loaded kernel uses for another frame. A site from the kernels has the
+kernel frame of its id (1000000 + NaifId) when a loaded kernel defines it, whatever its name, so the identity is then
+exact ([Sites](sites.md#reads-in-the-sites-frame), #690); when none does, the frame of its J2000 coordinates, in which an
+ephemeris is read in J2000 and rotated, as in the frame of a site from coordinates.
 `Frame.ICRF` is named `J2000`: `new Frame("ICRF")` is another name, not this frame. `Id` takes no part.
 Equality is not routing: a frame named TEME or GCRF is routed to the managed rotation by its name (see [TEME](#teme)
 and [ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)), but a frame named CIRS or TIRS that is not a `CirsFrame` or a
@@ -155,11 +158,21 @@ and they rotate: an ephemeris read in `Frame.CIRS` or `Frame.TIRS` (an instance 
 J2000 and rotated by the frame at the epoch of the read, the numbers `ToFrame` gives on the state read in ICRF (#558). So
 are the frames only the library holds, the `SiteFrame` of a site built from coordinates and the `SpacecraftFrame` of a
 managed spacecraft whose attitude record holds an entry (#682; before 11.0.0 a read in them reached SPICE by name and threw
-SPICE(UNKNOWNFRAME)), whatever a loaded kernel defines under their names. The frame of a managed spacecraft whose record
+SPICE(UNKNOWNFRAME)), whatever a loaded kernel defines under their names, and the `SiteFrame` of a site from the kernels
+whose frame id (1000000 + NaifId) no loaded kernel defines, the frame of its J2000 coordinates (third review of #690;
+before, a read in it threw SPICE(UNKNOWNFRAME)), decided at each read. The frame of a managed spacecraft whose record
 is empty (never propagated, no orientation added, built from a TLE or propagated by `TLEPropagator`) holds no attitude in
 the library: a read in it still reaches SPICE by name, which reads the frame kernel and the CK of that id when they are
 loaded (those the library wrote for an earlier object of the id) and throws SPICE(UNKNOWNFRAME) otherwise. A coordinate
-search that CSPICE runs in one of them is not mapped.
+search of `CelestialItem` or `Site` in a frame whose reads are the library's is the library's, also when a kernel
+spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
+frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
+loaded kernel defines under its name (third review of #690; before, no window), and `InvalidOperationException` with
+SPICE's message for any other name SPICE does not know (fourth round of #668; before, no window).
+`SpiceAPI.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
+coordinates, or from the kernels with no frame kernel of its id loaded), decided at each call (fourth round of #668;
+before, a site's frame threw); CIRS and TIRS throw there (#656), and the frame of a spacecraft is SPICE's by name,
+which reads the frame kernel and the CK written for it.
 
 ### TEME
 
@@ -186,7 +199,7 @@ rotation about z.
   frame applies: TEME → ITRF93 is TEME → ICRF, then ICRF → ITRF93 from SPICE.
 - **By name.** A frame built by name, `new Frame("TEME")` in any case (a CCSDS file, the CLI, user code), is routed to
   `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceAPI.TransformFrame` composes a TEME end
-  through ICRF; the native TEME of the C++ layer is no longer used. An ephemeris read in TEME is read in J2000
+  through ICRF (as it composes the frame of a site only the library holds, #668); the native TEME of the C++ layer is no longer used. An ephemeris read in TEME is read in J2000
   and rotated (#558). A frame built by name equals `Frame.TEME` ([Equality](#equality), #562).
 - **Measured** (`tools/teme_reference`, 2026-11-08; a LEO and a GEO state at 13 epochs from 1980 to 2026): within
   0.9 mm (LEO) and 18 mm (GEO) of ERFA's CIP route with IAU 2006/2000B, 19 mm and 106 mm (0.55 mas, IAU 2000B's

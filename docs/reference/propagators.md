@@ -24,8 +24,12 @@ covariance through the Jacobian (TEME is quasi-inertial: v' = R v, P' = diag(R, 
 [TEME](frames.md#teme)). The run is bit for bit that of its ICRF twin, `start.ToFrame(Frame.ICRF)` on the same
 observer, on every path: `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
 `MonteCarloPropagator`, the constructors and the builder. The target orbit of an impulse of such a spacecraft is given
-in ICRF: a target in another frame, TEME included, is rejected when the propagation is built
-([Impulse Maneuvers](impulse-maneuvers.md)). CIRS, TIRS, the rotating frames and a set of mean elements in TEME
+in ICRF: a target in another frame, TEME included, is rejected when the propagation is built. On every spacecraft the
+target orbits of the impulses are given in the frame of the propagation (GCRF and ICRF, which share their axes, counting
+as one), and any other frame is rejected when the
+propagation is built (`ArgumentException`) and, for a maneuver attached after it was built, when it propagates
+(`InvalidOperationException`) (#685; before 11.0.0 only a TLE or TEME spacecraft was checked there,
+[The frame of a target orbit](impulse-maneuvers.md#the-frame-of-a-target-orbit)). CIRS, TIRS, the rotating frames and a set of mean elements in TEME
 (`tle.ToMeanKeplerianElements()`, which has no state without its theory) are still rejected. For a TLE, see
 [Numerical propagation of a TLE](tle.md#numerical-propagation-of-a-tle): its point-mass Earth is not SGP4.
 
@@ -53,10 +57,10 @@ in ICRF: a target in another frame, TEME included, is rejected when the propagat
 | Constructor | Description |
 |-------------|-------------|
 | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT)` | Full control: specify integrator, bodies, and perturbation flags |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added) |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state |
 | `CentralBodyPropagator(window, spacecraft, celestialBodies, drag, srp, deltaT)` | Auto-creates a default VVIntegrator with specified forces |
 | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT, covariancePropagation)` | As the first, and propagates the state transition matrix and, in covariance mode, the covariance ([Covariance Propagation](covariance-propagation.md)); null options for none |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second, with the covariance propagation; the columns of Ψ follow the forces of the integrator |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second (the integrator initialized by the propagator), with the covariance propagation; the columns of Ψ follow the forces of the integrator |
 
 On every constructor that builds the forces the central body takes part with the models of the observer: it is inserted
 first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a listed body of its
@@ -66,7 +70,9 @@ weather for an Earth without a model, and of each other listed body with an atmo
 ([Force Models](force-models.md#atmosphericdrag)). The integrator of a constructor
 that builds the forces must be a new instance: one that holds forces or was used by such a constructor throws
 `ArgumentException` (`integrator`); the constructors without celestial bodies use the integrator and its forces as
-given, after the caller's `Initialize`. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
+given and initialize it with the initial state of the propagation: about the central body (the Sun in SSB mode), in the
+inertial frame of the propagation, at the TDB start of the window; a later `Initialize` by the caller replaces it. Before
+11.0.0 they used it as given, and one its caller had not initialized threw `NullReferenceException` at the first step. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
 constructor (#674).
 
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the

@@ -33,6 +33,48 @@ another type beside it are ignored). A document that holds several OPMs, such as
 `OpmValidator.ValidateFile` reports it invalid (#679); before 11.0.0 the first one was read. Split such a document into
 one OPM per document.
 
+The OPM itself holds one header and one body, the body one segment, the segment one metadata and one data section, and
+the data at most one of each block, the maneuvers excepted (NDM/XML 4.0.0, `ndmxml-4.0.0-opm-3.0.xsd`; CCSDS 502.0-B-3). An OPM
+with a second segment, or a second header, body, metadata, data section or block, throws `OpmParseException` naming
+the element and its count without `validateSchema`; with it the schema rejects the document first, an
+`OpmValidationException` (`TryLoadFromFile` returns false with the schema error and `OpmValidator.ValidateFile` reports it
+invalid; without schema validation, a `PARSE_ERROR` and the reader's error). Before 11.0.0 the first one was read and
+the others dropped, a whole second segment included. Split such a document into one message per segment.
+
+A keyword whose value the data model refuses throws `OpmParseException` naming the keyword, its value, its block and the
+rule, the data model's exception as `InnerException` (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ECCENTRICITY` negative,
+`SEMI_MAJOR_AXIS` not above 0 for an `ECCENTRICITY` below 1 or not below 0 above 1 (the message gives both keywords),
+`INCLINATION` outside [0, 180], `GM` not above 0, `MASS` not above 0, a negative `SOLAR_RAD_AREA`, `SOLAR_RAD_COEFF`,
+`DRAG_AREA` or `DRAG_COEFF`, a negative `MAN_DURATION`, a positive `MAN_DELTA_MASS`, or an empty `MAN_REF_FRAME`,
+`OBJECT_NAME`, `OBJECT_ID`, `CENTER_NAME`, `REF_FRAME`, `TIME_SYSTEM` or `ORIGINATOR`, for example
+`MASS '0' in spacecraftParameters is invalid: Mass must be positive.` Before 11.0.0 the `ArgumentOutOfRangeException` or
+`ArgumentException` of the data model's constructor crossed the reader, naming its parameter. With `validateSchema` the
+schema rejects most of these values first (`OpmValidationException`), but not those its types allow: `SEMI_MAJOR_AXIS`
+is `xsd:double`, `MASS` a `nonNegativeDouble` (0 allowed), the strings `xsd:string`, so a `MASS` of 0, a
+`SEMI_MAJOR_AXIS` of the wrong sign or an empty `OBJECT_NAME` throws `OpmParseException` with the default validation too.
+`TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error, both naming the keyword.
+The constructors of the data model (`OpmKeplerianElements`, `OpmData`, ...) keep their `ArgumentException`.
+
+### Schema validation
+
+`validateSchema` and `OpmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
+505.0-B-3) in its form, as SANA publishes them: a root `ndm` or `opm` without a namespace, every element unqualified (the
+form of Space-Track and of the writer, SANA's `ndmxml_unqualified` set) or every element below the root in the
+namespace `urn:ccsds:schema:ndmxml` (the qualified set). Any other root is an error, and so is an `ndm` that holds no
+`opm` child (an empty `ndm`, or one of other messages only), which the NDM master accepts but in which the reader
+finds no OPM (`OPM006`; reported valid before 11.0.0, `Load*` then throwing `OpmParseException`).
+A root in the namespace, the library's earlier form of a bare message, is checked as before, against the OPM schema with that root declared in the
+namespace (an `ndm` root in the namespace has no declaration and is rejected, by SANA too). The unqualified set is the
+embedded one with its `elementFormDefault` set to `unqualified`, the one difference between the two sets SANA publishes.
+
+Before the third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) an
+unqualified document matched no declaration of the validator, so it was reported valid with a warning per element and
+nothing below its root was checked: an OPM whose `X` is in `units="m"` loaded with its value read as km, and undeclared
+elements were ignored. Such a document now makes `Load*` throw `OpmValidationException`; fix the document, or pass
+`validateSchema: false` to read it without the schema step, where a keyword out of its range throws `OpmParseException`
+since the fourth round (above). A valid document, the writer's output included, validates without a warning.
+
 ### Saving
 
 | Method | Description |

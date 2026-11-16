@@ -422,13 +422,23 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// Creates a 3x3 rotation matrix from a quaternion.
+    /// Creates a 3x3 rotation matrix from a quaternion: the matrix of the active rotation q p q* of its unit quaternion.
     /// </summary>
-    /// <param name="q">The quaternion representing the rotation.</param>
+    /// <param name="q">The quaternion representing the rotation, of any finite non-zero magnitude.</param>
     /// <returns>A 3x3 rotation matrix.</returns>
+    /// <exception cref="ArgumentException"><paramref name="q"/> is the zero quaternion or has a component that is not
+    /// finite: it is no rotation (#680's known limitation; the identity was returned for the zero quaternion before
+    /// 11.0.0). Every finite non-zero quaternion is a rotation, its magnitude scaled as <see cref="Quaternion.Normalize"/>
+    /// does (third round of #668: outside about 1e-154 to 1e154 it threw before 11.0.0).</exception>
     public static Matrix FromQuaternion(Quaternion q)
     {
-        var qn = q.NormalizeOrZero();
+        return RotationMatrix(q, nameof(q));
+    }
+
+    // The rotation matrix of a quaternion, which must be normalizable, the parameter of the caller named in the exception
+    private static Matrix RotationMatrix(in Quaternion q, string parameterName)
+    {
+        var qn = Quaternion.RequireUnit(q, parameterName);
         double w = qn.W;
         double x = qn.VectorPart.X;
         double y = qn.VectorPart.Y;
@@ -522,7 +532,10 @@ public readonly record struct Matrix
     /// use for any frame change of a state carrying a covariance.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentException">Thrown when covariance is not 6x6.</exception>
+    /// <exception cref="ArgumentException">Thrown when covariance is not 6x6, or when <paramref name="rotation"/> is the zero
+    /// quaternion or has a component that is not finite (#680's known limitation; the covariance was returned unrotated for
+    /// the zero quaternion before 11.0.0). Every finite non-zero quaternion is a rotation (third round of #668: outside
+    /// about 1e-154 to 1e154 it threw before 11.0.0).</exception>
     public static Matrix TransformCovariance(Matrix covariance, Quaternion rotation)
     {
         if (covariance.Rows != 6 || covariance.Columns != 6)
@@ -531,7 +544,7 @@ public readonly record struct Matrix
         }
 
         // Get the 3×3 rotation matrix from the quaternion
-        var R = FromQuaternion(rotation);
+        var R = RotationMatrix(rotation, nameof(rotation));
 
         // Build the 6×6 block-diagonal transformation matrix T = [R 0; 0 R]
         var T = CreateBlockDiagonal(R, R);
@@ -555,7 +568,7 @@ public readonly record struct Matrix
     /// </remarks>
     internal static Matrix CreateStateTransformationJacobian(Quaternion rotation, Vector3 angularVelocity)
     {
-        var r = FromQuaternion(rotation);
+        var r = RotationMatrix(rotation, nameof(rotation));
         var jacobian = new Matrix(6, 6);
         for (int i = 0; i < 3; i++)
         {

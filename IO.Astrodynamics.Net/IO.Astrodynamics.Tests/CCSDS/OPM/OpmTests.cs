@@ -1361,5 +1361,64 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region Keywords out of their range
+
+        // Rows of OpmReaderTests.OpmKeywordsOutOfRange: one the schema rejects, and those it accepts though the data model
+        // refuses them (distanceType xsd:double, massType nonNegativeDouble, MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR
+        // xsd:string)
+        [Theory]
+        [InlineData("ECCENTRICITY", "-0.5", null, true)]
+        [InlineData("SEMI_MAJOR_AXIS", "-6878.137", null, false)]
+        [InlineData("SEMI_MAJOR_AXIS", "7000", "ECCENTRICITY=1.5", false)]
+        [InlineData("MASS", "0", null, false)]
+        [InlineData("MAN_REF_FRAME", "", null, false)]
+        [InlineData("OBJECT_NAME", "", null, false)]
+        [InlineData("ORIGINATOR", "", null, false)]
+        public void LoadFromStringStreamAndFile_KeywordOutOfRange_ThrowsOpmParseException_WithAndWithoutSchema(
+            string keyword, string value, string with, bool schemaRejects)
+        {
+            var xml = OpmReaderTests.OpmWithKeyword(keyword, value, with);
+
+            // Without the schema: every entry point throws the reader's exception (before: ArgumentException of the model)
+            OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() =>
+                Opm.LoadFromString(xml, validateSchema: false)), keyword, value, with);
+            using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml)))
+            {
+                OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() =>
+                    Opm.LoadFromStream(stream, validateSchema: false)), keyword, value, with);
+            }
+
+            NdmDocuments.WithTempFile(xml, file =>
+            {
+                OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() =>
+                    Opm.LoadFromFile(file, validateSchema: false)), keyword, value, with);
+
+                // With the default validation: the schema's exception where it has a facet, the reader's otherwise
+                if (schemaRejects)
+                {
+                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file));
+                }
+                else
+                {
+                    OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml)), keyword, value, with);
+                    OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromFile(file)), keyword, value, with);
+                }
+
+                // TryLoadFromFile: false, the parse error naming the keyword (before: the constructor's parameter)
+                foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
+                {
+                    Assert.False(Opm.TryLoadFromFile(file, out var opm, out var result, validateSchema));
+                    Assert.Null(opm);
+                    var error = Assert.Single(result.Errors);
+                    Assert.Equal("PARSE_ERROR", error.Code);
+                    Assert.Contains(keyword, error.Message);
+                    Assert.Contains($"'{value}'", error.Message);
+                }
+            });
+        }
+
+        #endregion
     }
 }

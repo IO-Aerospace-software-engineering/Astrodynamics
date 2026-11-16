@@ -291,6 +291,10 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 ## Practical Limits
 
 - Collision probability uses a 2D Foster-style encounter-plane method.
+- The relative state and the covariances at TCA are expressed in the RTN frame of a participant, which a rectilinear
+  state (r × v = 0: at rest, at the centre, a radial motion) does not define: `Analyze`, `AnalyzeAll`,
+  `EvaluateAvoidance` and the CDM export throw `InvalidOperationException` for a protected or secondary state at TCA
+  that is rectilinear (#687; a matrix with zero rows was used before 11.0.0).
 - `EncounterQualityFlags.LowRelativeVelocityEncounter` is an applicability warning that the 2D assumption may be degraded.
 - The covariance is propagated to TCA for the participants the library propagates in RK7(8); the others keep their
   initial covariance held in RTN (see [Covariance at TCA](#covariance-at-tca)).

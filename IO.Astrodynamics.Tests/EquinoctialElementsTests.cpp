@@ -19,10 +19,10 @@ TEST(EquinoctialElements, Initialization) {
     double ecc = 0.1;
     double a = p / (1. - ecc);
     double n = sqrt(gm / a) / a;
-    double argp = 30. * rpd_c();
-    double node = 15. * rpd_c();
-    double inc = 10. * rpd_c();
-    double m0 = 45. * rpd_c();
+    double argp = 30. * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15. * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10. * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45. * IO::Astrodynamics::Constants::DEG_RAD;
 
     //equinoctial elements
     double h = ecc * sin(argp + node);
@@ -58,10 +58,10 @@ TEST(EquinoctialElements, InitializationFromKeplerian) {
     double ecc = 0.5;
     double a = p / (1. - ecc);
     double n = sqrt(gm / a) / a;
-    double argp = 30. * rpd_c();
-    double node = 15. * rpd_c();
-    double inc = 10. * rpd_c();
-    double m0 = 45. * rpd_c();
+    double argp = 30. * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15. * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10. * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45. * IO::Astrodynamics::Constants::DEG_RAD;
 
     //equinoctial elements
     double h = ecc * sin(argp + node);
@@ -99,10 +99,10 @@ TEST(EquinoctialElements, GetPeriod) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30. * rpd_c();
-    double node = 15. * rpd_c();
-    double inc = 10. * rpd_c();
-    double m0 = 45. * rpd_c();
+    double argp = 30. * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15. * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10. * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45. * IO::Astrodynamics::Constants::DEG_RAD;
 
     //equinoctial elements
     double h = ecc * sin(argp + node);
@@ -124,10 +124,10 @@ TEST(EquinoctialElements, GetStateVector) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
-    double inc = 10.0 * rpd_c();
-    double m0 = 45.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -158,10 +158,10 @@ TEST(EquinoctialElements, GetStateVectorAtEpoch) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
-    double inc = 10.0 * rpd_c();
-    double m0 = 45.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -191,10 +191,10 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 0.0 * rpd_c();
-    double node = 0.0 * rpd_c();
-    double inc = 0.0 * rpd_c();
-    double m0 = 0.0 * rpd_c();
+    double argp = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{0.0s};
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, t0,
@@ -218,10 +218,10 @@ TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity) {
     double p = 1.0e7;
     double ecc = 0.0;
     double a = p / (1. - ecc);
-    double argp = 0.0 * rpd_c();
-    double node = 0.0 * rpd_c();
-    double inc = 0.0 * rpd_c();
-    double m0 = 0.0 * rpd_c();
+    double argp = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{0.0s};
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, t0,
@@ -240,10 +240,10 @@ TEST(EquinoctialElements, GetEccentricity) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
-    double inc = 10.0 * rpd_c();
-    double m0 = 45.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -268,10 +268,10 @@ TEST(EquinoctialElements, GetInclination) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 45.0 * rpd_c();
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -296,10 +296,10 @@ TEST(EquinoctialElements, GetPeriapsisArgument) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 45.0 * rpd_c();
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -324,10 +324,10 @@ TEST(EquinoctialElements, GetRightAscendingNode) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 45.0 * rpd_c();
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -352,10 +352,10 @@ TEST(EquinoctialElements, GetMeanAnomalyAtEpoch) {
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 45.0 * rpd_c();
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
@@ -380,10 +380,10 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
     //double p = 1.0e7;
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
-    double argp = 9.311325640521339E+01 * rpd_c();
-    double node = 9.542543898089574E+00 * rpd_c();
+    double argp = 9.311325640521339E+01 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 9.542543898089574E+00 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 2.989409852022806E+02 * rpd_c();
+    double m0 = 2.989409852022806E+02 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
@@ -407,10 +407,10 @@ TEST(EquinoctialElements, GetSpecificAngularMomentum) {
     //ISS keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
-    double argp = 9.311325640521339E+01 * rpd_c();
-    double node = 9.542543898089574E+00 * rpd_c();
+    double argp = 9.311325640521339E+01 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 9.542543898089574E+00 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 2.989409852022806E+02 * rpd_c();
+    double m0 = 2.989409852022806E+02 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
@@ -434,10 +434,10 @@ TEST(EquinoctialElements, GetTrueAnomalyAtEpoch) {
     //ISS keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
-    double argp = 9.311325640521339E+01 * rpd_c();
-    double node = 9.542543898089574E+00 * rpd_c();
+    double argp = 9.311325640521339E+01 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 9.542543898089574E+00 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 2.989409852022806E+02 * rpd_c();
+    double m0 = 2.989409852022806E+02 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
@@ -461,10 +461,10 @@ TEST(EquinoctialElements, GetISSMeanAnomaly) {
     //keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
-    double argp = 9.311325640521339E+01 * rpd_c();
-    double node = 9.542543898089574E+00 * rpd_c();
+    double argp = 9.311325640521339E+01 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 9.542543898089574E+00 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 2.989409852022806E+02 * rpd_c();
+    double m0 = 2.989409852022806E+02 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
@@ -488,10 +488,10 @@ TEST(EquinoctialElements, GetSemiMajorAxis) {
     //keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
-    double argp = 9.311325640521339E+01 * rpd_c();
-    double node = 9.542543898089574E+00 * rpd_c();
+    double argp = 9.311325640521339E+01 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 9.542543898089574E+00 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 2.989409852022806E+02 * rpd_c();
+    double m0 = 2.989409852022806E+02 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
@@ -515,10 +515,10 @@ TEST(EquinoctialElements, GetTimeToMeanAnomaly) {
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
-    double argp = 20.0 * rpd_c();
-    double node = 45.0 * rpd_c();
+    double argp = 20.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 10.0 * rpd_c();
+    double m0 = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
@@ -542,10 +542,10 @@ TEST(EquinoctialElements, GetMeanAnomalyForEpoch) {
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
-    double argp = 20.0 * rpd_c();
-    double node = 45.0 * rpd_c();
+    double argp = 20.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 10.0 * rpd_c();
+    double m0 = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
@@ -569,10 +569,10 @@ TEST(EquinoctialElements, GetTimeToTrueAnomaly) {
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
-    double argp = 20.0 * rpd_c();
-    double node = 45.0 * rpd_c();
+    double argp = 20.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 10.0 * rpd_c();
+    double m0 = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
@@ -596,10 +596,10 @@ TEST(EquinoctialElements, GetTrueAnomalyForEpoch) {
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
-    double argp = 20.0 * rpd_c();
-    double node = 45.0 * rpd_c();
+    double argp = 20.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 10.0 * rpd_c();
+    double m0 = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
@@ -623,10 +623,10 @@ TEST(EquinoctialElements, TrajectoryType) {
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
-    double argp = 20.0 * rpd_c();
-    double node = 45.0 * rpd_c();
+    double argp = 20.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    double m0 = 10.0 * rpd_c();
+    double m0 = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements

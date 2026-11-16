@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.Tests;
 /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/>, which throws once the frame is out of the pool. A text kernel
 /// is closed by SPICE after its load, so a loaded text kernel can be deleted on every platform, and SPICE keeps nothing of it
 /// once unloaded. A binary kernel (the copies of the moon PCK of <c>Data/SolarSystem</c>) stays open: the scenarios that
-/// delete a loaded one run in the child process <c>IO.Astrodynamics.Tests.KernelUnload</c>, because a failed reopening
+/// delete a loaded one run in the child process <c>IO.Astrodynamics.Tests.KernelUnload</c> (<see cref="KernelUnloadChildTests"/>), because a failed reopening
 /// leaves the deleted kernel open in SPICE for good, which made the IAU frames of other test classes fail (#673), and are
 /// skipped on Windows, where it cannot be deleted (<see cref="NotOnWindowsTheoryAttribute"/>). The kernels are written by
 /// <see cref="TestKernelWriter"/>. The frame ids and frame class ids 1999901 and up are not defined by
@@ -358,32 +358,6 @@ public class KernelRegistryTests : IDisposable
 
         Assert.Equal(60.0, RotationAngleDeg("IOA_F02_MKB_E"), 12);
         Assert.Equal([after.FullName], Under(_root).Select(k => k.FullName));
-    }
-
-    // A child that ends takes about 1 s (Linux x64, 3 cores); the limit is 60 times that, for a slow CI machine
-    private static readonly TimeSpan ChildTimeout = TimeSpan.FromSeconds(60);
-
-    /// <summary>
-    /// The scenarios in which SPICE fails to open a deleted binary PCK again, each run in the child process
-    /// <c>IO.Astrodynamics.Tests.KernelUnload</c>, which loads <c>Data/SolarSystem</c>, plays the scenario and exits 0 when
-    /// it held (its scenarios and their measurements in its <c>Program</c>). In this process, the deleted PCK of such a
-    /// failure stays open in SPICE after its unload, KEEPER's handle for it being 0, and once its logical unit is released the
-    /// PCK searches of every IAU frame fail to reconnect it (#673, measured with CSPICE N0067; CI of 725ee1a and a993265).
-    /// </summary>
-    [NotOnWindowsTheory("A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open")]
-    [InlineData("UnloadKernels_OfAFolderOfTwoPcks_WhoseSecondIsDeleted_RestoresThePrecedence")]
-    [InlineData("UnloadKernels_OfAPck_WhenSpiceCannotOpenAnotherPckAgain_Throws_AndThePcksLoadedBeforeTakePrecedence")]
-    [InlineData("UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenSpiceCannotOpenAnotherPckAgain_Throws")]
-    public void UnloadKernels_WhenSpiceCannotOpenAnotherPckAgain_InAChildProcess(string scenario)
-    {
-        string child = ChildProcess.AssemblyPath("KernelUnload", "IO.Astrodynamics.Tests.KernelUnload.dll");
-        Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");
-
-        var result = ChildProcess.Run(child, ChildTimeout, Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"), scenario);
-
-        Assert.True(result.HasValue, $"The child ({scenario}) did not end within {ChildTimeout.TotalSeconds} s.");
-        Assert.True(result.Value.ExitCode == 0,
-            $"The child ({scenario}) exited {result.Value.ExitCode}. Output: {result.Value.Output} Error: {result.Value.Error}");
     }
 
     [Fact]

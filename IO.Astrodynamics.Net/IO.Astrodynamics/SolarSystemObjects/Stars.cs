@@ -11,6 +11,8 @@ public static class Stars
     
     static Stars()
     {
-        SUN_BODY = new CelestialBody(Sun);
+        // No provider data read here: at the first read of a member that needs them, retried on failure (second round of
+        // #668)
+        SUN_BODY = CelestialBody.CreateDeferred(Sun);
     }
 }

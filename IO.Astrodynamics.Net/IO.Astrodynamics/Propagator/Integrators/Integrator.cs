@@ -80,7 +80,7 @@ public abstract class Integrator : IIntegrator
     /// <summary>
     /// Initialize the integrator with the initial state.
     /// Sets the observer and frame used for constructing intermediate StateVectors.
-    /// Called by the propagator after forces have been added.
+    /// Called by the propagator at construction, once the forces are added, and after each event.
     /// </summary>
     public virtual void Initialize(StateVector initialState)
     {

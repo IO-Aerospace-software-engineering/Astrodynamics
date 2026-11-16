@@ -8,7 +8,7 @@ as observer). An eclipse is the occultation of the Sun.
 var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 var sun = new CelestialBody(Stars.Sun);
 // spacecraft: propagated, from a TLE, or from the kernels
-var options = new OccultationSearchOptions { FrontFrame = new Frames.Frame("IAU_EARTH") };
+var options = new OccultationSearchOptions { FrontFrame = new Frame("IAU_EARTH") };
 var penumbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
     OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0), options);
 var umbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
@@ -57,6 +57,14 @@ extreme is searched, so an event shorter than the step is found as long as the s
 the extremes of the margins. For the eclipses of a satellite, a quarter of the period finds a penumbra of a few
 seconds. `gfoclt` asks the step to be shorter than every event and every gap.
 
+**Resolution.** The search for an extreme between samples is Brent's `localmin`, whose abscissa tolerance is
+√ε |x| + τ/3 (|x| up to the step h from the middle of its bracket, τ the convergence tolerance), and it stops only at a
+margin strictly past zero. A window or a gap narrower than about 2 √ε h + 2τ/3 can therefore be missed: 2.5 µs at a
+1 min step, 19 µs at 10 min, 41 µs at 22.5 min with τ = 1 µs; the bound scales with
+`OccultationSearchOptions.ConvergenceTolerance`. A tangency between two samples (an extreme exactly at zero) is not
+found. On a closed-form margin of period 5400 s, every window was found down to 0.3 µs at a 1 min step and 10 µs at 10
+and 22.5 min, every gap down to 0.3 µs, 1 µs and 10 µs (#668, `OccultationFinderResolutionTests`, Linux x64).
+
 **Aberration.** `None`, or the light time (`LT`, `CN`, `XLT`, `XCN`) as `gfoclt`: each body's position and frame at its
 corrected epoch. The stellar aberration of the `+S` corrections is ignored, as `gfoclt` does. A `Star` is a direction,
 read at the epoch whatever the correction, as the [field-of-view search](spacecraft.md) reads it: its catalog position
@@ -67,22 +75,24 @@ read there too, before the start of de440s beyond about 54 pc, which threw once 
 
 ## Accuracy
 
-Against `gfoclt` converged to 1e-9 s (`tools/occultation_reference`), on Linux x64 (2026-10-27):
+Against `gfoclt` converged to 1e-9 s (`tools/occultation_reference`), the first four rows the same on Linux x64, Windows
+x64 and macOS arm64 (CI run 43773937161, 2026-11-15):
 
 | Scenario | Worst edge |
 |----------|-----------:|
 | LEO, GEO eclipse season, grazing LEO, LRO behind the Moon, solar eclipses from the Earth and from DSS-13 and DSS-65 (geometric, 100 ns tolerance) | 1.2e-7 s |
-| The same at the default tolerance, against `gfoclt` at its default | 7.0e-7 s |
+| The same at the default tolerance, against `gfoclt` at its default | 6.0e-7 s |
 | Eclipse 001 with the light time (`LT`, `CN`, `XLT`, `XCN`) | 1.3e-6 s |
 | Eclipse 001 of a propagated spacecraft, against GMAT R2026a's `EclipseLocator` (epochs to the millisecond) | 4.8e-4 s |
 | A star at 20 and 100 pc behind the Moon from DSS-13, with and without 0.1″/yr of proper motion, `None`, `LT`, `CN`, `XLT`, `XCN`, against the closed form of `tools/occultation_reference/star_occultation_reference.py` (2026-11-11) | 2.38e-6 s (1.43e-6 s without `XLT` and `XCN`) |
 
 The last row includes the difference of the Earth GM of the two trajectories (the kernel's, GMAT's 398600.4415
 km³/s²), 3.2e-4 s after 12 h; measured again with the TT time argument of the propagation
-([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)), 4.83e-4 s (Linux, 2026-11-01).
+([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)), 4.83e-4 s (the three platforms, CI
+run 43773937161, 2026-11-15).
 The references of `tools/occultation_reference` are two-body SPKs propagated by `conics_c` over ET, TDB seconds about
 the Earth: they depart from the time argument of the library by the change of TDB − TT, at most 3.6e-6 s over their 12 h,
-within the bounds of the tests (5.2e-5 s and more), and are kept as they are.
+within the bounds of the tests (5.0e-5 s and more), and are kept as they are.
 
 `CelestialItem.IsOcculted(by, from, aberration)` gives the type at one instant with the same geometry.
 

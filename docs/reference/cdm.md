@@ -23,6 +23,36 @@ The readers read one CDM: a standalone `<cdm>`, or the one `<cdm>` of an `<ndm>`
 several CDMs, at any depth below the root, throws `CdmParseException` naming their number (#679); before 11.0.0 the first one was returned. Split such
 a document into one CDM per document.
 
+The CDM itself holds one header and one body, the body one `relativeMetadataData` and exactly two segments, one per
+object, each segment one metadata and one data section, and each data section and the `relativeMetadataData` at most
+one of each block (NDM/XML 4.0.0, `ndmxml-4.0.0-cdm-1.0.xsd`; CCSDS 508.0-B-1, 3.2). A body with another number of
+segments throws `CdmParseException` naming it, where before 11.0.0 the `Cdm` constructor threw `ArgumentException`; a
+second header, body, `relativeMetadataData`, metadata, data section or block throws `CdmParseException` naming the
+element and its count, where the first was read (a second `relativeMetadataData`'s miss distance dropped).
+
+An enumerated keyword whose value is not one of its own (`OBJECT`, `REF_FRAME`, `COVARIANCE_METHOD`, `MANEUVERABLE`,
+`SCREEN_VOLUME_FRAME`, `SCREEN_VOLUME_SHAPE`, `SOLAR_RAD_PRESSURE`, `EARTH_TIDES`, `INTRACK_THRUST`; CCSDS 508.0-B-1
+table 3-3) throws `CdmParseException` naming the keyword and its value, the `FormatException` of the enumeration as
+`InnerException`, for example `REF_FRAME 'TEME' is not one of the values of the keyword: Unsupported CDM reference frame
+'TEME'.` Before 11.0.0 that `FormatException` crossed the reader (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The readers do not check the
+schema: `Cdm.ValidateSchemaFromXml` rejects these values too.
+
+### Schema validation
+
+`Cdm.ValidateSchema` and `Cdm.ValidateSchemaFromXml` check a document whose root, `ndm` or `cdm`, has no namespace
+against the CCSDS NDM/XML 4.0.0 schemas (CCSDS 505.0-B-3) in its form, as SANA publishes them: every element unqualified
+(SANA's `ndmxml_unqualified` set) or every element below the root in the namespace `urn:ccsds:schema:ndmxml` (the
+qualified set). Any other root is a `CDM001` error, and so is an `ndm`, without a namespace or in it, that holds no `cdm`
+child (an empty `ndm`, or one of other messages only), which the NDM schema accepts but in which the reader finds no CDM
+(reported valid before 11.0.0). A root in the namespace, the form `CdmWriter` writes
+([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)), is checked as before, against
+the CDM schema with that root declared in the namespace. Before the third round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) a document in a standard form
+matched no declaration of the validator, so it was reported valid with a warning per element and nothing below its root
+was checked: a `COLLISION_PROBABILITY` of 1.5 was reported valid
+([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
+
 ## Instance Methods
 
 | Method | Description |
@@ -68,7 +98,22 @@ Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipan
   the combined radius minus it: the radius of the secondary the analysis resolved, its own `HardBodyRadius` when it
   gives one ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): π·5² for any
   secondary under the default options). π r² is the exporter's convention; 508 defines `AREA_PC` as the actual area of
-  the object (Annex E).
+  the object (Annex E);
+- `INTRACK_THRUST` is omitted: it states whether in-track thrust modeling was used for the orbit determination of the
+  object (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional), not its capability, which `MANEUVERABLE` states, and the library
+  runs no orbit determination. It is `NO` for a covariance the library propagated (below). Set
+  `ProtectedParticipantMetadata.IntrackThrust` or `SecondaryParticipantMetadata.IntrackThrust` to state the value of an
+  OD; `null` keeps the inferred value
+  ([#684](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/684), decided by S. Guillet,
+  2026-11-13: `YES` for a spacecraft with an engine and `NO` for one without before);
+- `SOLAR_RAD_PRESSURE` is omitted, as `GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS` and `EARTH_TIDES`
+  are: it states whether solar radiation pressure perturbations were used for the orbit determination of the object
+  (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional; wording confirmed by S. Guillet, 2026-11-15), not whether the spacecraft has a
+  reflectivity coefficient. For a covariance the library propagated it is `YES` or `NO` from the forces of the
+  propagation (below). Set `ProtectedParticipantMetadata.SolarRadPressure` or
+  `SecondaryParticipantMetadata.SolarRadPressure` to state the value of an OD; `null` keeps the inferred value (third
+  round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): `YES` for a
+  spacecraft whose `SolarRadiationCoeff` is above 0 before, whether or not any solar radiation pressure was modeled).
 
 ### Propagated covariance
 
@@ -83,9 +128,13 @@ For a participant whose covariance was propagated (`CovarianceSource.Propagated`
   EGM2008, its default; `GEOPOTENTIAL: nD nO` for harmonics evaluated with other constants, given to
   `GeopotentialModelParameters` or those of another body; `POINT MASS` otherwise), `ATMOSPHERIC_MODEL` (`NRLMSISE-00`,
   `US STANDARD ATMOSPHERE 1976`, `MARS STANDARD ATMOSPHERE`, `NONE` without drag), `N_BODY_PERTURBATIONS` (the third
-  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` describe the forces the propagation actually used. The library
+  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` (`YES` or `NO`, whatever the `SolarRadiationCoeff` of the
+  spacecraft) describe the forces the propagation actually used. The library
   does not know the name of a model whose constants are given; set it through `ProtectedParticipantMetadata` or
   `SecondaryParticipantMetadata` (`GravityModel = "EGM-96: 36D 36O"`), which take precedence;
+- `INTRACK_THRUST` is `NO`, whatever the engines of the spacecraft: the forces of the propagation hold no thrust model.
+  An impulsive maneuver the propagation executed is not a thrust model in the sense of Table 3-3, and the CDM has no
+  keyword for executed maneuvers, so a participant whose propagation carried impulses is `NO` too;
 - comments of the data give the source of the covariance, the process noise applied (q_R, q_T, q_N in m²/s³) or
   "No process noise applied", the consider parameters and the non-linearity index.
 

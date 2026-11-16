@@ -14,7 +14,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
 /// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); the list of the
 /// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
-/// reference of the kernel registry and of the type of a text kernel (#673). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
+/// reference of the kernel registry and of the type of a text kernel (#673), with their handles and the files of open DAF
+/// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
 /// </summary>
 /// <remarks>
 /// The Linux build of the native library exports the CSPICE symbols; the Windows DLL exports only the proxies, so the tests
@@ -75,6 +76,9 @@ internal static class CspiceDirect
     private static extern int kdata_(ref int which, [In] byte[] kind, [Out] byte[] file, [Out] byte[] fileType, [Out] byte[] source,
         ref int handle, ref int found, int kindLength, int fileLength, int fileTypeLength, int sourceLength);
 
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int dafhfn_(ref int handle, [Out] byte[] fname, int fnameLength);
+
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern double unitim_c(double epoch, string insys, string outsys);
 
@@ -89,6 +93,37 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void pxform_c(string from, string to, double et, [Out] double[] rotate);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void q2m_c([In] double[] q, [Out] double[] r);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int axisar_([In] double[] axis, ref double angle, [Out] double[] r);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int vrotv_([In] double[] v, [In] double[] axis, ref double theta, [Out] double[] r);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void oscltx_c([In] double[] state, double et, double mu, [Out] double[] elts);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void latrec_c(double radius, double longitude, double latitude, [Out] double[] rectan);
+
+    /// <summary>
+    /// The rectangular coordinates of a range, right ascension and declination: <c>latrec_c</c> of the range, the right
+    /// ascension as longitude and the declination as latitude, what CSPICE's <c>radrec_c</c> computes (radrec_c is not
+    /// exported by the native library).
+    /// </summary>
+    internal static double[] Radrec(double range, double rightAscension, double declination)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var rectan = new double[3];
+            latrec_c(range, rightAscension, declination, rectan);
+            Check("latrec");
+            return rectan;
+        }
+    }
 
     /// <summary>The planetographic coordinates of a body-fixed point (<c>recpgr_c</c>): the longitude in [0, 2π] in the
     /// sense of the body (the kernel pool's), the latitude and the altitude on the spheroid of <paramref name="re"/> and
@@ -136,6 +171,66 @@ internal static class CspiceDirect
             pxform_c(from, to, et, rotation);
             Check("pxform");
             return rotation;
+        }
+    }
+
+    /// <summary>The rotation matrix of a SPICE quaternion (<c>q2m_c</c>, scalar first), row-major.</summary>
+    internal static double[] Q2m(double w, double x, double y, double z)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var r = new double[9];
+            q2m_c([w, x, y, z], r);
+            Check("q2m");
+            return r;
+        }
+    }
+
+    /// <summary>The matrix that rotates vectors by <paramref name="angle"/> radians about <paramref name="axis"/> (the f2c
+    /// routine <c>axisar_</c>, whose column-major matrix is returned row-major; the axis need not be a unit vector).</summary>
+    internal static double[] Axisar(double[] axis, double angle)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var columnMajor = new double[9];
+            double theta = angle;
+            axisar_(axis, ref theta, columnMajor);
+            Check("axisar");
+            var r = new double[9];
+            for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                r[3 * i + j] = columnMajor[i + 3 * j];
+            return r;
+        }
+    }
+
+    /// <summary>The vector <paramref name="v"/> rotated by <paramref name="angle"/> radians about <paramref name="axis"/>
+    /// (the f2c routine <c>vrotv_</c>; the axis need not be a unit vector).</summary>
+    internal static double[] Vrotv(double[] v, double[] axis, double angle)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var r = new double[3];
+            double theta = angle;
+            vrotv_(v, axis, ref theta, r);
+            Check("vrotv");
+            return r;
+        }
+    }
+
+    /// <summary>The short error message SPICE signals for the osculating elements of a state (<c>oscltx_c</c>), or null
+    /// when it gives them; SPICE is reset after the error.</summary>
+    internal static string OscltxError(double[] state, double et, double mu)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var elts = new double[20];
+            oscltx_c(state, et, mu, elts);
+            if (failed_c() == 0) return null;
+            var message = new StringBuilder(64);
+            getmsg_c("SHORT", message.Capacity, message);
+            reset_c();
+            return message.ToString().Trim();
         }
     }
 
@@ -252,8 +347,31 @@ internal static class CspiceDirect
     /// it does not hold.</summary>
     internal static string LoadedKernelType(string file) => LoadedKernels().Where(x => x.File == file).Select(x => x.Type).FirstOrDefault();
 
-    // The files SPICE holds and their types, in their load order
-    private static List<(string File, string Type)> LoadedKernels()
+    /// <summary>The handle KEEPER holds for a file SPICE holds (<c>kdata_</c>; 0 for a text kernel, or for a binary kernel SPICE
+    /// failed to open again), null for a file it does not hold.</summary>
+    internal static int? LoadedKernelHandle(string file) =>
+        LoadedKernels().Where(x => x.File == file).Select(x => (int?)x.Handle).FirstOrDefault();
+
+    /// <summary>The file of an open DAF handle (<c>dafhfn_</c>), null when no open DAF has that handle: DAF handles are not
+    /// reused, so a handle once closed stays unknown.</summary>
+    internal static string OpenDafFile(int handle)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var file = new byte[1024];
+            dafhfn_(ref handle, file, file.Length);
+            if (failed_c() != 0)
+            {
+                reset_c();
+                return null;
+            }
+
+            return Encoding.UTF8.GetString(file).TrimEnd(' ', '\0');
+        }
+    }
+
+    // The files SPICE holds, their types and their handles, in their load order
+    private static List<(string File, string Type, int Handle)> LoadedKernels()
     {
         lock (SpiceAPI.SyncRoot)
         {
@@ -261,7 +379,7 @@ internal static class CspiceDirect
             int count = 0;
             ktotal_(all, ref count, all.Length);
             Check("ktotal");
-            var files = new List<(string File, string Type)>(count);
+            var files = new List<(string File, string Type, int Handle)>(count);
             for (int which = 1; which <= count; which++)
             {
                 var file = new byte[1024];
@@ -273,7 +391,7 @@ internal static class CspiceDirect
                 Check("kdata");
                 if (found != 0)
                 {
-                    files.Add((Encoding.UTF8.GetString(file).TrimEnd(' ', '\0'), Encoding.ASCII.GetString(fileType).TrimEnd(' ', '\0')));
+                    files.Add((Encoding.UTF8.GetString(file).TrimEnd(' ', '\0'), Encoding.ASCII.GetString(fileType).TrimEnd(' ', '\0'), handle));
                 }
             }
 
