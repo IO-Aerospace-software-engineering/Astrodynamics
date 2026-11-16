@@ -54,10 +54,11 @@ before 11.0.0, so a document read without the schema step kept an angle of 1000 
 `ArgumentException` of the data model's constructor crossed the reader, naming its parameter. With `validateSchema` the
 schema rejects most of these values first (`OpmValidationException`), but not those its types allow: `SEMI_MAJOR_AXIS`
 is `xsd:double` and the strings `xsd:string`, so a `SEMI_MAJOR_AXIS` of the wrong sign or an empty `OBJECT_NAME` throws
-`OpmParseException` with the default validation too. These rules go beyond the schema: a = p / (1 − e²) with a
-semi-latus rectum p above 0 gives no conic for the other sign, and CCSDS 502.0-B-3 makes `OBJECT_NAME` and the other
-metadata mandatory; whether the readers should accept these schema-valid values is left open by [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708) (a decision
-of S. Guillet), and they are refused as before. A `MASS` of 0 is read, `massType` being a `nonNegativeDouble` (its
+`OpmParseException` with the default validation too. These rules go beyond the schema and are the library's
+([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), decided by S. Guillet, 2026-11-16): a = p / (1 − e²) with a semi-latus rectum p above 0
+gives no conic for the other sign, CCSDS 502.0-B-3 makes `OBJECT_NAME` and the other metadata mandatory, each with a
+non-empty value (7.5.1; 8.13.1 for ODM/XML), and the parse exception names the keyword. The readers refuse these schema-valid
+values, as before 11.0.0. A `MASS` of 0 is read, `massType` being a `nonNegativeDouble` (its
 `minInclusive` 0.0), as for the `MASS` of an OMM: `OpmData` and `OpmValidator` take a mass of 0 or more ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before
 11.0.0 a mass of 0 threw `OpmParseException`, `Mass must be positive.`). `ToSpacecraft` builds a spacecraft of mass 0.
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error, both naming the keyword.

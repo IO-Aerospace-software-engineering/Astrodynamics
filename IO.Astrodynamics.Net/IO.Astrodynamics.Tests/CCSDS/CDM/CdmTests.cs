@@ -384,8 +384,10 @@ public class CdmTests
     }
 
     // A text that double.TryParse reads as NaN or ±Infinity ("NaN", "Infinity" in any case, an overflow such as "1e400")
-    // is not a real number (IEEE 754), and the values of a CDM are real numbers in their units (CCSDS 508.0-B-1): the reader
-    // refuses it, as #708 expects. The rows cover the relative metadata, a state vector and the covariance, in the first
+    // is not a real number (IEEE 754). CCSDS 508.0-B-1 writes a KVN value in fixed-point or floating-point digits up to about
+    // 1.798E+308 (6.3.2.2, 6.3.2.3), which holds neither, but a CDM/XML value follows the xsd:double of XML Schema Part 2
+    // (6.4.2.2), whose value space holds NaN and ±INF (CCSDS 508.0-B-1; to be verified by S. Guillet): the reader refuses it
+    // as a rule of the library, as #708 expects. The rows cover the relative metadata, a state vector and the covariance, in the first
     // segment (the first element of that name in the document)
     [Theory]
     [InlineData("MISS_DISTANCE", "NaN")]

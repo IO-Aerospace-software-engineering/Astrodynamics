@@ -26,8 +26,9 @@ internal readonly record struct CcsdsKeyword(string Parameter, string Keyword, s
 internal static class CcsdsValues
 {
     /// <summary>
-    /// Whether an optional parameter of the data model is absent or a finite value of 0 or more (nonNegativeDouble of
-    /// NDM/XML 4.0.0, a real number): false for NaN and ±Infinity (#708).
+    /// Whether an optional parameter of the data model is absent or a finite value of 0 or more: the nonNegativeDouble of
+    /// NDM/XML 4.0.0 (minInclusive 0.0, which excludes NaN but not +INF, XML Schema Part 2, 3.2.5) taken as a real number,
+    /// false for NaN and ±Infinity (#708).
     /// </summary>
     /// <param name="value">The value, or null when the keyword is absent.</param>
     /// <returns>True when <paramref name="value"/> is null or finite and not below 0.</returns>

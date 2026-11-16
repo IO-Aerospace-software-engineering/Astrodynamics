@@ -719,8 +719,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         /// <summary>
         /// Keywords of the OPM with a text that double.TryParse (NumberStyles.Float, the invariant culture) reads as NaN or
         /// ±Infinity ("NaN", "Infinity" in any case, an overflow such as "1e400"). NaN and ±Infinity are not real numbers
-        /// (IEEE 754), and the values of an OPM are real numbers in their units (CCSDS 502.0-B-3; to be verified by
-        /// S. Guillet): the reader refuses them, as #708 expects. The rows cover the state vector, the Keplerian elements,
+        /// (IEEE 754). CCSDS 502.0-B-3 writes a KVN value in fixed-point or floating-point digits up to about 1.798E+308
+        /// (7.5.5 to 7.5.7), which holds neither, but an ODM/XML value follows the xsd:double of XML Schema Part 2 (8.13.4),
+        /// whose value space holds NaN and ±INF (CCSDS 502.0-B-3; to be verified by S. Guillet): the reader refuses them as a
+        /// rule of the library, as #708 expects. The rows cover the state vector, the Keplerian elements,
         /// the spacecraft parameters, the covariance and the maneuvers, ranged or not by the data model.
         /// </summary>
         public static TheoryData<string, string> OpmNonFiniteValues() => new()

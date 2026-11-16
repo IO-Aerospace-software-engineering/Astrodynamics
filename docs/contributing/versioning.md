@@ -2719,7 +2719,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SEMI_MAJOR_AXIS` the `ECCENTRICITY` it was checked with too); the CDM reader catches the `FormatException` of the
   enumerated keywords, `OBJECT` and the YES/NO keywords included, and throws `CdmParseException` naming the keyword and
   its value. `TryLoadFromFile` and `ValidateFile`, which caught every exception, now report the keyword. The rules stay
-  those of the data model, whose public constructors keep their `ArgumentException` for a programmatic caller; a
+  those of the data model, whose public constructors keep their `ArgumentException` for a programmatic caller, and
+  those the schema allows (an OMM `MEAN_MOTION` or `SEMI_MAJOR_AXIS` not above 0, the OPM `SEMI_MAJOR_AXIS` sign, the
+  empty strings) are the library's rules beyond the schema ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), decided by S. Guillet,
+  2026-11-16: no orbit has those elements, and CCSDS 502.0-B-3 makes the metadata mandatory with a non-empty value); a
   document that loaded loads as before, bit for bit. The tests change one keyword of iss.omm (with a GM and a
   spacecraftParameters block) or of satellite_complete.xml, both unqualified and schema-valid, or of a CDM of the
   library: every keyword with a range or a required string of the OMM and the OPM and every enumerated keyword of the
@@ -2971,11 +2974,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   UTC times skipped the leap seconds between them (86 400 s from 2016-12-31T12:00Z to 2017-01-01T12:00Z, where 86 401 s
   elapse). dt now counts the Julian years of TDB: both times are converted to TDB (the catalog epoch once, when the star
   is built; `Epoch` is kept as given), as SOFA's `iauStarpm` and `iauPmsafe` take TDB dates and proper motions in
-  radians per TDB Julian year (`external-lib/sofa-src/starpm.c` and `pmsafe.c`, Notes 1 and 2). The catalog epoch read
-  in its own time frame is the recommendation of this fix, to be decided by S. Guillet: #709 left the scale of the
-  catalog epoch open, and the alternative is a catalog epoch always read as TDB whatever its tag (a catalog epoch tagged
-  UTC would then be its calendar in TDB, 64 to 69 s from the instant the tag names); the recommendation keeps `Epoch` an
-  instant like every other `Time` of the library. The position of a time is that of its TDB time, bit for bit, and agrees within the motion of 1 µs
+  radians per TDB Julian year (`external-lib/sofa-src/starpm.c` and `pmsafe.c`, Notes 1 and 2). The catalog epoch is
+  read in its own time frame and converted (decided by S. Guillet, 2026-11-16; #709 left its scale open): `Epoch` stays
+  an instant like every other `Time` of the library, where a catalog epoch always read as TDB whatever its tag would put
+  a catalog epoch tagged UTC 64 to 69 s from the instant its tag names. The position of a time is that of its TDB time, bit for bit, and agrees within the motion of 1 µs
   between frames (`StarTests.GetEquatorialCoordinates_TheSameInstantInEveryFrame_IsOnePosition`); across the leap second
   it counts 86 401 s plus the change of TDB − TT, 0.000e+00 rad from the closed form of the leapseconds kernel
   (`AcrossALeapSecond_CountsIt`, 3.169e-9 rad before); against dt from CSPICE's ET (`unitim_c` of the TT of each UTC
@@ -4222,7 +4224,6 @@ not listed.
   dropped crossing. Split the search window so that each part holds fewer than 1000 windows.
 - **The element conversions of `SpiceAPI`**
   ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450),
-  [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
   [#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
   `SpiceAPI.ConvertEquinoctialElementsToStateVector` passes the true longitude where `EQNCPV` takes the mean longitude
   (1029 km off for an ordinary LEO, 27 900 km at e = 0.89) and throws `ArgumentException` for a ≤ 0 or e > 0.9, the
@@ -4232,12 +4233,18 @@ not listed.
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),
   [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
-  [#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661)). `Spacecraft.WriteOrientation`,
+  [#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661),
+  [#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). `Spacecraft.WriteOrientation`,
   `SpiceAPI.WriteOrientation` and `SpiceAPI.WriteEphemeris` (under `Star.WriteEphemeris` and `Site.WriteEphemeris`)
-  leave the kernel they write unloaded, and a CK loaded then rewritten in the same process is still read with its old
-  content: unload a file before rewriting it, and load it after. `SpiceAPI.WriteEphemeris` ends the process (exit code
-  134) for a centre with a GM but no NAIF name and for fewer than 3 states (pass 3 states or more), and enumerates the caller's states twice, both writers under the SPICE lock:
-  pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
+  leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
+  the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
+  (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
+  before rewriting the file. `SpiceAPI.WriteEphemeris` rejects before the native call a centre that is not a celestial
+  body, a spacecraft or a site (`ArgumentException`), but leaves to the native writer a celestial-body identifier no
+  kernel names, with or without a GM: `InvalidOperationException` with the native message (`CelestialItem id2999991
+  can't be found`, followed by SPICE's for a missing GM, which SPICE also prints on standard output), nothing written, a
+  file it replaces kept (measured on 5a3e6c3; before #706 the process ended for one with a GM). Both writers enumerate the caller's
+  states once, under the SPICE lock: pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
