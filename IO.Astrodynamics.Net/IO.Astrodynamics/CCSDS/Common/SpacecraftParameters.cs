@@ -72,7 +72,7 @@ public class SpacecraftParameters
     /// <param name="dragArea">Atmospheric drag area in square meters.</param>
     /// <param name="dragCoeff">Atmospheric drag coefficient.</param>
     /// <param name="comments">Comments associated with the parameters.</param>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when any parameter is negative.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when any parameter is negative, NaN or infinite.</exception>
     public SpacecraftParameters(
         double? mass = null,
         double? solarRadArea = null,
@@ -81,16 +81,17 @@ public class SpacecraftParameters
         double? dragCoeff = null,
         IReadOnlyList<string> comments = null)
     {
-        if (mass.HasValue && mass.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(mass), "Mass must be non-negative.");
-        if (solarRadArea.HasValue && solarRadArea.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(solarRadArea), "Solar radiation area must be non-negative.");
-        if (solarRadCoeff.HasValue && solarRadCoeff.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(solarRadCoeff), "Solar radiation coefficient must be non-negative.");
-        if (dragArea.HasValue && dragArea.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(dragArea), "Drag area must be non-negative.");
-        if (dragCoeff.HasValue && dragCoeff.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(dragCoeff), "Drag coefficient must be non-negative.");
+        // Finite values of 0 or more (#708: NaN and +Infinity passed the check "< 0")
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(mass))
+            throw new ArgumentOutOfRangeException(nameof(mass), "Mass must be a finite non-negative value.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(solarRadArea))
+            throw new ArgumentOutOfRangeException(nameof(solarRadArea), "Solar radiation area must be a finite non-negative value.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(solarRadCoeff))
+            throw new ArgumentOutOfRangeException(nameof(solarRadCoeff), "Solar radiation coefficient must be a finite non-negative value.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(dragArea))
+            throw new ArgumentOutOfRangeException(nameof(dragArea), "Drag area must be a finite non-negative value.");
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(dragCoeff))
+            throw new ArgumentOutOfRangeException(nameof(dragCoeff), "Drag coefficient must be a finite non-negative value.");
 
         Mass = mass;
         SolarRadArea = solarRadArea;

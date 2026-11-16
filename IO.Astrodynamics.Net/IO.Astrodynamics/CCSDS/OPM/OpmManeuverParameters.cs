@@ -90,8 +90,8 @@ public class OpmManeuverParameters
     /// Initializes a new instance of the <see cref="OpmManeuverParameters"/> class.
     /// </summary>
     /// <param name="manEpochIgnition">Epoch of maneuver ignition.</param>
-    /// <param name="manDuration">Duration in seconds (>= 0).</param>
-    /// <param name="manDeltaMass">Mass change in kg (&lt;= 0).</param>
+    /// <param name="manDuration">Duration in seconds (finite, >= 0).</param>
+    /// <param name="manDeltaMass">Mass change in kg (finite, &lt;= 0).</param>
     /// <param name="manRefFrame">Reference frame for delta-V components.</param>
     /// <param name="manDv1">First delta-V component in km/s.</param>
     /// <param name="manDv2">Second delta-V component in km/s.</param>
@@ -107,11 +107,12 @@ public class OpmManeuverParameters
         double manDv3,
         IReadOnlyList<string> comments = null)
     {
-        if (manDuration < 0)
-            throw new ArgumentOutOfRangeException(nameof(manDuration), "Maneuver duration cannot be negative.");
-        if (manDeltaMass > 0)
+        // Finite values (#708: NaN, and -Infinity for the delta mass, passed the checks)
+        if (!(double.IsFinite(manDuration) && manDuration >= 0))
+            throw new ArgumentOutOfRangeException(nameof(manDuration), "Maneuver duration must be finite and cannot be negative.");
+        if (!(double.IsFinite(manDeltaMass) && manDeltaMass <= 0))
             throw new ArgumentOutOfRangeException(nameof(manDeltaMass),
-                "Maneuver delta mass must be non-positive. Use negative values for expelled mass (e.g., -25.0 kg means 25 kg of propellant burned).");
+                "Maneuver delta mass must be finite and non-positive. Use negative values for expelled mass (e.g., -25.0 kg means 25 kg of propellant burned).");
         if (string.IsNullOrWhiteSpace(manRefFrame))
             throw new ArgumentException("Maneuver reference frame is required.", nameof(manRefFrame));
 

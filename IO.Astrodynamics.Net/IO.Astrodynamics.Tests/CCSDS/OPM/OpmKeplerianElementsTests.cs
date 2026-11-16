@@ -255,5 +255,56 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region Non-finite values (#708)
+
+        public static TheoryData<string, double> NonFiniteRangedParameters()
+        {
+            var data = new TheoryData<string, double>();
+            foreach (var parameter in new[] { "semiMajorAxis", "eccentricity", "inclination", "gm" })
+            {
+                data.Add(parameter, double.NaN);
+                data.Add(parameter, double.PositiveInfinity);
+                data.Add(parameter, double.NegativeInfinity);
+            }
+
+            return data;
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteRangedParameters))]
+        public void Create_NonFiniteRangedParameter_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // e >= 0, i in [0, 180], GM > 0 and a finite a of the sign of 1 - e (nonNegativeDouble, inclinationRange and
+            // positiveDouble of ndmxml-4.0.0-common-4.0.xsd): NaN, and +Infinity for e, GM and a, passed the checks before
+            double V(string name, double nominal) => name == parameter ? value : nominal;
+            foreach (var create in new Func<OpmKeplerianElements>[]
+                     {
+                         () => OpmKeplerianElements.CreateWithTrueAnomaly(V("semiMajorAxis", 6778.137), V("eccentricity", 0.0001),
+                             V("inclination", 51.6), 120.0, 90.0, 45.0, V("gm", 398600.4418)),
+                         () => OpmKeplerianElements.CreateWithMeanAnomaly(V("semiMajorAxis", 6778.137), V("eccentricity", 0.0001),
+                             V("inclination", 51.6), 120.0, 90.0, 45.0, V("gm", 398600.4418))
+                     })
+            {
+                var ex = Assert.Throws<ArgumentOutOfRangeException>(() => create());
+                Assert.Equal(parameter, ex.ParamName);
+            }
+        }
+
+        [Fact]
+        public void Create_HyperbolicWithNonFiniteSemiMajorAxis_Throws()
+        {
+            // e > 1: a negative and finite; -Infinity and NaN are not
+            foreach (var a in new[] { double.NaN, double.NegativeInfinity })
+            {
+                var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                    OpmKeplerianElements.CreateWithTrueAnomaly(a, 1.5, 51.6, 120.0, 90.0, 10.0, 398600.4418));
+                Assert.Equal("semiMajorAxis", ex.ParamName);
+            }
+
+            Assert.Equal(-20000.0, OpmKeplerianElements.CreateWithTrueAnomaly(-20000.0, 1.5, 51.6, 120.0, 90.0, 10.0, 398600.4418).SemiMajorAxis);
+        }
+
+        #endregion
     }
 }

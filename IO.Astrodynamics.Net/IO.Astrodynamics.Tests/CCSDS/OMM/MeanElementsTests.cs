@@ -196,7 +196,21 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.Equal(inclination, elements.Inclination);
         }
 
-        #region Angle ranges (#708)
+        #region Non-finite and boundary values (#708)
+
+        public static TheoryData<string, double> NonFiniteRangedParameters()
+        {
+            var data = new TheoryData<string, double>();
+            foreach (var parameter in new[] { "semiMajorAxis", "meanMotion", "eccentricity", "inclination", "raan", "argOfPericenter", "meanAnomaly", "gm" })
+            {
+                foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+                {
+                    data.Add(parameter, value);
+                }
+            }
+
+            return data;
+        }
 
         /// <summary>The ISS-like elements of the tests with one parameter replaced, through the factory of the semi-major
         /// axis (or of the mean motion for meanMotion), and through both for the parameters they share.</summary>
@@ -217,6 +231,49 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
                     V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), V("gm", 398600.4418));
                 yield return () => new MeanElements(_testEpoch, V("meanMotion", 15.5), V("eccentricity", 0.0005),
                     V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), true, V("gm", 398600.4418));
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteRangedParameters))]
+        public void Constructor_NonFiniteRangedParameter_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // NaN and ±Infinity are in none of the documented ranges (a > 0, n > 0, e >= 0, i in [0, 180], the angles in
+            // [-360, 360), GM > 0; ndmxml-4.0.0-common-4.0.xsd): before, NaN (and +Infinity for the half-open ranges)
+            // passed the checks, written as the complement of the range
+            foreach (var build in BuildWith(parameter, value))
+            {
+                var ex = Assert.Throws<ArgumentOutOfRangeException>(() => build());
+                Assert.Equal(parameter, ex.ParamName);
+            }
+        }
+
+        [Theory]
+        [InlineData("eccentricity", 0.0)]
+        [InlineData("eccentricity", -0.0)]
+        [InlineData("inclination", 0.0)]
+        [InlineData("inclination", 180.0)]
+        [InlineData("raan", -360.0)]
+        [InlineData("argOfPericenter", -360.0)]
+        [InlineData("meanAnomaly", 359.999)]
+        [InlineData("semiMajorAxis", double.Epsilon)]
+        [InlineData("gm", double.MaxValue)]
+        public void Constructor_BoundaryValue_IsStoredAsGiven(string parameter, double value)
+        {
+            foreach (var build in BuildWith(parameter, value))
+            {
+                var elements = build();
+                double stored = parameter switch
+                {
+                    "eccentricity" => elements.Eccentricity,
+                    "inclination" => elements.Inclination,
+                    "raan" => elements.RightAscensionOfAscendingNode,
+                    "argOfPericenter" => elements.ArgumentOfPericenter,
+                    "meanAnomaly" => elements.MeanAnomaly,
+                    "semiMajorAxis" => elements.SemiMajorAxis!.Value,
+                    _ => elements.GravitationalParameter!.Value
+                };
+                Assert.Equal(BitConverter.DoubleToInt64Bits(value), BitConverter.DoubleToInt64Bits(stored));
             }
         }
 

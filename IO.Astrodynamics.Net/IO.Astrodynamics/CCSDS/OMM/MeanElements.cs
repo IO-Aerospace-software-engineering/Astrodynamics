@@ -87,8 +87,8 @@ public class MeanElements
         double? gravitationalParameter = null,
         IReadOnlyList<string> comments = null)
     {
-        if (semiMajorAxis <= 0)
-            throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be positive.");
+        if (!(double.IsFinite(semiMajorAxis) && semiMajorAxis > 0))
+            throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be a finite positive value.");
 
         ValidateAngles(eccentricity, inclination, rightAscensionOfAscendingNode, argumentOfPericenter, meanAnomaly);
         ValidateGravitationalParameter(gravitationalParameter);
@@ -133,8 +133,8 @@ public class MeanElements
         if (!useMeanMotion)
             throw new ArgumentException("useMeanMotion must be true when using this constructor.", nameof(useMeanMotion));
 
-        if (meanMotion <= 0)
-            throw new ArgumentOutOfRangeException(nameof(meanMotion), "Mean motion must be positive.");
+        if (!(double.IsFinite(meanMotion) && meanMotion > 0))
+            throw new ArgumentOutOfRangeException(nameof(meanMotion), "Mean motion must be a finite positive value.");
 
         ValidateAngles(eccentricity, inclination, rightAscensionOfAscendingNode, argumentOfPericenter, meanAnomaly);
         ValidateGravitationalParameter(gravitationalParameter);
@@ -190,28 +190,30 @@ public class MeanElements
         return new MeanElements(epoch, meanMotion, eccentricity, inclination, raan, argOfPericenter, meanAnomaly, true, gm, comments);
     }
 
+    // Each check is the negation of the admitted range, so that NaN, in no range, is refused, and the half-open ranges
+    // also require a finite value (#708: the complement of the range, false for NaN, let NaN and +Infinity through)
     private static void ValidateAngles(double eccentricity, double inclination, double raan, double argOfPericenter, double meanAnomaly)
     {
-        if (eccentricity < 0)
-            throw new ArgumentOutOfRangeException(nameof(eccentricity), "Eccentricity must be non-negative.");
+        if (!(double.IsFinite(eccentricity) && eccentricity >= 0))
+            throw new ArgumentOutOfRangeException(nameof(eccentricity), "Eccentricity must be a finite non-negative value.");
 
-        if (inclination < 0 || inclination > 180)
+        if (!(inclination >= 0 && inclination <= 180))
             throw new ArgumentOutOfRangeException(nameof(inclination), "Inclination must be between 0 and 180 degrees.");
 
-        if (raan < -360 || raan >= 360)
+        if (!(raan >= -360 && raan < 360))
             throw new ArgumentOutOfRangeException(nameof(raan), "RAAN must be in [-360, 360) degrees.");
 
-        if (argOfPericenter < -360 || argOfPericenter >= 360)
+        if (!(argOfPericenter >= -360 && argOfPericenter < 360))
             throw new ArgumentOutOfRangeException(nameof(argOfPericenter), "Argument of pericenter must be in [-360, 360) degrees.");
 
-        if (meanAnomaly < -360 || meanAnomaly >= 360)
+        if (!(meanAnomaly >= -360 && meanAnomaly < 360))
             throw new ArgumentOutOfRangeException(nameof(meanAnomaly), "Mean anomaly must be in [-360, 360) degrees.");
     }
 
     private static void ValidateGravitationalParameter(double? gm)
     {
-        if (gm.HasValue && gm.Value <= 0)
-            throw new ArgumentOutOfRangeException(nameof(gm), "Gravitational parameter must be positive.");
+        if (gm.HasValue && !(double.IsFinite(gm.Value) && gm.Value > 0))
+            throw new ArgumentOutOfRangeException(nameof(gm), "Gravitational parameter must be a finite positive value.");
     }
 
     /// <inheritdoc />

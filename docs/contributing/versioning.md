@@ -2839,6 +2839,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   "0 to 360", states [-360, 360). No value is accepted or refused differently
   (`MeanElementsTests.Constructor_AngleAt360_MessageStatesHalfOpenRange`,
   `OmmReaderTests.ReadFromString_AngleAt360_MessageStatesHalfOpenRange`, red on 46e6975).
+- **The constructors of the CCSDS data model accepted NaN and infinite values** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). Each range check was the
+  complement of the range (`x < 0`, `x < -360 || x >= 360`), false for NaN, and the half-open ranges took +Infinity:
+  `MeanElements.CreateWithMeanMotion` accepted an eccentricity or a mean motion of NaN and an eccentricity of +∞,
+  `new SpacecraftParameters(mass: NaN)`, `OpmKeplerianElements.CreateWithTrueAnomaly(semiMajorAxis: NaN, ...)` and
+  `new OpmManeuverParameters(manDuration: NaN, ...)` built, against their documented ranges. Each check is now the
+  negation of the admitted range, with a finite value where the range is half-open: `MeanElements` (a and n finite and
+  above 0, e finite and 0 or more, i in [0, 180], the three angles in [-360, 360), GM finite and above 0),
+  `SpacecraftParameters` and `OpmData` (the five spacecraft parameters finite and 0 or more, through the internal
+  `CcsdsValues.IsNullOrFiniteNonNegative`), `OpmKeplerianElements` (e finite and 0 or more, a finite, i in [0, 180], GM
+  finite and above 0) and `OpmManeuverParameters` (`manDuration` finite and 0 or more, `manDeltaMass` finite and 0 or
+  less), the same `ArgumentOutOfRangeException` naming the parameter. The parameters without a range (the state
+  vector, the covariance, the ΔV components, the TLE parameters, the CDM records) are unchanged. Finite values build bit
+  for bit as before (`MeanElementsTests`, `SpacecraftParametersTests`, `OpmDataTests`, `OpmKeplerianElementsTests` and
+  `OpmManeuverParametersTests` `*_NonFinite*`, NaN, +∞ and −∞ in each ranged parameter, red on 46e6975; the bounds
+  e 0 and −0, i 0 and 180, the angles −360, a mass and a delta mass of 0 stored as given).
 
 **Changed**
 
@@ -3865,6 +3880,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OmmParseException` of the reader for `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` or `MEAN_ANOMALY`, say "must be in
   [-360, 360) degrees" where they said "must be between -360 and 360 degrees". Migration: none, unless a caller parses
   the message.
+- **Breaking: the constructors of the CCSDS data model refuse non-finite values** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
+  `MeanElements` (both constructors and both factories), `SpacecraftParameters`, `OpmData`,
+  `OpmKeplerianElements.CreateWith*` and `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming the
+  parameter for NaN, and for +Infinity or −Infinity, in a range-checked parameter, where they accepted it; so do
+  `TLE.ToOmm` and `Spacecraft.ToOpm`, which build them, for such a value, where they wrote `NaN`. Migration: pass finite values; a
+  non-finite element or spacecraft parameter carried no orbit. Finite values build bit for bit as before.
 
 **Deprecated**
 

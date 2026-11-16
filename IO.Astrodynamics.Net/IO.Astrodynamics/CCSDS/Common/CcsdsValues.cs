@@ -26,6 +26,15 @@ internal readonly record struct CcsdsKeyword(string Parameter, string Keyword, s
 internal static class CcsdsValues
 {
     /// <summary>
+    /// Whether an optional parameter of the data model is absent or a finite value of 0 or more (nonNegativeDouble of
+    /// NDM/XML 4.0.0, a real number): false for NaN and ±Infinity (#708).
+    /// </summary>
+    /// <param name="value">The value, or null when the keyword is absent.</param>
+    /// <returns>True when <paramref name="value"/> is null or finite and not below 0.</returns>
+    internal static bool IsNullOrFiniteNonNegative(double? value) =>
+        !value.HasValue || (double.IsFinite(value.Value) && value.Value >= 0);
+
+    /// <summary>
     /// Runs <paramref name="construct"/>; an <see cref="ArgumentException"/> it throws (an
     /// <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentNullException"/> included) becomes the reader's parse
     /// exception, naming the keyword whose parameter it names, with its text, and holding it as inner exception.

@@ -42,7 +42,9 @@ parameter. With `validateSchema` the schema rejects most of these values first (
 its types allow: `MEAN_MOTION` and `SEMI_MAJOR_AXIS` are `xsd:double` and the metadata strings `xsd:string`, so a
 `MEAN_MOTION` of 0 or an empty `OBJECT_NAME` throws `OmmParseException` with the default validation too.
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error, both naming the keyword.
-The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`.
+The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`; a ranged
+parameter of `MeanElements` (a, n, e, i, the three angles, GM) or `SpacecraftParameters` refuses NaN and ±Infinity with
+its `ArgumentOutOfRangeException`, and so does `TLE.ToOmm`, which builds them, for such a value, where it wrote `NaN` ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)).
 
 A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
 case, or a value beyond the range of a `double` such as `1e400`, which .NET rounds to ±Infinity) throws

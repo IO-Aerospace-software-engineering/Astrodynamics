@@ -56,7 +56,13 @@ is `xsd:double` and the strings `xsd:string`, so a `SEMI_MAJOR_AXIS` of the wron
 `minInclusive` 0.0), as for the `MASS` of an OMM: `OpmData` and `OpmValidator` take a mass of 0 or more ({I}; before
 11.0.0 a mass of 0 threw `OpmParseException`, `Mass must be positive.`). `ToSpacecraft` builds a spacecraft of mass 0.
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error, both naming the keyword.
-The constructors of the data model (`OpmKeplerianElements`, `OpmData`, ...) keep their `ArgumentException`.
+The constructors of the data model (`OpmKeplerianElements`, `OpmData`, ...) keep their `ArgumentException`; a ranged
+parameter of `OpmKeplerianElements` (a, e, i, GM), `OpmData` (the five spacecraft parameters) or `OpmManeuverParameters`
+(`MAN_DURATION`, `MAN_DELTA_MASS`) refuses NaN and ±Infinity with its `ArgumentOutOfRangeException`, and so does
+`Spacecraft.ToOpm`, which builds them, for such a value, where it wrote `NaN`
+([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The state vector, the
+covariance and the components of a ΔV, which carry no range, accept any value programmatically; the reader refuses a
+non-finite one.
 
 A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
 case, or a value beyond the range of a `double` such as `1e400`, which .NET rounds to ±Infinity) throws
