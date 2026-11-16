@@ -71,16 +71,30 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <summary>
         /// Instrument constructor
         /// </summary>
+        /// <remarks>
+        /// The field of view is checked as CSPICE's <c>getfov</c> reads it from the instrument kernel the library writes
+        /// (#707): a boresight with finite components and of non-zero magnitude (SPICE(ZEROBORESIGHT)), a reference vector
+        /// likewise and not parallel to the boresight, |b × r| = 0 on the given vectors, <c>getfov</c>'s test
+        /// (SPICE(BADREFVECTORSPEC)), and a finite positive half-angle. Before 11.0.0 the vectors were not checked and a NaN
+        /// or infinite half-angle was accepted: the instrument was built, its getters returned zero or NaN vectors,
+        /// <c>InstrumentPointingToAttitude</c> gave the identity or a NaN attitude, its kernel was one SPICE rejects or cannot
+        /// read, and the field-of-view search threw late. The upper bound of the half-angles, π/2 − 1e-6 for <c>gftfov</c>,
+        /// is checked by the search.
+        /// </remarks>
         /// <param name="naifId"></param>
         /// <param name="name"></param>
         /// <param name="model"></param>
-        /// <param name="fieldOfView"></param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector, rad: finite and
+        /// positive</param>
         /// <param name="shape"></param>
-        /// <param name="boresight"></param>
-        /// <param name="refVector"></param>
+        /// <param name="boresight">The boresight: finite components, a non-zero magnitude</param>
+        /// <param name="refVector">The reference vector: finite components, a non-zero magnitude, not parallel to the
+        /// boresight</param>
         /// <param name="orientation"></param>
         /// <param name="spacecraft"></param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">The name or the model is empty; or, naming the parameter, the field of view is
+        /// not a finite positive number, the boresight or the reference vector has a component that is not finite or a
+        /// magnitude of 0 (the boresight checked first), or the reference vector is parallel to the boresight (#707).</exception>
         protected Instrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, InstrumentShape shape, Vector3 boresight, Vector3 refVector,
             Vector3 orientation)
         {
@@ -94,9 +108,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new ArgumentException("Instrument requires a model");
             }
 
-            if (fieldOfView <= 0)
+            // A NaN passed the former test fieldOfView <= 0, and an infinity was not checked (#707)
+            if (!double.IsFinite(fieldOfView) || fieldOfView <= 0.0)
             {
-                throw new ArgumentException("fieldOfView must be a positive number");
+                throw new ArgumentException("fieldOfView must be a finite positive number", nameof(fieldOfView));
+            }
+
+            // getfov's rules on the vectors of the instrument kernel (#707), with the finite rule of the body axes of a
+            // spacecraft and the body vectors of a TRIAD (#703): SPICE reads no NaN nor infinity in a kernel
+            CheckDirection(boresight, "An instrument boresight", nameof(boresight));
+            CheckDirection(refVector, "An instrument reference vector", nameof(refVector));
+            if (boresight.Cross(refVector).Magnitude() == 0.0)
+            {
+                throw new ArgumentException(
+                    "An instrument reference vector must not be parallel to its boresight: they define the plane of the field of view (getfov, SPICE(BADREFVECTORSPEC)).",
+                    nameof(refVector));
             }
 
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
@@ -119,6 +145,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
 
             NaifId = naifId;
+        }
+
+        // A vector with a direction: finite components and a non-zero magnitude (getfov's SPICE(ZEROBORESIGHT), and a zero
+        // reference vector is parallel to any boresight, SPICE(BADREFVECTORSPEC))
+        private static void CheckDirection(in Vector3 vector, string what, string paramName)
+        {
+            if (!double.IsFinite(vector.X) || !double.IsFinite(vector.Y) || !double.IsFinite(vector.Z))
+            {
+                throw new ArgumentException($"{what} must have finite components.", paramName);
+            }
+
+            if (vector.Magnitude() == 0.0)
+            {
+                throw new ArgumentException($"{what} must have a non-zero magnitude.", paramName);
+            }
         }
 
         /// <summary>
@@ -180,8 +221,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// spacecraft or is an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), or, on the
         /// managed path, the search window leaves the propagated states of the instrument's spacecraft or of a spacecraft
         /// target, which would be extrapolated.</exception>
-        /// <exception cref="InvalidOperationException">The field of view cannot be searched: a boresight zero or parallel to
-        /// the reference vector, a half-angle not positive, an angular radius above π/2 − 1e-6, or a shape other than a
+        /// <exception cref="InvalidOperationException">The field of view cannot be searched: a cross angle not positive, an
+        /// angular radius above π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
         /// or, on the managed path, the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from

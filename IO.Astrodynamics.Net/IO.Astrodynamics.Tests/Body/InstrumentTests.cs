@@ -587,5 +587,279 @@ namespace IO.Astrodynamics.Tests.Body
             // Assert: both load without error
             FrameKernelFiles.Load(spacecraftFk, () => FrameKernelFiles.Load(fk));
         }
+
+        // The shapes of the three methods that add an instrument, all of which go through the constructor of Instrument
+        public static readonly string[] Shapes = { "Circular", "Rectangular", "Elliptical" };
+
+        private static void AddInstrument(Spacecraft spc, string shape, int naifId, double fieldOfView, Vector3 boresight, Vector3 refVector)
+        {
+            switch (shape)
+            {
+                case "Circular":
+                    spc.AddCircularInstrument(naifId, "CAM", "M", fieldOfView, boresight, refVector, Vector3.Zero);
+                    break;
+                case "Rectangular":
+                    spc.AddRectangularInstrument(naifId, "CAM", "M", fieldOfView, 0.05, boresight, refVector, Vector3.Zero);
+                    break;
+                default:
+                    spc.AddEllipticalInstrument(naifId, "CAM", "M", fieldOfView, 0.05, boresight, refVector, Vector3.Zero);
+                    break;
+            }
+        }
+
+        // A vector with no direction: zero, or a component that is not finite, in each component
+        private static readonly Vector3[] VectorsWithoutDirection =
+        {
+            Vector3.Zero, new(-0.0, -0.0, -0.0),
+            new(double.NaN, 0.0, 1.0), new(0.0, double.NaN, 1.0), new(0.0, 0.0, double.NaN),
+            new(double.PositiveInfinity, 0.0, 1.0), new(0.0, double.PositiveInfinity, 1.0), new(0.0, 0.0, double.PositiveInfinity),
+            new(double.NegativeInfinity, 0.0, 1.0), new(0.0, double.NegativeInfinity, 1.0), new(0.0, 0.0, double.NegativeInfinity),
+        };
+
+        public static TheoryData<string, int> ShapesAndVectorsWithoutDirection()
+        {
+            var data = new TheoryData<string, int>();
+            foreach (var shape in Shapes)
+            for (int i = 0; i < VectorsWithoutDirection.Length; i++)
+                data.Add(shape, i);
+            return data;
+        }
+
+        /// <summary>
+        /// #707: a boresight of magnitude 0 or with a component that is not finite has no direction. <c>getfov</c> rejects the
+        /// zero boresight (SPICE(ZEROBORESIGHT), <see cref="RejectedFields_AreThoseGetfovRejects"/>) and SPICE reads no NaN or
+        /// infinity in a kernel; the rule of the body axes of a spacecraft and of the body vectors of a TRIAD (#703). Before,
+        /// the instrument was built: its getters returned the zero or NaN vector, InstrumentPointingToAttitude the identity or a
+        /// NaN attitude, the IK writer a kernel SPICE rejects, and the search threw late (an unrelated ArgumentException for
+        /// NaN and infinity). The three methods throw, naming the boresight, and add nothing.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(ShapesAndVectorsWithoutDirection))]
+        public void AddInstrument_BoresightNotFiniteOrZero_Throws(string shape, int vector)
+        {
+            // Arrange
+            var spc = Host(-7071, "B707");
+
+            // Act
+            var exception = Record.Exception(() => AddInstrument(spc, shape, -7071001, 0.1, VectorsWithoutDirection[vector], Vector3.VectorX));
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("boresight", rejected.ParamName);
+            Assert.Empty(spc.Instruments);
+        }
+
+        /// <summary>
+        /// #707: a reference vector of magnitude 0 or with a component that is not finite: <c>getfov</c> rejects the zero
+        /// vector as parallel to the boresight (|b × 0| = 0, SPICE(BADREFVECTORSPEC)) and SPICE reads no NaN or infinity in
+        /// a kernel. The three methods throw, naming the reference vector, and add nothing; the boresight is checked first.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(ShapesAndVectorsWithoutDirection))]
+        public void AddInstrument_RefVectorNotFiniteOrZero_Throws(string shape, int vector)
+        {
+            // Arrange
+            var spc = Host(-7072, "R707");
+            var refVector = VectorsWithoutDirection[vector];
+            // Its components along X, so that a finite one is never parallel to the boresight +Z
+            refVector = new Vector3(refVector.Z, refVector.Y, refVector.X);
+
+            // Act
+            var exception = Record.Exception(() => AddInstrument(spc, shape, -7072001, 0.1, Vector3.VectorZ, refVector));
+            var both = Record.Exception(() => AddInstrument(spc, shape, -7072002, 0.1, Vector3.Zero, refVector));
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("refVector", rejected.ParamName);
+            Assert.Equal("boresight", Assert.IsType<ArgumentException>(both).ParamName);
+            Assert.Empty(spc.Instruments);
+        }
+
+        public static TheoryData<string, double, double, double, double, double, double> ShapesAndParallelPairs()
+        {
+            var data = new TheoryData<string, double, double, double, double, double, double>();
+            foreach (var shape in Shapes)
+            {
+                data.Add(shape, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0);
+                data.Add(shape, 0.0, 0.0, 1.0, 0.0, 0.0, -3.0);
+                data.Add(shape, 1.0, 1.0, 1.0, 3.0, 3.0, 3.0);
+                data.Add(shape, 0.0, 0.0, 1.0, 0.0, 0.0, 1e-300);
+            }
+
+            return data;
+        }
+
+        /// <summary>
+        /// #707: a reference vector parallel to the boresight, |b × r| = 0, the rule of <c>getfov</c> (N0067, "The reference
+        /// vector ... is parallel to the instrument boresight vector. This is not allowed by the ANGLES FOV specification",
+        /// SPICE(BADREFVECTORSPEC)), defines no plane of the field. Before, the instrument was built, the frame of its field
+        /// was the zero vector, its IK one getfov rejects, and only the search threw. The three methods throw, naming the
+        /// reference vector, and add nothing.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(ShapesAndParallelPairs))]
+        public void AddInstrument_RefVectorParallelToBoresight_Throws(string shape, double bx, double by, double bz, double rx, double ry, double rz)
+        {
+            // Arrange
+            var spc = Host(-7073, "P707");
+
+            // Act
+            var exception = Record.Exception(() => AddInstrument(spc, shape, -7073001, 0.1, new Vector3(bx, by, bz), new Vector3(rx, ry, rz)));
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("refVector", rejected.ParamName);
+            Assert.Empty(spc.Instruments);
+        }
+
+        /// <summary>
+        /// #707, control: a reference vector whose cross product with the boresight is not zero, however small, is accepted,
+        /// as <c>getfov</c> accepts it (<see cref="RejectedFields_AreThoseGetfovRejects"/>): 1e-300 off the boresight, the
+        /// smallest double off it, and a vector opposite the boresight but for 1e-300.
+        /// </summary>
+        [Theory]
+        [InlineData("Circular", 1e-300)]
+        [InlineData("Rectangular", 1e-300)]
+        [InlineData("Elliptical", 1e-300)]
+        [InlineData("Circular", double.Epsilon)]
+        [InlineData("Rectangular", double.Epsilon)]
+        [InlineData("Elliptical", double.Epsilon)]
+        public void AddInstrument_RefVectorNearlyParallel_IsAccepted(string shape, double offset)
+        {
+            // Arrange
+            var spc = Host(-7074, "N707");
+            Assert.True(Vector3.VectorZ.Cross(new Vector3(0.0, offset, 1.0)).Magnitude() > 0.0);
+
+            // Act
+            AddInstrument(spc, shape, -7074001, 0.1, Vector3.VectorZ, new Vector3(0.0, offset, 1.0));
+            AddInstrument(spc, shape, -7074002, 0.1, Vector3.VectorZ, new Vector3(0.0, offset, -1.0));
+
+            // Assert
+            Assert.Equal(2, spc.Instruments.Count);
+            Assert.Equal(new Vector3(0.0, offset, 1.0), spc.Instruments.Single(x => x.NaifId == -7074001).RefVector);
+        }
+
+        public static TheoryData<string, double> ShapesAndFieldsOfViewNotFinitePositive()
+        {
+            var data = new TheoryData<string, double>();
+            foreach (var shape in Shapes)
+            foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity, 0.0, -0.0, -0.1 })
+                data.Add(shape, value);
+            return data;
+        }
+
+        /// <summary>
+        /// #707: the half-angle of the field of view is a finite positive number. NaN passed the former check (NaN &lt;= 0 is
+        /// false) and +∞ was not checked: the instrument was built, the search threw late and the IK held
+        /// <c>FOV_REF_ANGLE = NaN</c> or <c>Infinity</c>, which SPICE cannot read. The three methods throw, naming the field
+        /// of view, and add nothing; 0 and negative values threw before, without the parameter's name.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(ShapesAndFieldsOfViewNotFinitePositive))]
+        public void AddInstrument_FieldOfViewNotFinitePositive_Throws(string shape, double fieldOfView)
+        {
+            // Arrange
+            var spc = Host(-7075, "F707");
+
+            // Act
+            var exception = Record.Exception(() => AddInstrument(spc, shape, -7075001, fieldOfView, Vector3.VectorZ, Vector3.VectorX));
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("fieldOfView", rejected.ParamName);
+            Assert.Empty(spc.Instruments);
+        }
+
+        // The instrument kernel the library's circular writer would write for these vectors, written here
+        private static string CircularKernel(int id, string boresight, string refVector) =>
+            $"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}" +
+            $"INS{id}_FOV_CLASS_SPEC       = 'ANGLES'{Environment.NewLine}" +
+            $"INS{id}_FOV_SHAPE            = 'CIRCLE'{Environment.NewLine}" +
+            $"INS{id}_FOV_FRAME            = 'G707_CAM'{Environment.NewLine}" +
+            $"INS{id}_BORESIGHT            = ( {boresight} ){Environment.NewLine}" +
+            $"INS{id}_FOV_REF_VECTOR       = ( {refVector} ){Environment.NewLine}" +
+            $"INS{id}_FOV_REF_ANGLE        = 0.1{Environment.NewLine}" +
+            $"INS{id}_FOV_ANGLE_UNITS      = 'RADIANS'{Environment.NewLine}\\begintext{Environment.NewLine}";
+
+        /// <summary>
+        /// #707, the reference: the fields the constructor now rejects are those CSPICE's <c>getfov_c</c> rejects, on the
+        /// IKs the library wrote for them before (written here, as the library can no longer build such an instrument): the
+        /// zero boresight SPICE(ZEROBORESIGHT), the zero and the parallel reference vectors SPICE(BADREFVECTORSPEC). The
+        /// instruments the constructor accepts at the bound, a reference vector 1e-300 and the smallest double off the
+        /// boresight, written by the library's writers for the three shapes, are read by getfov. Validation category:
+        /// <c>getfov_c</c> through <see cref="CspiceDirect"/>, which the Windows DLL does not export; the cross-platform tests
+        /// above assert the constructor's rule.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Validation")]
+        public async Task RejectedFields_AreThoseGetfovRejects()
+        {
+            // Arrange: the rejected fields, each with the error getfov signals
+            var rejected = new (int Id, string Boresight, string RefVector, string Error)[]
+            {
+                (-7076001, "0, 0, 0", "1, 0, 0", "SPICE(ZEROBORESIGHT)"),
+                (-7076002, "-0, -0, -0", "1, 0, 0", "SPICE(ZEROBORESIGHT)"),
+                (-7076003, "0, 0, 1", "0, 0, 0", "SPICE(BADREFVECTORSPEC)"),
+                (-7076004, "0, 0, 1", "0, 0, 2", "SPICE(BADREFVECTORSPEC)"),
+                (-7076005, "0, 0, 1", "-0, -0, -3", "SPICE(BADREFVECTORSPEC)"),
+                (-7076006, "1, 1, 1", "3, 3, 3", "SPICE(BADREFVECTORSPEC)"),
+                (-7076007, "0, 0, 1", "0, 0, 1E-300", "SPICE(BADREFVECTORSPEC)"),
+            };
+            var spc = Host(-7077, "G707");
+            foreach (var (offset, n) in new[] { (1e-300, 0), (double.Epsilon, 1) })
+            {
+                AddInstrument(spc, "Circular", -7077001 - 10 * n, 0.1, Vector3.VectorZ, new Vector3(0.0, offset, 1.0));
+                AddInstrument(spc, "Rectangular", -7077002 - 10 * n, 0.1, Vector3.VectorZ, new Vector3(0.0, offset, 1.0));
+                AddInstrument(spc, "Elliptical", -7077003 - 10 * n, 0.1, Vector3.VectorZ, new Vector3(0.0, offset, -1.0));
+            }
+
+            var files = new System.Collections.Generic.List<FileInfo>();
+            foreach (var field in rejected)
+            {
+                var ik = FrameKernelFiles.NewFile($"ik707_{-field.Id}", ".ti");
+                await File.WriteAllTextAsync(ik.FullName, CircularKernel(field.Id, field.Boresight, field.RefVector));
+                files.Add(ik);
+            }
+
+            foreach (var instrument in spc.Instruments)
+            {
+                var ik = FrameKernelFiles.NewFile($"ik707_{-instrument.NaifId}", ".ti");
+                await instrument.WriteKernelAsync(ik);
+                files.Add(ik);
+            }
+
+            foreach (var file in files)
+            {
+                file.Refresh();
+                SpiceAPI.Instance.LoadKernels(file);
+            }
+
+            try
+            {
+                // Act and assert
+                foreach (var field in rejected)
+                {
+                    var read = CspiceDirect.Getfov(field.Id);
+                    _output.WriteLine($"MEASURE getfov {field.Id} ( {field.Boresight} ) ( {field.RefVector} ): {read.Error ?? "read"}");
+                    Assert.Equal(field.Error, read.Error);
+                }
+
+                foreach (var instrument in spc.Instruments)
+                {
+                    var read = CspiceDirect.Getfov(instrument.NaifId);
+                    _output.WriteLine($"MEASURE getfov {instrument.NaifId} {instrument.Shape} ref ( {instrument.RefVector} ): {read.Error ?? read.Shape}");
+                    Assert.Null(read.Error);
+                    Assert.Equal(new[] { 0.0, 0.0, 1.0 }, read.Boresight);
+                }
+            }
+            finally
+            {
+                foreach (var file in files)
+                {
+                    SpiceAPI.Instance.UnloadKernels(file);
+                    FrameKernelFiles.Delete(file);
+                }
+            }
+        }
     }
 }

@@ -314,7 +314,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
+        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
+        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
+        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
         /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
         /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>
@@ -337,7 +340,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
+        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
+        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
+        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
         /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
         /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>
@@ -361,7 +367,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
+        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
+        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
+        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
         /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
         /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>

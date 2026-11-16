@@ -391,11 +391,11 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `NaifId` | NAIF instrument ID: negative, and not the spacecraft frame's id NaifId × 1000, which the instrument FK would define relative to itself (SPICE(BADFRAMESPEC2), #676); NAIF's convention is NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required Reading, "Instruments") |
 | `Name` | Instrument name |
 | `Model` | Instrument model identifier |
-| `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad) |
+| `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad): finite and positive |
 | `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad); `EllipticalInstrument` and `RectangularInstrument` |
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
-| `Boresight` | Boresight direction in instrument frame |
-| `RefVector` | Reference vector in instrument frame |
+| `Boresight` | Boresight direction in instrument frame: finite components, a non-zero magnitude |
+| `RefVector` | Reference vector in instrument frame: finite components, a non-zero magnitude, not parallel to the boresight (b × r ≠ 0) |
 | `Orientation` | Instrument orientation relative to spacecraft: the Euler angles (x, y, z), in radians, about the axes 1, 2, 3 of the frame kernel ([Instrument orientation](#instrument-orientation)) |
 | `RotationToSpacecraft` | The rotation from the instrument frame to the spacecraft frame of `Orientation`, `vectorInSpacecraft = vectorInInstrument.Rotate(q)` |
 
@@ -405,6 +405,14 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `FindWindowsInFieldOfViewConstraint(Window, Spacecraft, ILocalizable, Frame, ShapeType, Aberration, TimeSpan)` | The windows, in TDB, where the target is in the field: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
+
+The constructor, so `AddCircularInstrument`, `AddEllipticalInstrument` and `AddRectangularInstrument`, throws
+`ArgumentException` naming the parameter for the fields CSPICE's `getfov` rejects on the kernel the library writes, or
+cannot read ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)): a boresight or a reference vector with a component that is not finite or a magnitude of 0
+(SPICE(ZEROBORESIGHT); `boresight` checked first), a reference vector parallel to the boresight, |b × r| = 0 on the
+given vectors as `getfov` tests it (SPICE(BADREFVECTORSPEC)), and a field of view that is not a finite positive number.
+A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
+angular radius, π/2 − 1e-6, is checked by the search.
 
 #### Instrument orientation
 
@@ -491,10 +499,10 @@ search for a `+S` correction.
 - `ArgumentOutOfRangeException`: a step that is not positive;
 - `ArgumentException`: a search window that ends before it starts, a target that is the instrument's spacecraft, an
   ellipsoid target without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star);
-- `InvalidOperationException`: a boresight that is zero or parallel to the reference vector, a half-angle that is not
-  positive, a field whose angular radius (the larger half-angle of a circle or an ellipse, the angle of the corner of a
-  rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an instrument that is neither
-  an `EllipticalInstrument` nor a `RectangularInstrument`.
+- `InvalidOperationException`: a cross angle that is not positive, a field whose angular radius (the larger half-angle
+  of a circle or an ellipse, the angle of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an instrument that is neither
+  an `EllipticalInstrument` nor a `RectangularInstrument`. The boresight, the reference vector and the field of view are
+  checked when the instrument is built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [Instrument](#instrument)).
 
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
