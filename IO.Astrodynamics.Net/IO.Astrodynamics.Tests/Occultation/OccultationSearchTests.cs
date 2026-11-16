@@ -24,8 +24,14 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// </summary>
 public class OccultationSearchTests
 {
-    // Provisional, twice the worst value on Linux x64 (2026-10-27): the managed search and gfoclt both at 1e-6 s
-    private const double GfocltThreshold = 1.4e-6;
+    // Point bodies against gfoclt at 1e-9 s, the managed search and gfoclt both at 1e-6 s: twice the worst, 1.000e-7 s (one
+    // tick) on Linux x64, Windows x64 and macOS arm64 (CI run 43773937161, 2026-11-15), rounded up at the second digit
+    private const double GfocltThreshold = 2.0e-7;
+
+    // None against gfoclt on eclipse 001, geometric, the managed search and gfoclt both at 1e-6 s: the threshold of that pair
+    // in OccultationSearchValidationTests, twice its worst (6.000e-7 s on Linux x64, Windows x64 and macOS arm64, CI run
+    // 43773937161, 2026-11-15)
+    private const double NoneGfocltThreshold = 1.2e-6;
 
     private readonly ITestOutputHelper _output;
 
@@ -120,7 +126,9 @@ public class OccultationSearchTests
             Assert.Equal(any[i].StartDate, none[i].EndDate);
         }
 
-        Assert.True(WorstEdge(managedNone, none) < GfocltThreshold);
+        double worstNone = WorstEdge(managedNone, none);
+        _output.WriteLine($"MEASURE #277 eclipse_001 None, managed (1 us) - gfoclt (1 us): {worstNone:E3} s");
+        Assert.True(worstNone < NoneGfocltThreshold, $"{worstNone:E2} s");
     }
 
     [Fact]

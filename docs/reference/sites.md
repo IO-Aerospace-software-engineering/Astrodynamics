@@ -134,7 +134,7 @@ no window, or for a site named as a kernel frame searched in that kernel frame, 
 `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it unless a loaded kernel defines its id
 under its name. `SpiceAPI.TransformFrame` with it is the library's frame composed through ICRF, as for TEME: the
 orientation `ToFrame` uses, bit for bit, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's `sxform_c` in the frame kernel
-`WriteFrameAsync` writes for the site (measured on Linux x64; fourth round of
+`WriteFrameAsync` writes for the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161; fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), before, it threw).
 
 A site from the kernels (`new Site(13, "DSS-13", earth)`) has the frame the loaded kernels define for its id,

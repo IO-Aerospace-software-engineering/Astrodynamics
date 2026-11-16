@@ -35,23 +35,25 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// <para>
 /// The managed search runs on the kernel-backed observers through <see cref="OccultationSearch.Managed"/> (the public
 /// methods send them to <c>gfoclt</c>): it reads their states from the kernels, so both searches see the same
-/// trajectory, and the difference is that of the geometry and of the root finding. The thresholds are provisional,
-/// twice the Linux value rounded up at the second significant digit, until the three platforms of the CI have printed
-/// their MEASURE lines.
+/// trajectory, and the difference is that of the geometry and of the root finding. The thresholds are twice the worst
+/// value over Linux x64, Windows x64 and macOS arm64 (CI run 43773937161, 2026-11-15), rounded up at the second
+/// significant digit.
 /// </para>
 /// </remarks>
 public class OccultationSearchValidationTests
 {
     private static readonly DirectoryInfo ReferencePath = new("Data/OccultationReference");
 
-    // Provisional thresholds, twice the worst value over the scenarios on Linux x64 (2026-10-27), rounded up at the second
-    // digit. Geometric: 1.49e-7 s against the reference at 1e-9 s, the managed search at 100 ns (the tick, and the 119 ns
-    // ulp of an ET of 8e8 s); 7e-7 s against gfoclt at 1e-6 s, the managed search at 1e-6 s. With the light time, both
-    // gfoclt and the managed search read the Earth at its corrected epoch, an ET in double whose rounding (up to 60 ns,
-    // half the ulp) moves the Earth by up to 1.8 mm; seen from 7000 km, the contacts of eclipse 001 move by about 1 µs:
-    // 1.31e-6 s against the reference, 1.5e-6 s against gfoclt, the noise of the reference itself
-    private const double ReferenceThreshold = 3.0e-7;
-    private const double GfocltThreshold = 1.4e-6;
+    // Thresholds, twice the worst value over the scenarios on Linux x64, Windows x64 and macOS arm64 (CI run 43773937161,
+    // 2026-11-15, the same figures on the three), rounded up at the second digit. Geometric: 1.192e-7 s against the
+    // reference at 1e-9 s, the managed search at 100 ns (the tick, and the 119 ns ulp of an ET of 8e8 s); 6.000e-7 s
+    // against gfoclt at 1e-6 s, the managed search at 1e-6 s (multiples of 1e-7 s, the tick of the windows' Time). With
+    // the light time, both gfoclt and the managed search read the Earth at its corrected epoch, an ET
+    // in double whose rounding (up to 60 ns, half the ulp) moves the Earth by up to 1.8 mm; seen from 7000 km, the contacts
+    // of eclipse 001 move by about 1 µs: 1.311e-6 s against the reference, 1.500e-6 s against gfoclt, the noise of the
+    // reference itself
+    private const double ReferenceThreshold = 2.4e-7;
+    private const double GfocltThreshold = 1.2e-6;
     private const double LightTimeReferenceThreshold = 2.7e-6;
     private const double LightTimeGfocltThreshold = 3.0e-6;
 
@@ -324,7 +326,9 @@ public class OccultationSearchValidationTests
         ];
         _output.WriteLine("MEASURE #277 eclipse_001 propagated - GMAT (penumbra entry, umbra entry, umbra exit, penumbra exit, penumbra duration, " +
                           $"umbra duration): {string.Join(", ", gmat.Select(x => x.ToString("E3")))} s");
-        Assert.True(firstEclipse < 5.2e-5, $"{firstEclipse:E2} s");
+        // Twice the worst on Linux x64, Windows x64 and macOS arm64, the same figures on the three (CI run 43773937161,
+        // 2026-11-15), rounded up at the second digit: first eclipse 2.470e-5 s, over 12 h 3.194e-4 s, against GMAT 4.832e-4 s
+        Assert.True(firstEclipse < 5.0e-5, $"{firstEclipse:E2} s");
         Assert.True(worstAny < 6.4e-4 && worstFull < 6.4e-4, $"{worstAny:E2} s, {worstFull:E2} s");
         Assert.All(gmat, x => Assert.True(System.Math.Abs(x) < 9.7e-4, $"{x:E2} s"));
     }

@@ -83,7 +83,8 @@ release are listed under **Known limitations**.
   ẑ × r, argument of periapsis equal to the argument of latitude and mean anomaly 0. The method without the period
   is unchanged (2π / |ω| of the body frame at the epoch); with the Earth's binary PCK of the tests, the two radii
   differ by 0.48 m at 2021-01-01. Against CSPICE (geosynchronous 001 of the conformance suite, the test kernels), the
-  state agrees to 3.3e-8 m and 2.3e-12 m/s. Decision 18 of #457.
+  state agrees to 3.8e-8 m and 2.4e-12 m/s over Linux x64, Windows x64 and macOS arm64 (CI run 43773937161; 3.3e-8 m
+  and 2.3e-12 m/s on Linux and macOS). Decision 18 of #457.
 - **`Instrument.RotationToSpacecraft`**: the rotation from the instrument frame to the spacecraft frame of
   `Orientation`, `vectorInSpacecraft = vectorInInstrument.Rotate(q)`, the Euler angles of the frame kernel
   (`eul2m(x, y, z, 1, 2, 3)`), which the managed field of view, `GetBoresightInSpacecraftFrame`,
@@ -2360,7 +2361,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   **Deprecated**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
   catalog position moved by the proper motion, written in the test (right ascension and declination plus the proper
   motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
-  relative over four years (threshold 4.0e-16, provisional, twice the Linux worst).
+  relative over four years (threshold 4.0e-16, twice the worst; Validation category, Linux only, CI run 43773937161).
 
 - **A star propagated twice kept the states of both propagations** (third round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). `Star.Propagate` added each state
@@ -2396,9 +2397,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   sigmas 3.469e-16 relative (3.930e-12 before). The error is proportional to the proper motion: about 1e-16 relative
   and below for the proper motions of real stars. At epochs whole or half days from J2000, whose Julian dates are exact,
   nothing moves, bit for bit, nor any other test or measurement of the suite. `StarTests` checks the angles and the
-  sigmas against the closed form on every platform (thresholds 8.9e-16 rad and 7.0e-16 relative, provisional, twice the
-  Linux worst; the sigmas square through `Math.Pow`, the platform's libm, so their figure awaits the Windows and macOS
-  arm64 CI logs) and the position against `latrec_c` in the Validation category (9.4e-16, provisional).
+  sigmas against the closed form on every platform (thresholds 8.9e-16 rad and 7.0e-16 relative, twice the worst, the
+  same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161; the sigmas square through `Math.Pow`, the
+  platform's libm, which could have differed) and the position against `latrec_c` in the Validation category (9.4e-16,
+  twice the worst, Linux only).
 
 - **A `CentralBodyPropagator` given an integrator with its forces threw `NullReferenceException` unless its caller
   initialized the integrator** (second round of
@@ -2753,8 +2755,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   SPICE, which does not know it, and threw `InvalidOperationException`. It now composes the transform through ICRF, as
   for TEME, decided at each call (a frame kernel of its id loaded later is read by name): the orientation of
   `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's
-  `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (measured on Linux
-  x64). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
+  `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (the same on Linux
+  x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
   frame kernel and the CK written for them) and CIRS and TIRS ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)) keep their path; TEME's composition is the same code, bit for bit.
 - **The documentation of a site observer of `SpiceAPI.ReadEphemeris` by identifiers stated no condition** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth
   round). The observer of a site identifier is a `Site` built from its SPICE name and read at J2000 TDB (#672), so a

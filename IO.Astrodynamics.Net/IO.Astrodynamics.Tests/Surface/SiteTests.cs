@@ -775,9 +775,9 @@ namespace IO.Astrodynamics.Tests.Surface
             }
         }
 
-        // #668, fourth round, measured on Linux x64 (2026-11-15): SpiceAPI.TransformFrame with the frame of a site from coordinates
-        // against SPICE's sxform in the frame kernel the library writes for it, renamed, 9.325e-16 rad and 5.666e-20 rad/s at
-        // worst; thresholds twice those rounded up, provisional until the three platforms have printed their MEASURE lines
+        // #668, fourth round: SpiceAPI.TransformFrame with the frame of a site from coordinates against SPICE's sxform in the
+        // frame kernel the library writes for it, renamed, 9.325e-16 rad and 5.666e-20 rad/s at worst, the same on Linux x64,
+        // Windows x64 and macOS arm64 (CI run 43773937161, 2026-11-15); thresholds twice those, rounded up at the second digit
         private const double ManagedSiteTransformAngleThreshold = 1.9e-15;
         private const double ManagedSiteTransformRateThreshold = 1.2e-19;
 

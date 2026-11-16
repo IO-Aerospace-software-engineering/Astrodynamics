@@ -261,10 +261,12 @@ public class StarTests
         }
     }
 
-    // The noise-level record of the SPK read against the catalog position written in the test: twice the worst (1.390e-16,
-    // StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore, Linux, 2026-11-15), asserted by the
-    // Validation test alone, which runs on Linux alone (the epochs are whole half days from the catalog epoch, whose Julian
-    // dates, which the star differences, are exact). The tests of every platform assert CatalogMotionInOneMicrosecond
+    // The noise-level record of the SPK read against the catalog position written in the test: twice the worst, rounded up
+    // at the second digit (1.390e-16, StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone, Validation category, Linux
+    // only, CI run 43773937161, 2026-11-15; StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore
+    // the same on Linux x64, Windows x64 and macOS arm64), asserted by the Validation test alone (the epochs are whole half
+    // days from the catalog epoch, whose Julian dates, which the star differences, are exact). The tests of every platform
+    // assert CatalogMotionInOneMicrosecond
     internal const double CatalogPositionTolerance = 2.8e-16;
 
     /// <summary>
@@ -378,8 +380,9 @@ public class StarTests
         new(catalogNumber, $"star{catalogNumber}", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.01, 0.01, 0, 0, 0, 0, epoch);
 
     // The record of the right ascension and the declination off half days against their closed form, IEEE 754 arithmetic
-    // alone (no sine nor cosine), so the same on every platform: twice the worst (4.441e-16 rad, 2 ulp of a + μ dt near
-    // 1.4 rad, the slow star 40 years after its epoch; 2.220e-16 for the fast star; Linux, 2026-11-15), provisional.
+    // alone (no sine nor cosine), so the same on every platform: twice the worst, rounded up at the second digit (4.441e-16
+    // rad, 2 ulp of a + μ dt near 1.4 rad, the slow star 40 years after its epoch; 2.220e-16 for the fast star; the same on
+    // Linux x64, Windows x64 and macOS arm64, CI run 43773937161, 2026-11-15).
     // Before the fix, the Julian dates rounded before their difference put the fast star 6.328e-14 rad away, the position
     // of an epoch up to about 20 µs away (half the 2^-31 day, 40.2 µs, a Julian date near 2.45e6 resolves)
     internal const double ClosedFormAngleTolerance = 8.9e-16;
@@ -430,10 +433,10 @@ public class StarTests
     }
 
     // The record of the right ascension and declination sigmas off half days against their closed form: twice the worst
-    // relative difference (3.469e-16, Linux, 2026-11-15), provisional until the Windows and macOS arm64 CI logs give their
-    // worst. The sigmas square through System.Math.Pow, the platform's libm, which IEEE 754 does not require to round
-    // correctly, so the figure may differ between platforms. Before the fix, the rounded Julian dates moved them by
-    // 3.930e-12 relative
+    // relative difference, rounded up at the second digit (3.469e-16, the same on Linux x64, Windows x64 and macOS arm64,
+    // CI run 43773937161, 2026-11-15). The sigmas square through System.Math.Pow, the platform's libm, which IEEE 754 does
+    // not require to round correctly, so the figure could differ between platforms; it does not on these three. Before
+    // the fix, the rounded Julian dates moved them by 3.930e-12 relative
     internal const double ClosedFormSigmaTolerance = 7.0e-16;
 
     [Fact]
@@ -475,9 +478,9 @@ public class StarTests
     }
 
     // The record of the position off half days against CSPICE's latrec_c (the radrec_c of SPICE) of the closed form of
-    // the right ascension and the declination: twice the worst (4.657e-16, the slow star 40 years after its epoch;
-    // 3.711e-16 for the fast star; Linux, 2026-11-15), provisional, asserted by the Validation test, which runs on Linux
-    // alone (7.287e-14 before the fix). A record of its own: CatalogPositionTolerance, the SPK read at half-day epochs,
+    // the right ascension and the declination: twice the worst, rounded up at the second digit (4.657e-16, the slow star 40
+    // years after its epoch; 3.711e-16 for the fast star; Validation category, Linux only, CI run 43773937161, 2026-11-15),
+    // asserted by the Validation test (7.287e-14 before the fix). A record of its own: CatalogPositionTolerance, the SPK read at half-day epochs,
     // does not move
     internal const double ClosedFormPositionTolerance = 9.4e-16;
 

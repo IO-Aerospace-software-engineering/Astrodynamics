@@ -236,9 +236,9 @@ public class EphemerisTests
                     await command.Ephemeris("Data", 301, 399777, window, TimeSpan.FromMinutes(1));
                     var expected = SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
                     Assert.Equal("CLISITE", expected.Observer.Name);
-                    // The command reads through GetEphemeris: the position of the library's read to its last digit (measured on
-                    // Linux x64: 1.0e-7 m in X, 2.5e-16 relative); threshold twice that, provisional until the three platforms
-                    // have run it
+                    // The command reads through GetEphemeris: the position of the library's read to its last digit (5.960e-8 m
+                    // in X, 1.487e-16 relative, the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161,
+                    // 2026-11-15); threshold twice that, rounded up at the second digit
                     var line = sb.ToString().Split(Environment.NewLine)[0];
                     Assert.StartsWith($"Epoch : {begin} Position : ", line);
                     var xyz = System.Text.RegularExpressions.Regex.Matches(line, @"(?<=X : |Y : |Z: )-?[0-9.E+-]+").Take(3)
@@ -246,7 +246,7 @@ public class EphemerisTests
                     var printed = new Math.Vector3(xyz[0], xyz[1], xyz[2]);
                     _output.WriteLine($"MEASURE CLI site ephemeris against SpiceAPI.ReadEphemeris: X {System.Math.Abs(printed.X - expected.Position.X):E3} m, " +
                                       $"relative {(printed - expected.Position).Magnitude() / expected.Position.Magnitude():E3}");
-                    Assert.True((printed - expected.Position).Magnitude() < 5e-16 * expected.Position.Magnitude(),
+                    Assert.True((printed - expected.Position).Magnitude() < 3.0e-16 * expected.Position.Magnitude(),
                         $"{printed} against {expected.Position}");
                 }
                 finally

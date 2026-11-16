@@ -1518,11 +1518,11 @@ public class TriadAttitudeTests
         }
     }
 
-    // Provisional, twice the Linux x64 worst until the three platforms' CI: the primary angle is 2.220E-016 rad and the
-    // secondary 0.000E+000 rad on Linux x64 (the triads of the axis vectors and of the targets, (-1, 0, 0) and (0, 1, 0),
-    // are exact, so the matrix is; the quaternion's square root and the rotation round). The angles are
-    // atan2(|a × b|, a · b), which resolves them to the rounding, where acos of the cosine cannot tell an angle below
-    // about 1.5e-8 rad from 0
+    // Twice the worst, rounded up at the second digit: the primary angle is 2.220e-16 rad and the secondary 0 rad on Linux
+    // x64, Windows x64 and macOS arm64 (CI run 43773937161, 2026-11-15) (the triads of the axis vectors and of the targets,
+    // (-1, 0, 0) and (0, 1, 0), are exact, so the matrix is; the quaternion's square root and the rotation round). The
+    // angles are atan2(|a × b|, a · b), which resolves them to the rounding, where acos of the cosine cannot tell an angle
+    // below about 1.5e-8 rad from 0
     private const double HalfPiAttitudeAngle = 4.5e-16;
 
     private static double ResolvedAngle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
