@@ -2271,9 +2271,46 @@ public class SpiceAPI
         }
     }
 
-    // The GM given to CONICS (conics.c: SPICE(BADGM) for a GM not above 0), finite: a GM outside it is a bad argument when the
-    // caller gives it (#711: before, conics_c's error was left pending for the next native call)
+    // The GM given to CONICS (conics.c: SPICE(BADGM) for a GM not above 0), PROP2B and OSCELT (prop2b.c, oscelt.c:
+    // SPICE(NONPOSITIVEMASS)), finite: a GM outside it is a bad argument when the caller gives it (#711: before, conics_c's
+    // error was left pending for the next native call; #714: prop2b_c's and oscltx_c's aborted the process or returned the
+    // stack's contents)
     private static bool IsConicsGravitationalParameter(double gm) => gm > 0.0 && !double.IsInfinity(gm);
+
+    // The GM of the observer, finite and above 0, or the InvalidOperationException of a body whose GM the kernel pool lacks
+    // (#711, #714): the state of the observer, not an argument of the call
+    private static double ObserverGravitationalParameter(ILocalizable observer, string subject, string routine)
+    {
+        var gm = observer.GM;
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new InvalidOperationException(
+                $"The centre of motion of {subject}, {observer.Name} ({observer.NaifId}), has a GM of {gm} m^3/s^2, where {routine} needs one finite and " +
+                $"above 0: for a body read from the kernels, the kernel pool holds no BODY{observer.NaifId}_GM.");
+        }
+
+        return gm;
+    }
+
+    // A state the two-body calls give SPICE: a position and a velocity that are not finite raise no SPICE error, prop2b_c and
+    // oscltx_c returning NaN (measured with CSPICE N0067), so they are a bad argument checked before the native call (#714)
+    private static void ThrowIfNotFinite(OrbitalParameters.StateVector stateVector, string paramName)
+    {
+        var p = stateVector.Position;
+        var v = stateVector.Velocity;
+        if (!(double.IsFinite(p.X) && double.IsFinite(p.Y) && double.IsFinite(p.Z) && double.IsFinite(v.X) && double.IsFinite(v.Y) &&
+              double.IsFinite(v.Z)))
+        {
+            throw new ArgumentException($"The state is not finite: position {p} m, velocity {v} m/s.", paramName);
+        }
+    }
+
+    // The elements of oscltx_c, or the InvalidOperationException of its failure: the native layer writes NaN in every element
+    // with SPICE's message (#714)
+    private static bool IsFinite(in DTO.KeplerianElements elements) =>
+        double.IsFinite(elements.PerifocalDistance) && double.IsFinite(elements.Eccentricity) && double.IsFinite(elements.Inclination) &&
+        double.IsFinite(elements.AscendingNodeLongitude) && double.IsFinite(elements.PeriapsisArgument) &&
+        double.IsFinite(elements.MeanAnomaly) && double.IsFinite(elements.TrueAnomaly);
 
     // The state of a native conversion, or the InvalidOperationException of its failure: a NaN state with SPICE's message,
     // a centre whose GM the kernel pool lacks (#711: before, the zero state, silently)
@@ -2287,23 +2324,55 @@ public class SpiceAPI
         return state.Convert();
     }
 
+    /// <summary>
+    /// The osculating conic elements of a state with the GM of its observer, through CSPICE's <c>oscltx_c</c>.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite (#714).</exception>
+    /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
+    /// kernel pool lacks (#714: before, the elements <c>oscltx_c</c> never wrote were returned). Or <c>oscltx_c</c> failed
+    /// (see <see cref="ConvertStateVectorToConicOrbitalElement(OrbitalParameters.StateVector, double)"/>).</exception>
     public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
     {
-        return ConvertStateVectorToConicOrbitalElement(stateVector, stateVector.Observer.GM);
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        return ConvertStateVectorToConicOrbitalElement(stateVector, ObserverGravitationalParameter(stateVector.Observer, "the state", "OSCELT"));
     }
 
     /// <summary>
-    /// Convert state vector to Keplerian elements with an explicit GM value.
+    /// Convert state vector to Keplerian elements with an explicit GM value, through CSPICE's <c>oscltx_c</c>.
     /// </summary>
     /// <param name="stateVector"></param>
     /// <param name="gm">Gravitational parameter (m^3/s^2)</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite, which <c>oscltx_c</c> turns into NaN
+    /// elements with no error (#714).</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#714: before, the
+    /// process ended when this was its first native call, otherwise the elements <c>oscltx_c</c> never wrote were
+    /// returned).</exception>
+    /// <exception cref="InvalidOperationException"><c>oscltx_c</c> failed: a zero position, a zero velocity, or a position and
+    /// a velocity too close to parallel (oscelt.c, <c>SPICE(DEGENERATECASE)</c>); the message is SPICE's (#714: before, the
+    /// elements it never wrote were returned).</exception>
     public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector, double gm)
     {
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to OSCELT must be finite and above 0.");
+        }
+
         lock (lockObject)
         {
-            var svDto = stateVector.Convert();
-            return ConvertStateVectorToConicOrbitalElementProxy(svDto, gm).Convert();
+            var elements = ConvertStateVectorToConicOrbitalElementProxy(stateVector.Convert(), gm);
+            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            if (!IsFinite(elements))
+            {
+                throw new InvalidOperationException($"The state cannot be converted to conic elements: {LastProxyError()}");
+            }
+
+            return elements.Convert();
         }
     }
 
@@ -2372,15 +2441,7 @@ public class SpiceAPI
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
         ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
-        var observer = keplerianElements.Observer;
-        var gm = observer.GM;
-        if (!IsConicsGravitationalParameter(gm))
-        {
-            throw new InvalidOperationException(
-                $"The centre of motion of the elements, {observer.Name} ({observer.NaifId}), has a GM of {gm} m^3/s^2, where CONICS needs one finite and " +
-                $"above 0: for a body read from the kernels, the kernel pool holds no BODY{observer.NaifId}_GM.");
-        }
-
+        var gm = ObserverGravitationalParameter(keplerianElements.Observer, "the elements", "CONICS");
         return ConvertConicElementsToStateVector(keplerianElements, epoch, gm);
     }
 
@@ -2412,28 +2473,69 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    /// The state propagated by two-body motion with the GM of its observer, through CSPICE's <c>prop2b_c</c>.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite (#714).</exception>
+    /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
+    /// kernel pool lacks (#714: before, the state <c>prop2b_c</c> never wrote was returned). Or <c>prop2b_c</c> failed (see
+    /// <see cref="Propagate2Bodies(OrbitalParameters.StateVector, double, TimeSpan)"/>).</exception>
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
     {
-        return Propagate2Bodies(stateVector, stateVector.Observer.GM, dt);
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        return Propagate2Bodies(stateVector, ObserverGravitationalParameter(stateVector.Observer, "the state", "PROP2B"), dt);
     }
 
     /// <summary>
-    /// Propagate a state vector using two-body mechanics with an explicit GM value.
+    /// Propagate a state vector using two-body mechanics with an explicit GM value, through CSPICE's <c>prop2b_c</c>.
     /// </summary>
     /// <param name="stateVector"></param>
     /// <param name="gm">Gravitational parameter (m^3/s^2)</param>
     /// <param name="dt"></param>
     /// <returns></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite, which <c>prop2b_c</c> turns into a NaN
+    /// state with no error (#714).</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#714: before, the
+    /// process ended when this was its first native call, otherwise the state <c>prop2b_c</c> never wrote was
+    /// returned).</exception>
+    /// <exception cref="InvalidOperationException"><c>prop2b_c</c> failed: a zero position, a zero velocity, a position
+    /// parallel to the velocity (prop2b.c, <c>SPICE(ZEROPOSITION)</c>, <c>SPICE(ZEROVELOCITY)</c>,
+    /// <c>SPICE(NONCONICMOTION)</c>, which carry no long message, so the message is the short one), or a
+    /// <paramref name="dt"/> out of its range (<c>SPICE(DTOUTOFRANGE)</c>); the message is SPICE's (#714: before, the state
+    /// it never wrote was returned).</exception>
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, double gm, TimeSpan dt)
     {
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to PROP2B must be finite and above 0.");
+        }
+
         lock (lockObject)
         {
-            return Propagate2BodiesProxy(stateVector.Convert(), gm, dt.TotalSeconds).Convert();
+            var state = Propagate2BodiesProxy(stateVector.Convert(), gm, dt.TotalSeconds);
+            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            if (!IsFinite(state))
+            {
+                throw new InvalidOperationException($"The state cannot be propagated by two-body motion: {LastProxyError()}");
+            }
+
+            return state.Convert();
         }
     }
 
+    /// <summary>
+    /// The state propagated by two-body motion to <paramref name="targetEpoch"/> with the GM of its observer
+    /// (<see cref="Propagate2Bodies(OrbitalParameters.StateVector, TimeSpan)"/>).
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
     {
+        ArgumentNullException.ThrowIfNull(stateVector);
         return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);
     }
 }

@@ -1719,4 +1719,129 @@ public class SpiceApiTest
     // 4.164e-10 m and 1.125e-12 / 1.125e-12 / 1.125e-12 m/s
     private const double EquinoctialPositionLimit = 8.4e-10;
     private const double EquinoctialVelocityLimit = 2.3e-12;
+
+    // #714: Propagate2Bodies and ConvertStateVectorToConicOrbitalElement passed the GM unchecked, and their proxies returned the
+    // arrays prop2b_c and oscltx_c never wrote, with no message: about 7e-310 for a GM below 0 or a zero velocity (measured on
+    // a80f6a5), or the end of the process as its first native call (ColdStartTests). The domains are those of CSPICE N0067:
+    // prop2b.c and oscelt.c, SPICE(NONPOSITIVEMASS) for a GM not above 0; a GM that is not finite and a state that is not
+    // finite raise no SPICE error (prop2b_c returns NaN), so they are checked before the native call
+    private static StateVector LeoState(Vector3 velocity, IO.Astrodynamics.Body.CelestialItem observer = null) =>
+        new(new Vector3(6800000.0, 0.0, 0.0), velocity, observer ?? TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-3.986e14)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    void TwoBodyCalls_WithAGmNotFiniteAndAboveZero_ThrowArgumentOutOfRangeException(double gm)
+    {
+        var sv = LeoState(new Vector3(0.0, 7656.2204182967143, 0.0));
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
+        Assert.Equal("gm", error.ParamName);
+        error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
+        Assert.Equal("gm", error.ParamName);
+        AssertNothingPending();
+    }
+
+    [Fact]
+    void TwoBodyCalls_OfAStateNotFinite_ThrowArgumentException()
+    {
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        foreach (var sv in new[]
+                 {
+                     new StateVector(new Vector3(double.NaN, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                         Frames.Frame.ICRF),
+                     LeoState(new Vector3(0.0, double.PositiveInfinity, 0.0))
+                 })
+        {
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0))).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm)).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)).ParamName);
+        }
+
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, gm, TimeSpan.FromSeconds(60.0)));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, TimeSpan.FromSeconds(60.0)));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, TimeSystem.Time.J2000TDB));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(null, gm));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(null));
+        AssertNothingPending();
+    }
+
+    // ELARA (507): named by SPICE, no BODY507_GM in gm_de440.tpc, so its GM is 0: the overloads that take the GM of the observer
+    // throw as ConvertConicElementsToStateVector(KeplerianElements, Time) does
+    [Fact]
+    void TwoBodyCalls_AboutABodyWithoutGm_ThrowInvalidOperationException()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var sv = LeoState(new Vector3(0.0, 7.5e3, 0.0), new IO.Astrodynamics.Body.CelestialBody(507));
+        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).Message);
+        Assert.Contains("BODY507_GM",
+            Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0))).Message);
+        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)).Message);
+        AssertNothingPending();
+    }
+
+    // A state outside the domain SPICE decides (prop2b.c, oscelt.c): SPICE's message, nothing pending, and the next read works
+    [Fact]
+    void TwoBodyCalls_OfAZeroVelocity_ThrowSpicesMessage()
+    {
+        var sv = LeoState(Vector3.Zero);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var before = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
+        _output.WriteLine($"MESSAGE #714 Propagate2Bodies of a zero velocity: {error.Message}");
+        Assert.EndsWith(": SPICE(ZEROVELOCITY)", error.Message);
+        error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
+        _output.WriteLine($"MESSAGE #714 ConvertStateVectorToConicOrbitalElement of a zero velocity: {error.Message}");
+        Assert.EndsWith(": Zero vector for input velocity vector.", error.Message);
+        var moon = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        Assert.Equal(before.Position, moon.Position);
+        Assert.Equal(before.Velocity, moon.Velocity);
+        AssertNothingPending();
+    }
+
+    // The messages of the states SPICE rejects are those of direct prop2b_c and oscltx_c calls (the long message, the short
+    // one when prop2b.c sets none; a GM not above 0 is checked before the native call), and an ordinary state gives their
+    // results bit for bit
+    [Fact]
+    [Trait("Category", "Validation")]
+    void TwoBodyCalls_AreThoseOfCspice()
+    {
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var cases = new (Vector3 Position, Vector3 Velocity, double Gm)[]
+        {
+            (Vector3.Zero, new Vector3(0.0, 7.5e3, 0.0), gm),
+            (new Vector3(6800000.0, 0.0, 0.0), Vector3.Zero, gm),
+            (new Vector3(6800000.0, 0.0, 0.0), new Vector3(7.5e3, 0.0, 0.0), gm)
+        };
+        foreach (var (position, velocity, mu) in cases)
+        {
+            var sv = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            double[] state = [position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z];
+            var prop2b = Body.CspiceDirect.Prop2b(mu, state, 60.0);
+            var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, mu, TimeSpan.FromSeconds(60.0)));
+            Assert.EndsWith(": " + (string.IsNullOrEmpty(prop2b.Long) ? prop2b.Short : prop2b.Long), error.Message);
+            var oscltx = Body.CspiceDirect.Oscltx(state, 0.0, mu);
+            error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, mu));
+            Assert.EndsWith(": " + oscltx.Long, error.Message);
+            _output.WriteLine($"MESSAGE #714 {prop2b.Short} / {oscltx.Short} {oscltx.Long}");
+        }
+
+        var leo = LeoState(new Vector3(0.0, 7656.2204182967143, 1000.0));
+        double[] leoState = [leo.Position.X, leo.Position.Y, leo.Position.Z, leo.Velocity.X, leo.Velocity.Y, leo.Velocity.Z];
+        var reference = Body.CspiceDirect.Prop2b(gm, leoState, 3600.0).State;
+        var propagated = SpiceAPI.Instance.Propagate2Bodies(leo, gm, TimeSpan.FromSeconds(3600.0));
+        Assert.Equal(new Vector3(reference[0], reference[1], reference[2]), propagated.Position);
+        Assert.Equal(new Vector3(reference[3], reference[4], reference[5]), propagated.Velocity);
+        var elements = Body.CspiceDirect.Oscltx(leoState, 0.0, gm).Elements;
+        var converted = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(leo, gm);
+        Assert.Equal(elements[1], converted.E);
+        Assert.Equal(elements[2], converted.I);
+        Assert.Equal(elements[3], converted.RAAN);
+        Assert.Equal(elements[4], converted.AOP);
+        Assert.Equal(elements[5], converted.M);
+        Assert.Equal(elements[9], converted.A);
+        AssertNothingPending();
+    }
 }

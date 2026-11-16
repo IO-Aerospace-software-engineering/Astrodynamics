@@ -53,13 +53,21 @@ namespace
     // again (fourth round of #668). Copied into lastError; true when there is none. The kernel loaders report the same way,
     // the message of a C++ exception then SPICE's (#706: they reset SPICE without keeping its message, so that the .NET layer
     // could not name the cause)
+    //
+    // A SPICE error is reported by its long message, or by its short one when it has none (#714: prop2b.c signals
+    // SPICE(NONPOSITIVEMASS), SPICE(ZEROPOSITION), SPICE(ZEROVELOCITY) and SPICE(NONCONICMOTION) with no setmsg_, so that the
+    // message was empty and the failed call reported as a success)
     bool ReportNativeErrors(std::string writing)
     {
         std::string message = std::move(writing);
         if (failed_c())
         {
+            SpiceChar shortMessage[SPICE_ERROR_SMSGLN]{};
+            getmsg_c("SHORT", SPICE_ERROR_SMSGLN, shortMessage);
+            std::string spice = HandleError();
+            if (spice.empty()) spice = shortMessage;
             if (!message.empty()) message += " ";
-            message += HandleError();
+            message += spice;
         }
         if (message.empty())
         {
@@ -1183,19 +1191,34 @@ void KClearProxy()
 
 #pragma endregion
 
+// As Propagate2BodiesProxy (#714): oscltx_c's errors (SPICE(NONPOSITIVEMASS) for a GM not above 0, SPICE(DEGENERATECASE) for a
+// zero position, a zero velocity or r and v too close to parallel, oscelt.c) give NaN in every element, the epoch, the centre
+// and the frame as given, with SPICE's message in lastError, SPICE reset; before, the process aborted on a first call, and the
+// elements oscltx_c never wrote were returned otherwise
 IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOrbitalElementProxy(
         IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu)
 {
+    ActivateErrorManagement();
     ClearLastError();
     ConstSpiceDouble sv[6]{
             stateVector.position.x, stateVector.position.y, stateVector.position.z,
             stateVector.velocity.x, stateVector.velocity.y, stateVector.velocity.z
     };
-    SpiceDouble elts[SPICE_OSCLTX_NELTS];
+    SpiceDouble elts[SPICE_OSCLTX_NELTS]{};
     oscltx_c(sv, stateVector.epoch, mu, elts);
     IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto;
     conicOrbitalElementsDto.centerOfMotionId = stateVector.centerOfMotionId;
     conicOrbitalElementsDto.SetFrame(stateVector.inertialFrame);
+    if (!ReportNativeErrors({}))
+    {
+        const double nan = std::nan("");
+        conicOrbitalElementsDto.perifocalDistance = conicOrbitalElementsDto.eccentricity = conicOrbitalElementsDto.inclination = nan;
+        conicOrbitalElementsDto.ascendingNodeLongitude = conicOrbitalElementsDto.periapsisArgument = nan;
+        conicOrbitalElementsDto.meanAnomaly = conicOrbitalElementsDto.trueAnomaly = nan;
+        conicOrbitalElementsDto.semiMajorAxis = conicOrbitalElementsDto.orbitalPeriod = nan;
+        conicOrbitalElementsDto.epoch = stateVector.epoch;
+        return conicOrbitalElementsDto;
+    }
     conicOrbitalElementsDto.perifocalDistance = elts[0];
     conicOrbitalElementsDto.eccentricity = elts[1];
     conicOrbitalElementsDto.inclination = elts[2];
@@ -1206,25 +1229,32 @@ IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOr
     conicOrbitalElementsDto.trueAnomaly = elts[8];
     conicOrbitalElementsDto.semiMajorAxis = elts[9];
     conicOrbitalElementsDto.orbitalPeriod = elts[10];
-    if (failed_c())
-    {
-        HandleError();
-    }
     return conicOrbitalElementsDto;
 }
 
+// No failure is silent and none aborts the process (#714): prop2b_c's errors (SPICE(NONPOSITIVEMASS) for a GM not above 0,
+// SPICE(ZEROPOSITION), SPICE(ZEROVELOCITY), SPICE(NONCONICMOTION) for r parallel to v, SPICE(DTOUTOFRANGE)) give the NaN state
+// at the epoch plus dt, the centre and the frame as given, with SPICE's message in lastError, SPICE reset. Before, the error
+// management was not activated (SPICE's default action, ABORT, ended a process that had made no other call) and the state
+// prop2b_c never wrote, the stack's contents, was returned with no message. A dt that is NaN raises no SPICE error: prop2b_c
+// returns the initial state (measured with CSPICE N0067); the .NET layer cannot pass one (TimeSpan)
 IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
         IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu, double dt)
 {
+    ActivateErrorManagement();
     ClearLastError();
     ConstSpiceDouble sv[6] = {
             stateVector.position.x, stateVector.position.y, stateVector.position.z,
             stateVector.velocity.x, stateVector.velocity.y, stateVector.velocity.z
     };
 
-    SpiceDouble result[6];
+    SpiceDouble result[6]{};
 
     prop2b_c(mu, sv, dt, result);
+    if (!ReportNativeErrors({}))
+    {
+        return FailedState(stateVector.epoch + dt, stateVector.centerOfMotionId, stateVector.inertialFrame);
+    }
 
     IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto;
     stateVectorDto.position.x = result[0];
@@ -1236,10 +1266,6 @@ IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
     stateVectorDto.epoch = stateVector.epoch + dt;
     stateVectorDto.centerOfMotionId = stateVector.centerOfMotionId;
     stateVectorDto.SetFrame(stateVector.inertialFrame);
-    if (failed_c())
-    {
-        HandleError();
-    }
     return stateVectorDto;
 }
 

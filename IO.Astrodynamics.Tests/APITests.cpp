@@ -2386,3 +2386,114 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
     std::filesystem::remove_all(folder);
     EXPECT_FALSE(TakePendingSpiceError());
 }
+
+// #714: Propagate2BodiesProxy and ConvertStateVectorToConicOrbitalElementProxy activated no error management, checked SPICE
+// only to reset it, and returned the arrays prop2b_c and oscltx_c never wrote. As the first native call of a process, SPICE's
+// default action (ABORT, SPICE Error Handling Required Reading) ended the process with exit code 1; after another proxy, they
+// returned the stack's contents (about 7e-310) with no message. They now return a NaN result with SPICE's message. The
+// references are the errors of CSPICE N0067: prop2b.c signals SPICE(NONPOSITIVEMASS) for a GM not above 0,
+// SPICE(ZEROPOSITION), SPICE(ZEROVELOCITY) and, for r parallel to v, SPICE(NONCONICMOTION), all four with no long message;
+// oscelt.c (through oscltx_c) signals SPICE(NONPOSITIVEMASS) "MU = #; non-positive gravitational parameter" and
+// SPICE(DEGENERATECASE) "Zero vector for input position vector.", "Zero vector for input velocity vector." and "Input position
+// and velocity are too close to parallel"
+namespace
+{
+    IO::Astrodynamics::API::DTO::StateVectorDTO TwoBodyState(double x, double vx, double vy)
+    {
+        IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+        sv.position = {x, 0.0, 0.0};
+        sv.velocity = {vx, vy, 0.0};
+        sv.epoch = 100.0;
+        sv.centerOfMotionId = 399;
+        sv.SetFrame("J2000");
+        return sv;
+    }
+
+    constexpr double EarthGm = 3.986004418e14;
+
+    bool IsNaN(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv)
+    {
+        return std::isnan(sv.position.x) && std::isnan(sv.position.y) && std::isnan(sv.position.z) && std::isnan(sv.velocity.x) &&
+               std::isnan(sv.velocity.y) && std::isnan(sv.velocity.z);
+    }
+
+    bool IsNaN(const IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO &elements)
+    {
+        return std::isnan(elements.perifocalDistance) && std::isnan(elements.eccentricity) && std::isnan(elements.inclination) &&
+               std::isnan(elements.ascendingNodeLongitude) && std::isnan(elements.periapsisArgument) && std::isnan(elements.meanAnomaly) &&
+               std::isnan(elements.trueAnomaly) && std::isnan(elements.semiMajorAxis) && std::isnan(elements.orbitalPeriod);
+    }
+
+    // The failed propagation: a NaN state at the epoch plus dt, the centre and the frame as given, and SPICE's message
+    void ExpectPropagationFails(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv, double gm, const std::string &message)
+    {
+        IO::Astrodynamics::API::DTO::StateVectorDTO res;
+        EXPECT_NO_THROW(res = Propagate2BodiesProxy(sv, gm, 60.0));
+        EXPECT_STREQ(message.c_str(), GetLastErrorProxy());
+        ExpectFailureReported(message);
+        ExpectNaN(res);
+        EXPECT_EQ(160.0, res.epoch);
+        EXPECT_EQ(399, res.centerOfMotionId);
+        EXPECT_STREQ("J2000", res.inertialFrame);
+    }
+
+    // The failed conversion: NaN elements, the epoch, the centre and the frame as given, and SPICE's message
+    void ExpectConversionFails(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv, double gm, const std::string &text)
+    {
+        IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO res;
+        EXPECT_NO_THROW(res = ConvertStateVectorToConicOrbitalElementProxy(sv, gm));
+        std::cout << "MESSAGE #714 oscltx_c: " << GetLastErrorProxy() << std::endl;
+        ExpectFailureReported(text);
+        EXPECT_TRUE(IsNaN(res));
+        EXPECT_EQ(100.0, res.epoch);
+        EXPECT_EQ(399, res.centerOfMotionId);
+        EXPECT_STREQ("J2000", res.frame);
+    }
+}
+
+TEST(API, Propagate2BodiesProxyOfAStateOutsideTheDomainOfProp2bReturnsNaN)
+{
+    // prop2b.c signals these four with no long message: the short one is the message (before, a failed SPICE call whose long
+    // message is empty was reported as a success by ReportNativeErrors)
+    ExpectPropagationFails(TwoBodyState(7.0e6, 0.0, 7.5e3), 0.0, "SPICE(NONPOSITIVEMASS)");
+    ExpectPropagationFails(TwoBodyState(7.0e6, 0.0, 7.5e3), -EarthGm, "SPICE(NONPOSITIVEMASS)");
+    ExpectPropagationFails(TwoBodyState(0.0, 0.0, 7.5e3), EarthGm, "SPICE(ZEROPOSITION)");
+    ExpectPropagationFails(TwoBodyState(7.0e6, 0.0, 0.0), EarthGm, "SPICE(ZEROVELOCITY)");
+    ExpectPropagationFails(TwoBodyState(7.0e6, 7.5e3, 0.0), EarthGm, "SPICE(NONCONICMOTION)");
+}
+
+TEST(API, ConvertStateVectorToConicOrbitalElementProxyOfAStateOutsideTheDomainOfOscltxReturnsNaN)
+{
+    ExpectConversionFails(TwoBodyState(7.0e6, 0.0, 7.5e3), 0.0, "non-positive gravitational parameter");
+    ExpectConversionFails(TwoBodyState(7.0e6, 0.0, 7.5e3), -EarthGm, "non-positive gravitational parameter");
+    ExpectConversionFails(TwoBodyState(0.0, 0.0, 7.5e3), EarthGm, "Zero vector for input position vector.");
+    ExpectConversionFails(TwoBodyState(7.0e6, 0.0, 0.0), EarthGm, "Zero vector for input velocity vector.");
+    ExpectConversionFails(TwoBodyState(7.0e6, 7.5e3, 0.0), EarthGm, "Input position and velocity are too close to parallel");
+}
+
+// The first native call of a process: the child gtest starts (threadsafe style) runs main, which loads the kernels through
+// KernelsLoader and sets no error action, then the proxy, the first to set it. Exit 0 when the result is NaN with SPICE's
+// message, 2 otherwise; before, SPICE's ABORT ended the child with exit code 1
+TEST(API, Propagate2BodiesProxyAsTheFirstCallReturnsNaN)
+{
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    EXPECT_EXIT(
+        {
+            const auto res = Propagate2BodiesProxy(TwoBodyState(7.0e6, 0.0, 0.0), EarthGm, 60.0);
+            const std::string message = GetLastErrorProxy();
+            std::exit(IsNaN(res) && message == "SPICE(ZEROVELOCITY)" ? 0 : 2);
+        },
+        ::testing::ExitedWithCode(0), "");
+}
+
+TEST(API, ConvertStateVectorToConicOrbitalElementProxyAsTheFirstCallReturnsNaN)
+{
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    EXPECT_EXIT(
+        {
+            const auto res = ConvertStateVectorToConicOrbitalElementProxy(TwoBodyState(7.0e6, 0.0, 7.5e3), 0.0);
+            const std::string message = GetLastErrorProxy();
+            std::exit(IsNaN(res) && message.find("non-positive gravitational parameter") != std::string::npos ? 0 : 2);
+        },
+        ::testing::ExitedWithCode(0), "");
+}

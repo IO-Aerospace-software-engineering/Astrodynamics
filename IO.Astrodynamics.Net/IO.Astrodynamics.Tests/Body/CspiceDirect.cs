@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
 /// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); <c>getfov_c</c>, the
 /// reference of the fields of view an instrument may hold (#707), and <c>reclat_c</c>, that of a star's crossing of a pole
-/// (#709); the list of the
+/// (#709); <c>prop2b_c</c> and <c>oscltx_c</c>, the references of the two-body proxies' errors (#714); the list of the
 /// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
 /// reference of the kernel registry and of the type of a text kernel (#673), with their handles and the files of open DAF
 /// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
@@ -107,6 +107,9 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void oscltx_c([In] double[] state, double et, double mu, [Out] double[] elts);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void prop2b_c(double gm, [In] double[] pvinit, double dt, [Out] double[] pvprop);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void latrec_c(double radius, double longitude, double latitude, [Out] double[] rectan);
@@ -279,6 +282,44 @@ internal static class CspiceDirect
             reset_c();
             return message.ToString().Trim();
         }
+    }
+
+    /// <summary>The state <c>prop2b_c</c> gives (m and m/s with a GM in m^3/s^2), or null with the short and long messages of
+    /// the error it signals, SPICE reset (#714).</summary>
+    internal static (double[] State, string Short, string Long) Prop2b(double gm, double[] state, double dt)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var result = new double[6];
+            prop2b_c(gm, state, dt, result);
+            var (shortMessage, longMessage) = TakeError();
+            return (shortMessage == null ? result : null, shortMessage, longMessage);
+        }
+    }
+
+    /// <summary>The elements <c>oscltx_c</c> gives (its 20 elements), or null with the short and long messages of the error it
+    /// signals, SPICE reset (#714).</summary>
+    internal static (double[] Elements, string Short, string Long) Oscltx(double[] state, double et, double mu)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var elements = new double[20];
+            oscltx_c(state, et, mu, elements);
+            var (shortMessage, longMessage) = TakeError();
+            return (shortMessage == null ? elements : null, shortMessage, longMessage);
+        }
+    }
+
+    // The short and long messages of a pending SPICE error, SPICE reset, or nulls when none is pending
+    private static (string Short, string Long) TakeError()
+    {
+        if (failed_c() == 0) return (null, null);
+        var shortMessage = new StringBuilder(64);
+        getmsg_c("SHORT", shortMessage.Capacity, shortMessage);
+        var longMessage = new StringBuilder(1841);
+        getmsg_c("LONG", longMessage.Capacity, longMessage);
+        reset_c();
+        return (shortMessage.ToString().Trim(), longMessage.ToString().Trim());
     }
 
     /// <summary>Whether SPICE has an error pending (<c>failed_c</c>), which a failed proxy must not leave for the next call
