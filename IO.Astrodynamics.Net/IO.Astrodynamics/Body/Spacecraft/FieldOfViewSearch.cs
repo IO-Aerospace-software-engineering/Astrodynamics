@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Frames;
-using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.TimeSystem;
 
@@ -98,11 +97,15 @@ internal static class FieldOfViewSearch
     /// reference plane: the <see cref="EllipticalInstrument.CrossAngle"/> or <see cref="RectangularInstrument.CrossAngle"/>,
     /// the <see cref="Instrument.FieldOfView"/> of a circle.
     /// </summary>
-    /// <exception cref="InvalidOperationException">The boresight is zero, the reference vector is parallel to it, a
-    /// half-angle is not positive, the angular radius of the field (the larger half-angle of a circle or an ellipse, the
-    /// angle of the corner of a rectangle) exceeds π/2 − 1e-6, or the instrument is of a shape other than a circle without
-    /// being an <see cref="EllipticalInstrument"/> or a <see cref="RectangularInstrument"/>, so that its cross angle is
-    /// unknown.</exception>
+    /// <remarks>
+    /// The constructor of <see cref="Instrument"/> rejects the vectors <c>getfov</c> rejects, a zero or non-finite boresight
+    /// or reference vector and a reference vector parallel to the boresight, and a field of view that is not a finite
+    /// positive number (#707): before 11.0.0 this check threw for the zero and parallel vectors at search time.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">The cross angle is not positive, the angular radius of the field (the
+    /// larger half-angle of a circle or an ellipse, the angle of the corner of a rectangle) exceeds π/2 − 1e-6, or the
+    /// instrument is of a shape other than a circle without being an <see cref="EllipticalInstrument"/> or a
+    /// <see cref="RectangularInstrument"/>, so that its cross angle is unknown.</exception>
     internal static double CheckField(Instrument instrument)
     {
         double crossAngle = instrument switch
@@ -114,14 +117,9 @@ internal static class FieldOfViewSearch
                 $"The field of view of {instrument.Name} cannot be searched: its cross angle is unknown for the shape {instrument.Shape} of a {instrument.GetType().Name}.")
         };
 
-        // getfov: the boresight is not zero, the reference vector not parallel to it (|b × ref| = 0)
-        if (instrument.Boresight == Vector3.Zero || instrument.Boresight.Cross(instrument.RefVector).Magnitude() == 0.0)
-        {
-            throw new InvalidOperationException(
-                $"The field of view of {instrument.Name} cannot be searched: its boresight is zero or parallel to its reference vector.");
-        }
-
-        if (!(instrument.FieldOfView > 0.0) || !(crossAngle > 0.0))
+        // The boresight, the reference vector and the field of view are those getfov accepts, checked by the constructor of
+        // Instrument (#707); a cross angle is not
+        if (!(crossAngle > 0.0))
         {
             throw new InvalidOperationException($"The field of view of {instrument.Name} cannot be searched: its half-angles must be positive.");
         }

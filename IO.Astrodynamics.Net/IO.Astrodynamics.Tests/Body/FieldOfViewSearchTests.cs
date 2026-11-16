@@ -744,8 +744,11 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         foreach (var spacecraft in new[] { unpropagated, kernel })
         {
             int id = spacecraft.NaifId * 1000;
-            spacecraft.AddCircularInstrument(id - 901, "ZERO", "fov515", 0.3, Vector3.Zero, Vector3.VectorY, Vector3.Zero);
-            spacecraft.AddCircularInstrument(id - 902, "PARALLEL", "fov515", 0.3, Vector3.VectorZ, Vector3.VectorZ * 2.0, Vector3.Zero);
+            // A zero boresight and a reference vector parallel to it are rejected when the instrument is added (#707)
+            Assert.Equal("boresight", Assert.Throws<ArgumentException>(() =>
+                spacecraft.AddCircularInstrument(id - 901, "ZERO", "fov515", 0.3, Vector3.Zero, Vector3.VectorY, Vector3.Zero)).ParamName);
+            Assert.Equal("refVector", Assert.Throws<ArgumentException>(() =>
+                spacecraft.AddCircularInstrument(id - 902, "PARALLEL", "fov515", 0.3, Vector3.VectorZ, Vector3.VectorZ * 2.0, Vector3.Zero)).ParamName);
             spacecraft.AddEllipticalInstrument(id - 903, "NOCROSSE", "fov515", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
             spacecraft.AddRectangularInstrument(id - 904, "NOCROSSR", "fov515", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
             spacecraft.AddCircularInstrument(id - 905, "WIDEC", "fov515", IO.Astrodynamics.Constants.PI2 - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
@@ -862,13 +865,13 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             // The getters keep the documented identity before any attitude
             Assert.Equal(Vector3.VectorY, camera.GetBoresightInICRFFrame(start));
 
-            // A field error first: a zero boresight
-            spacecraft.AddCircularInstrument(spacecraft.NaifId * 1000 - 2, "ZERO", "fov682", 0.3, Vector3.Zero, Vector3.VectorY, Vector3.Zero);
+            // A field error first: a cross angle of 0 (a zero boresight is rejected when the instrument is added, #707)
+            spacecraft.AddEllipticalInstrument(spacecraft.NaifId * 1000 - 2, "ZERO", "fov682", 0.3, 0.0, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
             var zero = spacecraft.Instruments.First(x => x.Name == "ZERO");
             var fieldError = Assert.Throws<InvalidOperationException>(() =>
                 zero.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));
-            Assert.Contains("boresight", fieldError.Message);
-            Assert.Contains("boresight", Assert.Throws<InvalidOperationException>(() => zero.IsInFOV(start, earth, Aberration.LT)).Message);
+            Assert.Contains("half-angles", fieldError.Message);
+            Assert.Contains("half-angles", Assert.Throws<InvalidOperationException>(() => zero.IsInFOV(start, earth, Aberration.LT)).Message);
             // and an argument error before it: the instrument's spacecraft as the target
             Assert.Throws<ArgumentException>(() =>
                 camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, spacecraft, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));

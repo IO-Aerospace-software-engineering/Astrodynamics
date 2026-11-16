@@ -770,6 +770,10 @@ The `Instrument` class now provides:
 - `GetRefVectorInSpacecraftFrame()`: Returns instrument reference vector in spacecraft body frame (new in this release)
 
 Both methods transform the instrument-frame vectors to the spacecraft body frame, enabling direct use with TRIAD constructors.
+An instrument is built with a finite, non-zero boresight and reference vector that are not parallel, and a finite positive
+field of view, the fields CSPICE's `getfov` accepts; otherwise `AddCircularInstrument`, `AddEllipticalInstrument` and
+`AddRectangularInstrument` throw `ArgumentException` naming the parameter, and the last two
+`ArgumentOutOfRangeException` for a cross angle that is negative or not finite (#707).
 
 **Matrix Utility**
 

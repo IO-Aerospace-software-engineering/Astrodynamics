@@ -2389,7 +2389,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day, about 40 µs) before the
   subtraction, against the remark of `Time.ToJulianDate`. dt now comes from the exact difference of the ticks, rounded
   once to a double, then divided by the days of a Julian year, in each time's own calendar as before (a UTC catalog epoch
-  and a UTC epoch still difference their UTC calendars). Measured on the star of `StarTests` (1 rad, 0.1 rad/yr, catalog
+  and a UTC epoch still differenced their UTC calendars, until [#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709), below). Measured on the star of `StarTests` (1 rad, 0.1 rad/yr, catalog
   epoch 2001-01-01 TDB) against the closed form, dt from the tick difference in `decimal` (28 digits) rounded once: at
   the 744 hourly epochs of March 2001, at 199 epochs 1234567 ticks apart and at 99 epochs before the catalog epoch, the
   right ascension and the declination were 6.328e-14 rad away, the position 7.287e-14 relative from CSPICE's `latrec_c`
@@ -2964,6 +2964,51 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadOrientation_WithoutAClock_ThrowsSpicesMessage`, C++ `API.ReadOrientationProxyOfAnUnknownFrameReturnsSpicesMessageAndLeavesNothingPending`,
   `API.ReadOrientationProxyWithoutAClockReturnsSpicesMessage` and `API.LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending`).
   The tests of #706 that kept a second CK loaded so that this error did not reach the next call no longer do.
+- **The position of a star depended on the time frame of its epoch** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates`,
+  `GetRightAscensionSigma` and `GetDeclinationSigma` took dt from the calendars of the catalog epoch and of the epoch,
+  each in its own time frame, so that the same instant gave two positions (relative to the epoch in TDB: 2.299e-7 in UTC,
+  1.153e-7 in TAI, 4.977e-12 in TT, for the star of 1 rad and 0.1 rad/yr of `StarTests`, measured on 46e6975), and two
+  UTC times skipped the leap seconds between them (86 400 s from 2016-12-31T12:00Z to 2017-01-01T12:00Z, where 86 401 s
+  elapse). dt now counts the Julian years of TDB: both times are converted to TDB (the catalog epoch once, when the star
+  is built; `Epoch` is kept as given), as SOFA's `iauStarpm` and `iauPmsafe` take TDB dates and proper motions in
+  radians per TDB Julian year (`external-lib/sofa-src/starpm.c` and `pmsafe.c`, Notes 1 and 2). The catalog epoch read
+  in its own time frame is the recommendation of this fix, to be decided by S. Guillet: #709 left the scale of the
+  catalog epoch open, and the alternative is a catalog epoch always read as TDB whatever its tag (a catalog epoch tagged
+  UTC would then be its calendar in TDB, 64 to 69 s from the instant the tag names); the recommendation keeps `Epoch` an
+  instant like every other `Time` of the library. The position of a time is that of its TDB time, bit for bit, and agrees within the motion of 1 µs
+  between frames (`StarTests.GetEquatorialCoordinates_TheSameInstantInEveryFrame_IsOnePosition`); across the leap second
+  it counts 86 401 s plus the change of TDB − TT, 0.000e+00 rad from the closed form of the leapseconds kernel
+  (`AcrossALeapSecond_CountsIt`, 3.169e-9 rad before); against dt from CSPICE's ET (`unitim_c` of the TT of each UTC
+  time), 3.553e-15 rad over 2001 and 2016-07 to 2017-06 (Validation, Linux, threshold 7.2e-15, provisional). For a
+  catalog epoch or an epoch in UTC, TAI or GPS a star moves by μ × (TDB − UTC or TAI), about 32 to 69 s of its motion:
+  about 1e-11 rad for a real star of 1″/yr; in TT, under 1.7 ms of it. `Star.Propagate`, `GetEphemeris` and the star of
+  an occultation or field-of-view search over a UTC window move the same way. Two times in TDB, every star of the
+  suite, are unchanged, bit for bit.
+- **A star whose declination passed a pole jumped toward the equator** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates` reduced
+  δ0 + μδ dt modulo π/2: past a pole the declination folded toward the equator and the right ascension did not turn, a
+  jump of up to π/2 in direction (1.5 rad + 0.1 rad/yr read 0.0092 rad after 0.8 yr), and a star at a pole read the
+  equator ((π/2) mod (π/2) = 0). A declination of magnitude above π/2 is now reduced to (−π, π], then reflected through
+  the pole it passed, π − d (−π − d past the south pole), and the right ascension turned by π: the pair points where the
+  unreduced angles of the linear model point, (cos d cos a, cos d sin a, sin d). Against the closed form of the spherical
+  identity, 9.992e-15 rad and 1.539e-15 in direction over two years every 0.01 yr past the north pole, the south pole,
+  and both for a star of 1 rad/yr, each step no longer than the arc of the angles (3.142 rad, a direction 2.0 away and
+  a jump of 1.569 rad before; `StarTests.GetEquatorialCoordinates_AcrossAPole_CrossesIt`, thresholds 2.0e-14 rad and
+  3.1e-15, provisional); against CSPICE's `latrec_c` then `reclat_c` of the unreduced angles, 1.533e-15 rad
+  (`AcrossAPole_IsReclatOfLatrec`, Validation, threshold 3.1e-15, provisional). A star of the model still moves along
+  its angles, not along a great circle (SOFA's space motion is not modeled). Declinations within [−π/2, π/2] are
+  unchanged, bit for bit; the snapshot of `StarTests.GetEquatorialCoordinates2`, past the south pole, which encoded the
+  jump (−0.128953 rad), is replaced by the closed form (−1.441843 rad, the right ascension turned by π). The right
+  ascension is in [0, 2π) as documented: a value just below 0 whose sum with 2π rounds to 2π (above −ulp(2π)/2,
+  4.44e-16 rad) was returned as 2π (a right ascension of 0 moving −1e-30 rad/yr read 6.283185307179586 rad after a
+  Julian year); it is now 0, the double of [0, 2π) nearest to it on the circle, and −1e-15 rad still 6.283185307179585
+  (`StarTests.GetEquatorialCoordinates_RightAscensionJustBelowZero_IsInZeroTwoPi`, red on c54a0fc for −1e-30, −1e-17 and
+  −4e-16).
+- **The sigmas of a star were reduced like angles** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetRightAscensionSigma` and `GetDeclinationSigma`
+  reduced √(σ² + (dt σμ)²) modulo 2π and π/2: a declination sigma of 2 rad read 0.429 rad, one of 2 rad grown by
+  1e-3 rad/yr over 2000 years 1.258 rad (2.828 rad). A standard deviation is now returned as it is
+  (`StarTests.Sigmas_AboveAnAngleRange_AreNotReduced`; the snapshots of `GetDeclinationSigma` and
+  `GetRightAscensionSigma`, 0.588 and 5.133 rad, are replaced by their closed forms, 10.013 and 11.416 rad). Sigmas
+  below π/2 and 2π are unchanged, bit for bit.
 
 **Changed**
 
@@ -2999,6 +3044,28 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   finite. A null argument throws `ArgumentNullException`. Migration: convert elliptic equinoctial elements of
   eccentricity above 0.9 with `EquinoctialElements.ToStateVector()`, pass a positive finite GM, and catch
   `ArgumentException` where elements may be inconsistent.
+- **Breaking: an instrument checks its field of view when it is built** ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)). The constructor of `Instrument`, so
+  `AddCircularInstrument`, `AddEllipticalInstrument`, `AddRectangularInstrument` and any subclass, throws
+  `ArgumentException` naming the parameter for a boresight or a reference vector with a component that is not finite or
+  a magnitude of 0 (`boresight`, checked first, then `refVector`), a reference vector parallel to the boresight,
+  |b × r| = 0 on the given vectors, the test of CSPICE's `getfov` (`refVector`), and a field of view that is NaN or
+  +∞ (`fieldOfView`; 0 and negative values threw before, now with the parameter's name), and adds nothing;
+  `AddEllipticalInstrument` and `AddRectangularInstrument` throw `ArgumentOutOfRangeException` naming `crossAngle` for
+  a cross angle of +∞ or a NaN of positive sign (0x7FF8000000000000), which `ThrowIfNegative` let through, as for a
+  negative one and for `double.NaN` before (a cross angle of 0 is still accepted and rejected by the search). These are
+  the fields `getfov` rejects on the kernel the library writes (SPICE(ZEROBORESIGHT), SPICE(BADREFVECTORSPEC)) or
+  cannot read (NaN, Infinity: an IK holding `FOV_CROSS_ANGLE = Infinity` fails to load, SPICE(NUMBEREXPECTED)), and the rule of the body axes of a spacecraft and of the body vectors of a TRIAD (#703).
+  Before, the instrument was built: `GetBoresightInICRFFrame` and the other getters returned the zero or NaN vector,
+  `InstrumentPointingToAttitude` the identity or a NaN attitude, `WriteKernelAsync` a kernel SPICE rejects
+  (`BORESIGHT = ( 0, 0, 0 )`, `FOV_REF_ANGLE = NaN`), and the field-of-view search and `IsInFOV` threw only when
+  called, `InvalidOperationException` for the zero and parallel vectors and an unrelated `ArgumentException` ("The
+  semi-axes of an ellipsoid must have positive lengths") for NaN and infinite ones; the search no longer checks the
+  vectors. A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it
+  (`InstrumentTests.RejectedFields_AreThoseGetfovRejects`, `getfov_c` on the kernels, and the cross-platform
+  `AddInstrument_*_Throws`, red on 46e6975, `AddInstrument_CrossAngleNotFinite_Throws` red on c54a0fc for +∞ and the
+  positive NaN). Results for the instruments accepted are unchanged, bit for bit.
+  Migration: give a finite, non-zero boresight, a finite reference vector not parallel to it, a finite positive
+  half-angle and a finite cross angle.
 - **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
   centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)
@@ -3231,13 +3298,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     `RectangularInstrument` are removed. Where it returned a value, it now throws `InvalidOperationException` for a field
     the search rejects (below: a boresight zero or parallel to the reference vector, a half-angle not positive, an
     angular radius above π/2 − 1e-6, a circle of half-angle π/2 included, a non-circular instrument of another
-    subclass), and `ArgumentException` when the target is the instrument's own spacecraft;
+    subclass), and `ArgumentException` when the target is the instrument's own spacecraft; since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707) the
+    constructor of the instrument rejects the zero, non-finite and parallel vectors and a field of view that is not a
+    finite positive number (`ArgumentException`, Changed above), so the search's check is left with the cross angle,
+    the angular radius and the shape;
   - both paths check the same rules before the search and throw where they returned no window, or one computed on an
     extrapolation: a step that is not positive (`ArgumentOutOfRangeException`); a search window that ends before it
     starts, a target that is the instrument's spacecraft, an ellipsoid target without radii (a site, a spacecraft, a
-    barycenter, a Lagrange point, a star) (`ArgumentException`); a boresight zero or parallel to the reference vector, a
-    half-angle that is not positive, a field whose angular radius exceeds π/2 − 1e-6, a non-circular instrument of
-    another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
+    barycenter, a Lagrange point, a star) (`ArgumentException`); a boresight zero or parallel to the reference vector
+    (rejected by the instrument's constructor since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)), a half-angle that is not positive, a field whose angular
+    radius exceeds π/2 − 1e-6, a non-circular instrument of another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
     states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
     target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the
     start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, extrapolated.
