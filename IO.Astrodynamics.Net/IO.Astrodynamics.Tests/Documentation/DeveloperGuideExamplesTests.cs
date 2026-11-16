@@ -306,14 +306,14 @@ public class DeveloperGuideExamplesTests
         return (position, velocity);
     }
 
-    // Twice the worst on Linux x64 (2026-11-16; MEASURE lines below), rounded up at the second significant digit,
-    // provisional until set again from the Windows x64 and macOS arm64 CI logs: the example's Velocity-Verlet propagation
+    // Twice the worst on Linux x64 and Windows x64 (the same on both, CI run 43906476725; MEASURE lines below), rounded up at the
+    // second significant digit, provisional until set again with the macOS arm64 CI log: the example's Velocity-Verlet propagation
     // at 5 min against the reference with GM_Earth + GM_Moon after 25 days, 4.684e2 m and 1.197e-3 m/s, the integrator's own
     // error (second order; the reference's own spread over its steps, 600 to 60 s, is about 1e-4 m)
     private const double DeepSpaceExamplePositionLimit = 9.4e2;
     private const double DeepSpaceExampleVelocityLimit = 2.4e-3;
 
-    // Twice the worst on Linux x64 (2026-11-16), provisional as above: the reference with GM_Earth + GM_Moon against the
+    // Twice the worst on Linux x64 and Windows x64 (the same on both), provisional as above: the reference with GM_Earth + GM_Moon against the
     // Moon's SPK (de440s) after 25 days, 1.514e3 m, the perturbations the reference leaves out (the Earth's and the
     // Moon's figures, the other planets, relativity), and the example's propagated Moon against the SPK, 1.972e3 m, both
     // errors together
