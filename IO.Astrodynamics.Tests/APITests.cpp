@@ -2127,9 +2127,11 @@ TEST(API, ConvertTLEToStateVectorProxyOfAFailedSgp4ReturnsNaN)
 {
     IO::Astrodynamics::API::DTO::StateVectorDTO sv;
     EXPECT_NO_THROW(sv = ConvertTLEToStateVectorProxy("ERR", FailedSgp4Line1, FailedSgp4Line2, 2.0e8));
-    std::cout << "MESSAGE #711 SGP4 error of 33334: " << GetLastErrorProxy() << std::endl;
+    // Taken before ExpectFailureReported, whose next proxy clears it (#714)
+    const std::string message = GetLastErrorProxy();
+    std::cout << "MESSAGE #711 SGP4 error of 33334: " << message << std::endl;
     ExpectFailureReported("");
-    EXPECT_STRNE("", GetLastErrorProxy());
+    EXPECT_NE("", message);
     ExpectNaN(sv);
 }
 
@@ -2271,4 +2273,116 @@ TEST(API, ReadOrientationProxyWithoutAClockReturnsSpicesMessage)
     ExpectFailureReported("SCLK_DATA_TYPE_");
     auto kernel = LoadTextKernel("ioa_712_cpp_after_clock.tpc", "IOA712_CLOCK_VALUE = ( 1.0 )");
     UnloadTextKernel(kernel);
+}
+
+// #714: lastError held the message of the last failure until another failure replaced it, so that a proxy that failed
+// without a message of its own, or the .NET layer reading the message after a later successful call, reported the failure
+// of another call, about another body. Each proxy that reports through lastError now clears it when it starts: after a
+// failure (a conversion about ELARA, whose GM gm_de431.tpc lacks), every one of them that succeeds leaves it empty
+namespace
+{
+    void FailAConversion()
+    {
+        ConvertConicElementsToStateVectorProxy(ConicsAbout(507));
+        ASSERT_STRNE("", GetLastErrorProxy());
+    }
+
+    // The proxy succeeds and leaves lastError empty after a failure
+    void ExpectClearedBy(const std::string &proxy, const std::function<bool()> &succeeds)
+    {
+        FailAConversion();
+        EXPECT_TRUE(succeeds()) << proxy;
+        EXPECT_STREQ("", GetLastErrorProxy()) << proxy;
+    }
+
+    bool IsFinite(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv)
+    {
+        return std::isfinite(sv.position.x) && std::isfinite(sv.position.y) && std::isfinite(sv.position.z) &&
+               std::isfinite(sv.velocity.x) && std::isfinite(sv.velocity.y) && std::isfinite(sv.velocity.z);
+    }
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO EarthState()
+    {
+        IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+        sv.position = {7.0e6, 0.0, 0.0};
+        sv.velocity = {0.0, 7.5e3, 0.0};
+        sv.epoch = 0.0;
+        sv.centerOfMotionId = 399;
+        sv.SetFrame("J2000");
+        return sv;
+    }
+
+    const char *const IssLine1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
+    const char *const IssLine2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
+}
+
+TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
+{
+    const double earthGm = GetCelestialBodyInfoProxy(399).GM;
+    ExpectClearedBy("ConvertConicElementsToStateVectorProxy", [] { return IsFinite(ConvertConicElementsToStateVectorProxy(ConicsAbout(399))); });
+    ExpectClearedBy("ConvertEquinoctialElementsToStateVectorProxy",
+                    [] { return IsFinite(ConvertEquinoctialElementsToStateVectorProxy(EquinoctialAbout(399))); });
+    ExpectClearedBy("ConvertConicElementsToStateVectorAtEpochProxy",
+                    [earthGm] { return IsFinite(ConvertConicElementsToStateVectorAtEpochProxy(ConicsAbout(399), 100.0, earthGm)); });
+    ExpectClearedBy("ConvertStateVectorToEquatorialCoordinatesProxy",
+                    [] { return std::isfinite(ConvertStateVectorToEquatorialCoordinatesProxy(EarthState()).rightAscension); });
+    ExpectClearedBy("ConvertStateVectorToConicOrbitalElementProxy",
+                    [earthGm] { return std::isfinite(ConvertStateVectorToConicOrbitalElementProxy(EarthState(), earthGm).eccentricity); });
+    ExpectClearedBy("Propagate2BodiesProxy", [earthGm] { return IsFinite(Propagate2BodiesProxy(EarthState(), earthGm, 60.0)); });
+    ExpectClearedBy("ConvertTLEToStateVectorProxy", [] { return IsFinite(ConvertTLEToStateVectorProxy("ISS", IssLine1, IssLine2, 664440682.0)); });
+    ExpectClearedBy("GetTLEElementsProxy", [] { return std::isfinite(GetTLEElementsProxy("ISS", IssLine1, IssLine2).Epoch); });
+    ExpectClearedBy("GetCelestialBodyInfoProxy", [] { return GetCelestialBodyInfoProxy(399).Id == 399; });
+    ExpectClearedBy("TransformFrameProxy", [] { return std::isfinite(TransformFrameProxy("J2000", "ITRF93", 0.0).Rotation.w); });
+    ExpectClearedBy("ReadEphemerisAtGivenEpochProxy", [] { return IsFinite(ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE")); });
+    ExpectClearedBy("ReadEphemerisProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO window{};
+        window.start = 0.0;
+        window.end = 60.0;
+        IO::Astrodynamics::API::DTO::StateVectorDTO sv[2];
+        return ReadEphemerisProxy(window, 399, 301, "J2000", "NONE", 60.0, sv);
+    });
+    ExpectClearedBy("GetFrameNameProxy", []
+    {
+        char name[33];
+        return GetFrameNameProxy(1, name);
+    });
+    ExpectClearedBy("FindWindowsOnDistanceConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsOnDistanceConstraintProxy(SearchWindow("2007 JAN 1", "2007 JAN 2"), 399, 301, ">", 1.0, "NONE", 3600.0, windows);
+    });
+    ExpectClearedBy("FindWindowsOnCoordinateConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsOnCoordinateConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 2"), 399, 301, "J2000", "RECTANGULAR", "Z", "<",
+                                                      0.0, 0.0, "NONE", 3600.0, windows);
+    });
+    ExpectClearedBy("FindWindowsOnOccultationConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsOnOccultationConstraintProxy(SearchWindow("2001 DEC 14", "2001 DEC 15"), 399, 10, "IAU_SUN", "ELLIPSOID", 301,
+                                                       "IAU_MOON", "ELLIPSOID", "ANY", "LT", 3600.0, windows);
+    });
+    ExpectClearedBy("FindWindowsOnIlluminationConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD,
+                                                              48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
+        return FindWindowsOnIlluminationConstraintProxy(SearchWindow("2021 MAY 17", "2021 MAY 18"), 10, "SUN", 399, "IAU_EARTH", geodetic,
+                                                        "INCIDENCE", "<", IO::Astrodynamics::Constants::PI2, 0.0, "NONE", 3600.0,
+                                                        "Ellipsoid", windows);
+    });
+    const auto kernel = std::filesystem::temp_directory_path() / "ioa_714_cpp_clear.tpc";
+    std::ofstream(kernel.string()) << "KPL/PCK\n\\begindata\nIOA714_CLEAR = ( 1.0 )\n\\begintext\n";
+    ExpectClearedBy("LoadKernelsProxy", [&kernel] { return LoadKernelsProxy(kernel.string().c_str()); });
+    ExpectClearedBy("UnloadKernelsProxy", [&kernel] { return UnloadKernelsProxy(kernel.string().c_str()); });
+    ExpectClearedBy("UnloadEveryLoadProxy", [&kernel] { return UnloadEveryLoadProxy(kernel.string().c_str()); });
+    std::filesystem::remove(kernel);
+    auto folder = FreshFolder("ioa_714_cpp_clear_spk");
+    const auto spk = folder / "e.bsp";
+    auto states = EarthStates(5);
+    ExpectClearedBy("WriteEphemerisProxy", [&spk, &states] { return WriteEphemerisProxy(spk.string().c_str(), -1999714, states.data(), 5); });
+    std::filesystem::remove_all(folder);
+    EXPECT_FALSE(TakePendingSpiceError());
 }

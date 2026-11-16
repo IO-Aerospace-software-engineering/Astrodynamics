@@ -70,6 +70,14 @@ namespace
         return false;
     }
 
+    // The message of the call that starts (#714): lastError was written only on failure, so that GetLastErrorProxy returned
+    // the message of an earlier call, about another body, after a call that succeeded or that failed without a message of
+    // its own. Called first by every proxy that reports through lastError
+    void ClearLastError()
+    {
+        lastError[0] = '\0';
+    }
+
     // A proxy that failed with a C++ exception: its message, then SPICE's, SPICE reset (#711, #712). Always false
     bool ReportException(const std::exception &e)
     {
@@ -106,6 +114,7 @@ bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(launchDto.recoverySite.bodyId);
         IO::Astrodynamics::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
                                                 ToPlanetodetic(launchDto.launchSite.coordinates),
@@ -167,6 +176,7 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::
                          unsigned int size)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string writing;
     try
     {
@@ -211,6 +221,7 @@ bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics
                            unsigned int size)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string writing;
     try
     {
@@ -250,6 +261,7 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
         {
             std::strncpy(lastError,
@@ -358,6 +370,7 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
 bool LoadKernelsProxy(const char *path)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     try
     {
@@ -373,6 +386,7 @@ bool LoadKernelsProxy(const char *path)
 bool UnloadKernelsProxy(const char *path)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     try
     {
@@ -388,6 +402,7 @@ bool UnloadKernelsProxy(const char *path)
 bool UnloadEveryLoadProxy(const char *path)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     try
     {
@@ -415,6 +430,7 @@ bool KernelNameResolvesThroughProxy(const char *name, const char *path)
 bool GetFrameNameProxy(int frameId, char name[33])
 {
     ActivateErrorManagement();
+    ClearLastError();
     name[0] = '\0';
     frmnam_c(frameId, lenout, name);
     if (failed_c())
@@ -457,6 +473,9 @@ const char *UTCToStringProxy(double secondsFromJ2000)
     return strdup(str.c_str());
 }
 
+static IO::Astrodynamics::API::DTO::StateVectorDTO ReadStateAt(double epoch, int observerId, int targetId, const char *frame,
+                                                              const char *aberration);
+
 bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                         const char *frame, const char *aberration, double stepSize,
                         IO::Astrodynamics::API::DTO::StateVectorDTO *stateVectors)
@@ -464,6 +483,7 @@ bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
         {
             std::strncpy(lastError,
@@ -476,7 +496,7 @@ bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
         double epoch = searchWindow.start;
         while (epoch <= searchWindow.end && idx < 10000)
         {
-            stateVectors[idx] = ReadEphemerisAtGivenEpochProxy(epoch, observerId, targetId, frame, aberration);
+            stateVectors[idx] = ReadStateAt(epoch, observerId, targetId, frame, aberration);
             epoch += stepSize;
             idx++;
         }
@@ -505,6 +525,7 @@ bool FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
         auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
 
@@ -552,6 +573,7 @@ FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
         auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(
                 ToTDBWindow(searchWindow),
@@ -603,6 +625,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
         auto systemType = IO::Astrodynamics::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
         auto coordinateType = IO::Astrodynamics::Coordinate::ToCoordinateType(coordinate);
@@ -655,6 +678,7 @@ bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
 
         IO::Astrodynamics::Body::CelestialBody body(targetBody);
@@ -713,6 +737,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
     try
     {
         ActivateErrorManagement();
+        ClearLastError();
         auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
         auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(
                 ToTDBWindow(searchWindow),
@@ -800,6 +825,7 @@ static IO::Astrodynamics::API::DTO::CelestialBodyDTO ReadCelestialBodyInfo(int b
 IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
 {
     ActivateErrorManagement();
+    ClearLastError();
     try
     {
         return ReadCelestialBodyInfo(bodyId);
@@ -893,6 +919,7 @@ IO::Astrodynamics::API::DTO::FrameTransformationDTO
 TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
 {
     ActivateErrorManagement();
+    ClearLastError();
     IO::Astrodynamics::Frames::Frames from{fromFrame};
     IO::Astrodynamics::Frames::Frames to{toFrame};
     IO::Astrodynamics::Time::TDB tdb((std::chrono::duration<double>(epoch)));
@@ -931,6 +958,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(
         const char *L1, const char *L2, const char *L3, double epoch)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     IO::Astrodynamics::API::DTO::StateVectorDTO svDTO;
     try
@@ -962,6 +990,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO
 ConvertConicElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     IO::Astrodynamics::API::DTO::StateVectorDTO svDTO;
     try
@@ -1000,6 +1029,7 @@ ConvertEquinoctialElementsToStateVectorProxy(
         IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     IO::Astrodynamics::API::DTO::StateVectorDTO svDTO;
     try
@@ -1039,6 +1069,7 @@ IO::Astrodynamics::API::DTO::RaDecDTO
 ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     IO::Astrodynamics::API::DTO::RaDecDTO raDecDTO;
     try
@@ -1064,10 +1095,12 @@ ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::Stat
     return raDecDTO;
 }
 
-IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
-        double epoch, int observerId, int targetId, const char *frame, const char *aberration)
+// The state of one epoch (spkezr_c), the body of ReadEphemerisAtGivenEpochProxy and of each epoch of ReadEphemerisProxy: a failed
+// read is a NaN state, its SPICE message kept in lastError, SPICE reset (#454). It does not clear lastError, so that the message
+// of a failed epoch of ReadEphemerisProxy outlives the epochs after it, which the .NET layer reads once the loop has ended
+static IO::Astrodynamics::API::DTO::StateVectorDTO ReadStateAt(double epoch, int observerId, int targetId, const char *frame,
+                                                              const char *aberration)
 {
-    ActivateErrorManagement();
     IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto;
     SpiceDouble sv[6];
     SpiceDouble lt;
@@ -1094,11 +1127,20 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
     return stateVectorDto;
 }
 
+IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
+        double epoch, int observerId, int targetId, const char *frame, const char *aberration)
+{
+    ActivateErrorManagement();
+    ClearLastError();
+    return ReadStateAt(epoch, observerId, targetId, frame, aberration);
+}
+
 // As ConvertTLEToStateVectorProxy (#711): a failure gives NaN in every field, the epoch included, with the message in
 // lastError; before, the epoch getelm_c never wrote (skipped on a pending error), which the .NET TLE cached for its life
 IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, const char *L2, const char *L3)
 {
     ActivateErrorManagement();
+    ClearLastError();
     std::string message;
     IO::Astrodynamics::API::DTO::TLEElementsDTO tleElementsDto;
     try
@@ -1144,6 +1186,7 @@ void KClearProxy()
 IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOrbitalElementProxy(
         IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu)
 {
+    ClearLastError();
     ConstSpiceDouble sv[6]{
             stateVector.position.x, stateVector.position.y, stateVector.position.z,
             stateVector.velocity.x, stateVector.velocity.y, stateVector.velocity.z
@@ -1173,6 +1216,7 @@ IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOr
 IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
         IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu, double dt)
 {
+    ClearLastError();
     ConstSpiceDouble sv[6] = {
             stateVector.position.x, stateVector.position.y, stateVector.position.z,
             stateVector.velocity.x, stateVector.velocity.y, stateVector.velocity.z
@@ -1208,6 +1252,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO
 ConvertConicElementsToStateVectorAtEpochProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElements, double epoch, double gm)
 {
     ActivateErrorManagement();
+    ClearLastError();
     SpiceDouble sv[6];
 
     double ke[8] = {conicOrbitalElements.perifocalDistance, conicOrbitalElements.eccentricity, conicOrbitalElements.inclination, conicOrbitalElements.ascendingNodeLongitude, conicOrbitalElements.periapsisArgument,
