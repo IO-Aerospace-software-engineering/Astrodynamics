@@ -78,10 +78,10 @@ public class StarTests
     }
 
     // The record of a star against its straight line written here (StraightLinePosition, the sines and cosines of the
-    // runtime on both sides): twice the worst on Linux x64, rounded up at the second digit, provisional (to be set again
-    // from the Windows x64 and macOS arm64 CI logs): 4.384e-16 relative, GetEquatorialCoordinates_OffHalfDays_IsTheClosedForm
-    // (2.775e-16 for GetEquatorialCoordinates, 4.319e-16 across a pole, 1.033e-16 for Propagate; 2026-11-16). Before the fix
-    // (#718), the linear angles
+    // runtime on both sides): twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit:
+    // 4.384e-16 relative on all three, GetEquatorialCoordinates_OffHalfDays_IsTheClosedForm (2.775e-16 for
+    // GetEquatorialCoordinates, 4.319e-16 across a pole, 1.033e-16 for Propagate and ScenarioTests.PropagateStar, the same on
+    // the three; CI run 43974478027, 2026-11-16). Before the fix (#718), the linear angles
     internal const double StraightLinePositionTolerance = 8.8e-16;
 
     [Fact]
@@ -312,9 +312,10 @@ public class StarTests
     }
 
     // The noise-level record of the SPK read against the catalog position written in the test (its straight line, #718):
-    // twice the worst on Linux x64, rounded up at the second digit, provisional (2.780e-16,
-    // StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone, Validation category, Linux only, 2026-11-16; StarTests.Propagate_Twice
-    // and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore the same; 1.390e-16 for the linear angles before #718, CI run
+    // twice the worst on Linux x64, rounded up at the second digit (2.780e-16,
+    // StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone, Validation category, Linux only, CI run 43974478027, 2026-11-16;
+    // StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore the same on Linux x64, 2.780e-16 and
+    // 1.966e-16 on Windows x64, 1.966e-16 on macOS arm64; 1.390e-16 for the linear angles before #718, CI run
     // 43773937161), asserted by the Validation test alone (the epochs are whole half
     // days from the catalog epoch, whose Julian dates, which the star differences, are exact). The tests of every platform
     // assert CatalogMotionInOneMicrosecond
@@ -520,8 +521,8 @@ public class StarTests
     }
 
     // The record of the position off half days against the straight line whose catalog direction is CSPICE's latrec_c (the
-    // radrec_c of SPICE): twice the worst on Linux x64, rounded up at the second digit, provisional (the Validation test runs
-    // on Linux alone): 4.199e-16 relative (2026-11-16). Before #709, 7.287e-14; a record of its own: CatalogPositionTolerance, the SPK
+    // radrec_c of SPICE): twice the worst on Linux x64, rounded up at the second digit (the Validation test runs on Linux
+    // alone): 4.199e-16 relative (CI run 43974478027, 2026-11-16). Before #709, 7.287e-14; a record of its own: CatalogPositionTolerance, the SPK
     // read at half-day epochs, does not move
     internal const double ClosedFormPositionTolerance = 8.4e-16;
 
@@ -759,8 +760,8 @@ public class StarTests
     }
 
     // The record of the position against the straight line at dt from CSPICE's ET: twice the worst on Linux x64, rounded up
-    // at the second digit, provisional (the Validation test runs on Linux alone): 4.963e-15 relative, 2016-07 (4.941e-15 for 2001-01;
-    // 3.553e-15 rad in the angles of the linear model before #718, CI run 43906476725; 2026-11-16). The ET of unitim_c, a
+    // at the second digit (the Validation test runs on Linux alone): 4.963e-15 relative, 2016-07 (4.941e-15 for 2001-01; CI run
+    // 43974478027, 2026-11-16; 3.553e-15 rad in the angles of the linear model before #718, CI run 43906476725). The ET of unitim_c, a
     // double near 5e8 s (ulp 6e-8 s), and the tick of the library (1e-7 s) bound it near the motion of 1e-7 s, 4.5e-16
     // relative, plus the rounding of the sines and cosines. Before the fix (#709), dt skipped the leap second of 2016-12-31
     // (3.2e-9 rad) and the TDB − TT of each UTC time (up to 1.7 ms)
@@ -919,8 +920,8 @@ public class StarTests
     }
 
     // The record of the crossing against reclat_c of the straight line: twice the worst on Linux x64, rounded up at the
-    // second digit, provisional (the Validation test runs on Linux alone): 2.220e-16 rad, every case (2026-11-16). Before
-    // #709, 3.142 rad
+    // second digit (the Validation test runs on Linux alone): 2.220e-16 rad, every case (CI run 43974478027, 2026-11-16).
+    // Before #709, 3.142 rad
     internal const double PoleReclatTolerance = 4.5e-16;
 
     /// <summary>
@@ -1156,10 +1157,10 @@ public class StarTests
     /// </summary>
     private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
 
-    // The records against iauStarpm, per horizon: twice the worst on Linux x64, rounded up at the second digit, provisional
-    // (to be set again from the Windows x64 and macOS arm64 CI logs): the direction 1.780e-17, 1.777e-17, 2.419e-14 and
-    // 2.412e-10 rad after 1, 10, 100 and 1000 years, the distance 7.570e-9, 7.570e-8, 7.570e-7 and 7.570e-6 relative
-    // (2026-11-16). After 1 and 10 years the library and iauStarpm round the right ascension to the same double on Linux,
+    // The records against iauStarpm, per horizon: twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at
+    // the second digit: the direction 1.780e-17, 1.777e-17, 2.419e-14 and 2.412e-10 rad after 1, 10, 100 and 1000 years,
+    // the distance 7.570e-9, 7.570e-8, 7.570e-7 and 7.570e-6 relative, the same on the three (CI run 43974478027,
+    // 2026-11-16). After 1 and 10 years the library and iauStarpm round the right ascension to the same double on the three,
     // a worst below the resolution of the returned angles: one ulp of a right ascension below 2π, 8.9e-16 rad, and one of a
     // declination, 2.2e-16 rad, 9.15e-16 rad together, which a one-ulp difference of another platform's atan2, sin or cos
     // would show. So the direction threshold after 1 and 10 years is twice that resolution, 1.9e-15 rad, not twice the
@@ -1230,10 +1231,10 @@ public class StarTests
         }
     }
 
-    // The record against the closed form of the straight line in long double: twice the worst on Linux x64, rounded up at
-    // the second digit, provisional (to be set again from the Windows x64 and macOS arm64 CI logs): the direction 7.825e-16
-    // rad, Barnard's star after 10 years, whose right ascension near 4.7 rad resolves 8.9e-16 rad and is reduced to
-    // [0, 2π) by the double of 2π, 2.4e-16 below it; the length 2.220e-16 relative (2026-11-16). Before the fix (#718),
+    // The record against the closed form of the straight line in long double: twice the worst over Linux x64, Windows x64
+    // and macOS arm64, rounded up at the second digit: the direction 7.825e-16 rad on the three, Barnard's star after 10
+    // years, whose right ascension near 4.7 rad resolves 8.9e-16 rad and is reduced to [0, 2π) by the double of 2π, 2.4e-16
+    // below it; the length 2.220e-16 relative on the three (CI run 43974478027, 2026-11-16). Before the fix (#718),
     // 2.213 rad and 0.993
     internal const double StraightLineDirectionTolerance = 1.6e-15;
     internal const double StraightLineLengthTolerance = 4.5e-16;
@@ -1274,8 +1275,8 @@ public class StarTests
     }
 
     // The record of the second difference of the positions at 0, dt and 2 dt, relative to the position at dt: twice the
-    // worst on Linux x64, rounded up at the second digit, provisional (to be set again from the Windows x64 and macOS arm64
-    // CI logs): 1.170e-15 (2026-11-16). Before the fix (#718), 3.725, the curvature of the linear angles
+    // worst over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit: 1.170e-15 on the three (CI run
+    // 43974478027, 2026-11-16). Before the fix (#718), 3.725, the curvature of the linear angles
     internal const double OneLineTolerance = 2.4e-15;
 
     /// <summary>
@@ -1424,9 +1425,9 @@ public class StarTests
         Assert.True(relative <= TrueAngleTolerance, $"{relative:E3}");
     }
 
-    // The record of the true-angle motion against r0 (u0 + μα* dt e_α): twice the worst on Linux x64, rounded up at the
-    // second digit, provisional (to be set again from the Windows x64 and macOS arm64 CI logs): the position 1.475e-16
-    // relative, the angle 1.364e-16 rad (2026-11-16). Before the fix (#718), the motion was dα/dt: the position 4.597e-4 relative
+    // The record of the true-angle motion against r0 (u0 + μα* dt e_α): twice the worst over Linux x64, Windows x64 and
+    // macOS arm64, rounded up at the second digit: the position 1.475e-16 relative, the angle 1.364e-16 rad, the same on the
+    // three (CI run 43974478027, 2026-11-16). Before the fix (#718), the motion was dα/dt: the position 4.597e-4 relative
     // at 1 rad and 1.000e-3 at a pole, where the star did not move
     internal const double TrueAngleTolerance = 3.0e-16;
 }

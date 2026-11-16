@@ -1985,9 +1985,10 @@ public class SpiceApiTest
     // (cos(wt/2), 0, 0, sin(wt/2))), the clock written by Clock.WriteAsync: each record is ckgp_c's C-matrix and the closed form
     // R_z(1e-3 t), with a zero angular velocity without rates and (0, 0, 1e-3) rad/s with them. ckw03_c is not exported by the
     // Windows DLL
-    // Twice the worst over Linux x64 of the angle of a record to ckgp_c and to the closed form (the MEASURE lines, 1.570e-16
-    // rad for both CKs), rounded up: provisional, to be set again from the macOS arm64 CI log
-    private const double CkRecordAngleLimit = 3.15e-16;
+    // Twice the worst on Linux x64 of the angle of a record to ckgp_c and to the closed form (the MEASURE lines, 1.570e-16
+    // rad for both CKs, CI run 43974478027, 2026-11-16), rounded up at the second digit: the Validation test runs on Linux
+    // alone
+    private const double CkRecordAngleLimit = 3.2e-16;
 
     [Theory]
     [InlineData(false)]

@@ -3029,8 +3029,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a type-2 or type-3 CK written without rates, threw "No orientation found" (a type-3 CK written by `ckw03_c` without
   rates, measured on a80f6a5). The proxy falls back to `ckgp_c` when `ckgpav_c` finds nothing too; such a record has the
   pointing of `ckgp_c` and a zero angular velocity (C++ `API.ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing`,
-  within 2.23e-16 rad of `ckgp_c` and of the closed form R_z(1e-3 t); `SpiceApiTest.ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing`,
-  within 3.15e-16 rad, the CK with rates (0, 0, 1e-3) rad/s; both thresholds provisional, twice the Linux worst). The
+  within 2.3e-16 rad of `ckgp_c` and of the closed form R_z(1e-3 t), twice the worst on Linux x64 and macOS arm64, where
+  it runs; `SpiceApiTest.ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing`, within 3.2e-16 rad, the CK
+  with rates (0, 0, 1e-3) rad/s, twice the Linux worst, Validation; CI run 43974478027). The
   CKs the library writes carry their rates and read as before, bit for bit.
 - **The position of a star depended on the time frame of its epoch** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates`,
   `GetRightAscensionSigma` and `GetDeclinationSigma` took dt from the calendars of the catalog epoch and of the epoch,
@@ -3220,9 +3221,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Barnard's star); against the closed form in long double, the stars at ±π/2 and the synthetic stars of the suite
   included, 7.8e-16 rad and 2.2e-16 relative (`IsTheStraightLine_OfALongDoubleClosedForm`); three positions dt apart lie
   on one line at constant speed within 1.2e-15 of their size (`PositionsLieOnOneLineAtConstantSpeed`, 3.7 before);
-  thresholds twice the Linux worst, provisional, but after 1 and 10 years against `iauStarpm`, where the Linux worst
-  lies below one ulp of the right ascension (8.9e-16 rad near 4.7 rad), twice the resolution of the returned angles,
-  1.9e-15 rad, so that a one-ulp difference of another platform passes. A star without proper motion, and every star at its catalog epoch, is
+  thresholds twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI run 43974478027;
+  the Validation tests twice the Linux worst), but after 1 and 10 years against `iauStarpm`, where the worst lies below
+  one ulp of the right ascension (8.9e-16 rad near 4.7 rad), twice the resolution of the returned angles, 1.9e-15 rad,
+  so that a one-ulp difference of another platform passes. A star without proper motion, and every star at its catalog epoch, is
   unchanged, bit for bit (`WithoutProperMotion_IsTheCatalog_BitForBit`), and so are the stars of the field-of-view and
   kernel tests. `GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate` and `Scenario.SimulateAsync`,
   the SPK of `WriteEphemeris` and the occultation and field-of-view searches of a star with proper motion move with it.

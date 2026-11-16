@@ -104,8 +104,8 @@ After 1 and 10 years both round the right ascension to the same double. After 10
 inertial radial velocity −v_t²/(2c) for an observed radial velocity of 0, 7.6e-8 relative per decade for Barnard's star.
 Against the same closed form evaluated in long double, every star of the harness, the poles and the synthetic stars
 included: 7.8e-16 rad in direction (the resolution of a right ascension near 4.7 rad), 2.2e-16 relative in length. The
-thresholds of `StarTests` are twice the Linux worst, provisional, to be set again from the Windows x64 and macOS arm64 CI
-logs; after 1 and 10 years, where the Linux worst lies below one ulp of the right ascension, the direction threshold is
+thresholds of `StarTests` are twice the worst over Linux x64, Windows x64 and macOS arm64, the same on the three (CI run
+43974478027); after 1 and 10 years, where the worst lies below one ulp of the right ascension, the direction threshold is
 twice the resolution of the returned angles, 1.9e-15 rad (one ulp of a right ascension below 2π, 8.9e-16 rad, and one of
 a declination, 2.2e-16 rad), so that another platform's one-ulp difference passes.
 

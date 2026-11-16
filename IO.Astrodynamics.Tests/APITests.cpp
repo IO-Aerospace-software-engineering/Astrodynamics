@@ -2630,9 +2630,10 @@ namespace
     }
 }
 
-// Twice the worst over Linux x64 of the angles between a record and ckgp_c (0 rad) and the closed form (1.110e-16 rad, the
-// MEASURE line), rounded up: provisional, to be set again from the macOS arm64 CI log
-constexpr double CkWithoutRatesAngleLimit = 2.23e-16;
+// Twice the worst over Linux x64 and macOS arm64 of the angles between a record and ckgp_c (0 rad on both) and the closed
+// form (1.110e-16 rad on both, the MEASURE line; CI run 43974478027, 2026-11-16), rounded up at the second digit; the test
+// does not run on Windows (ckw03_c is not exported by the DLL)
+constexpr double CkWithoutRatesAngleLimit = 2.3e-16;
 
 TEST(API, ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing)
 {

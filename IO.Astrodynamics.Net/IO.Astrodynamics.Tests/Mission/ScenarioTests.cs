@@ -654,9 +654,9 @@ namespace IO.Astrodynamics.Tests.Mission
 
                 Assert.Equal(5, k);
 
-                // Twice the worst against the straight line from latrec_c on Linux x64, rounded up at the second digit,
-                // provisional (Validation category, Linux only): 2.182e-16 (2026-11-16; 1.982e-16 for the linear angles before
-                // #718, CI run 43773937161). The distance is the star's own
+                // Twice the worst against the straight line from latrec_c on Linux x64, rounded up at the second digit
+                // (Validation category, Linux only): 2.182e-16 (CI run 43974478027, 2026-11-16; 1.982e-16 for the linear angles
+                // before #718, CI run 43773937161). The distance is the star's own
                 // (Distance, from its parallax): the parsec of the library is not what this test measures
                 _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: worst relative position {worst:E3}");
                 Assert.True(worst <= 4.4e-16, $"{worst:E3}");
