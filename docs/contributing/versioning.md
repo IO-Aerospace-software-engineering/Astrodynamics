@@ -2823,7 +2823,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   numeric keyword of the three messages, and so `Load*`, `TryLoadFromFile` (a `PARSE_ERROR`) and `ValidateFile`. A
   finite document reads bit for bit as before, and `INF` and `-INF` throw the parse exception as before
   (`OmmReaderTests`, `OpmReaderTests`, `OmmTests`, `OpmTests` and `CdmTests`
-  `*_NonFiniteValue_*`, through every entry point, red on 46e6975).
+  `*_NonFiniteValue_*`, through every entry point, red on 46e6975). The CDM reader checks the value it holds after its
+  conversion to m or m/s as well: a finite text in km or km/s above about 1.8e305 (`1e306` for `X`, `Z`, `X_DOT`,
+  `MISS_DISTANCE`, `RELATIVE_POSITION_R`, `RELATIVE_VELOCITY_T`) became ±Infinity by its product by 1000 (IEEE 754), which
+  `Cdm.Validate` reported valid; it throws `CdmParseException` naming the keyword, its text and its unit
+  (`Invalid numeric value for X: '1e306' km is not a finite number in SI units.`), and 1e305 km reads as before, bit for
+  bit (`CdmTests.ReadFromString_FiniteValueOverflowingInSiUnits_ThrowsCdmParseException`, red on the first fix of #708;
+  `ReadFromString_LargestValueFiniteInSiUnits_ReadsTheProduct`).
 - **An OPM `MASS` of 0 threw** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OpmData` required a mass above 0 and `OpmValidator` reported "Mass must be
   positive.", where NDM/XML 4.0.0 types `MASS` as `massType`, a `nonNegativeDouble` (`minInclusive` 0.0), the type of
   the OMM's `MASS` too, which `SpacecraftParameters` accepts at 0: a schema-valid OPM with a `MASS` of 0 threw
@@ -2877,6 +2883,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   parameters and the OPM (`OmmValidatorTests.Validate_MassZero_NoError`, the schema its oracle, red on 46e6975;
   `OmmReaderTests.ReadFromString_KeywordAtRangeBoundary_Parses` now loads its bounds, `RA_OF_ASC_NODE` -360 and `MASS`
   0 included, with the default validation).
+- **The angles of an OPM had no range** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER`, `TRUE_ANOMALY` and
+  `MEAN_ANOMALY` are `ndm:angleType` in ndmxml-4.0.0-opm-3.0.xsd, `angleRange` [-360, 360) (`minInclusive` -360.0,
+  `maxExclusive` 360.0), the range `MeanElements` checks for the OMM, and the XML documentation of
+  `OpmKeplerianElements` said "-360 to 360", but nothing checked them: `CreateWithTrueAnomaly(..., raan: NaN, aop: +∞,
+  trueAnomaly: NaN, ...)` built and `OpmValidator` reported it valid, and `Opm.LoadFrom*` with `validateSchema: false`
+  loaded an angle of 1000, -720 or 360, which the schema rejects. `OpmKeplerianElements.CreateWithTrueAnomaly` and
+  `CreateWithMeanAnomaly` now throw `ArgumentOutOfRangeException` naming `raan`, `aop`, `trueAnomaly` or `meanAnomaly`
+  for an angle outside [-360, 360), NaN and ±Infinity included ("RAAN must be in [-360, 360) degrees."), and the reader
+  `OpmParseException` naming the keyword and its text; -360, -0, -10 and the largest double below 360 are stored as
+  given. `FromKeplerianElements` writes each angle as its value in [0, 360): for an angle of 2π, which the [0, 2π)
+  normalization of `KeplerianElements` gives for -1e-17 rad, it wrote 360, now 0 (an angle in [0, 360) bit for bit as
+  before); `Spacecraft.ToOpm` builds its elements through it, its output unchanged
+  (`OpmKeplerianElementsTests.Create_AngleOutOfSchemaRange_ThrowsArgumentOutOfRangeException`, 28 rows,
+  `FromKeplerianElements_AngleAtTwoPi_WritesItsValueInZeroTo360`, `OpmReaderTests` rows `RA_OF_ASC_NODE` 360,
+  `ARG_OF_PERICENTER` -360.5, `TRUE_ANOMALY` 1000 and `ReadFromString_MeanAnomalyOutOfSchemaRange_*`, `OpmTests` rows
+  without the schema, red on the first fix of #708, the schema their oracle; `Create_AngleAtSchemaBounds_StoresTheValueGiven`,
+  `OpmTests.ToOpm_RetrogradeEquatorialOrbit_WritesAnglesInSchemaRange`, guards). `OpmValidator` checks no angle: the
+  constructor refuses one out of range, so no `Opm` holds it.
 
 **Changed**
 
@@ -3889,8 +3913,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: a non-finite numeric value throws the reader's parse exception** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
   `Omm`/`Opm.LoadFromFile`, `LoadFromString` and `LoadFromStream`, `OmmReader`/`OpmReader`/`CdmReader.ReadFrom*` and
   `Cdm.ReadFrom*` throw `OmmParseException`, `OpmParseException` or `CdmParseException` for a numeric keyword of
-  `NaN`, `Infinity`, `-Infinity` (any case) or an overflowing value such as `1e400`, where they loaded the document with
-  a NaN or infinite value; `TryLoadFromFile` returns false with a `PARSE_ERROR`, and `ValidateFile` reports the
+  `NaN`, `Infinity`, `-Infinity` (any case) or an overflowing value such as `1e400`, and the CDM readers for a value in
+  km or km/s whose value in m or m/s overflows (`1e306` km), where they loaded the document with a NaN or infinite value; `TryLoadFromFile` returns false with a `PARSE_ERROR`, and `ValidateFile` reports the
   document invalid. Migration: correct the producer of the document; a NaN or infinite value carried no orbit. Finite
   documents load bit for bit as before.
 - **An OPM `MASS` of 0 is accepted** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `Opm.LoadFrom*`, `OpmReader.ReadFrom*` and
@@ -3919,6 +3943,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `MEAN_ANOMALY` in [-360, 0), where they reported an `InvalidRange` error (`OMM002`) and threw
   `OmmValidationException`. Migration: none; a caller that wants [0, 360) normalizes the angle. No result moves for
   angles in [0, 360).
+- **Breaking: the angles of `OpmKeplerianElements` are in [-360, 360)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
+  `OpmKeplerianElements.CreateWithTrueAnomaly` and `CreateWithMeanAnomaly` throw `ArgumentOutOfRangeException` naming
+  `raan`, `aop`, `trueAnomaly` or `meanAnomaly` for an angle outside [-360, 360) (NaN and ±Infinity included), where
+  they built; `Opm.LoadFrom*`, `OpmReader.ReadFrom*` and `TryLoadFromFile` with `validateSchema: false` throw
+  `OpmParseException` (a `PARSE_ERROR`) for such an angle, where they loaded it (with the default validation the schema
+  rejected it already, `OpmValidationException`, unchanged); `FromKeplerianElements` writes an angle of 2π as 0, where
+  it wrote 360. Migration: pass an angle in [-360, 360), for example its value in [0, 360). An angle inside the range
+  is stored as before, bit for bit, and `Spacecraft.ToOpm` writes the same document.
 - **The OMM content validation accepts a `MASS` of 0** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator.Validate`,
   `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept it, where they reported an
   `InvalidRange` error (`OMM002`) and threw `OmmValidationException`. Migration: none; a caller that needs a positive

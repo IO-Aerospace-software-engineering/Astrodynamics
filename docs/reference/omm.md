@@ -40,7 +40,11 @@ negative, a negative spacecraft parameter, an empty `OBJECT_NAME`, `OBJECT_ID`, 
 `ArgumentOutOfRangeException` or `ArgumentException` of the data model's constructor crossed the reader, naming its
 parameter. With `validateSchema` the schema rejects most of these values first (`OmmValidationException`), but not those
 its types allow: `MEAN_MOTION` and `SEMI_MAJOR_AXIS` are `xsd:double` and the metadata strings `xsd:string`, so a
-`MEAN_MOTION` of 0 or an empty `OBJECT_NAME` throws `OmmParseException` with the default validation too.
+`MEAN_MOTION` of 0 or an empty `OBJECT_NAME` throws `OmmParseException` with the default validation too. These rules
+go beyond the schema: a = (μ / n²)^(1/3) is infinite for a mean motion of 0 and no mean motion or semi-major axis below
+0 describes an orbit, and CCSDS 502.0-B-3 makes `OBJECT_NAME` and the other metadata mandatory; whether the readers
+should accept these schema-valid values is left open by [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708) (a decision of S. Guillet), and they are refused as
+before.
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error, both naming the keyword.
 The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`; a ranged
 parameter of `MeanElements` (a, n, e, i, the three angles, GM) or `SpacecraftParameters` refuses NaN and ±Infinity with

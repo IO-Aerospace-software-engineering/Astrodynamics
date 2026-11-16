@@ -45,19 +45,24 @@ A keyword whose value the data model refuses throws `OpmParseException` naming t
 rule, the data model's exception as `InnerException` (fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ECCENTRICITY` negative,
 `SEMI_MAJOR_AXIS` not above 0 for an `ECCENTRICITY` below 1 or not below 0 above 1 (the message gives both keywords),
-`INCLINATION` outside [0, 180], `GM` not above 0, a negative `MASS`, `SOLAR_RAD_AREA`, `SOLAR_RAD_COEFF`,
+`INCLINATION` outside [0, 180], `GM` not above 0, `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER`, `TRUE_ANOMALY` or
+`MEAN_ANOMALY` outside [-360, 360) (the `angleRange` of the schema and of the OMM's angles; [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708): not checked
+before 11.0.0, so a document read without the schema step kept an angle of 1000 or NaN), a negative `MASS`, `SOLAR_RAD_AREA`, `SOLAR_RAD_COEFF`,
 `DRAG_AREA` or `DRAG_COEFF`, a negative `MAN_DURATION`, a positive `MAN_DELTA_MASS`, or an empty `MAN_REF_FRAME`,
 `OBJECT_NAME`, `OBJECT_ID`, `CENTER_NAME`, `REF_FRAME`, `TIME_SYSTEM` or `ORIGINATOR`, for example
 `SEMI_MAJOR_AXIS '-6878.137' in keplerianElements with ECCENTRICITY '0.0001234' is invalid: Semi-major axis must be positive for elliptical orbits (e < 1).` Before 11.0.0 the `ArgumentOutOfRangeException` or
 `ArgumentException` of the data model's constructor crossed the reader, naming its parameter. With `validateSchema` the
 schema rejects most of these values first (`OpmValidationException`), but not those its types allow: `SEMI_MAJOR_AXIS`
 is `xsd:double` and the strings `xsd:string`, so a `SEMI_MAJOR_AXIS` of the wrong sign or an empty `OBJECT_NAME` throws
-`OpmParseException` with the default validation too. A `MASS` of 0 is read, `massType` being a `nonNegativeDouble` (its
-`minInclusive` 0.0), as for the `MASS` of an OMM: `OpmData` and `OpmValidator` take a mass of 0 or more ({I}; before
+`OpmParseException` with the default validation too. These rules go beyond the schema: a = p / (1 − e²) with a
+semi-latus rectum p above 0 gives no conic for the other sign, and CCSDS 502.0-B-3 makes `OBJECT_NAME` and the other
+metadata mandatory; whether the readers should accept these schema-valid values is left open by [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708) (a decision
+of S. Guillet), and they are refused as before. A `MASS` of 0 is read, `massType` being a `nonNegativeDouble` (its
+`minInclusive` 0.0), as for the `MASS` of an OMM: `OpmData` and `OpmValidator` take a mass of 0 or more ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before
 11.0.0 a mass of 0 threw `OpmParseException`, `Mass must be positive.`). `ToSpacecraft` builds a spacecraft of mass 0.
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error, both naming the keyword.
 The constructors of the data model (`OpmKeplerianElements`, `OpmData`, ...) keep their `ArgumentException`; a ranged
-parameter of `OpmKeplerianElements` (a, e, i, GM), `OpmData` (the five spacecraft parameters) or `OpmManeuverParameters`
+parameter of `OpmKeplerianElements` (a, e, i, GM, and the four angles in [-360, 360) since [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), `OpmData` (the five spacecraft parameters) or `OpmManeuverParameters`
 (`MAN_DURATION`, `MAN_DELTA_MASS`) refuses NaN and ±Infinity with its `ArgumentOutOfRangeException`, and so does
 `Spacecraft.ToOpm`, which builds them, for such a value, where it wrote `NaN`
 ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The state vector, the
@@ -160,6 +165,11 @@ format the state of the spacecraft's initial orbital parameters at `epoch`, thei
 `InitialOrbitalParameters.ToStateVector(epoch)`, the two-body motion of osculating elements (SGP4 for a TLE), not the
 states of a propagation. Every argument is optional, so name the ones you pass (`epoch: epoch`). The state is written in
 the frame of the spacecraft's initial orbital parameters, which the export does not change: there is no frame argument. The spacecraft needs a `CosparId` (`InvalidOperationException` otherwise).
+The Keplerian elements are those of `OpmKeplerianElements.FromKeplerianElements` with the true anomaly, each angle
+written as its value in [0, 360), inside the schema's [-360, 360). `FromKeplerianElements` writes 0 for an angle of
+2π, which the [0, 2π) normalization of `KeplerianElements` gives for a negative angle below half the ulp of 2π, where it
+wrote 360 before 11.0.0, which the schema rejects; the elements of `ToOpm`, computed from a state, never reach 2π, so
+its output is unchanged ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)); an angle inside [0, 360) is written as before, bit for bit.
 
 The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported, in km², km²/s and km²/s², when
 the OPM is written at the initial epoch (the default, or the same instant in any time frame) (#551). At another epoch the
