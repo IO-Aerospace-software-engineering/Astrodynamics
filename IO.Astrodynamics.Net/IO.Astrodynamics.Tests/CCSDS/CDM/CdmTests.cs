@@ -484,16 +484,188 @@ public class CdmTests
     }
 
     [Fact]
-    public void Validate_NaNMissDistance_IsInvalid()
+    public void Validate_NegativeMissDistance_IsInvalid()
     {
-        // A CDM built from its records with a NaN miss distance: not non-negative, so invalid (before: valid, the check
-        // MissDistanceMeters < 0 being false for NaN)
+        // A CDM built from its records with a negative miss distance: not non-negative, so invalid. A NaN miss distance,
+        // reported invalid since #708, no longer builds (#717)
         var read = Cdm.ReadFromString(ManualCdmXml());
         Assert.True(read.Validate().IsValid);
-        var cdm = new Cdm(read.Header, read.RelativeMetadataData with { MissDistanceMeters = double.NaN }, read.Segments);
+        var cdm = new Cdm(read.Header, read.RelativeMetadataData with { MissDistanceMeters = -1.0 }, read.Segments);
         var result = cdm.Validate();
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.Message.Contains("Miss distance must be non-negative"));
+    }
+
+    // The real values of the CDM records, by record: every double, double?, Vector3 and Matrix property, which the reader
+    // fills from an xsd:double it reads as a real number (#708) and the writer writes (#717)
+    private static readonly Dictionary<Type, string[]> RealProperties = new()
+    {
+        [typeof(CdmRelativeMetadataData)] = new[]
+        {
+            nameof(CdmRelativeMetadataData.MissDistanceMeters), nameof(CdmRelativeMetadataData.RelativeSpeedMetersPerSecond),
+            nameof(CdmRelativeMetadataData.ScreenVolumeXMeters), nameof(CdmRelativeMetadataData.ScreenVolumeYMeters),
+            nameof(CdmRelativeMetadataData.ScreenVolumeZMeters), nameof(CdmRelativeMetadataData.CollisionProbability)
+        },
+        [typeof(CdmRelativeStateVector)] = new[]
+        {
+            nameof(CdmRelativeStateVector.RelativePositionRtnMeters), nameof(CdmRelativeStateVector.RelativeVelocityRtnMetersPerSecond)
+        },
+        [typeof(CdmOdParameters)] = new[]
+        {
+            nameof(CdmOdParameters.RecommendedOdSpanDays), nameof(CdmOdParameters.ActualOdSpanDays),
+            nameof(CdmOdParameters.ResidualsAcceptedPercent), nameof(CdmOdParameters.WeightedRms)
+        },
+        [typeof(CdmAdditionalParameters)] = new[]
+        {
+            nameof(CdmAdditionalParameters.AreaPcSquareMeters), nameof(CdmAdditionalParameters.AreaDragSquareMeters),
+            nameof(CdmAdditionalParameters.AreaSrpSquareMeters), nameof(CdmAdditionalParameters.MassKilograms),
+            nameof(CdmAdditionalParameters.CdAreaOverMass), nameof(CdmAdditionalParameters.CrAreaOverMass),
+            nameof(CdmAdditionalParameters.ThrustAccelerationMetersPerSecondSquared), nameof(CdmAdditionalParameters.SedrWattsPerKilogram)
+        },
+        [typeof(CdmStateVector)] = new[] { nameof(CdmStateVector.PositionMeters), nameof(CdmStateVector.VelocityMetersPerSecond) },
+        [typeof(CdmCovarianceMatrix)] = new[]
+        {
+            nameof(CdmCovarianceMatrix.StateCovarianceRtn),
+            nameof(CdmCovarianceMatrix.CdrgR), nameof(CdmCovarianceMatrix.CdrgT), nameof(CdmCovarianceMatrix.CdrgN),
+            nameof(CdmCovarianceMatrix.CdrgRdot), nameof(CdmCovarianceMatrix.CdrgTdot), nameof(CdmCovarianceMatrix.CdrgNdot),
+            nameof(CdmCovarianceMatrix.CdrgDrg),
+            nameof(CdmCovarianceMatrix.CsrpR), nameof(CdmCovarianceMatrix.CsrpT), nameof(CdmCovarianceMatrix.CsrpN),
+            nameof(CdmCovarianceMatrix.CsrpRdot), nameof(CdmCovarianceMatrix.CsrpTdot), nameof(CdmCovarianceMatrix.CsrpNdot),
+            nameof(CdmCovarianceMatrix.CsrpDrg), nameof(CdmCovarianceMatrix.CsrpSrp),
+            nameof(CdmCovarianceMatrix.CthrR), nameof(CdmCovarianceMatrix.CthrT), nameof(CdmCovarianceMatrix.CthrN),
+            nameof(CdmCovarianceMatrix.CthrRdot), nameof(CdmCovarianceMatrix.CthrTdot), nameof(CdmCovarianceMatrix.CthrNdot),
+            nameof(CdmCovarianceMatrix.CthrDrg), nameof(CdmCovarianceMatrix.CthrSrp), nameof(CdmCovarianceMatrix.CthrThr)
+        }
+    };
+
+    private static readonly double[] NonFiniteValues = { double.NaN, double.PositiveInfinity, double.NegativeInfinity };
+
+    [Fact]
+    public void RealProperties_ListEveryRealPropertyOfTheRecords()
+    {
+        // The list of the tests below is complete: a real property added to a record without its check fails here
+        foreach (var (type, names) in RealProperties)
+        {
+            var real = type.GetProperties()
+                .Where(p => p.PropertyType == typeof(double) || p.PropertyType == typeof(double?) ||
+                            p.PropertyType == typeof(Vector3) || p.PropertyType == typeof(Matrix))
+                .Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal);
+            Assert.Equal(names.OrderBy(n => n, StringComparer.Ordinal), real);
+        }
+    }
+
+    public static TheoryData<string, string, double> NonFiniteScalarProperties()
+    {
+        var data = new TheoryData<string, string, double>();
+        foreach (var (type, names) in RealProperties)
+        foreach (var name in names)
+        {
+            var propertyType = type.GetProperty(name)!.PropertyType;
+            if (propertyType != typeof(double) && propertyType != typeof(double?))
+                continue;
+            foreach (var value in NonFiniteValues)
+                data.Add(type.Name, name, value);
+        }
+
+        return data;
+    }
+
+    // Sets a property through its init accessor, as an object initializer or a with expression does
+    private static void Init(object record, string property, object? value)
+    {
+        try
+        {
+            record.GetType().GetProperty(property)!.SetValue(record, value);
+        }
+        catch (System.Reflection.TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalarProperties))]
+    public void Init_NonFiniteScalar_ThrowsArgumentOutOfRangeException(string record, string property, double value)
+    {
+        // Before, NaN and ±Infinity built, Validate() passed them (but the miss distance, #708) and WriteToString wrote
+        // NaN, Infinity or -Infinity, which the reader refuses
+        var type = RealProperties.Keys.Single(t => t.Name == record);
+        var instance = Activator.CreateInstance(type)!;
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => Init(instance, property, value));
+        Assert.Equal(property, ex.ParamName);
+
+        // A finite value, and null for an optional one, is stored as given
+        Init(instance, property, -double.MaxValue);
+        Assert.Equal(-double.MaxValue, Convert.ToDouble(type.GetProperty(property)!.GetValue(instance)));
+        if (type.GetProperty(property)!.PropertyType == typeof(double?))
+        {
+            Init(instance, property, null);
+            Assert.Null(type.GetProperty(property)!.GetValue(instance));
+        }
+    }
+
+    public static TheoryData<string, string, int, double> NonFiniteVectorComponents()
+    {
+        var data = new TheoryData<string, string, int, double>();
+        foreach (var (type, names) in RealProperties)
+        foreach (var name in names.Where(n => type.GetProperty(n)!.PropertyType == typeof(Vector3)))
+        for (int component = 0; component < 3; component++)
+        foreach (var value in NonFiniteValues)
+            data.Add(type.Name, name, component, value);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteVectorComponents))]
+    public void Init_NonFiniteVectorComponent_ThrowsArgumentOutOfRangeException(string record, string property, int component, double value)
+    {
+        var type = RealProperties.Keys.Single(t => t.Name == record);
+        var instance = Activator.CreateInstance(type)!;
+        var c = new[] { 1.5, -2.5, 3.5 };
+        c[component] = value;
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => Init(instance, property, new Vector3(c[0], c[1], c[2])));
+        Assert.Equal(property, ex.ParamName);
+    }
+
+    public static TheoryData<int, int, double> NonFiniteCovarianceTerms()
+    {
+        var data = new TheoryData<int, int, double>();
+        for (int row = 0; row < 6; row++)
+        for (int column = 0; column < 6; column++)
+        foreach (var value in NonFiniteValues)
+            data.Add(row, column, value);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteCovarianceTerms))]
+    public void Init_NonFiniteCovarianceTerm_ThrowsArgumentOutOfRangeException(int row, int column, double value)
+    {
+        // The 21 terms of the lower triangle are written (CR_R ... CNDOT_NDOT); a term of the upper triangle is refused too,
+        // the record holding no non-finite value
+        var matrix = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+            matrix.Set(i, i, 1.0);
+        matrix.Set(row, column, value);
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+        ex = Assert.Throws<ArgumentOutOfRangeException>(() => CdmCovarianceMatrix.FromRtnCovariance(matrix));
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+    }
+
+    [Fact]
+    public void With_NonFiniteCollisionProbability_ThrowsAndTheWrittenCdmReadsBack()
+    {
+        // The reproduction of #717: a with expression on a CDM read back, which built and wrote <COLLISION_PROBABILITY>NaN
+        // that the reader refuses; every CDM the records can hold is written and read back
+        var read = Cdm.ReadFromString(ManualCdmXml());
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => read.RelativeMetadataData with { CollisionProbability = double.NaN });
+        Assert.Equal(nameof(CdmRelativeMetadataData.CollisionProbability), ex.ParamName);
+
+        var extreme = new Cdm(read.Header, read.RelativeMetadataData with { CollisionProbability = double.Epsilon }, read.Segments);
+        var back = Cdm.ReadFromString(extreme.WriteToString());
+        Assert.Equal(BitConverter.DoubleToInt64Bits(double.Epsilon), BitConverter.DoubleToInt64Bits(back.RelativeMetadataData.CollisionProbability!.Value));
     }
 
     private static string WithSegmentCount(string xml, int count)
