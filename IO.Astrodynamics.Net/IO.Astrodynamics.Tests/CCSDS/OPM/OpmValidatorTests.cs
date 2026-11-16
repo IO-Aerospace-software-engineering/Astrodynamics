@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using Xunit;
 
@@ -32,7 +33,6 @@ public class OpmValidatorTests
     // and its value (before: the data model's message, naming its constructor parameter)
     [Theory]
     [InlineData("SEMI_MAJOR_AXIS", "-6878.137")]
-    [InlineData("MASS", "0")]
     [InlineData("MAN_REF_FRAME", "")]
     [InlineData("OBJECT_NAME", "")]
     [InlineData("ORIGINATOR", "")]
@@ -179,4 +179,24 @@ public class OpmValidatorTests
         Assert.Equal(error.Message, Assert.Single(ex.ValidationResult.Errors).Message);
         NdmDocuments.WithTempFile(xml, file => Assert.Contains(_validator.ValidateFile(file).Errors, e => e.Message == error.Message));
     }
+
+    #region Ranges of NDM/XML 4.0.0 and non-finite values (#708)
+
+    private static OpmData DataWith(OpmData data, double? mass, CovarianceMatrix covariance) => new(
+        data.StateVector, data.KeplerianElements, mass, data.SolarRadiationPressureArea, data.SolarRadiationCoefficient,
+        data.DragArea, data.DragCoefficient, covariance, data.Maneuvers, data.UserDefinedParameters, data.SpacecraftComments,
+        data.Comments);
+
+    [Fact]
+    public void Validate_MassZero_NoError()
+    {
+        // massType of ndmxml-4.0.0-common-4.0.xsd extends nonNegativeDouble (minInclusive 0.0), the type of the MASS of the
+        // OMM too: an Opm built with mass 0 is valid (before: OpmData threw, and the validator reported "Mass must be positive")
+        var read = Opm.LoadFromString(OpmReaderTests.KeywordBaseOpm());
+        var opm = new Opm(read.Header, read.Metadata, DataWith(read.Data, 0.0, read.Data.Covariance));
+        Assert.Equal(0.0, opm.Data.Mass);
+        Assert.Empty(_validator.Validate(opm).Errors);
+    }
+
+    #endregion
 }

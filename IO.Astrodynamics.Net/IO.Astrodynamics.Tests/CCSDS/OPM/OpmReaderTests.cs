@@ -584,8 +584,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         /// The keywords of the OPM whose value the data model refuses, with that value, a second keyword set with it
         /// ("KEYWORD=value", or null), and whether the NDM/XML 4.0.0 schema rejects the document (CCSDS 502.0-B-3; the facets
         /// of ndmxml-4.0.0-common-4.0.xsd and -opm-3.0.xsd). The schema-valid rows are those where the schema type is wider
-        /// than the data model: distanceType is xsd:double (the sign of SEMI_MAJOR_AXIS against ECCENTRICITY), massType
-        /// nonNegativeDouble (OpmData requires a mass above 0), MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR xsd:string.
+        /// than the data model: distanceType is xsd:double (the sign of SEMI_MAJOR_AXIS against ECCENTRICITY), MAN_REF_FRAME,
+        /// OBJECT_NAME and ORIGINATOR xsd:string. MASS 0, a massType value (nonNegativeDouble), is read since #708.
         /// </summary>
         public static TheoryData<string, string, string?, bool> OpmKeywordsOutOfRange() => new()
         {
@@ -597,8 +597,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             { "INCLINATION", "181", null, true },
             { "GM", "-1", null, true }, // gmType: positiveDouble
             { "GM", "0", null, true },
-            { "MASS", "0", null, false }, // massType: nonNegativeDouble
-            { "MASS", "-1", null, true },
+            { "MASS", "-1", null, true }, // massType: nonNegativeDouble
             { "SOLAR_RAD_AREA", "-1", null, true }, // areaType: nonNegativeDouble
             { "SOLAR_RAD_COEFF", "-1", null, true }, // nonNegativeDouble
             { "DRAG_AREA", "-1", null, true },
@@ -645,6 +644,32 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var schema = new OpmValidator().ValidateSchemaFromXml(xml);
             Assert.True(schema.IsValid, string.Join("; ", schema.Errors.Select(e => e.Message)));
             Assert.Equal(1500.0, Opm.LoadFromString(xml).Data.Mass);
+        }
+
+        [Fact]
+        public void ReadFromString_MassZero_ReadsZero()
+        {
+            // massType of ndmxml-4.0.0-common-4.0.xsd extends nonNegativeDouble (minInclusive 0.0); the schema, the oracle,
+            // accepts the document. Before #708: OpmParseException "Mass must be positive", the data model requiring a mass
+            // above 0 where the OMM's SpacecraftParameters, for the same keyword of the same type, accepts 0
+            var xml = OpmWithKeyword("MASS", "0");
+            Assert.True(new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            Assert.Equal(0.0, _reader.ReadFromString(xml).Data.Mass);
+            Assert.Equal(0.0, Opm.LoadFromString(xml).Data.Mass);
+            Assert.Equal(0.0, Opm.LoadFromString(xml, validateSchema: true, validateContent: false).Data.Mass);
+            NdmDocuments.WithTempFile(xml, file =>
+            {
+                Assert.True(Opm.TryLoadFromFile(file, out var opm, out var result));
+                Assert.Equal(0.0, opm.Data.Mass);
+                Assert.True(result.IsValid);
+                Assert.True(new OpmValidator().ValidateFile(file).IsValid);
+            });
+
+            // A spacecraft of mass 0, which CelestialItem allows
+            var spacecraft = Opm.LoadFromString(xml).ToSpacecraft(-1000, 1000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("OnboardClock", 256),
+                new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH));
+            Assert.Equal(0.0, spacecraft.Mass);
         }
 
         [Theory]

@@ -45,14 +45,16 @@ A keyword whose value the data model refuses throws `OpmParseException` naming t
 rule, the data model's exception as `InnerException` (fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ECCENTRICITY` negative,
 `SEMI_MAJOR_AXIS` not above 0 for an `ECCENTRICITY` below 1 or not below 0 above 1 (the message gives both keywords),
-`INCLINATION` outside [0, 180], `GM` not above 0, `MASS` not above 0, a negative `SOLAR_RAD_AREA`, `SOLAR_RAD_COEFF`,
+`INCLINATION` outside [0, 180], `GM` not above 0, a negative `MASS`, `SOLAR_RAD_AREA`, `SOLAR_RAD_COEFF`,
 `DRAG_AREA` or `DRAG_COEFF`, a negative `MAN_DURATION`, a positive `MAN_DELTA_MASS`, or an empty `MAN_REF_FRAME`,
 `OBJECT_NAME`, `OBJECT_ID`, `CENTER_NAME`, `REF_FRAME`, `TIME_SYSTEM` or `ORIGINATOR`, for example
-`MASS '0' in spacecraftParameters is invalid: Mass must be positive.` Before 11.0.0 the `ArgumentOutOfRangeException` or
+`SEMI_MAJOR_AXIS '-6878.137' in keplerianElements with ECCENTRICITY '0.0001234' is invalid: Semi-major axis must be positive for elliptical orbits (e < 1).` Before 11.0.0 the `ArgumentOutOfRangeException` or
 `ArgumentException` of the data model's constructor crossed the reader, naming its parameter. With `validateSchema` the
 schema rejects most of these values first (`OpmValidationException`), but not those its types allow: `SEMI_MAJOR_AXIS`
-is `xsd:double`, `MASS` a `nonNegativeDouble` (0 allowed), the strings `xsd:string`, so a `MASS` of 0, a
-`SEMI_MAJOR_AXIS` of the wrong sign or an empty `OBJECT_NAME` throws `OpmParseException` with the default validation too.
+is `xsd:double` and the strings `xsd:string`, so a `SEMI_MAJOR_AXIS` of the wrong sign or an empty `OBJECT_NAME` throws
+`OpmParseException` with the default validation too. A `MASS` of 0 is read, `massType` being a `nonNegativeDouble` (its
+`minInclusive` 0.0), as for the `MASS` of an OMM: `OpmData` and `OpmValidator` take a mass of 0 or more ({I}; before
+11.0.0 a mass of 0 threw `OpmParseException`, `Mass must be positive.`). `ToSpacecraft` builds a spacecraft of mass 0.
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error, both naming the keyword.
 The constructors of the data model (`OpmKeplerianElements`, `OpmData`, ...) keep their `ArgumentException`.
 

@@ -482,9 +482,9 @@ public class OpmValidator
         if (!ValidatePhysicalConstraints)
             return;
 
-        if (data.Mass.HasValue && data.Mass.Value <= 0)
+        if (data.Mass.HasValue && data.Mass.Value < 0)
         {
-            result.AddError(InvalidRange, "Mass must be positive.", "Data.SpacecraftParameters.Mass");
+            result.AddError(InvalidRange, "Mass cannot be negative.", "Data.SpacecraftParameters.Mass");
         }
 
         if (data.DragArea.HasValue && data.DragArea.Value < 0)

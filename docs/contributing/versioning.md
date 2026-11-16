@@ -2706,7 +2706,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the wrong sign for its `ECCENTRICITY`, `MAN_DELTA_MASS` of 1; an empty `OBJECT_NAME`, `ORIGINATOR` or
   `MAN_REF_FRAME`), and with the default validation for the values the NDM/XML 4.0.0 schema accepts: an OMM
   `MEAN_MOTION` or `SEMI_MAJOR_AXIS` not above 0 (`revType` and `distanceType` are `xsd:double`), the OPM
-  `SEMI_MAJOR_AXIS` sign and `MASS` 0 (`massType` is a `nonNegativeDouble`, `OpmData` requires a mass above 0), and the
+  `SEMI_MAJOR_AXIS` sign and `MASS` 0 (`massType` is a `nonNegativeDouble`, `OpmData` required a mass above 0, read since #708), and the
   empty strings (`xsd:string`). The CDM reader, which has no schema step, let the `FormatException` of
   `CdmEnumExtensions` cross every read for an `OBJECT` of `OBJECT3`, a `REF_FRAME` of `TEME`, a `COVARIANCE_METHOD`,
   `MANEUVERABLE`, `SCREEN_VOLUME_FRAME`, `SCREEN_VOLUME_SHAPE`, `SOLAR_RAD_PRESSURE`, `EARTH_TIDES` or `INTRACK_THRUST`
@@ -2824,6 +2824,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   finite document reads bit for bit as before, and `INF` and `-INF` throw the parse exception as before
   (`OmmReaderTests`, `OpmReaderTests`, `OmmTests`, `OpmTests` and `CdmTests`
   `*_NonFiniteValue_*`, through every entry point, red on 46e6975).
+- **An OPM `MASS` of 0 threw** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OpmData` required a mass above 0 and `OpmValidator` reported "Mass must be
+  positive.", where NDM/XML 4.0.0 types `MASS` as `massType`, a `nonNegativeDouble` (`minInclusive` 0.0), the type of
+  the OMM's `MASS` too, which `SpacecraftParameters` accepts at 0: a schema-valid OPM with a `MASS` of 0 threw
+  `OpmParseException` (`MASS '0' in spacecraftParameters is invalid: Mass must be positive.`) with or without schema
+  validation. `OpmData` and `OpmValidator` now take a mass of 0 or more, so the OPM loads, `Data.Mass` 0 exactly, and
+  `Opm.ToSpacecraft` builds a spacecraft of mass 0, as `CelestialItem` allows (`OpmReaderTests.ReadFromString_MassZero_ReadsZero`,
+  `OpmValidatorTests.Validate_MassZero_NoError`, red on 46e6975, the schema their oracle).
 
 **Changed**
 
@@ -3840,6 +3847,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a NaN or infinite value; `TryLoadFromFile` returns false with a `PARSE_ERROR`, and `ValidateFile` reports the
   document invalid. Migration: correct the producer of the document; a NaN or infinite value carried no orbit. Finite
   documents load bit for bit as before.
+- **An OPM `MASS` of 0 is accepted** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `Opm.LoadFrom*`, `OpmReader.ReadFrom*` and
+  `TryLoadFromFile` read it, where they threw `OpmParseException`; `new OpmData(stateVector, mass: 0)` builds, where it
+  threw `ArgumentOutOfRangeException`; and `OpmValidator` reports no error for it, where it reported "Mass must be
+  positive.". Migration: a caller that relied on the refusal checks `Data.Mass > 0` itself. No result moves for a
+  positive mass.
 
 **Deprecated**
 

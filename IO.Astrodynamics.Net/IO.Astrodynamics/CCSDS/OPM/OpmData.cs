@@ -119,8 +119,9 @@ public class OpmData
     {
         StateVector = stateVector ?? throw new ArgumentNullException(nameof(stateVector));
 
-        if (mass.HasValue && mass.Value <= 0)
-            throw new ArgumentOutOfRangeException(nameof(mass), "Mass must be positive.");
+        // massType of NDM/XML 4.0.0 is a nonNegativeDouble, as for the MASS of an OMM (#708: above 0 before)
+        if (mass.HasValue && mass.Value < 0)
+            throw new ArgumentOutOfRangeException(nameof(mass), "Mass cannot be negative.");
         if (solarRadiationPressureArea.HasValue && solarRadiationPressureArea.Value < 0)
             throw new ArgumentOutOfRangeException(nameof(solarRadiationPressureArea), "SRP area cannot be negative.");
         if (solarRadiationCoefficient.HasValue && solarRadiationCoefficient.Value < 0)

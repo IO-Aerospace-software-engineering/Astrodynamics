@@ -1365,13 +1365,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         #region Keywords out of their range
 
         // Rows of OpmReaderTests.OpmKeywordsOutOfRange: one the schema rejects, and those it accepts though the data model
-        // refuses them (distanceType xsd:double, massType nonNegativeDouble, MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR
-        // xsd:string)
+        // refuses them (distanceType xsd:double, MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR xsd:string)
         [Theory]
         [InlineData("ECCENTRICITY", "-0.5", null, true)]
         [InlineData("SEMI_MAJOR_AXIS", "-6878.137", null, false)]
         [InlineData("SEMI_MAJOR_AXIS", "7000", "ECCENTRICITY=1.5", false)]
-        [InlineData("MASS", "0", null, false)]
         [InlineData("MAN_REF_FRAME", "", null, false)]
         [InlineData("OBJECT_NAME", "", null, false)]
         [InlineData("ORIGINATOR", "", null, false)]
