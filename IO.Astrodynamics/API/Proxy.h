@@ -47,7 +47,8 @@ MODULE_API const char *GetSpiceVersionProxy();
  * @param objectId ID of the object
  * @param sv Array of state vectors
  * @param size Size of the state vector array
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, the message in GetLastErrorProxy: fewer than three states, several frames,
+ * a centre that is not a celestial body, a path the file system rejects (#706: these threw a C++ exception across P/Invoke)
  */
 MODULE_API bool
 WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000],
@@ -59,7 +60,8 @@ WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::
  * @param objectId ID of the object
  * @param so Array of state orientations
  * @param size Size of the state orientation array
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, the message in GetLastErrorProxy: no record, several frames, a path the file
+ * system rejects (#706: these threw a C++ exception across P/Invoke, or read an empty array)
  */
 MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId,
                                       IO::Astrodynamics::API::DTO::StateOrientationDTO so[100000], unsigned int size);
@@ -117,14 +119,16 @@ MODULE_API bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
 /**
  * Load kernels
  * @param path Directory path to the kernels
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, with SPICE's message or that of a path the file system rejects in
+ * GetLastErrorProxy (#706)
  */
 MODULE_API bool LoadKernelsProxy(const char *path);
 
 /**
  * Unload kernels
  * @param path Directory path to the kernels
- * @return true if successful, false otherwise
+ * @return true if successful, false otherwise, with SPICE's message or that of a path the file system rejects in
+ * GetLastErrorProxy (#706)
  */
 MODULE_API bool UnloadKernelsProxy(const char *path);
 

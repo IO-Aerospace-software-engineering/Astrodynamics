@@ -17,6 +17,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <locale>
 #include <sstream>
@@ -1506,6 +1507,254 @@ TEST(API, WriteOrientationProxyReplacingAFileWhenACkHeldUnderARelativeNameIsDele
     ckupf_c(handle);
     EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
     reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// #706: the native writers and the kernel loaders let a C++ exception cross P/Invoke, which ended the host process
+// (std::terminate, exit code 134). The rule of the native writer itself is the reference (EphemerisKernel::WriteData: three
+// states or more, in one frame), with POSIX's ELOOP for a symbolic-link loop, and KEEPER's list (kdata_c) for the kernels a
+// writer leaves loaded
+namespace
+{
+    // Equally spaced states of a circular orbit about the Earth in J2000, from the epoch, x offset by dx
+    std::vector<IO::Astrodynamics::API::DTO::StateVectorDTO> EarthStates(int count, double dx = 0.0)
+    {
+        std::vector<IO::Astrodynamics::API::DTO::StateVectorDTO> sv(count);
+        for (int i = 0; i < count; ++i)
+        {
+            sv[i].position = {6800000.0 + dx + i, 0.0, 0.0};
+            sv[i].velocity = {0.0, 8000.0, 0.0};
+            sv[i].epoch = i;
+            sv[i].centerOfMotionId = 399;
+            sv[i].SetFrame("J2000");
+        }
+        return sv;
+    }
+
+    // Calls the writer of an SPK and expects it to return false without an exception, nothing pending, nothing written, and
+    // the message to contain the given text
+    void ExpectEphemerisRejected(std::vector<IO::Astrodynamics::API::DTO::StateVectorDTO> sv, const std::string &name,
+                                 const std::string &text)
+    {
+        auto folder = FreshFolder(name);
+        const auto file = folder / "e.bsp";
+        bool written = true;
+        EXPECT_NO_THROW(written = WriteEphemerisProxy(file.string().c_str(), -1999701, sv.data(),
+                                                      static_cast<unsigned int>(sv.size())));
+        const bool pending = failed_c();
+        const std::string message = GetLastErrorProxy();
+        reset_c();
+        EXPECT_FALSE(written);
+        EXPECT_FALSE(pending);
+        EXPECT_NE(std::string::npos, message.find(text)) << message;
+        EXPECT_FALSE(std::filesystem::exists(file));
+        std::filesystem::remove_all(folder);
+    }
+
+    std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> Records(int count)
+    {
+        std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> so(std::max(count, 1));
+        for (int i = 0; i < count; ++i)
+        {
+            so[i].orientation = {1.0, 0.0, 0.0, 0.0};
+            so[i].angularVelocity = {0.0, 0.0, 0.0};
+            so[i].epoch = i;
+            so[i].SetFrame("J2000");
+        }
+        return so;
+    }
+
+    void ExpectOrientationRejected(std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> so, unsigned int size,
+                                   const std::string &name, const std::string &text)
+    {
+        auto folder = FreshFolder(name);
+        const auto file = folder / "o.bc";
+        bool written = true;
+        EXPECT_NO_THROW(written = WriteOrientationProxy(file.string().c_str(), -175, so.data(), size));
+        const bool pending = failed_c();
+        const std::string message = GetLastErrorProxy();
+        reset_c();
+        EXPECT_FALSE(written);
+        EXPECT_FALSE(pending);
+        EXPECT_NE(std::string::npos, message.find(text)) << message;
+        EXPECT_FALSE(std::filesystem::exists(file));
+        std::filesystem::remove_all(folder);
+    }
+}
+
+TEST(API, WriteEphemerisProxyOfOneStateReturnsFalse)
+{
+    ExpectEphemerisRejected(EarthStates(1), "ioa_k1_cpp_one_state", "State vector set must have 3 items or more");
+}
+
+TEST(API, WriteEphemerisProxyOfTwoStatesReturnsFalse)
+{
+    ExpectEphemerisRejected(EarthStates(2), "ioa_k1_cpp_two_states", "State vector set must have 3 items or more");
+}
+
+TEST(API, WriteEphemerisProxyOfTwoFramesReturnsFalse)
+{
+    auto sv = EarthStates(3);
+    sv[2].SetFrame("ECLIPJ2000");
+    ExpectEphemerisRejected(sv, "ioa_k1_cpp_two_frames", "State vectors must have the same frame");
+}
+
+TEST(API, WriteOrientationProxyOfNoRecordReturnsFalse)
+{
+    ExpectOrientationRejected(Records(0), 0, "ioa_k1_cpp_no_record", "Orientation array is empty");
+}
+
+TEST(API, WriteOrientationProxyOfTwoFramesReturnsFalse)
+{
+    auto so = Records(3);
+    so[2].SetFrame("ECLIPJ2000");
+    ExpectOrientationRejected(so, 3, "ioa_k1_cpp_two_frames_ck", "All orientations must have the same frame");
+}
+
+// A path that is a loop of symbolic links: the throwing std::filesystem calls of the kernel objects (exists) and of
+// KernelsLoader (is_regular_file) raise filesystem_error with POSIX's ELOOP, which crossed P/Invoke. Each proxy now returns
+// false with the message, nothing pending, nothing loaded; the unload, which tests the path without throwing, still succeeds
+TEST(API, KernelProxiesOfASymbolicLinkLoopReturnFalse)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A symbolic link needs a privilege on Windows";
+#else
+    auto folder = FreshFolder("ioa_k1_cpp_loop");
+    const auto a = folder / "a.bsp";
+    const auto b = folder / "b.bsp";
+    std::filesystem::create_symlink(b, a);
+    std::filesystem::create_symlink(a, b);
+    auto sv = EarthStates(3);
+    auto so = Records(3);
+
+    const auto expectRejected = [&](const std::function<bool()> &call, const char *what)
+    {
+        bool result = true;
+        EXPECT_NO_THROW(result = call()) << what;
+        const bool pending = failed_c();
+        const std::string message = GetLastErrorProxy();
+        reset_c();
+        EXPECT_FALSE(result) << what;
+        EXPECT_FALSE(pending) << what;
+        EXPECT_NE(std::string::npos, message.find("symbolic links")) << what << ": " << message;
+        EXPECT_EQ(-1, KeeperHandle(a)) << what;
+    };
+    expectRejected([&] { return WriteEphemerisProxy(a.string().c_str(), -1999702, sv.data(), 3); }, "WriteEphemerisProxy");
+    expectRejected([&] { return WriteOrientationProxy(a.string().c_str(), -175, so.data(), 3); }, "WriteOrientationProxy");
+    expectRejected([&] { return LoadKernelsProxy(a.string().c_str()); }, "LoadKernelsProxy");
+    EXPECT_TRUE(UnloadKernelsProxy(a.string().c_str()));
+    EXPECT_FALSE(failed_c());
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// A file the writer replaces, loaded twice before: furnsh_c of a file already loaded adds a second entry of the same handle
+// to KEEPER, and each unload_c removes one. The writer's kernel object loads it once more, then WriteData unloaded it once:
+// the loads before were left in KEEPER, which went on holding the replaced file, deleted but open, and reading its data
+// (measured on c533a6e). The writer now unloads every load of the name, so the written file is no longer loaded and, loaded
+// again, gives the new states. References: KEEPER's list (kdata_c) and the states written
+TEST(API, WriteEphemerisProxyReplacingAFileLoadedTwiceUnloadsEveryLoad)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "KEEPER's list is read through the CSPICE routines the shared library exports on Linux and macOS only";
+#else
+    auto folder = FreshFolder("ioa_k1_cpp_loaded_twice");
+    const auto c = folder / "c.bsp";
+    auto first = EarthStates(3);
+    ASSERT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999703, first.data(), 3));
+    furnsh_c(c.string().c_str());
+    furnsh_c(c.string().c_str());
+    ASSERT_FALSE(failed_c());
+    ASSERT_GT(KeeperHandle(c), 0);
+
+    auto second = EarthStates(5, 5000.0);
+    EXPECT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999703, second.data(), 5));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(c));
+
+    ASSERT_TRUE(LoadKernelsProxy(c.string().c_str()));
+    const auto read = ReadEphemerisAtGivenEpochProxy(4.0, 399, -1999703, "J2000", "NONE");
+    EXPECT_DOUBLE_EQ(second[4].position.x, read.position.x);
+    for (int i = 0; i < 4 && KeeperHandle(c) != -1; ++i)
+    {
+        UnloadKernelsProxy(c.string().c_str());
+    }
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The CK analog: OrientationKernel::WriteOrientations unloads every load of the CK it replaces
+TEST(API, WriteOrientationProxyReplacingAFileLoadedTwiceUnloadsEveryLoad)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "KEEPER's list is read through the CSPICE routines the shared library exports on Linux and macOS only";
+#else
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
+        IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                           IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                           IO::Astrodynamics::Time::TDB(0.0s),
+                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                                        std::move(orbitalParams));
+    auto folder = FreshFolder("ioa_k1_cpp_ck_loaded_twice");
+    const auto c = folder / "c.bc";
+    auto so = Records(3);
+    ASSERT_TRUE(WriteOrientationProxy(c.string().c_str(), -175, so.data(), 3));
+    furnsh_c(c.string().c_str());
+    furnsh_c(c.string().c_str());
+    ASSERT_FALSE(failed_c());
+    ASSERT_GT(KeeperHandle(c), 0);
+
+    auto more = Records(5);
+    EXPECT_TRUE(WriteOrientationProxy(c.string().c_str(), -175, more.data(), 5));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(c));
+    for (int i = 0; i < 4 && KeeperHandle(c) != -1; ++i)
+    {
+        UnloadKernelsProxy(c.string().c_str());
+    }
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// UnloadKernelsProxy dropped SPICE's message of a failed unload: it reset SPICE without copying the message to lastError, so
+// the .NET layer could not name the cause. The unload of an SPK opens the other loaded SPKs again (unload_c -> UNLOAD ->
+// SPKLEF) and fails on a deleted SPK SPICE holds under a relative name (SPICE(FILENOTFOUND)). Reference: that message, which
+// names the deleted file
+TEST(API, UnloadKernelsProxyKeepsTheMessageOfAFailedUnload)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto before = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    ASSERT_FALSE(std::isnan(before.position.x));
+    auto folder = FreshFolder("ioa_k1_cpp_unload_message");
+    const auto c = folder / "c.bsp";
+    auto sv = EarthStates(3);
+    ASSERT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999704, sv.data(), 3));
+    ASSERT_TRUE(LoadKernelsProxy(c.string().c_str()));
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", folder / "x.bsp");
+    ASSERT_TRUE(LoadRelativeMetaKernel(folder, "x.bsp"));
+    const SpiceInt handle = KeeperHandle("x.bsp");
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(folder / "x.bsp");
+
+    const bool unloaded = UnloadKernelsProxy(c.string().c_str());
+    const bool pending = failed_c();
+    const std::string message = GetLastErrorProxy();
+    reset_c();
+    EXPECT_FALSE(unloaded);
+    EXPECT_FALSE(pending);
+    EXPECT_NE(std::string::npos, message.find("x.bsp")) << message;
+
+    spkuef_c(handle);
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
+    reset_c();
+    ExpectSameState(before, ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE"));
     std::filesystem::remove_all(folder);
 #endif
 }

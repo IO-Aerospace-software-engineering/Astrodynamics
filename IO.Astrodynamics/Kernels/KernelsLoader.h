@@ -30,6 +30,16 @@ namespace IO::Astrodynamics::Kernels
          * objects (Kernel, whose destructor unloads its file) and the writers of SPKs and CKs unload through it
          */
         static void UnloadFile(const std::string& path);
+
+        /**
+         * @brief Unloads every load of one file by the name SPICE holds it under, after the deleted binary kernels: unload_c
+         * until KEEPER no longer finds the name (kinfo_c), stopping at a failure, which is left signalled. furnsh_c of a file
+         * already loaded adds an entry of the same handle to KEEPER, and each unload_c removes one, so that a single unload
+         * of a file loaded twice (by the caller and by a kernel object, or twice by the caller) left it loaded: the writers of
+         * SPKs and CKs, which replace a file, unload it this way (#706: before, a load left in KEEPER held the replaced file,
+         * deleted but open, and SPICE went on reading its data)
+         */
+        static void UnloadEveryLoad(const std::string& path);
 	};
 }
 

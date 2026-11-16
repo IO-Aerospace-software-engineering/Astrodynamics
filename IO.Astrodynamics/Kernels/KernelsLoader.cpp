@@ -158,3 +158,24 @@ void IO::Astrodynamics::Kernels::KernelsLoader::UnloadFile(const std::string &pa
     UnloadDeletedBinaryKernels();
     unload_c(path.c_str());
 }
+
+void IO::Astrodynamics::Kernels::KernelsLoader::UnloadEveryLoad(const std::string &path)
+{
+    UnloadDeletedBinaryKernels();
+    SpiceInt count{};
+    ktotal_c("ALL", &count);
+    // At most one unload per entry KEEPER holds: each unload_c removes one entry of the name
+    for (SpiceInt i = 0; i <= count && !failed_c(); ++i)
+    {
+        SpiceChar type[TypeLength]{};
+        SpiceChar source[FileLength]{};
+        SpiceInt handle{};
+        SpiceBoolean found{};
+        kinfo_c(path.c_str(), TypeLength, FileLength, type, source, &handle, &found);
+        if (failed_c() || !found)
+        {
+            return;
+        }
+        unload_c(path.c_str());
+    }
+}
