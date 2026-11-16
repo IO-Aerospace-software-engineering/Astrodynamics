@@ -84,7 +84,8 @@ constructors, without a range, do not check ([#708](https://github.com/IO-Aerosp
 information levels (an unusual drag coefficient, a large eccentricity) are unchanged. `RA_OF_ASC_NODE`,
 `ARG_OF_PERICENTER` and `MEAN_ANOMALY` are checked against [-360, 360), the `angleRange` of the schema and the range of
 `MeanElements` (#708: [0, 360) before 11.0.0, so the default `Load*` threw `OmmValidationException` for a schema-valid
-negative angle); `ToTle` writes a negative angle as its value in [0, 360).
+negative angle); `ToTle` writes a negative angle as its value in [0, 360). A `MASS` of 0, a `massType` value, is
+valid, as for the other spacecraft parameters (#708: an error before 11.0.0).
 
 ### Saving
 

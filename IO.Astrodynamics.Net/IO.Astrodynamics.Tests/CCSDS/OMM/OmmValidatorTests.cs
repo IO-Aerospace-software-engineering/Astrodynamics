@@ -1026,5 +1026,30 @@ public class OmmValidatorTests
         NdmDocuments.WithTempFile(xml, file => Assert.True(_validator.ValidateFile(file).IsValid));
     }
 
+    [Fact]
+    public void Validate_MassZero_NoError()
+    {
+        // massType of ndmxml-4.0.0-common-4.0.xsd extends nonNegativeDouble (minInclusive 0.0), and SpacecraftParameters
+        // accepts 0; the schema, the oracle, accepts the document. Before: the default content validation refused it
+        // ("MASS must be positive"), so the default LoadFromString threw OmmValidationException
+        var xml = OmmReaderTests.OmmWithKeyword("MASS", "0");
+        Assert.True(_validator.ValidateSchemaFromXml(xml).IsValid);
+
+        var omm = Omm.LoadFromString(xml);
+        Assert.Equal(0.0, omm.Data.SpacecraftParameters.Mass);
+        Assert.Empty(_validator.Validate(omm).Errors);
+        NdmDocuments.WithTempFile(xml, file => Assert.True(_validator.ValidateFile(file).IsValid));
+    }
+
+    [Fact]
+    public void Validate_NegativeMass_StillReportsError()
+    {
+        // A negative mass cannot reach the validator through SpacecraftParameters; its check stays for a mass below 0,
+        // which the reader of a document refuses first (the schema rejects it)
+        var xml = OmmReaderTests.OmmWithKeyword("MASS", "-1");
+        Assert.False(_validator.ValidateSchemaFromXml(xml).IsValid);
+        Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
+    }
+
     #endregion
 }

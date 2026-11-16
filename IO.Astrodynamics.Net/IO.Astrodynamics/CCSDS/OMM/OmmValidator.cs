@@ -540,10 +540,11 @@ public class OmmValidator
 
     private void ValidateSpacecraftParameters(SpacecraftParameters spacecraft, OmmValidationResult result)
     {
-        // All spacecraft parameters should be positive if specified
-        if (spacecraft.Mass.HasValue && !(double.IsFinite(spacecraft.Mass.Value) && spacecraft.Mass.Value > 0))
+        // Every spacecraft parameter is a finite value of 0 or more if specified: massType, areaType and nonNegativeDouble of
+        // NDM/XML 4.0.0, as SpacecraftParameters checks (#708: MASS 0, schema-valid, was an error)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(spacecraft.Mass))
         {
-            result.AddError(InvalidRange, $"MASS must be positive, got {spacecraft.Mass.Value}.", "Data.SpacecraftParameters.Mass");
+            result.AddError(InvalidRange, $"MASS must be non-negative, got {spacecraft.Mass.Value}.", "Data.SpacecraftParameters.Mass");
         }
 
         if (!CcsdsValues.IsNullOrFiniteNonNegative(spacecraft.SolarRadArea))

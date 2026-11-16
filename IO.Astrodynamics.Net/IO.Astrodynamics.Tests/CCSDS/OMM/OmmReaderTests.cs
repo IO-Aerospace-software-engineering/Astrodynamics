@@ -707,12 +707,13 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         {
             // The bounds of the schema's facets (nonNegativeDouble, inclinationRange, angleRange, massType) are accepted by
             // the reader, with the schema, and read exactly (the value of the text, a decimal that round-trips). The content
-            // validation, a separate layer, is not run: it refuses RA_OF_ASC_NODE -360 and MASS 0, which the schema accepts
+            // validation accepts them too (#708: it refused RA_OF_ASC_NODE -360 and MASS 0, which the schema accepts)
             var xml = OmmWithKeyword(keyword, value);
             Assert.True(new OmmValidator().ValidateSchemaFromXml(xml).IsValid);
 
             var omm = Omm.LoadFromString(xml, validateSchema: true, validateContent: false);
             Assert.Equal(omm.ToXml(), _reader.ReadFromString(xml).ToXml());
+            Assert.Equal(omm.ToXml(), Omm.LoadFromString(xml).ToXml());
 
             double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
             double actual = keyword switch

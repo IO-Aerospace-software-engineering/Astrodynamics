@@ -2870,6 +2870,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   three checks now take [-360, 360) ("must be in [-360, 360) degrees"), NaN refused. `Omm.ToTle` writes such an angle
   as its value in [0, 360) (-10 as 350.0000, measured) (`OmmValidatorTests.Validate_NegativeAngleInSchemaRange_NoError`,
   -360, -10 and -0 for each angle, the schema its oracle, red on 46e6975 for -360 and -10).
+- **The OMM content validation refused a `MASS` of 0** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OmmValidator` reported "MASS must be positive",
+  where `massType` of NDM/XML 4.0.0 is a `nonNegativeDouble` and `SpacecraftParameters` accepts 0: the default
+  `Omm.LoadFrom*` threw `OmmValidationException` for a schema-valid OMM that `validateContent: false` loaded. The check
+  now reports a mass that is not a finite value of 0 or more ("MASS must be non-negative"), as for the other spacecraft
+  parameters and the OPM (`OmmValidatorTests.Validate_MassZero_NoError`, the schema its oracle, red on 46e6975;
+  `OmmReaderTests.ReadFromString_KeywordAtRangeBoundary_Parses` now loads its bounds, `RA_OF_ASC_NODE` -360 and `MASS`
+  0 included, with the default validation).
 
 **Changed**
 
@@ -3912,6 +3919,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `MEAN_ANOMALY` in [-360, 0), where they reported an `InvalidRange` error (`OMM002`) and threw
   `OmmValidationException`. Migration: none; a caller that wants [0, 360) normalizes the angle. No result moves for
   angles in [0, 360).
+- **The OMM content validation accepts a `MASS` of 0** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator.Validate`,
+  `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept it, where they reported an
+  `InvalidRange` error (`OMM002`) and threw `OmmValidationException`. Migration: none; a caller that needs a positive
+  mass checks it.
 
 **Deprecated**
 
