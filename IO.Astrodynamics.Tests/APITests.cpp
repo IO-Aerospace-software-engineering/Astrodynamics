@@ -2108,6 +2108,8 @@ TEST(API, ConvertConicElementsToStateVectorProxyOfACentreWithoutGmReturnsNaN)
     ASSERT_EQ(507, GetCelestialBodyInfoProxy(507).Id);
     IO::Astrodynamics::API::DTO::StateVectorDTO sv;
     EXPECT_NO_THROW(sv = ConvertConicElementsToStateVectorProxy(ConicsAbout(507)));
+    // The whole message, the same on every run (#714: before, "can't be found" on some runs only)
+    EXPECT_STREQ("CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.", GetLastErrorProxy());
     ExpectFailureReported("BODY507_GM");
     ExpectNaN(sv);
 }
@@ -2117,6 +2119,7 @@ TEST(API, ConvertEquinoctialElementsToStateVectorProxyOfACentreWithoutGmReturnsN
     ASSERT_TRUE(KernelTextValues("gm_de431.tpc", "BODY507_GM").empty());
     IO::Astrodynamics::API::DTO::StateVectorDTO sv;
     EXPECT_NO_THROW(sv = ConvertEquinoctialElementsToStateVectorProxy(EquinoctialAbout(507)));
+    EXPECT_STREQ("CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.", GetLastErrorProxy());
     ExpectFailureReported("BODY507_GM");
     ExpectNaN(sv);
 }
@@ -2218,6 +2221,7 @@ TEST(API, LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending)
     bool res = true;
     EXPECT_NO_THROW(res = LaunchProxy(launch));
     EXPECT_FALSE(res);
+    EXPECT_STREQ("CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.", GetLastErrorProxy());
     ExpectFailureReported("BODY507_GM");
 }
 

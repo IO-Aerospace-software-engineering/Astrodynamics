@@ -16,6 +16,18 @@
 
 using namespace std::chrono_literals;
 
+namespace
+{
+    // The SDKException of a body whose reads failed through SPICE (#714), SPICE's error left pending
+    void ThrowIfSpiceFailed(int id)
+    {
+        if (failed_c())
+        {
+            throw IO::Astrodynamics::Exception::SDKException("CelestialItem id" + std::to_string(id) + " can't be read:");
+        }
+    }
+}
+
 IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion)
         : IO::Astrodynamics::Body::CelestialItem(id, "",
                                                  ReadGM(id) /
@@ -24,12 +36,16 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_
           m_BodyFixedFrame{""},
           m_J2{ReadJ2(id)}, m_J3{ReadJ3(id)}, m_J4{ReadJ4(id)}
 {
+    ThrowIfSpiceFailed(id);
     const_cast<double &>(m_sphereOfInfluence) = IO::Astrodynamics::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(),
                                                                                            m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
     const_cast<double &>(m_hillSphere) = IO::Astrodynamics::Body::HillSphere(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetEccentricity(),
                                                                              m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
-    // Initialised: after a failed GM read SPICE is failed, and bodc2n_c returns without writing them (CSPICE bodc2n.c), so
-    // that an indeterminate flag and name were read (#711); the body is then not found, deterministically
+    // After a failed read (a GM the kernel pool lacks), SPICE is failed: BODC2N then returns at once and bodc2n_c copies its
+    // own unwritten local into the flag (CSPICE N0067: bodc2n.c "if (return_())", bodc2n_c.c "*found = fnd;"), so that
+    // initialising the flag here did not make it determinate (#714: the body was built with an empty name, or not found, from
+    // run to run). The constructor throws first, SPICE's error left pending for the caller, whose proxy appends it
+    ThrowIfSpiceFailed(id);
     SpiceBoolean found{SPICEFALSE};
     SpiceChar name[32]{};
     bodc2n_c(id, 32, name, &found);
@@ -58,8 +74,11 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrod
                                                                       m_BodyFixedFrame{""},
                                                                       m_J2{ReadJ2(id)}, m_J3{ReadJ3(id)}, m_J4{ReadJ4(id)}
 {
-    // Initialised: after a failed GM read SPICE is failed, and bodc2n_c returns without writing them (CSPICE bodc2n.c), so
-    // that an indeterminate flag and name were read (#711); the body is then not found, deterministically
+    // After a failed read (a GM the kernel pool lacks), SPICE is failed: BODC2N then returns at once and bodc2n_c copies its
+    // own unwritten local into the flag (CSPICE N0067: bodc2n.c "if (return_())", bodc2n_c.c "*found = fnd;"), so that
+    // initialising the flag here did not make it determinate (#714: the body was built with an empty name, or not found, from
+    // run to run). The constructor throws first, SPICE's error left pending for the caller, whose proxy appends it
+    ThrowIfSpiceFailed(id);
     SpiceBoolean found{SPICEFALSE};
     SpiceChar name[32]{};
     bodc2n_c(id, 32, name, &found);

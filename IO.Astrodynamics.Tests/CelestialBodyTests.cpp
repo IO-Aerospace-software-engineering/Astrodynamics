@@ -9,6 +9,7 @@
 #include <limits>
 #include <StateVector.h>
 #include <memory>
+#include <functional>
 #include <InertialFrames.h>
 #include <Aberrations.h>
 #include <Barycenter.h>
@@ -305,3 +306,44 @@ TEST(CelestialBody, GeosynchronousOrbitFromLongitudeAndLatitude2)
               svICRF.GetVelocity());
     ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::ICRF(), svICRF.GetFrame());
 }
+
+// #714: after a failed GM read SPICE is failed, and bodc2n_c copies into the caller's flag its own local, which BODC2N leaves
+// unwritten when it returns at once on a pending error (CSPICE N0067: bodc2n_c.c "*found = fnd;", bodc2n.c "if (return_())"),
+// so that the constructors went on with an indeterminate flag: an empty name, or "can't be found" on some runs only. They now
+// throw before bodc2n_c, SPICE's error left pending for the caller (a proxy appends it to the message). ELARA (507) is named
+// by SPICE, and gm_de431.tpc has no BODY507_GM. The CSPICE calls are not exported by the Windows DLL
+#if !defined(_WIN32)
+#include <SDKException.h>
+#include <SpiceUsr.h>
+
+void ActivateErrorManagement();
+
+namespace
+{
+    void ExpectGmReadFailure(const std::function<void()> &construct)
+    {
+        try
+        {
+            construct();
+            ADD_FAILURE() << "no exception";
+        }
+        catch (const IO::Astrodynamics::Exception::SDKException &e)
+        {
+            EXPECT_STREQ("CelestialItem id507 can't be read:", e.what());
+        }
+        EXPECT_TRUE(failed_c());
+        SpiceChar message[1841]{};
+        getmsg_c("LONG", sizeof(message), message);
+        EXPECT_STREQ("The variable BODY507_GM could not be found in the kernel pool.", message);
+        reset_c();
+    }
+}
+
+TEST(CelestialBody, ConstructorsOfABodyWithoutGmThrowBeforeReadingItsName)
+{
+    ActivateErrorManagement();
+    ExpectGmReadFailure([] { IO::Astrodynamics::Body::CelestialBody elara(507); });
+    auto jupiter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(599);
+    ExpectGmReadFailure([&jupiter] { IO::Astrodynamics::Body::CelestialBody elara(507, jupiter); });
+}
+#endif

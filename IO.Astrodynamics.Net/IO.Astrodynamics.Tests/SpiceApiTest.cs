@@ -1307,8 +1307,13 @@ public class SpiceApiTest
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
-        Assert.Contains("BODY507_GM", error.Message);
+        // The same message on every run (#714: before, "can't be found" on some runs only, the name read after the failed GM
+        // read indeterminate)
+        Assert.Equal(ElaraWithoutGmMessage, error.Message);
     }
+
+    private const string ElaraWithoutGmMessage =
+        "The elements cannot be converted to a state vector: CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.";
 
     [Fact]
     void ConvertEquinoctialElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
@@ -1317,7 +1322,7 @@ public class SpiceApiTest
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, 0.1, 0.0, 0.5, new IO.Astrodynamics.Body.CelestialBody(507),
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
-        Assert.Contains("BODY507_GM", error.Message);
+        Assert.Equal(ElaraWithoutGmMessage, error.Message);
     }
 
     // An open orbit goes to conics_c with the GM of its observer, 0 for Elara (no BODY507_GM in gm_de440.tpc). Before the
