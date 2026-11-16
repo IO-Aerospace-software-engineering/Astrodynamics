@@ -92,6 +92,14 @@ elements were ignored. Such a document now makes `Load*` throw `OpmValidationExc
 `validateSchema: false` to read it without the schema step, where a keyword out of its range throws `OpmParseException`
 since the fourth round (above). A valid document, the writer's output included, validates without a warning.
 
+### Content validation
+
+`validateContent`, `Validate()` and `OpmValidator.Validate` check the physical constraints of the data model's values. Each
+error check is the negation of its admitted range, so that NaN, in no range, is an error (`OPM002`), as is an infinite
+value where the range is half-open: a covariance variance must be finite and non-negative, which the covariance
+constructors, without a range, do not check ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN variance was valid). The warnings and the
+information levels (an unusual drag coefficient, a large eccentricity) are unchanged.
+
 ### Saving
 
 | Method | Description |

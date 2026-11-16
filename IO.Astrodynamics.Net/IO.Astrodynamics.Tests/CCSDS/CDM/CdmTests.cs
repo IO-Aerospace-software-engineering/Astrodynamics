@@ -431,6 +431,19 @@ public class CdmTests
         }
     }
 
+    [Fact]
+    public void Validate_NaNMissDistance_IsInvalid()
+    {
+        // A CDM built from its records with a NaN miss distance: not non-negative, so invalid (before: valid, the check
+        // MissDistanceMeters < 0 being false for NaN)
+        var read = Cdm.ReadFromString(ManualCdmXml());
+        Assert.True(read.Validate().IsValid);
+        var cdm = new Cdm(read.Header, read.RelativeMetadataData with { MissDistanceMeters = double.NaN }, read.Segments);
+        var result = cdm.Validate();
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Message.Contains("Miss distance must be non-negative"));
+    }
+
     private static string WithSegmentCount(string xml, int count)
     {
         var document = XDocument.Parse(xml);

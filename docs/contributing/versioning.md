@@ -2854,6 +2854,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   for bit as before (`MeanElementsTests`, `SpacecraftParametersTests`, `OpmDataTests`, `OpmKeplerianElementsTests` and
   `OpmManeuverParametersTests` `*_NonFinite*`, NaN, +∞ and −∞ in each ranged parameter, red on 46e6975; the bounds
   e 0 and −0, i 0 and 180, the angles −360, a mass and a delta mass of 0 stored as given).
+- **The CCSDS content validators reported NaN valid** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The error checks of `OmmValidator`, `OpmValidator` and
+  `CdmValidator` were the complement of their range (`CxX < 0`, `MissDistanceMeters < 0.0`, ...), false for NaN: a
+  covariance built with `new CovarianceMatrix(...)` or `CovarianceMatrix.FromMatrix` with a NaN variance, which the
+  covariance constructors do not range-check, and a `CdmRelativeMetadataData` with a NaN miss distance were reported
+  valid, against the validators' own rules ("must be non-negative"). Each error check is now the negation of its
+  admitted range, with a finite value where the range is half-open, so NaN is an `InvalidRange` error (`OMM002`,
+  `OPM002`) or a CDM content error naming its value (`Variance CX_X must be finite and non-negative, got NaN.`); the
+  warnings and the information levels are unchanged (`OmmValidatorTests` and `OpmValidatorTests`
+  `Validate_NaNVariance_ReportsError`, each variance; `CdmTests.Validate_NaNMissDistance_IsInvalid`; red on 46e6975).
 
 **Changed**
 
@@ -3886,6 +3895,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   parameter for NaN, and for +Infinity or −Infinity, in a range-checked parameter, where they accepted it; so do
   `TLE.ToOmm` and `Spacecraft.ToOpm`, which build them, for such a value, where they wrote `NaN`. Migration: pass finite values; a
   non-finite element or spacecraft parameter carried no orbit. Finite values build bit for bit as before.
+- **The CCSDS content validators report a NaN variance or miss distance** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator`,
+  `OpmValidator` and `CdmValidator.Validate` (and `Cdm.Validate`) report an error for a NaN or infinite covariance
+  variance or CDM miss distance, where they reported the object valid, and their range messages now name the finite
+  rule (`must be finite and non-negative`, `must be finite and positive`). Only an object built programmatically with
+  such a value is affected: the readers refuse it. Migration: none for finite data.
 
 **Deprecated**
 

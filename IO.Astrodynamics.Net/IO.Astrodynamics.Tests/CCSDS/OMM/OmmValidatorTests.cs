@@ -954,4 +954,46 @@ public class OmmValidatorTests
     }
 
     #endregion
+
+    #region Ranges of NDM/XML 4.0.0 and non-finite values (#708)
+
+    private static CovarianceMatrix CovarianceWithVariance(string term, double value)
+    {
+        double V(string name) => name == term ? value : 1.0e-6;
+        return new CovarianceMatrix(
+            V("CX_X"), 0, V("CY_Y"),
+            0, 0, V("CZ_Z"),
+            0, 0, 0, V("CX_DOT_X_DOT"),
+            0, 0, 0, 0, V("CY_DOT_Y_DOT"),
+            0, 0, 0, 0, 0, V("CZ_DOT_Z_DOT"), "TEME");
+    }
+
+    [Theory]
+    [InlineData("CX_X", "CxX")]
+    [InlineData("CY_Y", "CyY")]
+    [InlineData("CZ_Z", "CzZ")]
+    [InlineData("CX_DOT_X_DOT", "CxDotXDot")]
+    [InlineData("CY_DOT_Y_DOT", "CyDotYDot")]
+    [InlineData("CZ_DOT_Z_DOT", "CzDotZDot")]
+    public void Validate_NaNVariance_ReportsError(string keyword, string property)
+    {
+        // A variance is non-negative, and NaN is not (before: valid, the check "< 0" being false for NaN). The covariance
+        // constructors do not range-check their terms, so the validator is the check of a programmatic covariance
+        var read = _reader.ReadFromString(OmmReaderTests.KeywordBaseOmm());
+        var data = read.Data;
+        var omm = new Omm(read.Header, read.Metadata, new OmmData(data.MeanElements, data.SpacecraftParameters,
+            data.TleParameters, CovarianceWithVariance(keyword, double.NaN), data.UserDefinedParameters, data.Comments));
+
+        var error = Assert.Single(_validator.Validate(omm).Errors);
+        Assert.Equal("OMM002", error.Code);
+        Assert.Equal($"Data.CovarianceMatrix.{property}", error.Path);
+        Assert.Contains(keyword, error.Message);
+
+        // A finite non-negative variance is still valid
+        var finite = new Omm(read.Header, read.Metadata, new OmmData(data.MeanElements, data.SpacecraftParameters,
+            data.TleParameters, CovarianceWithVariance(keyword, 0.0), data.UserDefinedParameters, data.Comments));
+        Assert.Empty(_validator.Validate(finite).Errors);
+    }
+
+    #endregion
 }

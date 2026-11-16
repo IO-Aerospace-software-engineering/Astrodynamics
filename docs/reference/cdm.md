@@ -42,7 +42,8 @@ A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`
 case, or a value beyond the range of a `double` such as `1e400`) throws `CdmParseException` naming the keyword and the
 text, for every numeric keyword (the miss distance, the states, the covariances, the probability; [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), for example
 `Invalid numeric value for MISS_DISTANCE: 'NaN' is not a finite number.` Before 11.0.0 the CDM was read with the value,
-and `Cdm.Validate` reported a NaN miss distance valid.
+and `Cdm.Validate` reported a NaN miss distance valid; it now reports a miss distance that is NaN, infinite or negative
+as an error.
 
 ### Schema validation
 

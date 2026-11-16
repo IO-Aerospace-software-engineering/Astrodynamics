@@ -455,10 +455,12 @@ public class OmmValidator
         }
     }
 
+    // The error checks are the negation of the admitted range, so that NaN, in no range, is an error (#708: the complement
+    // of the range, false for NaN, reported NaN valid)
     private void ValidateMeanElementsPhysicalConstraints(MeanElements elements, OmmValidationResult result)
     {
         // Eccentricity: must be >= 0
-        if (elements.Eccentricity < 0)
+        if (!(elements.Eccentricity >= 0))
         {
             result.AddError(InvalidRange, $"Eccentricity must be >= 0, got {elements.Eccentricity}.", "Data.MeanElements.Eccentricity");
         }
@@ -478,13 +480,13 @@ public class OmmValidator
         }
 
         // Inclination: must be 0 to 180 degrees
-        if (elements.Inclination < 0 || elements.Inclination > 180)
+        if (!(elements.Inclination >= 0 && elements.Inclination <= 180))
         {
             result.AddError(InvalidRange, $"Inclination must be 0-180 degrees, got {elements.Inclination}.", "Data.MeanElements.Inclination");
         }
 
         // RAAN: must be 0 to 360 degrees
-        if (elements.RightAscensionOfAscendingNode < 0 || elements.RightAscensionOfAscendingNode >= 360)
+        if (!(elements.RightAscensionOfAscendingNode >= 0 && elements.RightAscensionOfAscendingNode < 360))
         {
             result.AddError(InvalidRange,
                 $"RA_OF_ASC_NODE must be 0-360 degrees, got {elements.RightAscensionOfAscendingNode}.",
@@ -492,7 +494,7 @@ public class OmmValidator
         }
 
         // Argument of pericenter: must be 0 to 360 degrees
-        if (elements.ArgumentOfPericenter < 0 || elements.ArgumentOfPericenter >= 360)
+        if (!(elements.ArgumentOfPericenter >= 0 && elements.ArgumentOfPericenter < 360))
         {
             result.AddError(InvalidRange,
                 $"ARG_OF_PERICENTER must be 0-360 degrees, got {elements.ArgumentOfPericenter}.",
@@ -500,7 +502,7 @@ public class OmmValidator
         }
 
         // Mean anomaly: must be 0 to 360 degrees
-        if (elements.MeanAnomaly < 0 || elements.MeanAnomaly >= 360)
+        if (!(elements.MeanAnomaly >= 0 && elements.MeanAnomaly < 360))
         {
             result.AddError(InvalidRange,
                 $"MEAN_ANOMALY must be 0-360 degrees, got {elements.MeanAnomaly}.",
@@ -519,18 +521,19 @@ public class OmmValidator
         }
 
         // Mean motion: must be positive
-        if (elements.MeanMotion.HasValue && elements.MeanMotion.Value <= 0)
+        if (elements.MeanMotion.HasValue && !(double.IsFinite(elements.MeanMotion.Value) && elements.MeanMotion.Value > 0))
         {
             result.AddError(InvalidRange,
-                $"MEAN_MOTION must be positive, got {elements.MeanMotion.Value}.",
+                $"MEAN_MOTION must be finite and positive, got {elements.MeanMotion.Value}.",
                 "Data.MeanElements.MeanMotion");
         }
 
         // Gravitational parameter: must be positive if specified
-        if (elements.GravitationalParameter.HasValue && elements.GravitationalParameter.Value <= 0)
+        if (elements.GravitationalParameter.HasValue
+            && !(double.IsFinite(elements.GravitationalParameter.Value) && elements.GravitationalParameter.Value > 0))
         {
             result.AddError(InvalidRange,
-                $"GM must be positive, got {elements.GravitationalParameter.Value}.",
+                $"GM must be finite and positive, got {elements.GravitationalParameter.Value}.",
                 "Data.MeanElements.GravitationalParameter");
         }
     }
@@ -538,33 +541,33 @@ public class OmmValidator
     private void ValidateSpacecraftParameters(SpacecraftParameters spacecraft, OmmValidationResult result)
     {
         // All spacecraft parameters should be positive if specified
-        if (spacecraft.Mass.HasValue && spacecraft.Mass.Value <= 0)
+        if (spacecraft.Mass.HasValue && !(double.IsFinite(spacecraft.Mass.Value) && spacecraft.Mass.Value > 0))
         {
             result.AddError(InvalidRange, $"MASS must be positive, got {spacecraft.Mass.Value}.", "Data.SpacecraftParameters.Mass");
         }
 
-        if (spacecraft.SolarRadArea.HasValue && spacecraft.SolarRadArea.Value < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(spacecraft.SolarRadArea))
         {
             result.AddError(InvalidRange,
                 $"SOLAR_RAD_AREA must be non-negative, got {spacecraft.SolarRadArea.Value}.",
                 "Data.SpacecraftParameters.SolarRadArea");
         }
 
-        if (spacecraft.SolarRadCoeff.HasValue && spacecraft.SolarRadCoeff.Value < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(spacecraft.SolarRadCoeff))
         {
             result.AddError(InvalidRange,
                 $"SOLAR_RAD_COEFF must be non-negative, got {spacecraft.SolarRadCoeff.Value}.",
                 "Data.SpacecraftParameters.SolarRadCoeff");
         }
 
-        if (spacecraft.DragArea.HasValue && spacecraft.DragArea.Value < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(spacecraft.DragArea))
         {
             result.AddError(InvalidRange,
                 $"DRAG_AREA must be non-negative, got {spacecraft.DragArea.Value}.",
                 "Data.SpacecraftParameters.DragArea");
         }
 
-        if (spacecraft.DragCoeff.HasValue && spacecraft.DragCoeff.Value < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(spacecraft.DragCoeff))
         {
             result.AddError(InvalidRange,
                 $"DRAG_COEFF must be non-negative, got {spacecraft.DragCoeff.Value}.",
@@ -590,30 +593,30 @@ public class OmmValidator
 
     private void ValidateCovarianceMatrix(CovarianceMatrix covariance, OmmValidationResult result)
     {
-        // Diagonal elements (variances) must be non-negative
-        if (covariance.CxX < 0)
+        // Diagonal elements (variances) must be finite and non-negative (#708: a NaN variance was valid)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CxX))
         {
-            result.AddError(InvalidRange, "Variance CX_X must be non-negative.", "Data.CovarianceMatrix.CxX");
+            result.AddError(InvalidRange, $"Variance CX_X must be finite and non-negative, got {covariance.CxX}.", "Data.CovarianceMatrix.CxX");
         }
-        if (covariance.CyY < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CyY))
         {
-            result.AddError(InvalidRange, "Variance CY_Y must be non-negative.", "Data.CovarianceMatrix.CyY");
+            result.AddError(InvalidRange, $"Variance CY_Y must be finite and non-negative, got {covariance.CyY}.", "Data.CovarianceMatrix.CyY");
         }
-        if (covariance.CzZ < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CzZ))
         {
-            result.AddError(InvalidRange, "Variance CZ_Z must be non-negative.", "Data.CovarianceMatrix.CzZ");
+            result.AddError(InvalidRange, $"Variance CZ_Z must be finite and non-negative, got {covariance.CzZ}.", "Data.CovarianceMatrix.CzZ");
         }
-        if (covariance.CxDotXDot < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CxDotXDot))
         {
-            result.AddError(InvalidRange, "Variance CX_DOT_X_DOT must be non-negative.", "Data.CovarianceMatrix.CxDotXDot");
+            result.AddError(InvalidRange, $"Variance CX_DOT_X_DOT must be finite and non-negative, got {covariance.CxDotXDot}.", "Data.CovarianceMatrix.CxDotXDot");
         }
-        if (covariance.CyDotYDot < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CyDotYDot))
         {
-            result.AddError(InvalidRange, "Variance CY_DOT_Y_DOT must be non-negative.", "Data.CovarianceMatrix.CyDotYDot");
+            result.AddError(InvalidRange, $"Variance CY_DOT_Y_DOT must be finite and non-negative, got {covariance.CyDotYDot}.", "Data.CovarianceMatrix.CyDotYDot");
         }
-        if (covariance.CzDotZDot < 0)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(covariance.CzDotZDot))
         {
-            result.AddError(InvalidRange, "Variance CZ_DOT_Z_DOT must be non-negative.", "Data.CovarianceMatrix.CzDotZDot");
+            result.AddError(InvalidRange, $"Variance CZ_DOT_Z_DOT must be finite and non-negative, got {covariance.CzDotZDot}.", "Data.CovarianceMatrix.CzDotZDot");
         }
 
         // Reference frame should be specified
