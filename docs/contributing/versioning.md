@@ -3047,7 +3047,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   between frames (`StarTests.GetEquatorialCoordinates_TheSameInstantInEveryFrame_IsOnePosition`); across the leap second
   it counts 86 401 s plus the change of TDB − TT, 0.000e+00 rad from the closed form of the leapseconds kernel
   (`AcrossALeapSecond_CountsIt`, 3.169e-9 rad before); against dt from CSPICE's ET (`unitim_c` of the TT of each UTC
-  time), 3.553e-15 rad over 2001 and 2016-07 to 2017-06 (Validation, Linux, threshold 7.2e-15, provisional). For a
+  time), 3.553e-15 rad over 2001 and 2016-07 to 2017-06 (Validation, Linux, threshold 7.2e-15; 1.0e-14 for the straight line of #718). For a
   catalog epoch or an epoch in UTC, TAI or GPS a star moves by μ × (TDB − UTC or TAI), about 32 to 69 s of its motion:
   about 1e-11 rad for a real star of 1″/yr; in TT, under 1.7 ms of it. `Star.Propagate`, `GetEphemeris` and the star of
   an occultation or field-of-view search over a UTC window move the same way. Two times in TDB, every star of the
@@ -3061,9 +3061,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   identity, 9.992e-15 rad and 1.539e-15 in direction over two years every 0.01 yr past the north pole, the south pole,
   and both for a star of 1 rad/yr, each step no longer than the arc of the angles (3.142 rad, a direction 2.0 away and
   a jump of 1.569 rad before; `StarTests.GetEquatorialCoordinates_AcrossAPole_CrossesIt`, thresholds 2.0e-14 rad and
-  3.1e-15, provisional); against CSPICE's `latrec_c` then `reclat_c` of the unreduced angles, 1.533e-15 rad
-  (`AcrossAPole_IsReclatOfLatrec`, Validation, threshold 3.1e-15, provisional). A star of the model still moves along
-  its angles, not along a great circle (SOFA's space motion is not modeled). Declinations within [−π/2, π/2] are
+  3.2e-15 over Linux, Windows and macOS arm64); against CSPICE's `latrec_c` then `reclat_c` of the unreduced angles, 1.533e-15 rad
+  (`AcrossAPole_IsReclatOfLatrec`, Validation, threshold 3.1e-15). Since #718 a star moves along `iauStarpm`'s
+  straight line instead (below), which crosses a pole without this reduction. Declinations within [−π/2, π/2] are
   unchanged, bit for bit; the snapshot of `StarTests.GetEquatorialCoordinates2`, past the south pole, which encoded the
   jump (−0.128953 rad), is replaced by the closed form (−1.441843 rad, the right ascension turned by π). The right
   ascension is in [0, 2π) as documented: a value just below 0 whose sum with 2π rounds to 2π (above −ulp(2π)/2,
@@ -3087,7 +3087,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and Saturn read from SPICE at the TDB of the TT argument, RK4 at 300 s, converged to about 1e-4 m): 468.4 m and
   1.197e-3 m/s, the error of Velocity-Verlet at the example's 5 min, that integration against the Moon of de440s,
   1.514 km (the forces it leaves out), and the example against it, 1.972 km (bounds 9.4e2 m, 2.4e-3 m/s, 3.1e3 m and
-  4.0e3 m, twice the Linux worst, provisional); with the Earth's GM alone the integration ends 54 310 km from the Moon.
+  4.0e3 m, twice the worst over Linux, Windows and macOS arm64); with the Earth's GM alone the integration ends 54 310 km from the Moon.
   The comment of the 5 min step states what the step costs where it said "for accuracy". The library is unchanged
   (`DeepSpaceExample_FollowsTheMoonOfTheEphemeris`, red on 46e6975: the block returned nothing to compare; with the
   Earth's GM alone, 5.431e7 m from the reference).
@@ -3124,7 +3124,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its lines), and the Lambert, frame, lunar eclipse, batch and thread-safety blocks with their inputs: the Lambert velocities
   against the two-body closed form (3.1e-7 m at arrival), the ecliptic state against the rotation by the obliquity of
   ECLIPJ2000 (9.3e-10 m), the CIRS round trip (1.4e-16), the eclipse of 2024-03-25 bracketed within 60 s by the discs of
-  the Earth and the Moon as the Sun sees them (bounds twice the Linux worst, provisional). The 12 signature listings and
+  the Earth and the Moon as the Sun sees them (bounds twice the worst over Linux, Windows and macOS arm64). The 12 signature listings and
   fragments that are not statements are fenced `csharp-signature` (highlighted as C# through `mkdocs.yml`, and checked
   against the library's constructors and methods by reflection), or written out in full; the excerpt of `Constants` that
   opens `docs/standards-and-units.md`, declarations fenced `csharp` with no region (region 1 of that page is its second
