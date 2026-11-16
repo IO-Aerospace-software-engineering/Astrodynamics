@@ -16,10 +16,18 @@ namespace IO.Astrodynamics.Body;
 /// <summary>
 /// Represents a star in the celestial system.
 /// </summary>
+/// <remarks>
+/// Its position at an epoch is that of its catalog plus the proper motions times dt, the Julian years of TDB from the
+/// catalog epoch (both times converted to TDB, as SOFA's <c>iauStarpm</c> takes TDB dates, #709): the angles move
+/// linearly, the declination reduced to [−π/2, π/2] across a pole, and the sigmas grow as √(σ² + (dt σμ)²).
+/// </remarks>
 public class Star : CelestialBody
 {
     // The states of the last propagation, in the order of their epochs; replaced as a whole by each propagation
     private StateVector[] _propagatedStates = Array.Empty<StateVector>();
+
+    // The catalog epoch in TDB, the time scale of the catalog motion's dt (#709)
+    private readonly Time _epochTdb;
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -45,6 +53,7 @@ public class Star : CelestialBody
         SpectralType = spectralType ?? throw new ArgumentNullException(nameof(spectralType));
         VisualMagnitude = visualMagnitude;
         Epoch = epoch;
+        _epochTdb = epoch.ToTDB();
         Parallax = parallax;
         EquatorialCoordinatesAtEpoch = equatorialCoordinatesAtEpoch;
         RightAscensionProperMotion = rightAscensionProperMotion;
@@ -82,7 +91,8 @@ public class Star : CelestialBody
     public double Distance { get; }
 
     /// <summary>
-    /// Gets the epoch time for the star.
+    /// Gets the epoch time for the star: the catalog epoch, as given. The catalog motion counts the Julian years of TDB
+    /// from it, whatever its time frame (#709).
     /// </summary>
     public Time Epoch { get; }
 
@@ -139,31 +149,62 @@ public class Star : CelestialBody
     public bool IsPropagated => Volatile.Read(ref _propagatedStates).Length > 0;
 
     /// <summary>
-    /// The Julian years from the catalog epoch to <paramref name="epoch"/>, the calendars of the two times as they are
-    /// (as <see cref="Time.ToJulianDate"/> reads them), from the exact difference of their ticks rounded once to a double.
+    /// The Julian years of TDB from the catalog epoch to <paramref name="epoch"/>, both converted to TDB, from the exact
+    /// difference of their ticks rounded once to a double, as SOFA's <c>iauStarpm</c> and <c>iauPmsafe</c> take TDB dates
+    /// (#709): the same instant gives the same position whatever its time frame, and a leap second between two UTC times
+    /// counts. A time in TDB is used as it is, bit for bit.
     /// </summary>
     /// <remarks>
     /// Before 11.0.0 it was the difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day,
     /// about 40 µs) before the subtraction: off whole and half days from J2000 the star was that of an epoch up to about
-    /// 20 µs away, half that resolution.
+    /// 20 µs away, half that resolution. It was also the difference of the two calendars, each in its own time frame
+    /// (#709): an epoch in UTC moved a star of the catalog epoch of TDB by its proper motion over the 64 to 69 s of
+    /// TDB − UTC (2.3e-7 relative at 0.1 rad/yr), and two UTC times skipped the leap seconds between them.
     /// </remarks>
     private double JulianYearsFromCatalogEpoch(Time epoch)
     {
-        return (epoch.DateTime.Ticks - Epoch.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JULIAN_YEAR;
+        return (epoch.ToTDB().DateTime.Ticks - _epochTdb.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JULIAN_YEAR;
     }
 
     /// <summary>
     /// Gets the equatorial coordinates of the star at a specific epoch: those of the catalog epoch plus the proper motions
-    /// times dt, the Julian years from the catalog epoch, from the exact difference of the ticks.
+    /// times dt, the Julian years of TDB from the catalog epoch (both times converted to TDB, whatever their frames), from
+    /// the exact difference of the ticks; the declination reduced to [−π/2, π/2] and the right ascension to [0, 2π), a
+    /// pole crossed.
     /// </summary>
+    /// <remarks>
+    /// The angles of the linear model, d = δ0 + μδ dt and a = α0 + μα dt, are reduced to the pair that points where
+    /// (cos d cos a, cos d sin a, sin d) points: when |d| exceeds π/2, d is reduced to (−π, π], and a declination past a
+    /// pole becomes π − d (−π − d past the south pole) with the right ascension turned by π. A declination within
+    /// [−π/2, π/2] is used as it is. Before 11.0.0 the declination was reduced modulo π/2, so that a star whose declination
+    /// reached or passed a pole jumped toward the equator, by up to π/2 in direction, and a star at a pole read the
+    /// equator (#709).
+    /// </remarks>
     /// <param name="epoch">The epoch time for the coordinates.</param>
     /// <returns>The equatorial coordinates at the specified epoch.</returns>
     public Equatorial GetEquatorialCoordinates(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
-        var dec = (EquatorialCoordinatesAtEpoch.Declination + dt * DeclinationProperMotion) % Constants.PI2;
+        var dec = EquatorialCoordinatesAtEpoch.Declination + dt * DeclinationProperMotion;
+        var ra = EquatorialCoordinatesAtEpoch.RightAscension + dt * RightAscensionProperMotion;
+        if (System.Math.Abs(dec) > Constants.PI2)
+        {
+            // Past a pole: the declination in (−π, π], then reflected through the pole it passed, the right ascension
+            // turned by π (cos(π − d) = −cos d, sin(π − d) = sin d)
+            dec = System.Math.IEEERemainder(dec, Constants._2PI);
+            if (dec > Constants.PI2)
+            {
+                dec = Constants.PI - dec;
+                ra += Constants.PI;
+            }
+            else if (dec < -Constants.PI2)
+            {
+                dec = -Constants.PI - dec;
+                ra += Constants.PI;
+            }
+        }
 
-        var ra = (EquatorialCoordinatesAtEpoch.RightAscension + dt * RightAscensionProperMotion) % Constants._2PI;
+        ra %= Constants._2PI;
         if (ra < 0.0)
         {
             ra += Constants._2PI;
@@ -173,27 +214,33 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Gets the sigma value for right ascension at a specific epoch, dt the Julian years from the catalog epoch, from the
-    /// exact difference of the ticks.
+    /// Gets the sigma value for right ascension at a specific epoch, √(σα² + (dt σμα)²), dt the Julian years of TDB from
+    /// the catalog epoch, from the exact difference of the ticks.
     /// </summary>
+    /// <remarks>
+    /// A standard deviation, not an angle: it is not reduced. Before 11.0.0 it was reduced modulo 2π (#709).
+    /// </remarks>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for right ascension at the specified epoch.</returns>
     public double GetRightAscensionSigma(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
-        return System.Math.Sqrt(System.Math.Pow(RightAscensionSigma, 2) + System.Math.Pow(dt * RightAscensionSigmaProperMotion, 2)) % Constants._2PI;
+        return System.Math.Sqrt(System.Math.Pow(RightAscensionSigma, 2) + System.Math.Pow(dt * RightAscensionSigmaProperMotion, 2));
     }
 
     /// <summary>
-    /// Gets the sigma value for declination at a specific epoch, dt the Julian years from the catalog epoch, from the exact
-    /// difference of the ticks.
+    /// Gets the sigma value for declination at a specific epoch, √(σδ² + (dt σμδ)²), dt the Julian years of TDB from the
+    /// catalog epoch, from the exact difference of the ticks.
     /// </summary>
+    /// <remarks>
+    /// A standard deviation, not an angle: it is not reduced. Before 11.0.0 it was reduced modulo π/2 (#709).
+    /// </remarks>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for declination at the specified epoch.</returns>
     public double GetDeclinationSigma(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
-        return System.Math.Sqrt(System.Math.Pow(DeclinationSigma, 2) + System.Math.Pow(dt * DeclinationSigmaProperMotion, 2)) % Constants.PI2;
+        return System.Math.Sqrt(System.Math.Pow(DeclinationSigma, 2) + System.Math.Pow(dt * DeclinationSigmaProperMotion, 2));
     }
 
     /// <summary>

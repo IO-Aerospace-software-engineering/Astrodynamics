@@ -2388,7 +2388,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day, about 40 µs) before the
   subtraction, against the remark of `Time.ToJulianDate`. dt now comes from the exact difference of the ticks, rounded
   once to a double, then divided by the days of a Julian year, in each time's own calendar as before (a UTC catalog epoch
-  and a UTC epoch still difference their UTC calendars). Measured on the star of `StarTests` (1 rad, 0.1 rad/yr, catalog
+  and a UTC epoch still differenced their UTC calendars, until [#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709), below). Measured on the star of `StarTests` (1 rad, 0.1 rad/yr, catalog
   epoch 2001-01-01 TDB) against the closed form, dt from the tick difference in `decimal` (28 digits) rounded once: at
   the 744 hourly epochs of March 2001, at 199 epochs 1234567 ticks apart and at 99 epochs before the catalog epoch, the
   right ascension and the declination were 6.328e-14 rad away, the position 7.287e-14 relative from CSPICE's `latrec_c`
@@ -2808,6 +2808,42 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` of `LoadKernels` and `UnloadKernels` carries it ("Kernel ... can't be unloaded:
   SPICE(FILENOTFOUND) ...") where it said "You can have more details on standard output". The exception types are
   unchanged.
+- **The position of a star depended on the time frame of its epoch** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates`,
+  `GetRightAscensionSigma` and `GetDeclinationSigma` took dt from the calendars of the catalog epoch and of the epoch,
+  each in its own time frame, so that the same instant gave two positions (relative to the epoch in TDB: 2.299e-7 in UTC,
+  1.153e-7 in TAI, 4.977e-12 in TT, for the star of 1 rad and 0.1 rad/yr of `StarTests`, measured on 46e6975), and two
+  UTC times skipped the leap seconds between them (86 400 s from 2016-12-31T12:00Z to 2017-01-01T12:00Z, where 86 401 s
+  elapse). dt now counts the Julian years of TDB: both times are converted to TDB (the catalog epoch once, when the star
+  is built; `Epoch` is kept as given), as SOFA's `iauStarpm` and `iauPmsafe` take TDB dates (to be verified by
+  S. Guillet). The position of a time is that of its TDB time, bit for bit, and agrees within the motion of 1 µs
+  between frames (`StarTests.GetEquatorialCoordinates_TheSameInstantInEveryFrame_IsOnePosition`); across the leap second
+  it counts 86 401 s plus the change of TDB − TT, 0.000e+00 rad from the closed form of the leapseconds kernel
+  (`AcrossALeapSecond_CountsIt`, 3.169e-9 rad before); against dt from CSPICE's ET (`unitim_c` of the TT of each UTC
+  time), 3.553e-15 rad over 2001 and 2016-07 to 2017-06 (Validation, Linux, threshold 7.2e-15, provisional). For a
+  catalog epoch or an epoch in UTC, TAI or GPS a star moves by μ × (TDB − UTC or TAI), about 32 to 69 s of its motion:
+  about 1e-11 rad for a real star of 1″/yr; in TT, under 1.7 ms of it. `Star.Propagate`, `GetEphemeris` and the star of
+  an occultation or field-of-view search over a UTC window move the same way. Two times in TDB, every star of the
+  suite, are unchanged, bit for bit.
+- **A star whose declination passed a pole jumped toward the equator** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates` reduced
+  δ0 + μδ dt modulo π/2: past a pole the declination folded toward the equator and the right ascension did not turn, a
+  jump of up to π/2 in direction (1.5 rad + 0.1 rad/yr read 0.0092 rad after 0.8 yr), and a star at a pole read the
+  equator ((π/2) mod (π/2) = 0). A declination of magnitude above π/2 is now reduced to (−π, π], then reflected through
+  the pole it passed, π − d (−π − d past the south pole), and the right ascension turned by π: the pair points where the
+  unreduced angles of the linear model point, (cos d cos a, cos d sin a, sin d). Against the closed form of the spherical
+  identity, 9.992e-15 rad and 1.539e-15 in direction over two years every 0.01 yr past the north pole, the south pole,
+  and both for a star of 1 rad/yr, each step no longer than the arc of the angles (3.142 rad, a direction 2.0 away and
+  a jump of 1.569 rad before; `StarTests.GetEquatorialCoordinates_AcrossAPole_CrossesIt`, thresholds 2.0e-14 rad and
+  3.1e-15, provisional); against CSPICE's `latrec_c` then `reclat_c` of the unreduced angles, 1.533e-15 rad
+  (`AcrossAPole_IsReclatOfLatrec`, Validation, threshold 3.1e-15, provisional). A star of the model still moves along
+  its angles, not along a great circle (SOFA's space motion is not modeled). Declinations within [−π/2, π/2] are
+  unchanged, bit for bit; the snapshot of `StarTests.GetEquatorialCoordinates2`, past the south pole, which encoded the
+  jump (−0.128953 rad), is replaced by the closed form (−1.441843 rad, the right ascension turned by π).
+- **The sigmas of a star were reduced like angles** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetRightAscensionSigma` and `GetDeclinationSigma`
+  reduced √(σ² + (dt σμ)²) modulo 2π and π/2: a declination sigma of 2 rad read 0.429 rad, one of 2 rad grown by
+  1e-3 rad/yr over 2000 years 1.258 rad (2.828 rad). A standard deviation is now returned as it is
+  (`StarTests.Sigmas_AboveAnAngleRange_AreNotReduced`; the snapshots of `GetDeclinationSigma` and
+  `GetRightAscensionSigma`, 0.588 and 5.133 rad, are replaced by their closed forms, 10.013 and 11.416 rad). Sigmas
+  below π/2 and 2π are unchanged, bit for bit.
 
 **Changed**
 
