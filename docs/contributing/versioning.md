@@ -2844,6 +2844,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (GALILEO ORBITER, -77); the .NET layer rejects such identifiers first (#560), so only a native caller met it. The proxy
   now returns the record of an identifier SPICE does not name (`Id` -1) with the message in `GetLastErrorProxy`
   (C++ `API.GetCelestialBodyInfoProxyOfANamedSpacecraftReturnsNoRecord`).
+- **A failed `SpiceAPI.ReadOrientation` hid SPICE's error and left it pending for the next call** ([#712](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/712)).
+  With no CK loaded, a frame SPICE does not know or no clock for the spacecraft, the read threw "No orientation found"
+  and left SPICE failed, so that the next native call, an unrelated `LoadKernels` for instance, threw the stale message
+  ("At least one CK file must be loaded by CKLPF before beginning a search.", measured on 46e6975); a missing clock's
+  message was reset and lost. `ReadOrientationProxy` now checks SPICE after each clock conversion and after the fallback
+  of `ckgpav_c` to `ckgp_c`, and returns false with SPICE's message, SPICE reset; its catch branch, and those of
+  `LaunchProxy` and `ReadEphemerisProxy`, take SPICE's pending error with the exception's (a native change for a
+  technical reason, no signature changed). The exception type is unchanged; a read outside the CK's coverage still
+  throws "No orientation found", and ordinary reads are unchanged, bit for bit (child scenarios
+  `ReadOrientation_WithNoCkLoaded_ThrowsSpicesMessage_AndLeavesNothingPending` and
+  `ReadOrientation_WithoutAClock_ThrowsSpicesMessage`, C++ `API.ReadOrientationProxyOfAnUnknownFrameReturnsSpicesMessageAndLeavesNothingPending`,
+  `API.ReadOrientationProxyWithoutAClockReturnsSpicesMessage` and `API.LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending`).
+  The tests of #706 that kept a second CK loaded so that this error did not reach the next call no longer do.
+
 **Changed**
 
 - **Breaking: the element conversions of `SpiceAPI` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
@@ -2858,7 +2872,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ConvertEquinoctialElementsToStateVectorProxy` and `ConvertStateVectorToEquatorialCoordinatesProxy` return a NaN
   result with `GetLastErrorProxy()` instead of throwing or returning zeros; `ConvertTLEToStateVectorProxy` and
   `GetTLEElementsProxy` return NaN instead of a zero state or unwritten elements; `GetCelestialBodyInfoProxy` returns
-  `Id` -1 instead of throwing. Migration: convert elements about a celestial body SPICE names, with its GM kernel loaded
+  `Id` -1 instead of throwing; `ReadOrientationProxy`, `LaunchProxy` and `ReadEphemerisProxy` leave SPICE reset when
+  they return false. Migration: convert elements about a celestial body SPICE names, with its GM kernel loaded
   (`gm_de440.tpc`); catch `InvalidOperationException`. Ordinary inputs are unchanged, bit for bit.
 - **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a

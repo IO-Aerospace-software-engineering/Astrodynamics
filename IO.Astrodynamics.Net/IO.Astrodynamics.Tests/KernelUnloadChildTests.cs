@@ -85,12 +85,17 @@ public class KernelUnloadChildTests
     /// <summary>
     /// The element conversions about a centre the native layer cannot read as a celestial body (#711): a spacecraft whose GM
     /// a text kernel gives, and a body no longer named, threw SDKException across P/Invoke and ended the process (exit code
-    /// 134 on 46e6975); each now throws an <see cref="ArgumentException"/> naming the elements before the native call.
+    /// 134 on 46e6975); each now throws an <see cref="ArgumentException"/> naming the elements before the native call. Then
+    /// the orientation reads SPICE cannot answer (#712): with no CK loaded and without a clock, the read threw "No orientation
+    /// found" and left SPICE's error pending, so that the next native call threw it; it now throws SPICE's message and leaves
+    /// nothing pending.
     /// </summary>
     [Theory]
     [InlineData("ConvertConicElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException")]
     [InlineData("ConvertEquinoctialElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException")]
     [InlineData("ConvertConicElementsToStateVector_AboutABodyNoLongerNamed_ThrowsArgumentException")]
+    [InlineData("ReadOrientation_WithNoCkLoaded_ThrowsSpicesMessage_AndLeavesNothingPending")]
+    [InlineData("ReadOrientation_WithoutAClock_ThrowsSpicesMessage")]
     public void NativeProxy_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
 
     /// <summary>

@@ -147,9 +147,8 @@ bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     }
     catch (const std::exception &e)
     {
-        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
-        return false;
+        // The exception's message, then SPICE's pending one, SPICE reset (#712: before, SPICE stayed failed)
+        return ReportException(e);
     }
 }
 
@@ -265,9 +264,14 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
         // Convert tolerance from TDB seconds to encoded spacecraft clock ticks.
         // ckgpav_c requires tolerance in ticks, not seconds.
         // Computing once at window start is valid for linear (type 1) SCLK.
-        SpiceDouble sclk0, sclkPlusTol;
+        SpiceDouble sclk0{}, sclkPlusTol{};
         sce2c_c(spacecraftId, searchWindow.start, &sclk0);
         sce2c_c(spacecraftId, searchWindow.start + tolerance, &sclkPlusTol);
+        // SPICE's error of a missing clock (#712: before, reset by the fallback below and lost)
+        if (failed_c())
+        {
+            return ReportNativeErrors("");
+        }
         SpiceDouble toleranceInTicks = std::abs(sclkPlusTol - sclk0);
 
         double epoch = searchWindow.start;
@@ -279,11 +283,15 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
                                                                                                         IO::Astrodynamics::Time::TDB(
                                                                                                                 std::chrono::duration<double>(
                                                                                                                         epoch)));
+            if (failed_c())
+            {
+                return ReportNativeErrors("");
+            }
 
             SpiceDouble cmat[3][3]{};
             SpiceDouble av[3]{};
-            SpiceDouble clkout;
-            SpiceBoolean found;
+            SpiceDouble clkout{};
+            SpiceBoolean found{SPICEFALSE};
 
             //Get orientation and angular velocity
             ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
@@ -292,7 +300,14 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
                 // CK segment may not carry angular velocity (e.g. Type 1 CK).
                 // Reset the error and fall back to rotation-only query; av stays zero.
                 reset_c();
+                found = SPICEFALSE;
                 ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
+                // The fallback fails too (no CK loaded, an unknown frame): SPICE's message, SPICE reset (#712: before, "No
+                // orientation found" with the error left pending for the next call)
+                if (failed_c())
+                {
+                    return ReportNativeErrors("");
+                }
             }
 
             if (!found)
@@ -308,6 +323,10 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
 
             double correctedEpoch{};
             sct2e_c(spacecraftId, clkout, &correctedEpoch);
+            if (failed_c())
+            {
+                return ReportNativeErrors("");
+            }
             so[idx].epoch = correctedEpoch;
             so[idx].SetFrame(frame);
             so[idx].orientation = ToQuaternionDTO(q);
@@ -328,9 +347,8 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
     }
     catch (const std::exception &e)
     {
-        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
-        return false;
+        // The exception's message, then SPICE's pending one, SPICE reset (#712: before, SPICE stayed failed)
+        return ReportException(e);
     }
 }
 
@@ -472,9 +490,8 @@ bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
     }
     catch (const std::exception &e)
     {
-        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
-        return false;
+        // The exception's message, then SPICE's pending one, SPICE reset (#712: before, SPICE stayed failed)
+        return ReportException(e);
     }
 }
 

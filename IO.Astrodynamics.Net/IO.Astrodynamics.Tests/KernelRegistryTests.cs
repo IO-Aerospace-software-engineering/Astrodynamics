@@ -705,12 +705,6 @@ public class KernelRegistryTests : IDisposable
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.WriteAsync(clockFile).GetAwaiter().GetResult();
         SpiceAPI.Instance.LoadKernels(clockFile);
-        // Another CK of the spacecraft, outside the epochs read, stays loaded: with no CK loaded at all, a failed read leaves
-        // SPICE's CKBSS error pending for the next call (ReadOrientationProxy, outside #706)
-        var keep = new FileInfo(Path.Combine(folder.FullName, "keep.bc"));
-        SpiceAPI.Instance.WriteOrientation(keep, spacecraft.NaifId, Enumerable.Range(100, 3)
-            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frames.Frame.ICRF)).ToArray());
-        SpiceAPI.Instance.LoadKernels(keep);
         var turned = new Quaternion(Vector3.VectorZ, System.Math.PI / 2.0);
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bc"));
         SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, Enumerable.Range(0, 3)
@@ -720,7 +714,10 @@ public class KernelRegistryTests : IDisposable
         SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, Enumerable.Range(0, 5)
             .Select(i => new StateOrientation(turned, Vector3.Zero, Epoch.AddSeconds(i), Frames.Frame.ICRF)).ToArray());
 
-        Assert.Equal([clockFile.FullName, keep.FullName], Under(_root).Select(k => k.FullName));
+        Assert.Equal([clockFile.FullName], Under(_root).Select(k => k.FullName));
+        // The CK is no longer loaded: the read throws, with SPICE's message when no other CK of the process is loaded, and
+        // leaves nothing pending, so that the load below succeeds (#712; before, a second CK of the spacecraft stayed loaded
+        // so that this load did not throw the CKBSS error the failed read left pending)
         Assert.Throws<InvalidOperationException>(() => ReadOrientation(spacecraft.NaifId, 1.0));
         SpiceAPI.Instance.LoadKernels(c);
         var q = ReadOrientation(spacecraft.NaifId, 4.0).Rotation;

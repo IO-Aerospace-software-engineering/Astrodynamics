@@ -2170,3 +2170,85 @@ TEST(API, GetCelestialBodyInfoProxyOfANamedSpacecraftReturnsNoRecord)
     EXPECT_STREQ("", res.Name);
     EXPECT_EQ(0.0, res.GM);
 }
+
+// A site on ELARA, whose GM the kernel pool lacks: the GM read failed, then CelestialBody's SDKException, whose catch
+// returned without taking SPICE's error (#712's pattern). On 46e6975 the exception depended on the unwritten found flag
+TEST(API, LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending)
+{
+    IO::Astrodynamics::API::DTO::LaunchDTO launch{};
+    launch.launchSite.id = 507001;
+    launch.launchSite.name = "ELARA_LAUNCH";
+    launch.launchSite.bodyId = 507;
+    launch.launchSite.directoryPath = SitePath.data();
+    launch.recoverySite.id = 507002;
+    launch.recoverySite.name = "ELARA_RECOVERY";
+    launch.recoverySite.bodyId = 507;
+    launch.recoverySite.directoryPath = SitePath.data();
+    launch.targetOrbit.position = {7.0e6, 0.0, 0.0};
+    launch.targetOrbit.velocity = {0.0, 7.5e3, 0.0};
+    launch.targetOrbit.centerOfMotionId = 507;
+    launch.targetOrbit.SetFrame("J2000");
+    launch.window.start = 0.0;
+    launch.window.end = 86400.0;
+    bool res = true;
+    EXPECT_NO_THROW(res = LaunchProxy(launch));
+    EXPECT_FALSE(res);
+    ExpectFailureReported("BODY507_GM");
+}
+
+// #712: a failed ReadOrientationProxy left SPICE failed (ckgp_c's error after the fallback), so that the next native call
+// failed with that stale message, and reported "No orientation found" instead of SPICE's message. A CK of a native
+// spacecraft (its clock written and loaded by its constructor) read in a frame SPICE does not know: false, SPICE's message
+// (SPICE(UNKNOWNFRAME) of ckgpav_c --> CKGPAV --> FRMCHG, "The number 0 is not a recognized id-code for a reference frame.",
+// the frame name read as the id 0; measured with CSPICE N0067), nothing pending, and the next proxy, a load, succeeds. The same CK read in J2000 first: the ordinary read is unchanged
+TEST(API, ReadOrientationProxyOfAnUnknownFrameReturnsSpicesMessageAndLeavesNothingPending)
+{
+    auto folder = FreshFolder("ioa_712_cpp_ck");
+    {
+        const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbit = std::make_unique<
+            IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                               IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                               IO::Astrodynamics::Time::TDB(0.0s),
+                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+        IO::Astrodynamics::Body::Spacecraft::Spacecraft spacecraft(-1999811, "IOA712CK", 1000.0, 3000.0, folder.string(),
+                                                                   std::move(orbit));
+        const auto ck = folder / "o.bc";
+        auto records = Records(3);
+        ASSERT_TRUE(WriteOrientationProxy(ck.string().c_str(), -1999811, records.data(), 3)) << GetLastErrorProxy();
+        ASSERT_TRUE(LoadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+
+        IO::Astrodynamics::API::DTO::WindowDTO window{};
+        window.start = 0.0;
+        window.end = 2.0;
+        IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+        ASSERT_TRUE(ReadOrientationProxy(window, -1999811, 0.0, "J2000", 1.0, so)) << GetLastErrorProxy();
+        EXPECT_EQ(1.0, std::abs(so[2].orientation.w));
+
+        bool res = true;
+        EXPECT_NO_THROW(res = ReadOrientationProxy(window, -1999811, 0.0, "NOPE_FRAME", 1.0, so));
+        EXPECT_FALSE(res);
+        std::cout << "MESSAGE #712 ReadOrientationProxy in an unknown frame: " << GetLastErrorProxy() << std::endl;
+        ExpectFailureReported("is not a recognized id-code for a reference frame");
+        auto kernel = LoadTextKernel("ioa_712_cpp_after.tpc", "IOA712_VALUE = ( 1.0 )");
+        UnloadTextKernel(kernel);
+        EXPECT_TRUE(UnloadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+    }
+    std::filesystem::remove_all(folder);
+}
+
+// No clock for the spacecraft: SPICE's KERNELVARNOTFOUND of SCLK_DATA_TYPE_1999812 was reset by the fallback and lost
+TEST(API, ReadOrientationProxyWithoutAClockReturnsSpicesMessage)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO window{};
+    window.start = 0.0;
+    window.end = 2.0;
+    IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+    bool res = true;
+    EXPECT_NO_THROW(res = ReadOrientationProxy(window, -1999812, 0.0, "J2000", 1.0, so));
+    EXPECT_FALSE(res);
+    std::cout << "MESSAGE #712 ReadOrientationProxy without a clock: " << GetLastErrorProxy() << std::endl;
+    ExpectFailureReported("SCLK_DATA_TYPE_");
+    auto kernel = LoadTextKernel("ioa_712_cpp_after_clock.tpc", "IOA712_CLOCK_VALUE = ( 1.0 )");
+    UnloadTextKernel(kernel);
+}
