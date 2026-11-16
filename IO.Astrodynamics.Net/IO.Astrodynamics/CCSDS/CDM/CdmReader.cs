@@ -444,10 +444,12 @@ public sealed class CdmReader
     }
 
     // A value is a real number (#708): the text double.TryParse reads as NaN or ±Infinity
-    // ("NaN", "Infinity" in any case, an overflow such as "1e400") is refused, as the lexical INF of xsd:double it rejects
+    // ("NaN", "Infinity" in any case, an overflow such as "1e400") is refused, as the lexical INF of xsd:double it rejects.
+    // No thousands separator (#717, #619): xsd:double has no comma, and AllowThousands dropped every comma wherever it
+    // stood, so a decimal comma read as another number (MISS_DISTANCE 118,1 as 1181 m)
     private static double ParseDouble(string value, string fieldName)
     {
-        if (!double.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var result))
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
         {
             throw new CdmParseException($"Invalid numeric value for {fieldName}: '{value}'.");
         }

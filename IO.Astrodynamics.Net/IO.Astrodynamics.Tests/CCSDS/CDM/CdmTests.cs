@@ -383,6 +383,44 @@ public class CdmTests
         NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromFile(file))));
     }
 
+    // A comma is not in the lexical space of xsd:double (XML Schema Part 2, 3.2.5.1: decimal digits, a period, an exponent,
+    // the special values), the type of every real value of CDM/XML (6.4.2.2), and CCSDS 508.0-B-1 writes a value with a
+    // period as decimal point and no blank inside it (6.3.2.2 to 6.3.2.4). AllowThousands dropped every comma whatever its
+    // place, so a decimal comma read as another number (#717, #619): MISS_DISTANCE 118,1 as 1181 m, 0,715 as 715 m,
+    // COLLISION_PROBABILITY 4,835E-05 as 0.04835, CR_R 4,1 as 41 m², X 2,570.097065 km as 2 570 097.065 m
+    [Theory]
+    [InlineData("MISS_DISTANCE", "118,1")]
+    [InlineData("MISS_DISTANCE", "1,1,8")]
+    [InlineData("MISS_DISTANCE", "0,715")]
+    [InlineData("MISS_DISTANCE", "1,715")]
+    [InlineData("MISS_DISTANCE", "7,,1,5")]
+    [InlineData("COLLISION_PROBABILITY", "4,835E-05")]
+    [InlineData("CR_R", "4,1")]
+    [InlineData("X", "2,570.097065")]
+    [InlineData("X_DOT", "7,5")]
+    [InlineData("MASS", "1,2")]
+    public void ReadFromString_CommaInValue_ThrowsCdmParseException(string keyword, string value)
+    {
+        var xml = NdmDocuments.WithElementValue(ManualCdmXml(), keyword, value);
+        var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        Assert.Equal($"Invalid numeric value for {keyword}: '{value}'.", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("MISS_DISTANCE", " 118.1 ", 118.1)]
+    [InlineData("MISS_DISTANCE", "+1.181E2", 118.1)]
+    [InlineData("MISS_DISTANCE", "1181e-1", 118.1)]
+    [InlineData("COLLISION_PROBABILITY", "4.835E-05", 4.835e-5)]
+    [InlineData("COLLISION_PROBABILITY", ".5", 0.5)]
+    public void ReadFromString_XsdDoubleLexicalForms_AreRead(string keyword, string value, double expected)
+    {
+        // The forms of the xsd:double lexical space a writer uses (a sign, no integer digit, an exponent of either case,
+        // whitespace the schema collapses) read as before, bit for bit the double nearest the decimal value
+        var cdm = Cdm.ReadFromString(NdmDocuments.WithElementValue(ManualCdmXml(), keyword, value));
+        var read = keyword == "MISS_DISTANCE" ? cdm.RelativeMetadataData.MissDistanceMeters : cdm.RelativeMetadataData.CollisionProbability!.Value;
+        Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(read));
+    }
+
     // A text that double.TryParse reads as NaN or ±Infinity ("NaN", "Infinity" in any case, an overflow such as "1e400")
     // is not a real number (IEEE 754). CCSDS 508.0-B-1 writes a KVN value in fixed-point or floating-point digits up to about
     // 1.798E+308 (6.3.2.2, 6.3.2.3), which holds neither, but a CDM/XML value follows the xsd:double of XML Schema Part 2
