@@ -446,6 +446,31 @@ public class SpiceApiTest
     }
 
     /// <summary>
+    /// A window read in a managed frame that runs past the coverage of de440s (which ends on 2150 JAN 22) throws SPICE's
+    /// message, as the same read in J2000 does (#714, review of the branch). The epochs SPICE gives come first and are rotated
+    /// into the frame of a site on Mars (IAU_MARS of the text PCK, no time limit), a rotation that calls
+    /// <c>TransformFrameProxy</c>, which clears the last native error when it starts: the message of the failed epochs must
+    /// be read before it. The reference is SPICE's message of the same read in J2000, where no rotation runs.
+    /// </summary>
+    [Fact]
+    public void ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage()
+    {
+        var site = new Site(714, "PROBE714", new IO.Astrodynamics.Body.CelestialBody(PlanetsAndMoons.MARS), new Planetodetic(0.1, 0.2, 0.0));
+        var start = new TimeSystem.Time(2150, 1, 20, frame: TimeFrame.TDBFrame);
+        var window = new Window(start, start.AddDays(5.0));
+        var step = TimeSpan.FromHours(12.0);
+
+        var reference = Assert.Throws<InvalidOperationException>(() =>
+            SpiceAPI.Instance.ReadEphemeris(window, 399, 10, Frames.Frame.ICRF, Aberration.None, step));
+        Assert.Contains("Insufficient ephemeris data", reference.Message);
+        Assert.Contains("2150 JAN 25 00:00:00.000", reference.Message);
+
+        var e = Assert.Throws<InvalidOperationException>(() =>
+            SpiceAPI.Instance.ReadEphemeris(window, 399, 10, site.Frame, Aberration.None, step));
+        Assert.Equal(reference.Message, e.Message);
+    }
+
+    /// <summary>
     /// The documented limitation of a site observer read by identifiers (#672, documented in the fourth round of #668): the
     /// observer is a <see cref="Site"/>, which needs a SPICE name and a state at J2000 TDB. A site from coordinates whose SPK
     /// the library wrote (no naming kernel loaded) throws <see cref="ArgumentException"/> naming <c>naifId</c> as observer,

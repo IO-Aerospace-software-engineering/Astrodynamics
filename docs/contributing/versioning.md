@@ -3014,8 +3014,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GetLastErrorProxy()` returned the message of an earlier call after a proxy that succeeded or failed without a message
   of its own: a conversion of a NaN inclination threw "Native proxy call failed", or, after a failed conversion about
   Elara, Elara's message about the Earth's elements (measured on a80f6a5). Every proxy that reports through `lastError`
-  now clears it when it starts (C++ `API.EveryReportingProxyThatSucceedsClearsTheLastError`, 21 proxies); the read of
-  each epoch of `ReadEphemerisProxy` does not, so a failed epoch's message outlives the epochs after it.
+  now clears it when it starts (C++ `API.EveryReportingProxyThatSucceedsClearsTheLastError`, the 25 proxies); the read of
+  each epoch of `ReadEphemerisProxy` does not, so a failed epoch's message outlives the epochs after it. `SpiceAPI.ReadEphemeris`
+  over a window checks every state before it rotates any into a managed frame, whose rotation calls `TransformFrameProxy`
+  and so clears the message (`SpiceApiTest.ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage`:
+  the frame of a site on Mars past the end of de440s gives SPICE's message, as J2000 does).
 - **A CK without angular velocity could not be read** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `ckgpav_c` skips a segment without rates and returns
   found = false with no error ("Segments containing only pointing data will be skipped over", its Restrictions 1), and
   `ReadOrientationProxy` fell back to `ckgp_c` only on an error, so that `SpiceAPI.ReadOrientation` of a type-1 CK, or of

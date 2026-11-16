@@ -201,7 +201,9 @@ The element conversions (`ConvertConicElementsToStateVector`, three overloads, a
 its domain with comparisons NaN passes, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state.
 
 Each proxy that reports through `GetLastErrorProxy()` clears it when it starts (#714), so the message read after a call is
-that call's: before, it held the message of the last failure, about another call, until another failure replaced it. A
+that call's: before, it held the message of the last failure, about another call, until another failure replaced it.
+`SpiceAPI` reads it before any other native call: `ReadEphemeris` over a window checks every state before it rotates any
+into a managed frame (TEME, CIRS, TIRS, the frame of a site from coordinates), since the rotation calls the native layer. A
 SPICE error with no long message is reported by its short one (`SPICE(ZEROVELOCITY)`), where the proxies that report through
 the shared routine reported such an error as a success.
 

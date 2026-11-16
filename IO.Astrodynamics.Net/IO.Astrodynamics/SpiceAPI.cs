@@ -1518,9 +1518,17 @@ public class SpiceAPI
                     aberration.GetDescription(), stepSize.TotalSeconds,
                     stateVectors))
                     ThrowLastProxyError();
-                orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
+                var read = stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).ToArray();
+                // Every state checked before any is converted: the rotation into a managed frame calls TransformFrameProxy,
+                // which clears the message of the failed epochs (#714, review of the branch: a site frame threw "Native proxy
+                // call failed" where J2000 threw SPICE's message)
+                foreach (var x in read)
                 {
                     ThrowOnFailedRead(x);
+                }
+
+                orbitalParameters.AddRange(read.Select(x =>
+                {
                     var epoch = Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame);
                     return managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
