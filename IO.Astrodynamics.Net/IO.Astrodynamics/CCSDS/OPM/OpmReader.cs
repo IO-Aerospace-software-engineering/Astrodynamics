@@ -298,8 +298,10 @@ public class OpmReader
         var sma = ParseDouble(smaStr, "SEMI_MAJOR_AXIS");
         var ecc = ParseDouble(eccStr, "ECCENTRICITY");
         var inc = ParseDouble(incStr, "INCLINATION");
-        var raan = ParseDouble(GetRequiredElementValue(element, "RA_OF_ASC_NODE"), "RA_OF_ASC_NODE");
-        var aop = ParseDouble(GetRequiredElementValue(element, "ARG_OF_PERICENTER"), "ARG_OF_PERICENTER");
+        var raanStr = GetRequiredElementValue(element, "RA_OF_ASC_NODE");
+        var raan = ParseDouble(raanStr, "RA_OF_ASC_NODE");
+        var aopStr = GetRequiredElementValue(element, "ARG_OF_PERICENTER");
+        var aop = ParseDouble(aopStr, "ARG_OF_PERICENTER");
 
         // Either TRUE_ANOMALY or MEAN_ANOMALY (choice)
         var trueAnomalyStr = GetOptionalElementValue(element, "TRUE_ANOMALY");
@@ -321,7 +323,11 @@ public class OpmReader
             new CcsdsKeyword("semiMajorAxis", "SEMI_MAJOR_AXIS", smaStr, $"ECCENTRICITY '{eccStr}'"),
             new CcsdsKeyword("eccentricity", "ECCENTRICITY", eccStr),
             new CcsdsKeyword("inclination", "INCLINATION", incStr),
-            new CcsdsKeyword("gm", "GM", gmStr)
+            new CcsdsKeyword("gm", "GM", gmStr),
+            new CcsdsKeyword("raan", "RA_OF_ASC_NODE", raanStr),
+            new CcsdsKeyword("aop", "ARG_OF_PERICENTER", aopStr),
+            new CcsdsKeyword("trueAnomaly", "TRUE_ANOMALY", trueAnomalyStr),
+            new CcsdsKeyword("meanAnomaly", "MEAN_ANOMALY", meanAnomalyStr)
         };
 
         if (!string.IsNullOrEmpty(trueAnomalyStr))

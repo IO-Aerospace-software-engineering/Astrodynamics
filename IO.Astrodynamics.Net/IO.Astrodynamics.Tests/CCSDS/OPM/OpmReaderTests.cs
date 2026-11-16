@@ -593,6 +593,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             { "SEMI_MAJOR_AXIS", "-6878.137", null, false }, // distanceType: xsd:double; e < 1 needs a > 0
             { "SEMI_MAJOR_AXIS", "0", null, false },
             { "SEMI_MAJOR_AXIS", "7000", "ECCENTRICITY=1.5", false }, // e > 1 needs a < 0
+            { "RA_OF_ASC_NODE", "360", null, true }, // angleType: angleRange [-360, 360) (#708: read before)
+            { "ARG_OF_PERICENTER", "-360.5", null, true },
+            { "TRUE_ANOMALY", "1000", null, true },
             { "INCLINATION", "-1", null, true }, // inclinationRange [0, 180]
             { "INCLINATION", "181", null, true },
             { "GM", "-1", null, true }, // gmType: positiveDouble
@@ -670,6 +673,24 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var spacecraft = Opm.LoadFromString(xml).ToSpacecraft(-1000, 1000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("OnboardClock", 256),
                 new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH));
             Assert.Equal(0.0, spacecraft.Mass);
+        }
+
+        [Theory]
+        [InlineData("360")]
+        [InlineData("-720")]
+        public void ReadFromString_MeanAnomalyOutOfSchemaRange_ThrowsOpmParseExceptionNamingKeyword(string value)
+        {
+            // The base document with its TRUE_ANOMALY renamed MEAN_ANOMALY (the choice of keplerianElementsType):
+            // angleType, so the schema, the oracle, rejects 360 and -720, which the reader read before #708
+            var xml = NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", value, renameTo: "MEAN_ANOMALY");
+            Assert.False(new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
+            Assert.True(new OpmValidator().ValidateSchemaFromXml(
+                NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", "-10", renameTo: "MEAN_ANOMALY")).IsValid);
+
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)), "MEAN_ANOMALY", value);
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml, validateSchema: false)), "MEAN_ANOMALY", value);
+            Assert.Equal(-10.0, Opm.LoadFromString(
+                NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", "-10", renameTo: "MEAN_ANOMALY")).Data.KeplerianElements.MeanAnomaly);
         }
 
         [Theory]
