@@ -74,8 +74,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <remarks>
         /// The field of view is checked as CSPICE's <c>getfov</c> reads it from the instrument kernel the library writes
         /// (#707): a boresight with finite components and of non-zero magnitude (SPICE(ZEROBORESIGHT)), a reference vector
-        /// likewise and not parallel to the boresight, |b × r| = 0 on the given vectors, <c>getfov</c>'s test
-        /// (SPICE(BADREFVECTORSPEC)), and a finite positive half-angle. Before 11.0.0 the vectors were not checked and a NaN
+        /// likewise and not parallel to the boresight (parallel: |b × r| = 0 on the given vectors, <c>getfov</c>'s test,
+        /// SPICE(BADREFVECTORSPEC)), and a finite positive half-angle. Before 11.0.0 the vectors were not checked and a NaN
         /// or infinite half-angle was accepted: the instrument was built, its getters returned zero or NaN vectors,
         /// <c>InstrumentPointingToAttitude</c> gave the identity or a NaN attitude, its kernel was one SPICE rejects or cannot
         /// read, and the field-of-view search threw late. The upper bound of the half-angles, π/2 − 1e-6 for <c>gftfov</c>,
