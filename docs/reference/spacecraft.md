@@ -419,7 +419,10 @@ of 0 is a field of no width, which CSPICE's `gftfov` rejects (SPICE(DEGENERATECA
 rectangle with a zero cross product, a semi-axis of the ellipse of zero length) or, for an ellipse whose computed
 semi-axis rounds to a non-zero length, searches as a segment ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, it was accepted and the library's
 searches threw). A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
-angular radius, π/2 − 1e-6, is checked by the search.
+angular radius, π/2 − 1e-6, is checked by the search. The three methods throw `ArgumentException` naming `orientation`
+for Euler angles with a component that is NaN or infinite ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)): such an angle has no rotation, and SPICE cannot
+read it in the frame kernel (`ANGLES = ( NaN,0,0 )`, SPICE(NUMBEREXPECTED) when it is loaded); before, the instrument
+was built with a NaN `RotationToSpacecraft` and NaN spacecraft-frame getters.
 
 #### Instrument orientation
 
@@ -435,6 +438,12 @@ instrument frame is rotated by −z about Z, then by −y about Y, then by −x 
 `RotationToSpacecraft` is that rotation; the managed field-of-view path, `GetBoresightInSpacecraftFrame`,
 `GetRefVectorInSpacecraftFrame`, and the attitudes built from an instrument (`TriadAttitude`,
 `InstrumentPointingToAttitude`) all use it, so they agree with SPICE reading the frame kernel (#524).
+
+The angles are finite ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)), and any finite angle is accepted. SPICE reads each angle from the text of the
+kernel, the shortest decimal that reads back to the same double, and converts it with `CONVRT`; both can move it by a
+few ulps, so SPICE's frame and `RotationToSpacecraft` differ by up to 1.8e-15 rad for angles within [−2π, 2π], and by
+more for large angles (1.6e-2 rad near 1e13, 0.268 rad at 1e300; measured with CSPICE N0067 on 20 000 angles per
+decade, #715). Give angles within a few turns.
 
 #### Field-of-view search
 

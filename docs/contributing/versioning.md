@@ -3139,6 +3139,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   red on a80f6a5 for the 8 rows of +0, −0 and the negatives of both shapes). Migration: give a positive cross angle; an
   instrument with no extent across the reference plane can be searched neither by the library nor reliably by
   `gftfov`.
+- **Breaking: an instrument's orientation is finite** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)). `AddCircularInstrument`, `AddRectangularInstrument` and
+  `AddEllipticalInstrument` (the constructor of `Instrument`) throw `ArgumentException` naming `orientation` for Euler
+  angles with a component that is NaN or infinite, and add nothing, the rule of the boresight and the reference vector
+  (#707) and of the body axes of a spacecraft (#703). Before, the instrument was built with a NaN
+  `RotationToSpacecraft` (IEEE 754: the sine and cosine of a NaN or an infinity are NaN), its spacecraft-frame and ICRF
+  getters returned NaN vectors, and `WriteFrameAsync` wrote `TKFRAME_<id>_ANGLES = ( NaN,0,0 )` (or `Infinity`), which
+  SPICE fails to load (SPICE(NUMBEREXPECTED), the variables before that line left in the kernel pool), measured on
+  a80f6a5 (`InstrumentTests.AddInstrument_OrientationNotFinite_Throws`, red there for the 33 rows of the three
+  shapes). Every finite angle stays accepted, results unchanged bit for bit
+  (`AddInstrument_OrientationFinite_IsAccepted`); SPICE's frame agrees with `RotationToSpacecraft` to a few ulps of
+  each angle, 1.8e-15 rad within [−2π, 2π] and more for large angles (0.268 rad at 1e300), as documented on
+  `Instrument.Orientation`. Migration: give finite Euler angles, preferably within a few turns.
 - **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
   centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)

@@ -881,6 +881,107 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal(crossAngle, instrument is RectangularInstrument r ? r.CrossAngle : ((EllipticalInstrument)instrument).CrossAngle);
         }
 
+        // Euler angles with a component that is not finite, in each component
+        private static readonly Vector3[] OrientationsNotFinite =
+        {
+            new(double.NaN, 0.0, 0.0), new(0.0, double.NaN, 0.0), new(0.0, 0.0, double.NaN),
+            new(double.PositiveInfinity, 0.0, 0.0), new(0.0, double.PositiveInfinity, 0.0), new(0.0, 0.0, double.PositiveInfinity),
+            new(double.NegativeInfinity, 0.0, 0.0), new(0.0, double.NegativeInfinity, 0.0), new(0.0, 0.0, double.NegativeInfinity),
+            new(double.NaN, double.NaN, double.NaN), new(0.1, BitConverter.Int64BitsToDouble(0x7FF8000000000000L), 0.3),
+        };
+
+        public static TheoryData<string, int> ShapesAndOrientationsNotFinite()
+        {
+            var data = new TheoryData<string, int>();
+            foreach (var shape in Shapes)
+            for (int i = 0; i < OrientationsNotFinite.Length; i++)
+                data.Add(shape, i);
+            return data;
+        }
+
+        /// <summary>
+        /// #715: the Euler angles of the orientation are finite. A NaN or an infinite angle was accepted: the instrument was
+        /// built with a NaN <see cref="Instrument.RotationToSpacecraft"/>, its spacecraft-frame getters returned NaN vectors,
+        /// and its frame kernel held <c>TKFRAME_..._ANGLES = ( NaN,0,0 )</c>, which SPICE cannot read (SPICE(NUMBEREXPECTED)
+        /// at <c>furnsh_c</c>, the variables before the line left in the pool). The three methods throw
+        /// <see cref="ArgumentException"/> naming the orientation, the rule of the boresight and the reference vector (#707)
+        /// and of the body axes (#703), and add nothing.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(ShapesAndOrientationsNotFinite))]
+        public void AddInstrument_OrientationNotFinite_Throws(string shape, int orientation)
+        {
+            // Arrange
+            var spc = Host(-7153, "O715");
+            var angles = OrientationsNotFinite[orientation];
+
+            // Act
+            var exception = Record.Exception(() =>
+            {
+                switch (shape)
+                {
+                    case "Circular":
+                        spc.AddCircularInstrument(-7153001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, angles);
+                        break;
+                    case "Rectangular":
+                        spc.AddRectangularInstrument(-7153001, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles);
+                        break;
+                    default:
+                        spc.AddEllipticalInstrument(-7153001, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles);
+                        break;
+                }
+            });
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("orientation", rejected.ParamName);
+            Assert.Empty(spc.Instruments);
+        }
+
+        /// <summary>
+        /// #715, control: finite Euler angles stay accepted, the zero, the angles of a turn and above, and the largest finite
+        /// angles (question 2 of the issue: SPICE's TK frame then agrees with <see cref="Instrument.RotationToSpacecraft"/> to a
+        /// few ulps of the angle, which the documentation states). The rotation is <c>eul2m(x, y, z, 1, 2, 3)</c>, its closed
+        /// form [x]1 [y]2 [z]3 checked on a vector by <see cref="RotationToSpacecraft_IsTheFrameKernel"/>; here it is finite.
+        /// </summary>
+        [Theory]
+        [InlineData(0.0, 0.0, 0.0)]
+        [InlineData(-0.0, -0.0, -0.0)]
+        [InlineData(7.0, -10.0, 100.0)]
+        [InlineData(double.MaxValue, double.MinValue, double.Epsilon)]
+        public void AddInstrument_OrientationFinite_IsAccepted(double x, double y, double z)
+        {
+            // Arrange
+            var spc = Host(-7154, "F715");
+
+            // Act
+            foreach (var (shape, n) in Shapes.Select((s, i) => (s, i)))
+            {
+                switch (shape)
+                {
+                    case "Circular":
+                        spc.AddCircularInstrument(-7154001 - n, "C" + n, "M", 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        break;
+                    case "Rectangular":
+                        spc.AddRectangularInstrument(-7154001 - n, "C" + n, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        break;
+                    default:
+                        spc.AddEllipticalInstrument(-7154001 - n, "C" + n, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        break;
+                }
+            }
+
+            // Assert
+            Assert.Equal(3, spc.Instruments.Count);
+            foreach (var instrument in spc.Instruments)
+            {
+                Assert.Equal(new Vector3(x, y, z), instrument.Orientation);
+                var q = instrument.RotationToSpacecraft;
+                Assert.True(double.IsFinite(q.W) && double.IsFinite(q.VectorPart.X) && double.IsFinite(q.VectorPart.Y) && double.IsFinite(q.VectorPart.Z));
+                Assert.Equal(1.0, q.Magnitude(), 15);
+            }
+        }
+
         // An instrument kernel of the layout of the library's rectangular and elliptical writers, in J2000
         private static string AnglesKernel(int id, string shape, Vector3 boresight, Vector3 refVector, double refAngle, double crossAngle)
         {

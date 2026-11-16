@@ -63,6 +63,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// of the rotations of a vector by A). Here M = [x]1 [y]2 [z]3 = <c>eul2m(x, y, z, 1, 2, 3)</c> =
         /// <c>pxform(instrument, spacecraft)</c>: a vector in the instrument frame is rotated by -z about Z, then by -y
         /// about Y, then by -x about X, into the spacecraft frame (<see cref="RotationToSpacecraft"/>, #524).
+        /// <para>
+        /// The angles are finite, checked when the instrument is built (#715). Any finite angle is accepted; the frame
+        /// SPICE reads from the kernel the library writes agrees with <see cref="RotationToSpacecraft"/> to a few ulps of
+        /// each angle, which SPICE's text kernel reader and its unit conversion (<c>CONVRT</c>) can move by a few ulps:
+        /// 1.8e-15 rad within [−2π, 2π], growing with the angle (1.6e-2 rad near 1e13, 0.268 rad at 1e300; measured with
+        /// CSPICE N0067, #715). Give angles within a few turns.
+        /// </para>
         /// </remarks>
         public Vector3 Orientation { get; }
 
@@ -79,7 +86,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// or infinite half-angle was accepted: the instrument was built, its getters returned zero or NaN vectors,
         /// <c>InstrumentPointingToAttitude</c> gave the identity or a NaN attitude, its kernel was one SPICE rejects or cannot
         /// read, and the field-of-view search threw late. The upper bound of the half-angles, π/2 − 1e-6 for <c>gftfov</c>,
-        /// is checked by the search.
+        /// is checked by the search. The Euler angles of the orientation are finite (#715): before 11.0.0 a NaN or an
+        /// infinite angle gave a NaN <see cref="RotationToSpacecraft"/>, NaN spacecraft-frame getters, and a frame kernel
+        /// holding <c>ANGLES = ( NaN,0,0 )</c>, which SPICE fails to load (SPICE(NUMBEREXPECTED)).
         /// </remarks>
         /// <param name="naifId"></param>
         /// <param name="name"></param>
@@ -90,11 +99,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="boresight">The boresight: finite components, a non-zero magnitude</param>
         /// <param name="refVector">The reference vector: finite components, a non-zero magnitude, not parallel to the
         /// boresight</param>
-        /// <param name="orientation"></param>
+        /// <param name="orientation">The Euler angles (x, y, z) of <see cref="Orientation"/>, rad: finite</param>
         /// <param name="spacecraft"></param>
         /// <exception cref="ArgumentException">The name or the model is empty; or, naming the parameter, the field of view is
         /// not a finite positive number, the boresight or the reference vector has a component that is not finite or a
-        /// magnitude of 0 (the boresight checked first), or the reference vector is parallel to the boresight (#707).</exception>
+        /// magnitude of 0 (the boresight checked first), or the reference vector is parallel to the boresight (#707), or an
+        /// Euler angle of the orientation is not finite (#715).</exception>
         protected Instrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, InstrumentShape shape, Vector3 boresight, Vector3 refVector,
             Vector3 orientation)
         {
@@ -123,6 +133,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new ArgumentException(
                     "An instrument reference vector must not be parallel to its boresight: they define the plane of the field of view (getfov, SPICE(BADREFVECTORSPEC)).",
                     nameof(refVector));
+            }
+
+            // SPICE reads no NaN nor infinity in the ANGLES of the frame kernel (SPICE(NUMBEREXPECTED)), and the rotation of such
+            // an angle is NaN (#715)
+            if (!double.IsFinite(orientation.X) || !double.IsFinite(orientation.Y) || !double.IsFinite(orientation.Z))
+            {
+                throw new ArgumentException(
+                    $"The Euler angles of an instrument orientation must be finite: {orientation} has no rotation, and SPICE cannot read it in the frame kernel.",
+                    nameof(orientation));
             }
 
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
