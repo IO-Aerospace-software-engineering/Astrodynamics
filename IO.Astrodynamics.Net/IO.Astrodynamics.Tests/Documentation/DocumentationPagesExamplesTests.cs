@@ -377,7 +377,7 @@ public class DocumentationPagesExamplesTests
                 ("docs/get-started.md", 4), ("docs/get-started.md", 5),
                 ("docs/reference/integrators.md", 1), ("docs/reference/integrators.md", 2), ("docs/reference/integrators.md", 3),
                 ("docs/reference/math.md", 1), ("docs/reference/predefined-objects.md", 1),
-                ("docs/reference/spacecraft.md", 4), ("docs/reference/spacecraft.md", 6),
+                ("docs/reference/spacecraft.md", 4), ("docs/reference/spacecraft.md", 6), ("docs/reference/stars.md", 1),
                 ("docs/reference/time-and-windows.md", 1), ("docs/reference/time-and-windows.md", 2), ("docs/reference/tle.md", 1),
                 ("docs/tutorials/coordinate-conversions.md", 1), ("docs/tutorials/coordinate-conversions.md", 5),
                 ("docs/tutorials/ephemeris-queries.md", 2), ("docs/tutorials/monte-carlo.md", 3),
