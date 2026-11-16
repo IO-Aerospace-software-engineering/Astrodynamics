@@ -75,8 +75,13 @@ internal static class Program
     internal const string ManagedReplacerOfAMetaKernelFileRelative =
         "SpacecraftWriteEphemeris_ReplacingAFileAMetaKernelHolds_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile";
 
+    internal const string ConicAboutASpacecraftWithAGm = "ConvertConicElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException";
+    internal const string EquinoctialAboutASpacecraftWithAGm = "ConvertEquinoctialElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException";
+    internal const string ConicAboutABodyNoLongerNamed = "ConvertConicElementsToStateVector_AboutABodyNoLongerNamed_ThrowsArgumentException";
+
     private static readonly string[] Scenarios =
     [
+        ConicAboutASpacecraftWithAGm, EquinoctialAboutASpacecraftWithAGm, ConicAboutABodyNoLongerNamed,
         FolderOfTwoPcks, PckOfAFolder, MetaKernelOfAPck, FolderOfTwoDeletedPcks, DeletedSpk, DeletedPckNeverUnloaded, DeletedCk, WriterOfAnSpk,
         WriterOfACk, RelativeName, FolderOfADeletedSpk, ManagedWriterOfAnSpk, WriterOfAnSpkRelative, WriterOfACkRelative,
         ReplacerOfAnSpkRelative, ReplacerOfACkRelative, NoNativeCall, DanglingLink, WriterOfOneState, WriterOfTwoStates, WriterOfTwoFrames,
@@ -188,6 +193,15 @@ internal static class Program
                     break;
                 case ManagedReplacerOfAMetaKernelFileRelative:
                     ReplaceAFileAMetaKernelHoldsWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(root, kernels);
+                    break;
+                case ConicAboutASpacecraftWithAGm:
+                    ConvertAboutASpacecraftWithAGm(root, equinoctial: false);
+                    break;
+                case EquinoctialAboutASpacecraftWithAGm:
+                    ConvertAboutASpacecraftWithAGm(root, equinoctial: true);
+                    break;
+                case ConicAboutABodyNoLongerNamed:
+                    ConvertAboutABodyNoLongerNamed(root);
                     break;
                 default:
                     LoadAfterTheWorkingDirectoryChanged(root);
@@ -780,6 +794,71 @@ internal static class Program
         SpiceAPI.Instance.UnloadKernels(keep);
         SpiceAPI.Instance.UnloadKernels(clockFile);
         Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // #711. Elements about a spacecraft whose GM a text kernel gives: the native conversions built the centre as a celestial
+    // body (CelestialBody(int)), whose name SPICE does not know, and threw SDKException across P/Invoke: the process ended
+    // (exit code 134, measured on 46e6975). SpiceAPI now rejects a centre that is not a celestial body with an
+    // ArgumentException naming the elements, before the native call, and the process goes on
+    private static void ConvertAboutASpacecraftWithAGm(DirectoryInfo root, bool equinoctial)
+    {
+        var before = ReadMoon();
+        var gm = WriteTextKernel(root, "gm.tpc", "BODY-1999820_GM = ( 1.0E-10 )");
+        SpiceAPI.Instance.LoadKernels(gm);
+        var spacecraft = new Spacecraft(-1999820, "IOA_711_SPC", 3000.0, 10000.0, new Clock("IOA_711_CLOCK", 65536), EarthStates()[0]);
+        var elements = new KeplerianElements(7.0e6, 0.01, 0.2, 0.3, 0.4, 0.5, spacecraft, Epoch, Frame.ICRF);
+
+        var error = equinoctial
+            ? ThrowsArgument(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(elements.ToEquinoctial()))
+            : ThrowsArgument(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+
+        string parameter = equinoctial ? "equinoctialElements" : "keplerianElements";
+        Check(error.ParamName == parameter, $"the exception names {parameter} ({error.ParamName}: {error.Message})");
+        SpiceAPI.Instance.UnloadKernels(gm);
+        CheckSameMoon(before, "the read after the rejected conversion");
+        CheckMoonAsSpice("the read after the rejected conversion");
+    }
+
+    // A body SPICE named when it was built (its frame J2000, OBJECT_1999821_FRAME, Frames Required Reading), then no longer:
+    // the kernel of its name and frame unloaded, the kernel of its GM kept. The
+    // native conversion read its GM and threw SDKException for its name (exit code 134 on 46e6975); SpiceAPI now rejects an
+    // identifier SPICE does not name with the ArgumentException of #680, naming the elements, before the native call
+    private static void ConvertAboutABodyNoLongerNamed(DirectoryInfo root)
+    {
+        var before = ReadMoon();
+        var name = WriteTextKernel(root, "name.tpc", "NAIF_BODY_NAME += ( 'IOA_711_BODY' )\nNAIF_BODY_CODE += ( 1999821 )\nOBJECT_1999821_FRAME = 'J2000'");
+        var gm = WriteTextKernel(root, "gm.tpc", "BODY1999821_GM = ( 1.0 )");
+        SpiceAPI.Instance.LoadKernels(name);
+        SpiceAPI.Instance.LoadKernels(gm);
+        var body = new global::IO.Astrodynamics.Body.CelestialBody(1999821);
+        var elements = new KeplerianElements(7.0e6, 0.01, 0.2, 0.3, 0.4, 0.5, body, Epoch, Frame.ICRF);
+        SpiceAPI.Instance.UnloadKernels(name);
+
+        var error = ThrowsArgument(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+
+        Check(error.ParamName == "keplerianElements", $"the exception names keplerianElements ({error.ParamName}: {error.Message})");
+        SpiceAPI.Instance.UnloadKernels(gm);
+        CheckSameMoon(before, "the read after the rejected conversion");
+        CheckMoonAsSpice("the read after the rejected conversion");
+    }
+
+    // The Moon from the Earth in J2000 at the epoch: on Linux, the state of spkezr_c through CspiceDirect, bit for bit; on
+    // every platform, a finite state
+    private static void CheckMoonAsSpice(string what)
+    {
+        var moon = ReadMoon();
+        Check(double.IsFinite(moon.Position.Magnitude()) && moon.Position.Magnitude() > 0.0, $"{what}: the Moon is read ({moon.Position})");
+        if (!OperatingSystem.IsLinux()) return;
+        var spice = CspiceDirect.Spkezr("301", Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, "J2000", "NONE", "399");
+        var expected = new Vector3(spice[0], spice[1], spice[2]) * 1000.0;
+        Check(moon.Position == expected, $"{what}: the Moon is spkezr_c's state ({moon.Position} against {expected})");
+    }
+
+    private static FileInfo WriteTextKernel(DirectoryInfo root, string name, string data)
+    {
+        var file = new FileInfo(Path.Combine(root.FullName, name));
+        File.WriteAllText(file.FullName, "KPL/PCK\n\\begindata\n" + data + "\n\\begintext\n");
+        return file;
     }
 
     // The bound of the angle between a CK record written and the one read back at its epoch: twice the worst over Linux x64,

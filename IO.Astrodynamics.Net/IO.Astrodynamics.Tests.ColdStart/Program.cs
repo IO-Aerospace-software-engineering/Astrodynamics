@@ -106,6 +106,12 @@ internal static class Program
             return CheckTleTextWithoutKernels();
         }
 
+        // Before any kernel is loaded: a TLE read before its kernels throws SPICE's error, and works once they are loaded
+        if (args.Length == 2 && args[1] == "tle-before-kernels")
+        {
+            return CheckTleBeforeKernels(args[0]);
+        }
+
         if (args.Length < 3 || args[2] is not ("race" or "held") || (args[2] == "held") != (args.Length == 4))
         {
             return Usage();
@@ -229,6 +235,57 @@ internal static class Program
     /// constructor checks before it builds its Earth. Writes nothing on the standard output, where CSPICE prints the
     /// banner of a failed read; a mismatch is written on the standard error and exits 1.
     /// </summary>
+    // The bound of the instants of Sgp4ReferenceTests (InstantPosition, m per component: twice the worst over Linux x64,
+    // Windows x64 and macOS arm64, CI run 42490199772)
+    private const double InstantPosition = 7.2e-4;
+
+    // #711. A TLE read before the kernels are loaded: the native Earth's GM read fails (BODY399_GM), and before the fix the
+    // state read threw "SGP4 failed ... zero state" while the epoch read returned the epoch getelm_c never wrote, which the
+    // TLE cached for its life, so that the same instance kept throwing once the kernels were loaded (measured on 46e6975).
+    // Now the read throws SPICE's message, nothing is cached, and once the kernels are loaded the same instance gives the
+    // state of tools/sgp4_reference (Vallado's SGP4, sgp4 2.27) at a sample of Data/Sgp4Reference within the bound of
+    // Sgp4ReferenceTests, bit for bit the state of a fresh instance
+    private static int CheckTleBeforeKernels(string kernels)
+    {
+        var reference = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(kernels, "..", "Sgp4Reference", "sgp4_reference.json")))
+            .RootElement.GetProperty("instants")[1];
+        string line1 = reference.GetProperty("line1").GetString(), line2 = reference.GetProperty("line2").GetString();
+        var sample = reference.GetProperty("samples")[24];
+        var epoch = new Time(DateTime.ParseExact(sample.GetProperty("utc").GetString(), "yyyy-MM-ddTHH:mm:ss.fffffff",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal), TimeFrame.UTCFrame);
+        var tle = new TLE(Name, line1, line2);
+
+        int failures = Expect<InvalidOperationException>("state before the kernels", () =>
+            {
+                tle.ToStateVector(epoch);
+                return tle;
+            },
+            e => e.Message.Contains("BODY399_GM", StringComparison.Ordinal));
+
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+        var reused = tle.ToStateVector(epoch).ToStateVector();
+        var fresh = new TLE(Name, line1, line2).ToStateVector(epoch).ToStateVector();
+        var r = sample.GetProperty("r_km");
+        var expected = new IO.Astrodynamics.Math.Vector3(r[0].GetDouble(), r[1].GetDouble(), r[2].GetDouble()) * 1e3;
+        var delta = reused.Position - expected;
+        double worst = System.Math.Max(System.Math.Abs(delta.X), System.Math.Max(System.Math.Abs(delta.Y), System.Math.Abs(delta.Z)));
+        Console.WriteLine($"MEASURE #711 TLE read before its kernels, then after: largest position component from sgp4 2.27 {worst:E3} m");
+        if (!(worst <= InstantPosition))
+        {
+            Console.Error.WriteLine($"the reused TLE is {worst:E3} m from the reference");
+            failures++;
+        }
+
+        if (reused.Position != fresh.Position || reused.Velocity != fresh.Velocity)
+        {
+            Console.Error.WriteLine($"the reused TLE differs from a fresh one ({reused.Position} against {fresh.Position})");
+            failures++;
+        }
+
+        return failures == 0 ? 0 : 1;
+    }
+
     private static int CheckTleTextWithoutKernels()
     {
         // The checksum of line 1 is 4; 0 here

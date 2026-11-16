@@ -83,6 +83,17 @@ public class KernelUnloadChildTests
     public void KernelWriter_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
 
     /// <summary>
+    /// The element conversions about a centre the native layer cannot read as a celestial body (#711): a spacecraft whose GM
+    /// a text kernel gives, and a body no longer named, threw SDKException across P/Invoke and ended the process (exit code
+    /// 134 on 46e6975); each now throws an <see cref="ArgumentException"/> naming the elements before the native call.
+    /// </summary>
+    [Theory]
+    [InlineData("ConvertConicElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException")]
+    [InlineData("ConvertEquinoctialElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException")]
+    [InlineData("ConvertConicElementsToStateVector_AboutABodyNoLongerNamed_ThrowsArgumentException")]
+    public void NativeProxy_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
+
+    /// <summary>
     /// A loop of symbolic links given to the writers and to <see cref="SpiceAPI.LoadKernels"/>: the native layer's
     /// <c>std::filesystem</c> calls threw <c>filesystem_error</c> (ELOOP) across P/Invoke, which ended the process (#706, exit
     /// code 134 on c533a6e). Each now throws an <see cref="InvalidOperationException"/> with that message.

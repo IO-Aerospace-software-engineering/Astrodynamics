@@ -71,7 +71,9 @@ The states of SGP4/SDP4 are in `Frame.TEME`, the managed TEME frame ([Frames](fr
 needs no Earth orientation kernel, at any epoch. The Earth a TLE refers to is built in an inertial frame, so that a TLE
 outside the coverage of the Earth's binary PCK reads nothing it does not need (#597). A failed SGP4 evaluation (a
 decayed or suborbital orbit, an eccentricity out of range) throws `InvalidOperationException` instead of returning a
-zero state (#454).
+zero state (#454), with SPICE's message (#711). So does a TLE read before the kernels are loaded (SPICE's
+"The variable BODY399_GM could not be found in the kernel pool."): nothing is cached by the failed read, and the same
+`TLE` gives its states once the kernels are loaded (#711).
 
 NORAD catalog numbers run from 0 to 339999. Above 99999 they are written with the Alpha-5
 convention of the 18th Space Defense Squadron, which replaces the first digit with a letter

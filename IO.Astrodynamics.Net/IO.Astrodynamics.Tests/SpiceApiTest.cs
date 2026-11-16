@@ -1298,6 +1298,28 @@ public class SpiceApiTest
         Assert.Equal(ke.Observer, ke2.Observer);
     }
 
+    // ELARA (507): named by SPICE, no BODY507_GM in gm_de440.tpc (the kernel text, KernelTextValues). Before #711 the native
+    // conversions returned the zero state silently (the found flag of their centre read undefined after the failed GM read);
+    // they now return a NaN state with SPICE's message, which SpiceAPI throws
+    [Fact]
+    void ConvertConicElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
+        Assert.Contains("BODY507_GM", error.Message);
+    }
+
+    [Fact]
+    void ConvertEquinoctialElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, 0.1, 0.0, 0.5, new IO.Astrodynamics.Body.CelestialBody(507),
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        Assert.Contains("BODY507_GM", error.Message);
+    }
+
     [Fact]
     void ConvertConicHyperbolicToState()
     {

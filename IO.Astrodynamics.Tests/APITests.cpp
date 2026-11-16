@@ -1958,3 +1958,215 @@ TEST(API, KernelNameResolvesThroughProxy)
     std::filesystem::remove_all(folder);
 #endif
 }
+
+// #711 and #712: no C++ exception crosses P/Invoke from the element conversions, the TLE proxies and the body information,
+// and no proxy that fails leaves SPICE failed for the next call. A centre of motion the native layer reads as a celestial
+// body (CelestialBody(int)) threw SDKException out of the proxy when SPICE names no body of its id (exit code 134 of the .NET
+// host), and, when the kernel pool has no GM for it, read the found flag and the name bodc2n_c leaves unwritten after the
+// failed GM read (CSPICE bodc2n.c returns at once on a pending error). The proxies now return a NaN result with the message
+// of the exception then SPICE's, SPICE reset. References: SPICE's names (bodc2n_c through GetCelestialBodyInfoProxy, whose
+// record has the Id -1 for an id SPICE does not name, #672), the text of gm_de431.tpc (no BODY507_GM) and SPICE's messages
+namespace
+{
+    // A text kernel of the given data under the temporary directory, written and loaded
+    std::filesystem::path LoadTextKernel(const std::string &fileName, const std::string &data)
+    {
+        auto file = std::filesystem::temp_directory_path() / fileName;
+        std::ofstream(file.string()) << "KPL/PCK\n\\begindata\n" << data << "\n\\begintext\n";
+        EXPECT_TRUE(LoadKernelsProxy(file.string().c_str())) << GetLastErrorProxy();
+        return file;
+    }
+
+    void UnloadTextKernel(const std::filesystem::path &file)
+    {
+        EXPECT_TRUE(UnloadKernelsProxy(file.string().c_str())) << GetLastErrorProxy();
+        std::filesystem::remove(file);
+    }
+
+    // The message of the last proxy, nothing pending, and the next proxy succeeds: J2000 is SPICE's built-in frame 1
+    void ExpectFailureReported(const std::string &text)
+    {
+        const std::string message = GetLastErrorProxy();
+        const bool pending = TakePendingSpiceError();
+        EXPECT_FALSE(pending);
+        EXPECT_NE(std::string::npos, message.find(text)) << message;
+        char name[33];
+        EXPECT_TRUE(GetFrameNameProxy(1, name)) << GetLastErrorProxy();
+        EXPECT_STREQ("J2000", name);
+    }
+
+    void ExpectNaN(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv)
+    {
+        EXPECT_TRUE(std::isnan(sv.position.x));
+        EXPECT_TRUE(std::isnan(sv.position.y));
+        EXPECT_TRUE(std::isnan(sv.position.z));
+        EXPECT_TRUE(std::isnan(sv.velocity.x));
+        EXPECT_TRUE(std::isnan(sv.velocity.y));
+        EXPECT_TRUE(std::isnan(sv.velocity.z));
+    }
+
+    IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConicsAbout(int centre)
+    {
+        IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conics;
+        conics.SetFrame("J2000");
+        conics.epoch = 0.0;
+        conics.perifocalDistance = 7.0e6;
+        conics.eccentricity = 0.01;
+        conics.inclination = 0.2;
+        conics.ascendingNodeLongitude = 0.3;
+        conics.periapsisArgument = 0.4;
+        conics.meanAnomaly = 0.5;
+        conics.centerOfMotionId = centre;
+        return conics;
+    }
+
+    IO::Astrodynamics::API::DTO::EquinoctialElementsDTO EquinoctialAbout(int centre)
+    {
+        IO::Astrodynamics::API::DTO::EquinoctialElementsDTO eq;
+        eq.SetFrame("J2000");
+        eq.epoch = 0.0;
+        eq.semiMajorAxis = 7.0e6;
+        eq.h = 0.01;
+        eq.k = 0.0;
+        eq.p = 0.1;
+        eq.q = 0.0;
+        eq.L = 0.5;
+        eq.periapsisLongitudeRate = 0.0;
+        eq.ascendingNodeLongitudeRate = 0.0;
+        eq.rightAscensionOfThePole = -IO::Astrodynamics::Constants::PI2;
+        eq.declinationOfThePole = IO::Astrodynamics::Constants::PI2;
+        eq.centerOfMotionId = centre;
+        return eq;
+    }
+
+    // An identifier SPICE does not name, with a GM in the kernel pool
+    constexpr int UnnamedCentre = -1999813;
+
+    void ExpectUnnamed(int id)
+    {
+#if !defined(_WIN32)
+        SpiceChar name[32]{};
+        SpiceBoolean found{SPICETRUE};
+        bodc2n_c(id, 32, name, &found);
+        EXPECT_FALSE(found);
+#endif
+        EXPECT_EQ(-1, GetCelestialBodyInfoProxy(id).Id);
+    }
+}
+
+TEST(API, ConvertConicElementsToStateVectorProxyOfAnUnnamedCentreWithAGmReturnsNaN)
+{
+    ExpectUnnamed(UnnamedCentre);
+    auto kernel = LoadTextKernel("ioa_711_cpp_gm.tpc", "BODY-1999813_GM = ( 1.0E-10 )");
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+    EXPECT_NO_THROW(sv = ConvertConicElementsToStateVectorProxy(ConicsAbout(UnnamedCentre)));
+    ExpectFailureReported("can't be found");
+    ExpectNaN(sv);
+    EXPECT_EQ(UnnamedCentre, sv.centerOfMotionId);
+    UnloadTextKernel(kernel);
+}
+
+TEST(API, ConvertEquinoctialElementsToStateVectorProxyOfAnUnnamedCentreWithAGmReturnsNaN)
+{
+    ExpectUnnamed(UnnamedCentre);
+    auto kernel = LoadTextKernel("ioa_711_cpp_gm_eq.tpc", "BODY-1999813_GM = ( 1.0E-10 )");
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+    EXPECT_NO_THROW(sv = ConvertEquinoctialElementsToStateVectorProxy(EquinoctialAbout(UnnamedCentre)));
+    ExpectFailureReported("can't be found");
+    ExpectNaN(sv);
+    EXPECT_EQ(UnnamedCentre, sv.centerOfMotionId);
+    UnloadTextKernel(kernel);
+}
+
+TEST(API, ConvertStateVectorToEquatorialCoordinatesProxyOfAnUnnamedCentreWithAGmReturnsNaN)
+{
+    ExpectUnnamed(UnnamedCentre);
+    auto kernel = LoadTextKernel("ioa_711_cpp_gm_radec.tpc", "BODY-1999813_GM = ( 1.0E-10 )");
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+    sv.position = {7.0e6, 0.0, 0.0};
+    sv.velocity = {0.0, 7.5e3, 0.0};
+    sv.epoch = 0.0;
+    sv.centerOfMotionId = UnnamedCentre;
+    sv.SetFrame("J2000");
+    IO::Astrodynamics::API::DTO::RaDecDTO raDec;
+    EXPECT_NO_THROW(raDec = ConvertStateVectorToEquatorialCoordinatesProxy(sv));
+    ExpectFailureReported("can't be found");
+    EXPECT_TRUE(std::isnan(raDec.rightAscension));
+    EXPECT_TRUE(std::isnan(raDec.declination));
+    EXPECT_TRUE(std::isnan(raDec.range));
+    UnloadTextKernel(kernel);
+}
+
+// ELARA (507): named by SPICE, BODY507_RADII in pck00011.tpc, no BODY507_GM in gm_de431.tpc. Before, both conversions
+// returned the zero state, silently (measured from .NET on 46e6975), the found flag of the name read undefined
+TEST(API, ConvertConicElementsToStateVectorProxyOfACentreWithoutGmReturnsNaN)
+{
+    ASSERT_TRUE(KernelTextValues("gm_de431.tpc", "BODY507_GM").empty());
+    ASSERT_EQ(507, GetCelestialBodyInfoProxy(507).Id);
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+    EXPECT_NO_THROW(sv = ConvertConicElementsToStateVectorProxy(ConicsAbout(507)));
+    ExpectFailureReported("BODY507_GM");
+    ExpectNaN(sv);
+}
+
+TEST(API, ConvertEquinoctialElementsToStateVectorProxyOfACentreWithoutGmReturnsNaN)
+{
+    ASSERT_TRUE(KernelTextValues("gm_de431.tpc", "BODY507_GM").empty());
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+    EXPECT_NO_THROW(sv = ConvertEquinoctialElementsToStateVectorProxy(EquinoctialAbout(507)));
+    ExpectFailureReported("BODY507_GM");
+    ExpectNaN(sv);
+}
+
+// The 33334 set of Data/Sgp4Reference (checksums recomputed): Vallado's SGP4 error 3 and CSPICE's BADPECCENTRICITY at its
+// epoch (tools/sgp4_reference). Before, the state proxy returned the zero state, its SPICE message dropped
+static const char *const FailedSgp4Line1 = "1 33334U 78066F   06174.85818871  .00000620  00000-0  10000-3 0  6806";
+static const char *const FailedSgp4Line2 = "2 33334  68.4714 236.1303 5602877 123.7484 302.5767  0.00001000 67521";
+
+TEST(API, ConvertTLEToStateVectorProxyOfAFailedSgp4ReturnsNaN)
+{
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+    EXPECT_NO_THROW(sv = ConvertTLEToStateVectorProxy("ERR", FailedSgp4Line1, FailedSgp4Line2, 2.0e8));
+    std::cout << "MESSAGE #711 SGP4 error of 33334: " << GetLastErrorProxy() << std::endl;
+    ExpectFailureReported("");
+    EXPECT_STRNE("", GetLastErrorProxy());
+    ExpectNaN(sv);
+}
+
+TEST(API, GetTLEElementsProxyOfAFailedSgp4ReturnsNaN)
+{
+    IO::Astrodynamics::API::DTO::TLEElementsDTO elements;
+    EXPECT_NO_THROW(elements = GetTLEElementsProxy("ERR", FailedSgp4Line1, FailedSgp4Line2));
+    const std::string message = GetLastErrorProxy();
+    ExpectFailureReported("");
+    EXPECT_NE("", message);
+    EXPECT_TRUE(std::isnan(elements.Epoch));
+    EXPECT_TRUE(std::isnan(elements.A));
+    EXPECT_TRUE(std::isnan(elements.E));
+    EXPECT_TRUE(std::isnan(elements.I));
+    EXPECT_TRUE(std::isnan(elements.O));
+    EXPECT_TRUE(std::isnan(elements.W));
+    EXPECT_TRUE(std::isnan(elements.M));
+    EXPECT_TRUE(std::isnan(elements.BalisticCoefficient));
+    EXPECT_TRUE(std::isnan(elements.DragTerm));
+    EXPECT_TRUE(std::isnan(elements.SecondDerivativeOfMeanMotion));
+}
+
+// GALILEO ORBITER (-77), a built-in SPICE name (NAIF IDs Required Reading): the search of its centre of motion threw
+// InvalidArgumentException out of the proxy. The record has the Id -1 now, as for an id SPICE does not name
+TEST(API, GetCelestialBodyInfoProxyOfANamedSpacecraftReturnsNoRecord)
+{
+#if !defined(_WIN32)
+    SpiceChar name[32]{};
+    SpiceBoolean found{SPICEFALSE};
+    bodc2n_c(-77, 32, name, &found);
+    ASSERT_TRUE(found);
+    ASSERT_STREQ("GALILEO ORBITER", name);
+#endif
+    IO::Astrodynamics::API::DTO::CelestialBodyDTO res;
+    EXPECT_NO_THROW(res = GetCelestialBodyInfoProxy(-77));
+    ExpectFailureReported("Invalid Naif Id");
+    EXPECT_EQ(-1, res.Id);
+    EXPECT_STREQ("", res.Name);
+    EXPECT_EQ(0.0, res.GM);
+}

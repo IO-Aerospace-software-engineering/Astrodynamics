@@ -20,7 +20,8 @@ IO::Astrodynamics::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::Astrody
     }
 
     //Set elements
-    SpiceDouble epoch;
+    // Initialised: getelm_c writes nothing on a pending error (#711)
+    SpiceDouble epoch{};
     getelm_c(m_firstYear, length + 1, m_lines, &epoch, m_elements);
 
     const_cast<IO::Astrodynamics::Time::TDB &>(m_epoch) = Time::TDB(std::chrono::duration<double>(epoch));
