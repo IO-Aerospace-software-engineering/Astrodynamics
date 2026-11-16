@@ -264,11 +264,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
         /// or, on the managed path, a circle or an ellipse whose half-angles are so small that the squares of the semi-axes of
-        /// the cone of the field underflow at the target's distance (#715; before 11.0.0 an unrelated
-        /// <see cref="ArgumentException"/>), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
+        /// the cone of the field underflow at the target's distance, or a point target at the observer (distance 0: it has no
+        /// direction) (#715; before 11.0.0 an unrelated <see cref="ArgumentException"/> for both), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
         /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
-        /// is inside the ellipsoid of the target; or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no
+        /// is inside the ellipsoid of the target (at its center included, an unrelated <see cref="ArgumentException"/> before
+        /// 11.0.0 for a circle or an ellipse); or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no
         /// instrument kernel defines the field of view, a body or an epoch without ephemeris data, an epoch outside the coverage
         /// of the frame data or of the C-kernel), with SPICE's message (fourth round of #668; before 11.0.0 the search returned
         /// no window).</exception>

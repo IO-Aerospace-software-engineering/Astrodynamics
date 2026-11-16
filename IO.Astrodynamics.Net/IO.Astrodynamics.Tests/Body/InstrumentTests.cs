@@ -1114,6 +1114,41 @@ namespace IO.Astrodynamics.Tests.Body
             }
         }
 
+        /// <summary>
+        /// #715, review: a point target at the observer, distance exactly 0 (two managed spacecraft of the same state), has no
+        /// direction, so it is neither in nor out of the field (the angle between the zero vector and the boresight is
+        /// undefined). The cone of a circle or an ellipse at that distance has semi-axes of 0 m: on a80f6a5 the ellipsoid of the
+        /// occultation search threw an unrelated <see cref="ArgumentException"/>, "The semi-axes of an ellipsoid must have
+        /// positive lengths", and after the underflow guard of #715 an <see cref="InvalidOperationException"/> that blamed
+        /// the half-angles of a normal field (0.1 rad). <see cref="Instrument.IsInFOV"/> throws
+        /// <see cref="InvalidOperationException"/> naming the target at the observer, not the field.
+        /// </summary>
+        [Theory]
+        [InlineData("Circular")]
+        [InlineData("Elliptical")]
+        public void PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance(string shape)
+        {
+            // Arrange: two managed spacecraft of the same state, the observer with an attitude and a field of 0.1 rad
+            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var spc = Host(-7157, "T715A");
+            var twin = Host(-7158, "T715B");
+            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
+            if (shape == "Circular")
+                spc.AddCircularInstrument(-7157001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            else
+                spc.AddEllipticalInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            var instrument = spc.Instruments.Single();
+            Assert.Equal(0.0, twin.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude());
+
+            // Act
+            var exception = Record.Exception(() => instrument.IsInFOV(epoch, twin, Aberration.None));
+
+            // Assert
+            var failed = Assert.IsType<InvalidOperationException>(exception);
+            Assert.Contains("at the observer", failed.Message);
+            Assert.DoesNotContain("half-angles", failed.Message);
+        }
+
         // The instrument kernel the library's circular writer would write for these vectors, written here
         private static string CircularKernel(int id, string boresight, string refVector) =>
             $"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}" +

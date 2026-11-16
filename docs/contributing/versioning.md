@@ -3072,8 +3072,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   lengths", instead of the `InvalidOperationException` of a field that cannot be searched; it now throws that, naming
   the half-angles and the underflow (`InstrumentTests.TinyHalfAngle_ManagedSearchThrowsInvalidOperation`, red on
   a80f6a5 for the six rows of a circle and an ellipse, a point and an ellipsoid target). The rectangle, whose margin
-  takes the half-angles as angles, was not affected. Every other field is searched as before, bit for bit (the same
-  vectors). As the issue recommends, the constructors keep the rule "finite and positive" for both half-angles, and the
+  takes the half-angles as angles, was not affected. A target at the observer, distance 0 (two spacecraft of the same
+  state), threw the same `ArgumentException` for a circle or an ellipse of any field: a point target now throws
+  `InvalidOperationException` naming the target at the observer, which has no direction, and an ellipsoid target the
+  `InvalidOperationException` of an observer inside the target, never a message about the half-angles
+  (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
+  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle still reports such a point in view, its margin taking
+  atan2(0, 0) = 0). Every other field and target is searched as before, bit for bit (the same vectors). Migration: a
+  caller that caught `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends, the constructors keep the rule "finite and positive" for both half-angles, and the
   documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
   measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
   and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at

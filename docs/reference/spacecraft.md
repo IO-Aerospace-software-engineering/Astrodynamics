@@ -507,7 +507,12 @@ then disagree. Its cone of a circle or an ellipse loses its precision far below 
 boresight not found for a half-angle of 1e-155 rad in the reference plane), and where the squares of its semi-axes
 underflow at the target's distance (a half-angle below about 6e-171 rad at the Moon's distance) it throws
 `InvalidOperationException`, the field cannot be searched ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated `ArgumentException`, "The
-semi-axes of an ellipsoid must have positive lengths").
+semi-axes of an ellipsoid must have positive lengths"). A point target at the observer, distance 0 (two spacecraft of
+the same state), has no direction: `IsInFOV` and the search of a circle or an ellipse throw
+`InvalidOperationException` naming the target at the observer, not the field (before, the same unrelated
+`ArgumentException`); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an
+observer inside the target. The rectangle's point margin takes the angles of the zero vector as 0 and reports such a
+target in view.
 
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
 gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the
