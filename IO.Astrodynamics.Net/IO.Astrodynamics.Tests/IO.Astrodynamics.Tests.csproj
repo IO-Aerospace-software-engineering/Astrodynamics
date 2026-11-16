@@ -275,7 +275,11 @@
       <None Include="Documentation\ClaudeMdExamples.cs" Link="Docs\ClaudeMdExamples.cs">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <!-- The pages of docs/ and the README, whose csharp blocks DocumentationPagesTests reads (#668, third round). -->
+      <!-- The compiled examples of the pages of docs/ and the README, compared by DocumentationPagesExamplesTests (#705). -->
+      <None Include="Documentation\Pages\**\*.cs" Link="Docs\PageExamples\%(RecursiveDir)%(Filename)%(Extension)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <!-- The pages of docs/ and the README, whose csharp blocks DocumentationPagesTests and DocumentationPagesExamplesTests read (#668, third round, #705). -->
       <None Include="..\..\docs\**\*.md" LinkBase="Docs\pages">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

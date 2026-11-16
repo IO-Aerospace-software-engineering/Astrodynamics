@@ -20,6 +20,7 @@ window, celestial environment, force model options, output step size, and
 integrator factory.
 
 ```csharp
+// Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
 var tasks = new List<PropagationTask>
 {
     new PropagationTask(
@@ -45,6 +46,7 @@ LEO satellite might include atmospheric drag while a GEO satellite does not.
 ## Running the batch
 
 ```csharp
+// Inputs: tasks (List<PropagationTask>)
 var result = BatchPropagator.Propagate(tasks, new BatchOptions
 {
     MaxDegreeOfParallelism = 4
@@ -57,22 +59,24 @@ you want to leave headroom for other processes.
 
 ## Processing results
 
-Each result entry indicates whether the propagation succeeded or failed:
+Each result entry indicates whether the propagation succeeded or failed; the elapsed time is that of the whole batch:
 
 ```csharp
+// Inputs: result (BatchResult)
 foreach (var r in result.Results)
 {
     if (r.Succeeded)
     {
         Console.WriteLine($"{r.Spacecraft.Name}: " +
-                          $"{r.Solution.StateVectors.Count} states, " +
-                          $"duration {r.ElapsedTime.TotalSeconds:F1}s");
+                          $"{r.Solution.StateVectors.Count} states");
     }
     else
     {
         Console.WriteLine($"{r.Spacecraft.Name}: FAILED - {r.Error.Message}");
     }
 }
+
+Console.WriteLine($"Batch: {result.ElapsedTime.TotalSeconds:F1} s, all succeeded: {result.AllSucceeded}");
 ```
 
 ### Fault isolation
@@ -91,26 +95,29 @@ which object failed.
 
 ### Progress reporting
 
-Pass a progress callback to monitor completion:
+Pass an `IProgress<BatchProgress>` to monitor completion:
 
 ```csharp
+// Inputs: tasks (List<PropagationTask>)
 var result = BatchPropagator.Propagate(tasks, new BatchOptions
 {
     MaxDegreeOfParallelism = 4,
-    Progress = (completed, total) =>
+    Progress = new Progress<BatchProgress>(p =>
     {
-        Console.WriteLine($"Progress: {completed}/{total}");
-    }
+        Console.WriteLine($"Progress: {p.Completed}/{p.Total}");
+    })
 });
 ```
 
-The callback fires each time a task completes (successfully or not).
+It is reported each time a task completes (successfully or not); `Progress<T>` calls its handler on the thread pool,
+or on the synchronization context it was created on.
 
 ### Cancellation
 
 Use a `CancellationToken` to abort the batch early:
 
 ```csharp
+// Inputs: tasks (List<PropagationTask>)
 var cts = new CancellationTokenSource();
 
 // Cancel after 30 seconds
@@ -137,6 +144,7 @@ run to completion.
 Create separate instances for each task:
 
 ```csharp
+// Inputs: spacecraftList (List<Spacecraft>), window (Window)
 var tasks = Enumerable.Range(0, spacecraftList.Count).Select(i =>
 {
     // Fresh CelestialBody per task

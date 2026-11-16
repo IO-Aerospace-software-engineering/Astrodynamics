@@ -16,6 +16,7 @@ even when the initial state carries a covariance ([see below](#an-initial-covari
 ## Example
 
 ```csharp
+// Inputs: window (Window), spacecraft (Spacecraft), moon and sun (CelestialBody), tca (Time)
 var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-11, 1e-11), TimeSpan.FromSeconds(60))
     .WithPerturbingBodies(new CelestialItem[] { moon, sun })   // the central body, the observer of the spacecraft, is added
     .IncludeAtmosphericDrag()
@@ -361,6 +362,7 @@ the burn by the model of Gates, four independent zero-mean Gaussian errors:
 | `PointingSigma` (σ_p) | Pointing error proportional to \|ΔV\|, on each axis perpendicular to ΔV | rad |
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
 var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7000000.0, engine)
 {
     ExecutionError = new ManeuverExecutionError
@@ -403,6 +405,7 @@ correlation matrix:
 - the result symmetric to the bit and accepted by the check of the propagation.
 
 ```csharp
+// Inputs: state (StateVector), clock (Clock), window (Window), bodies (CelestialItem[])
 var remediation = state.WithRemediatedCovariance();
 if (remediation.Remediated)
     Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");

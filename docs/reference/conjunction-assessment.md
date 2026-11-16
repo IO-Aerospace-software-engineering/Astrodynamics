@@ -328,6 +328,7 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 ## Example
 
 ```csharp
+// Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
 var encounter = ConjunctionAssessment.Analyze(
     new ProtectedSpacecraftProfile(protectedSpacecraft),
     secondarySpacecraft,

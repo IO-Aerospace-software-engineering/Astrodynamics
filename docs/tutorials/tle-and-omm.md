@@ -19,9 +19,9 @@ var tle = new TLE("ISS (ZARYA)",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
 Console.WriteLine($"Name:         {tle.Name}");
-Console.WriteLine($"NORAD ID:     {tle.NoradId}");
+Console.WriteLine($"NORAD ID:     {tle.NoradCatalogId}");
 Console.WriteLine($"Epoch:        {tle.Epoch}");
-Console.WriteLine($"Inclination:  {tle.Inclination * Constants.Rad2Deg:F4} deg");
+Console.WriteLine($"Inclination:  {tle.MeanInclination * Constants.Rad2Deg:F4} deg");  // the mean inclination of line 2
 ```
 
 ## Mean vs Osculating Elements
@@ -32,6 +32,7 @@ Console.WriteLine($"Inclination:  {tle.Inclination * Constants.Rad2Deg:F4} deg")
 To get a physical state vector, always use `ToOsculating`:
 
 ```csharp
+// Inputs: tle (TLE)
 // Correct: osculating state vector at TLE epoch
 var sv = tle.ToOsculating();
 
@@ -51,6 +52,7 @@ var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0));
 Propagate the TLE to a future epoch using the built-in SGP4/SDP4 propagator:
 
 ```csharp
+// Inputs: tle (TLE)
 var futureEpoch = new Time(2021, 1, 25, 0, 0, 0);
 var futureSv = tle.ToStateVector(futureEpoch);
 
@@ -82,6 +84,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 
+// Inputs: tle (TLE)
 var window = new Window(tle.Epoch, tle.Epoch.AddHours(6.0));
 var start = window.StartDate.ToTDB();
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
@@ -111,8 +114,9 @@ without aberration, which interpolates the samples (under a millimetre for the I
 Convert an osculating state vector back to a TLE:
 
 ```csharp
-// TLE.Configuration collides with IO.Astrodynamics.Configuration, so alias it
 using TleConfiguration = IO.Astrodynamics.OrbitalParameters.TLE.Configuration;
+// Inputs: sv (StateVector)
+// TLE.Configuration collides with IO.Astrodynamics.Configuration, so the directive above aliases it
 
 var config = new TleConfiguration(
     NoradId: 25544,
@@ -130,6 +134,7 @@ field. Each field of the text is the nearest value its columns hold.
 A `NoradId` above 99999 is encoded with the Alpha-5 convention, up to 339999:
 
 ```csharp
+// Inputs: sv (StateVector), and the TleConfiguration alias above
 var alpha5 = new TleConfiguration(NoradId: 275544, Name: "MY_SAT", CosparId: "24001A");
 var alpha5Tle = sv.ToTLE(alpha5);
 
@@ -155,6 +160,7 @@ Console.WriteLine($"Epoch:       {omm.Epoch}");
 Not all OMMs can be converted to TLEs (some lack the required fields). Check compatibility first:
 
 ```csharp
+// Inputs: omm (Omm)
 if (omm.IsTleCompatible)
 {
     var tleFromOmm = omm.ToTle();
@@ -168,6 +174,7 @@ if (omm.IsTleCompatible)
 Convert a TLE to OMM for CCSDS-compliant data exchange:
 
 ```csharp
+// Inputs: tle (TLE)
 var newOmm = tle.ToOmm(originator: "My Organization");
 ```
 

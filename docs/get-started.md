@@ -109,6 +109,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     using IO.Astrodynamics.Propagator;
     using IO.Astrodynamics.Propagator.Integrators;
 
+    // Inputs: orbit (StateVector), epoch (Time), earth (CelestialBody)
     var spacecraft = new Spacecraft(
         -1001,                         // NAIF id
         "MySat",
@@ -141,6 +142,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     using IO.Astrodynamics.Propagator;
     using IO.Astrodynamics.Propagator.Integrators;
 
+    // Inputs: epoch (Time), spacecraft (Spacecraft)
     var integrator = new RK78Integrator(
         absoluteTolerance: 1e-10,
         relativeTolerance: 1e-10,

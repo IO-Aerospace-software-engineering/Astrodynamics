@@ -27,6 +27,7 @@ Single-vector attitudes constrain one spacecraft body axis to a geometric direct
 The remaining degrees of freedom (roll around that axis) are uncontrolled.
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
 // Point the thrust axis along the velocity vector; the next maneuver of the chain starts 30 minutes later at the earliest
 var prograde = new ProgradeAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
 
@@ -52,6 +53,7 @@ exactly; the secondary is satisfied in the plane perpendicular to the primary.
 This eliminates roll ambiguity.
 
 ```csharp
+// Inputs: epoch (Time), earth and sun (CelestialBody), engine (Engine)
 // Primary: spacecraft -Z toward Earth (nadir pointing)
 // Secondary: spacecraft +X toward Sun, which sets the roll about nadir (+Z, opposite to -Z, would leave the roll
 // undetermined: the body vectors must be at least 5 degrees apart)
@@ -66,6 +68,7 @@ When using `CelestialAttitudeTarget`, the default aberration is `Aberration.None
 Use `Aberration.LT` for photon-based pointing scenarios (e.g., optical sensors):
 
 ```csharp
+// Inputs: engine (Engine), sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)
 // Default geometric direction
 var sunTarget = new CelestialAttitudeTarget(sun);
 
@@ -83,6 +86,7 @@ engine (`BodyDown` and `BodyFront` for LVLH, `BodyFront` and `BodyUp` for Sun tr
 its own `bodyFront`, `bodyRight` and `bodyUp` gets its own axes pointed:
 
 ```csharp
+// Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
 // LVLH frame (the spacecraft's down axis to nadir, its front axis toward the velocity)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
@@ -103,6 +107,7 @@ from the centre of `ManeuverCenter`, not an altitude. For an altitude h above th
 plus h:
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
 // An apogee 1 000 km above the equator: R + 1 000 km from the Earth's centre
 double targetApogeeRadius = earth.EquatorialRadius + 1000e3;
 var raiseApogee = new ApogeeHeightManeuver(
@@ -115,6 +120,7 @@ var raiseApogee = new ApogeeHeightManeuver(
 metres:
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius (double), engine (Engine)
 var lowerPerigee = new PerigeeHeightManeuver(
     earth, epoch, TimeSpan.Zero, targetPerigeeRadius, engine);
 ```
@@ -125,6 +131,7 @@ var lowerPerigee = new PerigeeHeightManeuver(
 particular relative position after a given number of revolutions:
 
 ```csharp
+// Inputs: epoch (Time), targetOrbit (OrbitalParameters), revolutions (uint), engine (Engine)
 var phasing = new PhasingManeuver(
     epoch, TimeSpan.Zero, targetOrbit, revolutions, engine);
 ```
@@ -136,6 +143,7 @@ It fires at the nearest orbital node (ascending or descending) using an
 adaptive crossing direction:
 
 ```csharp
+// Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
 var planeChange = new PlaneAlignmentManeuver(
     epoch, TimeSpan.Zero, targetOrbit, engine);
 ```
@@ -146,6 +154,7 @@ var planeChange = new PlaneAlignmentManeuver(
 It fires at the nearest orbit intersection point using the g-function r . (h x p):
 
 ```csharp
+// Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
 var apsidalAlign = new ApsidalAlignmentManeuver(
     epoch, TimeSpan.Zero, targetOrbit, engine);
 ```
@@ -157,6 +166,7 @@ moved to a target radius from the centre, in metres. It includes a precondition 
 node before firing:
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius and targetInclination (double), engine (Engine)
 var combined = new CombinedManeuver(
     earth, epoch, TimeSpan.Zero, targetPerigeeRadius, targetInclination, engine);
 ```
@@ -170,14 +180,20 @@ fires, the attitudes chained after it activate at the end of its maneuver window
 next impulse is gated by the end of their holds.
 
 ```csharp
+// Inputs: targetOrbit (OrbitalParameters), engine (Engine), revolutions (uint), earth (CelestialBody),
+//   targetApogeeRadius (double), spacecraft (Spacecraft)
 var maneuver1 = new PlaneAlignmentManeuver(
     new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
     targetOrbit, engine);
 
+// Each next maneuver takes its own arguments, as in the sections above
 maneuver1
-    .SetNextManeuver(new ApsidalAlignmentManeuver(...))
-    .SetNextManeuver(new PhasingManeuver(...))
-    .SetNextManeuver(new ApogeeHeightManeuver(...));
+    .SetNextManeuver(new ApsidalAlignmentManeuver(
+        new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbit, engine))
+    .SetNextManeuver(new PhasingManeuver(
+        new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbit, revolutions, engine))
+    .SetNextManeuver(new ApogeeHeightManeuver(
+        earth, new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetApogeeRadius, engine));
 
 spacecraft.SetStandbyManeuver(maneuver1);
 ```

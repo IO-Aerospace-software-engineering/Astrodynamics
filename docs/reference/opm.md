@@ -143,6 +143,7 @@ OPM carries no covariance: moving it there would take the state transition matri
 ## Example
 
 ```csharp
+// Inputs: spacecraft (Spacecraft), epoch (Time), earth (CelestialBody)
 // Export spacecraft state to OPM, in the frame of its state
 var opm = spacecraft.ToOpm(epoch: epoch);
 opm.SaveToFile("state.opm.xml");

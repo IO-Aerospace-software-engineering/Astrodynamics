@@ -116,6 +116,10 @@ markdown_extensions:
       permalink: true
   - pymdownx.highlight:
       anchor_linenums: true
+      # Signature listings and fragments, which the compiled pages do not read (#705), highlighted as C#
+      extend_pygments_lang:
+        - name: csharp-signature
+          lang: csharp
   - pymdownx.inlinehilite
   - pymdownx.superfences
   - pymdownx.tabbed:

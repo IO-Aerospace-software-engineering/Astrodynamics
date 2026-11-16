@@ -8,25 +8,27 @@ spacecraft for archived missions.
 ## Lambert solver
 
 The Lambert problem finds the transfer orbit connecting two position vectors
-in a given flight time. IO.Astrodynamics provides a solver that handles both
-short-way and long-way transfers with multi-revolution solutions.
+in a given flight time. IO.Astrodynamics provides a solver of prograde or retrograde
+transfers, from zero to a given number of full revolutions, each multi-revolution
+count with its two branches (`LambertBranch.Left` and `Right`).
 
 ```csharp
+// Inputs: departure and arrival (StateVector), earth (CelestialBody)
 var solver = new LambertSolver();
 
 // Solve for the transfer from departure to arrival position
 var result = solver.Solve(
-    shortWay: false,       // long-way transfer
+    isRetrograde: false,   // prograde transfer
     departure,             // StateVector at departure
     arrival,               // StateVector at arrival
     earth,                 // central body
-    nRevolutions: 0);      // zero extra revolutions
+    maxRevolution: 0);     // zero full revolutions
 
 // Extract the zero-revolution solution
 var solution = result.GetZeroRevolutionSolution();
 
-Console.WriteLine($"Departure V: {solution.DepartureVelocity.Magnitude():F2} m/s");
-Console.WriteLine($"Arrival   V: {solution.ArrivalVelocity.Magnitude():F2} m/s");
+Console.WriteLine($"Departure V: {solution.V1.Magnitude():F2} m/s");
+Console.WriteLine($"Arrival   V: {solution.V2.Magnitude():F2} m/s");
 ```
 
 The solver returns departure and arrival velocity vectors. Subtract the
@@ -37,12 +39,13 @@ spacecraft's current velocity to obtain the required delta-v at each end.
 For longer flight times, multiple revolution solutions may exist:
 
 ```csharp
-var result = solver.Solve(false, departure, arrival, earth, nRevolutions: 2);
+// Inputs: solver (LambertSolver), departure and arrival (StateVector), earth (CelestialBody)
+var result = solver.Solve(false, departure, arrival, earth, maxRevolution: 2);
 
 foreach (var sol in result.Solutions)
 {
-    Console.WriteLine($"Revolutions: {sol.Revolutions}, " +
-                      $"DV: {sol.TotalDeltaV:F2} m/s");
+    Console.WriteLine($"Revolutions: {sol.Revolutions} {sol.Branch}, " +
+                      $"DV: {sol.DeltaV:F2} m/s");
 }
 ```
 
@@ -53,8 +56,9 @@ a target orbit from a given launch site, accounting for Earth rotation, site
 latitude constraints, and lighting conditions.
 
 ```csharp
+// Inputs: launchSite (LaunchSite), recoverySite (Site), targetOrbit (OrbitalParameters), searchWindow (Window)
 var launch = new Launch(
-    launchSite,              // Site object for the pad
+    launchSite,              // LaunchSite of the pad
     recoverySite,            // Site for abort/recovery
     targetOrbit,             // desired orbital parameters
     Constants.CivilTwilight, // minimum solar elevation for launch
@@ -79,6 +83,7 @@ A mission groups one or more scenarios; each scenario defines a time window,
 celestial environment, and spacecraft to propagate.
 
 ```csharp
+// Inputs: start and end (Time), earth and moon (CelestialBody), spacecraft (Spacecraft)
 // Create mission
 var mission = new Mission("LunarExplorer");
 
@@ -109,6 +114,7 @@ By default, `SimulateAsync` integrates with Velocity-Verlet, using `propagatorSt
 use another integrator, for example the adaptive RK7(8):
 
 ```csharp
+// Inputs: scenario (Scenario)
 var summary = await scenario.SimulateAsync(
     includeAtmosphericDrag: false,
     includeSolarRadiationPressure: false,
@@ -125,6 +131,7 @@ states. See [Integrators](../reference/integrators.md#choosing-the-integrator).
 A mission can contain sequential or alternative scenarios:
 
 ```csharp
+// Inputs: nominalWindow and backupWindow (Window), spacecraft and spacecraftBackup (Spacecraft)
 var mission = new Mission("TransferStudy");
 
 var nominalScenario = new Scenario("Nominal", mission, nominalWindow);
@@ -145,6 +152,8 @@ The typical sequence is: plane alignment, apsidal alignment, phasing, then
 orbit circularization.
 
 ```csharp
+// Inputs: targetOrbit (OrbitalParameters), engine (Engine), spacecraft (Spacecraft), mission (Mission), window
+//   (Window), earth (CelestialBody)
 // Build the maneuver chain
 var maneuver1 = new PlaneAlignmentManeuver(
     new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
@@ -180,6 +189,7 @@ reference table.
 Insert attitude maneuvers before impulse burns to orient the spacecraft:
 
 ```csharp
+// Inputs: earth (CelestialBody), engine (Engine), maneuver1 (Maneuver), spacecraft (Spacecraft)
 var attitude = new ProgradeAttitude(
     earth, new Time(DateTime.MinValue, TimeFrame.TDBFrame),
     TimeSpan.FromMinutes(5), engine);
@@ -200,6 +210,7 @@ directly from its NAIF ID. The framework reads ephemeris, attitude, and
 instrument data from loaded kernels:
 
 ```csharp
+// Inputs: epoch (Time), moon (CelestialBody)
 var lro = new Spacecraft(
     naifId: -85,
     name: "LRO",

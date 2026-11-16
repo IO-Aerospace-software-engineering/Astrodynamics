@@ -184,7 +184,7 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 
 | Method | Description |
 |--------|-------------|
-| `AddCelestialBodyInfo(params CelestialBody[] bodies)` | Add celestial body data |
+| `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add celestial body data: the records of `IO.Astrodynamics.DTO`, not `IO.Astrodynamics.Body.CelestialBody` |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
 | `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
 
@@ -220,6 +220,7 @@ instances held), so that a kernel loaded later, or unloaded, reaches them (third
 runtime keeps for the life of the process.
 
 ```csharp
+// Inputs: customEarth (IO.Astrodynamics.DTO.CelestialBody)
 var memoryProvider = new MemoryDataProvider();
 Configuration.Instance.SetDataProvider(memoryProvider);
 memoryProvider.AddCelestialBodyInfo(customEarth);

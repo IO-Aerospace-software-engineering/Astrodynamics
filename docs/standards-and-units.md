@@ -66,9 +66,10 @@ Frame transforms in the managed API use a consistent source-to-destination conve
 Example:
 
 ```csharp
+// Inputs: epoch (Time), positionIcrf (Vector3)
 var so = Frame.CIRS.GetStateOrientationToICRF(epoch);
-var positionIcrf = positionCirs.Rotate(so.Rotation);
-var positionCirs = positionIcrf.Rotate(so.Rotation.Conjugate());
+var positionCirs = positionIcrf.Rotate(so.Rotation.Conjugate());  // ICRF -> CIRS
+var positionBack = positionCirs.Rotate(so.Rotation);              // CIRS -> ICRF, positionIcrf again
 ```
 
 `StateOrientation.ReferenceFrame` identifies the source frame of the rotation, not the destination frame.

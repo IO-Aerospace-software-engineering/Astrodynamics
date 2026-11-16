@@ -27,7 +27,7 @@ var orbit = new StateVector(
     new Vector3(0.0, 7700.0, 0.0),
     earth, epoch, Frame.ICRF);
 
-var clock = new Clock("DemoClock", 1.0 / 65536.0);
+var clock = new Clock("DemoClock", 65536);  // 65536 ticks per second
 var spacecraft = new Spacecraft(-1001, "DemoSat", 100.0, 10000.0, clock, orbit);
 
 var solution = spacecraft.Propagate(
@@ -72,6 +72,7 @@ Tighter tolerances produce more accurate results at the cost of smaller (more nu
     Use `CentralBodyPropagator` directly for full control over integrator selection and output cadence.
 
 ```csharp
+// Inputs: epoch (Time), spacecraft (Spacecraft), integrator (Integrator), earth (CelestialBody)
 using var propagator = new CentralBodyPropagator(
     new Window(epoch, epoch.AddHours(2)),
     spacecraft,
@@ -97,8 +98,9 @@ Always included. Uses the observer's gravitational parameter for two-body accele
 Pass perturbing bodies in the `CelestialItem[]` array. The framework uses Battin's numerically stable formulation to avoid catastrophic cancellation:
 
 ```csharp
-new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY,
-    PlanetsAndMoons.JUPITER_BODY }
+// Inputs: earth (CelestialBody)
+var bodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY,
+    Barycenters.JUPITER_BARYCENTER };
 ```
 
 ### Geopotential Gravity (EGM2008)
@@ -106,6 +108,7 @@ new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY,
 For higher-fidelity Earth gravity, attach a geopotential model to the central body:
 
 ```csharp
+// Inputs: epoch (Time)
 var earthWithGeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 ```
@@ -117,6 +120,7 @@ The second argument to `GeopotentialModelParameters` is the maximum degree of th
 Enable drag and SRP with the boolean flags:
 
 ```csharp
+// Inputs: window (Window), spacecraft (Spacecraft), integrator (Integrator), earth (CelestialBody)
 using var propagator = new CentralBodyPropagator(
     window, spacecraft, integrator,
     new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
@@ -138,6 +142,7 @@ continuous shadow fraction computation, the central body among the occulting bod
     The `CentralBodyPropagatorBuilder` provides a fluent API for constructing propagators with advanced force models including albedo and thermal radiation pressure.
 
 ```csharp
+// Inputs: epoch (Time), spacecraft (Spacecraft), integrator (Integrator)
 var earth = new CelestialBody(PlanetsAndMoons.EARTH,
     albedo: 0.306,
     thermalEffectiveTemperature: 254.0,
@@ -163,10 +168,11 @@ var solution = propagator.Propagate();
 The propagation solution supports interpolation at arbitrary epochs within the propagated window:
 
 ```csharp
-var stateAtHalfDay = solution.InterpolateAt(epoch.AddHours(12));
+// Inputs: solution (PropagationSolution), epoch (Time)
+var (position, velocity) = solution.InterpolateAt(epoch.AddHours(12));
 
-Console.WriteLine($"Position: {stateAtHalfDay.Position}");
-Console.WriteLine($"Velocity: {stateAtHalfDay.Velocity}");
+Console.WriteLine($"Position: {position}");
+Console.WriteLine($"Velocity: {velocity}");
 ```
 
 Interpolation uses cubic Hermite polynomials constructed from the position, velocity, and acceleration stored at each accepted integration step. This provides smooth, continuous output without re-integrating.

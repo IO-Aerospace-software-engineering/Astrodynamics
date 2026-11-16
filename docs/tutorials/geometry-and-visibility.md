@@ -6,20 +6,22 @@ operations.
 
 ## Occultation and eclipse windows
 
-An **occultation** occurs when one body blocks the view of another. Eclipse
-searches are a special case where the Sun is the occulted body.
+An **occultation** occurs when a front body blocks an observer's view of a target, the
+back body. Eclipse searches are a special case where the Sun is the target.
 
-Use `FindWindowsOnOccultationConstraint` on any celestial body to search for
-time windows when the geometry is satisfied:
+`FindWindowsOnOccultationConstraint` is a method of the target: it takes the observer, the
+target's shape, the front body and its shape, and searches for the time windows when the
+geometry is satisfied (see [Occultations and eclipses](../reference/occultations.md)):
 
 ```csharp
-// Find lunar eclipses (Earth occults the Moon as seen from the Sun)
-var lunarEclipses = sun.FindWindowsOnOccultationConstraint(
+// Inputs: moon, sun and earth (CelestialBody), searchWindow (Window)
+// Find lunar eclipses (the Earth occults the Moon as seen from the Sun)
+var lunarEclipses = moon.FindWindowsOnOccultationConstraint(
     searchWindow,
-    occultingBody: earth,
-    occultingShape: ShapeType.Ellipsoid,
-    occultedBody: moon,
-    occultedShape: ShapeType.Ellipsoid,
+    observer: sun,
+    targetShape: ShapeType.Ellipsoid,
+    frontBody: earth,
+    frontShape: ShapeType.Ellipsoid,
     occultationType: OccultationType.Any,
     aberration: Aberration.None,
     stepSize: TimeSpan.FromHours(1));
@@ -31,7 +33,7 @@ The `occultationType` parameter controls what you are looking for:
 |-------|---------|
 | `OccultationType.Full` | Target completely hidden |
 | `OccultationType.Partial` | Target partially hidden |
-| `OccultationType.Annular` | Occulting body inside target disk |
+| `OccultationType.Annular` | Front body inside the target's disc |
 | `OccultationType.Any` | Any of the above |
 
 The `stepSize` sets the initial search grid. Use a step smaller than the
@@ -39,15 +41,17 @@ shortest event you expect to find.
 
 ### Spacecraft eclipse windows
 
-To find when a spacecraft enters Earth's shadow:
+To find when a spacecraft enters Earth's shadow, search the Sun's occultation by the Earth as
+the spacecraft sees it:
 
 ```csharp
-var eclipseWindows = spacecraft.FindWindowsOnOccultationConstraint(
+// Inputs: sun and earth (CelestialBody), searchWindow (Window), spacecraft (Spacecraft)
+var eclipseWindows = sun.FindWindowsOnOccultationConstraint(
     searchWindow,
-    occultingBody: earth,
-    occultingShape: ShapeType.Ellipsoid,
-    occultedBody: sun,
-    occultedShape: ShapeType.Ellipsoid,
+    observer: spacecraft,
+    targetShape: ShapeType.Ellipsoid,
+    frontBody: earth,
+    frontShape: ShapeType.Ellipsoid,
     occultationType: OccultationType.Any,
     aberration: Aberration.None,
     stepSize: TimeSpan.FromMinutes(5));
@@ -59,6 +63,7 @@ Search for time windows when the distance between two bodies satisfies a
 relational constraint:
 
 ```csharp
+// Inputs: earth and moon (CelestialBody), searchWindow (Window)
 // Find when the Moon is farther than 400,000 km from Earth
 var farMoonWindows = earth.FindWindowsOnDistanceConstraint(
     searchWindow,
@@ -91,6 +96,7 @@ rectangle about their boresight. Use `FindWindowsInFieldOfViewConstraint` to
 determine when a target is in it:
 
 ```csharp
+// Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
 var visibilityWindows = spacecraft.Instruments.First()
     .FindWindowsInFieldOfViewConstraint(
         window,
@@ -132,6 +138,7 @@ and the reference vector in the instrument frame, and the orientation of the
 instrument frame in the spacecraft frame:
 
 ```csharp
+// Inputs: spacecraft (Spacecraft)
 spacecraft.AddCircularInstrument(
     naifId: -1001001,
     name: "Camera",
@@ -159,6 +166,7 @@ the instrument frame on the spacecraft frame. See
 Sites registered in SPICE kernels are created by NAIF ID:
 
 ```csharp
+// Inputs: earth (CelestialBody)
 var goldstone = new Site(13, "DSS-13", earth);
 ```
 
@@ -167,6 +175,7 @@ var goldstone = new Site(13, "DSS-13", earth);
 For sites not in any kernel, supply geodetic coordinates:
 
 ```csharp
+// Inputs: earth (CelestialBody)
 var mySite = new Site(100, "MySite", earth,
     new Planetodetic(
         -117.0 * Constants.Deg2Rad,   // longitude (radians)
@@ -179,6 +188,7 @@ var mySite = new Site(100, "MySite", earth,
 Compute azimuth and elevation of a target as seen from a ground site:
 
 ```csharp
+// Inputs: goldstone (Site), epoch (Time), moon (CelestialBody)
 var horizontal = goldstone.GetHorizontalCoordinates(
     epoch, moon, Aberration.LT);
 
@@ -196,6 +206,7 @@ windows: the spacecraft seen from the site, its declination in the site's
 topocentric frame being its elevation:
 
 ```csharp
+// Inputs: spacecraft (Spacecraft), searchWindow (Window), mySite (Site)
 var visibleWindows = spacecraft.FindWindowsOnCoordinateConstraint(
     searchWindow,
     mySite,
@@ -219,6 +230,7 @@ For operational satellites you often have TLE data rather than a full
 ephemeris. Propagate the TLE and query geometry from a ground site:
 
 ```csharp
+// Inputs: mySite (Site), epoch (Time)
 // Parse TLE
 var tle = new TLE(
     "ISS (ZARYA)",
@@ -226,7 +238,7 @@ var tle = new TLE(
     "2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49750667  1007");
 
 // Create spacecraft from TLE
-var iss = new Spacecraft(-25544, "ISS", tle);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, new Clock("ISS_CLK", 65536), tle);
 
 // Track from ground site
 var coords = mySite.GetHorizontalCoordinates(epoch, iss, Aberration.None);

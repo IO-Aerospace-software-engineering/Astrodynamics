@@ -133,6 +133,7 @@ build it: `new CelestialBody(399)` reads the kernels once.
 ## Example
 
 ```csharp
+// Inputs: epoch (Time)
 var earth = PlanetsAndMoons.EARTH_BODY;
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
 

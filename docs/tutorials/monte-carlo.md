@@ -20,6 +20,7 @@ sampler draws initial conditions from the multivariate normal distribution
 defined by this covariance.
 
 ```csharp
+// Inputs: r0 and v0 (double), earth (CelestialBody)
 var cov = new Matrix(6, 6);
 cov.Set(0, 0, 100.0);   // sigma_x^2  (m^2)
 cov.Set(1, 1, 100.0);   // sigma_y^2
@@ -43,6 +44,7 @@ shape of the sampled dispersion in either direction.
 The configuration object controls every aspect of the campaign:
 
 ```csharp
+// Inputs: spacecraft (Spacecraft)
 var config = new MonteCarloConfiguration
 {
     RunCount = 100,
@@ -77,12 +79,13 @@ each propagation thread needs its own `CelestialBody` instance. The
 isolated instances:
 
 ```csharp
-CelestialBodiesFactory = () =>
+// The configuration's factory, as a variable: CelestialBodiesFactory = celestialBodiesFactory
+Func<IEnumerable<CelestialItem>> celestialBodiesFactory = () =>
 [
     new CelestialBody(PlanetsAndMoons.EARTH),   // fresh Earth per thread
     Stars.SUN_BODY,
     PlanetsAndMoons.MOON_BODY
-]
+];
 ```
 
 If you omit the geopotential model (degree 0), you can share instances,
@@ -91,6 +94,7 @@ but using the factory pattern is always safe and recommended.
 ## Running the campaign
 
 ```csharp
+// Inputs: config (MonteCarloConfiguration)
 var result = MonteCarloPropagator.Propagate(config);
 
 Console.WriteLine($"Completed {result.SuccessCount} / {config.RunCount} runs");
@@ -106,16 +110,17 @@ stop the campaign.
 ### Per-epoch statistics
 
 `result.EpochStatistics` contains one entry per output epoch. Each entry
-provides mean, standard deviation, and percentiles for position and velocity
-dispersion.
+provides the mean position and velocity, the sample covariance, the standard
+deviation, minimum and maximum of each component, and the percentiles of the RSS
+position and velocity dispersion.
 
 ```csharp
+// Inputs: result (MonteCarloResult)
 // Statistics at the final epoch
 var last = result.EpochStatistics[^1];
 
 Console.WriteLine($"Epoch:           {last.Epoch}");
-Console.WriteLine($"Mean RSS pos:    {last.MeanRssPosition:F1} m");
-Console.WriteLine($"Std RSS pos:     {last.StdRssPosition:F1} m");
+Console.WriteLine($"Sigma position:  {last.StandardDeviation.Position} m");  // per ICRF axis
 Console.WriteLine($"RSS pos P50:     {last.RssPositionPercentiles.P50:F1} m");
 Console.WriteLine($"RSS pos P95:     {last.RssPositionPercentiles.P95:F1} m");
 Console.WriteLine($"RSS pos P99:     {last.RssPositionPercentiles.P99:F1} m");
@@ -138,6 +143,7 @@ fraction of samples:
 Plot RSS percentiles versus epoch to visualize how uncertainty grows:
 
 ```csharp
+// Inputs: result (MonteCarloResult)
 foreach (var stat in result.EpochStatistics)
 {
     Console.WriteLine($"{stat.Epoch}, " +

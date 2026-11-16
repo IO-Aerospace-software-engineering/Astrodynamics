@@ -22,6 +22,7 @@ initial `StateVector` as a 6x6 matrix.
     [Conjunction Assessment](../reference/conjunction-assessment.md#covariance-at-tca).
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 // Build a 6x6 covariance matrix (diagonal for simplicity)
 var protectedCov = new Matrix(6, 6);
 protectedCov.Set(0, 0, 25.0);   // sigma_x^2  (m^2)
@@ -48,6 +49,7 @@ object and is used in miss-distance calculations and collision probability.
 Set up the secondary object the same way:
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 var secondaryCov = new Matrix(6, 6);
 secondaryCov.Set(0, 0, 50.0);
 secondaryCov.Set(1, 1, 50.0);
@@ -84,6 +86,7 @@ Keplerian orbit (SGP4 for a TLE); propagate it first, or use the
 `PropagationSolution` overloads, for a high-fidelity trajectory.
 
 ```csharp
+// Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
 var encounter = ConjunctionAssessment.Analyze(
     new ProtectedSpacecraftProfile(protectedSpacecraft),
     secondarySpacecraft,
@@ -104,6 +107,7 @@ When objects have multiple close approaches in the window, use `AnalyzeAll`
 to return every encounter rather than just the closest:
 
 ```csharp
+// Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
 var allEncounters = ConjunctionAssessment.AnalyzeAll(
     new ProtectedSpacecraftProfile(protectedSpacecraft),
     secondarySpacecraft,
@@ -123,6 +127,7 @@ secondary objects. `Screen` evaluates all pairs, filters by distance or
 probability thresholds, and returns a ranked list.
 
 ```csharp
+// Inputs: protectedSpacecraft, secondary1, secondary2 and secondary3 (Spacecraft), window (Window)
 var encounters = ConjunctionAssessment.Screen(
     new ProtectedSpacecraftProfile(protectedSpacecraft),
     new ILocalizable[] { secondary1, secondary2, secondary3 },
@@ -158,6 +163,8 @@ If you have already propagated both trajectories, pass the
 sampling the participants' ephemerides:
 
 ```csharp
+// Inputs: step (TimeSpan), protectedSpacecraft and secondarySpacecraft (Spacecraft), window (Window),
+//   perturbingBodies (CelestialItem[])
 var protectedTrajectory = protectedSpacecraft.Propagate(window, perturbingBodies, false, false, step);
 var secondaryTrajectory = secondarySpacecraft.Propagate(window, perturbingBodies, false, false, step);
 
@@ -177,6 +184,8 @@ covariance at the start of the propagation: the analysis then uses the
 covariance propagated to TCA (on by default):
 
 ```csharp
+// Inputs: window (Window), perturbingBodies (CelestialItem[]), step (TimeSpan), protectedSpacecraft and
+//   secondarySpacecraft (Spacecraft)
 var integrator = new RK78Integrator(1e-11, 1e-11);
 protectedSpacecraft.Propagate(window, perturbingBodies, integrator, true, true, step, null);
 secondarySpacecraft.Propagate(window, perturbingBodies, new RK78Integrator(1e-11, 1e-11), true, true, step, null);
@@ -211,6 +220,7 @@ shows the resulting miss distance and collision probability after the
 maneuver.
 
 ```csharp
+// Inputs: encounter (EncounterCase)
 var options = ConjunctionAssessment.EvaluateAvoidance(
     encounter,
     new AvoidanceSearchOptions
@@ -245,6 +255,7 @@ with conjunction assessment providers or archival.
 ### Exporting a CDM
 
 ```csharp
+// Inputs: encounter (EncounterCase)
 var cdm = encounter.ToCdm(new CdmExportOptions
 {
     Originator = "MyOpsCenter",
@@ -342,6 +353,8 @@ A typical operational SSA workflow proceeds as follows:
 
 2. **Screen** the protected asset against the catalog:
     ```csharp
+    // Inputs: profile (ProtectedSpacecraftProfile), catalog (IEnumerable<ILocalizable>), window (Window),
+    //   screeningOptions (ScreeningOptions)
     var encounters = ConjunctionAssessment.Screen(
         profile, catalog, window, screeningOptions);
     ```
@@ -351,18 +364,21 @@ A typical operational SSA workflow proceeds as follows:
 
 4. **Analyze** high-priority encounters in detail:
     ```csharp
+    // Inputs: profile (ProtectedSpacecraftProfile), highPrioritySecondary (Spacecraft), refinedWindow (Window)
     var details = ConjunctionAssessment.Analyze(
         profile, highPrioritySecondary, refinedWindow);
     ```
 
 5. **Evaluate avoidance** if the risk is unacceptable:
     ```csharp
+    // Inputs: details (EncounterCase), avoidanceOptions (AvoidanceSearchOptions)
     var trades = ConjunctionAssessment.EvaluateAvoidance(
         details, avoidanceOptions);
     ```
 
 6. **Export CDM** for coordination with partner agencies:
     ```csharp
+    // Inputs: details (EncounterCase), exportOptions (CdmExportOptions)
     var cdm = details.ToCdm(exportOptions);
     cdm.WriteToFile("cdm_report.xml");
     ```

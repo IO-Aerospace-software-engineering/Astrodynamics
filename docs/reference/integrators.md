@@ -147,6 +147,7 @@ which initializes it with the initial state of the propagation (a later `Initial
 (`ArgumentOutOfRangeException` otherwise).
 
 ```csharp
+// Inputs: scenario (Scenario)
 var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0),
     () => new RK78Integrator(absoluteTolerance: 1e-11, relativeTolerance: 1e-11));
 ```

@@ -61,25 +61,7 @@ public class DeveloperGuideExamplesTests
     [Fact]
     public void GuideConstants_EqualTheLibrary()
     {
-        var block = GuideBlocks()[0];
-        Assert.NotEmpty(block);
-        foreach (var line in block)
-        {
-            var match = Regex.Match(line, @"public const double (\w+) = ([^;]+);");
-            Assert.True(match.Success, line);
-            var field = typeof(IO.Astrodynamics.Constants).GetField(match.Groups[1].Value, BindingFlags.Public | BindingFlags.Static);
-            Assert.NotNull(field);
-            Assert.True(field.IsLiteral, match.Groups[1].Value);
-            Assert.Equal((double)field.GetValue(null)!, Evaluate(match.Groups[2].Value.Trim()));
-        }
-    }
-
-    // A number, or a quotient of two among numbers and Math.PI
-    private static double Evaluate(string expression)
-    {
-        double Term(string t) => t.Trim() == "Math.PI" ? System.Math.PI : double.Parse(t.Trim(), CultureInfo.InvariantCulture);
-        var parts = expression.Split('/');
-        return parts.Length == 2 ? Term(parts[0]) / Term(parts[1]) : Term(expression);
+        DocumentationCodeBlocks.AssertConstantsEqualTheLibrary(GuideBlocks()[0]);
     }
 
     // The methods of the guide's member tables: the type of the heading above (#### Name, its first word), each
