@@ -273,7 +273,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [MemberData(nameof(NonFiniteComponents))]
         public void FromStateVector_NonFiniteComponent_ThrowsArgumentOutOfRangeException(string parameter, double value)
         {
-            // A StateVector holds any value; its OPM state refuses a non-finite component (Opm.FromStateVector and
+            // A StateVector holds any value; its OPM state refuses a non-finite component (Opm.CreateFromStateVector and
             // Spacecraft.ToOpm build it), where it was written as NaN or ±Infinity
             var c = Components(parameter, value);
             var stateVector = new AstroStateVector(new AstroVector3(c[0] * 1000.0, c[1] * 1000.0, c[2] * 1000.0),

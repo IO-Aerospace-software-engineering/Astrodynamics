@@ -262,7 +262,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.Common
         [MemberData(nameof(NonFiniteTerms))]
         public void FromMatrixWithUnitConversion_NonFiniteTerm_ThrowsArgumentOutOfRangeException(int term, double value)
         {
-            // A StateVector's covariance (m², m²/s, m²/s²) holds any value; Opm.FromStateVector converts it here
+            // A StateVector's covariance (m², m²/s, m²/s²) holds any value; Opm.CreateFromStateVector converts it here
             var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
                 CovarianceMatrix.FromMatrixWithUnitConversion(new IO.Astrodynamics.Math.Matrix(SampleFullMatrix(term, value))));
             Assert.Equal(Terms[term].Name, ex.ParamName);

@@ -239,10 +239,13 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [Theory]
         [InlineData(0, double.NaN)]
         [InlineData(0, double.PositiveInfinity)]
+        [InlineData(0, double.NegativeInfinity)]
         [InlineData(1, double.NaN)]
+        [InlineData(1, double.PositiveInfinity)]
         [InlineData(1, double.NegativeInfinity)]
         [InlineData(2, double.NaN)]
         [InlineData(2, double.PositiveInfinity)]
+        [InlineData(2, double.NegativeInfinity)]
         public void CreateImpulsive_NonFiniteDeltaVComponent_ThrowsArgumentOutOfRangeException(int component, double value)
         {
             var dv = new[] { 0.1, 0.0, -0.05 };

@@ -3084,10 +3084,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `FromFullMatrix`, `FromMatrix`, `FromMatrixWithUnitConversion`, `CreateImpulsive`, the four `CreateWith*`,
   `FromRtnCovariance`) inherit the check under the name of the term at fault. Finite values build bit for bit as
   before, and the written documents are byte for byte unchanged (`OpmStateVectorTests`, `CovarianceMatrixTests`,
-  `OpmManeuverParametersTests`, `TleParametersTests` and `CdmTests` `*_NonFinite*`, NaN, +∞ and −∞ in each value, 629
+  `OpmManeuverParametersTests`, `TleParametersTests` and `CdmTests` `*_NonFinite*`, NaN, +∞ and −∞ in each value, 622
   cases red on a80f6a5; `CdmTests.RealProperties_ListEveryRealPropertyOfTheRecords` guards that every real property of
   the six records is checked; ±`double.MaxValue`, ±`double.Epsilon` and −0 stored as given, a Pc of `double.Epsilon`
-  written and read back bit for bit).
+  written and read back bit for bit). `CdmCovarianceMatrix.StateCovarianceRtn` held the caller's `Matrix`, whose `Set`
+  writes the array it wraps, and returned it: a NaN or ±Infinity set on the matrix given, or on the one the getter
+  returned (a CDM read by `Cdm.ReadFromString` included), reached the record after the check, `Validate()` passed it,
+  `WriteToString` wrote it and the reader refused the document (measured on the first fix of #717). The record now holds
+  a copy of the matrix it is given and its getter returns a copy (internal `CcsdsValues.Copy`), so a term set on either
+  matrix does not reach it (`CdmTests.Init_MatrixChangedAfterwards_TheRecordKeepsTheTermsItChecked` and
+  `StateCovarianceRtn_ReturnedMatrixChanged_TheCdmStillWritesAndReadsBack`, CR_R, CT_R and CNDOT_NDOT with NaN, +∞ and
+  −∞, 18 cases red on a80f6a5).
 - **The CDM reader read a decimal comma as another number** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), the number half of [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). `CdmReader`
   parsed with `NumberStyles.AllowThousands`, which drops every comma wherever it stands: `MISS_DISTANCE` `118,1` read
   as 1181 m, `0,715` as 715 m, `COLLISION_PROBABILITY` `4,835E-05` as 0.04835 (1000 times the value), `CR_R` `4,1` as
@@ -4211,9 +4218,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidRange` error (`OMM002`) and threw `OmmValidationException`. Migration: none; a caller that needs a positive
   mass checks it.
 - **Breaking: the CCSDS data model refuses a non-finite value without a range** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), Fixed above).
-  `new OpmStateVector(...)`, `OpmStateVector.FromStateVector`, `Opm.FromStateVector` and `Spacecraft.ToOpm` throw
+  `new OpmStateVector(...)`, `OpmStateVector.FromStateVector`, `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` throw
   `ArgumentOutOfRangeException` naming `x`, `y`, `z`, `xDot`, `yDot` or `zDot`; `new CovarianceMatrix(...)`,
-  `FromFullMatrix`, `FromMatrix` and `FromMatrixWithUnitConversion` (so `Opm.FromStateVector` for a state's covariance)
+  `FromFullMatrix`, `FromMatrix` and `FromMatrixWithUnitConversion` (so `Opm.CreateFromStateVector` for a state's covariance)
   the term (`cxX` ... `czDotZDot`); `new OpmManeuverParameters(...)`, `CreateImpulsive` and
   `ImpulseManeuver.ToOpmManeuverParameters` `manDv1`, `manDv2` or `manDv3`; `new TleParameters(...)`, the four
   `CreateWith*` factories and `Omm.CreateForTle` `bstar`, `bterm`, `meanMotionDot`, `meanMotionDDot` or `agom`; setting a
@@ -4223,7 +4230,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   an encounter built by hand: each for NaN or ±Infinity, where they built it and wrote `NaN`, `Infinity` or `-Infinity`,
   which the readers refuse. A negative variance still builds and is reported by the validators. Migration: pass finite
   values, or leave an optional CDM value null; a non-finite state carried no orbit. Finite values build bit for bit as
-  before, `TLE.ToOmm` is unchanged, and the documents written are byte for byte unchanged.
+  before, `TLE.ToOmm` is unchanged, and the documents written are byte for byte unchanged. `CdmCovarianceMatrix`
+  copies the matrix it is given and the one its `StateCovarianceRtn` returns: a term set afterwards on the caller's matrix
+  or on the matrix returned no longer changes the record. Migration: build the record again, or use
+  `with { StateCovarianceRtn = matrix }` with the changed matrix.
 - **Breaking: the CDM reader refuses a comma in a numeric value** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), Fixed above). `Cdm.ReadFromString`,
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a

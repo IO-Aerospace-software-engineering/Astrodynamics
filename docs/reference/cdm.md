@@ -60,6 +60,10 @@ throws `ArgumentOutOfRangeException` naming the property for NaN or ±Infinity, 
 which builds these records, throws it for such a value in an encounter built by hand. Before 11.0.0 the record built,
 `Cdm.Validate` passed it (but the miss distance) and `WriteToString` wrote `NaN`, `Infinity` or `-Infinity`, which the
 reader refuses. `Cdm.Validate` keeps its own checks (a miss distance of 0 or more, a 6x6 covariance).
+`CdmCovarianceMatrix` holds a copy of the matrix it is given, and `StateCovarianceRtn` returns a copy of the one it holds:
+a `Matrix` wraps an array that its `Set` writes, so a term set afterwards on either matrix does not reach the record, a
+record read by `Cdm.ReadFromString` included. To change a term, build the record again or use
+`with { StateCovarianceRtn = matrix }`.
 
 ### Schema validation
 

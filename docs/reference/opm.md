@@ -70,7 +70,7 @@ parameter of `OpmKeplerianElements` (a, e, i, GM, and the four angles in [-360, 
 `CovarianceMatrix` and a ΔV component of `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming the parameter
 (`x` ... `zDot`, `cxX` ... `czDotZDot`, `manDv1` ... `manDv3`) for NaN or ±Infinity, from the constructors and from the
 factories that build them (`OpmStateVector.FromStateVector`, `CovarianceMatrix.FromFullMatrix`, `FromMatrix`,
-`FromMatrixWithUnitConversion`, `OpmManeuverParameters.CreateImpulsive`), so from `Opm.FromStateVector`,
+`FromMatrixWithUnitConversion`, `OpmManeuverParameters.CreateImpulsive`), so from `Opm.CreateFromStateVector`,
 `Spacecraft.ToOpm` and `ImpulseManeuver.ToOpmManeuverParameters`. Before 11.0.0 they built it, `Validate()` passed it
 and `SaveToFile` wrote `NaN`, `Infinity` or `-Infinity`, which the reader refuses (`Infinity` is not an `xsd:double`
 literal). The data model holds only what its reader reads.
