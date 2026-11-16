@@ -43,6 +43,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// The modes <c>static-bodies-memory</c>, <c>static-bodies-spice</c>, <c>static-bodies-switch</c> and
 /// <c>static-bodies-before-kernels</c> take the kernel directory alone: the static objects resolve their data at first read,
 /// see <see cref="StaticBodiesChild"/>.
+/// The modes <c>two-body-first-propagate</c> and <c>two-body-first-conic</c> take no schedule and load no kernel: the two-body
+/// call is the first native call of the process, see <see cref="CheckTwoBodyAsFirstNativeCall"/> (#714).
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// </para>
@@ -104,6 +106,12 @@ internal static class Program
         if (args.Length == 2 && args[1] == "tle-text")
         {
             return CheckTleTextWithoutKernels();
+        }
+
+        // No kernel loaded and no native call before: the two-body call is the first native call of the process (#714)
+        if (args.Length == 2 && args[1] is "two-body-first-propagate" or "two-body-first-conic")
+        {
+            return CheckTwoBodyAsFirstNativeCall(args[1] == "two-body-first-propagate");
         }
 
         // Before any kernel is loaded: a TLE read before its kernels throws SPICE's error, and works once they are loaded
@@ -226,7 +234,7 @@ internal static class Program
     private static int Usage()
     {
         Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
-                                "or <kernel directory> memory-provider|static-bodies-memory|static-bodies-spice|tle-text");
+                                "or <kernel directory> memory-provider|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic");
         return 2;
     }
 
@@ -306,7 +314,31 @@ internal static class Program
         return failures == 0 ? 0 : 1;
     }
 
-    private static int Expect<TException>(string label, Func<TLE> create, Func<TException, bool> matches)
+    /// <summary>
+    /// The modes <c>two-body-first-propagate</c> and <c>two-body-first-conic</c> (#714): with no kernel loaded, about a body
+    /// built from custom parameters (no SPICE read), <see cref="SpiceAPI.Propagate2Bodies(StateVector, double, TimeSpan)"/> or
+    /// <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(StateVector, double)"/> of a zero velocity is the first
+    /// native call of the process. It throws SPICE's error (prop2b.c: SPICE(ZEROVELOCITY), with no long message; oscelt.c:
+    /// "Zero vector for input velocity vector."). Before, the proxy activated no error management: SPICE's default action,
+    /// ABORT, printed the error and ended the process with exit code 1.
+    /// </summary>
+    private static int CheckTwoBodyAsFirstNativeCall(bool propagate)
+    {
+        var sv = new StateVector(new IO.Astrodynamics.Math.Vector3(7.0e6, 0.0, 0.0), IO.Astrodynamics.Math.Vector3.Zero, new CustomEarth(),
+            Time.J2000TDB, Frame.ICRF);
+        const double gm = 3.986004418e14;
+        return propagate
+            ? Expect<InvalidOperationException>("Propagate2Bodies", () => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)),
+                e => e.Message.EndsWith(": SPICE(ZEROVELOCITY)", StringComparison.Ordinal))
+            : Expect<InvalidOperationException>("ConvertStateVectorToConicOrbitalElement",
+                () => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm),
+                e => e.Message.EndsWith(": Zero vector for input velocity vector.", StringComparison.Ordinal));
+    }
+
+    // A body from custom parameters, which reads nothing from SPICE
+    private sealed class CustomEarth() : CelestialBody(399, "IOA_714_EARTH", 5.972e24);
+
+    private static int Expect<TException>(string label, Func<object> create, Func<TException, bool> matches)
         where TException : Exception
     {
         try

@@ -1518,9 +1518,17 @@ public class SpiceAPI
                     aberration.GetDescription(), stepSize.TotalSeconds,
                     stateVectors))
                     ThrowLastProxyError();
-                orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
+                var read = stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).ToArray();
+                // Every state checked before any is converted: the rotation into a managed frame calls TransformFrameProxy,
+                // which clears the message of the failed epochs (#714, review of the branch: a site frame threw "Native proxy
+                // call failed" where J2000 threw SPICE's message)
+                foreach (var x in read)
                 {
                     ThrowOnFailedRead(x);
+                }
+
+                orbitalParameters.AddRange(read.Select(x =>
+                {
                     var epoch = Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame);
                     return managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
@@ -1638,8 +1646,8 @@ public class SpiceAPI
             : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame);
     }
 
-    // The bound of | |q| − 1 | of a rotation from the native layer, a unit quaternion to rounding; the zero quaternion of a
-    // failed transformation is 1 away (#454)
+    // The bound of | |q| − 1 | of a rotation from the native layer, a unit quaternion to rounding; the NaN rotation of a
+    // failed transformation (#714; the zero quaternion before, 1 away, #454) fails the comparison
     private const double UnitQuaternionTolerance = 1.0e-9;
 
     /// <summary>
@@ -1675,7 +1683,9 @@ public class SpiceAPI
     ///     source (<c>vectorInSpacecraft = vectorInReference.Rotate(Rotation)</c>), and the angular velocity of the
     ///     spacecraft relative to <paramref name="referenceFrame"/>, expressed in <paramref name="referenceFrame"/>: the
     ///     convention of <see cref="Frame.ToFrame"/> (<c>xf2rav_c</c>) for that rotation, and that of
-    ///     <see cref="Body.Spacecraft.Spacecraft.GetOrientation"/>.
+    ///     <see cref="Body.Spacecraft.Spacecraft.GetOrientation"/>. A record read from a segment without angular velocity
+    ///     (a type-1 CK, or a type-2 or type-3 CK written without rates) has a zero angular velocity: <c>ckgpav_c</c> skips
+    ///     such a segment, and its pointing is read by <c>ckgp_c</c> (#714: before, the call threw "No orientation found").
     /// </returns>
     /// <remarks>
     ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,
@@ -1793,10 +1803,15 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">Fewer than three states, states not all in the frame of the first one (compared
     /// by name, ordinal), or a centre of motion that is not a celestial body (<see cref="IsCelestialBodyId"/>; a spacecraft or
     /// a site): the native writer rejects them or cannot read the centre; nothing is written, an existing file kept (#706:
-    /// before, a C++ exception crossed P/Invoke and ended the process).</exception>
+    /// before, a C++ exception crossed P/Invoke and ended the process). Or a centre of motion SPICE does not name, neither by
+    /// its built-in names nor by the loaded kernels ("has no name in SPICE"; a body built from custom parameters of an
+    /// identifier no kernel names): load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE); nothing is written, an
+    /// existing file kept (#714: before, <see cref="InvalidOperationException"/> from the native writer).</exception>
     /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
     /// the file once written (the reopening of the other loaded SPKs); the message is SPICE's. Or the native file system calls
-    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended).</exception>
+    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended). Or the
+    /// kernel pool has no GM for a centre SPICE names (ELARA, 507, without <c>BODY507_GM</c>): "CelestialItem id507 can't be
+    /// read:" followed by SPICE's message (#714); nothing is written.</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
@@ -1909,8 +1924,9 @@ public class SpiceAPI
     /// Rejects the states the native writer of SPKs rejects or cannot read (#706): it writes three states or more
     /// (<c>EphemerisKernel::WriteData</c>), all in one frame, compared by name ordinally as the native layer compares them,
     /// and reads the centre of motion of each as a celestial body (<see cref="IsCelestialBodyId"/>, a barycenter, a body or
-    /// a star the library builds, not a spacecraft nor a site). Each threw a C++ exception across P/Invoke, which ended the
-    /// process, or, for a spacecraft centre, read the uninitialised GM of a failed read.
+    /// a star the library builds, not a spacecraft nor a site) that SPICE names (#714). Each threw a C++ exception across
+    /// P/Invoke, which ended the process, or, for a spacecraft centre, read the uninitialised GM of a failed read; a centre
+    /// SPICE does not name threw <see cref="InvalidOperationException"/> from the native writer. Called under the lock.
     /// </summary>
     private static void ThrowIfNativeWriterRejects(OrbitalParameters.StateVector[] stateVectors)
     {
@@ -1937,6 +1953,14 @@ public class SpiceAPI
                 $"{centre.Observer.Name} ({centre.Observer.NaifId}), which is not a celestial body: a barycenter (0 to 9), the Sun (10), " +
                 "a planet, a moon or a Lagrange point (101 to 999), or an identifier above 1000, not a spacecraft nor a site.",
                 nameof(stateVectors));
+        }
+
+        // A centre SPICE does not name, which the native writer cannot build (#714, the last row of #655: before, it threw
+        // InvalidOperationException from the native layer, "CelestialItem id<id> can't be found"); #680's rule, as the element
+        // conversions check it (ReadCelestialBodyInfo)
+        foreach (var naifId in stateVectors.Select(x => x.Observer.NaifId).Distinct())
+        {
+            ReadCelestialBodyInfo(naifId, nameof(stateVectors));
         }
     }
 
@@ -2041,12 +2065,16 @@ public class SpiceAPI
     /// handed its name, <c>Name + "_TOPO"</c>, to SPICE, which does not know it, and threw). The frame of a site whose frame
     /// the kernels define is that kernel frame, read by SPICE, and the frame of a spacecraft is SPICE's by name, which reads
     /// the frame kernel and the C-kernel loaded for it. CIRS and TIRS are not composed: SPICE does not know them, and the
-    /// call throws (#656). SPICE must give a rotation: outside the coverage of
-    /// the frame data the native layer returns the zero quaternion and drops the SPICE message, and the call throws (#454;
-    /// before 11.0.0 the zero quaternion was returned, except on the TEME path).
+    /// call throws (#656). SPICE must give a rotation: for a frame SPICE does not know, or outside the coverage of the frame
+    /// data, the native layer returns a NaN rotation with SPICE's message, and the call throws with it (#714; before, the zero
+    /// quaternion and a message of the library's that named the coverage whatever the cause, #454; before 11.0.0 the zero
+    /// quaternion was returned, except on the TEME path).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE gives no rotation between the frames at this epoch: a quaternion
-    /// whose norm differs from 1 by more than 1e-9.</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no rotation between the frames at this epoch (a quaternion
+    /// whose norm differs from 1 by more than 1e-9, or NaN): the message names the frames and the epoch, then gives SPICE's,
+    /// such as <c>SPICE(UNKNOWNFRAME)</c>'s "The frame NOT_A_FRAME was not recognized as a known reference frame." or
+    /// <c>SPICE(FRAMEDATANOTFOUND)</c>'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for
+    /// epoch ... were not found."</exception>
     public OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame)
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
@@ -2069,13 +2097,13 @@ public class SpiceAPI
         {
             var res = TransformFrameProxy(SpiceFrameName(fromFrame), SpiceFrameName(toFrame), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
-            // A failed transformation returns the zero quaternion, its SPICE message printed and dropped by the native layer
-            // (#454): a rotation is a unit quaternion
+            // A failed transformation returns a NaN rotation with SPICE's message (#714; the zero quaternion with no message
+            // before, #454): a rotation is a unit quaternion. Read before any other native call
             var rotation = new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z);
             if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
             {
                 throw new InvalidOperationException(
-                    $"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}: the frame data (a PCK, CK or frame kernel) does not cover this epoch or is not loaded.");
+                    $"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}: {LastProxyError()}");
             }
 
             return new OrbitalParameters.StateOrientation(
@@ -2238,6 +2266,33 @@ public class SpiceAPI
         }
     }
 
+    // Elements that are not finite (#714): CONICS checks its domain with comparisons that NaN passes (conics.c) and the native
+    // ellipse checks nothing, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state, with no SPICE
+    // error (measured with CSPICE N0067); the constructors of the elements accept them. A bad argument, checked before the
+    // native call. The semi-major axis of a parabola is infinite: its periapsis radius is checked by ThrowIfOutsideConicsDomain
+    private static void ThrowIfNotFinite(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
+    {
+        ThrowIfNotFinite(paramName, ("e", keplerianElements.E), ("i", keplerianElements.I), ("RAAN", keplerianElements.RAAN),
+            ("AOP", keplerianElements.AOP), ("M", keplerianElements.M));
+    }
+
+    private static void ThrowIfNotFinite(OrbitalParameters.EquinoctialElements equinoctialElements, string paramName)
+    {
+        ThrowIfNotFinite(paramName, ("p", equinoctialElements.P), ("f", equinoctialElements.F), ("g", equinoctialElements.G),
+            ("h", equinoctialElements.H), ("k", equinoctialElements.K), ("L", equinoctialElements.L0));
+    }
+
+    private static void ThrowIfNotFinite(string paramName, params (string Name, double Value)[] elements)
+    {
+        foreach (var (name, value) in elements)
+        {
+            if (!double.IsFinite(value))
+            {
+                throw new ArgumentException($"The element {name} of the elements is {value}: the elements must be finite.", paramName);
+            }
+        }
+    }
+
     // The domain of EQNCPV (eqncpv.c: SPICE(BADSEMIAXIS) for a semi-major axis not above 0, SPICE(ECCOUTOFRANGE) for an
     // eccentricity sqrt(h^2 + k^2) above 0.9), checked before the native call: elements outside it are a bad argument (#711:
     // before, a zero state was returned)
@@ -2271,9 +2326,46 @@ public class SpiceAPI
         }
     }
 
-    // The GM given to CONICS (conics.c: SPICE(BADGM) for a GM not above 0), finite: a GM outside it is a bad argument when the
-    // caller gives it (#711: before, conics_c's error was left pending for the next native call)
+    // The GM given to CONICS (conics.c: SPICE(BADGM) for a GM not above 0), PROP2B and OSCELT (prop2b.c, oscelt.c:
+    // SPICE(NONPOSITIVEMASS)), finite: a GM outside it is a bad argument when the caller gives it (#711: before, conics_c's
+    // error was left pending for the next native call; #714: prop2b_c's and oscltx_c's aborted the process or returned the
+    // stack's contents)
     private static bool IsConicsGravitationalParameter(double gm) => gm > 0.0 && !double.IsInfinity(gm);
+
+    // The GM of the observer, finite and above 0, or the InvalidOperationException of a body whose GM the kernel pool lacks
+    // (#711, #714): the state of the observer, not an argument of the call
+    private static double ObserverGravitationalParameter(ILocalizable observer, string subject, string routine)
+    {
+        var gm = observer.GM;
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new InvalidOperationException(
+                $"The centre of motion of {subject}, {observer.Name} ({observer.NaifId}), has a GM of {gm} m^3/s^2, where {routine} needs one finite and " +
+                $"above 0: for a body read from the kernels, the kernel pool holds no BODY{observer.NaifId}_GM.");
+        }
+
+        return gm;
+    }
+
+    // A state the two-body calls give SPICE: a position and a velocity that are not finite raise no SPICE error, prop2b_c and
+    // oscltx_c returning NaN (measured with CSPICE N0067), so they are a bad argument checked before the native call (#714)
+    private static void ThrowIfNotFinite(OrbitalParameters.StateVector stateVector, string paramName)
+    {
+        var p = stateVector.Position;
+        var v = stateVector.Velocity;
+        if (!(double.IsFinite(p.X) && double.IsFinite(p.Y) && double.IsFinite(p.Z) && double.IsFinite(v.X) && double.IsFinite(v.Y) &&
+              double.IsFinite(v.Z)))
+        {
+            throw new ArgumentException($"The state is not finite: position {p} m, velocity {v} m/s.", paramName);
+        }
+    }
+
+    // The elements of oscltx_c, or the InvalidOperationException of its failure: the native layer writes NaN in every element
+    // with SPICE's message (#714)
+    private static bool IsFinite(in DTO.KeplerianElements elements) =>
+        double.IsFinite(elements.PerifocalDistance) && double.IsFinite(elements.Eccentricity) && double.IsFinite(elements.Inclination) &&
+        double.IsFinite(elements.AscendingNodeLongitude) && double.IsFinite(elements.PeriapsisArgument) &&
+        double.IsFinite(elements.MeanAnomaly) && double.IsFinite(elements.TrueAnomaly);
 
     // The state of a native conversion, or the InvalidOperationException of its failure: a NaN state with SPICE's message,
     // a centre whose GM the kernel pool lacks (#711: before, the zero state, silently)
@@ -2287,23 +2379,55 @@ public class SpiceAPI
         return state.Convert();
     }
 
+    /// <summary>
+    /// The osculating conic elements of a state with the GM of its observer, through CSPICE's <c>oscltx_c</c>.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite (#714).</exception>
+    /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
+    /// kernel pool lacks (#714: before, the elements <c>oscltx_c</c> never wrote were returned). Or <c>oscltx_c</c> failed
+    /// (see <see cref="ConvertStateVectorToConicOrbitalElement(OrbitalParameters.StateVector, double)"/>).</exception>
     public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
     {
-        return ConvertStateVectorToConicOrbitalElement(stateVector, stateVector.Observer.GM);
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        return ConvertStateVectorToConicOrbitalElement(stateVector, ObserverGravitationalParameter(stateVector.Observer, "the state", "OSCELT"));
     }
 
     /// <summary>
-    /// Convert state vector to Keplerian elements with an explicit GM value.
+    /// Convert state vector to Keplerian elements with an explicit GM value, through CSPICE's <c>oscltx_c</c>.
     /// </summary>
     /// <param name="stateVector"></param>
     /// <param name="gm">Gravitational parameter (m^3/s^2)</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite, which <c>oscltx_c</c> turns into NaN
+    /// elements with no error (#714).</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#714: before, the
+    /// process ended when this was its first native call, otherwise the elements <c>oscltx_c</c> never wrote were
+    /// returned).</exception>
+    /// <exception cref="InvalidOperationException"><c>oscltx_c</c> failed: a zero position, a zero velocity, or a position and
+    /// a velocity too close to parallel (oscelt.c, <c>SPICE(DEGENERATECASE)</c>); the message is SPICE's (#714: before, the
+    /// elements it never wrote were returned).</exception>
     public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector, double gm)
     {
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to OSCELT must be finite and above 0.");
+        }
+
         lock (lockObject)
         {
-            var svDto = stateVector.Convert();
-            return ConvertStateVectorToConicOrbitalElementProxy(svDto, gm).Convert();
+            var elements = ConvertStateVectorToConicOrbitalElementProxy(stateVector.Convert(), gm);
+            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            if (!IsFinite(elements))
+            {
+                throw new InvalidOperationException($"The state cannot be converted to conic elements: {LastProxyError()}");
+            }
+
+            return elements.Convert();
         }
     }
 
@@ -2315,11 +2439,14 @@ public class SpiceAPI
     /// GM, and the conversion of the result threw for the others).</exception>
     /// <exception cref="ArgumentException">The elements are outside the domain of <c>EQNCPV</c>: a semi-major axis that is not
     /// above 0, or an eccentricity above 0.9 (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">An element is not finite (#714: before, the native layer returned a NaN state, which
+    /// threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
     /// returned); the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
     {
         if (equinoctialElements == null) throw new ArgumentNullException(nameof(equinoctialElements));
+        ThrowIfNotFinite(equinoctialElements, nameof(equinoctialElements));
         ThrowIfOutsideEqncpvDomain(equinoctialElements, nameof(equinoctialElements));
         ThrowIfNotACelestialCentre(equinoctialElements.Observer, nameof(equinoctialElements));
         lock (lockObject)
@@ -2339,11 +2466,14 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
     /// <c>CONICS</c>: an ellipse of negative semi-major axis, a hyperbola of positive one (#711: before, a zero state was
     /// returned).</exception>
+    /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
+    /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
     /// returned for an ellipse, and an open orbit threw an unrelated message); for an ellipse the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
         ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
         // The native conic elements solve the elliptic Kepler equation when they are built, an iteration that may never
         // end on an open orbit (#372): an open orbit goes to SPICE CONICS at the epoch of its elements, as the other
@@ -2366,21 +2496,16 @@ public class SpiceAPI
     /// </summary>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
     /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
+    /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
     /// kernel pool lacks (#711: before, <c>conics_c</c>'s error was left pending and an unrelated message thrown).</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
         ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
-        var observer = keplerianElements.Observer;
-        var gm = observer.GM;
-        if (!IsConicsGravitationalParameter(gm))
-        {
-            throw new InvalidOperationException(
-                $"The centre of motion of the elements, {observer.Name} ({observer.NaifId}), has a GM of {gm} m^3/s^2, where CONICS needs one finite and " +
-                $"above 0: for a body read from the kernels, the kernel pool holds no BODY{observer.NaifId}_GM.");
-        }
-
+        var gm = ObserverGravitationalParameter(keplerianElements.Observer, "the elements", "CONICS");
         return ConvertConicElementsToStateVector(keplerianElements, epoch, gm);
     }
 
@@ -2394,12 +2519,15 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
     /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
+    /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#711: before,
     /// <c>conics_c</c>'s error was left pending for the next native call and an unrelated message thrown).</exception>
     /// <exception cref="InvalidOperationException"><c>conics_c</c> failed; the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch, double gm)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
         ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
         if (!IsConicsGravitationalParameter(gm))
         {
@@ -2412,28 +2540,69 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    /// The state propagated by two-body motion with the GM of its observer, through CSPICE's <c>prop2b_c</c>.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite (#714).</exception>
+    /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
+    /// kernel pool lacks (#714: before, the state <c>prop2b_c</c> never wrote was returned). Or <c>prop2b_c</c> failed (see
+    /// <see cref="Propagate2Bodies(OrbitalParameters.StateVector, double, TimeSpan)"/>).</exception>
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
     {
-        return Propagate2Bodies(stateVector, stateVector.Observer.GM, dt);
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        return Propagate2Bodies(stateVector, ObserverGravitationalParameter(stateVector.Observer, "the state", "PROP2B"), dt);
     }
 
     /// <summary>
-    /// Propagate a state vector using two-body mechanics with an explicit GM value.
+    /// Propagate a state vector using two-body mechanics with an explicit GM value, through CSPICE's <c>prop2b_c</c>.
     /// </summary>
     /// <param name="stateVector"></param>
     /// <param name="gm">Gravitational parameter (m^3/s^2)</param>
     /// <param name="dt"></param>
     /// <returns></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    /// <exception cref="ArgumentException">The position or the velocity is not finite, which <c>prop2b_c</c> turns into a NaN
+    /// state with no error (#714).</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#714: before, the
+    /// process ended when this was its first native call, otherwise the state <c>prop2b_c</c> never wrote was
+    /// returned).</exception>
+    /// <exception cref="InvalidOperationException"><c>prop2b_c</c> failed: a zero position, a zero velocity, a position
+    /// parallel to the velocity (prop2b.c, <c>SPICE(ZEROPOSITION)</c>, <c>SPICE(ZEROVELOCITY)</c>,
+    /// <c>SPICE(NONCONICMOTION)</c>, which carry no long message, so the message is the short one), or a
+    /// <paramref name="dt"/> out of its range (<c>SPICE(DTOUTOFRANGE)</c>); the message is SPICE's (#714: before, the state
+    /// it never wrote was returned).</exception>
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, double gm, TimeSpan dt)
     {
+        ArgumentNullException.ThrowIfNull(stateVector);
+        ThrowIfNotFinite(stateVector, nameof(stateVector));
+        if (!IsConicsGravitationalParameter(gm))
+        {
+            throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to PROP2B must be finite and above 0.");
+        }
+
         lock (lockObject)
         {
-            return Propagate2BodiesProxy(stateVector.Convert(), gm, dt.TotalSeconds).Convert();
+            var state = Propagate2BodiesProxy(stateVector.Convert(), gm, dt.TotalSeconds);
+            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            if (!IsFinite(state))
+            {
+                throw new InvalidOperationException($"The state cannot be propagated by two-body motion: {LastProxyError()}");
+            }
+
+            return state.Convert();
         }
     }
 
+    /// <summary>
+    /// The state propagated by two-body motion to <paramref name="targetEpoch"/> with the GM of its observer
+    /// (<see cref="Propagate2Bodies(OrbitalParameters.StateVector, TimeSpan)"/>).
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
     {
+        ArgumentNullException.ThrowIfNull(stateVector);
         return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);
     }
 }

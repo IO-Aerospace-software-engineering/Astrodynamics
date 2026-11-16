@@ -446,6 +446,31 @@ public class SpiceApiTest
     }
 
     /// <summary>
+    /// A window read in a managed frame that runs past the coverage of de440s (which ends on 2150 JAN 22) throws SPICE's
+    /// message, as the same read in J2000 does (#714, review of the branch). The epochs SPICE gives come first and are rotated
+    /// into the frame of a site on Mars (IAU_MARS of the text PCK, no time limit), a rotation that calls
+    /// <c>TransformFrameProxy</c>, which clears the last native error when it starts: the message of the failed epochs must
+    /// be read before it. The reference is SPICE's message of the same read in J2000, where no rotation runs.
+    /// </summary>
+    [Fact]
+    public void ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage()
+    {
+        var site = new Site(714, "PROBE714", new IO.Astrodynamics.Body.CelestialBody(PlanetsAndMoons.MARS), new Planetodetic(0.1, 0.2, 0.0));
+        var start = new TimeSystem.Time(2150, 1, 20, frame: TimeFrame.TDBFrame);
+        var window = new Window(start, start.AddDays(5.0));
+        var step = TimeSpan.FromHours(12.0);
+
+        var reference = Assert.Throws<InvalidOperationException>(() =>
+            SpiceAPI.Instance.ReadEphemeris(window, 399, 10, Frames.Frame.ICRF, Aberration.None, step));
+        Assert.Contains("Insufficient ephemeris data", reference.Message);
+        Assert.Contains("2150 JAN 25 00:00:00.000", reference.Message);
+
+        var e = Assert.Throws<InvalidOperationException>(() =>
+            SpiceAPI.Instance.ReadEphemeris(window, 399, 10, site.Frame, Aberration.None, step));
+        Assert.Equal(reference.Message, e.Message);
+    }
+
+    /// <summary>
     /// The documented limitation of a site observer read by identifiers (#672, documented in the fourth round of #668): the
     /// observer is a <see cref="Site"/>, which needs a SPICE name and a state at J2000 TDB. A site from coordinates whose SPK
     /// the library wrote (no naming kernel loaded) throws <see cref="ArgumentException"/> naming <c>naifId</c> as observer,
@@ -1307,8 +1332,13 @@ public class SpiceApiTest
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
-        Assert.Contains("BODY507_GM", error.Message);
+        // The same message on every run (#714: before, "can't be found" on some runs only, the name read after the failed GM
+        // read indeterminate)
+        Assert.Equal(ElaraWithoutGmMessage, error.Message);
     }
+
+    private const string ElaraWithoutGmMessage =
+        "The elements cannot be converted to a state vector: CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.";
 
     [Fact]
     void ConvertEquinoctialElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
@@ -1317,7 +1347,7 @@ public class SpiceApiTest
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, 0.1, 0.0, 0.5, new IO.Astrodynamics.Body.CelestialBody(507),
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
-        Assert.Contains("BODY507_GM", error.Message);
+        Assert.Equal(ElaraWithoutGmMessage, error.Message);
     }
 
     // An open orbit goes to conics_c with the GM of its observer, 0 for Elara (no BODY507_GM in gm_de440.tpc). Before the
@@ -1719,4 +1749,396 @@ public class SpiceApiTest
     // 4.164e-10 m and 1.125e-12 / 1.125e-12 / 1.125e-12 m/s
     private const double EquinoctialPositionLimit = 8.4e-10;
     private const double EquinoctialVelocityLimit = 2.3e-12;
+
+    // #714: Propagate2Bodies and ConvertStateVectorToConicOrbitalElement passed the GM unchecked, and their proxies returned the
+    // arrays prop2b_c and oscltx_c never wrote, with no message: about 7e-310 for a GM below 0 or a zero velocity (measured on
+    // a80f6a5), or the end of the process as its first native call (ColdStartTests). The domains are those of CSPICE N0067:
+    // prop2b.c and oscelt.c, SPICE(NONPOSITIVEMASS) for a GM not above 0; a GM that is not finite and a state that is not
+    // finite raise no SPICE error (prop2b_c returns NaN), so they are checked before the native call
+    private static StateVector LeoState(Vector3 velocity, IO.Astrodynamics.Body.CelestialItem observer = null) =>
+        new(new Vector3(6800000.0, 0.0, 0.0), velocity, observer ?? TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-3.986e14)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    void TwoBodyCalls_WithAGmNotFiniteAndAboveZero_ThrowArgumentOutOfRangeException(double gm)
+    {
+        var sv = LeoState(new Vector3(0.0, 7656.2204182967143, 0.0));
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
+        Assert.Equal("gm", error.ParamName);
+        error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
+        Assert.Equal("gm", error.ParamName);
+        AssertNothingPending();
+    }
+
+    [Fact]
+    void TwoBodyCalls_OfAStateNotFinite_ThrowArgumentException()
+    {
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        foreach (var sv in new[]
+                 {
+                     new StateVector(new Vector3(double.NaN, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                         Frames.Frame.ICRF),
+                     LeoState(new Vector3(0.0, double.PositiveInfinity, 0.0))
+                 })
+        {
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0))).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm)).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)).ParamName);
+        }
+
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, gm, TimeSpan.FromSeconds(60.0)));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, TimeSpan.FromSeconds(60.0)));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, TimeSystem.Time.J2000TDB));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(null, gm));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(null));
+        AssertNothingPending();
+    }
+
+    // ELARA (507): named by SPICE, no BODY507_GM in gm_de440.tpc, so its GM is 0: the overloads that take the GM of the observer
+    // throw as ConvertConicElementsToStateVector(KeplerianElements, Time) does
+    [Fact]
+    void TwoBodyCalls_AboutABodyWithoutGm_ThrowInvalidOperationException()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var sv = LeoState(new Vector3(0.0, 7.5e3, 0.0), new IO.Astrodynamics.Body.CelestialBody(507));
+        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).Message);
+        Assert.Contains("BODY507_GM",
+            Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0))).Message);
+        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)).Message);
+        AssertNothingPending();
+    }
+
+    // A state outside the domain SPICE decides (prop2b.c, oscelt.c): SPICE's message, nothing pending, and the next read works
+    [Fact]
+    void TwoBodyCalls_OfAZeroVelocity_ThrowSpicesMessage()
+    {
+        var sv = LeoState(Vector3.Zero);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var before = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
+        _output.WriteLine($"MESSAGE #714 Propagate2Bodies of a zero velocity: {error.Message}");
+        Assert.EndsWith(": SPICE(ZEROVELOCITY)", error.Message);
+        error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
+        _output.WriteLine($"MESSAGE #714 ConvertStateVectorToConicOrbitalElement of a zero velocity: {error.Message}");
+        Assert.EndsWith(": Zero vector for input velocity vector.", error.Message);
+        var moon = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        Assert.Equal(before.Position, moon.Position);
+        Assert.Equal(before.Velocity, moon.Velocity);
+        AssertNothingPending();
+    }
+
+    // The messages of the states SPICE rejects are those of direct prop2b_c and oscltx_c calls (the long message, the short
+    // one when prop2b.c sets none; a GM not above 0 is checked before the native call), and an ordinary state gives their
+    // results bit for bit
+    [Fact]
+    [Trait("Category", "Validation")]
+    void TwoBodyCalls_AreThoseOfCspice()
+    {
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var cases = new (Vector3 Position, Vector3 Velocity, double Gm)[]
+        {
+            (Vector3.Zero, new Vector3(0.0, 7.5e3, 0.0), gm),
+            (new Vector3(6800000.0, 0.0, 0.0), Vector3.Zero, gm),
+            (new Vector3(6800000.0, 0.0, 0.0), new Vector3(7.5e3, 0.0, 0.0), gm)
+        };
+        foreach (var (position, velocity, mu) in cases)
+        {
+            var sv = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            double[] state = [position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z];
+            var prop2b = Body.CspiceDirect.Prop2b(mu, state, 60.0);
+            var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, mu, TimeSpan.FromSeconds(60.0)));
+            Assert.EndsWith(": " + (string.IsNullOrEmpty(prop2b.Long) ? prop2b.Short : prop2b.Long), error.Message);
+            var oscltx = Body.CspiceDirect.Oscltx(state, 0.0, mu);
+            error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, mu));
+            Assert.EndsWith(": " + oscltx.Long, error.Message);
+            _output.WriteLine($"MESSAGE #714 {prop2b.Short} / {oscltx.Short} {oscltx.Long}");
+        }
+
+        var leo = LeoState(new Vector3(0.0, 7656.2204182967143, 1000.0));
+        double[] leoState = [leo.Position.X, leo.Position.Y, leo.Position.Z, leo.Velocity.X, leo.Velocity.Y, leo.Velocity.Z];
+        var reference = Body.CspiceDirect.Prop2b(gm, leoState, 3600.0).State;
+        var propagated = SpiceAPI.Instance.Propagate2Bodies(leo, gm, TimeSpan.FromSeconds(3600.0));
+        Assert.Equal(new Vector3(reference[0], reference[1], reference[2]), propagated.Position);
+        Assert.Equal(new Vector3(reference[3], reference[4], reference[5]), propagated.Velocity);
+        var elements = Body.CspiceDirect.Oscltx(leoState, 0.0, gm).Elements;
+        var converted = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(leo, gm);
+        Assert.Equal(elements[1], converted.E);
+        Assert.Equal(elements[2], converted.I);
+        Assert.Equal(elements[3], converted.RAAN);
+        Assert.Equal(elements[4], converted.AOP);
+        Assert.Equal(elements[5], converted.M);
+        Assert.Equal(elements[9], converted.A);
+        AssertNothingPending();
+    }
+
+    // #714: a transformation SPICE cannot give threw the same message whatever the cause, "the frame data (a PCK, CK or frame
+    // kernel) does not cover this epoch or is not loaded", since TransformFrameProxy dropped SPICE's message (measured on
+    // a80f6a5). The message keeps the frames and the epoch and gives SPICE's: SPICE(UNKNOWNFRAME) of a frame SPICE does not
+    // know, SPICE(FRAMEDATANOTFOUND) of ITRF93 past the coverage of earth_latest_high_prec.bpc (6.3e9 s TDB is 2199-08-22)
+    private const string UnknownFrameMessage = "The frame NOT_A_FRAME was not recognized as a known reference frame.";
+    private const string Itrf93NotCoveredMessage =
+        "PCK data required to compute the orientation of the body-fixed frame ITRF93 for epoch 2199 AUG 22 04:00:00.000 TDB were not found.";
+
+    [Fact]
+    void TransformFrame_ThatSpiceCannotGive_ThrowsSpicesMessage()
+    {
+        var unknown = Assert.Throws<InvalidOperationException>(() =>
+            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
+        _output.WriteLine($"MESSAGE #714 {unknown.Message}");
+        Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to NOT_A_FRAME at {TimeSystem.Time.J2000TDB}: ", unknown.Message);
+        Assert.EndsWith(UnknownFrameMessage, unknown.Message);
+
+        var epoch = TimeSystem.Time.CreateTDB(6.3e9);
+        var itrf93 = new Frames.Frame("ITRF93");
+        var uncovered = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, itrf93));
+        _output.WriteLine($"MESSAGE #714 {uncovered.Message}");
+        Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to ITRF93 at {epoch}: ", uncovered.Message);
+        Assert.Contains(Itrf93NotCoveredMessage, uncovered.Message);
+
+        // Through the data provider, the frames reversed
+        var provider = Assert.Throws<InvalidOperationException>(() => Frames.Frame.ICRF.ToFrame(itrf93, epoch));
+        Assert.Contains(Itrf93NotCoveredMessage, provider.Message);
+        AssertNothingPending();
+    }
+
+    // The message SpiceAPI gives is that of a direct sxform_c call
+    [Fact]
+    [Trait("Category", "Validation")]
+    void TransformFrame_ThatSpiceCannotGive_ThrowsTheMessageOfSxform()
+    {
+        foreach (var (to, et) in new[] { ("NOT_A_FRAME", 0.0), ("ITRF93", 6.3e9) })
+        {
+            var expected = Body.CspiceDirect.SxformError("J2000", to, et);
+            Assert.False(string.IsNullOrEmpty(expected));
+            var error = Assert.Throws<InvalidOperationException>(() =>
+                SpiceAPI.Instance.TransformFrame(TimeSystem.Time.CreateTDB(et), Frames.Frame.ICRF, new Frames.Frame(to)));
+            Assert.EndsWith(": " + expected, error.Message);
+        }
+
+        AssertNothingPending();
+    }
+
+    // #714: KeplerianElements and EquinoctialElements accept elements that are not finite, which CONICS and the native ellipse
+    // let through (conics.c checks its domain with comparisons NaN passes): a NaN mean anomaly gave a finite state, silently,
+    // and a NaN inclination a NaN state that threw "Native proxy call failed", or the message of an earlier call about another
+    // body (measured on a80f6a5). They are a bad argument, checked before the native call
+    [Theory]
+    [InlineData(double.NaN, 0.5, 0.3, 0.4)]
+    [InlineData(0.2, double.NaN, 0.3, 0.4)]
+    [InlineData(0.2, 0.5, double.NaN, 0.4)]
+    [InlineData(0.2, 0.5, 0.3, double.PositiveInfinity)]
+    void ConvertConicElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double i, double m, double raan, double aop)
+    {
+        var ke = new KeplerianElements(7.0e6, 0.1, i, raan, aop, m, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        foreach (var conversion in new Func<StateVector>[]
+                 {
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke),
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB),
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm)
+                 })
+        {
+            var error = Assert.Throws<ArgumentException>(conversion);
+            Assert.Equal("keplerianElements", error.ParamName);
+        }
+
+        AssertNothingPending();
+    }
+
+    [Theory]
+    [InlineData(double.NaN, 0.0, 0.5)]
+    [InlineData(0.1, double.NaN, 0.5)]
+    [InlineData(0.1, 0.0, double.NaN)]
+    [InlineData(0.1, 0.0, double.PositiveInfinity)]
+    void ConvertEquinoctialElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double h, double k, double l)
+    {
+        var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, h, k, l, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        Assert.Equal("equinoctialElements", error.ParamName);
+        AssertNothingPending();
+    }
+
+    // The reason the elements are checked by the library: conics_c gives a finite state for a NaN mean anomaly and a NaN state
+    // for a NaN inclination, with no SPICE error
+    [Fact]
+    [Trait("Category", "Validation")]
+    void Conics_OfElementsNotFinite_SignalsNoError()
+    {
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var (finite, finiteError) = Body.CspiceDirect.Conics([6.3e6, 0.1, 0.2, 0.3, 0.4, double.NaN, 0.0, gm], 0.0);
+        _output.WriteLine($"MEASURE #714 conics_c with M0 = NaN: x = {finite[0]:E16} m, error {finiteError ?? "none"}");
+        Assert.Null(finiteError);
+        Assert.True(finite.All(double.IsFinite));
+        var (nan, nanError) = Body.CspiceDirect.Conics([6.3e6, 0.1, double.NaN, 0.3, 0.4, 0.5, 0.0, gm], 0.0);
+        Assert.Null(nanError);
+        Assert.True(nan.All(double.IsNaN));
+    }
+
+    // #714: ReadOrientation threw "No orientation found" for a CK segment without angular velocity: ckgpav_c skips it with no
+    // error (ckgpav_c.c, Restrictions 1), and the native layer fell back to ckgp_c only on an error. A type-3 CK written by
+    // ckw03_c with and without rates (11 records 100 s apart, a rotation about z at 1e-3 rad/s, the SPICE quaternion
+    // (cos(wt/2), 0, 0, sin(wt/2))), the clock written by Clock.WriteAsync: each record is ckgp_c's C-matrix and the closed form
+    // R_z(1e-3 t), with a zero angular velocity without rates and (0, 0, 1e-3) rad/s with them. ckw03_c is not exported by the
+    // Windows DLL
+    // Twice the worst over Linux x64 of the angle of a record to ckgp_c and to the closed form (the MEASURE lines, 1.570e-16
+    // rad for both CKs), rounded up: provisional, to be set again from the macOS arm64 CI log
+    private const double CkRecordAngleLimit = 3.15e-16;
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    [Trait("Category", "Validation")]
+    async Task ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing(bool withRates)
+    {
+        const double rate = 1.0e-3;
+        int id = withRates ? -1999717 : -1999716;
+        var dir = Directory.CreateTempSubdirectory("ioa714ck");
+        var clockFile = new FileInfo(Path.Combine(dir.FullName, "clock.tsc"));
+        var ckFile = new FileInfo(Path.Combine(dir.FullName, "pointing.bc"));
+        var orbit = new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var spacecraft = new Spacecraft(id, $"IOA714CK{-id}", 1000.0, 10000.0, new Clock($"IOA714CLOCK{-id}", 65536), orbit);
+        await spacecraft.Clock.WriteAsync(clockFile);
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        try
+        {
+            var sclk = new double[11];
+            var quaternions = new double[44];
+            var angularVelocities = new double[33];
+            for (int i = 0; i < 11; i++)
+            {
+                sclk[i] = Body.CspiceDirect.Sce2c(id, 100.0 * i);
+                double angle = rate * 100.0 * i;
+                quaternions[4 * i] = System.Math.Cos(angle / 2.0);
+                quaternions[4 * i + 3] = System.Math.Sin(angle / 2.0);
+                angularVelocities[3 * i + 2] = rate;
+            }
+
+            Body.CspiceDirect.WriteType3Ck(ckFile.FullName, id * 1000, "J2000", withRates, sclk, quaternions, angularVelocities);
+            SpiceAPI.Instance.LoadKernels(ckFile);
+            try
+            {
+                var records = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)), id,
+                    TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(100.0)).ToArray();
+                Assert.Equal(11, records.Length);
+                double worstSpice = 0.0, worstClosedForm = 0.0;
+                for (int i = 0; i < records.Length; i++)
+                {
+                    var q = records[i].Rotation;
+                    var matrix = Body.CspiceDirect.Q2m(q.W, q.VectorPart.X, q.VectorPart.Y, q.VectorPart.Z);
+                    var cmat = Body.CspiceDirect.Ckgp(id * 1000, sclk[i], 0.0, "J2000");
+                    Assert.NotNull(cmat);
+                    double t = (records[i].Epoch - TimeSystem.Time.J2000TDB).TotalSeconds;
+                    double c = System.Math.Cos(rate * t), s = System.Math.Sin(rate * t);
+                    worstSpice = System.Math.Max(worstSpice, RotationAngle(matrix, cmat));
+                    worstClosedForm = System.Math.Max(worstClosedForm, RotationAngle(matrix, [c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0]));
+                    Assert.Equal(withRates ? new Vector3(0.0, 0.0, rate) : Vector3.Zero, records[i].AngularVelocity);
+                    Assert.Equal(Frames.Frame.ICRF, records[i].ReferenceFrame);
+                }
+
+                _output.WriteLine($"MEASURE #714 CK {(withRates ? "with" : "without")} rates: worst angle to ckgp_c {worstSpice:E3} rad, to the closed form {worstClosedForm:E3} rad");
+                Assert.True(worstSpice <= CkRecordAngleLimit, $"{worstSpice:E3} rad");
+                Assert.True(worstClosedForm <= CkRecordAngleLimit, $"{worstClosedForm:E3} rad");
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(ckFile);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(clockFile);
+            dir.Delete(true);
+        }
+    }
+
+    // The angle of the rotation between two rotation matrices (row-major): ||A - B||_F = 2 sqrt(2) sin(θ / 2), exact near 0
+    private static double RotationAngle(double[] a, double[] b)
+    {
+        double sum = 0.0;
+        for (int k = 0; k < 9; k++)
+        {
+            sum += (a[k] - b[k]) * (a[k] - b[k]);
+        }
+
+        return 2.0 * System.Math.Asin(System.Math.Min(1.0, System.Math.Sqrt(sum) / (2.0 * System.Math.Sqrt(2.0))));
+    }
+
+    // #714 (the last row of #655): WriteEphemeris checked that the centre of each state is a celestial body (#706) but not
+    // that SPICE names it, so that a centre of an identifier no kernel names reached the native writer, which threw
+    // InvalidOperationException "CelestialItem id2999991 can't be found" (measured on a80f6a5, with and without a GM in the
+    // kernel pool). It is a bad argument, rejected before anything is unloaded or written, as the element conversions reject
+    // such a centre (#711, #680's rule); the reference is SPICE's names (GetCelestialBodyInfoProxy gives the record of Id -1)
+    private sealed class UnnamedBody() : IO.Astrodynamics.Body.CelestialBody(UnnamedBodyId, "IOA_714_UNNAMED", 1.0e20);
+
+    private const int UnnamedBodyId = 2999991;
+
+    private static StateVector[] StatesAbout(IO.Astrodynamics.Body.CelestialItem centre) =>
+        Enumerable.Range(0, 5).Select(i => new StateVector(new Vector3(7.0e6 + i, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), centre,
+            TimeSystem.Time.J2000TDB.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    void WriteEphemeris_AboutACentreSpiceDoesNotName_ThrowsArgumentExceptionAndKeepsTheFile(bool withGm)
+    {
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.GetCelestialBodyInfo(UnnamedBodyId));
+        var dir = Directory.CreateTempSubdirectory("ioa714we");
+        var gmKernel = new FileInfo(Path.Combine(dir.FullName, "gm.tpc"));
+        File.WriteAllText(gmKernel.FullName, $"KPL/PCK\n\\begindata\nBODY{UnnamedBodyId}_GM = ( 1.0E+03 )\n\\begintext\n");
+        var target = new FileInfo(Path.Combine(dir.FullName, "existing.bsp"));
+        File.WriteAllText(target.FullName, "a file the writer would replace");
+        var before = System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(target.FullName));
+        if (withGm)
+        {
+            SpiceAPI.Instance.LoadKernels(gmKernel);
+        }
+
+        try
+        {
+            var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(target, -1999718, StatesAbout(new UnnamedBody())));
+            Assert.Equal("stateVectors", error.ParamName);
+            Assert.StartsWith($"The NAIF identifier {UnnamedBodyId} has no name in SPICE", error.Message);
+            Assert.Equal(before, System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(target.FullName)));
+            AssertNothingPending();
+        }
+        finally
+        {
+            if (withGm)
+            {
+                SpiceAPI.Instance.UnloadKernels(gmKernel);
+            }
+
+            dir.Delete(true);
+        }
+    }
+
+    // ELARA (507), named by SPICE, without BODY507_GM: the native writer reads the centre and throws SPICE's message, the same
+    // on every run (#714), and writes nothing
+    [Fact]
+    void WriteEphemeris_AboutACentreWithoutGm_ThrowsSpicesMessage()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var dir = Directory.CreateTempSubdirectory("ioa714we507");
+        var target = new FileInfo(Path.Combine(dir.FullName, "elara.bsp"));
+        try
+        {
+            var error = Assert.Throws<InvalidOperationException>(() =>
+                SpiceAPI.Instance.WriteEphemeris(target, -1999719, StatesAbout(new IO.Astrodynamics.Body.CelestialBody(507))));
+            Assert.Equal(
+                "An error occurred while writing ephemeris: CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.",
+                error.Message);
+            Assert.False(File.Exists(target.FullName));
+            AssertNothingPending();
+        }
+        finally
+        {
+            dir.Delete(true);
+        }
+    }
 }
