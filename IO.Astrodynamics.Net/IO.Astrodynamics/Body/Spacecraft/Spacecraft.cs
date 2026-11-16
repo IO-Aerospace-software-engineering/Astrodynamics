@@ -327,7 +327,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="name"></param>
         /// <param name="model"></param>
         /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
-        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and not negative</param>
+        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and positive</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
@@ -338,7 +338,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
         /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
         /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments");
-        /// or <paramref name="crossAngle"/> is negative or not finite, which SPICE cannot read in the kernel (#707).</exception>
+        /// or <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
+        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width, which <c>gftfov</c> rejects or searches as a
+        /// segment depending on the rounding of the boresight (#715; before 11.0.0 +0 was accepted and the search threw).</exception>
         public void AddRectangularInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
             in Vector3 orientation)
         {
@@ -355,7 +357,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="name"></param>
         /// <param name="model"></param>
         /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
-        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and not negative</param>
+        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and positive</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
@@ -366,7 +368,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
         /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
         /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments");
-        /// or <paramref name="crossAngle"/> is negative or not finite, which SPICE cannot read in the kernel (#707).</exception>
+        /// or <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
+        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width, which <c>gftfov</c> rejects or searches as a
+        /// segment depending on the rounding of the boresight (#715; before 11.0.0 +0 was accepted and the search threw).</exception>
         public void AddEllipticalInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
             in Vector3 orientation)
         {

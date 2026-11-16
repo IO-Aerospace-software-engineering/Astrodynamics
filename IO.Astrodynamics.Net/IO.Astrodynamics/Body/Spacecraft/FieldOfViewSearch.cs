@@ -100,9 +100,11 @@ internal static class FieldOfViewSearch
     /// <remarks>
     /// The constructor of <see cref="Instrument"/> rejects the vectors <c>getfov</c> rejects, a zero or non-finite boresight
     /// or reference vector and a reference vector parallel to the boresight, and a field of view that is not a finite
-    /// positive number (#707): before 11.0.0 this check threw for the zero and parallel vectors at search time.
+    /// positive number (#707), and those of <see cref="EllipticalInstrument"/> and <see cref="RectangularInstrument"/> a
+    /// cross angle that is not one (#715): before 11.0.0 this check threw for the zero and parallel vectors and for a cross
+    /// angle of 0 at search time.
     /// </remarks>
-    /// <exception cref="InvalidOperationException">The cross angle is not positive, the angular radius of the field (the
+    /// <exception cref="InvalidOperationException">The angular radius of the field (the
     /// larger half-angle of a circle or an ellipse, the angle of the corner of a rectangle) exceeds π/2 − 1e-6, or the
     /// instrument is of a shape other than a circle without being an <see cref="EllipticalInstrument"/> or a
     /// <see cref="RectangularInstrument"/>, so that its cross angle is unknown.</exception>
@@ -117,13 +119,8 @@ internal static class FieldOfViewSearch
                 $"The field of view of {instrument.Name} cannot be searched: its cross angle is unknown for the shape {instrument.Shape} of a {instrument.GetType().Name}.")
         };
 
-        // The boresight, the reference vector and the field of view are those getfov accepts, checked by the constructor of
-        // Instrument (#707); a cross angle is not
-        if (!(crossAngle > 0.0))
-        {
-            throw new InvalidOperationException($"The field of view of {instrument.Name} cannot be searched: its half-angles must be positive.");
-        }
-
+        // The boresight, the reference vector, the field of view and the cross angle are finite, and the half-angles positive,
+        // checked by the constructors (#707, #715): the cross angle of a circle is its field of view
         double angularRadius = instrument.Shape != InstrumentShape.Rectangular ? System.Math.Max(instrument.FieldOfView, crossAngle)
             : instrument.FieldOfView >= Constants.PI2 || crossAngle >= Constants.PI2 ? Constants.PI2
             : System.Math.Atan(System.Math.Sqrt(System.Math.Pow(System.Math.Tan(instrument.FieldOfView), 2) + System.Math.Pow(System.Math.Tan(crossAngle), 2)));

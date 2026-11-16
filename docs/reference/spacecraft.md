@@ -414,8 +414,11 @@ cannot read ([#707](https://github.com/IO-Aerospace-software-engineering/Astrody
 (SPICE(ZEROBORESIGHT); `boresight` checked first), a reference vector parallel to the boresight, |b × r| = 0 on the
 given vectors as `getfov` tests it (SPICE(BADREFVECTORSPEC)), and a field of view that is not a finite positive number;
 `AddEllipticalInstrument` and `AddRectangularInstrument` throw `ArgumentOutOfRangeException` naming `crossAngle` for a
-cross angle that is negative or not finite, which SPICE cannot read in the kernel (a cross angle of 0 is rejected by the
-search). A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
+cross angle that is not a finite positive number: SPICE cannot read a NaN or an infinity in the kernel, and a cross angle
+of 0 is a field of no width, which CSPICE's `gftfov` rejects (SPICE(DEGENERATECASE): consecutive boundary vectors of the
+rectangle with a zero cross product, a semi-axis of the ellipse of zero length) or, for an ellipse whose computed
+semi-axis rounds to a non-zero length, searches as a segment ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, it was accepted and the library's
+searches threw). A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
 angular radius, π/2 − 1e-6, is checked by the search.
 
 #### Instrument orientation
@@ -504,10 +507,11 @@ search for a `+S` correction.
 - `ArgumentOutOfRangeException`: a step that is not positive;
 - `ArgumentException`: a search window that ends before it starts, a target that is the instrument's spacecraft, an
   ellipsoid target without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star);
-- `InvalidOperationException`: a cross angle that is not positive, a field whose angular radius (the larger half-angle
-  of a circle or an ellipse, the angle of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an instrument that is neither
-  an `EllipticalInstrument` nor a `RectangularInstrument`. The boresight, the reference vector and the field of view are
-  checked when the instrument is built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [Instrument](#instrument)).
+- `InvalidOperationException`: a field whose angular radius (the larger half-angle of a circle or an ellipse, the angle
+  of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an
+  instrument that is neither an `EllipticalInstrument` nor a `RectangularInstrument`. The boresight, the reference
+  vector, the field of view and the cross angle, whose half-angles are positive, are checked when the instrument is
+  built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), [Instrument](#instrument)).
 
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its

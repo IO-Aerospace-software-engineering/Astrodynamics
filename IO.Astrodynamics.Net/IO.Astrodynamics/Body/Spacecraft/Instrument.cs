@@ -148,17 +148,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// The half-angle across the reference plane of an ellipse or a rectangle, as given: not negative and finite, or
-        /// <see cref="ArgumentOutOfRangeException"/> naming <paramref name="crossAngle"/>. SPICE reads no NaN nor infinity in
-        /// a kernel (#707: +∞ and a NaN of positive sign passed <c>ThrowIfNegative</c>, and the instrument kernel held
-        /// <c>FOV_CROSS_ANGLE = Infinity</c>, SPICE(NUMBEREXPECTED) on loading). A cross angle of 0 is rejected by the search.
+        /// The half-angle across the reference plane of an ellipse or a rectangle, as given: a finite positive number, or
+        /// <see cref="ArgumentOutOfRangeException"/> naming <paramref name="crossAngle"/>, one message for every value
+        /// rejected. SPICE reads no NaN nor infinity in a kernel (#707: +∞ and a NaN of positive sign passed
+        /// <c>ThrowIfNegative</c>, and the instrument kernel held <c>FOV_CROSS_ANGLE = Infinity</c>, SPICE(NUMBEREXPECTED) on
+        /// loading). A cross angle of 0 (#715; −0 was rejected by <c>ThrowIfNegative</c> with another message, +0 accepted)
+        /// is a field of no width that the library's searches rejected when called and that CSPICE's <c>gftfov</c> rejects
+        /// (SPICE(DEGENERATECASE): the rectangle's consecutive boundary vectors are not independent, <c>zzfovaxi</c>; the
+        /// ellipse's semi-axis has a zero length, <c>zzgffvu</c>) or, for an ellipse whose computed semi-axis rounds to a
+        /// non-zero length, searches as a segment, as the field of view of 0 the constructor rejects.
         /// </summary>
         private protected static double CheckCrossAngle(double crossAngle)
         {
-            ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
-            if (!double.IsFinite(crossAngle))
+            // -0 <= 0: one message for +0, -0 and a negative angle (#715)
+            if (!double.IsFinite(crossAngle) || crossAngle <= 0.0)
             {
-                throw new ArgumentOutOfRangeException(nameof(crossAngle), crossAngle, "The cross angle of an instrument must be finite.");
+                throw new ArgumentOutOfRangeException(nameof(crossAngle), crossAngle,
+                    "The cross angle of an instrument must be a finite positive number: SPICE reads no NaN nor infinity in the instrument kernel, and a field of view of zero width is degenerate for gftfov.");
             }
 
             return crossAngle;
@@ -223,8 +229,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// spacecraft or is an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), or, on the
         /// managed path, the search window leaves the propagated states of the instrument's spacecraft or of a spacecraft
         /// target, which would be extrapolated.</exception>
-        /// <exception cref="InvalidOperationException">The field of view cannot be searched: a cross angle not positive, an
-        /// angular radius above π/2 − 1e-6, or a shape other than a
+        /// <exception cref="InvalidOperationException">The field of view cannot be searched: an angular radius above
+        /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
         /// or, on the managed path, the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
