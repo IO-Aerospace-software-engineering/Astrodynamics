@@ -67,6 +67,17 @@ public class SpiceAPI
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool UnloadKernelsProxy(string directoryPath);
 
+    // Every load of a file a writer replaces: each name KEEPER holds that resolves through it (review of #706)
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool UnloadEveryLoadProxy(string path);
+
+    // Whether a kernel name resolves through a file a writer replaces, the native rule of UnloadEveryLoadProxy (review of
+    // #706); no SPICE call
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool KernelNameResolvesThroughProxy(string name, string path);
+
     // frmnam_c: the name SPICE gives to a frame id, false when it knows none (#676)
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -574,6 +585,13 @@ public class SpiceAPI
     {
         _nativeKernelCalls++;
         return UnloadKernelsProxy(path);
+    }
+
+    // The native unload of every load of a file a writer replaces, counted (_nativeKernelCalls)
+    private static bool UnloadEveryLoadNative(string path)
+    {
+        _nativeKernelCalls++;
+        return UnloadEveryLoadProxy(path);
     }
 
     /// <summary>
@@ -1690,7 +1708,9 @@ public class SpiceAPI
     /// native writer, it unloads and replaces an existing file, creates its directory when needed, and leaves the new file
     /// unloaded (the native kernel unloads the file it wrote when it is destroyed, at the end of its proxy). A file
     /// <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/> does, so that
-    /// <see cref="GetLoadedKernels"/> no longer lists it (#706: before, it stayed listed while SPICE no longer held it).
+    /// <see cref="GetLoadedKernels"/> no longer lists it (#706: before, it stayed listed while SPICE no longer held it), then
+    /// every other load of it SPICE holds, under the names <see cref="WriteEphemeris"/> finds (review of #706: before, a
+    /// single unload, which left a second load, a meta-kernel's, holding the replaced data).
     /// </summary>
     /// <param name="filePath">The SPK; the caller's <see cref="FileInfo"/> is refreshed once the file is written.</param>
     /// <param name="naifId">The NAIF identifier of the object.</param>
@@ -1715,9 +1735,11 @@ public class SpiceAPI
             // File.Exists, not FileInfo.Exists: the caller's FileInfo must not cache the state of the file before the write
             if (File.Exists(filePath.FullName))
             {
+                // Every load SPICE holds of the file, under its name or a name that resolves through it, as the native writers
+                // unload it (review of #706: a single unload left a second load, a meta-kernel's, holding the replaced file).
                 // A failed unload (the reopening of the other SPKs, on a deleted one SPICE holds under a relative name) keeps
                 // the file as it was, as the native writers do; before #706 its result was ignored and the file replaced
-                bool unloaded = UnloadKernelNative(filePath.FullName);
+                bool unloaded = UnloadEveryLoadNative(filePath.FullName);
                 ForgetDroppedKernels();
                 if (!unloaded)
                 {
@@ -1757,9 +1779,13 @@ public class SpiceAPI
     /// file is then left on disk as it was, no longer loaded, and nothing is written (review of the fourth round of #668;
     /// before, it was removed and nothing written in its place).
     /// A file it replaces that <see cref="LoadKernels"/> loaded, by itself or in a loaded directory, is first unloaded as
-    /// <see cref="UnloadKernels"/> does, and the native writer unloads every other load of its name: SPICE no longer reads
-    /// the replaced data, <see cref="GetLoadedKernels"/> no longer lists the file, and the new file is left unloaded (#706:
-    /// before, the caller's load stayed in SPICE, which held the replaced file open and read its data).
+    /// <see cref="UnloadKernels"/> does, and the native writer unloads every other load of the file (a meta-kernel's): SPICE
+    /// no longer reads the replaced data, <see cref="GetLoadedKernels"/> no longer lists the file, and the new file is left
+    /// unloaded (#706: before, the caller's load stayed in SPICE, which held the replaced file open and read its data). A
+    /// load is found under the path or under an absolute name whose symbolic links, followed one at a time, resolve through
+    /// it (a link to the file, the file in a directory loaded through a link; review of #706). A hard link to the file and
+    /// the file a symbolic link given as <paramref name="filePath"/> names keep what they name and stay loaded; a relative
+    /// name other than the path (a meta-kernel's) is not found, and SPICE goes on reading the replaced data through it.
     /// </remarks>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
@@ -1831,7 +1857,8 @@ public class SpiceAPI
     /// unloaded before its removal, and that unload fails the same way: the file is then left on disk as it was, no longer
     /// loaded, and nothing is written (review of the fourth round of #668; before, it was removed and nothing written in its
     /// place). A file it replaces that <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/>
-    /// does, and the native writer unloads every other load of its name, as <see cref="WriteEphemeris"/> (#706).
+    /// does, and the native writer unloads every other load of the file, under the names <see cref="WriteEphemeris"/>
+    /// finds (#706 and its review).
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
     /// the file once written (the reopening of the other loaded CKs); the message is SPICE's. Or the native file system calls
@@ -1915,8 +1942,11 @@ public class SpiceAPI
 
     /// <summary>
     /// Unloads, as <see cref="UnloadKernels"/> does, a file a writer is about to replace when it was loaded through
-    /// <see cref="LoadKernels"/>, by itself or in a loaded directory (#706): <see cref="GetLoadedKernels"/> no longer lists it,
-    /// a directory being replaced by its remaining files, and SPICE no longer holds it. Before, the native writers unloaded
+    /// <see cref="LoadKernels"/>, by itself or in a loaded directory, under its own name or a name whose symbolic links
+    /// resolve through it (a link to the file, or the file in a directory loaded through a link; #706 and its review):
+    /// <see cref="GetLoadedKernels"/> no longer lists it, a directory being replaced by its remaining files, and SPICE no
+    /// longer holds it. A hard link names the replaced data, which stay on disk, and is kept, as is the file a symbolic link
+    /// given as the target names: the writer replaces the link. Before, the native writers unloaded
     /// the file once after loading it once more, so the caller's load stayed in SPICE, which held the replaced file open and
     /// read its data, and the managed writer unloaded it in SPICE but left it listed. Nothing is done for a file the
     /// registry does not hold; a failed unload throws the <see cref="InvalidOperationException"/> of
@@ -1924,9 +1954,15 @@ public class SpiceAPI
     /// </summary>
     private void UnloadReplacedKernel(FileInfo target)
     {
-        if (_kernels.Any(x => IsSameOrInside(target.FullName, x.Path.FullName) && x.Files.Any(f => IsSameOrInside(f.Name, target.FullName))))
+        // Each file of the registry whose name resolves through the target: the target itself, or, while it exists, a name
+        // whose symbolic links reach it (KernelNameResolvesThroughProxy, the rule of the native writers' unload)
+        bool exists = File.Exists(target.FullName);
+        var names = _kernels.SelectMany(x => x.Files).Select(f => f.Name)
+            .Where(n => IsSameOrInside(n, target.FullName) || exists && KernelNameResolvesThroughProxy(n, target.FullName))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        foreach (var name in names)
         {
-            UnloadKernels(target);
+            UnloadKernels(new FileInfo(name));
         }
     }
 

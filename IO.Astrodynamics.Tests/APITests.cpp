@@ -1758,3 +1758,187 @@ TEST(API, UnloadKernelsProxyKeepsTheMessageOfAFailedUnload)
     std::filesystem::remove_all(folder);
 #endif
 }
+
+// A file the writer replaces, loaded under the name of a symbolic link to it, and of a link to that link: KEEPER held the
+// replaced file through each name, deleted but open, and SPICE went on reading its data once the link named the new file
+// (review of #706, measured on 9338a40: KEEPER still held both links). The writer now unloads every name whose symbolic
+// links resolve through the file it replaces. References: KEEPER's list (kdata_c) and the states written
+TEST(API, WriteEphemerisProxyReplacingAFileLoadedThroughSymbolicLinksUnloadsThem)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A symbolic link needs a privilege on Windows";
+#else
+    auto folder = FreshFolder("ioa_k1r_cpp_link_spk");
+    const auto c = folder / "c.bsp";
+    const auto link = folder / "link.bsp";
+    const auto chain = folder / "chain.bsp";
+    auto first = EarthStates(3);
+    ASSERT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999731, first.data(), 3));
+    std::filesystem::create_symlink(c, link);
+    std::filesystem::create_symlink(link, chain);
+    ASSERT_TRUE(LoadKernelsProxy(link.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(chain.string().c_str()));
+    ASSERT_GT(KeeperHandle(link), 0);
+    ASSERT_GT(KeeperHandle(chain), 0);
+
+    auto second = EarthStates(5, 5000.0);
+    EXPECT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999731, second.data(), 5));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(link));
+    EXPECT_EQ(-1, KeeperHandle(chain));
+
+    ASSERT_TRUE(LoadKernelsProxy(link.string().c_str()));
+    const auto read = ReadEphemerisAtGivenEpochProxy(4.0, 399, -1999731, "J2000", "NONE");
+    EXPECT_DOUBLE_EQ(second[4].position.x, read.position.x);
+    EXPECT_TRUE(UnloadKernelsProxy(link.string().c_str()));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The writer given a symbolic link replaces the link, not the file it names: the file stays loaded, its data unchanged,
+// and a name that resolves through the link (a link to the link) is unloaded, since it now names the new file. A hard link
+// to a replaced file still names the replaced data, which the replacement leaves on disk: it stays loaded too. References:
+// KEEPER's list and the states written
+TEST(API, WriteEphemerisProxyReplacingALinkKeepsTheFilesThatDoNotResolveThroughIt)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A symbolic link needs a privilege on Windows";
+#else
+    auto folder = FreshFolder("ioa_k1r_cpp_link_kept");
+    const auto c = folder / "c.bsp";
+    const auto link = folder / "link.bsp";
+    const auto chain = folder / "chain.bsp";
+    const auto d = folder / "d.bsp";
+    const auto hard = folder / "hard.bsp";
+    auto first = EarthStates(3);
+    ASSERT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999732, first.data(), 3));
+    ASSERT_TRUE(WriteEphemerisProxy(d.string().c_str(), -1999733, first.data(), 3));
+    std::filesystem::create_symlink(c, link);
+    std::filesystem::create_symlink(link, chain);
+    std::filesystem::create_hard_link(d, hard);
+    ASSERT_TRUE(LoadKernelsProxy(c.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(chain.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(hard.string().c_str()));
+
+    auto second = EarthStates(5, 5000.0);
+    EXPECT_TRUE(WriteEphemerisProxy(link.string().c_str(), -1999732, second.data(), 5));
+    EXPECT_TRUE(WriteEphemerisProxy(d.string().c_str(), -1999733, second.data(), 5));
+    EXPECT_FALSE(failed_c());
+    EXPECT_GT(KeeperHandle(c), 0);
+    EXPECT_EQ(-1, KeeperHandle(chain));
+    EXPECT_GT(KeeperHandle(hard), 0);
+    EXPECT_FALSE(std::filesystem::is_symlink(link));
+    EXPECT_DOUBLE_EQ(first[1].position.x, ReadEphemerisAtGivenEpochProxy(1.0, 399, -1999732, "J2000", "NONE").position.x);
+    EXPECT_DOUBLE_EQ(first[1].position.x, ReadEphemerisAtGivenEpochProxy(1.0, 399, -1999733, "J2000", "NONE").position.x);
+    EXPECT_TRUE(UnloadKernelsProxy(c.string().c_str()));
+    EXPECT_TRUE(UnloadKernelsProxy(hard.string().c_str()));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The CK analog of WriteEphemerisProxyReplacingAFileLoadedThroughSymbolicLinksUnloadsThem
+TEST(API, WriteOrientationProxyReplacingAFileLoadedThroughASymbolicLinkUnloadsIt)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A symbolic link needs a privilege on Windows";
+#else
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
+        IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                           IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                           IO::Astrodynamics::Time::TDB(0.0s),
+                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                                        std::move(orbitalParams));
+    auto folder = FreshFolder("ioa_k1r_cpp_link_ck");
+    const auto c = folder / "c.bc";
+    const auto link = folder / "link.bc";
+    auto so = Records(3);
+    ASSERT_TRUE(WriteOrientationProxy(c.string().c_str(), -175, so.data(), 3));
+    std::filesystem::create_symlink(c, link);
+    ASSERT_TRUE(LoadKernelsProxy(link.string().c_str()));
+    ASSERT_GT(KeeperHandle(link), 0);
+
+    auto more = Records(5);
+    EXPECT_TRUE(WriteOrientationProxy(c.string().c_str(), -175, more.data(), 5));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(link));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The proxy of the managed writer of SPKs (SpiceAPI.WriteEphemerisArcs), which made one unload_c of the file it replaces:
+// a file loaded twice, and under a symbolic link, stayed in KEEPER (review of #706, measured on 9338a40 through
+// Spacecraft.WriteEphemeris). It unloads every load that resolves through the file; another file stays loaded
+TEST(API, UnloadEveryLoadProxyUnloadsEveryNameThatResolvesThroughTheFile)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A symbolic link needs a privilege on Windows";
+#else
+    auto folder = FreshFolder("ioa_k1r_cpp_every_load");
+    const auto c = folder / "c.bsp";
+    const auto d = folder / "d.bsp";
+    const auto link = folder / "link.bsp";
+    auto sv = EarthStates(3);
+    ASSERT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999734, sv.data(), 3));
+    ASSERT_TRUE(WriteEphemerisProxy(d.string().c_str(), -1999735, sv.data(), 3));
+    std::filesystem::create_symlink(c, link);
+    furnsh_c(c.string().c_str());
+    furnsh_c(c.string().c_str());
+    furnsh_c(link.string().c_str());
+    furnsh_c(d.string().c_str());
+    ASSERT_FALSE(failed_c());
+
+    EXPECT_TRUE(UnloadEveryLoadProxy(c.string().c_str()));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(c));
+    EXPECT_EQ(-1, KeeperHandle(link));
+    EXPECT_GT(KeeperHandle(d), 0);
+    EXPECT_TRUE(UnloadKernelsProxy(d.string().c_str()));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The rule both the native and the .NET layers apply to the names of the loaded kernels: a name resolves through a file
+// when it is the same string, or an absolute name whose symbolic links, followed one at a time, reach the file's entry in
+// its directory (its directory's links resolved, its own name kept). A hard link, the target of a link given as the file,
+// a relative name and a name that does not exist do not
+TEST(API, KernelNameResolvesThroughProxy)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A symbolic link needs a privilege on Windows";
+#else
+    auto folder = FreshFolder("ioa_k1r_cpp_resolves");
+    const auto c = folder / "c.bsp";
+    const auto link = folder / "link.bsp";
+    const auto chain = folder / "chain.bsp";
+    const auto hard = folder / "hard.bsp";
+    const auto linkedFolder = folder / "linked";
+    const auto real = folder / "real";
+    std::filesystem::create_directories(real);
+    std::ofstream(c.string()) << "c";
+    std::ofstream((real / "e.bsp").string()) << "e";
+    std::filesystem::create_symlink(c, link);
+    std::filesystem::create_symlink(link, chain);
+    std::filesystem::create_hard_link(c, hard);
+    std::filesystem::create_directory_symlink(real, linkedFolder);
+
+    EXPECT_TRUE(KernelNameResolvesThroughProxy(c.string().c_str(), c.string().c_str()));
+    EXPECT_TRUE(KernelNameResolvesThroughProxy(link.string().c_str(), c.string().c_str()));
+    EXPECT_TRUE(KernelNameResolvesThroughProxy(chain.string().c_str(), c.string().c_str()));
+    EXPECT_TRUE(KernelNameResolvesThroughProxy(chain.string().c_str(), link.string().c_str()));
+    EXPECT_TRUE(KernelNameResolvesThroughProxy((linkedFolder / "e.bsp").string().c_str(), (real / "e.bsp").string().c_str()));
+    EXPECT_TRUE(KernelNameResolvesThroughProxy((real / "e.bsp").string().c_str(), (linkedFolder / "e.bsp").string().c_str()));
+    EXPECT_FALSE(KernelNameResolvesThroughProxy(c.string().c_str(), link.string().c_str()));
+    EXPECT_FALSE(KernelNameResolvesThroughProxy(hard.string().c_str(), c.string().c_str()));
+    EXPECT_FALSE(KernelNameResolvesThroughProxy("c.bsp", c.string().c_str()));
+    EXPECT_TRUE(KernelNameResolvesThroughProxy("c.bsp", "c.bsp"));
+    EXPECT_FALSE(KernelNameResolvesThroughProxy((folder / "missing.bsp").string().c_str(), c.string().c_str()));
+    EXPECT_FALSE(failed_c());
+    std::filesystem::remove_all(folder);
+#endif
+}

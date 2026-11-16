@@ -133,6 +133,25 @@ MODULE_API bool LoadKernelsProxy(const char *path);
 MODULE_API bool UnloadKernelsProxy(const char *path);
 
 /**
+ * Unload every load of a file a writer replaces: each name SPICE holds that resolves through it (KernelsLoader::
+ * ResolvesThrough: the same name, or an absolute name whose symbolic links reach it), after the deleted binary kernels.
+ * The managed writer of SPKs of the .NET layer unloads this way the file it replaces, as the native writers do (review of
+ * #706: KEEPER's list, which only native code reads, is needed to find every load)
+ * @param path Full path of the file
+ * @return true if successful, false otherwise, with SPICE's message in GetLastErrorProxy
+ */
+MODULE_API bool UnloadEveryLoadProxy(const char *path);
+
+/**
+ * Whether a kernel name resolves through a file a writer replaces (KernelsLoader::ResolvesThrough), for the registry of
+ * the .NET layer, which follows the names the native writers unload (review of #706); no SPICE call
+ * @param name A kernel name, as the registry holds it
+ * @param path Full path of the file the writer replaces
+ * @return true when the name is the path, or an absolute name whose symbolic links, followed one at a time, reach its entry
+ */
+MODULE_API bool KernelNameResolvesThroughProxy(const char *name, const char *path);
+
+/**
  * Get the name SPICE gives to a frame id (frmnam_c), from its built-in frames and the loaded frame kernels
  * @param frameId Frame id
  * @param name Buffer of 33 characters that receives the name, empty when SPICE knows no frame of that id

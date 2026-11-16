@@ -2786,6 +2786,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   does, and the native layer every other load of its name (`KernelsLoader::UnloadEveryLoad`) (Changed, Breaking, below).
   `Spacecraft.WriteEphemeris` unloaded the file in SPICE but left it listed; `GetLoadedKernels` no longer lists it
   (`KernelRegistryTests.*_ReplacingALoadedFile_*`, red on c533a6e).
+- **A writer left a second load, or a load through a symbolic link, of the file it replaced** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
+  review). `Spacecraft.WriteEphemeris` made one native unload of its target, so a file two meta-kernels held kept a KEEPER
+  entry, and every writer compared names as strings, so a load under a symbolic link to the target (or in a directory
+  loaded through a link) stayed in SPICE and listed: SPICE read the replaced data (measured on 9338a40: x = 6800 km at
+  +60 s, no state at +180 s that only the new file holds). Every writer now unloads each name KEEPER holds and each file
+  of the registry whose name resolves through the target, the same string or an absolute name whose symbolic links,
+  followed one at a time, reach the target's entry (`KernelsLoader::ResolvesThrough`, through the new proxies
+  `UnloadEveryLoadProxy` and `KernelNameResolvesThroughProxy`, a native change for a technical reason: KEEPER's list is
+  read by native code only, and the .NET registry follows the native rule). A hard link and the file a link given to the
+  writer names keep what they name and stay loaded; a relative name other than the path (a meta-kernel's) is not found
+  (C++ tests `API.*ThroughSymbolicLinks*`, `API.*ThroughASymbolicLink*`, `API.UnloadEveryLoadProxy*`,
+  `API.KernelNameResolvesThroughProxy`; `KernelRegistryTests.Writers_ReplacingAFileTwoMetaKernelsHold_UnloadEveryLoad`
+  and `Writers_ReplacingAFileLoadedThroughASymbolicLink_UnloadIt`, red on 9338a40).
 - **`Spacecraft.WriteEphemeris` ignored a failed unload of the file it replaced** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). When the unload of the
   target failed (KEEPER's reopening of the other SPKs, on a deleted one SPICE holds under a relative name), it replaced
   the file all the same and reported nothing, SPICE printing `SPICE(FILENOTFOUND)` on the standard output. It now
@@ -2809,8 +2822,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   pass three states or more, in one frame, relative to a celestial body; catch the exceptions.
 - **Breaking: a writer that replaces a file `LoadKernels` loaded unloads it first** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706), Fixed above).
   `WriteEphemeris`, `WriteOrientation`, `Star.WriteEphemeris`, `Site.WriteEphemeris`, `Spacecraft.WriteOrientation` and
-  `Spacecraft.WriteEphemeris` unload such a target as `UnloadKernels` does: `GetLoadedKernels` no longer lists it (a
-  loaded directory is replaced by its remaining files), and the new file is left unloaded, as the writers leave every
+  `Spacecraft.WriteEphemeris` unload such a target as `UnloadKernels` does, and every other load of it, under its path or
+  an absolute name whose symbolic links resolve through it (a meta-kernel's load, a link to it): `GetLoadedKernels` no
+  longer lists them (a loaded directory is replaced by its remaining files), and the new file is left unloaded, as the writers leave every
   file they write, so a read of its object fails until it is loaded again, where the native writers went on reading the
   replaced data. A failed unload throws the `InvalidOperationException` of `UnloadKernels` before anything is written,
   the file kept as it was. Files that were not loaded are written as before, bit for bit. Migration: `LoadKernels` the

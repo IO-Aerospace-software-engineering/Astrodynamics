@@ -83,7 +83,9 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   loaded DSK on disk until it is unloaded.
 - A writer that replaces a file `LoadKernels` loaded, by itself or in a loaded directory, first unloads it as
   `UnloadKernels` does (#706): `GetLoadedKernels` no longer lists it (a directory is replaced by its remaining files), and
-  the new file is not loaded. Load it again after the write to read it. Before 11.0.0 the native writers left the caller's
+  the new file is not loaded. Every other load of the file is unloaded too (a meta-kernel's), under the writer's path or
+  an absolute name whose symbolic links resolve through it; a hard link and a relative name of a meta-kernel are not
+  (`docs/reference/spice-api.md`). Load it again after the write to read it. Before 11.0.0 the native writers left the caller's
   load in SPICE, which went on reading the replaced file's data, and the managed `Spacecraft.WriteEphemeris` left the path
   listed. A failed unload of the file throws `InvalidOperationException` with SPICE's message, and the file is kept as it
   was; so does a path the file system rejects (a loop of symbolic links), given to a writer or to `LoadKernels`, which

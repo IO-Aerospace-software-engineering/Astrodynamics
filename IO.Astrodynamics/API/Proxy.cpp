@@ -348,6 +348,33 @@ bool UnloadKernelsProxy(const char *path)
     return ReportNativeErrors(std::move(message));
 }
 
+bool UnloadEveryLoadProxy(const char *path)
+{
+    ActivateErrorManagement();
+    std::string message;
+    try
+    {
+        IO::Astrodynamics::Kernels::KernelsLoader::UnloadEveryLoad(path);
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    return ReportNativeErrors(std::move(message));
+}
+
+bool KernelNameResolvesThroughProxy(const char *name, const char *path)
+{
+    try
+    {
+        return IO::Astrodynamics::Kernels::KernelsLoader::ResolvesThrough(name, path);
+    }
+    catch (const std::exception &)
+    {
+        return false;
+    }
+}
+
 bool GetFrameNameProxy(int frameId, char name[33])
 {
     ActivateErrorManagement();

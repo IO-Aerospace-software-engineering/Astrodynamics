@@ -12,6 +12,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 using static IO.Astrodynamics.Tests.TestKernelWriter;
 
 namespace IO.Astrodynamics.Tests;
@@ -38,9 +39,11 @@ public class KernelRegistryTests : IDisposable
 {
     private static readonly TimeSystem.Time Epoch = new(2024, 1, 1);
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("kernel-registry-");
+    private readonly ITestOutputHelper _output;
 
-    public KernelRegistryTests()
+    public KernelRegistryTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
     }
 
@@ -681,10 +684,15 @@ public class KernelRegistryTests : IDisposable
         Assert.Equal(written[3].Velocity, read.Velocity);
     }
 
+    // The bound of the angle between a CK record written and the one read back at its epoch, provisional: twice the worst
+    // measured on Linux x64 (MEASURE line, 0.000E+000 rad, a zero worst, so the records are read back exactly), to be set
+    // again from the CI logs of Windows and macOS arm64 (review of #706: before, 1e-9° taken from other tests)
+    private const double CkRecordAngleBound = 0.0;
+
     /// <summary>
     /// The CK analog: a CK of identity records loaded, then replaced by five records of 90° about z. Before, the load stayed
     /// in SPICE and the identity records were read (#706). References: the records written, compared as a rotation angle
-    /// (2 atan2(|v|, |w|) of the quaternion between them, to 1e-9°, the 9 decimals of the other angle tests of the class).
+    /// (2 atan2(|v|, |w|) of the quaternion between them) within <see cref="CkRecordAngleBound"/>.
     /// </summary>
     [Fact]
     public void WriteOrientation_ReplacingALoadedFile_UnloadsIt()
@@ -716,7 +724,8 @@ public class KernelRegistryTests : IDisposable
         SpiceAPI.Instance.LoadKernels(c);
         var q = ReadOrientation(spacecraft.NaifId, 4.0).Rotation;
         double angle = 2.0 * System.Math.Atan2((q.Conjugate() * turned).VectorPart.Magnitude(), System.Math.Abs((q.Conjugate() * turned).W));
-        Assert.Equal(0.0, angle * Astrodynamics.Constants.Rad2Deg, 9);
+        _output.WriteLine($"MEASURE #706 CK replaced while loaded: angle between the record written and the one read {angle:E3} rad");
+        Assert.True(angle <= CkRecordAngleBound, $"angle {angle:E3} rad");
     }
 
     private static StateOrientation ReadOrientation(int naifId, double seconds) => SpiceAPI.Instance
@@ -744,6 +753,117 @@ public class KernelRegistryTests : IDisposable
         Assert.Throws<InvalidOperationException>(() => ReadObject(-1999725, 60.0));
         SpiceAPI.Instance.LoadKernels(c);
         Assert.Equal(6800000.0, ReadObject(-1999725, 60.0).Position.X);
+    }
+
+    // Writes the states of an object through the native writer (SpiceAPI.WriteEphemeris) or the managed one
+    // (Spacecraft.WriteEphemeris, through SpiceAPI.WriteEphemerisArcs), with a spacecraft of its own for each call
+    private static void WriteStates(FileInfo file, int naifId, StateVector[] states, bool managed)
+    {
+        if (!managed)
+        {
+            SpiceAPI.Instance.WriteEphemeris(file, naifId, states);
+            return;
+        }
+
+        var spacecraft = new Spacecraft(naifId, $"IOA_K1R_{-naifId}", 3000.0, 10000.0, new Clock($"IOA_K1R_CLOCK_{-naifId}", 65536), states[0]);
+        spacecraft.AddPropagatedStates(states);
+        spacecraft.WriteEphemeris(file);
+    }
+
+    /// <summary>
+    /// A file two meta-kernels hold by its absolute path, then replaced by each writer. The native writer unloaded every load
+    /// of its name (#706), but the managed one made a single unload, so the second meta-kernel's load stayed in SPICE, which
+    /// read the replaced data and not the new file's (review of #706, measured on 9338a40: the state at 60 s read at the old
+    /// x, the state at 180 s, which only the new file holds, not read). Both now unload every load: the meta-kernels stay
+    /// listed, the object is not read until the file is loaded again, and then from the new file. References: the states
+    /// written and SPICE's coverage.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Writers_ReplacingAFileTwoMetaKernelsHold_UnloadEveryLoad(bool managed)
+    {
+        int id = managed ? -1999726 : -1999727;
+        var c = new FileInfo(Path.Combine(_root.FullName, "held.bsp"));
+        WriteStates(c, id, EarthStates(3, 6800000.0), managed);
+        var mk1 = WriteMetaKernel(new FileInfo(Path.Combine(_root.FullName, "mk1.tm")), c.FullName);
+        var mk2 = WriteMetaKernel(new FileInfo(Path.Combine(_root.FullName, "mk2.tm")), c.FullName);
+        SpiceAPI.Instance.LoadKernels(mk1);
+        SpiceAPI.Instance.LoadKernels(mk2);
+        Assert.Equal(6800000.0, ReadObject(id, 60.0).Position.X);
+        var written = EarthStates(4, 6805000.0);
+
+        WriteStates(c, id, written, managed);
+
+        Assert.Equal([mk1.FullName, mk2.FullName], Under(_root).Select(k => k.FullName));
+        Assert.Throws<InvalidOperationException>(() => ReadObject(id, 60.0));
+        SpiceAPI.Instance.LoadKernels(c);
+        Assert.Equal(written[3].Position, ReadObject(id, 180.0).Position);
+    }
+
+    /// <summary>
+    /// A file loaded under the name of a symbolic link to it, or in a folder loaded through a symbolic link, then replaced by
+    /// each writer: the writers compared names as strings, so the link's load stayed in SPICE and listed, its replaced data
+    /// read (review of #706, measured on 9338a40 for the native writer: the state at 60 s read at the old x, the link
+    /// listed). A load whose name resolves through the replaced file is now unloaded as <see cref="SpiceAPI.UnloadKernels"/>
+    /// does: the link no longer listed, the linked folder replaced by its other file, the object not read until it is loaded
+    /// again, and then from the new file. References: the states written and SPICE's coverage.
+    /// </summary>
+    [NotOnWindowsTheory("Creating a symbolic link needs a privilege on Windows")]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void Writers_ReplacingAFileLoadedThroughASymbolicLink_UnloadIt(bool managed, bool linkedFolder)
+    {
+        int id = managed ? -1999728 : -1999729;
+        var folder = Directory.CreateDirectory(Path.Combine(_root.FullName, "Real"));
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        WriteStates(c, id, EarthStates(3, 6800000.0), managed);
+        SpiceAPI.Instance.WriteEphemeris(new FileInfo(Path.Combine(folder.FullName, "other.bsp")), -1999730, EarthStates(3, 6800000.0));
+        FileSystemInfo loaded = linkedFolder
+            ? new DirectoryInfo(Directory.CreateSymbolicLink(Path.Combine(_root.FullName, "Linked"), folder.FullName).FullName)
+            : new FileInfo(File.CreateSymbolicLink(Path.Combine(_root.FullName, "link.bsp"), c.FullName).FullName);
+        SpiceAPI.Instance.LoadKernels(loaded);
+        Assert.Equal(6800000.0, ReadObject(id, 60.0).Position.X);
+        var written = EarthStates(4, 6805000.0);
+
+        WriteStates(c, id, written, managed);
+
+        Assert.Equal(linkedFolder ? [Path.Combine(loaded.FullName, "other.bsp")] : Array.Empty<string>(),
+            Under(_root).Select(k => k.FullName));
+        Assert.Throws<InvalidOperationException>(() => ReadObject(id, 60.0));
+        SpiceAPI.Instance.LoadKernels(c);
+        Assert.Equal(written[3].Position, ReadObject(id, 180.0).Position);
+    }
+
+    /// <summary>
+    /// A writer given a symbolic link replaces the link, not the file it names, as <c>File.Delete</c> and
+    /// <c>std::filesystem::remove</c> do: the file stays loaded and listed, its data unchanged, and the link becomes the new
+    /// file. A guard of the rule of the review of #706, which unloads the names that resolve through the replaced file only.
+    /// References: the states written and the file's bytes.
+    /// </summary>
+    [NotOnWindowsTheory("Creating a symbolic link needs a privilege on Windows")]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Writers_ReplacingASymbolicLink_KeepTheFileItNamedLoaded(bool managed)
+    {
+        int id = managed ? -1999736 : -1999737;
+        var c = new FileInfo(Path.Combine(_root.FullName, "target.bsp"));
+        WriteStates(c, id, EarthStates(3, 6800000.0), managed);
+        var bytes = File.ReadAllBytes(c.FullName);
+        var link = new FileInfo(File.CreateSymbolicLink(Path.Combine(_root.FullName, "link.bsp"), c.FullName).FullName);
+        SpiceAPI.Instance.LoadKernels(c);
+        var written = EarthStates(4, 6805000.0);
+
+        WriteStates(link, id, written, managed);
+
+        Assert.Equal([c.FullName], Under(_root).Select(k => k.FullName));
+        Assert.Equal(bytes, File.ReadAllBytes(c.FullName));
+        Assert.Null(new FileInfo(link.FullName).LinkTarget);
+        Assert.Equal(6800000.0, ReadObject(id, 60.0).Position.X);
+        SpiceAPI.Instance.LoadKernels(link);
+        Assert.Equal(written[3].Position, ReadObject(id, 180.0).Position);
     }
 
     // SPICE's files under the root, the expected ones, and the files the listing names, in any order

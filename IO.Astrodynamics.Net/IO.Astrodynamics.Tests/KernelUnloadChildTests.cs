@@ -2,7 +2,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests;
 
@@ -21,6 +23,12 @@ public class KernelUnloadChildTests
 {
     // A child that ends takes about 1 s (Linux x64, 3 cores); the limit is 60 times that, for a slow CI machine
     private static readonly TimeSpan ChildTimeout = TimeSpan.FromSeconds(60);
+    private readonly ITestOutputHelper _output;
+
+    public KernelUnloadChildTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
 
     /// <summary>
     /// The scenarios in which a loaded binary kernel (PCK, SPK, CK) is deleted, each run in the child process
@@ -92,7 +100,8 @@ public class KernelUnloadChildTests
     public void LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively_InAChildProcess() =>
         RunKernelUnloadChild("LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively");
 
-    private static void RunKernelUnloadChild(string scenario)
+    // Runs a scenario in the child, whose MEASURE lines are written to the test output
+    private void RunKernelUnloadChild(string scenario)
     {
         string child = ChildProcess.AssemblyPath("KernelUnload", "IO.Astrodynamics.Tests.KernelUnload.dll");
         Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");
@@ -100,6 +109,11 @@ public class KernelUnloadChildTests
         var result = ChildProcess.Run(child, ChildTimeout, Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"), scenario);
 
         Assert.True(result.HasValue, $"The child ({scenario}) did not end within {ChildTimeout.TotalSeconds} s.");
+        foreach (var line in result.Value.Output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
+        {
+            _output.WriteLine(line.TrimEnd('\r'));
+        }
+
         Assert.True(result.Value.ExitCode == 0,
             $"The child ({scenario}) exited {result.Value.ExitCode}. Output: {result.Value.Output} Error: {result.Value.Error}");
     }

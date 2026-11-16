@@ -772,13 +772,20 @@ internal static class Program
         CheckClosed(c, handle);
         Throws(() => ReadOrientationAt(spacecraft.NaifId, 1.0));
         SpiceAPI.Instance.LoadKernels(c);
-        double angle = AngleBetweenDeg(turned, ReadOrientationAt(spacecraft.NaifId, 4.0).Rotation);
-        Check(System.Math.Round(angle, 9) == 0.0, $"the new file gives the record written ({angle}°)");
+        var q = ReadOrientationAt(spacecraft.NaifId, 4.0).Rotation.Conjugate() * turned;
+        double angle = 2.0 * System.Math.Atan2(q.VectorPart.Magnitude(), System.Math.Abs(q.W));
+        Console.WriteLine($"MEASURE #706 CK replaced while loaded (child): angle between the record written and the one read {angle:E3} rad");
+        Check(angle <= CkRecordAngleBound, $"the new file gives the record written ({angle:E3} rad)");
         SpiceAPI.Instance.UnloadKernels(c);
         SpiceAPI.Instance.UnloadKernels(keep);
         SpiceAPI.Instance.UnloadKernels(clockFile);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
+
+    // The bound of the angle between a CK record written and the one read back at its epoch, provisional: twice the worst
+    // measured on Linux x64 (MEASURE line, 0.000E+000 rad, a zero worst, so the records are read back exactly), to be set
+    // again from the CI logs of Windows and macOS arm64 (review of #706: before, 1e-9° taken from other tests)
+    private const double CkRecordAngleBound = 0.0;
 
     private static StateOrientation ReadOrientationAt(int naifId, double seconds) => SpiceAPI.Instance
         .ReadOrientation(new Window(Epoch.AddSeconds(seconds), Epoch.AddSeconds(seconds)), naifId, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0))

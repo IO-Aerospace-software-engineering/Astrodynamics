@@ -89,8 +89,16 @@ the new file is left unloaded, as the writers leave every file they write: load 
 native writers (`WriteEphemeris`, `WriteOrientation`, `Star.WriteEphemeris`, `Site.WriteEphemeris`,
 `Spacecraft.WriteOrientation`) unloaded the file once after loading it once more, so the caller's load stayed in SPICE,
 which held the replaced file, deleted but open, and read its data until the file was unloaded (on Windows, from the code,
-not measured, the removal of the open file ended the process); `Spacecraft.WriteEphemeris` unloaded it in SPICE but left it listed. The native writers
-now also unload every other load of the name (a meta-kernel's, a direct C++ caller's) before the removal. A failed unload
+not measured, the removal of the open file ended the process); `Spacecraft.WriteEphemeris` unloaded it in SPICE but left it listed. Every
+writer now also unloads every other load of the file before the removal (a meta-kernel's, a direct C++ caller's, two
+meta-kernels' included; `Spacecraft.WriteEphemeris` made one unload, which left the second load holding the replaced
+data), whether its name is the writer's path or an absolute name whose symbolic links resolve through it, followed one
+at a time: a symbolic link to the file, or the file in a directory loaded through a link, unloaded and no longer listed
+(a directory replaced by its remaining files). Kept, as they still name what they named: a hard link to the file (the
+replaced data stay on disk under it) and the file a symbolic link given to the writer names (the writer replaces the
+link). Not found, so still loaded, and the replaced data still read: a relative name other than the writer's path (a
+meta-kernel's `KERNELS_TO_LOAD` without an absolute path; relative to the working directory of its load) and a name that
+differs only by the case of its letters on a file system that ignores it. A failed unload
 of the file (the reopening of the other SPKs or CKs, on a deleted one SPICE holds under a relative name) throws
 `InvalidOperationException` with SPICE's message and keeps the file on disk as it was, no longer loaded, nothing written:
 `Spacecraft.WriteEphemeris` ignored that failure and replaced the file before #706.

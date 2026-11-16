@@ -200,7 +200,7 @@ Singleton class providing access to SPICE operations.
 | `GetSpiceVersion()` | Get SPICE toolkit version |
 | `ReadEphemeris(...)` | Read state vectors (throws `InvalidOperationException` on native error) |
 | `ReadOrientation(...)` | Read spacecraft orientations (throws `InvalidOperationException` on native error) |
-| `WriteEphemeris(...)`, `WriteOrientation(...)` | Write an SPK (three states or more, one frame, about a celestial body, else `ArgumentException`) or a CK through the native writer; a file they replace that `LoadKernels` loaded is unloaded first and the new file is left unloaded (#706) |
+| `WriteEphemeris(...)`, `WriteOrientation(...)` | Write an SPK (three states or more, one frame, about a celestial body, else `ArgumentException`) or a CK through the native writer; a file they replace that `LoadKernels` loaded, under its path or a symbolic link that resolves through it, is unloaded first, with every other load of it, and the new file is left unloaded (#706) |
 
 ```csharp
 // Load all kernels from a directory
