@@ -337,7 +337,8 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   (the same reader). A shorter output step lowers it.
 
 `SpiceAPI.ReadOrientation` and `SpiceAPI.WriteOrientation` are the raw C-matrix pair of `ckgpav_c` and `ckw03_c`
-([SpiceAPI](spice-api.md#orientation-kernels)). `ReadOrientation` of a CK written by 11.0.0 returns the C-matrix of the
+([SpiceAPI](spice-api.md#orientation-kernels)); a CK segment without angular velocity is read by `ckgp_c`, with a zero
+angular velocity (#714). `ReadOrientation` of a CK written by 11.0.0 returns the C-matrix of the
 attitude.
 
 **CKs written before 11.0.0** hold the inverse of the attitude (3.14 rad off for a nadir attitude), in the initial frame

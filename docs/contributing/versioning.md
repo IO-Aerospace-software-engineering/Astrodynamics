@@ -2967,6 +2967,64 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadOrientation_WithoutAClock_ThrowsSpicesMessage`, C++ `API.ReadOrientationProxyOfAnUnknownFrameReturnsSpicesMessageAndLeavesNothingPending`,
   `API.ReadOrientationProxyWithoutAClockReturnsSpicesMessage` and `API.LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending`).
   The tests of #706 that kept a second CK loaded so that this error did not reach the next call no longer do.
+- **The two-body proxies aborted the process or returned the stack's contents** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)).
+  `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` activated no error management, reset SPICE
+  without its message and returned the arrays `prop2b_c` and `oscltx_c` never wrote: as the first native call of a
+  process, `SpiceAPI.Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` with a GM of 0 or below ended it
+  through SPICE's default action, ABORT (exit code 1, no managed exception); after any other call they returned about
+  7e-310 for a GM below 0, a zero position or velocity, or a position parallel to the velocity, with no error, and so did
+  the overloads that take the GM of an observer without one (Elara, 507), all measured on a80f6a5. Both proxies now
+  return a NaN result (the epoch plus dt, the centre and the frame as given; NaN in every element) with SPICE's message,
+  SPICE reset (a native change for a technical reason, no signature changed), and `SpiceAPI` throws (Changed, Breaking,
+  below). C++ `API.Propagate2BodiesProxyOfAStateOutsideTheDomainOfProp2bReturnsNaN`,
+  `API.ConvertStateVectorToConicOrbitalElementProxyOfAStateOutsideTheDomainOfOscltxReturnsNaN` and the death tests
+  `API.*AsTheFirstCallReturnsNaN` (exit code 1 on the base), child modes `two-body-first-propagate` and
+  `two-body-first-conic` of `ColdStartTests`, `SpiceApiTest.TwoBodyCalls_*` (the messages those of direct `prop2b_c` and
+  `oscltx_c` calls, an ordinary state their results bit for bit; the domains read from `prop2b.c` and `oscelt.c` of
+  CSPICE N0067).
+- **A SPICE error with no long message was reported as a success** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `ReportNativeErrors`, through which most
+  proxies report, built its message from SPICE's long message alone, and returned true when it was empty: `prop2b.c`
+  signals `SPICE(NONPOSITIVEMASS)`, `SPICE(ZEROPOSITION)`, `SPICE(ZEROVELOCITY)` and `SPICE(NONCONICMOTION)` with no
+  `setmsg_`. Such an error is now reported by its short message (`SPICE(ZEROVELOCITY)`), the proxy returning false or
+  its NaN result. Only a native caller met it before the two-body proxies reported through it.
+- **The message of a failed frame transformation named a wrong cause** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `TransformFrameProxy` checked SPICE only
+  after `xf2rav_c`, the unwritten matrix of a failed `sxform_c` passed to the quaternion, then reset SPICE without its
+  message and returned the zero quaternion, so that `SpiceAPI.TransformFrame` (and `Frame.ToFrame` through the
+  `SpiceDataProvider`) threw "the frame data (a PCK, CK or frame kernel) does not cover this epoch or is not loaded" for an
+  unknown frame too. The proxy reports right after `sxform_c` and catches C++ exceptions, returning a NaN rotation and
+  angular velocity with SPICE's message; `TransformFrame` keeps the frames and the epoch and appends it
+  (`SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known reference frame.",
+  `SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for epoch
+  2199 AUG 22 04:00:00.000 TDB were not found. ..."). The exception type is unchanged (C++
+  `API.TransformFrameProxyOfAnUnknownFrameReturnsNaNWithSpicesMessage`,
+  `API.TransformFrameProxyOutsideTheCoverageOfAPckReturnsNaNWithSpicesMessage`; `SpiceApiTest.TransformFrame_ThatSpiceCannotGive_*`,
+  the text that of a direct `sxform_c` call).
+- **The message of a centre without GM changed from run to run** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), question 4 of #713). After a failed GM read
+  SPICE is failed, `BODC2N` returns at once and `bodc2n_c` copies its own unwritten local into the caller's flag
+  (`bodc2n_c.c` of N0067, `*found = fnd;`), so that initialising the flag (#711) did not make it determinate: about Elara,
+  six runs of nine gave "CelestialItem id507 can't be found" before SPICE's message, three SPICE's alone, and the body
+  was built with an empty name when the flag was not zero. Both `CelestialBody` constructors now throw `SDKException`
+  `CelestialItem id<id> can't be read:` before `bodc2n_c`, SPICE's error left pending for the proxy, which appends it:
+  "CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool." on every run (C++
+  `CelestialBody.ConstructorsOfABodyWithoutGmThrowBeforeReadingItsName`, the whole message in
+  `API.Convert*ProxyOfACentreWithoutGmReturnsNaN` and `API.LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending`;
+  `SpiceApiTest.Convert*ElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException`). The exception type
+  is unchanged.
+- **The last native error outlived its call** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `lastError` was written only on failure, so that
+  `GetLastErrorProxy()` returned the message of an earlier call after a proxy that succeeded or failed without a message
+  of its own: a conversion of a NaN inclination threw "Native proxy call failed", or, after a failed conversion about
+  Elara, Elara's message about the Earth's elements (measured on a80f6a5). Every proxy that reports through `lastError`
+  now clears it when it starts (C++ `API.EveryReportingProxyThatSucceedsClearsTheLastError`, 21 proxies); the read of
+  each epoch of `ReadEphemerisProxy` does not, so a failed epoch's message outlives the epochs after it.
+- **A CK without angular velocity could not be read** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `ckgpav_c` skips a segment without rates and returns
+  found = false with no error ("Segments containing only pointing data will be skipped over", its Restrictions 1), and
+  `ReadOrientationProxy` fell back to `ckgp_c` only on an error, so that `SpiceAPI.ReadOrientation` of a type-1 CK, or of
+  a type-2 or type-3 CK written without rates, threw "No orientation found" (a type-3 CK written by `ckw03_c` without
+  rates, measured on a80f6a5). The proxy falls back to `ckgp_c` when `ckgpav_c` finds nothing too; such a record has the
+  pointing of `ckgp_c` and a zero angular velocity (C++ `API.ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing`,
+  within 2.23e-16 rad of `ckgp_c` and of the closed form R_z(1e-3 t); `SpiceApiTest.ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing`,
+  within 3.15e-16 rad, the CK with rates (0, 0, 1e-3) rad/s; both thresholds provisional, twice the Linux worst). The
+  CKs the library writes carry their rates and read as before, bit for bit.
 - **The position of a star depended on the time frame of its epoch** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates`,
   `GetRightAscensionSigma` and `GetDeclinationSigma` took dt from the calendars of the catalog epoch and of the epoch,
   each in its own time frame, so that the same instant gave two positions (relative to the epoch in TDB: 2.299e-7 in UTC,
@@ -3099,6 +3157,43 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   finite. A null argument throws `ArgumentNullException`. Migration: convert elliptic equinoctial elements of
   eccentricity above 0.9 with `EquinoctialElements.ToStateVector()`, pass a positive finite GM, and catch
   `ArgumentException` where elements may be inconsistent.
+- **Breaking: the two-body calls of `SpiceAPI` check their arguments and throw SPICE's errors** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above).
+  `Propagate2Bodies(StateVector, double, TimeSpan)` and `ConvertStateVectorToConicOrbitalElement(StateVector, double)`
+  throw `ArgumentOutOfRangeException` (`gm`) for a GM that is not finite and above 0 (`SPICE(NONPOSITIVEMASS)` of
+  `prop2b.c` and `oscelt.c`); the overloads that take the GM of the observer (`Propagate2Bodies(StateVector, TimeSpan)`,
+  `(StateVector, Time)`, `ConvertStateVectorToConicOrbitalElement(StateVector)`) throw `InvalidOperationException` naming
+  `BODYnnn_GM` when that GM is not, as `ConvertConicElementsToStateVector(KeplerianElements, Time)` does; every overload
+  throws `ArgumentNullException` for a null state and `ArgumentException` (`stateVector`) for a position or a velocity
+  that is not finite, which SPICE turns into NaN with no error; and `InvalidOperationException` with SPICE's message for a
+  state SPICE rejects: a zero position, a zero velocity, a position parallel to the velocity, a time out of
+  `prop2b_c`'s range (`SPICE(ZEROPOSITION)`, `SPICE(ZEROVELOCITY)`, `SPICE(NONCONICMOTION)`, `SPICE(DTOUTOFRANGE)`;
+  `SPICE(DEGENERATECASE)` for the elements). Before, the process ended when the call was its first native call, and
+  otherwise the stack's contents (about 7e-310) were returned. Native callers: both proxies return a NaN result with
+  `GetLastErrorProxy()`. Migration: pass a finite state and a finite GM above 0, load the GM of the observer, and catch
+  `InvalidOperationException` for a degenerate state. Results on ordinary inputs are unchanged, bit for bit.
+- **Breaking: the element conversions of `SpiceAPI` reject elements that are not finite** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). The three
+  `ConvertConicElementsToStateVector` overloads throw `ArgumentException` (`keplerianElements`) for an eccentricity,
+  inclination, ascending node, argument of periapsis or mean anomaly that is not finite, and
+  `ConvertEquinoctialElementsToStateVector` (`equinoctialElements`) for a p, f, g, h, k or L that is not, before the native
+  call. Before, a NaN mean anomaly gave a finite state silently (CONICS checks its domain with comparisons NaN passes:
+  `conics_c` gives a finite state for M0 = NaN with no error, `SpiceApiTest.Conics_OfElementsNotFinite_SignalsNoError`),
+  and a NaN inclination a NaN state that threw `InvalidOperationException` "Native proxy call failed" or the message of
+  an earlier call. The semi-major axis of a parabola stays infinite: its periapsis radius is checked. Migration: pass
+  finite elements.
+- **Breaking: `SpiceAPI.WriteEphemeris` rejects a centre SPICE does not name** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), the last row of
+  [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655)). It throws `ArgumentException`
+  (`stateVectors`, "The NAIF identifier 2999991 has no name in SPICE: ...") before anything is unloaded or written, an
+  existing file kept byte for byte, for a centre no loaded kernel names (a body built from custom parameters), with or
+  without a GM in the kernel pool, where the native writer threw `InvalidOperationException` ("CelestialItem id2999991
+  can't be found"); the check is that of the element conversions (#711, #680's rule). A centre SPICE names whose GM the
+  kernel pool lacks still reaches the native writer, `InvalidOperationException` with the message of the Fixed entry
+  above, nothing written. `Star.WriteEphemeris` and `Site.WriteEphemeris` write about named bodies and are unchanged.
+  Migration: catch `ArgumentException`, or load a kernel that names the body (`NAIF_BODY_NAME`, `NAIF_BODY_CODE`)
+  (`SpiceApiTest.WriteEphemeris_AboutACentreSpiceDoesNotName_ThrowsArgumentExceptionAndKeepsTheFile`).
+- **`TransformFrameProxy` returns a NaN rotation when it fails** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above). A native caller gets a NaN rotation
+  and angular velocity with SPICE's message in `GetLastErrorProxy()`, where it got the zero quaternion with no message
+  (#454); `GetLastErrorProxy()` is empty after a reporting proxy that succeeds. `SpiceAPI.TransformFrame` throws the same
+  `InvalidOperationException` on both, its message now SPICE's.
 - **Breaking: an instrument checks its field of view when it is built** ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)). The constructor of `Instrument`, so
   `AddCircularInstrument`, `AddEllipticalInstrument`, `AddRectangularInstrument` and any subclass, throws
   `ArgumentException` naming the parameter for a boresight or a reference vector with a component that is not finite or
@@ -4239,11 +4334,7 @@ not listed.
   leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
-  before rewriting the file. `SpiceAPI.WriteEphemeris` rejects before the native call a centre that is not a celestial
-  body, a spacecraft or a site (`ArgumentException`), but leaves to the native writer a celestial-body identifier no
-  kernel names, with or without a GM: `InvalidOperationException` with the native message (`CelestialItem id2999991
-  can't be found`, followed by SPICE's for a missing GM, which SPICE also prints on standard output), nothing written, a
-  file it replaces kept (measured on 5a3e6c3; before #706 the process ended for one with a GM). Both writers enumerate the caller's
+  before rewriting the file. Both writers enumerate the caller's
   states once, under the SPICE lock: pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of

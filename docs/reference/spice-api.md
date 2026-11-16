@@ -12,10 +12,12 @@
 | `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
 | `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
-| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
+| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
-| `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
+| `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, or that SPICE does not name, #714, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
+| `TransformFrame(Time, Frame, Frame)` | The rotation and angular velocity from one frame to another (throws `InvalidOperationException` naming the frames and the epoch, then SPICE's message, when SPICE gives none: an unknown frame, frame data that do not cover the epoch, #714) |
+| `Propagate2Bodies(...)`, `ConvertStateVectorToConicOrbitalElement(...)` | Two-body motion and osculating elements through `prop2b_c` and `oscltx_c` (see [Two-body calls](#two-body-calls)) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
 celestial body: a barycenter (0 to 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or an identifier
@@ -77,7 +79,11 @@ No C++ exception of the native writers or loaders crosses P/Invoke any more (#70
 fewer than three states (its own rule, whose message said "2 items or more"), states not all in the frame of the first
 one (compared by name, ordinal), or a centre of motion that is not a celestial body (`IsCelestialBodyId`: a barycenter, the
 Sun, a planet, a moon, a Lagrange point or an identifier above 1000; not a spacecraft nor a site), whose GM the native layer
-read from a failed read. A site's 1-minute step gives three states over two minutes, so `Site.WriteEphemeris` over a
+read from a failed read, or that SPICE does not name, by its built-in names or the loaded kernels (a body built from custom
+parameters of an identifier no kernel names; #714, where the native writer threw `InvalidOperationException`), an existing
+file then kept byte for byte. A centre SPICE names whose GM the kernel pool lacks (ELARA, 507) reaches the native writer,
+which throws `InvalidOperationException` "CelestialItem id507 can't be read: The variable BODY507_GM could not be found in
+the kernel pool.", nothing written. A site's 1-minute step gives three states over two minutes, so `Site.WriteEphemeris` over a
 shorter window throws. A path the native file system calls reject, a loop of symbolic links, makes the writers and
 `LoadKernels` throw `InvalidOperationException` with the file system's message (POSIX `ELOOP`, "Too many levels of
 symbolic links"). `LoadKernels` and `UnloadKernels` give SPICE's message of a failed native call in their
@@ -110,6 +116,14 @@ from the kernels whose frame id no loaded kernel defines, the frame only the lib
 which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrameAsync` writes for
 the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define and the frame of a spacecraft are
 SPICE's by name; CIRS and TIRS throw ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+A transformation SPICE cannot give throws `InvalidOperationException` "SPICE gives no transformation from {from} to {to} at
+{epoch}: " followed by SPICE's message, `SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known
+reference frame." for a frame SPICE does not know, `SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the
+orientation of the body-fixed frame ITRF93 for epoch 2199 AUG 22 04:00:00.000 TDB were not found. ..." past the coverage of
+the frame data ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the native
+layer dropped SPICE's message and the call named the coverage whatever the cause). A native caller of
+`TransformFrameProxy` gets a NaN rotation and angular velocity with SPICE's message in `GetLastErrorProxy()` (the zero
+quaternion with no message before).
 
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
@@ -154,11 +168,42 @@ frame, `vectorInSpacecraft = vectorInReference.Rotate(Rotation)`, with the angul
 to the reference frame, expressed in the reference frame: the convention of `Frame.ToFrame` for that rotation, and of
 `Spacecraft.GetOrientation`. On the external CK of the tests (PHSRM) it equals `pxform` from J2000 to its bus frame to 0 rad.
 
+A CK segment without angular velocity (a type-1 CK, or a type-2 or type-3 CK written without rates) is read by `ckgp_c`,
+which `ckgpav_c` skips with no error ("Segments containing only pointing data will be skipped over", `ckgpav_c` Restrictions
+1): its records have the pointing `ckgp_c` gives and a zero angular velocity
+([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the read threw "No
+orientation found"). The CKs the library writes carry their rates.
+
 `WriteOrientation` writes its records unchanged, in one interval of one segment tagged with the frame of the first
 record: every record carries the same frame (another frame throws `ArgumentException` before the native call, which
 ended the process before 11.0.0, #560), in increasing order of their encoded SCLK, and the spacecraft clock kernel
 is loaded. To write the attitude of a propagated spacecraft, use `Spacecraft.WriteOrientation`, which writes its
 attitude record in this convention, in J2000 ([Attitude and kernels](spacecraft.md#attitude-and-kernels)).
+
+### Two-body calls
+
+`Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` are CSPICE's `prop2b_c` and `oscltx_c`
+([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). They throw, before the native call,
+`ArgumentNullException` for a null state, `ArgumentException` (`stateVector`) for a position or a velocity that is not
+finite (SPICE returns NaN for it with no error), `ArgumentOutOfRangeException` (`gm`) for a given GM that is not finite and
+above 0 (`SPICE(NONPOSITIVEMASS)` in `prop2b.c` and `oscelt.c`), and, for the overloads that take the GM of the observer,
+`InvalidOperationException` naming `BODYnnn_GM` when that GM is not finite and above 0 (a body whose GM the kernel pool
+lacks, ELARA among them). A state SPICE rejects throws `InvalidOperationException` with SPICE's message: a zero position,
+a zero velocity, a position parallel to the velocity or an out-of-range time for `prop2b_c` (`SPICE(ZEROPOSITION)`,
+`SPICE(ZEROVELOCITY)`, `SPICE(NONCONICMOTION)`, which carry no long message, so the message is the short one, and
+`SPICE(DTOUTOFRANGE)`), and `SPICE(DEGENERATECASE)` for `oscltx_c` ("Zero vector for input velocity vector." and the like).
+Before 11.0.0 the native proxies activated no error management: as the first native call of a process, SPICE's default
+action (ABORT) ended it with exit code 1; otherwise the values SPICE never wrote, the stack's contents (about 1e-310), came
+back with no error. The results on ordinary inputs are those of `prop2b_c` and `oscltx_c`, bit for bit.
+
+The element conversions (`ConvertConicElementsToStateVector`, three overloads, and
+`ConvertEquinoctialElementsToStateVector`) throw `ArgumentException` for an element that is not finite (#714): CONICS checks
+its domain with comparisons NaN passes, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state.
+
+Each proxy that reports through `GetLastErrorProxy()` clears it when it starts (#714), so the message read after a call is
+that call's: before, it held the message of the last failure, about another call, until another failure replaced it. A
+SPICE error with no long message is reported by its short one (`SPICE(ZEROVELOCITY)`), where the proxies that report through
+the shared routine reported such an error as a success.
 
 ### Example
 
