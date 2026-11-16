@@ -41,12 +41,25 @@ schema: `Cdm.ValidateSchemaFromXml` rejects these values too.
 A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
 case, or a value beyond the range of a `double` such as `1e400`) throws `CdmParseException` naming the keyword and the
 text, for every numeric keyword (the miss distance, the states, the covariances, the probability; [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), for example
-`Invalid numeric value for MISS_DISTANCE: 'NaN' is not a finite number.` The check applies to the value the CDM holds,
+`Invalid numeric value for MISS_DISTANCE: 'NaN' is not a finite number.` A value with a comma throws the same exception
+(`Invalid numeric value for MISS_DISTANCE: '118,1'.`): `xsd:double` has no comma (XML Schema Part 2, 3.2.5.1), and
+before 11.0.0 the reader dropped every comma wherever it stood, so a decimal comma read as another number (`118,1` as
+1181 m, a `COLLISION_PROBABILITY` of `4,835E-05` as 0.04835; [#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), the number half of
+[#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). The check applies to the value the CDM holds,
 in m or m/s, too: a finite text in km or km/s whose product by 1000 is beyond the range of a `double` (above about
 1.8e305 km, as `1e306`) throws `CdmParseException` naming the keyword, its text and its unit
 (`Invalid numeric value for X: '1e306' km is not a finite number in SI units.`), where it was read as ±Infinity. Before 11.0.0 the CDM was read with the value,
-and `Cdm.Validate` reported a NaN miss distance valid; it now reports a miss distance that is NaN, infinite or negative
-as an error.
+and `Cdm.Validate` reported a NaN miss distance valid; it reports a negative miss distance as an error, NaN and
+±Infinity no longer building (below).
+
+The records of a CDM hold real numbers only, as the reader reads them ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)): every real value of
+`CdmRelativeMetadataData`, `CdmRelativeStateVector`, `CdmOdParameters`, `CdmAdditionalParameters`, `CdmStateVector` and
+`CdmCovarianceMatrix` (a `double`, a `double?`, each component of a `Vector3`, each term of the covariance `Matrix`)
+throws `ArgumentOutOfRangeException` naming the property for NaN or ±Infinity, whether set by an object initializer, a
+`with` expression or `CdmCovarianceMatrix.FromRtnCovariance`; an optional value may stay null. `EncounterCase.ToCdm`,
+which builds these records, throws it for such a value in an encounter built by hand. Before 11.0.0 the record built,
+`Cdm.Validate` passed it (but the miss distance) and `WriteToString` wrote `NaN`, `Infinity` or `-Infinity`, which the
+reader refuses. `Cdm.Validate` keeps its own checks (a miss distance of 0 or more, a 6x6 covariance).
 
 ### Schema validation
 

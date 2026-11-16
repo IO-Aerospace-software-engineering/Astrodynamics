@@ -66,9 +66,14 @@ The constructors of the data model (`OpmKeplerianElements`, `OpmData`, ...) keep
 parameter of `OpmKeplerianElements` (a, e, i, GM, and the four angles in [-360, 360) since [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), `OpmData` (the five spacecraft parameters) or `OpmManeuverParameters`
 (`MAN_DURATION`, `MAN_DELTA_MASS`) refuses NaN and ±Infinity with its `ArgumentOutOfRangeException`, and so does
 `Spacecraft.ToOpm`, which builds them, for such a value, where it wrote `NaN`
-([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The state vector, the
-covariance and the components of a ΔV, which carry no range, accept any value programmatically; the reader refuses a
-non-finite one.
+([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The values without a range are real numbers too ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)): a component of `OpmStateVector`, a term of
+`CovarianceMatrix` and a ΔV component of `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming the parameter
+(`x` ... `zDot`, `cxX` ... `czDotZDot`, `manDv1` ... `manDv3`) for NaN or ±Infinity, from the constructors and from the
+factories that build them (`OpmStateVector.FromStateVector`, `CovarianceMatrix.FromFullMatrix`, `FromMatrix`,
+`FromMatrixWithUnitConversion`, `OpmManeuverParameters.CreateImpulsive`), so from `Opm.FromStateVector`,
+`Spacecraft.ToOpm` and `ImpulseManeuver.ToOpmManeuverParameters`. Before 11.0.0 they built it, `Validate()` passed it
+and `SaveToFile` wrote `NaN`, `Infinity` or `-Infinity`, which the reader refuses (`Infinity` is not an `xsd:double`
+literal). The data model holds only what its reader reads.
 
 A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
 case, or a value beyond the range of a `double` such as `1e400`, which .NET rounds to ±Infinity) throws
@@ -102,8 +107,9 @@ since the fourth round (above). A valid document, the writer's output included, 
 
 `validateContent`, `Validate()` and `OpmValidator.Validate` check the physical constraints of the data model's values. Each
 error check is the negation of its admitted range, so that NaN, in no range, is an error (`OPM002`), as is an infinite
-value where the range is half-open: a covariance variance must be finite and non-negative, which the covariance
-constructors, without a range, do not check ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN variance was valid). The warnings and the
+value where the range is half-open: a covariance variance must be finite and non-negative; the covariance constructors
+refuse a non-finite term ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)) but take a negative one, which the validator reports ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN
+variance was valid). The warnings and the
 information levels (an unusual drag coefficient, a large eccentricity) are unchanged.
 
 ### Saving

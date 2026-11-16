@@ -49,6 +49,13 @@ names the keyword. The readers refuse these schema-valid values, as before 11.0.
 The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`; a ranged
 parameter of `MeanElements` (a, n, e, i, the three angles, GM) or `SpacecraftParameters` refuses NaN and ±Infinity with
 its `ArgumentOutOfRangeException`, and so does `TLE.ToOmm`, which builds them, for such a value, where it wrote `NaN` ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)).
+The values without a range are real numbers too ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)): a term of `CovarianceMatrix` and a value of `TleParameters`
+(`BSTAR`, `BTERM`, `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`, `AGOM`) throw `ArgumentOutOfRangeException` naming the
+parameter (`cxX` ... `czDotZDot`; `bstar`, `bterm`, `meanMotionDot`, `meanMotionDDot`, `agom`) for NaN or ±Infinity, from
+the constructors, the covariance factories (`FromFullMatrix`, `FromMatrix`, `FromMatrixWithUnitConversion`), the four
+`TleParameters.CreateWith*` factories and `Omm.CreateForTle`. Before 11.0.0 they built it, `Validate()` passed it (an
+infinite `BSTAR` with an information message only) and `SaveToStream` wrote `NaN`, `Infinity` or `-Infinity`, which the
+reader refuses. `TLE.ToOmm`, whose values come from the finite text of a TLE, is unchanged.
 
 A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
 case, or a value beyond the range of a `double` such as `1e400`, which .NET rounds to ±Infinity) throws
@@ -83,8 +90,9 @@ schema step, where a keyword out of its range, as that `ECCENTRICITY`, throws `O
 
 `validateContent`, `Validate()` and `OmmValidator.Validate` check the physical constraints of the data model's values. Each
 error check is the negation of its admitted range, so that NaN, in no range, is an error (`OMM002`), as is an infinite
-value where the range is half-open: a covariance variance must be finite and non-negative, which the covariance
-constructors, without a range, do not check ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN variance was valid). The warnings and the
+value where the range is half-open: a covariance variance must be finite and non-negative; the covariance constructors
+refuse a non-finite term ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)) but take a negative one, which the validator reports ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN
+variance was valid). The warnings and the
 information levels (an unusual drag coefficient, a large eccentricity) are unchanged. `RA_OF_ASC_NODE`,
 `ARG_OF_PERICENTER` and `MEAN_ANOMALY` are checked against [-360, 360), the `angleRange` of the schema and the range of
 `MeanElements` (#708: [0, 360) before 11.0.0, so the default `Load*` threw `OmmValidationException` for a schema-valid
