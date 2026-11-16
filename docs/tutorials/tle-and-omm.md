@@ -148,6 +148,8 @@ Console.WriteLine(alpha5Tle.NoradCatalogId);         // 275544
 OMM is the CCSDS standard XML/KVN format for distributing mean elements. Load, validate, and convert:
 
 ```csharp
+using IO.Astrodynamics.CCSDS.OMM;
+
 var omm = Omm.LoadFromFile("satellite.omm",
     validateSchema: true, validateContent: true);
 
@@ -188,6 +190,8 @@ TLE uses a compact international designator (e.g., `98067A`) while OMM uses the 
 OPM carries a single osculating state vector in CCSDS format:
 
 ```csharp
+using IO.Astrodynamics.CCSDS.OPM;
+
 var earth = PlanetsAndMoons.EARTH_BODY;
 
 var opm = Opm.LoadFromFile("spacecraft.opm",

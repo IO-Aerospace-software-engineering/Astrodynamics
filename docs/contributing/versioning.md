@@ -3145,6 +3145,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
   and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at
   the boresight not found for a half-angle of 1e-155 rad in the reference plane, measured).
+- **Six csharp blocks of three tutorials did not compile with the directives of their page** ([#716](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/716)).
+  `DocumentationPagesExamplesTests.PageBlocks_CompileWithTheUsingsOfTheirPage` compiled, as a reader who copies them,
+  only the blocks that declare using directives (15 of 174), so a block without a list of its own that used a namespace
+  its page never imports passed: `Planetodetic` in the coordinate conversions tutorial (`IO.Astrodynamics.Coordinates`),
+  `CentralBodyPropagator` and `CentralBodyPropagatorBuilder` in three blocks of the numerical propagation tutorial
+  (`IO.Astrodynamics.Propagator`), `Omm` and `Opm` in the TLE and OMM tutorial (`IO.Astrodynamics.CCSDS.OMM` and
+  `IO.Astrodynamics.CCSDS.OPM`), CS0246 and CS0103 for a reader. The test now compiles every block of a page that
+  declares directives with the block's own, the earlier blocks' and a console application's implicit ones (red on
+  a80f6a5 on exactly these six blocks of three of the eight pages); the first blocks of the coordinate conversions and
+  numerical propagation tutorials import the two namespaces, and the OMM and OPM blocks of the TLE tutorial import their
+  own. A page that declares no directive gives the reader none and is not compiled this way. Documentation and tests
+  only: no library result moves.
 
 **Changed**
 

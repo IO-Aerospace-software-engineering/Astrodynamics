@@ -287,19 +287,26 @@ public class DocumentationPagesExamplesTests
                 : $"{d.Id} {d.GetMessage(CultureInfo.InvariantCulture)}")
             .ToList();
 
-    // The pages with a block that declares using directives
+    // The pages with a block that declares using directives, each of whose blocks is compiled with them (#716)
     public static IEnumerable<object[]> PagesWithUsings() =>
         Pages().Where(p => DocumentationCodeBlocks.Blocks(MarkdownPath((string)p[0])).Any(b => DocumentationCodeBlocks.SplitUsings(b).Usings.Count > 0));
 
     /// <summary>
-    /// Every csharp block of a page that declares using directives compiles, as its method of the page's file, with those
-    /// directives, the ones the earlier blocks of the page declare and the implicit ones of a console application, against
-    /// the library alone: a reader who copies the block with the directives the page gave compiles it. The regions compile
-    /// in their file under the directives of every namespace of the library, and
-    /// <see cref="PageBlocks_EqualTheirCompiledRegions"/> checks only that a block's directives name namespaces. Red on the
-    /// first blocks of tle-and-omm.md (<c>TLE</c>, whose namespace <c>IO.Astrodynamics.OrbitalParameters.TLE</c> the block
-    /// did not import, CS0246) and coordinate-conversions.md (<c>StateVector</c> and <c>PlanetsAndMoons</c>, CS0246 and
-    /// CS0103), which the first version of #705 left.
+    /// Every csharp block of a page that declares using directives, whether the block declares some or not, compiles, as
+    /// its method of the page's file, with the directives it declares, the ones the earlier blocks of the page declare and
+    /// the implicit ones of a console application, against the library alone: a reader who copies the block with the
+    /// directives the page gave compiles it. The regions compile in their file under the directives of every namespace of
+    /// the library, and <see cref="PageBlocks_EqualTheirCompiledRegions"/> checks only that a block's directives name
+    /// namespaces. Red on the first blocks of tle-and-omm.md (<c>TLE</c>, whose namespace
+    /// <c>IO.Astrodynamics.OrbitalParameters.TLE</c> the block did not import, CS0246) and coordinate-conversions.md
+    /// (<c>StateVector</c> and <c>PlanetsAndMoons</c>, CS0246 and CS0103), which the first version of #705 left; and, once
+    /// the blocks without directives of their own were compiled too (#716; #705 compiled only those that declare some), on
+    /// a80f6a5 on six blocks of three pages whose namespace the page never imported: <c>Planetodetic</c> in block 5 of
+    /// coordinate-conversions.md (<c>IO.Astrodynamics.Coordinates</c>, CS0246), <c>CentralBodyPropagator</c> and
+    /// <c>CentralBodyPropagatorBuilder</c> in blocks 3, 6 and 7 of numerical-propagation.md
+    /// (<c>IO.Astrodynamics.Propagator</c>, CS0246), <c>Omm</c> and <c>Opm</c> in blocks 7 and 10 of tle-and-omm.md
+    /// (<c>IO.Astrodynamics.CCSDS.OMM</c> and <c>.OPM</c>, CS0103). The pages that declare no directive are not read here:
+    /// they give the reader none.
     /// </summary>
     [Theory]
     [MemberData(nameof(PagesWithUsings))]
@@ -312,11 +319,6 @@ public class DocumentationPagesExamplesTests
         var blockOfTree = new Dictionary<SyntaxTree, int>();
         for (int n = 1; n <= blocks.Count - first; n++)
         {
-            if (DocumentationCodeBlocks.SplitUsings(blocks[first + n - 1]).Usings.Count == 0)
-            {
-                continue;
-            }
-
             var method = Assert.Single(methods, m => m.Identifier.Text == $"Block{n:00}");
             var tree = CSharpSyntaxTree.ParseText(ReaderSource(page, n, model, method, method.Body!.ToFullString(), false), ReaderParse);
             trees.Add(tree);

@@ -8,9 +8,9 @@
 // ("// Inputs: ..."). DocumentationPagesExamplesTests checks that each block equals its region (the block's using
 // directives aside, which are this file's) and runs the blocks that need only Data/SolarSystem. The namespace is
 // outside IO.Astrodynamics, as an application's; the file imports every namespace of the library, so
-// DocumentationPagesExamplesTests also compiles each block that declares using directives with those directives, the
-// earlier blocks' and a console application's implicit ones alone, as a reader who copies it does. Do not edit a region
-// alone: change the page and copy the block.
+// DocumentationPagesExamplesTests also compiles every block of a page that declares using directives, whether the block
+// declares them or not, with its own, the earlier blocks' and a console application's implicit ones alone, as a reader
+// who copies it does (#716). Do not edit a region alone: change the page and copy the block.
 
 using System;
 using System.Collections.Generic;

@@ -54,8 +54,10 @@ error a proxy drops, performance), with its P/Invoke declarations in the same pu
   (`docs/tutorials/tle-and-omm.md` in `Tutorials/TleAndOmmPage.cs`, n its rank among the page's compiled csharp
   blocks), whose parameters are the inputs its first comment names (`// Inputs: ...`), and
   `DocumentationPagesExamplesTests` fails when a block and its region differ, when a page with csharp blocks has no such
-  file, or when a block that declares using directives does not compile with those directives, the earlier blocks' of
-  its page and a console application's implicit ones alone, as a reader who copies it compiles it. A signature listing
+  file, or when a block of a page that declares using directives, whether the block declares some or not, does not
+  compile with its own directives, the earlier blocks' of its page and a console application's implicit ones alone, as
+  a reader who copies it compiles it (#716); a page that declares no directive gives the reader none and is not compiled
+  this way. A signature listing
   or a fragment that is not a statement is fenced `csharp-signature`, highlighted as C# (`mkdocs.yml`) and checked
   against the library's public members by reflection (#705); the one exception is the excerpt of `Constants` that opens
   `docs/standards-and-units.md`, fenced `csharp`, with no region (so region 1 of that page is its second csharp block)

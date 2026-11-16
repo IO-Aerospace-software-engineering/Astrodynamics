@@ -801,8 +801,9 @@ The C# blocks of this file and of the root `CLAUDE.md` are compiled regions of
 `IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs`, which `ClaudeMdExamplesTests` compares with them and runs
 where they need only `Data/SolarSystem`: change a block and its region together (#668, third round). The csharp
 blocks of `docs/` and `README.md` are compiled the same way, one file per page under
-`IO.Astrodynamics.Tests/Documentation/Pages/`, by `DocumentationPagesExamplesTests`, which also compiles a block that
-declares using directives with those of its page alone, as a reader compiles it (#705).
+`IO.Astrodynamics.Tests/Documentation/Pages/`, by `DocumentationPagesExamplesTests`, which also compiles every block of
+a page that declares using directives with those of its page alone (its own and the earlier blocks'), as a reader
+compiles it (#705, #716).
 
 **Name shadowing in test namespaces.** `IO.Astrodynamics.Tests` contains the sub-namespaces `Frame`
 and `Time`, and a local `Constants` class. Inside any `IO.Astrodynamics.Tests.*` namespace these
