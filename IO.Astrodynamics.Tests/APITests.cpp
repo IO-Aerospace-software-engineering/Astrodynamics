@@ -2391,6 +2391,73 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
     auto states = EarthStates(5);
     ExpectClearedBy("WriteEphemerisProxy", [&spk, &states] { return WriteEphemerisProxy(spk.string().c_str(), -1999714, states.data(), 5); });
     std::filesystem::remove_all(folder);
+
+    // The CK pair (review of #714: these four proxies were not exercised): a native spacecraft writes and loads its clock, its
+    // CK is written, loaded and read back at the epochs of its records
+    auto ckFolder = FreshFolder("ioa_714_cpp_clear_ck");
+    {
+        const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbit = std::make_unique<
+            IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                               IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                               IO::Astrodynamics::Time::TDB(0.0s),
+                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+        IO::Astrodynamics::Body::Spacecraft::Spacecraft spacecraft(-1999714, "IOA714CK", 1000.0, 3000.0, ckFolder.string(),
+                                                                   std::move(orbit));
+        const auto ck = ckFolder / "o.bc";
+        auto records = Records(3);
+        ExpectClearedBy("WriteOrientationProxy", [&ck, &records] { return WriteOrientationProxy(ck.string().c_str(), -1999714, records.data(), 3); });
+        ASSERT_TRUE(LoadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+        ExpectClearedBy("ReadOrientationProxy", []
+        {
+            IO::Astrodynamics::API::DTO::WindowDTO window{};
+            window.start = 0.0;
+            window.end = 2.0;
+            IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+            return ReadOrientationProxy(window, -1999714, 0.0, "J2000", 1.0, so);
+        });
+        EXPECT_TRUE(UnloadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+    }
+    std::filesystem::remove_all(ckFolder);
+
+    // A field of view: an instrument kernel of a circle of 10 degrees about +Z of J2000, the Moon seen from the Earth
+    const auto ik = std::filesystem::temp_directory_path() / "ioa_714_cpp_clear.ti";
+    std::ofstream(ik.string()) << "KPL/IK\n\\begindata\n"
+                                  "INS-999714_FOV_FRAME = 'J2000'\nINS-999714_FOV_SHAPE = 'CIRCLE'\n"
+                                  "INS-999714_BORESIGHT = ( 0.0 0.0 1.0 )\nINS-999714_FOV_CLASS_SPEC = 'ANGLES'\n"
+                                  "INS-999714_FOV_REF_VECTOR = ( 1.0 0.0 0.0 )\nINS-999714_FOV_REF_ANGLE = ( 10.0 )\n"
+                                  "INS-999714_FOV_ANGLE_UNITS = 'DEGREES'\n\\begintext\n";
+    ASSERT_TRUE(LoadKernelsProxy(ik.string().c_str())) << GetLastErrorProxy();
+    ExpectClearedBy("FindWindowsInFieldOfViewConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsInFieldOfViewConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 2"), 399, -999714, 301, "IAU_MOON",
+                                                       "ELLIPSOID", "NONE", 3600.0, windows);
+    });
+    EXPECT_TRUE(UnloadKernelsProxy(ik.string().c_str())) << GetLastErrorProxy();
+    std::filesystem::remove(ik);
+
+    // A launch from a site on the Earth to an orbit of 51.6 degrees of inclination, over one day
+    ExpectClearedBy("LaunchProxy", []
+    {
+        auto launch = std::make_unique<IO::Astrodynamics::API::DTO::LaunchDTO>();
+        launch->launchSite.id = 399001;
+        launch->launchSite.name = "S1";
+        launch->launchSite.bodyId = 399;
+        launch->launchSite.coordinates.longitude = -81.0 * IO::Astrodynamics::Constants::DEG_RAD;
+        launch->launchSite.coordinates.latitude = 28.5 * IO::Astrodynamics::Constants::DEG_RAD;
+        launch->launchSite.directoryPath = SitePath.data();
+        launch->recoverySite = launch->launchSite;
+        const double inclination = 51.6 * IO::Astrodynamics::Constants::DEG_RAD;
+        launch->targetOrbit.position = {6.8e6, 0.0, 0.0};
+        launch->targetOrbit.velocity = {0.0, 7.6e3 * std::cos(inclination), 7.6e3 * std::sin(inclination)};
+        launch->targetOrbit.epoch = 675777669.0;
+        launch->targetOrbit.centerOfMotionId = 399;
+        launch->targetOrbit.SetFrame("J2000");
+        launch->window.start = 675777669.0;
+        launch->window.end = 675777669.0 + 86400.0;
+        return LaunchProxy(*launch);
+    });
     EXPECT_FALSE(TakePendingSpiceError());
 }
 
