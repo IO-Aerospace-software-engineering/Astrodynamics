@@ -684,10 +684,11 @@ public class KernelRegistryTests : IDisposable
         Assert.Equal(written[3].Velocity, read.Velocity);
     }
 
-    // The bound of the angle between a CK record written and the one read back at its epoch, provisional: twice the worst
-    // measured on Linux x64 (MEASURE line, 0.000E+000 rad, a zero worst, so the records are read back exactly), to be set
-    // again from the CI logs of Windows and macOS arm64 (review of #706: before, 1e-9° taken from other tests)
-    private const double CkRecordAngleBound = 0.0;
+    // The bound of the angle between a CK record written and the one read back at its epoch: twice the worst over Linux x64,
+    // Windows and macOS arm64, rounded up at two significant digits (MEASURE lines of CI run 43851568556: 0.000E+000 rad on
+    // Linux and macOS arm64, 2.220E-016 rad on Windows, in process and in the child; review of #706: before, 1e-9° taken
+    // from other tests)
+    private const double CkRecordAngleBound = 4.5e-16;
 
     /// <summary>
     /// The CK analog: a CK of identity records loaded, then replaced by five records of 90° about z. Before, the load stayed
