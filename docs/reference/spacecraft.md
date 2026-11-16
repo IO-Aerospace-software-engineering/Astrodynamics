@@ -392,7 +392,7 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `Name` | Instrument name |
 | `Model` | Instrument model identifier |
 | `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad): finite and positive |
-| `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad); `EllipticalInstrument` and `RectangularInstrument` |
+| `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad): finite and not negative; `EllipticalInstrument` and `RectangularInstrument` |
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
 | `Boresight` | Boresight direction in instrument frame: finite components, a non-zero magnitude |
 | `RefVector` | Reference vector in instrument frame: finite components, a non-zero magnitude, not parallel to the boresight (b × r ≠ 0) |
@@ -410,8 +410,10 @@ The constructor, so `AddCircularInstrument`, `AddEllipticalInstrument` and `AddR
 `ArgumentException` naming the parameter for the fields CSPICE's `getfov` rejects on the kernel the library writes, or
 cannot read ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)): a boresight or a reference vector with a component that is not finite or a magnitude of 0
 (SPICE(ZEROBORESIGHT); `boresight` checked first), a reference vector parallel to the boresight, |b × r| = 0 on the
-given vectors as `getfov` tests it (SPICE(BADREFVECTORSPEC)), and a field of view that is not a finite positive number.
-A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
+given vectors as `getfov` tests it (SPICE(BADREFVECTORSPEC)), and a field of view that is not a finite positive number;
+`AddEllipticalInstrument` and `AddRectangularInstrument` throw `ArgumentOutOfRangeException` naming `crossAngle` for a
+cross angle that is negative or not finite, which SPICE cannot read in the kernel (a cross angle of 0 is rejected by the
+search). A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
 angular radius, π/2 − 1e-6, is checked by the search.
 
 #### Instrument orientation

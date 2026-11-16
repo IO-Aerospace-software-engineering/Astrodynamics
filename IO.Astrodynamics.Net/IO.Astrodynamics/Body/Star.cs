@@ -18,7 +18,8 @@ namespace IO.Astrodynamics.Body;
 /// </summary>
 /// <remarks>
 /// Its position at an epoch is that of its catalog plus the proper motions times dt, the Julian years of TDB from the
-/// catalog epoch (both times converted to TDB, as SOFA's <c>iauStarpm</c> takes TDB dates, #709): the angles move
+/// catalog epoch (both times converted to TDB, as SOFA's <c>iauStarpm</c> takes TDB dates and its proper motions in radians
+/// per TDB Julian year, <c>external-lib/sofa-src/starpm.c</c>, Notes 1 and 2, #709): the angles move
 /// linearly, the declination reduced to [−π/2, π/2] across a pole, and the sigmas grow as √(σ² + (dt σμ)²).
 /// </remarks>
 public class Star : CelestialBody
@@ -151,7 +152,7 @@ public class Star : CelestialBody
     /// <summary>
     /// The Julian years of TDB from the catalog epoch to <paramref name="epoch"/>, both converted to TDB, from the exact
     /// difference of their ticks rounded once to a double, as SOFA's <c>iauStarpm</c> and <c>iauPmsafe</c> take TDB dates
-    /// (#709): the same instant gives the same position whatever its time frame, and a leap second between two UTC times
+    /// (<c>external-lib/sofa-src/starpm.c</c> and <c>pmsafe.c</c>, Note 1, #709): the same instant gives the same position whatever its time frame, and a leap second between two UTC times
     /// counts. A time in TDB is used as it is, bit for bit.
     /// </summary>
     /// <remarks>
@@ -176,9 +177,10 @@ public class Star : CelestialBody
     /// The angles of the linear model, d = δ0 + μδ dt and a = α0 + μα dt, are reduced to the pair that points where
     /// (cos d cos a, cos d sin a, sin d) points: when |d| exceeds π/2, d is reduced to (−π, π], and a declination past a
     /// pole becomes π − d (−π − d past the south pole) with the right ascension turned by π. A declination within
-    /// [−π/2, π/2] is used as it is. Before 11.0.0 the declination was reduced modulo π/2, so that a star whose declination
-    /// reached or passed a pole jumped toward the equator, by up to π/2 in direction, and a star at a pole read the
-    /// equator (#709).
+    /// [−π/2, π/2] is used as it is. The right ascension is then reduced modulo 2π, a value just below 0 whose sum with 2π
+    /// rounds to 2π returned as 0, the same direction. Before 11.0.0 the declination was reduced modulo π/2, so that a
+    /// star whose declination reached or passed a pole jumped toward the equator, by up to π/2 in direction, and a star at
+    /// a pole read the equator (#709), and such a right ascension was returned as 2π.
     /// </remarks>
     /// <param name="epoch">The epoch time for the coordinates.</param>
     /// <returns>The equatorial coordinates at the specified epoch.</returns>
@@ -207,7 +209,13 @@ public class Star : CelestialBody
         ra %= Constants._2PI;
         if (ra < 0.0)
         {
+            // A right ascension just below 0 (above −ulp(2π)/2) rounds to 2π, the end [0, 2π) excludes: it is the direction
+            // of 0
             ra += Constants._2PI;
+            if (ra == Constants._2PI)
+            {
+                ra = 0.0;
+            }
         }
 
         return new Equatorial(dec, ra, Distance, epoch);

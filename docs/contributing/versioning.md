@@ -2814,8 +2814,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   1.153e-7 in TAI, 4.977e-12 in TT, for the star of 1 rad and 0.1 rad/yr of `StarTests`, measured on 46e6975), and two
   UTC times skipped the leap seconds between them (86 400 s from 2016-12-31T12:00Z to 2017-01-01T12:00Z, where 86 401 s
   elapse). dt now counts the Julian years of TDB: both times are converted to TDB (the catalog epoch once, when the star
-  is built; `Epoch` is kept as given), as SOFA's `iauStarpm` and `iauPmsafe` take TDB dates (to be verified by
-  S. Guillet). The position of a time is that of its TDB time, bit for bit, and agrees within the motion of 1 µs
+  is built; `Epoch` is kept as given), as SOFA's `iauStarpm` and `iauPmsafe` take TDB dates and proper motions in
+  radians per TDB Julian year (`external-lib/sofa-src/starpm.c` and `pmsafe.c`, Notes 1 and 2). The catalog epoch read
+  in its own time frame is the recommendation of this fix, to be decided by S. Guillet: #709 left the scale of the
+  catalog epoch open, and the alternative is a catalog epoch always read as TDB whatever its tag (a catalog epoch tagged
+  UTC would then be its calendar in TDB, 64 to 69 s from the instant the tag names); the recommendation keeps `Epoch` an
+  instant like every other `Time` of the library. The position of a time is that of its TDB time, bit for bit, and agrees within the motion of 1 µs
   between frames (`StarTests.GetEquatorialCoordinates_TheSameInstantInEveryFrame_IsOnePosition`); across the leap second
   it counts 86 401 s plus the change of TDB − TT, 0.000e+00 rad from the closed form of the leapseconds kernel
   (`AcrossALeapSecond_CountsIt`, 3.169e-9 rad before); against dt from CSPICE's ET (`unitim_c` of the TT of each UTC
@@ -2837,7 +2841,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`AcrossAPole_IsReclatOfLatrec`, Validation, threshold 3.1e-15, provisional). A star of the model still moves along
   its angles, not along a great circle (SOFA's space motion is not modeled). Declinations within [−π/2, π/2] are
   unchanged, bit for bit; the snapshot of `StarTests.GetEquatorialCoordinates2`, past the south pole, which encoded the
-  jump (−0.128953 rad), is replaced by the closed form (−1.441843 rad, the right ascension turned by π).
+  jump (−0.128953 rad), is replaced by the closed form (−1.441843 rad, the right ascension turned by π). The right
+  ascension is in [0, 2π) as documented: a value just below 0 whose sum with 2π rounds to 2π (above −ulp(2π)/2,
+  4.44e-16 rad) was returned as 2π (a right ascension of 0 moving −1e-30 rad/yr read 6.283185307179586 rad after a
+  Julian year); it is now 0, the double of [0, 2π) nearest to it on the circle, and −1e-15 rad still 6.283185307179585
+  (`StarTests.GetEquatorialCoordinates_RightAscensionJustBelowZero_IsInZeroTwoPi`, red on c54a0fc for −1e-30, −1e-17 and
+  −4e-16).
 - **The sigmas of a star were reduced like angles** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetRightAscensionSigma` and `GetDeclinationSigma`
   reduced √(σ² + (dt σμ)²) modulo 2π and π/2: a declination sigma of 2 rad read 0.429 rad, one of 2 rad grown by
   1e-3 rad/yr over 2000 years 1.258 rad (2.828 rad). A standard deviation is now returned as it is
@@ -2852,9 +2861,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ArgumentException` naming the parameter for a boresight or a reference vector with a component that is not finite or
   a magnitude of 0 (`boresight`, checked first, then `refVector`), a reference vector parallel to the boresight,
   |b × r| = 0 on the given vectors, the test of CSPICE's `getfov` (`refVector`), and a field of view that is NaN or
-  +∞ (`fieldOfView`; 0 and negative values threw before, now with the parameter's name), and adds nothing. These are
+  +∞ (`fieldOfView`; 0 and negative values threw before, now with the parameter's name), and adds nothing;
+  `AddEllipticalInstrument` and `AddRectangularInstrument` throw `ArgumentOutOfRangeException` naming `crossAngle` for
+  a cross angle of +∞ or a NaN of positive sign (0x7FF8000000000000), which `ThrowIfNegative` let through, as for a
+  negative one and for `double.NaN` before (a cross angle of 0 is still accepted and rejected by the search). These are
   the fields `getfov` rejects on the kernel the library writes (SPICE(ZEROBORESIGHT), SPICE(BADREFVECTORSPEC)) or
-  cannot read (NaN, Infinity), and the rule of the body axes of a spacecraft and of the body vectors of a TRIAD (#703).
+  cannot read (NaN, Infinity: an IK holding `FOV_CROSS_ANGLE = Infinity` fails to load, SPICE(NUMBEREXPECTED)), and the rule of the body axes of a spacecraft and of the body vectors of a TRIAD (#703).
   Before, the instrument was built: `GetBoresightInICRFFrame` and the other getters returned the zero or NaN vector,
   `InstrumentPointingToAttitude` the identity or a NaN attitude, `WriteKernelAsync` a kernel SPICE rejects
   (`BORESIGHT = ( 0, 0, 0 )`, `FOV_REF_ANGLE = NaN`), and the field-of-view search and `IsInFOV` threw only when
@@ -2862,9 +2874,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   semi-axes of an ellipsoid must have positive lengths") for NaN and infinite ones; the search no longer checks the
   vectors. A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it
   (`InstrumentTests.RejectedFields_AreThoseGetfovRejects`, `getfov_c` on the kernels, and the cross-platform
-  `AddInstrument_*_Throws`, red on 46e6975). Results for the instruments accepted are unchanged, bit for bit.
-  Migration: give a finite, non-zero boresight, a finite reference vector not parallel to it and a finite positive
-  half-angle.
+  `AddInstrument_*_Throws`, red on 46e6975, `AddInstrument_CrossAngleNotFinite_Throws` red on c54a0fc for +∞ and the
+  positive NaN). Results for the instruments accepted are unchanged, bit for bit.
+  Migration: give a finite, non-zero boresight, a finite reference vector not parallel to it, a finite positive
+  half-angle and a finite cross angle.
 - **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
   centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)

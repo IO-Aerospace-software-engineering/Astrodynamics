@@ -116,8 +116,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // getfov's rules on the vectors of the instrument kernel (#707), with the finite rule of the body axes of a
             // spacecraft and the body vectors of a TRIAD (#703): SPICE reads no NaN nor infinity in a kernel
-            CheckDirection(boresight, "An instrument boresight", nameof(boresight));
-            CheckDirection(refVector, "An instrument reference vector", nameof(refVector));
+            Vector3.ThrowIfNoDirection(boresight, "An instrument boresight", nameof(boresight));
+            Vector3.ThrowIfNoDirection(refVector, "An instrument reference vector", nameof(refVector));
             if (boresight.Cross(refVector).Magnitude() == 0.0)
             {
                 throw new ArgumentException(
@@ -147,19 +147,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
             NaifId = naifId;
         }
 
-        // A vector with a direction: finite components and a non-zero magnitude (getfov's SPICE(ZEROBORESIGHT), and a zero
-        // reference vector is parallel to any boresight, SPICE(BADREFVECTORSPEC))
-        private static void CheckDirection(in Vector3 vector, string what, string paramName)
+        /// <summary>
+        /// The half-angle across the reference plane of an ellipse or a rectangle, as given: not negative and finite, or
+        /// <see cref="ArgumentOutOfRangeException"/> naming <paramref name="crossAngle"/>. SPICE reads no NaN nor infinity in
+        /// a kernel (#707: +∞ and a NaN of positive sign passed <c>ThrowIfNegative</c>, and the instrument kernel held
+        /// <c>FOV_CROSS_ANGLE = Infinity</c>, SPICE(NUMBEREXPECTED) on loading). A cross angle of 0 is rejected by the search.
+        /// </summary>
+        private protected static double CheckCrossAngle(double crossAngle)
         {
-            if (!double.IsFinite(vector.X) || !double.IsFinite(vector.Y) || !double.IsFinite(vector.Z))
+            ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
+            if (!double.IsFinite(crossAngle))
             {
-                throw new ArgumentException($"{what} must have finite components.", paramName);
+                throw new ArgumentOutOfRangeException(nameof(crossAngle), crossAngle, "The cross angle of an instrument must be finite.");
             }
 
-            if (vector.Magnitude() == 0.0)
-            {
-                throw new ArgumentException($"{what} must have a non-zero magnitude.", paramName);
-            }
+            return crossAngle;
         }
 
         /// <summary>

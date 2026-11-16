@@ -770,6 +770,50 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Empty(spc.Instruments);
         }
 
+        public static TheoryData<string, long> CrossShapesAndCrossAnglesNotFinite()
+        {
+            var data = new TheoryData<string, long>();
+            foreach (var shape in new[] { "Rectangular", "Elliptical" })
+            foreach (var bits in new[]
+                     {
+                         BitConverter.DoubleToInt64Bits(double.PositiveInfinity), BitConverter.DoubleToInt64Bits(double.NegativeInfinity),
+                         BitConverter.DoubleToInt64Bits(double.NaN), 0x7FF8000000000000L
+                     })
+                data.Add(shape, bits);
+            return data;
+        }
+
+        /// <summary>
+        /// #707: the half-angle across the reference plane of a rectangle or an ellipse is finite. +∞ and a NaN of positive
+        /// sign (0x7FF8000000000000; <c>double.NaN</c> has the sign bit set) passed <c>ThrowIfNegative</c>: the instrument was
+        /// built and its IK held <c>FOV_CROSS_ANGLE = Infinity</c> or <c>NaN</c>, which SPICE cannot read (loading such an IK
+        /// signals SPICE(NUMBEREXPECTED), "Encountered 'Infinity' while attempting to parse a number"), the search throwing only
+        /// when called. Both methods throw <see cref="ArgumentOutOfRangeException"/> naming the cross angle, as for a negative
+        /// one, and add nothing. A cross angle of 0 is still accepted here and rejected by the search.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(CrossShapesAndCrossAnglesNotFinite))]
+        public void AddInstrument_CrossAngleNotFinite_Throws(string shape, long bits)
+        {
+            // Arrange
+            var spc = Host(-7078, "C707");
+            double crossAngle = BitConverter.Int64BitsToDouble(bits);
+
+            // Act
+            var exception = Record.Exception(() =>
+            {
+                if (shape == "Rectangular")
+                    spc.AddRectangularInstrument(-7078001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                else
+                    spc.AddEllipticalInstrument(-7078001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            });
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
+            Assert.Equal("crossAngle", rejected.ParamName);
+            Assert.Empty(spc.Instruments);
+        }
+
         // The instrument kernel the library's circular writer would write for these vectors, written here
         private static string CircularKernel(int id, string boresight, string refVector) =>
             $"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}" +
@@ -828,14 +872,17 @@ namespace IO.Astrodynamics.Tests.Body
                 files.Add(ik);
             }
 
-            foreach (var file in files)
-            {
-                file.Refresh();
-                SpiceAPI.Instance.LoadKernels(file);
-            }
-
+            // Each kernel loaded inside the try, so that a failed load still unloads those already loaded and deletes every file
+            var loaded = new System.Collections.Generic.List<FileInfo>();
             try
             {
+                foreach (var file in files)
+                {
+                    file.Refresh();
+                    SpiceAPI.Instance.LoadKernels(file);
+                    loaded.Add(file);
+                }
+
                 // Act and assert
                 foreach (var field in rejected)
                 {
@@ -854,9 +901,13 @@ namespace IO.Astrodynamics.Tests.Body
             }
             finally
             {
-                foreach (var file in files)
+                foreach (var file in loaded)
                 {
                     SpiceAPI.Instance.UnloadKernels(file);
+                }
+
+                foreach (var file in files)
+                {
                     FrameKernelFiles.Delete(file);
                 }
             }

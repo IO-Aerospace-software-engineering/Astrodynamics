@@ -92,7 +92,9 @@ public class StarTests
         var res = star.GetDeclinationSigma(at);
         // The closed form √(6² + (8 dt)²), 10.0131 rad, not reduced (#709; before, modulo π/2: 0.58837 rad)
         double expected = ClosedFormSigma(6, 8, star, at);
-        Assert.True(System.Math.Abs(res - expected) / expected <= ClosedFormSigmaTolerance, $"{res} {expected}");
+        double delta = System.Math.Abs(res - expected) / expected;
+        _output.WriteLine($"MEASURE StarTests.GetDeclinationSigma: relative {delta:E3} ({res:R} rad)");
+        Assert.True(delta <= LargeSigmaTolerance, $"{res} {expected}");
     }
 
 
@@ -104,7 +106,9 @@ public class StarTests
         var res = star.GetRightAscensionSigma(at);
         // The closed form √(7² + (9 dt)²), 11.4163 rad, not reduced (#709; before, modulo 2π: 5.13316 rad)
         double expected = ClosedFormSigma(7, 9, star, at);
-        Assert.True(System.Math.Abs(res - expected) / expected <= ClosedFormSigmaTolerance, $"{res} {expected}");
+        double delta = System.Math.Abs(res - expected) / expected;
+        _output.WriteLine($"MEASURE StarTests.GetRightAscensionSigma: relative {delta:E3} ({res:R} rad)");
+        Assert.True(delta <= LargeSigmaTolerance, $"{res} {expected}");
     }
 
     [Fact]
@@ -357,12 +361,12 @@ public class StarTests
         decimal.Parse(value.ToString("E27", CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// The Julian years from the catalog epoch of <paramref name="star"/> to <paramref name="epoch"/>, from the exact
-    /// difference of their ticks, divided in <see cref="decimal"/> (28 digits): the dt of the catalog motion, before any
-    /// rounding to a double.
+    /// The Julian years of TDB from the catalog epoch of <paramref name="star"/> to <paramref name="epoch"/>, both converted
+    /// to TDB (#709), from the exact difference of their ticks, divided in <see cref="decimal"/> (28 digits): the dt of the
+    /// catalog motion, before any rounding to a double. A time in TDB is taken as it is.
     /// </summary>
     private static decimal JulianYearsFromCatalogEpoch(Star star, TimeSystem.Time epoch) =>
-        (decimal)(epoch.DateTime.Ticks - star.Epoch.DateTime.Ticks) / TimeSpan.TicksPerDay / 365.25m;
+        (decimal)(epoch.ToTDB().DateTime.Ticks - star.Epoch.ToTDB().DateTime.Ticks) / TimeSpan.TicksPerDay / 365.25m;
 
     /// <summary>The closed form of the catalog motion, a + μ dt, in <see cref="decimal"/> and rounded once to a double.</summary>
     private static double ClosedFormAngle(double angleAtEpoch, double properMotion, Star star, TimeSystem.Time epoch) =>
@@ -933,12 +937,55 @@ public class StarTests
             double rightAscension = star.GetRightAscensionSigma(at);
             double expectedDeclination = ClosedFormSigma(2.0, 1e-3, star, at);
             double expectedRightAscension = ClosedFormSigma(7.0, 1e-3, star, at);
-            Assert.True(System.Math.Abs(declination - expectedDeclination) / expectedDeclination <= ClosedFormSigmaTolerance, $"{declination} {expectedDeclination}");
-            Assert.True(System.Math.Abs(rightAscension - expectedRightAscension) / expectedRightAscension <= ClosedFormSigmaTolerance,
-                $"{rightAscension} {expectedRightAscension}");
+            double declinationDelta = System.Math.Abs(declination - expectedDeclination) / expectedDeclination;
+            double rightAscensionDelta = System.Math.Abs(rightAscension - expectedRightAscension) / expectedRightAscension;
+            _output.WriteLine(
+                $"MEASURE StarTests.Sigmas_AboveAnAngleRange ({(at == catalog ? "catalog" : "2000 yr")}): relative declination {declinationDelta:E3} ({declination:R} rad), right ascension {rightAscensionDelta:E3} ({rightAscension:R} rad)");
+            Assert.True(declinationDelta <= LargeSigmaTolerance, $"{declination} {expectedDeclination}");
+            Assert.True(rightAscensionDelta <= LargeSigmaTolerance, $"{rightAscension} {expectedRightAscension}");
         }
 
         Assert.Equal(2.0, star.GetDeclinationSigma(catalog));
         Assert.Equal(7.0, star.GetRightAscensionSigma(catalog));
+    }
+
+    // The record of the sigmas above π/2 and 2π against their closed form (GetDeclinationSigma, GetRightAscensionSigma,
+    // Sigmas_AboveAnAngleRange_AreNotReduced: 2, 2.828, 7, 7.280, 10.013 and 11.416 rad): twice the worst relative
+    // difference on Linux x64, rounded up at the second digit (1.269e-16, the right ascension sigma of 7 rad at the catalog
+    // epoch, where the library returns 7 exactly: the closed form's conversion of 49 with 28 decimals from decimal to
+    // double; 0.000e+00 for the others; 2026-11-16), PROVISIONAL, to be set again from the Windows and macOS arm64 CI logs
+    // (System.Math.Pow is the platform's libm). Before the fix (#709), the sigmas were reduced: 0.588, 5.133, 0.429 rad
+    internal const double LargeSigmaTolerance = 2.6e-16;
+
+    /// <summary>
+    /// The right ascension is reduced to [0, 2π): a right ascension just below 0, a + μ dt = −1e-30 rad, is the direction of
+    /// 0, the double of [0, 2π) nearest to it on the circle; 2π − 1e-30 rounds to 2π, the end the interval excludes, which
+    /// the reduction returned (`ra % 2π` keeps −1e-30, and −1e-30 + 2π rounds to 2π). A right ascension of −1e-15 rad is
+    /// 2π − 1e-15, which rounds to the double below 2π (6.283185307179585), kept. The closed form: dt is one Julian year
+    /// exactly (365.25 days of TDB from a catalog epoch of TDB), so a + μ dt is μ exactly.
+    /// </summary>
+    [Theory]
+    [InlineData(-1e-30)]
+    [InlineData(-1e-17)]
+    [InlineData(-1e-15)]
+    [InlineData(-4.0e-16)]
+    public void GetEquatorialCoordinates_RightAscensionJustBelowZero_IsInZeroTwoPi(double rightAscensionMotion)
+    {
+        // Arrange
+        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var star = new Star(709061, "star709061", 1E+30, "spec", 2, 0.3792, new Equatorial(0.5, 0.0, catalog), 0, rightAscensionMotion, 0, 0, 0, 0, catalog);
+        var at = catalog + TimeSpan.FromDays(365.25);
+        Assert.Equal(1m, JulianYearsFromCatalogEpoch(star, at));
+
+        // Act
+        var coordinates = star.GetEquatorialCoordinates(at);
+
+        // Assert: in [0, 2π), and the double of that interval nearest to μ on the circle (0 when 2π + μ rounds to 2π)
+        double shifted = 2.0 * System.Math.PI + rightAscensionMotion;
+        double expected = shifted < 2.0 * System.Math.PI ? shifted : 0.0;
+        _output.WriteLine($"MEASURE StarTests.RightAscensionJustBelowZero ({rightAscensionMotion:E3}): {coordinates.RightAscension:R} rad");
+        Assert.InRange(coordinates.RightAscension, 0.0, System.Math.BitDecrement(2.0 * System.Math.PI));
+        Assert.Equal(expected, coordinates.RightAscension);
+        Assert.Equal(0.5, coordinates.Declination);
     }
 }
