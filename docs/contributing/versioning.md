@@ -3125,6 +3125,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   opens `docs/standards-and-units.md`, declarations fenced `csharp` with no region (region 1 of that page is its second
   csharp block), is checked by value. A block's leading using alias may name a public type of the library. This lifts the known
   limitation of #662. Documentation and tests only: no library result moves.
+- **The managed field-of-view search of a field with tiny half-angles threw an unrelated `ArgumentException`** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)).
+  The managed search and `IsInFOV` of a circle or an ellipse build an ellipsoid whose limb is the cone of the field, of
+  semi-axes D sin REF and D sin REF · tan CROSS / tan REF at the target's distance D. Where the square of one of them
+  underflows to 0 (IEEE 754: a half-angle below about 6e-171 rad at the Moon's distance, 1e-200 and 5e-324 measured),
+  the ellipsoid of the occultation search threw `ArgumentException`, "The semi-axes of an ellipsoid must have positive
+  lengths", instead of the `InvalidOperationException` of a field that cannot be searched; it now throws that, naming
+  the half-angles and the underflow (`InstrumentTests.TinyHalfAngle_ManagedSearchThrowsInvalidOperation`, red on
+  a80f6a5 for the six rows of a circle and an ellipse, a point and an ellipsoid target). The rectangle, whose margin
+  takes the half-angles as angles, was not affected. A target at the observer, distance 0 (two spacecraft of the same
+  state), threw the same `ArgumentException` for a circle or an ellipse of any field: a point target now throws
+  `InvalidOperationException` naming the target at the observer, which has no direction, and an ellipsoid target the
+  `InvalidOperationException` of an observer inside the target, never a message about the half-angles
+  (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
+  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle still reports such a point in view, its margin taking
+  atan2(0, 0) = 0). Every other field and target is searched as before, bit for bit (the same vectors). Migration: a
+  caller that caught `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends, the constructors keep the rule "finite and positive" for both half-angles, and the
+  documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
+  measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
+  and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at
+  the boresight not found for a half-angle of 1e-155 rad in the reference plane, measured).
 
 **Changed**
 
@@ -3205,7 +3225,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   +∞ (`fieldOfView`; 0 and negative values threw before, now with the parameter's name), and adds nothing;
   `AddEllipticalInstrument` and `AddRectangularInstrument` throw `ArgumentOutOfRangeException` naming `crossAngle` for
   a cross angle of +∞ or a NaN of positive sign (0x7FF8000000000000), which `ThrowIfNegative` let through, as for a
-  negative one and for `double.NaN` before (a cross angle of 0 is still accepted and rejected by the search). These are
+  negative one and for `double.NaN` before (a cross angle of 0 too since [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), the entry below). These are
   the fields `getfov` rejects on the kernel the library writes (SPICE(ZEROBORESIGHT), SPICE(BADREFVECTORSPEC)) or
   cannot read (NaN, Infinity: an IK holding `FOV_CROSS_ANGLE = Infinity` fails to load, SPICE(NUMBEREXPECTED)), and the rule of the body axes of a spacecraft and of the body vectors of a TRIAD (#703).
   Before, the instrument was built: `GetBoresightInICRFFrame` and the other getters returned the zero or NaN vector,
@@ -3219,6 +3239,36 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   positive NaN). Results for the instruments accepted are unchanged, bit for bit.
   Migration: give a finite, non-zero boresight, a finite reference vector not parallel to it, a finite positive
   half-angle and a finite cross angle.
+- **Breaking: an instrument's cross angle is a finite positive number** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)). `AddEllipticalInstrument` and
+  `AddRectangularInstrument` (the constructors of `EllipticalInstrument` and `RectangularInstrument`) throw
+  `ArgumentOutOfRangeException` naming `crossAngle` for a cross angle of +0, which they accepted, writing an IK with
+  `FOV_CROSS_ANGLE = 0` while every search of the library and `IsInFOV` threw `InvalidOperationException` ("its
+  half-angles must be positive"), and add nothing; −0, which `ThrowIfNegative` rejected with its own message ("must be a
+  non-negative value"), negative values and the values that are not finite now carry one message, "The cross angle of
+  an instrument must be a finite positive number". A cross angle of 0 is a field of no width, as the field of view of 0
+  the constructor already rejected: CSPICE's `gftfov` (N0067, through the library's proxy) rejects it with
+  SPICE(DEGENERATECASE), for the rectangle whatever the boresight (consecutive boundary vectors with a zero cross
+  product, `zzfovaxi`) and for the ellipse when its computed semi-axis is exactly of zero length (boresight +Z,
+  `zzgffvu`); with the boresight at the Moon, a unit vector rounded from its ephemeris, the semi-axis is not exactly
+  zero and `gftfov` searches the segment, one window of 1 µs for the Moon's centre and of 59.8 min for its ellipsoid
+  (measured on Linux, `InstrumentTests.ZeroHalfAngle_IsDegenerateForGftfov`). The search no longer checks the cross
+  angle: its `InvalidOperationException` "its half-angles must be positive" is gone, since no instrument can reach it.
+  Results for the instruments accepted are unchanged, bit for bit (`InstrumentTests.AddInstrument_CrossAngleNotPositive_Throws`,
+  red on a80f6a5 for the 8 rows of +0, −0 and the negatives of both shapes). Migration: give a positive cross angle; an
+  instrument with no extent across the reference plane can be searched neither by the library nor reliably by
+  `gftfov`.
+- **Breaking: an instrument's orientation is finite** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)). `AddCircularInstrument`, `AddRectangularInstrument` and
+  `AddEllipticalInstrument` (the constructor of `Instrument`) throw `ArgumentException` naming `orientation` for Euler
+  angles with a component that is NaN or infinite, and add nothing, the rule of the boresight and the reference vector
+  (#707) and of the body axes of a spacecraft (#703). Before, the instrument was built with a NaN
+  `RotationToSpacecraft` (IEEE 754: the sine and cosine of a NaN or an infinity are NaN), its spacecraft-frame and ICRF
+  getters returned NaN vectors, and `WriteFrameAsync` wrote `TKFRAME_<id>_ANGLES = ( NaN,0,0 )` (or `Infinity`), which
+  SPICE fails to load (SPICE(NUMBEREXPECTED), the variables before that line left in the kernel pool), measured on
+  a80f6a5 (`InstrumentTests.AddInstrument_OrientationNotFinite_Throws`, red there for the 33 rows of the three
+  shapes). Every finite angle stays accepted, results unchanged bit for bit
+  (`AddInstrument_OrientationFinite_IsAccepted`); SPICE's frame agrees with `RotationToSpacecraft` to a few ulps of
+  each angle, 1.8e-15 rad within [−2π, 2π] and more for large angles (0.268 rad at 1e300), as documented on
+  `Instrument.Orientation`. Migration: give finite Euler angles, preferably within a few turns.
 - **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
   centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)
@@ -3453,13 +3503,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     angular radius above π/2 − 1e-6, a circle of half-angle π/2 included, a non-circular instrument of another
     subclass), and `ArgumentException` when the target is the instrument's own spacecraft; since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707) the
     constructor of the instrument rejects the zero, non-finite and parallel vectors and a field of view that is not a
-    finite positive number (`ArgumentException`, Changed above), so the search's check is left with the cross angle,
-    the angular radius and the shape;
+    finite positive number (`ArgumentException`, Changed above), and since [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715) the constructors of the ellipse and the
+    rectangle a cross angle that is not one, so the search's check is left with the angular radius and the shape;
   - both paths check the same rules before the search and throw where they returned no window, or one computed on an
     extrapolation: a step that is not positive (`ArgumentOutOfRangeException`); a search window that ends before it
     starts, a target that is the instrument's spacecraft, an ellipsoid target without radii (a site, a spacecraft, a
     barycenter, a Lagrange point, a star) (`ArgumentException`); a boresight zero or parallel to the reference vector
-    (rejected by the instrument's constructor since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)), a half-angle that is not positive, a field whose angular
+    (rejected by the instrument's constructor since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)), a half-angle that is not positive (rejected by the
+    constructors since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707) and [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)), a field whose angular
     radius exceeds π/2 − 1e-6, a non-circular instrument of another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
     states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
     target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the

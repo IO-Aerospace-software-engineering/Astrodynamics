@@ -1316,9 +1316,9 @@ Represents a spacecraft with components.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, or `ArgumentException` naming the parameter, #707) |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite cross angle not negative, or `ArgumentOutOfRangeException`) |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite cross angle not negative, or `ArgumentOutOfRangeException`) |
+| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, and finite Euler angles, or `ArgumentException` naming the parameter, #707, #715) |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
 | `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
 | `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |

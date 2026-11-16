@@ -789,7 +789,7 @@ namespace IO.Astrodynamics.Tests.Body
         /// built and its IK held <c>FOV_CROSS_ANGLE = Infinity</c> or <c>NaN</c>, which SPICE cannot read (loading such an IK
         /// signals SPICE(NUMBEREXPECTED), "Encountered 'Infinity' while attempting to parse a number"), the search throwing only
         /// when called. Both methods throw <see cref="ArgumentOutOfRangeException"/> naming the cross angle, as for a negative
-        /// one, and add nothing. A cross angle of 0 is still accepted here and rejected by the search.
+        /// one, and add nothing; a cross angle of 0 too since #715 (<see cref="AddInstrument_CrossAngleNotPositive_Throws"/>).
         /// </summary>
         [Theory]
         [MemberData(nameof(CrossShapesAndCrossAnglesNotFinite))]
@@ -812,6 +812,341 @@ namespace IO.Astrodynamics.Tests.Body
             var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
             Assert.Equal("crossAngle", rejected.ParamName);
             Assert.Empty(spc.Instruments);
+        }
+
+        public static TheoryData<string, long> CrossShapesAndCrossAnglesNotPositive()
+        {
+            var data = new TheoryData<string, long>();
+            foreach (var shape in new[] { "Rectangular", "Elliptical" })
+            foreach (var value in new[] { 0.0, -0.0, -double.Epsilon, -0.1 })
+                data.Add(shape, BitConverter.DoubleToInt64Bits(value));
+            return data;
+        }
+
+        /// <summary>
+        /// #715: the half-angle across the reference plane of a rectangle or an ellipse is positive, as the field of view is
+        /// (#707). A cross angle of +0 was accepted: the instrument was built and its IK written with
+        /// <c>FOV_CROSS_ANGLE = 0</c>, which CSPICE's <c>gftfov</c> rejects (SPICE(DEGENERATECASE),
+        /// <see cref="ZeroHalfAngle_IsDegenerateForGftfov"/>), and every search threw late, "its half-angles must be positive";
+        /// −0 was rejected by <c>ThrowIfNegative</c> with another message. Both methods throw
+        /// <see cref="ArgumentOutOfRangeException"/> naming the cross angle, with one message for +0, −0 and a negative value,
+        /// and add nothing.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(CrossShapesAndCrossAnglesNotPositive))]
+        public void AddInstrument_CrossAngleNotPositive_Throws(string shape, long bits)
+        {
+            // Arrange
+            var spc = Host(-7151, "Z715");
+            double crossAngle = BitConverter.Int64BitsToDouble(bits);
+
+            // Act
+            var exception = Record.Exception(() =>
+            {
+                if (shape == "Rectangular")
+                    spc.AddRectangularInstrument(-7151001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                else
+                    spc.AddEllipticalInstrument(-7151001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            });
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
+            Assert.Equal("crossAngle", rejected.ParamName);
+            Assert.StartsWith("The cross angle of an instrument must be a finite positive number", rejected.Message);
+            Assert.Empty(spc.Instruments);
+        }
+
+        /// <summary>
+        /// #715, control: the smallest positive cross angle and the largest finite one are accepted, as the field of view's
+        /// rule accepts them (#707); the bound of <c>gftfov</c>, π/2 − 1e-6, is the search's.
+        /// </summary>
+        [Theory]
+        [InlineData("Rectangular", double.Epsilon)]
+        [InlineData("Elliptical", double.Epsilon)]
+        [InlineData("Rectangular", double.MaxValue)]
+        [InlineData("Elliptical", double.MaxValue)]
+        public void AddInstrument_CrossAnglePositive_IsAccepted(string shape, double crossAngle)
+        {
+            // Arrange
+            var spc = Host(-7152, "P715");
+
+            // Act
+            if (shape == "Rectangular")
+                spc.AddRectangularInstrument(-7152001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            else
+                spc.AddEllipticalInstrument(-7152001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+
+            // Assert
+            var instrument = Assert.Single(spc.Instruments);
+            Assert.Equal(crossAngle, instrument is RectangularInstrument r ? r.CrossAngle : ((EllipticalInstrument)instrument).CrossAngle);
+        }
+
+        // Euler angles with a component that is not finite, in each component
+        private static readonly Vector3[] OrientationsNotFinite =
+        {
+            new(double.NaN, 0.0, 0.0), new(0.0, double.NaN, 0.0), new(0.0, 0.0, double.NaN),
+            new(double.PositiveInfinity, 0.0, 0.0), new(0.0, double.PositiveInfinity, 0.0), new(0.0, 0.0, double.PositiveInfinity),
+            new(double.NegativeInfinity, 0.0, 0.0), new(0.0, double.NegativeInfinity, 0.0), new(0.0, 0.0, double.NegativeInfinity),
+            new(double.NaN, double.NaN, double.NaN), new(0.1, BitConverter.Int64BitsToDouble(0x7FF8000000000000L), 0.3),
+        };
+
+        public static TheoryData<string, int> ShapesAndOrientationsNotFinite()
+        {
+            var data = new TheoryData<string, int>();
+            foreach (var shape in Shapes)
+            for (int i = 0; i < OrientationsNotFinite.Length; i++)
+                data.Add(shape, i);
+            return data;
+        }
+
+        /// <summary>
+        /// #715: the Euler angles of the orientation are finite. A NaN or an infinite angle was accepted: the instrument was
+        /// built with a NaN <see cref="Instrument.RotationToSpacecraft"/>, its spacecraft-frame getters returned NaN vectors,
+        /// and its frame kernel held <c>TKFRAME_..._ANGLES = ( NaN,0,0 )</c>, which SPICE cannot read (SPICE(NUMBEREXPECTED)
+        /// at <c>furnsh_c</c>, the variables before the line left in the pool). The three methods throw
+        /// <see cref="ArgumentException"/> naming the orientation, the rule of the boresight and the reference vector (#707)
+        /// and of the body axes (#703), and add nothing.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(ShapesAndOrientationsNotFinite))]
+        public void AddInstrument_OrientationNotFinite_Throws(string shape, int orientation)
+        {
+            // Arrange
+            var spc = Host(-7153, "O715");
+            var angles = OrientationsNotFinite[orientation];
+
+            // Act
+            var exception = Record.Exception(() =>
+            {
+                switch (shape)
+                {
+                    case "Circular":
+                        spc.AddCircularInstrument(-7153001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, angles);
+                        break;
+                    case "Rectangular":
+                        spc.AddRectangularInstrument(-7153001, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles);
+                        break;
+                    default:
+                        spc.AddEllipticalInstrument(-7153001, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles);
+                        break;
+                }
+            });
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("orientation", rejected.ParamName);
+            Assert.Empty(spc.Instruments);
+        }
+
+        /// <summary>
+        /// #715, control: finite Euler angles stay accepted, the zero, the angles of a turn and above, and the largest finite
+        /// angles (question 2 of the issue: SPICE's TK frame then agrees with <see cref="Instrument.RotationToSpacecraft"/> to a
+        /// few ulps of the angle, which the documentation states). The rotation is <c>eul2m(x, y, z, 1, 2, 3)</c>, its closed
+        /// form [x]1 [y]2 [z]3 checked on a vector by <see cref="RotationToSpacecraft_IsTheFrameKernel"/>; here it is finite.
+        /// </summary>
+        [Theory]
+        [InlineData(0.0, 0.0, 0.0)]
+        [InlineData(-0.0, -0.0, -0.0)]
+        [InlineData(7.0, -10.0, 100.0)]
+        [InlineData(double.MaxValue, double.MinValue, double.Epsilon)]
+        public void AddInstrument_OrientationFinite_IsAccepted(double x, double y, double z)
+        {
+            // Arrange
+            var spc = Host(-7154, "F715");
+
+            // Act
+            foreach (var (shape, n) in Shapes.Select((s, i) => (s, i)))
+            {
+                switch (shape)
+                {
+                    case "Circular":
+                        spc.AddCircularInstrument(-7154001 - n, "C" + n, "M", 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        break;
+                    case "Rectangular":
+                        spc.AddRectangularInstrument(-7154001 - n, "C" + n, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        break;
+                    default:
+                        spc.AddEllipticalInstrument(-7154001 - n, "C" + n, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        break;
+                }
+            }
+
+            // Assert
+            Assert.Equal(3, spc.Instruments.Count);
+            foreach (var instrument in spc.Instruments)
+            {
+                Assert.Equal(new Vector3(x, y, z), instrument.Orientation);
+                var q = instrument.RotationToSpacecraft;
+                Assert.True(double.IsFinite(q.W) && double.IsFinite(q.VectorPart.X) && double.IsFinite(q.VectorPart.Y) && double.IsFinite(q.VectorPart.Z));
+                Assert.Equal(1.0, q.Magnitude(), 15);
+            }
+        }
+
+        // An instrument kernel of the layout of the library's rectangular and elliptical writers, in J2000
+        private static string AnglesKernel(int id, string shape, Vector3 boresight, Vector3 refVector, double refAngle, double crossAngle)
+        {
+            string N(double v) => v.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+            return $"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}" +
+                   $"INS{id}_FOV_CLASS_SPEC       = 'ANGLES'{Environment.NewLine}" +
+                   $"INS{id}_FOV_SHAPE            = '{shape}'{Environment.NewLine}" +
+                   $"INS{id}_FOV_FRAME            = 'J2000'{Environment.NewLine}" +
+                   $"INS{id}_BORESIGHT            = ( {N(boresight.X)}, {N(boresight.Y)}, {N(boresight.Z)} ){Environment.NewLine}" +
+                   $"INS{id}_FOV_REF_VECTOR       = ( {N(refVector.X)}, {N(refVector.Y)}, {N(refVector.Z)} ){Environment.NewLine}" +
+                   $"INS{id}_FOV_REF_ANGLE        = {N(refAngle)}{Environment.NewLine}" +
+                   $"INS{id}_FOV_CROSS_ANGLE      = {N(crossAngle)}{Environment.NewLine}" +
+                   $"INS{id}_FOV_ANGLE_UNITS      = 'RADIANS'{Environment.NewLine}\\begintext{Environment.NewLine}";
+        }
+
+        /// <summary>
+        /// #715, the reference: a half-angle of 0, across (<c>FOV_CROSS_ANGLE</c>) or in the reference plane
+        /// (<c>FOV_REF_ANGLE</c>), is a field CSPICE's <c>gftfov</c> rejects, for a point and an ellipsoid target, with
+        /// SPICE(DEGENERATECASE): consecutive boundary vectors of the rectangle whose cross product is the zero vector
+        /// (<c>zzfovaxi</c>, N0067), whatever the boresight, and a semi-axis of the ellipse of zero length (<c>zzgffvu</c>,
+        /// N0067) for the boresight +Z. The IKs are written here in J2000, in the layout of the library's writers, for an
+        /// instrument of the Earth observing the Moon; a control field of half-angles 0.1 with the boresight at the Moon holds
+        /// it for the whole search window. The ellipse's test is exact: with the boresight at the Moon (a unit vector rounded
+        /// from its ephemeris), the computed semi-axis of zero width is not exactly of zero length and <c>gftfov</c> searches a
+        /// segment: a window of 1 µs for the Moon's centre and of 59.8 min for its ellipsoid (measured on Linux, 2026-11-16). Through the
+        /// library's proxy of <c>gftfov_c</c>, which carries SPICE's long message (fourth round of #668), so the test runs on
+        /// the three platforms; <c>fovtrg_c</c> is not linked into the native library.
+        /// </summary>
+        [Theory]
+        [InlineData("RECTANGLE", true, 0.1, 0.0, ShapeType.Point, "vectors at indices 2 and 3 have cross product equal to the zero vector")]
+        [InlineData("RECTANGLE", true, 0.1, 0.0, ShapeType.Ellipsoid, "vectors at indices 2 and 3 have cross product equal to the zero vector")]
+        [InlineData("RECTANGLE", true, 0.0, 0.1, ShapeType.Point, "vectors at indices 1 and 2 have cross product equal to the zero vector")]
+        [InlineData("RECTANGLE", false, 0.1, 0.0, ShapeType.Point, "vectors at indices 2 and 3 have cross product equal to the zero vector")]
+        [InlineData("ELLIPSE", false, 0.1, 0.0, ShapeType.Point, "FOV semi-axis #2 for -7155001 has zero length")]
+        [InlineData("ELLIPSE", false, 0.1, 0.0, ShapeType.Ellipsoid, "FOV semi-axis #2 for -7155001 has zero length")]
+        [InlineData("ELLIPSE", false, 0.0, 0.1, ShapeType.Point, "FOV semi-axis #1 for -7155001 has zero length")]
+        [InlineData("RECTANGLE", true, 0.1, 0.1, ShapeType.Point, null)]
+        [InlineData("ELLIPSE", true, 0.1, 0.1, ShapeType.Ellipsoid, null)]
+        public async Task ZeroHalfAngle_IsDegenerateForGftfov(string shape, bool atMoon, double refAngle, double crossAngle, ShapeType targetShape, string error)
+        {
+            // Arrange
+            var epoch = new TimeSystem.Time(2024, 1, 1, frame: TimeFrame.TDBFrame);
+            var earth = new CelestialBody(399);
+            var moon = new CelestialBody(301);
+            var boresight = atMoon ? moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize() : Vector3.VectorZ;
+            var refVector = atMoon ? boresight.Cross(Vector3.VectorZ).Normalize() : Vector3.VectorX;
+            int id = -7155001;
+            var ik = FrameKernelFiles.NewFile("ik715", ".ti");
+            await File.WriteAllTextAsync(ik.FullName, AnglesKernel(id, shape, boresight, refVector, refAngle, crossAngle));
+            var window = new Window(epoch.AddSeconds(-3600.0), epoch.AddSeconds(3600.0));
+
+            // Act
+            Exception exception = null;
+            System.Collections.Generic.List<Window> windows = null;
+            FrameKernelFiles.Load(ik, () => exception = Record.Exception(() => windows = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301,
+                new Frames.Frame("IAU_MOON"), targetShape, Aberration.None, TimeSpan.FromSeconds(60.0)).ToList()));
+
+            // Assert
+            _output.WriteLine($"MEASURE gftfov {shape} boresight {boresight} ref {refAngle} cross {crossAngle} {targetShape}: {exception?.Message ?? $"{windows.Count} window(s) " + string.Join(", ", windows.Select(w => $"[{w.StartDate}, {w.EndDate}]"))}");
+            if (error == null)
+            {
+                Assert.Null(exception);
+                Assert.Equal(window, Assert.Single(windows));
+            }
+            else
+            {
+                var failed = Assert.IsType<InvalidOperationException>(exception);
+                Assert.Contains(error, failed.Message);
+            }
+        }
+
+        /// <summary>
+        /// #715, question 1: the managed search of a circle or an ellipse builds an ellipsoid whose limb is the cone of the
+        /// field, of semi-axes D sin REF and D sin REF · tan CROSS / tan REF at the distance D of the target
+        /// (<c>FieldOfViewGeometry.Cone</c>). For half-angles this small the square of a semi-axis underflows to 0 (IEEE 754:
+        /// at the Moon's distance, D ≈ 3.6e8 m, D sin 1e-200 ≈ 4e-192 m, whose square is below the smallest subnormal,
+        /// 4.9e-324), and the ellipsoid of the occultation search rejected it with <see cref="ArgumentException"/>, "The
+        /// semi-axes of an ellipsoid must have positive lengths", not the <see cref="InvalidOperationException"/> of a field
+        /// that cannot be searched. <c>gftfov</c> is already degenerate far above (SPICE(DEGENERATECASE) up to about 1.5e-17 rad
+        /// with the boresight at the Moon, #715). <see cref="Instrument.IsInFOV"/> and the managed search, for a point and an
+        /// ellipsoid target, throw <see cref="InvalidOperationException"/> naming the underflow. Control: a half-angle of 1e-10
+        /// is searched, the Moon at the boresight in view (its margin is the half-angle, less the rounding of the axes,
+        /// about 1e-16 rad).
+        /// </summary>
+        [Theory]
+        [InlineData("Circular", 1e-200, 1e-200, false)]
+        [InlineData("Circular", double.Epsilon, double.Epsilon, false)]
+        [InlineData("Elliptical", 0.1, 1e-200, false)]
+        [InlineData("Elliptical", 1e-200, 0.1, false)]
+        [InlineData("Elliptical", 0.1, double.Epsilon, false)]
+        [InlineData("Elliptical", double.Epsilon, 0.1, false)]
+        [InlineData("Circular", 1e-10, 1e-10, true)]
+        [InlineData("Elliptical", 0.1, 1e-10, true)]
+        [InlineData("Elliptical", 1e-10, 0.1, true)]
+        public void TinyHalfAngle_ManagedSearchThrowsInvalidOperation(string shape, double refAngle, double crossAngle, bool searched)
+        {
+            // Arrange: a managed spacecraft with an attitude, its instrument's boresight at the Moon
+            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var spc = Host(-7156, "T715");
+            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
+            var moon = new CelestialBody(301);
+            var boresight = moon.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize();
+            var refVector = boresight.Cross(Vector3.VectorZ).Normalize();
+            if (shape == "Circular")
+                spc.AddCircularInstrument(-7156001, "CAM", "M", refAngle, boresight, refVector, Vector3.Zero);
+            else
+                spc.AddEllipticalInstrument(-7156001, "CAM", "M", refAngle, crossAngle, boresight, refVector, Vector3.Zero);
+            var instrument = spc.Instruments.Single();
+            var window = new Window(epoch, epoch.AddSeconds(120.0));
+
+            // Act
+            bool? inView = null;
+            var point = Record.Exception(() => inView = instrument.IsInFOV(epoch, moon, Aberration.None));
+            System.Collections.Generic.List<Window> windows = null;
+            var ellipsoid = Record.Exception(() => windows = instrument.FindWindowsInFieldOfViewConstraint(window, spc, moon, moon.Frame, ShapeType.Ellipsoid,
+                Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
+
+            // Assert
+            if (searched)
+            {
+                Assert.Null(point);
+                Assert.True(inView);
+                Assert.Null(ellipsoid);
+                Assert.Equal(window, Assert.Single(windows));
+            }
+            else
+            {
+                Assert.Contains("underflow", Assert.IsType<InvalidOperationException>(point).Message);
+                Assert.Contains("underflow", Assert.IsType<InvalidOperationException>(ellipsoid).Message);
+            }
+        }
+
+        /// <summary>
+        /// #715, review: a point target at the observer, distance exactly 0 (two managed spacecraft of the same state), has no
+        /// direction, so it is neither in nor out of the field (the angle between the zero vector and the boresight is
+        /// undefined). The cone of a circle or an ellipse at that distance has semi-axes of 0 m: on a80f6a5 the ellipsoid of the
+        /// occultation search threw an unrelated <see cref="ArgumentException"/>, "The semi-axes of an ellipsoid must have
+        /// positive lengths", and after the underflow guard of #715 an <see cref="InvalidOperationException"/> that blamed
+        /// the half-angles of a normal field (0.1 rad). <see cref="Instrument.IsInFOV"/> throws
+        /// <see cref="InvalidOperationException"/> naming the target at the observer, not the field.
+        /// </summary>
+        [Theory]
+        [InlineData("Circular")]
+        [InlineData("Elliptical")]
+        public void PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance(string shape)
+        {
+            // Arrange: two managed spacecraft of the same state, the observer with an attitude and a field of 0.1 rad
+            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var spc = Host(-7157, "T715A");
+            var twin = Host(-7158, "T715B");
+            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
+            if (shape == "Circular")
+                spc.AddCircularInstrument(-7157001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            else
+                spc.AddEllipticalInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            var instrument = spc.Instruments.Single();
+            Assert.Equal(0.0, twin.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude());
+
+            // Act
+            var exception = Record.Exception(() => instrument.IsInFOV(epoch, twin, Aberration.None));
+
+            // Assert
+            var failed = Assert.IsType<InvalidOperationException>(exception);
+            Assert.Contains("at the observer", failed.Message);
+            Assert.DoesNotContain("half-angles", failed.Message);
         }
 
         // The instrument kernel the library's circular writer would write for these vectors, written here

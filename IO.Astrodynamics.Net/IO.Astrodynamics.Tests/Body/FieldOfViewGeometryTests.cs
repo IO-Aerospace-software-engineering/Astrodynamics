@@ -152,4 +152,28 @@ public class FieldOfViewGeometryTests
         var target = OccultationBody.Ellipsoid(new Vector3(0.0, 0.0, 1.0e5), Vector3.VectorX * 6.4e6, Vector3.VectorY * 6.4e6, Vector3.VectorZ * 6.3e6);
         Assert.Throws<InvalidOperationException>(() => FieldOfViewGeometry.Margin(InstrumentShape.Rectangular, 0.4, 0.15, Axes, target));
     }
+
+    /// <summary>
+    /// Review of #715: a target at the observer, distance exactly 0. The cone of a circle or an ellipse has no extent there;
+    /// the failure is the target's, not the field's: an ellipsoid centred on the observer holds it (the rectangle's own
+    /// test, k = |c'|² − 1 = −1), and a point there has no direction. On c3a4cf8 both threw the underflow message of the
+    /// half-angles (0.4 and 0.15 rad), on a80f6a5 an unrelated <see cref="ArgumentException"/>.
+    /// </summary>
+    [Theory]
+    [InlineData(InstrumentShape.Circular, false, "at the observer")]
+    [InlineData(InstrumentShape.Elliptical, false, "at the observer")]
+    [InlineData(InstrumentShape.Circular, true, "inside the target")]
+    [InlineData(InstrumentShape.Elliptical, true, "inside the target")]
+    [InlineData(InstrumentShape.Rectangular, true, "inside the target")]
+    public void TargetAtTheObserver_ThrowsNamingTheTarget(InstrumentShape shape, bool ellipsoid, string expected)
+    {
+        var target = ellipsoid
+            ? OccultationBody.Ellipsoid(Vector3.Zero, Vector3.VectorX * 6.4e6, Vector3.VectorY * 6.4e6, Vector3.VectorZ * 6.3e6)
+            : OccultationBody.Point(Vector3.Zero);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => FieldOfViewGeometry.Margin(shape, 0.4, 0.15, Axes, target));
+
+        Assert.Contains(expected, exception.Message);
+        Assert.DoesNotContain("half-angles", exception.Message);
+    }
 }

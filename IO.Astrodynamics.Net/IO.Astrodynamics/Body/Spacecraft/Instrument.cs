@@ -63,6 +63,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// of the rotations of a vector by A). Here M = [x]1 [y]2 [z]3 = <c>eul2m(x, y, z, 1, 2, 3)</c> =
         /// <c>pxform(instrument, spacecraft)</c>: a vector in the instrument frame is rotated by -z about Z, then by -y
         /// about Y, then by -x about X, into the spacecraft frame (<see cref="RotationToSpacecraft"/>, #524).
+        /// <para>
+        /// The angles are finite, checked when the instrument is built (#715). Any finite angle is accepted; the frame
+        /// SPICE reads from the kernel the library writes agrees with <see cref="RotationToSpacecraft"/> to a few ulps of
+        /// each angle, which SPICE's text kernel reader and its unit conversion (<c>CONVRT</c>) can move by a few ulps:
+        /// 1.8e-15 rad within [−2π, 2π], growing with the angle (1.6e-2 rad near 1e13, 0.268 rad at 1e300; measured with
+        /// CSPICE N0067, #715). Give angles within a few turns.
+        /// </para>
         /// </remarks>
         public Vector3 Orientation { get; }
 
@@ -79,7 +86,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// or infinite half-angle was accepted: the instrument was built, its getters returned zero or NaN vectors,
         /// <c>InstrumentPointingToAttitude</c> gave the identity or a NaN attitude, its kernel was one SPICE rejects or cannot
         /// read, and the field-of-view search threw late. The upper bound of the half-angles, π/2 − 1e-6 for <c>gftfov</c>,
-        /// is checked by the search.
+        /// is checked by the search. The Euler angles of the orientation are finite (#715): before 11.0.0 a NaN or an
+        /// infinite angle gave a NaN <see cref="RotationToSpacecraft"/>, NaN spacecraft-frame getters, and a frame kernel
+        /// holding <c>ANGLES = ( NaN,0,0 )</c>, which SPICE fails to load (SPICE(NUMBEREXPECTED)).
         /// </remarks>
         /// <param name="naifId"></param>
         /// <param name="name"></param>
@@ -90,11 +99,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="boresight">The boresight: finite components, a non-zero magnitude</param>
         /// <param name="refVector">The reference vector: finite components, a non-zero magnitude, not parallel to the
         /// boresight</param>
-        /// <param name="orientation"></param>
+        /// <param name="orientation">The Euler angles (x, y, z) of <see cref="Orientation"/>, rad: finite</param>
         /// <param name="spacecraft"></param>
         /// <exception cref="ArgumentException">The name or the model is empty; or, naming the parameter, the field of view is
         /// not a finite positive number, the boresight or the reference vector has a component that is not finite or a
-        /// magnitude of 0 (the boresight checked first), or the reference vector is parallel to the boresight (#707).</exception>
+        /// magnitude of 0 (the boresight checked first), or the reference vector is parallel to the boresight (#707), or an
+        /// Euler angle of the orientation is not finite (#715).</exception>
         protected Instrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, InstrumentShape shape, Vector3 boresight, Vector3 refVector,
             Vector3 orientation)
         {
@@ -125,6 +135,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     nameof(refVector));
             }
 
+            // SPICE reads no NaN nor infinity in the ANGLES of the frame kernel (SPICE(NUMBEREXPECTED)), and the rotation of such
+            // an angle is NaN (#715)
+            if (!double.IsFinite(orientation.X) || !double.IsFinite(orientation.Y) || !double.IsFinite(orientation.Z))
+            {
+                throw new ArgumentException(
+                    $"The Euler angles of an instrument orientation must be finite: {orientation} has no rotation, and SPICE cannot read it in the frame kernel.",
+                    nameof(orientation));
+            }
+
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
 
             Name = name;
@@ -148,17 +167,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// The half-angle across the reference plane of an ellipse or a rectangle, as given: not negative and finite, or
-        /// <see cref="ArgumentOutOfRangeException"/> naming <paramref name="crossAngle"/>. SPICE reads no NaN nor infinity in
-        /// a kernel (#707: +∞ and a NaN of positive sign passed <c>ThrowIfNegative</c>, and the instrument kernel held
-        /// <c>FOV_CROSS_ANGLE = Infinity</c>, SPICE(NUMBEREXPECTED) on loading). A cross angle of 0 is rejected by the search.
+        /// The half-angle across the reference plane of an ellipse or a rectangle, as given: a finite positive number, or
+        /// <see cref="ArgumentOutOfRangeException"/> naming <paramref name="crossAngle"/>, one message for every value
+        /// rejected. SPICE reads no NaN nor infinity in a kernel (#707: +∞ and a NaN of positive sign passed
+        /// <c>ThrowIfNegative</c>, and the instrument kernel held <c>FOV_CROSS_ANGLE = Infinity</c>, SPICE(NUMBEREXPECTED) on
+        /// loading). A cross angle of 0 (#715; −0 was rejected by <c>ThrowIfNegative</c> with another message, +0 accepted)
+        /// is a field of no width that the library's searches rejected when called and that CSPICE's <c>gftfov</c> rejects
+        /// (SPICE(DEGENERATECASE): the rectangle's consecutive boundary vectors are not independent, <c>zzfovaxi</c>; the
+        /// ellipse's semi-axis has a zero length, <c>zzgffvu</c>) or, for an ellipse whose computed semi-axis rounds to a
+        /// non-zero length, searches as a segment, as the field of view of 0 the constructor rejects.
         /// </summary>
         private protected static double CheckCrossAngle(double crossAngle)
         {
-            ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
-            if (!double.IsFinite(crossAngle))
+            // -0 <= 0: one message for +0, -0 and a negative angle (#715)
+            if (!double.IsFinite(crossAngle) || crossAngle <= 0.0)
             {
-                throw new ArgumentOutOfRangeException(nameof(crossAngle), crossAngle, "The cross angle of an instrument must be finite.");
+                throw new ArgumentOutOfRangeException(nameof(crossAngle), crossAngle,
+                    "The cross angle of an instrument must be a finite positive number: SPICE reads no NaN nor infinity in the instrument kernel, and a field of view of zero width is degenerate for gftfov.");
             }
 
             return crossAngle;
@@ -208,6 +233,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <b>Target frame.</b> Used as given for an ellipsoid, without a check of its center; <c>gftfov</c> requires a
         /// body-fixed frame centered on the target. Ignored for a point, as <c>gftfov</c> ignores it.
         /// </para>
+        /// <para>
+        /// <b>Tiny half-angles.</b> The half-angles are finite and positive (#707, #715), but a field of a half-angle below
+        /// about 1e-16 rad can be degenerate for <c>gftfov</c>, whose tests of zero lengths and zero cross products are exact
+        /// on computed vectors, so their threshold depends on the boresight: SPICE(DEGENERATECASE) up to 1.53e-17 rad for a
+        /// rectangle and 1.42e-17 rad for an ellipse with the boresight at the Moon, none down to 5e-324 with the boresight
+        /// +Z but for an ellipse and an ellipsoid target, SPICE(BADAXISLENGTH) up to 2.73e-319 (measured with
+        /// <c>fovtrg_c</c>, CSPICE N0067, #715). The managed path searches such fields, so the two paths can then disagree;
+        /// its own construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at the
+        /// boresight not found for a half-angle of 1e-155 rad in the reference plane, measured), and it throws
+        /// <see cref="InvalidOperationException"/> where the squares of the semi-axes of the cone of the field underflow
+        /// (below about 6e-171 rad at the Moon's distance).
+        /// </para>
         /// </remarks>
         /// <param name="searchWindow">The search window.</param>
         /// <param name="observer">Not used: the observer is the instrument's spacecraft.</param>
@@ -223,13 +260,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// spacecraft or is an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), or, on the
         /// managed path, the search window leaves the propagated states of the instrument's spacecraft or of a spacecraft
         /// target, which would be extrapolated.</exception>
-        /// <exception cref="InvalidOperationException">The field of view cannot be searched: a cross angle not positive, an
-        /// angular radius above π/2 − 1e-6, or a shape other than a
+        /// <exception cref="InvalidOperationException">The field of view cannot be searched: an angular radius above
+        /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
-        /// or, on the managed path, the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
+        /// or, on the managed path, a circle or an ellipse whose half-angles are so small that the squares of the semi-axes of
+        /// the cone of the field underflow at the target's distance, or a point target at the observer (distance 0: it has no
+        /// direction) (#715; before 11.0.0 an unrelated <see cref="ArgumentException"/> for both), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
         /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
-        /// is inside the ellipsoid of the target; or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no
+        /// is inside the ellipsoid of the target (at its center included, an unrelated <see cref="ArgumentException"/> before
+        /// 11.0.0 for a circle or an ellipse); or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no
         /// instrument kernel defines the field of view, a body or an epoch without ephemeris data, an epoch outside the coverage
         /// of the frame data or of the C-kernel), with SPICE's message (fourth round of #668; before 11.0.0 the search returned
         /// no window).</exception>

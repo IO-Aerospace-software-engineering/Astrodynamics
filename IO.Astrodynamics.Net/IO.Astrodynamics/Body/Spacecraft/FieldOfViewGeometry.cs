@@ -63,6 +63,9 @@ internal static class FieldOfViewGeometry
     /// <param name="crossAngle">Its half-angle across the reference plane, rad; ignored for a circle.</param>
     /// <param name="axes">Its axes.</param>
     /// <param name="target">The target as the observer sees it.</param>
+    /// <exception cref="InvalidOperationException">For a circle or an ellipse: the target is at the observer (distance 0; a
+    /// point has no direction, an ellipsoid holds the observer), or the cone of the field cannot be built
+    /// (<see cref="Cone"/>). For a rectangle and an ellipsoid target: the observer is inside the target.</exception>
     internal static double Margin(InstrumentShape shape, double refAngle, double crossAngle, in FieldOfViewAxes axes, in OccultationBody target)
     {
         if (shape == InstrumentShape.Rectangular)
@@ -71,7 +74,17 @@ internal static class FieldOfViewGeometry
         }
 
         double cross = shape == InstrumentShape.Circular ? refAngle : crossAngle;
-        var cone = Cone(refAngle, cross, axes, target.Center.Magnitude());
+        double distance = target.Center.Magnitude();
+        if (!(distance > 0.0))
+        {
+            // The cone at distance 0 has no extent: a point target there has no direction, and the observer is at the
+            // center of an ellipsoid target; the field itself is not at fault (review of #715)
+            throw new InvalidOperationException(target.IsPoint
+                ? $"The target is at the observer (distance {distance} m): it has no direction, so it is neither in nor out of the field of view."
+                : $"The observer is inside the target, or on its surface (at its center, distance {distance} m).");
+        }
+
+        var cone = Cone(refAngle, cross, axes, distance);
         // The target is the unit sphere, unless it is a point: then the cone body is
         return OccultationGeometry.Evaluate(cone, target, target.IsPoint, OccultationMargin.Overlap, false).Overlap;
     }
@@ -80,11 +93,26 @@ internal static class FieldOfViewGeometry
     /// An ellipsoid whose limb, seen from the vertex, is the elliptic cone of half-angles <paramref name="refAngle"/>
     /// along b1 and <paramref name="crossAngle"/> along b2, centered at <paramref name="distance"/> along b.
     /// </summary>
+    /// <param name="distance">The distance D of the target, positive (<see cref="Margin"/> rejects a target at the observer).</param>
+    /// <exception cref="InvalidOperationException">The square of a semi-axis, D sin REF or D sin REF · tan CROSS / tan REF,
+    /// underflows to 0 (a half-angle below about 6e-171 rad at the Moon's distance): the field cannot be searched. Before
+    /// #715 the ellipsoid of the occultation search threw an unrelated <see cref="ArgumentException"/>.</exception>
     internal static OccultationBody Cone(double refAngle, double crossAngle, in FieldOfViewAxes axes, double distance)
     {
         double radius = distance * System.Math.Sin(refAngle);
         double stretch = System.Math.Tan(crossAngle) / System.Math.Tan(refAngle);
-        return OccultationBody.Ellipsoid(axes.Boresight * distance, axes.Ref * radius, axes.Cross * (radius * stretch), axes.Boresight * radius);
+        var axis1 = axes.Ref * radius;
+        var axis2 = axes.Cross * (radius * stretch);
+        var axis3 = axes.Boresight * radius;
+        // OccultationBody's own test, on the same vectors: a field the search cannot represent is an InvalidOperationException
+        // of the field-of-view path, as the other fields it rejects (#715)
+        if (!(axis1.MagnitudeSquared() > 0.0 && axis2.MagnitudeSquared() > 0.0 && axis3.MagnitudeSquared() > 0.0))
+        {
+            throw new InvalidOperationException(
+                $"The field of view cannot be searched: its half-angles {refAngle} and {crossAngle} rad give the cone of the field, at the target's distance {distance} m, semi-axes of {radius} m and {radius * stretch} m whose squares underflow to 0.");
+        }
+
+        return OccultationBody.Ellipsoid(axes.Boresight * distance, axis1, axis2, axis3);
     }
 
     private static double RectanglePointMargin(double refAngle, double crossAngle, in FieldOfViewAxes axes, in Vector3 direction)
