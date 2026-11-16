@@ -2152,6 +2152,26 @@ TEST(API, GetTLEElementsProxyOfAFailedSgp4ReturnsNaN)
     EXPECT_TRUE(std::isnan(elements.SecondDerivativeOfMeanMotion));
 }
 
+// conics_c signals SPICE(BADGM) for a GM that is not positive (CONICS: "The value of GM supplied was non-positive."). Before,
+// the proxy did not check SPICE: it returned the state conics_c never wrote and left SPICE failed, so that the next call,
+// GetCelestialBodyInfoProxy(399), returned the record of Id -1 with an empty name (measured on a77531f)
+TEST(API, ConvertConicElementsToStateVectorAtEpochProxyOfANonPositiveGmReturnsNaN)
+{
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+    EXPECT_NO_THROW(sv = ConvertConicElementsToStateVectorAtEpochProxy(ConicsAbout(399), 100.0, 0.0));
+    const std::string message = GetLastErrorProxy();
+    std::cout << "MESSAGE #711 conics_c of a GM of 0: " << message << std::endl;
+    const auto earth = GetCelestialBodyInfoProxy(399);
+    EXPECT_EQ(399, earth.Id);
+    EXPECT_STREQ("EARTH", earth.Name);
+    EXPECT_NE(std::string::npos, message.find("GM supplied was non-positive")) << message;
+    ExpectNaN(sv);
+    EXPECT_EQ(399, sv.centerOfMotionId);
+    EXPECT_EQ(100.0, sv.epoch);
+    EXPECT_STREQ("J2000", sv.inertialFrame);
+    EXPECT_FALSE(TakePendingSpiceError());
+}
+
 // GALILEO ORBITER (-77), a built-in SPICE name (NAIF IDs Required Reading): the search of its centre of motion threw
 // InvalidArgumentException out of the proxy. The record has the Id -1 now, as for an id SPICE does not name
 TEST(API, GetCelestialBodyInfoProxyOfANamedSpacecraftReturnsNoRecord)

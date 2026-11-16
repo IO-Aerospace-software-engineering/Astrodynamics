@@ -3013,7 +3013,7 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 The breaking changes of 11.0.0, each with its migration, are the **Breaking** entries under **Changed** and the entries under **Removed** of the 11.0.0 release notes (`docs/contributing/versioning.md#1100`).
 
-The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); a native caller checks the result before using it.
+The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy`, `ConvertStateVectorToConicOrbitalElementProxy` and `TransformFrameProxy` still drop their SPICE errors, SPICE reset, and return what the routine wrote; a native caller checks the result before using it.
 
 ### Breaking Changes in 8.5.0
 

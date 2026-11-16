@@ -2825,8 +2825,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `API.Convert*ProxyOfAnUnnamedCentreWithAGmReturnsNaN` and `API.Convert*ProxyOfACentreWithoutGmReturnsNaN`, child
   scenarios `ConvertConicElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException` (and its equinoctial
   analog, exit 134 on 46e6975) and `ConvertConicElementsToStateVector_AboutABodyNoLongerNamed_ThrowsArgumentException`,
-  `SpiceApiTest.Convert*ElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException`. Conversions about a
-  celestial body SPICE names with a GM are unchanged, bit for bit.
+  `SpiceApiTest.Convert*ElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException`.
+  `ConvertConicElementsToStateVectorAtEpochProxy`, under `ConvertConicElementsToStateVector(KeplerianElements, Time[, gm])`
+  and the open orbits of the one-argument overload, neither activated the error management nor checked SPICE: a failed
+  `conics_c` (a GM of 0, about Elara for instance) returned the state it never wrote and left SPICE failed, so that the
+  next native call read the Earth as an unnamed body (`GetCelestialBodyInfoProxy(399)` gave `Id` -1, measured on a77531f)
+  and the conversion threw "Celestial celestialItem name can't be defined"; in a process that had made no other call,
+  SPICE's default action aborted it. It now returns the NaN state with SPICE's message, SPICE reset (C++
+  `API.ConvertConicElementsToStateVectorAtEpochProxyOfANonPositiveGmReturnsNaN`, the message of CONICS's
+  `SPICE(BADGM)`; `SpiceApiTest.ConvertConicElementsToStateVector_OfAnOpenOrbitAboutABodyWithoutGm_ThrowsInvalidOperationException`).
+  Elements outside the domains of `EQNCPV` and `CONICS` returned the zero state silently (measured on 46e6975: equinoctial
+  e = 0.95 and a < 0, an ellipse of a < 0); they throw `ArgumentException` (Changed, Breaking, below;
+  `SpiceApiTest.ConvertConicElementsToStateVector_OfAPeriapsisNotAboveZero_ThrowsArgumentException`,
+  `ConvertEquinoctialElementsToStateVector_OutsideTheDomainOfEqncpv_ThrowsArgumentException`,
+  `ConvertConicElementsToStateVector_WithAGmNotFiniteAndAboveZero_ThrowsArgumentOutOfRangeException`, the domains read
+  from `eqncpv.c` and `conics.c` of CSPICE N0067). Conversions inside those domains about a celestial body SPICE names
+  with a GM are unchanged, bit for bit.
 - **A TLE read before its kernels threw a misleading message and stayed unusable** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711)). Without the
   kernels, the native Earth's GM read fails (`BODY399_GM`); `TLE.ToStateVector` threw "the native layer returned a zero
   state" while the cause was the missing kernels, and the epoch read returned the epoch `getelm_c` never wrote, which the
@@ -2873,8 +2887,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   result with `GetLastErrorProxy()` instead of throwing or returning zeros; `ConvertTLEToStateVectorProxy` and
   `GetTLEElementsProxy` return NaN instead of a zero state or unwritten elements; `GetCelestialBodyInfoProxy` returns
   `Id` -1 instead of throwing; `ReadOrientationProxy`, `LaunchProxy` and `ReadEphemerisProxy` leave SPICE reset when
-  they return false. Migration: convert elements about a celestial body SPICE names, with its GM kernel loaded
-  (`gm_de440.tpc`); catch `InvalidOperationException`. Ordinary inputs are unchanged, bit for bit.
+  they return false; `ConvertConicElementsToStateVectorAtEpochProxy` returns a NaN state with `GetLastErrorProxy()` and
+  SPICE reset when `conics_c` fails, instead of the unwritten state with SPICE left failed. Migration: convert elements
+  about a celestial body SPICE names, with its GM kernel loaded (`gm_de440.tpc`); catch `InvalidOperationException`.
+  Ordinary inputs are unchanged, bit for bit.
+- **Breaking: the element conversions of `SpiceAPI` throw for elements outside the domain of their SPICE routine** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
+  Fixed above). `ConvertEquinoctialElementsToStateVector` throws `ArgumentException` (`equinoctialElements`) for a
+  semi-major axis that is not finite and above 0 or an eccentricity sqrt(F² + G²) above 0.9 (`EQNCPV`'s
+  `SPICE(BADSEMIAXIS)` and `SPICE(ECCOUTOFRANGE)`); the three `ConvertConicElementsToStateVector` overloads throw
+  `ArgumentException` (`keplerianElements`) for a periapsis radius that is not finite and above 0, an ellipse of negative
+  semi-major axis or a hyperbola of positive one (`CONICS`'s `SPICE(BADPERIAPSEVALUE)`); the overload with a GM throws
+  `ArgumentOutOfRangeException` (`gm`) for a GM that is not finite and above 0 (`SPICE(BADGM)`), and the overload with an
+  epoch `InvalidOperationException` when the GM of the observer is not (a body without `BODYnnn_GM`, as Elara), as the
+  one-argument overload does for an open orbit. Each is checked before the native call. Before, the equinoctial elements
+  and an ellipse returned the zero state without an exception (46e6975), a failed `conics_c` of the overloads with an
+  epoch (a GM of 0 or below, a periapsis radius not above 0) threw an unrelated `InvalidOperationException` ("Celestial
+  celestialItem name can't be defined") after leaving SPICE failed, and a GM not finite returned a state that is not
+  finite. A null argument throws `ArgumentNullException`. Migration: convert elliptic equinoctial elements of
+  eccentricity above 0.9 with `EquinoctialElements.ToStateVector()`, pass a positive finite GM, and catch
+  `ArgumentException` where elements may be inconsistent.
 - **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
   centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)
@@ -3933,8 +3964,8 @@ not listed.
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
   [#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
   `SpiceAPI.ConvertEquinoctialElementsToStateVector` passes the true longitude where `EQNCPV` takes the mean longitude
-  (1029 km off for an ordinary LEO, 27 900 km at e = 0.89) and returns a zero state without an exception for a ≤ 0
-  or e > 0.9;
+  (1029 km off for an ordinary LEO, 27 900 km at e = 0.89) and throws `ArgumentException` for a ≤ 0 or e > 0.9, the
+  domain of `EQNCPV` (#711);
   the conversions hold the SPICE lock while they build their result (about 80 µs for a native call of 1.8 µs). Use
   `EquinoctialElements.ToStateVector()` and `KeplerianElements.ToStateVector()`.
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),

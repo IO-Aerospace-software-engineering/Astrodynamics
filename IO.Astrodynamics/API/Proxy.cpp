@@ -1199,14 +1199,24 @@ IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
     return stateVectorDto;
 }
 
+// No failure is silent and none is left pending (#711): a failed conics_c (SPICE(BADGM) for a GM not above 0,
+// SPICE(BADPERIAPSEVALUE), SPICE(BADECCENTRICITY)) gives the NaN state, the epoch, the centre and the frame as given, with
+// SPICE's message in lastError, SPICE reset. Before, the error management was not activated (SPICE's default action aborted a
+// process that had made no other call) and SPICE was not checked: the state conics_c never wrote was returned and SPICE left
+// failed, so that the next call, GetCelestialBodyInfoProxy(399) for instance, returned the record of Id -1
 IO::Astrodynamics::API::DTO::StateVectorDTO
 ConvertConicElementsToStateVectorAtEpochProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElements, double epoch, double gm)
 {
+    ActivateErrorManagement();
     SpiceDouble sv[6];
 
     double ke[8] = {conicOrbitalElements.perifocalDistance, conicOrbitalElements.eccentricity, conicOrbitalElements.inclination, conicOrbitalElements.ascendingNodeLongitude, conicOrbitalElements.periapsisArgument,
                     conicOrbitalElements.meanAnomaly, conicOrbitalElements.epoch, gm};
     conics_c(ke, epoch, sv);
+    if (!ReportNativeErrors({}))
+    {
+        return FailedState(epoch, conicOrbitalElements.centerOfMotionId, conicOrbitalElements.frame);
+    }
 
     IO::Astrodynamics::API::DTO::StateVectorDTO svres;
     svres.position.x = sv[0];
