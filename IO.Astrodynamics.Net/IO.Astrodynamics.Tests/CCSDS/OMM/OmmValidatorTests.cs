@@ -995,5 +995,36 @@ public class OmmValidatorTests
         Assert.Empty(_validator.Validate(finite).Errors);
     }
 
+    [Theory]
+    [InlineData("RA_OF_ASC_NODE", "-360")]
+    [InlineData("RA_OF_ASC_NODE", "-10")]
+    [InlineData("RA_OF_ASC_NODE", "-0")]
+    [InlineData("ARG_OF_PERICENTER", "-360")]
+    [InlineData("ARG_OF_PERICENTER", "-10")]
+    [InlineData("ARG_OF_PERICENTER", "-0")]
+    [InlineData("MEAN_ANOMALY", "-360")]
+    [InlineData("MEAN_ANOMALY", "-10")]
+    [InlineData("MEAN_ANOMALY", "-0")]
+    public void Validate_NegativeAngleInSchemaRange_NoError(string keyword, string value)
+    {
+        // angleRange of ndmxml-4.0.0-common-4.0.xsd is [-360, 360) (minInclusive -360.0, maxExclusive 360.0), the range of
+        // MeanElements too; the schema, the oracle, accepts the document. Before: the default content validation refused
+        // [-360, 0) ("must be 0-360 degrees"), so the default LoadFromString threw OmmValidationException
+        var xml = OmmReaderTests.OmmWithKeyword(keyword, value);
+        Assert.True(_validator.ValidateSchemaFromXml(xml).IsValid);
+
+        var omm = Omm.LoadFromString(xml);
+        double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+        double actual = keyword switch
+        {
+            "RA_OF_ASC_NODE" => omm.Data.MeanElements.RightAscensionOfAscendingNode,
+            "ARG_OF_PERICENTER" => omm.Data.MeanElements.ArgumentOfPericenter,
+            _ => omm.Data.MeanElements.MeanAnomaly
+        };
+        Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual));
+        Assert.Empty(_validator.Validate(omm).Errors);
+        NdmDocuments.WithTempFile(xml, file => Assert.True(_validator.ValidateFile(file).IsValid));
+    }
+
     #endregion
 }

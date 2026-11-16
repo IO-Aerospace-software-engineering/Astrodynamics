@@ -2863,6 +2863,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OPM002`) or a CDM content error naming its value (`Variance CX_X must be finite and non-negative, got NaN.`); the
   warnings and the information levels are unchanged (`OmmValidatorTests` and `OpmValidatorTests`
   `Validate_NaNVariance_ReportsError`, each variance; `CdmTests.Validate_NaNMissDistance_IsInvalid`; red on 46e6975).
+- **The OMM content validation refused a negative angle the schema accepts** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OmmValidator` checked
+  `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` and `MEAN_ANOMALY` against [0, 360) ("must be 0-360 degrees"), where the
+  `angleRange` of NDM/XML 4.0.0 and `MeanElements` take [-360, 360): `Omm.LoadFrom*` with the default `validateContent`
+  threw `OmmValidationException` for a schema-valid angle of -360 or -10, which `validateContent: false` loaded. The
+  three checks now take [-360, 360) ("must be in [-360, 360) degrees"), NaN refused. `Omm.ToTle` writes such an angle
+  as its value in [0, 360) (-10 as 350.0000, measured) (`OmmValidatorTests.Validate_NegativeAngleInSchemaRange_NoError`,
+  -360, -10 and -0 for each angle, the schema its oracle, red on 46e6975 for -360 and -10).
 
 **Changed**
 
@@ -3900,6 +3907,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   variance or CDM miss distance, where they reported the object valid, and their range messages now name the finite
   rule (`must be finite and non-negative`, `must be finite and positive`). Only an object built programmatically with
   such a value is affected: the readers refuse it. Migration: none for finite data.
+- **The OMM content validation accepts an angle in [-360, 0)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator.Validate`,
+  `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER`
+  and `MEAN_ANOMALY` in [-360, 0), where they reported an `InvalidRange` error (`OMM002`) and threw
+  `OmmValidationException`. Migration: none; a caller that wants [0, 360) normalizes the angle. No result moves for
+  angles in [0, 360).
 
 **Deprecated**
 

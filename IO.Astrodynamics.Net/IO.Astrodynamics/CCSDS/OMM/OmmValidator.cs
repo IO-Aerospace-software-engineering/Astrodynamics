@@ -485,27 +485,27 @@ public class OmmValidator
             result.AddError(InvalidRange, $"Inclination must be 0-180 degrees, got {elements.Inclination}.", "Data.MeanElements.Inclination");
         }
 
-        // RAAN: must be 0 to 360 degrees
-        if (!(elements.RightAscensionOfAscendingNode >= 0 && elements.RightAscensionOfAscendingNode < 360))
+        // RAAN: in [-360, 360) degrees, angleRange of NDM/XML 4.0.0 (#708: [0, 360) before, which refused a schema-valid angle)
+        if (!(elements.RightAscensionOfAscendingNode >= -360 && elements.RightAscensionOfAscendingNode < 360))
         {
             result.AddError(InvalidRange,
-                $"RA_OF_ASC_NODE must be 0-360 degrees, got {elements.RightAscensionOfAscendingNode}.",
+                $"RA_OF_ASC_NODE must be in [-360, 360) degrees, got {elements.RightAscensionOfAscendingNode}.",
                 "Data.MeanElements.RightAscensionOfAscendingNode");
         }
 
-        // Argument of pericenter: must be 0 to 360 degrees
-        if (!(elements.ArgumentOfPericenter >= 0 && elements.ArgumentOfPericenter < 360))
+        // Argument of pericenter: in [-360, 360) degrees (angleRange)
+        if (!(elements.ArgumentOfPericenter >= -360 && elements.ArgumentOfPericenter < 360))
         {
             result.AddError(InvalidRange,
-                $"ARG_OF_PERICENTER must be 0-360 degrees, got {elements.ArgumentOfPericenter}.",
+                $"ARG_OF_PERICENTER must be in [-360, 360) degrees, got {elements.ArgumentOfPericenter}.",
                 "Data.MeanElements.ArgumentOfPericenter");
         }
 
-        // Mean anomaly: must be 0 to 360 degrees
-        if (!(elements.MeanAnomaly >= 0 && elements.MeanAnomaly < 360))
+        // Mean anomaly: in [-360, 360) degrees (angleRange)
+        if (!(elements.MeanAnomaly >= -360 && elements.MeanAnomaly < 360))
         {
             result.AddError(InvalidRange,
-                $"MEAN_ANOMALY must be 0-360 degrees, got {elements.MeanAnomaly}.",
+                $"MEAN_ANOMALY must be in [-360, 360) degrees, got {elements.MeanAnomaly}.",
                 "Data.MeanElements.MeanAnomaly");
         }
 

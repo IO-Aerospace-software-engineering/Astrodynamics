@@ -81,7 +81,10 @@ schema step, where a keyword out of its range, as that `ECCENTRICITY`, throws `O
 error check is the negation of its admitted range, so that NaN, in no range, is an error (`OMM002`), as is an infinite
 value where the range is half-open: a covariance variance must be finite and non-negative, which the covariance
 constructors, without a range, do not check ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN variance was valid). The warnings and the
-information levels (an unusual drag coefficient, a large eccentricity) are unchanged.
+information levels (an unusual drag coefficient, a large eccentricity) are unchanged. `RA_OF_ASC_NODE`,
+`ARG_OF_PERICENTER` and `MEAN_ANOMALY` are checked against [-360, 360), the `angleRange` of the schema and the range of
+`MeanElements` (#708: [0, 360) before 11.0.0, so the default `Load*` threw `OmmValidationException` for a schema-valid
+negative angle); `ToTle` writes a negative angle as its value in [0, 360).
 
 ### Saving
 
