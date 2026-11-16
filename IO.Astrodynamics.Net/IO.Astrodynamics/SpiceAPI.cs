@@ -1795,10 +1795,15 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">Fewer than three states, states not all in the frame of the first one (compared
     /// by name, ordinal), or a centre of motion that is not a celestial body (<see cref="IsCelestialBodyId"/>; a spacecraft or
     /// a site): the native writer rejects them or cannot read the centre; nothing is written, an existing file kept (#706:
-    /// before, a C++ exception crossed P/Invoke and ended the process).</exception>
+    /// before, a C++ exception crossed P/Invoke and ended the process). Or a centre of motion SPICE does not name, neither by
+    /// its built-in names nor by the loaded kernels ("has no name in SPICE"; a body built from custom parameters of an
+    /// identifier no kernel names): load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE); nothing is written, an
+    /// existing file kept (#714: before, <see cref="InvalidOperationException"/> from the native writer).</exception>
     /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
     /// the file once written (the reopening of the other loaded SPKs); the message is SPICE's. Or the native file system calls
-    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended).</exception>
+    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended). Or the
+    /// kernel pool has no GM for a centre SPICE names (ELARA, 507, without <c>BODY507_GM</c>): "CelestialItem id507 can't be
+    /// read:" followed by SPICE's message (#714); nothing is written.</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
@@ -1911,8 +1916,9 @@ public class SpiceAPI
     /// Rejects the states the native writer of SPKs rejects or cannot read (#706): it writes three states or more
     /// (<c>EphemerisKernel::WriteData</c>), all in one frame, compared by name ordinally as the native layer compares them,
     /// and reads the centre of motion of each as a celestial body (<see cref="IsCelestialBodyId"/>, a barycenter, a body or
-    /// a star the library builds, not a spacecraft nor a site). Each threw a C++ exception across P/Invoke, which ended the
-    /// process, or, for a spacecraft centre, read the uninitialised GM of a failed read.
+    /// a star the library builds, not a spacecraft nor a site) that SPICE names (#714). Each threw a C++ exception across
+    /// P/Invoke, which ended the process, or, for a spacecraft centre, read the uninitialised GM of a failed read; a centre
+    /// SPICE does not name threw <see cref="InvalidOperationException"/> from the native writer. Called under the lock.
     /// </summary>
     private static void ThrowIfNativeWriterRejects(OrbitalParameters.StateVector[] stateVectors)
     {
@@ -1939,6 +1945,14 @@ public class SpiceAPI
                 $"{centre.Observer.Name} ({centre.Observer.NaifId}), which is not a celestial body: a barycenter (0 to 9), the Sun (10), " +
                 "a planet, a moon or a Lagrange point (101 to 999), or an identifier above 1000, not a spacecraft nor a site.",
                 nameof(stateVectors));
+        }
+
+        // A centre SPICE does not name, which the native writer cannot build (#714, the last row of #655: before, it threw
+        // InvalidOperationException from the native layer, "CelestialItem id<id> can't be found"); #680's rule, as the element
+        // conversions check it (ReadCelestialBodyInfo)
+        foreach (var naifId in stateVectors.Select(x => x.Observer.NaifId).Distinct())
+        {
+            ReadCelestialBodyInfo(naifId, nameof(stateVectors));
         }
     }
 

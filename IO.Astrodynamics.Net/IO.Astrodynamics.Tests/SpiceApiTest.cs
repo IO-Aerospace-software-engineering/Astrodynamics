@@ -2043,4 +2043,77 @@ public class SpiceApiTest
 
         return 2.0 * System.Math.Asin(System.Math.Min(1.0, System.Math.Sqrt(sum) / (2.0 * System.Math.Sqrt(2.0))));
     }
+
+    // #714 (the last row of #655): WriteEphemeris checked that the centre of each state is a celestial body (#706) but not
+    // that SPICE names it, so that a centre of an identifier no kernel names reached the native writer, which threw
+    // InvalidOperationException "CelestialItem id2999991 can't be found" (measured on a80f6a5, with and without a GM in the
+    // kernel pool). It is a bad argument, rejected before anything is unloaded or written, as the element conversions reject
+    // such a centre (#711, #680's rule); the reference is SPICE's names (GetCelestialBodyInfoProxy gives the record of Id -1)
+    private sealed class UnnamedBody() : IO.Astrodynamics.Body.CelestialBody(UnnamedBodyId, "IOA_714_UNNAMED", 1.0e20);
+
+    private const int UnnamedBodyId = 2999991;
+
+    private static StateVector[] StatesAbout(IO.Astrodynamics.Body.CelestialItem centre) =>
+        Enumerable.Range(0, 5).Select(i => new StateVector(new Vector3(7.0e6 + i, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), centre,
+            TimeSystem.Time.J2000TDB.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    void WriteEphemeris_AboutACentreSpiceDoesNotName_ThrowsArgumentExceptionAndKeepsTheFile(bool withGm)
+    {
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.GetCelestialBodyInfo(UnnamedBodyId));
+        var dir = Directory.CreateTempSubdirectory("ioa714we");
+        var gmKernel = new FileInfo(Path.Combine(dir.FullName, "gm.tpc"));
+        File.WriteAllText(gmKernel.FullName, $"KPL/PCK\n\\begindata\nBODY{UnnamedBodyId}_GM = ( 1.0E+03 )\n\\begintext\n");
+        var target = new FileInfo(Path.Combine(dir.FullName, "existing.bsp"));
+        File.WriteAllText(target.FullName, "a file the writer would replace");
+        var before = System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(target.FullName));
+        if (withGm)
+        {
+            SpiceAPI.Instance.LoadKernels(gmKernel);
+        }
+
+        try
+        {
+            var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(target, -1999718, StatesAbout(new UnnamedBody())));
+            Assert.Equal("stateVectors", error.ParamName);
+            Assert.StartsWith($"The NAIF identifier {UnnamedBodyId} has no name in SPICE", error.Message);
+            Assert.Equal(before, System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(target.FullName)));
+            AssertNothingPending();
+        }
+        finally
+        {
+            if (withGm)
+            {
+                SpiceAPI.Instance.UnloadKernels(gmKernel);
+            }
+
+            dir.Delete(true);
+        }
+    }
+
+    // ELARA (507), named by SPICE, without BODY507_GM: the native writer reads the centre and throws SPICE's message, the same
+    // on every run (#714), and writes nothing
+    [Fact]
+    void WriteEphemeris_AboutACentreWithoutGm_ThrowsSpicesMessage()
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var dir = Directory.CreateTempSubdirectory("ioa714we507");
+        var target = new FileInfo(Path.Combine(dir.FullName, "elara.bsp"));
+        try
+        {
+            var error = Assert.Throws<InvalidOperationException>(() =>
+                SpiceAPI.Instance.WriteEphemeris(target, -1999719, StatesAbout(new IO.Astrodynamics.Body.CelestialBody(507))));
+            Assert.Equal(
+                "An error occurred while writing ephemeris: CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.",
+                error.Message);
+            Assert.False(File.Exists(target.FullName));
+            AssertNothingPending();
+        }
+        finally
+        {
+            dir.Delete(true);
+        }
+    }
 }
