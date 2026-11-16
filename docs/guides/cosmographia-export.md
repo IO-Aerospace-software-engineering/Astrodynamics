@@ -11,6 +11,7 @@ Propagated trajectories can be exported as SPICE SPK kernels for visualization i
 ## Example
 
 ```csharp
+// Inputs: propagator (CentralBodyPropagator), spacecraft (Spacecraft)
 // Propagate
 var solution = propagator.Propagate();
 

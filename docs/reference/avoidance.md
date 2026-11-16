@@ -143,6 +143,7 @@ The ranking score is useful for sorting candidates but should not replace missio
 ## Example
 
 ```csharp
+// Inputs: encounter (EncounterCase)
 var options = ConjunctionAssessment.EvaluateAvoidance(
     encounter,
     new AvoidanceSearchOptions

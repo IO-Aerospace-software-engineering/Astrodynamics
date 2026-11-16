@@ -345,6 +345,25 @@ namespace IO.Astrodynamics.Math
             return IsFinite(v) && !IsZero(v);
         }
 
+        /// <summary>
+        /// Throws <see cref="ArgumentException"/> naming <paramref name="paramName"/> unless <paramref name="vector"/> has a
+        /// direction: finite components, then a non-zero magnitude. The rule of the body axes of a spacecraft (#680, fourth
+        /// round of #668) and of the boresight and reference vector of an instrument (#707), "<paramref name="what"/> must
+        /// have finite components." or "... a non-zero magnitude."
+        /// </summary>
+        internal static void ThrowIfNoDirection(in Vector3 vector, string what, string paramName)
+        {
+            if (!IsFinite(vector))
+            {
+                throw new ArgumentException($"{what} must have finite components.", paramName);
+            }
+
+            if (IsZero(vector))
+            {
+                throw new ArgumentException($"{what} must have a non-zero magnitude.", paramName);
+            }
+        }
+
         private static double LargestComponent(in Vector3 v)
         {
             return System.Math.Max(System.Math.Abs(v.X), System.Math.Max(System.Math.Abs(v.Y), System.Math.Abs(v.Z)));

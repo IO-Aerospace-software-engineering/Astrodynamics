@@ -36,22 +36,22 @@ public class OpmKeplerianElements
     public double Inclination { get; }
 
     /// <summary>
-    /// Gets the right ascension of the ascending node in degrees (-360 to 360).
+    /// Gets the right ascension of the ascending node in degrees, in [-360, 360) (angleRange of NDM/XML 4.0.0).
     /// </summary>
     public double RightAscensionOfAscendingNode { get; }
 
     /// <summary>
-    /// Gets the argument of pericenter in degrees (-360 to 360).
+    /// Gets the argument of pericenter in degrees, in [-360, 360) (angleRange of NDM/XML 4.0.0).
     /// </summary>
     public double ArgumentOfPericenter { get; }
 
     /// <summary>
-    /// Gets the true anomaly in degrees (null if mean anomaly is used).
+    /// Gets the true anomaly in degrees, in [-360, 360) (angleRange of NDM/XML 4.0.0), or null if mean anomaly is used.
     /// </summary>
     public double? TrueAnomaly { get; }
 
     /// <summary>
-    /// Gets the mean anomaly in degrees (null if true anomaly is used).
+    /// Gets the mean anomaly in degrees, in [-360, 360) (angleRange of NDM/XML 4.0.0), or null if true anomaly is used.
     /// </summary>
     public double? MeanAnomaly { get; }
 
@@ -89,22 +89,37 @@ public class OpmKeplerianElements
         double gm,
         IReadOnlyList<string> comments)
     {
-        if (eccentricity < 0)
-            throw new ArgumentOutOfRangeException(nameof(eccentricity), "Eccentricity cannot be negative.");
+        // Each check refuses NaN, in no range, and the half-open ranges an infinite value (#708: NaN, and +Infinity for e,
+        // a and GM, passed the checks, written as the complement of the range)
+        if (!(double.IsFinite(eccentricity) && eccentricity >= 0))
+            throw new ArgumentOutOfRangeException(nameof(eccentricity), "Eccentricity must be finite and cannot be negative.");
+        if (!double.IsFinite(semiMajorAxis))
+            throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be a finite value.");
 
         // Semi-major axis validation depends on orbit type:
         // - Elliptical orbits (e < 1): SMA must be positive
-        // - Parabolic orbits (e = 1): SMA is infinite (not typically used in OPM)
+        // - Parabolic orbits (e = 1): SMA is infinite, so any finite value is taken as given (not typically used in OPM)
         // - Hyperbolic orbits (e > 1): SMA is negative by convention
         if (eccentricity < 1 && semiMajorAxis <= 0)
             throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be positive for elliptical orbits (e < 1).");
         if (eccentricity > 1 && semiMajorAxis >= 0)
             throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be negative for hyperbolic orbits (e > 1).");
 
-        if (inclination < 0 || inclination > 180)
+        if (!(inclination >= 0 && inclination <= 180))
             throw new ArgumentOutOfRangeException(nameof(inclination), "Inclination must be between 0 and 180 degrees.");
-        if (gm <= 0)
-            throw new ArgumentOutOfRangeException(nameof(gm), "Gravitational parameter must be positive.");
+        if (!(double.IsFinite(gm) && gm > 0))
+            throw new ArgumentOutOfRangeException(nameof(gm), "Gravitational parameter must be a finite positive value.");
+
+        // The four angles are ndm:angleType in ndmxml-4.0.0-opm-3.0.xsd, angleRange [-360, 360), as those of MeanElements
+        // (#708: unchecked before, NaN and ±Infinity included)
+        if (!IsInAngleRange(raan))
+            throw new ArgumentOutOfRangeException(nameof(raan), "RAAN must be in [-360, 360) degrees.");
+        if (!IsInAngleRange(aop))
+            throw new ArgumentOutOfRangeException(nameof(aop), "Argument of pericenter must be in [-360, 360) degrees.");
+        if (trueAnomaly.HasValue && !IsInAngleRange(trueAnomaly.Value))
+            throw new ArgumentOutOfRangeException(nameof(trueAnomaly), "True anomaly must be in [-360, 360) degrees.");
+        if (meanAnomaly.HasValue && !IsInAngleRange(meanAnomaly.Value))
+            throw new ArgumentOutOfRangeException(nameof(meanAnomaly), "Mean anomaly must be in [-360, 360) degrees.");
         if (!trueAnomaly.HasValue && !meanAnomaly.HasValue)
             throw new ArgumentException("Either true anomaly or mean anomaly must be specified.");
         if (trueAnomaly.HasValue && meanAnomaly.HasValue)
@@ -125,11 +140,11 @@ public class OpmKeplerianElements
     /// Creates Keplerian elements with true anomaly.
     /// </summary>
     /// <param name="semiMajorAxis">Semi-major axis in km. Positive for elliptical orbits (e &lt; 1), negative for hyperbolic orbits (e &gt; 1).</param>
-    /// <param name="eccentricity">Eccentricity (>= 0).</param>
+    /// <param name="eccentricity">Eccentricity (finite, >= 0).</param>
     /// <param name="inclination">Inclination in degrees (0-180).</param>
-    /// <param name="raan">Right ascension of ascending node in degrees.</param>
-    /// <param name="aop">Argument of pericenter in degrees.</param>
-    /// <param name="trueAnomaly">True anomaly in degrees.</param>
+    /// <param name="raan">Right ascension of ascending node in degrees, in [-360, 360).</param>
+    /// <param name="aop">Argument of pericenter in degrees, in [-360, 360).</param>
+    /// <param name="trueAnomaly">True anomaly in degrees, in [-360, 360).</param>
     /// <param name="gm">Gravitational parameter in km³/s².</param>
     /// <param name="comments">Optional comments.</param>
     /// <returns>A new OpmKeplerianElements instance.</returns>
@@ -152,11 +167,11 @@ public class OpmKeplerianElements
     /// Creates Keplerian elements with mean anomaly.
     /// </summary>
     /// <param name="semiMajorAxis">Semi-major axis in km. Positive for elliptical orbits (e &lt; 1), negative for hyperbolic orbits (e &gt; 1).</param>
-    /// <param name="eccentricity">Eccentricity (>= 0).</param>
+    /// <param name="eccentricity">Eccentricity (finite, >= 0).</param>
     /// <param name="inclination">Inclination in degrees (0-180).</param>
-    /// <param name="raan">Right ascension of ascending node in degrees.</param>
-    /// <param name="aop">Argument of pericenter in degrees.</param>
-    /// <param name="meanAnomaly">Mean anomaly in degrees.</param>
+    /// <param name="raan">Right ascension of ascending node in degrees, in [-360, 360).</param>
+    /// <param name="aop">Argument of pericenter in degrees, in [-360, 360).</param>
+    /// <param name="meanAnomaly">Mean anomaly in degrees, in [-360, 360).</param>
     /// <param name="gm">Gravitational parameter in km³/s².</param>
     /// <param name="comments">Optional comments.</param>
     /// <returns>A new OpmKeplerianElements instance.</returns>
@@ -178,6 +193,10 @@ public class OpmKeplerianElements
     /// <summary>
     /// Creates OpmKeplerianElements from a framework KeplerianElements.
     /// </summary>
+    /// <remarks>
+    /// Each angle is written in degrees as its remainder modulo 360, in [0, 360) for the angles of
+    /// <see cref="OrbitalParameters.KeplerianElements"/>: an angle of 2π is written 0 (#708; 360, outside angleRange, before).
+    /// </remarks>
     /// <param name="keplerianElements">The framework Keplerian elements.</param>
     /// <param name="useTrueAnomaly">If true, uses true anomaly; otherwise uses mean anomaly.</param>
     /// <param name="comments">Optional comments.</param>
@@ -192,13 +211,13 @@ public class OpmKeplerianElements
 
         double semiMajorAxisKm = keplerianElements.SemiMajorAxis() / 1000.0;
         double inclDeg = keplerianElements.Inclination() * Constants.Rad2Deg;
-        double raanDeg = keplerianElements.AscendingNode() * Constants.Rad2Deg;
-        double aopDeg = keplerianElements.ArgumentOfPeriapsis() * Constants.Rad2Deg;
+        double raanDeg = ToDegreesInAngleRange(keplerianElements.AscendingNode());
+        double aopDeg = ToDegreesInAngleRange(keplerianElements.ArgumentOfPeriapsis());
         double gmKm3S2 = keplerianElements.Observer.GM / 1e9; // m³/s² to km³/s²
 
         if (useTrueAnomaly)
         {
-            double trueAnomalyDeg = keplerianElements.TrueAnomaly() * Constants.Rad2Deg;
+            double trueAnomalyDeg = ToDegreesInAngleRange(keplerianElements.TrueAnomaly());
             return CreateWithTrueAnomaly(
                 semiMajorAxisKm,
                 keplerianElements.Eccentricity(),
@@ -211,7 +230,7 @@ public class OpmKeplerianElements
         }
         else
         {
-            double meanAnomalyDeg = keplerianElements.MeanAnomaly() * Constants.Rad2Deg;
+            double meanAnomalyDeg = ToDegreesInAngleRange(keplerianElements.MeanAnomaly());
             return CreateWithMeanAnomaly(
                 semiMajorAxisKm,
                 keplerianElements.Eccentricity(),
@@ -223,6 +242,20 @@ public class OpmKeplerianElements
                 comments);
         }
     }
+
+    /// <summary>
+    /// Whether an angle in degrees lies in angleRange of NDM/XML 4.0.0, [-360, 360): false for NaN and ±Infinity.
+    /// </summary>
+    private static bool IsInAngleRange(double degrees) => degrees >= -360.0 && degrees < 360.0;
+
+    /// <summary>
+    /// An angle in radians as its remainder modulo 360 in degrees, inside angleRange: the remainder of a finite angle lies
+    /// in (-360, 360), and in [0, 360) for the angles of <see cref="OrbitalParameters.KeplerianElements"/>, in [0, 2π]. An
+    /// angle of 2π, which their [0, 2π) normalization gives for a negative angle smaller than half the ulp of 2π, is
+    /// written 0, where its 360 is outside the range (#708). An angle whose degrees lie in [0, 360) is returned unchanged,
+    /// bit for bit (IEEE 754 remainder); NaN and ±Infinity give NaN, for the range check to refuse.
+    /// </summary>
+    private static double ToDegreesInAngleRange(double radians) => radians * Constants.Rad2Deg % 360.0;
 
     /// <summary>
     /// Gets the anomaly value in degrees (either true or mean, whichever is set).

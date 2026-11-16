@@ -113,6 +113,7 @@ are measured at the point towards an observer (`gfilum_c` Particulars), which th
 `SpiceAPI.FindWindowsOnIlluminationConstraint` and the observer's NAIF id, or with the library's search on the angle:
 
 ```csharp
+// Inputs: window (Window), step (TimeSpan), site (Site), moon (CelestialBody)
 var windows = new GeometryFinder().FindWindowsWithCondition(window,
     t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.PI2, step);
 ```
@@ -172,6 +173,7 @@ the coordinates at J2000, build the site from them: `new Site(id, name, body, ke
 ### Example
 
 ```csharp
+// Inputs: earth and moon (CelestialBody), epoch (Time)
 var goldstone = new Site(13, "DSS-13", earth);
 var mySite = new Site(100, "MySite", earth,
     new Planetodetic(-117.0 * Constants.Deg2Rad, 34.0 * Constants.Deg2Rad, 1000.0));

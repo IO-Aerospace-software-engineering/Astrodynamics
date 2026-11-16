@@ -28,8 +28,10 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_
                                                                                            m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
     const_cast<double &>(m_hillSphere) = IO::Astrodynamics::Body::HillSphere(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetEccentricity(),
                                                                              m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
-    SpiceBoolean found;
-    SpiceChar name[32];
+    // Initialised: after a failed GM read SPICE is failed, and bodc2n_c returns without writing them (CSPICE bodc2n.c), so
+    // that an indeterminate flag and name were read (#711); the body is then not found, deterministically
+    SpiceBoolean found{SPICEFALSE};
+    SpiceChar name[32]{};
     bodc2n_c(id, 32, name, &found);
     if (!found)
     {
@@ -56,8 +58,10 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrod
                                                                       m_BodyFixedFrame{""},
                                                                       m_J2{ReadJ2(id)}, m_J3{ReadJ3(id)}, m_J4{ReadJ4(id)}
 {
-    SpiceBoolean found;
-    SpiceChar name[32];
+    // Initialised: after a failed GM read SPICE is failed, and bodc2n_c returns without writing them (CSPICE bodc2n.c), so
+    // that an indeterminate flag and name were read (#711); the body is then not found, deterministically
+    SpiceBoolean found{SPICEFALSE};
+    SpiceChar name[32]{};
     bodc2n_c(id, 32, name, &found);
     if (!found)
     {
@@ -112,8 +116,10 @@ double IO::Astrodynamics::Body::CelestialBody::ReadGM(int id)
         }
         return solarSystemGM;
     }
-    SpiceInt dim;
-    SpiceDouble res[1];
+    // 0 when the read fails (no BODYnnn_GM in the kernel pool), SPICE's error left signalled for the caller; before, the
+    // uninitialised value was returned (#711)
+    SpiceInt dim{};
+    SpiceDouble res[1]{};
     bodvcd_c(id, "GM", 1, &dim, res);
     return res[0] * 1E+09;
 }

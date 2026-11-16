@@ -169,9 +169,11 @@ public sealed class CdmValidator
             result.AddError(ContentValidationCode, "TCA is required.", "RelativeMetadataData.TcaUtc");
         }
 
-        if (cdm.RelativeMetadataData.MissDistanceMeters < 0.0)
+        // NaN, in no range, is an error, and so is an infinite distance (#708: the check "< 0" reported NaN valid)
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(cdm.RelativeMetadataData.MissDistanceMeters))
         {
-            result.AddError(ContentValidationCode, "Miss distance must be non-negative.", "RelativeMetadataData.MissDistanceMeters");
+            result.AddError(ContentValidationCode, $"Miss distance must be non-negative and finite, got {cdm.RelativeMetadataData.MissDistanceMeters}.",
+                "RelativeMetadataData.MissDistanceMeters");
         }
 
         if (cdm.Segments.Count != 2)

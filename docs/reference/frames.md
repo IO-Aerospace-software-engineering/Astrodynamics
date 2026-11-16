@@ -214,6 +214,7 @@ rate, and a zero rotation outside the PCK.
 ### Example
 
 ```csharp
+// Inputs: epoch (Time), positionCirs (Vector3)
 var cirsToIcrf = Frame.CIRS.GetStateOrientationToICRF(epoch);
 var positionIcrf = positionCirs.Rotate(cirsToIcrf.Rotation);
 ```

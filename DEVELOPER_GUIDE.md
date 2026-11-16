@@ -679,7 +679,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668) |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
 | `CreateForTle(string objectName, string objectId, DateTime epoch, double meanMotion, ...)` | Create OMM for SGP4 propagation (mean elements and TLE parameters) |
@@ -870,7 +870,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668) |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
 | `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector |
@@ -1316,9 +1316,9 @@ Represents a spacecraft with components.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676) |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same id rule) |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same id rule) |
+| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, or `ArgumentException` naming the parameter, #707) |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite cross angle not negative, or `ArgumentOutOfRangeException`) |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite cross angle not negative, or `ArgumentOutOfRangeException`) |
 | `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
 | `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
@@ -2745,18 +2745,26 @@ var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
 High-fidelity propagation including gravitational effects from multiple bodies:
 
 ```csharp
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB);
 var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000TDB);
 var sun = new CelestialBody(Stars.Sun);
+
+// The Moon moves about the Earth under the attraction of both masses, so the Earth's central term is GM_Earth + GM_Moon:
+// a field of degree 0 with the GM of the model is a point mass of that GM. With the Earth's GM alone, a massless probe
+// started at the Moon's state would end about 54 310 km from the Moon after 25 days
+double gmEarthMoon = PlanetsAndMoons.EARTH_BODY.GM + moon.GM;
+var earthMoonField = new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 0, gmEarthMoon, 6378136.3)
+{
+    CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+};
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB, earthMoonField);
 
 var start = Time.J2000TDB;
 var end = start.AddDays(25);
 
 var mission = new Mission("DeepSpaceTest");
-var scenario = new Scenario("LunarFlyby", mission, new Window(start, end));
+var scenario = new Scenario("LunarOrbit", mission, new Window(start, end));
 
-// Start at the Moon's position and velocity. A massless probe does not stay with the Moon, whose own mass adds about
-// 1.2 % to the attraction of their relative motion: they drift tens of thousands of km apart in 25 days
+// Start at the Moon's position and velocity
 var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
@@ -2771,26 +2779,32 @@ scenario.AddCelestialItem(earth);
 scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
 scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
 
-// Propagate with 5-minute step for accuracy
+// Propagate at a 5-minute step. Velocity-Verlet, the default integrator, is of the second order: it ends about 470 m
+// from an exact integration of these forces after 25 days
 var summary = await scenario.SimulateAsync(
     includeAtmosphericDrag: false,
     includeSolarRadiationPressure: false,
     TimeSpan.FromMinutes(5)
 );
 
-// Compare spacecraft to Moon position at end
-var spcFinal = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
+// Compare the propagated Moon with the Moon of the ephemeris (DE440)
+var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
-var moonFinal = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
+var ephemerisMoon = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
-var positionError = (spcFinal.Position - moonFinal.Position).Magnitude();
-var velocityError = (spcFinal.Velocity - moonFinal.Velocity).Magnitude();
+var positionDifference = (propagatedMoon.Position - ephemerisMoon.Position).Magnitude();
+var velocityDifference = (propagatedMoon.Velocity - ephemerisMoon.Velocity).Magnitude();
 
-Console.WriteLine($"Probe - Moon after 25 days:");
-Console.WriteLine($"  Position difference: {positionError:F1} m");
-Console.WriteLine($"  Velocity difference: {velocityError:F4} m/s");
+Console.WriteLine($"Propagated Moon - DE440 Moon after 25 days:");
+Console.WriteLine($"  Position difference: {positionDifference:F1} m");
+Console.WriteLine($"  Velocity difference: {velocityDifference:F4} m/s");
 ```
+
+The propagated Moon ends about 2.0 km from the Moon of DE440 after 25 days: 1.5 km are the forces the example leaves
+out (the figures of the Earth and the Moon, the other planets, relativity), which an independent integration of the
+example's forces (point masses with the kernel GMs, the bodies read from SPICE) ends at, and the rest is the error of
+Velocity-Verlet at 5 minutes, 470 m from that integration (#704).
 
 ### High-Fidelity LEO Propagation with Geopotential
 
@@ -3012,6 +3026,8 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 - License: LGPL-3.0-or-later
 
 The breaking changes of 11.0.0, each with its migration, are the **Breaking** entries under **Changed** and the entries under **Removed** of the 11.0.0 release notes (`docs/contributing/versioning.md#1100`).
+
+The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy`, `ConvertStateVectorToConicOrbitalElementProxy` and `TransformFrameProxy` still drop their SPICE errors, SPICE reset, and return what the routine wrote; a native caller checks the result before using it.
 
 ### Breaking Changes in 8.5.0
 

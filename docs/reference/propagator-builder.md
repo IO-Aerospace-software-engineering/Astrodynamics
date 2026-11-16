@@ -39,6 +39,7 @@ all the forces are added, since the columns of Ψ follow them (Cd with drag, Cr 
 ## Example
 
 ```csharp
+// Inputs: epoch (Time), spacecraft (Spacecraft)
 var earth = new CelestialBody(PlanetsAndMoons.EARTH,
     albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
 

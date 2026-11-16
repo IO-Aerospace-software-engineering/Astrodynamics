@@ -5,6 +5,7 @@
 ## Constructor
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),
     new Vector3(0.0, 8000.0, 0.0),
@@ -14,6 +15,7 @@ var sv = new StateVector(
 An optional 6x6 covariance matrix can be attached:
 
 ```csharp
+// Inputs: position and velocity (Vector3), earth (CelestialBody), epoch (Time), covarianceMatrix (Matrix)
 var sv = new StateVector(position, velocity, earth, epoch, Frame.ICRF, covarianceMatrix);
 ```
 

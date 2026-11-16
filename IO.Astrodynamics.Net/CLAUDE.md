@@ -59,6 +59,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - Platform-specific libraries: `IO.Astrodynamics.dll` (Windows), `libIO.Astrodynamics.so` (Linux)
 - Thread-safe access through lock synchronization
 - Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` and the five `FindWindows*` proxies of the CSPICE window searches (fourth round of #668; before, they dropped SPICE's error and returned no window) return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
+- The element conversions and the TLE proxies (`ConvertConicElementsToStateVectorProxy`, `ConvertEquinoctialElementsToStateVectorProxy`, `ConvertStateVectorToEquatorialCoordinatesProxy`, `ConvertTLEToStateVectorProxy`, `GetTLEElementsProxy`) catch their C++ exceptions and return a NaN result with the message (the exception's, then SPICE's) for `GetLastErrorProxy()` (#711; before, a centre SPICE does not name ended the process and a centre without a GM gave a zero state); `ConvertConicElementsToStateVectorAtEpochProxy` returns the NaN state with SPICE's message on a failed `conics_c`, nothing left pending; `SpiceAPI.ConvertConicElementsToStateVector` (an ellipse) and `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` for a centre that is not a celestial body SPICE names, `InvalidOperationException` with SPICE's message for one without a GM; the conversions throw `ArgumentException` for elements outside the domain of `EQNCPV` (a ≤ 0, e > 0.9) or `CONICS` (a periapsis radius ≤ 0), `ArgumentOutOfRangeException` (`gm`) for a given GM not finite and above 0, and `InvalidOperationException` for an observer whose GM is not; a TLE read before its kernels throws SPICE's message and works once they are loaded. A failed `bool` proxy leaves SPICE reset, `ReadOrientationProxy` reporting SPICE's message (no CK, an unknown frame, no clock) instead of "No orientation found", which stays for a read outside the coverage (#712)
 - The kernel writers and loaders (`WriteEphemerisProxy`, `WriteOrientationProxy`, `LoadKernelsProxy`, `UnloadKernelsProxy`) catch their C++ exceptions and keep SPICE's message for `GetLastErrorProxy()` (#706; before, an exception ended the process); `SpiceAPI.WriteEphemeris` throws `ArgumentException` (`stateVectors`) for fewer than three states, several frames or a centre that is not a celestial body; every writer first unloads, as `UnloadKernels` does, a target `LoadKernels` loaded, then every other load of the file SPICE holds (a meta-kernel's), under the writer's path or an absolute name whose symbolic links resolve through it, so the replaced file's data are not read again under those names and `GetLoadedKernels` no longer lists them; a hard link and the file a link given to the writer names keep what they name, and a relative name other than the path (a meta-kernel's) is not found (review of #706); the new file is left unloaded
 
 **Data Provider Pattern**
@@ -72,9 +73,9 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
 - `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE, mean/osculating elements
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
-- `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert)
-- `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
-- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668)
+- `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OmmParseException` naming its keyword (#708)
+- `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OpmParseException` naming its keyword, and the four angles of `OpmKeplerianElements` are in [-360, 360), the schema's `angleRange` (#708)
+- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
 - `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451)
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
@@ -769,6 +770,10 @@ The `Instrument` class now provides:
 - `GetRefVectorInSpacecraftFrame()`: Returns instrument reference vector in spacecraft body frame (new in this release)
 
 Both methods transform the instrument-frame vectors to the spacecraft body frame, enabling direct use with TRIAD constructors.
+An instrument is built with a finite, non-zero boresight and reference vector that are not parallel, and a finite positive
+field of view, the fields CSPICE's `getfov` accepts; otherwise `AddCircularInstrument`, `AddEllipticalInstrument` and
+`AddRectangularInstrument` throw `ArgumentException` naming the parameter, and the last two
+`ArgumentOutOfRangeException` for a cross angle that is negative or not finite (#707).
 
 **Matrix Utility**
 
@@ -793,7 +798,10 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
 
 The C# blocks of this file and of the root `CLAUDE.md` are compiled regions of
 `IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs`, which `ClaudeMdExamplesTests` compares with them and runs
-where they need only `Data/SolarSystem`: change a block and its region together (#668, third round).
+where they need only `Data/SolarSystem`: change a block and its region together (#668, third round). The csharp
+blocks of `docs/` and `README.md` are compiled the same way, one file per page under
+`IO.Astrodynamics.Tests/Documentation/Pages/`, by `DocumentationPagesExamplesTests`, which also compiles a block that
+declares using directives with those of its page alone, as a reader compiles it (#705).
 
 **Name shadowing in test namespaces.** `IO.Astrodynamics.Tests` contains the sub-namespaces `Frame`
 and `Time`, and a local `Constants` class. Inside any `IO.Astrodynamics.Tests.*` namespace these
@@ -822,7 +830,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 8. **CCSDS OMM Handling**: When working with OMM files:
    - Use `Omm.LoadFromFile()` with validation for production code
    - A document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `omm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OmmValidationException`, but not several OMMs of an NDM; split it into one message per segment. An `ndm` without an OMM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OmmValidationException` where the reader's `OmmParseException` came before
-   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OmmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OmmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Check `IsTleCompatible` (TLE parameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH) before calling `ToTle()`, which otherwise throws naming the keywords at fault (#679)
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
@@ -830,7 +838,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 9. **CCSDS OPM Handling**: When working with OPM files:
    - Use `Opm.LoadFromFile()` with validation for production code
    - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
-   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
    - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId, clock, maxMass)
    - Use `Opm.ToStateVector()` for simple state vector extraction

@@ -19,8 +19,7 @@ public class RectangularInstrument : Instrument
     internal RectangularInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, double crossAngle, Vector3 boresight, Vector3 refVector,
         Vector3 orientation) : base(spacecraft, naifId, name, model, fieldOfView, InstrumentShape.Rectangular, boresight, refVector, orientation)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
-        CrossAngle = crossAngle;
+        CrossAngle = CheckCrossAngle(crossAngle);
     }
 
     public override async Task WriteKernelAsync(FileInfo outputFile)

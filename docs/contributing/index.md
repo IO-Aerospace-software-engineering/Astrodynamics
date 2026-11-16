@@ -49,6 +49,17 @@ error a proxy drops, performance), with its P/Invoke declarations in the same pu
   excerpt of `Constants` excepted), and `DeveloperGuideExamplesTests` fails when a block and its region differ. Change
   the block and its region together; a block that continues an earlier one names its inputs in its first comment, and
   the method declares them (#668).
+- So is each csharp block of the pages of `docs/` and of `README.md` (the changelog aside): it is the region
+  `<page>:<n>` of a method of the page's file under `IO.Astrodynamics.Tests/Documentation/Pages/`
+  (`docs/tutorials/tle-and-omm.md` in `Tutorials/TleAndOmmPage.cs`, n its rank among the page's compiled csharp
+  blocks), whose parameters are the inputs its first comment names (`// Inputs: ...`), and
+  `DocumentationPagesExamplesTests` fails when a block and its region differ, when a page with csharp blocks has no such
+  file, or when a block that declares using directives does not compile with those directives, the earlier blocks' of
+  its page and a console application's implicit ones alone, as a reader who copies it compiles it. A signature listing
+  or a fragment that is not a statement is fenced `csharp-signature`, highlighted as C# (`mkdocs.yml`) and checked
+  against the library's public members by reflection (#705); the one exception is the excerpt of `Constants` that opens
+  `docs/standards-and-units.md`, fenced `csharp`, with no region (so region 1 of that page is its second csharp block)
+  and checked by value against the library, as the excerpt of the developer guide.
 - Microsoft C# conventions, SOLID and DRY, methods that do one thing.
 
 The full guidelines live in

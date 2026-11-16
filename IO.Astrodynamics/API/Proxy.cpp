@@ -46,6 +46,61 @@ const char *GetSpiceVersionProxy()
     return strdup(version);
 }
 
+namespace
+{
+    // The failure of a native writer: the message of its writing, taken (and SPICE reset) before its kernel object is
+    // destroyed, then that of the destruction, whose unload of the written file opens the other loaded kernels of its kind
+    // again (fourth round of #668). Copied into lastError; true when there is none. The kernel loaders report the same way,
+    // the message of a C++ exception then SPICE's (#706: they reset SPICE without keeping its message, so that the .NET layer
+    // could not name the cause)
+    bool ReportNativeErrors(std::string writing)
+    {
+        std::string message = std::move(writing);
+        if (failed_c())
+        {
+            if (!message.empty()) message += " ";
+            message += HandleError();
+        }
+        if (message.empty())
+        {
+            return true;
+        }
+        std::strncpy(lastError, message.c_str(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
+    }
+
+    // A proxy that failed with a C++ exception: its message, then SPICE's, SPICE reset (#711, #712). Always false
+    bool ReportException(const std::exception &e)
+    {
+        const std::string what = e.what();
+        return ReportNativeErrors(what.empty() ? std::string("C++ exception in the native layer") : what);
+    }
+
+    // The NaN state of a failed conversion (#711), as ReadEphemerisAtGivenEpochProxy's (#454): the epoch, the centre and the
+    // frame as given
+    IO::Astrodynamics::API::DTO::StateVectorDTO FailedState(double epoch, int centerOfMotionId, const char *frame)
+    {
+        IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+        sv.epoch = epoch;
+        sv.centerOfMotionId = centerOfMotionId;
+        sv.SetFrame(frame);
+        sv.position = sv.velocity = {std::nan(""), std::nan(""), std::nan("")};
+        return sv;
+    }
+
+    // Appends SPICE's message to the writing's, and resets SPICE, so that a kernel object is destroyed on a clean SPICE
+    // state whether its writing failed through SPICE or through a C++ exception
+    void TakeSpiceError(std::string &writing)
+    {
+        if (failed_c())
+        {
+            if (!writing.empty()) writing += " ";
+            writing += HandleError();
+        }
+    }
+}
+
 bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
 {
     try
@@ -92,45 +147,8 @@ bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     }
     catch (const std::exception &e)
     {
-        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
-        return false;
-    }
-}
-
-namespace
-{
-    // The failure of a native writer: the message of its writing, taken (and SPICE reset) before its kernel object is
-    // destroyed, then that of the destruction, whose unload of the written file opens the other loaded kernels of its kind
-    // again (fourth round of #668). Copied into lastError; true when there is none. The kernel loaders report the same way,
-    // the message of a C++ exception then SPICE's (#706: they reset SPICE without keeping its message, so that the .NET layer
-    // could not name the cause)
-    bool ReportNativeErrors(std::string writing)
-    {
-        std::string message = std::move(writing);
-        if (failed_c())
-        {
-            if (!message.empty()) message += " ";
-            message += HandleError();
-        }
-        if (message.empty())
-        {
-            return true;
-        }
-        std::strncpy(lastError, message.c_str(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
-        return false;
-    }
-
-    // Appends SPICE's message to the writing's, and resets SPICE, so that a kernel object is destroyed on a clean SPICE
-    // state whether its writing failed through SPICE or through a C++ exception
-    void TakeSpiceError(std::string &writing)
-    {
-        if (failed_c())
-        {
-            if (!writing.empty()) writing += " ";
-            writing += HandleError();
-        }
+        // The exception's message, then SPICE's pending one, SPICE reset (#712: before, SPICE stayed failed)
+        return ReportException(e);
     }
 }
 
@@ -246,9 +264,14 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
         // Convert tolerance from TDB seconds to encoded spacecraft clock ticks.
         // ckgpav_c requires tolerance in ticks, not seconds.
         // Computing once at window start is valid for linear (type 1) SCLK.
-        SpiceDouble sclk0, sclkPlusTol;
+        SpiceDouble sclk0{}, sclkPlusTol{};
         sce2c_c(spacecraftId, searchWindow.start, &sclk0);
         sce2c_c(spacecraftId, searchWindow.start + tolerance, &sclkPlusTol);
+        // SPICE's error of a missing clock (#712: before, reset by the fallback below and lost)
+        if (failed_c())
+        {
+            return ReportNativeErrors("");
+        }
         SpiceDouble toleranceInTicks = std::abs(sclkPlusTol - sclk0);
 
         double epoch = searchWindow.start;
@@ -260,11 +283,15 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
                                                                                                         IO::Astrodynamics::Time::TDB(
                                                                                                                 std::chrono::duration<double>(
                                                                                                                         epoch)));
+            if (failed_c())
+            {
+                return ReportNativeErrors("");
+            }
 
             SpiceDouble cmat[3][3]{};
             SpiceDouble av[3]{};
-            SpiceDouble clkout;
-            SpiceBoolean found;
+            SpiceDouble clkout{};
+            SpiceBoolean found{SPICEFALSE};
 
             //Get orientation and angular velocity
             ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
@@ -273,7 +300,14 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
                 // CK segment may not carry angular velocity (e.g. Type 1 CK).
                 // Reset the error and fall back to rotation-only query; av stays zero.
                 reset_c();
+                found = SPICEFALSE;
                 ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
+                // The fallback fails too (no CK loaded, an unknown frame): SPICE's message, SPICE reset (#712: before, "No
+                // orientation found" with the error left pending for the next call)
+                if (failed_c())
+                {
+                    return ReportNativeErrors("");
+                }
             }
 
             if (!found)
@@ -289,6 +323,10 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
 
             double correctedEpoch{};
             sct2e_c(spacecraftId, clkout, &correctedEpoch);
+            if (failed_c())
+            {
+                return ReportNativeErrors("");
+            }
             so[idx].epoch = correctedEpoch;
             so[idx].SetFrame(frame);
             so[idx].orientation = ToQuaternionDTO(q);
@@ -309,9 +347,8 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
     }
     catch (const std::exception &e)
     {
-        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
-        return false;
+        // The exception's message, then SPICE's pending one, SPICE reset (#712: before, SPICE stayed failed)
+        return ReportException(e);
     }
 }
 
@@ -453,9 +490,8 @@ bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
     }
     catch (const std::exception &e)
     {
-        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
-        return false;
+        // The exception's message, then SPICE's pending one, SPICE reset (#712: before, SPICE stayed failed)
+        return ReportException(e);
     }
 }
 
@@ -740,8 +776,8 @@ double ConvertUTCToTDBProxy(double utc)
 // The GM of a body as the kernel pool gives it, m^3/s^2, or 0 when the pool has no BODYnnn_GM; for the solar system
 // barycentre, the sum over 1 to 10, the rule of CelestialBody::ReadGM. Read only where bodfnd_c finds it, so that a missing
 // GM raises no SPICE error, which would leave SPICE failed for the next reads of the body information (#672).
-// CelestialBody::ReadGM stays unguarded: it is the mass of the native constructors of WriteEphemerisProxy and of the element
-// conversions (#655)
+// CelestialBody::ReadGM is the mass of the native constructors: it gives 0 when the GM is missing and leaves SPICE's error
+// signalled, which the proxies that build a celestial body report (#711)
 static double ReadDefinedGM(int bodyId)
 {
     if (bodyId == 0)
@@ -756,9 +792,27 @@ static double ReadDefinedGM(int bodyId)
     return bodfnd_c(bodyId, "GM") ? IO::Astrodynamics::Body::CelestialBody::ReadGM(bodyId) : 0.0;
 }
 
+static IO::Astrodynamics::API::DTO::CelestialBodyDTO ReadCelestialBodyInfo(int bodyId);
+
+// No C++ exception crosses P/Invoke (#711): the search of the centre of motion throws InvalidArgumentException for a named
+// identifier outside the celestial categories (a spacecraft such as GALILEO ORBITER, -77); the record is then the one of an
+// identifier SPICE does not name (Id -1), the exception's message in lastError
 IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
 {
     ActivateErrorManagement();
+    try
+    {
+        return ReadCelestialBodyInfo(bodyId);
+    }
+    catch (const std::exception &e)
+    {
+        ReportException(e);
+        return IO::Astrodynamics::API::DTO::CelestialBodyDTO{};
+    }
+}
+
+static IO::Astrodynamics::API::DTO::CelestialBodyDTO ReadCelestialBodyInfo(int bodyId)
+{
     // Zero-initialised: an unnamed identifier returns Id -1 and empty names, a barycentre an empty frame name (#672)
     IO::Astrodynamics::API::DTO::CelestialBodyDTO res{};
 
@@ -870,47 +924,73 @@ TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
     return frameTransformationDto;
 }
 
+// No C++ exception crosses P/Invoke and no failure is silent (#711): an exception (the native Earth, the TLE), or a SPICE error
+// (the Earth's GM missing before the kernels are loaded, SGP4's error), gives a NaN state with the exception's message then
+// SPICE's in lastError, SPICE reset; before, a zero state with the message dropped, or an exception across P/Invoke
 IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(
         const char *L1, const char *L2, const char *L3, double epoch)
 {
     ActivateErrorManagement();
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::string strings[3] = {L1, L2, L3};
-    IO::Astrodynamics::OrbitalParameters::TLE tle(earth, strings);
-    auto sv = tle.ToStateVector(IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(epoch)));
-    auto svDTO = ToStateVectorDTO(sv);
-    if (failed_c())
+    std::string message;
+    IO::Astrodynamics::API::DTO::StateVectorDTO svDTO;
+    try
     {
-        HandleError();
+        auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        std::string strings[3] = {L1, L2, L3};
+        IO::Astrodynamics::OrbitalParameters::TLE tle(earth, strings);
+        auto sv = tle.ToStateVector(IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(epoch)));
+        svDTO = ToStateVectorDTO(sv);
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    if (!ReportNativeErrors(std::move(message)))
+    {
+        return FailedState(epoch, 399, IO::Astrodynamics::Frames::BodyFixedFrames::TEME().ToCharArray());
     }
 
     return svDTO;
 }
 
+// No C++ exception crosses P/Invoke and no failure is silent (#711): the centre is built as a celestial body
+// (CelestialBody(int)), which throws SDKException when SPICE does not name it (a spacecraft whose GM a kernel gives: the
+// process ended) and fails through SPICE when the kernel pool has no GM for it (a zero state was returned). Either gives a
+// NaN state (NaN right ascension, declination and range for the equatorial coordinates), the epoch, the centre and the
+// frame as given, with the exception's message then SPICE's in lastError, SPICE reset
 IO::Astrodynamics::API::DTO::StateVectorDTO
 ConvertConicElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto)
 {
     ActivateErrorManagement();
-    auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-            conicOrbitalElementsDto.centerOfMotionId);
-    IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(conicOrbitalElementsDto.epoch)};
-    IO::Astrodynamics::Frames::Frames frame{conicOrbitalElementsDto.frame};
-    IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicOrbitalElements{
-            centerOfMotion,
-            conicOrbitalElementsDto.perifocalDistance,
-            conicOrbitalElementsDto.eccentricity,
-            conicOrbitalElementsDto.inclination,
-            conicOrbitalElementsDto.ascendingNodeLongitude,
-            conicOrbitalElementsDto.periapsisArgument,
-            conicOrbitalElementsDto.meanAnomaly,
-            tdb,
-            frame
-    };
-    auto sv = conicOrbitalElements.ToStateVector();
-    auto svDTO = ToStateVectorDTO(sv);
-    if (failed_c())
+    std::string message;
+    IO::Astrodynamics::API::DTO::StateVectorDTO svDTO;
+    try
     {
-        HandleError();
+        auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
+                conicOrbitalElementsDto.centerOfMotionId);
+        IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(conicOrbitalElementsDto.epoch)};
+        IO::Astrodynamics::Frames::Frames frame{conicOrbitalElementsDto.frame};
+        IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicOrbitalElements{
+                centerOfMotion,
+                conicOrbitalElementsDto.perifocalDistance,
+                conicOrbitalElementsDto.eccentricity,
+                conicOrbitalElementsDto.inclination,
+                conicOrbitalElementsDto.ascendingNodeLongitude,
+                conicOrbitalElementsDto.periapsisArgument,
+                conicOrbitalElementsDto.meanAnomaly,
+                tdb,
+                frame
+        };
+        auto sv = conicOrbitalElements.ToStateVector();
+        svDTO = ToStateVectorDTO(sv);
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    if (!ReportNativeErrors(std::move(message)))
+    {
+        return FailedState(conicOrbitalElementsDto.epoch, conicOrbitalElementsDto.centerOfMotionId, conicOrbitalElementsDto.frame);
     }
     return svDTO;
 }
@@ -920,28 +1000,37 @@ ConvertEquinoctialElementsToStateVectorProxy(
         IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto)
 {
     ActivateErrorManagement();
-    auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-            equinoctialElementsDto.centerOfMotionId);
-    IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(equinoctialElementsDto.epoch)};
-    IO::Astrodynamics::Frames::Frames frame{equinoctialElementsDto.inertialFrame};
-
-    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq{
-            centerOfMotion, tdb,
-            equinoctialElementsDto.semiMajorAxis,
-            equinoctialElementsDto.h, equinoctialElementsDto.k,
-            equinoctialElementsDto.p, equinoctialElementsDto.q,
-            equinoctialElementsDto.L,
-            equinoctialElementsDto.periapsisLongitudeRate,
-            equinoctialElementsDto.ascendingNodeLongitudeRate,
-            equinoctialElementsDto.rightAscensionOfThePole,
-            equinoctialElementsDto.declinationOfThePole, frame
-    };
-
-    auto sv = eq.ToStateVector();
-    auto svDTO = ToStateVectorDTO(sv);
-    if (failed_c())
+    std::string message;
+    IO::Astrodynamics::API::DTO::StateVectorDTO svDTO;
+    try
     {
-        HandleError();
+        auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
+                equinoctialElementsDto.centerOfMotionId);
+        IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(equinoctialElementsDto.epoch)};
+        IO::Astrodynamics::Frames::Frames frame{equinoctialElementsDto.inertialFrame};
+
+        IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq{
+                centerOfMotion, tdb,
+                equinoctialElementsDto.semiMajorAxis,
+                equinoctialElementsDto.h, equinoctialElementsDto.k,
+                equinoctialElementsDto.p, equinoctialElementsDto.q,
+                equinoctialElementsDto.L,
+                equinoctialElementsDto.periapsisLongitudeRate,
+                equinoctialElementsDto.ascendingNodeLongitudeRate,
+                equinoctialElementsDto.rightAscensionOfThePole,
+                equinoctialElementsDto.declinationOfThePole, frame
+        };
+
+        auto sv = eq.ToStateVector();
+        svDTO = ToStateVectorDTO(sv);
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    if (!ReportNativeErrors(std::move(message)))
+    {
+        return FailedState(equinoctialElementsDto.epoch, equinoctialElementsDto.centerOfMotionId, equinoctialElementsDto.inertialFrame);
     }
     return svDTO;
 }
@@ -950,19 +1039,29 @@ IO::Astrodynamics::API::DTO::RaDecDTO
 ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto)
 {
     ActivateErrorManagement();
-    auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(stateVectorDto.centerOfMotionId);
-    IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(stateVectorDto.epoch)};
-    IO::Astrodynamics::Frames::Frames frame{stateVectorDto.inertialFrame};
-    IO::Astrodynamics::OrbitalParameters::StateVector sv{
-            centerOfMotion, ToVector3D(stateVectorDto.position),
-            ToVector3D(stateVectorDto.velocity), tdb, frame
-    };
-    auto raDec = sv.ToEquatorialCoordinates();
-    if (failed_c())
+    std::string message;
+    IO::Astrodynamics::API::DTO::RaDecDTO raDecDTO;
+    try
     {
-        HandleError();
+        auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(stateVectorDto.centerOfMotionId);
+        IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(stateVectorDto.epoch)};
+        IO::Astrodynamics::Frames::Frames frame{stateVectorDto.inertialFrame};
+        IO::Astrodynamics::OrbitalParameters::StateVector sv{
+                centerOfMotion, ToVector3D(stateVectorDto.position),
+                ToVector3D(stateVectorDto.velocity), tdb, frame
+        };
+        auto raDec = sv.ToEquatorialCoordinates();
+        raDecDTO = ToEquatorialDTO(raDec);
     }
-    return ToEquatorialDTO(raDec);
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    if (!ReportNativeErrors(std::move(message)))
+    {
+        raDecDTO.rightAscension = raDecDTO.declination = raDecDTO.range = std::nan("");
+    }
+    return raDecDTO;
 }
 
 IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
@@ -995,30 +1094,42 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
     return stateVectorDto;
 }
 
+// As ConvertTLEToStateVectorProxy (#711): a failure gives NaN in every field, the epoch included, with the message in
+// lastError; before, the epoch getelm_c never wrote (skipped on a pending error), which the .NET TLE cached for its life
 IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, const char *L2, const char *L3)
 {
     ActivateErrorManagement();
-    std::string lines[3]{L1, L2, L3};
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
-
+    std::string message;
     IO::Astrodynamics::API::DTO::TLEElementsDTO tleElementsDto;
-
-    tleElementsDto.A = tle.GetSemiMajorAxis();
-    tleElementsDto.E = tle.GetEccentricity();
-    tleElementsDto.I = tle.GetInclination();
-    tleElementsDto.O = tle.GetRightAscendingNodeLongitude();
-    tleElementsDto.W = tle.GetPeriapsisArgument();
-    tleElementsDto.M = tle.GetMeanAnomaly();
-
-    tleElementsDto.Epoch = tle.GetEpoch().GetSecondsFromJ2000().count();
-
-    tleElementsDto.BalisticCoefficient = tle.GetBalisticCoefficient();
-    tleElementsDto.DragTerm = tle.GetDragTerm();
-    tleElementsDto.SecondDerivativeOfMeanMotion = tle.GetSecondDerivativeOfMeanMotion();
-    if (failed_c())
+    try
     {
-        HandleError();
+        std::string lines[3]{L1, L2, L3};
+        auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
+
+        tleElementsDto.A = tle.GetSemiMajorAxis();
+        tleElementsDto.E = tle.GetEccentricity();
+        tleElementsDto.I = tle.GetInclination();
+        tleElementsDto.O = tle.GetRightAscendingNodeLongitude();
+        tleElementsDto.W = tle.GetPeriapsisArgument();
+        tleElementsDto.M = tle.GetMeanAnomaly();
+
+        tleElementsDto.Epoch = tle.GetEpoch().GetSecondsFromJ2000().count();
+
+        tleElementsDto.BalisticCoefficient = tle.GetBalisticCoefficient();
+        tleElementsDto.DragTerm = tle.GetDragTerm();
+        tleElementsDto.SecondDerivativeOfMeanMotion = tle.GetSecondDerivativeOfMeanMotion();
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    if (!ReportNativeErrors(std::move(message)))
+    {
+        const double nan = std::nan("");
+        tleElementsDto.A = tleElementsDto.E = tleElementsDto.I = tleElementsDto.O = tleElementsDto.W = tleElementsDto.M = nan;
+        tleElementsDto.Epoch = tleElementsDto.BalisticCoefficient = tleElementsDto.DragTerm = nan;
+        tleElementsDto.SecondDerivativeOfMeanMotion = nan;
     }
     return tleElementsDto;
 }
@@ -1088,14 +1199,24 @@ IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
     return stateVectorDto;
 }
 
+// No failure is silent and none is left pending (#711): a failed conics_c (SPICE(BADGM) for a GM not above 0,
+// SPICE(BADPERIAPSEVALUE), SPICE(BADECCENTRICITY)) gives the NaN state, the epoch, the centre and the frame as given, with
+// SPICE's message in lastError, SPICE reset. Before, the error management was not activated (SPICE's default action aborted a
+// process that had made no other call) and SPICE was not checked: the state conics_c never wrote was returned and SPICE left
+// failed, so that the next call, GetCelestialBodyInfoProxy(399) for instance, returned the record of Id -1
 IO::Astrodynamics::API::DTO::StateVectorDTO
 ConvertConicElementsToStateVectorAtEpochProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElements, double epoch, double gm)
 {
+    ActivateErrorManagement();
     SpiceDouble sv[6];
 
     double ke[8] = {conicOrbitalElements.perifocalDistance, conicOrbitalElements.eccentricity, conicOrbitalElements.inclination, conicOrbitalElements.ascendingNodeLongitude, conicOrbitalElements.periapsisArgument,
                     conicOrbitalElements.meanAnomaly, conicOrbitalElements.epoch, gm};
     conics_c(ke, epoch, sv);
+    if (!ReportNativeErrors({}))
+    {
+        return FailedState(epoch, conicOrbitalElements.centerOfMotionId, conicOrbitalElements.frame);
+    }
 
     IO::Astrodynamics::API::DTO::StateVectorDTO svres;
     svres.position.x = sv[0];

@@ -11,8 +11,9 @@ namespace IO.Astrodynamics.Tests.Documentation;
 
 /// <summary>
 /// Rules that the csharp blocks of the pages an application's developer reads (docs/, README.md and DEVELOPER_GUIDE.md)
-/// keep, checked on their text (#668, third round): the pages of docs/ are fragments that continue each other and are not
-/// compiled, as DEVELOPER_GUIDE.md and the two CLAUDE.md files are (<see cref="DeveloperGuideExamplesTests"/>,
+/// keep, checked on their text (#668, third round), a quick check beside the compiled ones: the blocks of docs/ and
+/// README.md are compiled regions too since #705 (<see cref="DocumentationPagesExamplesTests"/>), as those of
+/// DEVELOPER_GUIDE.md and the two CLAUDE.md files (<see cref="DeveloperGuideExamplesTests"/>,
 /// <see cref="ClaudeMdExamplesTests"/>).
 /// </summary>
 public class DocumentationPagesTests

@@ -26,7 +26,12 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 
 When using geopotential gravity, create a separate `CelestialBody` instance per task. This gives each task its own `GeopotentialGravitationalField` buffers. A `CelestialBody` without geopotential, with or without an atmospheric model, can be shared.
 
+Build each task's initial state on its own Earth: the bodies of one NAIF identifier in a propagation, the centre of the
+orbit included, must have the same GM, radii, gravitational field and atmospheric model, so a state about a shared Earth
+without the geopotential fails every task with `ArgumentException` (#674).
+
 ```csharp
+// Inputs: taskCount (int), orbit (StateVector), window (Window)
 var tasks = new List<PropagationTask>();
 
 for (int i = 0; i < taskCount; i++)
@@ -35,8 +40,9 @@ for (int i = 0; i < taskCount; i++)
     var earth = new CelestialBody(PlanetsAndMoons.EARTH,
         new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
+    // The same state about this task's Earth: the orbit's centre and the listed Earth must have the same models
     var spacecraft = new Spacecraft(-(1000 + i), $"Sat-{i}", 100.0, 10000.0,
-        new Clock($"clk-{i}", 256), orbit.AtEpoch(epoch, earth, Frame.ICRF));
+        new Clock($"clk-{i}", 256), new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame));
 
     tasks.Add(new PropagationTask(spacecraft, window,
         new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
@@ -53,9 +59,14 @@ var result = BatchPropagator.Propagate(tasks);
 `MonteCarloPropagator` requires a `CelestialBodiesFactory` that returns fresh instances per run. Sharing SPICE-backed bodies or geopotential-enabled bodies across parallel runs causes data corruption.
 
 ```csharp
+// Inputs: spacecraft (Spacecraft), window (Window)
 var config = new MonteCarloConfiguration
 {
-    // ...
+    RunCount = 100,
+    Seed = 42,
+    TemplateSpacecraft = spacecraft,   // its initial state carries the covariance that is sampled
+    Window = window,
+    DeltaT = TimeSpan.FromSeconds(60),
     CelestialBodiesFactory = () =>
     [
         new CelestialBody(PlanetsAndMoons.EARTH,

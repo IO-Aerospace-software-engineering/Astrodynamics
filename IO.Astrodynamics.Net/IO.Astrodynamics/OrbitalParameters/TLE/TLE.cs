@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
@@ -206,7 +207,10 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         SecondDerivativeMeanMotion = ParseTleExponent(line1.Substring(44, 8));
         BallisticCoefficient = ParseTleExponent(line1.Substring(53, 8));
 
-        _sgp4Epoch = new Lazy<double>(() => SpiceAPI.Instance.ReadTleEpoch(Name, Line1, Line2));
+        // PublicationOnly: a failed read (no kernel loaded yet) is not cached, so that the TLE reads its epoch once the kernels
+        // are loaded (#711: before, the epoch of a failed read was kept for the life of the TLE). The read takes the SpiceAPI
+        // lock, so a read repeated by a race gives the same value
+        _sgp4Epoch = new Lazy<double>(() => SpiceAPI.Instance.ReadTleEpoch(Name, Line1, Line2), LazyThreadSafetyMode.PublicationOnly);
     }
 
     /// <summary>

@@ -19,8 +19,7 @@ public class EllipticalInstrument : Instrument
     internal EllipticalInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, double crossAngle, Vector3 boresight, Vector3 refVector,
         Vector3 orientation) : base(spacecraft, naifId, name, model, fieldOfView, InstrumentShape.Elliptical, boresight, refVector, orientation)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
-        CrossAngle = crossAngle;
+        CrossAngle = CheckCrossAngle(crossAngle);
     }
 
     public override async Task WriteKernelAsync(FileInfo outputFile)

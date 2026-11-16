@@ -34,6 +34,7 @@ var epoch = new Time(2024, 6, 21, 12, 0, 0);
 Retrieve the Earth-Sun state vector in the ICRF frame at one instant:
 
 ```csharp
+// Inputs: earth and sun (CelestialBody), epoch (Time)
 var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
@@ -48,6 +49,7 @@ The returned `StateVector` contains position and velocity in SI units (meters an
 Generate a sequence of states over a time window at a fixed step size:
 
 ```csharp
+// Inputs: epoch (Time), moon and earth (CelestialBody)
 var window = new Window(epoch, epoch.AddDays(1));
 var states = moon.GetEphemeris(window, earth, Frame.ICRF, Aberration.LT,
     TimeSpan.FromHours(1));
@@ -73,6 +75,7 @@ The `Aberration` parameter controls light-time and stellar aberration correction
 Use `None` for propagation and force-model queries. Use `LT` or `LTS` for observational geometry (e.g., where does the Moon appear from Earth?).
 
 ```csharp
+// Inputs: earth and moon (CelestialBody), epoch (Time)
 var geometric = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.None);
 var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LTS);
 ```
@@ -82,6 +85,7 @@ var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LTS);
 Compute the angular separation between two targets as seen from an observer:
 
 ```csharp
+// Inputs: earth, moon and sun (CelestialBody), epoch (Time)
 double angSep = earth.AngularSeparation(epoch, moon, sun, Aberration.None);
 Console.WriteLine($"Moon-Sun angular separation: {angSep * Constants.Rad2Deg:F4} deg");
 ```

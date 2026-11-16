@@ -31,6 +31,7 @@ Position is in meters, velocity in meters per second. The observer (central body
 Query derived quantities directly from any orbital parameter set:
 
 ```csharp
+// Inputs: sv (StateVector), earth (CelestialBody)
 Console.WriteLine($"Semi-major axis: {sv.SemiMajorAxis():F0} m");
 Console.WriteLine($"Eccentricity:    {sv.Eccentricity():F6}");
 Console.WriteLine($"Inclination:     {sv.Inclination() * Constants.Rad2Deg:F4} deg");
@@ -46,6 +47,7 @@ All angular quantities are in radians. Use `Constants.Rad2Deg` to convert to deg
 Create an orbit from classical elements (a, e, i, RAAN, AoP, M):
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 var kep = new KeplerianElements(
     7000000.0,                 // semi-major axis, m
     0.001,                     // eccentricity
@@ -69,6 +71,7 @@ The sixth argument is the mean anomaly in radians. All angles follow the convent
 Propagate Keplerian elements analytically to a future epoch:
 
 ```csharp
+// Inputs: kep (KeplerianElements), epoch (Time)
 var laterKep = kep.AtEpoch(epoch.AddDays(1));
 
 Console.WriteLine($"Mean anomaly after 1 day: {laterKep.MeanAnomaly() * Constants.Rad2Deg:F4} deg");
@@ -81,6 +84,7 @@ Console.WriteLine($"Mean anomaly after 1 day: {laterKep.MeanAnomaly() * Constant
 Equinoctial elements have no singularity at zero eccentricity or zero inclination: `ToStateVector()` computes the state from them directly. Their Keplerian angles take ω = 0 for an exactly circular orbit, f = g = 0 (ν is then the argument of latitude), and Ω = 0 for an exactly equatorial one, h = k = 0, as `StateVector` does. Their only singular orbit is the retrograde equatorial one (i = 180°), where h and k grow without bound:
 
 ```csharp
+// Inputs: sv (StateVector)
 var equinoctial = sv.ToEquinoctial();
 
 Console.WriteLine($"Semi-major axis: {equinoctial.SemiMajorAxis():F0} m");
@@ -105,6 +109,7 @@ They are preferred for numerical orbit determination and low-eccentricity orbits
 Generate a GEO orbit at a given longitude (the latitude sets the inclination):
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 var geoOrbit = earth.GeosynchronousOrbit(
     longitude: 0.0,
     latitude: 0.0,
@@ -119,6 +124,7 @@ orientation data loaded (for the Earth, the binary PCK of ITRF93). To take a dec
 radius a = (GM T² / 4π²)^(1/3) does not depend on the orientation data, pass it:
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, epoch, TimeSpan.FromSeconds(86164.0998101));
 ```
 
@@ -127,6 +133,7 @@ var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, epoch, TimeSpan.FromSeconds(8
 Generate an SSO for a given altitude and eccentricity:
 
 ```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
 var ssoOrbit = earth.HelioSynchronousOrbit(
     semiMajorAxis: 7000000.0,
     eccentricity: 0.001,

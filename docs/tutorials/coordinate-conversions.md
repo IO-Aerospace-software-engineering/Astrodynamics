@@ -15,6 +15,8 @@ using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 var epoch = new Time(2024, 6, 21, 12, 0, 0);
@@ -25,7 +27,7 @@ var svICRF = new StateVector(
     new Vector3(0.0, 7700.0, 0.0),
     earth, epoch, Frame.ICRF);
 
-var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000);
+var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
 
 Console.WriteLine($"ICRF position:     {svICRF.Position}");
 Console.WriteLine($"Ecliptic position: {svEcliptic.Position}");
@@ -38,8 +40,9 @@ The obliquity of the ecliptic (~23.4 deg) rotates the Z-axis component between t
 Transform to a body-fixed frame to get coordinates that rotate with the body:
 
 ```csharp
+// Inputs: svICRF (StateVector)
 var earthFrame = new Frame("IAU_EARTH");
-var svBodyFixed = svICRF.ToFrame(earthFrame);
+var svBodyFixed = svICRF.ToFrame(earthFrame).ToStateVector();
 
 Console.WriteLine($"Body-fixed position: {svBodyFixed.Position}");
 ```
@@ -65,14 +68,16 @@ These three frames follow the CIO-based IAU chain, IAU 2006 precession with IAU 
 | TIRS | Terrestrial Intermediate Reference System (accounts for Earth rotation angle) |
 
 ```csharp
+// Inputs: svICRF (StateVector), epoch (Time)
 // Get the CIRS-to-ICRF orientation at a given epoch
 var cirsToIcrf = Frame.CIRS.GetStateOrientationToICRF(epoch);
 
-// Rotate a position from CIRS to ICRF
-var positionIcrf = positionCirs.Rotate(cirsToIcrf.Rotation);
-
-// Rotate a position from ICRF to CIRS (use conjugate)
+// Rotate a position from ICRF to CIRS (use the conjugate)
+var positionIcrf = svICRF.Position;
 var positionCirs = positionIcrf.Rotate(cirsToIcrf.Rotation.Conjugate());
+
+// Rotate it back from CIRS to ICRF
+var positionBack = positionCirs.Rotate(cirsToIcrf.Rotation);
 ```
 
 These frames are critical for precise orbit determination and high-accuracy ground station modeling.
@@ -83,6 +88,7 @@ Extract right ascension and declination from a state vector. They are in ICRF wh
 state in another frame is rotated to ICRF at its epoch first (#680).
 
 ```csharp
+// Inputs: svICRF (StateVector)
 var eq = svICRF.ToEquatorial();
 
 Console.WriteLine($"RA:  {eq.RightAscension * Constants.Rad2Deg:F4} deg");
@@ -98,9 +104,9 @@ Define a surface location using geodetic longitude, latitude, and altitude:
 
 ```csharp
 var coords = new Planetodetic(
-    longitude: -122.0 * Constants.Deg2Rad,
-    latitude: 37.0 * Constants.Deg2Rad,
-    altitude: 100.0);
+    Longitude: -122.0 * Constants.Deg2Rad,
+    Latitude: 37.0 * Constants.Deg2Rad,
+    Altitude: 100.0);
 
 Console.WriteLine($"Longitude: {coords.Longitude * Constants.Rad2Deg:F2} deg");
 Console.WriteLine($"Latitude:  {coords.Latitude * Constants.Rad2Deg:F2} deg");
@@ -113,6 +119,7 @@ Convert between geodetic and planetocentric coordinates with the ellipsoid of th
 altitude, on the surface as in orbit:
 
 ```csharp
+// Inputs: coords (Planetodetic)
 var earth = PlanetsAndMoons.EARTH_BODY;
 var planetocentric = coords.ToPlanetocentric(earth.Flattening, earth.EquatorialRadius);
 var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadius); // coords, to about 1e-15

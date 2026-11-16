@@ -12,7 +12,9 @@ namespace IO.Astrodynamics.Tests.Body;
 /// <c>daffna_</c>, <c>dafgs_</c>, <c>dafus_</c>, <c>dafgda_</c>) and the SPK writer <c>spkw09_c</c>, the reference of the
 /// managed writer (#540), with its append (<c>dafopw_c</c>); <c>unitim_c</c>, the conversion between TDB and TT, the
 /// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
-/// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); the list of the
+/// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); <c>getfov_c</c>, the
+/// reference of the fields of view an instrument may hold (#707), and <c>reclat_c</c>, that of a star's crossing of a pole
+/// (#709); the list of the
 /// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
 /// reference of the kernel registry and of the type of a text kernel (#673), with their handles and the files of open DAF
 /// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
@@ -109,6 +111,13 @@ internal static class CspiceDirect
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void latrec_c(double radius, double longitude, double latitude, [Out] double[] rectan);
 
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void reclat_c([In] double[] rectan, out double radius, out double longitude, out double latitude);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void getfov_c(int instid, int room, int shapelen, int framelen, [Out] byte[] shape, [Out] byte[] frame,
+        [Out] double[] bsight, out int n, [Out] double[] bounds);
+
     /// <summary>
     /// The rectangular coordinates of a range, right ascension and declination: <c>latrec_c</c> of the range, the right
     /// ascension as longitude and the declination as latitude, what CSPICE's <c>radrec_c</c> computes (radrec_c is not
@@ -122,6 +131,44 @@ internal static class CspiceDirect
             latrec_c(range, rightAscension, declination, rectan);
             Check("latrec");
             return rectan;
+        }
+    }
+
+    /// <summary>The range, right ascension and declination of rectangular coordinates (<c>reclat_c</c>: the longitude in
+    /// (-π, π], the latitude in [-π/2, π/2]).</summary>
+    internal static (double Range, double Longitude, double Latitude) Reclat(double[] rectan)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            reclat_c(rectan, out double radius, out double longitude, out double latitude);
+            Check("reclat");
+            return (radius, longitude, latitude);
+        }
+    }
+
+    /// <summary>
+    /// The field of view of an instrument as <c>getfov_c</c> reads it from the loaded instrument kernels: its shape, its
+    /// boresight and its number of boundary vectors, or the short error message SPICE signals (<c>SPICE(ZEROBORESIGHT)</c>,
+    /// <c>SPICE(BADREFVECTORSPEC)</c>...) with nulls; SPICE is reset after the error.
+    /// </summary>
+    internal static (string Error, string Shape, double[] Boresight, int Count) Getfov(int instrumentId)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var shape = new byte[32];
+            var frame = new byte[64];
+            var boresight = new double[3];
+            var bounds = new double[3 * 10];
+            getfov_c(instrumentId, 10, shape.Length, frame.Length, shape, frame, boresight, out int n, bounds);
+            if (failed_c() != 0)
+            {
+                var message = new StringBuilder(64);
+                getmsg_c("SHORT", message.Capacity, message);
+                reset_c();
+                return (message.ToString().Trim(), null, null, 0);
+            }
+
+            return (null, Encoding.ASCII.GetString(shape).TrimEnd(' ', '\0'), boresight, n);
         }
     }
 
@@ -231,6 +278,16 @@ internal static class CspiceDirect
             getmsg_c("SHORT", message.Capacity, message);
             reset_c();
             return message.ToString().Trim();
+        }
+    }
+
+    /// <summary>Whether SPICE has an error pending (<c>failed_c</c>), which a failed proxy must not leave for the next call
+    /// (#712); nothing is reset.</summary>
+    internal static bool ErrorPending()
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            return failed_c() != 0;
         }
     }
 

@@ -142,7 +142,8 @@ public class Sgp4ReferenceTests
     public void FailedSgp4_Throws()
     {
         // 33334 (e out of range at the epoch, checksums recomputed) and 28350 after its decay: Vallado's errors 3 and 1,
-        // CSPICE's BADPECCENTRICITY and BADMECCENTRICITY; the native layer returns a zero state, the library throws (#454)
+        // CSPICE's BADPECCENTRICITY and BADMECCENTRICITY; the native TLE proxies return NaN with SPICE's message (#711: for
+        // 33334 already the read of its elements and epoch, GetTLEElementsProxy), the library throws (#454)
         foreach (var item in Reference.Value.GetProperty("errors").EnumerateArray())
         {
             Assert.NotEqual(0, item.GetProperty("sgp4_error").GetInt32());
