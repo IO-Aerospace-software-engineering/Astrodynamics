@@ -460,6 +460,21 @@ public sealed class CdmReader
         return result;
     }
 
+    // A finite value in km or km/s whose product by the factor of its unit is beyond the range of a double (above about
+    // 1.8e305 km) rounds to ±Infinity (IEEE 754): refused as a non-finite text is (#708), the check of ParseDouble applying
+    // to the value the CDM holds, in m or m/s
+    private static double ToSiUnits(double value, double factor, XElement element, string units)
+    {
+        var converted = value * factor;
+        if (!double.IsFinite(converted))
+        {
+            throw new CdmParseException(
+                $"Invalid numeric value for {element.Name.LocalName}: '{element.Value}' {units} is not a finite number in SI units.");
+        }
+
+        return converted;
+    }
+
     // positionTypeUR: units required, km by default as before
     private static double ParsePositionToMeters(XElement element)
     {
@@ -472,7 +487,7 @@ public sealed class CdmReader
         var value = ParseDouble(element.Value, element.Name.LocalName);
         return units switch
         {
-            "km/s" => value * 1000.0,
+            "km/s" => ToSiUnits(value, 1000.0, element, units),
             "m/s" => value,
             _ => throw new CdmParseException($"Unsupported velocity units '{units}'.")
         };
@@ -497,7 +512,7 @@ public sealed class CdmReader
         var value = ParseDouble(element.Value, element.Name.LocalName);
         return units switch
         {
-            "km" => value * 1000.0,
+            "km" => ToSiUnits(value, 1000.0, element, units),
             "m" => value,
             _ => throw new CdmParseException($"Unsupported length units '{units}'.")
         };
@@ -510,7 +525,7 @@ public sealed class CdmReader
         return units switch
         {
             "m/s" => value,
-            "km/s" => value * 1000.0,
+            "km/s" => ToSiUnits(value, 1000.0, element, units),
             _ => throw new CdmParseException($"Unsupported delta-velocity units '{units}'.")
         };
     }
