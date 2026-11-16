@@ -13,6 +13,7 @@ Convert a state vector from ICRF to the ecliptic J2000 frame:
 ```csharp
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;

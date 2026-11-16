@@ -3064,6 +3064,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   opens `docs/standards-and-units.md`, declarations fenced `csharp` with no region (region 1 of that page is its second
   csharp block), is checked by value. A block's leading using alias may name a public type of the library. This lifts the known
   limitation of #662. Documentation and tests only: no library result moves.
+- **Six csharp blocks of three tutorials did not compile with the directives of their page** ([#716](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/716)).
+  `DocumentationPagesExamplesTests.PageBlocks_CompileWithTheUsingsOfTheirPage` compiled, as a reader who copies them,
+  only the blocks that declare using directives (15 of 174), so a block without a list of its own that used a namespace
+  its page never imports passed: `Planetodetic` in the coordinate conversions tutorial (`IO.Astrodynamics.Coordinates`),
+  `CentralBodyPropagator` and `CentralBodyPropagatorBuilder` in three blocks of the numerical propagation tutorial
+  (`IO.Astrodynamics.Propagator`), `Omm` and `Opm` in the TLE and OMM tutorial (`IO.Astrodynamics.CCSDS.OMM` and
+  `IO.Astrodynamics.CCSDS.OPM`), CS0246 and CS0103 for a reader. The test now compiles every block of a page that
+  declares directives with the block's own, the earlier blocks' and a console application's implicit ones (red on
+  a80f6a5 on exactly these six blocks of three of the eight pages); the first blocks of the coordinate conversions and
+  numerical propagation tutorials import the two namespaces, and the OMM and OPM blocks of the TLE tutorial import their
+  own. A page that declares no directive gives the reader none and is not compiled this way. Documentation and tests
+  only: no library result moves.
 
 **Changed**
 
