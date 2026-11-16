@@ -25,10 +25,8 @@ public sealed record CdmHeader
 /// The relative position and velocity of object 2 with respect to object 1 in the RTN frame of object 1, in m and m/s.
 /// </summary>
 /// <remarks>
-/// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
-/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a component of a vector or a term of
-/// the matrix included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> (#717). Ranges
-/// (a miss distance of 0 or more ...) are the checks of <see cref="Cdm.Validate"/>.
+/// Every real value is a real number, as the CDM reader reads it (#708): the init accessor of each vector throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for a component NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
 /// </remarks>
 public sealed record CdmRelativeStateVector
 {
@@ -54,9 +52,8 @@ public sealed record CdmRelativeStateVector
 /// </summary>
 /// <remarks>
 /// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
-/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a component of a vector or a term of
-/// the matrix included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> (#717). Ranges
-/// (a miss distance of 0 or more ...) are the checks of <see cref="Cdm.Validate"/>.
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// The one range of these values that <see cref="Cdm.Validate"/> checks is the miss distance's, 0 or more.
 /// </remarks>
 public sealed record CdmRelativeMetadataData
 {
@@ -205,9 +202,7 @@ public sealed record CdmParticipantMetadata
 /// </summary>
 /// <remarks>
 /// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
-/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a component of a vector or a term of
-/// the matrix included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> (#717). Ranges
-/// (a miss distance of 0 or more ...) are the checks of <see cref="Cdm.Validate"/>.
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
 /// </remarks>
 public sealed record CdmOdParameters
 {
@@ -263,9 +258,7 @@ public sealed record CdmOdParameters
 /// </summary>
 /// <remarks>
 /// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
-/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a component of a vector or a term of
-/// the matrix included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> (#717). Ranges
-/// (a miss distance of 0 or more ...) are the checks of <see cref="Cdm.Validate"/>.
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
 /// </remarks>
 public sealed record CdmAdditionalParameters
 {
@@ -340,10 +333,8 @@ public sealed record CdmAdditionalParameters
 /// The state of the object of a CDM segment at TCA, in m and m/s.
 /// </summary>
 /// <remarks>
-/// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
-/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a component of a vector or a term of
-/// the matrix included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> (#717). Ranges
-/// (a miss distance of 0 or more ...) are the checks of <see cref="Cdm.Validate"/>.
+/// Every real value is a real number, as the CDM reader reads it (#708): the init accessor of each vector throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for a component NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
 /// </remarks>
 public sealed record CdmStateVector
 {
@@ -371,9 +362,10 @@ public sealed record CdmStateVector
 /// </summary>
 /// <remarks>
 /// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
-/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a component of a vector or a term of
-/// the matrix included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> (#717). Ranges
-/// (a miss distance of 0 or more ...) are the checks of <see cref="Cdm.Validate"/>.
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a term of
+/// <see cref="StateCovarianceRtn"/> included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// The record holds a copy of the matrix it is given and returns a copy of the one it holds, so a term set afterwards on
+/// either matrix does not reach it (review of #717). <see cref="Cdm.Validate"/> checks its size, 6×6.
 /// </remarks>
 public sealed record CdmCovarianceMatrix
 {
@@ -381,10 +373,20 @@ public sealed record CdmCovarianceMatrix
 
     private readonly Matrix _stateCovarianceRtn = new Matrix(6, 6);
 
+    /// <summary>
+    /// The 6×6 state covariance in the RTN frame of the object (m², m²/s, m²/s²), of which the writer writes the lower
+    /// triangle (<c>CR_R</c> ... <c>CNDOT_NDOT</c>).
+    /// </summary>
+    /// <remarks>
+    /// The record holds its own copy of the matrix: the init accessor checks the terms of a copy of the matrix it is given
+    /// and the getter returns a copy of the one it holds, so a term set afterwards on either <see cref="Matrix"/> (whose
+    /// <see cref="Matrix.Set"/> writes its shared array) does not reach the record (review of #717).
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the matrix given is NaN or ±Infinity.</exception>
     public Matrix StateCovarianceRtn
     {
-        get => _stateCovarianceRtn;
-        init => _stateCovarianceRtn = CcsdsValues.RequireFinite(value, nameof(StateCovarianceRtn));
+        get => CcsdsValues.Copy(_stateCovarianceRtn);
+        init => _stateCovarianceRtn = CcsdsValues.RequireFinite(CcsdsValues.Copy(value), nameof(StateCovarianceRtn));
     }
 
     private readonly double? _cdrgR;

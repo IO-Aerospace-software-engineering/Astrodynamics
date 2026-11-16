@@ -76,7 +76,7 @@ internal static class CcsdsValues
 
     /// <summary>
     /// A matrix of the data model: real numbers in every term, whatever its size (#717). The terms are read once, as given;
-    /// the matrix is not copied.
+    /// the matrix is not copied, so a record that holds it receives a copy (<see cref="Copy"/>, review of #717).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">A term of <paramref name="value"/> is NaN or ±Infinity.</exception>
     internal static Matrix RequireFinite(Matrix value, string parameter)
@@ -94,6 +94,17 @@ internal static class CcsdsValues
 
         return value;
     }
+
+    /// <summary>
+    /// A copy of a matrix that shares no array with it, since <see cref="Matrix.Set"/> writes the array a
+    /// <see cref="Matrix"/> wraps: a record of the data model holds and returns copies, so that a term set on the matrix
+    /// it was given or on the one it returned does not reach it (review of #717). A matrix without terms
+    /// (<c>default(Matrix)</c> included, whose array is null) is returned as it is.
+    /// </summary>
+    /// <param name="value">The matrix.</param>
+    /// <returns>A matrix of the same size and terms over a new array.</returns>
+    internal static Matrix Copy(Matrix value) =>
+        value.Rows == 0 || value.Columns == 0 ? value : new Matrix(value.ToArray());
 
     /// <summary>
     /// Runs <paramref name="construct"/>; an <see cref="ArgumentException"/> it throws (an

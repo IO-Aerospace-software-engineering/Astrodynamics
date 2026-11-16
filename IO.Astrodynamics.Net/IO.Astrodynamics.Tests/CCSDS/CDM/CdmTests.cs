@@ -706,6 +706,54 @@ public class CdmTests
         Assert.Equal(BitConverter.DoubleToInt64Bits(double.Epsilon), BitConverter.DoubleToInt64Bits(back.RelativeMetadataData.CollisionProbability!.Value));
     }
 
+    public static TheoryData<int, int, double> NonFiniteLowerTriangleTerms()
+    {
+        var data = new TheoryData<int, int, double>();
+        foreach (var (row, column) in new[] { (0, 0), (1, 0), (5, 5) })
+        foreach (var value in NonFiniteValues)
+            data.Add(row, column, value);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteLowerTriangleTerms))]
+    public void Init_MatrixChangedAfterwards_TheRecordKeepsTheTermsItChecked(int row, int column, double value)
+    {
+        // The review of #717: Matrix wraps a double[,] with a public Set, so a record that kept the caller's matrix held the
+        // NaN or ±Infinity set after the check, passed Validate, wrote it (CR_R, CT_R, CNDOT_NDOT) and its own reader refused it
+        var matrix = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+            matrix.Set(i, i, 1.0);
+        var byInit = new CdmCovarianceMatrix { StateCovarianceRtn = matrix };
+        var byFactory = CdmCovarianceMatrix.FromRtnCovariance(matrix);
+
+        matrix.Set(row, column, value);
+
+        foreach (var covariance in new[] { byInit, byFactory })
+        {
+            Assert.Equal(row == column ? 1.0 : 0.0, covariance.StateCovarianceRtn.Get(row, column));
+            Assert.Equal(Matrix.Identity6x6(), covariance.StateCovarianceRtn);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteLowerTriangleTerms))]
+    public void StateCovarianceRtn_ReturnedMatrixChanged_TheCdmStillWritesAndReadsBack(int row, int column, double value)
+    {
+        // A CDM read from a document: the matrix its getter returns is the caller's, so a term set on it reaches neither the
+        // record, nor Validate, nor the document written
+        var read = Cdm.ReadFromString(ManualCdmXml());
+        var covariance = read.Segments[0].Data!.CovarianceMatrix!;
+        var expected = covariance.StateCovarianceRtn.Get(row, column);
+
+        covariance.StateCovarianceRtn.Set(row, column, value);
+
+        Assert.Equal(expected, covariance.StateCovarianceRtn.Get(row, column));
+        Assert.True(read.Validate().IsValid);
+        var back = Cdm.ReadFromString(read.WriteToString());
+        Assert.Equal(expected, back.Segments[0].Data!.CovarianceMatrix!.StateCovarianceRtn.Get(row, column));
+    }
+
     private static string WithSegmentCount(string xml, int count)
     {
         var document = XDocument.Parse(xml);
