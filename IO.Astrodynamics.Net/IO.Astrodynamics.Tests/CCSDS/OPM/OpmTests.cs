@@ -1420,5 +1420,61 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region Non-finite values (#708)
+
+        [Theory]
+        [MemberData(nameof(OpmReaderTests.OpmNonFiniteValues), MemberType = typeof(OpmReaderTests))]
+        public void LoadFromString_NonFiniteValue_DoesNotLoad_WithDefaultValidation(string keyword, string value)
+        {
+            var xml = OpmReaderTests.OpmWithKeyword(keyword, value);
+
+            // .NET's schema validator accepts NaN against the bound facets and Infinity or 1e400 as xsd:double, so the
+            // schema step stops only some rows; the reader stops the others
+            bool schemaRejects = !new OpmValidator().ValidateSchemaFromXml(xml).IsValid;
+
+            // Before: every row loaded with the defaults, the keyword NaN or ±Infinity
+            NdmDocuments.WithTempFile(xml, file =>
+            {
+                if (schemaRejects)
+                {
+                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file));
+                }
+                else
+                {
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml)), keyword, value);
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromFile(file)), keyword, value);
+                    using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromStream(stream)), keyword, value);
+                }
+
+                // Without the schema, and without the content validation: the reader's exception
+                OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() =>
+                    Opm.LoadFromString(xml, validateSchema: false)), keyword, value);
+                OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() =>
+                    Opm.LoadFromString(xml, validateSchema: false, validateContent: false)), keyword, value);
+
+                // TryLoadFromFile: false, one PARSE_ERROR naming the keyword
+                foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
+                {
+                    Assert.False(Opm.TryLoadFromFile(file, out var opm, out var result, validateSchema));
+                    Assert.Null(opm);
+                    var error = Assert.Single(result.Errors);
+                    Assert.Equal("PARSE_ERROR", error.Code);
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(new Exception(error.Message), keyword, value);
+                }
+
+                // ValidateFile: invalid (before: valid), the parser's error naming the keyword where the schema passes
+                var validation = new OpmValidator().ValidateFile(file);
+                Assert.False(validation.IsValid);
+                if (!schemaRejects)
+                {
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(new Exception(Assert.Single(validation.Errors).Message), keyword, value);
+                }
+            });
+        }
+
+        #endregion
     }
 }

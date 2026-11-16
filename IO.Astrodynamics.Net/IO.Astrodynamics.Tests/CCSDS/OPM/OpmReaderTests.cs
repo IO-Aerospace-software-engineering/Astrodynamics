@@ -667,5 +667,85 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region Non-finite values (#708)
+
+        /// <summary>
+        /// Keywords of the OPM with a text that double.TryParse (NumberStyles.Float, the invariant culture) reads as NaN or
+        /// ±Infinity ("NaN", "Infinity" in any case, an overflow such as "1e400"). NaN and ±Infinity are not real numbers
+        /// (IEEE 754), and the values of an OPM are real numbers in their units (CCSDS 502.0-B-3; to be verified by
+        /// S. Guillet): the reader refuses them, as #708 expects. The rows cover the state vector, the Keplerian elements,
+        /// the spacecraft parameters, the covariance and the maneuvers, ranged or not by the data model.
+        /// </summary>
+        public static TheoryData<string, string> OpmNonFiniteValues() => new()
+        {
+            { "X", "NaN" },
+            { "X", "Infinity" },
+            { "X_DOT", "Infinity" },
+            { "Z_DOT", "-Infinity" },
+            { "SEMI_MAJOR_AXIS", "NaN" },
+            { "SEMI_MAJOR_AXIS", "Infinity" },
+            { "ECCENTRICITY", "NaN" },
+            { "INCLINATION", "NaN" },
+            { "TRUE_ANOMALY", "NaN" },
+            { "GM", "NaN" },
+            { "GM", "Infinity" },
+            { "MASS", "NaN" },
+            { "MASS", "infinity" },
+            { "DRAG_COEFF", "1e400" },
+            { "CX_X", "NaN" },
+            { "CY_X", "NaN" },
+            { "MAN_DURATION", "NaN" },
+            { "MAN_DELTA_MASS", "NaN" },
+            { "MAN_DV_1", "NaN" },
+            { "MAN_DV_1", "1e400" }
+        };
+
+        /// <summary>The parse exception names the keyword and its text, and says that the value is not finite.</summary>
+        internal static void AssertNamesNonFiniteKeyword(Exception ex, string keyword, string value)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            Assert.Contains("not a finite number", ex.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(OpmNonFiniteValues))]
+        public void ReadFromString_NonFiniteValue_ThrowsOpmParseExceptionNamingKeywordAndValue(string keyword, string value)
+        {
+            var xml = OpmWithKeyword(keyword, value);
+
+            // Before: the document loaded, the keyword holding NaN or ±Infinity, which every range check passed
+            AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)), keyword, value);
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromStream(stream)), keyword, value);
+            NdmDocuments.WithTempFile(xml, file =>
+                AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromFile(file)), keyword, value));
+        }
+
+        [Theory]
+        [InlineData("X", "INF")] // the lexical INF of xsd:double, which double.TryParse rejects (as before)
+        [InlineData("MASS", "-INF")]
+        public void ReadFromString_XsdInfinityLiteral_StillThrowsOpmParseException(string keyword, string value)
+        {
+            var ex = Assert.Throws<OpmParseException>(() => _reader.ReadFromString(OpmWithKeyword(keyword, value)));
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+        }
+
+        [Theory]
+        [InlineData("X", "-0")]
+        [InlineData("X", "1.0e-300")]
+        [InlineData("X", "4.9e-324")] // the least subnormal, finite
+        [InlineData("X_DOT", "-1.7976931348623157e308")] // -double.MaxValue, finite
+        public void ReadFromString_FiniteExtremeValue_ReadsTheValueOfTheText(string keyword, string value)
+        {
+            var opm = _reader.ReadFromString(OpmWithKeyword(keyword, value));
+            double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+            double actual = keyword == "X" ? opm.Data.StateVector.X : opm.Data.StateVector.XDot;
+            Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual));
+        }
+
+        #endregion
     }
 }

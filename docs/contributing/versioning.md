@@ -2808,6 +2808,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` of `LoadKernels` and `UnloadKernels` carries it ("Kernel ... can't be unloaded:
   SPICE(FILENOTFOUND) ...") where it said "You can have more details on standard output". The exception types are
   unchanged.
+- **The CCSDS readers loaded NaN and infinite values** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). The `ParseDouble` of `OmmReader`, `OpmReader` and
+  `CdmReader` used `double.TryParse` with the invariant culture, which reads `NaN`, `Infinity` and `-Infinity` in any
+  case and, since .NET Core 3.0, rounds an overflow (`1e400`) to ±Infinity; nothing checked the result, and every range
+  check of the data model and of the validators (`x < 0`) is false for NaN. With the default `validateSchema` and
+  `validateContent`, an OMM with `ECCENTRICITY`, `MEAN_MOTION`, `INCLINATION`, `RA_OF_ASC_NODE`, `BSTAR` or
+  `MEAN_MOTION_DOT` of `NaN` loaded, so did an OPM with `ECCENTRICITY`, `MASS`, `SEMI_MAJOR_AXIS`, `X`, `GM`, `CX_X`,
+  `MAN_DURATION` or `DRAG_COEFF` of `NaN` or `Infinity`, and a CDM with a `MISS_DISTANCE`, `X` or `CR_R` of `NaN`,
+  `Infinity` or `1e400`, which `Cdm.Validate` reported valid: .NET's schema validator accepts NaN against the bound
+  facets of NDM/XML 4.0.0 (`nonNegativeDouble`, `inclinationRange`, `angleRange`) and `Infinity` or an overflow as an
+  `xsd:double` (libxml2 rejects `Infinity`). Each `ParseDouble` now throws the reader's parse exception for a value that
+  is not finite, naming the keyword and the text (`Failed to parse numeric value 'NaN' for field 'ECCENTRICITY': not a
+  finite number.`; for the CDM `Invalid numeric value for MISS_DISTANCE: 'NaN' is not a finite number.`), for every
+  numeric keyword of the three messages, and so `Load*`, `TryLoadFromFile` (a `PARSE_ERROR`) and `ValidateFile`. A
+  finite document reads bit for bit as before, and `INF` and `-INF` throw the parse exception as before
+  (`OmmReaderTests`, `OpmReaderTests`, `OmmTests`, `OpmTests` and `CdmTests`
+  `*_NonFiniteValue_*`, through every entry point, red on 46e6975).
 
 **Changed**
 
@@ -3817,6 +3833,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`SpiceAPI.TransformFrame` composes the frame of a site only the library holds through ICRF** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
   Fixed above), where it threw `InvalidOperationException`. Not breaking for a valid use: every other pair of frames is
   unchanged, bit for bit. Migration: none; code that caught the exception gets the transform.
+- **Breaking: a non-finite numeric value throws the reader's parse exception** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
+  `Omm`/`Opm.LoadFromFile`, `LoadFromString` and `LoadFromStream`, `OmmReader`/`OpmReader`/`CdmReader.ReadFrom*` and
+  `Cdm.ReadFrom*` throw `OmmParseException`, `OpmParseException` or `CdmParseException` for a numeric keyword of
+  `NaN`, `Infinity`, `-Infinity` (any case) or an overflowing value such as `1e400`, where they loaded the document with
+  a NaN or infinite value; `TryLoadFromFile` returns false with a `PARSE_ERROR`, and `ValidateFile` reports the
+  document invalid. Migration: correct the producer of the document; a NaN or infinite value carried no orbit. Finite
+  documents load bit for bit as before.
 
 **Deprecated**
 

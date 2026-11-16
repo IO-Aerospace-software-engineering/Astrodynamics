@@ -383,6 +383,54 @@ public class CdmTests
         NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromFile(file))));
     }
 
+    // A text that double.TryParse reads as NaN or ±Infinity ("NaN", "Infinity" in any case, an overflow such as "1e400")
+    // is not a real number (IEEE 754), and the values of a CDM are real numbers in their units (CCSDS 508.0-B-1): the reader
+    // refuses it, as #708 expects. The rows cover the relative metadata, a state vector and the covariance, in the first
+    // segment (the first element of that name in the document)
+    [Theory]
+    [InlineData("MISS_DISTANCE", "NaN")]
+    [InlineData("MISS_DISTANCE", "Infinity")]
+    [InlineData("MISS_DISTANCE", "1e400")]
+    [InlineData("RELATIVE_SPEED", "-Infinity")]
+    [InlineData("COLLISION_PROBABILITY", "1e400")]
+    [InlineData("X", "NaN")]
+    [InlineData("X_DOT", "nan")]
+    [InlineData("CR_R", "Infinity")]
+    [InlineData("CT_R", "NaN")]
+    public void ReadFromString_NonFiniteValue_ThrowsCdmParseException(string keyword, string value)
+    {
+        var xml = NdmDocuments.WithElementValue(ManualCdmXml(), keyword, value);
+
+        // Before: the CDM loaded with the keyword NaN or ±Infinity, and CdmValidator reported it valid
+        void AssertNamesKeyword(CdmParseException ex)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            Assert.Contains("not a finite number", ex.Message);
+        }
+
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => new CdmReader().ReadFromString(xml)));
+        using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream)));
+        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromFile(file))));
+    }
+
+    [Fact]
+    public void ReadFromString_FiniteExtremeMissDistance_ReadsTheValueOfTheText()
+    {
+        // Zero, -0 and a value near the least normal double are finite: read as the value of their text (the writer's
+        // MISS_DISTANCE is in m)
+        var units = XDocument.Parse(ManualCdmXml()).Descendants().First(e => e.Name.LocalName == "MISS_DISTANCE").Attribute("units")!.Value;
+        Assert.Equal("m", units);
+        foreach (var text in new[] { "0", "-0", "1.0e-300" })
+        {
+            var cdm = Cdm.ReadFromString(NdmDocuments.WithElementValue(ManualCdmXml(), "MISS_DISTANCE", text));
+            double expected = double.Parse(text, System.Globalization.CultureInfo.InvariantCulture);
+            Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(cdm.RelativeMetadataData.MissDistanceMeters));
+        }
+    }
+
     private static string WithSegmentCount(string xml, int count)
     {
         var document = XDocument.Parse(xml);

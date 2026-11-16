@@ -44,6 +44,15 @@ its types allow: `MEAN_MOTION` and `SEMI_MAJOR_AXIS` are `xsd:double` and the me
 `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error, both naming the keyword.
 The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`.
 
+A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
+case, or a value beyond the range of a `double` such as `1e400`, which .NET rounds to ±Infinity) throws
+`OmmParseException` naming the keyword and the text, for every numeric keyword of the message ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), for example
+`Failed to parse numeric value 'NaN' for field 'ECCENTRICITY': not a finite number.` Before 11.0.0 the document loaded
+with the value, which every range check passed, the comparisons with NaN being false. The schema step does not stop
+these values: .NET's schema validator accepts NaN against the bound facets of NDM/XML 4.0.0 and `Infinity` or an
+overflow as an `xsd:double`. `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error,
+both naming the keyword. The lexical `INF` and `-INF` of `xsd:double` throw the parse exception, as before.
+
 ### Schema validation
 
 `validateSchema` and `OmmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS

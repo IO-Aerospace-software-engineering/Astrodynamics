@@ -26,7 +26,8 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// SCREEN_VOLUME_FRAME, SCREEN_VOLUME_SHAPE, SOLAR_RAD_PRESSURE, EARTH_TIDES, INTRACK_THRUST; CCSDS 508.0-B-1 table 3-3)
 /// throws <see cref="CdmParseException"/> naming the keyword and its value, the <see cref="FormatException"/> of the
 /// enumeration as inner exception, where before 11.0.0 that <see cref="FormatException"/> crossed the reader (fourth round
-/// of #668).
+/// of #668). A numeric value that is not finite (NaN, Infinity or -Infinity in any case, an overflow such as 1e400) throws
+/// <see cref="CdmParseException"/> naming the keyword and its text, where before 11.0.0 it was read (#708).
 /// </remarks>
 public sealed class CdmReader
 {
@@ -442,14 +443,21 @@ public sealed class CdmReader
         throw new CdmParseException($"Invalid integer value for {localName}: '{value}'.");
     }
 
+    // A value is a real number (#708): the text double.TryParse reads as NaN or ±Infinity
+    // ("NaN", "Infinity" in any case, an overflow such as "1e400") is refused, as the lexical INF of xsd:double it rejects
     private static double ParseDouble(string value, string fieldName)
     {
-        if (double.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var result))
+        if (!double.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var result))
         {
-            return result;
+            throw new CdmParseException($"Invalid numeric value for {fieldName}: '{value}'.");
         }
 
-        throw new CdmParseException($"Invalid numeric value for {fieldName}: '{value}'.");
+        if (!double.IsFinite(result))
+        {
+            throw new CdmParseException($"Invalid numeric value for {fieldName}: '{value}' is not a finite number.");
+        }
+
+        return result;
     }
 
     // positionTypeUR: units required, km by default as before

@@ -38,6 +38,12 @@ table 3-3) throws `CdmParseException` naming the keyword and its value, the `For
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The readers do not check the
 schema: `Cdm.ValidateSchemaFromXml` rejects these values too.
 
+A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
+case, or a value beyond the range of a `double` such as `1e400`) throws `CdmParseException` naming the keyword and the
+text, for every numeric keyword (the miss distance, the states, the covariances, the probability; [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), for example
+`Invalid numeric value for MISS_DISTANCE: 'NaN' is not a finite number.` Before 11.0.0 the CDM was read with the value,
+and `Cdm.Validate` reported a NaN miss distance valid.
+
 ### Schema validation
 
 `Cdm.ValidateSchema` and `Cdm.ValidateSchemaFromXml` check a document whose root, `ndm` or `cdm`, has no namespace

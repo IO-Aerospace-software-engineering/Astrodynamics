@@ -711,5 +711,86 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         }
 
         #endregion
+
+        #region Non-finite values (#708)
+
+        /// <summary>
+        /// Keywords of the OMM with a text that double.TryParse (NumberStyles.Float, the invariant culture) reads as NaN or
+        /// ±Infinity: "NaN" and "Infinity" in any case, and an overflow ("1e400"), which .NET Core 3.0 and later round to
+        /// ±Infinity. NaN and ±Infinity are not real numbers (IEEE 754), and the values of an OMM are real numbers in their
+        /// units (CCSDS 502.0-B-3; to be verified by S. Guillet): the reader refuses them, as #708 expects. The rows cover
+        /// the mean elements (ranged or not by the data model), GM, the spacecraft parameters and the TLE parameters, which
+        /// the data model does not range-check.
+        /// </summary>
+        public static TheoryData<string, string> OmmNonFiniteValues() => new()
+        {
+            { "ECCENTRICITY", "NaN" },
+            { "ECCENTRICITY", "Infinity" },
+            { "MEAN_MOTION", "NaN" },
+            { "MEAN_MOTION", "nan" },
+            { "MEAN_MOTION", "Infinity" },
+            { "MEAN_MOTION", "-Infinity" },
+            { "MEAN_MOTION", "1e400" },
+            { "INCLINATION", "NaN" },
+            { "INCLINATION", "Infinity" },
+            { "RA_OF_ASC_NODE", "NaN" },
+            { "ARG_OF_PERICENTER", "NaN" },
+            { "MEAN_ANOMALY", "NaN" },
+            { "GM", "NaN" },
+            { "MASS", "NaN" },
+            { "DRAG_COEFF", "1e400" },
+            { "BSTAR", "NaN" },
+            { "BSTAR", "-1e400" },
+            { "MEAN_MOTION_DOT", "Infinity" },
+            { "MEAN_MOTION_DDOT", "NaN" }
+        };
+
+        /// <summary>The parse exception names the keyword and its text, and says that the value is not finite.</summary>
+        internal static void AssertNamesNonFiniteKeyword(Exception ex, string keyword, string value)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            Assert.Contains("not a finite number", ex.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(OmmNonFiniteValues))]
+        public void ReadFromString_NonFiniteValue_ThrowsOmmParseExceptionNamingKeywordAndValue(string keyword, string value)
+        {
+            var xml = OmmWithKeyword(keyword, value);
+
+            // Before: the document loaded, the keyword holding NaN or ±Infinity, which every range check passed
+            AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml)), keyword, value);
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+            AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => _reader.ReadFromStream(stream)), keyword, value);
+            NdmDocuments.WithTempFile(xml, file =>
+                AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => _reader.ReadFromFile(file)), keyword, value));
+        }
+
+        [Theory]
+        [InlineData("ECCENTRICITY", "INF")] // the lexical INF of xsd:double, which double.TryParse rejects (as before)
+        [InlineData("MEAN_MOTION", "-INF")]
+        public void ReadFromString_XsdInfinityLiteral_StillThrowsOmmParseException(string keyword, string value)
+        {
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(OmmWithKeyword(keyword, value)));
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+        }
+
+        [Theory]
+        [InlineData("ECCENTRICITY", "0")]
+        [InlineData("ECCENTRICITY", "-0")]
+        [InlineData("ECCENTRICITY", "1.0e-300")]
+        [InlineData("ECCENTRICITY", "4.9e-324")] // the least subnormal, finite
+        [InlineData("BSTAR", "1.7976931348623157e308")] // double.MaxValue, finite
+        public void ReadFromString_FiniteExtremeValue_ReadsTheValueOfTheText(string keyword, string value)
+        {
+            var omm = _reader.ReadFromString(OmmWithKeyword(keyword, value));
+            double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+            double actual = keyword == "BSTAR" ? omm.Data.TleParameters.BStar!.Value : omm.Data.MeanElements.Eccentricity;
+            Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual));
+        }
+
+        #endregion
     }
 }
