@@ -207,7 +207,7 @@ public class Star : CelestialBody
     /// <para>
     /// Its departure from <c>iauStarpm</c> (rv = 0) is that function's light-time and relativistic terms of the observed
     /// place, which grow as dt⁴: for Barnard's star 2.4e-14 rad after 100 years and 2.4e-10 rad after 1000 (after 10
-    /// years both round the right ascension to the same double), the distance 7.5e-8 relative per decade (<c>iauStarpv</c>'s inertial radial velocity −v_t²/(2c) for an observed rv of
+    /// years both round the right ascension to the same double), the distance 7.6e-8 relative per decade (<c>iauStarpv</c>'s inertial radial velocity −v_t²/(2c) for an observed rv of
     /// 0), measured by <c>tools/sofa_reference/starpm_ref.c</c>. No radial velocity is taken: Barnard's −110.47 km/s
     /// (Gaia DR3) would move it by 64 mas after 10 years and 6.5″ after 100 (see <c>docs/reference/stars.md</c>).
     /// </para>

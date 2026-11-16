@@ -104,14 +104,19 @@ After 1 and 10 years both round the right ascension to the same double. After 10
 inertial radial velocity −v_t²/(2c) for an observed radial velocity of 0, 7.6e-8 relative per decade for Barnard's star.
 Against the same closed form evaluated in long double, every star of the harness, the poles and the synthetic stars
 included: 7.8e-16 rad in direction (the resolution of a right ascension near 4.7 rad), 2.2e-16 relative in length. The
-thresholds of `StarTests` are provisional, to be set again from the Windows x64 and macOS arm64 CI logs.
+thresholds of `StarTests` are twice the Linux worst, provisional, to be set again from the Windows x64 and macOS arm64 CI
+logs; after 1 and 10 years, where the Linux worst lies below one ulp of the right ascension, the direction threshold is
+twice the resolution of the returned angles, 1.9e-15 rad (one ulp of a right ascension below 2π, 8.9e-16 rad, and one of
+a declination, 2.2e-16 rad), so that another platform's one-ulp difference passes.
 
 ### Limits
 
 - **No radial velocity.** The model is `iauStarpm`'s at rv = 0, and the distance comes from the catalog parallax and the
   straight line. Barnard's star's −110.47 km/s (Gaia DR3) would move it by 64 mas after 10 years, 6.5″ after 100 and
-  11.4′ after 1000 (`iauStarpm` with and without it), and change its parallax after 100 years from 0.548303″ to
-  0.551722″.
+  11.4′ after 1000 (`iauStarpm` with and without it), more than the straight line corrects (34 mas after 100 years),
+  and change its parallax after 100 years from 0.548303″ to 0.551722″. A radial velocity input would be a new
+  constructor parameter, and the defect fixes of 11.0.0 keep the existing signatures (#668, decided by S. Guillet,
+  2026-11-14): whether `Star` takes one is S. Guillet's choice, open in the PR of #714 to #718.
 - **The state's velocity is zero.** `GetGeometricStateRelativeTo`, `Propagate` and the SPK of `WriteEphemeris` carry the
   moving position and a zero velocity.
 - **A catalog position is the direction of the light that reaches the barycenter at its epoch** (as SOFA's `iauPmsafe`

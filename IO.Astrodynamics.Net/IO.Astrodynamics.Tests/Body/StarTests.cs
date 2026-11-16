@@ -1159,17 +1159,21 @@ public class StarTests
     // The records against iauStarpm, per horizon: twice the worst on Linux x64, rounded up at the second digit, provisional
     // (to be set again from the Windows x64 and macOS arm64 CI logs): the direction 1.780e-17, 1.777e-17, 2.419e-14 and
     // 2.412e-10 rad after 1, 10, 100 and 1000 years, the distance 7.570e-9, 7.570e-8, 7.570e-7 and 7.570e-6 relative
-    // (2026-11-16). After 1 and 10 years the library and iauStarpm round the right ascension to the same double (a right
-    // ascension near 4.7 rad resolves 8.9e-16 rad, which a one-ulp difference of a platform's atan2 would show); after 100
-    // and 1000 years the direction is iauStarpm's light-time and relativistic terms of the observed place at rv = 0 (the
-    // straight line of its Note 5 is the same), growing as dt⁴, the distance
-    // iauStarpv's inertial radial velocity −v_t²/(2c) for an observed rv of 0, 7.5e-8 relative per decade for Barnard's star.
+    // (2026-11-16). After 1 and 10 years the library and iauStarpm round the right ascension to the same double on Linux,
+    // a worst below the resolution of the returned angles: one ulp of a right ascension below 2π, 8.9e-16 rad, and one of a
+    // declination, 2.2e-16 rad, 9.15e-16 rad together, which a one-ulp difference of another platform's atan2, sin or cos
+    // would show. So the direction threshold after 1 and 10 years is twice that resolution, 1.9e-15 rad, not twice the
+    // Linux worst; after 100 and 1000 years the direction is iauStarpm's light-time and relativistic terms of the observed
+    // place at rv = 0 (the straight line of its Note 5 is the same), growing as dt⁴, far above it, the distance
+    // iauStarpv's inertial radial velocity −v_t²/(2c) for an observed rv of 0, 7.6e-8 relative per decade for Barnard's star.
     // Before the fix (#718), Barnard's star fed its catalog μα* was 26.8 mas (1.3e-7 rad) away after 10 years, and fed
     // dα/dt 0.33 mas (1.6e-9 rad), 34 mas after 100 years and 9.4″ after 1000; the distance the catalog's
+    internal const double AngleResolutionFloor = 1.9e-15;
+
     internal static double StarpmDirectionTolerance(double years) => years switch
     {
-        1.0 => 3.6e-17,
-        10.0 => 3.6e-17,
+        1.0 => AngleResolutionFloor,
+        10.0 => AngleResolutionFloor,
         100.0 => 4.9e-14,
         _ => 4.9e-10
     };

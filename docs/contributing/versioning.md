@@ -3075,7 +3075,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`external-lib/sofa-src/starpm.c`, Note 5): with x = μα* dt and y = μδ dt, the position r0 (u0 + x e_α + y e_δ), so
   α = α0 + atan2(x, cos δ0 − y sin δ0), δ = atan2(sin δ0 + y cos δ0, √(x² + (cos δ0 − y sin δ0)²)), and the distance
   `Distance` · √(1 + x² + y²), as `iauStarpm`'s parallax decreases, no longer the catalog distance (Barnard's star:
-  1.2e-5 relative after 100 years, 6.7e11 m). The form divides by no cos δ0 and crosses a pole by itself. The change is
+  1.26e-5 relative after 100 years, 7.1e11 m). The form divides by no cos δ0 and crosses a pole by itself. The change is
   of the second order in μ dt for a star given dα/dt as before: Barnard's star 0.33 mas after 10 years, 34 mas after 100
   and 9.4″ after 1000, Polaris 4.2 mas after 100 years, a star near a pole 1.26° after 1000. Against `iauStarpm`
   (`tools/sofa_reference/starpm_ref.c`, SOFA 2023-10-11; Barnard's star from Hipparcos I/311 and Gaia DR3, Polaris, and
@@ -3086,7 +3086,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Barnard's star); against the closed form in long double, the stars at ±π/2 and the synthetic stars of the suite
   included, 7.8e-16 rad and 2.2e-16 relative (`IsTheStraightLine_OfALongDoubleClosedForm`); three positions dt apart lie
   on one line at constant speed within 1.2e-15 of their size (`PositionsLieOnOneLineAtConstantSpeed`, 3.7 before);
-  thresholds twice the Linux worst, provisional. A star without proper motion, and every star at its catalog epoch, is
+  thresholds twice the Linux worst, provisional, but after 1 and 10 years against `iauStarpm`, where the Linux worst
+  lies below one ulp of the right ascension (8.9e-16 rad near 4.7 rad), twice the resolution of the returned angles,
+  1.9e-15 rad, so that a one-ulp difference of another platform passes. A star without proper motion, and every star at its catalog epoch, is
   unchanged, bit for bit (`WithoutProperMotion_IsTheCatalog_BitForBit`), and so are the stars of the field-of-view and
   kernel tests. `GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate` and `Scenario.SimulateAsync`,
   the SPK of `WriteEphemeris` and the occultation and field-of-view searches of a star with proper motion move with it.
@@ -4260,8 +4262,10 @@ not listed.
 
 - **A star takes no radial velocity** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)). `Star` moves along `iauStarpm`'s straight line with rv = 0, its distance
   from the catalog parallax: Barnard's star's −110.47 km/s (Gaia DR3) would move it by 64 mas after 10 years, 6.5″ after
-  100 and 11.4′ after 1000. A radial velocity would be a new constructor overload, outside the signatures of 11.0.0
-  ([Stars](../reference/stars.md#limits)).
+  100 and 11.4′ after 1000, more than the straight line corrects (34 mas after 100 years). The radial velocity input
+  that #718 recommends would be a new constructor parameter, and the defect fixes of 11.0.0 keep the existing signatures
+  (#668, decided by S. Guillet, 2026-11-14): whether `Star` takes one is S. Guillet's choice, open in the PR of #714 to
+  #718 ([Stars](../reference/stars.md#limits)).
 - **A front body without radii on the CSPICE path of the occultation search**
   ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
