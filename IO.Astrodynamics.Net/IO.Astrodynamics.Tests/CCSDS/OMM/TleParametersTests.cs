@@ -205,5 +205,52 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             var tleParams = new TleParameters(bstar, 0.0, 0.0);
             Assert.Equal(bstar, tleParams.BStar);
         }
+
+        public static TheoryData<string, string, double> NonFiniteParameters()
+        {
+            var data = new TheoryData<string, string, double>();
+            var entries = new (string Entry, string[] Parameters)[]
+            {
+                ("Constructor", new[] { "bstar", "meanMotionDot", "meanMotionDDot" }),
+                ("CreateWithBStarAndDDot", new[] { "bstar", "meanMotionDot", "meanMotionDDot" }),
+                ("CreateWithBStarAndAGom", new[] { "bstar", "meanMotionDot", "agom" }),
+                ("CreateWithBTermAndDDot", new[] { "bterm", "meanMotionDot", "meanMotionDDot" }),
+                ("CreateWithBTermAndAGom", new[] { "bterm", "meanMotionDot", "agom" })
+            };
+            foreach (var (entry, parameters) in entries)
+            foreach (var parameter in parameters)
+            foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+                data.Add(entry, parameter, value);
+            return data;
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteParameters))]
+        public void Entry_NonFiniteParameter_ThrowsArgumentOutOfRangeException(string entry, string parameter, double value)
+        {
+            // BSTAR, BTERM, MEAN_MOTION_DOT, MEAN_MOTION_DDOT and AGOM are xsd:double values the library reads as real
+            // numbers (#708, #717); before, NaN and ±Infinity built parameters that Validate() passed (an infinite BSTAR with
+            // an information message only) and SaveToStream wrote as NaN, Infinity or -Infinity, which the reader refused
+            double V(string name, double given) => name == parameter ? value : given;
+            Func<TleParameters> create = entry switch
+            {
+                "Constructor" => () => new TleParameters(V("bstar", 1e-4), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
+                "CreateWithBStarAndDDot" => () => TleParameters.CreateWithBStarAndDDot(V("bstar", 1e-4), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
+                "CreateWithBStarAndAGom" => () => TleParameters.CreateWithBStarAndAGom(V("bstar", 1e-4), V("meanMotionDot", 1e-5), V("agom", 0.01)),
+                "CreateWithBTermAndDDot" => () => TleParameters.CreateWithBTermAndDDot(V("bterm", 0.02), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
+                _ => () => TleParameters.CreateWithBTermAndAGom(V("bterm", 0.02), V("meanMotionDot", 1e-5), V("agom", 0.01))
+            };
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => create());
+            Assert.Equal(parameter, ex.ParamName);
+        }
+
+        [Fact]
+        public void Constructor_LargestFiniteValues_AreStoredAsGiven()
+        {
+            var tleParams = new TleParameters(double.MaxValue, -double.MaxValue, double.Epsilon);
+            Assert.Equal(double.MaxValue, tleParams.BStar);
+            Assert.Equal(-double.MaxValue, tleParams.MeanMotionDot);
+            Assert.Equal(double.Epsilon, tleParams.MeanMotionDDot);
+        }
     }
 }
