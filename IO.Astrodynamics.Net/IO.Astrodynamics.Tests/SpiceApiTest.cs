@@ -1896,4 +1896,61 @@ public class SpiceApiTest
 
         AssertNothingPending();
     }
+
+    // #714: KeplerianElements and EquinoctialElements accept elements that are not finite, which CONICS and the native ellipse
+    // let through (conics.c checks its domain with comparisons NaN passes): a NaN mean anomaly gave a finite state, silently,
+    // and a NaN inclination a NaN state that threw "Native proxy call failed", or the message of an earlier call about another
+    // body (measured on a80f6a5). They are a bad argument, checked before the native call
+    [Theory]
+    [InlineData(double.NaN, 0.5, 0.3, 0.4)]
+    [InlineData(0.2, double.NaN, 0.3, 0.4)]
+    [InlineData(0.2, 0.5, double.NaN, 0.4)]
+    [InlineData(0.2, 0.5, 0.3, double.PositiveInfinity)]
+    void ConvertConicElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double i, double m, double raan, double aop)
+    {
+        var ke = new KeplerianElements(7.0e6, 0.1, i, raan, aop, m, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        foreach (var conversion in new Func<StateVector>[]
+                 {
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke),
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB),
+                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm)
+                 })
+        {
+            var error = Assert.Throws<ArgumentException>(conversion);
+            Assert.Equal("keplerianElements", error.ParamName);
+        }
+
+        AssertNothingPending();
+    }
+
+    [Theory]
+    [InlineData(double.NaN, 0.0, 0.5)]
+    [InlineData(0.1, double.NaN, 0.5)]
+    [InlineData(0.1, 0.0, double.NaN)]
+    [InlineData(0.1, 0.0, double.PositiveInfinity)]
+    void ConvertEquinoctialElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double h, double k, double l)
+    {
+        var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, h, k, l, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        Assert.Equal("equinoctialElements", error.ParamName);
+        AssertNothingPending();
+    }
+
+    // The reason the elements are checked by the library: conics_c gives a finite state for a NaN mean anomaly and a NaN state
+    // for a NaN inclination, with no SPICE error
+    [Fact]
+    [Trait("Category", "Validation")]
+    void Conics_OfElementsNotFinite_SignalsNoError()
+    {
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var (finite, finiteError) = Body.CspiceDirect.Conics([6.3e6, 0.1, 0.2, 0.3, 0.4, double.NaN, 0.0, gm], 0.0);
+        _output.WriteLine($"MEASURE #714 conics_c with M0 = NaN: x = {finite[0]:E16} m, error {finiteError ?? "none"}");
+        Assert.Null(finiteError);
+        Assert.True(finite.All(double.IsFinite));
+        var (nan, nanError) = Body.CspiceDirect.Conics([6.3e6, 0.1, double.NaN, 0.3, 0.4, 0.5, 0.0, gm], 0.0);
+        Assert.Null(nanError);
+        Assert.True(nan.All(double.IsNaN));
+    }
 }

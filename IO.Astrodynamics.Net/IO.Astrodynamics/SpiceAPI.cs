@@ -2242,6 +2242,33 @@ public class SpiceAPI
         }
     }
 
+    // Elements that are not finite (#714): CONICS checks its domain with comparisons that NaN passes (conics.c) and the native
+    // ellipse checks nothing, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state, with no SPICE
+    // error (measured with CSPICE N0067); the constructors of the elements accept them. A bad argument, checked before the
+    // native call. The semi-major axis of a parabola is infinite: its periapsis radius is checked by ThrowIfOutsideConicsDomain
+    private static void ThrowIfNotFinite(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
+    {
+        ThrowIfNotFinite(paramName, ("e", keplerianElements.E), ("i", keplerianElements.I), ("RAAN", keplerianElements.RAAN),
+            ("AOP", keplerianElements.AOP), ("M", keplerianElements.M));
+    }
+
+    private static void ThrowIfNotFinite(OrbitalParameters.EquinoctialElements equinoctialElements, string paramName)
+    {
+        ThrowIfNotFinite(paramName, ("p", equinoctialElements.P), ("f", equinoctialElements.F), ("g", equinoctialElements.G),
+            ("h", equinoctialElements.H), ("k", equinoctialElements.K), ("L", equinoctialElements.L0));
+    }
+
+    private static void ThrowIfNotFinite(string paramName, params (string Name, double Value)[] elements)
+    {
+        foreach (var (name, value) in elements)
+        {
+            if (!double.IsFinite(value))
+            {
+                throw new ArgumentException($"The element {name} of the elements is {value}: the elements must be finite.", paramName);
+            }
+        }
+    }
+
     // The domain of EQNCPV (eqncpv.c: SPICE(BADSEMIAXIS) for a semi-major axis not above 0, SPICE(ECCOUTOFRANGE) for an
     // eccentricity sqrt(h^2 + k^2) above 0.9), checked before the native call: elements outside it are a bad argument (#711:
     // before, a zero state was returned)
@@ -2388,11 +2415,14 @@ public class SpiceAPI
     /// GM, and the conversion of the result threw for the others).</exception>
     /// <exception cref="ArgumentException">The elements are outside the domain of <c>EQNCPV</c>: a semi-major axis that is not
     /// above 0, or an eccentricity above 0.9 (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">An element is not finite (#714: before, the native layer returned a NaN state, which
+    /// threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
     /// returned); the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
     {
         if (equinoctialElements == null) throw new ArgumentNullException(nameof(equinoctialElements));
+        ThrowIfNotFinite(equinoctialElements, nameof(equinoctialElements));
         ThrowIfOutsideEqncpvDomain(equinoctialElements, nameof(equinoctialElements));
         ThrowIfNotACelestialCentre(equinoctialElements.Observer, nameof(equinoctialElements));
         lock (lockObject)
@@ -2412,11 +2442,14 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
     /// <c>CONICS</c>: an ellipse of negative semi-major axis, a hyperbola of positive one (#711: before, a zero state was
     /// returned).</exception>
+    /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
+    /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
     /// returned for an ellipse, and an open orbit threw an unrelated message); for an ellipse the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
         ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
         // The native conic elements solve the elliptic Kepler equation when they are built, an iteration that may never
         // end on an open orbit (#372): an open orbit goes to SPICE CONICS at the epoch of its elements, as the other
@@ -2439,11 +2472,14 @@ public class SpiceAPI
     /// </summary>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
     /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
+    /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
     /// kernel pool lacks (#711: before, <c>conics_c</c>'s error was left pending and an unrelated message thrown).</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
         ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
         var gm = ObserverGravitationalParameter(keplerianElements.Observer, "the elements", "CONICS");
         return ConvertConicElementsToStateVector(keplerianElements, epoch, gm);
@@ -2459,12 +2495,15 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
     /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
+    /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#711: before,
     /// <c>conics_c</c>'s error was left pending for the next native call and an unrelated message thrown).</exception>
     /// <exception cref="InvalidOperationException"><c>conics_c</c> failed; the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch, double gm)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
+        ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
         ThrowIfOutsideConicsDomain(keplerianElements, nameof(keplerianElements));
         if (!IsConicsGravitationalParameter(gm))
         {
