@@ -1012,6 +1012,10 @@ var opm = new Opm(header, metadata, data);
 opm.SaveToFile("complete_opm.xml");
 ```
 
+Every real value of the data model is a real number, as the readers read it: the components of `OpmStateVector`, the
+terms of `CovarianceMatrix` and the ΔV components of `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming
+the parameter for NaN or ±Infinity (#717), which the writer would write as `NaN` or `Infinity` and the reader refuse.
+
 #### ImpulseManeuver.ToOpmManeuverParameters()
 
 After executing maneuvers during propagation, export them to OPM format:

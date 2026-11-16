@@ -975,14 +975,14 @@ public class OmmValidatorTests
     [InlineData("CX_DOT_X_DOT", "CxDotXDot")]
     [InlineData("CY_DOT_Y_DOT", "CyDotYDot")]
     [InlineData("CZ_DOT_Z_DOT", "CzDotZDot")]
-    public void Validate_NaNVariance_ReportsError(string keyword, string property)
+    public void Validate_NegativeVariance_ReportsError(string keyword, string property)
     {
-        // A variance is non-negative, and NaN is not (before: valid, the check "< 0" being false for NaN). The covariance
-        // constructors do not range-check their terms, so the validator is the check of a programmatic covariance
+        // A variance is non-negative. The covariance constructors refuse a non-finite term (#717; a NaN variance, reported
+        // invalid since #708, no longer builds) but take a negative one, so the validator is the check of its sign
         var read = _reader.ReadFromString(OmmReaderTests.KeywordBaseOmm());
         var data = read.Data;
         var omm = new Omm(read.Header, read.Metadata, new OmmData(data.MeanElements, data.SpacecraftParameters,
-            data.TleParameters, CovarianceWithVariance(keyword, double.NaN), data.UserDefinedParameters, data.Comments));
+            data.TleParameters, CovarianceWithVariance(keyword, -1.0e-6), data.UserDefinedParameters, data.Comments));
 
         var error = Assert.Single(_validator.Validate(omm).Errors);
         Assert.Equal("OMM002", error.Code);

@@ -124,6 +124,8 @@ public class CovarianceMatrix
     /// <param name="czDotZDot">Z_DOT-Z_DOT velocity covariance in km²/s².</param>
     /// <param name="referenceFrame">Reference frame for the covariance (optional).</param>
     /// <param name="comments">Comments associated with the covariance (optional).</param>
+    /// <exception cref="ArgumentOutOfRangeException">A term is NaN or ±Infinity, which the OPM and OMM readers refuse
+    /// (#708, #717). The terms carry no other check: the validators report a negative variance.</exception>
     public CovarianceMatrix(
         double cxX, double cyX, double cyY,
         double czX, double czY, double czZ,
@@ -133,32 +135,34 @@ public class CovarianceMatrix
         string referenceFrame = null,
         IReadOnlyList<string> comments = null)
     {
+        // Real numbers, as the readers read them (#717: NaN and ±Infinity built, and the writers wrote NaN, Infinity or
+        // -Infinity, which the readers refuse)
         // Position covariance
-        CxX = cxX;
-        CyX = cyX;
-        CyY = cyY;
-        CzX = czX;
-        CzY = czY;
-        CzZ = czZ;
+        CxX = CcsdsValues.RequireFinite(cxX, nameof(cxX));
+        CyX = CcsdsValues.RequireFinite(cyX, nameof(cyX));
+        CyY = CcsdsValues.RequireFinite(cyY, nameof(cyY));
+        CzX = CcsdsValues.RequireFinite(czX, nameof(czX));
+        CzY = CcsdsValues.RequireFinite(czY, nameof(czY));
+        CzZ = CcsdsValues.RequireFinite(czZ, nameof(czZ));
 
         // Position-velocity cross-covariance
-        CxDotX = cxDotX;
-        CxDotY = cxDotY;
-        CxDotZ = cxDotZ;
-        CyDotX = cyDotX;
-        CyDotY = cyDotY;
-        CyDotZ = cyDotZ;
-        CzDotX = czDotX;
-        CzDotY = czDotY;
-        CzDotZ = czDotZ;
+        CxDotX = CcsdsValues.RequireFinite(cxDotX, nameof(cxDotX));
+        CxDotY = CcsdsValues.RequireFinite(cxDotY, nameof(cxDotY));
+        CxDotZ = CcsdsValues.RequireFinite(cxDotZ, nameof(cxDotZ));
+        CyDotX = CcsdsValues.RequireFinite(cyDotX, nameof(cyDotX));
+        CyDotY = CcsdsValues.RequireFinite(cyDotY, nameof(cyDotY));
+        CyDotZ = CcsdsValues.RequireFinite(cyDotZ, nameof(cyDotZ));
+        CzDotX = CcsdsValues.RequireFinite(czDotX, nameof(czDotX));
+        CzDotY = CcsdsValues.RequireFinite(czDotY, nameof(czDotY));
+        CzDotZ = CcsdsValues.RequireFinite(czDotZ, nameof(czDotZ));
 
         // Velocity covariance
-        CxDotXDot = cxDotXDot;
-        CyDotXDot = cyDotXDot;
-        CyDotYDot = cyDotYDot;
-        CzDotXDot = czDotXDot;
-        CzDotYDot = czDotYDot;
-        CzDotZDot = czDotZDot;
+        CxDotXDot = CcsdsValues.RequireFinite(cxDotXDot, nameof(cxDotXDot));
+        CyDotXDot = CcsdsValues.RequireFinite(cyDotXDot, nameof(cyDotXDot));
+        CyDotYDot = CcsdsValues.RequireFinite(cyDotYDot, nameof(cyDotYDot));
+        CzDotXDot = CcsdsValues.RequireFinite(czDotXDot, nameof(czDotXDot));
+        CzDotYDot = CcsdsValues.RequireFinite(czDotYDot, nameof(czDotYDot));
+        CzDotZDot = CcsdsValues.RequireFinite(czDotZDot, nameof(czDotZDot));
 
         ReferenceFrame = referenceFrame;
         Comments = comments ?? Array.Empty<string>();
@@ -173,6 +177,8 @@ public class CovarianceMatrix
     /// <returns>A new CovarianceMatrix instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when matrix is null.</exception>
     /// <exception cref="ArgumentException">Thrown when matrix is not 6x6.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), named as the
+    /// constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
     public static CovarianceMatrix FromFullMatrix(double[,] matrix, string referenceFrame = null, IReadOnlyList<string> comments = null)
     {
         if (matrix == null)
@@ -208,6 +214,8 @@ public class CovarianceMatrix
     /// <param name="comments">Comments associated with the covariance (optional).</param>
     /// <returns>A new CovarianceMatrix instance.</returns>
     /// <exception cref="ArgumentException">Thrown when matrix is not 6x6.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), named as the
+    /// constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
     public static CovarianceMatrix FromMatrix(Matrix matrix, string referenceFrame = null, IReadOnlyList<string> comments = null)
     {
         if (matrix.Rows != 6 || matrix.Columns != 6)
@@ -223,6 +231,9 @@ public class CovarianceMatrix
     /// <param name="referenceFrame">Reference frame for the covariance (optional).</param>
     /// <param name="comments">Comments associated with the covariance (optional).</param>
     /// <returns>A new CovarianceMatrix instance in CCSDS units (km², km²/s, km²/s²).</returns>
+    /// <exception cref="ArgumentException">Thrown when the matrix is not 6x6.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), named as the
+    /// constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
     /// <remarks>
     /// Converts from framework units (m², m²/s, m²/s²) to CCSDS units (km², km²/s, km²/s²).
     /// All elements are divided by 10⁶ (1000² for position, 1000² for velocity).

@@ -2,6 +2,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Math;
 
@@ -20,22 +21,61 @@ public sealed record CdmHeader
     public string MessageId { get; init; } = string.Empty;
 }
 
+/// <summary>
+/// The relative position and velocity of object 2 with respect to object 1 in the RTN frame of object 1, in m and m/s.
+/// </summary>
+/// <remarks>
+/// Every real value is a real number, as the CDM reader reads it (#708): the init accessor of each vector throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for a component NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// </remarks>
 public sealed record CdmRelativeStateVector
 {
-    public Vector3 RelativePositionRtnMeters { get; init; } = Vector3.Zero;
+    private readonly Vector3 _relativePositionRtnMeters = Vector3.Zero;
 
-    public Vector3 RelativeVelocityRtnMetersPerSecond { get; init; } = Vector3.Zero;
+    public Vector3 RelativePositionRtnMeters
+    {
+        get => _relativePositionRtnMeters;
+        init => _relativePositionRtnMeters = CcsdsValues.RequireFinite(value, nameof(RelativePositionRtnMeters));
+    }
+
+    private readonly Vector3 _relativeVelocityRtnMetersPerSecond = Vector3.Zero;
+
+    public Vector3 RelativeVelocityRtnMetersPerSecond
+    {
+        get => _relativeVelocityRtnMetersPerSecond;
+        init => _relativeVelocityRtnMetersPerSecond = CcsdsValues.RequireFinite(value, nameof(RelativeVelocityRtnMetersPerSecond));
+    }
 }
 
+/// <summary>
+/// The relative metadata and data of a CDM: the TCA, the miss distance, the relative speed and state, the screening period and volume, and the probability of collision.
+/// </summary>
+/// <remarks>
+/// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// The one range of these values that <see cref="Cdm.Validate"/> checks is the miss distance's, 0 or more.
+/// </remarks>
 public sealed record CdmRelativeMetadataData
 {
     public IReadOnlyList<string> Comments { get; init; } = Array.Empty<string>();
 
     public DateTime TcaUtc { get; init; }
 
-    public double MissDistanceMeters { get; init; }
+    private readonly double _missDistanceMeters;
 
-    public double? RelativeSpeedMetersPerSecond { get; init; }
+    public double MissDistanceMeters
+    {
+        get => _missDistanceMeters;
+        init => _missDistanceMeters = CcsdsValues.RequireFinite(value, nameof(MissDistanceMeters));
+    }
+
+    private readonly double? _relativeSpeedMetersPerSecond;
+
+    public double? RelativeSpeedMetersPerSecond
+    {
+        get => _relativeSpeedMetersPerSecond;
+        init => _relativeSpeedMetersPerSecond = CcsdsValues.RequireNullOrFinite(value, nameof(RelativeSpeedMetersPerSecond));
+    }
 
     public CdmRelativeStateVector? RelativeStateVector { get; init; }
 
@@ -47,17 +87,41 @@ public sealed record CdmRelativeMetadataData
 
     public CdmScreenVolumeShape? ScreenVolumeShape { get; init; }
 
-    public double? ScreenVolumeXMeters { get; init; }
+    private readonly double? _screenVolumeXMeters;
 
-    public double? ScreenVolumeYMeters { get; init; }
+    public double? ScreenVolumeXMeters
+    {
+        get => _screenVolumeXMeters;
+        init => _screenVolumeXMeters = CcsdsValues.RequireNullOrFinite(value, nameof(ScreenVolumeXMeters));
+    }
 
-    public double? ScreenVolumeZMeters { get; init; }
+    private readonly double? _screenVolumeYMeters;
+
+    public double? ScreenVolumeYMeters
+    {
+        get => _screenVolumeYMeters;
+        init => _screenVolumeYMeters = CcsdsValues.RequireNullOrFinite(value, nameof(ScreenVolumeYMeters));
+    }
+
+    private readonly double? _screenVolumeZMeters;
+
+    public double? ScreenVolumeZMeters
+    {
+        get => _screenVolumeZMeters;
+        init => _screenVolumeZMeters = CcsdsValues.RequireNullOrFinite(value, nameof(ScreenVolumeZMeters));
+    }
 
     public DateTime? ScreenEntryTimeUtc { get; init; }
 
     public DateTime? ScreenExitTimeUtc { get; init; }
 
-    public double? CollisionProbability { get; init; }
+    private readonly double? _collisionProbability;
+
+    public double? CollisionProbability
+    {
+        get => _collisionProbability;
+        init => _collisionProbability = CcsdsValues.RequireNullOrFinite(value, nameof(CollisionProbability));
+    }
 
     public string? CollisionProbabilityMethod { get; init; }
 }
@@ -133,6 +197,13 @@ public sealed record CdmParticipantMetadata
     public bool? IntrackThrust { get; init; }
 }
 
+/// <summary>
+/// The orbit determination parameters of a CDM segment.
+/// </summary>
+/// <remarks>
+/// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// </remarks>
 public sealed record CdmOdParameters
 {
     public IReadOnlyList<string> Comments { get; init; } = Array.Empty<string>();
@@ -141,9 +212,21 @@ public sealed record CdmOdParameters
 
     public DateTime? TimeLastObservationEndUtc { get; init; }
 
-    public double? RecommendedOdSpanDays { get; init; }
+    private readonly double? _recommendedOdSpanDays;
 
-    public double? ActualOdSpanDays { get; init; }
+    public double? RecommendedOdSpanDays
+    {
+        get => _recommendedOdSpanDays;
+        init => _recommendedOdSpanDays = CcsdsValues.RequireNullOrFinite(value, nameof(RecommendedOdSpanDays));
+    }
+
+    private readonly double? _actualOdSpanDays;
+
+    public double? ActualOdSpanDays
+    {
+        get => _actualOdSpanDays;
+        init => _actualOdSpanDays = CcsdsValues.RequireNullOrFinite(value, nameof(ActualOdSpanDays));
+    }
 
     public int? ObservationsAvailable { get; init; }
 
@@ -153,94 +236,350 @@ public sealed record CdmOdParameters
 
     public int? TracksUsed { get; init; }
 
-    public double? ResidualsAcceptedPercent { get; init; }
+    private readonly double? _residualsAcceptedPercent;
 
-    public double? WeightedRms { get; init; }
+    public double? ResidualsAcceptedPercent
+    {
+        get => _residualsAcceptedPercent;
+        init => _residualsAcceptedPercent = CcsdsValues.RequireNullOrFinite(value, nameof(ResidualsAcceptedPercent));
+    }
+
+    private readonly double? _weightedRms;
+
+    public double? WeightedRms
+    {
+        get => _weightedRms;
+        init => _weightedRms = CcsdsValues.RequireNullOrFinite(value, nameof(WeightedRms));
+    }
 }
 
+/// <summary>
+/// The additional parameters of a CDM segment: areas, mass, ballistic and reflectivity terms, thrust acceleration, SEDR.
+/// </summary>
+/// <remarks>
+/// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// </remarks>
 public sealed record CdmAdditionalParameters
 {
     public IReadOnlyList<string> Comments { get; init; } = Array.Empty<string>();
 
-    public double? AreaPcSquareMeters { get; init; }
+    private readonly double? _areaPcSquareMeters;
 
-    public double? AreaDragSquareMeters { get; init; }
+    public double? AreaPcSquareMeters
+    {
+        get => _areaPcSquareMeters;
+        init => _areaPcSquareMeters = CcsdsValues.RequireNullOrFinite(value, nameof(AreaPcSquareMeters));
+    }
 
-    public double? AreaSrpSquareMeters { get; init; }
+    private readonly double? _areaDragSquareMeters;
 
-    public double? MassKilograms { get; init; }
+    public double? AreaDragSquareMeters
+    {
+        get => _areaDragSquareMeters;
+        init => _areaDragSquareMeters = CcsdsValues.RequireNullOrFinite(value, nameof(AreaDragSquareMeters));
+    }
 
-    public double? CdAreaOverMass { get; init; }
+    private readonly double? _areaSrpSquareMeters;
 
-    public double? CrAreaOverMass { get; init; }
+    public double? AreaSrpSquareMeters
+    {
+        get => _areaSrpSquareMeters;
+        init => _areaSrpSquareMeters = CcsdsValues.RequireNullOrFinite(value, nameof(AreaSrpSquareMeters));
+    }
 
-    public double? ThrustAccelerationMetersPerSecondSquared { get; init; }
+    private readonly double? _massKilograms;
 
-    public double? SedrWattsPerKilogram { get; init; }
+    public double? MassKilograms
+    {
+        get => _massKilograms;
+        init => _massKilograms = CcsdsValues.RequireNullOrFinite(value, nameof(MassKilograms));
+    }
+
+    private readonly double? _cdAreaOverMass;
+
+    public double? CdAreaOverMass
+    {
+        get => _cdAreaOverMass;
+        init => _cdAreaOverMass = CcsdsValues.RequireNullOrFinite(value, nameof(CdAreaOverMass));
+    }
+
+    private readonly double? _crAreaOverMass;
+
+    public double? CrAreaOverMass
+    {
+        get => _crAreaOverMass;
+        init => _crAreaOverMass = CcsdsValues.RequireNullOrFinite(value, nameof(CrAreaOverMass));
+    }
+
+    private readonly double? _thrustAccelerationMetersPerSecondSquared;
+
+    public double? ThrustAccelerationMetersPerSecondSquared
+    {
+        get => _thrustAccelerationMetersPerSecondSquared;
+        init => _thrustAccelerationMetersPerSecondSquared = CcsdsValues.RequireNullOrFinite(value, nameof(ThrustAccelerationMetersPerSecondSquared));
+    }
+
+    private readonly double? _sedrWattsPerKilogram;
+
+    public double? SedrWattsPerKilogram
+    {
+        get => _sedrWattsPerKilogram;
+        init => _sedrWattsPerKilogram = CcsdsValues.RequireNullOrFinite(value, nameof(SedrWattsPerKilogram));
+    }
 }
 
+/// <summary>
+/// The state of the object of a CDM segment at TCA, in m and m/s.
+/// </summary>
+/// <remarks>
+/// Every real value is a real number, as the CDM reader reads it (#708): the init accessor of each vector throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for a component NaN or ±Infinity, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// </remarks>
 public sealed record CdmStateVector
 {
     public IReadOnlyList<string> Comments { get; init; } = Array.Empty<string>();
 
-    public Vector3 PositionMeters { get; init; } = Vector3.Zero;
+    private readonly Vector3 _positionMeters = Vector3.Zero;
 
-    public Vector3 VelocityMetersPerSecond { get; init; } = Vector3.Zero;
+    public Vector3 PositionMeters
+    {
+        get => _positionMeters;
+        init => _positionMeters = CcsdsValues.RequireFinite(value, nameof(PositionMeters));
+    }
+
+    private readonly Vector3 _velocityMetersPerSecond = Vector3.Zero;
+
+    public Vector3 VelocityMetersPerSecond
+    {
+        get => _velocityMetersPerSecond;
+        init => _velocityMetersPerSecond = CcsdsValues.RequireFinite(value, nameof(VelocityMetersPerSecond));
+    }
 }
 
+/// <summary>
+/// The covariance of the object of a CDM segment at TCA in its RTN frame (m², m²/s, m²/s²), with the optional drag, SRP and thrust rows.
+/// </summary>
+/// <remarks>
+/// Every real value is a real number, as the CDM reader reads it (#708): an init accessor throws
+/// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a term of
+/// <see cref="StateCovarianceRtn"/> included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
+/// The record holds a copy of the matrix it is given and returns a copy of the one it holds, so a term set afterwards on
+/// either matrix does not reach it (review of #717). <see cref="Cdm.Validate"/> checks its size, 6×6.
+/// </remarks>
 public sealed record CdmCovarianceMatrix
 {
     public IReadOnlyList<string> Comments { get; init; } = Array.Empty<string>();
 
-    public Matrix StateCovarianceRtn { get; init; } = new Matrix(6, 6);
+    private readonly Matrix _stateCovarianceRtn = new Matrix(6, 6);
 
-    public double? CdrgR { get; init; }
+    /// <summary>
+    /// The 6×6 state covariance in the RTN frame of the object (m², m²/s, m²/s²), of which the writer writes the lower
+    /// triangle (<c>CR_R</c> ... <c>CNDOT_NDOT</c>).
+    /// </summary>
+    /// <remarks>
+    /// The record holds its own copy of the matrix: the init accessor checks the terms of a copy of the matrix it is given
+    /// and the getter returns a copy of the one it holds, so a term set afterwards on either <see cref="Matrix"/> (whose
+    /// <see cref="Matrix.Set"/> writes its shared array) does not reach the record (review of #717).
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the matrix given is NaN or ±Infinity.</exception>
+    public Matrix StateCovarianceRtn
+    {
+        get => CcsdsValues.Copy(_stateCovarianceRtn);
+        init => _stateCovarianceRtn = CcsdsValues.RequireFinite(CcsdsValues.Copy(value), nameof(StateCovarianceRtn));
+    }
 
-    public double? CdrgT { get; init; }
+    private readonly double? _cdrgR;
 
-    public double? CdrgN { get; init; }
+    public double? CdrgR
+    {
+        get => _cdrgR;
+        init => _cdrgR = CcsdsValues.RequireNullOrFinite(value, nameof(CdrgR));
+    }
 
-    public double? CdrgRdot { get; init; }
+    private readonly double? _cdrgT;
 
-    public double? CdrgTdot { get; init; }
+    public double? CdrgT
+    {
+        get => _cdrgT;
+        init => _cdrgT = CcsdsValues.RequireNullOrFinite(value, nameof(CdrgT));
+    }
 
-    public double? CdrgNdot { get; init; }
+    private readonly double? _cdrgN;
 
-    public double? CdrgDrg { get; init; }
+    public double? CdrgN
+    {
+        get => _cdrgN;
+        init => _cdrgN = CcsdsValues.RequireNullOrFinite(value, nameof(CdrgN));
+    }
 
-    public double? CsrpR { get; init; }
+    private readonly double? _cdrgRdot;
 
-    public double? CsrpT { get; init; }
+    public double? CdrgRdot
+    {
+        get => _cdrgRdot;
+        init => _cdrgRdot = CcsdsValues.RequireNullOrFinite(value, nameof(CdrgRdot));
+    }
 
-    public double? CsrpN { get; init; }
+    private readonly double? _cdrgTdot;
 
-    public double? CsrpRdot { get; init; }
+    public double? CdrgTdot
+    {
+        get => _cdrgTdot;
+        init => _cdrgTdot = CcsdsValues.RequireNullOrFinite(value, nameof(CdrgTdot));
+    }
 
-    public double? CsrpTdot { get; init; }
+    private readonly double? _cdrgNdot;
 
-    public double? CsrpNdot { get; init; }
+    public double? CdrgNdot
+    {
+        get => _cdrgNdot;
+        init => _cdrgNdot = CcsdsValues.RequireNullOrFinite(value, nameof(CdrgNdot));
+    }
 
-    public double? CsrpDrg { get; init; }
+    private readonly double? _cdrgDrg;
 
-    public double? CsrpSrp { get; init; }
+    public double? CdrgDrg
+    {
+        get => _cdrgDrg;
+        init => _cdrgDrg = CcsdsValues.RequireNullOrFinite(value, nameof(CdrgDrg));
+    }
 
-    public double? CthrR { get; init; }
+    private readonly double? _csrpR;
 
-    public double? CthrT { get; init; }
+    public double? CsrpR
+    {
+        get => _csrpR;
+        init => _csrpR = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpR));
+    }
 
-    public double? CthrN { get; init; }
+    private readonly double? _csrpT;
 
-    public double? CthrRdot { get; init; }
+    public double? CsrpT
+    {
+        get => _csrpT;
+        init => _csrpT = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpT));
+    }
 
-    public double? CthrTdot { get; init; }
+    private readonly double? _csrpN;
 
-    public double? CthrNdot { get; init; }
+    public double? CsrpN
+    {
+        get => _csrpN;
+        init => _csrpN = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpN));
+    }
 
-    public double? CthrDrg { get; init; }
+    private readonly double? _csrpRdot;
 
-    public double? CthrSrp { get; init; }
+    public double? CsrpRdot
+    {
+        get => _csrpRdot;
+        init => _csrpRdot = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpRdot));
+    }
 
-    public double? CthrThr { get; init; }
+    private readonly double? _csrpTdot;
+
+    public double? CsrpTdot
+    {
+        get => _csrpTdot;
+        init => _csrpTdot = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpTdot));
+    }
+
+    private readonly double? _csrpNdot;
+
+    public double? CsrpNdot
+    {
+        get => _csrpNdot;
+        init => _csrpNdot = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpNdot));
+    }
+
+    private readonly double? _csrpDrg;
+
+    public double? CsrpDrg
+    {
+        get => _csrpDrg;
+        init => _csrpDrg = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpDrg));
+    }
+
+    private readonly double? _csrpSrp;
+
+    public double? CsrpSrp
+    {
+        get => _csrpSrp;
+        init => _csrpSrp = CcsdsValues.RequireNullOrFinite(value, nameof(CsrpSrp));
+    }
+
+    private readonly double? _cthrR;
+
+    public double? CthrR
+    {
+        get => _cthrR;
+        init => _cthrR = CcsdsValues.RequireNullOrFinite(value, nameof(CthrR));
+    }
+
+    private readonly double? _cthrT;
+
+    public double? CthrT
+    {
+        get => _cthrT;
+        init => _cthrT = CcsdsValues.RequireNullOrFinite(value, nameof(CthrT));
+    }
+
+    private readonly double? _cthrN;
+
+    public double? CthrN
+    {
+        get => _cthrN;
+        init => _cthrN = CcsdsValues.RequireNullOrFinite(value, nameof(CthrN));
+    }
+
+    private readonly double? _cthrRdot;
+
+    public double? CthrRdot
+    {
+        get => _cthrRdot;
+        init => _cthrRdot = CcsdsValues.RequireNullOrFinite(value, nameof(CthrRdot));
+    }
+
+    private readonly double? _cthrTdot;
+
+    public double? CthrTdot
+    {
+        get => _cthrTdot;
+        init => _cthrTdot = CcsdsValues.RequireNullOrFinite(value, nameof(CthrTdot));
+    }
+
+    private readonly double? _cthrNdot;
+
+    public double? CthrNdot
+    {
+        get => _cthrNdot;
+        init => _cthrNdot = CcsdsValues.RequireNullOrFinite(value, nameof(CthrNdot));
+    }
+
+    private readonly double? _cthrDrg;
+
+    public double? CthrDrg
+    {
+        get => _cthrDrg;
+        init => _cthrDrg = CcsdsValues.RequireNullOrFinite(value, nameof(CthrDrg));
+    }
+
+    private readonly double? _cthrSrp;
+
+    public double? CthrSrp
+    {
+        get => _cthrSrp;
+        init => _cthrSrp = CcsdsValues.RequireNullOrFinite(value, nameof(CthrSrp));
+    }
+
+    private readonly double? _cthrThr;
+
+    public double? CthrThr
+    {
+        get => _cthrThr;
+        init => _cthrThr = CcsdsValues.RequireNullOrFinite(value, nameof(CthrThr));
+    }
 
     public static CdmCovarianceMatrix FromRtnCovariance(Matrix covarianceRtn, IReadOnlyList<string>? comments = null)
     {

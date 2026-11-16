@@ -2860,7 +2860,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CcsdsValues.IsNullOrFiniteNonNegative`), `OpmKeplerianElements` (e finite and 0 or more, a finite, i in [0, 180], GM
   finite and above 0) and `OpmManeuverParameters` (`manDuration` finite and 0 or more, `manDeltaMass` finite and 0 or
   less), the same `ArgumentOutOfRangeException` naming the parameter. The parameters without a range (the state
-  vector, the covariance, the ΔV components, the TLE parameters, the CDM records) are unchanged. Finite values build bit
+  vector, the covariance, the ΔV components, the TLE parameters, the CDM records) were left unchanged here; [#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)
+  extends the rule to them (below). Finite values build bit
   for bit as before (`MeanElementsTests`, `SpacecraftParametersTests`, `OpmDataTests`, `OpmKeplerianElementsTests` and
   `OpmManeuverParametersTests` `*_NonFinite*`, NaN, +∞ and −∞ in each ranged parameter, red on 46e6975; the bounds
   e 0 and −0, i 0 and 180, the angles −360, a mass and a delta mass of 0 stored as given).
@@ -2873,6 +2874,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OPM002`) or a CDM content error naming its value (`Variance CX_X must be finite and non-negative, got NaN.`); the
   warnings and the information levels are unchanged (`OmmValidatorTests` and `OpmValidatorTests`
   `Validate_NaNVariance_ReportsError`, each variance; `CdmTests.Validate_NaNMissDistance_IsInvalid`; red on 46e6975).
+  Since [#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717) a NaN or infinite variance or miss distance no longer builds, so these errors are reached through a
+  negative value (`Validate_NegativeVariance_ReportsError`, `Validate_NegativeMissDistance_IsInvalid`, which replace them).
 - **The OMM content validation refused a negative angle the schema accepts** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OmmValidator` checked
   `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` and `MEAN_ANOMALY` against [0, 360) ("must be 0-360 degrees"), where the
   `angleRange` of NDM/XML 4.0.0 and `MeanElements` take [-360, 360): `Omm.LoadFrom*` with the default `validateContent`
@@ -3157,6 +3160,44 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   numerical propagation tutorials import the two namespaces, and the OMM and OPM blocks of the TLE tutorial import their
   own. A page that declares no directive gives the reader none and is not compiled this way. Documentation and tests
   only: no library result moves.
+
+- **The CCSDS data model built values without a range that its readers refuse** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)). The
+  constructors of `OpmStateVector` (X ... Z_DOT), `CovarianceMatrix` (its 21 terms), `OpmManeuverParameters` (MAN_DV_1
+  to MAN_DV_3) and `TleParameters` (BSTAR, BTERM, MEAN_MOTION_DOT, MEAN_MOTION_DDOT, AGOM), and the init accessors of the
+  CDM records (`CdmRelativeMetadataData`, `CdmRelativeStateVector`, `CdmOdParameters`, `CdmAdditionalParameters`,
+  `CdmStateVector`, `CdmCovarianceMatrix`: 47 real values), assigned NaN and ±Infinity unchecked, where #708 had
+  checked the ranged parameters only: `Validate()` and `validateBeforeSave` passed them (an infinite BSTAR with an
+  information message, a covariance term other than a variance, every CDM value but the miss distance), the writers
+  wrote `NaN`, `Infinity` or `-Infinity` (`Infinity` is not an `xsd:double` literal, XML Schema Part 2, 3.2.5.1), and
+  the readers refused the document (measured on a80f6a5: `new OpmStateVector(epoch, NaN, ...)` written as
+  `<X units="km">NaN</X>`, then `OpmParseException`; `CY_X = NaN` in an OMM, `BSTAR = NaN`, `with { CollisionProbability
+  = NaN }` on a CDM read back, each written and refused). Each value now goes through the internal `CcsdsValues`
+  (`RequireFinite`, `RequireNullOrFinite`, a vector by component, a matrix by term), which throws
+  `ArgumentOutOfRangeException` naming the parameter or the property; the factories (`FromStateVector`,
+  `FromFullMatrix`, `FromMatrix`, `FromMatrixWithUnitConversion`, `CreateImpulsive`, the four `CreateWith*`,
+  `FromRtnCovariance`) inherit the check under the name of the term at fault. Finite values build bit for bit as
+  before, and the written documents are byte for byte unchanged (`OpmStateVectorTests`, `CovarianceMatrixTests`,
+  `OpmManeuverParametersTests`, `TleParametersTests` and `CdmTests` `*_NonFinite*`, NaN, +∞ and −∞ in each value, 622
+  cases red on a80f6a5; `CdmTests.RealProperties_ListEveryRealPropertyOfTheRecords` guards that every real property of
+  the six records is checked; ±`double.MaxValue`, ±`double.Epsilon` and −0 stored as given, a Pc of `double.Epsilon`
+  written and read back bit for bit). `CdmCovarianceMatrix.StateCovarianceRtn` held the caller's `Matrix`, whose `Set`
+  writes the array it wraps, and returned it: a NaN or ±Infinity set on the matrix given, or on the one the getter
+  returned (a CDM read by `Cdm.ReadFromString` included), reached the record after the check, `Validate()` passed it,
+  `WriteToString` wrote it and the reader refused the document (measured on the first fix of #717). The record now holds
+  a copy of the matrix it is given and its getter returns a copy (internal `CcsdsValues.Copy`), so a term set on either
+  matrix does not reach it (`CdmTests.Init_MatrixChangedAfterwards_TheRecordKeepsTheTermsItChecked` and
+  `StateCovarianceRtn_ReturnedMatrixChanged_TheCdmStillWritesAndReadsBack`, CR_R, CT_R and CNDOT_NDOT with NaN, +∞ and
+  −∞, 18 cases red on a80f6a5).
+- **The CDM reader read a decimal comma as another number** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), the number half of [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). `CdmReader`
+  parsed with `NumberStyles.AllowThousands`, which drops every comma wherever it stands: `MISS_DISTANCE` `118,1` read
+  as 1181 m, `0,715` as 715 m, `COLLISION_PROBABILITY` `4,835E-05` as 0.04835 (1000 times the value), `CR_R` `4,1` as
+  41 m², `X` `2,570.097065` km as 2 570 097.065 m (measured on a80f6a5). `xsd:double` has no comma (XML Schema Part 2,
+  3.2.5.1), nor a value of CCSDS 508.0-B-1 (6.3.2.2 to 6.3.2.4, to be verified by S. Guillet). The reader now parses
+  with `NumberStyles.Float` only, and a comma throws the existing `CdmParseException`
+  (`Invalid numeric value for MISS_DISTANCE: '118,1'.`). Every `xsd:double` numeral (a sign, no integer digit, an
+  exponent of either case, surrounding whitespace) reads bit for bit as before (`CdmTests`
+  `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
+  `ReadFromString_XsdDoubleLexicalForms_AreRead`). The date half of #619 stays open.
 
 **Changed**
 
@@ -4318,7 +4359,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OpmValidator` and `CdmValidator.Validate` (and `Cdm.Validate`) report an error for a NaN or infinite covariance
   variance or CDM miss distance, where they reported the object valid, and their range messages now name the finite
   rule (`must be finite and non-negative`, `must be finite and positive`). Only an object built programmatically with
-  such a value is affected: the readers refuse it. Migration: none for finite data.
+  such a value is affected: the readers refuse it. Migration: none for finite data. Since [#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717) such an object no
+  longer builds, so these errors are reached through a negative variance or miss distance only.
 - **The OMM content validation accepts an angle in [-360, 0)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator.Validate`,
   `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER`
   and `MEAN_ANOMALY` in [-360, 0), where they reported an `InvalidRange` error (`OMM002`) and threw
@@ -4336,6 +4378,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept it, where they reported an
   `InvalidRange` error (`OMM002`) and threw `OmmValidationException`. Migration: none; a caller that needs a positive
   mass checks it.
+- **Breaking: the CCSDS data model refuses a non-finite value without a range** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), Fixed above).
+  `new OpmStateVector(...)`, `OpmStateVector.FromStateVector`, `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` throw
+  `ArgumentOutOfRangeException` naming `x`, `y`, `z`, `xDot`, `yDot` or `zDot`; `new CovarianceMatrix(...)`,
+  `FromFullMatrix`, `FromMatrix` and `FromMatrixWithUnitConversion` (so `Opm.CreateFromStateVector` for a state's covariance)
+  the term (`cxX` ... `czDotZDot`); `new OpmManeuverParameters(...)`, `CreateImpulsive` and
+  `ImpulseManeuver.ToOpmManeuverParameters` `manDv1`, `manDv2` or `manDv3`; `new TleParameters(...)`, the four
+  `CreateWith*` factories and `Omm.CreateForTle` `bstar`, `bterm`, `meanMotionDot`, `meanMotionDDot` or `agom`; setting a
+  real property of `CdmRelativeMetadataData`, `CdmRelativeStateVector`, `CdmOdParameters`, `CdmAdditionalParameters`,
+  `CdmStateVector` or `CdmCovarianceMatrix` (by an object initializer, a `with` expression or `FromRtnCovariance`, a
+  vector component or a covariance term included) the property, and so does `EncounterCase.ToCdm` for such a value in
+  an encounter built by hand: each for NaN or ±Infinity, where they built it and wrote `NaN`, `Infinity` or `-Infinity`,
+  which the readers refuse. A negative variance still builds and is reported by the validators. Migration: pass finite
+  values, or leave an optional CDM value null; a non-finite state carried no orbit. Finite values build bit for bit as
+  before, `TLE.ToOmm` is unchanged, and the documents written are byte for byte unchanged. `CdmCovarianceMatrix`
+  copies the matrix it is given and the one its `StateCovarianceRtn` returns: a term set afterwards on the caller's matrix
+  or on the matrix returned no longer changes the record. Migration: build the record again, or use
+  `with { StateCovarianceRtn = matrix }` with the changed matrix.
+- **Breaking: the CDM reader refuses a comma in a numeric value** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), Fixed above). `Cdm.ReadFromString`,
+  `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
+  comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
+  period. Documents written to the standard are read bit for bit as before.
 
 **Deprecated**
 

@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.CCSDS.Common;
 
@@ -34,6 +35,76 @@ internal static class CcsdsValues
     /// <returns>True when <paramref name="value"/> is null or finite and not below 0.</returns>
     internal static bool IsNullOrFiniteNonNegative(double? value) =>
         !value.HasValue || (double.IsFinite(value.Value) && value.Value >= 0);
+
+    /// <summary>
+    /// A value of the data model without a range: a real number, the <c>xsd:double</c> of NDM/XML 4.0.0 the readers read
+    /// (#708), so that NaN and ±Infinity, which the writers would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c>
+    /// and the readers refuse, are refused where the data model receives them (#717).
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <param name="parameter">The name of the parameter or property that receives it.</param>
+    /// <returns><paramref name="value"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is NaN or ±Infinity.</exception>
+    internal static double RequireFinite(double value, string parameter)
+    {
+        if (!double.IsFinite(value))
+            throw new ArgumentOutOfRangeException(parameter, value, $"{parameter} must be a finite number.");
+        return value;
+    }
+
+    /// <summary>
+    /// An optional value of the data model without a range: null (the keyword absent) or a real number (#717).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is NaN or ±Infinity.</exception>
+    internal static double? RequireNullOrFinite(double? value, string parameter)
+    {
+        if (value.HasValue)
+            RequireFinite(value.Value, parameter);
+        return value;
+    }
+
+    /// <summary>
+    /// A vector of the data model: three real numbers (#717).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">A component of <paramref name="value"/> is NaN or ±Infinity.</exception>
+    internal static Vector3 RequireFinite(Vector3 value, string parameter)
+    {
+        if (!(double.IsFinite(value.X) && double.IsFinite(value.Y) && double.IsFinite(value.Z)))
+            throw new ArgumentOutOfRangeException(parameter, value, $"{parameter} must have finite components.");
+        return value;
+    }
+
+    /// <summary>
+    /// A matrix of the data model: real numbers in every term, whatever its size (#717). The terms are read once, as given;
+    /// the matrix is not copied, so a record that holds it receives a copy (<see cref="Copy"/>, review of #717).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">A term of <paramref name="value"/> is NaN or ±Infinity.</exception>
+    internal static Matrix RequireFinite(Matrix value, string parameter)
+    {
+        for (int row = 0; row < value.Rows; row++)
+        {
+            for (int column = 0; column < value.Columns; column++)
+            {
+                var term = value.Get(row, column);
+                if (!double.IsFinite(term))
+                    throw new ArgumentOutOfRangeException(parameter, term,
+                        $"{parameter} must have finite terms; the term ({row}, {column}) is not.");
+            }
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// A copy of a matrix that shares no array with it, since <see cref="Matrix.Set"/> writes the array a
+    /// <see cref="Matrix"/> wraps: a record of the data model holds and returns copies, so that a term set on the matrix
+    /// it was given or on the one it returned does not reach it (review of #717). A matrix without terms
+    /// (<c>default(Matrix)</c> included, whose array is null) is returned as it is.
+    /// </summary>
+    /// <param name="value">The matrix.</param>
+    /// <returns>A matrix of the same size and terms over a new array.</returns>
+    internal static Matrix Copy(Matrix value) =>
+        value.Rows == 0 || value.Columns == 0 ? value : new Matrix(value.ToArray());
 
     /// <summary>
     /// Runs <paramref name="construct"/>; an <see cref="ArgumentException"/> it throws (an

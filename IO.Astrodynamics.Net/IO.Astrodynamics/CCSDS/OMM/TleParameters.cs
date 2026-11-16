@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.CCSDS.Common;
 
 namespace IO.Astrodynamics.CCSDS.OMM;
 
@@ -81,6 +82,8 @@ public class TleParameters
     /// <param name="elementSetNumber">Optional element set number (0-9999).</param>
     /// <param name="revolutionNumberAtEpoch">Optional revolution number at epoch.</param>
     /// <param name="comments">Optional comments.</param>
+    /// <exception cref="ArgumentOutOfRangeException">BSTAR, the first or the second derivative of the mean motion is NaN or
+    /// ±Infinity, which the OMM reader refuses (#708, #717), or the element set or revolution number is out of its range.</exception>
     public TleParameters(
         double bstar,
         double meanMotionDot,
@@ -95,10 +98,11 @@ public class TleParameters
         ValidateElementSetNumber(elementSetNumber);
         ValidateRevolutionNumber(revolutionNumberAtEpoch);
 
-        BStar = bstar;
+        // Real numbers, as the reader reads them (#717)
+        BStar = CcsdsValues.RequireFinite(bstar, nameof(bstar));
         BTerm = null;
-        MeanMotionDot = meanMotionDot;
-        MeanMotionDDot = meanMotionDDot;
+        MeanMotionDot = CcsdsValues.RequireFinite(meanMotionDot, nameof(meanMotionDot));
+        MeanMotionDDot = CcsdsValues.RequireFinite(meanMotionDDot, nameof(meanMotionDDot));
         AGom = null;
         EphemerisType = ephemerisType;
         ClassificationType = classificationType;
@@ -124,11 +128,13 @@ public class TleParameters
         int? revolutionNumberAtEpoch,
         IReadOnlyList<string> comments)
     {
-        BStar = bstar;
-        BTerm = bterm;
-        MeanMotionDot = meanMotionDot;
-        MeanMotionDDot = meanMotionDDot;
-        AGom = agom;
+        // Real numbers, as the reader reads them (#717: NaN and ±Infinity built, Validate() passed them, an infinite BSTAR
+        // with an information message only, and the writer wrote NaN, Infinity or -Infinity, which the reader refuses)
+        BStar = CcsdsValues.RequireNullOrFinite(bstar, nameof(bstar));
+        BTerm = CcsdsValues.RequireNullOrFinite(bterm, nameof(bterm));
+        MeanMotionDot = CcsdsValues.RequireFinite(meanMotionDot, nameof(meanMotionDot));
+        MeanMotionDDot = CcsdsValues.RequireNullOrFinite(meanMotionDDot, nameof(meanMotionDDot));
+        AGom = CcsdsValues.RequireNullOrFinite(agom, nameof(agom));
         EphemerisType = ephemerisType;
         ClassificationType = classificationType;
         NoradCatalogId = noradCatalogId;
@@ -150,6 +156,8 @@ public class TleParameters
     /// <summary>
     /// Creates TleParameters with BSTAR and MEAN_MOTION_DDOT (standard SGP4).
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
+    /// revolution number is out of its range.</exception>
     public static TleParameters CreateWithBStarAndDDot(
         double bstar,
         double meanMotionDot,
@@ -172,6 +180,8 @@ public class TleParameters
     /// <summary>
     /// Creates TleParameters with BSTAR and AGOM (SGP4-XP).
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
+    /// revolution number is out of its range.</exception>
     public static TleParameters CreateWithBStarAndAGom(
         double bstar,
         double meanMotionDot,
@@ -194,6 +204,8 @@ public class TleParameters
     /// <summary>
     /// Creates TleParameters with BTerm and MEAN_MOTION_DDOT.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
+    /// revolution number is out of its range.</exception>
     public static TleParameters CreateWithBTermAndDDot(
         double bterm,
         double meanMotionDot,
@@ -216,6 +228,8 @@ public class TleParameters
     /// <summary>
     /// Creates TleParameters with BTerm and AGOM.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
+    /// revolution number is out of its range.</exception>
     public static TleParameters CreateWithBTermAndAGom(
         double bterm,
         double meanMotionDot,
