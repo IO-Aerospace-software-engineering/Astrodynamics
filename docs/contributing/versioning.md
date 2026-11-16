@@ -2809,17 +2809,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   SPICE(FILENOTFOUND) ...") where it said "You can have more details on standard output". The exception types are
   unchanged.
 - **The deep space example of the developer guide measured nothing** ([#704](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/704)). "Deep Space Propagation
-  with Multiple Perturbations" compares a massless probe started at the Moon's state with the Moon after 25 days, which
+  with Multiple Perturbations" compared a massless probe started at the Moon's state with the Moon after 25 days, which
   the probe cannot follow (the Moon's own mass, about 1.2 % of the attraction of their relative motion), so its 54 310 km
-  said nothing of the propagation, and its test only ran the block. `DeveloperGuideExamplesTests` now checks the probe
-  against an independent integration of the same forces (point masses with the kernel GMs, the Sun and the barycentres
-  of Jupiter and Saturn read from SPICE at the TDB of the TT argument, RK4 at 300 s, converged to about 1e-4 m): 457.9 m
-  and 1.164e-3 m/s, the error of Velocity-Verlet at the example's 5 min (114.5 m at 2.5 min, 9.9e-5 m with RK7(8);
-  bounds 9.2e2 m and 2.4e-3 m/s, twice the Linux worst, provisional), and that the same integration with the Moon's GM
-  added to the Earth's ends 1.514 km from the Moon of de440s (bound 3.1e3 m), which backs the explanation against SPICE.
-  The guide states both figures, and the comment of the 5 min step what the step costs where it said "for accuracy".
-  The library is unchanged (`DeepSpaceExample_MatchesAnIndependentNBodyIntegration`, red on 46e6975: the block returned
-  nothing to compare).
+  said nothing of the propagation, and its test only ran the block. The example now propagates the Moon: its Earth's
+  central term is GM_Earth + GM_Moon (a field of degree 0 with the model's GM, `GeopotentialCentralTerm.ModelGravitationalParameter`),
+  and it prints its difference to the Moon of DE440, about 2.0 km. `DeveloperGuideExamplesTests` checks it against an
+  independent integration of the same forces (point masses with the kernel GMs, the Sun and the barycentres of Jupiter
+  and Saturn read from SPICE at the TDB of the TT argument, RK4 at 300 s, converged to about 1e-4 m): 468.4 m and
+  1.197e-3 m/s, the error of Velocity-Verlet at the example's 5 min, that integration against the Moon of de440s,
+  1.514 km (the forces it leaves out), and the example against it, 1.972 km (bounds 9.4e2 m, 2.4e-3 m/s, 3.1e3 m and
+  4.0e3 m, twice the Linux worst, provisional); with the Earth's GM alone the integration ends 54 310 km from the Moon.
+  The comment of the 5 min step states what the step costs where it said "for accuracy". The library is unchanged
+  (`DeepSpaceExample_FollowsTheMoonOfTheEphemeris`, red on 46e6975: the block returned nothing to compare; with the
+  Earth's GM alone, 5.431e7 m from the reference).
 - **The C# blocks of `docs/` and `README.md` were not compiled, and 34 of their lines did not compile** ([#705](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/705)).
   Compiled each in its own method with its inputs declared, the blocks of 12 pages failed against the library: the TLE
   tutorial read `tle.NoradId` (now `NoradCatalogId`) and multiplied the method `Inclination` (now the field
@@ -2845,14 +2847,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   tutorial called a helper `WithRtnCovariance` defined nowhere (now in the block). Every csharp block is now the region
   of a method of the page's file under `IO.Astrodynamics.Tests/Documentation/Pages/`, its inputs the method's parameters
   named by its first comment (`// Inputs: ...`), and `DocumentationPagesExamplesTests` checks that each block equals its
-  region, that every page with csharp blocks has its file, and runs the 18 blocks that need only `Data/SolarSystem` and
-  the TLE, Lambert, frame, lunar eclipse, batch and thread-safety blocks with their inputs: the Lambert velocities
+  region, that every page with csharp blocks has its file, that each block declaring using directives compiles with
+  those of its page alone and a console application's implicit ones, as a reader who copies it compiles it (the first
+  blocks of the TLE and coordinate conversion tutorials lacked `IO.Astrodynamics.OrbitalParameters.TLE`, and
+  `IO.Astrodynamics.OrbitalParameters` and `IO.Astrodynamics.SolarSystemObjects`), and runs the 18 blocks that need only
+  `Data/SolarSystem`, the first TLE block so compiled (its printed catalog number and inclination against the columns of
+  its lines), and the Lambert, frame, lunar eclipse, batch and thread-safety blocks with their inputs: the Lambert velocities
   against the two-body closed form (3.1e-7 m at arrival), the ecliptic state against the rotation by the obliquity of
   ECLIPJ2000 (9.3e-10 m), the CIRS round trip (1.4e-16), the eclipse of 2024-03-25 bracketed within 60 s by the discs of
   the Earth and the Moon as the Sun sees them (bounds twice the Linux worst, provisional). The 12 signature listings and
   fragments that are not statements are fenced `csharp-signature` (highlighted as C# through `mkdocs.yml`, and checked
-  against the library's constructors and methods by reflection), or written out in full; the excerpt of `Constants` is
-  checked by value. A block's leading using alias may name a public type of the library. This lifts the known
+  against the library's constructors and methods by reflection), or written out in full; the excerpt of `Constants` that
+  opens `docs/standards-and-units.md`, declarations fenced `csharp` with no region (region 1 of that page is its second
+  csharp block), is checked by value. A block's leading using alias may name a public type of the library. This lifts the known
   limitation of #662. Documentation and tests only: no library result moves.
 
 **Changed**

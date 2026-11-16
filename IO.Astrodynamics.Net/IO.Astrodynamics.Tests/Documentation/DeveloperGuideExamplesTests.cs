@@ -308,44 +308,52 @@ public class DeveloperGuideExamplesTests
 
     // Twice the worst on Linux x64 (2026-11-16; MEASURE lines below), rounded up at the second significant digit,
     // provisional until set again from the Windows x64 and macOS arm64 CI logs: the example's Velocity-Verlet propagation
-    // at 5 min against the reference after 25 days, 4.579e2 m and 1.164e-3 m/s, the integrator's own error (second order:
-    // 1.145e2 m at 2.5 min; RK7(8) at 1e-12 ends 9.9e-5 m from it, the reference's own spread over its steps, 600 to 60 s,
-    // 9.9e-5 to 2.3e-4 m)
-    private const double DeepSpaceExamplePositionLimit = 9.2e2;
+    // at 5 min against the reference with GM_Earth + GM_Moon after 25 days, 4.684e2 m and 1.197e-3 m/s, the integrator's own
+    // error (second order; the reference's own spread over its steps, 600 to 60 s, is about 1e-4 m)
+    private const double DeepSpaceExamplePositionLimit = 9.4e2;
     private const double DeepSpaceExampleVelocityLimit = 2.4e-3;
 
-    // Twice the worst on Linux x64 (2026-11-16), provisional as above: the reference with the Moon's mass in the central
-    // term against the Moon's SPK (de440s) after 25 days, 1.514e3 m, the perturbations the reference leaves out (the
-    // Earth's and the Moon's figures, the other planets, relativity)
+    // Twice the worst on Linux x64 (2026-11-16), provisional as above: the reference with GM_Earth + GM_Moon against the
+    // Moon's SPK (de440s) after 25 days, 1.514e3 m, the perturbations the reference leaves out (the Earth's and the
+    // Moon's figures, the other planets, relativity), and the example's propagated Moon against the SPK, 1.972e3 m, both
+    // errors together
     private const double DeepSpaceMoonMassLimit = 3.1e3;
+    private const double DeepSpaceExampleMoonLimit = 4.0e3;
 
     /// <summary>
-    /// The deep space example of the guide ends where an independent integration of its forces ends (#704): the Sun, the
-    /// Earth and the barycentres of Jupiter and Saturn as point masses with the kernel GMs, the probe at the Moon's state of
-    /// J2000 TDB, 25 days. Before #704 the test only ran the block, whose printed 54 310 km to the Moon measures the
-    /// Moon's own mass, which the probe lacks: the same reference with GM_Earth + GM_Moon in the central term ends within
-    /// 1.5 km of the Moon's SPK, which backs that explanation against SPICE (a check of the reference, not of the library).
-    /// Red on 46e6975: the block returned nothing to compare.
+    /// The deep space example of the guide propagates the Moon (#704): a massless probe at the Moon's state of J2000 TDB,
+    /// 25 days about an Earth of GM_Earth + GM_Moon (a field of degree 0 with the model's GM), with the Sun and the
+    /// barycentres of Jupiter and Saturn as point masses. It ends where an independent integration of these forces ends,
+    /// the error of Velocity-Verlet at 5 min, and that integration ends within 1.5 km of the Moon's SPK, the physical
+    /// reference the example prints its difference to. With the Earth's GM alone the reference ends about 54 310 km from
+    /// the Moon, the Moon's own mass, which is what the example printed before #704 as its "position difference". Red on
+    /// 46e6975: the block returned nothing to compare; red on the example of the first version of #704, which kept the
+    /// Earth's GM alone: 5.431e7 m from the reference.
     /// </summary>
     [Fact]
-    public async Task DeepSpaceExample_MatchesAnIndependentNBodyIntegration()
+    public async Task DeepSpaceExample_FollowsTheMoonOfTheEphemeris()
     {
         var (spacecraft, moonState, start, end) = await DeveloperGuideExamples.Block54();
+        var earth = moonState.Observer;
+        var moon = SpiceAPI.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
 
-        var final = spacecraft.GetEphemeris(end, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-        var reference = DeepSpaceReference(moonState, start, end, moonMass: false);
+        var final = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var reference = DeepSpaceReference(moonState, start, end, moonMass: true);
         double dr = (final.Position - reference.Position).Magnitude();
         double dv = (final.Velocity - reference.Velocity).Magnitude();
-        _output.WriteLine($"MEASURE #704 guide deep space example against the N-body reference after 25 days: |dr| {dr:E3} m, |dv| {dv:E3} m/s");
+        _output.WriteLine($"MEASURE #704 guide deep space example against the N-body reference with GM_Earth + GM_Moon after 25 days: |dr| {dr:E3} m, |dv| {dv:E3} m/s");
         Assert.True(dr < DeepSpaceExamplePositionLimit, $"{dr:E3} m");
         Assert.True(dv < DeepSpaceExampleVelocityLimit, $"{dv:E3} m/s");
 
-        var moon = SpiceAPI.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-        var earthMoon = DeepSpaceReference(moonState, start, end, moonMass: true);
-        double moonDistance = (earthMoon.Position - moon.Position).Magnitude();
-        double probeDistance = (final.Position - moon.Position).Magnitude();
-        _output.WriteLine($"MEASURE #704 N-body reference with GM_Earth + GM_Moon against the Moon's SPK after 25 days: {moonDistance:E3} m (the probe: {probeDistance:E3} m)");
-        Assert.True(moonDistance < DeepSpaceMoonMassLimit, $"{moonDistance:E3} m");
+        double referenceToMoon = (reference.Position - moon.Position).Magnitude();
+        double exampleToMoon = (final.Position - moon.Position).Magnitude();
+        var earthOnly = DeepSpaceReference(moonState, start, end, moonMass: false);
+        double earthOnlyToMoon = (earthOnly.Position - moon.Position).Magnitude();
+        _output.WriteLine($"MEASURE #704 against the Moon's SPK after 25 days: the reference {referenceToMoon:E3} m, the example {exampleToMoon:E3} m, the reference with GM_Earth alone {earthOnlyToMoon:E3} m");
+        Assert.True(referenceToMoon < DeepSpaceMoonMassLimit, $"{referenceToMoon:E3} m");
+        Assert.True(exampleToMoon < DeepSpaceExampleMoonLimit, $"{exampleToMoon:E3} m");
+        // The Moon's own mass: tens of thousands of km without it
+        Assert.True(earthOnlyToMoon > 1.0e7, $"{earthOnlyToMoon:E3} m");
     }
 
     #endregion

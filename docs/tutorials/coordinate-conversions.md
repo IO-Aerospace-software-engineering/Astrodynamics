@@ -15,6 +15,8 @@ using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 var epoch = new Time(2024, 6, 21, 12, 0, 0);

@@ -17,6 +17,9 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 using Xunit.Abstractions;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
@@ -196,6 +199,172 @@ public class DocumentationPagesExamplesTests
 
     #endregion
 
+    #region The blocks as a reader compiles them
+
+    // The using directives a console application of the .NET SDK holds implicitly (ImplicitUsings of Microsoft.NET.Sdk)
+    private static readonly string[] ImplicitUsings =
+        { "System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks" };
+
+    // The references of a reader's application: the assemblies of the runtime, the library and those it references
+    private static readonly Lazy<List<MetadataReference>> ReaderReferences = new(() =>
+    {
+        var runtime = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+        var paths = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
+            .Where(p => string.Equals(Path.GetDirectoryName(p), runtime, StringComparison.Ordinal)).ToHashSet(StringComparer.Ordinal);
+        var pending = new Queue<Assembly>(new[] { typeof(IO.Astrodynamics.Constants).Assembly });
+        while (pending.Count > 0)
+        {
+            var assembly = pending.Dequeue();
+            if (!paths.Add(assembly.Location))
+            {
+                continue;
+            }
+
+            foreach (var name in assembly.GetReferencedAssemblies())
+            {
+                var referenced = Assembly.Load(name);
+                if (!string.Equals(Path.GetDirectoryName(referenced.Location), runtime, StringComparison.Ordinal))
+                {
+                    pending.Enqueue(referenced);
+                }
+            }
+        }
+
+        return paths.Select(p => (MetadataReference)MetadataReference.CreateFromFile(p)).ToList();
+    });
+
+    private static readonly CSharpParseOptions ReaderParse = new(LanguageVersion.Latest);
+    private static readonly CSharpCompilationOptions ReaderOptions = new(OutputKind.DynamicallyLinkedLibrary);
+
+    // The global using directives of a reader's application
+    private static SyntaxTree ImplicitUsingsTree() =>
+        CSharpSyntaxTree.ParseText(string.Concat(ImplicitUsings.Select(u => $"global using {u};\n")), ReaderParse);
+
+    // The page's compiled file, bound under its own directives, and its methods
+    private static (SemanticModel Model, List<MethodDeclarationSyntax> Methods) CompiledMethods(string page)
+    {
+        var file = Compiled(page).File;
+        var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(file), ReaderParse, file);
+        var model = CSharpCompilation.Create("Page", new[] { tree }, ReaderReferences.Value, ReaderOptions).GetSemanticModel(tree);
+        return (model, tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().ToList());
+    }
+
+    // The using directives a reader holds at block n of a page: those the block declares and those of the earlier blocks
+    private static List<string> UsingsAt(string page, int n)
+    {
+        var blocks = DocumentationCodeBlocks.Blocks(MarkdownPath(page));
+        int first = FirstCompiledBlock.GetValueOrDefault(page);
+        var usings = new List<string>();
+        for (int k = 1; k <= n; k++)
+        {
+            usings.AddRange(DocumentationCodeBlocks.SplitUsings(blocks[first + k - 1]).Usings.Where(u => !usings.Contains(u)));
+        }
+
+        return usings;
+    }
+
+    // The method of block n as a reader's source: the reader's directives, a class outside any namespace, as a top-level
+    // program's, the signature in fully qualified names, the given body; with a console, a StringWriter field named
+    // Console, to which the block's Console.WriteLine binds (the class's member hides System.Console)
+    private static string ReaderSource(string page, int n, SemanticModel model, MethodDeclarationSyntax method, string body, bool console)
+    {
+        string Name(ITypeSymbol type) => type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        Assert.Contains($"#region {page}:{n}", method.ToFullString());
+        var symbol = model.GetDeclaredSymbol(method)!;
+        Assert.All(symbol.Parameters, p => Assert.NotEqual(TypeKind.Error, p.Type.TypeKind));
+        var parameters = string.Join(", ", symbol.Parameters.Select(p => $"{Name(p.Type)} {p.Name}"));
+        var modifier = method.Modifiers.Any(SyntaxKind.AsyncKeyword) ? "async " : "";
+        var field = console ? "    internal static readonly global::System.IO.StringWriter Console = new();\n" : "";
+        return string.Concat(UsingsAt(page, n).Select(u => u + "\n")) +
+               $"\ninternal static class Block{n:00}OfThePage\n{{\n{field}    internal static {modifier}{Name(symbol.ReturnType)} Block({parameters})\n    {body}\n}}\n";
+    }
+
+    // The errors of a compilation, each with the block of its tree and its line
+    private static List<string> Errors(CSharpCompilation compilation, IReadOnlyDictionary<SyntaxTree, int> blockOfTree) =>
+        compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Select(d => blockOfTree.TryGetValue(d.Location.SourceTree!, out int n)
+                ? $"block {n}: {d.Id} {d.GetMessage(CultureInfo.InvariantCulture)} in \"{d.Location.SourceTree!.GetText().Lines[d.Location.GetLineSpan().StartLinePosition.Line].ToString().Trim()}\""
+                : $"{d.Id} {d.GetMessage(CultureInfo.InvariantCulture)}")
+            .ToList();
+
+    // The pages with a block that declares using directives
+    public static IEnumerable<object[]> PagesWithUsings() =>
+        Pages().Where(p => DocumentationCodeBlocks.Blocks(MarkdownPath((string)p[0])).Any(b => DocumentationCodeBlocks.SplitUsings(b).Usings.Count > 0));
+
+    /// <summary>
+    /// Every csharp block of a page that declares using directives compiles, as its method of the page's file, with those
+    /// directives, the ones the earlier blocks of the page declare and the implicit ones of a console application, against
+    /// the library alone: a reader who copies the block with the directives the page gave compiles it. The regions compile
+    /// in their file under the directives of every namespace of the library, and
+    /// <see cref="PageBlocks_EqualTheirCompiledRegions"/> checks only that a block's directives name namespaces. Red on the
+    /// first blocks of tle-and-omm.md (<c>TLE</c>, whose namespace <c>IO.Astrodynamics.OrbitalParameters.TLE</c> the block
+    /// did not import, CS0246) and coordinate-conversions.md (<c>StateVector</c> and <c>PlanetsAndMoons</c>, CS0246 and
+    /// CS0103), which the first version of #705 left.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(PagesWithUsings))]
+    public void PageBlocks_CompileWithTheUsingsOfTheirPage(string page)
+    {
+        var (model, methods) = CompiledMethods(page);
+        var blocks = DocumentationCodeBlocks.Blocks(MarkdownPath(page));
+        int first = FirstCompiledBlock.GetValueOrDefault(page);
+        var trees = new List<SyntaxTree> { ImplicitUsingsTree() };
+        var blockOfTree = new Dictionary<SyntaxTree, int>();
+        for (int n = 1; n <= blocks.Count - first; n++)
+        {
+            if (DocumentationCodeBlocks.SplitUsings(blocks[first + n - 1]).Usings.Count == 0)
+            {
+                continue;
+            }
+
+            var method = Assert.Single(methods, m => m.Identifier.Text == $"Block{n:00}");
+            var tree = CSharpSyntaxTree.ParseText(ReaderSource(page, n, model, method, method.Body!.ToFullString(), false), ReaderParse);
+            trees.Add(tree);
+            blockOfTree[tree] = n;
+        }
+
+        Assert.True(blockOfTree.Count > 0, page);
+        var errors = Errors(CSharpCompilation.Create("Reader", trees, ReaderReferences.Value, ReaderOptions), blockOfTree);
+        Assert.True(errors.Count == 0, $"{page}: {string.Join("; ", errors)}");
+    }
+
+    /// <summary>
+    /// Runs block n of a page, the text of the page, as a reader compiles it
+    /// (<see cref="PageBlocks_CompileWithTheUsingsOfTheirPage"/>), without the lines <paramref name="skip"/> names, and
+    /// returns what it writes to the console. The block takes no input and returns nothing.
+    /// </summary>
+    private static string RunAsReader(string page, int n, Func<string, bool> skip)
+    {
+        var (model, methods) = CompiledMethods(page);
+        var method = Assert.Single(methods, m => m.Identifier.Text == $"Block{n:00}");
+        Assert.Empty(method.ParameterList.Parameters);
+        Assert.Equal("void", method.ReturnType.ToString());
+        var block = DocumentationCodeBlocks.Blocks(MarkdownPath(page))[FirstCompiledBlock.GetValueOrDefault(page) + n - 1];
+        var code = DocumentationCodeBlocks.SplitUsings(block).Code.Where(l => !skip(l.Trim()));
+        var tree = CSharpSyntaxTree.ParseText(ReaderSource(page, n, model, method, "{\n" + string.Join("\n", code) + "\n}", true), ReaderParse);
+        var compilation = CSharpCompilation.Create($"Reader{Guid.NewGuid():N}", new[] { ImplicitUsingsTree(), tree }, ReaderReferences.Value, ReaderOptions);
+        var errors = Errors(compilation, new Dictionary<SyntaxTree, int> { [tree] = n });
+        Assert.True(errors.Count == 0, $"{page}: {string.Join("; ", errors)}");
+
+        using var image = new MemoryStream();
+        Assert.True(compilation.Emit(image).Success, page);
+        image.Position = 0;
+        // A collectible context: the library and the kernels resolve to those of the test process
+        var context = new System.Runtime.Loader.AssemblyLoadContext($"{page}:{n}", isCollectible: true);
+        try
+        {
+            var type = context.LoadFromStream(image).GetType($"Block{n:00}OfThePage")!;
+            type.GetMethod("Block", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, null);
+            return type.GetField("Console", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!.ToString()!;
+        }
+        finally
+        {
+            context.Unload();
+        }
+    }
+
+    #endregion
+
     #region The blocks that run
 
     // The blocks that need no input and run on Data/SolarSystem alone, with no file written or read and no global state
@@ -253,21 +422,28 @@ public class DocumentationPagesExamplesTests
     }
 
     /// <summary>
-    /// The first block of the TLE tutorial prints the TLE's catalog number and mean inclination (#705: it read
-    /// <c>tle.NoradId</c>, which does not exist, and multiplied the method group <c>tle.Inclination</c>). The block loads
-    /// the kernels, so it is compiled only: its TLE, read from the page, gives the columns 3 to 7 of line 1 and 9 to 16 of
-    /// line 2, the values the block prints.
+    /// The first block of the TLE tutorial, run as a reader compiles it with the page's directives, prints the TLE's name,
+    /// catalog number and mean inclination as its lines write them: the columns 3 to 7 of line 1 and 9 to 16 of line 2
+    /// (#705: it read <c>tle.NoradId</c>, which does not exist, and multiplied the method group <c>tle.Inclination</c>, and
+    /// its directives lacked <c>IO.Astrodynamics.OrbitalParameters.TLE</c>). The block's kernel load is not run: the test
+    /// process holds Data/SolarSystem, which no test reloads. Red on the page of 46e6975 (CS0246 for <c>TLE</c>; with the
+    /// directive added, CS1061 for <c>NoradId</c> and CS0019 for <c>Inclination</c>) and on the first version of #705
+    /// (CS0246).
     /// </summary>
     [Fact]
     public void TleTutorial_FirstBlock_PrintsTheFieldsOfItsLines()
     {
-        var block = DocumentationCodeBlocks.Blocks(MarkdownPath("docs/tutorials/tle-and-omm.md"))[0];
+        const string page = "docs/tutorials/tle-and-omm.md";
+        var block = DocumentationCodeBlocks.Blocks(MarkdownPath(page))[0];
         var lines = block.SelectMany(l => Regex.Matches(l, "\"([12] [^\"]+)\"").Select(m => m.Groups[1].Value)).ToList();
         Assert.Equal(2, lines.Count);
-        var tle = new TLE("ISS (ZARYA)", lines[0], lines[1]);
-        Assert.Equal(int.Parse(lines[0].Substring(2, 5), CultureInfo.InvariantCulture), tle.NoradCatalogId);
-        Assert.Equal(25544, tle.NoradCatalogId);
-        Assert.Equal(double.Parse(lines[1].Substring(8, 8), CultureInfo.InvariantCulture), tle.MeanInclination * IO.Astrodynamics.Constants.Rad2Deg, 12);
+
+        var printed = RunAsReader(page, 1, st => st == "SpiceAPI.Instance.LoadKernels(new DirectoryInfo(\"Data/SolarSystem\"));")
+            .Split('\n').Select(l => l.TrimEnd('\r')).Where(l => l.Contains(':')).ToDictionary(l => l[..l.IndexOf(':')], l => l[(l.IndexOf(':') + 1)..].Trim());
+        _output.WriteLine($"MEASURE #705 TLE tutorial, first block: {string.Join("; ", printed.Select(p => $"{p.Key}: {p.Value}"))}");
+        Assert.Equal("ISS (ZARYA)", printed["Name"]);
+        Assert.Equal(lines[0].Substring(2, 5).TrimStart('0'), printed["NORAD ID"]);
+        Assert.Equal(lines[1].Substring(8, 8).Trim() + " deg", printed["Inclination"]);
     }
 
     // The two-body position from (r0, v0) after the given seconds, by Kepler's equation in universal variables (the
@@ -322,7 +498,8 @@ public class DocumentationPagesExamplesTests
     /// The Lambert blocks of the mission design tutorial run (#705: they passed <c>shortWay:</c> and
     /// <c>nRevolutions:</c>, which <c>Solve</c> does not have, and read <c>DepartureVelocity</c>, <c>ArrivalVelocity</c> and
     /// <c>TotalDeltaV</c>, which <c>LambertSolution</c> does not have), and each solution's departure velocity carries the
-    /// two-body motion (RK4, BODY399_GM, the TT seconds of the flight, #508) from the departure to the arrival position.
+    /// two-body motion from the departure to the arrival position: the closed form of <see cref="TwoBodyPosition"/>
+    /// (Kepler's equation in universal variables, the Lagrange f and g), BODY399_GM, the TT seconds of the flight (#508).
     /// </summary>
     [Fact]
     public void MissionDesignTutorial_LambertBlocks_ReachTheArrival()

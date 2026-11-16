@@ -4,9 +4,11 @@
 // "docs/get-started.md:<n>" of one method, n its rank among the page's csharp blocks; the parameters of a method
 // give the inputs of a block that continues an earlier one, as the comment opening the block names them
 // ("// Inputs: ..."). DocumentationPagesExamplesTests checks that each block equals its region (the block's using
-// directives aside, which are this file's) and runs the blocks that need only Data/SolarSystem. The namespace is outside
-// IO.Astrodynamics, as an application's, so a name resolves here as it does for a reader of the page. Do not edit a
-// region alone: change the page and copy the block.
+// directives aside, which are this file's) and runs the blocks that need only Data/SolarSystem. The namespace is
+// outside IO.Astrodynamics, as an application's; the file imports every namespace of the library, so
+// DocumentationPagesExamplesTests also compiles each block that declares using directives with those directives, the
+// earlier blocks' and a console application's implicit ones alone, as a reader who copies it does. Do not edit a region
+// alone: change the page and copy the block.
 
 using System;
 using System.Collections.Generic;
