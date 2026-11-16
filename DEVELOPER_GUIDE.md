@@ -2771,7 +2771,8 @@ scenario.AddCelestialItem(earth);
 scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
 scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
 
-// Propagate with 5-minute step for accuracy
+// Propagate at a 5-minute step. Velocity-Verlet, the default integrator, is of the second order: it ends about 460 m
+// from an exact integration of these forces after 25 days (115 m at 2.5 minutes)
 var summary = await scenario.SimulateAsync(
     includeAtmosphericDrag: false,
     includeSolarRadiationPressure: false,
@@ -2791,6 +2792,11 @@ Console.WriteLine($"Probe - Moon after 25 days:");
 Console.WriteLine($"  Position difference: {positionError:F1} m");
 Console.WriteLine($"  Velocity difference: {velocityError:F4} m/s");
 ```
+
+The difference to the Moon, about 54 310 km and 139 m/s, is the Moon's own mass, not an error of the propagation: an
+independent integration of the same forces (point masses with the kernel GMs, the bodies read from SPICE) ends 458 m from
+the probe, the error of Velocity-Verlet at 5 minutes (114 m at 2.5 minutes, about 1e-4 m with RK7(8) at 1e-12), and the same
+integration with the Moon's GM added to the Earth's ends 1.5 km from the Moon of DE440 (#704).
 
 ### High-Fidelity LEO Propagation with Geopotential
 

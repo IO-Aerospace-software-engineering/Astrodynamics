@@ -2808,6 +2808,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` of `LoadKernels` and `UnloadKernels` carries it ("Kernel ... can't be unloaded:
   SPICE(FILENOTFOUND) ...") where it said "You can have more details on standard output". The exception types are
   unchanged.
+- **The deep space example of the developer guide measured nothing** ([#704](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/704)). "Deep Space Propagation
+  with Multiple Perturbations" compares a massless probe started at the Moon's state with the Moon after 25 days, which
+  the probe cannot follow (the Moon's own mass, about 1.2 % of the attraction of their relative motion), so its 54 310 km
+  said nothing of the propagation, and its test only ran the block. `DeveloperGuideExamplesTests` now checks the probe
+  against an independent integration of the same forces (point masses with the kernel GMs, the Sun and the barycentres
+  of Jupiter and Saturn read from SPICE at the TDB of the TT argument, RK4 at 300 s, converged to about 1e-4 m): 457.9 m
+  and 1.164e-3 m/s, the error of Velocity-Verlet at the example's 5 min (114.5 m at 2.5 min, 9.9e-5 m with RK7(8);
+  bounds 9.2e2 m and 2.4e-3 m/s, twice the Linux worst, provisional), and that the same integration with the Moon's GM
+  added to the Earth's ends 1.514 km from the Moon of de440s (bound 3.1e3 m), which backs the explanation against SPICE.
+  The guide states both figures, and the comment of the 5 min step what the step costs where it said "for accuracy".
+  The library is unchanged (`DeepSpaceExample_MatchesAnIndependentNBodyIntegration`, red on 46e6975: the block returned
+  nothing to compare).
 
 **Changed**
 

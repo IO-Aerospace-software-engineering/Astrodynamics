@@ -1529,7 +1529,7 @@ internal static class DeveloperGuideExamples
     }
 
     // DEVELOPER_GUIDE.md, "Deep Space Propagation with Multiple Perturbations"
-    internal static async Task Block54()
+    internal static async Task<(Spacecraft Spacecraft, StateVector MoonState, Time Start, Time End)> Block54()
     {
         #region guide:54
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB);
@@ -1558,7 +1558,8 @@ internal static class DeveloperGuideExamples
         scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
         scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
 
-        // Propagate with 5-minute step for accuracy
+        // Propagate at a 5-minute step. Velocity-Verlet, the default integrator, is of the second order: it ends about 460 m
+        // from an exact integration of these forces after 25 days (115 m at 2.5 minutes)
         var summary = await scenario.SimulateAsync(
             includeAtmosphericDrag: false,
             includeSolarRadiationPressure: false,
@@ -1578,6 +1579,7 @@ internal static class DeveloperGuideExamples
         Console.WriteLine($"  Position difference: {positionError:F1} m");
         Console.WriteLine($"  Velocity difference: {velocityError:F4} m/s");
         #endregion
+        return (spacecraft, moonState, start, end);
     }
 
     // DEVELOPER_GUIDE.md, "High-Fidelity LEO Propagation with Geopotential"
