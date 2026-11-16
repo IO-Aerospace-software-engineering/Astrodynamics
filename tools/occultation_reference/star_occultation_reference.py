@@ -9,8 +9,9 @@ since #517, as CSPICE's gfrfov reads a ray.
 The star (the library's Star): right ascension and declination at the catalog epoch S = 2026-03-01 12:00 TDB
 (825638400 s), placed on the Moon's LT direction from DSS-13 at S, at the distance D from DSS-13, its parallax the
 inverse of its distance from the barycenter in parsecs (Constants.Parsec2Meters = 3.085677581e16 m); its proper motion in
-right ascension pmra (rad per Julian year of 365.25 days, added to the right ascension, as Star.GetEquatorialCoordinates
-does).
+right ascension pmra, a true angle (mu_alpha* = (dalpha/dt) cos(dec), rad per Julian year of 365.25 days, #718), moving it
+along its straight line at constant speed (SOFA's iauStarpm, Note 5, rv = 0, as Star.GetEquatorialCoordinates does):
+the position r0 (u0 + pmra dt e_alpha), e_alpha = (-sin ra0, cos ra0, 0), written here with spiceypy's vector routines.
 
 The occultation: the Moon a sphere of 1737.4 km (pck00011's radii), its position from DSS-13 that of spkpos with the
 correction (NONE, LT, CN, XLT or XCN), the star as above; the entry and the exit are the zeros of asin(R/d) - sep(t)
@@ -53,9 +54,9 @@ def star_definition(distance_pc):
 
 
 def star_from_dss13(t, ra0, dec0, parallax, pmra):
-    ra = ra0 + (t - S) / YEAR * pmra
     d = PARSEC / 1000.0 / parallax
-    p = sp.radrec(d, ra, dec0)
+    east = [-math.sin(ra0), math.cos(ra0), 0.0]
+    p = sp.vadd(sp.radrec(d, ra0, dec0), sp.vscl(d * (t - S) / YEAR * pmra, east))
     return sp.vsub(p, dss13(t)[:3])
 
 

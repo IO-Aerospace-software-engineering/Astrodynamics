@@ -53,7 +53,8 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, the equality of frames, and the axes the TRIAD factories point. **Deprecated** lists
+public statics, the equality of frames, the axes the TRIAD factories point, and the straight-line motion of a star and
+its proper motion in right ascension as a true angle. **Deprecated** lists
 `Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
 `Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -3201,6 +3202,61 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
+  `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
+  a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
+  a straight line at constant speed in ICRF, the closed form of `iauStarpm`'s space motion with a radial velocity of 0
+  (`external-lib/sofa-src/starpm.c`, Note 5): with x = μα* dt and y = μδ dt, the position r0 (u0 + x e_α + y e_δ), so
+  α = α0 + atan2(x, cos δ0 − y sin δ0), δ = atan2(sin δ0 + y cos δ0, √(x² + (cos δ0 − y sin δ0)²)), and the distance
+  `Distance` · √(1 + x² + y²), as `iauStarpm`'s parallax decreases, no longer the catalog distance (Barnard's star:
+  1.26e-5 relative after 100 years, 7.1e11 m). The form divides by no cos δ0 and crosses a pole by itself. The change is
+  of the second order in μ dt for a star given dα/dt as before: Barnard's star 0.33 mas after 10 years, 34 mas after 100
+  and 9.4″ after 1000, Polaris 4.2 mas after 100 years, a star near a pole 1.26° after 1000. Against `iauStarpm`
+  (`tools/sofa_reference/starpm_ref.c`, SOFA 2023-10-11; Barnard's star from Hipparcos I/311 and Gaia DR3, Polaris, and
+  Barnard's motion at ±89.5°, which crosses a pole): 1.8e-17 rad after 1 and 10 years, 2.4e-14 rad after 100 and
+  2.4e-10 rad after 1000 (its light-time and relativistic terms of the observed place, as dt⁴), the distance 7.6e-8
+  relative per decade (`iauStarpv`'s inertial radial velocity −v_t²/(2c) for an observed rv of 0)
+  (`StarTests.GetEquatorialCoordinates_CatalogStars_AreIauStarpm`, red on a80f6a5: 1.3e-7 rad after 10 years for
+  Barnard's star); against the closed form in long double, the stars at ±π/2 and the synthetic stars of the suite
+  included, 7.8e-16 rad and 2.2e-16 relative (`IsTheStraightLine_OfALongDoubleClosedForm`); three positions dt apart lie
+  on one line at constant speed within 1.2e-15 of their size (`PositionsLieOnOneLineAtConstantSpeed`, 3.7 before);
+  thresholds twice the Linux worst, provisional, but after 1 and 10 years against `iauStarpm`, where the Linux worst
+  lies below one ulp of the right ascension (8.9e-16 rad near 4.7 rad), twice the resolution of the returned angles,
+  1.9e-15 rad, so that a one-ulp difference of another platform passes. A star without proper motion, and every star at its catalog epoch, is
+  unchanged, bit for bit (`WithoutProperMotion_IsTheCatalog_BitForBit`), and so are the stars of the field-of-view and
+  kernel tests. `GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate` and `Scenario.SimulateAsync`,
+  the SPK of `WriteEphemeris` and the occultation and field-of-view searches of a star with proper motion move with it.
+  The tests that encoded the linear angles are measured against the straight line written in the test
+  (`StarTests.GetEquatorialCoordinates`, `GetEquatorialCoordinates2`, `Propagate`, `ScenarioTests.PropagateStar`, whose
+  snapshots 1.1 and 1.2 rad and catalog distances are replaced; the dt tests of #709 keep their dt references, the
+  ticks or CSPICE's ET); the pole tests of #709 take straight lines that pass near and over a pole (a straight line never
+  passes both poles: #709's case of 1 rad/yr through both was an artefact of the linear angles). The sentences of the
+  #709 entries under **Fixed** about the linear model are history, superseded by this entry. Migration: none for a
+  catalog star given its catalog values (see the next entry); code that expects the angles to grow by μ dt computes the
+  straight line ([Stars](../reference/stars.md#the-model)). `Distance` stays the catalog distance. No radial velocity
+  is taken (rv = 0, its size on the [Stars](../reference/stars.md#limits) page).
+- **Breaking: the proper motion in right ascension of a star is a true angle, μα*** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
+  The constructor's `rightAscensionProperMotion`, `rightAscensionSigma` and `rightAscensionSigmaProperMotion` and their
+  properties gave no unit and no convention, and the model added the proper motion to the right ascension, so it was
+  dα/dt (SOFA's convention, `starpm.c` Note 4), while the catalogs a caller reads, Hipparcos (I/239 `pmRA`,
+  "mu_alpha.cos(delta)") and Gaia DR3 (I/355 `pmRA`, "pmRA*cosDE"; both cited from #718, to be verified by S. Guillet),
+  give μα* = (dα/dt) cos δ: a catalog star given its `pmra` moved cos δ0 times too fast in right ascension (Barnard's
+  star 26.8 mas away from `iauStarpm` after 10 years, Polaris 439 mas, a rate 77.9 times too large). They are now μα*,
+  σα* and σμα*, true angles in radians and radians per Julian year of TDB, as Hipparcos and Gaia give them, documented
+  on the constructor, the properties and the new [Stars](../reference/stars.md) page with the units of every parameter
+  and the conversion of a Gaia DR3 or Hipparcos record; `GetRightAscensionSigma` keeps its formula and returns σα*.
+  Barnard's star built from its Gaia DR3 record by its units alone is `iauStarpm` fed `pmra`/cos δ to the figures above
+  (`StarTests.GetEquatorialCoordinates_FromAGaiaDr3Record_IsIauStarpm`, 27.7 mas after 10 years before); the same μα*
+  moves a star on the equator, at 1 rad and at a pole by the same angle along e_α
+  (`RightAscensionProperMotion_IsTheTrueAngleRate`; before, cos δ0 times that, and nothing at a pole). For the same
+  number a star now moves cos δ0 times as fast in right ascension as before: 0.54 times for the stars of the tests at
+  1 rad, 1/77.9 for Polaris. The declination motion and sigmas are unchanged. The reference of `StarOccultationTests`
+  (`tools/occultation_reference/star_occultation_reference.py`) reads its 0.1″/yr as μα* and moves its star along the
+  straight line; its literals of 0.1″/yr are regenerated (spiceypy 8.4.0, CSPICE N0067; the cases without proper
+  motion reproduce their literals): 1.91e-6 s at worst at the edges and 1.30e-16 rad in direction on Linux x64, within
+  the thresholds of 4.8e-6 s and 4.4e-16 rad. Migration: a caller that passed dα/dt passes `RightAscensionProperMotion` ×
+  cos δ0, and multiplies its right ascension sigma and sigma rate by cos δ0; a caller that passed a catalog's `pmra`
+  needs no change and now gets the star of the catalog.
 - **Breaking: the element conversions of `SpiceAPI` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   Fixed above). `ConvertConicElementsToStateVector(KeplerianElements)` (an ellipse) and
   `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` (parameter `keplerianElements`, `equinoctialElements`)
@@ -4428,6 +4484,12 @@ The open defects a caller can meet at this release, grouped by cause; each line 
 one. The other open issues (tests, the conformance runner, benchmarks, documentation warnings and feature requests) are
 not listed.
 
+- **A star takes no radial velocity** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)). `Star` moves along `iauStarpm`'s straight line with rv = 0, its distance
+  from the catalog parallax: Barnard's star's −110.47 km/s (Gaia DR3) would move it by 64 mas after 10 years, 6.5″ after
+  100 and 11.4′ after 1000, more than the straight line corrects (34 mas after 100 years). The radial velocity input
+  that #718 recommends would be a new constructor parameter, and the defect fixes of 11.0.0 keep the existing signatures
+  (#668, decided by S. Guillet, 2026-11-14): whether `Star` takes one is S. Guillet's choice, open in the PR of #714 to
+  #718 ([Stars](../reference/stars.md#limits)).
 - **A front body without radii on the CSPICE path of the occultation search**
   ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii

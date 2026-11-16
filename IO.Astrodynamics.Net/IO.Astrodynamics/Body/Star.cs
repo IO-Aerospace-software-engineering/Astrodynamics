@@ -17,10 +17,18 @@ namespace IO.Astrodynamics.Body;
 /// Represents a star in the celestial system.
 /// </summary>
 /// <remarks>
-/// Its position at an epoch is that of its catalog plus the proper motions times dt, the Julian years of TDB from the
-/// catalog epoch (both times converted to TDB, as SOFA's <c>iauStarpm</c> takes TDB dates and its proper motions in radians
-/// per TDB Julian year, <c>external-lib/sofa-src/starpm.c</c>, Notes 1 and 2, #709): the angles move
-/// linearly, the declination reduced to [−π/2, π/2] across a pole, and the sigmas grow as √(σ² + (dt σμ)²).
+/// <para>
+/// Its position at an epoch is its catalog position moved along a straight line at constant speed in ICRF, SOFA's
+/// <c>iauStarpm</c> with a radial velocity of 0 (<c>external-lib/sofa-src/starpm.c</c>, Note 5, #718), over dt, the
+/// Julian years of TDB from the catalog epoch (both times converted to TDB, as <c>iauStarpm</c> takes TDB dates and its
+/// proper motions in radians per TDB Julian year, Notes 1 and 2, #709); its distance the length of that line; its sigmas
+/// √(σ² + (dt σμ)²). See <see cref="GetEquatorialCoordinates"/> and <c>docs/reference/stars.md</c>.
+/// </para>
+/// <para>
+/// The units and conventions are those of the Hipparcos and Gaia catalogs: angles in radians, proper motions in radians
+/// per Julian year of TDB, the proper motion in right ascension and its sigmas true angles (μα* = (dα/dt) cos δ, σα*,
+/// σμα*), the parallax in arcseconds. A Gaia DR3 record converts by its units alone: <c>pmra</c> is μα*.
+/// </para>
 /// </remarks>
 public class Star : CelestialBody
 {
@@ -37,15 +45,21 @@ public class Star : CelestialBody
     /// <param name="mass">The mass of the star.</param>
     /// <param name="spectralType">The spectral type of the star.</param>
     /// <param name="visualMagnitude">The visual magnitude of the star.</param>
-    /// <param name="parallax">The parallax of the star in arcseconds.</param>
-    /// <param name="equatorialCoordinatesAtEpoch">The equatorial coordinates of the star at the given epoch.</param>
-    /// <param name="declinationProperMotion">The proper motion in declination.</param>
-    /// <param name="rightAscensionProperMotion">The proper motion in right ascension.</param>
-    /// <param name="declinationSigma">The sigma value for declination.</param>
-    /// <param name="rightAscensionSigma">The sigma value for right ascension.</param>
-    /// <param name="declinationSigmaProperMotion">The sigma value for proper motion in declination.</param>
-    /// <param name="rightAscensionSigmaProperMotion">The sigma value for proper motion in right ascension.</param>
-    /// <param name="epoch">The epoch time for the star.</param>
+    /// <param name="parallax">The parallax of the star in arcseconds; its distance is 1/parallax parsecs.</param>
+    /// <param name="equatorialCoordinatesAtEpoch">The right ascension and declination of the star in ICRF at the catalog
+    /// epoch, in radians (its distance is not read).</param>
+    /// <param name="declinationProperMotion">The proper motion in declination, dδ/dt, in radians per Julian year of TDB.</param>
+    /// <param name="rightAscensionProperMotion">The proper motion in right ascension as a true angle, μα* = (dα/dt) cos δ,
+    /// in radians per Julian year of TDB: the <c>pmra</c> of Gaia and the μα* of Hipparcos, converted from mas/yr (#718;
+    /// before 11.0.0 it was read as dα/dt).</param>
+    /// <param name="declinationSigma">The standard deviation of the declination at the catalog epoch, in radians.</param>
+    /// <param name="rightAscensionSigma">The standard deviation of the right ascension at the catalog epoch as a true
+    /// angle, σα* = σα cos δ, in radians (Gaia's <c>ra_error</c>).</param>
+    /// <param name="declinationSigmaProperMotion">The standard deviation of the proper motion in declination, in radians
+    /// per Julian year of TDB.</param>
+    /// <param name="rightAscensionSigmaProperMotion">The standard deviation of the proper motion in right ascension as a
+    /// true angle, σμα*, in radians per Julian year of TDB (Gaia's <c>pmra_error</c>).</param>
+    /// <param name="epoch">The catalog epoch, read in its own time frame and converted to TDB (#709).</param>
     public Star(int catalogNumber, string name, double mass, string spectralType, double visualMagnitude, double parallax, Equatorial equatorialCoordinatesAtEpoch,
         double declinationProperMotion, double rightAscensionProperMotion, double declinationSigma, double rightAscensionSigma, double declinationSigmaProperMotion,
         double rightAscensionSigmaProperMotion, Time epoch) : base((int)1E+09 + catalogNumber, name, mass)
@@ -87,7 +101,9 @@ public class Star : CelestialBody
     public double Parallax { get; }
 
     /// <summary>
-    /// Gets the distance to the star in meters.
+    /// Gets the distance of the star from the solar system barycenter at the catalog epoch, in meters: 1/<see cref="Parallax"/>
+    /// parsecs. At another epoch the distance is the length of its straight line (<see cref="GetEquatorialCoordinates"/>,
+    /// #718), √(1 + (μ dt)²) times this one.
     /// </summary>
     public double Distance { get; }
 
@@ -98,37 +114,39 @@ public class Star : CelestialBody
     public Time Epoch { get; }
 
     /// <summary>
-    /// Gets the equatorial coordinates of the star at the given epoch.
+    /// Gets the right ascension and declination of the star in ICRF at the catalog epoch, in radians, as given.
     /// </summary>
     public Equatorial EquatorialCoordinatesAtEpoch { get; }
 
     /// <summary>
-    /// Gets the proper motion in right ascension.
+    /// Gets the proper motion in right ascension as a true angle, μα* = (dα/dt) cos δ, in radians per Julian year of TDB,
+    /// the convention of Hipparcos and Gaia (#718; before 11.0.0 it was read as dα/dt, which nothing documented).
     /// </summary>
     public double RightAscensionProperMotion { get; }
 
     /// <summary>
-    /// Gets the proper motion in declination.
+    /// Gets the proper motion in declination, dδ/dt, in radians per Julian year of TDB.
     /// </summary>
     public double DeclinationProperMotion { get; }
 
     /// <summary>
-    /// Gets the sigma value for right ascension.
+    /// Gets the standard deviation of the right ascension at the catalog epoch as a true angle, σα* = σα cos δ, in radians.
     /// </summary>
     public double RightAscensionSigma { get; }
 
     /// <summary>
-    /// Gets the sigma value for declination.
+    /// Gets the standard deviation of the declination at the catalog epoch, in radians.
     /// </summary>
     public double DeclinationSigma { get; }
 
     /// <summary>
-    /// Gets the sigma value for proper motion in right ascension.
+    /// Gets the standard deviation of the proper motion in right ascension as a true angle, σμα*, in radians per Julian
+    /// year of TDB.
     /// </summary>
     public double RightAscensionSigmaProperMotion { get; }
 
     /// <summary>
-    /// Gets the sigma value for proper motion in declination.
+    /// Gets the standard deviation of the proper motion in declination, in radians per Julian year of TDB.
     /// </summary>
     public double DeclinationSigmaProperMotion { get; }
 
@@ -168,30 +186,67 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Gets the equatorial coordinates of the star at a specific epoch: those of the catalog epoch plus the proper motions
-    /// times dt, the Julian years of TDB from the catalog epoch (both times converted to TDB, whatever their frames), from
-    /// the exact difference of the ticks; the declination reduced to [−π/2, π/2] and the right ascension to [0, 2π), a
-    /// pole crossed.
+    /// Gets the equatorial coordinates of the star at a specific epoch: the star moved along a straight line at constant
+    /// speed in ICRF, SOFA's <c>iauStarpm</c> with a radial velocity of 0 (<c>external-lib/sofa-src/starpm.c</c>, Note 5),
+    /// over dt, the Julian years of TDB from the catalog epoch (both times converted to TDB, whatever their frames), from
+    /// the exact difference of the ticks; the declination in [−π/2, π/2], the right ascension in [0, 2π), and the distance
+    /// the length of the line, √(1 + (μ dt)²) times <see cref="Distance"/>, μ the total proper motion.
     /// </summary>
     /// <remarks>
-    /// The angles of the linear model, d = δ0 + μδ dt and a = α0 + μα dt, are reduced to the pair that points where
-    /// (cos d cos a, cos d sin a, sin d) points: when |d| exceeds π/2, d is reduced to (−π, π], and a declination past a
-    /// pole becomes π − d (−π − d past the south pole) with the right ascension turned by π. A declination within
-    /// [−π/2, π/2] is used as it is. The right ascension is then reduced modulo 2π, a value just below 0 whose sum with 2π
-    /// rounds to 2π returned as 0, the same direction. Before 11.0.0 the declination was reduced modulo π/2, so that a
-    /// star whose declination reached or passed a pole jumped toward the equator, by up to π/2 in direction, and a star at
-    /// a pole read the equator (#709), and such a right ascension was returned as 2π.
+    /// <para>
+    /// With x = μα* dt and y = μδ dt (<see cref="RightAscensionProperMotion"/> and <see cref="DeclinationProperMotion"/>,
+    /// true angles), the position in catalog distances is u0 + x e_α + y e_δ, u0 the catalog direction, e_α =
+    /// (−sin α0, cos α0, 0) and e_δ = (−sin δ0 cos α0, −sin δ0 sin α0, cos δ0) its unit tangents: with e = cos δ0 − y sin δ0,
+    /// α = α0 + atan2(x, e) (the angle of the equatorial components e (cos α0, sin α0) + x (−sin α0, cos α0)),
+    /// δ = atan2(sin δ0 + y cos δ0, √(x² + e²)), and the length √(1 + x² + y²). The form holds at any
+    /// catalog declination, a pole included (it divides by no cos δ0), and crosses a pole by itself; it is geometric at
+    /// any speed. A star without proper motion, and every star at its catalog epoch, is its catalog (bit for bit), its
+    /// right ascension reduced to [0, 2π) and a declination past a pole reflected through it, π − d (−π − d past the south
+    /// pole) with the right ascension turned by π.
+    /// </para>
+    /// <para>
+    /// Its departure from <c>iauStarpm</c> (rv = 0) is that function's light-time and relativistic terms of the observed
+    /// place, which grow as dt⁴: for Barnard's star 2.4e-14 rad after 100 years and 2.4e-10 rad after 1000 (after 10
+    /// years both round the right ascension to the same double), the distance 7.6e-8 relative per decade (<c>iauStarpv</c>'s inertial radial velocity −v_t²/(2c) for an observed rv of
+    /// 0), measured by <c>tools/sofa_reference/starpm_ref.c</c>. No radial velocity is taken: Barnard's −110.47 km/s
+    /// (Gaia DR3) would move it by 64 mas after 10 years and 6.5″ after 100 (see <c>docs/reference/stars.md</c>).
+    /// </para>
+    /// <para>
+    /// Before 11.0.0 (#718) the angles moved linearly, α0 + μα dt and δ0 + μδ dt, μα read as dα/dt, and the distance was
+    /// the catalog's: a catalog star given its μα* moved cos δ0 times too fast in right ascension (77.9 times for Polaris),
+    /// and given dα/dt it left the straight line by the curvature of its angles (Barnard's star 0.33 mas after 10 years,
+    /// 34 mas after 100, 9.4″ after 1000; 1.26° near a pole after 1000 years). Before 11.0.0 (#709) the declination was
+    /// reduced modulo π/2 and a right ascension just below 0 returned as 2π.
+    /// </para>
     /// </remarks>
     /// <param name="epoch">The epoch time for the coordinates.</param>
     /// <returns>The equatorial coordinates at the specified epoch.</returns>
     public Equatorial GetEquatorialCoordinates(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
-        var dec = EquatorialCoordinatesAtEpoch.Declination + dt * DeclinationProperMotion;
-        var ra = EquatorialCoordinatesAtEpoch.RightAscension + dt * RightAscensionProperMotion;
-        if (System.Math.Abs(dec) > Constants.PI2)
+        double x = dt * RightAscensionProperMotion;
+        double y = dt * DeclinationProperMotion;
+        double dec = EquatorialCoordinatesAtEpoch.Declination;
+        double ra = EquatorialCoordinatesAtEpoch.RightAscension;
+        double distance = Distance;
+        if (x != 0.0 || y != 0.0)
         {
-            // Past a pole: the declination in (−π, π], then reflected through the pole it passed, the right ascension
+            // The straight line u0 + x e_α + y e_δ: its components along (cos α0, sin α0, 0), e_α and the pole are e, x and
+            // sin δ0 + y cos δ0. The right ascension is the angle of its equatorial components, α0 + atan2(x, e) without a
+            // sum with α0, so that a catalog right ascension outside [0, 2π) is read through its own sine and cosine and
+            // not reduced by the double of 2π (k (2π − fl(2π)) away)
+            double sinDec = System.Math.Sin(dec);
+            double cosDec = System.Math.Cos(dec);
+            double sinRa = System.Math.Sin(ra);
+            double cosRa = System.Math.Cos(ra);
+            double e = cosDec - y * sinDec;
+            ra = System.Math.Atan2(sinRa * e + cosRa * x, cosRa * e - sinRa * x);
+            dec = System.Math.Atan2(sinDec + y * cosDec, System.Math.Sqrt(x * x + e * e));
+            distance = Distance * System.Math.Sqrt(1.0 + x * x + y * y);
+        }
+        else if (System.Math.Abs(dec) > Constants.PI2)
+        {
+            // A catalog declination past a pole: in (−π, π], then reflected through the pole it passed, the right ascension
             // turned by π (cos(π − d) = −cos d, sin(π − d) = sin d)
             dec = System.Math.IEEERemainder(dec, Constants._2PI);
             if (dec > Constants.PI2)
@@ -218,12 +273,12 @@ public class Star : CelestialBody
             }
         }
 
-        return new Equatorial(dec, ra, Distance, epoch);
+        return new Equatorial(dec, ra, distance, epoch);
     }
 
     /// <summary>
-    /// Gets the sigma value for right ascension at a specific epoch, √(σα² + (dt σμα)²), dt the Julian years of TDB from
-    /// the catalog epoch, from the exact difference of the ticks.
+    /// Gets the sigma value for right ascension at a specific epoch, √(σα*² + (dt σμα*)²), a true angle in radians (#718),
+    /// dt the Julian years of TDB from the catalog epoch, from the exact difference of the ticks.
     /// </summary>
     /// <remarks>
     /// A standard deviation, not an angle: it is not reduced. Before 11.0.0 it was reduced modulo 2π (#709).
