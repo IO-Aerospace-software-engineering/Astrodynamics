@@ -233,6 +233,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <b>Target frame.</b> Used as given for an ellipsoid, without a check of its center; <c>gftfov</c> requires a
         /// body-fixed frame centered on the target. Ignored for a point, as <c>gftfov</c> ignores it.
         /// </para>
+        /// <para>
+        /// <b>Tiny half-angles.</b> The half-angles are finite and positive (#707, #715), but a field of a half-angle below
+        /// about 1e-16 rad can be degenerate for <c>gftfov</c>, whose tests of zero lengths and zero cross products are exact
+        /// on computed vectors, so their threshold depends on the boresight: SPICE(DEGENERATECASE) up to 1.53e-17 rad for a
+        /// rectangle and 1.42e-17 rad for an ellipse with the boresight at the Moon, none down to 5e-324 with the boresight
+        /// +Z but for an ellipse and an ellipsoid target, SPICE(BADAXISLENGTH) up to 2.73e-319 (measured with
+        /// <c>fovtrg_c</c>, CSPICE N0067, #715). The managed path searches such fields, so the two paths can then disagree;
+        /// its own construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at the
+        /// boresight not found for a half-angle of 1e-155 rad in the reference plane, measured), and it throws
+        /// <see cref="InvalidOperationException"/> where the squares of the semi-axes of the cone of the field underflow
+        /// (below about 6e-171 rad at the Moon's distance).
+        /// </para>
         /// </remarks>
         /// <param name="searchWindow">The search window.</param>
         /// <param name="observer">Not used: the observer is the instrument's spacecraft.</param>
@@ -251,7 +263,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">The field of view cannot be searched: an angular radius above
         /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
-        /// or, on the managed path, the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
+        /// or, on the managed path, a circle or an ellipse whose half-angles are so small that the squares of the semi-axes of
+        /// the cone of the field underflow at the target's distance (#715; before 11.0.0 an unrelated
+        /// <see cref="ArgumentException"/>), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
         /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
         /// is inside the ellipsoid of the target; or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no

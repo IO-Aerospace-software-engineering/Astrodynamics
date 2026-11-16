@@ -497,6 +497,18 @@ epoch: up to its light time before the start (reception, `LT` and `CN`) or after
 aspect ratio up to 1.0034 (the Earth, the Moon, the Sun) and fields of aspect ratio up to 10 311: no sign error. An
 elongated target stretches the limb of the field by its own aspect ratio.
 
+**Tiny half-angles.** The half-angles are finite and positive, checked when the instrument is built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707),
+[#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)), but a field with a half-angle below about 1e-16 rad can be degenerate for `gftfov`, whose tests of a
+zero length or a zero cross product are exact on computed vectors, so their threshold depends on the boresight
+(`fovtrg_c`, CSPICE N0067, measured in #715): SPICE(DEGENERATECASE) up to 1.53e-17 rad for a rectangle and 1.42e-17 rad
+for an ellipse with the boresight at the Moon; none down to 5e-324 with the boresight +Z, but for an ellipse and an
+ellipsoid target, SPICE(BADAXISLENGTH) up to 2.73e-319. The managed path searches such fields, so the two paths can
+then disagree. Its cone of a circle or an ellipse loses its precision far below (measured: the Moon's ellipsoid at the
+boresight not found for a half-angle of 1e-155 rad in the reference plane), and where the squares of its semi-axes
+underflow at the target's distance (a half-angle below about 6e-171 rad at the Moon's distance) it throws
+`InvalidOperationException`, the field cannot be searched ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated `ArgumentException`, "The
+semi-axes of an ellipsoid must have positive lengths").
+
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
 gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the
 resolution of the search of an extreme between samples (Brent's `localmin`): an event or a gap narrower than about
@@ -526,7 +538,8 @@ The managed path also throws `ArgumentException` when the search window leaves t
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
 milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when the instrument's spacecraft
-has no attitude, or when the observer is inside the ellipsoid of the target. A managed spacecraft has no attitude while
+has no attitude, when the observer is inside the ellipsoid of the target, or when the half-angles of a circle or an
+ellipse are too small for its cone at the target's distance ([Tiny half-angles](#field-of-view-search)). A managed spacecraft has no attitude while
 its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by
 `Spacecraft.Propagate` ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)), or propagated by
 `TLEPropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,

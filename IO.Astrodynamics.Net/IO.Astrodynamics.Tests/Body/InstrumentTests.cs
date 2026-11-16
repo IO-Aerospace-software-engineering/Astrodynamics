@@ -1053,6 +1053,67 @@ namespace IO.Astrodynamics.Tests.Body
             }
         }
 
+        /// <summary>
+        /// #715, question 1: the managed search of a circle or an ellipse builds an ellipsoid whose limb is the cone of the
+        /// field, of semi-axes D sin REF and D sin REF · tan CROSS / tan REF at the distance D of the target
+        /// (<c>FieldOfViewGeometry.Cone</c>). For half-angles this small the square of a semi-axis underflows to 0 (IEEE 754:
+        /// at the Moon's distance, D ≈ 3.6e8 m, D sin 1e-200 ≈ 4e-192 m, whose square is below the smallest subnormal,
+        /// 4.9e-324), and the ellipsoid of the occultation search rejected it with <see cref="ArgumentException"/>, "The
+        /// semi-axes of an ellipsoid must have positive lengths", not the <see cref="InvalidOperationException"/> of a field
+        /// that cannot be searched. <c>gftfov</c> is already degenerate far above (SPICE(DEGENERATECASE) up to about 1.5e-17 rad
+        /// with the boresight at the Moon, #715). <see cref="Instrument.IsInFOV"/> and the managed search, for a point and an
+        /// ellipsoid target, throw <see cref="InvalidOperationException"/> naming the underflow. Control: a half-angle of 1e-10
+        /// is searched, the Moon at the boresight in view (its margin is the half-angle, less the rounding of the axes,
+        /// about 1e-16 rad).
+        /// </summary>
+        [Theory]
+        [InlineData("Circular", 1e-200, 1e-200, false)]
+        [InlineData("Circular", double.Epsilon, double.Epsilon, false)]
+        [InlineData("Elliptical", 0.1, 1e-200, false)]
+        [InlineData("Elliptical", 1e-200, 0.1, false)]
+        [InlineData("Elliptical", 0.1, double.Epsilon, false)]
+        [InlineData("Elliptical", double.Epsilon, 0.1, false)]
+        [InlineData("Circular", 1e-10, 1e-10, true)]
+        [InlineData("Elliptical", 0.1, 1e-10, true)]
+        [InlineData("Elliptical", 1e-10, 0.1, true)]
+        public void TinyHalfAngle_ManagedSearchThrowsInvalidOperation(string shape, double refAngle, double crossAngle, bool searched)
+        {
+            // Arrange: a managed spacecraft with an attitude, its instrument's boresight at the Moon
+            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var spc = Host(-7156, "T715");
+            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
+            var moon = new CelestialBody(301);
+            var boresight = moon.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize();
+            var refVector = boresight.Cross(Vector3.VectorZ).Normalize();
+            if (shape == "Circular")
+                spc.AddCircularInstrument(-7156001, "CAM", "M", refAngle, boresight, refVector, Vector3.Zero);
+            else
+                spc.AddEllipticalInstrument(-7156001, "CAM", "M", refAngle, crossAngle, boresight, refVector, Vector3.Zero);
+            var instrument = spc.Instruments.Single();
+            var window = new Window(epoch, epoch.AddSeconds(120.0));
+
+            // Act
+            bool? inView = null;
+            var point = Record.Exception(() => inView = instrument.IsInFOV(epoch, moon, Aberration.None));
+            System.Collections.Generic.List<Window> windows = null;
+            var ellipsoid = Record.Exception(() => windows = instrument.FindWindowsInFieldOfViewConstraint(window, spc, moon, moon.Frame, ShapeType.Ellipsoid,
+                Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
+
+            // Assert
+            if (searched)
+            {
+                Assert.Null(point);
+                Assert.True(inView);
+                Assert.Null(ellipsoid);
+                Assert.Equal(window, Assert.Single(windows));
+            }
+            else
+            {
+                Assert.Contains("underflow", Assert.IsType<InvalidOperationException>(point).Message);
+                Assert.Contains("underflow", Assert.IsType<InvalidOperationException>(ellipsoid).Message);
+            }
+        }
+
         // The instrument kernel the library's circular writer would write for these vectors, written here
         private static string CircularKernel(int id, string boresight, string refVector) =>
             $"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}" +

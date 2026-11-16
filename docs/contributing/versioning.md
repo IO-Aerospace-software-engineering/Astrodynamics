@@ -3064,6 +3064,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   opens `docs/standards-and-units.md`, declarations fenced `csharp` with no region (region 1 of that page is its second
   csharp block), is checked by value. A block's leading using alias may name a public type of the library. This lifts the known
   limitation of #662. Documentation and tests only: no library result moves.
+- **The managed field-of-view search of a field with tiny half-angles threw an unrelated `ArgumentException`** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)).
+  The managed search and `IsInFOV` of a circle or an ellipse build an ellipsoid whose limb is the cone of the field, of
+  semi-axes D sin REF and D sin REF · tan CROSS / tan REF at the target's distance D. Where the square of one of them
+  underflows to 0 (IEEE 754: a half-angle below about 6e-171 rad at the Moon's distance, 1e-200 and 5e-324 measured),
+  the ellipsoid of the occultation search threw `ArgumentException`, "The semi-axes of an ellipsoid must have positive
+  lengths", instead of the `InvalidOperationException` of a field that cannot be searched; it now throws that, naming
+  the half-angles and the underflow (`InstrumentTests.TinyHalfAngle_ManagedSearchThrowsInvalidOperation`, red on
+  a80f6a5 for the six rows of a circle and an ellipse, a point and an ellipsoid target). The rectangle, whose margin
+  takes the half-angles as angles, was not affected. Every other field is searched as before, bit for bit (the same
+  vectors). As the issue recommends, the constructors keep the rule "finite and positive" for both half-angles, and the
+  documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
+  measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
+  and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at
+  the boresight not found for a half-angle of 1e-155 rad in the reference plane, measured).
 
 **Changed**
 
