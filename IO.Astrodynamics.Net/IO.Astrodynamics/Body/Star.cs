@@ -255,8 +255,13 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Write star ephemeris from propagated states: those of its last propagation.
+    /// Write star ephemeris from propagated states: those of its last propagation, through the native writer
+    /// (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels"/> loaded is unloaded
+    /// first, and the new one is left unloaded (#706).
     /// </summary>
+    /// <exception cref="ArgumentException">The last propagation stored fewer than three states: the native writer writes three
+    /// or more (#706: before, a C++ exception crossed P/Invoke and ended the process). See
+    /// <see cref="SpiceAPI.WriteEphemeris"/> for the others.</exception>
     public override void WriteEphemeris(FileInfo outputFile)
     {
         SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, Volatile.Read(ref _propagatedStates));

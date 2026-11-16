@@ -196,10 +196,11 @@ Singleton class providing access to SPICE operations.
 | `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory, the path taken as what it is on disk; `ArgumentException` for a path that does not exist |
 | `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
 | `ClearKernels()` | Unload all kernels |
-| `GetLoadedKernels()` | Get list of currently loaded paths; a deleted SPK, CK, binary PCK or EK leaves it at the next native load, unload or write (#668) |
+| `GetLoadedKernels()` | Get list of currently loaded paths; a deleted SPK, CK, binary PCK or EK leaves it at the next native load, unload or write (#668), a file a writer replaces before the write (#706) |
 | `GetSpiceVersion()` | Get SPICE toolkit version |
 | `ReadEphemeris(...)` | Read state vectors (throws `InvalidOperationException` on native error) |
 | `ReadOrientation(...)` | Read spacecraft orientations (throws `InvalidOperationException` on native error) |
+| `WriteEphemeris(...)`, `WriteOrientation(...)` | Write an SPK (three states or more, one frame, about a celestial body, else `ArgumentException`) or a CK through the native writer; a file they replace that `LoadKernels` loaded is unloaded first and the new file is left unloaded (#706) |
 
 ```csharp
 // Load all kernels from a directory

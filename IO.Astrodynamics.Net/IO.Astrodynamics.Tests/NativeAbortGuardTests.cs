@@ -4,9 +4,12 @@ using System;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -298,5 +301,94 @@ public class NativeAbortGuardTests
         Assert.Equal("stateOrientations", e.ParamName);
         file.Refresh();
         Assert.False(file.Exists);
+    }
+
+    // Equally spaced states of a circular orbit about the Earth in ICRF, 60 s apart from J2000
+    private static StateVector[] EarthStates(int count, ILocalizable centre = null) => Enumerable.Range(0, count)
+        .Select(i => new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), centre ?? TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
+
+    /// <summary>
+    /// The native writer of SPKs rejects fewer than three states (<c>EphemerisKernel::WriteData</c>, whose message said "2
+    /// items or more"), states in several frames, and reads the centre of motion as a celestial body: each threw a C++
+    /// exception across P/Invoke, which ended the process (#706, exit code 134 on c533a6e, the child scenarios of
+    /// <see cref="KernelUnloadChildTests"/>), or for a spacecraft centre read the uninitialised GM of a failed read.
+    /// Rejected before the native call with an <see cref="ArgumentException"/> naming <c>stateVectors</c>: a new path is not
+    /// written, and an existing file keeps its bytes. Reference: the native rule itself.
+    /// </summary>
+    private static void AssertWriteEphemerisRejected(StateVector[] states, string contains)
+    {
+        var folder = Directory.CreateTempSubdirectory("native-abort-guard-");
+        try
+        {
+            var fresh = new FileInfo(Path.Combine(folder.FullName, "fresh.bsp"));
+            var existing = new FileInfo(Path.Combine(folder.FullName, "existing.bsp"));
+            SpiceAPI.Instance.WriteEphemeris(existing, -1999720, EarthStates(3));
+            var bytes = File.ReadAllBytes(existing.FullName);
+
+            var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(fresh, -1999720, states));
+            Assert.Equal("stateVectors", e.ParamName);
+            Assert.Contains(contains, e.Message);
+            Assert.False(File.Exists(fresh.FullName));
+            e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(existing, -1999720, states));
+            Assert.Equal("stateVectors", e.ParamName);
+            Assert.Equal(bytes, File.ReadAllBytes(existing.FullName));
+        }
+        finally
+        {
+            folder.Delete(true);
+        }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void WriteEphemeris_FewerThanThreeStates_Throws(int count) => AssertWriteEphemerisRejected(EarthStates(count), "three states");
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void WriteEphemeris_SeveralFrames_Throws(int eclipticIndex)
+    {
+        var states = EarthStates(3);
+        states[eclipticIndex] = new StateVector(states[eclipticIndex].Position, states[eclipticIndex].Velocity, states[eclipticIndex].Observer,
+            states[eclipticIndex].Epoch, Frames.Frame.ECLIPTIC_J2000);
+        AssertWriteEphemerisRejected(states, "frame of the first one");
+    }
+
+    [Fact]
+    public void WriteEphemeris_CentreNotACelestialBody_Throws()
+    {
+        var spacecraft = new Spacecraft(-1999721, "IOA_K1_GUARD", 3000.0, 10000.0, new Clock("IOA_K1_GUARD_CLOCK", 65536), EarthStates(1)[0]);
+        AssertWriteEphemerisRejected(EarthStates(3, spacecraft), "not a celestial body");
+        var site = new Site(339, "S339", TestHelpers.EarthAtJ2000, new Planetodetic(0.5, 0.2, 1000.0));
+        AssertWriteEphemerisRejected(EarthStates(3, site), "not a celestial body");
+    }
+
+    /// <summary>
+    /// A site over 90 s: its 1-minute step gives two states, which the native writer rejected with a C++ exception (#706,
+    /// exit code 134 on c533a6e). The <see cref="ArgumentException"/> of <see cref="SpiceAPI.WriteEphemeris"/> reaches the
+    /// caller; over two minutes, three states, the site is written.
+    /// </summary>
+    [Fact]
+    public void Site_WriteEphemeris_WindowOfTwoStates_Throws()
+    {
+        var site = new Site(339, "S339", TestHelpers.EarthAtJ2000, new Planetodetic(0.5, 0.2, 1000.0));
+        var folder = Directory.CreateTempSubdirectory("native-abort-guard-");
+        try
+        {
+            var file = new FileInfo(Path.Combine(folder.FullName, "site.bsp"));
+            var start = TimeSystem.Time.J2000TDB;
+            var e = Assert.Throws<ArgumentException>(() => site.WriteEphemeris(new Window(start, start.AddSeconds(90.0)), file));
+            Assert.Equal("stateVectors", e.ParamName);
+            Assert.False(File.Exists(file.FullName));
+            site.WriteEphemeris(new Window(start, start.AddSeconds(120.0)), file);
+            Assert.True(File.Exists(file.FullName));
+        }
+        finally
+        {
+            folder.Delete(true);
+        }
     }
 }

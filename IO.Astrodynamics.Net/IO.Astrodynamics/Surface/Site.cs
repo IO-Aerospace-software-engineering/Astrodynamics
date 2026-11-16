@@ -588,10 +588,16 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Write ephemeris data
+        /// Writes the states of the site relative to its body, in the body's frame, every minute of the window, as an SPK
+        /// through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>).
         /// </summary>
-        /// <param name="window"></param>
-        /// <param name="outputFile"></param>
+        /// <param name="window">The window, sampled every minute from its start.</param>
+        /// <param name="outputFile">The SPK to write; a file it replaces that <see cref="SpiceAPI.LoadKernels"/> loaded is
+        /// unloaded first, and the new one is left unloaded (#706).</param>
+        /// <exception cref="ArgumentException">The window gives fewer than three states (shorter than two minutes): the
+        /// native writer writes three or more. The exception names <c>stateVectors</c>, the parameter of
+        /// <see cref="SpiceAPI.WriteEphemeris"/> (#706: before, a C++ exception crossed P/Invoke and ended the process). See
+        /// <see cref="SpiceAPI.WriteEphemeris"/> for the others.</exception>
         public void WriteEphemeris(Window window, FileInfo outputFile)
         {
             var ephemeris = GetEphemeris(window, CelestialBody, CelestialBody.Frame, Aberration.None, TimeSpan.FromMinutes(1.0));

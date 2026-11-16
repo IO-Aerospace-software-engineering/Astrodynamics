@@ -4,8 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Kernels;
+using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -631,6 +634,116 @@ public class KernelRegistryTests : IDisposable
         }
 
         AssertHeld();
+    }
+
+    // Equally spaced states of a circular orbit about the Earth in ICRF, 60 s apart from the epoch, x at the given radius
+    private static StateVector[] EarthStates(int count, double x)
+    {
+        var earth = new Astrodynamics.Body.CelestialBody(399);
+        return Enumerable.Range(0, count).Select(i => new StateVector(new Vector3(x, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth,
+            Epoch.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
+    }
+
+    private static StateVector ReadObject(int naifId, double seconds) =>
+        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(seconds), 399, naifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+
+    /// <summary>
+    /// A file loaded through <see cref="SpiceAPI.LoadKernels"/>, then replaced by the native writer: its kernel object loaded
+    /// the file once more and unloaded it once, so the caller's load stayed in SPICE, which held the replaced file, deleted
+    /// but open, and read its data, while the registry listed it (#706, measured on c533a6e: the replaced states read until
+    /// the file was unloaded; on Windows the removal of the open file threw across P/Invoke). The writer now unloads it first,
+    /// as <see cref="SpiceAPI.UnloadKernels"/> does: no longer listed, its object not read until it is loaded again, and then
+    /// read from the new file. A file of a loaded folder replaces the folder by its remaining files. References: the states
+    /// written, 5 km apart from the replaced ones, and SPICE's coverage, which reads no state of an object it holds no file of.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void WriteEphemeris_ReplacingALoadedFile_UnloadsIt(bool inAFolder)
+    {
+        var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Spks"));
+        folder.Create();
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
+        var other = new FileInfo(Path.Combine(folder.FullName, "other.bsp"));
+        SpiceAPI.Instance.WriteEphemeris(c, -1999722, EarthStates(3, 6800000.0));
+        SpiceAPI.Instance.WriteEphemeris(other, -1999723, EarthStates(3, 6800000.0));
+        SpiceAPI.Instance.LoadKernels(inAFolder ? folder : c);
+        Assert.Equal(6800000.0, ReadObject(-1999722, 60.0).Position.X);
+        var written = EarthStates(4, 6805000.0);
+
+        SpiceAPI.Instance.WriteEphemeris(c, -1999722, written);
+
+        Assert.Equal(inAFolder ? [other.FullName] : Array.Empty<string>(), Under(_root).Select(k => k.FullName));
+        Assert.Throws<InvalidOperationException>(() => ReadObject(-1999722, 60.0));
+        SpiceAPI.Instance.LoadKernels(c);
+        var read = ReadObject(-1999722, 180.0);
+        Assert.Equal(written[3].Position, read.Position);
+        Assert.Equal(written[3].Velocity, read.Velocity);
+    }
+
+    /// <summary>
+    /// The CK analog: a CK of identity records loaded, then replaced by five records of 90° about z. Before, the load stayed
+    /// in SPICE and the identity records were read (#706). References: the records written, compared as a rotation angle
+    /// (2 atan2(|v|, |w|) of the quaternion between them, to 1e-9°, the 9 decimals of the other angle tests of the class).
+    /// </summary>
+    [Fact]
+    public void WriteOrientation_ReplacingALoadedFile_UnloadsIt()
+    {
+        var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Cks"));
+        folder.Create();
+        var clock = new Clock("IOA_K1_REG_CLOCK", 65536);
+        var spacecraft = new Spacecraft(-1999724, "IOA_K1_REG", 3000.0, 10000.0, clock, EarthStates(1, 6800000.0)[0]);
+        var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
+        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        // Another CK of the spacecraft, outside the epochs read, stays loaded: with no CK loaded at all, a failed read leaves
+        // SPICE's CKBSS error pending for the next call (ReadOrientationProxy, outside #706)
+        var keep = new FileInfo(Path.Combine(folder.FullName, "keep.bc"));
+        SpiceAPI.Instance.WriteOrientation(keep, spacecraft.NaifId, Enumerable.Range(100, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frames.Frame.ICRF)).ToArray());
+        SpiceAPI.Instance.LoadKernels(keep);
+        var turned = new Quaternion(Vector3.VectorZ, System.Math.PI / 2.0);
+        var c = new FileInfo(Path.Combine(folder.FullName, "c.bc"));
+        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frames.Frame.ICRF)).ToArray());
+        SpiceAPI.Instance.LoadKernels(c);
+
+        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, Enumerable.Range(0, 5)
+            .Select(i => new StateOrientation(turned, Vector3.Zero, Epoch.AddSeconds(i), Frames.Frame.ICRF)).ToArray());
+
+        Assert.Equal([clockFile.FullName, keep.FullName], Under(_root).Select(k => k.FullName));
+        Assert.Throws<InvalidOperationException>(() => ReadOrientation(spacecraft.NaifId, 1.0));
+        SpiceAPI.Instance.LoadKernels(c);
+        var q = ReadOrientation(spacecraft.NaifId, 4.0).Rotation;
+        double angle = 2.0 * System.Math.Atan2((q.Conjugate() * turned).VectorPart.Magnitude(), System.Math.Abs((q.Conjugate() * turned).W));
+        Assert.Equal(0.0, angle * Astrodynamics.Constants.Rad2Deg, 9);
+    }
+
+    private static StateOrientation ReadOrientation(int naifId, double seconds) => SpiceAPI.Instance
+        .ReadOrientation(new Window(Epoch.AddSeconds(seconds), Epoch.AddSeconds(seconds)), naifId, TimeSpan.Zero, Frames.Frame.ICRF,
+            TimeSpan.FromSeconds(1.0)).Single();
+
+    /// <summary>
+    /// A spacecraft's SPK loaded, then written again by the managed writer (<c>Spacecraft.WriteEphemeris</c>): it unloaded the
+    /// file in SPICE, but the registry went on listing it (#706, measured on c533a6e). It is now unloaded as
+    /// <see cref="SpiceAPI.UnloadKernels"/> does: no longer listed, its object read again once it is loaded.
+    /// </summary>
+    [Fact]
+    public void SpacecraftWriteEphemeris_ReplacingALoadedFile_NoLongerListsIt()
+    {
+        var spacecraft = new Spacecraft(-1999725, "IOA_K1_REG_SPC", 3000.0, 10000.0, new Clock("IOA_K1_REG_SPC_CLOCK", 65536),
+            EarthStates(1, 6800000.0)[0]);
+        spacecraft.AddPropagatedStates(EarthStates(3, 6800000.0));
+        var c = new FileInfo(Path.Combine(_root.FullName, "managed.bsp"));
+        spacecraft.WriteEphemeris(c);
+        SpiceAPI.Instance.LoadKernels(c);
+
+        spacecraft.WriteEphemeris(c);
+
+        Assert.Empty(Under(_root));
+        Assert.Throws<InvalidOperationException>(() => ReadObject(-1999725, 60.0));
+        SpiceAPI.Instance.LoadKernels(c);
+        Assert.Equal(6800000.0, ReadObject(-1999725, 60.0).Position.X);
     }
 
     // SPICE's files under the root, the expected ones, and the files the listing names, in any order

@@ -891,7 +891,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// center of the segments, so SPICE chains the ephemerides; they are stored in ICRF whatever the frame of the initial
         /// state, so the SPK is in J2000 (#535). The file is written by the library's managed writer
         /// (<see cref="Kernels.SpkWriter"/>), in SSB mode and about any central body alike: an existing file is unloaded and
-        /// replaced, and the new one is left unloaded, as the native writer did.
+        /// replaced, and the new one is left unloaded, as the native writer did. A file <see cref="SpiceAPI.LoadKernels"/>
+        /// loaded is unloaded as <see cref="SpiceAPI.UnloadKernels"/> does, so that <see cref="SpiceAPI.GetLoadedKernels"/>
+        /// no longer lists it (#706).
         /// </summary>
         /// <remarks>
         /// The SPK holds positions and velocities only: the covariance of the propagated states, when the propagation
@@ -902,6 +904,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
         /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state.</exception>
+        /// <exception cref="InvalidOperationException">SPICE failed to unload the file it replaces (the reopening of the other
+        /// loaded SPKs, on a deleted one SPICE holds under a relative name): the message is SPICE's, and the file is left on
+        /// disk as it was, nothing written (#706: before, the failure was ignored and the file replaced).</exception>
         public override void WriteEphemeris(FileInfo outputFile)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");

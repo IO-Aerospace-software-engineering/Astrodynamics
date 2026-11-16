@@ -59,6 +59,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - Platform-specific libraries: `IO.Astrodynamics.dll` (Windows), `libIO.Astrodynamics.so` (Linux)
 - Thread-safe access through lock synchronization
 - Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` and the five `FindWindows*` proxies of the CSPICE window searches (fourth round of #668; before, they dropped SPICE's error and returned no window) return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
+- The kernel writers and loaders (`WriteEphemerisProxy`, `WriteOrientationProxy`, `LoadKernelsProxy`, `UnloadKernelsProxy`) catch their C++ exceptions and keep SPICE's message for `GetLastErrorProxy()` (#706; before, an exception ended the process); `SpiceAPI.WriteEphemeris` throws `ArgumentException` (`stateVectors`) for fewer than three states, several frames or a centre that is not a celestial body; every writer first unloads, as `UnloadKernels` does, a target `LoadKernels` loaded, and the native writers unload every other load of its name, so the replaced file's data are never read again and `GetLoadedKernels` no longer lists it; the new file is left unloaded
 
 **Data Provider Pattern**
 - `IDataProvider` interface with implementations:
@@ -808,7 +809,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 
 1. **Thread Safety**: CSPICE operations are not thread-safe - all API calls must use the shared lock object
 2. **Kernel Management**: Load/unload SPICE kernels appropriately to avoid memory leaks
-3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy`, and the five `FindWindows*` proxies of the CSPICE window searches) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `InvalidOperationException` with the native message.
+3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy`, the five `FindWindows*` proxies of the CSPICE window searches, and the kernel writers and loaders, #706) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `InvalidOperationException` with the native message.
 4. **Native Resources**: Properly free unmanaged memory returned from native calls
 5. **Time Systems**: Be explicit about time frames when working with epochs
 6. **Coordinate Systems**: Always specify reference frames for state vectors and transformations

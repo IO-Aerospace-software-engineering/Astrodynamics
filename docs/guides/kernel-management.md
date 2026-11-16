@@ -81,6 +81,13 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   meta-kernel by absolute paths, or through `PATH_VALUES` and `PATH_SYMBOLS` with an absolute `PATH_VALUES`, to have
   them covered. A DSK is left to SPICE too (its subsystem has no public routine that closes it by its handle): keep a
   loaded DSK on disk until it is unloaded.
+- A writer that replaces a file `LoadKernels` loaded, by itself or in a loaded directory, first unloads it as
+  `UnloadKernels` does (#706): `GetLoadedKernels` no longer lists it (a directory is replaced by its remaining files), and
+  the new file is not loaded. Load it again after the write to read it. Before 11.0.0 the native writers left the caller's
+  load in SPICE, which went on reading the replaced file's data, and the managed `Spacecraft.WriteEphemeris` left the path
+  listed. A failed unload of the file throws `InvalidOperationException` with SPICE's message, and the file is kept as it
+  was; so does a path the file system rejects (a loop of symbolic links), given to a writer or to `LoadKernels`, which
+  ended the process before 11.0.0.
 - SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
   File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
   `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.
