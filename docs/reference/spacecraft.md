@@ -394,7 +394,7 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `Name` | Instrument name |
 | `Model` | Instrument model identifier |
 | `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad): finite and positive |
-| `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad): finite and not negative; `EllipticalInstrument` and `RectangularInstrument` |
+| `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad): finite and positive ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)); `EllipticalInstrument` and `RectangularInstrument` |
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
 | `Boresight` | Boresight direction in instrument frame: finite components, a non-zero magnitude |
 | `RefVector` | Reference vector in instrument frame: finite components, a non-zero magnitude, not parallel to the boresight (b × r ≠ 0) |
