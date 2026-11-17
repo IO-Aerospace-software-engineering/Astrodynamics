@@ -48,7 +48,7 @@ public class OmmWriter
     /// <param name="omm">The OMM to write.</param>
     /// <param name="filePath">The file path to write to.</param>
     /// <exception cref="ArgumentNullException">Thrown when omm is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when filePath is null or empty.</exception>
+    /// <exception cref="ArgumentException">Thrown when filePath is null or empty, or when the <c>EPOCH</c> or <c>REF_FRAME_EPOCH</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>omm</c>, #617); nothing is written then.</exception>
     public void WriteToFile(Omm omm, string filePath)
     {
         if (omm == null)
@@ -66,6 +66,7 @@ public class OmmWriter
     /// <param name="omm">The OMM to write.</param>
     /// <param name="stream">The stream to write to.</param>
     /// <exception cref="ArgumentNullException">Thrown when omm or stream is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c> or <c>REF_FRAME_EPOCH</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>omm</c>, #617); nothing is written to the stream then.</exception>
     public void WriteToStream(Omm omm, Stream stream)
     {
         if (omm == null)
@@ -92,6 +93,7 @@ public class OmmWriter
     /// <param name="omm">The OMM to write.</param>
     /// <returns>The XML string representation of the OMM.</returns>
     /// <exception cref="ArgumentNullException">Thrown when omm is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c> or <c>REF_FRAME_EPOCH</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>omm</c>, #617).</exception>
     public string WriteToString(Omm omm)
     {
         if (omm == null)

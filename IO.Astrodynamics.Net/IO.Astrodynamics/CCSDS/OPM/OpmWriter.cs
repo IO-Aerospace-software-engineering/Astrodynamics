@@ -48,7 +48,7 @@ public class OpmWriter
     /// <param name="opm">The OPM to write.</param>
     /// <param name="filePath">The file path to write to.</param>
     /// <exception cref="ArgumentNullException">Thrown when opm is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when filePath is null or empty.</exception>
+    /// <exception cref="ArgumentException">Thrown when filePath is null or empty, or when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617); nothing is written then.</exception>
     public void WriteToFile(Opm opm, string filePath)
     {
         if (opm == null)
@@ -66,6 +66,7 @@ public class OpmWriter
     /// <param name="opm">The OPM to write.</param>
     /// <param name="stream">The stream to write to.</param>
     /// <exception cref="ArgumentNullException">Thrown when opm or stream is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617); nothing is written to the stream then.</exception>
     public void WriteToStream(Opm opm, Stream stream)
     {
         if (opm == null)
@@ -92,6 +93,7 @@ public class OpmWriter
     /// <param name="opm">The OPM to write.</param>
     /// <returns>The XML string representation of the OPM.</returns>
     /// <exception cref="ArgumentNullException">Thrown when opm is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617).</exception>
     public string WriteToString(Opm opm)
     {
         if (opm == null)

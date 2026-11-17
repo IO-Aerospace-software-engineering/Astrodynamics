@@ -4537,8 +4537,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: the exported CDM names its method `FOSTER-1992`** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), Fixed above). `EncounterCase.ToCdm` writes
   `COLLISION_PROBABILITY_METHOD = FOSTER-1992` where it wrote `FOSTER-2D`, and throws `InvalidOperationException` for an
   encounter flagged `SingleCovarianceMaximumPcUsed`, where a case built by hand with both covariances was written
-  `FOSTER-2D-MAX-PC`. Migration: a consumer that matched `FOSTER-2D` matches `FOSTER-1992`; a caller that sets
-  `CdmExportOptions.CollisionProbabilityMethod` is unaffected.
+  `FOSTER-2D-MAX-PC`, or with the method `CdmExportOptions.CollisionProbabilityMethod` named. Migration: a consumer that
+  matched `FOSTER-2D` matches `FOSTER-1992`; a caller that sets `CdmExportOptions.CollisionProbabilityMethod` keeps its
+  method, except for an encounter flagged `SingleCovarianceMaximumPcUsed`, which is refused whatever the option says
+  (that maximum is not the Pc of two covariances): such an encounter is no longer exported.
 - **The OPM, OMM and CDM writers write the shortest round-trip form of each value** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728), Fixed above). The text
   of the written messages changes: the OPM and OMM write the digits they dropped (0.00012345678901234567 where
   0.00012345678901 was written), the CDM drops the digits `G17` added beyond the shortest exact form
