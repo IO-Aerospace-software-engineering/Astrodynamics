@@ -46,8 +46,11 @@ given.
 | `DeltaTs` | The step in seconds |
 
 - Symplectic: conserves energy over long durations for conservative systems.
-- Second order: the global error grows with the square of the step (see below).
-- Event detection occurs at step boundaries only (no sub-step refinement).
+- Second order: the global error grows with the square of the step (see below), with drag too: the acceleration at the
+  end of a step is evaluated with the predicted end velocity v + h a (#439; the half-step velocity, before 11.0.0, made it
+  of first order with a force that depends on the velocity).
+- Event detection occurs at step boundaries only (no sub-step refinement); the step that holds an event is integrated
+  again to the tick of the label of its end, the state the next segment starts from (#572).
 
 ```csharp
 var integrator = new VVIntegrator(TimeSpan.FromSeconds(1.0));
@@ -168,6 +171,12 @@ Sources: errors from `VVIntegratorTests.GlobalErrorIsSecondOrderInTheStep`, agai
 Keplerian solution; times from `VVBenchmarks` and `RK78Benchmarks.LeoOneOrbit_EGM10_SunMoon`
 (BenchmarkDotNet 0.14.0, medium run, AMD Ryzen 7 5800X, Fedora Linux 44, .NET 10). The step of
 `VVIntegrator` is also the output cadence of the propagator; RK7(8) outputs every 10 s here.
+
+With drag the order holds: on a dense perigee pass (perigee 20 km and apogee 400 km above the equatorial radius, 45°,
+10 min from 300 s before the perigee, 1 000 kg, 1e-4 m², Cd 2.2, the U.S. Standard Atmosphere 1976) the position error
+against RK7(8) at 1e-13 is 6.09 m, 6.09e-2 m and 6.11e-4 m at 1, 0.1 and 0.01 s
+(`VVIntegratorTests.GlobalErrorIsSecondOrderWithDrag`, Linux x64, 2026-11-17); before 11.0.0, 272.6 m, 27.8 m and 2.78 m,
+first order (#439).
 
 With the full force model, the 1 s Velocity-Verlet error on this case is 281 m, of which 280 m is
 truncation (281.1 m against the GMAT golden of conformance propagator 001 over the TT day, Linux, Windows and macOS
