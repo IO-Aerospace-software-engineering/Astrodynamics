@@ -1135,8 +1135,10 @@ ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::Stat
 }
 
 // The state of one epoch (spkezr_c), the body of ReadEphemerisAtGivenEpochProxy and of each epoch of ReadEphemerisProxy: a failed
-// read is a NaN state, its SPICE message kept in lastError, SPICE reset (#454). It does not clear lastError, so that the message
-// of a failed epoch of ReadEphemerisProxy outlives the epochs after it, which the .NET layer reads once the loop has ended
+// read is a NaN state, its SPICE message kept in lastError, SPICE reset (#454). It neither clears lastError nor
+// replaces a message already there, so that ReadEphemerisProxy, which clears it once before its loop, keeps the message
+// of its first failed epoch, where the .NET layer stops once the loop has ended (#714, decision 1 of #719, decided by
+// S. Guillet, 2026-11-17; before, each failed epoch replaced the message, so the last one was named)
 static IO::Astrodynamics::API::DTO::StateVectorDTO ReadStateAt(double epoch, int observerId, int targetId, const char *frame,
                                                               const char *aberration)
 {
@@ -1158,9 +1160,13 @@ static IO::Astrodynamics::API::DTO::StateVectorDTO ReadStateAt(double epoch, int
 
     if (failed_c())
     {
-        // #454: a failed read is a NaN state, its SPICE message kept for GetLastErrorProxy
-        std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
-        lastError[sizeof(lastError) - 1] = '\0';
+        // #454: a failed read is a NaN state, its SPICE message kept for GetLastErrorProxy, the first of a call (#714)
+        const char *message = HandleError();
+        if (lastError[0] == '\0')
+        {
+            std::strncpy(lastError, message, sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+        }
         stateVectorDto.position = stateVectorDto.velocity = {std::nan(""), std::nan(""), std::nan("")};
     }
     return stateVectorDto;

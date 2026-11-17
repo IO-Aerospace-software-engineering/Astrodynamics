@@ -450,7 +450,10 @@ public class SpiceApiTest
     /// message, as the same read in J2000 does (#714, review of the branch). The epochs SPICE gives come first and are rotated
     /// into the frame of a site on Mars (IAU_MARS of the text PCK, no time limit), a rotation that calls
     /// <c>TransformFrameProxy</c>, which clears the last native error when it starts: the message of the failed epochs must
-    /// be read before it. The reference is SPICE's message of the same read in J2000, where no rotation runs.
+    /// be read before it. The reference is SPICE's message of the same read in J2000, where no rotation runs, which
+    /// names the first failed epoch, 2150 JAN 22 12:00 TDB, where <c>SpiceAPI</c> stops (de440s covers the Sun up to
+    /// 2150 JAN 22 00:00 TDB, <c>spkcov_c</c>; #714, decision 1 of #719, decided by S. Guillet, 2026-11-17: it named
+    /// the last, 2150 JAN 25).
     /// </summary>
     [Fact]
     public void ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage()
@@ -463,7 +466,8 @@ public class SpiceApiTest
         var reference = Assert.Throws<InvalidOperationException>(() =>
             SpiceAPI.Instance.ReadEphemeris(window, 399, 10, Frames.Frame.ICRF, Aberration.None, step));
         Assert.Contains("Insufficient ephemeris data", reference.Message);
-        Assert.Contains("2150 JAN 25 00:00:00.000", reference.Message);
+        Assert.Contains("2150 JAN 22 12:00:00.000", reference.Message);
+        Assert.DoesNotContain("2150 JAN 25", reference.Message);
 
         var e = Assert.Throws<InvalidOperationException>(() =>
             SpiceAPI.Instance.ReadEphemeris(window, 399, 10, site.Frame, Aberration.None, step));

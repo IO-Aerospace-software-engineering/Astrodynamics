@@ -222,6 +222,24 @@ TEST(API, ReadEphemerisProxyException)
     ASSERT_STRNE("", GetLastErrorProxy());
 }
 
+// A window read past the coverage names the first failed epoch, where SpiceAPI stops (#714, decision 1 of #719, decided
+// by S. Guillet, 2026-11-17; before, the message of each failed epoch replaced the earlier one, so the last was named).
+// de440s covers the Sun up to 2150 JAN 22 00:00:00 TDB (spkcov_c), so of the epochs every 12 h from 2150 JAN 20 TDB the
+// read at 2150 JAN 22 00:00 is the last one SPICE gives and 2150 JAN 22 12:00 the first one it cannot
+TEST(API, ReadEphemerisProxyPastTheCoverageNamesTheFirstFailedEpoch)
+{
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[11];
+    ReadEphemerisProxy(SearchWindow("2150 JAN 20 00:00:00 TDB", "2150 JAN 25 00:00:00 TDB"), 399, 10, "J2000", "NONE",
+                       43200.0, sv);
+    ASSERT_TRUE(std::isfinite(sv[4].position.x));
+    ASSERT_TRUE(std::isnan(sv[5].position.x));
+    ASSERT_TRUE(std::isnan(sv[10].position.x));
+    const std::string message = GetLastErrorProxy();
+    ASSERT_NE(std::string::npos, message.find("Insufficient ephemeris data")) << message;
+    ASSERT_NE(std::string::npos, message.find("2150 JAN 22 12:00:00.000")) << message;
+    ASSERT_EQ(std::string::npos, message.find("2150 JAN 25")) << message;
+}
+
 TEST(API, ReadSpacecraftOrientationProxyException)
 {
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
