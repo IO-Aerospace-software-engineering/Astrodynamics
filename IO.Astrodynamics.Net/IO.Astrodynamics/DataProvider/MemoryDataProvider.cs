@@ -41,15 +41,16 @@ public class MemoryDataProvider : IDataProvider
     /// <exception cref="InvalidOperationException"><paramref name="date"/> is outside the stored orientations of
     /// <paramref name="source"/> (#680; <see cref="ArgumentException"/> before 11.0.0).</exception>
     /// <remarks>
-    /// A frame named TEME is <see cref="Frame.TEME"/>, the managed <see cref="TemeFrame"/>, which needs no stored
-    /// orientation (#451, the routing of #562); its orientation is labelled with <paramref name="source"/>.
+    /// A frame named TEME, CIRS or TIRS, in any case, is <see cref="Frame.TEME"/>, <see cref="Frame.CIRS"/> or
+    /// <see cref="Frame.TIRS"/>, the managed frames, which need no stored orientation (#451, the routing of #562, #656); its
+    /// orientation is labelled with <paramref name="source"/>. An orientation added under one of those names is not read
+    /// (#656; before 11.0.0 the stored orientations of a frame named CIRS or TIRS were read).
     /// </remarks>
     public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
     {
-        if (SpiceAPI.IsTeme(source))
+        if (SpiceAPI.ManagedOrientationToIcrf(date, source) is { } managed)
         {
-            var teme = Frame.TEME.GetStateOrientationToICRF(date);
-            return new StateOrientation(teme.Rotation, teme.AngularVelocity, date, source);
+            return managed;
         }
 
         if (!_stateOrientationsToICRF.TryGetValue(source.Name, out var stateOrientations))

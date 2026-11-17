@@ -2762,7 +2762,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's
   `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (the same on Linux
   x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
-  frame kernel and the CK written for them) and CIRS and TIRS ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)) keep their path; TEME's composition is the same code, bit for bit.
+  frame kernel and the CK written for them) keep their path; CIRS and TIRS are composed the same way since [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656) (below); TEME's composition is the same code, bit for bit.
 - **The documentation of a site observer of `SpiceAPI.ReadEphemeris` by identifiers stated no condition** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth
   round). The observer of a site identifier is a `Site` built from its SPICE name and read at J2000 TDB (#672), so a
   site no loaded kernel names throws `ArgumentException` (`naifId`, "has no name in SPICE") and one whose SPK does not
@@ -3208,6 +3208,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
+- **A frame named CIRS or TIRS went to SPICE, and `SpiceAPI.TransformFrame` threw for CIRS and TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+  Since #562 a frame is its name, so `new Frame("CIRS")` equals `Frame.CIRS` and `new Frame("tirs")` equals
+  `Frame.TIRS`, but the routing went by type: a frame built by those names (user code, a CCSDS file, the CLI) was handed
+  to SPICE, which does not know them, and `SpiceAPI.TransformFrame` handed even the instances to SPICE. Measured on
+  a85098d: `new Frame("CIRS").ToFrame(Frame.ICRF, t)`, an ICRF state `ToFrame(new Frame("CIRS"))`, `GetEphemeris` in
+  `new Frame("TIRS")` and `SpiceAPI.Instance.TransformFrame(t, Frame.CIRS, Frame.ICRF)` threw
+  `InvalidOperationException` (SPICE(UNKNOWNFRAME)), `MemoryDataProvider.FrameTransformationToICRF` `ArgumentException`
+  ("Frame not found"). One internal rule, `SpiceAPI.ManagedFrame`, now resolves a `TemeFrame`, `CirsFrame` or
+  `TirsFrame` instance as it is and a frame named TEME, CIRS or TIRS, in any case, to `Frame.TEME`, `Frame.CIRS` or
+  `Frame.TIRS`; both data providers, the ephemeris reads and the CSPICE coordinate search's frame check use it, and
+  `SpiceAPI.TransformFrame` composes a CIRS or TIRS end through ICRF, as TEME's (decided by S. Guillet, 2026-11-17). A
+  frame built by name is now the static frame bit for bit (its orientation, its reads with or without light time and
+  stellar aberration), labelled with the frame given; against SOFA (`Data/SofaReference/iau2006_sweep.json`, IAU
+  2006/2000A: `iauC2ixys` from its X, Y and s for CIRS, its GCRS → TIRS for TIRS) at 2000, 2012, 2020 and 2024 the axes
+  are within 1.1e-9 rad and the Moon's position read from the Earth within 5.9e-10 rad, under the 5e-9 rad bound of
+  the SOFA sweep (IAU 2000B against 2000A); `TransformFrame` toward ITRF93 is `ToFrame`'s composition within 1e-15 rad
+  and 1e-20 rad/s (`ManagedFrameByNameTests`, 31 cases, all red on a85098d). A coordinate search of `CelestialItem` or
+  `Site` in a frame built by those names is the library's, as in the instances, and
+  `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it, as for the instances.
 
 **Changed**
 
@@ -4471,6 +4490,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
+- **Breaking: a `MemoryDataProvider` no longer reads orientations stored under the name CIRS or TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656), Fixed above).
+  `FrameTransformationToICRF` of a frame named CIRS or TIRS, in any case, returns the managed `Frame.CIRS` or
+  `Frame.TIRS` (an instance of `CirsFrame` or `TirsFrame` its own), as it did for TEME, where it read the orientations
+  `AddStateOrientationToICRF` stored under that name. Migration: none to read the IAU frames; a caller who stored another
+  frame under one of those names gives it another name.
 
 **Deprecated**
 
@@ -4557,15 +4581,10 @@ not listed.
   text kernel writers still write it: load it through a meta-kernel that names it by a shorter relative path, or write
   it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
   are two entries.
-- **CIRS and TIRS by name, and searches in a managed frame**
-  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558),
-  [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)). A frame built by name as CIRS
-  or TIRS (`new Frame("CIRS")`, a CCSDS file, the CLI) equals `Frame.CIRS` or `Frame.TIRS` but goes to SPICE, which does
-  not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws, and `SpiceAPI.TransformFrame` in CIRS or TIRS throws
-  even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in a frame built by the
-  name CIRS or TIRS throws SPICE's error (no window before the fourth round of #668), and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances
-  `Frame.CIRS` and `Frame.TIRS`, which the coordinate searches of `CelestialItem` and `Site` search in with the library
-  (third review of #690). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
+- **Orientations read in CIRS or TIRS, and frames of the library built by name**
+  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)). `SpiceAPI.ReadOrientation` in
+  CIRS or TIRS throws: SPICE does not know them (a frame built by those names is routed to `Frame.CIRS` and `Frame.TIRS`
+  everywhere else since #656, Fixed above). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
   record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), and searched in by the library (third review of #690), but a frame built by
   such a name (`new Frame("MYSITE_TOPO")`) still goes to SPICE, as does any frame built by a name SPICE does not know,
   whose CSPICE search throws SPICE's error (no window before the fourth round of #668).

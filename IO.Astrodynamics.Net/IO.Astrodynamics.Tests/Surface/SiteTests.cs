@@ -866,8 +866,8 @@ namespace IO.Astrodynamics.Tests.Surface
         /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/> with the frame of a site from the
         /// kernels whose frame id no loaded kernel defines is the frame of its J2000 coordinates
         /// (<see cref="SiteFrame.GetStateOrientationToICRF"/>), bit for bit, where it threw (#668, fourth round); with the frame
-        /// of a site whose frame the kernels define (DSS-13), SPICE's frame, as before. The frames of CIRS and TIRS keep their
-        /// path, which #656 owns.
+        /// of a site whose frame the kernels define (DSS-13), SPICE's frame, as before. CIRS is composed through ICRF by its
+        /// managed orientation since #656, where it threw (<c>ManagedFrameByNameTests</c> checks it against SOFA).
         /// </summary>
         [Fact]
         public void TransformFrame_KernelSites_TheFrameTheSiteUses()
@@ -896,7 +896,8 @@ namespace IO.Astrodynamics.Tests.Surface
             var at = new TimeSystem.Time("2024-03-01T12:00:00 TDB");
             Assert.Equal(SpiceAPI.Instance.TransformFrame(at, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF).Rotation,
                 SpiceAPI.Instance.TransformFrame(at, dss13.Frame, Frames.Frame.ICRF).Rotation);
-            Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.TransformFrame(at, Frames.Frame.CIRS, Frames.Frame.ICRF));
+            Assert.Equal(Frames.Frame.CIRS.GetStateOrientationToICRF(at).Rotation,
+                SpiceAPI.Instance.TransformFrame(at, Frames.Frame.CIRS, Frames.Frame.ICRF).Rotation);
         }
 
         // Third review of #690, against SPICE in the test's NAIF topocentric frame, the worst on Linux x64, Windows x64 and

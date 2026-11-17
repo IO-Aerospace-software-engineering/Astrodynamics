@@ -15,15 +15,17 @@ namespace IO.Astrodynamics.DataProvider;
 public class SpiceDataProvider : IDataProvider
 {
     /// <remarks>
-    /// A frame named TEME is <see cref="Frame.TEME"/>, the managed <see cref="TemeFrame"/>, whatever its instance (#451,
-    /// the routing of #562); its orientation is labelled with <paramref name="source"/>. Every other frame is SPICE's.
+    /// A frame named TEME, CIRS or TIRS, in any case, is <see cref="Frame.TEME"/>, <see cref="Frame.CIRS"/> or
+    /// <see cref="Frame.TIRS"/>, the managed frames, whatever its instance (#451, the routing of #562, #656: before, CIRS and
+    /// TIRS built by name reached SPICE, which threw); an instance of <see cref="TemeFrame"/> or <see cref="TirsFrame"/>
+    /// keeps its own Earth orientation parameters. Its orientation is labelled with <paramref name="source"/>. Every other
+    /// frame is SPICE's.
     /// </remarks>
     public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
     {
-        if (SpiceAPI.IsTeme(source))
+        if (SpiceAPI.ManagedOrientationToIcrf(date, source) is { } managed)
         {
-            var teme = Frame.TEME.GetStateOrientationToICRF(date);
-            return new StateOrientation(teme.Rotation, teme.AngularVelocity, date, source);
+            return managed;
         }
 
         return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF);
