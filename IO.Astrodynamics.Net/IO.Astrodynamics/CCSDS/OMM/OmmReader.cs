@@ -390,34 +390,19 @@ public class OmmReader
         var comments = GetComments(element);
         var refFrame = GetOptionalElementValue(element, "COV_REF_FRAME");
 
-        var cxX = ParseDouble(GetRequiredElementValue(element, "CX_X"), "CX_X");
-        var cyX = ParseDouble(GetRequiredElementValue(element, "CY_X"), "CY_X");
-        var cyY = ParseDouble(GetRequiredElementValue(element, "CY_Y"), "CY_Y");
-        var czX = ParseDouble(GetRequiredElementValue(element, "CZ_X"), "CZ_X");
-        var czY = ParseDouble(GetRequiredElementValue(element, "CZ_Y"), "CZ_Y");
-        var czZ = ParseDouble(GetRequiredElementValue(element, "CZ_Z"), "CZ_Z");
-        var cxDotX = ParseDouble(GetRequiredElementValue(element, "CX_DOT_X"), "CX_DOT_X");
-        var cxDotY = ParseDouble(GetRequiredElementValue(element, "CX_DOT_Y"), "CX_DOT_Y");
-        var cxDotZ = ParseDouble(GetRequiredElementValue(element, "CX_DOT_Z"), "CX_DOT_Z");
-        var cxDotXDot = ParseDouble(GetRequiredElementValue(element, "CX_DOT_X_DOT"), "CX_DOT_X_DOT");
-        var cyDotX = ParseDouble(GetRequiredElementValue(element, "CY_DOT_X"), "CY_DOT_X");
-        var cyDotY = ParseDouble(GetRequiredElementValue(element, "CY_DOT_Y"), "CY_DOT_Y");
-        var cyDotZ = ParseDouble(GetRequiredElementValue(element, "CY_DOT_Z"), "CY_DOT_Z");
-        var cyDotXDot = ParseDouble(GetRequiredElementValue(element, "CY_DOT_X_DOT"), "CY_DOT_X_DOT");
-        var cyDotYDot = ParseDouble(GetRequiredElementValue(element, "CY_DOT_Y_DOT"), "CY_DOT_Y_DOT");
-        var czDotX = ParseDouble(GetRequiredElementValue(element, "CZ_DOT_X"), "CZ_DOT_X");
-        var czDotY = ParseDouble(GetRequiredElementValue(element, "CZ_DOT_Y"), "CZ_DOT_Y");
-        var czDotZ = ParseDouble(GetRequiredElementValue(element, "CZ_DOT_Z"), "CZ_DOT_Z");
-        var czDotXDot = ParseDouble(GetRequiredElementValue(element, "CZ_DOT_X_DOT"), "CZ_DOT_X_DOT");
-        var czDotYDot = ParseDouble(GetRequiredElementValue(element, "CZ_DOT_Y_DOT"), "CZ_DOT_Y_DOT");
-        var czDotZDot = ParseDouble(GetRequiredElementValue(element, "CZ_DOT_Z_DOT"), "CZ_DOT_Z_DOT");
+        var keywords = CovarianceMatrix.TermKeywords;
+        var texts = new string[keywords.Length];
+        var terms = new double[keywords.Length];
+        for (int i = 0; i < keywords.Length; i++)
+        {
+            texts[i] = GetRequiredElementValue(element, keywords[i].Keyword);
+            terms[i] = ParseDouble(texts[i], keywords[i].Keyword);
+        }
 
-        return new CovarianceMatrix(
-            cxX, cyX, cyY, czX, czY, czZ,
-            cxDotX, cxDotY, cxDotZ, cxDotXDot,
-            cyDotX, cyDotY, cyDotZ, cyDotXDot, cyDotYDot,
-            czDotX, czDotY, czDotZ, czDotXDot, czDotYDot, czDotZDot,
-            refFrame, comments);
+        // A term whose value in m², m²/s or m²/s² is beyond the range of a double throws the parse exception naming its
+        // keyword (#729)
+        return Construct(() => CovarianceMatrix.FromTerms(terms, refFrame, comments), "covarianceMatrix",
+            keywords.Select((keyword, i) => new CcsdsKeyword(keyword.Parameter, keyword.Keyword, texts[i])).ToArray());
     }
 
     private UserDefinedParameters ParseUserDefinedParameters(XElement element)

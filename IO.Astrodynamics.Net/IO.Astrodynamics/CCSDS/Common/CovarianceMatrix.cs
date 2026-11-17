@@ -36,6 +36,36 @@ namespace IO.Astrodynamics.CCSDS.Common;
 /// </remarks>
 public class CovarianceMatrix
 {
+    // The factor of the conversion of km², km²/s and km²/s² to m², m²/s and m²/s²
+    private const double SquareKilometersToSquareMeters = 1e6;
+
+    /// <summary>
+    /// The 21 terms in the order of the constructor: the name of its parameter and the ODM keyword of the term
+    /// (CCSDS 502.0-B-3), which the OPM and OMM readers read and name in their parse exception (#729).
+    /// </summary>
+    internal static readonly (string Parameter, string Keyword)[] TermKeywords =
+    {
+        ("cxX", "CX_X"),
+        ("cyX", "CY_X"), ("cyY", "CY_Y"),
+        ("czX", "CZ_X"), ("czY", "CZ_Y"), ("czZ", "CZ_Z"),
+        ("cxDotX", "CX_DOT_X"), ("cxDotY", "CX_DOT_Y"), ("cxDotZ", "CX_DOT_Z"), ("cxDotXDot", "CX_DOT_X_DOT"),
+        ("cyDotX", "CY_DOT_X"), ("cyDotY", "CY_DOT_Y"), ("cyDotZ", "CY_DOT_Z"), ("cyDotXDot", "CY_DOT_X_DOT"),
+        ("cyDotYDot", "CY_DOT_Y_DOT"),
+        ("czDotX", "CZ_DOT_X"), ("czDotY", "CZ_DOT_Y"), ("czDotZ", "CZ_DOT_Z"), ("czDotXDot", "CZ_DOT_X_DOT"),
+        ("czDotYDot", "CZ_DOT_Y_DOT"), ("czDotZDot", "CZ_DOT_Z_DOT")
+    };
+
+    /// <summary>
+    /// Builds a covariance from its 21 terms in the order of <see cref="TermKeywords"/>.
+    /// </summary>
+    internal static CovarianceMatrix FromTerms(double[] t, string referenceFrame, IReadOnlyList<string> comments)
+    {
+        return new CovarianceMatrix(
+            t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10],
+            t[11], t[12], t[13], t[14], t[15], t[16], t[17], t[18], t[19], t[20],
+            referenceFrame, comments);
+    }
+
     /// <summary>
     /// Gets the comments associated with the covariance matrix.
     /// </summary>
@@ -125,7 +155,9 @@ public class CovarianceMatrix
     /// <param name="referenceFrame">Reference frame for the covariance (optional).</param>
     /// <param name="comments">Comments associated with the covariance (optional).</param>
     /// <exception cref="ArgumentOutOfRangeException">A term is NaN or ±Infinity, which the OPM and OMM readers refuse
-    /// (#708, #717). The terms carry no other check: the validators report a negative variance.</exception>
+    /// (#708, #717), or its value in SI units, the term times 1e6, is beyond the range of a double (#729: above about
+    /// 1.8e302 km², which <see cref="ToMatrixWithUnitConversion"/> converted to ±Infinity). The terms carry no other check:
+    /// the validators report a negative variance.</exception>
     public CovarianceMatrix(
         double cxX, double cyX, double cyY,
         double czX, double czY, double czZ,
@@ -136,33 +168,33 @@ public class CovarianceMatrix
         IReadOnlyList<string> comments = null)
     {
         // Real numbers, as the readers read them (#717: NaN and ±Infinity built, and the writers wrote NaN, Infinity or
-        // -Infinity, which the readers refuse)
+        // -Infinity, which the readers refuse), finite in SI units too (#729: ToMatrixWithUnitConversion gave ±Infinity)
         // Position covariance
-        CxX = CcsdsValues.RequireFinite(cxX, nameof(cxX));
-        CyX = CcsdsValues.RequireFinite(cyX, nameof(cyX));
-        CyY = CcsdsValues.RequireFinite(cyY, nameof(cyY));
-        CzX = CcsdsValues.RequireFinite(czX, nameof(czX));
-        CzY = CcsdsValues.RequireFinite(czY, nameof(czY));
-        CzZ = CcsdsValues.RequireFinite(czZ, nameof(czZ));
+        CxX = CcsdsValues.RequireFiniteInSiUnits(cxX, SquareKilometersToSquareMeters, "km²", nameof(cxX));
+        CyX = CcsdsValues.RequireFiniteInSiUnits(cyX, SquareKilometersToSquareMeters, "km²", nameof(cyX));
+        CyY = CcsdsValues.RequireFiniteInSiUnits(cyY, SquareKilometersToSquareMeters, "km²", nameof(cyY));
+        CzX = CcsdsValues.RequireFiniteInSiUnits(czX, SquareKilometersToSquareMeters, "km²", nameof(czX));
+        CzY = CcsdsValues.RequireFiniteInSiUnits(czY, SquareKilometersToSquareMeters, "km²", nameof(czY));
+        CzZ = CcsdsValues.RequireFiniteInSiUnits(czZ, SquareKilometersToSquareMeters, "km²", nameof(czZ));
 
         // Position-velocity cross-covariance
-        CxDotX = CcsdsValues.RequireFinite(cxDotX, nameof(cxDotX));
-        CxDotY = CcsdsValues.RequireFinite(cxDotY, nameof(cxDotY));
-        CxDotZ = CcsdsValues.RequireFinite(cxDotZ, nameof(cxDotZ));
-        CyDotX = CcsdsValues.RequireFinite(cyDotX, nameof(cyDotX));
-        CyDotY = CcsdsValues.RequireFinite(cyDotY, nameof(cyDotY));
-        CyDotZ = CcsdsValues.RequireFinite(cyDotZ, nameof(cyDotZ));
-        CzDotX = CcsdsValues.RequireFinite(czDotX, nameof(czDotX));
-        CzDotY = CcsdsValues.RequireFinite(czDotY, nameof(czDotY));
-        CzDotZ = CcsdsValues.RequireFinite(czDotZ, nameof(czDotZ));
+        CxDotX = CcsdsValues.RequireFiniteInSiUnits(cxDotX, SquareKilometersToSquareMeters, "km²/s", nameof(cxDotX));
+        CxDotY = CcsdsValues.RequireFiniteInSiUnits(cxDotY, SquareKilometersToSquareMeters, "km²/s", nameof(cxDotY));
+        CxDotZ = CcsdsValues.RequireFiniteInSiUnits(cxDotZ, SquareKilometersToSquareMeters, "km²/s", nameof(cxDotZ));
+        CyDotX = CcsdsValues.RequireFiniteInSiUnits(cyDotX, SquareKilometersToSquareMeters, "km²/s", nameof(cyDotX));
+        CyDotY = CcsdsValues.RequireFiniteInSiUnits(cyDotY, SquareKilometersToSquareMeters, "km²/s", nameof(cyDotY));
+        CyDotZ = CcsdsValues.RequireFiniteInSiUnits(cyDotZ, SquareKilometersToSquareMeters, "km²/s", nameof(cyDotZ));
+        CzDotX = CcsdsValues.RequireFiniteInSiUnits(czDotX, SquareKilometersToSquareMeters, "km²/s", nameof(czDotX));
+        CzDotY = CcsdsValues.RequireFiniteInSiUnits(czDotY, SquareKilometersToSquareMeters, "km²/s", nameof(czDotY));
+        CzDotZ = CcsdsValues.RequireFiniteInSiUnits(czDotZ, SquareKilometersToSquareMeters, "km²/s", nameof(czDotZ));
 
         // Velocity covariance
-        CxDotXDot = CcsdsValues.RequireFinite(cxDotXDot, nameof(cxDotXDot));
-        CyDotXDot = CcsdsValues.RequireFinite(cyDotXDot, nameof(cyDotXDot));
-        CyDotYDot = CcsdsValues.RequireFinite(cyDotYDot, nameof(cyDotYDot));
-        CzDotXDot = CcsdsValues.RequireFinite(czDotXDot, nameof(czDotXDot));
-        CzDotYDot = CcsdsValues.RequireFinite(czDotYDot, nameof(czDotYDot));
-        CzDotZDot = CcsdsValues.RequireFinite(czDotZDot, nameof(czDotZDot));
+        CxDotXDot = CcsdsValues.RequireFiniteInSiUnits(cxDotXDot, SquareKilometersToSquareMeters, "km²/s²", nameof(cxDotXDot));
+        CyDotXDot = CcsdsValues.RequireFiniteInSiUnits(cyDotXDot, SquareKilometersToSquareMeters, "km²/s²", nameof(cyDotXDot));
+        CyDotYDot = CcsdsValues.RequireFiniteInSiUnits(cyDotYDot, SquareKilometersToSquareMeters, "km²/s²", nameof(cyDotYDot));
+        CzDotXDot = CcsdsValues.RequireFiniteInSiUnits(czDotXDot, SquareKilometersToSquareMeters, "km²/s²", nameof(czDotXDot));
+        CzDotYDot = CcsdsValues.RequireFiniteInSiUnits(czDotYDot, SquareKilometersToSquareMeters, "km²/s²", nameof(czDotYDot));
+        CzDotZDot = CcsdsValues.RequireFiniteInSiUnits(czDotZDot, SquareKilometersToSquareMeters, "km²/s²", nameof(czDotZDot));
 
         ReferenceFrame = referenceFrame;
         Comments = comments ?? Array.Empty<string>();
@@ -177,8 +209,8 @@ public class CovarianceMatrix
     /// <returns>A new CovarianceMatrix instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when matrix is null.</exception>
     /// <exception cref="ArgumentException">Thrown when matrix is not 6x6.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), named as the
-    /// constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), or its product
+    /// by 1e6 is not finite (#729), named as the constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
     public static CovarianceMatrix FromFullMatrix(double[,] matrix, string referenceFrame = null, IReadOnlyList<string> comments = null)
     {
         if (matrix == null)
@@ -214,8 +246,8 @@ public class CovarianceMatrix
     /// <param name="comments">Comments associated with the covariance (optional).</param>
     /// <returns>A new CovarianceMatrix instance.</returns>
     /// <exception cref="ArgumentException">Thrown when matrix is not 6x6.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), named as the
-    /// constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), or its product
+    /// by 1e6 is not finite (#729), named as the constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
     public static CovarianceMatrix FromMatrix(Matrix matrix, string referenceFrame = null, IReadOnlyList<string> comments = null)
     {
         if (matrix.Rows != 6 || matrix.Columns != 6)
@@ -232,8 +264,8 @@ public class CovarianceMatrix
     /// <param name="comments">Comments associated with the covariance (optional).</param>
     /// <returns>A new CovarianceMatrix instance in CCSDS units (km², km²/s, km²/s²).</returns>
     /// <exception cref="ArgumentException">Thrown when the matrix is not 6x6.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), named as the
-    /// constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
+    /// <exception cref="ArgumentOutOfRangeException">A term of the lower triangle is NaN or ±Infinity (#717), or its product
+    /// by 1e6 is not finite (#729), named as the constructor's parameter (<c>cxX</c> ... <c>czDotZDot</c>).</exception>
     /// <remarks>
     /// Converts from framework units (m², m²/s, m²/s²) to CCSDS units (km², km²/s, km²/s²).
     /// All elements are divided by 10⁶ (1000² for position, 1000² for velocity).
@@ -264,12 +296,12 @@ public class CovarianceMatrix
     /// <returns>A 6x6 Matrix in framework units (m², m²/s, m²/s²).</returns>
     /// <remarks>
     /// Converts from CCSDS units (km², km²/s, km²/s²) to framework units (m², m²/s, m²/s²).
-    /// All elements are multiplied by 10⁶.
+    /// All elements are multiplied by 10⁶, each product finite: the constructor refuses a term whose product is not (#729).
     /// </remarks>
     public Matrix ToMatrixWithUnitConversion()
     {
         // Convert km² to m² (multiply by 10⁶)
-        const double conversionFactor = 1e6;
+        const double conversionFactor = SquareKilometersToSquareMeters;
         var source = ToFullMatrix();
         var scaled = new double[6, 6];
         for (int i = 0; i < 6; i++)

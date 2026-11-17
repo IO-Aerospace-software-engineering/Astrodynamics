@@ -954,6 +954,28 @@ public class TLETests
         Assert.Equal(OrbitalElementsType.Osculating, kep.ElementsType);
     }
 
+    /// <summary>
+    /// #729: FromOMM converts rev/day to rad/s as (n × 2π) / 86400, two roundings of double arithmetic; the product
+    /// n × 2π overflows to +Infinity above about 2.86e307 rev/day, where the quotient is finite (about 2.08e303 rad/s).
+    /// The reference is the same two roundings with an unbounded exponent (round to 53 bits, ties to even, of
+    /// round(n × 2π) / 86400, 2π the double of Constants._2PI), computed in exact rational arithmetic (Python fractions,
+    /// 2026-11-17); below the overflow it is the former result, bit for bit.
+    /// </summary>
+    [Theory]
+    [InlineData(15.5, 0x3f5277c8fd1119eeL)] // the former product, unchanged
+    [InlineData(2.8e307, 0x7ee7c10c6e82d137L)] // below the overflow of n × 2π, unchanged
+    [InlineData(2.9e307, 0x7ee89a3a97077d42L)] // above: +Infinity before
+    [InlineData(3e307, 0x7ee97368bf8c294cL)]
+    [InlineData(double.MaxValue, 0x7f13104b57cf96a2L)]
+    public void FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient(double meanMotion, long expectedBits)
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var meanKep = KeplerianElements.FromOMM(meanMotion, 0.001, 51.6, 10.0, 20.0, 30.0, TestHelpers.EarthAtJ2000, epoch,
+            Frames.Frame.TEME);
+
+        Assert.Equal(expectedBits, BitConverter.DoubleToInt64Bits(meanKep.MeanMotion()));
+    }
+
     [Fact]
     public void FromOMM_CreatesValidMeanElements()
     {
