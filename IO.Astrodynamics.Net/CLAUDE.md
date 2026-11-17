@@ -414,6 +414,7 @@ All models implement `IAtmosphericModel` with these methods:
 
 **Mars Models:**
 - **MarsStandardAtmosphere**: Simplified analytical model using altitude only: the NASA Glenn curve fit below 49.887 km,
+  ρ = p / [0.1921 (T + 273.1)] with the fit's own 273.1 (#438, decided by S. Guillet, 2026-11-17; 273.15 before 11.0.0),
   the isothermal layer of Seiff (1982) at 139 K above (5 km C² transition), the branches of the curve fit joined over
   500 m at 7 km (#433); positive and decreasing at every altitude;
   no thermosphere, so drag in orbit above about 120 km is underestimated (#431)
@@ -518,6 +519,9 @@ Earth and the Sun without a model throws `InvalidOperationException`, and about 
 bodies with an atmosphere; an Earth always has one (NRLMSISE-00 nominal without a model), listed or central. A force-building path rejects an integrator that holds forces or was already used, and every entry
 rejects a step of zero or less.
 
+**Third-Body Perturbation (`ThirdBodyPerturbation`)**
+- Battin's form far from the perturbing body; the direct difference −μ ((r − d)/|r − d|³ + d/|d|³) where |r − d| < |d|/2 (SSB mode near a planet, a spacecraft near the Moon about the Earth), where Battin's 1 + q lost eight digits (#576, #544); Battin's bit for bit elsewhere
+
 **Solar Radiation Pressure (`SolarRadiationPressure`)**
 - Cannonball model: `F = (L_sun / 4*pi*c) * Cr * (A/m) * r_hat / r^2`
 - Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (range 1.0–2.0, default 1.0)
@@ -556,6 +560,7 @@ PropagatorBase (abstract)
 **Key Classes**
 - `PropagatorBase`: Abstract base with segment-based propagation loop, event detection, and dense output
 - `CentralBodyPropagator`: Concrete implementation with auto force-building and ephemeris cache injection
+- Force caches: `PropagationFrameOrientationCache` (the central body's orientation, 60 s grid, exact SLERP, #561) and `PropagationEphemerisCache` (the bodies, 8-point Lagrange) cover the span the propagation integrates, to its last output, up to ΔT/2 past the window (#626); a read outside their grid reads the data provider at its epoch
 - `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet. When the covariance propagation is on, Φ, Ψ and P at any epoch, by the same shortened step with the variational equations (the getters serialize on a lock of the solution and evaluate the forces, like `InterpolateAt`)
 - `PropagationSegment`: List of `AcceptedStep` records with Hermite interpolation
 - `AcceptedStep`: Start/end position, velocity, and acceleration for cubic Hermite dense output

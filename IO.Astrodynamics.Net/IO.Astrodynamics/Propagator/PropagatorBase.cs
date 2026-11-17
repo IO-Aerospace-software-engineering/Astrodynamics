@@ -76,6 +76,54 @@ public abstract class PropagatorBase : IPropagator
     private readonly double _windowLength;
 
     /// <summary>
+    /// The span a propagation integrates (#626): its output count, its length in seconds of the time argument and the TDB
+    /// label of its end, which lies up to half an output step past the end of the window when the step does not divide
+    /// it, and whether its last output is labelled with the end of the window (TT, within the drift of the labels).
+    /// </summary>
+    internal readonly record struct PropagationSpan(uint OutputCount, double Duration, Time End, bool EndsAtWindowEnd)
+    {
+        /// <summary>
+        /// The window of the caches of the forces: from the start of <paramref name="tdbWindow"/> to the later of its end
+        /// and the end of the span, so that they hold every epoch the propagation reads (#626: they ended with the window,
+        /// and past it the orientation of the central body was held at its last grid point and the bodies
+        /// extrapolated).
+        /// </summary>
+        internal Window CacheWindow(in Window tdbWindow) =>
+            new(tdbWindow.StartDate, End > tdbWindow.EndDate ? End : tdbWindow.EndDate);
+    }
+
+    /// <summary>
+    /// The span of a propagation over <paramref name="tdbWindow"/>, of <paramref name="windowLength"/> seconds of
+    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/>: it runs to the last output,
+    /// round(L/ΔT)·ΔT, the window's length when that is shorter; in TT, a grid that misses the end of the window by the
+    /// drift between TT and the labels ends at the window, its last output labelled with the end of the window.
+    /// </summary>
+    internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, double windowLength,
+        in Window tdbWindow, TimeSpan deltaT)
+    {
+        uint outputCount = (uint)System.Math.Round(windowLength / deltaT.TotalSeconds,
+            MidpointRounding.AwayFromZero) + 1;
+        double outputDuration = (outputCount - 1) * deltaT.TotalSeconds;
+        bool endsAtWindowEnd = timeArgument.EndsAtWindowEnd(windowLength, outputDuration);
+        double duration = endsAtWindowEnd ? windowLength : System.Math.Max(windowLength, outputDuration);
+        var end = endsAtWindowEnd ? tdbWindow.EndDate : timeArgument.EpochAt(tdbWindow.StartDate, duration);
+        return new PropagationSpan(outputCount, duration, end, endsAtWindowEnd);
+    }
+
+    /// <summary>
+    /// The span of a propagation over <paramref name="window"/> as the caller tagged it, before a propagator exists: the
+    /// span <see cref="Span"/> of the propagator built from the same inputs.
+    /// </summary>
+    internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, in Window window, TimeSpan deltaT)
+    {
+        var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        return SpanOf(timeArgument, timeArgument.Length(window, tdbWindow), tdbWindow, deltaT);
+    }
+
+    /// <summary>The span this propagation integrates (#626).</summary>
+    private protected PropagationSpan Span => SpanOf(TimeArgument, _windowLength, Window, DeltaT);
+
+    /// <summary>
     /// A propagator over TDB seconds, with output states every <paramref name="deltaT"/>.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
@@ -419,13 +467,13 @@ public abstract class PropagatorBase : IPropagator
     {
         // 1. The length of the propagation (may exceed the window for non-fitting step sizes), in seconds of the time
         // argument. In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the
-        // window, its last output labelled with the end of the window as the caller gave it
-        uint outputCount = (uint)System.Math.Round(_windowLength / DeltaT.TotalSeconds,
-            MidpointRounding.AwayFromZero) + 1;
-        double outputDuration = (outputCount - 1) * DeltaT.TotalSeconds;
-        bool endsAtWindowEnd = TimeArgument.EndsAtWindowEnd(_windowLength, outputDuration);
-        double propagationDuration = endsAtWindowEnd ? _windowLength : System.Math.Max(_windowLength, outputDuration);
-        var propagationEnd = endsAtWindowEnd ? Window.EndDate : TimeArgument.EpochAt(Window.StartDate, propagationDuration);
+        // window, its last output labelled with the end of the window as the caller gave it. The caches of the forces
+        // cover the same span (#626)
+        var span = Span;
+        uint outputCount = span.OutputCount;
+        double propagationDuration = span.Duration;
+        var propagationEnd = span.End;
+        bool endsAtWindowEnd = span.EndsAtWindowEnd;
         _propagationDuration = propagationDuration;
 
         // 2. The leading attitudes of the chain on the attitude timeline, and the detector of its first impulse (#539),

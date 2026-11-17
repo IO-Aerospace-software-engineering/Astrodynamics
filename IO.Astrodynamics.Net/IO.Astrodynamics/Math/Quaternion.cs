@@ -307,8 +307,9 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
-        /// The SLERP of the quaternions as they are, unchecked: the library's own interpolation of the orientation cache of
-        /// a propagation, bit for bit the former public <see cref="SLERP"/>.
+        /// The SLERP of the quaternions as they are, unchecked: the body of the public <see cref="SLERP"/>, bit for bit
+        /// its former self. The orientation cache of a propagation interpolates by <see cref="SlerpByAxisAngle"/> since
+        /// 11.0.0 (#561).
         /// </summary>
         internal Quaternion SlerpUnchecked(Quaternion q, double t)
         {

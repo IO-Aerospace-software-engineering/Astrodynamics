@@ -168,8 +168,9 @@ public class AttitudeRecordTests
     internal const double PositionAgainstSolution = 2.6e-8;
 
     /// <summary>The same in SSB mode, m: the stored states relative to the Sun. Worst 7.07e-4 m, the same on the three
-    /// platforms (InstrumentTriad and Nadir, RK7(8), GALACTIC; CI run 41651463194). The rows without an impulse, which #568
-    /// did not change, keep the assertion; those with an impulse are a MEASURE line (#576, below).</summary>
+    /// platforms (InstrumentTriad and Nadir, RK7(8), GALACTIC; CI run 41651463194). The rows with an impulse were a MEASURE
+    /// line until the direct difference near the Earth (#576; Linux 8.59e-4 m before, CI run 41651463194): with it 4.09e-4 m
+    /// (ImpulseTriad, RK7(8), ICRF) and 4.82e-4 m without an impulse (Linux x64, 2026-11-17), under the same limit.</summary>
     internal const double PositionAgainstSolutionSsb = 1.5e-3;
 
     /// <summary>The state of the spacecraft relative to the Earth in its own frame (<c>GetEphemeris</c>) against <c>spkezr</c>
@@ -220,8 +221,10 @@ public class AttitudeRecordTests
     /// <summary>The same at 60 s outputs. Worst 2.06e-3 rad (InstrumentTriad; Nadir 1.41e-3 rad).</summary>
     internal const double SlerpResidualAtSixtySeconds = 4.2e-3;
 
-    /// <summary>The tolerance of RK7(8) in SSB mode: about the Sun, 1e-12 does not finish in minutes (item 7 of §8 of the
-    /// design, #544); 1e-9 takes seconds.</summary>
+    /// <summary>The tolerance of RK7(8) in SSB mode: about the Sun, 1e-12 did not finish in minutes (item 7 of §8 of the
+    /// design, #544); 1e-9 takes seconds. Since the direct difference near the Earth (#576, #544) 1e-12 takes 5 210 steps
+    /// for an hour of LEO (2 093 091 before; <c>SsbModeThirdBodyTests</c>); the SSB thresholds of these tests were set on
+    /// the three platforms at 1e-9, which stays until they are measured again at 1e-12.</summary>
     internal const double SsbRk78Tolerance = 1e-9;
 
     private const double Length = 3600.0;
@@ -486,14 +489,9 @@ public class AttitudeRecordTests
         bool impulse = run.Law.Contains("Impulse");
         Assert.True(m.PositionsAgainstSpk <= (ssb ? impulse ? PositionAgainstSpkSsbAcrossImpulses : PositionAgainstSpkSsb : impulse ? PositionAgainstSpkAcrossImpulses : PositionAgainstSpk),
             $"positions - SPK {m.PositionsAgainstSpk:E3} m");
-        // In SSB mode across an impulse (measured since #540), the dense output carries the noise of ThirdBodyPerturbation near
-        // the Earth (#576) over a step sequence that differs per platform: a MEASURE line with no assertion (Linux worst
-        // 8.59e-4 m, ImpulseTriad, RK7(8), GALACTIC; CI run 41651463194, these rows in the Validation category), restored by
-        // the PR of #576
-        if (!(ssb && impulse))
-        {
-            Assert.True(m.PositionsAgainstSolution <= (ssb ? PositionAgainstSolutionSsb : PositionAgainstSolution), $"positions - solution {m.PositionsAgainstSolution:E3} m");
-        }
+        // In SSB mode across an impulse, asserted again since the direct difference near the Earth (#576), whose noise made the
+        // step sequence differ per platform
+        Assert.True(m.PositionsAgainstSolution <= (ssb ? PositionAgainstSolutionSsb : PositionAgainstSolution), $"positions - solution {m.PositionsAgainstSolution:E3} m");
         // At the outputs the stored states are the solution's rotated by pxform(F, J2000), the rotation of the same doubles
         // as the reference's: measured 0 in every case
         Assert.Equal(0.0, m.StatesAtOutputs);

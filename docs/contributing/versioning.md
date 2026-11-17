@@ -140,6 +140,55 @@ release are listed under **Known limitations**.
   half-step velocity, so a force that depends on the velocity erred by O(h) there: on a dense perigee pass (20 × 400 km,
   45°, 1e-4 m², 1 000 kg, the U.S. Standard Atmosphere 1976) 272.6 m, 27.8 m and 2.78 m against RK7(8) at 1e-13 at steps
   of 1, 0.1 and 0.01 s. It now takes the predicted end velocity (Changed, Breaking, below).
+- **A propagation past its window read a frozen central body and extrapolated third bodies** ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626), Changed below).
+  A propagation whose output step does not divide its window runs to its last output, round(L/ΔT)·ΔT, up to ΔT/2 past
+  the window, but `CentralBodyPropagator` built its orientation cache and its ephemeris cache over the window: past
+  window end + 120 s the orientation was held at the last grid point (the Earth stopped turning: 4.4e-3 rad 60 s past
+  the grid, 4.4e-2 rad 600 s past), past window end + 240 s the 8-point polynomial of the bodies was extrapolated (the
+  Moon 25 m off 1 680 s past). With EGM2008 10×10, the Moon and the Sun, a LEO propagated over 3 900 s at 600 s outputs
+  ended 7.0 mm and 1.7e-4 m/s from the same propagation over 4 200 s, over 88 200 s at 3 600 s outputs 4.76 m and
+  1.2e-2 m/s; the wrong states were stored and read back. The caches now cover the span the propagation integrates
+  (internal `PropagatorBase.PropagationSpan`, the step 1 of the propagation shared with the three cache sites, the
+  default Velocity-Verlet path included, which needs it before the propagator exists), and a read outside their grid
+  reads the data provider at its epoch instead of holding or extrapolating. Both propagations now take the same accepted
+  steps bit for bit, RK7(8) and the default Velocity-Verlet (`PropagationPastTheWindowTests`, red on a85098d), and the
+  reads outside the grid are `sxform`'s and `spkezr`'s own values. A propagation whose step divides its window builds
+  the same grids as before and is unchanged bit for bit.
+- **The orientation cache of a propagation interpolated by a normalised Lerp** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Changed below).
+  `PropagationFrameOrientationCache`, which gives the geopotential and drag the orientation of the central body during a
+  propagation and the RK7(8) evaluations after it, interpolated its 60 s points with `Quaternion.SLERP`, whose
+  normalised-Lerp fallback below 0.028 rad took every cell of the Earth's grid (4.4e-3 rad between two points): 3.37e-10
+  rad from `sxform` at worst, where its comments said SLERP. It now takes the exact SLERP by the axis and the angle of the
+  relative rotation (internal `Quaternion.SlerpByAxisAngle`, that of a type-3 CK and of the attitude record): 2.38e-12 rad
+  over the 6 840 epochs of 6 h (`PropagationFrameOrientationCacheTests.Interpolation_IsTheExactSlerp_AgainstSxform`, red
+  on a85098d; the bound of the KR-1 tests of lot 6, 6.9e-10 rad from the Lerp, measured again at 1.0e-13 rad and set to
+  2.1e-13, provisional).
+- **The third body's attraction lost eight digits near the perturbing body** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Changed below).
+  `ThirdBodyPerturbation` computed |r − d|³ as |d|³ (1 + q)^1.5 with Battin's q = r·(r − 2d)/|d|², whose 1 + q = |r − d|²/|d|²
+  a cancellation of terms of order 1 gives to about ε |d|²/|r − d|²: in SSB mode about the Earth (the Sun the central body,
+  the Earth a third body, |r − d|/|d| = 4.6e-5) the Earth's attraction had a relative error of 2.7e-7 (6.3e-4 at 1e-6),
+  a noise of about 1e-6 m/s² that drove RK7(8)'s step control: 21 363 steps for an hour of LEO at 1e-10 (21 317 one ulp
+  of tolerance looser, the final positions 8.8 cm apart), 2 093 091 at 1e-12, step sequences that differ per platform,
+  and a start from ECLIPJ2000 or GALACTIC 3.3 to 6.0 cm (RK7(8)) and 0.87 to 1.14 m (Velocity-Verlet at 10 s) from its
+  ICRF twin after 1 h. Where |r − d| < |d|/2 the acceleration is now the direct difference −μ ((r − d)/|r − d|³ + d/|d|³),
+  ρ = r − d formed once: within 4.1e-16 of the exact acceleration there, 2.7e-15 at most around the switch, Battin's side
+  (`ThirdBodyNearThePerturberTests`, an integer reference of 2 200 bits, |r − d|/|d| from 1e-6 to 1.5, about the Sun with
+  the Earth and about the Earth with the Moon; red on a85098d); the same LEO takes 49 steps at 1e-10 (47 one ulp looser,
+  5.6 mm apart), 5 210 at 1e-12, its twins end 1.1 cm (RK7(8), the integration error of two step sequences at 1e-10) and
+  0.62 mm (Velocity-Verlet) from it (`SsbModeThirdBodyTests`; thresholds twice the Linux figures, provisional). The SSB
+  rows of `AttitudeRecordTests`, `PropagatedArcsTests` and `MinimumEpochGateEdgeTests` that the noise had turned into
+  MEASURE lines are asserted again (positions against the solution across an impulse 4.1e-4 m, the velocity 1 µs before
+  it 5.4e-7 m/s, the two-`Propagate` burn 1.5e-5 s, 2.2e-5 s over 22 starts and tolerances one ulp apart, Linux x64;
+  provisional, to be set again from the Windows x64 and macOS arm64 CI logs). Elsewhere the acceleration is Battin's bit for
+  bit (`Acceleration_FarFromThePerturber_IsBattinsBitForBit`), so propagations about the Earth with the Moon and the Sun,
+  the goldens and the GMAT conformance runs do not move.
+- **The Mars curve fit took 273.15 where it publishes 273.1** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Changed below).
+  `MarsStandardAtmosphere` computed the density of the NASA Glenn curve fit as p / [0.1921 (T + 273.15)], where the fit
+  ("Mars Atmosphere Model – Metric Units") takes 273.1: below the layer its density was 2.07e-4 (surface) to 3.59e-4
+  (49.8 km) under the published fit. It now takes the fit's own offset (internal `CurveFitKelvin`) in the density and in
+  its closed-form derivative; the published density to 1e-15 at 0 to 49.8 km outside the transitions
+  (`MarsStandardAtmosphereDomainTests.CurveFit_TakesItsPublishedOffset`, red on a85098d at 2.07e-4 to 3.59e-4;
+  `CelestialBodyTests.MarsAirDensity` against the published formula, where it held the code's former values).
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -3297,6 +3346,45 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and 0.01 s (272.6 m, 27.8 m and 2.78 m before), and on a 300 × 400 km LEO with 0.01 m² 0.947 m at 1 s, unchanged (its
   drag error was below the truncation). Every Velocity-Verlet result with drag moves, the default integrator's included;
   without a force that depends on the velocity, bit for bit. No golden of the propagator tests moved.
+- **A propagation whose output step does not divide its window moves** ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626), Fixed above).
+  Its caches cover the span it integrates, up to half an output step past the window: with a geopotential, drag or
+  third bodies, its states past window end + 120 s change (7.0 mm after 3 900 s at 600 s outputs, 4.76 m after 88 200 s
+  at 3 600 s outputs, 2.4 km after 129 600 s at 86 400 s outputs in #626's measurement), and so the stored states read
+  near the end of the window. `PropagationFrameOrientationCache.GetOrientation` and `PropagationEphemerisCache.GetPosition`
+  and `GetState`, public, read the frame or the body at their epoch outside their grid, where they held its first or last
+  point or extrapolated. A propagation whose step divides its window, as with the common 60 s, does not move. No code
+  change is needed.
+- **Breaking: a propagation with a geopotential or drag about its central body moves by the orientation it reads** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Fixed above).
+  With the exact SLERP the orientation of the central body read by the geopotential and by drag moves by up to 3.4e-10
+  rad (2.3 mm at a LEO radius): the bit-for-bit goldens of `PropagationGoldenTests` are recaptured, the GEO case moved by
+  2.1e-6 m, the maneuver case by 1.1e-6 m (its maneuver epoch unchanged), the SRP case by 1.66 mm with 100 steps instead
+  of 103 (the integration error at 1e-11 of other steps). A point-mass propagation, which reads no orientation, does not
+  move. The references of the Validation records by central differences of whole propagations take other steps, another
+  draw of their noise: the penumbra record of R4 (`StmValidationTests`) is set again at 9.6e-8 (its Φ 4.8e-8 there, 3.6e-9
+  before, Φ under test moved by 1.3e-9) and the arc record of Ψ_Cr of the eclipsing case (`ManeuverStmValidationTests`)
+  at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), provisional. Eleven draws of each reference, its
+  start moved by −5 to +5 ulps with the quantity under test unchanged, show the noise of the references: R4 in the
+  penumbra 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d), Ψ_Cr over the arc 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
+  a85098d, 9 of 11 above the former record). Migration: none in code; a golden of
+  a propagation with a geopotential or drag is to be captured again.
+- **Breaking: a propagation near a third body, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
+  `ThirdBodyPerturbation.Apply` takes the direct difference where the spacecraft is closer to the perturbing body than
+  half its distance to the central body (|r − d| < |d|/2): SSB mode near any planet, and a spacecraft near the Moon
+  propagated about the Earth (within about 190 000 km of it). Those propagations take other steps and end elsewhere, within
+  their integration error (an hour of LEO in SSB mode at 1e-10: 49 steps instead of 21 363); every other propagation is bit
+  for bit unchanged. Migration: none in code; a result in SSB mode or near the Moon about the Earth is to be measured
+  again, and an RK7(8) tolerance loosened for SSB mode (1e-9) can be tightened.
+- **Breaking: the density of Mars air below 54.887 km rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
+  Below the isothermal layer (49.887 km) and through its transition (to 54.887 km), `MarsStandardAtmosphere` takes the
+  curve fit's own 273.1 instead of 273.15 (decided by S. Guillet, 2026-11-17: 273.1 in the curve fit only, the 139 K
+  layer unchanged). The layer is unchanged bit for bit (its base, where the fit's temperature reaches −134.15 °C, and
+  its pressures do not depend on the offset); through the transition the absolute temperature goes from the fit's
+  T + 273.1 (138.95 K at the base) to 139 K and the temperature in °C from the fit's to −134.15 °C by the existing
+  smootherstep, so the density and its first two derivatives stay continuous. `GetTemperature` and `GetPressure` are
+  unchanged. Every density, drag and propagation through Mars air below 54.887 km moves: the RK7(8) run of
+  `MarsDragTests` across the base takes 36, 49 and 94 steps at 1e-11, 1e-12 and 1e-13 (35, 47 and 79 before); the
+  ratios to Seiff (1982) move by at most 3.6e-4. Migration: none in code; a result that needs the former density
+  multiplies it by (T + 273.1) / (T + 273.15) below the base.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -4672,15 +4760,12 @@ not listed.
   `SpiceDataProvider` for an identifier SPICE does not name
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680); `KeyNotFoundException` before).
 - **Reads past the stored states of a propagated spacecraft**
-  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527),
-  [#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)).
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)).
   `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and the managed distance and coordinate searches extrapolate
   the 8-point polynomial past the stored states without an error (567 km off 6 min before the first state, 8 282 km 6
-  min after the last). A propagation whose output step does not divide its window runs up to half a step past its end,
-  where its orientation cache, which ends 120 s after the window, holds the Earth's orientation at its last grid point,
-  and its ephemeris cache, which ends 240 s after it, extrapolates the third bodies; a geopotential or drag read there
-  past the coverage throws. Keep reads
-  inside the propagated window, and choose an output step that divides it, or one of 240 s or less.
+  min after the last). A propagation whose output step does not divide its window runs up to half a step past its end
+  (its caches cover that span since #626), so a geopotential or drag read there past the coverage of the orientation
+  data throws. Keep reads inside the propagated window.
 - **Impulses at the edges of the stored states**
   ([#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579),
   [#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). An impulse at the end of the propagation opens a last arc of one state, the state after it ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)),
@@ -4830,18 +4915,14 @@ not listed.
   the whole process. `SpiceAPI.ReadOrientation` costs about 1.4 ms a call whatever the window, and the window reads of
   `ReadOrientation` and `ReadEphemeris` step by epoch += step, so their samples drift (4.3e-4 s observed) and the last
   epoch of the window can be dropped.
-- **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389),
-  [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544),
-  [#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576)). `ThirdBodyPerturbation`
-  computes the Earth's attraction with Battin's 1 + q, which loses about 8 digits near it: in SSB mode an RK7(8) LEO
-  propagation takes about 5 500 times more steps than relative to the Earth (125 641 against 23 for one hour at 1e-10)
-  and fails at 1e-12, its steps depend on the platform, and a start from ECLIPJ2000 or GALACTIC ends 0.07 to 0.56 m from
-  its ICRF twin after 1 h. Propagate relative to the Earth, or keep the tolerance at 1e-9 or looser.
-- **Integration accuracy** ([#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445),
-  [#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561)). At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
-  to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation interpolates the
-  Earth's 60 s nodes with the normalised-Lerp fallback of `Quaternion.SLERP`, up to 3.4e-10 rad from the exact
-  interpolation. It is built for every central body, whether or not a force rotates, so each of its 60 s points past the
+- **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).
+  With the variational equations in the step control (`IncludeInStepControl`) the columns of Y are scaled by |r0|
+  relative to the barycentre, about 1.5e11 m, and the step control fails, with or without drag; propagate relative to
+  the Earth. (The noise of the Earth's attraction in SSB mode, #544 and #576, is fixed in this release.)
+- **Integration accuracy** ([#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445)).
+  At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
+  to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation is built for
+  every central body, whether or not a force rotates, so each of its 60 s points past the
   coverage of the orientation kernel goes through the native read, which prints its SPICE message on standard output
   (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); the native read is unchanged): a point-mass
   propagation there still runs ([#595](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/595)).
@@ -4854,10 +4935,6 @@ not listed.
 - **Mars atmosphere** ([#431](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/431)). Above 100 km
   `MarsStandardAtmosphere` extends an isothermal layer at 139 K: at 400 km its density is 4.6e7 times below Mars-GRAM,
   so drag in Mars orbit above about 120 km is underestimated by orders of magnitude.
-- **Kelvin offset of the standard atmospheres**
-  ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438)). `EarthStandardAtmosphere` and
-  `MarsStandardAtmosphere` take 273.15 where the NASA Glenn curve fits take 273.1: the Earth's density departs from the
-  published fit by up to 0.285 % (at 25 km), the Mars density by about 0.02 %.
 - **Covariance remediation and the non-linearity index**
   ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403),
   [#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)). The threshold 1.0 of the

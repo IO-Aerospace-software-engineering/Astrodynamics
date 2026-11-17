@@ -10,9 +10,20 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Propagator.Forces;
 
 /// <summary>
-/// Third-body gravitational perturbation using Battin's numerically stable formulation.
+/// Third-body gravitational perturbation, a = −μ_j ((r − d_j) / |r − d_j|³ + d_j / |d_j|³): Battin's numerically stable
+/// formulation far from the perturbing body, the direct difference near it.
 /// Computes the tidal acceleration of a perturbing body on a satellite in a central-body-centered frame.
 /// </summary>
+/// <remarks>
+/// Battin's form is accurate where the spacecraft is near the central body relative to the perturbing body (|r| ≪ |d_j|,
+/// the Moon and the Sun on an Earth orbit), where the direct difference cancels. Near the perturbing body it loses
+/// digits: its 1 + q = |r − d_j|² / |d_j|² comes from terms of order 1, so its relative error is about
+/// ε |d_j|² / |r − d_j|², 1e-7 in SSB mode about the Earth (the Sun the central body, the Earth the third body,
+/// |r − d_j| / |d_j| = 4.6e-5), which put a noise of about 1e-6 m/s² on the Earth's attraction (#576, #544). Where
+/// |r − d_j| &lt; |d_j| / 2 the acceleration is the direct difference, ρ = r − d_j formed once (each component rounded once,
+/// exact when the two agree within a factor of 2): a few ε of the exact acceleration at every distance, 2.7e-15 at most
+/// around the switch (before 11.0.0: 2.7e-7 at 4.6e-5, 6.3e-4 at 1e-6). Elsewhere it is Battin's, bit for bit as before.
+/// </remarks>
 public class ThirdBodyPerturbation : ForceBase
 {
     public CelestialItem PerturbingBody { get; }
@@ -25,7 +36,8 @@ public class ThirdBodyPerturbation : ForceBase
     }
 
     /// <summary>
-    /// Compute third-body perturbation acceleration using Battin's formula.
+    /// Compute the third-body perturbation acceleration: the direct difference where the spacecraft is closer to the
+    /// perturbing body than half its distance to the central body, Battin's formula elsewhere (#576).
     /// The state vector must be central-body-relative.
     /// </summary>
     public override Vector3 Apply(StateVector stateVector)
@@ -37,6 +49,16 @@ public class ThirdBodyPerturbation : ForceBase
         var r = stateVector.Position;
         double djMag = dj.Magnitude();
         double djMag2 = djMag * djMag;
+
+        // Near the perturbing body, |r - d_j| < |d_j| / 2: the direct difference, whose 1/|r - d_j|^3 Battin's 1 + q would
+        // give to about eps |d_j|^2 / |r - d_j|^2 only (#576, #544)
+        var rho = r - dj;
+        double rhoMag2 = rho * rho;
+        if (4.0 * rhoMag2 < djMag2)
+        {
+            double rhoMag = System.Math.Sqrt(rhoMag2);
+            return (rho * (1.0 / (rhoMag2 * rhoMag)) + dj * (1.0 / (djMag2 * djMag))) * -PerturbingBody.GM;
+        }
 
         // Battin's q parameter: q = r . (r - 2*d_j) / |d_j|^2
         // Note: |r - d_j|^2 = |d_j|^2 * (1 + q), so q encodes the geometry stably.

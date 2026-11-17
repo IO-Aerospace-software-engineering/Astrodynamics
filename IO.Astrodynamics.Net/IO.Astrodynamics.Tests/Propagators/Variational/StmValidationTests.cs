@@ -101,6 +101,21 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// the penumbra 1.2e-8. They are not set again from this one draw: over eleven starts moved by −5 to +5 ticks, the F1
 /// noise of the full degree moves by up to a factor of 3.3 (R4) and 7.7 (R2) (<c>GeopotentialPartialsDegreeTests</c>).
 /// </para>
+/// <para>
+/// The exact SLERP of the orientation cache (#561) moves the Earth's orientation by up to 3.4e-10 rad, and so the steps of
+/// the references: another draw of their noise. R4 measured again (Linux x64, Release, 2026-11-17; a85098d in
+/// parentheses): Φ outside the penumbra 6.5e-8, 2.8e-9, 5.2e-8, 2.5e-9 (1.1e-8, 2.8e-9, 1.8e-8, 2.5e-9), in the penumbra
+/// up to 4.8e-8 (3.6e-9), while Φ under test moved by 1.3e-9 at most per block over the arc: the reference moved. Eleven
+/// draws of the reference, its start moved by −5 to +5 ulps along x (7.45e-9 m each) and Φ under test the same in all
+/// (Linux x64, Release, 2026-11-17), show it: in the penumbra the worst block spans 2.3e-9 to 6.7e-8 (one ulp below the
+/// start, 4.8e-8 at the start, 1.1e-8 or less in the nine others), outside it 3.7e-9 to 1.9e-7 (Φ_rr), so the references
+/// one ulp apart differ among themselves by more than the measure; on a85098d the same draws span 2.3e-9 to 1.1e-8 in the
+/// penumbra and 5.4e-9 to 2.1e-8 outside it (Φ_rr). The exact SLERP adds no rounding noise to the orientation (the midpoint
+/// defect of three interpolations 0.03 s apart is 1.6e-17 rad rms, 1.5e-15 for the normalised Lerp with its departure
+/// from a uniform rotation, over 50 cells of the Earth's grid), so the wider tail of the references is a draw of their steps at 1e-14, not a defect of the cache.
+/// The penumbra record of R4 is set again at twice its measurement at the start, 9.6e-8 (1.2e-8 before; the worst draw,
+/// 6.7e-8, under it), provisional (to be confirmed by S. Guillet, as decision 53 of #457 kept the records from one draw).
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class StmValidationTests : IClassFixture<ReferenceCases>
@@ -124,7 +139,7 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
         { "R1", 1e-7, 0.0, 0.0 },
         { "R2", 1e-4, 0.0, 0.0 },
         { "R3", 1e-4, 1.6e-5, 4.5e-4 },
-        { "R4", 1e-4, 1.2e-8, 0.0 },
+        { "R4", 1e-4, 9.6e-8, 0.0 },
         { "R5", 1e-4, 0.0, 0.0 }
     };
 

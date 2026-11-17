@@ -63,12 +63,65 @@ public class MarsStandardAtmosphereDomainTests
         _output.WriteLine($"10 000 km: {Density(1e7):E3} kg/m³");
     }
 
-    // The branches of the curve fit, as published by the NASA Glenn Research Center, with the code's 273.15
+    // The branches of the curve fit, as published by the NASA Glenn Research Center, "Mars Atmosphere Model - Metric
+    // Units": ρ = p / [0.1921 (T + 273.1)], the fit's own offset, not the 273.15 of the Celsius scale (#438)
+    private const double CurveFitKelvin = 273.1;
+
     private static double LowerBranch(double h) => 0.699 * System.Math.Exp(-0.00009 * h) /
-                                                    (0.1921 * (-31.0 - 0.000998 * h + IO.Astrodynamics.Constants.Kelvin));
+                                                    (0.1921 * (-31.0 - 0.000998 * h + CurveFitKelvin));
 
     private static double UpperBranch(double h) => 0.699 * System.Math.Exp(-0.00009 * h) /
-                                                    (0.1921 * (-23.4 - 0.00222 * h + IO.Astrodynamics.Constants.Kelvin));
+                                                    (0.1921 * (-23.4 - 0.00222 * h + CurveFitKelvin));
+
+    // The density of the published curve fit at altitudes outside both transitions (7 km ± 250 m, and the layer from its
+    // base): the code's density took 273.15, 0.02 % below it (2.07e-4 at the surface, 2.97e-4 at 45 km, #438)
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(3000.0)]
+    [InlineData(6700.0)]
+    [InlineData(7300.0)]
+    [InlineData(20000.0)]
+    [InlineData(30000.0)]
+    [InlineData(45000.0)]
+    [InlineData(49800.0)]
+    public void CurveFit_TakesItsPublishedOffset(double altitude)
+    {
+        // Arrange
+        double published = altitude < 7000.0 ? LowerBranch(altitude) : UpperBranch(altitude);
+
+        // Act
+        double density = Density(altitude);
+
+        // Assert: the published density to the rounding of its evaluation
+        double relative = System.Math.Abs(density / published - 1.0);
+        _output.WriteLine($"MEASURE {altitude / 1000.0} km: ρ {density:E17}, relative to the published fit {relative:E3}");
+        Assert.True(relative < 1e-15, $"{relative:E3}");
+    }
+
+    // The temperature in °C stays that of the curve fit below the layer, and that of the layer, 139 K = −134.15 °C,
+    // above its transition: the fit's offset is blended into the Celsius scale's by the smootherstep of the transition
+    [Fact]
+    public void Temperature_IsTheCurveFitsBelowAndTheLayersAbove()
+    {
+        Assert.Equal(-31.0, Model.GetTemperature(AtmosphericContext.FromAltitude(0.0)), 12);
+        Assert.Equal(-23.4 - 0.00222 * 30000.0, Model.GetTemperature(AtmosphericContext.FromAltitude(30000.0)), 12);
+        Assert.Equal(-23.4 - 0.00222 * 49800.0, Model.GetTemperature(AtmosphericContext.FromAltitude(49800.0)), 12);
+        double end = Base + MarsStandardAtmosphere.TransitionWidth;
+        Assert.Equal(139.0 - 273.15, Model.GetTemperature(AtmosphericContext.FromAltitude(end)), 12);
+        Assert.Equal(139.0 - 273.15, Model.GetTemperature(AtmosphericContext.FromAltitude(100e3)), 12);
+    }
+
+    // Through the transition to the layer the density stays continuous at both of its ends (the layer itself unchanged:
+    // its base and its pressures do not depend on the offset of the curve fit)
+    [Fact]
+    public void Transition_IsContinuousAtItsEnd()
+    {
+        double end = Base + MarsStandardAtmosphere.TransitionWidth;
+        double below = Density(System.Math.BitDecrement(end));
+        double at = Density(end);
+        _output.WriteLine($"MEASURE end of the transition {end} m: ρ {below:E17} / {at:E17}, {System.Math.Abs(below / at - 1.0):E3}");
+        Assert.True(System.Math.Abs(below / at - 1.0) < 1e-13);
+    }
 
     [Fact]
     public void CurveFit_IsContinuousAcross7Km()

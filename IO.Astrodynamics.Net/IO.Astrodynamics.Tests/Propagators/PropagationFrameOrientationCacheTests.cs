@@ -211,6 +211,47 @@ public class PropagationFrameOrientationCacheTests
         Assert.Null(earth.Frame.OrientationCache);
     }
 
+    /// <summary>
+    /// Every cell of the 60 s grid of the Earth over 6 h, at 19 fractions of each (0.05 to 0.95), against CSPICE
+    /// <c>sxform</c>: the exact SLERP of the grid points (#561). The normalised-Lerp fallback of <c>Quaternion.SLERP</c>,
+    /// which every cell of the grid took (4.4e-3 rad between two points), was up to 3.4e-10 rad off; the exact SLERP of the
+    /// same points 2.4e-12 rad (measured in #561, 2026-11-03).
+    /// </summary>
+    /// <remarks>Measured on a85098d (Linux x64, Release, 2026-11-17): 3.371e-10 rad; with the exact SLERP 2.381e-12 rad, the
+    /// angular velocity 3.7e-15 rad/s (linear between the points, unchanged). The bound is twice the Linux worst with the
+    /// fix, rounded up, provisional (to be set again from the Windows x64 and macOS arm64 CI logs).</remarks>
+    [Fact]
+    public void Interpolation_IsTheExactSlerp_AgainstSxform()
+    {
+        // Arrange
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var start = new TimeSystem.Time(new DateTime(2024, 3, 1, 0, 0, 0), TimeFrame.TDBFrame);
+        var cache = new PropagationFrameOrientationCache(new Window(start, start.AddHours(6.0)), earth.Frame,
+            TimeSpan.FromSeconds(60));
+
+        // Act
+        double worst = 0.0;
+        double worstRate = 0.0;
+        for (int cell = 0; cell < 360; cell++)
+        {
+            for (int k = 1; k <= 19; k++)
+            {
+                var epoch = start.AddSeconds(60.0 * cell + 3.0 * k);
+                var spice = SpiceAPI.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
+                var cached = cache.GetOrientation(epoch);
+                worst = System.Math.Max(worst, RotationAngle(spice.Rotation, cached.Rotation));
+                worstRate = System.Math.Max(worstRate, (spice.AngularVelocity - cached.AngularVelocity).Magnitude());
+            }
+        }
+
+        // Assert
+        _output.WriteLine($"MEASURE exact SLERP against sxform over 6 840 epochs: {worst:E3} rad, angular velocity {worstRate:E3} rad/s");
+        Assert.True(worst < ExactSlerpAgainstSxform, $"{worst:E3} rad");
+    }
+
+    /// <summary>Twice the Linux worst with the exact SLERP, 2.381e-12 rad, rounded up, provisional.</summary>
+    private const double ExactSlerpAgainstSxform = 4.8e-12;
+
     // ---- KR-1 of lot 6 (#457): a window that ends (or starts) inside the PCK coverage, its next grid point outside ----
 
     // The coverage of ITRF93 in earth_latest_high_prec.bpc, CSPICE pckcov (body 3000), ET: sxform('ITRF93', 'J2000')
@@ -224,10 +265,12 @@ public class PropagationFrameOrientationCacheTests
     private const double UnalignedLength = 3610.0;
 
     // The SLERP of the grid against CSPICE sxform, 98 epochs evenly spaced over each window besides the chosen ones:
-    // worst 3.43e-10 rad (a window starting 59.999 s after the coverage start), angular velocity 1.117e-17 rad/s
-    // (1.116e-17 on Linux x64); bounds twice the worst over Linux x64, Windows x64 and macOS arm64 (CI of #622 at
-    // 7f5e6dfb, 2026-11-10), rounded up to two digits
-    private const double AngleBound = 6.9e-10;
+    // worst 3.43e-10 rad with the normalised-Lerp fallback (a window starting 59.999 s after the coverage start),
+    // angular velocity 1.117e-17 rad/s (1.116e-17 on Linux x64); bounds twice the worst over Linux x64, Windows x64 and
+    // macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10), rounded up to two digits. With the exact SLERP (#561) the angle is
+    // 1.012e-13 rad at worst (the window start, Linux x64, 2026-11-17): twice that, provisional (to be set again from the
+    // Windows x64 and macOS arm64 CI logs); the angular velocity bound unchanged
+    private const double AngleBound = 2.1e-13;
     private const double AngularVelocityBound = 2.3e-17;
 
     [Theory]

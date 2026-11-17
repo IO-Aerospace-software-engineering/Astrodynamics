@@ -597,8 +597,11 @@ public class CelestialBodyTests
     public void MarsAirDensity()
     {
         MarsStandardAtmosphere model = new MarsStandardAtmosphere();
-        Assert.Equal(0.015026759563140498, model.GetDensity(AtmosphericContext.FromAltitude(0.0)));
-        Assert.Equal(0.0013352044980975983, model.GetDensity(AtmosphericContext.FromAltitude(30000.0)));
+        // The published curve fit, ρ = p / [0.1921 (T + 273.1)] (NASA Glenn, "Mars Atmosphere Model - Metric Units", #438)
+        Assert.Equal(1.0, model.GetDensity(AtmosphericContext.FromAltitude(0.0)) / (0.699 / (0.1921 * (-31.0 + 273.1))),
+            14);
+        Assert.Equal(1.0, model.GetDensity(AtmosphericContext.FromAltitude(30000.0)) /
+                          (0.699 * System.Math.Exp(-0.00009 * 30000.0) / (0.1921 * (-90.0 + 273.1))), 14);
     }
     
     [Fact]

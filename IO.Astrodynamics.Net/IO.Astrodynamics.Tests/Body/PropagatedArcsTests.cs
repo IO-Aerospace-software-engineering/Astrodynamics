@@ -35,10 +35,11 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// which does not resolve the Lagrange interpolation of the outputs (0.16 m at 10 s outputs, the integrator's own): the
 /// Velocity-Verlet rows measure that no trace of the impulse is left, the error near a burn against the error far from
 /// it. Rotated to ICRF by <c>pxform</c> (<see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/>); in SSB mode, where
-/// the solution is relative to the Sun, less the Earth's state of <c>spkezr</c> on the planetary ephemeris; there the
-/// solution carries the noise of <c>ThirdBodyPerturbation</c> near the Earth (#576), whose step sequence differs per
-/// platform: its figures are MEASURE lines with no assertion (restored by the PR of #576), and the velocity 1 µs before an
-/// impulse is measured against the anchored reference, <see cref="ArcRun.AnchoredVelocityBefore"/>. The
+/// the solution is relative to the Sun, less the Earth's state of <c>spkezr</c> on the planetary ephemeris. Until 11.0.0
+/// the solution carried there the noise of <c>ThirdBodyPerturbation</c> near the Earth (#576), whose step sequence differed
+/// per platform, and its figures were MEASURE lines with no assertion; with the direct difference near the Earth they are
+/// asserted again (<see cref="NearRkSsb"/>, <see cref="VelocityBeforeSsbRkSolution"/>), and the velocity 1 µs before an
+/// impulse is also measured against the anchored reference, <see cref="ArcRun.AnchoredVelocityBefore"/>. The
 /// Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
 /// <c>Spacecraft.Propagate</c>, whose stored states equal the scenario's to the bit.
 /// </para>
@@ -71,6 +72,12 @@ public class PropagatedArcsTests
     /// apogee instead of its minimum epoch: worst 1.21e-8 / 1.21e-8 / 1.65e-8 m (Combined at 1 s outputs on Linux and Windows,
     /// the timed impulse on macOS arm64; CI run 41852583362), the limit unchanged.</summary>
     internal const double NearRk = 3.4e-8;
+
+    /// <summary>The same in SSB mode, RK7(8) at <see cref="AttitudeRecordTests.SsbRk78Tolerance"/>, whose error about the Sun
+    /// it measures: 2.1e-4 to 3.4e-4 m on a85098d with the noise of #576 (CI run 41651463194, no assertion), 1.57e-4 m with
+    /// the direct difference near the Earth (Apogee, 10 s, Linux x64, 2026-11-17). Twice the Linux worst, provisional (to be
+    /// set again from the Windows x64 and macOS arm64 CI logs).</summary>
+    internal const double NearRkSsb = 3.2e-4;
 
     /// <summary>The same on the chain of four of <c>ScenarioTests</c> (Earth, Moon and Sun, 24.7 h). Worst 2.25e-8 / 2.25e-8
     /// / 2.32e-8 m (10 s; CI run 41651463194); main 763 m.</summary>
@@ -135,13 +142,21 @@ public class PropagatedArcsTests
 
     /// <summary>The managed velocity 1 µs before an impulse in SSB mode, RK7(8), against the anchored reference
     /// (<see cref="AnchoredVelocityBefore"/>: the state before the impulse moved back by 1 µs with the closed-form
-    /// acceleration of the Sun and the Earth), not against the solution: in SSB mode <c>InterpolateAt</c> carries the noise
-    /// of <c>ThirdBodyPerturbation</c> near the Earth (#576), 3.29e-8 / 3.83e-7 / 1.98e-6 m/s on Linux / Windows / macOS
-    /// arm64 (CI run 41651463194), a figure kept in the MEASURE line with no assertion. Worst 4.90e-12 / 3.75e-12 / 4.17e-12 m/s
+    /// acceleration of the Sun and the Earth), which resolves it better than the solution: until 11.0.0 <c>InterpolateAt</c>
+    /// carried there the noise of <c>ThirdBodyPerturbation</c> near the Earth (#576), 3.29e-8 / 3.83e-7 / 1.98e-6 m/s on
+    /// Linux / Windows / macOS arm64 (CI run 41651463194); the figure against the solution is
+    /// <see cref="VelocityBeforeSsbRkSolution"/>. Worst 4.90e-12 / 3.75e-12 / 4.17e-12 m/s
     /// on Linux / Windows / macOS arm64 (Apogee; CI run 41689602272; 4.897779e-12 at six digits on Linux). The
     /// reference's own floor is a few 1e-12 m/s, the size of this figure: 2.6e-12 to 9.1e-12 m/s over 26 step sequences on
     /// Linux x64.</summary>
     internal const double VelocityBeforeSsbRk = 9.8e-12;
+
+    /// <summary>The managed velocity 1 µs before an impulse in SSB mode, RK7(8), against the solution there: with the noise of
+    /// #576 3.29e-8 / 3.83e-7 / 1.98e-6 m/s on Linux / Windows / macOS arm64 (CI run 41651463194, no assertion); with the
+    /// direct difference near the Earth 5.41e-7 m/s (Apogee, 10 s, Linux x64, 2026-11-17), the error of the shortened step of
+    /// <c>InterpolateAt</c> at the SSB tolerance of 1e-9 (the managed read is 9.1e-13 m/s from the anchored reference). Twice
+    /// the Linux worst, provisional.</summary>
+    internal const double VelocityBeforeSsbRkSolution = 1.1e-6;
 
     /// <summary>The same in SSB mode, Velocity-Verlet, against the anchored reference. Worst 1.02e-10 m/s, the same on the
     /// three platforms (Apogee, at the output step; 3.75e-12 m/s at 1 s; CI run 41689602272; 1.019446e-10 at six
@@ -165,8 +180,9 @@ public class PropagatedArcsTests
 
     /// <summary>The same in SSB mode, against the anchored reference (<see cref="AnchoredVelocityBefore"/>): the resolution
     /// of the ET doubles of the read and of the node at tc (1.2e-7 s) times the acceleration, 8.67 m/s². Against the
-    /// solution, kept in the MEASURE line with no assertion (#576), 5.99e-7 / 7.85e-7 / 1.58e-6 m/s on Linux / Windows /
-    /// macOS arm64 (CI run 41651463194). Worst 6.32e-7 / 4.02e-7 / 4.02e-7 m/s on Linux / Windows / macOS
+    /// solution, 5.99e-7 / 7.85e-7 / 1.58e-6 m/s on Linux / Windows / macOS arm64 with the noise of #576 (CI run
+    /// 41651463194, no assertion), 7.89e-7 m/s with the direct difference near the Earth (Linux x64, 2026-11-17), asserted
+    /// under <see cref="VelocityBeforeSpk"/>. Worst 6.32e-7 / 4.02e-7 / 4.02e-7 m/s on Linux / Windows / macOS
     /// arm64 (Apogee, RK7(8); 4.02e-7 m/s with Velocity-Verlet on the three; CI run 41689602272): one of the two values
     /// the ET doubles allow, 4.017e-7 and 6.319e-7 m/s, with the step sequence of each platform.</summary>
     internal const double VelocityBeforeSpkSsb = 1.3e-6;
@@ -282,8 +298,8 @@ public class PropagatedArcsTests
         Assert.True(index >= 0, key);
         using var run = ArcRun.Run(-(5400 + index), key);
         var m = Measure(run);
-        _output.WriteLine($"MEASURE #540 arcs {key.Replace('|', ' ')}: near managed {m.NearManaged:E2} m SPK {m.NearSpk:E2} m, far managed {m.FarManaged:E2} m SPK {m.FarSpk:E2} m, " +
-                          $"SPK - managed {m.SpkAgainstManaged:E2} m, v at tc - 1 us managed {m.VelocityBeforeManaged:E2} SPK {m.VelocityBeforeSpk:E2} m/s, " +
+        _output.WriteLine($"MEASURE #540 arcs {key.Replace('|', ' ')}: near managed {m.NearManaged:E3} m SPK {m.NearSpk:E2} m, far managed {m.FarManaged:E2} m SPK {m.FarSpk:E2} m, " +
+                          $"SPK - managed {m.SpkAgainstManaged:E2} m, v at tc - 1 us managed {m.VelocityBeforeManaged:E3} SPK {m.VelocityBeforeSpk:E2} m/s, " +
                           $"v at tc managed {m.VelocityAtManaged:E2} SPK {m.VelocityAtSpk:E2} m/s, jump - dV {m.JumpAgainstDeltaV:E2} m/s, boundary positions {m.BoundaryPositions:E2} m, " +
                           $"at the outputs {m.AtOutputs:E2} m, twin {m.TwinStates:E2}, {m.Impulses} impulses, arcs [{string.Join(",", run.Spacecraft.PropagatedArcs.Select(a => a.Length))}], " +
                           $"{m.NearReads} near and {m.FarReads} far reads, {m.FarDiffering} far reads differing from the former sort" +
@@ -333,11 +349,10 @@ public class PropagatedArcsTests
         bool sixty = run.Step.TotalSeconds >= 60.0;
         if (run.Ssb)
         {
-            // In SSB mode the solution's dense output carries the noise of ThirdBodyPerturbation near the Earth (#576), and the
-            // RK7(8) step sequence, so the noise, differs per platform: the near and far figures against the solution (2.1e-4
-            // to 3.4e-4 m near, CI run 41651463194) are MEASURE lines with no assertion, restored by the PR of #576. What is
-            // asserted compares the library with itself or with CSPICE on the same stored states, and the velocity before the
-            // impulse against the anchored reference
+            // In SSB mode, against the solution: restored with the direct difference near the Earth (#576), whose noise made
+            // the RK7(8) step sequence differ per platform
+            if (rk) Assert.True(m.NearManaged <= NearRkSsb, $"near {m.NearManaged:E3} m");
+            else if (run.Integrator == "VV") Assert.True(m.NearManaged <= NearVv, $"near {m.NearManaged:E3} m");
         }
         else if (moon)
         {
@@ -353,7 +368,7 @@ public class PropagatedArcsTests
             Assert.True(m.NearManaged <= NearVv, $"near {m.NearManaged:E3} m");
         }
 
-        if (run.Integrator == "VVd" && !run.Ssb)
+        if (run.Integrator == "VVd")
         {
             Assert.True(m.NearManaged <= NearOverFarVvd * m.FarManaged, $"near {m.NearManaged:E3} m, far {m.FarManaged:E3} m");
         }
@@ -362,9 +377,11 @@ public class PropagatedArcsTests
         Assert.True(m.SpkAgainstManaged <= spkLimit, $"SPK - managed {m.SpkAgainstManaged:E3} m");
         if (run.Ssb)
         {
-            // Against the anchored reference; the figures against the solution stay in the MEASURE line (#576)
+            // Against the anchored reference, and against the solution since the direct difference near the Earth (#576)
             Assert.True(m.VelocityBeforeManagedAnchored <= (rk ? VelocityBeforeSsbRk : VelocityBeforeSsbVv), $"v before - anchored {m.VelocityBeforeManagedAnchored:E3} m/s");
             Assert.True(m.VelocityBeforeSpkAnchored <= VelocityBeforeSpkSsb, $"SPK v before - anchored {m.VelocityBeforeSpkAnchored:E3} m/s");
+            Assert.True(m.VelocityBeforeManaged <= (rk ? VelocityBeforeSsbRkSolution : VelocityBefore), $"v before {m.VelocityBeforeManaged:E3} m/s");
+            Assert.True(m.VelocityBeforeSpk <= VelocityBeforeSpk, $"SPK v before {m.VelocityBeforeSpk:E3} m/s");
         }
         else
         {

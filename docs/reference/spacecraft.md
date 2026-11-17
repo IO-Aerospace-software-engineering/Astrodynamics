@@ -213,11 +213,12 @@ from an output, on either side):
 | The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 4.9e-12 m/s in SSB mode, against the anchored reference below), 8.4e-7 m/s (Velocity-Verlet), 8.5e-7 m/s by `spkezr` (6.3e-7 m/s in SSB mode, anchored), since #569, where the combined maneuvers fire at their apogee (8.0e-7 m/s before) |
 | Velocity-Verlet | 18.5 m to 16 km | its own error far from the impulses (0.16 m at 10 s, 33 m at 60 s outputs, the Lagrange of its outputs against its cubic Hermite); 5.9e-4 m at 1 s steps, the label of its event (up to 1e-7 s from the event) |
 
-In SSB mode the solution's dense output carries the noise of the third-body acceleration of the Earth, which loses about
-eight digits there (#576), and the RK7(8) step sequence, so the noise, differs per platform: the reads against the
-solution, 2.1e-4 to 3.4e-4 m within ±150 s of the impulse and 3.3e-8 to 2.0e-6 m/s at tc − 1 µs over Linux, Windows and
-macOS arm64 (CI run 41651463194), are measured, not asserted, until the PR of #576. The velocity 1 µs before the impulse
-is measured instead against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
+In SSB mode the solution's dense output carried, before 11.0.0, the noise of the third-body acceleration of the Earth,
+which lost about eight digits there (#576), and the RK7(8) step sequence, so the noise, differed per platform: the reads
+against the solution, 2.1e-4 to 3.4e-4 m within ±150 s of the impulse and 3.3e-8 to 2.0e-6 m/s at tc − 1 µs over Linux,
+Windows and macOS arm64 (CI run 41651463194), were measured, not asserted. With the direct difference near the Earth they
+are asserted again: 1.6e-4 m and 5.4e-7 m/s on Linux x64, the error of RK7(8) at the SSB tolerance of 1e-9 (provisional
+limits, twice the Linux worst). The velocity 1 µs before the impulse is also measured against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
 acceleration of the Sun and the Earth (point masses, kernel GMs, the Earth from the Sun of `spkezr` at the impulse),
 whose floor is a few 1e-12 m/s (the roundings of its 1 µs, an ulp of 4.55e-13 s near 2 963 s, and of the heliocentric
 velocity, an ulp of 3.64e-12 m/s), the size of the managed figure: 2.6e-12 to 9.1e-12 m/s over 26 step sequences on
@@ -318,7 +319,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
-  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (CI run 41651463194, the worst on Linux, in the Validation category; in SSB mode measured, not asserted, the noise of the third body near the Earth, #576) |
+  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (CI run 41651463194, the worst on Linux, in the Validation category); in SSB mode across an impulse 4.1e-4 m, asserted since the direct difference near the Earth (#576; measured, not asserted, before 11.0.0) |
   | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.35e-3 m, 5.9e-6 m/s in SSB mode, 2.6e-3 m across an impulse (CI run 41651463194; across an impulse the worst on Linux, in the Validation category; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
   | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
 
