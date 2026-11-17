@@ -1352,7 +1352,7 @@ release are listed under **Known limitations**.
     the one-term TDB − TT series, within 1.06 µs of the LSK formula SPICE `unitim` evaluates and 37.34 µs of ERFA `dtdb`
     from 1972 to 2100; CSPICE is given the managed TDB as its ephemeris time. See
     [Time Scales](../reference/time-and-windows.md#time-scales).
-    `Period()` for e ≥ 1 (item 3) is [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663); the ephemeris time given to CSPICE is still the managed TDB,
+    `Period()` for e ≥ 1 (item 3) is fixed by [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), under **Changed**; the ephemeris time given to CSPICE is still the managed TDB,
     not the LSK formula (item 4, [#665](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/665)). Both are under **Known limitations**.
 
 - **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
@@ -4611,6 +4611,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   parabola has a semi-major axis of about ±1e20 m, or +Infinity at a zero energy). Migration: code that read +Infinity from `SemiMajorAxis()` to recognize the band
   calls `IsParabolic()`; code that took `MeanMotion()` as the rate of the mean anomaly in the band uses `AtEpoch` or
   `EpochAtMeanAnomaly`; elements within 1e-6 of e = 1 given a finite a now build where they threw (with a perigee radius).
+- **Breaking: `Period()` of an open orbit throws `InvalidOperationException`** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), item 3 of [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)).
+  `Period()` passed 2π √(a³/μ) to `TimeSpan.FromSeconds` without a check: a hyperbola (a < 0) threw TimeSpan's
+  `ArgumentException` "TimeSpan does not accept floating point Not-a-Number values", a parabola (a = +Infinity) its
+  `OverflowException`, with no message saying that an open orbit has no period (measured on a85098d, as in the
+  issue). It now throws `InvalidOperationException` naming e and a when the semi-major axis is not finite and above 0
+  (decided by S. Guillet, 2026-11-17, the fix of the issue: the test is on a, not on e, so the conic's finite a of the
+  near-parabolic band keeps its period, #459). An ellipse whose period exceeds `TimeSpan.MaxValue` (29 227 years: within
+  1e-6 of e = 1, for instance) still throws `TimeSpan`'s `OverflowException`, now documented. The callers
+  (`PhasingManeuver`, `CosmographiaExporter`) let it through, as before. Tests: `ElementsValidationTests.Issue663_*` on
+  a `StateVector` at escape speed and above, Keplerian and equinoctial hyperbolas and parabolas (red on a85098d), and an
+  ellipse unchanged. Migration: catch `InvalidOperationException` instead of `ArgumentException` or `OverflowException`,
+  or test `IsElliptical()` first.
 
 **Deprecated**
 
@@ -4821,9 +4833,6 @@ not listed.
   e = 0.999999 (155 m at the apoapsis of a 7000 km periapsis). Near the periapsis Kepler's equation stops at its
   cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r| off at e = 0.999999, and
   `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
-- **No period for e ≥ 1** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663)).
-  `Period()` throws the NaN `ArgumentException` of `TimeSpan` for a hyperbola and an `OverflowException` for a parabola,
-  and for an ellipse in the parabolic band, with no message that says an open orbit has no period.
 - **Mean elements and equality of orbital parameters**
   ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463),
   [#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). `AtEpoch(t)` and

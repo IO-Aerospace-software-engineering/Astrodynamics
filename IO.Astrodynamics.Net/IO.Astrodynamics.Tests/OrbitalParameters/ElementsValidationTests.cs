@@ -285,4 +285,45 @@ public class ElementsValidationTests
     }
 
     #endregion
+
+    #region #663: no period for e ≥ 1
+
+    [Fact]
+    public void Issue663_AnOpenOrbit_HasNoPeriod()
+    {
+        // Arrange: r = (7000 km, 0, 0) about the Earth, v at escape speed (e one ulp above 1 in doubles) and 1.2 times it,
+        // and the Keplerian and equinoctial elements of a hyperbola and of a parabola
+        double r = 7000000.0;
+        double escape = System.Math.Sqrt(2.0 * _earth.GM / r);
+        var orbits = new (string Name, IO.Astrodynamics.OrbitalParameters.OrbitalParameters Orbit)[]
+        {
+            ("state at escape speed", new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, escape, 0.0), _earth, Epoch, Frames.Frame.ICRF)),
+            ("hyperbolic state", new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, 1.2 * escape, 0.0), _earth, Epoch, Frames.Frame.ICRF)),
+            ("Keplerian hyperbola", Keplerian(a: -1e7, e: 1.7)),
+            ("Keplerian parabola", Keplerian(a: double.PositiveInfinity, e: 1.0, perigeeRadius: 6800000.0)),
+            ("equinoctial hyperbola", Equinoctial(7000000.0, 1.5, 0.0, 0.2, 0.1, 0.5)),
+            ("equinoctial parabola", Equinoctial(14000000.0, 1.0, 0.0, 0.2, 0.1, 0.5)),
+        };
+
+        foreach (var (name, orbit) in orbits)
+        {
+            // Act, assert: InvalidOperationException naming e and a (before: TimeSpan's NaN ArgumentException for a
+            // hyperbola, its OverflowException for a parabola)
+            var exception = Assert.Throws<InvalidOperationException>(() => orbit.Period());
+            Assert.Contains("no period", exception.Message);
+            Assert.Contains("e = ", exception.Message);
+            Assert.Contains("a = ", exception.Message);
+            Assert.True(orbit.Eccentricity() >= 1.0, name);
+        }
+    }
+
+    [Fact]
+    public void Issue663_AnEllipse_KeepsItsPeriod()
+    {
+        // 2π √(a³/μ), the closed form, as before
+        var ke = Keplerian(a: 7000000.0, e: 0.1);
+        Assert.Equal(TimeSpan.FromSeconds(IO.Astrodynamics.Constants._2PI * System.Math.Sqrt(7e6 * 7e6 * 7e6 / _earth.GM)), ke.Period());
+    }
+
+    #endregion
 }

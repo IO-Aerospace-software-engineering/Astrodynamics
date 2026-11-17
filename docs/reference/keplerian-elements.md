@@ -43,7 +43,7 @@ axis of a parabola, +∞ with its perigee radius. `FromOMM` checks the same, its
 | `ToEquinoctial()` | Convert to equinoctial elements |
 | `AtEpoch(Time)` | Two-body propagation to new epoch; within 1e-6 of e = 1, Barker's anomaly at Barker's rate ([the band](#the-near-parabolic-band)) |
 | `EccentricAnomaly()` / `TrueAnomaly()` | From M, on an ellipse or a hyperbola by Kepler's equation: Newton's method from an upper bound of the root, to its rounding floor, at most 50 iterations; a non-finite M or e throws `InvalidOperationException` (#453). On a parabola, Barker's closed form |
-| `Period()` | Orbital period |
+| `Period()` | Orbital period of an ellipse, 2π √(a³/μ); a parabola or a hyperbola (a not finite and above 0) has none and throws `InvalidOperationException` naming e and a (#663) |
 | `PerigeeRadius()` / `ApogeeVector().Magnitude()` | Apse radii (m) |
 | `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂, P̂ the perifocal axis of Ω, ω and i, defined at e = 0 (#686); mean elements have no position and throw `InvalidOperationException`, as `ToStateVector()` does: read `PerigeeRadius()` |
 | `IsCircular()` / `IsElliptical()` / `IsParabolic()` / `IsHyperbolic()` | Orbit type checks |

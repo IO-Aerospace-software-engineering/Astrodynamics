@@ -71,7 +71,7 @@ conjunction analysis; see
 | `TrueAnomaly()` | True anomaly (rad) |
 | `MeanAnomaly()` | Mean anomaly (rad) |
 | `EccentricAnomaly()` | Eccentric anomaly (rad) |
-| `Period()` | Orbital period |
+| `Period()` | Orbital period of an ellipse; an open orbit throws `InvalidOperationException` (#663) |
 | `MeanMotion()` | Mean motion (rad/s), √(μ/\|a\|³); Barker's √(μ/(2q³)) for a parabola (#459) |
 | `SpecificOrbitalEnergy()` | Vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Angular momentum vector |
