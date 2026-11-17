@@ -59,7 +59,10 @@ throws `ArgumentOutOfRangeException` naming the property for NaN or ±Infinity, 
 `with` expression or `CdmCovarianceMatrix.FromRtnCovariance`; an optional value may stay null. `EncounterCase.ToCdm`,
 which builds these records, throws it for such a value in an encounter built by hand. Before 11.0.0 the record built,
 `Cdm.Validate` passed it (but the miss distance) and `WriteToString` wrote `NaN`, `Infinity` or `-Infinity`, which the
-reader refuses. `Cdm.Validate` keeps its own checks (a miss distance of 0 or more, a 6x6 covariance).
+reader refuses. `Cdm.Validate` keeps its own check of a miss distance of 0 or more. `StateCovarianceRtn` refuses a
+matrix that is not 6×6, `default(Matrix)` included, with `ArgumentException` naming the property, before its terms
+([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730)): before 11.0.0 it built, and `WriteToString` threw `IndexOutOfRangeException` or
+`NullReferenceException` (`Cdm.Validate` reported the size when it ran).
 `CdmCovarianceMatrix` holds a copy of the matrix it is given, and `StateCovarianceRtn` returns a copy of the one it holds:
 a `Matrix` wraps an array that its `Set` writes, so a term set afterwards on either matrix does not reach the record, a
 record read by `Cdm.ReadFromString` included. To change a term, build the record again or use
@@ -189,12 +192,18 @@ The managed API stores values internally in SI units. The CDM writer emits CCSDS
 
 The reader converts each value from its `units` attribute. A length of the `lengthTypeUO` type (`MISS_DISTANCE`,
 `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`), whose attribute the schema makes optional with `m` as its only unit, is
-read in m when the attribute is absent ([#613](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/613); km before 11.0.0). A state vector position, whose
-`units` the schema requires, defaults to km.
+read in m when the attribute is absent ([#613](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/613); km before 11.0.0), and any units other than `m` throw
+`CdmParseException` naming the keyword and the units ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), decided by S. Guillet, 2026-11-17: `units="km"`
+was converted before 11.0.0). A state vector position, whose `units` the schema requires, defaults to km.
 
 Dates are read in both forms of the NDM/XML `epochType` ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)): calendar (`2026-01-13T05:00:55.752768`)
-and day of year (`2026-013T05:00:55.752768`), with any fraction, an optional `Z` or `±hh:mm` offset, as UTC. The OPM
-and OMM readers share the parser (`CcsdsEpochParser`). The writer emits the calendar form.
+and day of year (`2026-013T05:00:55.752768`), with any fraction, an optional `Z` or `±hh:mm` offset, as UTC: the two
+forms of CCSDS 508.0-B-1 §6.3.2.6, each field with its leading zeros. Any other text throws `CdmParseException` naming
+the field and the text ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), decided by S. Guillet, 2026-11-17): a time alone, a date alone, a bare number
+(`1.5`, which the bare-number branch of `epochType` admits but §6.3.2.6 does not), a space or a lowercase `t` for the
+`T`, RFC 1123, a decimal comma, a blank around the date. Before 11.0.0 the reader passed such a text to
+`DateTime.TryParse`: a `TCA` of `22:37:52.618` was read on the day of the read, `1.5` or `1,5` as 5 January of the
+current year. The OPM and OMM readers share the parser (`CcsdsEpochParser`). The writer emits the calendar form.
 
 Standards-compliant CDM export requires covariance for both participants, so the exported
 `COLLISION_PROBABILITY_METHOD` is `FOSTER-2D`.

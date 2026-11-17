@@ -66,6 +66,23 @@ these values: .NET's schema validator accepts NaN against the bound facets of ND
 overflow as an `xsd:double`. `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error,
 both naming the keyword. The lexical `INF` and `-INF` of `xsd:double` throw the parse exception, as before.
 
+A date (`EPOCH`, `CREATION_DATE`) is read in the two forms of CCSDS 502.0-B-3: calendar
+(`2026-01-13T05:00:55.752768`) or day of year (`2026-013T05:00:55.752768`), each field with its leading zeros, any
+fraction, an optional `Z` or `±hh:mm` offset of the NDM/XML `epochType`, as UTC. Any other text throws `OmmParseException`
+naming the field and the text ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), decided by S. Guillet, 2026-11-17): a time alone, a date alone, a bare
+number, a space or a lowercase `t` for the `T`, a decimal comma, a missing second, a short offset, a blank around the
+date. Before 11.0.0 the reader passed such a text to `DateTime.TryParse`, which gave a time alone the day of the read
+and `1.5` or `1,5` 5 January of the current year.
+
+A term of the covariance (`CX_X` ... `CZ_DOT_Z_DOT`, km², km²/s, km²/s²) whose value in m², m²/s or m²/s², its product by
+1e6, is beyond the range of a `double` (above about 1.8e302) throws `OmmParseException` naming the keyword and the text,
+and `new CovarianceMatrix(...)` and its factories `ArgumentOutOfRangeException` naming the term
+([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)): `ToMatrixWithUnitConversion` gave ±Infinity before 11.0.0. `KeplerianElements.FromOMM`, which converts
+the mean motion to rad/s for `ToTle`, gives a finite value above about 2.86e307 rev/day, where (n × 2π) / 86400 gave
++Infinity ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). A negative `REV_AT_EPOCH` names `revolutionNumberAtEpoch` in the `ArgumentOutOfRangeException` of
+`TleParameters` (its constructor and the four `CreateWith*` factories), the parameter they take, where it named
+`revNumber` ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734)).
+
 ### Schema validation
 
 `validateSchema` and `OmmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
