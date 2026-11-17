@@ -10,6 +10,12 @@
 | `KeplerianElements(..., perigeeRadius)` | Create parabolic orbit |
 | `KeplerianElements(..., OrbitalElementsType)` | Create with explicit element type |
 
+Every element is finite (#726): the constructor throws `ArgumentException` naming the parameter for a semi-major axis
+NaN, −∞, or +∞ outside the parabolic band, and for an angle (i, Ω, ω, M, the optional true anomaly) that is not
+finite; `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity not finite or negative (#476), and
+(`perigeeRadius`) for a perigee radius given and not finite and above 0. The one infinite element is the semi-major
+axis of a parabola, +∞ with its perigee radius. `FromOMM` checks the same, its mean motion finite and above 0.
+
 ### Factory Methods
 
 | Method | Description |
@@ -54,6 +60,10 @@
 | `L0` | True longitude Ω + ω + ν (rad) |
 
 The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F, p = K and q = H.
+
+The constructor refuses what no conic has (#481, #726): F, G, H, K and L0 not finite (`ArgumentException` naming the
+parameter), P not finite and above 0 (`ArgumentOutOfRangeException`, `p`; a non-finite P only for a parabola,
+|e − 1| < 1e-6, given its perigee radius), and a perigee radius given and not finite and above 0 (`perigeeRadius`).
 
 A parabola (|e − 1| < 1e-6, e = √(F² + G²)) given a finite P and no perigee radius has its perigee radius
 q = P / (1 + e), P / 2 at e = 1, derived when it is built, so that every path (`PerigeeRadius()`,

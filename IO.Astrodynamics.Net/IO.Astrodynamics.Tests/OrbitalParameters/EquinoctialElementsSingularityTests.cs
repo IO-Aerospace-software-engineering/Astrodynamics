@@ -758,10 +758,18 @@ public class EquinoctialElementsSingularityTests
         // Arrange: a parabola with P = NaN or +∞ and no perigee radius, and an ellipse with P = NaN
         var cases = _reference.Undefined;
 
-        // Act and assert: an exception instead of a stack overflow (parabola) or a NaN state (ellipse)
+        // Act and assert: an exception instead of a stack overflow (parabola) or a NaN state (ellipse). Since #481 the
+        // ellipse is refused when it is built, a non-finite P being accepted only in the parabolic band
         Assert.Equal(3, cases.Count);
         foreach (var c in cases)
         {
+            if (System.Math.Abs(System.Math.Sqrt(c.F * c.F + c.G * c.G) - 1.0) >= 1e-6)
+            {
+                var refused = Assert.Throws<ArgumentOutOfRangeException>(() => c.Elements(_earth, Epoch, Frames.Frame.ICRF));
+                Assert.Equal("p", refused.ParamName);
+                continue;
+            }
+
             var elements = c.Elements(_earth, Epoch, Frames.Frame.ICRF);
             var exception = Assert.Throws<InvalidOperationException>(() => elements.ToStateVector());
             Assert.Contains("P is not finite and no perigee radius", exception.Message);

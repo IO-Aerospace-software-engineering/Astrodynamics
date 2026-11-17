@@ -302,6 +302,8 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (!_meanAnomaly.HasValue)
             {
                 ThrowIfRectilinear(NoOrbitPlane);
+                throw new InvalidOperationException(
+                    $"No conic has the eccentricity e = {Eccentricity():R} of this state: its mean anomaly is undefined (#476).");
             }
 
             return _meanAnomaly!.Value;

@@ -324,6 +324,22 @@ public class OrbitalParametersTests
     }
 
     [Fact]
+    public async Task EquinoctialWithANegativeSemiLatusRectum_IsRefused()
+    {
+        // --from-equinoctial with P = −7000 km: no conic has p ≤ 0 (#481: before, a mirrored position with a NaN velocity
+        // through ToStateVector, NaN states through AtEpoch)
+        var command = new OrbitalParametersConverterCommand();
+        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "-7000000.0 0.1 0.05 0.2 0.1 1.0", CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
+                Frame = "ICRF", FromStateVector = false, FromKeplerian = false, FromEquinoctial = true, FromTLE = false
+            }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF"));
+        Assert.Equal("p", exception.ParamName);
+        Assert.Contains("semi-latus rectum P must be finite and above 0", exception.Message);
+    }
+
+    [Fact]
     public async Task Exceptions()
     {
         var command = new OrbitalParametersConverterCommand();

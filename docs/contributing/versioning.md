@@ -3263,6 +3263,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `EquinoctialElementsSingularityTests.Parabolic_WithAFinitePOrAPerigeeRadius_MatchesTheReference` now finds
   `PerigeeRadius()` without a radius exactly P / (1 + e). Within the band with e ≠ 1 the Keplerian path runs too, with the
   mean anomaly of #478.
+- **A non-finite eccentricity gave the message of an empty `Nullable`** ([#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476)).
+  With e = NaN no conic branch of `OrbitalParameters.TrueAnomaly()` held, and `TrueAnomaly()`, `ToStateVector()`,
+  `ToStateVector(Time)`, `TrueAnomaly(Time)`, `TrueLongitude()` and `ToEquinoctial()` threw `InvalidOperationException`
+  "Nullable object must have a value.", which names neither e nor the call. The constructors now refuse such an
+  eccentricity (Changed, Breaking, below), and the branches of `TrueAnomaly()` and `StateVector.MeanAnomaly()` end with an
+  `InvalidOperationException` naming e, for orbital parameters whose eccentricity no constructor checks (a subclass; a
+  non-finite `StateVector`, which the rectilinear check of #687 meets first on every state measured)
+  (`ElementsValidationTests.Issue476_ATrueAnomalyWithoutAConicBranch_NamesTheEccentricity`, red on a85098d;
+  `Issue476_ANonFiniteState_ThrowsWhereItNeedsAConic`).
 
 **Changed**
 
@@ -4526,6 +4535,46 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
+- **Breaking: `KeplerianElements` and `EquinoctialElements` refuse elements that are not finite** ([#726](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/726), [#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476)).
+  The constructors stored a NaN or infinite element, which then reached the period, the anomalies and the conversions
+  done in .NET (only the conversions of `SpiceAPI` refused them, #714). They now throw when the elements are built
+  (decided by S. Guillet, 2026-11-17, the recommendation of the triage: in the constructors, `ArgumentException` naming
+  the parameter, `ArgumentOutOfRangeException` for the eccentricity and the ranges):
+  - `KeplerianElements` (public constructor): `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity that is
+    not finite or is negative, "finite and non-negative", as the CCSDS `MeanElements` and `OpmKeplerianElements` (NaN and
+    +Infinity were accepted, the negative ones refused by an `ArgumentException` without a parameter name; −0.0 is
+    accepted, as 0); `ArgumentException` naming `semiMajorAxis` for NaN, −Infinity, or +Infinity outside the parabolic
+    band (+Infinity with |e − 1| < 1e-6 and a perigee radius, the parabola, stays the one infinity, #373), and naming
+    `inclination`, `rigthAscendingNode`, `argumentOfPeriapsis`, `meanAnomaly` or `trueAnomaly` (when given) for a value
+    that is not finite; `ArgumentOutOfRangeException` (`perigeeRadius`) for a perigee radius that is given and not
+    finite and above 0. `period` is a `TimeSpan`, always finite.
+  - `KeplerianElements.FromOMM`: `ArgumentOutOfRangeException` (`meanMotion`) for a mean motion not finite and above 0
+    (0 gave a = +Infinity, a negative one the a of its opposite), (`eccentricity`) as above, and `ArgumentException`
+    naming `inclination`, `raan`, `argumentOfPeriapsis` or `meanAnomaly`.
+  - `EquinoctialElements`: `ArgumentException` naming `f`, `g`, `h`, `k` or `l0` for a value that is not finite, and
+    `f` when √(F² + G²) overflows; P and the perigee radius below (#481).
+  Results of finite elements are unchanged, bit for bit: the checks compute nothing they use. `NonFiniteInput_Throws` of
+  `KeplerEquationTests` keeps the solver's guard and asserts the refusal of the elements, and the `SpiceApiTest`
+  rows of #714 that built non-finite elements now assert the constructor's exception (`SpiceAPI` keeps its own check).
+  Tests: `ElementsValidationTests.Issue726_*` and `Issue476_*` (red on a85098d). Migration: build elements from finite
+  values; catch `ArgumentException` (which `ArgumentOutOfRangeException` derives from) where elements come from
+  unchecked input.
+- **Breaking: `EquinoctialElements` refuses a semi-latus rectum or a perigee radius that no conic has** ([#481](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/481)).
+  The constructor checked only the observer and the frame: a finite P ≤ 0 gave a position mirrored through the centre
+  with a NaN velocity from `ToStateVector()`, a negative semi-major axis from `ToKeplerianElements()` and NaN states from
+  `AtEpoch` and `ToStateVector(Time)` (so from the start of a propagation and the CLI's `--from-equinoctial`), a P of
+  ±Infinity on an ellipse a non-finite state, and a parabola of perigee radius ≤ 0 or NaN the same kind of result
+  (measured on a85098d, as in the issue). It now throws `ArgumentOutOfRangeException` (`p`) for a P that is not finite
+  and above 0 (p = h²/μ > 0 for every conic; −0.0 included), a non-finite P being accepted only in the parabolic band
+  |e − 1| < 1e-6, where #452 documents it with a perigee radius as the way to give a parabola, and
+  (`perigeeRadius`) for a perigee radius given and not finite and above 0, as SPICE CONICS rejects rp ≤ 0
+  (decided by S. Guillet, 2026-11-17, the recommendation of the issue: the check in the constructor, no bound beyond
+  P > 0). The elements the library builds pass (`ToEquinoctial()`, whose P is finite since #462, and the TLE fit, which
+  raises P to keep its perigee). The ellipse row of `WithoutAFinitePOrAPerigeeRadius_TheStateIsUndefined` (P = NaN) now
+  throws from the constructor, and the P < 0 row of `ConvertEquinoctialElementsToStateVector_OutsideTheDomainOfEqncpv`
+  too (a semi-major axis ≤ 0 with P > 0 needs e > 1, outside EQNCPV's e ≤ 0.9). Tests: `ElementsValidationTests.Issue481_*`
+  (red on a85098d), `OrbitalParametersTests.EquinoctialWithANegativeSemiLatusRectum_IsRefused` (CLI). Migration: give P
+  finite and above 0, or a parabola's non-finite P with its perigee radius.
 
 **Deprecated**
 
@@ -4750,15 +4799,6 @@ not listed.
 - **No period for e ≥ 1** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663)).
   `Period()` throws the NaN `ArgumentException` of `TimeSpan` for a hyperbola and an `OverflowException` for a parabola,
   and for an ellipse in the parabolic band, with no message that says an open orbit has no period.
-- **Elements accepted without a check**
-  ([#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476),
-  [#481](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/481)). `KeplerianElements` accepts e
-  = NaN or +Infinity: `TrueAnomaly()`, `ToStateVector()` and `ToEquinoctial()` then throw `InvalidOperationException`
-  "Nullable object must have a value", which names neither e nor the call (+Infinity gives NaN states).
-  `EquinoctialElements` accepts P ≤ 0 or a non-finite P. For a finite P ≤ 0, `ToStateVector()` gives a NaN velocity
-  and `ToKeplerianElements()` a negative semi-major axis without an error, while `AtEpoch` and `ToStateVector(Time)`
-  throw the Kepler solver's error on M = NaN, which does not name P; for P = ±∞ on an ellipse they give a non-finite
-  state without an error. Check the elements before building them.
 - **Mean elements and equality of orbital parameters**
   ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463),
   [#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). `AtEpoch(t)` and

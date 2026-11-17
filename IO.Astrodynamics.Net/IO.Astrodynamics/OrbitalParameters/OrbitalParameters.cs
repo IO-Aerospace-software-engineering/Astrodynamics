@@ -265,7 +265,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the true anomaly is computed from the mean anomaly and the mean anomaly or the eccentricity is not
-    /// finite (#453).
+    /// finite (#453), and when the eccentricity is not finite, which no conic has (#476).
     /// </exception>
     public virtual double TrueAnomaly()
     {
@@ -285,6 +285,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         else if (IsHyperbolic())
         {
             _trueAnomaly = HyperbolicTrueAnomaly() % Constants._2PI;
+        }
+        else
+        {
+            // Only a non-finite eccentricity takes no branch: no conic has it (#476; the message of an empty Nullable before)
+            throw new InvalidOperationException(
+                $"No conic has the eccentricity e = {Eccentricity():R}: the true anomaly is undefined.");
         }
 
         if (_trueAnomaly < 0)
