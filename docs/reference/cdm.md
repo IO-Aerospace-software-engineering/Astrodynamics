@@ -127,7 +127,7 @@ accept that form. A reader that matches local names reads both.
 | `Originator` | `string` | Originating organization |
 | `MessageId` | `string` | Unique message identifier |
 | `MessageFor` | `string` | Intended recipient |
-| `CollisionProbabilityMethod` | `string` | Overrides the method name, `FOSTER-2D` by default |
+| `CollisionProbabilityMethod` | `string` | Overrides the method name, `FOSTER-1992` by default |
 | `AllowStaleCovariance` | `bool` | Allows exporting an encounter flagged `StaleCovarianceUsed` (refused by default) |
 
 The covariance of each participant is the one the conjunction analysis used (see
@@ -224,7 +224,12 @@ built by hand on a machine outside UTC was written with its dates shifted by the
 Paris in winter, five hours late in New York).
 
 Standards-compliant CDM export requires covariance for both participants, so the exported
-`COLLISION_PROBABILITY_METHOD` is `FOSTER-2D`.
+`COLLISION_PROBABILITY_METHOD` is `FOSTER-1992`: Foster and Estes (1992), the 2D Gaussian integrated over the
+hard-body disc, under its name in the SANA registry `cdm_cpm` (CCSDS 508.0-B-1 Cor. 2, annex E, which gives it as an
+example; [#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), decided by S. Guillet,
+2026-11-17; `FOSTER-2D`, which the registry does not hold, before 11.0.0). An encounter whose Pc is the maximum of a
+single covariance (`SingleCovarianceMaximumPcUsed`), which no registered value names, is refused with
+`InvalidOperationException`, whatever `CollisionProbabilityMethod` says.
 
 ## Example
 

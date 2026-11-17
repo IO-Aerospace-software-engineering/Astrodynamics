@@ -55,7 +55,12 @@ public class CdmTests
             cdm.RelativeMetadataData.RelativeSpeedMetersPerSecond!.Value, 9);
         Assert.NotNull(cdm.RelativeMetadataData.CollisionProbability);
         Assert.Equal(encounter.CollisionRisk.ProbabilityOfCollision!.Value, cdm.RelativeMetadataData.CollisionProbability!.Value, 12);
-        Assert.Equal("FOSTER-2D", cdm.RelativeMetadataData.CollisionProbabilityMethod);
+        // Foster and Estes (1992), the 2D Gaussian integrated over the hard-body disc: FOSTER-1992 in the SANA registry
+        // cdm_cpm (CCSDS 508.0-B-1 Cor. 2, annex E, E1, which gives it as an example) and in the standard's examples
+        // (3.6.3, 4.4); FOSTER-2D, written before #618, is not registered
+        Assert.Equal("FOSTER-1992", cdm.RelativeMetadataData.CollisionProbabilityMethod);
+        Assert.Equal("FOSTER-1992", XDocument.Parse(cdm.WriteToString()).Descendants()
+            .Single(e => e.Name.LocalName == "COLLISION_PROBABILITY_METHOD").Value);
         Assert.NotNull(cdm.RelativeMetadataData.RelativeStateVector);
         AssertVectorApproximatelyEqual(
             encounter.EncounterState.RelativeState.RelativePositionRtn,
@@ -140,6 +145,38 @@ public class CdmTests
             protectedSegment.Data.CovarianceMatrix!.StateCovarianceRtn, 1.0e-12);
         AssertMatrixApproximatelyEqual(RotateCovarianceToRtn(encounter.SecondaryState),
             secondarySegment.Data.CovarianceMatrix!.StateCovarianceRtn, 1.0e-9);
+    }
+
+    // The maximum Pc of a single covariance (Frisbee) has no value in the SANA registry cdm_cpm (ALFANO-MAX-PROBABILITY is
+    // Alfano's 2005 maximum, another method), and a CDM carries both covariances: an encounter whose Pc is that maximum is
+    // not exported (#618 with #342, decided by S. Guillet, 2026-11-17; before, a case built with the flag and both
+    // covariances was written with the unregistered FOSTER-2D-MAX-PC), whatever method the options name
+    [Theory]
+    [InlineData(null)]
+    [InlineData("ALFANO-MAX-PROBABILITY")]
+    public void ToCdm_SingleCovarianceMaximumPc_IsRefused(string? method)
+    {
+        var encounter = CreateManualEncounterCase(qualityFlags: EncounterQualityFlags.SingleCovarianceMaximumPcUsed);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => encounter.ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 0, 0, DateTimeKind.Utc),
+            CollisionProbabilityMethod = method
+        }));
+        Assert.Contains("SingleCovarianceMaximumPcUsed", exception.Message);
+    }
+
+    // A method the options name is written as given
+    [Fact]
+    public void ToCdm_CollisionProbabilityMethodOption_IsWrittenAsGiven()
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 0, 0, DateTimeKind.Utc),
+            CollisionProbabilityMethod = "ALFANO-2005"
+        });
+
+        Assert.Equal("ALFANO-2005", Cdm.ReadFromString(cdm.WriteToString()).RelativeMetadataData.CollisionProbabilityMethod);
     }
 
     [Fact]
@@ -1396,7 +1433,8 @@ public class CdmTests
         Assert.Contains("covariance", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    internal static EncounterCase CreateManualEncounterCase(bool withEngines = false)
+    internal static EncounterCase CreateManualEncounterCase(bool withEngines = false,
+        EncounterQualityFlags qualityFlags = EncounterQualityFlags.None)
     {
         var earth = CreateEarth();
         var epoch = TimeSystem.Time.J2000TDB.AddMinutes(5.0);
@@ -1477,7 +1515,7 @@ public class CdmTests
             relativeState,
             relativePosition.Magnitude(),
             combinedCovarianceRtn,
-            EncounterQualityFlags.None);
+            qualityFlags);
 
         var collisionRisk = new CollisionRisk(
             combinedHardBodyRadiusMeters: 11.0,

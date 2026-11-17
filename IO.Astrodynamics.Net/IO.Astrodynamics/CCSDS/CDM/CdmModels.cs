@@ -634,6 +634,11 @@ public sealed record CdmExportOptions
 
     public bool IncludeScreeningWindow { get; init; } = true;
 
+    /// <summary>
+    /// The <c>COLLISION_PROBABILITY_METHOD</c> written, as given; null for the method the analysis computes, Foster and Estes
+    /// (1992), <c>FOSTER-1992</c> in the SANA registry <c>cdm_cpm</c> (CCSDS 508.0-B-1 Cor. 2, annex E; <c>FOSTER-2D</c>,
+    /// which the registry does not hold, before #618).
+    /// </summary>
     public string? CollisionProbabilityMethod { get; init; }
 
     /// <summary>

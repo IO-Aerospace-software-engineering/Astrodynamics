@@ -3234,6 +3234,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CcsdsLocalTimeTests` runs the three writers in child processes under `TZ=Europe/Paris` and `TZ=America/New_York`,
   the expected texts from the IANA rules of each zone (2 cases red on a85098d); `CdmTests`,
   `OpmWriterTests` and `OmmWriterTests` check each kind in the test process (8 refusals red on a85098d).
+- **The CDM named its collision probability method `FOSTER-2D`, which no registry holds** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), with
+  [#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). `EncounterCase.ToCdm` wrote
+  `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, or `FOSTER-2D-MAX-PC` for an encounter flagged
+  `SingleCovarianceMaximumPcUsed` (reached only by a case built by hand with both covariances), neither in the SANA
+  registry `cdm_cpm`, so a receiver that maps the method through the registry could not tell which Pc it was given. The
+  method the analysis computes, Foster and Estes (1992), is `FOSTER-1992` there and in the examples of CCSDS 508.0-B-1
+  Cor. 2 (annex E, 3.6.3, 4.4): it is now written (decided by S. Guillet, 2026-11-17). The single-covariance maximum Pc
+  has no registered value and a CDM carries both covariances: an encounter flagged so is refused, as one with a single
+  covariance already was, and the dead branch is gone (`CdmTests.ToCdm_ManualEncounter_ExportsExpectedValues` and
+  `ToCdm_SingleCovarianceMaximumPc_IsRefused`, red on a85098d). No number moves.
 
 **Changed**
 
@@ -4514,6 +4524,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its clock reading; a local `CREATION_DATE` is converted to UTC. Dates of kind `Utc` and `Unspecified` are written as
   before. Migration: give a CDM's dates in UTC, with any kind but `Local` for a UTC clock reading; give an OPM or OMM
   epoch outside `TIME_SYSTEM = UTC` as its clock reading in that time system, of kind `Utc` or `Unspecified`.
+- **Breaking: the exported CDM names its method `FOSTER-1992`** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), Fixed above). `EncounterCase.ToCdm` writes
+  `COLLISION_PROBABILITY_METHOD = FOSTER-1992` where it wrote `FOSTER-2D`, and throws `InvalidOperationException` for an
+  encounter flagged `SingleCovarianceMaximumPcUsed`, where a case built by hand with both covariances was written
+  `FOSTER-2D-MAX-PC`. Migration: a consumer that matched `FOSTER-2D` matches `FOSTER-1992`; a caller that sets
+  `CdmExportOptions.CollisionProbabilityMethod` is unaffected.
 
 **Deprecated**
 
@@ -4700,11 +4715,6 @@ not listed.
   ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
   as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
-- **CDM writing** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618)).
-  `CdmExporter` writes `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, which SANA does not register (Foster's method is
-  FOSTER-1992). `CdmExporter` refuses an encounter with one covariance, so its `FOSTER-2D-MAX-PC` is never written
-  ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Set
-  `CdmExportOptions.CollisionProbabilityMethod`.
 - **CDM dates and numbers** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616),
   [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). A date in a leap second throws
   `CdmParseException`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads

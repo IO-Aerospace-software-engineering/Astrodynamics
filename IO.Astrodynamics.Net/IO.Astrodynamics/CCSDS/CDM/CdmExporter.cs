@@ -48,6 +48,17 @@ internal static class CdmExporter
                 "Secondary object covariance is required to export a standards-compliant CDM.");
         }
 
+        // The maximum Pc of a single covariance (Frisbee) has no value in the SANA registry cdm_cpm, and a CDM carries both
+        // covariances: refused, as an encounter with one covariance is above (#618 with #342, decided by S. Guillet,
+        // 2026-11-17; before, a case built with the flag and both covariances was written FOSTER-2D-MAX-PC)
+        if (encounterCase.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.SingleCovarianceMaximumPcUsed))
+        {
+            throw new InvalidOperationException(
+                "The collision probability of the encounter is the maximum probability of a single covariance " +
+                "(EncounterQualityFlags.SingleCovarianceMaximumPcUsed), which a CDM cannot carry: it holds both covariances, and the " +
+                "SANA registry of COLLISION_PROBABILITY_METHOD holds no value for that method.");
+        }
+
         if (encounterCase.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed) && !options.AllowStaleCovariance)
         {
             throw new InvalidOperationException(
@@ -141,7 +152,7 @@ internal static class CdmExporter
                 ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.EndDate.ToUTC().DateTime)
                 : null,
             CollisionProbability = encounterCase.CollisionRisk.ProbabilityOfCollision,
-            CollisionProbabilityMethod = options.CollisionProbabilityMethod ?? InferCollisionProbabilityMethod(encounterCase)
+            CollisionProbabilityMethod = options.CollisionProbabilityMethod ?? FosterCollisionProbabilityMethod
         };
     }
 
@@ -441,12 +452,10 @@ internal static class CdmExporter
         };
     }
 
-    private static string InferCollisionProbabilityMethod(EncounterCase encounterCase)
-    {
-        return encounterCase.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.SingleCovarianceMaximumPcUsed)
-            ? "FOSTER-2D-MAX-PC"
-            : "FOSTER-2D";
-    }
+    // Foster and Estes (1992), the 2D Gaussian integrated over the hard-body disc, the Pc the analysis computes: FOSTER-1992
+    // in the SANA registry cdm_cpm (CCSDS 508.0-B-1 Cor. 2, annex E, E1). Before #618, FOSTER-2D, which the registry does
+    // not hold (decided by S. Guillet, 2026-11-17)
+    private const string FosterCollisionProbabilityMethod = "FOSTER-1992";
 
     private static string CreateMessageId(EncounterCase encounterCase)
     {

@@ -116,6 +116,15 @@ public sealed class EncounterCase
     /// </summary>
     /// <param name="options">Optional CDM export overrides.</param>
     /// <returns>A CDM representation of this encounter.</returns>
+    /// <remarks>
+    /// <c>COLLISION_PROBABILITY_METHOD</c> is <c>FOSTER-1992</c> unless <see cref="CdmExportOptions.CollisionProbabilityMethod"/>
+    /// names another (#618).
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// The case holds no participant states, a participant has no covariance, the encounter's Pc is the maximum of a
+    /// single covariance (<see cref="EncounterQualityFlags.SingleCovarianceMaximumPcUsed"/>, which no registered method
+    /// names, #618), or its covariance is stale and <see cref="CdmExportOptions.AllowStaleCovariance"/> is not set.
+    /// </exception>
     public Cdm ToCdm(CdmExportOptions options = null)
     {
         return CdmExporter.Export(this, options);
