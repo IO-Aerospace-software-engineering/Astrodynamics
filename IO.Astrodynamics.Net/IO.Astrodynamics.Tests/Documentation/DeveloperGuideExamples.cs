@@ -524,10 +524,10 @@ internal static class DeveloperGuideExamples
         // After propagation with executed maneuvers...
         var opm = spacecraft.ToOpm(
             originator: "Mission Control",
-            epoch: null,                      // Use current epoch (or specify)
+            epoch: null,                      // The initial epoch (or one within the propagation, #658)
             includeKeplerianElements: true,   // Include optional Keplerian elements
             includeSpacecraftParameters: true, // Include mass, drag, SRP
-            includeManeuvers: true);          // Include executed maneuvers
+            includeManeuvers: true);          // Include the maneuvers executed by the epoch
 
         // Save for archival/sharing
         opm.SaveToFile("iss_state.opm");

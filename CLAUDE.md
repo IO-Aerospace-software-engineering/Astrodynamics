@@ -187,6 +187,7 @@ The C# blocks of this file and of `IO.Astrodynamics.Net/CLAUDE.md` are compiled 
 - Check `omm.IsTleCompatible` (tleParameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH; #679) before calling `ToTle()`, which otherwise throws naming each keyword at fault
 - OPM uses CCSDS units (km, km/s, deg); framework uses SI (m, m/s, rad) — conversions are automatic
 - Maneuver conversion is one-way: `Spacecraft → OPM` (OPM maneuvers are archival)
+- `Spacecraft.ToOpm` of a spacecraft that holds propagated states writes the state, the mass and the maneuvers of its epoch (#658, decided by S. Guillet, 2026-11-17): `GetEphemeris` at the epoch from the observer and in the frame of the initial orbital parameters, the mass after the propagation plus the fuel of the impulses executed after the epoch, the impulses executed by then (an impulse counts at its event, internal `Maneuver.ImpulseEpoch`), an epoch outside the states throwing (#527); without propagated states, the motion of the initial orbit as before
 - `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT, GPS; another throws) by `Opm.ToStateVector` and `Omm.ToTle` (#485); the writers write UTC under `TIME_SYSTEM = UTC`, `MAN_EPOCH_IGNITION` included (#479)
 
 ### Attitude Maneuvers

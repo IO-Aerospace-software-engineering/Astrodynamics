@@ -1079,16 +1079,32 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Creates a CCSDS OPM (Orbit Parameter Message) from this spacecraft's current state.
+        /// Creates a CCSDS OPM (Orbit Parameter Message) of this spacecraft at <paramref name="epoch"/>: its state, its mass
+        /// and its maneuvers at that instant (#658, decided by S. Guillet, 2026-11-17). A spacecraft that holds propagated
+        /// states (by <c>Propagate</c>, <c>Scenario.SimulateAsync</c>, the builder, a propagator built directly or
+        /// <see cref="AddPropagatedStates"/>) writes the state read from them, <see cref="GetEphemeris"/> relative to the
+        /// observer and in the frame of its initial orbital parameters without aberration, the mass at the epoch and the
+        /// impulses executed by then; one without them, the motion of its initial orbital parameters (two-body for
+        /// osculating elements, SGP4 for a TLE, also when <see cref="TLEPropagator"/> sampled it) with its mass now and the
+        /// maneuvers of its last propagation, none for a spacecraft never propagated, as before 11.0.0.
         /// </summary>
         /// <param name="originator">The message originator. If null, uses "IO.Astrodynamics".</param>
-        /// <param name="epoch">The epoch for the state vector. If null, uses the initial orbital parameters epoch.</param>
+        /// <param name="epoch">The epoch of the state. If null, the epoch of the initial orbital parameters.</param>
         /// <param name="includeKeplerianElements">If true, includes optional Keplerian elements in the OPM.</param>
         /// <param name="includeSpacecraftParameters">If true, includes spacecraft parameters (mass, drag, SRP).</param>
-        /// <param name="includeManeuvers">If true, includes executed maneuvers in the OPM.</param>
+        /// <param name="includeManeuvers">If true, includes the maneuvers executed by the epoch.</param>
         /// <returns>A new OPM instance representing this spacecraft's state.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when CosparId is not set.</exception>
+        /// <exception cref="InvalidOperationException">CosparId is not set; or the spacecraft holds propagated states and
+        /// the epoch, given or by default, lies outside them (#527).</exception>
         /// <remarks>
+        /// <para>
+        /// The mass of a propagated spacecraft at the epoch is its mass after the propagation plus the fuel of the impulses
+        /// executed after the epoch; an impulse counts at its epoch, the instant the propagated state receives its delta-V
+        /// and the tanks lose its fuel (at that epoch the state read is the state after it), so that the state, the mass
+        /// and the maneuvers written are those of one instant. Before 11.0.0 the state was the motion of the initial orbit
+        /// whatever the propagation, with the mass and every maneuver after the propagation: 1 212 km and 1 137 m/s off the
+        /// propagated state one burn later.
+        /// </para>
         /// <para>
         /// Maneuver delta-V components are exported in the same inertial reference frame as the state vector
         /// (typically ICRF or EME2000). This is the frame in which the framework stores maneuver data.
@@ -1112,9 +1128,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new InvalidOperationException("CosparId must be set to create an OPM. Use the spacecraft constructor's cosparId parameter.");
             }
 
-            // Get the state vector at the specified epoch (or initial epoch)
+            // The state at the epoch (or the initial epoch): the propagated states when the spacecraft holds them (#658),
+            // relative to the observer and in the frame of the initial orbital parameters, within them (#527); the motion
+            // of the initial orbit otherwise
             var targetEpoch = epoch ?? InitialOrbitalParameters.Epoch;
-            var stateVector = InitialOrbitalParameters.ToStateVector(targetEpoch);
+            var initialState = InitialOrbitalParameters.ToStateVector(targetEpoch);
+            bool propagated = InterpolatedStatesWindow.HasValue;
+            var stateVector = initialState;
+            if (propagated)
+            {
+                var read = GetEphemeris(targetEpoch, InitialOrbitalParameters.Observer, InitialOrbitalParameters.Frame, Aberration.None).ToStateVector();
+                stateVector = new StateVector(read.Position, read.Velocity, InitialOrbitalParameters.Observer, targetEpoch, InitialOrbitalParameters.Frame,
+                    initialState.Covariance);
+            }
+
+            // The impulses of the last propagation executed by the epoch, whose delta-V and fuel the state and the mass
+            // hold; all of them for a spacecraft without propagated states, as before
+            bool ExecutedBy(Maneuver.Maneuver m) => !propagated || (m.ImpulseEpoch.HasValue && m.ImpulseEpoch.Value <= targetEpoch);
+            double laterFuel = propagated ? ExecutedManeuvers.OfType<Maneuver.ImpulseManeuver>().Where(m => m.ImpulseEpoch.HasValue && !ExecutedBy(m)).Sum(m => m.FuelBurned) : 0.0;
 
             // Create header
             var header = originator != null
@@ -1152,7 +1183,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (includeManeuvers && ExecutedManeuvers.Count > 0)
             {
                 var maneuverList = new List<OpmManeuverParameters>();
-                foreach (var maneuver in ExecutedManeuvers.OrderBy(m => m.ThrustWindow?.StartDate))
+                foreach (var maneuver in ExecutedManeuvers.Where(ExecutedBy).OrderBy(m => m.ThrustWindow?.StartDate))
                 {
                     if (maneuver is Maneuver.ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
                     {
@@ -1170,7 +1201,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             var data = new OpmData(
                 stateVector: opmStateVector,
                 keplerianElements: keplerianElements,
-                mass: includeSpacecraftParameters ? GetTotalMass() : null,
+                mass: includeSpacecraftParameters ? GetTotalMass() + laterFuel : null,
                 solarRadiationPressureArea: includeSpacecraftParameters ? SectionalArea : null,
                 solarRadiationCoefficient: includeSpacecraftParameters ? SolarRadiationCoeff : null,
                 dragArea: includeSpacecraftParameters ? SectionalArea : null,

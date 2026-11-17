@@ -3257,6 +3257,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and 6 min outside the states red on a85098d, both integrators, from ICRF and ECLIPJ2000). A TLE spacecraft sampled by
   `TLEPropagator` read from the Earth outside its samples extrapolated them (20.7 m 6 min before the first, 6.3 m 6 min
   after the last on the ISS): it reads SGP4 there, as from any other body (0 m against SGP4, red on a85098d).
+- **`Spacecraft.ToOpm` wrote the motion of the initial orbit with the mass and the maneuvers after the propagation**
+  ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). Its state was
+  `InitialOrbitalParameters.ToStateVector(epoch)`, the two-body (or SGP4) motion, whatever the propagation, while its
+  `MASS` was the mass after every burn and its maneuvers every executed impulse: one burn later 1 212 km and 1 137 m/s off
+  the propagated state on the issue's case, and at the default epoch a state before the burn with the mass after it. The
+  OPM of a spacecraft that holds propagated states now carries the state, the mass and the maneuvers of its epoch (see
+  **Changed**): the state is `GetEphemeris`'s at the epoch, within 3.8e-9 m of the solution, the mass Tsiolkovsky's
+  after the burn from the burn's epoch on and the full mass before, the maneuvers the burn from its epoch on and none
+  before (`SpacecraftToOpmTests`, both integrators, from ICRF and ECLIPJ2000, the default epoch, before, at and after the
+  burn, red on b4f5dbb); a TLE spacecraft propagated numerically writes its propagated state in TEME, 53.7 km from SGP4
+  after 1 h, one only sampled by `TLEPropagator` SGP4 as before.
 
 **Changed**
 
@@ -4549,6 +4560,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   after the end of the window, so a read at the end of such a window throws when the last output falls before it (a
   3 610 s window at 60 s outputs stores its states to 3 600 s); read the solution there, or choose an output step that
   divides the window.
+- **Breaking: `Spacecraft.ToOpm` writes the propagated state, mass and maneuvers of its epoch**
+  ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided by S. Guillet,
+  2026-11-17). A spacecraft that holds propagated states writes `GetEphemeris(epoch, observer, frame, Aberration.None)`
+  with the observer and the frame of its initial orbital parameters, its mass at the epoch (its mass after the
+  propagation plus the fuel of the impulses executed after the epoch) and only the impulses executed by the epoch, an
+  impulse counting at its event; an epoch outside the propagated states, the default one included when the propagation
+  started later, throws `InvalidOperationException` (#527). A spacecraft without propagated states writes the motion of
+  its initial orbit as before. Migration: pass the epoch of the instant to export, the end of the propagation for the
+  state after every maneuver (the default epoch, the initial one, now carries no maneuver of a propagation that starts
+  there); a caller that wanted the initial orbit writes `Opm.CreateFromStateVector` from `InitialOrbitalParameters`.
 
 **Deprecated**
 
@@ -4697,11 +4718,8 @@ not listed.
   (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)), but a
   subnormal component (below about 2.2e-308) rounds by an absolute 4.9e-324: v = (1, 2, 3)·1e-320 and fl(0.7 v) have a
   sine of 1.1e-4 and pass a separation below that, with a roll set by rounding; give body vectors of a normal magnitude.
-- **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339),
-  [#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). `Spacecraft.ToOpm` writes the
-  two-body (or SGP4) motion of the initial orbit, not the propagated state, with the mass and the maneuvers after the
-  propagation (1 212 km and 1 137 m/s off one burn later): for a propagated state, write `Opm.CreateFromStateVector`
-  from `GetEphemeris` at the epoch. `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
+- **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)).
+  `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
   which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
   and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
 - **TLEs** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598),

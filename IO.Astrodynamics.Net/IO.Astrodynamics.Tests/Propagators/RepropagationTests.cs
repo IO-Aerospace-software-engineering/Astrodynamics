@@ -386,7 +386,9 @@ public class RepropagationTests
             v = arcs[^1][^1].Velocity;
         }
 
-        var opm = spacecraft.ToOpm(includeKeplerianElements: false, includeManeuvers: true);
+        // At the window end, by which every maneuver of the run executed: an OPM carries the maneuvers executed by its epoch
+        // (#658)
+        var opm = spacecraft.ToOpm(epoch: window.EndDate, includeKeplerianElements: false, includeManeuvers: true);
         return new Run
         {
             Window = window,

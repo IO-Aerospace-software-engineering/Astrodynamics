@@ -164,6 +164,7 @@ namespace IO.Astrodynamics.Maneuver
             //seconds from the time argument of its event, and replaces the gate of the next maneuver with that end (#547).
             var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * 0.666, thrustDuration);
+            ImpulseEpoch = stateVector.Epoch;
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);
 
             //Set next maneuver
