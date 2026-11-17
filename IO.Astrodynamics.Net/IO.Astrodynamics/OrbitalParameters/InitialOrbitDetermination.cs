@@ -17,7 +17,8 @@ public class InitialOrbitDetermination
     /// <param name="observation1"></param>
     /// <param name="observation2"></param>
     /// <param name="observation3"></param>
-    /// <param name="observer"></param>
+    /// <param name="observer">The observer, read at each observation epoch at its geometric position relative to
+    /// <paramref name="expectedCenterOfMotion"/>; the light time of the observations is the target's.</param>
     /// <param name="expectedCenterOfMotion"></param>
     /// <param name="expectedRangeFromObserver"></param>
     /// <returns></returns>
@@ -27,19 +28,23 @@ public class InitialOrbitDetermination
         var distanceScale = expectedCenterOfMotion.IsSun ? Constants.AU : 1E03;
 
         double mu = expectedCenterOfMotion.GM / System.Math.Pow(distanceScale, 3);
-        // Step 1: Compute observer positions with improved scaling
+        // Step 1: the observer's geometric position at each observation epoch (Curtis, algorithm 5.5: R is the position of
+        // the observer at the time of the observation); the light time belongs to the target, whose direction the
+        // observations carry. A light-time corrected read would take the observer at t - lt seen from the centre: a site
+        // given by its coordinates is corrected as spkcpt_c since #489, about 21 ms of the Earth's rotation for a site seen
+        // from the Earth's centre, about 500 s of the Earth's orbit for any site seen from the Sun
         Vector3 R1 = observer
-            .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
+            .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
             .Position / distanceScale;
 
         Vector3 R2 = observer
-            .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
+            .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
             .Position / distanceScale;
 
         Vector3 R3 = observer
-            .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
+            .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
             .Position / distanceScale;
 

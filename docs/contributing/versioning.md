@@ -251,6 +251,19 @@ release are listed under **Known limitations**.
   (2026-11-17), the nine corrections: the boresight 1.0e-13 rad from `spkcvo_c`'s Moon from a LEO (8 states), 1.1e-12
   rad from `spkcpt_c`'s site from a LEO (3 states), 1.6e-16 rad from the closed form of a star at 20 and 2000 pc. See
   Changed for the new parameter.
+- **`InitialOrbitDetermination.CreateFromObservation_Gauss` read its observer with light time from the centre of motion**
+  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), found when the fixes of this
+  release were merged). The method takes the observer's position R at the epoch of each observation (H. D. Curtis,
+  *Orbital Mechanics for Engineering Students*, algorithm 5.5), the light time belonging to the target whose direction
+  the observations carry, but it read the observer with `Aberration.LT` from the centre: the observer at t − lt. About the
+  Sun that is about 500 s of the Earth's orbit, which did not shrink with the spacing of the observations: Mars from
+  DSS-13 at 2.5, 5 and 10 days, 3.7 %, 1.8e-3 % and 5.8e-2 % of the position at e2 − lt (SPICE). Since a site given by its
+  coordinates is corrected as `spkcpt_c` (#489, above), the same read took such a site about 21 ms back seen from the
+  Earth's centre, and the determination from the exact site of the COBE observations lost its second order in the spacing
+  (`FromTheExactSite_TheErrorIsOfSecondOrderInTheSpacing`: a ratio of 3.32 instead of 4.00 when the spacing is halved).
+  The observer is now read at its geometric position: the COBE determination is that of SPICE's site again (ratios 4.002
+  and 4.001), and Mars's error falls with the spacing, 7.06e-2, 1.07e-2 and 1.56e-3 % (Linux x64, `PlanetObject`, bounds
+  at 2.5 days twice those figures, provisional). See Changed.
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -3529,6 +3542,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star` target takes no light time, so only its `+S` corrections move it, by its stellar aberration.
   Migration: pass `Aberration.None` for the former geometric direction of a celestial target; recompile, the
   constructor's signature changed.
+- **Breaking: `InitialOrbitDetermination.CreateFromObservation_Gauss` reads the observer at its geometric position**
+  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), Fixed above). The observer's
+  position relative to the centre of motion at each observation epoch is read without light time (`Aberration.None`),
+  where it took the observer at t − lt: every determination moves, by the Earth's motion over the light time from the
+  Sun about the Sun (Mars from DSS-13 at 10 days: 5.65e-2 to 6.94e-2 % of the position against the state from the Sun
+  with `LT`, the error of the method at that spacing), and about the Earth by the site's rotation over its light time
+  from the Earth's centre for a site read by CSPICE (a kernel site), a site given by its coordinates already read
+  geometric before this release. Migration: none in code; observations are the target's directions from the observer
+  at each epoch, corrected for the target's light time as before.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along

@@ -34,7 +34,7 @@ public class InitialOrbitDeterminationDynamicalTimeTests
         var epochs = new[] { e2.AddMinutes(-2.0), e2, e2.AddMinutes(2.0) };
         var orbit = new KeplerianElements(42164000.0, 0.0, 15.0 * Deg, 45.0 * Deg, 0.0, 45.0 * Deg,
             TestHelpers.EarthAtJ2000, e2, Frames.Frame.ICRF);
-        var observations = Array.ConvertAll(epochs, e => orbit.AtEpoch(e).RelativeTo(site, Aberration.LT).ToEquatorial());
+        var observations = Array.ConvertAll(epochs, e => orbit.AtEpoch(e).RelativeTo(site, Aberration.None).ToEquatorial());
 
         // Act
         var utc = Determine(observations, site, e => e);
