@@ -72,13 +72,34 @@ against the CCSDS NDM/XML 4.0.0 schemas (CCSDS 505.0-B-3) in its form, as SANA p
 (SANA's `ndmxml_unqualified` set) or every element below the root in the namespace `urn:ccsds:schema:ndmxml` (the
 qualified set). Any other root is a `CDM001` error, and so is an `ndm`, without a namespace or in it, that holds no `cdm`
 child (an empty `ndm`, or one of other messages only), which the NDM schema accepts but in which the reader finds no CDM
-(reported valid before 11.0.0). A root in the namespace, the form `CdmWriter` writes
+(reported valid before 11.0.0). A root in the namespace, the form `CdmWriter` wrote before 11.0.0
 ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)), is checked as before, against
-the CDM schema with that root declared in the namespace. Before the third round of
+the CDM schema with that root declared in the namespace, so that those files still validate. Before the third round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) a document in a standard form
 matched no declaration of the validator, so it was reported valid with a warning per element and nothing below its root
 was checked: a `COLLISION_PROBABILITY` of 1.5 was reported valid
 ([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
+
+### Written form
+
+`CdmWriter`, `Cdm.WriteToString`, `Cdm.WriteToFile` and so `EncounterCase.ToCdm(...).WriteTo*` write the qualified form
+of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root, `cdm` or the `ndm` that wraps it (`wrapInNdmContainer`, the default), in no
+namespace with `xmlns:ndm="urn:ccsds:schema:ndmxml"` declared on it, and every element below it in that namespace under
+the prefix `ndm`:
+
+```xml
+<ndm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ndm="urn:ccsds:schema:ndmxml"
+     xsi:noNamespaceSchemaLocation="https://sanaregistry.org/r/ndmxml_qualified/ndmxml-4.0.0-master-4.0.xsd">
+  <ndm:cdm id="CCSDS_CDM_VERS" version="1.0">
+    <ndm:header>
+```
+
+The SANA NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace and which
+`xsi:noNamespaceSchemaLocation` names (4.3.3.4), accepts it. Before 11.0.0 the
+root was in the namespace too (`<ndm xmlns="urn:ccsds:schema:ndmxml">`,
+[#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)), which that master rejects at the
+root ("No matching global declaration available for the validation root"); the reader and `Cdm.ValidateSchema` still
+accept that form. A reader that matches local names reads both.
 
 ## Instance Methods
 

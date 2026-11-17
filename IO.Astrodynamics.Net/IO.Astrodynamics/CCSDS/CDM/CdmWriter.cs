@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -11,10 +12,22 @@ using IO.Astrodynamics.CCSDS.Common.Enums;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
 
+/// <summary>
+/// Writes a <see cref="Cdm"/> as NDM/XML 4.0.0 (CCSDS 508.0-B-1 Cor. 2), in the qualified form of its 4.3.3: the root,
+/// <c>cdm</c> or the <c>ndm</c> that wraps it, in no namespace with <c>xmlns:ndm="urn:ccsds:schema:ndmxml"</c> declared on
+/// it, and every element below it in that namespace under the prefix <c>ndm</c>, which the SANA NDM/XML 4.0.0 qualified
+/// master accepts.
+/// </summary>
+/// <remarks>
+/// Before 11.0.0 the root was in the namespace too (#615), which the SANA master rejects at the root; the reader and
+/// <see cref="CdmValidator"/> still accept that form.
+/// </remarks>
 public sealed class CdmWriter
 {
     private static readonly XNamespace CcsdsNamespace = "urn:ccsds:schema:ndmxml";
     private static readonly XNamespace XsiNamespace = "http://www.w3.org/2001/XMLSchema-instance";
+    // The SANA NDM/XML 4.0.0 qualified master, identical to the embedded ndmxml-4.0.0-master-4.0.xsd (read 2026-11-17)
+    private const string QualifiedSchemaLocation = "https://sanaregistry.org/r/ndmxml_qualified/ndmxml-4.0.0-master-4.0.xsd";
 
     public bool IndentOutput { get; set; } = true;
 
@@ -83,21 +96,32 @@ public sealed class CdmWriter
         return reader.ReadToEnd();
     }
 
+    // The qualified form of CCSDS 508.0-B-1 Cor. 2, 4.3.3 (note 2), that of the SANA NDM/XML 4.0.0 qualified master: the root,
+    // <cdm> or the <ndm> that wraps it, in no namespace (the master has no targetNamespace), xmlns:ndm declared on it, and
+    // every element below it in urn:ccsds:schema:ndmxml under the prefix ndm, the <cdm> of an <ndm> included
+    // (ndmxml-4.0.0-ndm-4.0.xsd, elementFormDefault="qualified"), and xsi:noNamespaceSchemaLocation naming that master
+    // (4.3.3.4), as OpmWriter names the unqualified one. Before #615 the root was in the namespace too, which the master
+    // rejects at the root
     private XDocument CreateDocument(Cdm cdm, bool wrapInNdmContainer)
     {
-        var cdmElement = CreateCdmElement(cdm);
+        var cdmElement = CreateCdmElement(cdm, wrapInNdmContainer ? CcsdsNamespace + "cdm" : XName.Get("cdm"));
         XElement root = wrapInNdmContainer
-            ? new XElement(CcsdsNamespace + "ndm",
-                new XAttribute(XNamespace.Xmlns + "xsi", XsiNamespace),
-                cdmElement)
+            ? new XElement("ndm", cdmElement)
             : cdmElement;
+        var attributes = root.Attributes().ToList();
+        root.RemoveAttributes();
+        root.Add(
+            new XAttribute(XNamespace.Xmlns + "xsi", XsiNamespace),
+            new XAttribute(XNamespace.Xmlns + "ndm", CcsdsNamespace),
+            new XAttribute(XsiNamespace + "noNamespaceSchemaLocation", QualifiedSchemaLocation),
+            attributes);
 
         return new XDocument(new XDeclaration("1.0", "UTF-8", null), root);
     }
 
-    private XElement CreateCdmElement(Cdm cdm)
+    private XElement CreateCdmElement(Cdm cdm, XName name)
     {
-        return new XElement(CcsdsNamespace + "cdm",
+        return new XElement(name,
             new XAttribute("id", Cdm.FormatId),
             new XAttribute("version", Cdm.Version),
             CreateHeaderElement(cdm.Header),

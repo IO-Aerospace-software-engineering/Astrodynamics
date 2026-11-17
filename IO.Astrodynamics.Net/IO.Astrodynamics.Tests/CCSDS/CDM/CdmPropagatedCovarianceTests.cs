@@ -150,7 +150,9 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
             Assert.False(reread.Segments[s].Metadata.IntrackThrust);
         }
 
-        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(xml, "<INTRACK_THRUST>NO</INTRACK_THRUST>").Count);
+        // Counted by element, the written elements in the NDM/XML namespace under the prefix ndm (#615)
+        Assert.Equal(2, System.Xml.Linq.XDocument.Parse(xml).Descendants()
+            .Count(e => e.Name.LocalName == "INTRACK_THRUST" && e.Value == "NO"));
 
         // The rows CDRG and CSRP: the extended covariance of the propagation with the covariance at the TCA, the cross terms
         // rotated to RTN as the state block and scaled by A/m, the variances by (A/m)² (CCSDS 508.0-B-1)
@@ -277,8 +279,8 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
             Assert.Equal(CovarianceSource.Propagated, encounter.SecondaryCovariance.Source);
             Assert.False(cdm.Segments[0].Metadata.SolarRadPressure);
             Assert.False(cdm.Segments[1].Metadata.SolarRadPressure);
-            Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(cdm.WriteToString(),
-                "<SOLAR_RAD_PRESSURE>NO</SOLAR_RAD_PRESSURE>").Count);
+            Assert.Equal(2, System.Xml.Linq.XDocument.Parse(cdm.WriteToString()).Descendants()
+                .Count(e => e.Name.LocalName == "SOLAR_RAD_PRESSURE" && e.Value == "NO"));
         }
         else
         {

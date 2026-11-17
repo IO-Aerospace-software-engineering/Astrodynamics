@@ -3208,6 +3208,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
+- **No CDM the library wrote validated against the SANA schema** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)). `CdmWriter` put the root,
+  `cdm` or the `ndm` that wraps it, in the namespace `urn:ccsds:schema:ndmxml` with every other element, so the SANA
+  NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace (no `targetNamespace`), rejected every
+  CDM written by `CdmWriter`, `Cdm.WriteTo*` and `EncounterCase.ToCdm(...).WriteTo*`, wrapped or not, at the root ("No
+  matching global declaration available for the validation root", lxml 6.1.3 and .NET's validator on the embedded
+  master, measured on a85098d); the library's own check accepted it through a synthetic root in the namespace. The writer
+  now writes the qualified form of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root in no namespace with
+  `xmlns:ndm="urn:ccsds:schema:ndmxml"` and `xsi:noNamespaceSchemaLocation` (SANA's qualified master, identical to the
+  embedded one) declared on it, every element below it, the `cdm` of an `ndm` included, in the namespace under the
+  prefix `ndm` (`CdmTests.WriteTo_RootOutsideTheNamespace_ValidatesAgainstTheSanaQualifiedMaster`:
+  the written text, through `WriteToString` wrapped and bare, `WriteToStream` and `WriteToFile`, validated against the
+  embedded master compiled in the test with no synthetic root, 4 cases red on a85098d). `Cdm.ValidateSchema` checks it
+  as a standard form; a root in the namespace, the form written before, is still read and checked as before
+  (`ReadFromString_RootInTheNamespace_FormWrittenBefore615_IsStillReadAndValidated`).
 
 **Changed**
 
@@ -4471,6 +4485,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
+- **Breaking: the CDM writer puts the root outside the NDM/XML namespace** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615), Fixed above). The text of
+  every written CDM changes: `<ndm xmlns:xsi="..." xmlns:ndm="urn:ccsds:schema:ndmxml" xsi:noNamespaceSchemaLocation="..."><ndm:cdm ...><ndm:header>...`, or
+  `<cdm xmlns:xsi="..." xmlns:ndm="urn:ccsds:schema:ndmxml" xsi:noNamespaceSchemaLocation="..." id="CCSDS_CDM_VERS" version="1.0"><ndm:header>...` with
+  `wrapInNdmContainer: false`, where it was `<ndm xmlns="urn:ccsds:schema:ndmxml"><cdm ...>` and
+  `<cdm ... xmlns="urn:ccsds:schema:ndmxml">`. The values are unchanged and the library reads both forms. Migration: a
+  namespace-aware consumer that looked for the root `{urn:ccsds:schema:ndmxml}ndm` or `{urn:ccsds:schema:ndmxml}cdm`
+  looks for `ndm` or `cdm` in no namespace (the elements below it keep the namespace); one that removed the namespace of
+  the root to validate against the SANA schema no longer needs to.
 
 **Deprecated**
 
@@ -4657,17 +4679,10 @@ not listed.
   ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
   as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
-- **CDM writing and validation** ([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614),
-  [#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615),
-  [#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618)). `CdmWriter` puts the `cdm` and
-  `ndm` roots in the NDM/XML namespace, so the SANA schema rejects every CDM the library writes, which
-  `Cdm.ValidateSchema` accepts in that form (it checks the standard forms since the third round of
-  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), which closes
-  [#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
+- **CDM writing** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618)).
   `CdmExporter` writes `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, which SANA does not register (Foster's method is
   FOSTER-1992). `CdmExporter` refuses an encounter with one covariance, so its `FOSTER-2D-MAX-PC` is never written
-  ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Remove the namespace of the
-  written CDM before exchanging it (the result validates with `Cdm.ValidateSchemaFromXml`), and set
+  ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Set
   `CdmExportOptions.CollisionProbabilityMethod`.
 - **CDM dates and numbers** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616),
   [#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617),

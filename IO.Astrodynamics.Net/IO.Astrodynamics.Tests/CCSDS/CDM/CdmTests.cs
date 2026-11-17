@@ -162,6 +162,147 @@ public class CdmTests
         Assert.True(standaloneValidation.IsValid, FormatValidationIssues(standaloneValidation.Issues));
     }
 
+    // The qualified form of CCSDS 508.0-B-1 Cor. 2, 4.3.3 (note 2): the root, <cdm> or the <ndm> that wraps it, in no
+    // namespace, with xmlns:ndm="urn:ccsds:schema:ndmxml" declared on it, every element below it in that namespace under
+    // the prefix ndm. The reference is the SANA NDM/XML 4.0.0 qualified master as embedded (ndmxml-4.0.0-master-4.0.xsd,
+    // no targetNamespace: its global ndm and cdm in no namespace; the cdm of an ndm qualified, ndmxml-4.0.0-ndm-4.0.xsd),
+    // compiled here from the embedded files with no synthetic root and run by .NET's validator on the written text alone.
+    // Before #615 the writer put the root in the namespace, which that master rejects at the root ("No matching global
+    // declaration available for the validation root", lxml 6.1.3 and .NET alike, measured 2026-11-17 on a85098d)
+    [Theory]
+    [InlineData("string, ndm")]
+    [InlineData("string, cdm")]
+    [InlineData("stream, ndm")]
+    [InlineData("file, cdm")]
+    public void WriteTo_RootOutsideTheNamespace_ValidatesAgainstTheSanaQualifiedMaster(string output)
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 5, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-615"
+        });
+        bool wrapped = output.EndsWith("ndm", StringComparison.Ordinal);
+        string xml;
+        if (output.StartsWith("string", StringComparison.Ordinal))
+        {
+            xml = cdm.WriteToString(wrapped);
+        }
+        else if (output.StartsWith("stream", StringComparison.Ordinal))
+        {
+            using var stream = new MemoryStream();
+            new CdmWriter().WriteToStream(cdm, stream, wrapped);
+            stream.Position = 0;
+            xml = new StreamReader(stream, System.Text.Encoding.UTF8).ReadToEnd();
+        }
+        else
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"cdm_615_{Guid.NewGuid():N}.xml");
+            try
+            {
+                cdm.WriteToFile(path, wrapped);
+                xml = File.ReadAllText(path);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        var document = XDocument.Parse(xml);
+        XNamespace ndm = "urn:ccsds:schema:ndmxml";
+        var root = document.Root!;
+        Assert.Equal(XName.Get(wrapped ? "ndm" : "cdm"), root.Name);
+        Assert.Equal(ndm.NamespaceName, root.Attribute(XNamespace.Xmlns + "ndm")?.Value);
+        Assert.Equal("https://sanaregistry.org/r/ndmxml_qualified/ndmxml-4.0.0-master-4.0.xsd",
+            root.Attribute(XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance") + "noNamespaceSchemaLocation")?.Value);
+        Assert.All(root.Descendants(), e => Assert.Equal(ndm, e.Name.Namespace));
+        Assert.All(root.Descendants(), e => Assert.Equal("ndm", e.GetPrefixOfNamespace(ndm)));
+        if (wrapped)
+        {
+            Assert.Equal(ndm + "cdm", Assert.Single(root.Elements()).Name);
+        }
+
+        Assert.Empty(SanaQualifiedMasterIssues(xml));
+        AssertCdmEquivalent(cdm, Cdm.ReadFromString(xml));
+        var validation = Cdm.ValidateSchemaFromXml(xml);
+        Assert.True(validation.IsValid, FormatValidationIssues(validation.Issues));
+        Assert.Empty(validation.Issues);
+    }
+
+    // The form written before #615, the root in the namespace: still read, and still checked by Cdm.ValidateSchema
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ReadFromString_RootInTheNamespace_FormWrittenBefore615_IsStillReadAndValidated(bool wrapped)
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 5, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-615-OLD"
+        });
+        XNamespace ndm = "urn:ccsds:schema:ndmxml";
+        var document = XDocument.Parse(cdm.WriteToString(wrapped));
+        var root = document.Root!;
+        foreach (var element in root.DescendantsAndSelf())
+        {
+            element.Attributes().Where(a => a.IsNamespaceDeclaration).Remove();
+            element.Name = ndm + element.Name.LocalName;
+        }
+
+        root.SetAttributeValue("xmlns", ndm.NamespaceName);
+        var old = document.ToString();
+        Assert.StartsWith($"<{root.Name.LocalName} ", old);
+        Assert.Equal(ndm, XDocument.Parse(old).Root!.Name.Namespace);
+        Assert.NotEmpty(SanaQualifiedMasterIssues(old));
+
+        AssertCdmEquivalent(cdm, Cdm.ReadFromString(old));
+        var validation = Cdm.ValidateSchemaFromXml(old);
+        Assert.True(validation.IsValid, FormatValidationIssues(validation.Issues));
+    }
+
+    // The errors and warnings of .NET's validator on the document against the embedded SANA NDM/XML 4.0.0 qualified master,
+    // compiled from the embedded schema files, every include resolved to them
+    private static List<string> SanaQualifiedMasterIssues(string xml)
+    {
+        var resolver = new EmbeddedNdmSchemaResolver();
+        var schemas = new System.Xml.Schema.XmlSchemaSet { XmlResolver = resolver };
+        using (var master = IO.Astrodynamics.CCSDS.CcsdsSchemaLoader.GetSchemaStream("ndmxml-4.0.0-master-4.0.xsd"))
+        using (var reader = System.Xml.XmlReader.Create(master,
+                   new System.Xml.XmlReaderSettings { XmlResolver = resolver, DtdProcessing = System.Xml.DtdProcessing.Prohibit },
+                   "file:///ndmxml/ndmxml-4.0.0-master-4.0.xsd"))
+        {
+            schemas.Add(null, reader);
+        }
+
+        schemas.Compile();
+        var issues = new List<string>();
+        var settings = new System.Xml.XmlReaderSettings
+        {
+            ValidationType = System.Xml.ValidationType.Schema,
+            Schemas = schemas,
+            ValidationFlags = System.Xml.Schema.XmlSchemaValidationFlags.ReportValidationWarnings
+        };
+        settings.ValidationEventHandler += (_, args) => issues.Add($"{args.Severity}: {args.Message}");
+        using (var reader = System.Xml.XmlReader.Create(new StringReader(xml), settings))
+        {
+            while (reader.Read())
+            {
+            }
+        }
+
+        return issues;
+    }
+
+    private sealed class EmbeddedNdmSchemaResolver : System.Xml.XmlResolver
+    {
+        public override object GetEntity(Uri absoluteUri, string? role, Type? ofObjectToReturn)
+        {
+            return IO.Astrodynamics.CCSDS.CcsdsSchemaLoader.GetSchemaStream(Path.GetFileName(absoluteUri.LocalPath));
+        }
+    }
+
     public static TheoryData<string, string, string> CdmFormsAndMutations()
     {
         // The mutation and a fragment of the error that names its element. The verdicts are those of the SANA NDM/XML 4.0.0

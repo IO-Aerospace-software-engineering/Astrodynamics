@@ -54,8 +54,9 @@ public sealed class CdmValidator
     /// qualified set otherwise (the elements below the root in the namespace); any other root without a namespace, or in
     /// another namespace, is a CDM001 error, and so is an <c>ndm</c>, without a namespace or in it, that holds no <c>cdm</c>
     /// child (empty, or of other messages only), which the NDM schema accepts but in which the reader finds no CDM (valid
-    /// before the fix of the third round of #668). A root in the NDM/XML namespace, the form <see cref="CdmWriter"/> writes
-    /// (#615), is otherwise validated as before, against the CDM schema with that root declared in the namespace. Before the third
+    /// before the fix of the third round of #668). A root in the NDM/XML namespace, the form <see cref="CdmWriter"/> wrote before 11.0.0
+    /// (#615), which the SANA master rejects, is otherwise validated as before, against the CDM schema with that root declared
+    /// in the namespace, so that the files written then still validate. Before the third
     /// round of #668 a standard form matched no declaration and was reported valid, with a warning per element and nothing
     /// below its root checked (#614).
     /// </remarks>
@@ -89,7 +90,8 @@ public sealed class CdmValidator
 
             if (root.Name.NamespaceName == CcsdsNamespace)
             {
-                // A root in the namespace, the form CdmWriter writes (#615): the synthetic root, as before
+                // A root in the namespace, the form CdmWriter wrote before 11.0.0 (#615): the synthetic root, as before, so
+                // that those files still validate
                 schemaSet = CreateSchemaSet(root.Name.LocalName);
             }
             else
