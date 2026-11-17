@@ -392,13 +392,14 @@ public class TlePropagationTests
     [InlineData("Builder")]
     public void PropagatedTleSpacecraft_ReadsItsStates(string path)
     {
-        // Arrange: a TLE spacecraft propagated on its point-mass Earth, 1 h; the builder leaves IsPropagated false
+        // Arrange: a TLE spacecraft propagated on its point-mass Earth, 1 h; IsPropagated on every path, the builder
+        // included (#583: it left it false before 11.0.0)
         var tle = NewTle();
         var window = OneHour(tle);
         int id = path switch { "VVIntegrator" => -7001, "RK78Integrator" => -7011, _ => -7021 };
         var spacecraft = NewSpacecraft(id, tle);
         Run(path, spacecraft, window, Array.Empty<CelestialItem>(), false);
-        Assert.Equal(path != "Builder", spacecraft.IsPropagated);
+        Assert.True(spacecraft.IsPropagated);
         var earth = (CelestialItem)tle.Observer;
 
         // Act, assert: its reads are its stored states, 50 km and more from SGP4 at the end (53.7 km measured): the geometric

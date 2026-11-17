@@ -3428,6 +3428,72 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ToStateVector(t)` now say "e = NaN") (`ElementsValidationTests.Issue476_ATrueAnomalyWithoutAConicBranch_NamesTheEccentricity`
   and `Issue476_AStateOfNaNEccentricity_NamesItsEccentricity`, red on a85098d, the latter added by the review, which
   measured that `Issue476_ANonFiniteState_ThrowsWhereItNeedsAConic` asserts the exception type only and holds there too).
+- **A spacecraft propagated again through `CentralBodyPropagatorBuilder` or a `CentralBodyPropagator` built directly
+  was not re-armed** ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583)). Only
+  `Spacecraft.Propagate` reset the spacecraft (the private `ResetPropagation`), so a second run through the builder or a
+  propagator built directly fired no burn, started with the fuel the first run left, kept its `ExecutedManeuvers` (and
+  so `ToOpm` and the summary) and added to its attitude record: 1.465e7 m and 1.425e4 m/s from a fresh spacecraft at the
+  end of a 6 h run of two apogee raises (RK7(8) and Velocity-Verlet alike, with and without the covariance). The reset is
+  now internal and called by `PropagatorBase.Propagate` once its checks pass, on every path (decided by S. Guillet,
+  2026-11-17): a spacecraft propagated again, by any path or a mix of them, is bit for bit a spacecraft never
+  propagated, burns, state, fuel, `ExecutedManeuvers`, `ToOpm`, summary, attitudes and P alike
+  (`RepropagationTests.PropagatorPaths_IdenticalRun_IsAFreshSpacecrafts`, `PropagatorPaths_MixedRuns_AreAFreshSpacecrafts`,
+  and the builder and direct rows of `AnotherState_FiresAsAFreshSpacecraft` and
+  `Covariance_AnotherState_FiresAsAFreshSpacecraft`, red on a85098d, the fresh spacecraft checked against the Keplerian
+  closed form), and a propagator built and never run, or rejected by `Build` or its constructor, leaves the previous
+  propagation as it was (`PropagatorPaths_NoRun_LeavesTheFirstAsItWas`). The chain `Propagate` checks before the reset
+  is the one from `InitialManeuver`, the head it runs.
+- **A second `Spacecraft.SetStandbyManeuver` before a propagation was ignored**
+  ([#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584)). The public call shared the
+  bookkeeping of the chain's advance inside a propagation: it set `InitialManeuver` only when no maneuver was in standby
+  and added the maneuver in standby to `ExecutedManeuvers`. So `SetStandbyManeuver(m1)` then `SetStandbyManeuver(m2)`,
+  or a new head after a run whose chain did not finish, fired m1 and dropped m2 without an error,
+  `SetStandbyManeuver(null)` could not cancel m1, and `ExecutedManeuvers` listed m1 before anything ran. The call now
+  sets the head of the chain (see **Changed**); `SetStandbyManeuver_ASecondCall_SetsTheHead` (`RepropagationTests`, the
+  second head m2, the head of a chain of two, null, after an unfinished run, both integrators, red on a85098d; after a
+  finished run the control) is bit for bit a fresh spacecraft given the last call alone.
+- **Two impulses less than 2 µs apart: a read at the first returned the state before both**
+  ([#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579)). The stored states drop the
+  arc between two impulses within 2 µs, one epoch, but the arc after them opened at the second: `GetEphemeris` and
+  `GetGeometricStateRelativeTo` at the first impulse returned the state before both, extrapolated it up to the second,
+  and an SPK read between them threw SPKINSUFFDATA (a 1e-5 m/s trim then 50 m/s 1 µs later, RK7(8): 50 m/s off at the
+  first impulse). Impulses each within 2 µs of the one before are now one epoch (decided by S. Guillet, 2026-11-17): the
+  arc after them opens at the first with the state after them all, its position and its velocity after it plus the jump
+  of each later one, so that the reads and the SPK from the first impulse on give the state after them all, as for
+  impulses at one event, whose stored states are unchanged. Against the solution after the first impulse plus the
+  second ΔV, carried by the two-body Taylor of the second order, at the first impulse, between and at the second:
+  1.9e-9 m and 2.0e-12 m/s managed, the SPK within `SpkAgainstManaged` of them
+  (`PropagatedArcsEdgeTests.TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth`, 1 and 1.5 µs apart, red on
+  a85098d; 3 µs apart, two arcs, the control; `PropagatedEphemerisTests.ImpulsesWithin2Microseconds_AreOneEpoch`, 0.1 to
+  2 µs, red on a85098d, 2.1 and 3 µs the control).
+- **A propagated spacecraft was read outside its propagated states without an error**
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)).
+  `Spacecraft.GetGeometricStateRelativeTo` and the short-circuit of `GetEphemeris` extrapolated the 8-point polynomial of
+  the stored states at any epoch (567 km off 6 min before the first state, 8 282 km 6 min after the last on a LEO), and
+  every read through them did the same: `GetEphemeris` from any body, the managed distance and coordinate searches, the
+  attitude targets. They now throw (see **Changed**); the epoch a light-time correction reads may lie up to its light
+  time outside the states, against the same correction written in the test on the two-body motion of the end state
+  3.3e-5 m in RK7(8) and 2.2e-3 m in Velocity-Verlet 1.3 s outside them (`PropagatedStatesSpanTests`; the reads one tick
+  and 6 min outside the states red on a85098d, both integrators, from ICRF and ECLIPJ2000). The light time of the
+  managed field-of-view and occultation searches (their shared reader) reads a spacecraft target as `GetEphemeris`
+  does: 2.8e-5 m from the same correction 0.67 ms outside the states, LT, CN, XLT and XCN, both integrators, and the
+  searches over the whole span of a target's states return as many windows with each correction as the geometric
+  search (`PropagatedStatesSpanTests.ApparentPositionReader_AtTheEnds_IsAllowedWithinTheLightTime`,
+  `ManagedSearches_OverTheWholeSpan_ReadTheTargetWithinTheLightTime`; before, they threw at the first corrected read). A TLE spacecraft sampled by
+  `TLEPropagator` read from the Earth outside its samples extrapolated them (20.7 m 6 min before the first, 6.3 m 6 min
+  after the last on the ISS): it reads SGP4 there, as from any other body (0 m against SGP4, red on a85098d).
+- **`Spacecraft.ToOpm` wrote the motion of the initial orbit with the mass and the maneuvers after the propagation**
+  ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). Its state was
+  `InitialOrbitalParameters.ToStateVector(epoch)`, the two-body (or SGP4) motion, whatever the propagation, while its
+  `MASS` was the mass after every burn and its maneuvers every executed impulse: one burn later 1 212 km and 1 137 m/s off
+  the propagated state on the issue's case, and at the default epoch a state before the burn with the mass after it. The
+  OPM of a spacecraft that holds propagated states now carries the state, the mass and the maneuvers of its epoch (see
+  **Changed**): the state is `GetEphemeris`'s at the epoch, within 5.3e-9 m of the RK7(8) solution, the mass
+  Tsiolkovsky's after the burn from its ignition on and the full mass before, the maneuvers the burn from its ignition
+  on and none before (`SpacecraftToOpmTests`, both integrators, from ICRF and ECLIPJ2000, the default epoch, before the
+  burn, a tick before its ignition, at it, 1 s after it, at the impulse and after; red on b4f5dbb, and at the ignition
+  and 1 s after it while the branch counted the burn from its impulse); a TLE spacecraft propagated numerically writes its propagated state in TEME, 53.7 km from SGP4
+  after 1 h, one only sampled by `TLEPropagator` SGP4 as before.
 
 **Changed**
 
@@ -3979,7 +4045,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     radius exceeds π/2 − 1e-6, a non-circular instrument of another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
     states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
     target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the
-    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, extrapolated.
+    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, which its
+    propagated states allow (#527, Fixed above).
 
   A search on a propagated spacecraft takes 0.1 to 1 s (0.1 to 0.7 s before). The occultation searches share the
   light time and the root finder, bit for bit. No other public signature changes; `Instrument.PositionInFOV` is
@@ -4944,6 +5011,46 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   provisional threshold twice the Linux worst), red on a85098d. Migration: propagate a TLE with `TLEPropagator` or
   start from `TLE.ToOsculating()` (or the TLE itself, whose SGP4 state starts the propagation); build osculating
   elements for a numerical propagation.
+- **Breaking: `Spacecraft.SetStandbyManeuver` sets the head of the maneuver chain**
+  ([#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584), decided by S. Guillet,
+  2026-11-17). `InitialManeuver` and `StandbyManeuver` both become the given maneuver, whatever was set before or left by
+  a propagation, null clears the chain, and nothing is added to `ExecutedManeuvers`, which lists the maneuvers of the
+  last propagation. The advance of the chain inside a propagation keeps its bookkeeping in the internal
+  `ChainStandbyManeuver`. Migration: a caller that called `SetStandbyManeuver` several times to build a chain links it
+  with `SetNextManeuver` and sets its head once; one that read `ExecutedManeuvers` between the call and the propagation
+  no longer finds the previous head there.
+- **Breaking: every numerical propagation re-arms the spacecraft and makes it `IsPropagated`**
+  ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583), decided by S. Guillet,
+  2026-11-17). `PropagatorBase.Propagate` resets the spacecraft once its checks pass (the tanks refuelled,
+  `ExecutedManeuvers`, the stored states, the attitude record and the gates cleared, the chain put back in standby from
+  `InitialManeuver`), and `IsPropagated` is true after a run through `CentralBodyPropagatorBuilder` or a
+  `CentralBodyPropagator` built directly, as after `Spacecraft.Propagate` (false before). A propagator built and not run
+  changes nothing. Migration: a caller that propagated one spacecraft several times through the builder to continue a
+  chain (the second run started from the fuel and the standby maneuver the first left) propagates once over the whole
+  window, or sets the next head with `SetStandbyManeuver` and the state with `SetInitialOrbitalParameters`.
+- **Breaking: a propagated spacecraft is read within its propagated states**
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+  2026-11-17). `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and every read through them (the managed
+  geometry and field-of-view searches, `IsInFOV`, the attitude targets) throw `InvalidOperationException`, as a
+  read past the coverage of SPICE, at an epoch before the first stored state or after the last, the epoch a light-time
+  correction reads allowed up to its light time outside them. The window checks of the conjunction overloads and of the
+  field-of-view search (`ArgumentException`, #622) are unchanged. Migration: read a propagated spacecraft within its
+  propagation window, or propagate it over the epochs read. The stored states run from the first output to the last,
+  round(L/ΔT)·ΔT after the start for a window of length L at outputs ΔT: when ΔT does not divide L, up to ΔT/2 before or
+  after the end of the window, so a read at the end of such a window throws when the last output falls before it (a
+  3 610 s window at 60 s outputs stores its states to 3 600 s); read the solution there, or choose an output step that
+  divides the window.
+- **Breaking: `Spacecraft.ToOpm` writes the propagated state, mass and maneuvers of its epoch**
+  ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided by S. Guillet,
+  2026-11-17). A spacecraft that holds propagated states writes `GetEphemeris(epoch, observer, frame, Aberration.None)`
+  with the observer and the frame of its initial orbital parameters, with the mass and the impulses ignited by then
+  (its mass after the propagation plus the fuel of the impulses ignited after the epoch, and only the impulses ignited
+  by the epoch), an impulse counting from the start of its thrust window, the `MAN_EPOCH_IGNITION` written (between the
+  ignition and the event, about two thirds of the burn, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
+  started later, throws `InvalidOperationException` (#527). A spacecraft without propagated states writes the motion of
+  its initial orbit as before. Migration: pass the epoch of the instant to export, the end of the propagation for the
+  state after every maneuver (the default epoch, the initial one, now carries no maneuver of a propagation that starts
+  there); a caller that wanted the initial orbit writes `Opm.CreateFromStateVector` from `InitialOrbitalParameters`.
 
 **Deprecated**
 
@@ -5058,29 +5165,16 @@ not listed.
   `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as
   `SpiceDataProvider` for an identifier SPICE does not name
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680); `KeyNotFoundException` before).
-- **Reads past the stored states of a propagated spacecraft**
-  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)).
-  `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and the managed distance and coordinate searches extrapolate
-  the 8-point polynomial past the stored states without an error (567 km off 6 min before the first state, 8 282 km 6
-  min after the last). A propagation whose output step does not divide its window runs up to half a step past its end
-  (its caches cover that span since #626), so a geopotential or drag read there past the coverage of the orientation
-  data throws. Keep reads inside the propagated window.
+- **Reads past the end of a propagation window**
+  ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)). A propagation whose output
+  step does not divide its window runs up to half a step past its end (its caches cover that span since #626), so a
+  geopotential or drag read there past the coverage of the orientation data throws. Choose an output step that divides
+  the window.
 - **Impulses at the edges of the stored states**
-  ([#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579),
-  [#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). An impulse at the end of the propagation opens a last arc of one state, the state after it ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)),
+  ([#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). An impulse at the end of the propagation opens a last arc of one state, the state after it ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)),
   which an SPK segment cannot hold: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the
-  impulse at that last epoch where `GetEphemeris` reads the state after it. Two impulses less than 2 µs apart store no
-  arc between them: a read at the first returns the state before both, and an SPK read between them throws
-  SPKINSUFFDATA. The state that closes an arc carries its impulse's tick, up to half a tick from its instant (about 0.4
-  mm at 8.6 km/s).
-- **State kept by the maneuver chain**
-  ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583),
-  [#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584)). A spacecraft propagated a
-  second time through `CentralBodyPropagatorBuilder.Build().Propagate()` or a `CentralBodyPropagator` built directly is
-  not reset: the second run fires no burn and starts with the fuel the first left. A second
-  `Spacecraft.SetStandbyManeuver` before a propagation does not replace the first, which fires while the new one is
-  dropped silently. Use `Spacecraft.Propagate` or a fresh spacecraft, and set the standby maneuver once (a maneuver on
-  another spacecraft's tank is rejected since #676).
+  impulse at that last epoch where `GetEphemeris` reads the state after it. The state that closes an arc carries its
+  impulse's tick, up to half a tick from its instant (about 0.4 mm at 8.6 km/s).
 - **A null target orbit** ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). The
   target-orbit constructors of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` throw `NullReferenceException` for a
   null `targetOrbit`, not an `ArgumentNullException` that names it.
@@ -5091,11 +5185,8 @@ not listed.
   (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)), but a
   subnormal component (below about 2.2e-308) rounds by an absolute 4.9e-324: v = (1, 2, 3)·1e-320 and fl(0.7 v) have a
   sine of 1.1e-4 and pass a separation below that, with a roll set by rounding; give body vectors of a normal magnitude.
-- **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339),
-  [#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). `Spacecraft.ToOpm` writes the
-  two-body (or SGP4) motion of the initial orbit, not the propagated state, with the mass and the maneuvers after the
-  propagation (1 212 km and 1 137 m/s off one burn later): for a propagated state, write `Opm.CreateFromStateVector`
-  from `GetEphemeris` at the epoch. `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
+- **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)).
+  `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
   which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
   and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
 - **TLEs** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598),

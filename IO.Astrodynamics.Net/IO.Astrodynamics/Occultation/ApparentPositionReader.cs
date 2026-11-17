@@ -102,7 +102,7 @@ internal sealed class ApparentPositionReader
                 // one by their velocity: a 50 ns error would move the Earth by 1.5 mm, and a grazing contact by 1 µs
                 double shift = _lightTimeSign * lightTime;
                 var corrected = Shift(epoch, shift, out double residual);
-                var target = item.GetGeometricStateRelativeTo(corrected, Reference);
+                var target = StateAtCorrectedEpoch(item, corrected, Reference, shift);
                 position = target.Position + target.Velocity * residual - observerPosition;
                 if (Reference.NaifId != 0)
                 {
@@ -137,6 +137,19 @@ internal sealed class ApparentPositionReader
         }
 
         return position;
+    }
+
+    /// <summary>
+    /// The geometric state of <paramref name="target"/> relative to <paramref name="reference"/> at the light-time
+    /// corrected epoch: a propagated spacecraft is read up to the light time <paramref name="shift"/> outside its
+    /// propagated states, the observation epoch being within them (#527, decided by S. Guillet, 2026-11-17); any other
+    /// target as at any epoch. Shared by the corrections of <see cref="CelestialItem.GetEphemeris"/> and of this reader.
+    /// </summary>
+    internal static StateVector StateAtCorrectedEpoch(ILocalizable target, in Time corrected, CelestialItem reference, double shift)
+    {
+        return target is Body.Spacecraft.Spacecraft spacecraft
+            ? spacecraft.GetGeometricStateRelativeTo(corrected, reference, System.Math.Abs(shift))
+            : target.GetGeometricStateRelativeTo(corrected, reference);
     }
 
     /// <summary>

@@ -112,7 +112,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddFuelTank(FuelTank)` | Add fuel tank; a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
-| `SetStandbyManeuver(Maneuver, Time?)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
+| `SetStandbyManeuver(Maneuver, Time?)` | Set the head of the maneuver chain, the maneuver the next propagation starts from: a second call replaces the first, null clears the chain, and nothing is added to `ExecutedManeuvers` (#584; before 11.0.0 a second call before a propagation was ignored); a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
@@ -122,10 +122,15 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
-Each `Propagate` (and `PropagateAsync`, `Scenario.SimulateAsync` and `BatchPropagator`, which go through it) starts the
-maneuver chain again from its head: it refuels the tanks, clears `ExecutedManeuvers`, the windows of the maneuvers and the
-gates of the previous propagation (#573). The inputs of a propagation are checked when its propagator is built, before
-anything is reset: a propagation rejected there leaves the previous one as it was. A spacecraft propagated again fires
+Each propagation, by every path (`Propagate`, `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
+`CentralBodyPropagatorBuilder` and a `CentralBodyPropagator` built directly), starts the maneuver chain again from its
+head, the maneuver `SetStandbyManeuver` set: it refuels the tanks, clears `ExecutedManeuvers`, the stored states, the
+attitude record, the windows of the maneuvers and the gates of the previous propagation (#573), and the spacecraft is
+then `IsPropagated`. The reset belongs to `PropagatorBase.Propagate`, once its checks pass (#583, decided by S. Guillet,
+2026-11-17: before 11.0.0 only `Spacecraft.Propagate` reset the spacecraft, so a second run through the builder or a
+propagator built directly fired no burn and started with the fuel left by the first). The inputs of a propagation are
+checked when its propagator is built, and its chain again when it runs, before anything is reset: a propagation
+rejected there, or a propagator built and never run, leaves the previous one as it was. A spacecraft propagated again fires
 its chain as a spacecraft never propagated. Among those inputs, each maneuver of the chain draws on a tank of the
 spacecraft: its engine's fuel tank is one of the spacecraft's tank instances, held by it; otherwise the propagation
 throws `InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft (#676, #586; before, an
@@ -169,7 +174,12 @@ across the jump:
   or more (the states then 1 µs apart, distinct epochs of the SPK; shorter, its interpolation is linear within 3e-10 m).
   Without an impulse the states make one arc, never filled, as before 11.0.0.
 - **An arc of zero length** is not stored: two impulses at one event; nor an arc between impulses within 2 µs, one
-  epoch. An impulse at the end of the propagation (Velocity-Verlet locates a crossing of its last step at its end, RK7(8)
+  epoch: the arc after them opens at the first with the state after them all, the position of the first and its
+  velocity after it plus the jump of each later one, so that the reads and the SPK from the first impulse on give the
+  state after them all, as at one event (#579, decided by S. Guillet, 2026-11-17; before 11.0.0 the arc after them
+  opened at the last, a read at the first returned the state before them all, 50 m/s off for a 50 m/s burn 1 µs after
+  a trim, and an SPK read between them threw SPKINSUFFDATA).
+  An impulse at the end of the propagation (Velocity-Verlet locates a crossing of its last step at its end, RK7(8)
   a root at the end of the window) is carried by a last segment of zero length (#575): it opens a last arc of one state,
   the state after it, so the reads at the end give the state after it, as the solution does. An SPK segment needs two
   epochs: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the impulse at that last epoch.
@@ -177,7 +187,15 @@ across the jump:
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
   so that at an impulse it gives the state after it, as `PropagationSolution.InterpolateAt`, SPICE (the later segment of
   an SPK) and GMAT's ephemeris give it. It interpolates the 8 states of that arc nearest to its epoch (Lagrange), in the
-  order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. The arcs
+  order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. A read
+  stays within the stored states: an epoch before the first or after the last throws `InvalidOperationException`, as a
+  read past the coverage of SPICE, where the 8-point polynomial was extrapolated without an error before 11.0.0 (567 km
+  off 6 min before the first state, 8 282 km 6 min after the last in LEO;
+  [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+  2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light time, may lie up to
+  that light time outside them, the observation epoch itself within them; so the managed geometry searches over a window
+  that leaves the states throw too. A TLE spacecraft sampled by `TLEPropagator` reads SGP4 outside its samples, from the
+  Earth as from any other body (its short-circuit extrapolated them before). The arcs
   are immutable arrays read by a binary search: a read takes no lock and sorts nothing, 0.001 to 0.003 ms at 7 000 to
   9 000 states, where the sort of every state at each call took 1.6 to 2.2 ms
   ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522); 2 000 reads in one process,
@@ -190,7 +208,7 @@ across the jump:
   `Spacecraft.Propagate` or `Scenario.SimulateAsync` replaces every stored state, those added before it included: before
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
 - **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, the builder and
-  a `CentralBodyPropagator` built directly included (which leave `IsPropagated` false), and SGP4 otherwise: unpropagated,
+  a `CentralBodyPropagator` built directly included (which make it `IsPropagated` since #583, false before), and SGP4 otherwise: unpropagated,
   or sampled by `TLEPropagator`, whose `AddPropagatedStates` does not change the rule (#675; before 11.0.0 it read SGP4
   whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
   `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
@@ -549,7 +567,9 @@ search for a `+S` correction.
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
-milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when the instrument's spacecraft
+milliseconds about the Earth, which its propagated states allow, as for `GetEphemeris`:
+[#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+2026-11-17), and `InvalidOperationException` when the instrument's spacecraft
 has no attitude, when the observer is inside the ellipsoid of the target, or when the half-angles of a circle or an
 ellipse are too small for its cone at the target's distance ([Tiny half-angles](#field-of-view-search)). A managed spacecraft has no attitude while
 its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by

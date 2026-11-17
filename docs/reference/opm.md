@@ -168,9 +168,27 @@ Before 11.0.0 the observer was the Earth whatever `CENTER_NAME` said.
 ## Spacecraft Export
 
 `Spacecraft.ToOpm(originator, epoch, includeKeplerianElements, includeSpacecraftParameters, includeManeuvers)` exports to OPM
-format the state of the spacecraft's initial orbital parameters at `epoch`, their epoch by default:
-`InitialOrbitalParameters.ToStateVector(epoch)`, the two-body motion of osculating elements (SGP4 for a TLE), not the
-states of a propagation. Every argument is optional, so name the ones you pass (`epoch: epoch`). The state is written in
+format the spacecraft at `epoch`, the epoch of its initial orbital parameters by default: its state, its mass and its
+maneuvers at that instant ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided
+by S. Guillet, 2026-11-17).
+
+- A spacecraft that holds propagated states (after `Propagate`, `Scenario.SimulateAsync`, the builder, a
+  `CentralBodyPropagator` built directly, or `AddPropagatedStates`) writes the state read from them,
+  `GetEphemeris(epoch, observer, frame, Aberration.None)` with the observer and the frame of its initial orbital
+  parameters (TEME for a TLE), with the mass and the impulses ignited by then: its mass after the propagation plus the
+  fuel of the impulses ignited after the epoch, and the impulses ignited by the epoch. An impulse counts from its
+  ignition, the start of its thrust window, the `MAN_EPOCH_IGNITION` written. The propagated state receives its ΔV at
+  its event, about two thirds of the burn later (`ImpulseManeuver`): at an epoch between the two (3.4 s for a 5.2 s
+  burn) the state written is the state before the impulse, with the burn listed and its fuel spent; from the event on,
+  the state after it. An epoch outside the propagated states throws `InvalidOperationException`, as every read there
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)); so does the default epoch
+  when the propagation started later.
+- A spacecraft without propagated states (never propagated, or a TLE spacecraft only sampled by `TLEPropagator`) writes
+  `InitialOrbitalParameters.ToStateVector(epoch)`, the two-body motion of osculating elements (SGP4 for a TLE), with its
+  mass now and the maneuvers its chain executed, none when it never ran, as before 11.0.0.
+
+Before 11.0.0 a propagated spacecraft wrote the motion of its initial orbit with the mass and every maneuver after the
+propagation: 1 212 km and 1 137 m/s off the propagated state one burn later. Every argument is optional, so name the ones you pass (`epoch: epoch`). The state is written in
 the frame of the spacecraft's initial orbital parameters, which the export does not change: there is no frame argument. The spacecraft needs a `CosparId` (`InvalidOperationException` otherwise).
 The Keplerian elements are those of `OpmKeplerianElements.FromKeplerianElements` with the true anomaly, each angle
 written as its value in [0, 360), inside the schema's [-360, 360). `FromKeplerianElements` writes 0 for an angle of

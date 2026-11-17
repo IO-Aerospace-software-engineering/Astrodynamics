@@ -135,7 +135,11 @@ public class CentralBodyPropagatorBuilder
     /// barycenter) takes part in the forces whether or not it was given to <see cref="WithPerturbingBody"/>, with the
     /// models of the observer: atmospheric drag applies with its atmosphere and solar radiation pressure with its shadow.
     /// A body of its NAIF identifier given to <see cref="WithPerturbingBody"/> is accepted when its models are those of
-    /// the observer (#674). The forces are added to the integrator of the builder, so a builder builds once.
+    /// the observer (#674). The forces are added to the integrator of the builder, so a builder builds once. Building
+    /// changes nothing on the spacecraft: <see cref="PropagatorBase.Propagate"/> re-arms it once its checks pass (the
+    /// tanks refuelled, <see cref="Spacecraft.ExecutedManeuvers"/>, the stored states and the attitude record cleared, the
+    /// chain started again from its head), so a spacecraft propagated again through a new builder fires its chain as a
+    /// spacecraft never propagated (#583; before 11.0.0 the second run fired no burn).
     /// </remarks>
     /// <exception cref="NotSupportedException">The covariance propagation is asked for with another integrator than
     /// <see cref="RK78Integrator"/>.</exception>

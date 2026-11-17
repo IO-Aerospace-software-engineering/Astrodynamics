@@ -325,10 +325,10 @@ var newOpm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
 
 **Maneuver Integration**
 ```csharp
-// spacecraft: a propagated spacecraft with a COSPAR id
-// Executed maneuvers are automatically included in ToOpm()
-var opm = spacecraft.ToOpm(includeManeuvers: true);
-// OPM will contain OpmManeuverParameters for each executed ImpulseManeuver
+// spacecraft: a propagated spacecraft with a COSPAR id; end: an epoch of its propagation after its burns
+// The OPM carries the state of its epoch, with the mass and the maneuvers ignited by then (#658)
+var opm = spacecraft.ToOpm(epoch: end, includeManeuvers: true);
+// OPM will contain OpmManeuverParameters for each ImpulseManeuver ignited by then
 
 // Manual maneuver export from ImpulseManeuver
 foreach (var maneuver in spacecraft.ExecutedManeuvers)
@@ -598,7 +598,7 @@ Industry-standard g-function zero-crossing approach for maneuver triggering and 
 
 **Key Types**
 - `IEventDetector`: `Evaluate(state)` → scalar, `Direction` → `CrossingDirection`, `HandleEvent()` → `EventResult`
-- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`; `HandleEvent` executes the impulse only and returns no next detector, the propagation advancing the chain (#539); its `MinimumEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); the public `Evaluate` keeps its +1 before the gate for external callers; internally, `EvaluateOpen` calls `ImpulseManeuver.ComputeEventValueAtSearchStart` (internal virtual, `ComputeEventValue` by default), which only `PlaneAlignmentManeuver` overrides: from the state at a minimum epoch inside a step it takes the node it moves toward, never one just passed, and so at a segment base whose gate is open there (#581; the detector of an event just handled starts from its g-value past that root); a g exactly zero at a step end after a non-zero one is a crossing there, a gated g exactly zero at the base with its gate at or before the base a crossing there when the first step end has the target sign (#580), and `IIntegrator.IntegrateSegment` reports the earliest crossing of a step, ties in list order (#578); the gate of a chained maneuver belongs to one propagation (#573): `Spacecraft.ChainStandbyManeuver` raises `Maneuver.PropagationGate`, cleared by `Maneuver.Reset` at each `Spacecraft.Propagate`; `SetStandbyManeuver(maneuver, minimumEpoch)` raises the given value, which lasts; `MinimumEpoch` is the later of the two
+- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`; `HandleEvent` executes the impulse only and returns no next detector, the propagation advancing the chain (#539); its `MinimumEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); the public `Evaluate` keeps its +1 before the gate for external callers; internally, `EvaluateOpen` calls `ImpulseManeuver.ComputeEventValueAtSearchStart` (internal virtual, `ComputeEventValue` by default), which only `PlaneAlignmentManeuver` overrides: from the state at a minimum epoch inside a step it takes the node it moves toward, never one just passed, and so at a segment base whose gate is open there (#581; the detector of an event just handled starts from its g-value past that root); a g exactly zero at a step end after a non-zero one is a crossing there, a gated g exactly zero at the base with its gate at or before the base a crossing there when the first step end has the target sign (#580), and `IIntegrator.IntegrateSegment` reports the earliest crossing of a step, ties in list order (#578); the gate of a chained maneuver belongs to one propagation (#573): `Spacecraft.ChainStandbyManeuver` raises `Maneuver.PropagationGate`, cleared by `Maneuver.Reset` at each propagation, on every path (`PropagatorBase.Propagate` re-arms the spacecraft once its checks pass, #583); `SetStandbyManeuver(maneuver, minimumEpoch)` sets the head of the chain, nothing added to `ExecutedManeuvers` (#584), and raises the given value, which lasts; `MinimumEpoch` is the later of the two
 - `CrossingDirection` enum: `NegativeToPositive`, `PositiveToNegative`, `Any`
 - `EventResult`: Modified state, orientation, action (`StopAndRestart` or `Continue`), next detector
 

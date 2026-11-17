@@ -656,7 +656,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         {
             // The light time to the centre: the method of the correction, without its stellar aberration
             var centerRead = FrameCenterRead(frame, center.Value, referenceBody);
-            var centerCB = centerRead(corrected.Epoch);
+            var centerCB = centerRead(corrected.Epoch, 0.0);
             var centerRelative = new StateVector(centerCB.Position - observerCB.Position, centerCB.Velocity - observerCB.Velocity,
                 observer, corrected.Epoch, Frame.ICRF);
             CorrectFromAberrationCB(centerRead, corrected.Epoch, observer, LightTimeOnly(aberration), centerRelative, observerCB,
@@ -738,7 +738,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// positive identifier; any other object, a spacecraft whose frame is given by name, read from SPICE by its identifier,
     /// which throws <see cref="InvalidOperationException"/> where SPICE has no state of it, as <c>spkezr_c</c> does.
     /// </summary>
-    private static Func<Time, StateVector> FrameCenterRead(Frame frame, int centerId, CelestialItem referenceBody)
+    private static Func<Time, double, StateVector> FrameCenterRead(Frame frame, int centerId, CelestialItem referenceBody)
     {
         ILocalizable center = centerId == referenceBody.NaifId
             ? referenceBody
@@ -752,10 +752,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             };
         if (center != null)
         {
-            return t => center.GetGeometricStateRelativeTo(t, referenceBody);
+            return (t, shift) => ApparentPositionReader.StateAtCorrectedEpoch(center, t, referenceBody, shift);
         }
 
-        return t =>
+        return (t, _) =>
         {
             var fromSsb = SpiceAPI.Instance.ReadEphemeris(t, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, centerId, Frame.ICRF, Aberration.None).ToStateVector();
             if (referenceBody.NaifId == Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId)
@@ -869,17 +869,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     internal static StateVector CorrectFromAberrationCB(
         ILocalizable target, Time epoch, ILocalizable observer, Aberration aberration,
         StateVector relativeState, StateVector observerCB, CelestialItem referenceBody, out double lightTimeOut, out double lightTimeRateOut) =>
-        CorrectFromAberrationCB(t => target.GetGeometricStateRelativeTo(t, referenceBody), epoch, observer, aberration, relativeState, observerCB,
+        CorrectFromAberrationCB((t, shift) => ApparentPositionReader.StateAtCorrectedEpoch(target, t, referenceBody, shift), epoch, observer, aberration, relativeState, observerCB,
             referenceBody, out lightTimeOut, out lightTimeRateOut);
 
     /// <summary>
     /// <see cref="CorrectFromAberrationCB(ILocalizable, Time, ILocalizable, Aberration, StateVector, StateVector, CelestialItem, out double, out double)"/>
     /// with the target given by its geometric state relative to <paramref name="referenceBody"/> in ICRF at any epoch,
-    /// <paramref name="targetRelativeToReference"/>: the centre of a frame that no object of the library holds is read by
+    /// <paramref name="targetRelativeToReference"/> (given the corrected epoch and the light-time shift that reached it, #527): the centre of a frame that no object of the library holds is read by
     /// its NAIF identifier (<see cref="FrameCenterRead"/>).
     /// </summary>
     private static StateVector CorrectFromAberrationCB(
-        Func<Time, StateVector> targetRelativeToReference, Time epoch, ILocalizable observer, Aberration aberration,
+        Func<Time, double, StateVector> targetRelativeToReference, Time epoch, ILocalizable observer, Aberration aberration,
         StateVector relativeState, StateVector observerCB, CelestialItem referenceBody, out double lightTimeOut, out double lightTimeRateOut)
     {
         (int iterations, double sign) = LightTimeIterations(aberration);
@@ -906,7 +906,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             double shift = sign * lightTime;
             var corrected = ApparentPositionReader.Shift(epoch, shift);
             double residual = (epochSeconds + shift) - corrected.ToTDB().TimeSpanFromJ2000().TotalSeconds;
-            var targetState = targetRelativeToReference(corrected);
+            // A propagated spacecraft is read up to the light time outside its stored states (#527)
+            var targetState = targetRelativeToReference(corrected, shift);
             targetVelocity = targetState.Velocity;
             position = targetState.Position + targetState.Velocity * residual - observerCB.Position;
             if (!inertialReference)

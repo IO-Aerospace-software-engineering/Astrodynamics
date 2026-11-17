@@ -444,8 +444,20 @@ public abstract class PropagatorBase : IPropagator
     private protected virtual (Frame Frame, PropagationFrameOrientationCache Cache) OrientationCache => (null, null);
 
     /// <summary>
-    /// Propagates the spacecraft over the window, with its maneuver chain from its maneuver in standby.
+    /// Propagates the spacecraft over the window, with its maneuver chain from its head
+    /// (<see cref="Spacecraft.InitialManeuver"/>, set by <see cref="Spacecraft.SetStandbyManeuver"/>).
     /// </summary>
+    /// <remarks>
+    /// Once its checks pass, the propagation re-arms the spacecraft, on every path (#583, decided by S. Guillet,
+    /// 2026-11-17): the solution, the stored states and the attitude record of the previous propagation are dropped,
+    /// <see cref="Spacecraft.ExecutedManeuvers"/> is cleared, the tanks are refuelled and the chain is reset and put back
+    /// in standby, so that a spacecraft propagated again, through <see cref="CentralBodyPropagatorBuilder"/>, a
+    /// <see cref="CentralBodyPropagator"/> built directly or <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
+    /// never propagated; a propagator built and never run, or rejected by its constructor, changes nothing. Before
+    /// 11.0.0 only <c>Spacecraft.Propagate</c> re-armed it: a second run through the builder or a propagator built
+    /// directly fired no burn and started with the fuel left by the first. The spacecraft is then
+    /// <see cref="Spacecraft.IsPropagated"/>, whatever the path.
+    /// </remarks>
     /// <returns>The solution.</returns>
     /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
     /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
@@ -482,13 +494,17 @@ public abstract class PropagatorBase : IPropagator
         // tanks of the spacecraft (#676, #586)
         // and whose target orbits are in the frame of the integration: a maneuver attached after the propagator was built
         // escaped the check of the constructor (#685)
-        var chain = Maneuver.Maneuver.Chain(Spacecraft.StandbyManeuver);
+        // The chain run is the one from the head, which the reset puts back in standby (#583)
+        var chain = Maneuver.Maneuver.Chain(Spacecraft.InitialManeuver);
         if (TargetOrbitFrameError(Spacecraft, chain, InitialState.Frame) is { } frameError)
         {
             throw new InvalidOperationException(frameError);
         }
 
         Spacecraft.CheckManeuverEngines();
+
+        // Every check passed: the spacecraft is re-armed, on every path (#583)
+        Spacecraft.ResetPropagation();
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
         var eventDetectors = BuildEventDetectors();
@@ -716,6 +732,7 @@ public abstract class PropagatorBase : IPropagator
         // With any integrator whose settings can be copied, the spacecraft keeps the force model of the propagation, without
         // its steps, for the avoidance options of the conjunction assessment (#402)
         Spacecraft.LastForceModel = solution.ForceModel;
+        Spacecraft.MarkPropagated();
 
         return solution;
     }

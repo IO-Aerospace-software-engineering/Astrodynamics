@@ -108,10 +108,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public override bool IsSpiceBacked => _isFromKernel;
 
         private bool _isPropagated;
+
+        /// <summary>
+        /// Whether a numerical propagation ran on the spacecraft, by any path: <c>Propagate</c>, <c>PropagateAsync</c>,
+        /// <c>Scenario.SimulateAsync</c>, <see cref="BatchPropagator"/>, <see cref="CentralBodyPropagatorBuilder"/> or a
+        /// <see cref="CentralBodyPropagator"/> built directly (#583: the last two left it false before 11.0.0).
+        /// </summary>
         public bool IsPropagated => _isPropagated;
 
-        // Whether the stored states are those of a numerical propagation, by any path (the builder and a propagator built
-        // directly included, which leave IsPropagated false): a TLE spacecraft then reads them, SGP4 otherwise (#675).
+        // Whether the stored states are those of a numerical propagation, by any path: a TLE spacecraft then reads them, SGP4
+        // otherwise (#675).
         // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator) leaves it
         private bool _holdsPropagatedStates;
 
@@ -547,10 +553,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Put a maneuver in standby. When no maneuver is in standby, it becomes the head of the maneuver chain
-        /// (<see cref="Maneuver.Maneuver.SetNextManeuver"/>), from which each <c>Propagate</c> starts the chain again.
+        /// Sets the head of the maneuver chain (<see cref="Maneuver.Maneuver.SetNextManeuver"/>): the maneuver every later
+        /// propagation starts the chain from. <see cref="InitialManeuver"/> and <see cref="StandbyManeuver"/> both become
+        /// <paramref name="maneuver"/>, whatever was set before or left by an earlier propagation, and nothing is added to
+        /// <see cref="ExecutedManeuvers"/>, which lists the maneuvers of the last propagation; null clears the chain, so the
+        /// next propagation fires nothing (#584, decided by S. Guillet, 2026-11-17: before 11.0.0 a second call before a
+        /// propagation, or a call after a propagation whose chain did not finish, left the first head in place, which fired,
+        /// and added it to <see cref="ExecutedManeuvers"/> before it ran).
         /// </summary>
-        /// <param name="maneuver">The maneuver to put in standby.</param>
+        /// <param name="maneuver">The head of the chain; null for no maneuver.</param>
         /// <param name="minimumEpoch">Null to keep the minimum epoch the maneuver was given. When later than that minimum
         /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
         /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it, and an <see cref="Maneuver.Attitude"/> never
@@ -573,15 +584,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 maneuver?.RaiseGivenMinimumEpoch(minimumEpoch.Value);
             }
 
-            Standby(maneuver);
+            InitialManeuver = maneuver;
+            StandbyManeuver = maneuver;
         }
 
         /// <summary>
         /// Put the next maneuver of the chain in standby during a propagation, gated at <paramref name="gate"/>, the end of
         /// the window of the maneuver that precedes it, for this propagation only: the gate is raised on
         /// <see cref="Maneuver.Maneuver.PropagationGate"/>, which the next <c>Propagate</c> clears, never on the minimum epoch
-        /// the maneuver was given (#573). The library's raises of a chain go through it, never through
-        /// <see cref="SetStandbyManeuver"/>.
+        /// the maneuver was given (#573). The maneuver in standby until then is added to <see cref="ExecutedManeuvers"/>.
+        /// The library's advances of a chain go through it, never through <see cref="SetStandbyManeuver"/>, which sets the
+        /// head of the chain (#584).
         /// </summary>
         /// <param name="maneuver">The next maneuver of the chain; null at its end.</param>
         /// <param name="gate">The end of the window of the maneuver before it; null for none.</param>
@@ -592,20 +605,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 maneuver?.RaisePropagationGate(gate.Value);
             }
 
-            Standby(maneuver);
-        }
-
-        // The bookkeeping of a maneuver put in standby, shared by the user's call and the chain's
-        private void Standby(Maneuver.Maneuver maneuver)
-        {
             if (StandbyManeuver != null)
             {
                 _executedManeuvers.Add(StandbyManeuver);
-            }
-
-            if (StandbyManeuver == null)
-            {
-                InitialManeuver = maneuver;
             }
 
             StandbyManeuver = maneuver;
@@ -709,14 +711,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
-            // Built before the reset, so that a rejected input leaves the previous propagation as it was
+            // The propagation resets the spacecraft once its checks pass, so that a rejected input leaves the previous
+            // propagation as it was (#583)
             using var propagator = new CentralBodyPropagator(window, this, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            ResetPropagation();
-
-            var solution = propagator.Propagate();
-            _isPropagated = true;
-            return solution;
+            return propagator.Propagate();
         }
 
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
@@ -767,15 +766,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
             PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
 
-            // Built, and so the options and P0 checked, before the reset: a rejected activation leaves the previous
-            // propagation as it was
+            // Built, and so the options and P0 checked, before the reset of the propagation (#583): a rejected activation
+            // leaves the previous propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, covariancePropagation);
-            ResetPropagation();
-
-            var solution = propagator.Propagate();
-            _isPropagated = true;
-            return solution;
+            return propagator.Propagate();
         }
 
         /// <summary>
@@ -790,7 +785,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
-            // Built and activated before the reset, so that a rejected input leaves the previous propagation as it was
+            // Built and activated before the reset of the propagation (#583), so that a rejected input leaves the previous
+            // propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             if (variationalOptions != null)
@@ -798,18 +794,33 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 propagator.EnableVariationalEquations(variationalOptions);
             }
 
-            ResetPropagation();
-
-            var solution = propagator.Propagate();
-            _isPropagated = true;
-            return solution;
+            return propagator.Propagate();
         }
 
         /// <summary>
         /// Computes the geometric state relative to a reference body.
         /// Uses cached propagation states with Lagrange interpolation, chaining via SPICE if needed.
         /// </summary>
+        /// <remarks>
+        /// A spacecraft that holds propagated states (<see cref="InterpolatedStatesWindow"/>) is read within them only: an
+        /// epoch before the first or after the last throws, where the 8-point polynomial was extrapolated before 11.0.0
+        /// without an error, 567 km off 6 min before the first state and 8 282 km 6 min after the last in LEO (#527, decided
+        /// by S. Guillet, 2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light
+        /// time, may lie up to that light time outside them (see <see cref="CelestialItem.GetEphemeris"/>), the observation
+        /// epoch itself being read within them.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The spacecraft holds propagated states and <paramref name="epoch"/>
+        /// lies outside them, as a read past the coverage of SPICE.</exception>
         public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+        {
+            return GetGeometricStateRelativeTo(epoch, referenceBody, 0.0);
+        }
+
+        /// <summary>
+        /// The geometric state relative to <paramref name="referenceBody"/>, the propagated states read up to
+        /// <paramref name="margin"/> seconds outside them: the light time of a corrected read (#527).
+        /// </summary>
+        internal StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody, double margin)
         {
             // Kernel-backed: delegate to base which uses SPICE directly
             if (_isFromKernel)
@@ -827,7 +838,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Interpolate the arc of the epoch (#540)
+            // Interpolate the arc of the epoch (#540), within the propagated states (#527)
+            CheckInsidePropagatedStates(epoch, margin);
             var cb = (CelestialItem)_propagatedStates.First.Observer;
             var interpolated = _propagatedStates.Interpolate(epoch);
 
@@ -864,9 +876,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 ? (CelestialItem)_propagatedStates.First.Observer
                 : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
 
-            // Short-circuit: observer IS the CB, no aberration, have cached states
+            // Short-circuit: observer IS the CB, no aberration, have cached states, the epoch within them (#527: outside,
+            // the reference-body path throws for propagated states, and a TLE spacecraft sampled by TLEPropagator reads SGP4)
             if (aberration == Aberration.None && _propagatedStates.Count >= 2
-                                              && cb.NaifId == observer.NaifId && cb.NaifId != 0)
+                                              && cb.NaifId == observer.NaifId && cb.NaifId != 0
+                                              && IsInside(_propagatedStates.Span, epoch, 0.0))
             {
                 return _propagatedStates.Interpolate(epoch).ToFrame(frame);
             }
@@ -961,6 +975,29 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
         }
 
+        // Whether an epoch lies within a span of stored states, widened by margin seconds on each side and by one tick, the
+        // resolution of a Time a corrected epoch is rounded to
+        private static bool IsInside(Window? span, in Time epoch, double margin)
+        {
+            if (span is not { } window) return false;
+            long slack = (long)System.Math.Ceiling(margin * TimeSpan.TicksPerSecond) + (margin > 0.0 ? 1 : 0);
+            var t = epoch.ToTDB();
+            return (t - window.StartDate.ToTDB()).Ticks >= -slack && (window.EndDate.ToTDB() - t).Ticks >= -slack;
+        }
+
+        // Throws for an epoch outside the propagated states the spacecraft interpolates, widened by margin seconds (#527)
+        private void CheckInsidePropagatedStates(in Time epoch, double margin)
+        {
+            var span = _propagatedStates.Span;
+            if (!IsInside(span, epoch, margin))
+            {
+                throw new InvalidOperationException(
+                    $"The epoch {epoch.ToTDB()} lies outside the propagated states of {Name}, [{span?.StartDate.ToTDB()}, {span?.EndDate.ToTDB()}]" +
+                    (margin > 0.0 ? $" widened by the light time, {margin:R} s" : "") +
+                    ": they would be extrapolated. Read the spacecraft within its propagation window, or propagate it over the epochs read.");
+            }
+        }
+
         // The initial state of a kernel-backed spacecraft relative to its centre of motion, the Earth by default (#620); the
         // identifier and the clock checked before the read (#676)
         private static StateVector ReadKernelInitialState(int naifId, string name, in Time epoch, CelestialItem centerOfMotion, Clock clock)
@@ -1037,16 +1074,35 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Creates a CCSDS OPM (Orbit Parameter Message) from this spacecraft's current state.
+        /// Creates a CCSDS OPM (Orbit Parameter Message) of this spacecraft at <paramref name="epoch"/>: its state, its mass
+        /// and its maneuvers at that instant (#658, decided by S. Guillet, 2026-11-17). A spacecraft that holds propagated
+        /// states (by <c>Propagate</c>, <c>Scenario.SimulateAsync</c>, the builder, a propagator built directly or
+        /// <see cref="AddPropagatedStates"/>) writes the state read from them, <see cref="GetEphemeris"/> relative to the
+        /// observer and in the frame of its initial orbital parameters without aberration, with the mass and the impulses
+        /// ignited by then; one without them, the motion of its initial orbital parameters (two-body for
+        /// osculating elements, SGP4 for a TLE, also when <see cref="TLEPropagator"/> sampled it) with its mass now and the
+        /// maneuvers of its last propagation, none for a spacecraft never propagated, as before 11.0.0.
         /// </summary>
         /// <param name="originator">The message originator. If null, uses "IO.Astrodynamics".</param>
-        /// <param name="epoch">The epoch for the state vector. If null, uses the initial orbital parameters epoch.</param>
+        /// <param name="epoch">The epoch of the state. If null, the epoch of the initial orbital parameters.</param>
         /// <param name="includeKeplerianElements">If true, includes optional Keplerian elements in the OPM.</param>
         /// <param name="includeSpacecraftParameters">If true, includes spacecraft parameters (mass, drag, SRP).</param>
-        /// <param name="includeManeuvers">If true, includes executed maneuvers in the OPM.</param>
+        /// <param name="includeManeuvers">If true, includes the maneuvers ignited by the epoch (all those executed for a
+        /// spacecraft without propagated states).</param>
         /// <returns>A new OPM instance representing this spacecraft's state.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when CosparId is not set.</exception>
+        /// <exception cref="InvalidOperationException">CosparId is not set; or the spacecraft holds propagated states and
+        /// the epoch, given or by default, lies outside them (#527).</exception>
         /// <remarks>
+        /// <para>
+        /// The mass of a propagated spacecraft at the epoch is its mass after the propagation plus the fuel of the impulses
+        /// ignited after the epoch; an impulse counts from its ignition, the start of its thrust window, the
+        /// <c>MAN_EPOCH_IGNITION</c> written (#658, decided by S. Guillet, 2026-11-17: "the mass and the maneuvers ignited by
+        /// then"). The propagated state receives the delta-V of an impulse at its event, about two thirds of the burn after
+        /// the ignition (<see cref="Maneuver.ImpulseManeuver"/>): at an epoch between the two (3.4 s for a 5.2 s burn) the
+        /// state written is the state before the impulse, with the burn listed and its fuel spent. Before 11.0.0 the state
+        /// was the motion of the initial orbit whatever the propagation, with the mass and every maneuver after the
+        /// propagation: 1 212 km and 1 137 m/s off the propagated state one burn later.
+        /// </para>
         /// <para>
         /// Maneuver delta-V components are exported in the same inertial reference frame as the state vector
         /// (typically ICRF or EME2000). This is the frame in which the framework stores maneuver data.
@@ -1070,9 +1126,27 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new InvalidOperationException("CosparId must be set to create an OPM. Use the spacecraft constructor's cosparId parameter.");
             }
 
-            // Get the state vector at the specified epoch (or initial epoch)
+            // The state at the epoch (or the initial epoch): the propagated states when the spacecraft holds them (#658),
+            // relative to the observer and in the frame of the initial orbital parameters, within them (#527); the motion
+            // of the initial orbit otherwise
             var targetEpoch = epoch ?? InitialOrbitalParameters.Epoch;
-            var stateVector = InitialOrbitalParameters.ToStateVector(targetEpoch);
+            var initialState = InitialOrbitalParameters.ToStateVector(targetEpoch);
+            bool propagated = InterpolatedStatesWindow.HasValue;
+            var stateVector = initialState;
+            if (propagated)
+            {
+                var read = GetEphemeris(targetEpoch, InitialOrbitalParameters.Observer, InitialOrbitalParameters.Frame, Aberration.None).ToStateVector();
+                stateVector = new StateVector(read.Position, read.Velocity, InitialOrbitalParameters.Observer, targetEpoch, InitialOrbitalParameters.Frame,
+                    initialState.Covariance);
+            }
+
+            // The impulses of the last propagation ignited by the epoch (#658, decided by S. Guillet, 2026-11-17), whose
+            // fuel the mass has spent; all of them for a spacecraft without propagated states, as before
+            static bool IgnitedBy(Maneuver.Maneuver m, Time t) => m is Maneuver.ImpulseManeuver { ThrustWindow: { } thrust } && thrust.StartDate <= t;
+            bool ExecutedBy(Maneuver.Maneuver m) => !propagated || IgnitedBy(m, targetEpoch);
+            double laterFuel = propagated
+                ? ExecutedManeuvers.OfType<Maneuver.ImpulseManeuver>().Where(m => m.ThrustWindow.HasValue && !IgnitedBy(m, targetEpoch)).Sum(m => m.FuelBurned)
+                : 0.0;
 
             // Create header
             var header = originator != null
@@ -1110,7 +1184,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (includeManeuvers && ExecutedManeuvers.Count > 0)
             {
                 var maneuverList = new List<OpmManeuverParameters>();
-                foreach (var maneuver in ExecutedManeuvers.OrderBy(m => m.ThrustWindow?.StartDate))
+                foreach (var maneuver in ExecutedManeuvers.Where(ExecutedBy).OrderBy(m => m.ThrustWindow?.StartDate))
                 {
                     if (maneuver is Maneuver.ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
                     {
@@ -1128,7 +1202,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             var data = new OpmData(
                 stateVector: opmStateVector,
                 keplerianElements: keplerianElements,
-                mass: includeSpacecraftParameters ? GetTotalMass() : null,
+                mass: includeSpacecraftParameters ? GetTotalMass() + laterFuel : null,
                 solarRadiationPressureArea: includeSpacecraftParameters ? SectionalArea : null,
                 solarRadiationCoefficient: includeSpacecraftParameters ? SolarRadiationCoeff : null,
                 dragArea: includeSpacecraftParameters ? SectionalArea : null,
@@ -1140,9 +1214,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Reset propagation elements
+        /// Re-arms the spacecraft for a propagation (#583): the solution, the force model, the stored states and the attitude
+        /// record of the previous propagation are dropped, <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
+        /// the chain from <see cref="InitialManeuver"/> reset (its windows and the gates of the last propagation) and put back
+        /// in standby. <see cref="PropagatorBase.Propagate"/> calls it once its checks pass, on every path: before 11.0.0
+        /// only <c>Spacecraft.Propagate</c> did, so a second run through <see cref="CentralBodyPropagatorBuilder"/> or a
+        /// <see cref="CentralBodyPropagator"/> built directly fired no burn and started with the fuel left by the first.
         /// </summary>
-        private void ResetPropagation()
+        internal void ResetPropagation()
         {
             LastPropagation = null;
             LastForceModel = null;
@@ -1162,6 +1241,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             Maneuver.Maneuver.ResetChain(InitialManeuver);
             StandbyManeuver = InitialManeuver;
+        }
+
+        /// <summary>
+        /// Marks the spacecraft as propagated, at the end of a numerical propagation by any path (#583): the next
+        /// propagation then drops its stored states and attitude record.
+        /// </summary>
+        internal void MarkPropagated()
+        {
+            _isPropagated = true;
         }
     }
 }

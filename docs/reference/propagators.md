@@ -77,6 +77,12 @@ inertial frame of the propagation, at the TDB start of the window; a later `Init
 11.0.0 they used it as given, and one its caller had not initialized threw `NullReferenceException` at the first step. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
 constructor (#674).
 
+A constructor changes nothing on the spacecraft. `Propagate` re-arms it once its checks pass, on every path, as
+`Spacecraft.Propagate` does: the tanks refuelled, `ExecutedManeuvers`, the stored states and the attitude record of the
+previous propagation cleared, the maneuver chain started again from its head, and the spacecraft `IsPropagated` after
+the run (#583, decided by S. Guillet, 2026-11-17; before 11.0.0 a second run through a propagator built directly fired no
+burn and started with the fuel the first left).
+
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
 initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
 derivative is evaluated.

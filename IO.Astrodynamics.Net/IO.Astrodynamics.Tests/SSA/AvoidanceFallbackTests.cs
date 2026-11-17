@@ -646,9 +646,12 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
     private (Spacecraft, PropagationSolution) BurnPropagatedInTwoParts(AvoidanceOption option, StateVector start, int naifId)
     {
         var before = AvoidanceFallbackCase.WithEngine(naifId, start, out _);
-        before.Propagate(new Window(AvoidanceFallbackCase.Start, option.BurnEpoch), _case.Bodies, true, true,
+        var beforeSolution = before.Propagate(new Window(AvoidanceFallbackCase.Start, option.BurnEpoch), _case.Bodies, true, true,
             AvoidanceFallbackCase.VelocityVerletStep);
-        var atBurn = before.GetEphemeris(option.BurnEpoch, _case.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        // The solution at the burn: the output grid of a step that does not divide the window ends before it, and a read of
+        // the stored states past them throws (#527; it extrapolated them before)
+        var (rBurn, vBurn) = beforeSolution.InterpolateAt(option.BurnEpoch);
+        var atBurn = new StateVector(rBurn, vBurn, _case.Earth, option.BurnEpoch, Frames.Frame.ICRF);
         var afterBurn = new StateVector(atBurn.Position, atBurn.Velocity + option.DeltaVInertial, _case.Earth, option.BurnEpoch,
             Frames.Frame.ICRF);
 

@@ -327,7 +327,8 @@ public class AttitudeTimelineEdgeTests
         Assert.Contains(run.Chain[0], executed);
 
         // ToOpm: the impulses
-        var opm = run.Spacecraft.ToOpm(includeKeplerianElements: false, includeManeuvers: true).Data.Maneuvers.ToArray();
+        // At the last stored state, by which every impulse executed: an OPM carries the maneuvers executed by its epoch (#658)
+        var opm = run.Spacecraft.ToOpm(epoch: run.Spacecraft.PropagatedStates[^1].Epoch, includeKeplerianElements: false, includeManeuvers: true).Data.Maneuvers.ToArray();
         var impulses = executed.OfType<ImpulseManeuver>().ToArray();
         Assert.Equal(impulses.Length, opm.Length);
         double mass = 2000.0;
