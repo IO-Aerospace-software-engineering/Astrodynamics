@@ -110,6 +110,26 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **`TLEPropagator` counted its samples in whole seconds** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598)). Its
+  sample count was `(uint)L / (uint)ΔT + 1` for a window of L seconds: a step below 1 s divided by zero
+  (`DivideByZeroException`), a fractional step was counted as its whole seconds, so its samples i·ΔT ran past the window
+  end (1.5 s over 10 s: 11 samples to +15 s), and a window that the step does not divide lost its end (90 s at 60 s:
+  2 samples, the last at +60 s, with no state and no solution after it). The samples are now counted in ticks: i·ΔT from
+  the start for i = 0 … ceil(L/ΔT) − 1, then the window end, so ceil(L/ΔT) + 1 samples, each the SGP4 state of its
+  epoch, the steps of the solution the intervals between them, the last shorter; a grid point closer to the end than
+  ΔT/10 is dropped, the last step then up to 1.1 ΔT, as the stored states drop an output that close to an impulse (a
+  window given in UTC is a few ticks longer or shorter in TDB: one UTC hour from the ISS TLE's epoch is 3600 s and 11
+  ticks, whose 62nd sample 1.1 µs after the 61st the Lagrange read of the stored states could not take); a step of zero
+  or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
+  whole-second step divides keeps its samples and its solution, bit for bit (`TLEPropagatorTests`: 121 samples at 0.5 s
+  over 1 min, 3 at 60 s over 90 s, 8 at 1.5 s over 10 s, 61 at 60 s over 3600.5 s and over one UTC hour, the last at the
+  window end, red on a85098d; 61 at 60 s over 3600 s unchanged; between +60 s and +90 s the Hermite of the 30 s step is
+  2.7e-5 m/s and 0.037 m off SGP4, Linux x64, bounds 5.5e-5 m/s and 0.075 m provisional; 251 m/s and 222 km before,
+  past the end of the solution). A window given in UTC whose TDB length the step does not divide ends at its TDB end
+  instead of the grid point before it: for the ISS at 60 s over one UTC hour the last sample moves by 1.1 µs, and the
+  Lagrange read of the samples between them, 7.593e-4 m from SGP4 before, is 9.062e-4 m (the SGP4 state of an instant off
+  the grid of the other samples carries its own tick rounding, 0.77 mm per tick; `TlePropagationTests`, bound 1.9e-3 m
+  provisional, 1.6e-3 m before). No numerical propagation and no conformance case moves.
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -4663,10 +4683,7 @@ not listed.
   from `GetEphemeris` at the epoch. `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
   which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
   and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
-- **TLEs** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598),
-  [#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). `TLEPropagator` counts its
-  samples in whole seconds: a step below 1 s throws `DivideByZeroException`, and a window that is not a multiple of the
-  step loses its end; use a whole-second step that divides the window. A TLE with a blank international designator can
+- **TLEs** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). A TLE with a blank international designator can
   be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM.
   A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
   is NRLMSISE-00 at nominal space weather ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)), and an Earth with a geopotential or an atmosphere in the bodies throws

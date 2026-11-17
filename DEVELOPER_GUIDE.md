@@ -1683,7 +1683,7 @@ SGP4/SDP4 propagator for TLE elements.
 
 | Constructor | Description |
 |------------|-------------|
-| `TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan step)` | Create propagator for a spacecraft whose initial orbital parameters are a TLE |
+| `TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan step)` | Create propagator for a spacecraft whose initial orbital parameters are a TLE, sampled every step from the start and at the window end (#598); a step of zero or less throws `ArgumentOutOfRangeException` |
 
 | Method | Description |
 |--------|-------------|

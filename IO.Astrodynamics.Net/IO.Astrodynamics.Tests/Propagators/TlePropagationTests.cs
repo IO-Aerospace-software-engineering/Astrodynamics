@@ -54,10 +54,13 @@ public class TlePropagationTests
     private const double KeplerPosition = 1.9e-6;
     private const double KeplerVelocity = 2.4e-9;
 
-    // Twice the worst of UnpropagatedOrSampledTleSpacecraft_ReadsSgp4 over Linux x64, Windows and macOS arm64 (CI run 43591654097, 2026-11-14),
-    // rounded up at the second significant digit: the Lagrange interpolation of the TLEPropagator samples at mid-step, ISS
-    // at 60 s, 7.593e-4, 7.593e-4 and 7.593e-4 m
-    private const double SampledEphemerisBetweenSamples = 1.6e-3;
+    // Twice the worst of UnpropagatedOrSampledTleSpacecraft_ReadsSgp4 on Linux x64 (2026-11-17), rounded up at the second
+    // significant digit, provisional until the Windows x64 and macOS arm64 CI logs: the Lagrange interpolation of the
+    // TLEPropagator samples at mid-step, ISS at 60 s, 9.062e-4 m in the last step. #598 moved the last sample from +3600 s
+    // to the TDB end of the UTC hour, 11 ticks later, whose SGP4 state carries the tick rounding of an instant off the
+    // grid of the other samples (0.77 mm per tick at 7.7 km/s); before, 7.593e-4 m on the three (CI run 43591654097,
+    // 2026-11-14), bound 1.6e-3 m
+    private const double SampledEphemerisBetweenSamples = 1.9e-3;
 
     private readonly ITestOutputHelper _output;
 

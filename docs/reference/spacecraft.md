@@ -193,7 +193,7 @@ across the jump:
   whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
   `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
   without aberration reads them directly, whatever the initial orbit, so after `TLEPropagator` it interpolates its
-  samples (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s), as before 11.0.0.
+  samples (SGP4 at the samples, 9.1e-4 m from it between them for the ISS at 60 s over one UTC hour, 7.6e-4 m before #598 moved the last sample to the window end), as before 11.0.0.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
 41651463194, 2026-11-03, and run 41689602272 for the velocities in SSB mode against the anchored reference; the

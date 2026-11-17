@@ -549,7 +549,7 @@ The propagation system uses a segment-based architecture with event-driven maneu
 **Propagator Hierarchy**
 ```
 PropagatorBase (abstract)
-├── TLEPropagator         — SGP4/SDP4 from Two-Line Elements
+├── TLEPropagator         — SGP4/SDP4 from Two-Line Elements, sampled every ΔT from the start and at the window end (#598)
 └── CentralBodyPropagator — All numerical propagation (LEO, GEO, lunar, interplanetary)
 ```
 
