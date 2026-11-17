@@ -16,7 +16,10 @@ namespace IO.Astrodynamics.Tests;
 /// 2026-11-17), whose barycentre is 3, and the NAIF rule of site identifiers that <see cref="Surface.Site.NaifId"/>
 /// follows (body × 1000 + site). Before the fix both layers classed every identifier above 1000 as an asteroid:
 /// <see cref="SpiceAPI.GetCelestialBodyInfo"/> gave 10 and 0 for 399013 and 399014, and <see cref="CelestialItem.IsAsteroid"/>
-/// was true for them (measured on a85098d).
+/// was true for them (measured on a85098d). An identifier of the form of a site whose body SPICE does not name keeps that
+/// classification: SPICE's built-in names include NOTO (398989) and NEW NORCIA (398990), ESA stations, but no body 398
+/// (spiceypy 8.4.0, CSPICE N0067, <c>bodc2n</c> without kernels, 2026-11-17); before the review of #651 they were
+/// corrected to the centre 398, which SPICE does not name, and the barycentre 3.
 /// </remarks>
 public class SiteIdentifierCentreTests
 {
@@ -34,6 +37,8 @@ public class SiteIdentifierCentreTests
     [InlineData(399065, 399, 3)] // DSS-65
     [InlineData(301, 399, 3)] // control: the Moon
     [InlineData(399, 10, 3)] // control: the Earth
+    [InlineData(398989, 10, 0)] // NOTO, a built-in name of SPICE whose form is a site's of 398, a body SPICE does not name
+    [InlineData(398990, 10, 0)] // NEW NORCIA, the same
     public void GetCelestialBodyInfo_GivesTheCentreAndTheBarycentreOfSPICE(int naifId, int centre, int barycentre)
     {
         // Act
@@ -53,6 +58,9 @@ public class SiteIdentifierCentreTests
     [InlineData(1000012, 10, 0, true)] // a comet, unchanged
     [InlineData(391001, 10, 0, true)] // above 1000 and not a site: the body 391 is L1, unchanged
     [InlineData(399000, 10, 0, true)] // a site number 0 is no site (Site.NaifId starts at 1), unchanged
+    [InlineData(398989, 10, 0, true)] // NOTO: SPICE names no body 398, so no site, unchanged
+    [InlineData(398990, 10, 0, true)] // NEW NORCIA, the same
+    [InlineData(101001, 10, 0, true)] // the form of a site of 101, a body SPICE does not name, unchanged
     public void CelestialItem_OfASiteIdentifier_IsAboutItsBody(int naifId, int centre, int barycentre, bool asteroid)
     {
         // Arrange: a body from custom parameters, whose identifiers of centre the constructor does not set

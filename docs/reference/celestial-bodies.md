@@ -51,7 +51,8 @@ Before #672 a missing `BODYnnn_RADII` or `BODYnnn_GM` left the GM 0 and the fram
 built and Elara was built with a garbage frame name. A site identifier (399013, DSS-13) builds a body named after the site,
 of GM 0 and frame `DSS-13_TOPO`, about its body (`CenterOfMotionId` 399, `BarycenterOfMotionId` 3, `IsAsteroid` false;
 before 11.0.0 an asteroid about the Sun, [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)):
-build a `Site` instead.
+build a `Site` instead. The rule needs SPICE to name the body (identifier / 1000): SPICE's NOTO (398989) and NEW NORCIA
+(398990), ESA stations of no body 398, are classed as any identifier above 1000.
 
 ### Methods
 

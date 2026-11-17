@@ -34,9 +34,12 @@ reads its state at J2000 TDB, so its SPK must cover that epoch), while `GetCeles
 an unnamed one throw.
 
 The record of a site identifier, its body's identifier times 1000 plus its own (399013 for DSS-13, the body a planet or a
-moon), has its body as centre of motion and its body's barycentre as barycentre, 399 and 3 for DSS-13 as its SPK segment
-([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651): before 11.0.0 the Sun and 0, the
-native layer classing every identifier above 1000 as an asteroid); `CelestialItem.IsAsteroid` is false for it.
+moon SPICE names), has its body as centre of motion and its body's barycentre as barycentre, 399 and 3 for DSS-13 as its
+SPK segment ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651): before 11.0.0 the Sun
+and 0, the native layer classing every identifier above 1000 as an asteroid); `CelestialItem.IsAsteroid` is false for it.
+An identifier of that form whose body SPICE does not name keeps 10 and 0 and stays an asteroid: SPICE's built-in names
+include two ESA stations, NOTO (398989) and NEW NORCIA (398990), whose identifiers do not follow the rule, 398 being no
+body.
 
 A body the kernel pool gives no `BODYnnn_RADII` has radii 0, one it gives no `BODYnnn_GM` a GM of 0, and its frame is
 still read (`cnmfrm_c`); a barycentre has no frame (an empty `FrameName`, `FrameId` 0). Before #672 a missing variable

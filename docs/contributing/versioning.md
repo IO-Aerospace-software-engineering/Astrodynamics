@@ -3244,11 +3244,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   DSS-14 and DSS-65 gave the centre 10 and the barycentre 0 (measured on a85098d), where SPICE's SPK of the stations
   (`earthstns_itrf93_201023.bsp`) has their segments about the Earth (399, spiceypy `spksfs`), and
   `CelestialItem.IsAsteroid` was true for them. A site identifier (body × 1000 + site, the body a planet or a moon, the
-  rule of `Site.NaifId`, internal `SpiceAPI.IsSiteId`) now has its body as centre and its body's barycentre as
-  barycentre, in the record (`SpiceAPI` corrects the native record, the C++ layer unchanged) and in
-  `CelestialItem.FindCenterOfMotionId`/`FindBarycenterOfMotionId`, and is no asteroid (`SiteIdentifierCentreTests`: the
-  three stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the
-  rule, and an asteroid, a comet, 391001 and 399000, not sites, unchanged).
+  rule of `Site.NaifId`, internal `SpiceAPI.IsSiteId`) of a body SPICE names (internal `SpiceAPI.IsSiteOfNamedBody`, the
+  body's name read under the SPICE lock) now has its body as centre and its body's barycentre as barycentre, in the
+  record (`SpiceAPI` corrects the native record, the C++ layer unchanged) and in
+  `CelestialItem.FindCenterOfMotionId`/`FindBarycenterOfMotionId`, and is no asteroid. SPICE's built-in NOTO (398989)
+  and NEW NORCIA (398990), ESA stations whose identifiers have the form of a site of 398, a body SPICE does not name
+  (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
+  stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the rule, and
+  an asteroid, a comet, 391001, 399000, NOTO, NEW NORCIA and 101001, not sites, unchanged).
 
 **Changed**
 
@@ -4532,7 +4535,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   around the defect passes the true longitude.
 - **Breaking: a site identifier is about its body, not an asteroid** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651), Fixed above).
   `SpiceAPI.GetCelestialBodyInfo` (so `SpiceDataProvider.GetCelestialBodyInfo` and the command `celestial-body-info`) of a
-  site identifier, 100001 to 999999 with a planet or a moon as body (399013 for DSS-13), gives its body as
+  site identifier, 100001 to 999999 with a planet or a moon SPICE names as body (399013 for DSS-13), gives its body as
   `CenterOfMotionId` and its body's barycentre as `BarycenterOfMotionId` (399 and 3), where it gave 10 and 0;
   `CelestialItem.IsAsteroid` is false for it, and a `CelestialBody` of that identifier is about its body, its
   `ToString` naming no type. Every other identifier is classed as before. Migration: a caller that read the Sun as the

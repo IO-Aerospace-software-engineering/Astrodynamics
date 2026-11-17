@@ -1613,6 +1613,31 @@ public class SpiceAPI
     }
 
     /// <summary>
+    /// Whether <paramref name="naifId"/> is a site identifier (<see cref="IsSiteId"/>) whose body SPICE names, by its built-in
+    /// names or the loaded kernels: the identifiers that are about their body (#651). SPICE's built-in NOTO (398989) and
+    /// NEW NORCIA (398990) have the form of a site of 398, a body SPICE does not name: they are not, and keep the
+    /// classification of an identifier above 1000 (the Sun as centre, the solar system barycentre).
+    /// </summary>
+    /// <remarks>
+    /// Reads SPICE under the shared lock, for an identifier of the form of a site only: the static objects of
+    /// <see cref="SolarSystemObjects"/>, whose identifiers are at most 999, never reach it (#623).
+    /// </remarks>
+    internal static bool IsSiteOfNamedBody(int naifId)
+    {
+        if (!IsSiteId(naifId))
+        {
+            return false;
+        }
+
+        int body = naifId / 1000;
+        lock (lockObject)
+        {
+            // The record's Id stays -1 when bodc2n_c does not find the identifier (#672)
+            return GetCelestialBodyInfoProxy(body).Id == body;
+        }
+    }
+
+    /// <summary>
     /// Read ephemeris at a given epoch using the caller-provided observer object.
     /// Avoids CelestialItem.Create() which can't handle spacecraft/site NAIF IDs.
     /// </summary>
@@ -2029,9 +2054,11 @@ public class SpiceAPI
     /// <remarks>
     /// A body the kernel pool gives no <c>BODYnnn_RADII</c> has radii 0, one it gives no <c>BODYnnn_GM</c> a GM of 0, and a
     /// barycentre has no frame (an empty <c>FrameName</c>, <c>FrameId</c> 0); before #672 a missing variable left the GM 0
-    /// and the frame name undefined. A site identifier (<see cref="IsSiteId"/>, 399013 for DSS-13) has its body as centre
-    /// of motion and its body's barycentre as barycentre (399 and 3 for DSS-13, the centre of its SPK segment): before
-    /// 11.0.0 the Sun and 0, every identifier above 1000 being classed as an asteroid (#651).
+    /// and the frame name undefined. A site identifier of a body SPICE names (<see cref="IsSiteOfNamedBody"/>, 399013 for
+    /// DSS-13) has its body as centre of motion and its body's barycentre as barycentre (399 and 3 for DSS-13, the centre of
+    /// its SPK segment): before 11.0.0 the Sun and 0, every identifier above 1000 being classed as an asteroid (#651). An
+    /// identifier of that form whose body SPICE does not name keeps the Sun and 0: SPICE's NOTO (398989) and NEW NORCIA
+    /// (398990), ESA stations whose identifiers do not follow the rule, 398 being no body.
     /// </remarks>
     /// <exception cref="ArgumentException"><paramref name="naifId"/> is not the identifier of a celestial body
     /// (<see cref="IsCelestialBodyId"/>): a spacecraft, an instrument or a site of a negative identifier, 11 to 100, or 1000.
@@ -2048,8 +2075,8 @@ public class SpiceAPI
     }
 
     // The body information of an identifier SPICE names, under the lock: the record's Id, -1 until bodc2n_c finds the
-    // identifier, is the found flag (#672). A site identifier is about its body and its body's barycentre, where the
-    // native layer, which classes every identifier above 1000 as an asteroid, gives the Sun and 0 (#651)
+    // identifier, is the found flag (#672). A site identifier of a body SPICE names is about its body and its body's
+    // barycentre, where the native layer, which classes every identifier above 1000 as an asteroid, gives the Sun and 0 (#651)
     private static CelestialBody ReadCelestialBodyInfo(int naifId, string paramName)
     {
         var info = GetCelestialBodyInfoProxy(naifId);
@@ -2060,7 +2087,7 @@ public class SpiceAPI
                 paramName);
         }
 
-        if (IsSiteId(naifId))
+        if (IsSiteOfNamedBody(naifId))
         {
             info.CenterOfMotionId = Body.CelestialItem.SiteBodyId(naifId);
             info.BarycenterOfMotionId = Body.CelestialItem.SiteBarycenterId(naifId);

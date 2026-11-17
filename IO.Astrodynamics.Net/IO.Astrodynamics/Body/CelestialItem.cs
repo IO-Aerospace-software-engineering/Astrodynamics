@@ -325,10 +325,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     /// <summary>
     /// Gets a value indicating whether the celestial item is an asteroid: an identifier from 1001 to 999999999 that is
-    /// not a site's (its body's identifier times 1000 plus its own, a planet or a moon, as <see cref="Surface.Site.NaifId"/>
-    /// builds it: 399013 is DSS-13 on the Earth). Before 11.0.0 a site identifier was an asteroid, about the Sun (#651).
+    /// not a site's (its body's identifier times 1000 plus its own, a planet or a moon SPICE names, as
+    /// <see cref="Surface.Site.NaifId"/> builds it: 399013 is DSS-13 on the Earth). Before 11.0.0 a site identifier was an
+    /// asteroid, about the Sun (#651). An identifier of the form of a site whose body SPICE does not name is still one:
+    /// SPICE's NOTO (398989) and NEW NORCIA (398990), 398 being no body (<see cref="SpiceAPI.IsSiteOfNamedBody"/>).
     /// </summary>
-    public bool IsAsteroid => this.NaifId is > 1000 and < 1000000000 && !SpiceAPI.IsSiteId(NaifId);
+    /// <remarks>For an identifier of the form of a site, reads the name of its body in SPICE under the shared lock.</remarks>
+    public bool IsAsteroid => this.NaifId is > 1000 and < 1000000000 && !SpiceAPI.IsSiteOfNamedBody(NaifId);
 
     /// <summary>
     /// Gets a value indicating whether the celestial item is a star.
@@ -1120,8 +1123,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             return (int)(celestialItem.NaifId / 100);
         }
 
-        // A site identifier: the barycentre of its body (#651)
-        if (SpiceAPI.IsSiteId(celestialItem.NaifId))
+        // A site identifier of a body SPICE names: the barycentre of its body (#651)
+        if (SpiceAPI.IsSiteOfNamedBody(celestialItem.NaifId))
         {
             return SiteBarycenterId(celestialItem.NaifId);
         }
@@ -1139,10 +1142,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         throw new ArgumentException("Invalid Naif Id : " + celestialItem.NaifId);
     }
 
-    /// <summary>The body of a site identifier (<see cref="SpiceAPI.IsSiteId"/>): its identifier divided by 1000 (#651).</summary>
+    /// <summary>The body of a site identifier (<see cref="SpiceAPI.IsSiteOfNamedBody"/>): its identifier divided by 1000 (#651).</summary>
     internal static int SiteBodyId(int siteId) => siteId / 1000;
 
-    /// <summary>The barycentre of the body of a site identifier (<see cref="SpiceAPI.IsSiteId"/>), that of a planet or a
+    /// <summary>The barycentre of the body of a site identifier (<see cref="SpiceAPI.IsSiteOfNamedBody"/>), that of a planet or a
     /// moon: its identifier divided by 100000 (#651).</summary>
     internal static int SiteBarycenterId(int siteId) => siteId / 100000;
 
@@ -1169,8 +1172,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             return celestialItem.NaifId - (celestialItem.NaifId % 100) + 99;
         }
 
-        // A site identifier: its body (#651)
-        if (SpiceAPI.IsSiteId(celestialItem.NaifId))
+        // A site identifier of a body SPICE names: its body (#651)
+        if (SpiceAPI.IsSiteOfNamedBody(celestialItem.NaifId))
         {
             return SiteBodyId(celestialItem.NaifId);
         }
