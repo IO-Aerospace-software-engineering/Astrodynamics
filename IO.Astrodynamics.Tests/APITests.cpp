@@ -99,6 +99,46 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
     ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 }
 
+// #496: the native search passed "ELLIPSOID" as the shape of every front body to gfoclt_c, so that a point front body
+// (its frame blank) made SPICE fail. The Moon's center across the Sun's disc from DSS-65 on 2005-10-03, against gfoclt_c
+// with a POINT front body converged to 1e-9 s (tools/occultation_reference, "dss65_2005_point_front ANY NONE POINT":
+// 181599513.5947857 to 181604529.2431715 TDB seconds, on the kernels of the .NET tests). The C++ tests load another
+// earth_latest_high_prec.bpc, which moves DSS-65 and the edges by up to 6.26e-7 s (Linux x64, 2026-11-17): within 1.3e-6
+// s, twice that, provisional until the Windows x64 and macOS arm64 CI logs. Where the test calls CSPICE (not on Windows,
+// whose DLL does not export it), the proxy is gfoclt_c on the same kernels, step and window, bit for bit
+TEST(API, FindWindowsOnOccultationConstraintProxyOfAPointFrontBody)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = IO::Astrodynamics::Time::TDB("2005-10-03 00:00:00 TDB").GetSecondsFromJ2000().count();
+    searchWindow.end = IO::Astrodynamics::Time::TDB("2005-10-04 00:00:00 TDB").GetSecondsFromJ2000().count();
+    for (auto &window: windows)
+    {
+        window.start = window.end = std::nan("");
+    }
+    ASSERT_TRUE(FindWindowsOnOccultationConstraintProxy(searchWindow, 399065, 10, "IAU_SUN", "ELLIPSOID", 301, "", "POINT",
+                                                        "ANY", "NONE", 360.0, windows)) << GetLastErrorProxy();
+    std::cout << "MEASURE #496 point front body, proxy - gfoclt_c (1e-9 s, the .NET tests' kernels): " << std::scientific
+              << windows[0].start - 181599513.5947857 << " s, " << windows[0].end - 181604529.2431715 << " s"
+              << std::defaultfloat << std::endl;
+    EXPECT_NEAR(181599513.5947857, windows[0].start, 1.3e-6);
+    EXPECT_NEAR(181604529.2431715, windows[0].end, 1.3e-6);
+    EXPECT_TRUE(std::isnan(windows[1].start));
+#if !defined(_WIN32)
+    SPICEDOUBLE_CELL(cnfine, 2);
+    SPICEDOUBLE_CELL(result, 20);
+    wninsd_c(searchWindow.start, searchWindow.end, &cnfine);
+    gfoclt_c("ANY", "301", "POINT", " ", "10", "ELLIPSOID", "IAU_SUN", "NONE", "399065", 360.0, &cnfine, &result);
+    ASSERT_FALSE(failed_c());
+    ASSERT_EQ(1, wncard_c(&result));
+    SpiceDouble start{}, end{};
+    wnfetd_c(&result, 0, &start, &end);
+    EXPECT_EQ(start, windows[0].start);
+    EXPECT_EQ(end, windows[0].end);
+#endif
+    EXPECT_TRUE(std::isnan(windows[1].start));
+}
+
 
 // A search SPICE cannot run returns false with SPICE's message, and writes no window (fourth round of #668: before, the
 // proxies printed the error, dropped it and returned no window, which a caller could not tell from a condition that never

@@ -3209,6 +3209,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
 
+- **A point front body on the CSPICE path of the occultation search threw** ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)).
+  The native search passed `"ELLIPSOID"` as the shape of every front body to `gfoclt_c`, whatever the shape given (the
+  shape it computed from it was unused), so a point front body, whose frame is blank, failed in SPICE ("The front
+  target shape is represented by an ellipsoid or by DSK data, but the associated body-fixed frame name is blank."):
+  `SpiceAPI.FindWindowsOnOccultationConstraint` and the CSPICE path of `FindWindowsOnOccultationConstraint` (a
+  spacecraft of the kernels with a point front body) threw `InvalidOperationException` since the fourth round of #668,
+  and returned no window before (measured on a85098d). `gfoclt_c` now receives the shape given (a one-token change of
+  the C++ layer, for a technical reason: the proxy could not run the search it was asked). The Moon's centre across the
+  Sun's disc from DSS-65 on 2005-10-03 against `gfoclt` with a POINT front body converged to 1e-9 s
+  (`tools/occultation_reference`): 1.0e-7 s, a tick, through `SpiceAPI` and the CSPICE path (`Annular`, which is `Any`
+  for a point front body) (`OccultationSearchTests.SpicePath_PointFrontBody_MatchesGfocltAny`, red on a85098d); the
+  proxy itself is `gfoclt_c` bit for bit, 6.3e-7 s from that reference on the other Earth orientation kernel of the C++
+  tests (`API.FindWindowsOnOccultationConstraintProxyOfAPointFrontBody`, red on a85098d).
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -4513,11 +4527,6 @@ not listed.
   atan2(0, 0) = 0, where a circle and an ellipse throw `InvalidOperationException` since #715 (Fixed above). It is to
   throw as they do (decision 9 of #719, decided by S. Guillet, 2026-11-17). No workaround is needed for a target away
   from the observer.
-- **A front body without radii on the CSPICE path of the occultation search**
-  ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
-  `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
-  cannot be searched there: SPICE's error, `InvalidOperationException` since the fourth round of #668 (before, no
-  window). The other SPICE errors of the CSPICE window searches throw since that round (Changed above).
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter

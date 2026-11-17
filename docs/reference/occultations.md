@@ -41,7 +41,8 @@ A body modeled as `ShapeType.Ellipsoid` is the triaxial ellipsoid of its radii (
 ## Two paths
 
 - **CSPICE.** When the observer and the target are in the kernels and one of them is a spacecraft (or, for a site, the
-  target is a spacecraft of the kernels), `gfoclt` searches, with its convergence tolerance of 1 µs.
+  target is a spacecraft of the kernels), `gfoclt` searches, with its convergence tolerance of 1 µs, each body with the
+  shape given (before 11.0.0 a point front body reached it as an ellipsoid, and the search failed: #496).
 - **Managed.** Otherwise the library searches: a propagated spacecraft, a spacecraft from a TLE, a site, two natural
   bodies. It reads the states and the orientations (the kernels through the shared lock of `SpiceAPI`), never writes a
   kernel, and keeps no state, so searches on separate propagations may run concurrently.
