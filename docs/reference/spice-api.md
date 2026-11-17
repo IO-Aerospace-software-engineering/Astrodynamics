@@ -200,6 +200,11 @@ The element conversions (`ConvertConicElementsToStateVector`, three overloads, a
 `ConvertEquinoctialElementsToStateVector`) throw `ArgumentException` for an element that is not finite (#714): CONICS checks
 its domain with comparisons NaN passes, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state.
 
+`ConvertEquinoctialElementsToStateVector` gives `eqncpv_c` the mean longitude of the elements, `MeanLongitude()`, its
+fourth element ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450): before 11.0.0 the
+true longitude L0, the state of another point of the orbit, 1029 km off for an ordinary LEO); its state is that of
+`EquinoctialElements.ToStateVector()` within 1.0e-15 relative.
+
 The result of each two-body call and element conversion is about the observer and in the frame of its input, the same
 instances ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)): a body with a geopotential
 or an atmospheric model, a barycentre or a body built from custom parameters comes back as given, so a propagation started

@@ -18,7 +18,8 @@ namespace IO.Astrodynamics.Tests;
 
 /// <summary>
 /// The element conversions and the two-body propagation of <see cref="SpiceAPI"/>: the observer and the frame of their
-/// results are those of their input (#725).
+/// results are those of their input (#725), and <see cref="SpiceAPI.ConvertEquinoctialElementsToStateVector"/> gives
+/// EQNCPV the mean longitude of the elements (#450).
 /// </summary>
 /// <remarks>
 /// The child process of <see cref="ColdStartTests"/> checks, on a probe data provider, that none of these calls reads the
@@ -106,5 +107,55 @@ public class SpiceApiElementConversionTests
             Assert.All(results, x => Assert.Same(earth.Field, ((CelestialBody)x.Result.Observer).Field));
             Assert.All(results, x => Assert.True(((CelestialBody)x.Result.Observer).HasAtmosphericModel));
         }
+    }
+
+    // Twice the worst, rounded up at the second significant digit, of EquinoctialToState_MatchesTheReference on Linux x64
+    // (2026-11-17: position 1.007e-15, velocity 1.020e-15 relative, both at "keplerian e 0.05, i 0, node 180, aop 300
+    // (h = -0.0)"); provisional, to be set again from the CI logs of Windows x64 and macOS arm64
+    private const double EqncpvPosition = 2.1e-15;
+    private const double EqncpvVelocity = 2.1e-15;
+
+    /// <summary>
+    /// #450: the state EQNCPV gives the equinoctial elements, against the 60-digit reference of
+    /// <see cref="EquinoctialReference"/> (the closed form of the modified equinoctial elements at their true longitude,
+    /// <c>tools/equinoctial_elements/equinoctial_reference.py</c>), for the cases of #450 (a LEO, e = 0.89, an equatorial
+    /// ellipse, a circular orbit of f = −0.0, <see cref="EquinoctialReference.Eqncpv"/>) and the reference cases within the domain of EQNCPV
+    /// (e below 0.9, |h| and |k| below √(double.MaxValue)) and within a turn of their true longitude (the larger ones
+    /// measure the reduction of ν = L − atan2(g, f), shared by every path, #450's comment), and the Keplerian cases through
+    /// <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.ToEquinoctial"/>, which gives every sign pattern of the zeros. Before,
+    /// the true longitude L0 went to the slot of the mean longitude: the state of another point of the orbit, 7.6 |r| off
+    /// at e = 0.89 and 0.18 |r| for the LEO (measured on a85098d); now 1.0e-15 |r| at worst.
+    /// </summary>
+    [Fact]
+    public void EquinoctialToState_MatchesTheReference()
+    {
+        // Arrange
+        var reference = EquinoctialReference.Load();
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, SpiceFrame.ICRF, Epoch);
+        Assert.Equal(reference.Gm["gm_de440"], earth.GM);
+        var cases = reference.Eqncpv.Concat(reference.Equinoctial)
+            .Where(c => c.Group is not "large L" && System.Math.Sqrt(c.F * c.F + c.G * c.G) < 0.9 && c.P > 0.0 &&
+                        System.Math.Max(System.Math.Abs(c.H), System.Math.Abs(c.K)) < 1.3e154)
+            .Select(c => (Name: c.Name, Elements: c.Elements(earth, Epoch, SpiceFrame.ICRF), State: c.At(0.0)))
+            .Concat(reference.Keplerian.Where(c => c.E < 0.9 && c.A > 0.0)
+                .Select(c => (Name: "keplerian " + c.Name, Elements: c.Elements(earth, Epoch).ToEquinoctial(), State: c.At(0.0))))
+            .ToList();
+
+        // Act
+        var errors = cases.Select(c => (c.Name, Error: c.State.RelativeError(SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(c.Elements))))
+            .ToList();
+
+        // Assert
+        foreach (var (name, (position, velocity)) in errors)
+        {
+            _output.WriteLine($"MEASURE #450 EQNCPV, {name}: position {position:E3}, velocity {velocity:E3} (relative)");
+        }
+
+        var worstPosition = errors.MaxBy(e => double.IsNaN(e.Error.Position) ? double.PositiveInfinity : e.Error.Position);
+        var worstVelocity = errors.MaxBy(e => double.IsNaN(e.Error.Velocity) ? double.PositiveInfinity : e.Error.Velocity);
+        _output.WriteLine($"MEASURE #450 EQNCPV, {errors.Count} cases, worst: position {worstPosition.Error.Position:E3} ({worstPosition.Name}), " +
+                          $"velocity {worstVelocity.Error.Velocity:E3} ({worstVelocity.Name}) (relative)");
+        Assert.True(worstPosition.Error.Position <= EqncpvPosition, $"position {worstPosition.Error.Position:E3} ({worstPosition.Name})");
+        Assert.True(worstVelocity.Error.Velocity <= EqncpvVelocity, $"velocity {worstVelocity.Error.Velocity:E3} ({worstVelocity.Name})");
     }
 }

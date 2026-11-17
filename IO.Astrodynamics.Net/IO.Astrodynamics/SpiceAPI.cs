@@ -2435,8 +2435,14 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The state of equinoctial elements, through CSPICE's <c>eqncpv_c</c> in the native layer.
+    /// The state of equinoctial elements, through CSPICE's <c>eqncpv_c</c> in the native layer, at the epoch of the
+    /// elements, about their observer and in their frame (#725).
     /// </summary>
+    /// <remarks>
+    /// EQNCPV takes the mean longitude λ = Ω + ω + M, which the elements give by
+    /// <see cref="OrbitalParameters.OrbitalParameters.MeanLongitude"/> (#450: before 11.0.0 the true longitude L0 was passed
+    /// in its place, the state of another point of the orbit, 1029 km off for an ordinary LEO).
+    /// </remarks>
     /// <exception cref="ArgumentException">The centre of the elements is not a celestial body SPICE names: a spacecraft, a
     /// site, or an identifier no loaded kernel names (#711: before, the native layer ended the process for a centre with a
     /// GM, and the conversion of the result threw for the others).</exception>

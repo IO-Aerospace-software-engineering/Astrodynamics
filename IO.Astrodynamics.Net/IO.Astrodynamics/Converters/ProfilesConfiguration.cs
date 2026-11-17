@@ -119,19 +119,16 @@ public static class ProfilesConfiguration
             frame, keplerianElements.TrueAnomaly, TimeSpan.FromSeconds(keplerianElements.OrbitalPeriod));
     }
 
+    /// <summary>
+    /// The elements EQNCPV takes (eqncpv.c): a, h = e sin ϖ (G), k = e cos ϖ (F), p (K), q (H), the mean longitude
+    /// λ = Ω + ω + M at the epoch, and a pole at (−π/2, π/2), which applies no rotation. λ is
+    /// <see cref="OrbitalParameters.OrbitalParameters.MeanLongitude"/>, right for every set since #469, circular and
+    /// equatorial ones included (#450: before, the true longitude L0, the state of another point of the orbit).
+    /// </summary>
     internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)
     {
         return new EquinoctialElements(equinoctialElements.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
             equinoctialElements.SemiMajorAxis(), equinoctialElements.G, equinoctialElements.F,
-            equinoctialElements.K, equinoctialElements.H, equinoctialElements.L0, 0.0, -Constants.PI2, Constants.PI2, 0.0);
-    }
-
-    internal static OrbitalParameters.EquinoctialElements Convert(this DTO.EquinoctialElements equinoctialElements)
-    {
-        var observer = new CelestialBody(equinoctialElements.CenterOfMotionId);
-        var e = System.Math.Sqrt(equinoctialElements.H * equinoctialElements.H + equinoctialElements.K * equinoctialElements.K);
-        var p = equinoctialElements.SemiMajorAxis / (1 - e * e);
-        return new OrbitalParameters.EquinoctialElements(p, equinoctialElements.K, equinoctialElements.H, equinoctialElements.Q, equinoctialElements.P, equinoctialElements.L,
-            observer, Time.Create(equinoctialElements.Epoch, TimeFrame.TDBFrame), new Frame(equinoctialElements.Frame));
+            equinoctialElements.K, equinoctialElements.H, equinoctialElements.MeanLongitude(), 0.0, -Constants.PI2, Constants.PI2, 0.0);
     }
 }

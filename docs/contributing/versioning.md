@@ -3217,6 +3217,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   result carries the caller's observer (#725, under Changed), so no call reads the provider at all
   (`ColdStartTests.ElementConversions_ReadNoProviderUnderTheSpiceLock`, a child process on a probe provider that counts
   the calls made while the thread holds the lock: 9 of 9 for each of the ten overloads on a85098d, 0 of 0 now).
+- **`SpiceAPI.ConvertEquinoctialElementsToStateVector` gave the state of another point of the orbit** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450)).
+  `ProfilesConfiguration.Convert` passed the true longitude L0 to `eqncpv_c`, whose fourth element is the mean longitude
+  (NAIF's documentation of `eqncpv_c`: "the mean longitude (mean0+argp+node) at the epoch of the elements"): every orbit
+  whose mean and true longitudes differ came back off, 0.18 |r| for a LEO of e = 0.1 and 7.6 |r| at e = 0.89 (measured on
+  a85098d; the issue's 1029 km and 27 900 km on 732bcc3). It now passes `MeanLongitude()`, right on every branch since
+  #469, circular elements of f = −0.0 and equatorial ones included (#450's comment), and the unused reverse converter,
+  which read the mean longitude as a true one and took p = a / (1 − e²), is removed. Against the 60-digit closed form of
+  `tools/equinoctial_elements/equinoctial_reference.py` (the cases of #450 added under `eqncpv`, and every reference case
+  within the domain of EQNCPV and a turn of its true longitude, 79 cases) the worst relative error is 1.0e-15 in position
+  and velocity (`SpiceApiElementConversionTests.EquinoctialToState_MatchesTheReference`; 7.6 and 0.94 on a85098d).
+  The domain checks of #711 are unchanged.
 
 **Changed**
 
@@ -4493,6 +4504,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ECLIPJ2000, red on a85098d for all three). The positions, velocities, elements and epochs are unchanged, bit for bit.
   Migration: none for a caller that read the observer's identifier or name; a caller that relied on a body read from the
   kernels gets its own instance back (build the observer from the kernels to have one).
+- **Breaking: `SpiceAPI.ConvertEquinoctialElementsToStateVector` returns the state of its elements** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450), Fixed above).
+  Its state was that of the elements with L0 read as a mean longitude; it is now the state at the true longitude L0, as
+  `EquinoctialElements.ToStateVector()` gives it (within 1.0e-15 relative of the 60-digit closed form). Circular orbits,
+  whose two longitudes coincide, give the same state. Migration: a caller that passed the mean longitude as L0 to work
+  around the defect passes the true longitude.
 
 **Deprecated**
 
@@ -4553,11 +4569,6 @@ not listed.
   ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
   returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every
   dropped crossing. Split the search window so that each part holds fewer than 1000 windows.
-- **The element conversions of `SpiceAPI`**
-  ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450)).
-  `SpiceAPI.ConvertEquinoctialElementsToStateVector` passes the true longitude where `EQNCPV` takes the mean longitude
-  (1029 km off for an ordinary LEO, 27 900 km at e = 0.89) and throws `ArgumentException` for a ≤ 0 or e > 0.9, the
-  domain of `EQNCPV` (#711). Use `EquinoctialElements.ToStateVector()`.
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),
   [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
