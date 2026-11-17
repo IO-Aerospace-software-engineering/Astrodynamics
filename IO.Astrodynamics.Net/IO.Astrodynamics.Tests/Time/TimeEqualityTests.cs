@@ -209,6 +209,16 @@ public class TimeEqualityTests
         Assert.False(none == Utc);
         Assert.False(Utc.Equals(none));
         Assert.Equal(none.GetHashCode(), default(TimeSystem.Time).GetHashCode());
+
+        // The order: the default time (the only time without a frame, every constructor requires one) before every time
+        // with a frame, so that CompareTo returns 0 exactly when Equals holds, the default time included
+        Assert.Equal(0, none.CompareTo(default(TimeSystem.Time)));
+        Assert.Equal(0, none.CompareTo((object)default(TimeSystem.Time)));
+        Assert.Equal(-1, none.CompareTo(Utc));
+        Assert.Equal(1, Utc.CompareTo(none));
+        Assert.Equal(-1, none.CompareTo(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame)));
+        Assert.True(none < Utc && Utc > none && none <= default(TimeSystem.Time) && none >= default(TimeSystem.Time));
+        Assert.Equal(new[] { none, Utc }, new SortedSet<TimeSystem.Time> { Utc, none, default(TimeSystem.Time) });
     }
 
     /// <summary>

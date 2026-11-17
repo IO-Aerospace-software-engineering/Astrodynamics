@@ -16,3 +16,15 @@ public sealed class NotOnWindowsTheoryAttribute : TheoryAttribute
         }
     }
 }
+
+/// <summary>A fact skipped on Windows, for the reason given: reported as skipped there, not as passed.</summary>
+public sealed class NotOnWindowsFactAttribute : FactAttribute
+{
+    public NotOnWindowsFactAttribute(string reason)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            Skip = reason;
+        }
+    }
+}

@@ -121,6 +121,16 @@ public class ColdStartTests
         RunChild(mode);
     }
 
+    [NotOnWindowsFact("The local zone of a .NET process on Windows comes from the system, not from TZ: the child cannot set it")]
+    public void LocalTimes_AreTheInstantsOfTheirZone()
+    {
+        // A child that sets its local zone to America/New_York (#512): local times compare, are equal and hash as the
+        // instants DateTime.ToUniversalTime gives their calendars, across the skipped and the repeated hours of 2025, each
+        // checked by the child against the rules of the zone. Before 11.0.0 the local times of one frame compared by their
+        // calendars: local 02:30 of 2025-03-09 came before local 03:00, which is the earlier instant
+        RunChild("local-dst");
+    }
+
     // Runs the child with the mode, and the schedule and hold when given; returns its standard output
     private static string RunChild(string mode, string schedule = null, string hold = null)
     {

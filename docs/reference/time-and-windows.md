@@ -136,7 +136,13 @@ finds the same instant in another frame, as `SortedSet` did. Within UTC, TAI, TT
 calendars; within TDB too for times two ticks or more apart, but two consecutive TDB ticks can convert to one TAI tick
 (TDB − TT, rounded to the tick, gains one there, about every 300 s near its steepest), and then they are one instant,
 equal to each other and to that TAI time, so that equality stays transitive. A UTC time is never equal to a TAI time in
-an inserted leap second (UTC 23:59:60 has no `Time`). Two default times (no frame) are equal when their calendars are.
+an inserted leap second (UTC 23:59:60 has no `Time`). The default time (`default(Time)`, no frame) comes before every
+time with a frame and equals only itself, so comparing or sorting it does not throw. A local time
+(`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the zone of the machine, and two
+local times compare as instants too (before 11.0.0, by their calendars): in a zone with daylight saving time a label of
+the skipped hour is read with the standard offset, so it is the instant of a label an hour later (in America/New_York,
+local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, after local 03:00), and a label of the repeated hour is read with
+the standard offset too, so the `ToLocal()` of an instant in the first of the two hours is not that instant.
 To tell two labels of one instant apart, compare `DateTime` and `Frame`. Within TDB, `-` still counts the ticks of the
 calendars, so two equal consecutive TDB ticks differ by one tick. The library's caches whose values carry their key as a
 label (the orientations of a frame, the range rates of the conjunction search) stay keyed by label, an epoch in another

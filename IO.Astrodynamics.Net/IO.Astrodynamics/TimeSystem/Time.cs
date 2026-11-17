@@ -475,10 +475,24 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// Within TDB it does too for times two ticks or more apart; two consecutive TDB ticks can convert to one TAI tick
     /// (TDB − TT, rounded to the tick, gains one there), and then compare to 0. Before 11.0.0, times of one frame were
     /// compared by their calendars, and so two such TDB ticks were in order while each compared to 0 with their TAI time.
-    /// Within TDB, <c>-</c> still counts the ticks of the calendars: two such equal ticks differ by one tick.
+    /// Within TDB, <c>-</c> still counts the ticks of the calendars: two such equal ticks differ by one tick. A local
+    /// time is the instant <see cref="System.DateTime.ToUniversalTime"/> gives its calendar in the time zone of the
+    /// machine, local times included (#512: before 11.0.0 they were compared by their calendars). The default time (no
+    /// frame) comes before every time with a frame and compares to 0 with itself, so that comparing it never throws.
     /// </remarks>
     public int CompareTo(Time other)
     {
+        // The default time, the only time without a frame, before every time with one
+        if (Frame is null)
+        {
+            return other.Frame is null ? DateTime.Ticks.CompareTo(other.DateTime.Ticks) : -1;
+        }
+
+        if (other.Frame is null)
+        {
+            return 1;
+        }
+
         if (this.Frame.Equals(other.Frame))
         {
             switch (Frame)
@@ -513,11 +527,6 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// </remarks>
     public bool Equals(Time other)
     {
-        if (Frame is null || other.Frame is null)
-        {
-            return Frame is null && other.Frame is null && DateTime.Ticks == other.DateTime.Ticks;
-        }
-
         return CompareTo(other) == 0;
     }
 

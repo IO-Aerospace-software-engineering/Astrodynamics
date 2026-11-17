@@ -47,6 +47,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// call is the first native call of the process, see <see cref="CheckTwoBodyAsFirstNativeCall"/> (#714).
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
+/// The mode <c>local-dst</c> takes no schedule and loads no kernel: the local times of a zone with daylight saving time,
+/// see <see cref="LocalTimeChild"/> (#512).
 /// </para>
 /// <para>
 /// The schedules: <c>race</c> starts the two threads behind a <see cref="Barrier"/>, the reproduction of #623;
@@ -112,6 +114,12 @@ internal static class Program
         if (args.Length == 2 && args[1] is "two-body-first-propagate" or "two-body-first-conic")
         {
             return CheckTwoBodyAsFirstNativeCall(args[1] == "two-body-first-propagate");
+        }
+
+        // No kernel loaded: the local times of a zone with daylight saving time, set before the first read of the zone (#512)
+        if (args.Length == 2 && args[1] == "local-dst")
+        {
+            return LocalTimeChild.Run();
         }
 
         // Before any kernel is loaded: a TLE read before its kernels throws SPICE's error, and works once they are loaded
@@ -234,7 +242,7 @@ internal static class Program
     private static int Usage()
     {
         Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
-                                "or <kernel directory> memory-provider|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic");
+                                "or <kernel directory> memory-provider|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic|local-dst");
         return 2;
     }
 
