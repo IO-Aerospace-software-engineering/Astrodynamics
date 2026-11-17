@@ -174,7 +174,11 @@ across the jump:
   or more (the states then 1 µs apart, distinct epochs of the SPK; shorter, its interpolation is linear within 3e-10 m).
   Without an impulse the states make one arc, never filled, as before 11.0.0.
 - **An arc of zero length** is not stored: two impulses at one event; nor an arc between impulses within 2 µs, one
-  epoch. An impulse that no segment of the solution carries (Velocity-Verlet can locate the crossing at the end of its
+  epoch: the arc after them opens at the first with the state after them all, the position of the first and its
+  velocity after it plus the jump of each later one, so that the reads and the SPK from the first impulse on give the
+  state after them all, as at one event (#579, decided by S. Guillet, 2026-11-17; before 11.0.0 the arc after them
+  opened at the last, a read at the first returned the state before them all, 50 m/s off for a 50 m/s burn 1 µs after
+  a trim, and an SPK read between them threw SPKINSUFFDATA). An impulse that no segment of the solution carries (Velocity-Verlet can locate the crossing at the end of its
   last step) closes the last arc: the reads and the SPK end with the state before it, as the solution does.
 - **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,

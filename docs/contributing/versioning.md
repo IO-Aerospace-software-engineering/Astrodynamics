@@ -3232,6 +3232,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   sets the head of the chain (see **Changed**); `SetStandbyManeuver_ASecondCall_SetsTheHead` (`RepropagationTests`, the
   second head m2, the head of a chain of two, null, after an unfinished run, both integrators, red on a85098d; after a
   finished run the control) is bit for bit a fresh spacecraft given the last call alone.
+- **Two impulses less than 2 µs apart: a read at the first returned the state before both**
+  ([#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579)). The stored states drop the
+  arc between two impulses within 2 µs, one epoch, but the arc after them opened at the second: `GetEphemeris` and
+  `GetGeometricStateRelativeTo` at the first impulse returned the state before both, extrapolated it up to the second,
+  and an SPK read between them threw SPKINSUFFDATA (a 1e-5 m/s trim then 50 m/s 1 µs later, RK7(8): 50 m/s off at the
+  first impulse). Impulses each within 2 µs of the one before are now one epoch (decided by S. Guillet, 2026-11-17): the
+  arc after them opens at the first with the state after them all, its position and its velocity after it plus the jump
+  of each later one, so that the reads and the SPK from the first impulse on give the state after them all, as for
+  impulses at one event, whose stored states are unchanged. Against the solution after the first impulse plus the
+  second ΔV, carried by the two-body Taylor of the second order, at the first impulse, between and at the second:
+  1.9e-9 m and 2.0e-12 m/s managed, the SPK within `SpkAgainstManaged` of them
+  (`PropagatedArcsEdgeTests.TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth`, 1 and 1.5 µs apart, red on
+  a85098d; 3 µs apart, two arcs, the control; `PropagatedEphemerisTests.ImpulsesWithin2Microseconds_AreOneEpoch`, 0.1 to
+  2 µs, red on a85098d, 2.1 and 3 µs the control).
 
 **Changed**
 
@@ -4639,13 +4653,10 @@ not listed.
 - **Impulses at the edges of the stored states**
   ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572),
   [#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575),
-  [#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579),
   [#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). With Velocity-Verlet the
   segment after an impulse starts at the event's label rounded to the 100 ns tick (up to 5e-8 s per event, accumulating
   over a chain), and an impulse whose crossing falls in the last step is executed (fuel, `ExecutedManeuvers`, `ToOpm`)
-  while the states end before it: extend the window past the last maneuver. Two impulses less than 2 µs apart store no
-  arc between them: a read at the first returns the state before both, and an SPK read between them throws
-  SPKINSUFFDATA. The state that closes an arc carries its impulse's tick, up to half a tick from its instant (about 0.4
+  while the states end before it: extend the window past the last maneuver. The state that closes an arc carries its impulse's tick, up to half a tick from its instant (about 0.4
   mm at 8.6 km/s).
 - **Event detection** ([#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578),
   [#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580),

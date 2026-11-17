@@ -87,6 +87,20 @@ public class PropagatedArcsEdgeTests
 
     internal const double SpkVelocityAtTheEnd = 2.6e-12;
 
+    /// <summary>The managed reads at, between and after two impulses within 2 µs against the state after both, the solution
+    /// after the first with the second ΔV added, carried by the two-body Taylor of the second order, m and m/s (#579). Worst
+    /// 1.92e-9 m and 2.03e-12 m/s on Linux x64 (1 and 1.5 µs apart): the read of the solution at the first impulse against
+    /// the integrator's state there. Provisional: twice the Linux worst, rounded up at the second significant digit, to be
+    /// set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    internal const double CloseImpulsesPosition = 3.9e-9;
+
+    internal const double CloseImpulsesVelocity = 4.1e-12;
+
+    /// <summary>The SPK against the managed reads at and between two impulses 1, 1.5 and 3 µs apart, m/s (#579); the
+    /// position is <see cref="PropagatedArcsTests.SpkAgainstManaged"/>'s. Worst 4.98e-7 m/s on Linux x64 (3 µs apart, the
+    /// epochs of the SPK doubles of 1.2e-7 s resolution). Provisional, as above.</summary>
+    internal const double CloseImpulsesSpkVelocity = 1.0e-6;
+
     /// <summary>The SPK of the Cosmographia export at tc - 1 µs, tc and tc + 1 µs against the solution, m and m/s. Worst
     /// 5.88e-4 m and 6.32e-7 m/s, the same on the three platforms (CI run 41651463194).</summary>
     internal const double CosmographiaPosition = 1.2e-3;
@@ -319,6 +333,99 @@ public class PropagatedArcsEdgeTests
             Assert.Equal(0.0, atTc);
             Assert.True(near <= PropagatedArcsTests.NearRk, $"near {near:E3} m");
             Assert.True(spkAgainstManaged <= PropagatedArcsTests.SpkAgainstManaged, $"SPK - managed {spkAgainstManaged:E3} m");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            spk.Delete();
+        }
+    }
+
+    /// <summary>
+    /// Two chained user impulses less than 2 µs apart (#579, decided by S. Guillet, 2026-11-17): a trim of 1e-5 m/s, then
+    /// 50 m/s along the velocity, the second aimed d after the first, on a 10 kg/s engine (the first burn, 6.8e-7 s, gates
+    /// the second 2.3e-7 s after the first), RK7(8) at 1e-12 about a point-mass Earth. Within 2 µs the impulses are one
+    /// epoch: the managed reads at the first impulse, between them and at the second, and the SPK, give the state after
+    /// both, against the reference built from the solution, <see cref="PropagationSolution.InterpolateAt"/> at the first
+    /// impulse (the state after it) with the second impulse's ΔV added, carried at that velocity to the epoch read. Before
+    /// the fix the read at the first impulse was the state before both, 50 m/s off, and an SPK read between them threw
+    /// SPICE(SPKINSUFFDATA). The control, 3 µs apart: two impulses, the read at the first the state after it, to the bit.
+    /// </summary>
+    [Theory]
+    [InlineData(1.0e-6, -5795)]
+    [InlineData(1.5e-6, -5796)]
+    [InlineData(3.0e-6, -5797)]
+    public void TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth(double d, int naifId)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), Leo(earth));
+        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        spacecraft.AddFuelTank(tank);
+        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        spacecraft.AddEngine(engine);
+        var target = Start.AddSeconds(2000.0);
+        var trim = new TimedImpulse(earth, Start, engine, target, 1.0e-5);
+        var burn = new TimedImpulse(earth, Start, engine, target.AddSeconds(d), 50.0);
+        trim.SetNextManeuver(burn);
+        spacecraft.SetStandbyManeuver(trim);
+        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(10.0));
+        var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
+        Assert.Equal(2, events.Length);
+        var (t1, t2) = (events[0], events[1]);
+        double separation = (t2 - t1).TotalSeconds;
+        bool oneEpoch = separation <= PropagatedEphemeris.SameEpochTolerance;
+        Assert.Equal(d < 2.0e-6, oneEpoch);
+
+        // The reference after both at t: the solution after the first impulse at t1, plus the second impulse's ΔV, carried
+        // to t by the second-order Taylor of the two-body motion, a = −GM r / |r|³ (the third order, 3e-12 m/s over 2 µs,
+        // below the reads); the control: the solution itself
+        var (r1, v1) = solution.InterpolateAt(t1);
+        var vAfter = v1 + burn.DeltaV;
+        var a1 = r1 * (-earth.GM / System.Math.Pow(r1.Magnitude(), 3));
+        (Vector3 R, Vector3 V) Reference(Time t)
+        {
+            if (!oneEpoch) return solution.InterpolateAt(t);
+            double tau = (t - t1).TotalSeconds;
+            return (r1 + vAfter * tau + a1 * (0.5 * tau * tau), vAfter + a1 * tau);
+        }
+
+        var epochs = new[] { t1, t1.AddSeconds(0.5 * separation), t2 };
+        var spk = NewSpk(spacecraft.Name.ToLowerInvariant());
+        spacecraft.WriteEphemeris(spk);
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            double managedR = 0.0, managedV = 0.0, spkR = 0.0, spkV = 0.0;
+            foreach (var t in epochs)
+            {
+                var (r, v) = Reference(t);
+                var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                managedR = System.Math.Max(managedR, (read.Position - r).Magnitude());
+                managedV = System.Math.Max(managedV, (read.Velocity - v).Magnitude());
+                // The windowed read, which throws on a SPICE error, against the managed read (the SPK's epochs are doubles of
+                // 1.2e-7 s resolution in 2024: SpkAgainstManaged)
+                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
+                spkR = System.Math.Max(spkR, (fromSpk.Position - read.Position).Magnitude());
+                spkV = System.Math.Max(spkV, (fromSpk.Velocity - read.Velocity).Magnitude());
+            }
+
+            _output.WriteLine($"MEASURE #579 d = {d:R} s: impulses {separation:E3} s apart at S + {(t1 - Start).TotalSeconds:R} s, arcs [{string.Join(",", spacecraft.PropagatedArcs.Select(a => a.Length))}], " +
+                              $"managed {managedR:E3} m {managedV:E3} m/s against the state after both, SPK - managed {spkR:E3} m {spkV:E3} m/s");
+            Assert.Equal(oneEpoch ? 2 : 3, spacecraft.PropagatedArcs.Count);
+            Assert.True(spkR <= PropagatedArcsTests.SpkAgainstManaged, $"SPK - managed {spkR:E3} m");
+            Assert.True(spkV <= CloseImpulsesSpkVelocity, $"SPK - managed {spkV:E3} m/s");
+            if (oneEpoch)
+            {
+                Assert.True(managedR <= CloseImpulsesPosition, $"managed {managedR:E3} m");
+                Assert.True(managedV <= CloseImpulsesVelocity, $"managed {managedV:E3} m/s");
+            }
+            else
+            {
+                var (rAt, vAt) = solution.InterpolateAt(t1);
+                var read = spacecraft.GetEphemeris(t1, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                Assert.Equal(rAt, read.Position);
+                Assert.Equal(vAt, read.Velocity);
+            }
         }
         finally
         {
