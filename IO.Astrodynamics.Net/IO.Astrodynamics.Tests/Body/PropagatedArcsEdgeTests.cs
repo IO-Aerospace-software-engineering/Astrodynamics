@@ -126,12 +126,11 @@ public class PropagatedArcsEdgeTests
 
     /// <summary>
     /// An impulse at the end of the propagation (review probe E3): Velocity-Verlet locates the perigee crossing at the end of
-    /// its last step, the impulse executes (§9 item 7 of #554, its own issue) and the solution ends with the state before it,
-    /// one segment. An impulse that no segment carries opens no arc, its state before it closes the last one: the reads and
-    /// the SPK end as the solution does, with the state before the impulse, at the end of the propagation, past the last
-    /// output when the output step does not divide the window (on the prototype, a one-state arc: the read at the end gave
-    /// the state after, 8 063 m/s against 7 829 m/s, and WriteEphemeris threw). RK7(8) over 2 970 s locates the impulse
-    /// 6.8 s before the end: a short arc, filled.
+    /// its last step, the impulse executes and the solution ends with the state after it, a last segment of zero length
+    /// (#575; before, it ended with the state before it, one segment). That segment opens a last arc of one state, the
+    /// state after: the managed reads end as the solution does. The SPK cannot hold a segment of one epoch: it ends with the
+    /// arc before, the state before the impulse at the end (WriteEphemeris threw on the one-state arc of the prototype of
+    /// #540). RK7(8) over 2 970 s locates the impulse 6.8 s before the end: a short arc, filled.
     /// </summary>
     [Theory]
     [InlineData("VVd", 10.0, 2964.0, -5501)]
@@ -161,13 +160,20 @@ public class PropagatedArcsEdgeTests
                               $"(dV {apogee.DeltaV.Magnitude():F1} m/s), arcs [{string.Join(",", arcs.Select(a => a.Length))}], at the end managed {managedPosition:E2} m {managedVelocity:E2} m/s, " +
                               $"SPK {spkPosition:E2} m {spkVelocity:E2} m/s, |v| solution {velocity.Magnitude():F2} m/s");
             Assert.True(apogee.ThrustWindow.HasValue);
-            if (solution.Segments.Count == 1)
+            Assert.Equal(2, solution.Segments.Count);
+            if (solution.Segments[^1].Duration == 0.0)
             {
-                // The impulse at the end: one arc, ending with the state before the impulse
-                Assert.Single(arcs);
+                // The impulse at the end: the arc closed by the state before it, then the state after it alone; the SPK
+                // ends with the state before it
+                Assert.Equal(2, arcs.Count);
                 Assert.True(arcs[0].Length >= 2);
+                Assert.Single(arcs[1]);
                 Assert.Equal(0.0, managedVelocity);
                 Assert.Equal(0.0, managedPosition);
+                var before = solution.Segments[0].Steps[^1];
+                spkVelocity = (read.Velocity - before.EndVelocity).Magnitude();
+                spkPosition = (read.Position - before.EndPosition).Magnitude();
+                _output.WriteLine($"MEASURE #575 SPK at the end against the state before the impulse: {spkPosition:E2} m {spkVelocity:E2} m/s");
             }
             else
             {

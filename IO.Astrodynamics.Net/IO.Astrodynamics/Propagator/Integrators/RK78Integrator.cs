@@ -415,6 +415,20 @@ public sealed class RK78Integrator : Integrator
             }
         }
 
+        // A segment of no duration (the state after an impulse at the end of the propagation, #575), or shorter than the
+        // landing tolerance: one step of zero length, which holds the state
+        if (segment.Steps.Count == 0)
+        {
+            var (posZero, velZero, _) = ComputeRK78Step(pos, vel, baseEpoch, 0.0, 0.0);
+            segment.AddStep(new AcceptedStep(0.0, 0.0, pos, vel, posZero, velZero, _stepper.StartAcceleration,
+                _stepper.EndAcceleration));
+            if (variational != null)
+            {
+                AdvanceVariational(0.0);
+                CommitVariational(variational);
+            }
+        }
+
         return new IntegrationResult(segment, null);
     }
 

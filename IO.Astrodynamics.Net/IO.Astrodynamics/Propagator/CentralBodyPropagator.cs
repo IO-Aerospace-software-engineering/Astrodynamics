@@ -457,8 +457,8 @@ public class CentralBodyPropagator : PropagatorBase
         // the frame of the propagation. Conversion to SSB happens on demand. The states replace those stored before, split
         // into arcs at each impulse with the states on either side at its epoch, the short arcs filled from the solution
         // with the covariance in covariance mode (#540)
-        // An impulse that no segment of the solution carries (located at the end of the propagation, §9 item 7 of #554)
-        // opens no arc: the solution ends with the state before it, and so do the stored states
+        // An impulse at the end of the propagation is carried by a last segment of zero length (#575), which opens a last
+        // arc of one state, the state after it; an impulse that no segment carries opens no arc
         var solution = CurrentSolution;
         var impulses = Impulses.Select(i => new ImpulseBoundary(i.Epoch, ToIcrf(i.Before),
             solution.Segments.Any(s => s.BaseEpoch == i.Epoch) ? ToIcrf(i.After) : null)).ToArray();

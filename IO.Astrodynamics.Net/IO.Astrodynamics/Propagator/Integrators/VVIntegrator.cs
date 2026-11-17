@@ -78,6 +78,15 @@ public sealed class VVIntegrator : Integrator
         UpdateEvalState(pos, vel, baseEpoch);
         var accel = ComputeAcceleration(EvalState);
 
+        // A segment of no duration, the state after an impulse at the end of the propagation (#575): one step of zero
+        // length, which holds the state
+        if (!(duration > 0.0))
+        {
+            SkipRoot = false;
+            segment.AddStep(new AcceptedStep(0.0, 0.0, pos, vel, pos, vel, accel, accel));
+            return new IntegrationResult(segment, null);
+        }
+
         // Initialize event detector g-values: a gated detector open at the base from the start of its search (#581), the
         // detector of the event just handled from its g-value past that root
         double[] prevG = null;

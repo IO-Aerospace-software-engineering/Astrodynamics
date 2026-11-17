@@ -41,6 +41,9 @@ public interface IIntegrator
     /// an event with the same detector does not find it again (#580).
     /// </para>
     /// <para>
+    /// A <paramref name="duration"/> of zero gives a segment of one step of zero length, which holds the start state.
+    /// </para>
+    /// <para>
     /// The integrators of the library evaluate the forces at the TDB label of each instant of the time argument. An
     /// integrator implemented outside the library, a bare <see cref="IIntegrator"/> or a subclass of
     /// <see cref="Integrator"/>, builds its own epochs, usually <c>baseEpoch.AddSeconds(t)</c>, in TDB seconds: about

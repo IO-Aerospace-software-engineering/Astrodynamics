@@ -480,11 +480,15 @@ public abstract class PropagatorBase : IPropagator
         // event times: the time argument of each event, from which the windows of the chain count their seconds (#547)
         double segmentBaseTau = 0.0;
 
-        // 4. Segment loop
+        // 4. Segment loop. An impulse executed with no time left after it (located at the end of the propagation, which
+        // Velocity-Verlet does when the crossing falls in its last step) opens a last segment of zero length, which holds
+        // the state after it, so that the solution, its outputs and the stored states end with it (#575)
+        bool afterImpulse = false;
         while (true)
         {
             double remaining = TimeArgument.Remaining(Window.StartDate, propagationDuration, propagationEnd, currentEpoch);
-            if (remaining <= 0.0) break;
+            bool lastAfterImpulse = remaining <= 0.0;
+            if (lastAfterImpulse && !afterImpulse) break;
 
             // a. Integrate segment, with the mass and coefficients of the segment, recorded for the force model of the
             // propagation (#402) and, in RK7(8), for the evaluations of its solution
@@ -494,8 +498,9 @@ public abstract class PropagatorBase : IPropagator
                 rk78.BeginVariationalSegment(context, entryY, entryQ, entryManeuver);
             }
 
-            var result = Integrator.IntegrateSegment(
-                currentPos, currentVel, currentEpoch, remaining, eventDetectors);
+            var result = lastAfterImpulse
+                ? Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, 0.0)
+                : Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, remaining, eventDetectors);
             result.Segment.Context = context;
             if (rk78 != null)
             {
@@ -506,7 +511,7 @@ public abstract class PropagatorBase : IPropagator
             solution.AddSegment(result.Segment);
 
             // c. Handle event
-            if (result.Event.HasValue)
+            if (result.Event.HasValue && !lastAfterImpulse)
             {
                 var evt = result.Event.Value;
                 var eventEpoch = TimeArgument.EpochAt(currentEpoch, evt.EventTime);
@@ -540,6 +545,7 @@ public abstract class PropagatorBase : IPropagator
                 // state at the event, unchanged, on Continue (#355: the same segment used to be integrated again, without
                 // end)
                 bool restart = eventResult.Action == EventAction.StopAndRestart;
+                afterImpulse = restart;
 
                 // An executed impulse: its windows in seconds of the time argument, its attitude and the rest of the chain
                 // on the timeline, and the detector of the next impulse (#539, #547); the detector executes the impulse

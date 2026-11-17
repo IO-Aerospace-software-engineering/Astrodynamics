@@ -19,8 +19,10 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// output, the ends of the window, are always kept. An arc bounded by an impulse and holding fewer than
 /// <see cref="MinimumArcStates"/> states takes <see cref="FilledArcStates"/> states of the solution, evenly spaced over it,
 /// its two ends kept, when they can be <see cref="MinimumFillSpacing"/> apart. An arc of zero length (two impulses at one
-/// event), or between two impulses and not longer than <see cref="SameEpochTolerance"/>, is not stored; an impulse that no
-/// segment of the solution carries (located at the end of the propagation) closes the last arc. At an impulse's
+/// event), or between two impulses and not longer than <see cref="SameEpochTolerance"/>, is not stored; an impulse at the
+/// end of the propagation, which the last segment of the solution carries, a segment of zero length (#575), opens a last
+/// arc of one state, the state after it; an impulse that no segment of the solution carries (a
+/// solution built otherwise) closes the last arc. At an impulse's
 /// epoch the reads take the later arc: the state after the impulse, as <see cref="PropagationSolution.InterpolateAt"/>,
 /// SPICE (the later segment of an SPK) and GMAT give it.
 /// </summary>
@@ -147,7 +149,8 @@ internal sealed class PropagatedEphemeris
     /// </summary>
     /// <param name="outputs">The output states, in ICRF, in epoch order.</param>
     /// <param name="impulses">The impulses, their states in ICRF, in epoch order; the state after the last one null when no
-    /// segment of the solution carries it (at the end of the propagation): the states end with the state before it.</param>
+    /// segment of the solution carries it: the states end with the state before it. An impulse at the end of the
+    /// propagation is carried by a last segment of zero length (#575).</param>
     /// <param name="fill">The state of the solution at an epoch inside an arc, in ICRF, with its covariance in covariance
     /// mode, for the short arcs; null for no fill.</param>
     internal void Set(IReadOnlyList<StateVector> outputs, IReadOnlyList<ImpulseBoundary> impulses, Func<Time, StateVector> fill)
@@ -179,6 +182,14 @@ internal sealed class PropagatedEphemeris
             // same-epoch tolerance is one epoch; at the ends of the window the first and the last output keep their arc
             bool bounded = opened || closed;
             double span = (arc[^1].Epoch - arc[0].Epoch).TotalSeconds;
+            if (opened && !closed && span <= 0.0)
+            {
+                // An impulse at the end of the propagation (#575): the last arc is its state after alone (the last output,
+                // at the same epoch, is the same state), so that the reads at the end give the state the solution ends with
+                arcs.Add([arc[0]]);
+                continue;
+            }
+
             if (bounded && (span <= 0.0 || opened && closed && span <= SameEpochTolerance)) continue;
 
             if (bounded && arc.Count < MinimumArcStates && fill != null && span >= (FilledArcStates - 1) * MinimumFillSpacing)
