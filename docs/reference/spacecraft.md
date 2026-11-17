@@ -504,16 +504,19 @@ zero length or a zero cross product are exact on computed vectors, so their thre
 (`fovtrg_c`, CSPICE N0067, measured in #715): SPICE(DEGENERATECASE) up to 1.53e-17 rad for a rectangle and 1.42e-17 rad
 for an ellipse with the boresight at the Moon; none down to 5e-324 with the boresight +Z, but for an ellipse and an
 ellipsoid target, SPICE(BADAXISLENGTH) up to 2.73e-319. The managed path searches such fields, so the two paths can
-then disagree (documented, not rejected: decided by S. Guillet, 2026-11-17). Its cone of a circle or an ellipse loses its precision far below (measured: the Moon's ellipsoid at the
-boresight not found for a half-angle of 1e-155 rad in the reference plane), and where the squares of its semi-axes
-underflow at the target's distance (a half-angle below about 6e-171 rad at the Moon's distance) it throws
-`InvalidOperationException`, the field cannot be searched ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated `ArgumentException`, "The
-semi-axes of an ellipsoid must have positive lengths"). A point target at the observer, distance 0 (two spacecraft of
-the same state), has no direction: `IsInFOV` and the search of a circle or an ellipse throw
-`InvalidOperationException` naming the target at the observer, not the field (before, the same unrelated
-`ArgumentException`); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an
-observer inside the target. The rectangle's point margin takes the angles of the zero vector as 0 and reports such a
-target in view.
+then disagree (documented, not rejected: decided by S. Guillet, 2026-11-17). Its cone of a circle or an ellipse loses
+its precision far below (measured: the Moon's ellipsoid at the boresight not found for a half-angle of 1e-155 rad in the
+reference plane), and where the squares of its semi-axes underflow at the target's distance (a half-angle below about
+6e-171 rad at the Moon's distance) it throws `InvalidOperationException`, the field cannot be searched
+([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated
+`ArgumentException`, "The semi-axes of an ellipsoid must have positive lengths"). A point target at the observer,
+distance 0 (two spacecraft of the same state), has no direction: `IsInFOV` and the search of a circle or an ellipse
+throw `InvalidOperationException` naming the target at the observer, not the field (before, the same unrelated
+`ArgumentException`); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an observer
+inside the target. The rectangle's point margin takes the angles of the zero vector as 0 and reports such a target in
+view; it is to throw as the circle and the ellipse do
+([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), decided by S. Guillet,
+2026-11-17).
 
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
 gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the
