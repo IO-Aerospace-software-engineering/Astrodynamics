@@ -13,7 +13,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 {
     /// <summary>
     /// The arguments of the target-orbit constructor of <see cref="ImpulseManeuver"/>, through the three maneuvers built on
-    /// it (#552).
+    /// it (#552), and of the target-orbit constructors of <see cref="ApogeeHeightManeuver"/> and
+    /// <see cref="PerigeeHeightManeuver"/>, which chain to its maneuver-centre constructor (#555).
     /// </summary>
     public class ImpulseManeuverTests
     {
@@ -32,6 +33,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
             nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
             nameof(PhasingManeuver) => new PhasingManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, 2, engine),
+            nameof(ApogeeHeightManeuver) => new ApogeeHeightManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
+            nameof(PerigeeHeightManeuver) => new PerigeeHeightManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
             _ => throw new ArgumentOutOfRangeException(nameof(maneuver))
         };
 
@@ -54,7 +57,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
         /// <summary>
         /// A null target orbit is an argument error naming it, whether the fuel tank of the engine is attached to a
-        /// spacecraft or not, not the <see cref="NullReferenceException"/> of its dereference.
+        /// spacecraft or not, not the <see cref="NullReferenceException"/> of its dereference. #555: the two height
+        /// maneuvers threw that <see cref="NullReferenceException"/> on a85098d, reading the apogee or perigee vector of the
+        /// null orbit in their constructor chain.
         /// </summary>
         [Theory]
         [InlineData(nameof(ApsidalAlignmentManeuver), false)]
@@ -63,6 +68,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [InlineData(nameof(PlaneAlignmentManeuver), true)]
         [InlineData(nameof(PhasingManeuver), false)]
         [InlineData(nameof(PhasingManeuver), true)]
+        [InlineData(nameof(ApogeeHeightManeuver), false)]
+        [InlineData(nameof(ApogeeHeightManeuver), true)]
+        [InlineData(nameof(PerigeeHeightManeuver), false)]
+        [InlineData(nameof(PerigeeHeightManeuver), true)]
         public void ANullTargetOrbit_IsAnArgumentError(string maneuver, bool attached)
         {
             var engine = Engine(attached);
@@ -80,6 +89,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [InlineData(nameof(ApsidalAlignmentManeuver))]
         [InlineData(nameof(PlaneAlignmentManeuver))]
         [InlineData(nameof(PhasingManeuver))]
+        [InlineData(nameof(ApogeeHeightManeuver))]
+        [InlineData(nameof(PerigeeHeightManeuver))]
         public void ANullEngine_IsAnArgumentError(string maneuver)
         {
             Assert.Equal("targetOrbit", Assert.Throws<ArgumentNullException>(() => Create(maneuver, null, null)).ParamName);

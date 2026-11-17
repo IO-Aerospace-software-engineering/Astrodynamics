@@ -1239,6 +1239,15 @@ release are listed under **Known limitations**.
   check: `NullReferenceException`, the `ArgumentException` unreachable. It throws `ArgumentNullException` (an
   `ArgumentException`) naming `targetOrbit`, before the check of the engine, whether the fuel tank is attached to a
   spacecraft or not ([#552](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/552)).
+- **A null target orbit of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` is an argument error**
+  ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). Their target-orbit
+  constructors chain to the maneuver-centre constructor of `ImpulseManeuver`, not to the one #552 fixed, and read the
+  observer and the apogee or perigee vector of the target in that chain: a null `targetOrbit` threw
+  `NullReferenceException` with no parameter name, whether the fuel tank of the engine was attached to a spacecraft or
+  not (a85098d, the four cases of `ImpulseManeuverTests.ANullTargetOrbit_IsAnArgumentError` and the two of
+  `ANullEngine_IsAnArgumentError` for these maneuvers). They throw the `ArgumentNullException` of the three maneuvers of
+  #552, naming `targetOrbit`, before the check of the engine. Migration: a caller that caught `NullReferenceException`
+  catches `ArgumentNullException`.
 - **The XML documentation of `OpmManeuverParameters`.** A bare `<= 0` in three comments (`ManDeltaMass`, the
   constructor's `manDeltaMass`, `CreateImpulsive`'s `deltaMass`) was badly formed XML (CS1570 with
   `GenerateDocumentationFile`), and the whole documentation of the three members was dropped from the generated file.
@@ -4631,9 +4640,6 @@ not listed.
   past the gate is never a crossing, so a time-like user `ImpulseManeuver` or `IEventDetector` landing on a
   Velocity-Verlet or fixed-step RK7(8) step end never fires. A `PlaneAlignmentManeuver` whose propagation starts less
   than 1e-6 |r| past a node fires one orbit late.
-- **A null target orbit** ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). The
-  target-orbit constructors of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` throw `NullReferenceException` for a
-  null `targetOrbit`, not an `ArgumentNullException` that names it.
 - **Attitudes** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549),
   [#592](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/592)). Between output epochs the
   attitude record is the spherical linear interpolation of its samples, not the law: a `NadirAttitude` 1.47e-3 rad off
