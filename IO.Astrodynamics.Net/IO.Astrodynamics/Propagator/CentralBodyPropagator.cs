@@ -88,6 +88,10 @@ public class CentralBodyPropagator : PropagatorBase
     {
         RequirePositiveStep(deltaT, nameof(deltaT));
         ArgumentNullException.ThrowIfNull(spacecraft);
+
+        // The checks of the initial orbit of PropagatorBase, before the initial state is computed here (#463)
+        ValidateInertialFrame(spacecraft);
+        ValidateOsculatingInitialOrbit(spacecraft);
         var centralBody = ResolveCentralBody(spacecraft);
         var bodies = ForceModelBodies(centralBody, celestialBodies);
         var forces = BuildCentralBodyForces(centralBody, bodies, spacecraft, includeAtmosphericDrag,

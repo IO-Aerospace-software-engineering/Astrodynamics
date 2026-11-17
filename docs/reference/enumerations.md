@@ -58,7 +58,7 @@ the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-s
 | Value | Description |
 |-------|-------------|
 | `Osculating` | Osculating (instantaneous) elements |
-| `Mean` | Mean elements (e.g., from TLE/OMM) |
+| `Mean` | Mean elements (e.g., from TLE/OMM): no state vector without their theory; `AtEpoch` and `ToKeplerianElements(Time)` keep the type, and a numerical propagation refuses them as initial orbit (#463) |
 
 !!! warning
     Mean elements cannot call `ToStateVector()` directly. Use `TLE.ToOsculating()` instead.

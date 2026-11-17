@@ -23,19 +23,59 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="observer">The observer.</param>
         /// <param name="epoch">The epoch.</param>
         /// <param name="frame">The reference frame.</param>
-        /// <param name="perigeeRadius">The perigee radius (optional).</param>
+        /// <param name="perigeeRadius">The perigee radius (optional): for a parabolic orbit (|e − 1| &lt; 1e-6) the state of
+        /// a non-finite P; without it, a finite P gives q = P / (1 + e) (#477).</param>
         /// <param name="elementsType">The type of orbital elements (osculating or mean). Defaults to osculating.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="p"/> is not finite and above 0, which no conic
+        /// has (p = h²/μ), a non-finite P being accepted only for a parabola (|e − 1| &lt; 1e-6), whose state then needs
+        /// <paramref name="perigeeRadius"/> (#481); or <paramref name="perigeeRadius"/> is given and not finite and above 0
+        /// (#481).</exception>
+        /// <exception cref="ArgumentException"><paramref name="f"/>, <paramref name="g"/>, <paramref name="h"/>,
+        /// <paramref name="k"/> or <paramref name="l0"/> is not finite, or √(F² + G²) overflows (#726). The exception
+        /// names the parameter.</exception>
         public EquinoctialElements(double p, double f, double g, double h, double k, double l0, ILocalizable observer, Time epoch, Frame frame,
             double? perigeeRadius = null, OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer,
             epoch, frame, elementsType)
         {
+            // No conic has a non-finite element (#726), nor p ≤ 0 or q ≤ 0 (#481); SPICE CONICS rejects rp ≤ 0 and EQNCPV
+            // a ≤ 0. The checks compute nothing that valid elements use
+            RequireFinite(f, nameof(f));
+            RequireFinite(g, nameof(g));
+            RequireFinite(h, nameof(h));
+            RequireFinite(k, nameof(k));
+            RequireFinite(l0, nameof(l0));
+
+            // e is the expression of Eccentricity()
+            double e = System.Math.Sqrt(f * f + g * g);
+            if (!double.IsFinite(e))
+            {
+                throw new ArgumentException($"The eccentricity √(F² + G²) of F = {f:R} and G = {g:R} is not finite.", nameof(f));
+            }
+
+            bool parabolic = System.Math.Abs(e - 1.0) < 1E-06;
+            if (double.IsFinite(p) ? !(p > 0.0) : !parabolic)
+            {
+                throw new ArgumentOutOfRangeException(nameof(p), p,
+                    "The semi-latus rectum P must be finite and above 0 (a non-finite P only for a parabola, |e − 1| < 1e-6, given its perigee radius).");
+            }
+
+            if (perigeeRadius is { } q && !(double.IsFinite(q) && q > 0.0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(perigeeRadius), q, "The perigee radius must be finite and above 0.");
+            }
+
             P = p;
             F = f;
             G = g;
             H = h;
             K = k;
             L0 = l0;
-            _perigeeRadius = perigeeRadius;
+
+            // A parabola of the band |e − 1| < 1e-6 given a finite P and no perigee radius has q = P / (1 + e), exactly P / 2
+            // at e = 1: derived here, so that every path reads the same q from the first call (#477; before, the
+            // Keplerian paths threw on a fresh instance, and after PerigeeRadius() read the h²/μ/(1 + e) of the state,
+            // 2 ulp away)
+            _perigeeRadius = perigeeRadius ?? (parabolic && double.IsFinite(p) ? p / (1.0 + e) : null);
         }
 
         /// <summary>
@@ -108,9 +148,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Calculates the semi-major axis.
+        /// Calculates the semi-major axis: P / (1 − F² − G²), +Infinity for e = 1 exactly.
         /// </summary>
         /// <returns>The semi-major axis.</returns>
+        /// <remarks>Within 1e-6 of e = 1 it is the conic's since 11.0.0 (#459; +Infinity before): P / (1 − F² − G²), or
+        /// q / (1 − e) for a non-finite P given its perigee radius q.</remarks>
         public override double SemiMajorAxis()
         {
             if (_semiMajorAxis.HasValue)
@@ -118,13 +160,20 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _semiMajorAxis.Value;
             }
 
-            if (IsParabolic())
+            if (Eccentricity() == 1.0)
             {
                 _semiMajorAxis = double.PositiveInfinity;
             }
+            else if (double.IsFinite(P))
+            {
+                // ±∞ when 1 − F² − G² rounds to a zero while e does not round to 1: the parabola's +Infinity
+                double a = P / (1 - F * F - G * G);
+                _semiMajorAxis = double.IsFinite(a) ? a : double.PositiveInfinity;
+            }
             else
             {
-                _semiMajorAxis = P / (1 - F * F - G * G);
+                // A non-finite P is accepted in the parabolic band only (#481): the conic of its perigee radius, when given
+                _semiMajorAxis = _perigeeRadius is { } q ? q / (1.0 - Eccentricity()) : double.PositiveInfinity;
             }
 
             return _semiMajorAxis.Value;
@@ -186,12 +235,13 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Calculates the mean anomaly.
+        /// Calculates the mean anomaly: that of the true anomaly, <see cref="OrbitalParameters.MeanAnomaly(double)"/>,
+        /// Barker's within 1e-6 of e = 1 (#478).
         /// </summary>
         /// <returns>The mean anomaly.</returns>
         public override double MeanAnomaly()
         {
-            _meanAnomaly ??= TrueAnomalyToMeanAnomaly(TrueAnomaly(), Eccentricity(), EccentricAnomaly(TrueAnomaly()));
+            _meanAnomaly ??= MeanAnomaly(TrueAnomaly());
             return _meanAnomaly.Value;
         }
 
@@ -299,6 +349,15 @@ namespace IO.Astrodynamics.OrbitalParameters
 
             throw new InvalidOperationException("The semi-latus rectum P is not finite and no perigee radius was given: " +
                                                 "the state of these equinoctial elements is undefined.");
+        }
+
+        /// <exception cref="ArgumentException">The value is not finite (#726).</exception>
+        private static void RequireFinite(double value, string name)
+        {
+            if (!double.IsFinite(value))
+            {
+                throw new ArgumentException($"The element {name} must be finite: {value:R}.", name);
+            }
         }
 
         // The smallest normal double: below it, the products of the argument of periapsis lose their precision

@@ -519,8 +519,9 @@ public class EquinoctialElementsSingularityTests
     public void StateRoundTrip_NearParabolic_ThroughEquinoctial(double eccentricityMinusOne, double trueAnomaly)
     {
         // Arrange: a state within the parabolic band, |e − 1| < 1e-6, q = 7000 km, i = 30°. Its ToEquinoctial has
-        // P = ±∞ (out-of-scope defect (a)) and its perigee radius: the direct state takes p = q (1 + e), the conic of its
-        // eccentricity, as SPICE CONICS (2q before, 1.75 m off at e = 1 − 5e-7)
+        // P = h²/μ, finite since #462 (P = ±∞ before, out-of-scope defect (a) of #452), and its perigee radius: the direct
+        // state takes P, the conic of its eccentricity (before #462, p = q (1 + e) from the perigee radius, as SPICE
+        // CONICS; 2q before #452, 1.75 m off at e = 1 − 5e-7)
         double e = 1.0 + eccentricityMinusOne, q = 7000.0e3, inclination = 30.0 * IO.Astrodynamics.Constants.Deg2Rad;
         double p = q * (1.0 + e), r = p / (1.0 + e * System.Math.Cos(trueAnomaly));
         double speed = System.Math.Sqrt(_earth.GM / p);
@@ -539,7 +540,7 @@ public class EquinoctialElementsSingularityTests
         // Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 2.86e-16 and 2.49e-16
         _output.WriteLine($"MEASURE #452 StateRoundTrip_NearParabolic, e - 1 = {eccentricityMinusOne:R}, ν = " +
                           $"{trueAnomaly:R}: position {position:E2}, velocity {velocity:E2} (relative); P {equinoctial.P:R}");
-        Assert.True(equinoctial.IsParabolic() && !double.IsFinite(equinoctial.P), $"P {equinoctial.P:R}");
+        Assert.True(equinoctial.IsParabolic() && double.IsFinite(equinoctial.P) && equinoctial.P > 0.0, $"P {equinoctial.P:R}");
         Assert.True(position < 5.8e-16, $"position {position:E2}");
         Assert.True(velocity < 5.0e-16, $"velocity {velocity:E2}");
     }
@@ -685,8 +686,8 @@ public class EquinoctialElementsSingularityTests
     [Fact]
     public void Parabolic_FromKeplerianElements_TakesThePerigeeRadius()
     {
-        // Arrange: KeplerianElements(∞, 1, …, perigee radius).ToEquinoctial() gives P = ∞ × 0 = NaN (out-of-scope
-        // defect (a)): the state comes from the perigee radius, p = q (1 + e), 2q at e = 1
+        // Arrange: KeplerianElements(∞, e, …, perigee radius).ToEquinoctial() gives P = q (1 + e), 2q at e = 1 (#462;
+        // before, P = ∞ × 0 = NaN, out-of-scope defect (a) of #452, and the state came from the perigee radius)
         var cases = _reference.Keplerian.Where(c => c.Group == "parabolic").ToList();
 
         // Act
@@ -694,12 +695,12 @@ public class EquinoctialElementsSingularityTests
             .ToList();
         var errors = equinoctial.Select(e => (e.Name, Error: e.State.RelativeError(e.Elements.ToStateVector()))).ToList();
 
-        // Assert. P is NaN today: this assertion fails once (a) is fixed, which then states the P it expects.
+        // Assert. P is q (1 + e) of the elements, the closed form in doubles, as #462 computes it.
         // Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 2.41e-16 (macOS arm64)
         // and 2.25e-16
         var worst = Report("Parabolic_FromKeplerianElements", errors);
         Assert.Equal(3, cases.Count);
-        Assert.All(equinoctial, e => Assert.True(double.IsNaN(e.Elements.P)));
+        Assert.All(cases, c => Assert.Equal(c.PerigeeRadius!.Value * (1.0 + c.E), c.Elements(_earth, Epoch).ToEquinoctial().P));
         Assert.True(worst.Position < 4.9e-16, $"position {worst.Position:E2}");
         Assert.True(worst.Velocity < 4.6e-16, $"velocity {worst.Velocity:E2}");
     }
@@ -745,7 +746,9 @@ public class EquinoctialElementsSingularityTests
         Assert.True(worst.Velocity < 1.8e-16, $"velocity {worst.Velocity:E2}");
         Assert.True(worstBand.Position < 3.8e-16, $"position {worstBand.Position:E2}");
         Assert.True(worstBand.Velocity < 3.4e-16, $"velocity {worstBand.Velocity:E2}");
-        Assert.True(perigeeRadiusError < 5.4e-16, $"perigee radius {perigeeRadiusError:E2}");
+        // Without a perigee radius, q = P / (1 + e) is derived when the elements are built (#477): exactly the reference
+        // (7 000 000.000000002 m, 2 ulp above, before, the h²/μ/(1 + e) of the state)
+        Assert.Equal(0.0, perigeeRadiusError);
         Assert.True(Worst(worstPeriapsis.Error) < 5.4e-16, $"periapsis {worstPeriapsis.Error:E2} ({worstPeriapsis.Name})");
     }
 
@@ -755,10 +758,18 @@ public class EquinoctialElementsSingularityTests
         // Arrange: a parabola with P = NaN or +∞ and no perigee radius, and an ellipse with P = NaN
         var cases = _reference.Undefined;
 
-        // Act and assert: an exception instead of a stack overflow (parabola) or a NaN state (ellipse)
+        // Act and assert: an exception instead of a stack overflow (parabola) or a NaN state (ellipse). Since #481 the
+        // ellipse is refused when it is built, a non-finite P being accepted only in the parabolic band
         Assert.Equal(3, cases.Count);
         foreach (var c in cases)
         {
+            if (System.Math.Abs(System.Math.Sqrt(c.F * c.F + c.G * c.G) - 1.0) >= 1e-6)
+            {
+                var refused = Assert.Throws<ArgumentOutOfRangeException>(() => c.Elements(_earth, Epoch, Frames.Frame.ICRF));
+                Assert.Equal("p", refused.ParamName);
+                continue;
+            }
+
             var elements = c.Elements(_earth, Epoch, Frames.Frame.ICRF);
             var exception = Assert.Throws<InvalidOperationException>(() => elements.ToStateVector());
             Assert.Contains("P is not finite and no perigee radius", exception.Message);

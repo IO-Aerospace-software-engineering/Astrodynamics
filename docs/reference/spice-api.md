@@ -195,6 +195,12 @@ a zero velocity, a position parallel to the velocity or an out-of-range time for
 Before 11.0.0 the native proxies activated no error management: as the first native call of a process, SPICE's default
 action (ABORT) ended it with exit code 1; otherwise the values SPICE never wrote, the stack's contents (about 1e-310), came
 back with no error. The results on ordinary inputs are those of `prop2b_c` and `oscltx_c`, bit for bit.
+`ConvertStateVectorToConicOrbitalElement` keeps `oscltx_c`'s semi-major axis within 1e-6 of e = 1, the conic's −μ/(2ξ)
+(+Infinity where `oscltx_c` gives 0: e = 1 or a zero energy), with its perifocal distance (#459; before 11.0.0, +Infinity
+in the whole band, so Barker's mean motion), and passes its period only when it is above 0 and fits a `TimeSpan`: the
+elements of an open orbit throw `InvalidOperationException` from `Period()` (#663; before, 00:00:00), and those of an
+ellipse whose period exceeds `TimeSpan.MaxValue` (e within about 5e-6 of 1) are built (before, `OverflowException` from
+the conversion).
 
 The element conversions (`ConvertConicElementsToStateVector`, three overloads, and
 `ConvertEquinoctialElementsToStateVector`) throw `ArgumentException` for an element that is not finite (#714): CONICS checks

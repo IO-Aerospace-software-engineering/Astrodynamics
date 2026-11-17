@@ -135,9 +135,14 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Calculates the specific orbital energy.
+        /// The semi-major axis of the conic, −μ/(2ξ) with ξ the specific orbital energy; +Infinity for e = 1 exactly and
+        /// for ξ = 0.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The semi-major axis, m: negative for a hyperbola.</returns>
+        /// <remarks>Within 1e-6 of e = 1 (<see cref="OrbitalParameters.IsParabolic"/>) it is the conic's since 11.0.0, about
+        /// 1.4e10 km at |e − 1| = 5e-7 (#459, option 1, decided by S. Guillet, 2026-11-17; +Infinity before): ξ cancels
+        /// there, so it carries about ε v²/(2|ξ|) of relative rounding, 2e-10 at |e − 1| = 5e-7. The anomalies of the band
+        /// stay Barker's.</remarks>
         public override double SemiMajorAxis()
         {
             if (_semiMajorAxis.HasValue)
@@ -145,12 +150,10 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _semiMajorAxis.Value;
             }
 
-            if (IsParabolic())
-            {
-                _semiMajorAxis = double.PositiveInfinity;
-            }
-
-            _semiMajorAxis ??= -(Observer.GM / (2.0 * SpecificOrbitalEnergy()));
+            // A parabola has no finite semi-major axis, nor a state of zero energy, whose −μ/(2ξ) is ±∞ by the sign of its
+            // zero (e can round off 1 while ξ rounds to 0); every other conic has −μ/(2ξ) (#459)
+            double energy = SpecificOrbitalEnergy();
+            _semiMajorAxis = Eccentricity() == 1.0 || energy == 0.0 ? double.PositiveInfinity : -(Observer.GM / (2.0 * energy));
 
             return _semiMajorAxis.Value;
         }
@@ -302,6 +305,8 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (!_meanAnomaly.HasValue)
             {
                 ThrowIfRectilinear(NoOrbitPlane);
+                throw new InvalidOperationException(
+                    $"No conic has the eccentricity e = {Eccentricity():R} of this state: its mean anomaly is undefined (#476).");
             }
 
             return _meanAnomaly!.Value;

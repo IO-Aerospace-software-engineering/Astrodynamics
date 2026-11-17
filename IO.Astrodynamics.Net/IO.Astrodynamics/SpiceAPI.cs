@@ -2268,8 +2268,9 @@ public class SpiceAPI
 
     // Elements that are not finite (#714): CONICS checks its domain with comparisons that NaN passes (conics.c) and the native
     // ellipse checks nothing, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state, with no SPICE
-    // error (measured with CSPICE N0067); the constructors of the elements accept them. A bad argument, checked before the
-    // native call. The semi-major axis of a parabola is infinite: its periapsis radius is checked by ThrowIfOutsideConicsDomain
+    // error (measured with CSPICE N0067). Since #726 the constructors of the elements refuse them, naming the element, so this
+    // check is no longer reached through these types; it stays, a bad argument checked before the native call. The
+    // semi-major axis of a parabola is infinite: its periapsis radius is checked by ThrowIfOutsideConicsDomain
     private static void ThrowIfNotFinite(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
     {
         ThrowIfNotFinite(paramName, ("e", keplerianElements.E), ("i", keplerianElements.I), ("RAAN", keplerianElements.RAAN),

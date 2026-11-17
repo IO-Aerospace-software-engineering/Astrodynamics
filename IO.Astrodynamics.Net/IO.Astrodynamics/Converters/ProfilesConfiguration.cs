@@ -95,18 +95,24 @@ public static class ProfilesConfiguration
     {
         var observer = new CelestialBody(keplerianElements.CenterOfMotionId);
 
-        // A parabola has no semi-major axis: SPICE gives its perifocal distance, the library an infinite axis (#373)
+        // Within 1e-6 of e = 1 the elements need the perigee radius, with the conic's semi-major axis, oscltx's −μ/(2ξ),
+        // +Infinity where oscltx gives none (0: e = 1, or a zero energy) (#459; before, +Infinity in the whole band)
         if (System.Math.Abs(keplerianElements.Eccentricity - 1.0) < 1E-06)
         {
-            return new KeplerianElements(double.PositiveInfinity, keplerianElements.Eccentricity, keplerianElements.Inclination,
+            double semiMajorAxis = keplerianElements.SemiMajorAxis == 0.0 ? double.PositiveInfinity : keplerianElements.SemiMajorAxis;
+            return new KeplerianElements(semiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination,
                 keplerianElements.AscendingNodeLongitude, keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer,
                 Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame), new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly,
                 perigeeRadius: keplerianElements.PerifocalDistance);
         }
 
+        // oscltx's period is 0 for an open orbit, which has none (#663), and can exceed TimeSpan.MaxValue on an ellipse
+        // (above 29 227 years, e within about 5e-6 of 1): no period is given then, Period() computing its own or throwing
+        double tau = keplerianElements.OrbitalPeriod;
+        TimeSpan? period = tau > 0.0 && tau * TimeSpan.TicksPerSecond < long.MaxValue ? TimeSpan.FromSeconds(tau) : null;
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
-            new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly, TimeSpan.FromSeconds(keplerianElements.OrbitalPeriod));
+            new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly, period);
     }
 
     internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)

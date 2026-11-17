@@ -398,7 +398,7 @@ Cartesian position and velocity state.
 
 | Method | Description |
 |--------|-------------|
-| `SemiMajorAxis()` | Compute semi-major axis (m) |
+| `SemiMajorAxis()` | Compute semi-major axis (m): the conic's −μ/(2ξ), within 1e-6 of e = 1 too; +Infinity for e = 1 exactly (#459) |
 | `Eccentricity()` | Compute eccentricity |
 | `Inclination()` | Compute inclination (rad) |
 | `AscendingNode()` | Compute RAAN (rad) |
@@ -406,8 +406,8 @@ Cartesian position and velocity state.
 | `TrueAnomaly()` | Compute true anomaly (rad) |
 | `MeanAnomaly()` | Compute mean anomaly (rad) |
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
-| `Period()` | Compute orbital period |
-| `MeanMotion()` | Compute mean motion (rad/s) |
+| `Period()` | Compute orbital period of an ellipse; an open orbit throws `InvalidOperationException` (#663) |
+| `MeanMotion()` | Compute mean motion (rad/s), √(μ/\|a\|³); Barker's for a parabola (#459) |
 | `SpecificOrbitalEnergy()` | Compute vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Compute specific angular momentum vector |
 | `EccentricityVector()` | Compute eccentricity vector |
@@ -460,7 +460,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | Constructor | Description |
 |------------|-------------|
 | `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements (the parameter of the RAAN is spelled `rigthAscendingNode`) |
-| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius |
+| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius: required within 1e-6 of e = 1, with the a of the same conic, q / (1 − e) to rounding, +Infinity at e = 1 (#459) |
 | `KeplerianElements(..., OrbitalElementsType elementsType)` | Create with explicit element type |
 
 | Factory Method | Description |
@@ -486,7 +486,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | `TrueAnomaly()` | Compute true anomaly (rad) |
 | `TrueAnomaly(Time epoch)` | Compute true anomaly at epoch |
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
-| `Period()` | Get orbital period |
+| `Period()` | Get orbital period of an ellipse; an open orbit throws `InvalidOperationException`, a period given to the constructor included (#663) |
 | `PerigeeRadius()` | Get perigee radius (m) |
 | `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
 | `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ (its `Magnitude()` is the apogee radius, m, a(1 + e)); mean elements throw |
@@ -496,8 +496,8 @@ Classical Keplerian orbital elements (osculating or mean).
 | `IsElliptical()` | Check if orbit is elliptical |
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |
 | `IsHyperbolic()` | Check if orbit is hyperbolic (e > 1) |
-| `AtEpoch(Time epoch)` | Get elements at different epoch |
-| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. For 1 − 1e-6 < e < 1 the epoch is wrong (about 8 times off) and can be before `Epoch` |
+| `AtEpoch(Time epoch)` | Get elements at different epoch, of the same `ElementsType` (#463) |
+| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. Within 1e-6 of e = 1 the time is Barker's, the motion of the band (#478; before 11.0.0 about 8 times off, and possibly before `Epoch`) |
 | `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the center of motion (`TimeToRadius`); throws when it is infinite |
 
 ```csharp

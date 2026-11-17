@@ -504,10 +504,9 @@ release are listed under **Known limitations**.
   to 7e-16); a radius reached outside the epochs a `Time` holds throws an `ArgumentOutOfRangeException` that says so,
   after the last or before the first. A circular orbit (e = 0), at its radius at every instant, returns its epoch, where
   0 / 0 gave NaN (and a radius an ulp from p an arbitrary epoch). On an open orbit already past the radius the epoch is
-  its outbound crossing, before the epoch of the orbit, as before. An ellipse with 1 − 1e-6 < e < 1, whose anomalies the
-  library takes as parabolic, keeps a time about 8 times off, and its epoch can be before the epoch of the orbit even for
-  a radius not yet reached (EpochAtMeanAnomaly adds a period only for e ≤ 1 − 1e-6); pre-existing, see **Known limitations**
-  ([#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)).
+  its outbound crossing, before the epoch of the orbit, as before. Within 1e-6 of e = 1, whose anomalies the library takes
+  as parabolic, the time was about 8 times off, and its epoch could be before the epoch of the orbit even for a radius
+  not yet reached: fixed by [#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478), below.
   `TimeToSphereOfInfluence` throws `InvalidOperationException` ("<body> has no finite sphere of influence; an orbit
   about it never leaves it") for an infinite sphere of influence. The recommendation of the issue: throw, no `Try`
   method.
@@ -1432,7 +1431,7 @@ release are listed under **Known limitations**.
     the one-term TDB − TT series, within 1.06 µs of the LSK formula SPICE `unitim` evaluates and 37.34 µs of ERFA `dtdb`
     from 1972 to 2100; CSPICE is given the managed TDB as its ephemeris time. See
     [Time Scales](../reference/time-and-windows.md#time-scales).
-    `Period()` for e ≥ 1 (item 3) is [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663); the ephemeris time given to CSPICE is still the managed TDB,
+    `Period()` for e ≥ 1 (item 3) is fixed by [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), under **Changed**; the ephemeris time given to CSPICE is still the managed TDB,
     not the LSK formula (item 4, [#665](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/665)). Both are under **Known limitations**.
 
 - **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
@@ -3287,6 +3286,73 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
+- **`ToEquinoctial()` gave P = NaN or ±Infinity within 1e-6 of e = 1** ([#462](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/462)).
+  The semi-latus rectum was a(1 − e²) with the a = +Infinity of the band |e − 1| < 1e-6 (`IsParabolic()`): NaN at e = 1
+  (∞ × 0), +Infinity or −Infinity elsewhere in the band, its sign set by rounding (the same exact parabola gave +∞ in
+  ICRF and −∞ in `ECLIPTIC_J2000`; NaN, −∞ or +∞ for every one of 2724 exact parabolas, measured on a85098d), printed
+  by `ToString()` and the CLI converter, so that the six elements could not rebuild the orbit. In the band P is now the
+  conic's q (1 + e), q the `PerigeeRadius()`: 2q for a parabola, q (1 + e) for `KeplerianElements` of the band, h²/μ for a
+  `StateVector` (decided by S. Guillet, 2026-11-17: the fix of the issue, which reads no semi-major axis and so holds with
+  the conic's a of #459). Outside the band P is a(1 − e²) bit for bit, so no TLE fit moves; the state rebuilt from the
+  elements is unchanged (it took the perigee radius when P was not finite). Against 60-digit closed forms
+  (`tools/near_parabolic/near_parabolic_reference.py`): 4.8e-17 relative for Keplerian elements (exactly 2q at e = 1),
+  4.9e-16 for the states of the issue through `ToEquinoctial()`, `ToKeplerianElements()`, `AtEpoch` and
+  `ToFrame(ECLIPTIC_J2000)`, 2.9e-16 of h²/μ over the 2724 parabolas (`NearParabolicBandTests.Issue462_*`, red on
+  a85098d; provisional thresholds, twice the Linux worst); the CLI prints h²/μ to its last bit
+  (`OrbitalParametersTests.NearParabolicSvToEquinoctial_PrintsAFiniteSemiLatusRectum`). `TestHelpers.EquinoctialComparer`
+  now compares P, and the two #452 tests that encoded the NaN and ±∞ (`EquinoctialElementsSingularityTests`
+  `StateRoundTrip_NearParabolic_ThroughEquinoctial`, `Parabolic_FromKeplerianElements_TakesThePerigeeRadius`) state the
+  finite P.
+- **Within 1e-6 of e = 1, Kepler's equation took Barker's anomaly** ([#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)).
+  In the band 0 < |e − 1| < 1e-6, `EccentricAnomaly(ν)` gives Barker's D = tan(ν/2), but the mean anomaly of a true
+  anomaly put it into Kepler's elliptic (e < 1) or hyperbolic (e > 1) equation, chosen by e alone: only e = 1 exactly
+  gave Barker's D + D³/3. `MeanAnomaly(ν)`, `ToStateVector(ν)`, `TimeToRadius`, `TimeToSphereOfInfluence` and every
+  path of `EquinoctialElements` (`MeanAnomaly()`, `ToKeplerianElements()`, `AtEpoch`, `ToStateVector(Time)`, the start of
+  a propagation) were then up to the size of the orbit off without an error: at q = 7000 km and ν0 = 0.5 rad,
+  `sv.ToStateVector(sv.TrueAnomaly())` 338.6 s in the past and 3565 km away, `TimeToRadius` −307 s for a radius reached
+  446 s later, an exact parabola given as Keplerian elements 5.1e7 m off through its equinoctial elements, whose e
+  rounds one ulp below 1 (measured on a85098d, as in the issue). `MeanAnomaly(ν)` now takes Barker's equation in the
+  band, whatever the side of e = 1, and `ToStateVector(ν)`, `TimeToRadius` and `EquinoctialElements.MeanAnomaly()` go
+  through it (decided by S. Guillet, 2026-11-17, the recommendation of the issue: the band test lives in
+  `MeanAnomaly(ν)`); the public static `TrueAnomalyToMeanAnomaly` keeps its contract, its documentation now saying that
+  the anomaly must match e. Outside the band every result is unchanged, bit for bit. Against 60-digit references
+  (`tools/near_parabolic/near_parabolic_reference.py`): Barker's mean anomaly within 2.8e-17 rad on a state, its
+  Keplerian and its equinoctial elements at e − 1 = ±9e-7, ±5e-7, ±1e-12; the state at its own true anomaly is itself,
+  at its epoch; the times within 7.8e-9 s (ν = 1 rad), 4.6e-8 s (2e7 m) and 4.6e-8 s (the sphere of influence) of
+  Barker's, their epochs ticks of `Time`; the exact parabola within 1.7e-16 rad of its M and 2.3e-9 m of Barker's
+  state; over 2000 random exact parabolas, the equinoctial round trip within 5.9e-15 of |r| (`NearParabolicBandTests.Issue478_*`,
+  red on a85098d; provisional thresholds, twice the Linux worst). The time of the band is Barker's, the motion the
+  library takes there (#459): at e − 1 = −5e-7 it differs from the conic's by 1.7e-5 s at ν = 1 rad.
+- **Parabolic `EquinoctialElements` without a perigee radius threw, or depended on the order of the calls** ([#477](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/477)).
+  Elements of the band |e − 1| < 1e-6 with a finite P define a parabola of perigee radius q = P / (1 + e), but nothing
+  derived it: on a fresh instance `ToKeplerianElements()`, `AtEpoch`, `ToStateVector(Time)`, `TrueAnomaly(Time)` and the
+  `CentralBodyPropagator` constructors (so `Spacecraft.Propagate` and the CLI's `--from-equinoctial`) threw the
+  `ArgumentException` of the parabolic `KeplerianElements`, and after `PerigeeRadius()`, `MeanMotion()` or a few other
+  calls they worked with the h²/μ/(1 + e) of the state, 2 ulp above P / 2 (measured on a85098d). The constructor now
+  derives q = P / (1 + e) when no perigee radius is given, the orbit is in the band and P is finite (decided by
+  S. Guillet, 2026-11-17, the recommendation of the issue), exactly P / 2 at e = 1, so every path reads the same q from the
+  first call. Elements given a perigee radius, elements outside the band, a non-finite P without a radius (its state
+  undefined, as #452 left it) and `Equals`/`GetHashCode` are unchanged. Against 60-digit closed forms (the
+  equinoctial-to-Cartesian form of Walker, Ireland and Owens and Barker's equation; the two cases of the issue): q
+  exactly P / 2, Barker's n within 4.1e-17, the Keplerian angles within 1.2e-16 rad, `AtEpoch` and `ToStateVector(Time)` up
+  to 1.5 h within 8.8e-16 of |r|, the first state of a propagation by Velocity-Verlet and RK7(8) within 2.9e-16, every
+  first call of the issue giving bit for bit the results of a fresh instance and of the elements given P / (1 + e)
+  (`NearParabolicBandTests.Issue477_*`, red on a85098d; provisional thresholds, twice the Linux worst), and the CLI
+  converter prints the state (`OrbitalParametersTests.ParabolicEquinoctialWithoutPerigeeRadiusToSv_PrintsItsState`).
+  `EquinoctialElementsSingularityTests.Parabolic_WithAFinitePOrAPerigeeRadius_MatchesTheReference` now finds
+  `PerigeeRadius()` without a radius exactly P / (1 + e). Within the band with e ≠ 1 the Keplerian path runs too, with the
+  mean anomaly of #478.
+- **A non-finite eccentricity gave the message of an empty `Nullable`** ([#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476)).
+  With e = NaN no conic branch of `OrbitalParameters.TrueAnomaly()` held, and `TrueAnomaly()`, `ToStateVector()`,
+  `ToStateVector(Time)`, `TrueAnomaly(Time)`, `TrueLongitude()` and `ToEquinoctial()` threw `InvalidOperationException`
+  "Nullable object must have a value.", which names neither e nor the call. The constructors now refuse such an
+  eccentricity (Changed, Breaking, below), and the branches of `TrueAnomaly()` and `StateVector.MeanAnomaly()` end with an
+  `InvalidOperationException` naming e, for orbital parameters whose eccentricity no constructor checks (a subclass; a
+  non-finite `StateVector`, which the rectilinear check of #687 meets first except where h and r stay finite and e is NaN,
+  r = (1e308, 0, 0) and v = (0, 1e308, 1e308): its `MeanAnomaly()`, `EccentricAnomaly()`, `ToKeplerianElements()` and
+  `ToStateVector(t)` now say "e = NaN") (`ElementsValidationTests.Issue476_ATrueAnomalyWithoutAConicBranch_NamesTheEccentricity`
+  and `Issue476_AStateOfNaNEccentricity_NamesItsEccentricity`, red on a85098d, the latter added by the review, which
+  measured that `Issue476_ANonFiniteState_ThrowsWhereItNeedsAConic` asserts the exception type only and holds there too).
 
 **Changed**
 
@@ -4645,6 +4711,139 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
+- **Breaking: `KeplerianElements` and `EquinoctialElements` refuse elements that are not finite** ([#726](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/726), [#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476)).
+  The constructors stored a NaN or infinite element, which then reached the period, the anomalies and the conversions
+  done in .NET (only the conversions of `SpiceAPI` refused them, #714). They now throw when the elements are built
+  (decided by S. Guillet, 2026-11-17, the recommendation of the triage: in the constructors, `ArgumentException` naming
+  the parameter, `ArgumentOutOfRangeException` for the eccentricity and the ranges):
+  - `KeplerianElements` (public constructor): `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity that is
+    not finite or is negative, "finite and non-negative", as the CCSDS `MeanElements` and `OpmKeplerianElements` (NaN and
+    +Infinity were accepted, the negative ones refused by an `ArgumentException` without a parameter name; −0.0 is
+    accepted, as 0); `ArgumentException` naming `semiMajorAxis` for NaN, −Infinity, or +Infinity outside the parabolic
+    band (+Infinity with e = 1 and a perigee radius, the parabola, stays the one infinity, #373; within the band
+    +Infinity is accepted only within a few ulps of e = 1, see #459 below), and naming
+    `inclination`, `rigthAscendingNode`, `argumentOfPeriapsis`, `meanAnomaly` or `trueAnomaly` (when given) for a value
+    that is not finite; `ArgumentOutOfRangeException` (`perigeeRadius`) for a perigee radius that is given and not
+    finite and above 0. `period` is a `TimeSpan`, always finite.
+  - `KeplerianElements.FromOMM`: `ArgumentOutOfRangeException` (`meanMotion`) for a mean motion not finite and above 0
+    (0 gave a = +Infinity, a negative one the a of its opposite), (`eccentricity`) as above, and `ArgumentException`
+    naming `inclination`, `raan`, `argumentOfPeriapsis` or `meanAnomaly`.
+  - `EquinoctialElements`: `ArgumentException` naming `f`, `g`, `h`, `k` or `l0` for a value that is not finite, and
+    `f` when √(F² + G²) overflows; P and the perigee radius below (#481).
+  Results of finite elements are unchanged, bit for bit: the checks compute nothing they use. `NonFiniteInput_Throws` of
+  `KeplerEquationTests` keeps the solver's guard and asserts the refusal of the elements, and the `SpiceApiTest`
+  rows of #714 that built non-finite elements now assert the constructor's exception (`SpiceAPI` keeps its own check).
+  Tests: `ElementsValidationTests.Issue726_*` and `Issue476_*` (red on a85098d). Migration: build elements from finite
+  values; catch `ArgumentException` (which `ArgumentOutOfRangeException` derives from) where elements come from
+  unchecked input.
+- **Breaking: `EquinoctialElements` refuses a semi-latus rectum or a perigee radius that no conic has** ([#481](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/481)).
+  The constructor checked only the observer and the frame: a finite P ≤ 0 gave a position mirrored through the centre
+  with a NaN velocity from `ToStateVector()`, a negative semi-major axis from `ToKeplerianElements()` and NaN states from
+  `AtEpoch` and `ToStateVector(Time)` (so from the start of a propagation and the CLI's `--from-equinoctial`), a P of
+  ±Infinity on an ellipse a non-finite state, and a parabola of perigee radius ≤ 0 or NaN the same kind of result
+  (measured on a85098d, as in the issue). It now throws `ArgumentOutOfRangeException` (`p`) for a P that is not finite
+  and above 0 (p = h²/μ > 0 for every conic; −0.0 included), a non-finite P being accepted only in the parabolic band
+  |e − 1| < 1e-6, where #452 documents it with a perigee radius as the way to give a parabola, and
+  (`perigeeRadius`) for a perigee radius given and not finite and above 0, as SPICE CONICS rejects rp ≤ 0
+  (decided by S. Guillet, 2026-11-17, the recommendation of the issue: the check in the constructor, no bound beyond
+  P > 0). The elements the library builds pass (`ToEquinoctial()`, whose P is finite since #462, and the TLE fit, which
+  raises P to keep its perigee). The ellipse row of `WithoutAFinitePOrAPerigeeRadius_TheStateIsUndefined` (P = NaN) now
+  throws from the constructor, and the P < 0 row of `ConvertEquinoctialElementsToStateVector_OutsideTheDomainOfEqncpv`
+  too (a semi-major axis ≤ 0 with P > 0 needs e > 1, outside EQNCPV's e ≤ 0.9). Tests: `ElementsValidationTests.Issue481_*`
+  (red on a85098d), `OrbitalParametersTests.EquinoctialWithANegativeSemiLatusRectum_IsRefused` (CLI). Migration: give P
+  finite and above 0, or a parabola's non-finite P with its perigee radius.
+- **Breaking: within 1e-6 of e = 1 the semi-major axis, the mean motion and the state are the conic's** ([#459](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/459)).
+  `IsParabolic()` holds for |e − 1| < 1e-6, and the whole band was taken as a parabola whatever its energy:
+  `StateVector.SemiMajorAxis()` and `EquinoctialElements.SemiMajorAxis()` returned +Infinity where the conic has
+  −μ/(2ξ) (about 1.4e10 km at |e − 1| = 5e-7), `MeanMotion()` Barker's √(μ/(2q³)), 2e9 times the conic's √(μ/|a|³)
+  at ±5e-7, the state of elements in the band took p = 2q where the conic has q (1 + e), so that
+  `sv.ToKeplerianElements().ToStateVector()` and the equinoctial round trips moved a state by |r| |e − 1| / (1 + e)
+  (1.9 m at ±5e-7, 3.4 m at ±9e-7, 4.2e7 m near the apoapsis of an ellipse given at e = 0.999999, which comes back in
+  the band from its state about one time in four), and `KeplerianElements` refused a finite semi-major axis in the band
+  (measured on a85098d). Option 1 of the issue (decided by S. Guillet, 2026-11-17): `SemiMajorAxis()` is the conic's for
+  every e ≠ 1, +Infinity for e = 1 exactly (`StateVector`: −μ/(2ξ), +Infinity for ξ = 0 too, which rounding gives the state of
+  an exact parabola whose e is one ulp off 1; `EquinoctialElements`: P / (1 − F² − G²), +Infinity where it overflows, or
+  q / (1 − e) for a non-finite P given its perigee radius); `MeanMotion()` is √(μ/|a|³), Barker's only for an infinite semi-major
+  axis; the state of elements in the band takes the conic's p = q (1 + e), 2q at e = 1 bit for bit; and
+  `KeplerianElements` accepts in the band, with the perigee radius q it requires, the semi-major axis of the same conic,
+  a (1 − e) = q to rounding: |q/a − (1 − e)| ≤ 6 ε (1 + e), twice the 3.0 ε (1 + e) measured on Linux over 6400 states
+  of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU) through every path that builds elements there (the
+  state, equinoctial elements, `AtEpoch`, SPICE's `oscltx`), provisional until the Windows x64 and macOS arm64 CI logs;
+  +Infinity at e = 1 exactly, and within a few ulps of it only (the state of an exact parabola, whose e rounds off 1
+  where ξ rounds to 0). The a of another conic throws `ArgumentException` (`semiMajorAxis`), as it did on a85098d: the
+  review of #459 measured `new KeplerianElements(7e6, 1 − 5e-7, ..., perigeeRadius: 7e6)` built with the semi-major axis,
+  mean motion, period and apoapsis of a 7000 km circle and the state of the near-parabola, and a = −7e6 or +Infinity at
+  e ≠ 1 built too (+Infinity giving the pre-#459 values). A missing perigee radius throws `ArgumentException`
+  (`perigeeRadius`). `SpiceAPI.ConvertStateVectorToConicOrbitalElement` forced a = +Infinity in the band, so Barker's
+  mean motion, 2e9 times the conic's at ±5e-7 (measured by the review): it keeps `oscltx`'s −μ/(2ξ), +Infinity where
+  `oscltx` gives 0 (e = 1 or a zero energy) (`NearParabolicBandTests.Issue459_InTheBand_*`,
+  `Issue459_SpiceConversionInTheBand_*`, red on the branch before the review; the measurement of the tolerance is
+  `Issue459_InTheBand_TheElementsOfASweepOfStatesAreOneConic`). The
+  motion of the band keeps Barker's anomaly, well conditioned there: `AtEpoch`, `ToKeplerianElements(Time)` and
+  `EpochAtMeanAnomaly` (so `ToStateVector(Time)`, `TimeToRadius`, the start of a propagation) advance it at Barker's
+  rate through a private method, the public `MeanMotion()` being the conic's. Outside the band every result is
+  unchanged, bit for bit; at e = 1 exactly too. Against 60-digit references (`tools/near_parabolic/near_parabolic_reference.py`): a and n
+  within 6.2e-16 and 9.3e-16 relative times |e − 1| (the cancellation of ξ, ε v²/(2|ξ|): 6e-10 at ±5e-7, 6e-4 at
+  ±1e-12), the round trips within 6.0e-16 of |r|, the state 600 s later within 6.1e-16 of the band model and 0.16 m of
+  the exact conic (1.8e-7 m at |e − 1| = 1e-12; 0.54 m from the periapsis at 5e-7), and the double edges of the band as
+  Keplerian elements (0.9999990000000001 and the double nearest 1.000001, both inside it, with their finite a, red on
+  a85098d) within 2.7e-16 (`NearParabolicBandTests.Issue459_*`, red on a85098d; provisional thresholds, twice the Linux
+  worst). The comment of the issue asked for the solvers of #467 to be measured inside the band before Barker's law is
+  kept for all of it: Kepler's equation for the conic, solved by `KeplerEquation` in doubles from the state's a, e and
+  ν, is 2.3 to 5.8 mm from the exact motion at |e − 1| = 5e-7 to 9e-7, better than Barker's law there (0.09 to 0.16 m),
+  and 2.8 to 5.0 km off at |e − 1| = 1e-12, where Barker's law is within 1.8e-7 m
+  (`NearParabolicBandTests.Issue459_KeplersEquationForTheConic_AgainstBarkersLaw`, on the 60-digit references of
+  `tools/near_parabolic`): neither holds over the whole band, so Barker's law is kept as decided. A motion that holds
+  over it (universal variables, or a band narrowed to where Barker's law is the better one) would change what
+  `IsParabolic()` means across the library: it is not part of 11.0.0 and needs its own issue (not opened yet). The tests of #477 that measured the 2q of the band now measure
+  rounding (3.6e-16 where 2.0e-7), and `TestHelpers.KeplerComparer` and `EquinoctialComparer` compare two orbits of the
+  band by their perigee radii, their semi-major axes being ill-conditioned there (`StateVectorTests.ToParabolicKeplerian`,
+  `KeplerianElementsTests.ParabolicToState`, `EquinoctialElementsTests.ParabolicToStateVector`: the state of an exact
+  parabola has a semi-major axis of about ±1e20 m, or +Infinity at a zero energy). Migration: code that read +Infinity from `SemiMajorAxis()` to recognize the band
+  calls `IsParabolic()`; code that took `MeanMotion()` as the rate of the mean anomaly in the band uses `AtEpoch` or
+  `EpochAtMeanAnomaly`; elements within 1e-6 of e = 1 given +Infinity at e ≠ 1 (the only form 10.x accepted) give
+  instead the conic's a, q / (1 − e), with the perigee radius.
+- **Breaking: `Period()` of an open orbit throws `InvalidOperationException`** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), item 3 of [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)).
+  `Period()` passed 2π √(a³/μ) to `TimeSpan.FromSeconds` without a check: a hyperbola (a < 0) threw TimeSpan's
+  `ArgumentException` "TimeSpan does not accept floating point Not-a-Number values", a parabola (a = +Infinity) its
+  `OverflowException`, with no message saying that an open orbit has no period (measured on a85098d, as in the
+  issue). It now throws `InvalidOperationException` naming e and a when the semi-major axis is not finite and above 0
+  (decided by S. Guillet, 2026-11-17, the fix of the issue: the test is on a, not on e, so the conic's finite a of the
+  near-parabolic band keeps its period, #459), before the cached period, so that a period given to `KeplerianElements`
+  for an open orbit, or the 0 of SPICE's `oscltx` for one (`SpiceAPI.ConvertStateVectorToConicOrbitalElement`), is not
+  returned either (the review of #663 measured 01:00:00 and 00:00:00; `Issue663_AnOpenOrbitGivenAPeriod_HasNoPeriod`).
+  `ConvertStateVectorToConicOrbitalElement` passes SPICE's period only when it is above 0 and fits a `TimeSpan`: an
+  ellipse at e = 1 − 2e-6, whose period is 2.1e12 s, threw `OverflowException` from the conversion and is now built
+  (`Issue663_SpicesElementsOfAnEllipseWithoutATimeSpanPeriod_AreBuilt`). An ellipse whose period exceeds
+  `TimeSpan.MaxValue` (29 227 years: within 1e-6 of e = 1, for instance) still throws `TimeSpan`'s `OverflowException`
+  from `Period()`, now documented. The callers
+  (`PhasingManeuver`, `CosmographiaExporter`) let it through, as before. Tests: `ElementsValidationTests.Issue663_*` on
+  a `StateVector` at escape speed and above, Keplerian and equinoctial hyperbolas and parabolas (red on a85098d), and an
+  ellipse unchanged. Migration: catch `InvalidOperationException` instead of `ArgumentException` or `OverflowException`,
+  or test `IsElliptical()` first.
+- **Breaking: mean elements stay mean through `AtEpoch` and `ToKeplerianElements(Time)`, and a propagation refuses a mean initial orbit** ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463)).
+  `AtEpoch(t)` and `ToKeplerianElements(t)` built their `KeplerianElements` without `elementsType`, so mean elements came
+  back labelled `Osculating`, even at their own epoch, and the guard of `ToStateVector()` let them through: a spacecraft
+  whose initial orbit was a mean set in an inertial frame (`KeplerianElements.FromOMM(..., Frame.ICRF)`, the public
+  constructors with `Mean`) was propagated from the two-body state of the mean numbers, with no error, by every path
+  (11.75 km and 7.7 m/s from SGP4 at the epoch for the ISS, 468 km after a day; measured on a85098d, as in the issue);
+  only a mean TEME set was refused, by the inertial-frame check. The recommendations of the issue (decided by
+  S. Guillet, 2026-11-17): both methods keep `ElementsType`; `ToKeplerianElements(Time)` is virtual and a `TLE`
+  overrides it as `ToKeplerianElements().ToKeplerianElements(epoch)`, its osculating SGP4 set moved in time, which stays
+  `Osculating` (as before); and every `CentralBodyPropagator` constructor (so `Spacecraft.Propagate` and
+  `PropagateAsync`, `CentralBodyPropagatorBuilder`, `Scenario.SimulateAsync`) throws `ArgumentException` (`spacecraft`)
+  naming the spacecraft and pointing to `TLEPropagator` and `TLE.ToOsculating()` for a mean initial orbit other than a
+  TLE, checked with the inertial-frame check before the initial state is computed (a mean TEME set still meets the frame
+  check first, `TlePropagationTests.MeanTemeSet_StaysRejected`). `AtEpoch` of mean elements advances the mean anomaly at
+  the two-body mean motion only, without the secular rates of the theory, as before, now documented; a mean set moved to
+  its own epoch writes the same TLE through `TLE.Create`, which refused it before. Osculating elements and states are
+  unchanged, bit for bit (only labels change), so no golden moves. Tests: `MeanElementsTypeTests` (mean Keplerian and
+  equinoctial sets from `FromOMM`, `TLE.ToMeanKeplerianElements()`, `ToEquinoctial()` and the constructors, in ICRF and
+  `ECLIPTIC_J2000`, at their epoch and an hour later; the seven propagation paths, Velocity-Verlet and RK7(8), windows at
+  and after the epoch; the TLE's osculating set within 8.9e-16 of CSPICE `prop2b` over the TT seconds of the hour,
+  provisional threshold twice the Linux worst), red on a85098d. Migration: propagate a TLE with `TLEPropagator` or
+  start from `TLE.ToOsculating()` (or the TLE itself, whose SGP4 state starts the propagation); build osculating
+  elements for a numerical propagation.
 
 **Deprecated**
 
@@ -4835,40 +5034,14 @@ not listed.
   `CdmParseException`. `CdmWriter` reads a `DateTime` of kind `Unspecified` as local time: build its dates with
   `DateTimeKind.Utc`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
   free-text or time-only dates (a time gets today's date) instead of rejecting them.
-- **Orbits within 1e-6 of e = 1**
-  ([#459](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/459),
-  [#462](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/462),
-  [#477](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/477),
-  [#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)). An orbit with |e − 1| < 1e-6
-  is taken as a parabola whatever its energy: `StateVector.SemiMajorAxis()` returns +Infinity, `MeanMotion()` and
-  `MeanAnomaly()` take Barker's forms, `ToStateVector()` takes p = 2q (metres off on a round trip), and
-  `ToEquinoctial()` gives P = NaN or ±Infinity. In 0 < |e − 1| < 1e-6 Kepler's equation is applied to Barker's anomaly,
-  so `ToStateVector(ν)`, `TimeToRadius` and the equinoctial round trips can be thousands of km or hundreds of seconds
-  off without an error. Parabolic `EquinoctialElements` with a finite P and no perigee radius throw from
-  `ToKeplerianElements()`, `AtEpoch` and a propagation: pass `perigeeRadius: P / (1 + e)`.
 - **Precision near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472),
   [#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
   `KeplerianElements.ToStateVector()` loses digits through p = a(1 − e²), 1 + e cos ν and e + cos ν: 1.1e-11 relative at
   e = 0.999999 (155 m at the apoapsis of a 7000 km periapsis). Near the periapsis Kepler's equation stops at its
   cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r| off at e = 0.999999, and
   `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
-- **No period for e ≥ 1** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663)).
-  `Period()` throws the NaN `ArgumentException` of `TimeSpan` for a hyperbola and an `OverflowException` for a parabola,
-  and for an ellipse in the parabolic band, with no message that says an open orbit has no period.
-- **Elements accepted without a check**
-  ([#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476),
-  [#481](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/481)). `KeplerianElements` accepts e
-  = NaN or +Infinity: `TrueAnomaly()`, `ToStateVector()` and `ToEquinoctial()` then throw `InvalidOperationException`
-  "Nullable object must have a value", which names neither e nor the call (+Infinity gives NaN states).
-  `EquinoctialElements` accepts P ≤ 0 or a non-finite P. For a finite P ≤ 0, `ToStateVector()` gives a NaN velocity
-  and `ToKeplerianElements()` a negative semi-major axis without an error, while `AtEpoch` and `ToStateVector(Time)`
-  throw the Kepler solver's error on M = NaN, which does not name P; for P = ±∞ on an ellipse they give a non-finite
-  state without an error. Check the elements before building them.
-- **Mean elements and equality of orbital parameters**
-  ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463),
-  [#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). `AtEpoch(t)` and
-  `ToKeplerianElements(t)` of mean elements (a TLE, `KeplerianElements.FromOMM`) return the same numbers labelled
-  osculating, which bypasses the guard of `ToStateVector()`: use `TLE.ToOsculating()` or an SGP4 state. Typed
+- **Equality of orbital parameters**
+  ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). Typed
   `OrbitalParameters`, `==`, `!=` and `Equals` compare `ToStateVector()`, so they throw for mean elements (even against
   null) or e = NaN, and `GetHashCode` includes the reference, so equal copies hash differently and hash sets keep
   duplicates: compare the element values.
