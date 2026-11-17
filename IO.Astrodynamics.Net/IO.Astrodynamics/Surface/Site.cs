@@ -194,9 +194,21 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Site ephemeris. Uses SPICE/direct path for CelestialBody observers,
-        /// reference-body approach for Spacecraft/Site observers.
+        /// The state of the site seen from <paramref name="observer"/> in <paramref name="frame"/>, corrected by
+        /// <paramref name="aberration"/>: a site of the kernels seen from a body, a barycenter or a spacecraft of the
+        /// kernels, by SPICE (<c>spkezr_c</c>); otherwise relative to the site's body, as CSPICE's <c>spkcpt_c</c> corrects
+        /// a site given by its coordinates (the site itself at t ∓ lt, the light time of <c>spkltc</c>, the stellar
+        /// aberration of <c>stelab</c> and <c>stlabx</c>, a non-inertial frame at the epoch of its centre;
+        /// <see cref="CelestialItem.ApparentStateFromReferenceBody"/>).
         /// </summary>
+        /// <remarks>
+        /// A site given by its coordinates seen from an observer of the kernels with a correction other than
+        /// <see cref="Aberration.None"/> is corrected as <c>spkcpt_c</c> corrects it, the observer its own body included
+        /// (#489). Before 11.0.0 the correction was that of the observer seen from the site's body
+        /// (<see cref="OrbitalParameters.OrbitalParameters.RelativeTo"/>), the site never moved back in time: 82.7 km
+        /// from <c>spkcpt_c</c> seen from the Moon with LT, about 15000 km from the Sun, and the geometric state seen from
+        /// its own body (640 m with LT). Without correction, the geometric state is unchanged, bit for bit.
+        /// </remarks>
         public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
         {
             // For SPICE-backed CelestialItem observers (planets, moons, barycenters, kernel-backed spacecraft)
@@ -207,26 +219,19 @@ namespace IO.Astrodynamics.Surface
                     return _dataProvider.GetEphemeris(date, this, observer, frame, aberration);
                 }
 
-                // Custom site: body-fixed computation with RelativeTo for observer change
-                var siteInFrame = new StateVector(
-                    Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
-                    Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
-                return siteInFrame.RelativeTo(observer, aberration);
+                if (aberration == Aberration.None)
+                {
+                    // Custom site, geometric: body-fixed computation with RelativeTo for observer change
+                    var siteInFrame = new StateVector(
+                        Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
+                        Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
+                    return siteInFrame.RelativeTo(observer, Aberration.None);
+                }
             }
 
-            // Reference-body approach for non-SPICE observers (Spacecraft, other Sites)
-            CelestialItem cb = CelestialBody;
-            var siteCB = this.GetGeometricStateRelativeTo(date, cb);
-            var observerCB = observer.GetGeometricStateRelativeTo(date, cb);
-            var relative = new StateVector(
-                siteCB.Position - observerCB.Position,
-                siteCB.Velocity - observerCB.Velocity,
-                observer, date, Frames.Frame.ICRF);
-
-            if (aberration != Aberration.None)
-                relative = CelestialItem.CorrectFromAberrationCB(this, date, observer, aberration, relative, observerCB, cb);
-
-            return relative.ToFrame(frame);
+            // Reference-body approach: non-SPICE observers (Spacecraft, other Sites), and a custom site corrected for any
+            // observer (#489)
+            return CelestialItem.ApparentStateFromReferenceBody(this, date, observer, frame, aberration, CelestialBody);
         }
 
         /// <summary>

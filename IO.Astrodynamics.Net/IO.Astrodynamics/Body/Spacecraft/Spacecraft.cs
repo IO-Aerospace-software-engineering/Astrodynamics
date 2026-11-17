@@ -856,18 +856,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (_isFromKernel)
             {
                 // Non-SPICE observer: reference-body approach, but GetGeometricStateRelativeTo delegates to SPICE
-                var kernelCb = GetReferenceBodyFor(observer);
-                var kernelScCB = this.GetGeometricStateRelativeTo(epoch, kernelCb);
-                var kernelObsCB = observer.GetGeometricStateRelativeTo(epoch, kernelCb);
-                var kernelRelative = new StateVector(
-                    kernelScCB.Position - kernelObsCB.Position,
-                    kernelScCB.Velocity - kernelObsCB.Velocity,
-                    observer, epoch, Frames.Frame.ICRF);
-
-                if (aberration != Aberration.None)
-                    kernelRelative = CorrectFromAberrationCB(this, epoch, observer, aberration, kernelRelative, kernelObsCB, kernelCb);
-
-                return kernelRelative.ToFrame(frame);
+                return ApparentStateFromReferenceBody(this, epoch, observer, frame, aberration, GetReferenceBodyFor(observer));
             }
 
             // Determine reference body
@@ -882,18 +871,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 return _propagatedStates.Interpolate(epoch).ToFrame(frame);
             }
 
-            // Reference-body approach
-            var spacecraftCB = this.GetGeometricStateRelativeTo(epoch, cb);
-            var observerCB = observer.GetGeometricStateRelativeTo(epoch, cb);
-            var relative = new StateVector(
-                spacecraftCB.Position - observerCB.Position,
-                spacecraftCB.Velocity - observerCB.Velocity,
-                observer, epoch, Frames.Frame.ICRF);
-
-            if (aberration != Aberration.None)
-                relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerCB, cb);
-
-            return relative.ToFrame(frame);
+            // Reference-body approach, a non-inertial frame at the epoch of its centre (#593)
+            return ApparentStateFromReferenceBody(this, epoch, observer, frame, aberration, cb);
         }
 
         /// <summary>

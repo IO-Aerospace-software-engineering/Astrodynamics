@@ -16,6 +16,22 @@
  * Moon from G. Epochs E0 = 2024-01-01 00:00:00 TDB, E0 + 7000 s and E0 + 43210 s. States in m and m/s; azimuth and
  * elevation in rad; range in m and range rate in m/s.
  *
+ * Rows of #489: G as target (spkcpt_c) seen from the Moon, the Earth (its own body), the Sun, the Mars barycenter and LRO
+ * (the reconstructed SPK of Data/LRO, -85), and three more sites given by their coordinates, on the equator (longitude
+ * 0, latitude 0, altitude 0) and at the poles (longitude 0, latitude +-90 deg, altitude 0), seen from the Moon; the window
+ * of the Site example of DEVELOPER_GUIDE.md (G within 400000 km of the Moon with LT, 2024-01-01 TDB to 2024-01-02 TDB),
+ * from 60 s samples of spkcpt_c and a bisection to adjacent doubles (1.2e-7 s).
+ *
+ * Rows of #593: states in a non-inertial frame (ITRF93, centred on the Earth; MOON_ME, centred on the Moon; DSS-13_TOPO,
+ * centred on DSS-13), whose orientation spkezr_c evaluates at et -+ the light time of the frame's centre (spkcpo_c and
+ * spkcpt_c with the locus CENTER, which this program checked against spkezr_c from DSS-13 to 8e-6 m): the Moon from
+ * DSS-13, from G and from S, S from G, G from S and from the Moon, the Sun from S, S from the Earth.
+ *
+ * Rows of #549: the Moon seen from a point of a LEO given by its state, as an attitude reads it (spkcvo_c, the observer's
+ * state relative to the Earth in J2000 at the epoch): the LEO of the issue (a = 6778.137 km, e = 0, i = 51.6 deg, node,
+ * argument of perigee and mean anomaly 0 at 2024-03-01 12:00:00 TDB, conics_c with BODY399_GM) every 600 s over 1 h, and
+ * the state of InstrumentPointingAttitudeTests.Execute (6678 km on +x, 7.727 km/s on +y at 2021-01-01 13:00:00 TDB).
+ *
  * Build and run from the repository root with the vendored CSPICE (N0067):
  *   gcc -O2 -I external-lib/includeLinux tools/light_time_reference/light_time_ref.c external-lib/cspice.a -lm -o light_time_ref
  *   ./light_time_ref IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SolarSystem /tmp \
@@ -33,7 +49,10 @@ static const char *FLAGS[NFLAGS] = {"NONE", "LT", "LT+S", "CN", "CN+S", "XLT", "
 static const char *SC = "-1001";
 
 static double epochs[NEPOCHS];
-static double site[3];
+static double g_site[3];
+static double *site = g_site;
+static const char *frame = "J2000";
+static const char *refloc = "OBSERVER";
 static int first_row = 1;
 
 typedef void (*state_fn)(const char *abcorr, double et, double state[6]);
@@ -42,17 +61,17 @@ static const char *target_name, *observer_name;
 
 static void by_spkezr(const char *abcorr, double et, double state[6]) {
     double lt;
-    spkezr_c(target_name, et, "J2000", abcorr, observer_name, state, &lt);
+    spkezr_c(target_name, et, frame, abcorr, observer_name, state, &lt);
 }
 
 static void by_spkcpo(const char *abcorr, double et, double state[6]) {
     double lt;
-    spkcpo_c(target_name, et, "J2000", "OBSERVER", abcorr, site, "EARTH", "ITRF93", state, &lt);
+    spkcpo_c(target_name, et, frame, refloc, abcorr, site, "EARTH", "ITRF93", state, &lt);
 }
 
 static void by_spkcpt(const char *abcorr, double et, double state[6]) {
     double lt;
-    spkcpt_c(site, "EARTH", "ITRF93", et, "J2000", "OBSERVER", abcorr, observer_name, state, &lt);
+    spkcpt_c(site, "EARTH", "ITRF93", et, frame, refloc, abcorr, observer_name, state, &lt);
 }
 
 static void row(const char *label, const char *target, const char *observer, state_fn fn) {
@@ -91,6 +110,83 @@ static void horizontal(const char *label, const char *target) {
     printf("\n    }");
 }
 
+/* The distance of G from the Moon with LT minus 400000 km, km */
+static double guide_distance(double et) {
+    double state[6], lt;
+    spkcpt_c(g_site, "EARTH", "ITRF93", et, "J2000", "OBSERVER", "LT", "MOON", state, &lt);
+    return vnorm_c(state) - 400000.0;
+}
+
+/* #489: the window of the Site example of DEVELOPER_GUIDE.md, 60 s samples and a bisection of each sign change to adjacent doubles */
+static void guide_window(void) {
+    double start, end;
+    str2et_c("2024-01-01 00:00:00 TDB", &start);
+    str2et_c("2024-01-02 00:00:00 TDB", &end);
+    printf("  \"guide_window_lt\": [");
+    int first = 1;
+    double previous = start, fprevious = guide_distance(start);
+    if (fprevious < 0.0) {
+        printf("%.17g", start);
+        first = 0;
+    }
+    for (double t = start + 60.0; t <= end + 1e-9; t += 60.0) {
+        double ft = guide_distance(t);
+        if ((fprevious < 0.0) != (ft < 0.0)) {
+            double a = previous, b = t, fa = fprevious;
+            for (;;) {
+                double m = 0.5 * (a + b);
+                if (m <= a || m >= b) break;
+                double fm = guide_distance(m);
+                if ((fa < 0.0) == (fm < 0.0)) {
+                    a = m;
+                    fa = fm;
+                } else {
+                    b = m;
+                }
+            }
+            printf("%s%.17g", first ? "" : ", ", fabs(guide_distance(a)) <= fabs(guide_distance(b)) ? a : b);
+            first = 0;
+        }
+        previous = t;
+        fprevious = ft;
+    }
+    if (fprevious < 0.0) printf("%s%.17g", first ? "" : ", ", end);
+    printf("]\n");
+}
+
+/* #549: the Moon from a state relative to the Earth in J2000, for the nine corrections */
+static void pointing_state(double et, const double obssta[6]) {
+    printf("%s    {\"epoch_tdb\": %.17g, \"state\": [", first_row ? "" : ",\n", et);
+    first_row = 0;
+    for (int k = 0; k < 6; k++) printf("%s%.17g", k == 0 ? "" : ", ", obssta[k] * 1000.0);
+    printf("], \"moon\": {");
+    for (int f = 0; f < NFLAGS; f++) {
+        double state[6], lt;
+        spkcvo_c("MOON", et, "J2000", "OBSERVER", FLAGS[f], obssta, et, "EARTH", "J2000", state, &lt);
+        printf("%s\"%s\": [%.17g, %.17g, %.17g]", f == 0 ? "" : ", ", FLAGS[f], state[0] * 1000.0, state[1] * 1000.0,
+               state[2] * 1000.0);
+    }
+    printf("}}");
+}
+
+static void pointing(double gm) {
+    double start;
+    str2et_c("2024-03-01 12:00:00 TDB", &start);
+    double elts[8] = {6778.137, 0.0, 51.6 * rpd_c(), 0.0, 0.0, 0.0, start, gm};
+    printf("  \"pointing\": [\n");
+    first_row = 1;
+    for (int k = 0; k <= 6; k++) {
+        double et = start + 600.0 * k, obssta[6];
+        conics_c(elts, et, obssta);
+        pointing_state(et, obssta);
+    }
+    double execute;
+    str2et_c("2021-01-01 13:00:00 TDB", &execute);
+    double executeState[6] = {6678.0, 0.0, 0.0, 0.0, 7.727, 0.0};
+    pointing_state(execute, executeState);
+    printf("\n  ],\n");
+}
+
 int main(int argc, char **argv) {
     if (argc != 3) {
         fprintf(stderr, "usage: %s <kernel directory> <scratch directory>\n", argv[0]);
@@ -111,13 +207,19 @@ int main(int argc, char **argv) {
         furnsh_c(path);
     }
     closedir(dir);
+    snprintf(path, sizeof path, "%s/../LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp", argv[1]);
+    furnsh_c(path);
 
     double radii[3], gm;
     SpiceInt n;
     bodvrd_c("EARTH", "RADII", 3, &n, radii);
     bodvrd_c("EARTH", "GM", 1, &n, &gm);
     double f = (radii[0] - radii[2]) / radii[0];
-    georec_c(-117.0 * rpd_c(), 34.0 * rpd_c(), 1.0, radii[0], f, site);
+    georec_c(-117.0 * rpd_c(), 34.0 * rpd_c(), 1.0, radii[0], f, g_site);
+    double equator_site[3], north_site[3], south_site[3];
+    georec_c(0.0, 0.0, 0.0, radii[0], f, equator_site);
+    georec_c(0.0, 90.0 * rpd_c(), 0.0, radii[0], f, north_site);
+    georec_c(0.0, -90.0 * rpd_c(), 0.0, radii[0], f, south_site);
 
     str2et_c("2024-01-01 00:00:00 TDB", &epochs[0]);
     epochs[1] = epochs[0] + 7000.0;
@@ -148,11 +250,48 @@ int main(int argc, char **argv) {
     row("moon_from_spacecraft", "MOON", SC, by_spkezr);
     row("sun_from_spacecraft", "SUN", SC, by_spkezr);
     row("site_from_spacecraft", NULL, SC, by_spkcpt);
+    /* #489: G and the other coordinate sites as targets */
+    row("site_from_moon", NULL, "MOON", by_spkcpt);
+    row("site_from_earth", NULL, "EARTH", by_spkcpt);
+    row("site_from_sun", NULL, "SUN", by_spkcpt);
+    row("site_from_mars_barycenter", NULL, "MARS BARYCENTER", by_spkcpt);
+    row("site_from_lro", NULL, "-85", by_spkcpt);
+    site = equator_site;
+    row("equator_site_from_moon", NULL, "MOON", by_spkcpt);
+    site = north_site;
+    row("north_pole_site_from_moon", NULL, "MOON", by_spkcpt);
+    site = south_site;
+    row("south_pole_site_from_moon", NULL, "MOON", by_spkcpt);
+    site = g_site;
+    /* #593: non-inertial output frames, evaluated as spkezr_c evaluates them (refloc CENTER of spkcpo_c and spkcpt_c) */
+    refloc = "CENTER";
+    frame = "ITRF93";
+    row("moon_from_dss13_itrf93", "MOON", "DSS-13", by_spkezr);
+    row("moon_from_site_itrf93", "MOON", NULL, by_spkcpo);
+    row("moon_from_spacecraft_itrf93", "MOON", SC, by_spkezr);
+    row("spacecraft_from_site_itrf93", SC, NULL, by_spkcpo);
+    row("site_from_spacecraft_itrf93", NULL, SC, by_spkcpt);
+    row("site_from_moon_itrf93", NULL, "MOON", by_spkcpt);
+    row("sun_from_spacecraft_itrf93", "SUN", SC, by_spkezr);
+    row("spacecraft_from_earth_itrf93", SC, "EARTH", by_spkezr);
+    frame = "MOON_ME";
+    row("moon_from_dss13_moon_me", "MOON", "DSS-13", by_spkezr);
+    row("moon_from_site_moon_me", "MOON", NULL, by_spkcpo);
+    row("moon_from_spacecraft_moon_me", "MOON", SC, by_spkezr);
+    row("spacecraft_from_site_moon_me", SC, NULL, by_spkcpo);
+    row("site_from_moon_moon_me", NULL, "MOON", by_spkcpt);
+    frame = "DSS-13_TOPO";
+    row("moon_from_dss13_topo", "MOON", "DSS-13", by_spkezr);
+    frame = "J2000";
+    refloc = "OBSERVER";
     printf("\n  },\n  \"horizontal\": {\n");
     first_row = 1;
     horizontal("spacecraft_from_site", SC);
     horizontal("moon_from_site", "MOON");
-    printf("\n  }\n}\n");
+    printf("\n  },\n");
+    pointing(gm);
+    guide_window();
+    printf("}\n");
 
     unload_c(path);
     remove(path);

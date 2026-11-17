@@ -464,6 +464,41 @@ bool GetFrameNameProxy(int frameId, char name[33])
     return true;
 }
 
+bool GetFrameInfoProxy(const char *frameName, int *frameId, int *centerId, int *frameClass)
+{
+    ActivateErrorManagement();
+    ClearLastError();
+    *frameId = 0;
+    *centerId = 0;
+    *frameClass = 0;
+    SpiceInt id = 0;
+    namfrm_c(frameName, &id);
+    SpiceInt center = 0, frclss = 0, clssid = 0;
+    SpiceBoolean found = SPICEFALSE;
+    if (!failed_c() && id != 0)
+    {
+        frinfo_c(id, &center, &frclss, &clssid, &found);
+    }
+
+    if (failed_c())
+    {
+        std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
+    }
+
+    if (id == 0 || !found)
+    {
+        std::snprintf(lastError, sizeof(lastError), "SPICE knows no frame named %s", frameName);
+        return false;
+    }
+
+    *frameId = static_cast<int>(id);
+    *centerId = static_cast<int>(center);
+    *frameClass = static_cast<int>(frclss);
+    return true;
+}
+
 const char *TDBToStringProxy(double secondsFromJ2000)
 {
     ActivateErrorManagement();

@@ -83,6 +83,11 @@ public class SpiceAPI
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool GetFrameNameProxy(int frameId, [Out] byte[] name);
 
+    // namfrm_c and frinfo_c: the id, the centre and the class SPICE gives to a frame name, false when it knows none (#593)
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool GetFrameInfoProxy(string frameName, out int frameId, out int centerId, out int frameClass);
+
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsOnDistanceConstraintProxy(Window searchWindow, int observerId,
@@ -279,6 +284,46 @@ public class SpiceAPI
 
         // frmnam_c writes at most 32 characters and the terminating null in the 33 bytes it is given
         return System.Text.Encoding.UTF8.GetString(name, 0, Array.IndexOf(name, (byte)0)).TrimEnd();
+    }
+
+    // The class of SPICE's inertial frames (frinfo_c; Frames Required Reading, "Frame Classes"), and the centre of TEME,
+    // CIRS and TIRS, a literal: PlanetsAndMoons, whose type initializer takes the lock, is not read under it (#623)
+    private const int InertialFrameClass = 1;
+    private const int EarthNaifId = 399;
+
+    /// <summary>
+    /// The NAIF identifier of the centre of a non-inertial frame, at whose light time from the observer a light-time
+    /// corrected state takes the orientation of the frame, as <c>spkezr_c</c> does (#593); null for an inertial frame, and
+    /// for a frame SPICE does not know, whose transformation throws. The library's frames
+    /// (<see cref="ManagedReadFrame"/>): the site of a <see cref="Surface.SiteFrame"/>, the spacecraft of a
+    /// <see cref="Body.Spacecraft.SpacecraftFrame"/>, the Earth for TEME, CIRS and TIRS. Any other frame: SPICE's centre
+    /// (<c>namfrm_c</c>, <c>frinfo_c</c>, through <c>GetFrameInfoProxy</c>), none for its inertial class (GCRF is handed as
+    /// J2000, <see cref="SpiceFrameName"/>). Read under the lock at each call, so that a frame kernel loaded since is read.
+    /// </summary>
+    internal static int? NonInertialFrameCenter(Frame frame)
+    {
+        ArgumentNullException.ThrowIfNull(frame);
+        lock (lockObject)
+        {
+            switch (ManagedReadFrame(frame))
+            {
+                case Surface.SiteFrame siteFrame:
+                    return siteFrame.Site.NaifId;
+                case Body.Spacecraft.SpacecraftFrame spacecraftFrame:
+                    return spacecraftFrame.Spacecraft.NaifId;
+                case null:
+                    break;
+                default:
+                    return EarthNaifId;
+            }
+
+            if (!GetFrameInfoProxy(SpiceFrameName(frame), out _, out int center, out int frameClass))
+            {
+                return null;
+            }
+
+            return frameClass == InertialFrameClass ? null : center;
+        }
     }
 
     /// <summary>

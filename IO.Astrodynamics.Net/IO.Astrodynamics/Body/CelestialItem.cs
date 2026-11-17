@@ -579,8 +579,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// GetEphemeris. For SPICE-backed observer/target pairs, uses SPICE directly.
     /// For non-SPICE observers (Spacecraft, Site), uses reference-body approach, where the nine aberration corrections are
-    /// applied as CSPICE's <c>spkaps</c> applies them (<see cref="CorrectFromAberrationCB"/>, #491); the state is rotated
-    /// to <paramref name="frame"/> at <paramref name="epoch"/> (#593).
+    /// applied as CSPICE's <c>spkaps</c> applies them (<see cref="CorrectFromAberrationCB"/>, #491), and the state is rotated
+    /// to a non-inertial <paramref name="frame"/> at the epoch of its centre, as <c>spkezr_c</c> rotates it
+    /// (<see cref="ApparentStateFromReferenceBody"/>; before 11.0.0 at <paramref name="epoch"/>, 620 m off for the Moon seen
+    /// from DSS-13 in ITRF93 with LT and 1.48 km in MOON_ME, #593).
     /// </summary>
     public virtual OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
@@ -592,19 +594,121 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         // Reference-body approach for non-SPICE observers
-        var cb = GetReferenceBodyFor(observer);
-        var targetCB = this.GetGeometricStateRelativeTo(epoch, cb);
-        var observerCB = observer.GetGeometricStateRelativeTo(epoch, cb);
+        return ApparentStateFromReferenceBody(this, epoch, observer, frame, aberration, GetReferenceBodyFor(observer));
+    }
+
+    /// <summary>
+    /// The state of <paramref name="target"/> relative to <paramref name="observer"/> in <paramref name="frame"/> at
+    /// <paramref name="epoch"/>, on the reference-body path: both read relative to <paramref name="referenceBody"/> in ICRF
+    /// (<see cref="ILocalizable.GetGeometricStateRelativeTo"/>), corrected as CSPICE corrects them
+    /// (<see cref="CorrectFromAberrationCB"/>, #491), and rotated to the frame as <c>spkezr_c</c> rotates them
+    /// (<see cref="ToApparentFrame"/>, #593). The helper of every target whose geometric state relative to the reference
+    /// body is known at any epoch: a body or a spacecraft seen by a site or a managed spacecraft, a site given by its
+    /// coordinates seen by any observer (#489).
+    /// </summary>
+    internal static StateVector ApparentStateFromReferenceBody(ILocalizable target, in Time epoch, ILocalizable observer, Frame frame,
+        Aberration aberration, CelestialItem referenceBody)
+    {
+        var targetCB = target.GetGeometricStateRelativeTo(epoch, referenceBody);
+        var observerCB = observer.GetGeometricStateRelativeTo(epoch, referenceBody);
         var relative = new StateVector(
             targetCB.Position - observerCB.Position,
             targetCB.Velocity - observerCB.Velocity,
             observer, epoch, Frame.ICRF);
 
-        if (aberration != Aberration.None)
-            relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerCB, cb);
+        if (aberration == Aberration.None)
+        {
+            return relative.ToFrame(frame).ToStateVector();
+        }
 
-        return relative.ToFrame(frame);
+        var corrected = CorrectFromAberrationCB(target, epoch, observer, aberration, relative, observerCB, referenceBody,
+            out double lightTime, out double lightTimeRate);
+        return ToApparentFrame(corrected, frame, target, observer, aberration, lightTime, lightTimeRate, observerCB, referenceBody);
     }
+
+    /// <summary>
+    /// A light-time corrected state, in ICRF at the epoch of the observation, in <paramref name="frame"/> as
+    /// <c>spkezr_c</c> gives it (N0067, its header, "Non-inertial frames"; #593): an inertial frame, or a frame centred on
+    /// the observer, at the epoch; any other at t ∓ lt_c, the epoch of its centre (<see cref="SpiceAPI.NonInertialFrameCenter"/>),
+    /// lt_c the light time from the observer to that centre by the method of <paramref name="aberration"/> (that of the
+    /// target when the centre is the target; the stellar aberration does not enter it), − for reception, + for
+    /// transmission; and the derivative of the rotation scaled by 1 ∓ dlt_c/dt, as CSPICE's <c>zzcorsxf</c> scales it. The
+    /// rotation is read at the 100 ns of a <see cref="Time"/> and carried to the exact epoch by the frame's angular velocity.
+    /// </summary>
+    private static StateVector ToApparentFrame(StateVector corrected, Frame frame, ILocalizable target, ILocalizable observer,
+        Aberration aberration, double lightTime, double lightTimeRate, StateVector observerCB, CelestialItem referenceBody)
+    {
+        if (frame == Frame.ICRF)
+        {
+            return corrected;
+        }
+
+        int? center = SpiceAPI.NonInertialFrameCenter(frame);
+        if (center == null || center == observer.NaifId)
+        {
+            return corrected.ToFrame(frame).ToStateVector();
+        }
+
+        double sign = LightTimeIterations(aberration).Sign;
+        double centerLightTime = lightTime;
+        double centerLightTimeRate = lightTimeRate;
+        if (center != target.NaifId)
+        {
+            // The light time to the centre: the method of the correction, without its stellar aberration
+            var centerObject = CenterOf(center.Value, referenceBody);
+            var centerCB = centerObject.GetGeometricStateRelativeTo(corrected.Epoch, referenceBody);
+            var centerRelative = new StateVector(centerCB.Position - observerCB.Position, centerCB.Velocity - observerCB.Velocity,
+                observer, corrected.Epoch, Frame.ICRF);
+            CorrectFromAberrationCB(centerObject, corrected.Epoch, observer, LightTimeOnly(aberration), centerRelative, observerCB,
+                referenceBody, out centerLightTime, out centerLightTimeRate);
+        }
+
+        var epoch = corrected.Epoch;
+        double shift = sign * centerLightTime;
+        var centerEpoch = ApparentPositionReader.Shift(epoch, shift);
+        double residual = (epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds + shift) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        var orientation = Frame.ICRF.ToFrame(frame, centerEpoch);
+        // The angular velocity of the frame relative to ICRF, in the frame, as OrbitalParameters.ToFrame forms it
+        var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
+        var position = corrected.Position.Rotate(orientation.Rotation);
+        position -= angularVelocity.Cross(position) * residual;
+        var velocity = corrected.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(position) * (1.0 + sign * centerLightTimeRate);
+        return new StateVector(position, velocity, observer, epoch, frame);
+    }
+
+    /// <summary>The object at the centre of a frame, as the reference-body path reads it: the reference body itself, a
+    /// site of the kernels, or the barycenter, Lagrange point or body of <see cref="Create"/>.</summary>
+    private static ILocalizable CenterOf(int centerId, CelestialItem referenceBody)
+    {
+        if (centerId == referenceBody.NaifId)
+        {
+            return referenceBody;
+        }
+
+        return SpiceAPI.IsSiteId(centerId) ? SpiceAPI.Instance.CreateKernelSite(centerId) : Create(centerId);
+    }
+
+    /// <summary>The light-time part of a correction: LT, CN, XLT or XCN for their "+S" forms.</summary>
+    private static Aberration LightTimeOnly(Aberration aberration) => aberration switch
+    {
+        Aberration.LTS => Aberration.LT,
+        Aberration.CNS => Aberration.CN,
+        Aberration.XLTS => Aberration.XLT,
+        Aberration.XCNS => Aberration.XCN,
+        _ => aberration
+    };
+
+    /// <summary>The iterations of <c>spkltc</c> for a correction and the sign of its shift of the epoch (− reception, +
+    /// transmission); none for <see cref="Aberration.None"/>.</summary>
+    private static (int Iterations, double Sign) LightTimeIterations(Aberration aberration) => aberration switch
+    {
+        Aberration.None => (0, 0.0),
+        Aberration.LT or Aberration.LTS => (1, -1.0),
+        Aberration.CN or Aberration.CNS => (ConvergedLightTimeIterations, -1.0),
+        Aberration.XLT or Aberration.XLTS => (1, 1.0),
+        Aberration.XCN or Aberration.XCNS => (ConvergedLightTimeIterations, 1.0),
+        _ => throw new ArgumentOutOfRangeException(nameof(aberration))
+    };
 
     /// <summary>
     /// Computes the geometric state of this object relative to a reference body in ICRF.
@@ -661,7 +765,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// (<c>spkacs</c>).
     /// </para>
     /// <para>
-    /// The state is in ICRF at the epoch; the output frame is applied by the caller at the epoch (#593).
+    /// The state is in ICRF at the epoch; the caller rotates it to the output frame at the epoch of the frame's centre
+    /// (<see cref="ApparentStateFromReferenceBody"/>, #593).
     /// </para>
     /// </remarks>
     /// <param name="target">The target.</param>
@@ -673,17 +778,21 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="referenceBody">The reference body.</param>
     internal static StateVector CorrectFromAberrationCB(
         ILocalizable target, Time epoch, ILocalizable observer, Aberration aberration,
-        StateVector relativeState, StateVector observerCB, CelestialItem referenceBody)
+        StateVector relativeState, StateVector observerCB, CelestialItem referenceBody) =>
+        CorrectFromAberrationCB(target, epoch, observer, aberration, relativeState, observerCB, referenceBody, out _, out _);
+
+    /// <summary>
+    /// <see cref="CorrectFromAberrationCB(ILocalizable, Time, ILocalizable, Aberration, StateVector, StateVector, CelestialItem)"/>,
+    /// with the light time of the correction and its rate dlt/dt (<c>spkltc</c>'s <c>lt</c> and <c>dlt</c>; 0 for
+    /// <see cref="Aberration.None"/>), which set the epoch of a non-inertial output frame centred on the target (#593).
+    /// </summary>
+    internal static StateVector CorrectFromAberrationCB(
+        ILocalizable target, Time epoch, ILocalizable observer, Aberration aberration,
+        StateVector relativeState, StateVector observerCB, CelestialItem referenceBody, out double lightTimeOut, out double lightTimeRateOut)
     {
-        (int iterations, double sign) = aberration switch
-        {
-            Aberration.None => (0, 0.0),
-            Aberration.LT or Aberration.LTS => (1, -1.0),
-            Aberration.CN or Aberration.CNS => (ConvergedLightTimeIterations, -1.0),
-            Aberration.XLT or Aberration.XLTS => (1, 1.0),
-            Aberration.XCN or Aberration.XCNS => (ConvergedLightTimeIterations, 1.0),
-            _ => throw new ArgumentOutOfRangeException(nameof(aberration))
-        };
+        (int iterations, double sign) = LightTimeIterations(aberration);
+        lightTimeOut = 0.0;
+        lightTimeRateOut = 0.0;
         if (iterations == 0)
         {
             return relativeState;
@@ -740,6 +849,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         var velocity = geometricVelocity + targetSsbVelocity * (sign * lightTimeRate);
+        lightTimeOut = lightTime;
+        lightTimeRateOut = lightTimeRate;
 
         if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
         {

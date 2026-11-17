@@ -110,6 +110,43 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **A site given by its coordinates, seen with a light-time correction, was not corrected as CSPICE corrects it**
+  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)). `Site.GetEphemeris` of such a site, as the target of a body, a barycenter, the Sun or a kernel
+  spacecraft, subtracted the observer seen from the site's body with the correction
+  (`OrbitalParameters.RelativeTo`): the observer was moved in time, never the site. Seen from the Moon with `LT` the site
+  of `DEVELOPER_GUIDE.md` was 82.7 km from `spkcpt_c` (its range 68.2 km short), from the Sun about 15 000 km, and
+  from its own body the correction was dropped (640 m with `LT`); every flag but `None` was wrong. The site now takes
+  the reference-body path for every observer when the correction is not `None` (the internal
+  `CelestialItem.ApparentStateFromReferenceBody`, the helper of #491's corrections for any target whose geometric state
+  relative to its reference body is known at any epoch): the site itself at t ∓ lt, the light time of `spkltc`, its rate
+  in the velocity, the stellar aberration of `stelab` and `stlabx` for `+S`, as `spkcpt_c` corrects it. Measured on
+  Linux x64 (2026-11-17) against `spkcpt_c` (`tools/light_time_reference`, the nine flags at three epochs): 2.4e-5 m and
+  3.7e-9 m/s from the Moon, the Earth and LRO, the sites at both poles and on the equator included, 6.8e-5 m from the
+  Sun and the Mars barycenter; the 400000 km window of the guide's example with `LT` within 1e-7 s of `spkcpt_c`'s
+  (09:42:24.997 to 14:20:43.029 TDB; 340 s wider at each end before). Without correction the state is unchanged, bit for
+  bit; a site of the kernels is unchanged. `OrbitalParameters.RelativeTo(ILocalizable, Aberration)` keeps its behaviour,
+  documented: its correction applies to the new origin seen from the current one, the state itself is not moved in time
+  (decided by S. Guillet, 2026-11-17). Changes published results: through `GetEphemeris`, the distance and coordinate
+  window searches, `SubObserverPoint` and `IsInFOV` of such a site, by up to 83 km from the Moon and 15 000 km from the
+  Sun; the conformance runner (its sites read with `None`) and the CLI (kernel sites only) do not move.
+- **A light-time corrected state in a non-inertial frame took the frame at the epoch of the observation**
+  ([#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593)). On the reference-body path (an observer that is a site or a spacecraft not from a kernel, a target
+  that is such a spacecraft or a site given by its coordinates), the corrected state was rotated to the output frame at
+  t; `spkezr_c` rotates a non-inertial frame at t ∓ lt_c of its centre, lt_c the light time from the observer to the
+  centre by the method of the correction (that of the target when the centre is the target, none when it is the
+  observer), and scales the derivative of the rotation by 1 ∓ dlt_c/dt (`zzcorsxf`). The Moon from DSS-13 with `LT` was
+  620 m off in ITRF93 and 1.48 km in MOON_ME, the Moon from a spacecraft 675 m in ITRF93, the Sun from it 228 km, a site
+  given by its coordinates 38 km in its own topocentric frame seen from the Moon. The library now does as `spkezr_c`:
+  the centre of a SPICE frame is SPICE's (`frinfo_c`, through the new native `GetFrameInfoProxy`, `namfrm_c` and
+  `frinfo_c`, and the internal `SpiceAPI.NonInertialFrameCenter`), that of the library's frames the site of a site frame,
+  the spacecraft of a spacecraft frame, the Earth for TEME, CIRS and TIRS; the rotation is read at the 100 ns of a `Time`
+  and carried to the exact epoch by the frame's angular velocity. Measured on Linux x64 (2026-11-17) against `spkezr_c`,
+  `spkcpo_c` and `spkcpt_c` with the locus `CENTER` (which reproduces `spkezr_c` from DSS-13 to 8e-6 m): 1.7e-5 m and
+  1.1e-8 m/s in ITRF93, MOON_ME centred on the observer and the topocentric frame of DSS-13; 2.4e-4 m in MOON_ME centred
+  on the target, the resolution of SPICE's own MOON_ME rotation, which moves by steps of 3.7e-4 m at 384 000 km within a
+  few ulps of its epoch; the spacecraft rows as in ICRF. An inertial frame, a frame centred on the observer (the
+  topocentric frame of the observing site, so the visibility searches of a spacecraft from a site) and `None` are
+  unchanged, bit for bit.
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -788,10 +825,10 @@ release are listed under **Known limitations**.
     sets and culminations within 0.50 ms of GMAT's `ContactLocator` (its millisecond print), the azimuth and elevation
     within 1.7e-7°, the range within 1.3 mm and the range rate within 0.014 mm/s of `azlcpo`, `LT+S` included (the
     range rate was 0.728 m/s off with `LT` and `XLT`, `LT+S` 4.1e-3° in azimuth and 211 m in range).
-  - **Not in this fix:** the output frame is still evaluated at the epoch of the observation; `spkezr` evaluates a
+  - **Not in this fix:** the output frame was still evaluated at the epoch of the observation; `spkezr` evaluates a
     non-inertial frame centred on another body at t − lt of its centre (the Moon from DSS-13 with `LT`, 531 to 620 m in
-    `ITRF93`; [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), split from #491).
-    The topocentric frame of the observing site and the inertial frames are not affected.
+    `ITRF93`; [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), split from #491,
+    fixed in this release, above). The topocentric frame of the observing site and the inertial frames are not affected.
   - **Changes published results:** on that path, the `LT` and `XLT` velocities by up to 0.77 m/s (a LEO spacecraft),
     the `CN` and `XCN` states by up to 42 km (the Moon from a site), the `+S` states by up to 14 775 km (the Sun from a
     site, 20.7″) and their velocities by up to 3.5 km/s (the Sun from a LEO spacecraft); the managed searches with a
@@ -3211,6 +3248,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: a light-time corrected state in a non-inertial frame is rotated at the epoch of the frame's centre**
+  ([#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), Fixed above). On the reference-body path, a state read with a correction other than `None` in a
+  non-inertial frame not centred on the observer moves: by 620 m for the Moon from DSS-13 in
+  ITRF93 with `LT`, 1.48 km in MOON_ME, 38 km for a site given by its coordinates in its own frame from the Moon; the
+  coordinate searches in such frames move with it. Migration: for the former value, read the state in ICRF and rotate
+  it with `ToFrame(frame)`, which rotates at the state's epoch. The native library exports `GetFrameInfoProxy`, which
+  the .NET layer of the same release calls: a native library of an earlier release throws `EntryPointNotFoundException`
+  there.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -4731,13 +4776,11 @@ not listed.
   the tick, [Time Scales](../reference/time-and-windows.md#time-scales)): a UTC epoch at a coverage bound of a kernel,
   as `str2et` computes it, can be read up to about 1.1 µs outside it and throw SPKINSUFFDATA. Read 2 µs inside the
   bound.
-- **Light time on the reference-body path**
-  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489),
-  [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593)). A `Site` built from its
-  coordinates and read as a target from a kernel-backed observer takes the light time of the observer, not of the site:
-  82.7 km off `spkcpt` from the Moon with LT, about 15 000 km from the Sun. A light-time-corrected state in a
-  non-inertial frame centred on the target (ITRF93, MOON_ME) takes the frame at the observation epoch, not at t − lt as
-  `spkezr` does: the Moon from DSS-13 with LT 531 m to 1.48 km off. `ToEquatorial` of such a state rotates it to ICRF at its epoch
+- **A light-time corrected state in a frame only the library holds, read by CSPICE.** An observer and a target SPICE
+  reads, in TEME, CIRS, TIRS or the frame of a site given by its coordinates, are read in J2000 and rotated at the epoch
+  of the observation, not at the epoch of the frame's centre as the reference-body path rotates them since #593. **The
+  equatorial coordinates of a light-time corrected state in a non-inertial frame.** `ToEquatorial` of such a state
+  (ITRF93, MOON_ME) rotates it to ICRF at its epoch
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)): 3.05e-6 rad in RA and 1.15e-6 rad in Dec for the Moon from the Earth with LT in MOON_ME; read it in ICRF.
 - **Illumination of a site above the ellipsoid**
   ([#654](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/654)). A site from the kernels,

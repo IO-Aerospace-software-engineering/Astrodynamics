@@ -22,7 +22,9 @@ namespace IO.Astrodynamics.Tests.Body;
 /// The light-time and stellar-aberration corrections of the reference-body path (#491), for the nine corrections, against
 /// the CSPICE states of <c>tools/light_time_reference</c> (<c>spkezr_c</c>, <c>spkcpo_c</c>, <c>spkcpt_c</c> and
 /// <c>azlcpo_c</c>): a site given by its coordinates and a spacecraft given by one state, as observers and as targets, a
-/// site of the kernels as observer, the Moon, the Sun and the spacecraft as targets.
+/// site of the kernels as observer, the Moon, the Sun and the spacecraft as targets. A site given by its coordinates as the
+/// target of an observer SPICE knows (#489), and the states in a non-inertial frame, whose orientation is that of the epoch
+/// of its centre, as <c>spkezr_c</c> takes it (#593).
 /// </summary>
 public class LightTimeCorrectionTests
 {
@@ -115,7 +117,7 @@ public class LightTimeCorrectionTests
 
         foreach (var flag in Flags)
         {
-            _output.WriteLine($"{label} {flag.GetDescription(),-6} position {worst[flag].Position:E3} m, velocity {worst[flag].Velocity:E3} m/s");
+            _output.WriteLine($"MEASURE {label} {flag.GetDescription(),-6} position {worst[flag].Position:E3} m, velocity {worst[flag].Velocity:E3} m/s");
         }
 
         return worst;
@@ -165,6 +167,187 @@ public class LightTimeCorrectionTests
     [Fact]
     public void CoordinateSiteFromSpacecraft() =>
         AssertRow("site_from_spacecraft", (t, a) => Icrf(_site.GetEphemeris(t, _spacecraft, Frames.Frame.ICRF, a)), SpacecraftGeometric, (3.4e-5, 2.1e-8));
+
+    private static StateVector InFrame(IO.Astrodynamics.OrbitalParameters.OrbitalParameters state, Frames.Frame frame)
+    {
+        Assert.Equal(frame, state.Frame);
+        return state.ToStateVector();
+    }
+
+    private static readonly Frames.Frame Itrf93 = new("ITRF93");
+    private static readonly Frames.Frame MoonMe = new("MOON_ME");
+
+    private Site CoordinateSite(int id, double longitudeDeg, double latitudeDeg, double altitude) =>
+        new(id, $"G489{id}", _earth, new Planetodetic(longitudeDeg * global::IO.Astrodynamics.Constants.Deg2Rad,
+            latitudeDeg * global::IO.Astrodynamics.Constants.Deg2Rad, altitude));
+
+    // #489: a site given by its coordinates as the target of an observer SPICE knows (spkcpt_c): before 11.0.0 the
+    // correction was that of the observer seen from the site's body (82.7 km from the Moon with LT), and none from that body
+
+    [Fact]
+    public void CoordinateSiteFromMoon() =>
+        AssertRow("site_from_moon", (t, a) => Icrf(_site.GetEphemeris(t, _moon, Frames.Frame.ICRF, a)), Site489Geometric, Site489Corrected);
+
+    [Fact]
+    public void CoordinateSiteFromItsBody() =>
+        AssertRow("site_from_earth", (t, a) => Icrf(_site.GetEphemeris(t, _earth, Frames.Frame.ICRF, a)), Site489Geometric, Site489Corrected);
+
+    [Fact]
+    public void CoordinateSiteFromSun() =>
+        AssertRow("site_from_sun", (t, a) => Icrf(_site.GetEphemeris(t, _sun, Frames.Frame.ICRF, a)), Site489SunGeometric, Site489SunCorrected);
+
+    [Fact]
+    public void CoordinateSiteFromMarsBarycenter() =>
+        AssertRow("site_from_mars_barycenter", (t, a) => Icrf(_site.GetEphemeris(t, new Barycenter(4), Frames.Frame.ICRF, a)), Site489SunGeometric,
+            Site489SunCorrected);
+
+    [Fact]
+    public void CoordinateSiteFromKernelSpacecraft()
+    {
+        TestKernels.EnsureLro();
+        var lro = new Spacecraft(-85, "LRO", epoch: _epochs[0]);
+        AssertRow("site_from_lro", (t, a) => Icrf(_site.GetEphemeris(t, lro, Frames.Frame.ICRF, a)), Site489Geometric, Site489Corrected);
+    }
+
+    [Theory]
+    [InlineData("equator_site_from_moon", 0.0, 0.0)]
+    [InlineData("north_pole_site_from_moon", 0.0, 90.0)]
+    [InlineData("south_pole_site_from_moon", 0.0, -90.0)]
+    public void SingularCoordinateSiteFromMoon(string label, double longitudeDeg, double latitudeDeg)
+    {
+        var site = CoordinateSite(489, longitudeDeg, latitudeDeg, 0.0);
+        AssertRow(label, (t, a) => Icrf(site.GetEphemeris(t, _moon, Frames.Frame.ICRF, a)), Site489Geometric, Site489Corrected);
+    }
+
+    /// <summary>
+    /// The window of the Site example of DEVELOPER_GUIDE.md (#483), the site within 400000 km of the Moon with LT, against
+    /// the window of <c>spkcpt_c</c> (60 s samples and a bisection, <c>tools/light_time_reference</c>): before 11.0.0 about
+    /// 340 s wider at each end (#489).
+    /// </summary>
+    [Fact]
+    public void CoordinateSiteGuideWindow()
+    {
+        var expected = _reference.GetProperty("guide_window_lt").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
+        var windows = _site.FindWindowsOnDistanceConstraint(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1), new TimeSystem.Time(2024, 1, 2)), _moon,
+            RelationnalOperator.Lower, 400000000, Aberration.LT, System.TimeSpan.FromMinutes(10)).ToArray();
+        Assert.Single(windows);
+        double start = (windows[0].StartDate - expected[0]).TotalSeconds;
+        double end = (windows[0].EndDate - expected[1]).TotalSeconds;
+        _output.WriteLine($"MEASURE guide window start {start:E3} s, end {end:E3} s");
+        Assert.True(System.Math.Abs(start) <= GuideWindowBound, $"start {start:E3} s");
+        Assert.True(System.Math.Abs(end) <= GuideWindowBound, $"end {end:E3} s");
+    }
+
+    // #593: a non-inertial output frame on the reference-body path, its orientation at t -+ the light time of its centre
+    // (ITRF93 about the Earth, MOON_ME about the Moon, DSS-13_TOPO about DSS-13), as spkezr_c, spkcpo_c and spkcpt_c
+
+    [Fact]
+    public void MoonFromKernelSiteInItrf93() =>
+        AssertRow("moon_from_dss13_itrf93", (t, a) => InFrame(_moon.GetEphemeris(t, _dss13, Itrf93, a), Itrf93), Frame593Geometric, Frame593Corrected);
+
+    [Fact]
+    public void MoonFromKernelSiteInMoonMe() =>
+        AssertRow("moon_from_dss13_moon_me", (t, a) => InFrame(_moon.GetEphemeris(t, _dss13, MoonMe, a), MoonMe), Frame593Geometric, Frame593TargetCentredCorrected);
+
+    [Fact]
+    public void MoonFromKernelSiteInItsTopocentricFrame() =>
+        AssertRow("moon_from_dss13_topo", (t, a) => InFrame(_moon.GetEphemeris(t, _dss13, _dss13.Frame, a), _dss13.Frame), Frame593Geometric, Frame593Corrected);
+
+    [Fact]
+    public void MoonFromCoordinateSiteInItrf93() =>
+        AssertRow("moon_from_site_itrf93", (t, a) => InFrame(_moon.GetEphemeris(t, _site, Itrf93, a), Itrf93), Frame593Geometric, Frame593Corrected);
+
+    [Fact]
+    public void MoonFromCoordinateSiteInMoonMe() =>
+        AssertRow("moon_from_site_moon_me", (t, a) => InFrame(_moon.GetEphemeris(t, _site, MoonMe, a), MoonMe), Frame593Geometric, Frame593TargetCentredCorrected);
+
+    [Fact]
+    public void MoonFromSpacecraftInItrf93() =>
+        AssertRow("moon_from_spacecraft_itrf93", (t, a) => InFrame(_moon.GetEphemeris(t, _spacecraft, Itrf93, a), Itrf93), SpacecraftGeometric, Frame593SpacecraftCorrected);
+
+    [Fact]
+    public void MoonFromSpacecraftInMoonMe() =>
+        AssertRow("moon_from_spacecraft_moon_me", (t, a) => InFrame(_moon.GetEphemeris(t, _spacecraft, MoonMe, a), MoonMe), SpacecraftGeometric, Frame593SpacecraftCorrected);
+
+    [Fact]
+    public void SpacecraftFromCoordinateSiteInItrf93() =>
+        AssertRow("spacecraft_from_site_itrf93", (t, a) => InFrame(_spacecraft.GetEphemeris(t, _site, Itrf93, a), Itrf93), SpacecraftGeometric, Frame593SpacecraftCorrected);
+
+    [Fact]
+    public void SpacecraftFromCoordinateSiteInMoonMe() =>
+        AssertRow("spacecraft_from_site_moon_me", (t, a) => InFrame(_spacecraft.GetEphemeris(t, _site, MoonMe, a), MoonMe), SpacecraftGeometric, Frame593SpacecraftCorrected);
+
+    [Fact]
+    public void CoordinateSiteFromSpacecraftInItrf93() =>
+        AssertRow("site_from_spacecraft_itrf93", (t, a) => InFrame(_site.GetEphemeris(t, _spacecraft, Itrf93, a), Itrf93), SpacecraftGeometric, Frame593SpacecraftCorrected);
+
+    [Fact]
+    public void CoordinateSiteFromMoonInItrf93() =>
+        AssertRow("site_from_moon_itrf93", (t, a) => InFrame(_site.GetEphemeris(t, _moon, Itrf93, a), Itrf93), Frame593Geometric, Frame593Corrected);
+
+    [Fact]
+    public void CoordinateSiteFromMoonInMoonMe() =>
+        AssertRow("site_from_moon_moon_me", (t, a) => InFrame(_site.GetEphemeris(t, _moon, MoonMe, a), MoonMe), Frame593Geometric, Frame593Corrected);
+
+    [Fact]
+    public void SunFromSpacecraftInItrf93() =>
+        AssertRow("sun_from_spacecraft_itrf93", (t, a) => InFrame(_sun.GetEphemeris(t, _spacecraft, Itrf93, a), Itrf93), SpacecraftGeometric, Frame593SunCorrected);
+
+    [Fact]
+    public void SpacecraftFromEarthInItrf93() =>
+        AssertRow("spacecraft_from_earth_itrf93", (t, a) => InFrame(_spacecraft.GetEphemeris(t, _earth, Itrf93, a), Itrf93), SpacecraftGeometric, Frame593SpacecraftCorrected);
+
+    /// <summary>
+    /// #593: the centre at whose light time a non-inertial output frame is evaluated, SPICE's (<c>frinfo_c</c>) for its
+    /// frames: none for an inertial frame (J2000, GCRF handed as J2000, ECLIPJ2000) or one SPICE does not know, the Earth
+    /// for ITRF93 and IAU_EARTH (built-in PCK frames, Frames Required Reading), the Moon for MOON_ME (moon_080317.tf),
+    /// DSS-13 for its topocentric frame (earth_topo_201023.tf); the site, the spacecraft with an attitude record and the
+    /// Earth for the library's own frames, and none for the frame of a spacecraft without one, which SPICE does not know.
+    /// </summary>
+    [Fact]
+    public void NonInertialFrameCenter()
+    {
+        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.ICRF));
+        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.GCRF));
+        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.ECLIPTIC_J2000));
+        Assert.Null(SpiceAPI.NonInertialFrameCenter(new Frames.Frame("NO_SUCH_FRAME_593")));
+        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Itrf93));
+        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(new Frames.Frame("iau_earth")));
+        Assert.Equal(301, SpiceAPI.NonInertialFrameCenter(MoonMe));
+        Assert.Equal(399013, SpiceAPI.NonInertialFrameCenter(_dss13.Frame));
+        Assert.Equal(_site.NaifId, SpiceAPI.NonInertialFrameCenter(_site.Frame));
+        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TEME));
+        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TIRS));
+        var oriented = new Spacecraft(-1593, "S593", 100.0, 1000.0, new Clock("S593", 65536), _spacecraft.InitialOrbitalParameters);
+        Assert.Null(SpiceAPI.NonInertialFrameCenter(oriented.Frame));
+        oriented.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _epochs[0], oriented.Frame));
+        Assert.Equal(-1593, SpiceAPI.NonInertialFrameCenter(oriented.Frame));
+        Assert.Throws<System.ArgumentNullException>(() => SpiceAPI.NonInertialFrameCenter(null));
+    }
+
+    // Provisional bounds of #489 and #593, twice the worst over the rows of each on Linux x64 (2026-11-17), rounded up at
+    // two digits, to be set again from the Windows x64 and macOS arm64 CI logs (the MEASURE lines of each row). Positions
+    // in m, velocities in m/s. A site given by its coordinates, as target: from the Moon, the Earth, LRO and the singular
+    // sites, geometric 6.8e-8 m and 4.6e-13 m/s, corrected 2.4e-5 m (the equator site) and 3.7e-9 m/s; from the Sun and
+    // the Mars barycenter, geometric 6.1e-5 m (the double of 2.3e11 m) and 3.8e-12 m/s, corrected 6.8e-5 m and 3.4e-9 m/s.
+    private static readonly (double Position, double Velocity) Site489Geometric = (1.4e-7, 9.2e-13);
+    private static readonly (double Position, double Velocity) Site489Corrected = (4.9e-5, 7.5e-9);
+    private static readonly (double Position, double Velocity) Site489SunGeometric = (1.3e-4, 7.6e-12);
+    private static readonly (double Position, double Velocity) Site489SunCorrected = (1.4e-4, 6.9e-9);
+
+    // A non-inertial frame (#593): geometric 3.0e-7 m and 4.4e-11 m/s; corrected 1.7e-5 m and 1.1e-8 m/s in ITRF93, the
+    // topocentric frame and MOON_ME centred on the observer; MOON_ME centred on the target, 2.4e-4 m, the resolution of
+    // the reference, whose MOON_ME rotation changes by steps of 3.7e-4 m at 384000 km within a few ulps of its epoch
+    // (sxform_c from MOON_PA's Chebyshev angles, measured with CSPICE N0067 on these kernels); the spacecraft rows 3.9e-4 m
+    // and 8.3e-7 m/s, the Sun from it 2.9e-2 m and 6.4e-5 m/s, as in ICRF (above).
+    private static readonly (double Position, double Velocity) Frame593Geometric = (5.9e-7, 8.9e-11);
+    private static readonly (double Position, double Velocity) Frame593Corrected = (3.5e-5, 2.3e-8);
+    private static readonly (double Position, double Velocity) Frame593TargetCentredCorrected = (4.9e-4, 2.3e-8);
+    private static readonly (double Position, double Velocity) Frame593SpacecraftCorrected = (7.9e-4, 1.7e-6);
+    private static readonly (double Position, double Velocity) Frame593SunCorrected = (5.9e-2, 1.3e-4);
+
+    // The guide window: 0 s and 1.0e-7 s from spkcpt_c's
+    private const double GuideWindowBound = 2.0e-7;
 
     /// <summary>
     /// Azimuth, elevation, range (<see cref="Site.GetHorizontalCoordinates"/>) and range rate (from the state of the target

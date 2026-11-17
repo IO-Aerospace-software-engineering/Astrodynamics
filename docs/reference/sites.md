@@ -25,7 +25,7 @@ Ground-based observation or tracking site.
 | Method | Description |
 |--------|-------------|
 | `GetHorizontalCoordinates(Time, ILocalizable, Aberration)` | Get azimuth, elevation, range |
-| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer |
+| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer: a site of the kernels seen from a body, a barycenter or a kernel spacecraft by `spkezr_c`; a site given by its coordinates corrected as `spkcpt_c` corrects it, the site itself at t ∓ lt ([Light time of a site](#light-time-of-a-site)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnCoordinateConstraint(...)` | Find coordinate constraint windows of this site seen from an observer; for the visibility of a spacecraft, search the spacecraft from the site: `spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, mask, 0.0, aberration, step)` (the declination in the site's frame is the elevation) |
@@ -169,6 +169,28 @@ frame not fixed in the frame of the body (read at J2000 TDB and 6 h later) canno
 and throws `InvalidOperationException`. Before 11.0.0 the writer wrote the frame of `Planetodetic` under the kernel's
 id, 7.76e-8 rad from `DSS-13_TOPO`, and for a site named otherwise renamed the frame of that id. To keep the frame of
 the coordinates at J2000, build the site from them: `new Site(id, name, body, kernelSite.Planetodetic)`.
+
+### Light time of a site
+
+A site of the kernels seen from a body, a barycenter or a spacecraft of the kernels is read by CSPICE (`spkezr_c`),
+which corrects it. A site given by its coordinates is corrected by the library as CSPICE's `spkcpt_c` corrects it, for
+every observer, its own body included: the site itself is taken at t − lt (t + lt for the transmission corrections), its
+position fixed in the body-fixed frame of its body turned to ICRF at that epoch, lt the light time of `spkltc` (one
+iteration for `LT` and `XLT`, converged for `CN` and `XCN`), the velocity scaled by the rate of the light time, and for
+the `+S` corrections the stellar aberration of `stelab` (`stlabx` for transmission) from the observer's velocity
+([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489); the reference-body path of
+[Celestial bodies](celestial-bodies.md)). It agrees with `spkcpt_c` to 2.4e-5 m and 3.7e-9 m/s from the Moon, the Earth
+and LRO, the sites at the poles and on the equator included, and to 6.8e-5 m from the Sun and the Mars barycenter.
+Without correction the state is unchanged, bit for bit. The window searches, `SubObserverPoint` and `IsInFOV` of such a
+site read it this way: the 400000 km window of the example below, with `LT`, is within 1e-7 s of the window of
+`spkcpt_c`.
+
+Before 11.0.0 the correction of a site given by its coordinates, seen from an observer of the kernels, was that of the
+observer seen from the site's body (`OrbitalParameters.RelativeTo`), the site never moved back in time: 82.7 km from
+`spkcpt_c` seen from the Moon with `LT`, about 15 000 km from the Sun, the geometric state seen from its own body (640 m
+with `LT`), and the window of the example about 340 s wider at each end. `OrbitalParameters.RelativeTo(ILocalizable,
+Aberration)` keeps its behaviour: it holds one state, not the trajectory of the object, so its correction applies to the
+new origin as seen from the current one (decided by S. Guillet, 2026-11-17).
 
 ### Example
 

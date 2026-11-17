@@ -109,7 +109,7 @@ small angular momentum.
 | `ToEquinoctial()` | Convert to equinoctial elements |
 | `ToEquatorial()` | Right ascension and declination in ICRF, whatever the frame of the state (rotated at its epoch, #680), and the distance |
 | `ToFrame(Frame)` | Transform to different reference frame |
-| `RelativeTo(ILocalizable, Aberration)` | Transform to different center |
+| `RelativeTo(ILocalizable, Aberration)` | Transform to a different center: the state minus the new center as the current center sees it, corrected by the aberration; the state itself is not moved in time, so the result is not the object seen from the new center with light time (for a site, `Site.GetEphemeris`, [#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)) |
 | `Inverse()` | Invert position and velocity |
 | `ToTLE(TLE.Configuration)` | Convert to TLE format |
 

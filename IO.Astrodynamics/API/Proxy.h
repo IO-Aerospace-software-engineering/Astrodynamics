@@ -161,6 +161,19 @@ MODULE_API bool KernelNameResolvesThroughProxy(const char *name, const char *pat
 MODULE_API bool GetFrameNameProxy(int frameId, char name[33]);
 
 /**
+ * Get the identifier, the centre and the class SPICE gives to a frame name (namfrm_c, frinfo_c), from its built-in frames
+ * and the loaded frame kernels: the centre of a non-inertial output frame sets the epoch of its orientation under a light
+ * time correction, as spkezr_c evaluates it (#593)
+ * @param frameName Frame name
+ * @param frameId Receives the frame id, 0 when SPICE knows no frame of that name
+ * @param centerId Receives the NAIF id of the frame's centre, 0 when SPICE knows no frame of that name
+ * @param frameClass Receives the class of the frame (1 inertial, 2 PCK, 3 CK, 4 TK, 5 dynamic, 6 switch), 0 when SPICE knows
+ * no frame of that name
+ * @return true when SPICE knows a frame of that name, false otherwise (call GetLastErrorProxy for details)
+ */
+MODULE_API bool GetFrameInfoProxy(const char *frameName, int *frameId, int *centerId, int *frameClass);
+
+/**
  * Convert seconds from J2000 to formatted string (TDB)
  * @param secondsFromJ2000 Seconds from J2000
  * @return Formatted string

@@ -1052,10 +1052,20 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Converts the orbital parameters to be relative to another localizable object.
+    /// Converts the orbital parameters to be relative to another localizable object: the state minus that object's state
+    /// as the current observer sees it.
     /// </summary>
+    /// <remarks>
+    /// The aberration corrects the new origin, read as a target seen from the current observer
+    /// (<c>localizable.GetEphemeris(Epoch, Observer, Frame, aberration)</c>); the state itself, one state and not the
+    /// trajectory of its object, is not moved in time. The result is therefore not the object seen from the new origin with
+    /// light time: for that, read the object as a target from the new origin (its <c>GetEphemeris</c>; a
+    /// <see cref="Surface.Site"/> given by its coordinates is corrected as CSPICE's <c>spkcpt_c</c> corrects it, #489).
+    /// When the new origin is the current observer, the state is returned unchanged, whatever the aberration. Kept as it was
+    /// before 11.0.0 (#489, decided by S. Guillet, 2026-11-17).
+    /// </remarks>
     /// <param name="localizable">The localizable object to which to convert the orbital parameters.</param>
-    /// <param name="aberration">The aberration to consider in the conversion.</param>
+    /// <param name="aberration">The correction of the new origin, seen from the current observer.</param>
     /// <returns>The orbital parameters relative to the specified localizable object.</returns>
     public OrbitalParameters RelativeTo(ILocalizable localizable, Aberration aberration)
     {

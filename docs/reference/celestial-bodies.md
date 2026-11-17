@@ -102,11 +102,25 @@ library applies the aberration corrections itself, as CSPICE's `spkaps` does
 ([#491](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/491)): the light time of `spkltc`, one
 iteration for `LT` and `XLT`, converged for `CN` and `XCN`, the target taken at t − lt (t + lt for the transmission
 cases) and the velocity scaled by the rate of the light time; for the `+S` corrections, the stellar aberration of
-`stelab` (`stlabx` for transmission) of that position, with its rate from the observer's acceleration. The state is
-rotated to the output frame at the epoch of the observation: a non-inertial frame centred on another body than the
-observer is not evaluated at t − lt of its centre, as `spkezr` does
-([#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593)); an inertial frame or the
-topocentric frame of the observing site is not affected.
+`stelab` (`stlabx` for transmission) of that position, with its rate from the observer's acceleration. A site given by
+its coordinates as the target takes this path for every observer when the correction is not `None`, as `spkcpt_c`
+corrects it ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489),
+[Light time of a site](sites.md#light-time-of-a-site)).
+
+The corrected state is rotated to the output frame as `spkezr` rotates it
+([#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593)): an inertial frame, or a frame
+centred on the observer (the topocentric frame of the observing site), at the epoch of the observation; any other
+non-inertial frame at t − lt_c (t + lt_c for the transmission corrections), lt_c the light time from the observer to the
+frame's centre by the method of the correction (that of the target when the centre is the target), with the derivative
+of the rotation scaled by 1 ∓ dlt_c/dt, as CSPICE's `zzcorsxf`. The centre of a SPICE frame is SPICE's (`frinfo_c`); that
+of the library's frames the site of a site frame, the spacecraft of a spacecraft frame, the Earth for TEME, CIRS and
+TIRS. Measured against `spkezr`, `spkcpo` and `spkcpt` (locus `CENTER`): 1.7e-5 m and 1.1e-8 m/s in ITRF93 and the
+topocentric frame of DSS-13, 2.4e-4 m in MOON_ME centred on the target, the resolution of SPICE's own MOON_ME rotation
+within a few ulps of its epoch. Before 11.0.0 the frame was evaluated at the epoch of the observation: the Moon from
+DSS-13 with `LT` 620 m off in ITRF93 and 1.48 km in MOON_ME, a site given by its coordinates 38 km off in its own
+topocentric frame from the Moon. The CSPICE path (an observer and a target SPICE reads) is `spkezr`'s; in a frame only
+the library holds (TEME, CIRS, TIRS, the frame of a site given by its coordinates), it reads J2000 and rotates at the
+epoch of the observation.
 
 ## See Also
 
