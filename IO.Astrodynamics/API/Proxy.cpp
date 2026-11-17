@@ -105,6 +105,29 @@ namespace
         return sv;
     }
 
+    // The windows of a search copied to the caller's buffer of `capacity` windows, their number in `count` (#653): every
+    // window of the native cell, which holds 10000 (CSPICE signals SPICE(WINDOWEXCESS) beyond). Before, each proxy copied
+    // its first 1000 windows and dropped the rest without an error. A buffer too small for the windows is the caller's
+    // error: nothing is written, false with the message
+    bool CopyWindows(const std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> &res,
+                     IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count)
+    {
+        if (capacity < 0 || res.size() > static_cast<size_t>(capacity))
+        {
+            const std::string message = "The search found " + std::to_string(res.size()) + " windows, more than the " +
+                                        std::to_string(capacity) + " the buffer holds";
+            std::strncpy(lastError, message.c_str(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+            windows[i] = ToWindowDTO(res[i]);
+        }
+        *count = static_cast<int>(res.size());
+        return true;
+    }
+
     // Appends SPICE's message to the writing's, and resets SPICE, so that a kernel object is destroyed on a clean SPICE
     // state whether its writing failed through SPICE or through a C++ exception
     void TakeSpiceError(std::string &writing)
@@ -533,7 +556,8 @@ bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
 bool FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                           int targetId,
                                           const char *relationalOperator, double value, const char *aberration,
-                                          double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000])
+                                          double stepSize, IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity,
+                                          int *count)
 {
     // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
     // before, the error was printed and dropped and the search returned no window)
@@ -556,12 +580,7 @@ bool FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO
             return false;
         }
 
-        for (size_t i = 0; i < res.size(); ++i)
-        {
-            if (i >= 1000) break;
-            windows[i] = ToWindowDTO(res[i]);
-        }
-        return true;
+        return CopyWindows(res, windows, capacity, count);
     }
     catch (const std::exception &e)
     {
@@ -581,7 +600,7 @@ FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         const char *targetFrame, const char *targetShape, int frontBodyId,
                                         const char *frontFrame, const char *frontShape, const char *occultationType,
                                         const char *aberration, double stepSize,
-                                        IO::Astrodynamics::API::DTO::WindowDTO *windows)
+                                        IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count)
 {
     // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
     // before, the error was printed and dropped and the search returned no window)
@@ -607,12 +626,7 @@ FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
             return false;
         }
 
-        for (size_t i = 0; i < res.size(); ++i)
-        {
-            if (i >= 1000) break;
-            windows[i] = ToWindowDTO(res[i]);
-        }
-        return true;
+        return CopyWindows(res, windows, capacity, count);
     }
     catch (const std::exception &e)
     {
@@ -633,7 +647,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
                                        const char *coordinate,
                                        const char *relationalOperator, double value, double adjustValue,
                                        const char *aberration, double stepSize,
-                                       IO::Astrodynamics::API::DTO::WindowDTO *windows)
+                                       IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count)
 {
     // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
     // before, the error was printed and dropped and the search returned no window)
@@ -660,12 +674,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
             return false;
         }
 
-        for (size_t i = 0; i < res.size(); ++i)
-        {
-            if (i >= 1000) break;
-            windows[i] = ToWindowDTO(res[i]);
-        }
-        return true;
+        return CopyWindows(res, windows, capacity, count);
     }
     catch (const std::exception &e)
     {
@@ -686,7 +695,7 @@ bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
                                               const char *relationalOperator, double value,
                                               double adjustValue,
                                               const char *aberration, double stepSize, const char *method,
-                                              IO::Astrodynamics::API::DTO::WindowDTO *windows)
+                                              IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count)
 {
     // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
     // before, the error was printed and dropped and the search returned no window)
@@ -720,12 +729,7 @@ bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
             return false;
         }
 
-        for (size_t i = 0; i < res.size(); ++i)
-        {
-            if (i >= 1000) break;
-            windows[i] = ToWindowDTO(res[i]);
-        }
-        return true;
+        return CopyWindows(res, windows, capacity, count);
     }
     catch (const std::exception &e)
     {
@@ -745,7 +749,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         int targetId, const char *targetFrame,
                                         const char *targetShape,
                                         const char *aberration, double stepSize,
-                                        IO::Astrodynamics::API::DTO::WindowDTO *windows)
+                                        IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count)
 {
     // An error SPICE signals is the caller's, as for ReadEphemerisProxy: the windows are not written (fourth round of #668;
     // before, the error was printed and dropped and the search returned no window)
@@ -768,12 +772,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
             return false;
         }
 
-        for (size_t i = 0; i < res.size(); ++i)
-        {
-            if (i >= 1000) break;
-            windows[i] = ToWindowDTO(res[i]);
-        }
-        return true;
+        return CopyWindows(res, windows, capacity, count);
     }
     catch (const std::exception &e)
     {

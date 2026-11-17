@@ -144,8 +144,10 @@ IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnIlluminationConstra
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
 
-    const SpiceInt MAXIVL{1000};
-    const SpiceInt MAXWIN{2000};
+    // The cell of the other searches, 10000 windows (#653: 1000 before, so that a search of more failed with
+    // SPICE(WINDOWEXCESS))
+    const SpiceInt MAXIVL{10000};
+    const SpiceInt MAXWIN{20000};
 
     SpiceDouble SPICE_CELL_A[SPICE_CELL_CTRLSZ + MAXWIN];
     SpiceCell cnfine = IO::Astrodynamics::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_A);

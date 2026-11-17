@@ -86,7 +86,8 @@ public class SpiceAPI
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsOnDistanceConstraintProxy(Window searchWindow, int observerId,
-        int targetId, string constraint, double value, string aberration, double stepSize, [In] [Out] Window[] windows);
+        int targetId, string constraint, double value, string aberration, double stepSize, [Out] Window[] windows, int capacity,
+        out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -94,27 +95,27 @@ public class SpiceAPI
         int targetId,
         string targetFrame, string targetShape, int frontBodyId, string frontFrame, string frontShape,
         string occultationType,
-        string aberration, double stepSize, [In] [Out] Window[] windows);
+        string aberration, double stepSize, [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsOnCoordinateConstraintProxy(Window searchWindow, int observerId, int targetId,
         string frame, string coordinateSystem, string coordinate,
         string relationalOperator, double value, double adjustValue, string aberration, double stepSize,
-        [In] [Out] Window[] windows);
+        [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsOnIlluminationConstraintProxy(Window searchWindow, int observerId,
         string illuminationSource, int targetBody, string fixedFrame,
         Planetodetic geodetic, string illuminationType, string relationalOperator, double value, double adjustValue,
-        string aberration, double stepSize, string method, [In] [Out] Window[] windows);
+        string aberration, double stepSize, string method, [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsInFieldOfViewConstraintProxy(Window searchWindow, int observerId,
         int instrumentId, int targetId, string targetFrame, string targetShape, string aberration, double stepSize,
-        [In] [Out] Window[] windows);
+        [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -1086,16 +1087,55 @@ public class SpiceAPI
     /// within the search window: the rounding is monotone, and where an ulp is coarser than a tick the double after the seconds of a
     /// tick is more than half a tick past that tick (the double before, more than half a tick before it).
     /// </summary>
-    private static IEnumerable<TimeSystem.Window> WithinSearchWindow(Window[] windows, TimeSystem.Window searchWindow)
+    private static IEnumerable<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
     {
         var start = searchWindow.StartDate.ToTDB();
         var end = searchWindow.EndDate.ToTDB();
         double startSeconds = start.TimeSpanFromJ2000().TotalSeconds;
         double endSeconds = end.TimeSpanFromJ2000().TotalSeconds;
-        return windows.Where(x => !double.IsNaN(x.Start)).Select(x => new TimeSystem.Window(Label(x.Start), Label(x.End))).ToArray();
+        var result = new TimeSystem.Window[count];
+        for (int i = 0; i < count; i++)
+        {
+            result[i] = new TimeSystem.Window(Label(windows[i].Start), Label(windows[i].End));
+        }
+
+        return result;
 
         Time Label(double seconds) =>
             seconds <= startSeconds ? start : seconds >= endSeconds ? end : Time.Create(seconds, TimeFrame.TDBFrame);
+    }
+
+    /// <summary>
+    /// The number of windows a CSPICE search returns at most: the result cell of the native layer, which holds 10000
+    /// windows for each search (#653). A search of more throws SPICE's <c>SPICE(WINDOWEXCESS)</c>.
+    /// </summary>
+    internal const int WindowSearchCapacity = 10000;
+
+    private delegate bool NativeWindowSearch(Window[] windows, int capacity, out int count);
+
+    /// <summary>
+    /// A native window search into a buffer of <see cref="WindowSearchCapacity"/> windows, rented from the shared pool and
+    /// returned: every window it found, labelled by <see cref="WithinSearchWindow"/>. Called under the lock. Before 11.0.0
+    /// the buffer held 1000 windows and the proxies dropped the rest without an error, so that a search that found more
+    /// returned its first 1000 (#653).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The native search failed: SPICE's message.</exception>
+    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search)
+    {
+        var windows = System.Buffers.ArrayPool<Window>.Shared.Rent(WindowSearchCapacity);
+        try
+        {
+            if (!search(windows, WindowSearchCapacity, out int count))
+            {
+                ThrowLastProxyError();
+            }
+
+            return WithinSearchWindow(windows, count, searchWindow);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<Window>.Shared.Return(windows);
+        }
     }
 
     /// <summary>
@@ -1177,7 +1217,7 @@ public class SpiceAPI
     /// crossing to the next, as the managed search gives it.
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, with
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), with
     /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1193,19 +1233,9 @@ public class SpiceAPI
     {
         lock (lockObject)
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
-            {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
-
-            if (!FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
-                aberration.GetDescription(), stepSize.TotalSeconds, windows))
-            {
-                ThrowLastProxyError();
-            }
-
-            return WithinSearchWindow(windows, searchWindow);
+            return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
+                    aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
         }
     }
 
@@ -1223,7 +1253,7 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
     /// the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1256,7 +1286,7 @@ public class SpiceAPI
     /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
     /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672).</exception>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
     /// the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1275,19 +1305,10 @@ public class SpiceAPI
             string targetFrameName = targetShape == ShapeType.Ellipsoid
                 ? targetFrame?.Name ?? ReadCelestialBodyInfo(targetId, nameof(targetId)).FrameName
                 : string.Empty;
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
-            {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
-
-            if (!FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
-                frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows))
-            {
-                ThrowLastProxyError();
-            }
-
-            return WithinSearchWindow(windows, searchWindow);
+            return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
+                    frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(),
+                    stepSize.TotalSeconds, windows, capacity, out count));
         }
     }
 
@@ -1325,7 +1346,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name.</exception>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// frame name it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
     /// error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1345,21 +1366,11 @@ public class SpiceAPI
         {
             lock (lockObject)
             {
-                var windows = new Window[1000];
-                for (var i = 0; i < 1000; i++)
-                {
-                    windows[i] = new Window(double.NaN, double.NaN);
-                }
-
-                if (!FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
-                    SpiceFrameName(frame), coordinateSystem.GetDescription(),
-                    coordinate.GetDescription(), relation, value, adjustValue,
-                    aberration.GetDescription(), stepSize.TotalSeconds, windows))
-                {
-                    ThrowLastProxyError();
-                }
-
-                return WithinSearchWindow(windows, searchWindow);
+                string frameName = SpiceFrameName(frame);
+                return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                    FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId, frameName,
+                        coordinateSystem.GetDescription(), coordinate.GetDescription(), relation, value, adjustValue,
+                        aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
             }
         });
     }
@@ -1395,7 +1406,7 @@ public class SpiceAPI
     /// Before 11.0.0 the altitude was read in km (#488).
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// fixed frame it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
     /// error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1409,23 +1420,13 @@ public class SpiceAPI
         {
             lock (lockObject)
             {
-                var windows = new Window[1000];
-                for (var i = 0; i < 1000; i++)
-                {
-                    windows[i] = new Window(double.NaN, double.NaN);
-                }
-
-                if (!FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
-                    illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
-                    // The native layer hands the altitude to georec_c beside a radius in km (#488)
-                    (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
-                    illuminationType.GetDescription(), relation, value, adjustValue,
-                    aberration.GetDescription(), stepSize.TotalSeconds, method, windows))
-                {
-                    ThrowLastProxyError();
-                }
-
-                return WithinSearchWindow(windows, searchWindow);
+                return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                    FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
+                        illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
+                        // The native layer hands the altitude to georec_c beside a radius in km (#488)
+                        (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
+                        illuminationType.GetDescription(), relation, value, adjustValue,
+                        aberration.GetDescription(), stepSize.TotalSeconds, method, windows, capacity, out count));
             }
         });
     }
@@ -1444,7 +1445,7 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, an
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), an
     /// instrument whose field of view no loaded instrument kernel defines, with SPICE's message (fourth round of #668;
     /// before 11.0.0 the native layer dropped the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1453,21 +1454,9 @@ public class SpiceAPI
         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
         lock (lockObject)
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
-            {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
-
-            var searchWindowDto = searchWindow.Convert();
-
-            if (!FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
-                aberration.GetDescription(), stepSize.TotalSeconds, windows))
-            {
-                ThrowLastProxyError();
-            }
-
-            return WithinSearchWindow(windows, searchWindow);
+            return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                FindWindowsInFieldOfViewConstraintProxy(searchWindow.Convert(), observerId, instrumentId, targetId, targetFrame.Name,
+                    targetShape.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
         }
     }
 

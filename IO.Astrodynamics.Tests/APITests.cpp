@@ -24,6 +24,12 @@
 #include <string>
 #include <vector>
 
+namespace
+{
+    // The number of windows a search proxy wrote, for the tests that read the windows themselves (#653)
+    int windowCount{};
+}
+
 TEST(API, TDBToString)
 {
     auto res = TDBToStringProxy(0.0);
@@ -46,7 +52,7 @@ TEST(API, FindWindowsOnCoordinateConstraintProxy)
     searchWindow.end = 730123200;
     ASSERT_TRUE(FindWindowsOnCoordinateConstraintProxy(searchWindow, 399013, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">",
                                            0.0, 0.0, "NONE", 60.0,
-                                           windows));
+                                           windows, 1000, &windowCount));
 
     ASSERT_STREQ("2023-02-19 14:33:08.917987 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
@@ -58,7 +64,7 @@ TEST(API, FindWindowsOnDistanceConstraintProxy)
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::Astrodynamics::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
     searchWindow.end = IO::Astrodynamics::Time::TDB("2007 APR 1").GetSecondsFromJ2000().count();
-    ASSERT_TRUE(FindWindowsOnDistanceConstraintProxy(searchWindow, 399, 301, ">", 400000000, "NONE", 86400.0, windows));
+    ASSERT_TRUE(FindWindowsOnDistanceConstraintProxy(searchWindow, 399, 301, ">", 400000000, "NONE", 86400.0, windows, 1000, &windowCount));
 
     ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2007-01-13 06:37:47.948144 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
@@ -78,7 +84,7 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy)
                                              geodetic, "INCIDENCE", "<",
                                              IO::Astrodynamics::Constants::PI2 -
                                              IO::Astrodynamics::Constants::OfficialTwilight, 0.0,
-                                             "CN+S", 4.5 * 60 * 60, "Ellipsoid", windows));
+                                             "CN+S", 4.5 * 60 * 60, "Ellipsoid", windows, 1000, &windowCount));
 
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-05-17 19:34:33.699813 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
@@ -93,7 +99,7 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
     searchWindow.start = IO::Astrodynamics::Time::TDB("2001 DEC 13").GetSecondsFromJ2000().count();
     searchWindow.end = IO::Astrodynamics::Time::TDB("2001 DEC 15").GetSecondsFromJ2000().count();
     ASSERT_TRUE(FindWindowsOnOccultationConstraintProxy(searchWindow, 399, 10, "IAU_SUN", "ELLIPSOID", 301, "IAU_MOON", "ELLIPSOID",
-                                            "ANY", "LT", 3600.0, windows));
+                                            "ANY", "LT", 3600.0, windows, 1000, &windowCount));
 
     ASSERT_STREQ("2001-12-14 20:10:15.410588 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
@@ -117,7 +123,7 @@ TEST(API, FindWindowsOnOccultationConstraintProxyOfAPointFrontBody)
         window.start = window.end = std::nan("");
     }
     ASSERT_TRUE(FindWindowsOnOccultationConstraintProxy(searchWindow, 399065, 10, "IAU_SUN", "ELLIPSOID", 301, "", "POINT",
-                                                        "ANY", "NONE", 360.0, windows)) << GetLastErrorProxy();
+                                                        "ANY", "NONE", 360.0, windows, 1000, &windowCount)) << GetLastErrorProxy();
     std::cout << "MEASURE #496 point front body, proxy - gfoclt_c (1e-9 s, the .NET tests' kernels): " << std::scientific
               << windows[0].start - 181599513.5947857 << " s, " << windows[0].end - 181604529.2431715 << " s"
               << std::defaultfloat << std::endl;
@@ -139,6 +145,69 @@ TEST(API, FindWindowsOnOccultationConstraintProxyOfAPointFrontBody)
     EXPECT_TRUE(std::isnan(windows[1].start));
 }
 
+
+// #653: each window proxy copied the first 1000 windows of its result and dropped the rest without an error, and the cell of
+// gfilum_c held 1000 windows (SPICE(WINDOWEXCESS) for more). Every window of the native cell, 10000, is written to the
+// caller's buffer, its number in count. The Moon's X in IAU_EARTH crosses 0 2126 times in the 1100 days from J2000, and the
+// point (0, 0, 0) of the Earth is in the night 1100 times (gfposc_c and gfilum_c with a cell of 20000 windows, Linux x64,
+// 2026-11-17); where the test calls CSPICE (not on Windows), the windows are those of gfposc_c bit for bit
+TEST(API, FindWindowsProxiesWriteEveryWindowOfTheirCell)
+{
+    std::vector<IO::Astrodynamics::API::DTO::WindowDTO> windows(10000);
+    IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = 0.0;
+    searchWindow.end = 1100.0 * 86400.0;
+    int count{-1};
+    ASSERT_TRUE(FindWindowsOnCoordinateConstraintProxy(searchWindow, 399, 301, "IAU_EARTH", "RECTANGULAR", "X", "=", 0.0, 0.0, "NONE", 3600.0,
+                                                       windows.data(), static_cast<int>(windows.size()), &count)) << GetLastErrorProxy();
+    ASSERT_EQ(2126, count);
+#if !defined(_WIN32)
+    static SpiceDouble cnfineData[SPICE_CELL_CTRLSZ + 2];
+    static SpiceDouble resultData[SPICE_CELL_CTRLSZ + 40000];
+    SpiceCell cnfine{SPICE_DP, 0, 2, 0, SPICETRUE, SPICEFALSE, SPICEFALSE, cnfineData, &cnfineData[SPICE_CELL_CTRLSZ]};
+    SpiceCell result{SPICE_DP, 0, 40000, 0, SPICETRUE, SPICEFALSE, SPICEFALSE, resultData, &resultData[SPICE_CELL_CTRLSZ]};
+    wninsd_c(searchWindow.start, searchWindow.end, &cnfine);
+    gfposc_c("301", "IAU_EARTH", "NONE", "399", "RECTANGULAR", "X", "=", 0.0, 0.0, 3600.0, 20000, &cnfine, &result);
+    ASSERT_FALSE(failed_c());
+    ASSERT_EQ(count, wncard_c(&result));
+    for (int i = 0; i < count; ++i)
+    {
+        SpiceDouble start{}, end{};
+        wnfetd_c(&result, i, &start, &end);
+        ASSERT_EQ(start, windows[i].start);
+        ASSERT_EQ(end, windows[i].end);
+    }
+#endif
+
+    count = -1;
+    IO::Astrodynamics::API::DTO::PlanetodeticDTO point(0.0, 0.0, 0.0);
+    ASSERT_TRUE(FindWindowsOnIlluminationConstraintProxy(searchWindow, 301, "SUN", 399, "IAU_EARTH", point, "INCIDENCE", ">",
+                                                         IO::Astrodynamics::Constants::PI2, 0.0, "NONE", 3600.0, "Ellipsoid",
+                                                         windows.data(), static_cast<int>(windows.size()), &count)) << GetLastErrorProxy();
+    ASSERT_EQ(1100, count);
+}
+
+// A buffer smaller than the windows found: false with the message, nothing written, the count left as it was (#653)
+TEST(API, FindWindowsProxyOfASmallBufferWritesNothing)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    for (auto &window: windows)
+    {
+        window.start = window.end = -1.0;
+    }
+    IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = 0.0;
+    searchWindow.end = 1100.0 * 86400.0;
+    int count{-1};
+    ASSERT_FALSE(FindWindowsOnCoordinateConstraintProxy(searchWindow, 399, 301, "IAU_EARTH", "RECTANGULAR", "X", "=", 0.0, 0.0, "NONE", 3600.0,
+                                                        windows, 1000, &count));
+    ASSERT_STREQ("The search found 2126 windows, more than the 1000 the buffer holds", GetLastErrorProxy());
+    ASSERT_EQ(-1, count);
+    for (const auto &window: windows)
+    {
+        ASSERT_EQ(-1.0, window.start);
+    }
+}
 
 // A search SPICE cannot run returns false with SPICE's message, and writes no window (fourth round of #668: before, the
 // proxies printed the error, dropped it and returned no window, which a caller could not tell from a condition that never
@@ -178,13 +247,13 @@ TEST(API, FindWindowsOnCoordinateConstraintProxyUnknownFrame)
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
     FillWindows(windows);
     ASSERT_FALSE(FindWindowsOnCoordinateConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), 399, 301, "NOT_A_FRAME_668",
-                                                        "RECTANGULAR", "Z", ">", 0.0, 0.0, "NONE", 3600.0, windows));
+                                                        "RECTANGULAR", "Z", ">", 0.0, 0.0, "NONE", 3600.0, windows, 1000, &windowCount));
     ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "NOT_A_FRAME_668"));
     ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "not recognized"));
     AssertNoWindowWritten(windows);
     // The error is reset: a valid search after it runs
     ASSERT_TRUE(FindWindowsOnCoordinateConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), 399, 301, "J2000",
-                                                       "RECTANGULAR", "Z", "<", 0.0, 0.0, "NONE", 3600.0, windows));
+                                                       "RECTANGULAR", "Z", "<", 0.0, 0.0, "NONE", 3600.0, windows, 1000, &windowCount));
 }
 
 TEST(API, FindWindowsOnDistanceConstraintProxyOutOfCoverage)
@@ -192,7 +261,7 @@ TEST(API, FindWindowsOnDistanceConstraintProxyOutOfCoverage)
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
     FillWindows(windows);
     ASSERT_FALSE(FindWindowsOnDistanceConstraintProxy(SearchWindow("2160 MAR 1", "2160 MAR 10"), 399, 301, ">", 400000000.0,
-                                                      "NONE", 3600.0, windows));
+                                                      "NONE", 3600.0, windows, 1000, &windowCount));
     ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "Insufficient ephemeris data"));
     AssertNoWindowWritten(windows);
 }
@@ -207,7 +276,7 @@ TEST(API, FailedProxiesPrintNothingOnTheStandardOutput)
     FillWindows(windows);
     testing::internal::CaptureStdout();
     const bool searched = FindWindowsOnDistanceConstraintProxy(SearchWindow("2160 MAR 1", "2160 MAR 10"), 399, 301, ">", 400000000.0,
-                                                               "NONE", 3600.0, windows);
+                                                               "NONE", 3600.0, windows, 1000, &windowCount);
     const std::string searchMessage = GetLastErrorProxy();
     const auto state = ReadEphemerisAtGivenEpochProxy(IO::Astrodynamics::Time::TDB("2160 MAR 1").GetSecondsFromJ2000().count(), 399, 301,
                                                       "J2000", "NONE");
@@ -230,7 +299,7 @@ TEST(API, FindWindowsOnOccultationConstraintProxyOutOfCoverage)
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
     FillWindows(windows);
     ASSERT_FALSE(FindWindowsOnOccultationConstraintProxy(SearchWindow("2160 MAR 1", "2160 MAR 10"), 399, 10, "IAU_SUN", "ELLIPSOID",
-                                                         301, "IAU_MOON", "ELLIPSOID", "ANY", "LT", 3600.0, windows));
+                                                         301, "IAU_MOON", "ELLIPSOID", "ANY", "LT", 3600.0, windows, 1000, &windowCount));
     ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "2160"));
     AssertNoWindowWritten(windows);
 }
@@ -244,7 +313,7 @@ TEST(API, FindWindowsOnIlluminationConstraintProxyUnknownFrame)
     ASSERT_FALSE(FindWindowsOnIlluminationConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), 301, "SUN", 399,
                                                           "NOT_A_FRAME_668", geodetic, "INCIDENCE", "<",
                                                           IO::Astrodynamics::Constants::PI2, 0.0, "NONE", 3600.0, "Ellipsoid",
-                                                          windows));
+                                                          windows, 1000, &windowCount));
     ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "NOT_A_FRAME_668"));
     AssertNoWindowWritten(windows);
 }
@@ -254,7 +323,7 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxyWithoutIk)
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
     FillWindows(windows);
     ASSERT_FALSE(FindWindowsInFieldOfViewConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 10"), -999, -999123, 301,
-                                                         "IAU_MOON", "ELLIPSOID", "NONE", 3600.0, windows));
+                                                         "IAU_MOON", "ELLIPSOID", "NONE", 3600.0, windows, 1000, &windowCount));
     ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "INS-999123_FOV_FRAME"));
     AssertNoWindowWritten(windows);
 }
@@ -2443,19 +2512,19 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
     ExpectClearedBy("FindWindowsOnDistanceConstraintProxy", []
     {
         IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
-        return FindWindowsOnDistanceConstraintProxy(SearchWindow("2007 JAN 1", "2007 JAN 2"), 399, 301, ">", 1.0, "NONE", 3600.0, windows);
+        return FindWindowsOnDistanceConstraintProxy(SearchWindow("2007 JAN 1", "2007 JAN 2"), 399, 301, ">", 1.0, "NONE", 3600.0, windows, 1000, &windowCount);
     });
     ExpectClearedBy("FindWindowsOnCoordinateConstraintProxy", []
     {
         IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
         return FindWindowsOnCoordinateConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 2"), 399, 301, "J2000", "RECTANGULAR", "Z", "<",
-                                                      0.0, 0.0, "NONE", 3600.0, windows);
+                                                      0.0, 0.0, "NONE", 3600.0, windows, 1000, &windowCount);
     });
     ExpectClearedBy("FindWindowsOnOccultationConstraintProxy", []
     {
         IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
         return FindWindowsOnOccultationConstraintProxy(SearchWindow("2001 DEC 14", "2001 DEC 15"), 399, 10, "IAU_SUN", "ELLIPSOID", 301,
-                                                       "IAU_MOON", "ELLIPSOID", "ANY", "LT", 3600.0, windows);
+                                                       "IAU_MOON", "ELLIPSOID", "ANY", "LT", 3600.0, windows, 1000, &windowCount);
     });
     ExpectClearedBy("FindWindowsOnIlluminationConstraintProxy", []
     {
@@ -2464,7 +2533,7 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
                                                               48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
         return FindWindowsOnIlluminationConstraintProxy(SearchWindow("2021 MAY 17", "2021 MAY 18"), 10, "SUN", 399, "IAU_EARTH", geodetic,
                                                         "INCIDENCE", "<", IO::Astrodynamics::Constants::PI2, 0.0, "NONE", 3600.0,
-                                                        "Ellipsoid", windows);
+                                                        "Ellipsoid", windows, 1000, &windowCount);
     });
     const auto kernel = std::filesystem::temp_directory_path() / "ioa_714_cpp_clear.tpc";
     std::ofstream(kernel.string()) << "KPL/PCK\n\\begindata\nIOA714_CLEAR = ( 1.0 )\n\\begintext\n";
@@ -2518,7 +2587,7 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
     {
         IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
         return FindWindowsInFieldOfViewConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 2"), 399, -999714, 301, "IAU_MOON",
-                                                       "ELLIPSOID", "NONE", 3600.0, windows);
+                                                       "ELLIPSOID", "NONE", 3600.0, windows, 1000, &windowCount);
     });
     EXPECT_TRUE(UnloadKernelsProxy(ik.string().c_str())) << GetLastErrorProxy();
     std::filesystem::remove(ik);

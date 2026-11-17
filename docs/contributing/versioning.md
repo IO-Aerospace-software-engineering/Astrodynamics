@@ -2752,7 +2752,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GeometryFinderTests` and the C++ `API` tests). A search SPICE runs
   is unchanged, bit for bit: the same native call, copy and labelling (the CSPICE goldens of `SpiceApiTest`,
   `KernelWindowSearchTests`, `OccultationSearchValidationTests` and `FieldOfViewSearchTests`). The 1000-window cap of
-  the copy stays ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+  the copy stayed in that round ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed below).
 - **`SpiceAPI.TransformFrame` threw for the frame of a site only the library holds** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round). The frame of
   a site built from coordinates, and of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel
   defines, is the library's: the reads in it are rotated (#682, third review of #690), and `ToFrame` and
@@ -3234,6 +3234,30 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   printed, in a child process whose three failed calls throw SPICE's messages
   (`ColdStartTests.SpiceErrors_ReachTheCallerOnly_NothingOnTheStandardOutput`) and at the file descriptor of the C++
   tests (`API.FailedProxiesPrintNothingOnTheStandardOutput`), both red on a85098d.
+
+- **A CSPICE window search returned at most 1000 windows** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+  Each native proxy of the window searches (`gfdist_c`, `gfposc_c`, `gfilum_c`, `gfoclt_c`, `gftfov_c`) copied the first
+  1000 windows of its result, whose cell holds 10000, and dropped the rest without an error; `SpiceAPI` could not tell a
+  full buffer from a search of exactly 1000 windows; `NotEqual`, built from the `=` crossings, ended with one window
+  across every dropped crossing; and the cell of `gfilum_c` held 1000 windows, so an illumination search of more threw
+  `SPICE(WINDOWEXCESS)`. Measured on a85098d: the Moon's X in `IAU_EARTH` from the Earth crosses 0 2126 times in 1100
+  days from J2000, of which `Equal` returned 1000, `NotEqual` 1001 for 2127, `Greater`, `LocalMax` and `AbsoluteMax`
+  (with an adjustment of 1e5 km) 1000 for 1064 and 1062; LRO's distance from the Moon crosses 1815.148 km 1904 times in
+  its 91-day SPK, of which `Equal` returned 1000, and passes 1121 times behind the Moon, of which the occultation search
+  returned 1000; the night at (0°, 0°) of the Earth, 1100 windows, threw. The proxies now take the capacity of the
+  caller's buffer and return the number of windows written (a native change for a technical reason, the P/Invoke
+  declarations in step), `SpiceAPI` passes a buffer of the native cell's 10000 windows, rented from the shared pool, and
+  `gfilum_c`'s cell holds 10000 windows like the others: every window CSPICE finds is returned, and a search of more
+  than 10000 throws SPICE's `SPICE(WINDOWEXCESS)` (`InvalidOperationException`), never a partial list; a buffer smaller
+  than the windows found makes a proxy return false with its message, nothing written. The absolute extremes need no
+  exception of their own: their windows are in the cell like the others'. Against CSPICE's searches with a cell of
+  20000 windows in the test process, every window equal to the tick (`CspiceWindowCapacityTests`, Validation: the ten
+  relations of the coordinate search, three of the distance, the illumination and the occultation), and on every
+  platform against the same searches over four parts of the window, each under 1000 windows, joined at the seams,
+  within 4.0e-7 s (Linux x64; `CspiceWindowCapacityTests`, 31 rows, red on a85098d); the C++ proxies write the 2126
+  crossings of `gfposc_c` bit for bit (`API.FindWindowsProxiesWriteEveryWindowOfTheirCell`). The searches under 1000
+  windows are unchanged, bit for bit. The managed searches had no cap. `FindWindowsInFieldOfViewConstraint` takes the
+  same path; no kernel of the tests gives it more than 1000 windows.
 
 **Changed**
 
@@ -4498,6 +4522,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
 
+- **Breaking: a CSPICE window search returns every window, up to 10000** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed above).
+  `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint`, `FindWindowsOnIlluminationConstraint`,
+  `FindWindowsOnOccultationConstraint` and `FindWindowsInFieldOfViewConstraint`, and the CSPICE paths of the searches of
+  `CelestialItem`, `Site` and `Instrument`, return every window CSPICE finds where they returned the first 1000, and an
+  illumination search of 1001 to 10000 windows returns them where it threw; beyond 10000 each throws
+  `SPICE(WINDOWEXCESS)`. Migration: a caller that split its search window to stay under 1000 windows (the workaround of
+  the known limitation of the earlier previews) can search the whole window; one that needs more than 10000 windows
+  splits it under 10000. The native proxies take two more arguments, the capacity of the buffer and the count written:
+  the native library and the .NET library of 11.0.0 go together.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4548,10 +4582,6 @@ not listed.
   exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
   `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short", and the `stepSize`
   of the distance, coordinate and illumination searches of `CelestialItem` and `Site` "every window and gap").
-- **At most 1000 windows from a CSPICE search**
-  ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
-  returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every
-  dropped crossing. Split the search window so that each part holds fewer than 1000 windows.
 - **The element conversions of `SpiceAPI`**
   ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450),
   [#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).

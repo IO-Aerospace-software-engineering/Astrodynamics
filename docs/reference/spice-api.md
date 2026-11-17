@@ -164,8 +164,9 @@ and the launch windows of a kernel site, and the CLI commands `find-windows-from
 error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never
 holds. The checks made before the native call keep their `ArgumentException`: a frame of the library SPICE does not
 know in `FindWindowsOnCoordinateConstraint`, an occultation body without a frame, an illumination method other than
-ELLIPSOID. A search SPICE runs is unchanged, and returns at most 1000 windows
-([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+ELLIPSOID. A search SPICE runs returns every window it finds, up to the 10000 of its result cell, more throwing
+`SPICE(WINDOWEXCESS)`: before 11.0.0 the native layer copied the first 1000 and dropped the rest without an error, and
+the cell of `gfilum_c` held 1000 ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
 
 ### Orientation kernels
 

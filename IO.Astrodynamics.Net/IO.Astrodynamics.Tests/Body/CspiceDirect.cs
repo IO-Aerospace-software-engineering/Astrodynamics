@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// that use this class are in the Validation category, which the CI runs on Linux. The f2c integers of CSPICE on 64-bit
 /// Linux are 32-bit (<c>SpiceZfc.h</c>).
 /// </remarks>
-internal static class CspiceDirect
+internal static partial class CspiceDirect
 {
     private const string Library = "IO.Astrodynamics";
 

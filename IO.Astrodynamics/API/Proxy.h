@@ -183,13 +183,16 @@ MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
  * @param value Value for the constraint
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
- * @param windows Array to store the time windows
+ * @param windows Array to store the time windows, of capacity windows at least
+ * @param capacity The number of windows the array holds; a search of more returns false (#653: every window of the native
+ * cell, 10000, is returned; before, the first 1000)
+ * @param count Receives the number of windows written
  * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
 MODULE_API bool
 FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                                      const char *relationalOperator, double value, const char *aberration,
-                                     double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
+                                     double stepSize, IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count);
 
 /**
  * Find time windows which satisfy occultation constraint
@@ -204,7 +207,10 @@ FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO sear
  * @param occultationType Type of occultation
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
- * @param windows Array to store the time windows
+ * @param windows Array to store the time windows, of capacity windows at least
+ * @param capacity The number of windows the array holds; a search of more returns false (#653: every window of the native
+ * cell, 10000, is returned; before, the first 1000)
+ * @param count Receives the number of windows written
  * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
 MODULE_API bool FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
@@ -214,7 +220,7 @@ MODULE_API bool FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::
                                                         int frontBodyId, const char *frontFrame, const char *frontShape,
                                                         const char *occultationType,
                                                         const char *aberration, double stepSize,
-                                                        IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
+                                                        IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count);
 
 /**
  * Find time windows which satisfy coordinate constraint
@@ -229,7 +235,10 @@ MODULE_API bool FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::
  * @param adjustValue Adjustment value for the constraint
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
- * @param windows Array to store the time windows
+ * @param windows Array to store the time windows, of capacity windows at least
+ * @param capacity The number of windows the array holds; a search of more returns false (#653: every window of the native
+ * cell, 10000, is returned; before, the first 1000)
+ * @param count Receives the number of windows written
  * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
 MODULE_API bool FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
@@ -238,7 +247,7 @@ MODULE_API bool FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::D
                                                        const char *coordinate, const char *relationalOperator,
                                                        double value, double adjustValue, const char *aberration,
                                                        double stepSize,
-                                                       IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
+                                                       IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count);
 
 /**
  * Find time windows which satisfy illumination constraint
@@ -255,7 +264,10 @@ MODULE_API bool FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::D
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
  * @param method Method for the search
- * @param windows Array to store the time windows
+ * @param windows Array to store the time windows, of capacity windows at least
+ * @param capacity The number of windows the array holds; a search of more returns false (#653: every window of the native
+ * cell, 10000, is returned; before, the first 1000)
+ * @param count Receives the number of windows written
  * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
 MODULE_API bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
@@ -267,7 +279,7 @@ MODULE_API bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API:
                                                          const char *relationalOperator, double value,
                                                          double adjustValue,
                                                          const char *aberration, double stepSize, const char *method,
-                                                         IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
+                                                         IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count);
 
 /**
  * Find time windows which satisfy in field of view constraint
@@ -279,7 +291,10 @@ MODULE_API bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API:
  * @param targetShape Shape of the target
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
- * @param windows Array to store the time windows
+ * @param windows Array to store the time windows, of capacity windows at least
+ * @param capacity The number of windows the array holds; a search of more returns false (#653: every window of the native
+ * cell, 10000, is returned; before, the first 1000)
+ * @param count Receives the number of windows written
  * @return true if successful, false otherwise (call GetLastErrorProxy for details); the windows are then not written
  */
 MODULE_API bool
@@ -287,7 +302,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         int instrumentId,
                                         int targetId, const char *targetFrame, const char *targetShape,
                                         const char *aberration, double stepSize,
-                                        IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
+                                        IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count);
 
 /**
  * Convert elapsed seconds from J2000 to UTC
