@@ -786,6 +786,18 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
+    /// The osculating Keplerian elements of <see cref="ToKeplerianElements()"/>, SGP4's state at the epoch of the TLE,
+    /// moved by the two-body motion to <paramref name="epoch"/>: osculating, though the TLE is mean (#463).
+    /// </summary>
+    /// <param name="epoch">The epoch of the elements.</param>
+    /// <returns>Osculating <see cref="KeplerianElements"/> at <paramref name="epoch"/>. For SGP4's state at that epoch, use
+    /// <see cref="ToOsculating(Time)"/>.</returns>
+    public override KeplerianElements ToKeplerianElements(Time epoch)
+    {
+        return ToKeplerianElements().ToKeplerianElements(epoch);
+    }
+
+    /// <summary>
     /// Converts the TLE to osculating Equinoctial elements.
     /// </summary>
     /// <returns>

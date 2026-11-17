@@ -896,6 +896,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// (1.2e-6 s of motion over an hour at most); from a TT epoch it returns there, and from a UTC epoch away from a leap
     /// second: <see cref="Time"/> + <see cref="TimeSpan"/> adds calendar seconds to a UTC time, so across a leap second
     /// <c>Epoch + Period()</c> is a period and one second of TT later.
+    /// <para>
+    /// The elements keep their <see cref="ElementsType"/> (#463; before 11.0.0 mean elements came back labelled
+    /// osculating, which let <see cref="ToStateVector()"/> take mean numbers for a state). Of mean elements, the mean
+    /// anomaly advances at the two-body mean motion only, without the secular rates of the node and of the periapsis of
+    /// the theory they belong to (SGP4 for a TLE set): a <see cref="TLE.TLE"/> overrides this method with SGP4.
+    /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane (#687).</exception>
@@ -905,9 +911,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         double elapsed = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
         var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanAnomalyRate();
 
-        // An angle on an ellipse only (#368); KeplerianElements reduces it
+        // An angle on an ellipse only (#368); KeplerianElements reduces it. Mean elements stay mean, so that the guard of
+        // ToStateVector holds (#463)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
-            perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius);
+            perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
     }
 
     /// <summary>
@@ -1001,17 +1008,18 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="epoch">The epoch time at which to compute the Keplerian elements.</param>
     /// <returns>The Keplerian elements at the given epoch.</returns>
     /// <remarks>The elapsed time is that of <see cref="AtEpoch"/>: the dynamical time of the observer, TT seconds about
-    /// the Earth, TDB seconds about any other body (#501, #508).</remarks>
+    /// the Earth, TDB seconds about any other body (#501, #508). The elements keep their <see cref="ElementsType"/> (#463);
+    /// a <see cref="TLE.TLE"/> moves its osculating set, which stays osculating.</remarks>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane and no elements (#687).</exception>
-    public KeplerianElements ToKeplerianElements(Time epoch)
+    public virtual KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
         double m = MeanAnomaly() + MeanAnomalyRate() * ellapsedTime;
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,
-            perigeeRadius: PerigeeRadius());
+            perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
     }
 
     /// <summary>

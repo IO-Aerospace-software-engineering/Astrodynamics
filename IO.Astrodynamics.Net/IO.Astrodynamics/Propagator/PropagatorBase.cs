@@ -111,6 +111,7 @@ public abstract class PropagatorBase : IPropagator
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
         ValidateInertialFrame(spacecraft);
+        ValidateOsculatingInitialOrbit(spacecraft);
         // A cycle in the maneuver chain would never end the walks of the chain: rejected before anything runs (#585)
         var initialChain = Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
         var standbyChain = Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
@@ -988,7 +989,25 @@ public abstract class PropagatorBase : IPropagator
         return new StateVector(state.Position.Rotate(q), state.Velocity.Rotate(q), state.Observer, state.Epoch, Frame.ICRF, covariance);
     }
 
-    private static void ValidateInertialFrame(Spacecraft spacecraft)
+    /// <summary>
+    /// A numerical propagation starts from a state: mean elements have none without the theory they belong to (#463). A
+    /// <see cref="OrbitalParameters.TLE.TLE"/> is mean and starts from its SGP4 state (#675).
+    /// </summary>
+    /// <exception cref="ArgumentException">The initial orbit of the spacecraft is a set of mean elements other than a
+    /// TLE.</exception>
+    internal static void ValidateOsculatingInitialOrbit(Spacecraft spacecraft)
+    {
+        var initial = spacecraft.InitialOrbitalParameters;
+        if (initial is not OrbitalParameters.TLE.TLE && initial.ElementsType == OrbitalElementsType.Mean)
+        {
+            throw new ArgumentException(
+                $"The initial orbit of spacecraft {spacecraft.Name} ({spacecraft.NaifId}) is a set of mean elements, which have no " +
+                "state without the theory they belong to: a numerical propagation cannot start from them. Propagate a TLE with " +
+                "TLEPropagator, or start from its osculating state, TLE.ToOsculating().", nameof(spacecraft));
+        }
+    }
+
+    internal static void ValidateInertialFrame(Spacecraft spacecraft)
     {
         var frame = PropagationFrame(spacecraft.InitialOrbitalParameters);
         if (frame != Frame.ICRF

@@ -4623,6 +4623,29 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a `StateVector` at escape speed and above, Keplerian and equinoctial hyperbolas and parabolas (red on a85098d), and an
   ellipse unchanged. Migration: catch `InvalidOperationException` instead of `ArgumentException` or `OverflowException`,
   or test `IsElliptical()` first.
+- **Breaking: mean elements stay mean through `AtEpoch` and `ToKeplerianElements(Time)`, and a propagation refuses a mean initial orbit** ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463)).
+  `AtEpoch(t)` and `ToKeplerianElements(t)` built their `KeplerianElements` without `elementsType`, so mean elements came
+  back labelled `Osculating`, even at their own epoch, and the guard of `ToStateVector()` let them through: a spacecraft
+  whose initial orbit was a mean set in an inertial frame (`KeplerianElements.FromOMM(..., Frame.ICRF)`, the public
+  constructors with `Mean`) was propagated from the two-body state of the mean numbers, with no error, by every path
+  (11.75 km and 7.7 m/s from SGP4 at the epoch for the ISS, 468 km after a day; measured on a85098d, as in the issue);
+  only a mean TEME set was refused, by the inertial-frame check. The recommendations of the issue (decided by
+  S. Guillet, 2026-11-17): both methods keep `ElementsType`; `ToKeplerianElements(Time)` is virtual and a `TLE`
+  overrides it as `ToKeplerianElements().ToKeplerianElements(epoch)`, its osculating SGP4 set moved in time, which stays
+  `Osculating` (as before); and every `CentralBodyPropagator` constructor (so `Spacecraft.Propagate` and
+  `PropagateAsync`, `CentralBodyPropagatorBuilder`, `Scenario.SimulateAsync`) throws `ArgumentException` (`spacecraft`)
+  naming the spacecraft and pointing to `TLEPropagator` and `TLE.ToOsculating()` for a mean initial orbit other than a
+  TLE, checked with the inertial-frame check before the initial state is computed (a mean TEME set still meets the frame
+  check first, `TlePropagationTests.MeanTemeSet_StaysRejected`). `AtEpoch` of mean elements advances the mean anomaly at
+  the two-body mean motion only, without the secular rates of the theory, as before, now documented; a mean set moved to
+  its own epoch writes the same TLE through `TLE.Create`, which refused it before. Osculating elements and states are
+  unchanged, bit for bit (only labels change), so no golden moves. Tests: `MeanElementsTypeTests` (mean Keplerian and
+  equinoctial sets from `FromOMM`, `TLE.ToMeanKeplerianElements()`, `ToEquinoctial()` and the constructors, in ICRF and
+  `ECLIPTIC_J2000`, at their epoch and an hour later; the seven propagation paths, Velocity-Verlet and RK7(8), windows at
+  and after the epoch; the TLE's osculating set within 8.9e-16 of CSPICE `prop2b` over the TT seconds of the hour,
+  provisional threshold twice the Linux worst), red on a85098d. Migration: propagate a TLE with `TLEPropagator` or
+  start from `TLE.ToOsculating()` (or the TLE itself, whose SGP4 state starts the propagation); build osculating
+  elements for a numerical propagation.
 
 **Deprecated**
 
@@ -4833,11 +4856,8 @@ not listed.
   e = 0.999999 (155 m at the apoapsis of a 7000 km periapsis). Near the periapsis Kepler's equation stops at its
   cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r| off at e = 0.999999, and
   `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
-- **Mean elements and equality of orbital parameters**
-  ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463),
-  [#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). `AtEpoch(t)` and
-  `ToKeplerianElements(t)` of mean elements (a TLE, `KeplerianElements.FromOMM`) return the same numbers labelled
-  osculating, which bypasses the guard of `ToStateVector()`: use `TLE.ToOsculating()` or an SGP4 state. Typed
+- **Equality of orbital parameters**
+  ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). Typed
   `OrbitalParameters`, `==`, `!=` and `Equals` compare `ToStateVector()`, so they throw for mean elements (even against
   null) or e = NaN, and `GetHashCode` includes the reference, so equal copies hash differently and hash sets keep
   duplicates: compare the element values.

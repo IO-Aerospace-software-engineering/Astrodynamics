@@ -48,6 +48,12 @@ var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0));
 - `ToStateVector(epoch)` propagates with SGP4/SDP4 to the given epoch and returns the osculating state.
 - `ToMeanKeplerianElements()` returns the raw mean elements for inspection.
 
+Mean elements stay mean through `AtEpoch(t)` and `ToKeplerianElements(t)` (#463), so their `ToStateVector()` throws
+there too, and a numerical propagation (`CentralBodyPropagator`, `Spacecraft.Propagate`, `Scenario.SimulateAsync`)
+refuses a spacecraft whose initial orbit is a set of mean elements other than a TLE, with an `ArgumentException` that
+points to `TLEPropagator` and `TLE.ToOsculating()`. `AtEpoch` of mean elements advances the mean anomaly at the two-body
+mean motion only, without the secular rates of the node and of the periapsis of SGP4: a TLE's own `AtEpoch` is SGP4.
+
 ## SGP4 Propagation
 
 Propagate the TLE to a future epoch using the built-in SGP4/SDP4 propagator:
