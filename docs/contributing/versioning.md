@@ -110,6 +110,15 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **The orientation cache of a propagation interpolated by a normalised Lerp** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Changed below).
+  `PropagationFrameOrientationCache`, which gives the geopotential and drag the orientation of the central body during a
+  propagation and the RK7(8) evaluations after it, interpolated its 60 s points with `Quaternion.SLERP`, whose
+  normalised-Lerp fallback below 0.028 rad took every cell of the Earth's grid (4.4e-3 rad between two points): 3.37e-10
+  rad from `sxform` at worst, where its comments said SLERP. It now takes the exact SLERP by the axis and the angle of the
+  relative rotation (internal `Quaternion.SlerpByAxisAngle`, that of a type-3 CK and of the attitude record): 2.38e-12 rad
+  over the 6 840 epochs of 6 h (`PropagationFrameOrientationCacheTests.Interpolation_IsTheExactSlerp_AgainstSxform`, red
+  on a85098d; the bound of the KR-1 tests of lot 6, 6.9e-10 rad from the Lerp, measured again at 1.0e-13 rad and set to
+  2.1e-13, provisional).
 - **The third body's attraction lost eight digits near the perturbing body** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Changed below).
   `ThirdBodyPerturbation` computed |r − d|³ as |d|³ (1 + q)^1.5 with Battin's q = r·(r − 2d)/|d|², whose 1 + q = |r − d|²/|d|²
   a cancellation of terms of order 1 gives to about ε |d|²/|r − d|²: in SSB mode about the Earth (the Sun the central body,
@@ -3236,7 +3245,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
-- **Breaking: a propagation near a third body, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
+- **Breaking: every propagation that rotates its central body moves by the orientation it reads** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Fixed above).
+  With the exact SLERP the orientation of the central body read by the geopotential and by drag moves by up to 3.4e-10
+  rad (2.3 mm at a LEO radius): the bit-for-bit goldens of `PropagationGoldenTests` are recaptured, the GEO case moved by
+  2.1e-6 m, the maneuver case by 1.1e-6 m (its maneuver epoch unchanged), the SRP case by 1.66 mm with 100 steps instead
+  of 103 (the integration error at 1e-11 of other steps). A point-mass propagation, which reads no orientation, does not
+  move. The references of the Validation records by central differences of whole propagations take other steps, another
+  draw of their noise: the penumbra record of R4 (`StmValidationTests`) is set again at 9.6e-8 (its Φ 4.8e-8 there, 3.6e-9
+  before, Φ under test moved by 1.3e-9) and the arc record of Ψ_Cr of the eclipsing case (`ManeuverStmValidationTests`)
+  at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), provisional. Migration: none in code; a golden of
+  a propagation with a geopotential or drag is to be captured again.
+, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
   `ThirdBodyPerturbation.Apply` takes the direct difference where the spacecraft is closer to the perturbing body than
   half its distance to the central body (|r − d| < |d|/2): SSB mode near any planet, and a spacecraft near the Moon
   propagated about the Earth (within about 190 000 km of it). Those propagations take other steps and end elsewhere, within
@@ -4803,13 +4822,11 @@ not listed.
   relative to the barycentre, about 1.5e11 m, and the step control fails, with or without drag; propagate relative to
   the Earth. (The noise of the Earth's attraction in SSB mode, #544 and #576, is fixed in this release.)
 - **Integration accuracy** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439),
-  [#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445),
-  [#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561)). Velocity-Verlet is of first
+  [#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445)). Velocity-Verlet is of first
   order with drag: on a dense perigee pass its error against RK7(8) is 267 m, 27.2 m and 2.72 m at steps of 1, 0.1 and
   0.01 s; use `RK78Integrator` when drag matters. At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
-  to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation interpolates the
-  Earth's 60 s nodes with the normalised-Lerp fallback of `Quaternion.SLERP`, up to 3.4e-10 rad from the exact
-  interpolation. It is built for every central body, whether or not a force rotates, so each of its 60 s points past the
+  to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation is built for
+  every central body, whether or not a force rotates, so each of its 60 s points past the
   coverage of the orientation kernel goes through the native read, which prints its SPICE message on standard output
   (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); the native read is unchanged): a point-mass
   propagation there still runs ([#595](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/595)).

@@ -12,6 +12,13 @@ namespace IO.Astrodynamics.Propagator;
 /// </summary>
 /// <remarks>
 /// <para>
+/// The rotation between two grid points is the exact spherical linear interpolation, by the axis and the angle of their
+/// relative rotation (that of a type-3 CK, as <see cref="StateOrientation"/> and the attitude record of a spacecraft
+/// interpolate), the angular velocity linear. Before 11.0.0 it was <c>Quaternion.SLERP</c>, whose normalised-Lerp fallback
+/// below 0.028 rad took every cell of the 60 s grid of the Earth (4.4e-3 rad): up to 3.4e-10 rad from the exact
+/// interpolation of the same points, 140 times its departure from SPICE (#561).
+/// </para>
+/// <para>
 /// A grid point SPICE cannot give (outside the coverage of the frame's orientation data, where
 /// <see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/> throws since #454) is kept as unavailable: a propagation
 /// whose forces need no orientation of the central body (a point mass, no drag) still runs there, as it did when the
@@ -132,7 +139,7 @@ public sealed class PropagationFrameOrientationCache
     }
 
     /// <summary>
-    /// Get interpolated orientation at the given epoch using SLERP for rotation
+    /// Get interpolated orientation at the given epoch using the exact SLERP for rotation (#561)
     /// and linear interpolation for angular velocity.
     /// </summary>
     public StateOrientation GetOrientation(in Time epoch)
@@ -143,7 +150,7 @@ public sealed class PropagationFrameOrientationCache
             return new StateOrientation(read.Rotation, read.AngularVelocity, epoch, Frame.ICRF);
         }
 
-        var rotation = p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
+        var rotation = Quaternion.SlerpByAxisAngle(p0.Rotation, p1.Rotation, ratio).Rotation;
         var angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
 
         return new StateOrientation(rotation, angularVelocity, epoch, Frame.ICRF);
@@ -159,7 +166,7 @@ public sealed class PropagationFrameOrientationCache
             return ReadAt(epoch).Rotation;
         }
 
-        return p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
+        return Quaternion.SlerpByAxisAngle(p0.Rotation, p1.Rotation, ratio).Rotation;
     }
 
     /// <summary>
@@ -175,7 +182,7 @@ public sealed class PropagationFrameOrientationCache
             return;
         }
 
-        rotation = p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
+        rotation = Quaternion.SlerpByAxisAngle(p0.Rotation, p1.Rotation, ratio).Rotation;
         angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
     }
 

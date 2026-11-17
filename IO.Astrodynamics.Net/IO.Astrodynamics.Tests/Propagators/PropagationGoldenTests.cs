@@ -77,6 +77,12 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// and 241 output labels are a tick later (their nearest tick); the output states moved by 1.37 mm and 1.4e-6 m/s (SRP),
 /// 0.31 mm and 2.2e-8 m/s (GEO), 0.82 mm and 9.0e-7 m/s (maneuver) at most, at the scale of |v| times a tick (0.77 mm in
 /// LEO, 0.31 mm at GEO) and of the integration error at 1e-11 of other steps (see #410 above).
+/// Recaptured with #561: the orientation cache of the Earth interpolates its 60 s points by the exact SLERP instead of the
+/// normalised-Lerp fallback of <c>Quaternion.SLERP</c>, which was up to 3.4e-10 rad off (the exact SLERP 2.4e-12 rad from
+/// <c>sxform</c>); every case has a geopotential and moved from its first step. The GEO case by 2.1e-6 m and 1.4e-10 m/s at
+/// most, the same 46 steps; the maneuver case by 1.1e-6 m and 1.0e-9 m/s, the same 22 and 72 steps, the maneuver epoch
+/// unchanged; the SRP case by 1.66 mm and 1.9e-6 m/s, 100 steps instead of 103, the integration error at 1e-11 of other
+/// steps (see #410 above).
 /// A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>

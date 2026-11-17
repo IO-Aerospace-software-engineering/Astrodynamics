@@ -101,6 +101,14 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// the penumbra 1.2e-8. They are not set again from this one draw: over eleven starts moved by −5 to +5 ticks, the F1
 /// noise of the full degree moves by up to a factor of 3.3 (R4) and 7.7 (R2) (<c>GeopotentialPartialsDegreeTests</c>).
 /// </para>
+/// <para>
+/// The exact SLERP of the orientation cache (#561) moves the Earth's orientation by up to 3.4e-10 rad, and so the steps of
+/// the references: another draw of their noise. R4 measured again (Linux x64, Release, 2026-11-17; a85098d in
+/// parentheses): Φ outside the penumbra 6.5e-8, 2.8e-9, 5.2e-8, 2.5e-9 (1.1e-8, 2.8e-9, 1.8e-8, 2.5e-9), in the penumbra
+/// up to 4.8e-8 (3.6e-9), while Φ under test moved by 1.3e-9 at most per block over the arc: the reference moved. The
+/// penumbra record of R4 is set again at twice its measurement, 9.6e-8 (1.2e-8 before), provisional (to be confirmed by
+/// S. Guillet, as decision 53 of #457 kept the records from one draw).
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class StmValidationTests : IClassFixture<ReferenceCases>
@@ -124,7 +132,7 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
         { "R1", 1e-7, 0.0, 0.0 },
         { "R2", 1e-4, 0.0, 0.0 },
         { "R3", 1e-4, 1.6e-5, 4.5e-4 },
-        { "R4", 1e-4, 1.2e-8, 0.0 },
+        { "R4", 1e-4, 9.6e-8, 0.0 },
         { "R5", 1e-4, 0.0, 0.0 }
     };
 
