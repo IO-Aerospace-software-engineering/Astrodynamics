@@ -422,7 +422,7 @@ Cartesian position and velocity state.
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`) |
+| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607) |
 
 A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
 no RTN frame: the members that read the plane (inclination, node, argument of periapsis, node vectors, longitudes, the
@@ -619,7 +619,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `ToKeplerianElements()` | Get osculating Keplerian elements (via SGP4) |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly from TLE data |
 | `AtEpoch(Time epoch)` | Get propagated orbital parameters |
-| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from orbital parameters |
+| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607) |
 
 ```csharp
 // Parse TLE

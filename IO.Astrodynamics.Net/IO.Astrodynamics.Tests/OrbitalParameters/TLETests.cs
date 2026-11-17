@@ -244,7 +244,7 @@ public class TLETests
     [Fact]
     public void Create_InvalidElementSetNumber_ThrowsArgumentOutOfRangeException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF,
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.TEME,
             elementsType: OrbitalElementsType.Mean);
         string name = "TestSatellite";
         ushort noradId = 12345;
@@ -268,7 +268,7 @@ public class TLETests
     [Fact]
     public void Create_InvalidName_ThrowsNullArgumentException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF,
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.TEME,
             elementsType: OrbitalElementsType.Mean);
         string name = "";
         ushort noradId = 12345;
@@ -593,7 +593,7 @@ public class TLETests
             0.0, // Mean anomaly
             TestHelpers.EarthAtJ2000,
             epoch,
-            Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
+            Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
 
         var tle = TLE.Create(kep, "TEST_SAT", 65535, "21001A", 1000,
             Classification.Unclassified, 0.0001, 0.000001, 0.0, 100);
@@ -666,7 +666,7 @@ public class TLETests
             0.0, // Mean anomaly
             TestHelpers.EarthAtJ2000,
             epoch,
-            Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
+            Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
 
         // Act: Create TLE with specific BSTAR value
         var tle = TLE.Create(kep, "TEST", 12345, "24001A", 100,

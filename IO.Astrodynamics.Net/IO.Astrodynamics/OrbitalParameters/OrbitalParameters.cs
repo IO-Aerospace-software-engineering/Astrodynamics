@@ -1202,9 +1202,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="ArgumentNullException">
     /// Thrown if the <paramref name="config"/> parameter is null.
     /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown before the fit when these parameters are not about the Earth (NAIF id 399): a TLE describes an Earth orbit
+    /// (#607; before 11.0.0, the fit took them for an Earth orbit and failed, or wrote a TLE of another orbit).
+    /// </exception>
     public TLE.TLE ToTLE(TLE.Configuration config)
     {
         ArgumentNullException.ThrowIfNull(config);
+        if (Observer.NaifId != TLE.TLE.EarthNaifId)
+        {
+            throw new InvalidOperationException(
+                $"The orbit is about {Observer.Name} ({Observer.NaifId}): a TLE describes an Earth orbit, so it cannot be converted to a TLE.");
+        }
+
         var meanElements = _sharedMeanElementsConverter.Convert(this, config.NoradId,
             config.Name, config.CosparId, config.RevolutionsAtEpoch,
             config.BstarDragTerm, config.MaxIterations);

@@ -3211,6 +3211,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: `TLE.Create` accepts only SGP4 mean elements of an Earth orbit in TEME, and `ToTLE` only an Earth orbit** ([#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)).
+  `TLE.Create` checked only that its elements were mean: mean elements in ICRF were written as a TLE, their angles
+  taken as TEME's, and mean elements about the Moon with their mean motion from the Moon's GM, a valid text that
+  describes another orbit. It now throws `ArgumentException` (`meanElements`) for elements whose frame is not
+  `Frame.TEME` (frames compared by name) or whose observer is not the Earth (NAIF id 399), naming the frame or the
+  centre (decided by S. Guillet, 2026-11-17). `OrbitalParameters.ToTLE`, whose fit rotates the state to TEME but kept
+  its centre, threw an `InvalidOperationException` of a failed fit for an orbit about the Moon (a state 8000 km from it
+  with the speed of a circular Earth orbit there), after its fit iterations; it now throws
+  `InvalidOperationException` naming the centre before the fit. `Omm.ToTle` (TEME and the Earth through
+  `IsTleCompatible`) and `ToTLE` of an Earth orbit in any frame are unchanged, bit for bit
+  (`TleCreateRulesTests`, red on a85098d: no exception for mean elements in ICRF, about the Moon or about the Earth-Moon
+  barycentre). Migration: rotate mean elements to TEME with `ToFrame(Frame.TEME)` before `Create`, or give `ToTLE` the
+  osculating state, which it rotates itself; a TLE holds no orbit about another centre.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -4643,12 +4656,10 @@ not listed.
   which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
   and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
 - **TLEs** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598),
-  [#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604),
-  [#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)). `TLEPropagator` counts its
+  [#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). `TLEPropagator` counts its
   samples in whole seconds: a step below 1 s throws `DivideByZeroException`, and a window that is not a multiple of the
   step loses its end; use a whole-second step that divides the window. A TLE with a blank international designator can
-  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM. `TLE.Create` checks only that its
-  elements are mean: pass mean elements about the Earth in `Frame.TEME`. `Omm.ToTle` writes element set 999 for an OMM
+  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM. `Omm.ToTle` writes element set 999 for an OMM
   without `ELEMENT_SET_NO`, `TLE.Create` 9999 by default ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)): pass the element set number.
   A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
   is NRLMSISE-00 at nominal space weather ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)), and an Earth with a geopotential or an atmosphere in the bodies throws

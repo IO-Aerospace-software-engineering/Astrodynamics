@@ -35,6 +35,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
     private const int MAX_REVOLUTIONS_AT_EPOCH = 99999;
+    // The centre of every TLE: SGP4 propagates Earth orbits only (#607)
+    internal const int EarthNaifId = 399;
     private KeplerianElements _meanKeplerianElements;
 
     // The TLE epoch as CSPICE's getelm_c reads it (ET, TDB seconds from J2000), read once from the native layer: SGP4
@@ -336,8 +338,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// (#602); B* and n̈/6 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601); a value that rounds
     /// to zero, −0.0 included, without a sign (#480).
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Thrown when orbitalParams or name is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when cosparId is null, whitespace, or not between 6-8 characters.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when meanElements or name is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when meanElements are not mean elements, are not in <see cref="Frame.TEME"/>
+    /// or are not about the Earth (NAIF id 399): a TLE holds SGP4 mean elements of an Earth orbit in TEME (#607; before
+    /// 11.0.0, elements in another frame or about another centre were written as if they were, their angles taken as
+    /// TEME's and their mean motion from their centre's GM); or when cosparId is null, whitespace, or not between 6-8
+    /// characters.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
     /// </exception>
@@ -347,6 +353,16 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
         if (meanElements.ElementsType != OrbitalElementsType.Mean)
             throw new ArgumentException("Orbital parameters must be mean elements. Use KeplerianElements.FromOMM() or ensure ElementsType is Mean.", nameof(meanElements));
+
+        // A TLE holds SGP4 mean elements of an Earth orbit in TEME (#607)
+        if (meanElements.Frame != Frame.TEME)
+            throw new ArgumentException(
+                $"The mean elements are in {meanElements.Frame.Name}: a TLE holds SGP4 mean elements of an Earth orbit in TEME.",
+                nameof(meanElements));
+        if (meanElements.Observer.NaifId != EarthNaifId)
+            throw new ArgumentException(
+                $"The mean elements are about {meanElements.Observer.Name} ({meanElements.Observer.NaifId}): a TLE holds SGP4 mean " +
+                "elements of an Earth orbit in TEME.", nameof(meanElements));
 
         return CreateInternal(meanElements, name, noradId, cosparId, revolutionsAtEpoch, classification, bstar, nDot, nDDot, elementSetNumber);
     }

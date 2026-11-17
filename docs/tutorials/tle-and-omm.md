@@ -129,7 +129,8 @@ var newTle = sv.ToTLE(config);
 ```
 
 The fitting process converts osculating elements to mean elements consistent with SGP4. The state may be in any frame,
-elements already in TEME included; the TLE's epoch is the UTC of the state's epoch, rounded to the 1e-8 day of the
+elements already in TEME included, but must be about the Earth: `ToTLE` throws `InvalidOperationException` for an
+orbit about another centre (#607); the TLE's epoch is the UTC of the state's epoch, rounded to the 1e-8 day of the
 field. Each field of the text is the nearest value its columns hold.
 
 A `NoradId` above 99999 is encoded with the Alpha-5 convention, up to 339999:

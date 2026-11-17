@@ -46,7 +46,7 @@ standard output. A valid TLE still needs the kernels that define the Earth (its 
 | `ToOsculating(Time)` | Convert to osculating StateVector at epoch |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly |
 | `ToOmm(string originator)` | Convert to CCSDS OMM |
-| `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters |
+| `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` |
 
 ## SGP4/SDP4
 
@@ -66,6 +66,14 @@ The epoch is the UTC instant of the field, exact: the day fraction is read in de
 nearest value its columns hold: the epoch to the 1e-8 day with the carry into the next day and year (#600), B* and n̈/6
 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601), e in [0, 0.9999999] (#602), a zero without
 a sign (#480).
+
+A TLE holds SGP4 mean elements of an Earth orbit in TEME, so `Create` throws `ArgumentException` (`meanElements`) for
+elements that are not mean, not in `Frame.TEME` (frames compared by name) or not about the Earth (NAIF id 399), and
+`ToTLE` throws `InvalidOperationException` before its fit for orbital parameters that are not about the Earth, in any
+frame (#607, decided by S. Guillet, 2026-11-17; before 11.0.0, `Create` wrote elements in another frame or about another
+centre as if they were, their angles taken as TEME's and their mean motion from their centre's GM, and `ToTLE` took an
+orbit about another centre for an Earth orbit and failed in its fit). Rotate mean elements to TEME with
+`ToFrame(Frame.TEME)` before `Create`, or give `ToTLE` the osculating state, which it rotates to TEME itself.
 
 The states of SGP4/SDP4 are in `Frame.TEME`, the managed TEME frame ([Frames](frames.md#teme)); `ToFrame(Frame.ICRF)`
 needs no Earth orientation kernel, at any epoch. The Earth a TLE refers to is built in an inertial frame, so that a TLE

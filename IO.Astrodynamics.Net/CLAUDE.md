@@ -826,7 +826,9 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 7. **Mean vs Osculating Elements**: Always check `ElementsType` when working with orbital parameters:
    - Use `ToOsculating()` for TLE position/velocity calculations
    - Never call `ToStateVector()` directly on mean KeplerianElements
-   - Use `TLE.Create()` only with mean elements (validates `ElementsType.Mean`)
+   - Use `TLE.Create()` only with mean elements of an Earth orbit in TEME (it validates `ElementsType.Mean`, `Frame.TEME` and
+     the Earth, NAIF id 399, `ArgumentException` otherwise; `ToTLE` refuses an orbit not about the Earth with
+     `InvalidOperationException`, #607)
    - NORAD catalog numbers are `int`, not `ushort`; values above 99999 use Alpha-5 encoding, and
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:
