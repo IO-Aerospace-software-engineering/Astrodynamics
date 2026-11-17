@@ -3148,8 +3148,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` naming the target at the observer, which has no direction, and an ellipsoid target the
   `InvalidOperationException` of an observer inside the target, never a message about the half-angles
   (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
-  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle still reports such a point in view, its margin taking
-  atan2(0, 0) = 0, [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). Every other
+  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle reported such a point in view, its margin taking
+  atan2(0, 0) = 0, until [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), under
+  Changed). Every other
   field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
   `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends (decided by
   S. Guillet, 2026-11-17), the constructors keep the rule "finite and positive" for both half-angles, and the
@@ -3211,6 +3212,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: a point target at the observer throws for a rectangular field too**
+  ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). `Instrument.IsInFOV` and the
+  managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` reported a point target at the observer,
+  distance 0 (two spacecraft of the same state), in view: its margin took the angles of the zero vector as
+  atan2(0, 0) = 0, so the search returned the whole search window (a85098d: `IsInFOV` true and the window
+  [2024-01-01T00:00:00, 00:02:00] TDB, for a field of 0.1 and 0.2 rad). A point at the observer has no direction, so
+  it is neither in nor out of the field; since #715 the circle and the ellipse throw `InvalidOperationException` naming
+  the target at the observer. The rectangle now throws the same exception, its distance checked before its margin
+  (decision 9 of #719, decided by S. Guillet, 2026-11-17;
+  `InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance` and
+  `PointTargetAtTheObserver_ManagedSearchThrowsInvalidOperationNamingTheDistance`, red on a85098d for the rectangle).
+  Every other target of a rectangle is searched as before, bit for bit (the same margin). Migration: a caller that
+  searches or tests a target that can be at the instrument's spacecraft catches `InvalidOperationException`; no change
+  for a target away from the observer.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -4507,12 +4522,6 @@ not listed.
   (#668, decided by S. Guillet, 2026-11-14): it is left to an additive constructor overload after 11.0.0, in
   [#723](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/723) (decided by S. Guillet,
   2026-11-17; [Stars](../reference/stars.md#limits)).
-- **A point target at the observer is in view of a rectangular field**
-  ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). The managed field-of-view
-  search of a rectangular instrument reports a point target at the observer, distance 0, in view, its margin taking
-  atan2(0, 0) = 0, where a circle and an ellipse throw `InvalidOperationException` since #715 (Fixed above). It is to
-  throw as they do (decision 9 of #719, decided by S. Guillet, 2026-11-17). No workaround is needed for a target away
-  from the observer.
 - **A front body without radii on the CSPICE path of the occultation search**
   ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii

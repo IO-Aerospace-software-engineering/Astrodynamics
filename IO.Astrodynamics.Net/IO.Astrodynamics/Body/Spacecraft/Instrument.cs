@@ -265,8 +265,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
         /// or, on the managed path, a circle or an ellipse whose half-angles are so small that the squares of the semi-axes of
-        /// the cone of the field underflow at the target's distance, or a point target at the observer (distance 0: it has no
-        /// direction) (#715; before 11.0.0 an unrelated <see cref="ArgumentException"/> for both), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
+        /// the cone of the field underflow at the target's distance, or a point target at the observer, for any shape
+        /// (distance 0: it has no direction) (#715; before 11.0.0 an unrelated <see cref="ArgumentException"/> for both for a
+        /// circle or an ellipse, and for a rectangle the target in view, #721), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
         /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
         /// is inside the ellipsoid of the target (at its center included, an unrelated <see cref="ArgumentException"/> before
