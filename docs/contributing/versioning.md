@@ -110,6 +110,24 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **The third body's attraction lost eight digits near the perturbing body** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Changed below).
+  `ThirdBodyPerturbation` computed |r − d|³ as |d|³ (1 + q)^1.5 with Battin's q = r·(r − 2d)/|d|², whose 1 + q = |r − d|²/|d|²
+  a cancellation of terms of order 1 gives to about ε |d|²/|r − d|²: in SSB mode about the Earth (the Sun the central body,
+  the Earth a third body, |r − d|/|d| = 4.6e-5) the Earth's attraction had a relative error of 2.7e-7 (6.3e-4 at 1e-6),
+  a noise of about 1e-6 m/s² that drove RK7(8)'s step control: 21 363 steps for an hour of LEO at 1e-10 (21 317 one ulp
+  of tolerance looser, the final positions 8.8 cm apart), 2 093 091 at 1e-12, step sequences that differ per platform,
+  and a start from ECLIPJ2000 or GALACTIC 3.3 to 6.0 cm (RK7(8)) and 0.87 to 1.14 m (Velocity-Verlet at 10 s) from its
+  ICRF twin after 1 h. Where |r − d| < |d|/2 the acceleration is now the direct difference −μ ((r − d)/|r − d|³ + d/|d|³),
+  ρ = r − d formed once: within 4.1e-16 of the exact acceleration there, 2.7e-15 at most around the switch, Battin's side
+  (`ThirdBodyNearThePerturberTests`, an integer reference of 2 200 bits, |r − d|/|d| from 1e-6 to 1.5, about the Sun with
+  the Earth and about the Earth with the Moon; red on a85098d); the same LEO takes 49 steps at 1e-10 (47 one ulp looser,
+  5.6 mm apart), 5 210 at 1e-12, its twins end 1.1 cm (RK7(8), the integration error of two step sequences at 1e-10) and
+  0.62 mm (Velocity-Verlet) from it (`SsbModeThirdBodyTests`; thresholds twice the Linux figures, provisional). The SSB
+  rows of `AttitudeRecordTests`, `PropagatedArcsTests` and `MinimumEpochGateEdgeTests` that the noise had turned into
+  MEASURE lines are asserted again (positions against the solution across an impulse 4.1e-4 m, the velocity 1 µs before
+  it 5.4e-7 m/s, the two-`Propagate` burn 1.5e-5 s, Linux x64; provisional). Elsewhere the acceleration is Battin's bit for
+  bit (`Acceleration_FarFromThePerturber_IsBattinsBitForBit`), so propagations about the Earth with the Moon and the Sun,
+  the goldens and the GMAT conformance runs do not move.
 - **The Mars curve fit took 273.15 where it publishes 273.1** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Changed below).
   `MarsStandardAtmosphere` computed the density of the NASA Glenn curve fit as p / [0.1921 (T + 273.15)], where the fit
   ("Mars Atmosphere Model – Metric Units") takes 273.1: below the layer its density was 2.07e-4 (surface) to 3.59e-4
@@ -3218,7 +3236,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
-- **Breaking: the density of the Mars curve fit rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
+- **Breaking: a propagation near a third body, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
+  `ThirdBodyPerturbation.Apply` takes the direct difference where the spacecraft is closer to the perturbing body than
+  half its distance to the central body (|r − d| < |d|/2): SSB mode near any planet, and a spacecraft near the Moon
+  propagated about the Earth (within about 190 000 km of it). Those propagations take other steps and end elsewhere, within
+  their integration error (an hour of LEO in SSB mode at 1e-10: 49 steps instead of 21 363); every other propagation is bit
+  for bit unchanged. Migration: none in code; a result in SSB mode or near the Moon about the Earth is to be measured
+  again, and an RK7(8) tolerance loosened for SSB mode (1e-9) can be tightened.
+ rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
   Below the isothermal layer (49.887 km) and through its transition (to 54.887 km), `MarsStandardAtmosphere` takes the
   curve fit's own 273.1 instead of 273.15 (decided by S. Guillet, 2026-11-17: 273.1 in the curve fit only, the 139 K
   layer unchanged). The layer is unchanged bit for bit (its base, where the fit's temperature reaches −134.15 °C, and
@@ -4773,13 +4798,10 @@ not listed.
   the whole process. `SpiceAPI.ReadOrientation` costs about 1.4 ms a call whatever the window, and the window reads of
   `ReadOrientation` and `ReadEphemeris` step by epoch += step, so their samples drift (4.3e-4 s observed) and the last
   epoch of the window can be dropped.
-- **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389),
-  [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544),
-  [#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576)). `ThirdBodyPerturbation`
-  computes the Earth's attraction with Battin's 1 + q, which loses about 8 digits near it: in SSB mode an RK7(8) LEO
-  propagation takes about 5 500 times more steps than relative to the Earth (125 641 against 23 for one hour at 1e-10)
-  and fails at 1e-12, its steps depend on the platform, and a start from ECLIPJ2000 or GALACTIC ends 0.07 to 0.56 m from
-  its ICRF twin after 1 h. Propagate relative to the Earth, or keep the tolerance at 1e-9 or looser.
+- **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).
+  With the variational equations in the step control (`IncludeInStepControl`) the columns of Y are scaled by |r0|
+  relative to the barycentre, about 1.5e11 m, and the step control fails, with or without drag; propagate relative to
+  the Earth. (The noise of the Earth's attraction in SSB mode, #544 and #576, is fixed in this release.)
 - **Integration accuracy** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439),
   [#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445),
   [#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561)). Velocity-Verlet is of first

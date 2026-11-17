@@ -14,7 +14,7 @@ new GravitationalAcceleration(centralBody)
 
 ### ThirdBodyPerturbation
 
-Third-body gravitational perturbation using Battin's numerically stable formula to avoid catastrophic cancellation when the perturbing body is distant.
+Third-body gravitational perturbation using Battin's numerically stable formula to avoid catastrophic cancellation when the perturbing body is distant, and the direct difference −μ ((r − d) / |r − d|³ + d / |d|³) where the spacecraft is closer to the perturbing body than half its distance to the central body (|r − d| < |d| / 2), where Battin's 1 + q = |r − d|² / |d|² would cancel: in SSB mode about the Earth (the Sun the central body, the Earth a third body) it put a relative noise of about 1e-7 on the Earth's attraction before 11.0.0 (#576, #544). The acceleration is within a few ε of the exact one at every distance (5.4e-15 relative bound), and Battin's bit for bit where it applies, so a propagation about the Earth with the Moon and the Sun does not move.
 
 ```csharp-signature
 new ThirdBodyPerturbation(perturbingBody, centralBody)

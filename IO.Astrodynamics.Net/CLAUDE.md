@@ -519,6 +519,9 @@ Earth and the Sun without a model throws `InvalidOperationException`, and about 
 bodies with an atmosphere; an Earth always has one (NRLMSISE-00 nominal without a model), listed or central. A force-building path rejects an integrator that holds forces or was already used, and every entry
 rejects a step of zero or less.
 
+**Third-Body Perturbation (`ThirdBodyPerturbation`)**
+- Battin's form far from the perturbing body; the direct difference −μ ((r − d)/|r − d|³ + d/|d|³) where |r − d| < |d|/2 (SSB mode near a planet, a spacecraft near the Moon about the Earth), where Battin's 1 + q lost eight digits (#576, #544); Battin's bit for bit elsewhere
+
 **Solar Radiation Pressure (`SolarRadiationPressure`)**
 - Cannonball model: `F = (L_sun / 4*pi*c) * Cr * (A/m) * r_hat / r^2`
 - Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (range 1.0–2.0, default 1.0)
