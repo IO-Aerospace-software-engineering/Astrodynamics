@@ -213,7 +213,7 @@ for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
     nu_r1 = mp.acos((c.p / r1 - 1) / c.e)  # the true anomaly of that double radius
     print(f'  e - 1 = {de!r}:')
     print_state('state', state)
-    print(f'    exact e - 1 = {mp.nstr(c.e - 1, 8)}, q = {pair(c.q)}, nu0 = {pair(c.nu)}, a = {pair(c.a)}, n = {pair(c.n)}')
+    print(f'    exact e - 1 = {mp.nstr(c.e - 1, 8)}, e = {pair(c.e)}, q = {pair(c.q)}, nu0 = {pair(c.nu)}, a = {pair(c.a)}, n = {pair(c.n)}')
     print(f'    Barker time to nu = 1 rad: {pair(c.barker_time_to_nu(mp.mpf(1)))} s (conic {mp.nstr(c.conic_time_to_nu(mp.mpf(1)), 15)} s)')
     print(f'    r at nu = 1: {r1!r} m, Barker time to it {pair(c.barker_time_to_nu(nu_r1))} s')
     r2 = 2e7
@@ -287,3 +287,26 @@ for e in (0.999999, math.nextafter(0.999999, 2.0), 1.000001):
         p = mp.mpf(a) * (1 - em) * (1 + em)
     st = perifocal_state(p, em, mp.mpf(0.7), mp.mpf(0.5), mp.mpf(0.9), nu)
     print(f'  e = {e!r} (band {in_band}), a = {a!r}: r = {vec(st[0])}, v = {vec(st[1])}')
+
+# 8. The states of 3 as the C# table of NearParabolicBandTests (BandStates)
+print('\nC# BandStates')
+for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
+    e = 1 + mp.mpf(de)
+    q = mp.mpf(7e6)
+    state = doubles(perifocal_state(q * (1 + e), e, mp.mpf(30) * mp.pi / 180, mp.mpf(40) * mp.pi / 180, 0, mp.mpf(0.5)))
+    c = Conic(*state)
+    r1 = float(c.p / (1 + c.e * mp.cos(1)))
+    nu_r1 = mp.acos((c.p / r1 - 1) / c.e)
+    nu2 = mp.acos((c.p / 2e7 - 1) / c.e)
+    after = doubles(c.conic_after(600))
+
+    def d(x):
+        return repr(float(x))
+
+    def dd(x):
+        hi = float(x)
+        return f'{hi!r}, {float(x - mp.mpf(hi))!r}'
+
+    print(f'        new({de!r}, {vec(state[0])}, {vec(state[1])}, {d(c.e)}, {d(c.q)}, {dd(c.nu)},')
+    print(f'            {dd(c.barker_time_to_nu(mp.mpf(1)))}, {r1!r}, {dd(c.barker_time_to_nu(nu_r1))}, {dd(c.barker_time_to_nu(nu2))},')
+    print(f'            {dd(c.a)}, {dd(c.n)}, {vec(after[0])}, {vec(after[1])}),')

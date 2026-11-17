@@ -483,11 +483,25 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Compute mean anomaly from true anomaly
     /// </summary>
-    /// <param name="trueAnomaly"></param>
-    /// <returns></returns>
+    /// <param name="trueAnomaly">The true anomaly, rad.</param>
+    /// <returns>The mean anomaly, rad: Kepler's elliptic or hyperbolic equation of the anomaly of
+    /// <see cref="EccentricAnomaly(double)"/>, and Barker's D + D³/3, D = tan(ν/2), in the near-parabolic band
+    /// |e − 1| &lt; 1e-6 (<see cref="IsParabolic"/>), whatever the side of e = 1.</returns>
+    /// <remarks>Before 11.0.0 the band put Barker's D into Kepler's elliptic or hyperbolic equation, chosen by e alone, so
+    /// that only e = 1 exactly gave Barker's mean anomaly: <see cref="ToStateVector(double)"/>, <see cref="TimeToRadius"/>
+    /// and the paths of <see cref="EquinoctialElements"/> were up to the size of the orbit off (#478).</remarks>
     public double MeanAnomaly(double trueAnomaly)
     {
-        return TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), this.EccentricAnomaly(trueAnomaly));
+        double anomaly = EccentricAnomaly(trueAnomaly);
+
+        // EccentricAnomaly gives Barker's D in the band, so the mean anomaly there is Barker's (#478); at e = 1 exactly the
+        // static form below gives the same, bit for bit
+        if (IsParabolic())
+        {
+            return anomaly + System.Math.Pow(anomaly, 3) / 3.0;
+        }
+
+        return TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), anomaly);
     }
 
     /// <summary>
@@ -495,7 +509,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="trueAnomaly">The true anomaly in radians.</param>
     /// <param name="eccentricity">The eccentricity of the orbit.</param>
-    /// <param name="eccentricAnomaly">The eccentric anomaly in radians.</param>
+    /// <param name="eccentricAnomaly">The eccentric anomaly in radians: elliptic for e &lt; 1, hyperbolic for e &gt; 1, Barker's
+    /// D = tan(ν/2) for e = 1. It must match <paramref name="eccentricity"/>, whose value alone chooses the equation; within
+    /// 1e-6 of e = 1, where <see cref="EccentricAnomaly(double)"/> gives Barker's D on either side, use
+    /// <see cref="MeanAnomaly(double)"/> (#478).</param>
     /// <returns>The mean anomaly in radians.</returns>
     public static double TrueAnomalyToMeanAnomaly(double trueAnomaly, double eccentricity, double eccentricAnomaly)
     {
@@ -674,7 +691,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// vector is zero, or a non-finite one has no orbit plane to count from (#687).</exception>
     public StateVector ToStateVector(double trueAnomaly)
     {
-        return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly(trueAnomaly))));
+        return ToStateVector(EpochAtMeanAnomaly(MeanAnomaly(trueAnomaly)));
     }
 
     /// <summary>
@@ -1106,10 +1123,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// open orbit its one outbound crossing, an epoch before <see cref="Epoch"/> when the orbit is already past the
     /// radius; on a circular orbit (e = 0), at its radius at every instant, <see cref="Epoch"/> itself.
     /// </summary>
-    /// <remarks>An ellipse with 1 − 1e-6 &lt; e &lt; 1, whose anomalies are taken as parabolic
-    /// (<see cref="IsParabolic"/>), gives an epoch about 8 times off the closed form, which can be before
-    /// <see cref="Epoch"/> even for a radius not yet reached: a defect of the near-parabolic anomalies, not of this
-    /// method.</remarks>
+    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the time is Barker's, the motion of the band; before 11.0.0
+    /// Kepler's equation took Barker's anomaly there, and the epoch was up to 8 times off, before <see cref="Epoch"/> even for
+    /// a radius not yet reached (#478).</remarks>
     /// <param name="radius">The distance from the center of motion, in meters.</param>
     /// <returns>The epoch at the radius, in the frame of <see cref="Epoch"/>.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="radius"/> is not finite, is below the periapsis, or
@@ -1139,7 +1155,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // The true anomaly at the radius; the clamp only absorbs the rounding at an apsis
         double cosNuRad = System.Math.Clamp((p / radius - 1) / e, -1.0, 1.0);
         double nuRad = System.Math.Acos(cosNuRad);
-        double meanAnomaly = TrueAnomalyToMeanAnomaly(nuRad, e, EccentricAnomaly(nuRad));
+        double meanAnomaly = MeanAnomaly(nuRad);
 
         // Far out on an open orbit the mean anomaly overflows (H = +∞, then e sinh H − H = NaN), a crossing after the last
         // epoch of Time; or the epoch passes one end of Time, the first on an open orbit far past the radius

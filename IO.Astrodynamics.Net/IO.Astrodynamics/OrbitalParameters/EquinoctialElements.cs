@@ -186,12 +186,13 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Calculates the mean anomaly.
+        /// Calculates the mean anomaly: that of the true anomaly, <see cref="OrbitalParameters.MeanAnomaly(double)"/>,
+        /// Barker's within 1e-6 of e = 1 (#478).
         /// </summary>
         /// <returns>The mean anomaly.</returns>
         public override double MeanAnomaly()
         {
-            _meanAnomaly ??= TrueAnomalyToMeanAnomaly(TrueAnomaly(), Eccentricity(), EccentricAnomaly(TrueAnomaly()));
+            _meanAnomaly ??= MeanAnomaly(TrueAnomaly());
             return _meanAnomaly.Value;
         }
 

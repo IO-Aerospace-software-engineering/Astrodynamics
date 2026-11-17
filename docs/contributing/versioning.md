@@ -425,10 +425,9 @@ release are listed under **Known limitations**.
   to 7e-16); a radius reached outside the epochs a `Time` holds throws an `ArgumentOutOfRangeException` that says so,
   after the last or before the first. A circular orbit (e = 0), at its radius at every instant, returns its epoch, where
   0 / 0 gave NaN (and a radius an ulp from p an arbitrary epoch). On an open orbit already past the radius the epoch is
-  its outbound crossing, before the epoch of the orbit, as before. An ellipse with 1 − 1e-6 < e < 1, whose anomalies the
-  library takes as parabolic, keeps a time about 8 times off, and its epoch can be before the epoch of the orbit even for
-  a radius not yet reached (EpochAtMeanAnomaly adds a period only for e ≤ 1 − 1e-6); pre-existing, see **Known limitations**
-  ([#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)).
+  its outbound crossing, before the epoch of the orbit, as before. Within 1e-6 of e = 1, whose anomalies the library takes
+  as parabolic, the time was about 8 times off, and its epoch could be before the epoch of the orbit even for a radius
+  not yet reached: fixed by [#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478), below.
   `TimeToSphereOfInfluence` throws `InvalidOperationException` ("<body> has no finite sphere of influence; an orbit
   about it never leaves it") for an infinite sphere of influence. The recommendation of the issue: throw, no `Try`
   method.
@@ -3225,6 +3224,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   now compares P, and the two #452 tests that encoded the NaN and ±∞ (`EquinoctialElementsSingularityTests`
   `StateRoundTrip_NearParabolic_ThroughEquinoctial`, `Parabolic_FromKeplerianElements_TakesThePerigeeRadius`) state the
   finite P.
+- **Within 1e-6 of e = 1, Kepler's equation took Barker's anomaly** ([#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)).
+  In the band 0 < |e − 1| < 1e-6, `EccentricAnomaly(ν)` gives Barker's D = tan(ν/2), but the mean anomaly of a true
+  anomaly put it into Kepler's elliptic (e < 1) or hyperbolic (e > 1) equation, chosen by e alone: only e = 1 exactly
+  gave Barker's D + D³/3. `MeanAnomaly(ν)`, `ToStateVector(ν)`, `TimeToRadius`, `TimeToSphereOfInfluence` and every
+  path of `EquinoctialElements` (`MeanAnomaly()`, `ToKeplerianElements()`, `AtEpoch`, `ToStateVector(Time)`, the start of
+  a propagation) were then up to the size of the orbit off without an error: at q = 7000 km and ν0 = 0.5 rad,
+  `sv.ToStateVector(sv.TrueAnomaly())` 338.6 s in the past and 3565 km away, `TimeToRadius` −307 s for a radius reached
+  446 s later, an exact parabola given as Keplerian elements 5.1e7 m off through its equinoctial elements, whose e
+  rounds one ulp below 1 (measured on a85098d, as in the issue). `MeanAnomaly(ν)` now takes Barker's equation in the
+  band, whatever the side of e = 1, and `ToStateVector(ν)`, `TimeToRadius` and `EquinoctialElements.MeanAnomaly()` go
+  through it (decided by S. Guillet, 2026-11-17, the recommendation of the issue: the band test lives in
+  `MeanAnomaly(ν)`); the public static `TrueAnomalyToMeanAnomaly` keeps its contract, its documentation now saying that
+  the anomaly must match e. Outside the band every result is unchanged, bit for bit. Against 60-digit references
+  (`tools/near_parabolic/near_parabolic_reference.py`): Barker's mean anomaly within 2.8e-17 rad on a state, its
+  Keplerian and its equinoctial elements at e − 1 = ±9e-7, ±5e-7, ±1e-12; the state at its own true anomaly is itself,
+  at its epoch; the times within 7.8e-9 s (ν = 1 rad), 4.6e-8 s (2e7 m) and 4.6e-8 s (the sphere of influence) of
+  Barker's, their epochs ticks of `Time`; the exact parabola within 1.7e-16 rad of its M and 2.3e-9 m of Barker's
+  state; over 2000 random exact parabolas, the equinoctial round trip within 5.9e-15 of |r| (`NearParabolicBandTests.Issue478_*`,
+  red on a85098d; provisional thresholds, twice the Linux worst). The time of the band is Barker's, the motion the
+  library takes there (#459): at e − 1 = −5e-7 it differs from the conic's by 1.7e-5 s at ν = 1 rad.
 
 **Changed**
 

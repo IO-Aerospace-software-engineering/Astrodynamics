@@ -497,7 +497,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |
 | `IsHyperbolic()` | Check if orbit is hyperbolic (e > 1) |
 | `AtEpoch(Time epoch)` | Get elements at different epoch |
-| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. For 1 − 1e-6 < e < 1 the epoch is wrong (about 8 times off) and can be before `Epoch` |
+| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. Within 1e-6 of e = 1 the time is Barker's, the motion of the band (#478; before 11.0.0 about 8 times off, and possibly before `Epoch`) |
 | `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the center of motion (`TimeToRadius`); throws when it is infinite |
 
 ```csharp
