@@ -4575,6 +4575,42 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   too (a semi-major axis ≤ 0 with P > 0 needs e > 1, outside EQNCPV's e ≤ 0.9). Tests: `ElementsValidationTests.Issue481_*`
   (red on a85098d), `OrbitalParametersTests.EquinoctialWithANegativeSemiLatusRectum_IsRefused` (CLI). Migration: give P
   finite and above 0, or a parabola's non-finite P with its perigee radius.
+- **Breaking: within 1e-6 of e = 1 the semi-major axis, the mean motion and the state are the conic's** ([#459](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/459)).
+  `IsParabolic()` holds for |e − 1| < 1e-6, and the whole band was taken as a parabola whatever its energy:
+  `StateVector.SemiMajorAxis()` and `EquinoctialElements.SemiMajorAxis()` returned +Infinity where the conic has
+  −μ/(2ξ) (about 1.4e10 km at |e − 1| = 5e-7), `MeanMotion()` Barker's √(μ/(2q³)), 2e9 times the conic's √(μ/|a|³)
+  at ±5e-7, the state of elements in the band took p = 2q where the conic has q (1 + e), so that
+  `sv.ToKeplerianElements().ToStateVector()` and the equinoctial round trips moved a state by |r| |e − 1| / (1 + e)
+  (1.9 m at ±5e-7, 3.4 m at ±9e-7, 4.2e7 m near the apoapsis of an ellipse given at e = 0.999999, which comes back in
+  the band from its state about one time in four), and `KeplerianElements` refused a finite semi-major axis in the band
+  (measured on a85098d). Option 1 of the issue (decided by S. Guillet, 2026-11-17): `SemiMajorAxis()` is the conic's for
+  every e ≠ 1, +Infinity for e = 1 exactly (`StateVector`: −μ/(2ξ), +Infinity for ξ = 0 too, which rounding gives the state of
+  an exact parabola whose e is one ulp off 1; `EquinoctialElements`: P / (1 − F² − G²), +Infinity where it overflows, or
+  q / (1 − e) for a non-finite P given its perigee radius); `MeanMotion()` is √(μ/|a|³), Barker's only for an infinite semi-major
+  axis; the state of elements in the band takes the conic's p = q (1 + e), 2q at e = 1 bit for bit; and
+  `KeplerianElements` accepts in the band, with the perigee radius it requires, a = +Infinity or the conic's finite a
+  (e = 1 exactly keeps +Infinity; the message of its `ArgumentException` now says so and names `perigeeRadius`). The
+  motion of the band keeps Barker's anomaly, well conditioned there: `AtEpoch`, `ToKeplerianElements(Time)` and
+  `EpochAtMeanAnomaly` (so `ToStateVector(Time)`, `TimeToRadius`, the start of a propagation) advance it at Barker's
+  rate through a private method, the public `MeanMotion()` being the conic's. Outside the band every result is
+  unchanged, bit for bit; at e = 1 exactly too. Against 60-digit references (`tools/near_parabolic/near_parabolic_reference.py`): a and n
+  within 6.2e-16 and 9.3e-16 relative times |e − 1| (the cancellation of ξ, ε v²/(2|ξ|): 6e-10 at ±5e-7, 6e-4 at
+  ±1e-12), the round trips within 6.0e-16 of |r|, the state 600 s later within 6.1e-16 of the band model and 0.16 m of
+  the exact conic (1.8e-7 m at |e − 1| = 1e-12; 0.54 m from the periapsis at 5e-7), and the double edges of the band as
+  Keplerian elements (0.9999990000000001 and the double nearest 1.000001, both inside it, with their finite a, red on
+  a85098d) within 2.7e-16 (`NearParabolicBandTests.Issue459_*`, red on a85098d; provisional thresholds, twice the Linux
+  worst). The comment of the issue asked for the solvers of #467 to be measured inside the band before Barker's law is
+  kept for all of it: Kepler's equation for the conic, solved by `KeplerEquation` in doubles from the same states, is
+  0.5 to 4.6 mm from the exact motion at |e − 1| = 5e-7 to 9e-7, better than Barker's law there (0.09 to 0.16 m), and 3.0
+  to 4.3 km off at |e − 1| = 1e-12, where Barker's law is within 1.8e-7 m: neither holds over the whole band, so Barker's
+  law is kept as decided, and a motion that holds over it (universal variables, or a band narrowed to where Barker's
+  law is the better one) is left to its own issue. The tests of #477 that measured the 2q of the band now measure
+  rounding (3.6e-16 where 2.0e-7), and `TestHelpers.KeplerComparer` and `EquinoctialComparer` compare two orbits of the
+  band by their perigee radii, their semi-major axes being ill-conditioned there (`StateVectorTests.ToParabolicKeplerian`,
+  `KeplerianElementsTests.ParabolicToState`, `EquinoctialElementsTests.ParabolicToStateVector`: the state of an exact
+  parabola has a semi-major axis of about ±1e20 m, or +Infinity at a zero energy). Migration: code that read +Infinity from `SemiMajorAxis()` to recognize the band
+  calls `IsParabolic()`; code that took `MeanMotion()` as the rate of the mean anomaly in the band uses `AtEpoch` or
+  `EpochAtMeanAnomaly`; elements within 1e-6 of e = 1 given a finite a now build where they threw (with a perigee radius).
 
 **Deprecated**
 
@@ -4779,17 +4815,6 @@ not listed.
   `CdmParseException`. `CdmWriter` reads a `DateTime` of kind `Unspecified` as local time: build its dates with
   `DateTimeKind.Utc`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
   free-text or time-only dates (a time gets today's date) instead of rejecting them.
-- **Orbits within 1e-6 of e = 1**
-  ([#459](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/459),
-  [#462](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/462),
-  [#477](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/477),
-  [#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)). An orbit with |e − 1| < 1e-6
-  is taken as a parabola whatever its energy: `StateVector.SemiMajorAxis()` returns +Infinity, `MeanMotion()` and
-  `MeanAnomaly()` take Barker's forms, `ToStateVector()` takes p = 2q (metres off on a round trip), and
-  `ToEquinoctial()` gives P = NaN or ±Infinity. In 0 < |e − 1| < 1e-6 Kepler's equation is applied to Barker's anomaly,
-  so `ToStateVector(ν)`, `TimeToRadius` and the equinoctial round trips can be thousands of km or hundreds of seconds
-  off without an error. Parabolic `EquinoctialElements` with a finite P and no perigee radius throw from
-  `ToKeplerianElements()`, `AtEpoch` and a propagation: pass `perigeeRadius: P / (1 + e)`.
 - **Precision near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472),
   [#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
   `KeplerianElements.ToStateVector()` loses digits through p = a(1 − e²), 1 + e cos ν and e + cos ν: 1.1e-11 relative at

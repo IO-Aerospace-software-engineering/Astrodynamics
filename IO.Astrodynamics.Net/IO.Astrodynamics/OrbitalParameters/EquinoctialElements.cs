@@ -148,9 +148,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Calculates the semi-major axis.
+        /// Calculates the semi-major axis: P / (1 − F² − G²), +Infinity for e = 1 exactly.
         /// </summary>
         /// <returns>The semi-major axis.</returns>
+        /// <remarks>Within 1e-6 of e = 1 it is the conic's since 11.0.0 (#459; +Infinity before): P / (1 − F² − G²), or
+        /// q / (1 − e) for a non-finite P given its perigee radius q.</remarks>
         public override double SemiMajorAxis()
         {
             if (_semiMajorAxis.HasValue)
@@ -158,13 +160,20 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _semiMajorAxis.Value;
             }
 
-            if (IsParabolic())
+            if (Eccentricity() == 1.0)
             {
                 _semiMajorAxis = double.PositiveInfinity;
             }
+            else if (double.IsFinite(P))
+            {
+                // ±∞ when 1 − F² − G² rounds to a zero while e does not round to 1: the parabola's +Infinity
+                double a = P / (1 - F * F - G * G);
+                _semiMajorAxis = double.IsFinite(a) ? a : double.PositiveInfinity;
+            }
             else
             {
-                _semiMajorAxis = P / (1 - F * F - G * G);
+                // A non-finite P is accepted in the parabolic band only (#481): the conic of its perigee radius, when given
+                _semiMajorAxis = _perigeeRadius is { } q ? q / (1.0 - Eccentricity()) : double.PositiveInfinity;
             }
 
             return _semiMajorAxis.Value;

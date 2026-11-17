@@ -59,34 +59,34 @@ public class NearParabolicBandTests
     /// <summary>
     /// A state of the band, q = 7000 km, i = 30°, Ω = 40°, ω = 0, ν0 = 0.5 rad, built at 60 digits and rounded to doubles,
     /// with the references of its exact conic: e and q, ν0, Barker's time to ν = 1 rad, to the double radius at ν = 1 rad
-    /// and to 2e7 m (√(2q³/μ) ΔM, the band model), the conic's a = −μ/(2ξ) and n = √(μ/|a|³), and its exact two-body state
-    /// 600 s later.
+    /// and to 2e7 m (√(2q³/μ) ΔM, the band model), the conic's a = −μ/(2ξ) and n = √(μ/|a|³), its exact two-body state
+    /// 600 s later, and the position of the band model 600 s later (Barker's anomaly at Barker's rate, the conic's p).
     /// </summary>
     private sealed record BandState(double EccentricityMinusOne, double[] R, double[] V, double E, double Q, double Nu0Hi,
         double Nu0Lo, double TimeToNu1Hi, double TimeToNu1Lo, double RadiusAtNu1, double TimeToR1Hi, double TimeToR1Lo,
         double TimeTo2e7Hi, double TimeTo2e7Lo, double AHi, double ALo, double NHi, double NLo, double[] ConicR600,
-        double[] ConicV600);
+        double[] ConicV600, double[] BandModelR600);
 
     private static readonly BandState[] BandStates =
     {
         new(-9e-07, new[] { 3022712.978827644, 6577710.563477488, 1787393.3961055127 }, new[] { -7536.673624729877, 5002.081834552712, 5009.262649628231 }, 0.9999990999999998, 6999999.999999999, 0.5000000000000001, -7.90058854244684e-18,
             445.7214440077845, 2.3121511062130555e-14, 9089123.652188776, 445.7214440077845, 1.6552751579726227e-14, 2552.2585813216256, -2.7638394189592477e-14,
-            7777777775849.168, 0.00025715800022454055, 9.204190288298098e-13, 1.4232657918025233e-29, new[] { -1726868.3535889704, 8577588.819387313, 4434525.706828881 }, new[] { -7935.00818791347, 1951.116951134403, 3807.7215838147417 }),
+            7777777775849.168, 0.00025715800022454055, 9.204190288298098e-13, 1.4232657918025233e-29, new[] { -1726868.3535889704, 8577588.819387313, 4434525.706828881 }, new[] { -7935.00818791347, 1951.116951134403, 3807.7215838147417 }, new[] { -1726868.4936726545, 8577588.853832098, 4434525.774049941 }),
         new(-5e-07, new[] { 3022713.0182435443, 6577710.649250231, 1787393.4194129587 }, new[] { -7536.674059189769, 5002.082750299571, 5009.263215875031 }, 0.9999994999999999, 7000000.0, 0.4999999999999999, -1.3392355868807667e-17,
             445.7214440077847, 2.3353488701011568e-14, 9089124.194712382, 445.7214440077847, 1.0930319806456158e-15, 2552.257121899323, 1.443134678622322e-13,
-            13999999997605.965, 0.0007617428192711686, 3.811332437055924e-13, -1.4155614888313326e-29, new[] { -1726868.554456251, 8577589.523180204, 4434526.092644141 }, new[] { -7935.008576817969, 1951.1181435562714, 3807.7222555220237 }),
+            13999999997605.965, 0.0007617428192711686, 3.811332437055924e-13, -1.4155614888313326e-29, new[] { -1726868.554456251, 8577589.523180204, 4434526.092644141 }, new[] { -7935.008576817969, 1951.1181435562714, 3807.7222555220237 }, new[] { -1726868.6322805488, 8577589.542316213, 4434526.129989194 }),
         new(-1e-12, new[] { 3022713.0675132996, 6577710.7564659, 1787393.4485471956 }, new[] { -7536.67460226353, 5002.083894980668, 5009.263923682028 }, 0.999999999999, 7000000.0, 0.5000000000000001, 2.2893671923504517e-17,
             445.72144400778456, -3.772433353186757e-15, 9089124.872865317, 445.7214440077845, -1.3656728867605846e-14, 2552.2552976284355, 2.1579064317604538e-13,
-            7.000446983145129e+18, 438.2739591184537, 1.0779043587689419e-21, 5.797399423910541e-38, new[] { -1726868.8055398676, 8577590.402919369, 4434526.574912175 }, new[] { -7935.009062947617, 1951.1196340802992, 3807.7230951543015 }),
+            7.000446983145129e+18, 438.2739591184537, 1.0779043587689419e-21, 5.797399423910541e-38, new[] { -1726868.8055398676, 8577590.402919369, 4434526.574912175 }, new[] { -7935.009062947617, 1951.1196340802992, 3807.7230951543015 }, new[] { -1726868.8055400234, 8577590.402919406, 4434526.574912249 }),
         new(1e-12, new[] { 3022713.067513497, 6577710.756466328, 1787393.448547312 }, new[] { -7536.674602265703, 5002.083894985247, 5009.263923684859 }, 1.000000000001, 7000000.0, 0.4999999999999999, 6.698638793340091e-18,
             445.7214440077847, 1.8161489767963067e-14, 9089124.872868031, 445.7214440077849, 1.4634123457112462e-14, 2552.2552976211387, 1.7108613163523074e-13,
-            -6.999543461347844e+18, 121.10533646075723, 1.0781130741338164e-21, -4.27116638403931e-38, new[] { -1726868.805540872, 8577590.402922887, 4434526.574914103 }, new[] { -7935.009062949563, 1951.1196340862605, 3807.72309515766 }),
+            -6.999543461347844e+18, 121.10533646075723, 1.0781130741338164e-21, -4.27116638403931e-38, new[] { -1726868.805540872, 8577590.402922887, 4434526.574914103 }, new[] { -7935.009062949563, 1951.1196340862605, 3807.72309515766 }, new[] { -1726868.8055407163, 8577590.402922848, 4434526.574914029 }),
         new(5e-07, new[] { 3022713.1167832296, 6577710.863681947, 1787393.4776815353 }, new[] { -7536.675145339446, 5002.085039666136, 5009.264631491756 }, 1.0000005, 7000000.0, 0.49999999999999994, 6.5562118814838666e-18,
             445.7214440077847, -2.374936784225188e-16, 9089125.551020728, 445.72144400778467, 9.676300271325106e-15, 2552.2534733539655, 1.4221236428348514e-13,
-            -13999999997301.438, 0.00041118925915454923, 3.8113324371802805e-13, -6.131900396934986e-30, new[] { -1726869.05662451, 8577591.282661838, 4434527.057182049 }, new[] { -7935.009549079209, 1951.1211246099224, 3807.723934789774 }),
+            -13999999997301.438, 0.00041118925915454923, 3.8113324371802805e-13, -6.131900396934986e-30, new[] { -1726869.05662451, 8577591.282661838, 4434527.057182049 }, new[] { -7935.009549079209, 1951.1211246099224, 3807.723934789774 }, new[] { -1726868.9788001392, 8577591.263525784, 4434527.01983695 }),
         new(9e-07, new[] { 3022713.156199078, 6577710.949454577, 1787393.5009889507 }, new[] { -7536.675579799297, 5002.085955412529, 5009.265197738335 }, 1.0000009, 7000000.0, 0.4999999999999999, -7.234819915321706e-18,
             445.7214440077848, -8.11882090880411e-15, 9089126.0935438, 445.72144400778456, 1.8603449180690334e-14, 2552.2520139399826, 3.658378749392438e-14,
-            -7777777777532.525, 0.00023342897249723345, 9.20419028530998e-13, 8.82357147199345e-29, new[] { -1726869.2574918373, 8577591.986454254, 4434527.442997117 }, new[] { -7935.009937983703, 1951.122317030973, 3807.7246064966916 })
+            -7777777777532.525, 0.00023342897249723345, 9.20419028530998e-13, 8.82357147199345e-29, new[] { -1726869.2574918373, 8577591.986454254, 4434527.442997117 }, new[] { -7935.009937983703, 1951.122317030973, 3807.7246064966916 }, new[] { -1726869.1174079173, 8577591.952009322, 4434527.375775903 })
     };
 
     public static TheoryData<int> BandStateIndices => new() { 0, 1, 2, 3, 4, 5 };
@@ -326,6 +326,178 @@ public class NearParabolicBandTests
 
     #endregion
 
+    #region #459: the conic's semi-major axis and mean motion, Barker's motion
+
+    // The periapsis states of #462 with their conic: a = −μ/(2ξ) and n = √(μ/|a|³) at 60 digits (hi, lo), and the exact
+    // two-body position 600 s later
+    private static readonly (double Vy, double EccentricityMinusOne, double AHi, double ALo, double NHi, double NLo, double[] ConicR600)[]
+        PeriapsisConics =
+    {
+        (10671.729487052813, -5.0e-7, 13999999998506.668, 0.00011686965500757134, 3.811332436688116e-13, -2.4544534186066316e-29,
+            [5701340.518665373, 6030128.912406198, 0.0]),
+        (10671.7308, -7.87848e-9, 888496454486998.6, 0.05359163239942072, 7.538506884282065e-16, -4.441791851760456e-32,
+            [5701340.566816242, 6030129.680142079, 0.0]),
+        (10671.732154985518, 5.0e-7, -13999999997212.982, -0.0007535038149700652, 3.811332437216401e-13, 2.282128073184565e-29,
+            [5701340.61650882, 6030130.472459559, 0.0]),
+    };
+
+    public static TheoryData<int> PeriapsisConicIndices => new() { 0, 1, 2 };
+
+    [Theory]
+    [MemberData(nameof(BandStateIndices))]
+    public void Issue459_StatesOfTheBand_HaveTheConicsSemiMajorAxisAndMeanMotion(int index)
+    {
+        var c = BandStates[index];
+        AssertConic(BandStateVector(index), c.EccentricityMinusOne.ToString("R"), System.Math.Abs(c.EccentricityMinusOne), c.AHi,
+            c.ALo, c.NHi, c.NLo);
+    }
+
+    [Theory]
+    [MemberData(nameof(PeriapsisConicIndices))]
+    public void Issue459_PeriapsisStatesOfTheBand_HaveTheConicsSemiMajorAxisAndMeanMotion(int index)
+    {
+        var c = PeriapsisConics[index];
+        AssertConic(State([7000000.0, 0.0, 0.0], [0.0, c.Vy, 0.0]), $"periapsis vy = {c.Vy:R}",
+            System.Math.Abs(c.EccentricityMinusOne), c.AHi, c.ALo, c.NHi, c.NLo);
+    }
+
+    private void AssertConic(StateVector sv, string name, double distanceToOne, double aHi, double aLo, double nHi, double nLo)
+    {
+        // Act
+        Assert.True(sv.IsParabolic());
+        double a = sv.SemiMajorAxis();
+        double n = sv.MeanMotion();
+
+        // Assert: −μ/(2ξ) and √(μ/|a|³), the conic of every e ≠ 1 (before: +Infinity and Barker's √(μ/(2q³)), 2e9 times n
+        // at e − 1 = ±5e-7)
+        double aError = (a - aHi - aLo) / aHi;
+        double nError = (n - nHi - nLo) / nHi;
+        Measure($"#459 {name}: a relative error", aError);
+        Measure($"#459 {name}: n relative error", nError);
+        // The specific energy ξ = v²/2 − μ/r cancels near e = 1: its rounding is about ε v²/(2|ξ|) ∝ ε / |e − 1| relative,
+        // 6e-10 at |e − 1| = 5e-7 and 6e-4 at 1e-12, so the errors are bounded scaled by |e − 1|. Measured at most 6.2e-16
+        // for a and 9.3e-16 for n, times |e − 1|, on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        Measure($"#459 {name}: a relative error × |e − 1|", aError * distanceToOne);
+        Measure($"#459 {name}: n relative error × |e − 1|", nError * distanceToOne);
+        Assert.InRange(aError * distanceToOne, -1.3e-15, 1.3e-15);
+        Assert.InRange(nError * distanceToOne, -1.9e-15, 1.9e-15);
+    }
+
+    [Theory]
+    [MemberData(nameof(BandStateIndices))]
+    public void Issue459_RoundTripsOfTheBand_ReturnTheState(int index)
+    {
+        // Arrange
+        var sv = BandStateVector(index);
+        var c = BandStates[index];
+
+        // Act: the paths through the Keplerian elements, which took p = 2q in the band
+        var paths = new (string Name, StateVector State)[]
+        {
+            ("ToKeplerianElements().ToStateVector()", sv.ToKeplerianElements().ToStateVector()),
+            ("ToEquinoctial().ToKeplerianElements().ToStateVector()", sv.ToEquinoctial().ToKeplerianElements().ToStateVector()),
+            ("AtEpoch(epoch).ToStateVector()", sv.AtEpoch(Epoch).ToStateVector()),
+            ("ToEquinoctial().ToStateVector(epoch + 0)", sv.ToEquinoctial().ToStateVector(Epoch)),
+        };
+
+        // Assert: the state, to rounding (before: |r| |e − 1| / (1 + e), 1.9 m at ±5e-7 and 3.4 m at ±9e-7)
+        foreach (var (name, state) in paths)
+        {
+            double error = Distance(state.Position, sv.Position) / sv.Position.Magnitude();
+            Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} {name}: |Δr| / |r|", error);
+            // Measured at most 6.0e-16 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            Assert.InRange(error, 0.0, 1.2e-15);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(BandStateIndices))]
+    public void Issue459_TheMotionOfTheBand_IsBarkersAnomalyOnTheConic(int index)
+    {
+        // Arrange
+        var sv = BandStateVector(index);
+        var c = BandStates[index];
+
+        // Act: 600 s of TT later
+        var later = sv.ToStateVector(Epoch.AddSeconds(600.0));
+
+        // Assert: the band model at 60 digits, Barker's anomaly at Barker's rate on the conic of p = q (1 + e), to rounding;
+        // and its distance to the exact conic, the model error of the band (the issue's comment, item 3 (c))
+        var model = new Vector3(c.BandModelR600[0], c.BandModelR600[1], c.BandModelR600[2]);
+        var conic = new Vector3(c.ConicR600[0], c.ConicR600[1], c.ConicR600[2]);
+        double modelError = Distance(later.Position, model) / model.Magnitude();
+        double conicError = Distance(later.Position, conic);
+        Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} +600 s: |Δr| / |r| to the band model", modelError);
+        Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} +600 s: |Δr| to the exact conic (m)", conicError);
+        // Measured at most 6.1e-16 to the band model and 0.16 m to the conic on Linux (1.8e-7 m at |e − 1| = 1e-12;
+        // before: 2.0 to 5.1 m, p = 2q); provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        Assert.InRange(modelError, 0.0, 1.3e-15);
+        Assert.InRange(conicError, 0.0, 0.32);
+    }
+
+    [Theory]
+    [MemberData(nameof(PeriapsisConicIndices))]
+    public void Issue459_TheMotionFromThePeriapsis_IsNearTheConic(int index)
+    {
+        var c = PeriapsisConics[index];
+        var sv = State([7000000.0, 0.0, 0.0], [0.0, c.Vy, 0.0]);
+        double error = Distance(sv.ToStateVector(Epoch.AddSeconds(600.0)).Position,
+            new Vector3(c.ConicR600[0], c.ConicR600[1], c.ConicR600[2]));
+        Measure($"#459 periapsis vy = {c.Vy:R} +600 s: |Δr| to the exact conic (m)", error);
+        // The model error of the band, 0.54 m at |e − 1| = 5e-7 from the periapsis (the reference script), 8.6e-3 m at
+        // 7.9e-9: measured at most 0.55 m on Linux (before: 2.3 m, p = 2q); provisional, twice, until the Windows x64 and
+        // macOS arm64 CI logs
+        Assert.InRange(error, 0.0, 1.1);
+    }
+
+    [Theory]
+    [InlineData(0.999999, 6999999999798.71, null, false, new[] { -1243914014995.374, -3939707795523.814, -2409833141200.765 })]
+    [InlineData(0.9999990000000001, 7000000000575.866, 7000000.0, true, new[] { -2084400.6272309453, 5446055.565423589, 4867313.5769885015 })]
+    [InlineData(1.000001, -7000000000575.866, 7000000.0, true, new[] { -2084400.804620014, 5446056.028900098, 4867313.991212241 })]
+    public void Issue459_TheEdgesOfTheBand_AsKeplerianElements(double e, double a, double? q, bool inBand, double[] r)
+    {
+        // Arrange: q = 7000 km, a = q / (1 − e) in doubles, i = 0.7, Ω = 0.5, ω = 0.9, M = 0.3. In doubles the band starts at
+        // the double after 0.999999, which is outside it, and the double nearest 1.000001 is inside it
+        Assert.Equal(System.Math.Abs(e - 1.0) < 1e-6, inBand);
+
+        // Act: a finite a with the perigee radius in the band (before: ArgumentException, a = +Infinity required)
+        var ke = new KeplerianElements(a, e, 0.7, 0.5, 0.9, 0.3, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+        var state = ke.ToStateVector();
+
+        // Assert: the state of the elements at 60 digits: Kepler's elliptic equation outside the band, Barker's anomaly and
+        // the conic's p = q (1 + e) inside it
+        Assert.Equal(inBand, ke.IsParabolic());
+        Assert.Equal(a, ke.SemiMajorAxis());
+        double error = Distance(state.Position, new Vector3(r[0], r[1], r[2])) / new Vector3(r[0], r[1], r[2]).Magnitude();
+        Measure($"#459 edge e = {e:R}: |Δr| / |r|", error);
+        // Measured on Linux 1.7e-12 at e = 0.999999, outside the band, near the apoapsis (#472: the cancellations of
+        // p = a(1 − e²) and 1 + e cos ν, its own issue), and at most 2.7e-16 inside; provisional, twice, until the Windows
+        // x64 and macOS arm64 CI logs
+        Assert.InRange(error, 0.0, inBand ? 5.3e-16 : 3.3e-12);
+
+        // In the band the perigee radius is still required
+        if (inBand)
+        {
+            Assert.Throws<ArgumentException>(() => new KeplerianElements(a, e, 0.7, 0.5, 0.9, 0.3, _earth, Epoch, Frames.Frame.ICRF));
+        }
+    }
+
+    [Fact]
+    public void Issue459_AParabola_KeepsItsInfiniteSemiMajorAxisAndBarkersMeanMotion()
+    {
+        // e = 1 exactly: a = +Infinity, n = √(μ/(2q³)), as before, bit for bit
+        var ke = new KeplerianElements(double.PositiveInfinity, 1.0, 0.2, 0.3, 0.4, 0.5, _earth, Epoch, Frames.Frame.ICRF,
+            perigeeRadius: 6800000.0);
+        Assert.True(double.IsPositiveInfinity(ke.SemiMajorAxis()));
+        Assert.Equal(System.Math.Sqrt(IO.Astrodynamics.Constants.G * _earth.Mass / (2.0 * System.Math.Pow(6800000.0, 3))), ke.MeanMotion());
+
+        // A finite a at e = 1 exactly has no meaning: refused
+        Assert.Throws<ArgumentException>(() => new KeplerianElements(7e12, 1.0, 0.2, 0.3, 0.4, 0.5, _earth, Epoch,
+            Frames.Frame.ICRF, perigeeRadius: 6800000.0));
+    }
+
+    #endregion
+
     #region #477: parabolic equinoctial elements without a perigee radius
 
     // Case 1 of the issue (the input of #469, section 9 (b)): e = 1, q = P / 2 = 7000 km
@@ -489,10 +661,10 @@ public class NearParabolicBandTests
         double atEpochError = RelativeDistance(atEpoch, r);
         Measure($"#477 band row e − 1 = {f - 1.0:E1}: direct |Δr| / |r|", directError);
         Measure($"#477 band row e − 1 = {f - 1.0:E1}: AtEpoch(t0) |Δr| / |r|", atEpochError);
-        // Measured on Linux 2.3e-16 and 2.0e-7 (the semi-latus rectum 2q of the Keplerian state in the band, |e − 1| /
-        // (1 + e), until #459); provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // Measured on Linux 2.3e-16 and 3.6e-16 (2.0e-7 before #459, the semi-latus rectum 2q of the Keplerian state in
+        // the band, |e − 1| / (1 + e)); provisional, twice, until the Windows x64 and macOS arm64 CI logs
         Assert.InRange(directError, 0.0, 4.6e-16);
-        Assert.InRange(atEpochError, 0.0, 4.0e-7);
+        Assert.InRange(atEpochError, 0.0, 7.2e-16);
     }
 
     #endregion

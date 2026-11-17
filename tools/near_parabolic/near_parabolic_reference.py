@@ -299,6 +299,7 @@ for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
     nu_r1 = mp.acos((c.p / r1 - 1) / c.e)
     nu2 = mp.acos((c.p / 2e7 - 1) / c.e)
     after = doubles(c.conic_after(600))
+    model = doubles(c.barker_after(600))
 
     def d(x):
         return repr(float(x))
@@ -309,4 +310,4 @@ for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
 
     print(f'        new({de!r}, {vec(state[0])}, {vec(state[1])}, {d(c.e)}, {d(c.q)}, {dd(c.nu)},')
     print(f'            {dd(c.barker_time_to_nu(mp.mpf(1)))}, {r1!r}, {dd(c.barker_time_to_nu(nu_r1))}, {dd(c.barker_time_to_nu(nu2))},')
-    print(f'            {dd(c.a)}, {dd(c.n)}, {vec(after[0])}, {vec(after[1])}),')
+    print(f'            {dd(c.a)}, {dd(c.n)}, {vec(after[0])}, {vec(after[1])}, {vec(model[0])}),')

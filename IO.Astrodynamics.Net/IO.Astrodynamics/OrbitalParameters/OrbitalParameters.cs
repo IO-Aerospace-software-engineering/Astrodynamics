@@ -553,12 +553,18 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Get orbital period
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The period of an ellipse, 2π √(a³/μ), truncated to the tick of <see cref="TimeSpan"/>.</returns>
+    /// <exception cref="InvalidOperationException">The semi-major axis is not finite and above 0: a parabola (+Infinity) or
+    /// a hyperbola (a &lt; 0) has no period (#663; before 11.0.0, the NaN <see cref="ArgumentException"/> or the
+    /// <see cref="OverflowException"/> of <see cref="TimeSpan"/>).</exception>
+    /// <exception cref="OverflowException">The period of an ellipse exceeds <see cref="TimeSpan.MaxValue"/>, 29 227 years:
+    /// a within 1e-6 of e = 1, for instance (#455).</exception>
     public TimeSpan Period()
     {
         if (!_period.HasValue)
         {
             double a = SemiMajorAxis();
+
             double T = Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM);
             _period = TimeSpan.FromSeconds(T);
         }
@@ -569,7 +575,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Get orbital mean motion
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The mean motion of the conic, √(μ/|a|³), rad/s; for a parabola, whose semi-major axis is +Infinity,
+    /// Barker's √(μ/(2q³)), q the perigee radius (#368).</returns>
+    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the conic of a finite semi-major axis has its own mean
+    /// motion, √(μ/|a|³), which this returns since 11.0.0 (#459, option 1, decided by S. Guillet, 2026-11-17; before,
+    /// Barker's, 2e9 times larger at |e − 1| = 5e-7). The two-body motion of the band (<see cref="AtEpoch"/>,
+    /// <see cref="EpochAtMeanAnomaly"/>, <see cref="TimeToRadius"/>) still advances Barker's anomaly at Barker's
+    /// rate.</remarks>
     public double MeanMotion(double orbitingBodyMass = 0.0)
     {
         if (_meanMotion.HasValue)
@@ -583,8 +595,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
         else if (IsParabolic())
         {
-            // So that Barker's D + D³/3 = n (t - T): t - T = √(2q³/μ) (D + D³/3), with q the periapsis radius (#368)
-            _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
+            double a = SemiMajorAxis();
+
+            // A parabola: so that Barker's D + D³/3 = n (t - T), t - T = √(2q³/μ) (D + D³/3), q the periapsis radius
+            // (#368). The conic of a finite a in the band, either side of e = 1: √(μ/|a|³) (#459)
+            _meanMotion = double.IsPositiveInfinity(a)
+                ? BarkerMeanMotion(orbitingBodyMass)
+                : System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(System.Math.Abs(a), 3));
         }
         else
         {
@@ -593,6 +610,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         return _meanMotion.Value;
     }
+
+    /// <summary>
+    /// Barker's mean motion √(μ/(2q³)), q the perigee radius: the rate of Barker's mean anomaly D + D³/3 (#368).
+    /// </summary>
+    private double BarkerMeanMotion(double orbitingBodyMass = 0.0) =>
+        System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
+
+    /// <summary>
+    /// The rate of <see cref="MeanAnomaly()"/> in the two-body motion: Barker's √(μ/(2q³)) within 1e-6 of e = 1, where the
+    /// mean anomaly is Barker's on both sides of e = 1 (#459, option 1: Barker's anomaly kept for the motion, well
+    /// conditioned there), <see cref="MeanMotion"/> elsewhere, cached mean motion of mean elements included.
+    /// </summary>
+    private double MeanAnomalyRate() => IsParabolic() ? BarkerMeanMotion() : MeanMotion();
 
 
     /// <summary>
@@ -613,11 +643,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         if (_stateVector is null)
         {
             var e = Eccentricity();
-            var p = SemiMajorAxis() * (1 - e * e);
-            if (IsParabolic())
-            {
-                p = 2 * PerigeeRadius();
-            }
+
+            // In the band |e − 1| < 1e-6 the conic's p = q (1 + e), 2q at e = 1 (#459; before, 2q on both sides, which put
+            // the periapsis up to 5e-7 of q away and moved a round trip by |r| |e − 1| / (1 + e), metres to 4.2e7 m)
+            var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
 
             var v = TrueAnomaly();
             var r0 = p / (1 + e * System.Math.Cos(v));
@@ -727,7 +756,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             res = SpecialFunctions.NormalizeAngle(res);
         }
 
-        return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch, res / MeanMotion());
+        return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch, res / MeanAnomalyRate());
     }
 
     /// <summary>
@@ -867,7 +896,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         var ke = this.ToKeplerianElements();
         double elapsed = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanMotion();
+        var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanAnomalyRate();
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
@@ -971,7 +1000,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     public KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        double m = MeanAnomaly() + MeanMotion() * ellapsedTime;
+        double m = MeanAnomaly() + MeanAnomalyRate() * ellapsedTime;
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,

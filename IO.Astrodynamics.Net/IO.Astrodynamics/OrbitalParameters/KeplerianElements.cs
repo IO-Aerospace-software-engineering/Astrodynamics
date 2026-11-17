@@ -62,9 +62,9 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="eccentricity"/> is not finite or is negative (#476),
         /// or <paramref name="perigeeRadius"/> is given and not finite and above 0 (#726).</exception>
         /// <exception cref="ArgumentException">An element is not finite (#726): <paramref name="semiMajorAxis"/> may be
-        /// +Infinity only for a parabola (|e − 1| &lt; 1e-6) given its perigee radius; or a parabola has no perigee radius or
-        /// a finite semi-major axis; or <paramref name="inclination"/> is outside [−π, π]. The exception names the
-        /// parameter.</exception>
+        /// +Infinity only within 1e-6 of e = 1 given the perigee radius; or an orbit within 1e-6 of e = 1 has no perigee
+        /// radius, or e = 1 exactly with a finite semi-major axis (a finite a with |e − 1| &lt; 1e-6 is the conic's, #459);
+        /// or <paramref name="inclination"/> is outside [−π, π]. The exception names the parameter.</exception>
         public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
             ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null,
             OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer, epoch, frame, elementsType)
@@ -95,9 +95,14 @@ namespace IO.Astrodynamics.OrbitalParameters
                 throw new ArgumentOutOfRangeException(nameof(perigeeRadius), q, "The perigee radius must be finite and above 0.");
             }
 
-            if (parabolic && (perigeeRadius is null || !double.IsPositiveInfinity(semiMajorAxis)))
+            // Within 1e-6 of e = 1 the anomalies are Barker's, read from the perigee radius: it is required, with a = +Infinity
+            // for a parabola or the conic's finite a, either side of e = 1 (#459; before, +Infinity only); e = 1 exactly has
+            // no finite a
+            if (parabolic && (perigeeRadius is null || (eccentricity == 1.0 && !double.IsPositiveInfinity(semiMajorAxis))))
             {
-                throw new ArgumentException("To build a parabolic orbit you must set perigee radius and define semi major axis as positive infinity");
+                throw new ArgumentException(
+                    "Within 1e-6 of e = 1 the perigee radius is required, with the semi-major axis +Infinity for a parabola " +
+                    "(e = 1) or the finite semi-major axis of the conic.", nameof(perigeeRadius));
             }
 
             A = semiMajorAxis;

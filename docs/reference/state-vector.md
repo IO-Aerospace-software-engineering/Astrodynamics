@@ -63,7 +63,7 @@ conjunction analysis; see
 
 | Method | Description |
 |--------|-------------|
-| `SemiMajorAxis()` | Semi-major axis (m) |
+| `SemiMajorAxis()` | Semi-major axis (m), −μ/(2ξ): the conic's within 1e-6 of e = 1 too, +Infinity for e = 1 exactly or a zero energy (#459; [the near-parabolic band](keplerian-elements.md#the-near-parabolic-band)) |
 | `Eccentricity()` | Eccentricity |
 | `Inclination()` | Inclination (rad) |
 | `AscendingNode()` | RAAN (rad) |
@@ -72,7 +72,7 @@ conjunction analysis; see
 | `MeanAnomaly()` | Mean anomaly (rad) |
 | `EccentricAnomaly()` | Eccentric anomaly (rad) |
 | `Period()` | Orbital period |
-| `MeanMotion()` | Mean motion (rad/s) |
+| `MeanMotion()` | Mean motion (rad/s), √(μ/\|a\|³); Barker's √(μ/(2q³)) for a parabola (#459) |
 | `SpecificOrbitalEnergy()` | Vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Angular momentum vector |
 | `EccentricityVector()` | Eccentricity vector |
