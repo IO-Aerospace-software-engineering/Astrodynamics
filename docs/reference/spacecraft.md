@@ -184,7 +184,15 @@ across the jump:
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
   so that at an impulse it gives the state after it, as `PropagationSolution.InterpolateAt`, SPICE (the later segment of
   an SPK) and GMAT's ephemeris give it. It interpolates the 8 states of that arc nearest to its epoch (Lagrange), in the
-  order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. The arcs
+  order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. A read
+  stays within the stored states: an epoch before the first or after the last throws `InvalidOperationException`, as a
+  read past the coverage of SPICE, where the 8-point polynomial was extrapolated without an error before 11.0.0 (567 km
+  off 6 min before the first state, 8 282 km 6 min after the last in LEO;
+  [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+  2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light time, may lie up to
+  that light time outside them, the observation epoch itself within them; so the managed geometry searches over a window
+  that leaves the states throw too. A TLE spacecraft sampled by `TLEPropagator` reads SGP4 outside its samples, from the
+  Earth as from any other body (its short-circuit extrapolated them before). The arcs
   are immutable arrays read by a binary search: a read takes no lock and sorts nothing, 0.001 to 0.003 ms at 7 000 to
   9 000 states, where the sort of every state at each call took 1.6 to 2.2 ms
   ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522); 2 000 reads in one process,

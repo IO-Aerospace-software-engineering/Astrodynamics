@@ -801,7 +801,26 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Computes the geometric state relative to a reference body.
         /// Uses cached propagation states with Lagrange interpolation, chaining via SPICE if needed.
         /// </summary>
+        /// <remarks>
+        /// A spacecraft that holds propagated states (<see cref="InterpolatedStatesWindow"/>) is read within them only: an
+        /// epoch before the first or after the last throws, where the 8-point polynomial was extrapolated before 11.0.0
+        /// without an error, 567 km off 6 min before the first state and 8 282 km 6 min after the last in LEO (#527, decided
+        /// by S. Guillet, 2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light
+        /// time, may lie up to that light time outside them (see <see cref="CelestialItem.GetEphemeris"/>), the observation
+        /// epoch itself being read within them.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The spacecraft holds propagated states and <paramref name="epoch"/>
+        /// lies outside them, as a read past the coverage of SPICE.</exception>
         public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+        {
+            return GetGeometricStateRelativeTo(epoch, referenceBody, 0.0);
+        }
+
+        /// <summary>
+        /// The geometric state relative to <paramref name="referenceBody"/>, the propagated states read up to
+        /// <paramref name="margin"/> seconds outside them: the light time of a corrected read (#527).
+        /// </summary>
+        internal StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody, double margin)
         {
             // Kernel-backed: delegate to base which uses SPICE directly
             if (_isFromKernel)
@@ -819,7 +838,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Interpolate the arc of the epoch (#540)
+            // Interpolate the arc of the epoch (#540), within the propagated states (#527)
+            CheckInsidePropagatedStates(epoch, margin);
             var cb = (CelestialItem)_propagatedStates.First.Observer;
             var interpolated = _propagatedStates.Interpolate(epoch);
 
@@ -867,9 +887,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 ? (CelestialItem)_propagatedStates.First.Observer
                 : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
 
-            // Short-circuit: observer IS the CB, no aberration, have cached states
+            // Short-circuit: observer IS the CB, no aberration, have cached states, the epoch within them (#527: outside,
+            // the reference-body path throws for propagated states, and a TLE spacecraft sampled by TLEPropagator reads SGP4)
             if (aberration == Aberration.None && _propagatedStates.Count >= 2
-                                              && cb.NaifId == observer.NaifId && cb.NaifId != 0)
+                                              && cb.NaifId == observer.NaifId && cb.NaifId != 0
+                                              && IsInside(_propagatedStates.Span, epoch, 0.0))
             {
                 return _propagatedStates.Interpolate(epoch).ToFrame(frame);
             }
@@ -955,6 +977,29 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 }
 
                 return _propagatedStates.Span;
+            }
+        }
+
+        // Whether an epoch lies within a span of stored states, widened by margin seconds on each side and by one tick, the
+        // resolution of a Time a corrected epoch is rounded to
+        private static bool IsInside(Window? span, in Time epoch, double margin)
+        {
+            if (span is not { } window) return false;
+            long slack = (long)System.Math.Ceiling(margin * TimeSpan.TicksPerSecond) + (margin > 0.0 ? 1 : 0);
+            var t = epoch.ToTDB();
+            return (t - window.StartDate.ToTDB()).Ticks >= -slack && (window.EndDate.ToTDB() - t).Ticks >= -slack;
+        }
+
+        // Throws for an epoch outside the propagated states the spacecraft interpolates, widened by margin seconds (#527)
+        private void CheckInsidePropagatedStates(in Time epoch, double margin)
+        {
+            var span = _propagatedStates.Span;
+            if (!IsInside(span, epoch, margin))
+            {
+                throw new InvalidOperationException(
+                    $"The epoch {epoch.ToTDB()} lies outside the propagated states of {Name}, [{span?.StartDate.ToTDB()}, {span?.EndDate.ToTDB()}]" +
+                    (margin > 0.0 ? $" widened by the light time, {margin:R} s" : "") +
+                    ": they would be extrapolated. Read the spacecraft within its propagation window, or propagate it over the epochs read.");
             }
         }
 

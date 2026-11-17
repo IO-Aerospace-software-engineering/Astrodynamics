@@ -705,7 +705,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             double shift = sign * lightTime;
             var corrected = ApparentPositionReader.Shift(epoch, shift);
             double residual = (epochSeconds + shift) - corrected.ToTDB().TimeSpanFromJ2000().TotalSeconds;
-            var targetState = target.GetGeometricStateRelativeTo(corrected, referenceBody);
+            // A propagated spacecraft is read up to the light time outside its stored states (#527)
+            var targetState = target is Spacecraft.Spacecraft spacecraft
+                ? spacecraft.GetGeometricStateRelativeTo(corrected, referenceBody, System.Math.Abs(shift))
+                : target.GetGeometricStateRelativeTo(corrected, referenceBody);
             targetVelocity = targetState.Velocity;
             position = targetState.Position + targetState.Velocity * residual - observerCB.Position;
             if (!inertialReference)

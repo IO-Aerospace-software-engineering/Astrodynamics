@@ -678,7 +678,8 @@ public class AttitudeRecordTests
     /// <summary>
     /// Reads before the propagation (an instrument's field of view before the start, which throws without an attitude since
     /// #682, an orientation 100 s in), during it (on
-    /// another thread) and after it (every output and 3.3 s after it, past the end, a managed field-of-view search) leave the
+    /// another thread) and after it (every output and 3.3 s after it, a managed field-of-view search, and the reads 10 s
+    /// before the start and 3.3 s past the end, which throw since #527) leave the
     /// attitude record and the CK of a twin without reads (#523): on the base, the CK could not be written (ICRF,
     /// SPICE(TIMESOUTOFORDER)) or aborted the process (ECLIPJ2000).
     /// </summary>
@@ -720,11 +721,14 @@ public class AttitudeRecordTests
             {
                 var start = sc.InitialOrbitalParameters.Epoch;
                 var instrument = sc.Instruments.First();
-                instrument.IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None);
+                // Outside the propagated states the reads throw (#527: they extrapolated the states before 11.0.0), and
+                // leave the record as the others do
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(Length + 3.3), earth, Aberration.None));
                 for (int k = 0; k <= 360; k++)
                 {
                     instrument.IsInFOV(start.AddSeconds(k * 10.0), earth, Aberration.None);
-                    instrument.IsInFOV(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
+                    if (k < 360) instrument.IsInFOV(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
                 }
 
                 instrument.GetBoresightInICRFFrame(start.AddSeconds(Length + 100.0));

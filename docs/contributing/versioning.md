@@ -3246,6 +3246,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`PropagatedArcsEdgeTests.TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth`, 1 and 1.5 µs apart, red on
   a85098d; 3 µs apart, two arcs, the control; `PropagatedEphemerisTests.ImpulsesWithin2Microseconds_AreOneEpoch`, 0.1 to
   2 µs, red on a85098d, 2.1 and 3 µs the control).
+- **A propagated spacecraft was read outside its propagated states without an error**
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)).
+  `Spacecraft.GetGeometricStateRelativeTo` and the short-circuit of `GetEphemeris` extrapolated the 8-point polynomial of
+  the stored states at any epoch (567 km off 6 min before the first state, 8 282 km 6 min after the last on a LEO), and
+  every read through them did the same: `GetEphemeris` from any body, the managed distance and coordinate searches, the
+  attitude targets. They now throw (see **Changed**); the epoch a light-time correction reads may lie up to its light
+  time outside the states, against the same correction written in the test on the two-body motion of the end state
+  3.3e-5 m in RK7(8) and 2.2e-3 m in Velocity-Verlet 1.3 s outside them (`PropagatedStatesSpanTests`; the reads one tick
+  and 6 min outside the states red on a85098d, both integrators, from ICRF and ECLIPJ2000). A TLE spacecraft sampled by
+  `TLEPropagator` read from the Earth outside its samples extrapolated them (20.7 m 6 min before the first, 6.3 m 6 min
+  after the last on the ISS): it reads SGP4 there, as from any other body (0 m against SGP4, red on a85098d).
 
 **Changed**
 
@@ -4526,6 +4537,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   changes nothing. Migration: a caller that propagated one spacecraft several times through the builder to continue a
   chain (the second run started from the fuel and the standby maneuver the first left) propagates once over the whole
   window, or sets the next head with `SetStandbyManeuver` and the state with `SetInitialOrbitalParameters`.
+- **Breaking: a propagated spacecraft is read within its propagated states**
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+  2026-11-17). `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and every read through them (the managed
+  geometry and field-of-view searches, `IsInFOV`, the attitude targets) throw `InvalidOperationException`, as a
+  read past the coverage of SPICE, at an epoch before the first stored state or after the last, the epoch a light-time
+  correction reads allowed up to its light time outside them. The window checks of the conjunction overloads and of the
+  field-of-view search (`ArgumentException`, #622) are unchanged. Migration: read a propagated spacecraft within its
+  propagation window, or propagate it over the epochs read. The stored states run from the first output to the last,
+  round(L/ΔT)·ΔT after the start for a window of length L at outputs ΔT: when ΔT does not divide L, up to ΔT/2 before or
+  after the end of the window, so a read at the end of such a window throws when the last output falls before it (a
+  3 610 s window at 60 s outputs stores its states to 3 600 s); read the solution there, or choose an output step that
+  divides the window.
 
 **Deprecated**
 
@@ -4640,16 +4663,11 @@ not listed.
   `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as
   `SpiceDataProvider` for an identifier SPICE does not name
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680); `KeyNotFoundException` before).
-- **Reads past the stored states of a propagated spacecraft**
-  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527),
-  [#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)).
-  `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and the managed distance and coordinate searches extrapolate
-  the 8-point polynomial past the stored states without an error (567 km off 6 min before the first state, 8 282 km 6
-  min after the last). A propagation whose output step does not divide its window runs up to half a step past its end,
+- **Reads past the end of a propagation window**
+  ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)). A propagation whose output step does not divide its window runs up to half a step past its end,
   where its orientation cache, which ends 120 s after the window, holds the Earth's orientation at its last grid point,
   and its ephemeris cache, which ends 240 s after it, extrapolates the third bodies; a geopotential or drag read there
-  past the coverage throws. Keep reads
-  inside the propagated window, and choose an output step that divides it, or one of 240 s or less.
+  past the coverage throws. Choose an output step that divides the window, or one of 240 s or less.
 - **Impulses at the edges of the stored states**
   ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572),
   [#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575),
