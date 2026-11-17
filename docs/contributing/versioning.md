@@ -3209,6 +3209,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
 
+- **`Constants.Parsec2Meters` was truncated** ([#733](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/733)).
+  It was 3.085677581e16 m, 1.592e-10 relative below the parsec, 648000/π au exactly (IAU 2015 Resolution B2) with the
+  au of 149597870700 m (IAU 2012 Resolution B2), 30856775814913672.789 m. It is now 3.0856775814913673e16, the nearest
+  double, 30856775814913672 m (decided by S. Guillet, 2026-11-17): the quotient at 40 digits (mpmath) and in decimal (28
+  digits), each read back by `double.Parse` (`StarTests.Parsec2Meters_Is648000OverPiAstronomicalUnits`, red on a85098d).
+  It sets a star's distance from its parallax: every `Star.Distance`, and every position of a star from the solar system
+  barycenter, grows by 1.592e-10 relative (a parallax of 0.3792″: 8.13733539293249e16 m before, 8.13733539422829e16 m
+  now, within 3 roundings of the exact quotient, `StarTests.Create`, which held the old snapshot), its direction from
+  the barycenter unchanged bit for bit; from an observer at r_obs the direction moves by at most |r_obs|/r · 1.6e-10
+  (6e-16 rad for a star at 1.3 pc seen from 1 au). The tests of the straight line of #718 measure against the star's own
+  `Distance` and do not move. The reference of `StarOccultationTests`
+  (`tools/occultation_reference/star_occultation_reference.py`, spiceypy 8.4.0, CSPICE N0067) takes the new parsec: its
+  parallaxes, declinations and directions move in their last digit, its edges not at all; the test's literals are
+  regenerated, its worst edge 2.38 µs and direction 1.19e-16 rad on Linux x64, within the thresholds of 4.8e-6 s and
+  4.4e-16 rad.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -3269,6 +3285,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   thresholds of 4.8e-6 s and 4.4e-16 rad. Migration: a caller that passed dα/dt passes `RightAscensionProperMotion` ×
   cos δ0, and multiplies its right ascension sigma and sigma rate by cos δ0; a caller that passed a catalog's `pmra`
   needs no change and now gets the star of the catalog.
+- **Breaking: `Constants.Parsec2Meters` is 648000/π au** ([#733](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/733), Fixed above).
+  3.0856775814913673e16 m, 1.592e-10 relative above the 3.085677581e16 m of 10.x, and so every `Star.Distance` and star
+  position from the barycenter. A public `const`: an assembly compiled against an earlier version keeps the old value
+  inlined until it is recompiled. Migration: none; a caller that needs the former value writes 3.085677581e16.
 - **Breaking: the element conversions of `SpiceAPI` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   Fixed above). `ConvertConicElementsToStateVector(KeplerianElements)` (an ellipse) and
   `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` (parameter `keplerianElements`, `equinoctialElements`)

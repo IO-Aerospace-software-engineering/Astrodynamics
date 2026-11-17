@@ -17,7 +17,7 @@ Star(int catalogNumber, string name, double mass, string spectralType, double vi
 
 | Parameter | Unit and convention |
 |-----------|---------------------|
-| `parallax` | Arcseconds. `Distance` is 1/`parallax` parsecs (`Constants.Parsec2Meters`) |
+| `parallax` | Arcseconds. `Distance` is 1/`parallax` parsecs, the parsec 648000/π au (`Constants.Parsec2Meters`, 3.0856775814913673e16 m, IAU 2015 Resolution B2; 3.085677581e16 m before 11.0.0, #733) |
 | `equatorialCoordinatesAtEpoch` | Right ascension and declination in ICRF at the catalog epoch, radians; its distance is not read |
 | `declinationProperMotion` | μδ = dδ/dt, radians per Julian year of TDB |
 | `rightAscensionProperMotion` | μα* = (dα/dt) cos δ, a true angle, radians per Julian year of TDB: Gaia's `pmra`, Hipparcos's μα* |

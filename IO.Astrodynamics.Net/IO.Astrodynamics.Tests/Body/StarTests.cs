@@ -45,10 +45,39 @@ public class StarTests
         Assert.Equal(8, star.DeclinationSigmaProperMotion);
         Assert.Equal(9, star.RightAscensionSigmaProperMotion);
         Assert.Equal(0.3792, star.Parallax);
-        Assert.Equal(8.1373353929324900E+16, star.Distance);
+        // 1/0.3792 parsecs of 648000/π au (#733), to the roundings of the constant, of 1/parallax and of the product,
+        // 3 u = 3.3e-16 relative: the exact value from mpmath (40 digits), 8.13733539422828963e16 m for the double 0.3792.
+        // Before, 8.13733539293249e16 m, the truncated parsec, 1.59e-10 relative too small
+        double distance = System.Math.Abs(star.Distance / 81373353942282896.34082216062554036927457 - 1.0);
+        _output.WriteLine($"MEASURE StarTests.Create: relative distance {distance:E3}");
+        Assert.True(distance <= 3.0 * DoubleUnitRoundoff, $"{distance:E3}");
         Assert.Null(star.InitialOrbitalParameters);
         Assert.Equal(0.0, star.Flattening);
         Assert.True(star.IsStar);
+    }
+
+    // The unit roundoff of a double, 2^-53
+    private const double DoubleUnitRoundoff = 1.1102230246251565e-16;
+
+    /// <summary>
+    /// #733: the parsec is 648000/π au exactly (IAU 2015 Resolution B2), the au 149597870700 m (IAU 2012 Resolution B2):
+    /// 30856775814913672.789139379578 m, whose nearest double is 30856775814913672 (the doubles near 3.1e16 are 4 apart).
+    /// The references: the value printed by mpmath at 40 digits, and the same quotient evaluated here in decimal (28 digits),
+    /// each read back by double.Parse, which rounds to the nearest. Before, 3.085677581e16 m, 1.59e-10 relative too small.
+    /// </summary>
+    [Fact]
+    public void Parsec2Meters_Is648000OverPiAstronomicalUnits()
+    {
+        // Arrange
+        double mpmath = double.Parse("30856775814913672.78913937957796471610732", CultureInfo.InvariantCulture);
+        decimal pi = 3.1415926535897932384626433833m;
+        double inDecimal = double.Parse((648000m / pi * 149597870700m).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+
+        // Assert
+        Assert.Equal(149597870700.0, Astrodynamics.Constants.AU);
+        Assert.Equal(mpmath, inDecimal);
+        double parsec = Astrodynamics.Constants.Parsec2Meters;
+        Assert.Equal(mpmath, parsec);
     }
 
     [Fact]

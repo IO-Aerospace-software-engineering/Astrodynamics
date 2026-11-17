@@ -8,7 +8,7 @@ since #517, as CSPICE's gfrfov reads a ray.
 
 The star (the library's Star): right ascension and declination at the catalog epoch S = 2026-03-01 12:00 TDB
 (825638400 s), placed on the Moon's LT direction from DSS-13 at S, at the distance D from DSS-13, its parallax the
-inverse of its distance from the barycenter in parsecs (Constants.Parsec2Meters = 3.085677581e16 m); its proper motion in
+inverse of its distance from the barycenter in parsecs (Constants.Parsec2Meters = 648000/pi au, #733); its proper motion in
 right ascension pmra, a true angle (mu_alpha* = (dalpha/dt) cos(dec), rad per Julian year of 365.25 days, #718), moving it
 along its straight line at constant speed (SOFA's iauStarpm, Note 5, rv = 0, as Star.GetEquatorialCoordinates does):
 the position r0 (u0 + pmra dt e_alpha), e_alpha = (-sin ra0, cos ra0, 0), written here with spiceypy's vector routines.
@@ -35,7 +35,7 @@ for f in sorted(os.listdir(KERNELS)):
         sp.furnsh(os.path.join(KERNELS, f))
 
 S = 825638400.0
-PARSEC = 3.085677581e16  # m
+PARSEC = 648000.0 / math.pi * 149597870700.0  # m, the nearest double of 648000/pi au (#733; 3.085677581e16 before 11.0.0)
 YEAR = 365.25 * 86400.0
 R_MOON = 1737.4  # km
 ARCSEC = math.pi / 180.0 / 3600.0
