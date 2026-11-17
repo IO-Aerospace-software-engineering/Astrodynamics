@@ -496,6 +496,189 @@ public class NearParabolicBandTests
             Frames.Frame.ICRF, perigeeRadius: 6800000.0));
     }
 
+    // The distance of a and q to one conic, |q/a − (1 − e)| in units of ε (1 + e): a conic has a (1 − e) = q exactly
+    private static double ConicMismatch(double a, double e, double q) =>
+        System.Math.Abs(q / a - (1.0 - e)) / (2.220446049250313e-16 * (1.0 + e));
+
+    [Theory]
+    [InlineData(7000000.0)]
+    [InlineData(-7000000.0)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(-14000000000000.0)]
+    [InlineData(1.000001)]
+    public void Issue459_InTheBand_ASemiMajorAxisOfAnotherConic_IsRefused(double a)
+    {
+        // Arrange: e = 1 − 5e-7 and q = 7000 km, whose conic has a = q / (1 − e) = 1.4e13 m: the rows give the a of a 7000 km
+        // circle, its opposite, the parabola's +Infinity (the only a the band took before #459), the a of the other side of
+        // e = 1, and (1.000001 as a factor) the conic's a in doubles off by 1e-6 relative, 5.0e-13 on q/a against a rounding
+        // of about 1e-16 (the review of #459: a85098d refused them, the branch built them with the values of the circle)
+        const double e = 1.0 - 5e-7;
+        const double q = 7000000.0;
+        double semiMajorAxis = a == 1.000001 ? q / (1.0 - e) * a : a;
+
+        // Act, assert: a and q of two conics, refused, naming the semi-major axis
+        var exception = Assert.Throws<ArgumentException>(() => new KeplerianElements(semiMajorAxis, e, 0.5, 0.3, 0.2, 0.3,
+            _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q));
+        Assert.Equal("semiMajorAxis", exception.ParamName);
+    }
+
+    [Fact]
+    public void Issue459_InTheBand_TheElementsOfTheLibraryAreOneConic()
+    {
+        // Arrange: the states of the band, the periapsis states, and exact parabolas whose state comes back one ulp off e = 1
+        var states = new System.Collections.Generic.List<(string Name, StateVector State)>();
+        for (int i = 0; i < BandStates.Length; i++)
+        {
+            states.Add(($"e − 1 = {BandStates[i].EccentricityMinusOne:R}", BandStateVector(i)));
+        }
+
+        foreach (var c in PeriapsisConics)
+        {
+            states.Add(($"periapsis vy = {c.Vy:R}", State([7000000.0, 0.0, 0.0], [0.0, c.Vy, 0.0])));
+        }
+
+        foreach (double m in new[] { -2.0, 0.0, 0.3, 5.0 })
+        {
+            states.Add(($"parabola M = {m:R}", new KeplerianElements(double.PositiveInfinity, 1.0, 0.5, 0.7, 0.9, m, _earth, Epoch,
+                Frames.Frame.ICRF, perigeeRadius: 6800000.0).ToStateVector()));
+        }
+
+        foreach (var (name, sv) in states)
+        {
+            // Act: every path that builds Keplerian elements of the band from a state (the constructor checks a against q)
+            var paths = new (string Path, KeplerianElements Elements)[]
+            {
+                ("ToKeplerianElements()", sv.ToKeplerianElements()),
+                ("ToEquinoctial().ToKeplerianElements()", sv.ToEquinoctial().ToKeplerianElements()),
+                ("AtEpoch(+600 s)", (KeplerianElements)sv.AtEpoch(Epoch.AddSeconds(600.0))),
+                ("SpiceAPI.ConvertStateVectorToConicOrbitalElement", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)),
+            };
+
+            // Assert: a (1 − e) = q to rounding, the rule of the constructor (|q/a − (1 − e)| ≤ 6 ε (1 + e))
+            foreach (var (path, ke) in paths)
+            {
+                Assert.True(ke.IsParabolic(), $"{name} {path}");
+                double mismatch = ConicMismatch(ke.SemiMajorAxis(), ke.E, ke.PerigeeRadius());
+                Measure($"#459 {name} {path}: |q/a − (1 − e)| / (ε (1 + e))", mismatch);
+                Assert.InRange(mismatch, 0.0, 6.0);
+            }
+        }
+    }
+
+    [Fact]
+    public void Issue459_InTheBand_TheElementsOfASweepOfStatesAreOneConic()
+    {
+        // Arrange: 6400 states of the band, from elements of |e − 1| from 0 to 9.99e-7 either side, q from 6600 km to 1 AU,
+        // |M| up to 2e6 rad and random orientations (a fixed seed), the measurement behind the tolerance of the constructor
+        var random = new Random(12345);
+        double[] distances = [0.0, 1e-16, 2.2e-16, 4.4e-16, 1e-15, 1e-14, 1e-13, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 5e-7, 9e-7, 9.99e-7];
+        double[] perigeeRadii = [6.6e6, 7e6, 4.2e7, 3.8e8, 1.5e11];
+        double worstState = 0.0, worstSpice = 0.0;
+        int count = 0;
+        foreach (double distance in distances)
+        foreach (double sign in new[] { -1.0, 1.0 })
+        foreach (double q in perigeeRadii)
+        {
+            for (int k = 0; k < 40; k++)
+            {
+                double e = 1.0 + sign * distance;
+                double m = (random.NextDouble() - 0.5) * 2.0 * System.Math.Pow(10.0, random.Next(-2, 7));
+                var elements = new KeplerianElements(e == 1.0 ? double.PositiveInfinity : q / (1.0 - e), e, random.NextDouble() * 3.0,
+                    random.NextDouble() * 6.0, random.NextDouble() * 6.0, m, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+                var sv = elements.ToStateVector();
+                sv = new StateVector(sv.Position, sv.Velocity, _earth, Epoch, Frames.Frame.ICRF);
+                if (!sv.IsParabolic())
+                {
+                    continue;
+                }
+
+                // Act: the elements of the state and SPICE's (oscltx: −μ/(2ξ) and its perifocal distance)
+                count++;
+                var fromState = sv.ToKeplerianElements();
+                var fromSpice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+                worstState = System.Math.Max(worstState, ConicMismatch(fromState.SemiMajorAxis(), fromState.E, fromState.PerigeeRadius()));
+                worstSpice = System.Math.Max(worstSpice, ConicMismatch(fromSpice.SemiMajorAxis(), fromSpice.E, fromSpice.PerigeeRadius()));
+            }
+        }
+
+        // Assert: every state of the band is built (the constructor checks the same rule); measured at most 2.8 and 3.0 ε (1 + e)
+        // on Linux, the tolerance of the constructor twice that, provisional until the Windows x64 and macOS arm64 CI logs
+        Measure($"#459 sweep of {count} states: ToKeplerianElements() |q/a − (1 − e)| / (ε (1 + e))", worstState);
+        Measure($"#459 sweep of {count} states: SPICE |q/a − (1 − e)| / (ε (1 + e))", worstSpice);
+        Assert.Equal(6400, count);
+        Assert.InRange(worstState, 0.0, 6.0);
+        Assert.InRange(worstSpice, 0.0, 6.0);
+    }
+
+    [Theory]
+    [MemberData(nameof(PeriapsisConicIndices))]
+    public void Issue459_SpiceConversionInTheBand_HasTheConicsSemiMajorAxisAndMeanMotion(int index)
+    {
+        // The public SpiceAPI.ConvertStateVectorToConicOrbitalElement forced a = +Infinity in the band, so Barker's n,
+        // 2e9 times the conic's at ±5e-7 (the review of #459); SPICE's oscltx gives −μ/(2ξ)
+        var c = PeriapsisConics[index];
+        var sv = State([7000000.0, 0.0, 0.0], [0.0, c.Vy, 0.0]);
+        var ke = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+        double aError = (ke.SemiMajorAxis() - c.AHi - c.ALo) / c.AHi;
+        double nError = (ke.MeanMotion() - c.NHi - c.NLo) / c.NHi;
+        double distanceToOne = System.Math.Abs(c.EccentricityMinusOne);
+        Measure($"#459 SPICE periapsis vy = {c.Vy:R}: a relative error × |e − 1|", aError * distanceToOne);
+        Measure($"#459 SPICE periapsis vy = {c.Vy:R}: n relative error × |e − 1|", nError * distanceToOne);
+        // The bound of the state's own a and n (AssertConic): the cancellation of ξ, scaled by |e − 1|
+        Assert.InRange(aError * distanceToOne, -1.3e-15, 1.3e-15);
+        Assert.InRange(nError * distanceToOne, -1.9e-15, 1.9e-15);
+    }
+
+    [Theory]
+    [MemberData(nameof(BandStateIndices))]
+    public void Issue459_KeplersEquationForTheConic_AgainstBarkersLaw(int index)
+    {
+        // The measurement the decision of #459 asked for (#467's solvers inside the band): Kepler's equation for the conic,
+        // solved in doubles by KeplerEquation from the state's a, e and ν, against the band's Barker's anomaly at Barker's
+        // rate, both 600 s later, to the exact conic at 60 digits (tools/near_parabolic)
+        var c = BandStates[index];
+        var sv = BandStateVector(index);
+        var conic = new Vector3(c.ConicR600[0], c.ConicR600[1], c.ConicR600[2]);
+
+        // Act: the conic's elliptic or hyperbolic anomaly, advanced at √(μ/|a|³)
+        double a = sv.SemiMajorAxis();
+        double e = sv.Eccentricity();
+        double nu = sv.TrueAnomaly();
+        double n = System.Math.Sqrt(Mu / System.Math.Pow(System.Math.Abs(a), 3));
+        var pHat = sv.EccentricityVector().Normalize();
+        var qHat = sv.SpecificAngularMomentum().Normalize().Cross(pHat);
+        Vector3 solved;
+        if (e < 1.0)
+        {
+            double e0 = 2.0 * System.Math.Atan2(System.Math.Sqrt(1.0 - e) * System.Math.Sin(nu / 2.0), System.Math.Sqrt(1.0 + e) * System.Math.Cos(nu / 2.0));
+            double e1 = KeplerEquation.EllipticAnomaly(e0 - e * System.Math.Sin(e0) + n * 600.0, e);
+            solved = pHat * (a * (System.Math.Cos(e1) - e)) + qHat * (a * System.Math.Sqrt(1.0 - e * e) * System.Math.Sin(e1));
+        }
+        else
+        {
+            double h0 = 2.0 * System.Math.Atanh(System.Math.Sqrt((e - 1.0) / (e + 1.0)) * System.Math.Tan(nu / 2.0));
+            double h1 = KeplerEquation.HyperbolicAnomaly(e * System.Math.Sinh(h0) - h0 + n * 600.0, e);
+            solved = pHat * (-a * (e - System.Math.Cosh(h1))) + qHat * (-a * System.Math.Sqrt(e * e - 1.0) * System.Math.Sinh(h1));
+        }
+
+        double keplerError = Distance(solved, conic);
+        double barkerError = Distance(sv.ToStateVector(Epoch.AddSeconds(600.0)).Position, conic);
+        Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} +600 s: Kepler's equation for the conic, |Δr| (m)", keplerError);
+        Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} +600 s: Barker's law, |Δr| (m)", barkerError);
+
+        // Assert: neither holds over the whole band, the reason Barker's law is kept (decided by S. Guillet, 2026-11-17):
+        // Kepler's equation is the better at the edges (|e − 1| = 5e-7 and 9e-7), Barker's law near e = 1 (1e-12), where
+        // the conic's a(cos E − e) cancels
+        if (System.Math.Abs(c.EccentricityMinusOne) >= 5e-7)
+        {
+            Assert.True(keplerError < barkerError, $"{keplerError} m, {barkerError} m");
+        }
+        else
+        {
+            Assert.True(barkerError < keplerError, $"{barkerError} m, {keplerError} m");
+        }
+    }
+
     #endregion
 
     #region #477: parabolic equinoctial elements without a perigee radius
@@ -677,9 +860,10 @@ public class NearParabolicBandTests
     [InlineData(1.0000005, 13600003.4, 1.0271605788148008e-10)]
     public void Issue462_KeplerianElementsOfTheBand_HaveTheConicsSemiLatusRectum(double e, double hi, double lo)
     {
-        // Arrange: the inputs of KeplerianElementsTests.ParabolicToEquinoctial, q = 6800 km
-        var ke = new KeplerianElements(double.PositiveInfinity, e, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF,
-            perigeeRadius: 6800000.0);
+        // Arrange: the inputs of KeplerianElementsTests.ParabolicToEquinoctial, q = 6800 km, with the semi-major axis of the
+        // conic, q / (1 − e) in doubles (+Infinity only at e = 1 since the review of #459)
+        double a = e == 1.0 ? double.PositiveInfinity : 6800000.0 / (1.0 - e);
+        var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: 6800000.0);
 
         // Act
         var eq = ke.ToEquinoctial();

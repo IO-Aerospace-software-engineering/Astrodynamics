@@ -43,9 +43,19 @@ namespace IO.Astrodynamics.OrbitalParameters
         public double M { get; }
 
         /// <summary>
+        /// The rounding allowed between a semi-major axis and a perigee radius of one conic within 1e-6 of e = 1:
+        /// |q/a − (1 − e)| ≤ 6 ε (1 + e). The elements the library builds there, from a state (−μ/(2ξ) and h²/(μ(1 + e))),
+        /// through equinoctial elements, along the two-body motion and from SPICE's oscltx, measured at most 3.0 ε (1 + e)
+        /// on Linux over 6400 states of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU, |M| up to 2e6 rad);
+        /// twice, provisional until the Windows x64 and macOS arm64 CI logs (the review of #459).
+        /// </summary>
+        private const double OneConicTolerance = 6.0 * 2.220446049250313e-16;
+
+        /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="semiMajorAxis"></param>
+        /// <param name="semiMajorAxis">The semi-major axis, m: within 1e-6 of e = 1 that of the conic of the perigee radius,
+        /// q / (1 − e) to rounding (|q/a − (1 − e)| ≤ 6 ε (1 + e)), +Infinity at e = 1 exactly (#459).</param>
         /// <param name="eccentricity"></param>
         /// <param name="inclination"></param>
         /// <param name="rigthAscendingNode"></param>
@@ -55,7 +65,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="epoch"></param>
         /// <param name="frame"></param>
         /// <param name="trueAnomaly"></param>
-        /// <param name="period"></param>
+        /// <param name="period">The period of an ellipse, when known; <see cref="OrbitalParameters.Period"/> throws for an open
+        /// orbit whatever is given (#663).</param>
         /// <param name="perigeeRadius">The perigee radius, m: required within 1e-6 of e = 1 (a parabola, whose
         /// <paramref name="semiMajorAxis"/> is +Infinity), finite and above 0 when given.</param>
         /// <param name="elementsType">Type of orbital elements (osculating or mean). Defaults to osculating.</param>
@@ -63,7 +74,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// or <paramref name="perigeeRadius"/> is given and not finite and above 0 (#726).</exception>
         /// <exception cref="ArgumentException">An element is not finite (#726): <paramref name="semiMajorAxis"/> may be
         /// +Infinity only within 1e-6 of e = 1 given the perigee radius; or an orbit within 1e-6 of e = 1 has no perigee
-        /// radius, or e = 1 exactly with a finite semi-major axis (a finite a with |e − 1| &lt; 1e-6 is the conic's, #459);
+        /// radius (<paramref name="perigeeRadius"/>), or a semi-major axis that is not the conic's of its perigee radius,
+        /// finite at e = 1 exactly or +Infinity beyond a few ulps of it (<paramref name="semiMajorAxis"/>, #459);
         /// or <paramref name="inclination"/> is outside [−π, π]. The exception names the parameter.</exception>
         public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
             ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null,
@@ -95,14 +107,24 @@ namespace IO.Astrodynamics.OrbitalParameters
                 throw new ArgumentOutOfRangeException(nameof(perigeeRadius), q, "The perigee radius must be finite and above 0.");
             }
 
-            // Within 1e-6 of e = 1 the anomalies are Barker's, read from the perigee radius: it is required, with a = +Infinity
-            // for a parabola or the conic's finite a, either side of e = 1 (#459; before, +Infinity only); e = 1 exactly has
-            // no finite a
-            if (parabolic && (perigeeRadius is null || (eccentricity == 1.0 && !double.IsPositiveInfinity(semiMajorAxis))))
+            // Within 1e-6 of e = 1 the anomalies are Barker's, read from the perigee radius: it is required (#368)
+            if (parabolic && perigeeRadius is null)
+            {
+                throw new ArgumentException("Within 1e-6 of e = 1 the perigee radius is required.", nameof(perigeeRadius));
+            }
+
+            // ... with the semi-major axis of the same conic, a (1 − e) = q, either side of e = 1 (#459; before, +Infinity
+            // only): +Infinity at e = 1 exactly, and otherwise q/a = 1 − e to rounding, which a = +Infinity meets only within a
+            // few ulps of e = 1 (the state of an exact parabola, whose e rounds off 1 where ξ rounds to 0). The semi-major
+            // axis, the mean motion, the period and the apoapsis come from a, the state and P from q (the review of #459)
+            if (parabolic && (eccentricity == 1.0
+                    ? !double.IsPositiveInfinity(semiMajorAxis)
+                    : !(System.Math.Abs(perigeeRadius!.Value / semiMajorAxis - (1.0 - eccentricity)) <= OneConicTolerance * (1.0 + eccentricity))))
             {
                 throw new ArgumentException(
-                    "Within 1e-6 of e = 1 the perigee radius is required, with the semi-major axis +Infinity for a parabola " +
-                    "(e = 1) or the finite semi-major axis of the conic.", nameof(perigeeRadius));
+                    $"Within 1e-6 of e = 1 the semi-major axis must be that of the conic of the perigee radius, q / (1 − e), " +
+                    $"+Infinity at e = 1: a = {semiMajorAxis:R} m, e = {eccentricity:R}, q = {perigeeRadius!.Value:R} m.",
+                    nameof(semiMajorAxis));
             }
 
             A = semiMajorAxis;

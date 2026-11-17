@@ -120,6 +120,25 @@ public class ElementsValidationTests
         Assert.True(double.IsNaN(sv.TrueAnomaly()));
     }
 
+    [Fact]
+    public void Issue476_AStateOfNaNEccentricity_NamesItsEccentricity()
+    {
+        // Arrange: h and r pass the rectilinear check of #687, e = NaN (|v|² overflows)
+        var sv = new StateVector(new Vector3(1e308, 0.0, 0.0), new Vector3(0.0, 1e308, 1e308), _earth, Epoch,
+            Frames.Frame.ICRF);
+
+        // Act, assert: the message names e (before #476: "Nullable object must have a value.", the same exception type)
+        foreach (Action call in new Action[]
+                 {
+                     () => sv.MeanAnomaly(), () => sv.EccentricAnomaly(), () => sv.ToKeplerianElements(),
+                     () => sv.ToStateVector(Epoch.AddSeconds(60.0)), () => sv.ToStateVector(1.0),
+                 })
+        {
+            var exception = Assert.Throws<InvalidOperationException>(call);
+            Assert.Contains("e = NaN", exception.Message);
+        }
+    }
+
     #endregion
 
     #region #726: every element finite
@@ -315,6 +334,50 @@ public class ElementsValidationTests
             Assert.Contains("a = ", exception.Message);
             Assert.True(orbit.Eccentricity() >= 1.0, name);
         }
+    }
+
+    [Fact]
+    public void Issue663_AnOpenOrbitGivenAPeriod_HasNoPeriod()
+    {
+        // Arrange: a period given to the constructor, or SPICE's (oscltx writes 0 for an open orbit), was returned without
+        // the check of #663 (the review of #663: 01:00:00 and 00:00:00)
+        double r = 7000000.0;
+        double escape = System.Math.Sqrt(2.0 * _earth.GM / r);
+        var hyperbola = new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, 1.2 * escape, 0.0), _earth, Epoch,
+            Frames.Frame.ICRF);
+        var orbits = new (string Name, IO.Astrodynamics.OrbitalParameters.OrbitalParameters Orbit)[]
+        {
+            ("Keplerian hyperbola given 1 h", new KeplerianElements(-1e7, 1.7, 0.1, 0.2, 0.3, 0.4, _earth, Epoch,
+                Frames.Frame.ICRF, period: TimeSpan.FromHours(1.0))),
+            ("SPICE's elements of a hyperbola", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(hyperbola)),
+        };
+
+        foreach (var (name, orbit) in orbits)
+        {
+            // Act, assert
+            var exception = Assert.Throws<InvalidOperationException>(() => orbit.Period());
+            Assert.Contains("no period", exception.Message);
+            Assert.True(orbit.Eccentricity() > 1.0, name);
+        }
+    }
+
+    [Fact]
+    public void Issue663_SpicesElementsOfAnEllipseWithoutATimeSpanPeriod_AreBuilt()
+    {
+        // Arrange: e = 1 − 2e-6, outside the band, a = 3.5e12 m: SPICE's period, 2.1e12 s, exceeds TimeSpan.MaxValue
+        // (9.2e11 s), and the conversion passed it to TimeSpan.FromSeconds
+        double r = 7000000.0;
+        double vy = System.Math.Sqrt(_earth.GM * (2.0 - 2e-6) / r);
+        var sv = new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, vy, 0.0), _earth, Epoch, Frames.Frame.ICRF);
+
+        // Act
+        var ke = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+
+        // Assert: the elements of the state, and the period's documented OverflowException, as from the state
+        Assert.True(ke.IsElliptical());
+        Assert.Equal(sv.SemiMajorAxis(), ke.SemiMajorAxis(), 1e-9 * sv.SemiMajorAxis());
+        Assert.Throws<OverflowException>(() => ke.Period());
+        Assert.Throws<OverflowException>(() => sv.Period());
     }
 
     [Fact]

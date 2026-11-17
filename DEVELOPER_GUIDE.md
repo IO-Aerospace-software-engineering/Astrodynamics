@@ -460,7 +460,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | Constructor | Description |
 |------------|-------------|
 | `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements (the parameter of the RAAN is spelled `rigthAscendingNode`) |
-| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius |
+| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius: required within 1e-6 of e = 1, with the a of the same conic, q / (1 − e) to rounding, +Infinity at e = 1 (#459) |
 | `KeplerianElements(..., OrbitalElementsType elementsType)` | Create with explicit element type |
 
 | Factory Method | Description |
@@ -486,7 +486,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | `TrueAnomaly()` | Compute true anomaly (rad) |
 | `TrueAnomaly(Time epoch)` | Compute true anomaly at epoch |
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
-| `Period()` | Get orbital period of an ellipse; an open orbit throws `InvalidOperationException` (#663) |
+| `Period()` | Get orbital period of an ellipse; an open orbit throws `InvalidOperationException`, a period given to the constructor included (#663) |
 | `PerigeeRadius()` | Get perigee radius (m) |
 | `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
 | `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ (its `Magnitude()` is the apogee radius, m, a(1 + e)); mean elements throw |

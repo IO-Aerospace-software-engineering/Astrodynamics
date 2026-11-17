@@ -3269,9 +3269,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   "Nullable object must have a value.", which names neither e nor the call. The constructors now refuse such an
   eccentricity (Changed, Breaking, below), and the branches of `TrueAnomaly()` and `StateVector.MeanAnomaly()` end with an
   `InvalidOperationException` naming e, for orbital parameters whose eccentricity no constructor checks (a subclass; a
-  non-finite `StateVector`, which the rectilinear check of #687 meets first on every state measured)
-  (`ElementsValidationTests.Issue476_ATrueAnomalyWithoutAConicBranch_NamesTheEccentricity`, red on a85098d;
-  `Issue476_ANonFiniteState_ThrowsWhereItNeedsAConic`).
+  non-finite `StateVector`, which the rectilinear check of #687 meets first except where h and r stay finite and e is NaN,
+  r = (1e308, 0, 0) and v = (0, 1e308, 1e308): its `MeanAnomaly()`, `EccentricAnomaly()`, `ToKeplerianElements()` and
+  `ToStateVector(t)` now say "e = NaN") (`ElementsValidationTests.Issue476_ATrueAnomalyWithoutAConicBranch_NamesTheEccentricity`
+  and `Issue476_AStateOfNaNEccentricity_NamesItsEccentricity`, red on a85098d, the latter added by the review, which
+  measured that `Issue476_ANonFiniteState_ThrowsWhereItNeedsAConic` asserts the exception type only and holds there too).
 
 **Changed**
 
@@ -4544,7 +4546,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     not finite or is negative, "finite and non-negative", as the CCSDS `MeanElements` and `OpmKeplerianElements` (NaN and
     +Infinity were accepted, the negative ones refused by an `ArgumentException` without a parameter name; −0.0 is
     accepted, as 0); `ArgumentException` naming `semiMajorAxis` for NaN, −Infinity, or +Infinity outside the parabolic
-    band (+Infinity with |e − 1| < 1e-6 and a perigee radius, the parabola, stays the one infinity, #373), and naming
+    band (+Infinity with e = 1 and a perigee radius, the parabola, stays the one infinity, #373; within the band
+    +Infinity is accepted only within a few ulps of e = 1, see #459 below), and naming
     `inclination`, `rigthAscendingNode`, `argumentOfPeriapsis`, `meanAnomaly` or `trueAnomaly` (when given) for a value
     that is not finite; `ArgumentOutOfRangeException` (`perigeeRadius`) for a perigee radius that is given and not
     finite and above 0. `period` is a `TimeSpan`, always finite.
@@ -4588,8 +4591,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   an exact parabola whose e is one ulp off 1; `EquinoctialElements`: P / (1 − F² − G²), +Infinity where it overflows, or
   q / (1 − e) for a non-finite P given its perigee radius); `MeanMotion()` is √(μ/|a|³), Barker's only for an infinite semi-major
   axis; the state of elements in the band takes the conic's p = q (1 + e), 2q at e = 1 bit for bit; and
-  `KeplerianElements` accepts in the band, with the perigee radius it requires, a = +Infinity or the conic's finite a
-  (e = 1 exactly keeps +Infinity; the message of its `ArgumentException` now says so and names `perigeeRadius`). The
+  `KeplerianElements` accepts in the band, with the perigee radius q it requires, the semi-major axis of the same conic,
+  a (1 − e) = q to rounding: |q/a − (1 − e)| ≤ 6 ε (1 + e), twice the 3.0 ε (1 + e) measured on Linux over 6400 states
+  of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU) through every path that builds elements there (the
+  state, equinoctial elements, `AtEpoch`, SPICE's `oscltx`), provisional until the Windows x64 and macOS arm64 CI logs;
+  +Infinity at e = 1 exactly, and within a few ulps of it only (the state of an exact parabola, whose e rounds off 1
+  where ξ rounds to 0). The a of another conic throws `ArgumentException` (`semiMajorAxis`), as it did on a85098d: the
+  review of #459 measured `new KeplerianElements(7e6, 1 − 5e-7, ..., perigeeRadius: 7e6)` built with the semi-major axis,
+  mean motion, period and apoapsis of a 7000 km circle and the state of the near-parabola, and a = −7e6 or +Infinity at
+  e ≠ 1 built too (+Infinity giving the pre-#459 values). A missing perigee radius throws `ArgumentException`
+  (`perigeeRadius`). `SpiceAPI.ConvertStateVectorToConicOrbitalElement` forced a = +Infinity in the band, so Barker's
+  mean motion, 2e9 times the conic's at ±5e-7 (measured by the review): it keeps `oscltx`'s −μ/(2ξ), +Infinity where
+  `oscltx` gives 0 (e = 1 or a zero energy) (`NearParabolicBandTests.Issue459_InTheBand_*`,
+  `Issue459_SpiceConversionInTheBand_*`, red on the branch before the review; the measurement of the tolerance is
+  `Issue459_InTheBand_TheElementsOfASweepOfStatesAreOneConic`). The
   motion of the band keeps Barker's anomaly, well conditioned there: `AtEpoch`, `ToKeplerianElements(Time)` and
   `EpochAtMeanAnomaly` (so `ToStateVector(Time)`, `TimeToRadius`, the start of a propagation) advance it at Barker's
   rate through a private method, the public `MeanMotion()` being the conic's. Outside the band every result is
@@ -4600,25 +4615,34 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Keplerian elements (0.9999990000000001 and the double nearest 1.000001, both inside it, with their finite a, red on
   a85098d) within 2.7e-16 (`NearParabolicBandTests.Issue459_*`, red on a85098d; provisional thresholds, twice the Linux
   worst). The comment of the issue asked for the solvers of #467 to be measured inside the band before Barker's law is
-  kept for all of it: Kepler's equation for the conic, solved by `KeplerEquation` in doubles from the same states, is
-  0.5 to 4.6 mm from the exact motion at |e − 1| = 5e-7 to 9e-7, better than Barker's law there (0.09 to 0.16 m), and 3.0
-  to 4.3 km off at |e − 1| = 1e-12, where Barker's law is within 1.8e-7 m: neither holds over the whole band, so Barker's
-  law is kept as decided, and a motion that holds over it (universal variables, or a band narrowed to where Barker's
-  law is the better one) is left to its own issue. The tests of #477 that measured the 2q of the band now measure
+  kept for all of it: Kepler's equation for the conic, solved by `KeplerEquation` in doubles from the state's a, e and
+  ν, is 2.3 to 5.8 mm from the exact motion at |e − 1| = 5e-7 to 9e-7, better than Barker's law there (0.09 to 0.16 m),
+  and 2.8 to 5.0 km off at |e − 1| = 1e-12, where Barker's law is within 1.8e-7 m
+  (`NearParabolicBandTests.Issue459_KeplersEquationForTheConic_AgainstBarkersLaw`, on the 60-digit references of
+  `tools/near_parabolic`): neither holds over the whole band, so Barker's law is kept as decided. A motion that holds
+  over it (universal variables, or a band narrowed to where Barker's law is the better one) would change what
+  `IsParabolic()` means across the library: it is not part of 11.0.0 and needs its own issue (not opened yet). The tests of #477 that measured the 2q of the band now measure
   rounding (3.6e-16 where 2.0e-7), and `TestHelpers.KeplerComparer` and `EquinoctialComparer` compare two orbits of the
   band by their perigee radii, their semi-major axes being ill-conditioned there (`StateVectorTests.ToParabolicKeplerian`,
   `KeplerianElementsTests.ParabolicToState`, `EquinoctialElementsTests.ParabolicToStateVector`: the state of an exact
   parabola has a semi-major axis of about ±1e20 m, or +Infinity at a zero energy). Migration: code that read +Infinity from `SemiMajorAxis()` to recognize the band
   calls `IsParabolic()`; code that took `MeanMotion()` as the rate of the mean anomaly in the band uses `AtEpoch` or
-  `EpochAtMeanAnomaly`; elements within 1e-6 of e = 1 given a finite a now build where they threw (with a perigee radius).
+  `EpochAtMeanAnomaly`; elements within 1e-6 of e = 1 given +Infinity at e ≠ 1 (the only form 10.x accepted) give
+  instead the conic's a, q / (1 − e), with the perigee radius.
 - **Breaking: `Period()` of an open orbit throws `InvalidOperationException`** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), item 3 of [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)).
   `Period()` passed 2π √(a³/μ) to `TimeSpan.FromSeconds` without a check: a hyperbola (a < 0) threw TimeSpan's
   `ArgumentException` "TimeSpan does not accept floating point Not-a-Number values", a parabola (a = +Infinity) its
   `OverflowException`, with no message saying that an open orbit has no period (measured on a85098d, as in the
   issue). It now throws `InvalidOperationException` naming e and a when the semi-major axis is not finite and above 0
   (decided by S. Guillet, 2026-11-17, the fix of the issue: the test is on a, not on e, so the conic's finite a of the
-  near-parabolic band keeps its period, #459). An ellipse whose period exceeds `TimeSpan.MaxValue` (29 227 years: within
-  1e-6 of e = 1, for instance) still throws `TimeSpan`'s `OverflowException`, now documented. The callers
+  near-parabolic band keeps its period, #459), before the cached period, so that a period given to `KeplerianElements`
+  for an open orbit, or the 0 of SPICE's `oscltx` for one (`SpiceAPI.ConvertStateVectorToConicOrbitalElement`), is not
+  returned either (the review of #663 measured 01:00:00 and 00:00:00; `Issue663_AnOpenOrbitGivenAPeriod_HasNoPeriod`).
+  `ConvertStateVectorToConicOrbitalElement` passes SPICE's period only when it is above 0 and fits a `TimeSpan`: an
+  ellipse at e = 1 − 2e-6, whose period is 2.1e12 s, threw `OverflowException` from the conversion and is now built
+  (`Issue663_SpicesElementsOfAnEllipseWithoutATimeSpanPeriod_AreBuilt`). An ellipse whose period exceeds
+  `TimeSpan.MaxValue` (29 227 years: within 1e-6 of e = 1, for instance) still throws `TimeSpan`'s `OverflowException`
+  from `Period()`, now documented. The callers
   (`PhasingManeuver`, `CosmographiaExporter`) let it through, as before. Tests: `ElementsValidationTests.Issue663_*` on
   a `StateVector` at escape speed and above, Keplerian and equinoctial hyperbolas and parabolas (red on a85098d), and an
   ellipse unchanged. Migration: catch `InvalidOperationException` instead of `ArgumentException` or `OverflowException`,

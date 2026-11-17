@@ -561,21 +561,18 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// a within 1e-6 of e = 1, for instance (#455).</exception>
     public TimeSpan Period()
     {
-        if (!_period.HasValue)
+        double a = SemiMajorAxis();
+
+        // Only an ellipse has a period: tested on a, not on e, so that the conic's finite a of the band keeps it (#663);
+        // before the cache, so that a period given to the elements of an open orbit (KeplerianElements' period) is not
+        // returned either
+        if (!(double.IsFinite(a) && a > 0.0))
         {
-            double a = SemiMajorAxis();
-
-            // Only an ellipse has a period: tested on a, not on e, so that the conic's finite a of the band keeps it (#663)
-            if (!(double.IsFinite(a) && a > 0.0))
-            {
-                throw new InvalidOperationException(
-                    $"An open orbit has no period: e = {Eccentricity():R}, a = {a:R} m (a period needs a finite semi-major axis above 0, an ellipse).");
-            }
-
-            double T = Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM);
-            _period = TimeSpan.FromSeconds(T);
+            throw new InvalidOperationException(
+                $"An open orbit has no period: e = {Eccentricity():R}, a = {a:R} m (a period needs a finite semi-major axis above 0, an ellipse).");
         }
 
+        _period ??= TimeSpan.FromSeconds(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
         return _period.Value;
     }
 
