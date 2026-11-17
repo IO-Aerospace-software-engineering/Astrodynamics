@@ -680,24 +680,18 @@ public class ConjunctionRefinementTests
     private const double ReadSpacing = 60.0;
 
     [Theory]
-    [InlineData("A", false, false)]
-    [InlineData("A", false, true)]
-    [InlineData("A", true, false)]
-    [InlineData("A", true, true)]
-    [InlineData("B", false, false)]
-    [InlineData("B", false, true)]
-    [InlineData("B", true, false)]
-    [InlineData("B", true, true)]
-    public void TheReadsOverTheWindow_FindTheMinimaNoSeedReaches_OnlyWhenAskedFor(string form, bool overTheWindow,
-        bool windowEndsWithoutInteriorMinimum)
+    [InlineData("A", false)]
+    [InlineData("A", true)]
+    [InlineData("B", false)]
+    [InlineData("B", true)]
+    public void TheReadsOverTheWindow_FindTheMinimaNoSeedReaches_OnlyWhenAskedFor(string form, bool overTheWindow)
     {
-        // The dense search after its seeds (CloseApproachesOnRangeRate), AnalyzeAll (no window end) and Analyze (window ends
-        // without a minimum inside), on the two forms of #628. Form A: minima at 150 s and 850 s, maxima at 520 s and
+        // The dense search after its seeds (CloseApproachesOnRangeRate), never a window end (#621: Analyze returns the
+        // closest end without a close approach, SelectBestTcaEpoch), on the two forms of #628. Form A: minima at 150 s and 850 s, maxima at 520 s and
         // 930 s, no seed, the range rate closing at both window ends, so that the bisection over the window does not apply.
         // Form B: one step of 600 s holding minima at 117.45 s and 326.28 s and a maximum at 250 s, the seed at 302.10 s
         // (CW600's step [1200, 1800] s). The reference: the zeros of the range rate from negative to positive. With the
-        // reads, every one; without them (the documented default, decision 54 of #457), the seed's alone, and for Analyze
-        // the window end where the distance decreases into the window when no seed gives one
+        // reads, every one; without them (the documented default, decision 54 of #457), the seed's alone
         bool formA = form == "A";
         var candidates = formA
             ? Candidates(11)
@@ -706,8 +700,8 @@ public class ConjunctionRefinementTests
         var seeds = formA ? Array.Empty<TimeSystem.Time>() : new[] { candidates[1] };
         double[] reference = formA ? new[] { 150.0, 850.0 } : new[] { 117.45, 326.28 };
 
-        var tca = ConjunctionAssessment.CloseApproachesOnRangeRate(seeds, candidates, rangeRate,
-            epoch => (epoch - Epoch).TotalSeconds, Tolerance, Reads(overTheWindow), windowEndsWithoutInteriorMinimum);
+        var tca = ConjunctionAssessment.CloseApproachesOnRangeRate(seeds, candidates, rangeRate, Tolerance,
+            Reads(overTheWindow));
 
         if (overTheWindow)
         {
@@ -717,9 +711,8 @@ public class ConjunctionRefinementTests
         }
         else if (formA)
         {
-            // No minimum inside: nothing for AnalyzeAll, for Analyze the end, closing there (the start recedes into the
-            // window nowhere: closing there too)
-            Assert.Equal(windowEndsWithoutInteriorMinimum ? new[] { candidates[^1] } : Array.Empty<TimeSystem.Time>(), tca);
+            // No minimum the seeds reach: nothing
+            Assert.Empty(tca);
         }
         else
         {
@@ -912,11 +905,8 @@ public class ConjunctionRefinementTests
         AssertWithinATick(970.0, Assert.Single(tca));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void AMinimumInTheLastPairOfReads_ThatItsBisectionStepsOver_IsFoundByTheBisectionOverTheWindow(
-        bool windowEndsWithoutInteriorMinimum)
+    [Fact]
+    public void AMinimumInTheLastPairOfReads_ThatItsBisectionStepsOver_IsFoundByTheBisectionOverTheWindow()
     {
         // No seed, closing up to the window end, exactly zero there, but receding over [960, 970) s: a minimum at 960 s in
         // the last pair of reads (950 and 1000 s, 50 s apart, both closing), narrower than the reads. That pair's bisection
@@ -929,7 +919,7 @@ public class ConjunctionRefinementTests
         var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : Steps(960.0, 970.0)(epoch));
 
         var tca = ConjunctionAssessment.CloseApproachesOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates, rangeRate,
-            _ => 1.0, Tolerance, ReadSpacing, windowEndsWithoutInteriorMinimum);
+            Tolerance, ReadSpacing);
 
         AssertWithinATick(960.0, Assert.Single(tca));
     }

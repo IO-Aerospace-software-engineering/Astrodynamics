@@ -3220,6 +3220,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   option is analyzed (`ConjunctionAssessmentTests.EvaluateAvoidance_StepNotPositive_Throws`, the three paths, 0 s and
   −5 s, 12 rows, red on a85098d).
 
+- **A window without a close approach gave its midpoint on the sampled path** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621)).
+  `Screen` and the `ILocalizable` overloads of `Analyze` and `AnalyzeAll` returned the window midpoint when the range
+  rate had no zero from negative to positive in the window, and the search on two propagations returned the end where
+  the distance grows into the window: the same window, two answers, neither a close approach. On the reproduction of
+  #621 (two LEO crossing at 60°, 250 m at t0 + 1800 s), the sampled `Analyze` returned t0 + 1789.5 s and 79 930.977 m
+  on [1780, 1799] s, where the end is 7 616.710 m away and closing at 7.6 km/s, and `Screen` dropped the object at its
+  default 25 km; on [1200, 1500] s the midpoint, 3 285 799 m, against 2 242 051 m at the end (measured on a85098d).
+  `Analyze` and `Screen` now return the closest window end on every path, the absolute minimum of the distance over the
+  window (CSPICE's `ABSMIN`), flagged by the new `EncounterQualityFlags.TcaAtWindowEnd`, and `AnalyzeAll` an empty
+  list, as on two propagations (decided by S. Guillet, 2026-11-17). Against CSPICE's `gfdist_c` on the SPKs of the two
+  propagations, over windows of a monotonic approach, a recession and a maximum only, through both paths and `Screen`:
+  the end of `ABSMIN` itself, the miss within 2.3e-4 m of CSPICE's distance there
+  (`ConjunctionKernelAndWindowTests.NoCloseApproach_AnalyzeReturnsTheClosestEnd_Flagged_AnalyzeAllNothing`, 10 rows, red
+  on a85098d: the midpoints, `Screen` empty, no flag on the dense path).
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -4488,6 +4503,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ConjunctionAnalysisOptions`: `ArgumentOutOfRangeException` (its `ParamName` the option), where a negative step was
   accepted or the call ran out of memory. Migration: give a positive step, or null for the encounter's.
 
+- **Breaking: a window without a close approach gives its closest end, flagged, and `AnalyzeAll` nothing** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above).
+  `Analyze`, `Screen` and the re-analysis of each avoidance option return the closest window end where the sampled path
+  returned the midpoint (and where the search on two propagations returned the end the distance grows into, the same end
+  but for a minimum its seeds miss), with `EncounterQualityFlags.TcaAtWindowEnd` (new, `1 << 8`) raised; the
+  `ILocalizable` `AnalyzeAll` returns an empty list where it returned one midpoint encounter. Every encounter whose TCA
+  is a window end carries the flag, the CDM export's comment of the flags included. Migration: test
+  `QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd)` for an encounter whose closest approach lies outside the
+  window, and widen the window to find it; expect an empty list from `AnalyzeAll` where one midpoint encounter came.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4810,13 +4834,10 @@ not listed.
   remediates any indefinite covariance, however deep its defect (a correlation of −10 is accepted, a largest relative
   change of 5.5): check an input covariance before relying on it.
 - **Close-approach search** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574),
-  [#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621),
   [#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
   [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). On two RK7(8) propagations the
   dense search of `Analyze` and `AnalyzeAll` reads the trajectory without the burn between an impulse and the end of the
-  step that holds it, so a close approach there can be missed. Without an interior minimum, `Screen` and the
-  `ILocalizable` overloads of `Analyze` and `AnalyzeAll` return the window midpoint, so `Screen` can drop an object
-  closing at the window end. In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
+  step that holds it, so a close approach there can be missed. In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
   seed), or, with a `BisectionToleranceSeconds` coarser than a tick, a zero at the window end as the middle of its last
   bracket. The sampled search subdivides a step one tick longer than `MaximumEventSearchStep`, one sample more for a read
   100 ns closer ([#642](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/642)); results are unaffected.

@@ -256,10 +256,11 @@ public partial class ConjunctionAssessmentTests
     }
 
     [Fact]
-    public void FindCloseApproaches_NoTcaFallback_AnalyzeReturnsValidEncounter()
+    public void FindCloseApproaches_NoTca_AnalyzeReturnsTheClosestWindowEnd()
     {
         var earth = CreateEarth();
-        // Co-moving spacecraft → no zero-crossing → Analyze falls back to window midpoint
+        // Co-moving spacecraft → no zero-crossing → Analyze returns the closest window end, flagged (#621: the window
+        // midpoint before 11.0.0)
         var protected1 = CreateSpacecraft(-2201, "P", earth,
             new Vector3(6_800_000.0, 0.0, 0.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
@@ -268,19 +269,21 @@ public partial class ConjunctionAssessmentTests
             new Vector3(0.0, 7_656.2204182967143, 0.0));
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
         var profile = new ProtectedSpacecraftProfile(protected1);
-        var expectedMidpoint = window.StartDate + TimeSpan.FromSeconds(
-            (window.EndDate - window.StartDate).TotalSeconds * 0.5);
 
         var encounter = ConjunctionAssessment.Analyze(profile, secondary1, window);
 
-        Assert.True(encounter.EncounterState.MissDistanceMeters > 0.0);
-        // Fallback should place TCA at window midpoint
-        double deltaToMidpoint = System.Math.Abs((encounter.EncounterState.Epoch - expectedMidpoint).TotalSeconds);
-        Assert.True(deltaToMidpoint == 0.0, $"TCA should be near midpoint, offset={deltaToMidpoint:F3}s");
+        // The reference: the distance of the two-body states at each end
+        double Distance(TimeSystem.Time epoch) => (secondary1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None)
+            .ToStateVector().Position - protected1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None)
+            .ToStateVector().Position).Magnitude();
+        var expected = Distance(window.EndDate) < Distance(window.StartDate) ? window.EndDate : window.StartDate;
+        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        Assert.Equal(Distance(expected), encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
     }
 
     [Fact]
-    public void AnalyzeAll_NoTcaFallback_ReturnsSingleMidpointEncounter()
+    public void AnalyzeAll_NoTca_ReturnsNothing()
     {
         var earth = CreateEarth();
         var protected1 = CreateSpacecraft(-2203, "P", earth,
@@ -290,15 +293,10 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 100.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
-        var expectedMidpoint = window.StartDate + TimeSpan.FromSeconds(
-            (window.EndDate - window.StartDate).TotalSeconds * 0.5);
         var profile = new ProtectedSpacecraftProfile(protected1);
 
-        var encounters = ConjunctionAssessment.AnalyzeAll(profile, secondary1, window);
-
-        var encounter = Assert.Single(encounters);
-        Assert.Equal(expectedMidpoint, encounter.EncounterState.Epoch);
-        Assert.True(encounter.EncounterState.MissDistanceMeters > 0.0);
+        // No close approach: an empty list, as on two propagations (#621: a single midpoint encounter before 11.0.0)
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, secondary1, window));
     }
 
     [Fact]
@@ -498,6 +496,7 @@ public partial class ConjunctionAssessmentTests
 
         Assert.Equal(end, encounter.EncounterState.Epoch);
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
     }
 
     // #687: the protected spacecraft of the dense tests was at rest at the centre (r = 0, v = 0), a state with no RTN
@@ -2262,11 +2261,14 @@ public partial class ConjunctionAssessmentTests
             {
                 MaxDeltaVMetersPerSecond = 0.2,
                 MinimumLeadTime = TimeSpan.FromMinutes(1),
-                MaximumLeadTime = TimeSpan.FromMinutes(10)
+                MaximumLeadTime = TimeSpan.FromMinutes(20)
             });
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
         var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
 
+        // No close approach: the TCA is the closest window end, the end here (#621: the midpoint before 11.0.0), so that a
+        // lead time of 12 min puts the burn before the window
+        Assert.Equal(window.EndDate, encounter.EncounterState.Epoch);
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter,
             new AvoidanceSearchOptions
             {
@@ -2274,7 +2276,7 @@ public partial class ConjunctionAssessmentTests
                 {
                     TimeSpan.FromSeconds(30.0),
                     TimeSpan.FromMinutes(2.0),
-                    TimeSpan.FromMinutes(6.0)
+                    TimeSpan.FromMinutes(12.0)
                 },
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.0, 0.1, 0.25 },
                 MaxReturnedOptions = 20

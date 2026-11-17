@@ -379,7 +379,7 @@ public abstract class ConjunctionDensePassTestBase
         // The windows of the sweep above, on the passes of #628, with the default options (decision 54 of #457): a minimum
         // that no minimum of the Hermite seeds may be missing, but every TCA listed is a minimum of CSPICE within the bounds
         // of the pass, inside the window, in order, none twice, and Analyze returns the closest one listed, or without one
-        // the end where the distance grows into the window (the contract that holds by default)
+        // the closest window end (the contract that holds by default, #621)
         var crossing = Pass(fixture);
         var (minima, windows) = SweepWindows(crossing, Options);
         _worstSlowTcaError = 0.0;
@@ -483,8 +483,8 @@ public abstract class ConjunctionDensePassTestBase
     // The contract of the dense search by default (decision 54 of #457): AnalyzeAll lists only local minima of CSPICE's
     // gfdist_c, each within the bounds of the slow passes (or, within the TCA bound of a window end, one CSPICE places just
     // outside the window, or none, the states and their SPK placing the zero on either side of that end), strictly inside
-    // the window, in order, none twice; Analyze returns the closest one listed, or without one the window end where the
-    // distance grows into the window (AssertTheEndWhereTheDistanceGrows)
+    // the window, in order, none twice; Analyze returns the closest one listed, or without one the closest window end
+    // (AssertTheClosestEnd, #621)
     protected void AssertSlowPassListsOnlyMinima(CrossingEncounterCase crossing, Window window,
         ConjunctionAnalysisOptions options, bool log)
     {
@@ -544,8 +544,8 @@ public abstract class ConjunctionDensePassTestBase
             }
             else
             {
-                // None listed, a minimum inside lost by default or none: the end where the distance grows into the window
-                AssertTheEndWhereTheDistanceGrows(crossing, window, encounter, tcaBound, missBound);
+                // None listed, a minimum inside lost by default or none: the closest end (#621)
+                AssertTheClosestEnd(crossing, window, encounter, tcaBound, missBound);
             }
         }
         catch (Xunit.Sdk.XunitException e) when (!log)
@@ -557,8 +557,7 @@ public abstract class ConjunctionDensePassTestBase
     // AnalyzeAll lists the local minima of CSPICE's gfdist_c in the window, each within the bounds of the slow passes, and
     // nothing else; a CSPICE minimum within the TCA bound of a window end may be listed or not, and a listed one there may
     // have no CSPICE minimum, the states and their SPK placing the zero of the range rate on either side of that end.
-    // Analyze returns the closest listed minimum, or without one the window end where the distance grows into the window by
-    // CSPICE's range rate (the closer one when both do)
+    // Analyze returns the closest listed minimum, or without one the closest window end (#621)
     protected void AssertSlowPassMatchesCspice(CrossingEncounterCase crossing, Window window, int? expectedCount,
         bool log = true, ConjunctionAnalysisOptions options = null)
     {
@@ -654,19 +653,24 @@ public abstract class ConjunctionDensePassTestBase
             return;
         }
 
-        AssertTheEndWhereTheDistanceGrows(crossing, window, encounter, tcaBound, missBound);
+        AssertTheClosestEnd(crossing, window, encounter, tcaBound, missBound);
     }
 
-    // Analyze without a listed minimum: the window end where the distance grows into the window by CSPICE's range rate, the
-    // closer one when both do (either one when their distances lie within the miss bound of each other), or an end within
-    // the TCA bound of a zero of CSPICE's range rate
-    private static void AssertTheEndWhereTheDistanceGrows(CrossingEncounterCase crossing, Window window,
+    // Analyze without a listed minimum: the closest window end by CSPICE's distance, flagged TcaAtWindowEnd (#621, decided
+    // by S. Guillet, 2026-11-17: before 11.0.0, the end where the distance grows into the window, which differs from the
+    // closest end when the window holds a minimum the seeds miss by default), either one when their distances lie within
+    // twice the miss bound of each other, or an end within the TCA bound of a zero of CSPICE's range rate (the states may
+    // place that zero on either side of the end)
+    private static void AssertTheClosestEnd(CrossingEncounterCase crossing, Window window,
         EncounterCase encounter, double tcaBound, double missBound)
     {
+        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd),
+            encounter.EncounterState.QualityFlags.ToString());
+
         // A zero of CSPICE's range rate, from negative to positive, within the TCA bound of a window end (inside the window
-        // or outside it, too near an end for gfdist_c): the states may place it anywhere within that bound, so that the
-        // whole window recedes (the start the closest point) or closes (the end) on the states. A window narrower than the
-        // bound about a minimum, or starting or ending at one, as in the fifth reviewer's windows (round 5 of the lot-6 review)
+        // or outside it, too near an end for gfdist_c): the states may place it anywhere within that bound. A window
+        // narrower than the bound about a minimum, or starting or ending at one, as in the fifth reviewer's windows (round
+        // 5 of the lot-6 review)
         bool ZeroNear(TimeSystem.Time end)
         {
             var before = end.AddSeconds(-tcaBound);
@@ -682,22 +686,15 @@ public abstract class ConjunctionDensePassTestBase
             return;
         }
 
-        var ends = new[] { window.StartDate, window.EndDate }
-            .Where(epoch => epoch == window.StartDate
-                ? CspiceRangeRate(epoch, crossing) >= 0.0
-                : CspiceRangeRate(epoch, crossing) <= 0.0)
-            .ToArray();
-        Assert.NotEmpty(ends);
-
-        // Both ends nearer to each other than the miss bound of the states against their SPK: either one
+        var ends = new[] { window.StartDate, window.EndDate };
         var distances = ends.Select(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()).ToArray();
-        if (distances.Length == 2 && System.Math.Abs(distances[0] - distances[1]) <= 2.0 * missBound)
+        if (System.Math.Abs(distances[0] - distances[1]) <= 2.0 * missBound)
         {
             Assert.Contains(encounter.EncounterState.Epoch, ends);
             return;
         }
 
-        Assert.Equal(ends.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()), encounter.EncounterState.Epoch);
+        Assert.Equal(distances[1] < distances[0] ? window.EndDate : window.StartDate, encounter.EncounterState.Epoch);
     }
 
     private double _worstSlowTcaError;
