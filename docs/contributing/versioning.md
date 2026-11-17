@@ -3254,7 +3254,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   attitude targets. They now throw (see **Changed**); the epoch a light-time correction reads may lie up to its light
   time outside the states, against the same correction written in the test on the two-body motion of the end state
   3.3e-5 m in RK7(8) and 2.2e-3 m in Velocity-Verlet 1.3 s outside them (`PropagatedStatesSpanTests`; the reads one tick
-  and 6 min outside the states red on a85098d, both integrators, from ICRF and ECLIPJ2000). A TLE spacecraft sampled by
+  and 6 min outside the states red on a85098d, both integrators, from ICRF and ECLIPJ2000). The light time of the
+  managed field-of-view and occultation searches (their shared reader) reads a spacecraft target as `GetEphemeris`
+  does: 2.8e-5 m from the same correction 0.67 ms outside the states, LT, CN, XLT and XCN, both integrators, and the
+  searches over the whole span of a target's states return as many windows with each correction as the geometric
+  search (`PropagatedStatesSpanTests.ApparentPositionReader_AtTheEnds_IsAllowedWithinTheLightTime`,
+  `ManagedSearches_OverTheWholeSpan_ReadTheTargetWithinTheLightTime`; before, they threw at the first corrected read). A TLE spacecraft sampled by
   `TLEPropagator` read from the Earth outside its samples extrapolated them (20.7 m 6 min before the first, 6.3 m 6 min
   after the last on the ISS): it reads SGP4 there, as from any other body (0 m against SGP4, red on a85098d).
 - **`Spacecraft.ToOpm` wrote the motion of the initial orbit with the mass and the maneuvers after the propagation**
@@ -3699,7 +3704,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     radius exceeds π/2 − 1e-6, a non-circular instrument of another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
     states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
     target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the
-    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, extrapolated.
+    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, which its
+    propagated states allow (#527, Fixed above).
 
   A search on a propagated spacecraft takes 0.1 to 1 s (0.1 to 0.7 s before). The occultation searches share the
   light time and the root finder, bit for bit. No other public signature changes; `Instrument.PositionInFOV` is

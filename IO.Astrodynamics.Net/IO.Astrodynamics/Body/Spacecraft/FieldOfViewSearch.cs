@@ -138,7 +138,8 @@ internal static class FieldOfViewSearch
     /// would otherwise extrapolate; nothing to check for a kernel-backed spacecraft, a TLE, or a spacecraft whose initial
     /// orbital parameters are propagated in two-body motion (<see cref="Spacecraft.InterpolatedStatesWindow"/>). The light
     /// time of a spacecraft target reads it up to the light time before the start of the search window (reception) or
-    /// after its end (transmission, XLT and XCN), which is extrapolated.
+    /// after its end (transmission, XLT and XCN), which its propagated states allow (#527, decided by S. Guillet,
+    /// 2026-11-17).
     /// </summary>
     /// <exception cref="ArgumentException">The search window leaves the propagated states.</exception>
     internal static void CheckCoverage(Spacecraft spacecraft, in Window searchWindow)

@@ -215,7 +215,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// ellipsoid, in closed form), sampled at the step, its extremes searched between the samples, and its sign changes
         /// located by Brent's method to 1 µs, CSPICE's <c>SPICE_GF_CNVTOL</c>. No state outside the search window is read,
         /// except the light-time corrected epoch of the target, up to its light time before the start (reception) or after
-        /// the end (transmission, XLT and XCN), which for a propagated spacecraft target is extrapolated; a window holding
+        /// the end (transmission, XLT and XCN), which a propagated spacecraft target allows outside its propagated states
+        /// (#527, decided by S. Guillet, 2026-11-17); a window holding
         /// at a bound of the search starts or ends there.
         /// </para>
         /// <para>

@@ -563,7 +563,9 @@ search for a `+S` correction.
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
-milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when the instrument's spacecraft
+milliseconds about the Earth, which its propagated states allow, as for `GetEphemeris`:
+[#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+2026-11-17), and `InvalidOperationException` when the instrument's spacecraft
 has no attitude, when the observer is inside the ellipsoid of the target, or when the half-angles of a circle or an
 ellipse are too small for its cone at the target's distance ([Tiny half-angles](#field-of-view-search)). A managed spacecraft has no attitude while
 its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by

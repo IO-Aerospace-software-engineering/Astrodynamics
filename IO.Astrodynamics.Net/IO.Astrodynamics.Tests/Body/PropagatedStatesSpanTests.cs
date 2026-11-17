@@ -41,6 +41,13 @@ public class PropagatedStatesSpanTests
     /// x64 and macOS arm64 CI logs.</summary>
     internal const double LightTimeAtTheEnds = 4.5e-3;
 
+    /// <summary>The light-time reads of <c>ApparentPositionReader</c> at the ends of the states of a spacecraft target
+    /// against the same correction written in the test on the two-body motion of the end state, m (#527): the read 0.67 ms
+    /// outside the states. Worst 1.26e-5 m in RK7(8) and 2.77e-5 m in Velocity-Verlet at 1 s on Linux x64, at the
+    /// resolution of the barycentric positions in double (1.5e11 m × 1.1e-16). Provisional: twice the Linux worst, rounded
+    /// up at the second significant digit, to be set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    internal const double ReaderLightTimeAtTheEnds = 5.6e-5;
+
     private readonly ITestOutputHelper _output;
 
     public PropagatedStatesSpanTests(ITestOutputHelper output)
@@ -152,6 +159,125 @@ public class PropagatedStatesSpanTests
         }
 
         Assert.True(worst <= LightTimeAtTheEnds, $"{worst:E3} m");
+    }
+
+    /// <summary>
+    /// The light-time reads of the managed field-of-view and occultation searches (<c>ApparentPositionReader</c>) at the
+    /// ends of the states of a spacecraft target, allowed as those of <c>GetEphemeris</c>: the retarded epoch of LT and CN
+    /// at the first state, the advanced epoch of XLT and XCN at the last, 0.67 ms outside them for a target 200 km ahead of
+    /// the observer. Before the fix the reader read the target with no margin and threw. The reference: the same
+    /// correction written in the test (spkltc relative to the Earth, the observer's reference body, plus the Earth's
+    /// motion during the light time), the target carried from its end state by its two-body motion, the Earth from SPICE.
+    /// </summary>
+    [Theory]
+    [InlineData("RK", -5281)]
+    [InlineData("VV", -5283)]
+    public void ApparentPositionReader_AtTheEnds_IsAllowedWithinTheLightTime(string integrator, int naifId)
+    {
+        // Arrange
+        var (observer, target, earth) = Pair(naifId, integrator);
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var states = target.PropagatedStates;
+        double worst = 0.0;
+        foreach (var (end, aberration, sign) in new[] { (states[0], Aberration.LT, -1.0), (states[0], Aberration.CN, -1.0), (states[^1], Aberration.XLT, 1.0), (states[^1], Aberration.XCN, 1.0) })
+        {
+            var t = end.Epoch;
+            var reader = new IO.Astrodynamics.Occultation.ApparentPositionReader(observer, aberration, false, true);
+            Assert.Equal(PlanetsAndMoons.EARTH.NaifId, reader.Reference.NaifId);
+            var observerState = reader.Observer(t);
+            var observerFromSsb = earth.GetGeometricStateRelativeTo(t, ssb).Position + observerState.Position;
+            Vector3 Target(double dt)
+            {
+                // Read at the tick nearest t + dt and carried to it by the velocities: the 50 ns of a tick would move the
+                // Earth by 1.5 mm, more than what the test measures
+                var at = t.AddSeconds(dt);
+                double residual = dt - (at - t).Ticks / (double)TimeSpan.TicksPerSecond;
+                var earthState = earth.GetGeometricStateRelativeTo(at, ssb);
+                var targetState = end.AtEpoch(at).ToStateVector();
+                return earthState.Position + targetState.Position + (earthState.Velocity + targetState.Velocity) * residual;
+            }
+
+            double lt = (Target(0.0) - observerFromSsb).Magnitude() / IO.Astrodynamics.Constants.C;
+            int iterations = aberration is Aberration.LT or Aberration.XLT ? 1 : 5;
+            var expected = Vector3.Zero;
+            for (int i = 0; i < iterations; i++)
+            {
+                expected = Target(sign * lt) - observerFromSsb;
+                lt = expected.Magnitude() / IO.Astrodynamics.Constants.C;
+            }
+
+            // Act
+            StateVector referenceAtEpoch = null;
+            var read = reader.Position(target, t, observerState, ref referenceAtEpoch, out _);
+
+            // Assert
+            double delta = (read - expected).Magnitude();
+            worst = System.Math.Max(worst, delta);
+            _output.WriteLine($"MEASURE #527 reader {integrator} {aberration} at {(t - S).TotalSeconds:R} s, light time {lt:E3} s: |Δr| {delta:E3} m against the correction on the two-body motion");
+        }
+
+        Assert.True(worst <= ReaderLightTimeAtTheEnds, $"{worst:E3} m");
+    }
+
+    /// <summary>
+    /// The managed field-of-view search of a propagated spacecraft target, and the managed occultation search of that
+    /// target seen from the observer, over the whole span of their states, with each light-time correction: they read the
+    /// target up to its light time outside its states (0.67 ms) and return as many windows as the geometric search. Before
+    /// the fix every corrected search threw
+    /// <see cref="InvalidOperationException"/> at its first or last read.
+    /// </summary>
+    [Fact]
+    public void ManagedSearches_OverTheWholeSpan_ReadTheTargetWithinTheLightTime()
+    {
+        // Arrange
+        var (observer, target, earth) = Pair(-5285, "RK");
+        var window = new Window(S, S.AddHours(1.0));
+        var instrument = observer.Instruments.Single();
+        var step = TimeSpan.FromSeconds(60.0);
+        var geometric = instrument.FindWindowsInFieldOfViewConstraint(window, observer, target, Frame.ICRF, ShapeType.Point, Aberration.None, step).ToArray();
+        var hidden = target.FindWindowsOnOccultationConstraint(window, observer, ShapeType.Point, earth, ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, step).ToArray();
+        Assert.NotEmpty(geometric);
+
+        foreach (var aberration in new[] { Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS, Aberration.XCN, Aberration.XCNS })
+        {
+            // Act
+            var corrected = instrument.FindWindowsInFieldOfViewConstraint(window, observer, target, Frame.ICRF, ShapeType.Point, aberration, step).ToArray();
+            var occulted = target.FindWindowsOnOccultationConstraint(window, observer, ShapeType.Point, earth, ShapeType.Ellipsoid, OccultationType.Any, aberration, step).ToArray();
+
+            // Assert: the windows of the geometric search, their ends moved by the aberration (the target's motion from
+            // the solar system barycentre over the light time, 20 m across 200 km, and the stellar aberration, each about
+            // 1e-4 rad, reached at the rate of the line of sight in the field)
+            Assert.Equal(geometric.Length, corrected.Length);
+            for (int i = 0; i < geometric.Length; i++)
+            {
+                double start = System.Math.Abs((corrected[i].StartDate - geometric[i].StartDate).TotalSeconds);
+                double end = System.Math.Abs((corrected[i].EndDate - geometric[i].EndDate).TotalSeconds);
+                _output.WriteLine($"MEASURE #527 field of view {aberration} window {i}: start {start:E3} s, end {end:E3} s from the geometric search");
+            }
+
+            Assert.Equal(hidden.Length, occulted.Length);
+        }
+    }
+
+    // The observer, with a circular instrument of 1 rad along its velocity at the start, and a target 200 km ahead on the
+    // same orbit, both propagated over [S, S + 1 h]; the attitude of the observer is the identity
+    private static (Spacecraft Observer, Spacecraft Target, CelestialBody Earth) Pair(int naifId, string integrator)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var initial = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
+        var ahead = initial.AtEpoch(S.AddSeconds(200000.0 / initial.Velocity.Magnitude())).ToStateVector();
+        var observer = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536), initial);
+        var target = new Spacecraft(naifId - 1, $"SPAN{1 - naifId}", 1000.0, 3000.0, new Clock($"SPAN{1 - naifId}_CLK", 65536),
+            new StateVector(ahead.Position, ahead.Velocity, earth, S, Frame.ICRF));
+        observer.AddCircularInstrument(naifId * 1000 - 1, $"SPAN{-naifId}_CAM", "fov527", 1.0, new Vector3(0.0, 1.0, 1.0).Normalize(), Vector3.VectorX, Vector3.Zero);
+        var window = new Window(S, S.AddHours(1.0));
+        foreach (var spacecraft in new[] { observer, target })
+        {
+            Integrator integratorInstance = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
+            spacecraft.Propagate(window, [earth], integratorInstance, false, false, Output);
+        }
+
+        return (observer, target, earth);
     }
 
     /// <summary>
