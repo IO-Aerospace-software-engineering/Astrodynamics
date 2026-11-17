@@ -18,8 +18,10 @@ namespace IO.Astrodynamics.DataProvider;
 /// Its reads follow the contract of the SPICE provider (#680): a target without stored states or read outside them, and a
 /// frame read outside its stored orientations, throw <see cref="InvalidOperationException"/>, the type SPICE throws for the
 /// same situations and the type the library's handlers of missing data catch, so a body whose barycentre's data the
-/// provider lacks builds without an orbit and with an infinite sphere of influence, as on SPICE; a frame never added throws
-/// <see cref="ArgumentException"/>. A NAIF id without body information throws <see cref="ArgumentException"/> naming
+/// provider lacks builds without an orbit and with an infinite sphere of influence, as on SPICE; a frame neither added nor
+/// known to the provider (ICRF, GCRF, ECLIPJ2000, TEME, CIRS and TIRS, #559, #656) throws <see cref="ArgumentException"/>,
+/// from <see cref="FrameTransformationToICRF"/> and, since #559, from <see cref="GetEphemeris"/> (a body-fixed frame such as
+/// IAU_EARTH or ITRF93 included, unless its orientations were added). A NAIF id without body information throws <see cref="ArgumentException"/> naming
 /// <c>naifId</c>, as the SPICE provider for an id SPICE does not name or that is not a celestial body's (#672), and so do
 /// <c>new CelestialBody(id)</c> and <see cref="CelestialItem.Create"/> of that id (#680, decided by S. Guillet,
 /// 2026-11-14: a bad argument gives <see cref="ArgumentException"/>), except <see cref="CelestialItem.Create"/> of a
@@ -37,7 +39,9 @@ public class MemoryDataProvider : IDataProvider
     private Dictionary<int, SortedDictionary<Time, StateVector>> _stateVectors = new Dictionary<int, SortedDictionary<Time, StateVector>>();
     private Dictionary<int, CelestialBody> _celestialBodies = new Dictionary<int, CelestialBody>();
 
-    /// <exception cref="ArgumentException">No orientation of <paramref name="source"/> was ever added.</exception>
+    /// <exception cref="ArgumentException">No orientation of <paramref name="source"/> was ever added, and the provider does not
+    /// know it: neither ICRF, GCRF, ECLIPJ2000 (#559), nor TEME, CIRS or TIRS (#656), by name in any case for the last
+    /// three.</exception>
     /// <exception cref="InvalidOperationException"><paramref name="date"/> is outside the stored orientations of
     /// <paramref name="source"/> (#680; <see cref="ArgumentException"/> before 11.0.0).</exception>
     /// <remarks>

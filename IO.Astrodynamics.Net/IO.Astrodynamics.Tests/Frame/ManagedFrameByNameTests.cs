@@ -246,7 +246,7 @@ public class ManagedFrameByNameTests
     public void SpiceTransformFrame_ComposesTheManagedFrameThroughIcrf(string name)
     {
         var itrf93 = new Frames.Frame("ITRF93");
-        double worst = 0.0;
+        double worst = 0.0, worstComposedAngle = 0.0, worstComposedRate = 0.0, worstIdentity = 0.0;
         foreach (var epoch in Epochs)
         {
             // Instance and name alike, to ICRF against SOFA
@@ -259,18 +259,26 @@ public class ManagedFrameByNameTests
                 var fromIcrf = SpiceAPI.Instance.TransformFrame(epoch.Utc, Frames.Frame.ICRF, frame);
                 worst = System.Math.Max(worst, WorstAxisAngle(fromIcrf.Rotation.Conjugate(), SofaGcrsTo(name, epoch)));
 
-                // Toward a SPICE frame: the composition through ICRF of Frame.ToFrame, the angular velocity included
+                // Toward a SPICE frame: the composition through ICRF of Frame.ToFrame, the angular velocity included. The same
+                // formula on the same orientations (the managed frame's, and SPICE's ITRF93 -> ICRF, which the SPICE provider
+                // reads through TransformFrame), so the same doubles on every platform: equality, not a bound
                 var direct = SpiceAPI.Instance.TransformFrame(epoch.Utc, frame, itrf93);
                 var composed = StaticFrameOf(name).ToFrame(itrf93, epoch.Utc);
-                Assert.InRange(Angle(direct.Rotation, composed.Rotation), 0.0, 1e-15);
-                Assert.InRange((direct.AngularVelocity - composed.AngularVelocity).Magnitude(), 0.0, 1e-20);
+                worstComposedAngle = System.Math.Max(worstComposedAngle, Angle(direct.Rotation, composed.Rotation));
+                worstComposedRate = System.Math.Max(worstComposedRate, (direct.AngularVelocity - composed.AngularVelocity).Magnitude());
+                Assert.Equal(composed.Rotation, direct.Rotation);
+                Assert.Equal(composed.AngularVelocity, direct.AngularVelocity);
 
+                // A frame to itself by name: q* q, whose vector part cancels exactly (each product appears twice, opposite)
                 var identity = SpiceAPI.Instance.TransformFrame(epoch.Utc, frame, new Frames.Frame(name.ToUpperInvariant()));
-                Assert.InRange(Angle(identity.Rotation, Quaternion.Identity), 0.0, 1e-15);
+                worstIdentity = System.Math.Max(worstIdentity, Angle(identity.Rotation, Quaternion.Identity));
+                Assert.Equal(0.0, Angle(identity.Rotation, Quaternion.Identity));
             }
         }
 
         _output.WriteLine($"MEASURE TransformFrame {name} -> ICRF against SOFA: {worst.ToString("E3", CultureInfo.InvariantCulture)} rad");
+        _output.WriteLine($"MEASURE TransformFrame {name} -> ITRF93 against ToFrame: {worstComposedAngle.ToString("E3", CultureInfo.InvariantCulture)} rad, "
+                          + $"{worstComposedRate.ToString("E3", CultureInfo.InvariantCulture)} rad/s; to itself {worstIdentity.ToString("E3", CultureInfo.InvariantCulture)} rad");
         Assert.InRange(worst, 0.0, SofaTolerance);
     }
 
@@ -286,8 +294,10 @@ public class ManagedFrameByNameTests
             // CIRS -> TIRS = (GCRS -> TIRS) (GCRS -> CIRS)^T
             var x = Apply(sofaTirs, ApplyTranspose(sofaCirs, Vector3.VectorX));
             Assert.InRange(AngleBetween(Vector3.VectorX.Rotate(transform.Rotation), x), 0.0, SofaTolerance);
-            Assert.InRange((transform.AngularVelocity - Frames.Frame.CIRS.ToFrame(Frames.Frame.TIRS, epoch.Utc).AngularVelocity).Magnitude(),
-                0.0, 1e-20);
+            // ToFrame's composition of the same two managed orientations: the same doubles
+            var composed = Frames.Frame.CIRS.ToFrame(Frames.Frame.TIRS, epoch.Utc);
+            Assert.Equal(composed.Rotation, transform.Rotation);
+            Assert.Equal(composed.AngularVelocity, transform.AngularVelocity);
         }
     }
 }

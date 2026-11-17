@@ -171,7 +171,7 @@ public class MemoryDataProviderTests
     // #680, the contract of the reads (#668, C10): a target or a frame without data at the epoch throws
     // InvalidOperationException, the type SPICE throws for the same situations, which the library's handlers of missing data
     // catch (a body whose barycentre the data do not reach builds without an orbit; the orientation cache of a propagation
-    // keeps the point unavailable); a frame never added throws ArgumentException; an id without body information throws
+    // keeps the point unavailable); a frame neither added nor known throws ArgumentException; an id without body information throws
     // ArgumentException naming naifId, as SpiceDataProvider for an id SPICE does not name since #672 (a bad argument,
     // decided by S. Guillet, 2026-11-14). Before, ArgumentException, KeyNotFoundException and, earlier in #680,
     // InvalidOperationException for the id
@@ -198,7 +198,7 @@ public class MemoryDataProviderTests
         Assert.Throws<InvalidOperationException>(() =>
             states.GetEphemeris(Start.AddSeconds(1201.0), earth, ssb, Frames.Frame.ICRF, Aberration.None));
 
-        // A frame read outside its stored orientations; a frame never added keeps ArgumentException
+        // A frame read outside its stored orientations; a frame neither added nor known keeps ArgumentException
         var (orientations, frame) = OrientationProvider(0.025);
         var frameException = Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(-1.0), frame));
         Assert.Contains(frame.Name, frameException.Message);

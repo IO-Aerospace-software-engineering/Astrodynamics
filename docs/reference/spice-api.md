@@ -243,7 +243,8 @@ entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange
 states. Missing data throw `InvalidOperationException`, which the library's handlers of missing data catch (#680): a
 state read for a target without entries or outside them and an orientation read outside a frame's entries, the type
 SPICE throws for the same reads. A bad argument throws `ArgumentException` (#680, decided by S. Guillet, 2026-11-14): a
-frame never added, and the information of an identifier never added, whose `ParamName` is `naifId`, the type and the
+frame neither added nor known (below), from `GetEphemeris` too since #559, and the information of an identifier never
+added, whose `ParamName` is `naifId`, the type and the
 parameter `SpiceDataProvider.GetCelestialBodyInfo` throws for an identifier SPICE does not name or that is not a
 celestial body's (#672); `new CelestialBody(id)` and `CelestialItem.Create(id)` of that identifier throw it too, on both
 providers, except `CelestialItem.Create` of a Lagrange point (391 to 395), which reads the point's state and not its

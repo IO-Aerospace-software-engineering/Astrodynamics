@@ -213,13 +213,19 @@ public class MemoryDataProviderFrameTests
         Assert.Throws<InvalidOperationException>(() => provider.FrameTransformationToICRF(Start.AddSeconds(10.0), Frames.Frame.ECLIPTIC_J2000));
     }
 
-    [Fact]
-    public void Read_InAFrameNeitherStoredNorKnown_Throws()
+    [Theory]
+    [InlineData("B1950")]
+    [InlineData("IAU_EARTH")]
+    [InlineData("ITRF93")]
+    public void Read_InAFrameNeitherStoredNorKnown_Throws(string name)
     {
+        // A frame the provider neither stores nor defines, a body-fixed frame such as the Earth's included: no rotation into
+        // it exists, so the read throws (#559; before, the ICRF difference came back labelled with the frame). Migration:
+        // store the frame's orientations (AddStateOrientationToICRF)
         var provider = StatesProvider(Frames.Frame.ICRF);
         var ex = Assert.Throws<ArgumentException>(() =>
-            provider.GetEphemeris(Start, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, Frames.Frame.B1950, Aberration.None));
-        Assert.Contains("B1950", ex.Message);
+            provider.GetEphemeris(Start, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, new Frames.Frame(name), Aberration.None));
+        Assert.Contains(name, ex.Message);
     }
 
     [Theory]
