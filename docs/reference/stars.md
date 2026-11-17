@@ -51,8 +51,9 @@ too fast in right ascension, 77.9 times for Polaris (#718).
 |--------|-------------|
 | `GetEquatorialCoordinates(Time)` | The right ascension in [0, 2π), the declination in [−π/2, π/2] and the distance at the epoch (see [The model](#the-model)) |
 | `GetRightAscensionSigma(Time)`, `GetDeclinationSigma(Time)` | √(σ² + (dt σμ)²), radians, not reduced (#709); the right ascension's a true angle |
-| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | The star from an observer at the epoch: a direction, no light time on the star whatever the correction, the stellar aberration of the `+S` corrections ([Occultations](occultations.md)) |
-| `Propagate(Window, TimeSpan)`, `PropagateAsync(Window, TimeSpan)` | The states every step from the start of the window, replacing those held |
+| `GetGeometricStateRelativeTo(Time, CelestialItem)` | The position and the space velocity ([The velocity](#the-velocity)) minus the reference body's state, in ICRF |
+| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | The star from an observer at the epoch: a direction, no light time on the star whatever the correction, the stellar aberration of the `+S` corrections ([Occultations](occultations.md)); the velocity the space velocity minus the observer's |
+| `Propagate(Window, TimeSpan)`, `PropagateAsync(Window, TimeSpan)` | The states every step from the start of the window, with the space velocity, replacing those held |
 | `WriteEphemeris(FileInfo)` | The SPK of the last propagation |
 
 ## The catalog epoch and dt
@@ -109,6 +110,32 @@ thresholds of `StarTests` are twice the worst over Linux x64, Windows x64 and ma
 twice the resolution of the returned angles, 1.9e-15 rad (one ulp of a right ascension below 2π, 8.9e-16 rad, and one of
 a declination, 2.2e-16 rad), so that another platform's one-ulp difference passes (decided by S. Guillet, 2026-11-17).
 
+### The velocity
+
+The state of a star carries its space velocity, the derivative of its straight line, constant (decided by S. Guillet,
+2026-11-17, [#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731)):
+
+    v = r0 (μα* e_α + μδ e_δ) / (365.25 · 86 400 s)
+
+r0 the catalog `Distance`, in m/s of TDB, perpendicular to the catalog direction. `GetGeometricStateRelativeTo` gives it
+minus the velocity of the reference body, `GetEphemeris` minus the observer's, and `Propagate`, `PropagateAsync` and
+`Scenario.SimulateAsync` store it with each position, so the SPK of `WriteEphemeris` holds it: `spkezr` reads it back
+(`StarVelocityTests`). Barnard's star moves at 89 km/s. Before 11.0.0 the velocity was zero while the position moved:
+from the barycenter a zero velocity, from an observer the opposite of the observer's velocity.
+
+Its accuracy, Linux x64, 2026-11-17 (provisional until the Windows x64 and macOS arm64 logs):
+
+- against the derivative of the straight line in long double (`tools/sofa_reference/starpm_ref.c --velocity`), every
+  star of the harness at 0 to 1000 years, the poles and the synthetic stars included: 2.0e-16 relative;
+- against the derivative of `iauStarpm` (rv = 0, central differences over ±1 year), after adding its two terms the model
+  does not take: `iauStarpv`'s inertial radial velocity for an observed radial velocity of 0, −c β²/(√(1 − β²) + 1) ≈
+  −v_t²/(2c) along the catalog direction (−13.3 m/s for Barnard's star, 1.5e-4 of its speed; the term of the distance
+  departure in [Accuracy](#accuracy)), and its light time counted from the catalog epoch, which scales its rate by
+  1 − (ṙ(dt) − ṙ(0))/c (1.5e-8 per year for Barnard's star): 3.6e-10 relative, the resolution of the central difference
+  for Polaris's 0.046″/yr;
+- against the central difference of the library's own positions over ±1 year: within 6.2e-16 of the position;
+- read back from the SPK: 1.8e-16 relative.
+
 ### Limits
 
 - **No radial velocity.** The model is `iauStarpm`'s at rv = 0, and the distance comes from the catalog parallax and the
@@ -119,9 +146,6 @@ a declination, 2.2e-16 rad), so that another platform's one-ulp difference passe
   2026-11-14): it is left to an additive constructor overload after 11.0.0, in
   [#723](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/723) (decided by S. Guillet,
   2026-11-17).
-- **The state's velocity is zero.** `GetGeometricStateRelativeTo`, `Propagate` and the SPK of `WriteEphemeris` carry the
-  moving position and a zero velocity
-  ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731)).
 - **A catalog position is the direction of the light that reaches the barycenter at its epoch** (as SOFA's `iauPmsafe`
   reads a catalog): no light time is applied to a star, whatever the correction ([Occultations](occultations.md)).
 

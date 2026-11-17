@@ -53,8 +53,9 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, the equality of frames, the axes the TRIAD factories point, and the straight-line motion of a star and
-its proper motion in right ascension as a true angle. **Deprecated** lists
+public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
+proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked and the
+parsec of 648000/π au. **Deprecated** lists
 `Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
 `Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -3236,6 +3237,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Constructor_APositiveParallax_GivesAFiniteDistance` for 1e-291″, 1e-6″ and 1e300″). Every star of the test suite
   keeps its parallax.
 
+- **The state of a star carried a zero velocity while its position moved** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731)).
+  Since #718 a star moves along a straight line, but `GetGeometricStateRelativeTo` gave a zero velocity from the
+  barycenter and the opposite of the reference body's velocity from another, `GetEphemeris` the opposite of the
+  observer's, and `Propagate`, `PropagateAsync`, `Scenario.SimulateAsync` and so the SPK of `WriteEphemeris` a zero
+  velocity: Barnard's star seen from the Earth had a velocity 1.12 relative away from the reference (its 89 km/s
+  missing), its range rate 53.4 m/s (its velocity along the line of sight, turned by its proper motion since 2016;
+  measured on a85098d). The state now carries the star's space velocity, the derivative of its straight line,
+  r0 (μα* e_α + μδ e_δ) per Julian year of TDB, constant (decided by S. Guillet, 2026-11-17): against the derivative of
+  the straight line in long double (`tools/sofa_reference/starpm_ref.c --velocity`), every star of the harness at 0 to
+  1000 years, 1.98e-16 relative (`StarVelocityTests.GetGeometricStateRelativeTo_Velocity_IsTheDerivativeOfTheStraightLine`,
+  1 before); against the derivative of `iauStarpm` (rv = 0, central differences over ±1 year) with its two terms the
+  model does not take added in closed form (`iauStarpv`'s inertial radial velocity −c β²/(√(1 − β²) + 1) ≈ −v_t²/(2c)
+  along the catalog direction, 1.5e-4 of Barnard's speed, and its light time from the catalog epoch, a rate scaled by
+  1 − (ṙ(dt) − ṙ(0))/c), 3.62e-10 relative, the resolution of the central difference for Polaris
+  (`IsTheDerivativeOfIauStarpm`); within 6.2e-16 of the position of the central difference of the library's own
+  positions (`IsTheRateOfThePosition`); from the Earth, the space velocity minus the Earth's velocity from SPICE
+  (`GetEphemeris_FromTheEarth_IsTheSpaceVelocityMinusTheEarths`); and read back by `spkezr` from the SPK of
+  `WriteEphemeris`, 1.84e-16 relative (`WriteEphemeris_TheSpkHoldsTheSpaceVelocity`); all red on a85098d. Thresholds
+  twice the Linux x64 worst, provisional until the Windows x64 and macOS arm64 logs. The positions are unchanged, bit
+  for bit; the rate of the stellar aberration of the `+S` corrections, which takes the relative velocity, follows. The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -3296,6 +3318,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   thresholds of 4.8e-6 s and 4.4e-16 rad. Migration: a caller that passed dα/dt passes `RightAscensionProperMotion` ×
   cos δ0, and multiplies its right ascension sigma and sigma rate by cos δ0; a caller that passed a catalog's `pmra`
   needs no change and now gets the star of the catalog.
+- **Breaking: the state of a star carries its space velocity** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731), Fixed above).
+  `Star.GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate`, `PropagateAsync` and
+  `Scenario.SimulateAsync` and the SPK of `WriteEphemeris` carry r0 (μα* e_α + μδ e_δ) per Julian year of TDB, where
+  they carried a zero velocity (from an observer, the opposite of its velocity). Migration: code that took the
+  velocity of a star's state as the observer's opposite subtracts the star's (its velocity from the barycenter);
+  the positions are unchanged.
 - **Breaking: the `Star` constructor refuses a parallax that is not finite and positive** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732), Fixed above).
   `ArgumentOutOfRangeException` (`parallax`) for 0, a negative value, NaN, ±∞ and a positive value whose distance
   overflows a double. Migration: a catalog record with a parallax of 0 or less (a Gaia DR3 star whose parallax is below

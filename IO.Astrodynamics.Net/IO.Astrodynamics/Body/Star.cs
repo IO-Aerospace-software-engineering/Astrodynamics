@@ -22,7 +22,8 @@ namespace IO.Astrodynamics.Body;
 /// <c>iauStarpm</c> with a radial velocity of 0 (<c>external-lib/sofa-src/starpm.c</c>, Note 5, #718), over dt, the
 /// Julian years of TDB from the catalog epoch (both times converted to TDB, as <c>iauStarpm</c> takes TDB dates and its
 /// proper motions in radians per TDB Julian year, Notes 1 and 2, #709); its distance the length of that line; its sigmas
-/// √(σ² + (dt σμ)²). See <see cref="GetEquatorialCoordinates"/> and <c>docs/reference/stars.md</c>.
+/// √(σ² + (dt σμ)²); the velocity of its states the derivative of that line, constant (#731). See
+/// <see cref="GetEquatorialCoordinates"/>, <see cref="GetGeometricStateRelativeTo"/> and <c>docs/reference/stars.md</c>.
 /// </para>
 /// <para>
 /// The units and conventions are those of the Hipparcos and Gaia catalogs: angles in radians, proper motions in radians
@@ -37,6 +38,12 @@ public class Star : CelestialBody
 
     // The catalog epoch in TDB, the time scale of the catalog motion's dt (#709)
     private readonly Time _epochTdb;
+
+    // The space velocity, the derivative of the straight line, constant, in m/s of TDB (#731)
+    private readonly Vector3 _spaceVelocity;
+
+    // The seconds of a Julian year of TDB, the unit of time of the proper motions
+    private const double JulianYearSeconds = Time.JULIAN_YEAR * 86400.0;
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -98,6 +105,23 @@ public class Star : CelestialBody
         RightAscensionSigmaProperMotion = rightAscensionSigmaProperMotion;
         DeclinationSigmaProperMotion = declinationSigmaProperMotion;
         Distance = distance;
+        _spaceVelocity = SpaceVelocity(equatorialCoordinatesAtEpoch, rightAscensionProperMotion, declinationProperMotion, distance);
+    }
+
+    /// <summary>
+    /// The space velocity of the star, the derivative of its straight line (<see cref="GetEquatorialCoordinates"/>):
+    /// r0 (μα* e_α + μδ e_δ) per Julian year of TDB, r0 the catalog distance, e_α = (−sin α0, cos α0, 0) and
+    /// e_δ = (−sin δ0 cos α0, −sin δ0 sin α0, cos δ0), in m/s; constant, perpendicular to the catalog direction (#731).
+    /// </summary>
+    private static Vector3 SpaceVelocity(Equatorial catalog, double rightAscensionProperMotion, double declinationProperMotion, double distance)
+    {
+        double sinDec = System.Math.Sin(catalog.Declination);
+        double cosDec = System.Math.Cos(catalog.Declination);
+        double sinRa = System.Math.Sin(catalog.RightAscension);
+        double cosRa = System.Math.Cos(catalog.RightAscension);
+        var east = new Vector3(-sinRa, cosRa, 0.0);
+        var north = new Vector3(-sinDec * cosRa, -sinDec * sinRa, cosDec);
+        return (east * rightAscensionProperMotion + north * declinationProperMotion) * (distance / JulianYearSeconds);
     }
 
     /// <summary>
@@ -327,33 +351,40 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Computes the geometric state relative to a reference body.
-    /// Stars use equatorial coordinates (inherently SSB-relative), then chain to reference body.
+    /// Computes the geometric state relative to a reference body, in ICRF: the star's position from the solar system
+    /// barycenter (<see cref="GetEquatorialCoordinates"/>) and its space velocity, the derivative of its straight line,
+    /// r0 (μα* e_α + μδ e_δ) per Julian year of TDB, constant (#731), minus the reference body's state from the barycenter.
     /// </summary>
+    /// <remarks>
+    /// Before 11.0.0 the velocity of a star was zero, its position moving (#731): from the barycenter a zero velocity, from
+    /// another body the opposite of that body's velocity.
+    /// </remarks>
     public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
     {
         var starSsb = GetEquatorialCoordinates(epoch).ToCartesian();
         if (referenceBody.NaifId == 0)
-            return new StateVector(starSsb, Vector3.Zero, referenceBody, epoch, Frame.ICRF);
+            return new StateVector(starSsb, _spaceVelocity, referenceBody, epoch, Frame.ICRF);
 
         var refFromSsb = referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector();
         return new StateVector(
-            starSsb - refFromSsb.Position, refFromSsb.Velocity.Inverse(),
+            starSsb - refFromSsb.Position, _spaceVelocity - refFromSsb.Velocity,
             referenceBody, epoch, Frame.ICRF);
     }
 
     /// <summary>
-    /// Get geometric state from SSB in ICRF. Computes directly from equatorial coordinates.
+    /// Get geometric state from SSB in ICRF: the position of <see cref="GetEquatorialCoordinates"/> and the space velocity
+    /// (#731).
     /// </summary>
     internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
         var position = GetEquatorialCoordinates(date).ToCartesian();
-        return new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frame.ICRF);
+        return new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frame.ICRF);
     }
 
     /// <summary>
     /// The star seen from <paramref name="observer"/> at <paramref name="epoch"/>: a direction, its catalog position moved
-    /// by its proper motion to the epoch minus the observer's position from the solar system barycenter at the epoch.
+    /// by its proper motion to the epoch minus the observer's position from the solar system barycenter at the epoch; its
+    /// velocity the star's space velocity minus the observer's (before 11.0.0 the opposite of the observer's alone, #731).
     /// </summary>
     /// <remarks>
     /// A catalog position at an epoch is the direction of the light that reaches the barycenter then, as SOFA's
@@ -385,8 +416,8 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Write star ephemeris from propagated states: those of its last propagation, through the native writer
-    /// (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels"/> loaded is unloaded
+    /// Write star ephemeris from propagated states: those of its last propagation, their positions and the star's space
+    /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels"/> loaded is unloaded
     /// first, and the new one is left unloaded (#706).
     /// </summary>
     /// <exception cref="ArgumentException">The last propagation stored fewer than three states: the native writer writes three
@@ -424,7 +455,8 @@ public class Star : CelestialBody
     /// <remarks>
     /// The states of the propagation replace those the star held, as <c>Spacecraft.Propagate</c> replaces the states of a
     /// spacecraft: a state at the start of the window and every <paramref name="stepSize"/> up to its end, published at once
-    /// when they are all computed. Before 11.0.0 each propagation added its states to those of the previous ones (the
+    /// when they are all computed, each the position of <see cref="GetEquatorialCoordinates"/> and the space velocity of
+    /// <see cref="GetGeometricStateRelativeTo"/> (before 11.0.0 a zero velocity, #731). Before 11.0.0 each propagation added its states to those of the previous ones (the
     /// first state of an epoch kept), so that <see cref="WriteEphemeris"/> wrote every window ever propagated, the gaps
     /// between them interpolated.
     /// </remarks>
@@ -438,7 +470,7 @@ public class Star : CelestialBody
         for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
-            states.Add(new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
+            states.Add(new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
         }
 
         Volatile.Write(ref _propagatedStates, states.ToArray());

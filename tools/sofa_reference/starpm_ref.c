@@ -17,8 +17,16 @@
  *     u0 + x e_alpha + y e_delta, e_alpha = (-sin a0, cos a0, 0) and e_delta = (-sin d0 cos a0, -sin d0 sin a0, cos d0):
  *     its unit vector and its length sqrt(1 + x^2 + y^2).
  *
+ * With the argument --velocity (#731), it prints the rows of StarTests.StarpmVelocityCases instead: for each star and each
+ * horizon dt of 0, 1, 10, 100 and 1000 Julian years, the velocity in catalog distances per Julian year of TDB
+ *   - of iauStarpm, the reference: the central difference of its position (its direction times the ratio of the catalog
+ *     parallax to its parallax, evaluated in long double) at dt - 1 and dt + 1 years, over 2 years; NaN where it cannot be
+ *     fed or does not move the star, the status of the first failing call printed;
+ *   - of the closed form, the derivative of the straight line, constant: mu_alpha* e_alpha + mu_delta e_delta, in long
+ *     double.
+ *
  * The rows of StarTests are printed by this program, never edited by hand. It builds as every harness of this directory
- * (README.md), from the repository root, and takes no argument.
+ * (README.md), from the repository root, and takes no argument, or --velocity.
  *
  * The catalog values (VizieR, read on 2026-11-16, #718; confirmed by S. Guillet, 2026-11-17): Barnard's star from the
  * Hipparcos new reduction I/311 (J1991.25; its pmRA is mu_alpha* = mu_alpha cos(delta): van Leeuwen 2007, Validation of
@@ -30,6 +38,7 @@
  */
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include "sofa.h"
 #include "sofam.h"
 
@@ -90,8 +99,57 @@ static void row(const star_t *s, double years)
            (double)(p[2] / n), (double)length);
 }
 
-int main(void)
+/* iauStarpm's position at dt years, in catalog distances: its direction times px / px2; its status */
+static int starpm_position(const star_t *s, double years, long double p[3])
 {
+    double ra2, dec2, pmr2, pmd2, px2, rv2;
+    int status = iauStarpm(s->ra, s->dec, s->pmras / cos(s->dec), s->pmdec, s->px, 0.0, DJ00, s->epochDays, DJ00,
+                           s->epochDays + years * DJY, &ra2, &dec2, &pmr2, &pmd2, &px2, &rv2);
+    long double ratio = (long double)s->px / px2;
+    p[0] = ratio * cosl(dec2) * cosl(ra2);
+    p[1] = ratio * cosl(dec2) * sinl(ra2);
+    p[2] = ratio * sinl(dec2);
+    return status;
+}
+
+static void velocity_row(const star_t *s, double years)
+{
+    const double h = 1.0;
+    long double v[3] = {NAN, NAN, NAN};
+    int status = -9;
+    if (fabs(s->dec) < M_PI / 2.0)
+    {
+        long double before[3], after[3];
+        status = starpm_position(s, years - h, before);
+        if (status == 0)
+        {
+            status = starpm_position(s, years + h, after);
+        }
+
+        if (status == 0)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                v[i] = (after[i] - before[i]) / (2.0L * h);
+            }
+        }
+    }
+
+    long double ca = cosl(s->ra), sa = sinl(s->ra), cd = cosl(s->dec), sd = sinl(s->dec);
+    long double x = s->pmras, y = s->pmdec;
+    long double w[3] = {-x * sa - y * sd * ca, x * ca - y * sd * sa, y * cd};
+
+    printf("        new(\"%s\", %.17g, %.17g, %.17g, %.17g, %.17g, %.17g, %.1f, %d,\n", s->label, s->ra, s->dec, s->pmras,
+           s->pmdec, s->px, s->epochDays, years, status);
+    char b0[32], b1[32], b2[32];
+    printf("            new Vector3(%s, %s, %s),\n", literal((double)v[0], b0), literal((double)v[1], b1),
+           literal((double)v[2], b2));
+    printf("            new Vector3(%.17g, %.17g, %.17g)),\n", (double)w[0], (double)w[1], (double)w[2]);
+}
+
+int main(int argc, char **argv)
+{
+    const int velocity = argc > 1 && strcmp(argv[1], "--velocity") == 0;
     const double j1991 = -3195.9375, j2016 = 5844.0, j2001 = 366.5;
     const star_t stars[] = {
         {"Barnard I/311", 269.45402263 * DEG, 4.66828781 * DEG, -798.58 * MAS, 10328.12 * MAS, 548.31 / 1000.0, j1991},
@@ -109,8 +167,19 @@ int main(void)
         {"-1.5 rad, -0.1 and 0.05 rad/yr", 1.0, -1.5, 0.05, -0.1, 0.3792, j2001},
     };
     const double horizons[] = {1.0, 10.0, 100.0, 1000.0};
+    const double velocityHorizons[] = {0.0, 1.0, 10.0, 100.0, 1000.0};
     for (size_t i = 0; i < sizeof stars / sizeof stars[0]; i++)
     {
+        if (velocity)
+        {
+            for (size_t k = 0; k < sizeof velocityHorizons / sizeof velocityHorizons[0]; k++)
+            {
+                velocity_row(&stars[i], velocityHorizons[k]);
+            }
+
+            continue;
+        }
+
         for (size_t k = 0; k < sizeof horizons / sizeof horizons[0]; k++)
         {
             row(&stars[i], horizons[k]);
