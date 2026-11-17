@@ -288,8 +288,9 @@ public static class ConjunctionAssessment
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
     /// <returns>
-    /// All detected encounters in the window, the zeros of the range rate from negative to positive; an empty list when the
-    /// window holds none (#621: a single encounter at the window midpoint before 11.0.0).
+    /// All detected encounters in the window, the zeros of the range rate from negative to positive, each at the tick nearer
+    /// its zero (#624): a window end for a zero in the half-tick next to it, unflagged; an empty list when the window holds
+    /// none (#621: a single encounter at the window midpoint before 11.0.0).
     /// </returns>
     /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
     /// propagated secondary spacecraft, which would be extrapolated (#527); the secondary object has the NAIF identifier of
@@ -780,7 +781,8 @@ public static class ConjunctionAssessment
             readRangeRateOverWindow: options.ReadRangeRateOverWindow);
 
         Time tca = SelectBestTcaEpoch(tcaEpochs, screeningWindow, protectedSource, secondarySource);
-        return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource, secondarySource,
+        return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, tcaEpochs.Count == 0, options,
+            protectedSource, secondarySource,
             protectedResolver ?? CreateResolver(protectedAsset.Spacecraft, protectedSource, options, tca),
             secondaryResolver ?? CreateResolver(secondaryObject, secondarySource, options, tca));
     }
@@ -821,8 +823,8 @@ public static class ConjunctionAssessment
         var protectedResolver = CreateResolver(protectedAsset.Spacecraft, protectedSource, options, lastTca);
         var secondaryResolver = CreateResolver(secondaryObject, secondarySource, options, lastTca);
         return tcaEpochs
-            .Select(tca => BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource,
-                secondarySource, protectedResolver, secondaryResolver))
+            .Select(tca => BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, false, options,
+                protectedSource, secondarySource, protectedResolver, secondaryResolver))
             .ToArray();
     }
 
@@ -2402,14 +2404,17 @@ public static class ConjunctionAssessment
         ILocalizable secondaryObject,
         Window screeningWindow,
         Time tca,
+        bool windowHoldsNoCloseApproach,
         ConjunctionAnalysisOptions options,
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource,
         EncounterCovarianceResolver protectedResolver,
         EncounterCovarianceResolver secondaryResolver)
     {
-        // A TCA on a window end is the closest end of a window without a close approach (#621)
-        var qualityFlags = tca.CompareTo(screeningWindow.StartDate) == 0 || tca.CompareTo(screeningWindow.EndDate) == 0
+        // The closest end of a window without a close approach (#621); a close approach the search finds on an end (its
+        // range-rate zero in the half-tick next to it, or exactly on it) is one the window holds, not flagged (adversarial
+        // review of #621)
+        var qualityFlags = windowHoldsNoCloseApproach
             ? EncounterQualityFlags.TcaAtWindowEnd
             : EncounterQualityFlags.None;
         var protectedState = protectedSource.GetState(tca);

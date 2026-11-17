@@ -33,7 +33,9 @@ internal static class CovarianceChecks
 
     /// <summary>
     /// The deepest defect that the remediation repairs (#443, decided by S. Guillet, 2026-11-17): the smallest eigenvalue of
-    /// the correlation matrix at least −1e-3 of its trace, the quantity of <see cref="RelativeTolerance"/>. Rounding each
+    /// the correlation matrix at least −1e-3 of its trace, the quantity of <see cref="RelativeTolerance"/>, in the frame
+    /// the clipping is made in (that of the state, or the RTN frame of the state when the depth passes there only,
+    /// <see cref="PropagatorBase.RemediateInitialCovariance"/>), so that each correlation moves by at most 6e-3 there. Rounding each
     /// element of a positive semi-definite covariance to 4 significant digits, as the covariances of a CDM (CCSDS 508.0-B-1,
     /// to be verified by S. Guillet), changes each correlation by at most 2u/(1 − u), u = 5e-4, so the smallest eigenvalue
     /// of a correlation matrix of order n by at most (n − 1) 2u/(1 − u) (Weyl), 8.34e-4 of the trace 6; measured: 1.6e-4 at

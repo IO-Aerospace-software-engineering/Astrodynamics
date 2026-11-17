@@ -437,10 +437,15 @@ var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false,
   11.0.0); −1.0001 changes the covariance by 7.1e-5 of √(P_ii P_jj), remediated. The analysis holds a refused covariance
   in RTN, as its other refusals, unflagged. A covariance rounded to 3 digits or fewer may be refused: remediate it
   yourself, or give it at its full precision.
-- The clipping is made in the frame of the state, the frame in which the propagation takes P0, and depends on the
-  axes: the same covariance clipped in RTN comes out different, by 4.2e-5 of √(P_ii P_jj) for a correlation of −1.0001.
-  A covariance known in RTN (a CDM) is given to the state in its inertial frame (`RotateCovarianceFromRtn`), then
-  remediated there, as the analysis does.
+- The clipping is made in a frame where the depth passes the bound: the frame of the state, the frame in which the
+  propagation takes P0, when it passes there (bit for bit as before 11.0.0); otherwise the RTN frame of the state, the
+  result rotated back to the frame of the state (adversarial review of #443: clipped in the frame of the state, a
+  covariance rounded in RTN whose depth there reached −0.75 of the trace changed by up to 2.9 √(P_ii P_jj), +26 % on a
+  σ_N). Clipped in RTN, 83 such covariances of LEO and GEO changed in RTN by 4.4e-4 of √(P_ii P_jj) at worst, the size of
+  their rounding; a correlation moves by at most the largest clipped eigenvalue, 6e-3 within the bound. The clipping
+  depends on the axes: the same covariance clipped in RTN and in the frame of the state comes out different, by 4.2e-5
+  of √(P_ii P_jj) for a correlation of −1.0001. A covariance known in RTN (a CDM) is given to the state in its inertial
+  frame (`RotateCovarianceFromRtn`), then remediated, as the analysis does.
 - The conjunction analysis, given the remediated state, propagates the same covariance bit for bit as when it
   remediates the original state itself, but does not raise `EncounterQualityFlags.CovarianceRemediated`: the covariance
   it is given is valid.

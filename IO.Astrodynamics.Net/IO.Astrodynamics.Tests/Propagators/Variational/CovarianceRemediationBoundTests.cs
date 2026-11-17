@@ -116,21 +116,25 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
     }
 
     [Theory]
-    [InlineData(-1.0059)] // just inside the bound: −9.83e-4 of the trace in RTN
-    [InlineData(-1.0001)]
-    [InlineData(-1.000000001)]
-    public void WithRemediatedCovariance_DefectWithinTheBound_IsRemediated(double rho)
+    [InlineData(-1.0059, true)] // just inside the bound: −9.83e-4 of the trace in RTN, beyond it in the frame of the state
+    [InlineData(-1.0001, false)]
+    [InlineData(-1.000000001, false)]
+    public void WithRemediatedCovariance_DefectWithinTheBound_IsRemediated(double rho, bool deepInTheFrameOfTheState)
     {
         // Arrange
         var (rtn, inertial) = WithTrCorrelation(Leo, rho);
         Assert.True(Depth(rtn) >= -Bound && Depth(rtn) < 0.0);
+        Assert.Equal(deepInTheFrameOfTheState, Depth(inertial) < -Bound);
 
         // Act
         var remediation = WithCovariance(Leo, inertial).WithRemediatedCovariance();
 
-        // Assert: remediated, in the frame of the state, against the independent clipping
+        // Assert: remediated against the independent clipping, in the frame of the state where the depth passes the bound
+        // there, in RTN and rotated back otherwise
         Assert.True(remediation.Remediated);
-        var expected = SSA.ConjunctionCovarianceEdgeTests.ClipCorrelation(inertial);
+        var expected = deepInTheFrameOfTheState
+            ? Rotate(SSA.ConjunctionCovarianceEdgeTests.ClipCorrelation(Rotate(inertial, Leo, toRtn: true)), Leo, toRtn: false)
+            : SSA.ConjunctionCovarianceEdgeTests.ClipCorrelation(inertial);
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
@@ -212,6 +216,69 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
 
         return rounded;
     }
+
+    [Fact]
+    public void WithRemediatedCovariance_DeepOnlyInTheFrameOfTheState_IsClippedInRtn()
+    {
+        // Arrange: covariances rounded to 4 significant digits in RTN (a CDM) and rotated to the frame of the state, whose
+        // defect passes the bound in RTN only (adversarial review of #443: clipped in the frame of the state, such a
+        // covariance changed by up to 2.9 √(M_ii M_jj))
+        var random = new Random(4430);
+        var leo = Leo;
+        int cases = 0;
+        double worstChange = 0.0, worstStateDepth = 0.0, worstReference = 0.0;
+        for (int k = 0; k < 6000; k++)
+        {
+            var rounded = RoundTo4Digits(CwCovariance(random, 1 + k % 6));
+            var given = Rotate(rounded, leo, toRtn: false);
+            if (Enumerable.Range(0, 6).Any(i => !(given.Get(i, i) > 0.0)) || Depth(rounded) < -Bound ||
+                Depth(given) >= -Bound)
+            {
+                continue;
+            }
+
+            cases++;
+            worstStateDepth = System.Math.Min(worstStateDepth, Depth(given));
+
+            // Act
+            var remediation = WithCovariance(leo, given).WithRemediatedCovariance();
+
+            // Assert: remediated, the clipping of the RTN covariance (computed here) rotated back to the frame of the
+            // state, so that the change in RTN is that of the clipping of its rounding
+            Assert.True(remediation.Remediated);
+            var actual = remediation.State.Covariance.Value;
+            Assert.Null(Propagator.Variational.CovarianceChecks.Validate(Values(actual), 6, "remediated", out _));
+            var expected = Rotate(SSA.ConjunctionCovarianceEdgeTests.ClipCorrelation(Rotate(given, leo, toRtn: true)), leo,
+                toRtn: false);
+            var actualRtn = Rotate(actual, leo, toRtn: true);
+            for (int i = 0; i < 6; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    double scale = System.Math.Sqrt(expected.Get(i, i) * expected.Get(j, j));
+                    worstReference = System.Math.Max(worstReference, System.Math.Abs(actual.Get(i, j) - expected.Get(i, j)) / scale);
+                    double rtnScale = System.Math.Sqrt(rounded.Get(i, i) * rounded.Get(j, j));
+                    worstChange = System.Math.Max(worstChange,
+                        System.Math.Abs(actualRtn.Get(i, j) - rounded.Get(i, j)) / rtnScale);
+                }
+            }
+        }
+
+        // The reference: the clipping of the same matrix in RTN, the two rotations and decompositions differing by rounding,
+        // which a variance ratio of up to 1e15 amplifies in the correlations (1.64e-9 measured on Linux; provisional, twice
+        // it, to be set again from the Windows x64 and macOS arm64 CI logs). The change in RTN of the order of the
+        // rounding: each correlation moves by at most the largest clipped eigenvalue, 6 × 1e-3 within the bound (a
+        // rigorous bound: |ΔC_ij| ≤ ‖ΔC‖₂)
+        _output.WriteLine($"MEASURE #443 deep only in the frame of the state: {cases} cases, depth there down to " +
+                          $"{worstStateDepth:E3} of the trace, largest change in RTN {worstChange:E3} of √(M_ii M_jj), " +
+                          $"largest difference from the clipping in RTN {worstReference:E3} of √(M_ii M_jj)");
+        Assert.True(cases > 0, "no covariance is deep only in the frame of the state");
+        Assert.True(worstReference <= 3.3e-9, $"{worstReference:E3}");
+        Assert.True(worstChange <= 6.0 * Bound, $"{worstChange:E3}");
+    }
+
+    private static double[] Values(Matrix p) =>
+        Enumerable.Range(0, 36).Select(k => p.Get(k / 6, k % 6)).ToArray();
 
     [Theory]
     [InlineData(true)]

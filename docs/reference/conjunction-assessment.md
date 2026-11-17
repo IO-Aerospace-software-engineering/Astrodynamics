@@ -301,7 +301,10 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 - `EncounterQualityFlags.LowRelativeVelocityEncounter` is an applicability warning that the 2D assumption may be degraded.
 - `EncounterQualityFlags.TcaAtWindowEnd` says that the window holds no close approach: the TCA is the closest window end,
   where the objects are in general still closing or already receding, their closest approach outside the window; widen
-  the window to find it ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621)).
+  the window to find it ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621)). A close
+  approach that the sampled search finds on a window end, its range-rate zero in the half-tick next to the end (the tick
+  nearer the zero, [#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624)), is one the
+  window holds: listed by `AnalyzeAll`, not flagged.
 - The covariance is propagated to TCA for the participants the library propagates in RK7(8); the others keep their
   initial covariance held in RTN (see [Covariance at TCA](#covariance-at-tca)).
 - The propagated covariance is linear: see the [non-linearity index](#non-linearity-index).

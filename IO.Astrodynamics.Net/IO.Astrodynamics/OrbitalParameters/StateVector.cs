@@ -573,8 +573,10 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <para>
         /// A covariance that the propagation accepts (each asymmetry within 1e-12 of √(P_ii P_jj), the smallest eigenvalue
         /// of C at least −1e-12 of its trace) is returned as it is: the state itself, not remediated. The clipping is made
-        /// in the frame of this state, as the analysis and the propagator take the covariance, and depends on the axes:
-        /// clipped in RTN, the same covariance comes out different (by 4.2e-5 of √(P_ii P_jj) for a correlation of −1.0001).
+        /// in the frame of this state, as the analysis and the propagator take the covariance, when the depth of its defect
+        /// passes the bound below there, and in the RTN frame of this state, rotated back, when it passes there only; it
+        /// depends on the axes: clipped in RTN, the same covariance comes out different (by 4.2e-5 of √(P_ii P_jj) for a
+        /// correlation of −1.0001).
         /// <see cref="CovarianceRemediation.SmallestCorrelationEigenvalue"/> says how far from positive semi-definite the
         /// covariance was.
         /// </para>

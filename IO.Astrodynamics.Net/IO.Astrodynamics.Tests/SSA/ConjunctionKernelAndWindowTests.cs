@@ -565,6 +565,52 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         }
     }
 
+    [Fact]
+    public void CloseApproachInTheLastHalfTick_IsListedAtTheEnd_NotFlagged()
+    {
+        // The encounter at t0 + 1800 s, its range-rate zero within half a tick of a window end, on the side of the window:
+        // the sampled search returns the tick nearer the zero (#624), the end itself, of a close approach the window holds.
+        // TcaAtWindowEnd says that the window holds none, so it is not raised, and AnalyzeAll lists it (adversarial review
+        // of #621: listed flagged, the flag saying to widen the window). The reference: CSPICE's LOCMIN on the SPKs of the
+        // two propagations, the TCA within the bound of AssertIsMinimum of its zero
+        var profile = new ProtectedSpacecraftProfile(_case.Sat1);
+        var reference = CspiceLocalMinima(_case.Seconds(1700.0, 1900.0)).Single();
+        var sampled = Assert.Single(ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, _case.Seconds(1700.0, 1900.0), Options));
+        var tick = sampled.EncounterState.Epoch;
+        double tickError = (tick - reference.Epoch).TotalSeconds - reference.Offset;
+        Assert.True(System.Math.Abs(tickError) <= 1.8e-7, $"TCA {tickError:E3} s");
+
+        // The windows ending and starting at that tick: the zero lies in one of them, within half a tick of its end
+        var listed = 0;
+        foreach (var window in new[] { new Window(_case.Seconds(1700.0, 1900.0).StartDate, tick),
+                     new Window(tick, _case.Seconds(1700.0, 1900.0).EndDate) })
+        {
+            // Act
+            var all = ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, window, Options);
+            var analyzed = ConjunctionAssessment.Analyze(profile, _case.Sat2, window, Options);
+
+            // Assert: the close approach at the tick, listed and returned, unflagged
+            _output.WriteLine($"[{(window.StartDate - _case.T0).TotalSeconds:F7}, {(window.EndDate - _case.T0).TotalSeconds:F7}] s: " +
+                              $"{all.Count} listed, Analyze t0 + {(analyzed.EncounterState.Epoch - _case.T0).TotalSeconds:F7} s " +
+                              $"{analyzed.EncounterState.QualityFlags}");
+            foreach (var encounter in all)
+            {
+                Assert.Equal(tick, encounter.EncounterState.Epoch);
+                Assert.False(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd),
+                    encounter.EncounterState.QualityFlags.ToString());
+                listed++;
+            }
+
+            if (all.Count > 0)
+            {
+                Assert.Equal(tick, analyzed.EncounterState.Epoch);
+                Assert.False(analyzed.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
+            }
+        }
+
+        Assert.True(listed > 0, "the close approach is listed in neither window");
+    }
+
     // The local minima of CSPICE on a window of the crossing at 60 s steps (CspiceLocalMinima of the base)
     private (TimeSystem.Time Epoch, double Offset, double Distance)[] CspiceLocalMinima(Window window) =>
         CspiceLocalMinima(window, _case);

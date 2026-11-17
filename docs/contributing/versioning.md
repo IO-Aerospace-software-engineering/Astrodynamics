@@ -4523,8 +4523,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Analyze`, `Screen` and the re-analysis of each avoidance option return the closest window end where the sampled path
   returned the midpoint (and where the search on two propagations returned the end the distance grows into, the same end
   but for a minimum its seeds miss), with `EncounterQualityFlags.TcaAtWindowEnd` (new, `1 << 8`) raised; the
-  `ILocalizable` `AnalyzeAll` returns an empty list where it returned one midpoint encounter. Every encounter whose TCA
-  is a window end carries the flag, the CDM export's comment of the flags included. Migration: test
+  `ILocalizable` `AnalyzeAll` returns an empty list where it returned one midpoint encounter. Every encounter of a
+  window without a close approach carries the flag, the CDM export's comment of the flags included; a close approach the
+  sampled search finds on a window end (its range-rate zero in the half-tick next to the end, the tick nearer it #624
+  returns) does not, and `AnalyzeAll` lists it
+  (`ConjunctionKernelAndWindowTests.CloseApproachInTheLastHalfTick_IsListedAtTheEnd_NotFlagged`, red on 415442e, where
+  the flag was raised for any TCA on a window end). Migration: test
   `QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd)` for an encounter whose closest approach lies outside the
   window, and widen the window to find it; expect an empty list from `AnalyzeAll` where one midpoint encounter came.
 
@@ -4537,7 +4541,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and in its RTN frame (the frame a CDM rounds in; a rotation deepens a rounding defect, up to −0.11 of the trace measured
   for covariances rounded in RTN). The bound is above the rigorous worst of that rounding, 8.34e-4 of the trace by Weyl's
   inequality (measured: 1.5e-4 over 6000 LEO and GEO covariances of ranks 1 to 6, 2.1e-4 by an adversarial search). A
-  correlation of −1.01 in RTN (1.67e-3 of the trace) is refused; −1.0059 (9.8e-4) is remediated as before.
+  correlation of −1.01 in RTN (1.67e-3 of the trace) is refused; −1.0059 (9.8e-4) is remediated. The clipping is made in
+  the frame of the state when the depth passes there, bit for bit as before; otherwise in the RTN frame of the state,
+  rotated back: clipped in the frame of the state, a covariance rounded in RTN whose depth there reached −0.75 of the
+  trace changed by up to 2.9 √(M_ii M_jj) (adversarial review of #443); clipped in RTN, by the size of its rounding
+  (4.4e-4 at worst over 83 such covariances, `WithRemediatedCovariance_DeepOnlyInTheFrameOfTheState_IsClippedInRtn`, red
+  on b8e2e42).
   `WithRemediatedCovariance` throws `InvalidOperationException` with the depth in both frames in its message; the
   analysis holds such a covariance in RTN, as its other refusals, without `CovarianceRemediated`
   (`CovarianceRemediationBoundTests`, `ConjunctionCovarianceEdgeTests.Analyze_InitialCovarianceBeyondTheDepthBound_IsHeldInRtn`,

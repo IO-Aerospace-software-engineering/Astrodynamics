@@ -346,7 +346,9 @@ public abstract class PropagatorBase : IPropagator
     /// rounding of every element to 4 significant digits in the frame it was rounded in, and a rotation to another frame
     /// can deepen that defect without bound in the correlation matrix (a covariance of LEO rounded in RTN and rotated to
     /// ICRF: up to 2.4e-2 of the trace measured for a full-rank covariance, near −1 for a degenerate one). The clipping
-    /// itself is made in the frame of the state, as before.
+    /// is made in a frame where the depth passes: the frame of the state when it passes there, as before; otherwise the
+    /// RTN frame, the result rotated back, so that the change stays of the size of the rounding (clipped in the frame of
+    /// the state, a covariance rounded in RTN changed by up to 2.9 √(M_ii M_jj), adversarial review of #443).
     /// </remarks>
     /// <param name="p0">The initial covariance.</param>
     /// <param name="state">The state the covariance belongs to, whose RTN frame is the second frame of the bound; null,
@@ -382,13 +384,22 @@ public abstract class PropagatorBase : IPropagator
         if (clipped == null)
             return refusal;
 
-        // The depth of the defect, in the frame of the covariance, then in the RTN frame of its state (#443)
+        // The depth of the defect, in the frame of the covariance, then in the RTN frame of its state (#443). The clipping
+        // is made in a frame where the depth passes the bound: the frame of the state when it passes there (as before
+        // 11.0.0), the RTN frame otherwise, so that the change stays of the size of the rounding the bound explains (a
+        // covariance rounded in RTN and rotated can be deep in the frame of the state, where its clipping changed it by up
+        // to 2.9 √(M_ii M_jj), adversarial review of #443)
         int positive = Enumerable.Range(0, 6).Count(i => values[6 * i + i] > 0.0);
         double depth = smallestEigenvalue / positive;
         if (depth < -CovarianceChecks.RemediationDepthBound)
         {
-            double rtnDepth = RtnRelativeDepth(p0, state);
-            if (!(rtnDepth >= -CovarianceChecks.RemediationDepthBound))
+            var rtn = RtnCovariance(p0, state, out var r6);
+            double rtnDepth = rtn == null ? double.NaN : CovarianceChecks.RelativeDepth(rtn, 6);
+            var clippedRtn = rtnDepth >= -CovarianceChecks.RemediationDepthBound
+                ? CovarianceChecks.RemediateByEigenvalueClipping(rtn, 6)
+                : null;
+            clipped = clippedRtn == null ? null : FromRtn(clippedRtn, r6);
+            if (clipped == null)
             {
                 smallestEigenvalue = double.NaN;
                 return "The covariance is not positive semi-definite beyond what rounding explains: the smallest " +
@@ -412,27 +423,52 @@ public abstract class PropagatorBase : IPropagator
         return null;
     }
 
-    // The depth of the defect of p0 in the RTN frame of its state (P_RTN = R P Rᵀ, R the block-diagonal rotation of the
-    // RTN axes, symmetrized); NaN without a state, for a rectilinear one, or for a matrix the check refuses there
-    private static double RtnRelativeDepth(Math.Matrix p0, StateVector state)
+    // p0 in the RTN frame of its state, P_RTN = R P Rᵀ, R the block-diagonal rotation of the RTN axes (r6), symmetrized;
+    // null without a state or for a rectilinear one (no RTN frame)
+    private static double[] RtnCovariance(Math.Matrix p0, StateVector state, out Math.Matrix r6)
     {
+        r6 = default;
         double h = state?.Position.Cross(state.Velocity).Magnitude() ?? double.NaN;
         if (!(h > 0.0) || !(state.Position.Magnitude() > 0.0))
-            return double.NaN;
+            return null;
 
         var rotation = state.CreateRtnRotation();
-        var r6 = Math.Matrix.CreateBlockDiagonal(rotation, rotation);
-        var rtn = r6 * p0 * r6.Transpose();
+        r6 = Math.Matrix.CreateBlockDiagonal(rotation, rotation);
+        return Symmetrized(r6 * p0 * r6.Transpose());
+    }
+
+    // A covariance clipped in RTN back in the frame of the state, Rᵀ P_RTN R, symmetrized; the rotation of a positive
+    // semi-definite matrix is one, but its rounding may leave a zero eigenvalue of the correlation matrix below the
+    // tolerance of the check, which a clipping in the frame of the state then repairs at that size
+    private static double[] FromRtn(double[] clippedRtn, Math.Matrix r6)
+    {
+        var rtn = new Math.Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                rtn.Set(i, j, clippedRtn[6 * i + j]);
+            }
+        }
+
+        var values = Symmetrized(r6.Transpose() * rtn * r6);
+        return CovarianceChecks.Validate(values, 6, "The remediated covariance", out _) == null
+            ? values
+            : CovarianceChecks.RemediateByEigenvalueClipping(values, 6);
+    }
+
+    private static double[] Symmetrized(Math.Matrix m)
+    {
         var values = new double[36];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                values[6 * i + j] = 0.5 * (rtn.Get(i, j) + rtn.Get(j, i));
+                values[6 * i + j] = 0.5 * (m.Get(i, j) + m.Get(j, i));
             }
         }
 
-        return CovarianceChecks.RelativeDepth(values, 6);
+        return values;
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one
