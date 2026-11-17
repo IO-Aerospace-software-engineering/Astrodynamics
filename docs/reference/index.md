@@ -16,6 +16,7 @@ Foundation services for kernel loading, time, frames, celestial bodies, and spac
 - [Celestial Bodies](celestial-bodies.md) — `CelestialBody`, `CelestialItem`, physical properties
 - [Spacecraft](spacecraft.md) — spacecraft modeling, components, body axes, the field-of-view search and its accuracy
 - [Sites](sites.md) — ground sites, launch sites, horizontal coordinates
+- [Stars](stars.md) — `Star`: catalog units and conventions, the straight-line space motion, its accuracy and limits, a Gaia DR3 record
 - [Occultations & Eclipses](occultations.md) — `FindWindowsOnOccultationConstraint`, shapes, frames, step rule, accuracy
 
 ## Orbital Mechanics

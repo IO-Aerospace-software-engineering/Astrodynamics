@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.CCSDS.OPM;
@@ -93,10 +94,12 @@ public class OpmManeuverParameters
     /// <param name="manDuration">Duration in seconds (finite, >= 0).</param>
     /// <param name="manDeltaMass">Mass change in kg (finite, &lt;= 0).</param>
     /// <param name="manRefFrame">Reference frame for delta-V components.</param>
-    /// <param name="manDv1">First delta-V component in km/s.</param>
-    /// <param name="manDv2">Second delta-V component in km/s.</param>
-    /// <param name="manDv3">Third delta-V component in km/s.</param>
+    /// <param name="manDv1">First delta-V component in km/s (finite).</param>
+    /// <param name="manDv2">Second delta-V component in km/s (finite).</param>
+    /// <param name="manDv3">Third delta-V component in km/s (finite).</param>
     /// <param name="comments">Optional comments.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The duration is not finite and 0 or more, the delta mass not finite
+    /// and 0 or less (#708), or a ΔV component is NaN or ±Infinity (#717).</exception>
     public OpmManeuverParameters(
         DateTime manEpochIgnition,
         double manDuration,
@@ -120,9 +123,10 @@ public class OpmManeuverParameters
         ManDuration = manDuration;
         ManDeltaMass = manDeltaMass;
         ManRefFrame = manRefFrame;
-        ManDv1 = manDv1;
-        ManDv2 = manDv2;
-        ManDv3 = manDv3;
+        // The ΔV components carry no range but are real numbers, as the reader reads them (#717)
+        ManDv1 = CcsdsValues.RequireFinite(manDv1, nameof(manDv1));
+        ManDv2 = CcsdsValues.RequireFinite(manDv2, nameof(manDv2));
+        ManDv3 = CcsdsValues.RequireFinite(manDv3, nameof(manDv3));
         Comments = comments ?? Array.Empty<string>();
     }
 
@@ -135,6 +139,9 @@ public class OpmManeuverParameters
     /// <param name="deltaMass">Mass change in kg (&lt;= 0).</param>
     /// <param name="comments">Optional comments.</param>
     /// <returns>A new OpmManeuverParameters instance.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">A component of <paramref name="deltaV"/> is NaN or ±Infinity (#717),
+    /// named as the constructor's parameter (<c>manDv1</c> ... <c>manDv3</c>), or the delta mass is not finite and 0 or
+    /// less.</exception>
     public static OpmManeuverParameters CreateImpulsive(
         DateTime epoch,
         Vector3 deltaV,

@@ -53,7 +53,8 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, the equality of frames, and the axes the TRIAD factories point. **Deprecated** lists
+public statics, the equality of frames, the axes the TRIAD factories point, and the straight-line motion of a star and
+its proper motion in right ascension as a true angle. **Deprecated** lists
 `Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
 `Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -2860,7 +2861,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CcsdsValues.IsNullOrFiniteNonNegative`), `OpmKeplerianElements` (e finite and 0 or more, a finite, i in [0, 180], GM
   finite and above 0) and `OpmManeuverParameters` (`manDuration` finite and 0 or more, `manDeltaMass` finite and 0 or
   less), the same `ArgumentOutOfRangeException` naming the parameter. The parameters without a range (the state
-  vector, the covariance, the ΔV components, the TLE parameters, the CDM records) are unchanged. Finite values build bit
+  vector, the covariance, the ΔV components, the TLE parameters, the CDM records) were left unchanged here; [#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)
+  extends the rule to them (below). Finite values build bit
   for bit as before (`MeanElementsTests`, `SpacecraftParametersTests`, `OpmDataTests`, `OpmKeplerianElementsTests` and
   `OpmManeuverParametersTests` `*_NonFinite*`, NaN, +∞ and −∞ in each ranged parameter, red on 46e6975; the bounds
   e 0 and −0, i 0 and 180, the angles −360, a mass and a delta mass of 0 stored as given).
@@ -2873,6 +2875,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OPM002`) or a CDM content error naming its value (`Variance CX_X must be finite and non-negative, got NaN.`); the
   warnings and the information levels are unchanged (`OmmValidatorTests` and `OpmValidatorTests`
   `Validate_NaNVariance_ReportsError`, each variance; `CdmTests.Validate_NaNMissDistance_IsInvalid`; red on 46e6975).
+  Since [#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717) a NaN or infinite variance or miss distance no longer builds, so these errors are reached through a
+  negative value (`Validate_NegativeVariance_ReportsError`, `Validate_NegativeMissDistance_IsInvalid`, which replace them).
 - **The OMM content validation refused a negative angle the schema accepts** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)). `OmmValidator` checked
   `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` and `MEAN_ANOMALY` against [0, 360) ("must be 0-360 degrees"), where the
   `angleRange` of NDM/XML 4.0.0 and `MeanElements` take [-360, 360): `Omm.LoadFrom*` with the default `validateContent`
@@ -2967,6 +2971,73 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadOrientation_WithoutAClock_ThrowsSpicesMessage`, C++ `API.ReadOrientationProxyOfAnUnknownFrameReturnsSpicesMessageAndLeavesNothingPending`,
   `API.ReadOrientationProxyWithoutAClockReturnsSpicesMessage` and `API.LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending`).
   The tests of #706 that kept a second CK loaded so that this error did not reach the next call no longer do.
+- **The two-body proxies aborted the process or returned the stack's contents** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)).
+  `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` activated no error management, reset SPICE
+  without its message and returned the arrays `prop2b_c` and `oscltx_c` never wrote: as the first native call of a
+  process, `SpiceAPI.Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` with a GM of 0 or below ended it
+  through SPICE's default action, ABORT (exit code 1, no managed exception); after any other call they returned about
+  7e-310 for a GM below 0, a zero position or velocity, or a position parallel to the velocity, with no error, and so did
+  the overloads that take the GM of an observer without one (Elara, 507), all measured on a80f6a5. Both proxies now
+  return a NaN result (the epoch plus dt, the centre and the frame as given; NaN in every element) with SPICE's message,
+  SPICE reset (a native change for a technical reason, no signature changed), and `SpiceAPI` throws (Changed, Breaking,
+  below). C++ `API.Propagate2BodiesProxyOfAStateOutsideTheDomainOfProp2bReturnsNaN`,
+  `API.ConvertStateVectorToConicOrbitalElementProxyOfAStateOutsideTheDomainOfOscltxReturnsNaN` and the death tests
+  `API.*AsTheFirstCallReturnsNaN` (exit code 1 on the base), child modes `two-body-first-propagate` and
+  `two-body-first-conic` of `ColdStartTests`, `SpiceApiTest.TwoBodyCalls_*` (the messages those of direct `prop2b_c` and
+  `oscltx_c` calls, an ordinary state their results bit for bit; the domains read from `prop2b.c` and `oscelt.c` of
+  CSPICE N0067).
+- **A SPICE error with no long message was reported as a success** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `ReportNativeErrors`, through which most
+  proxies report, built its message from SPICE's long message alone, and returned true when it was empty: `prop2b.c`
+  signals `SPICE(NONPOSITIVEMASS)`, `SPICE(ZEROPOSITION)`, `SPICE(ZEROVELOCITY)` and `SPICE(NONCONICMOTION)` with no
+  `setmsg_`. Such an error is now reported by its short message (`SPICE(ZEROVELOCITY)`), the proxy returning false or
+  its NaN result. Only a native caller met it before the two-body proxies reported through it.
+- **The message of a failed frame transformation named a wrong cause** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `TransformFrameProxy` checked SPICE only
+  after `xf2rav_c`, the unwritten matrix of a failed `sxform_c` passed to the quaternion, then reset SPICE without its
+  message and returned the zero quaternion, so that `SpiceAPI.TransformFrame` (and `Frame.ToFrame` through the
+  `SpiceDataProvider`) threw "the frame data (a PCK, CK or frame kernel) does not cover this epoch or is not loaded" for an
+  unknown frame too. The proxy reports right after `sxform_c` and catches C++ exceptions, returning a NaN rotation and
+  angular velocity with SPICE's message; `TransformFrame` keeps the frames and the epoch and appends it
+  (`SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known reference frame.",
+  `SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for epoch
+  2199 AUG 22 04:00:00.000 TDB were not found. ..."). The exception type is unchanged (C++
+  `API.TransformFrameProxyOfAnUnknownFrameReturnsNaNWithSpicesMessage`,
+  `API.TransformFrameProxyOutsideTheCoverageOfAPckReturnsNaNWithSpicesMessage`; `SpiceApiTest.TransformFrame_ThatSpiceCannotGive_*`,
+  the text that of a direct `sxform_c` call).
+- **The message of a centre without GM changed from run to run** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), question 4 of #713). After a failed GM read
+  SPICE is failed, `BODC2N` returns at once and `bodc2n_c` copies its own unwritten local into the caller's flag
+  (`bodc2n_c.c` of N0067, `*found = fnd;`), so that initialising the flag (#711) did not make it determinate: about Elara,
+  six runs of nine gave "CelestialItem id507 can't be found" before SPICE's message, three SPICE's alone, and the body
+  was built with an empty name when the flag was not zero. Both `CelestialBody` constructors now throw `SDKException`
+  `CelestialItem id<id> can't be read:` before `bodc2n_c`, SPICE's error left pending for the proxy, which appends it:
+  "CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool." on every run (C++
+  `CelestialBody.ConstructorsOfABodyWithoutGmThrowBeforeReadingItsName`, the whole message in
+  `API.Convert*ProxyOfACentreWithoutGmReturnsNaN` and `API.LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending`;
+  `SpiceApiTest.Convert*ElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException`). The exception type
+  is unchanged.
+- **The last native error outlived its call** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `lastError` was written only on failure, so that
+  `GetLastErrorProxy()` returned the message of an earlier call after a proxy that succeeded or failed without a message
+  of its own: a conversion of a NaN inclination threw "Native proxy call failed", or, after a failed conversion about
+  Elara, Elara's message about the Earth's elements (measured on a80f6a5). Every proxy that reports through `lastError`
+  now clears it when it starts (C++ `API.EveryReportingProxyThatSucceedsClearsTheLastError`, the 25 proxies).
+  `ReadEphemerisProxy` clears it once, before its epochs, and keeps the message of the first epoch that fails, where
+  `SpiceAPI.ReadEphemeris` stops (decided by S. Guillet, 2026-11-17; before, each failed epoch replaced the message, so
+  the last one was named: C++ `API.ReadEphemerisProxyPastTheCoverageNamesTheFirstFailedEpoch`, red on 507f963).
+  `SpiceAPI.ReadEphemeris` over a window checks every state before it rotates any into a managed frame, whose rotation
+  calls `TransformFrameProxy` and so clears the message
+  (`SpiceApiTest.ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage`: the frame of a site on
+  Mars past the end of de440s gives SPICE's message of the first failed epoch, 2150 JAN 22 12:00 TDB, as J2000 does; it
+  named 2150 JAN 25 on 507f963).
+- **A CK without angular velocity could not be read** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `ckgpav_c` skips a segment without rates and returns
+  found = false with no error ("Segments containing only pointing data will be skipped over", its Restrictions 1), and
+  `ReadOrientationProxy` fell back to `ckgp_c` only on an error, so that `SpiceAPI.ReadOrientation` of a type-1 CK, or of
+  a type-2 or type-3 CK written without rates, threw "No orientation found" (a type-3 CK written by `ckw03_c` without
+  rates, measured on a80f6a5). The proxy falls back to `ckgp_c` when `ckgpav_c` finds nothing too; such a record has the
+  pointing of `ckgp_c` and a zero angular velocity (decided by S. Guillet, 2026-11-17; C++
+  `API.ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing`, within 2.3e-16 rad of `ckgp_c` and of the
+  closed form R_z(1e-3 t), twice the worst on Linux x64 and macOS arm64, where it runs;
+  `SpiceApiTest.ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing`, within 3.2e-16 rad, the CK with
+  rates (0, 0, 1e-3) rad/s, twice the Linux worst, Validation; CI run 43974478027). The CKs the library writes carry
+  their rates and read as before, bit for bit.
 - **The position of a star depended on the time frame of its epoch** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates`,
   `GetRightAscensionSigma` and `GetDeclinationSigma` took dt from the calendars of the catalog epoch and of the epoch,
   each in its own time frame, so that the same instant gave two positions (relative to the epoch in TDB: 2.299e-7 in UTC,
@@ -2981,7 +3052,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   between frames (`StarTests.GetEquatorialCoordinates_TheSameInstantInEveryFrame_IsOnePosition`); across the leap second
   it counts 86 401 s plus the change of TDB − TT, 0.000e+00 rad from the closed form of the leapseconds kernel
   (`AcrossALeapSecond_CountsIt`, 3.169e-9 rad before); against dt from CSPICE's ET (`unitim_c` of the TT of each UTC
-  time), 3.553e-15 rad over 2001 and 2016-07 to 2017-06 (Validation, Linux, threshold 7.2e-15, provisional). For a
+  time), 3.553e-15 rad over 2001 and 2016-07 to 2017-06 (Validation, Linux, threshold 7.2e-15; 1.0e-14 for the straight line of #718). For a
   catalog epoch or an epoch in UTC, TAI or GPS a star moves by μ × (TDB − UTC or TAI), about 32 to 69 s of its motion:
   about 1e-11 rad for a real star of 1″/yr; in TT, under 1.7 ms of it. `Star.Propagate`, `GetEphemeris` and the star of
   an occultation or field-of-view search over a UTC window move the same way. Two times in TDB, every star of the
@@ -2995,9 +3066,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   identity, 9.992e-15 rad and 1.539e-15 in direction over two years every 0.01 yr past the north pole, the south pole,
   and both for a star of 1 rad/yr, each step no longer than the arc of the angles (3.142 rad, a direction 2.0 away and
   a jump of 1.569 rad before; `StarTests.GetEquatorialCoordinates_AcrossAPole_CrossesIt`, thresholds 2.0e-14 rad and
-  3.1e-15, provisional); against CSPICE's `latrec_c` then `reclat_c` of the unreduced angles, 1.533e-15 rad
-  (`AcrossAPole_IsReclatOfLatrec`, Validation, threshold 3.1e-15, provisional). A star of the model still moves along
-  its angles, not along a great circle (SOFA's space motion is not modeled). Declinations within [−π/2, π/2] are
+  3.2e-15 over Linux, Windows and macOS arm64); against CSPICE's `latrec_c` then `reclat_c` of the unreduced angles, 1.533e-15 rad
+  (`AcrossAPole_IsReclatOfLatrec`, Validation, threshold 3.1e-15). Since #718 a star moves along `iauStarpm`'s
+  straight line instead (below), which crosses a pole without this reduction. Declinations within [−π/2, π/2] are
   unchanged, bit for bit; the snapshot of `StarTests.GetEquatorialCoordinates2`, past the south pole, which encoded the
   jump (−0.128953 rad), is replaced by the closed form (−1.441843 rad, the right ascension turned by π). The right
   ascension is in [0, 2π) as documented: a value just below 0 whose sum with 2π rounds to 2π (above −ulp(2π)/2,
@@ -3021,7 +3092,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and Saturn read from SPICE at the TDB of the TT argument, RK4 at 300 s, converged to about 1e-4 m): 468.4 m and
   1.197e-3 m/s, the error of Velocity-Verlet at the example's 5 min, that integration against the Moon of de440s,
   1.514 km (the forces it leaves out), and the example against it, 1.972 km (bounds 9.4e2 m, 2.4e-3 m/s, 3.1e3 m and
-  4.0e3 m, twice the Linux worst, provisional); with the Earth's GM alone the integration ends 54 310 km from the Moon.
+  4.0e3 m, twice the worst over Linux, Windows and macOS arm64); with the Earth's GM alone the integration ends 54 310 km from the Moon.
   The comment of the 5 min step states what the step costs where it said "for accuracy". The library is unchanged
   (`DeepSpaceExample_FollowsTheMoonOfTheEphemeris`, red on 46e6975: the block returned nothing to compare; with the
   Earth's GM alone, 5.431e7 m from the reference).
@@ -3058,15 +3129,146 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its lines), and the Lambert, frame, lunar eclipse, batch and thread-safety blocks with their inputs: the Lambert velocities
   against the two-body closed form (3.1e-7 m at arrival), the ecliptic state against the rotation by the obliquity of
   ECLIPJ2000 (9.3e-10 m), the CIRS round trip (1.4e-16), the eclipse of 2024-03-25 bracketed within 60 s by the discs of
-  the Earth and the Moon as the Sun sees them (bounds twice the Linux worst, provisional). The 12 signature listings and
+  the Earth and the Moon as the Sun sees them (bounds twice the worst over Linux, Windows and macOS arm64). The 12 signature listings and
   fragments that are not statements are fenced `csharp-signature` (highlighted as C# through `mkdocs.yml`, and checked
   against the library's constructors and methods by reflection), or written out in full; the excerpt of `Constants` that
   opens `docs/standards-and-units.md`, declarations fenced `csharp` with no region (region 1 of that page is its second
   csharp block), is checked by value. A block's leading using alias may name a public type of the library. This lifts the known
   limitation of #662. Documentation and tests only: no library result moves.
+- **The managed field-of-view search of a field with tiny half-angles threw an unrelated `ArgumentException`** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)).
+  The managed search and `IsInFOV` of a circle or an ellipse build an ellipsoid whose limb is the cone of the field, of
+  semi-axes D sin REF and D sin REF · tan CROSS / tan REF at the target's distance D. Where the square of one of them
+  underflows to 0 (IEEE 754: a half-angle below about 6e-171 rad at the Moon's distance, 1e-200 and 5e-324 measured),
+  the ellipsoid of the occultation search threw `ArgumentException`, "The semi-axes of an ellipsoid must have positive
+  lengths", instead of the `InvalidOperationException` of a field that cannot be searched; it now throws that, naming
+  the half-angles and the underflow (`InstrumentTests.TinyHalfAngle_ManagedSearchThrowsInvalidOperation`, red on
+  a80f6a5 for the six rows of a circle and an ellipse, a point and an ellipsoid target). The rectangle, whose margin
+  takes the half-angles as angles, was not affected. A target at the observer, distance 0 (two spacecraft of the same
+  state), threw the same `ArgumentException` for a circle or an ellipse of any field: a point target now throws
+  `InvalidOperationException` naming the target at the observer, which has no direction, and an ellipsoid target the
+  `InvalidOperationException` of an observer inside the target, never a message about the half-angles
+  (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
+  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle still reports such a point in view, its margin taking
+  atan2(0, 0) = 0, [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). Every other
+  field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
+  `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends (decided by
+  S. Guillet, 2026-11-17), the constructors keep the rule "finite and positive" for both half-angles, and the
+  documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
+  measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
+  and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at the
+  boresight not found for a half-angle of 1e-155 rad in the reference plane, measured).
+- **Six csharp blocks of three tutorials did not compile with the directives of their page** ([#716](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/716)).
+  `DocumentationPagesExamplesTests.PageBlocks_CompileWithTheUsingsOfTheirPage` compiled, as a reader who copies them,
+  only the blocks that declare using directives (15 of 174), so a block without a list of its own that used a namespace
+  its page never imports passed: `Planetodetic` in the coordinate conversions tutorial (`IO.Astrodynamics.Coordinates`),
+  `CentralBodyPropagator` and `CentralBodyPropagatorBuilder` in three blocks of the numerical propagation tutorial
+  (`IO.Astrodynamics.Propagator`), `Omm` and `Opm` in the TLE and OMM tutorial (`IO.Astrodynamics.CCSDS.OMM` and
+  `IO.Astrodynamics.CCSDS.OPM`), CS0246 and CS0103 for a reader. The test now compiles every block of a page that
+  declares directives with the block's own, the earlier blocks' and a console application's implicit ones (red on
+  a80f6a5 on exactly these six blocks of three of the eight pages); the first blocks of the coordinate conversions and
+  numerical propagation tutorials import the two namespaces, and the OMM and OPM blocks of the TLE tutorial import their
+  own. A page that declares no directive gives the reader none and is not compiled this way. Documentation and tests
+  only: no library result moves.
+
+- **The CCSDS data model built values without a range that its readers refuse** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)). The
+  constructors of `OpmStateVector` (X ... Z_DOT), `CovarianceMatrix` (its 21 terms), `OpmManeuverParameters` (MAN_DV_1
+  to MAN_DV_3) and `TleParameters` (BSTAR, BTERM, MEAN_MOTION_DOT, MEAN_MOTION_DDOT, AGOM), and the init accessors of the
+  CDM records (`CdmRelativeMetadataData`, `CdmRelativeStateVector`, `CdmOdParameters`, `CdmAdditionalParameters`,
+  `CdmStateVector`, `CdmCovarianceMatrix`: 47 real values), assigned NaN and ±Infinity unchecked, where #708 had
+  checked the ranged parameters only: `Validate()` and `validateBeforeSave` passed them (an infinite BSTAR with an
+  information message, a covariance term other than a variance, every CDM value but the miss distance), the writers
+  wrote `NaN`, `Infinity` or `-Infinity` (`Infinity` is not an `xsd:double` literal, XML Schema Part 2, 3.2.5.1), and
+  the readers refused the document (measured on a80f6a5: `new OpmStateVector(epoch, NaN, ...)` written as
+  `<X units="km">NaN</X>`, then `OpmParseException`; `CY_X = NaN` in an OMM, `BSTAR = NaN`, `with { CollisionProbability
+  = NaN }` on a CDM read back, each written and refused). Each value now goes through the internal `CcsdsValues`
+  (`RequireFinite`, `RequireNullOrFinite`, a vector by component, a matrix by term), which throws
+  `ArgumentOutOfRangeException` naming the parameter or the property; the factories (`FromStateVector`,
+  `FromFullMatrix`, `FromMatrix`, `FromMatrixWithUnitConversion`, `CreateImpulsive`, the four `CreateWith*`,
+  `FromRtnCovariance`) inherit the check under the name of the term at fault. Finite values build bit for bit as
+  before, and the written documents are byte for byte unchanged (`OpmStateVectorTests`, `CovarianceMatrixTests`,
+  `OpmManeuverParametersTests`, `TleParametersTests` and `CdmTests` `*_NonFinite*`, NaN, +∞ and −∞ in each value, 622
+  cases red on a80f6a5; `CdmTests.RealProperties_ListEveryRealPropertyOfTheRecords` guards that every real property of
+  the six records is checked; ±`double.MaxValue`, ±`double.Epsilon` and −0 stored as given, a Pc of `double.Epsilon`
+  written and read back bit for bit). `CdmCovarianceMatrix.StateCovarianceRtn` held the caller's `Matrix`, whose `Set`
+  writes the array it wraps, and returned it: a NaN or ±Infinity set on the matrix given, or on the one the getter
+  returned (a CDM read by `Cdm.ReadFromString` included), reached the record after the check, `Validate()` passed it,
+  `WriteToString` wrote it and the reader refused the document (measured on the first fix of #717). The record now holds
+  a copy of the matrix it is given and its getter returns a copy (internal `CcsdsValues.Copy`), so a term set on either
+  matrix does not reach it (`CdmTests.Init_MatrixChangedAfterwards_TheRecordKeepsTheTermsItChecked` and
+  `StateCovarianceRtn_ReturnedMatrixChanged_TheCdmStillWritesAndReadsBack`, CR_R, CT_R and CNDOT_NDOT with NaN, +∞ and
+  −∞, 18 cases red on a80f6a5).
+- **The CDM reader read a decimal comma as another number** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), the number half of [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). `CdmReader`
+  parsed with `NumberStyles.AllowThousands`, which drops every comma wherever it stands: `MISS_DISTANCE` `118,1` read
+  as 1181 m, `0,715` as 715 m, `COLLISION_PROBABILITY` `4,835E-05` as 0.04835 (1000 times the value), `CR_R` `4,1` as
+  41 m², `X` `2,570.097065` km as 2 570 097.065 m (measured on a80f6a5). `xsd:double` has no comma (XML Schema Part 2,
+  3.2.5.1), nor a value of CCSDS 508.0-B-1 (6.3.2.2 to 6.3.2.4, confirmed by S. Guillet, 2026-11-17). The reader now
+  parses with `NumberStyles.Float` only, and a comma throws the existing `CdmParseException`
+  (`Invalid numeric value for MISS_DISTANCE: '118,1'.`). Every `xsd:double` numeral (a sign, no integer digit, an
+  exponent of either case, surrounding whitespace) reads bit for bit as before (`CdmTests`
+  `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
+  `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
+  half stays open.
 
 **Changed**
 
+- **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
+  `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
+  a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
+  a straight line at constant speed in ICRF, the closed form of `iauStarpm`'s space motion with a radial velocity of 0
+  (`external-lib/sofa-src/starpm.c`, Note 5; decided by S. Guillet, 2026-11-17): with x = μα* dt and y = μδ dt, the
+  position r0 (u0 + x e_α + y e_δ), so α = α0 + atan2(x, cos δ0 − y sin δ0), δ = atan2(sin δ0 + y cos δ0, √(x² + (cos δ0
+  − y sin δ0)²)), and the distance `Distance` · √(1 + x² + y²), as `iauStarpm`'s parallax decreases, no longer the
+  catalog distance (Barnard's star: 1.26e-5 relative after 100 years, 7.1e11 m). The form divides by no cos δ0 and
+  crosses a pole by itself. The change is of the second order in μ dt for a star given dα/dt as before: Barnard's star
+  0.33 mas after 10 years, 34 mas after 100 and 9.4″ after 1000, Polaris 4.2 mas after 100 years, a star near a pole
+  1.26° after 1000. Against `iauStarpm` (`tools/sofa_reference/starpm_ref.c`, SOFA 2023-10-11; Barnard's star from
+  Hipparcos I/311 and Gaia DR3, Polaris, and Barnard's motion at ±89.5°, which crosses a pole): 1.8e-17 rad after 1 and
+  10 years, 2.4e-14 rad after 100 and 2.4e-10 rad after 1000 (its light-time and relativistic terms of the observed
+  place, as dt⁴), the distance 7.6e-8 relative per decade (`iauStarpv`'s inertial radial velocity −v_t²/(2c) for an
+  observed rv of 0) (`StarTests.GetEquatorialCoordinates_CatalogStars_AreIauStarpm`, red on a80f6a5: 1.3e-7 rad after 10
+  years for Barnard's star); against the closed form in long double, the stars at ±π/2 and the synthetic stars of the
+  suite included, 7.8e-16 rad and 2.2e-16 relative (`IsTheStraightLine_OfALongDoubleClosedForm`); three positions dt
+  apart lie on one line at constant speed within 1.2e-15 of their size (`PositionsLieOnOneLineAtConstantSpeed`, 3.7
+  before); thresholds twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI run
+  43974478027; the Validation tests twice the Linux worst), but after 1 and 10 years against `iauStarpm`, where the
+  worst lies below one ulp of the right ascension (8.9e-16 rad near 4.7 rad), twice the resolution of the returned
+  angles, 1.9e-15 rad, so that a one-ulp difference of another platform passes (decided by S. Guillet, 2026-11-17). A
+  star without proper motion, and every star at its catalog epoch, is unchanged, bit for bit
+  (`WithoutProperMotion_IsTheCatalog_BitForBit`), and so are the stars of the field-of-view and kernel tests.
+  `GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate` and `Scenario.SimulateAsync`, the SPK of
+  `WriteEphemeris` and the occultation and field-of-view searches of a star with proper motion move with it. The tests
+  that encoded the linear angles are measured against the straight line written in the test
+  (`StarTests.GetEquatorialCoordinates`, `GetEquatorialCoordinates2`, `Propagate`, `ScenarioTests.PropagateStar`, whose
+  snapshots 1.1 and 1.2 rad and catalog distances are replaced; the dt tests of #709 keep their dt references, the ticks
+  or CSPICE's ET); the pole tests of #709 take straight lines that pass near and over a pole (a straight line never
+  passes both poles: #709's case of 1 rad/yr through both was an artefact of the linear angles). The sentences of the
+  #709 entries under **Fixed** about the linear model are history, superseded by this entry. Migration: none for a
+  catalog star given its catalog values (see the next entry); code that expects the angles to grow by μ dt computes the
+  straight line ([Stars](../reference/stars.md#the-model)). `Distance` stays the catalog distance. No radial velocity is
+  taken (rv = 0, its size on the [Stars](../reference/stars.md#limits) page).
+- **Breaking: the proper motion in right ascension of a star is a true angle, μα*** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
+  The constructor's `rightAscensionProperMotion`, `rightAscensionSigma` and `rightAscensionSigmaProperMotion` and their
+  properties gave no unit and no convention, and the model added the proper motion to the right ascension, so it was
+  dα/dt (SOFA's convention, `starpm.c` Note 4), while the catalogs a caller reads, Hipparcos (I/239 `pmRA`,
+  "mu_alpha.cos(delta)") and Gaia DR3 (I/355 `pmRA`, "pmRA*cosDE"; both cited from #718, confirmed by S. Guillet,
+  2026-11-17), give μα* = (dα/dt) cos δ: a catalog star given its `pmra` moved cos δ0 times too fast in right ascension
+  (Barnard's star 26.8 mas away from `iauStarpm` after 10 years, Polaris 439 mas, a rate 77.9 times too large). They are
+  now μα*, σα* and σμα* (decided by S. Guillet, 2026-11-17), true angles in radians and radians per Julian year of TDB,
+  as Hipparcos and Gaia give them, documented on the constructor, the properties and the new
+  [Stars](../reference/stars.md) page with the units of every parameter and the conversion of a Gaia DR3 or Hipparcos
+  record; `GetRightAscensionSigma` keeps its formula and returns σα*. Barnard's star built from its Gaia DR3 record by
+  its units alone is `iauStarpm` fed `pmra`/cos δ to the figures above
+  (`StarTests.GetEquatorialCoordinates_FromAGaiaDr3Record_IsIauStarpm`, 27.7 mas after 10 years before); the same μα*
+  moves a star on the equator, at 1 rad and at a pole by the same angle along e_α
+  (`RightAscensionProperMotion_IsTheTrueAngleRate`; before, cos δ0 times that, and nothing at a pole). For the same
+  number a star now moves cos δ0 times as fast in right ascension as before: 0.54 times for the stars of the tests at 1
+  rad, 1/77.9 for Polaris. The declination motion and sigmas are unchanged. The reference of `StarOccultationTests`
+  (`tools/occultation_reference/star_occultation_reference.py`) reads its 0.1″/yr as μα* and moves its star along the
+  straight line; its literals of 0.1″/yr are regenerated (spiceypy 8.4.0, CSPICE N0067; the cases without proper motion
+  reproduce their literals): 1.91e-6 s at worst at the edges and 1.30e-16 rad in direction on Linux x64, within the
+  thresholds of 4.8e-6 s and 4.4e-16 rad. Migration: a caller that passed dα/dt passes `RightAscensionProperMotion` ×
+  cos δ0, and multiplies its right ascension sigma and sigma rate by cos δ0; a caller that passed a catalog's `pmra`
+  needs no change and now gets the star of the catalog.
 - **Breaking: the element conversions of `SpiceAPI` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   Fixed above). `ConvertConicElementsToStateVector(KeplerianElements)` (an ellipse) and
   `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` (parameter `keplerianElements`, `equinoctialElements`)
@@ -3099,6 +3301,47 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   finite. A null argument throws `ArgumentNullException`. Migration: convert elliptic equinoctial elements of
   eccentricity above 0.9 with `EquinoctialElements.ToStateVector()`, pass a positive finite GM, and catch
   `ArgumentException` where elements may be inconsistent.
+- **Breaking: the two-body calls of `SpiceAPI` check their arguments and throw SPICE's errors** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above).
+  `Propagate2Bodies(StateVector, double, TimeSpan)` and `ConvertStateVectorToConicOrbitalElement(StateVector, double)`
+  throw `ArgumentOutOfRangeException` (`gm`) for a GM that is not finite and above 0 (`SPICE(NONPOSITIVEMASS)` of
+  `prop2b.c` and `oscelt.c`); the overloads that take the GM of the observer (`Propagate2Bodies(StateVector, TimeSpan)`,
+  `(StateVector, Time)`, `ConvertStateVectorToConicOrbitalElement(StateVector)`) throw `InvalidOperationException` naming
+  `BODYnnn_GM` when that GM is not, as `ConvertConicElementsToStateVector(KeplerianElements, Time)` does; every overload
+  throws `ArgumentNullException` for a null state and `ArgumentException` (`stateVector`) for a position or a velocity
+  that is not finite, which SPICE turns into NaN with no error; and `InvalidOperationException` with SPICE's message for a
+  state SPICE rejects (decided by S. Guillet, 2026-11-17: SPICE's own tolerances cannot be reproduced in .NET): a zero
+  position, a zero velocity, a position parallel to the velocity, a time out of `prop2b_c`'s range
+  (`SPICE(ZEROPOSITION)`, `SPICE(ZEROVELOCITY)`, `SPICE(NONCONICMOTION)`, `SPICE(DTOUTOFRANGE)`; `SPICE(DEGENERATECASE)`
+  for the elements). Before, the process ended when the call was its first native call, and otherwise the stack's
+  contents (about 7e-310) were returned. Native callers: both proxies return a NaN result with `GetLastErrorProxy()`.
+  Migration: pass a finite state and a finite GM above 0, load the GM of the observer, and catch
+  `InvalidOperationException` for a degenerate state. Results on ordinary inputs are unchanged, bit for bit.
+- **Breaking: the element conversions of `SpiceAPI` reject elements that are not finite** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). The three
+  `ConvertConicElementsToStateVector` overloads throw `ArgumentException` (`keplerianElements`) for an eccentricity,
+  inclination, ascending node, argument of periapsis or mean anomaly that is not finite, and
+  `ConvertEquinoctialElementsToStateVector` (`equinoctialElements`) for a p, f, g, h, k or L that is not, before the native
+  call. Before, a NaN mean anomaly gave a finite state silently (CONICS checks its domain with comparisons NaN passes:
+  `conics_c` gives a finite state for M0 = NaN with no error, `SpiceApiTest.Conics_OfElementsNotFinite_SignalsNoError`),
+  and a NaN inclination a NaN state that threw `InvalidOperationException` "Native proxy call failed" or the message of
+  an earlier call. The semi-major axis of a parabola stays infinite: its periapsis radius is checked. Migration: pass
+  finite elements.
+- **Breaking: `SpiceAPI.WriteEphemeris` rejects a centre SPICE does not name** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), the last row of
+  [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655)). It throws `ArgumentException`
+  (`stateVectors`, "The NAIF identifier 2999991 has no name in SPICE: ...") before anything is unloaded or written, an
+  existing file kept byte for byte, for a centre no loaded kernel names (a body built from custom parameters), with or
+  without a GM in the kernel pool, where the native writer threw `InvalidOperationException` ("CelestialItem id2999991
+  can't be found"); the check is that of the element conversions (#711, #680's rule). A centre SPICE names whose GM the
+  kernel pool lacks still reaches the native writer, `InvalidOperationException` with the message of the Fixed entry
+  above, nothing written. `Star.WriteEphemeris` and `Site.WriteEphemeris` write about named bodies and are unchanged.
+  Migration: catch `ArgumentException`, or load a kernel that names the body (`NAIF_BODY_NAME`, `NAIF_BODY_CODE`)
+  (`SpiceApiTest.WriteEphemeris_AboutACentreSpiceDoesNotName_ThrowsArgumentExceptionAndKeepsTheFile`).
+- **Breaking: `TransformFrameProxy` returns a NaN rotation when it fails**
+  ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above). A native caller
+  gets a NaN rotation and angular velocity (decided by S. Guillet, 2026-11-17) with SPICE's message in
+  `GetLastErrorProxy()`, where it got the zero quaternion with no message (#454); `GetLastErrorProxy()` is empty after a
+  reporting proxy that succeeds. `SpiceAPI.TransformFrame` throws the same `InvalidOperationException` on both, its
+  message now SPICE's. Migration (native callers): test the rotation for NaN, or read `GetLastErrorProxy()`, where the
+  zero quaternion was tested.
 - **Breaking: an instrument checks its field of view when it is built** ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)). The constructor of `Instrument`, so
   `AddCircularInstrument`, `AddEllipticalInstrument`, `AddRectangularInstrument` and any subclass, throws
   `ArgumentException` naming the parameter for a boresight or a reference vector with a component that is not finite or
@@ -3107,7 +3350,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   +∞ (`fieldOfView`; 0 and negative values threw before, now with the parameter's name), and adds nothing;
   `AddEllipticalInstrument` and `AddRectangularInstrument` throw `ArgumentOutOfRangeException` naming `crossAngle` for
   a cross angle of +∞ or a NaN of positive sign (0x7FF8000000000000), which `ThrowIfNegative` let through, as for a
-  negative one and for `double.NaN` before (a cross angle of 0 is still accepted and rejected by the search). These are
+  negative one and for `double.NaN` before (a cross angle of 0 too since [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), the entry below). These are
   the fields `getfov` rejects on the kernel the library writes (SPICE(ZEROBORESIGHT), SPICE(BADREFVECTORSPEC)) or
   cannot read (NaN, Infinity: an IK holding `FOV_CROSS_ANGLE = Infinity` fails to load, SPICE(NUMBEREXPECTED)), and the rule of the body axes of a spacecraft and of the body vectors of a TRIAD (#703).
   Before, the instrument was built: `GetBoresightInICRFFrame` and the other getters returned the zero or NaN vector,
@@ -3121,6 +3364,36 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   positive NaN). Results for the instruments accepted are unchanged, bit for bit.
   Migration: give a finite, non-zero boresight, a finite reference vector not parallel to it, a finite positive
   half-angle and a finite cross angle.
+- **Breaking: an instrument's cross angle is a finite positive number** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)). `AddEllipticalInstrument` and
+  `AddRectangularInstrument` (the constructors of `EllipticalInstrument` and `RectangularInstrument`) throw
+  `ArgumentOutOfRangeException` naming `crossAngle` for a cross angle of +0, which they accepted, writing an IK with
+  `FOV_CROSS_ANGLE = 0` while every search of the library and `IsInFOV` threw `InvalidOperationException` ("its
+  half-angles must be positive"), and add nothing; −0, which `ThrowIfNegative` rejected with its own message ("must be a
+  non-negative value"), negative values and the values that are not finite now carry one message, "The cross angle of
+  an instrument must be a finite positive number". A cross angle of 0 is a field of no width, as the field of view of 0
+  the constructor already rejected: CSPICE's `gftfov` (N0067, through the library's proxy) rejects it with
+  SPICE(DEGENERATECASE), for the rectangle whatever the boresight (consecutive boundary vectors with a zero cross
+  product, `zzfovaxi`) and for the ellipse when its computed semi-axis is exactly of zero length (boresight +Z,
+  `zzgffvu`); with the boresight at the Moon, a unit vector rounded from its ephemeris, the semi-axis is not exactly
+  zero and `gftfov` searches the segment, one window of 1 µs for the Moon's centre and of 59.8 min for its ellipsoid
+  (measured on Linux, `InstrumentTests.ZeroHalfAngle_IsDegenerateForGftfov`). The search no longer checks the cross
+  angle: its `InvalidOperationException` "its half-angles must be positive" is gone, since no instrument can reach it.
+  Results for the instruments accepted are unchanged, bit for bit (`InstrumentTests.AddInstrument_CrossAngleNotPositive_Throws`,
+  red on a80f6a5 for the 8 rows of +0, −0 and the negatives of both shapes). Migration: give a positive cross angle; an
+  instrument with no extent across the reference plane can be searched neither by the library nor reliably by
+  `gftfov`.
+- **Breaking: an instrument's orientation is finite** ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)). `AddCircularInstrument`, `AddRectangularInstrument` and
+  `AddEllipticalInstrument` (the constructor of `Instrument`) throw `ArgumentException` naming `orientation` for Euler
+  angles with a component that is NaN or infinite, and add nothing, the rule of the boresight and the reference vector
+  (#707) and of the body axes of a spacecraft (#703). Before, the instrument was built with a NaN
+  `RotationToSpacecraft` (IEEE 754: the sine and cosine of a NaN or an infinity are NaN), its spacecraft-frame and ICRF
+  getters returned NaN vectors, and `WriteFrameAsync` wrote `TKFRAME_<id>_ANGLES = ( NaN,0,0 )` (or `Infinity`), which
+  SPICE fails to load (SPICE(NUMBEREXPECTED), the variables before that line left in the kernel pool), measured on
+  a80f6a5 (`InstrumentTests.AddInstrument_OrientationNotFinite_Throws`, red there for the 33 rows of the three
+  shapes). Every finite angle stays accepted (decided by S. Guillet, 2026-11-17), results unchanged bit for bit
+  (`AddInstrument_OrientationFinite_IsAccepted`); SPICE's frame agrees with `RotationToSpacecraft` to a few ulps of
+  each angle, 1.8e-15 rad within [−2π, 2π] and more for large angles (0.268 rad at 1e300), as documented on
+  `Instrument.Orientation`. Migration: give finite Euler angles, preferably within a few turns.
 - **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
   centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)
@@ -3355,13 +3628,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     angular radius above π/2 − 1e-6, a circle of half-angle π/2 included, a non-circular instrument of another
     subclass), and `ArgumentException` when the target is the instrument's own spacecraft; since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707) the
     constructor of the instrument rejects the zero, non-finite and parallel vectors and a field of view that is not a
-    finite positive number (`ArgumentException`, Changed above), so the search's check is left with the cross angle,
-    the angular radius and the shape;
+    finite positive number (`ArgumentException`, Changed above), and since [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715) the constructors of the ellipse and the
+    rectangle a cross angle that is not one, so the search's check is left with the angular radius and the shape;
   - both paths check the same rules before the search and throw where they returned no window, or one computed on an
     extrapolation: a step that is not positive (`ArgumentOutOfRangeException`); a search window that ends before it
     starts, a target that is the instrument's spacecraft, an ellipsoid target without radii (a site, a spacecraft, a
     barycenter, a Lagrange point, a star) (`ArgumentException`); a boresight zero or parallel to the reference vector
-    (rejected by the instrument's constructor since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)), a half-angle that is not positive, a field whose angular
+    (rejected by the instrument's constructor since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)), a half-angle that is not positive (rejected by the
+    constructors since [#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707) and [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)), a field whose angular
     radius exceeds π/2 − 1e-6, a non-circular instrument of another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
     states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
     target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the
@@ -4157,7 +4431,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OpmValidator` and `CdmValidator.Validate` (and `Cdm.Validate`) report an error for a NaN or infinite covariance
   variance or CDM miss distance, where they reported the object valid, and their range messages now name the finite
   rule (`must be finite and non-negative`, `must be finite and positive`). Only an object built programmatically with
-  such a value is affected: the readers refuse it. Migration: none for finite data.
+  such a value is affected: the readers refuse it. Migration: none for finite data. Since [#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717) such an object no
+  longer builds, so these errors are reached through a negative variance or miss distance only.
 - **The OMM content validation accepts an angle in [-360, 0)** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator.Validate`,
   `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER`
   and `MEAN_ANOMALY` in [-360, 0), where they reported an `InvalidRange` error (`OMM002`) and threw
@@ -4175,6 +4450,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ValidateFile` and `Omm.LoadFrom*` with the default `validateContent` accept it, where they reported an
   `InvalidRange` error (`OMM002`) and threw `OmmValidationException`. Migration: none; a caller that needs a positive
   mass checks it.
+- **Breaking: the CCSDS data model refuses a non-finite value without a range** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), Fixed above).
+  `new OpmStateVector(...)`, `OpmStateVector.FromStateVector`, `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` throw
+  `ArgumentOutOfRangeException` naming `x`, `y`, `z`, `xDot`, `yDot` or `zDot`; `new CovarianceMatrix(...)`,
+  `FromFullMatrix`, `FromMatrix` and `FromMatrixWithUnitConversion` (so `Opm.CreateFromStateVector` for a state's covariance)
+  the term (`cxX` ... `czDotZDot`); `new OpmManeuverParameters(...)`, `CreateImpulsive` and
+  `ImpulseManeuver.ToOpmManeuverParameters` `manDv1`, `manDv2` or `manDv3`; `new TleParameters(...)`, the four
+  `CreateWith*` factories and `Omm.CreateForTle` `bstar`, `bterm`, `meanMotionDot`, `meanMotionDDot` or `agom`; setting a
+  real property of `CdmRelativeMetadataData`, `CdmRelativeStateVector`, `CdmOdParameters`, `CdmAdditionalParameters`,
+  `CdmStateVector` or `CdmCovarianceMatrix` (by an object initializer, a `with` expression or `FromRtnCovariance`, a
+  vector component or a covariance term included) the property, and so does `EncounterCase.ToCdm` for such a value in
+  an encounter built by hand: each for NaN or ±Infinity, where they built it and wrote `NaN`, `Infinity` or `-Infinity`,
+  which the readers refuse. A negative variance still builds and is reported by the validators. Migration: pass finite
+  values, or leave an optional CDM value null; a non-finite state carried no orbit. Finite values build bit for bit as
+  before, `TLE.ToOmm` is unchanged, and the documents written are byte for byte unchanged. `CdmCovarianceMatrix`
+  copies the matrix it is given and the one its `StateCovarianceRtn` returns: a term set afterwards on the caller's matrix
+  or on the matrix returned no longer changes the record. Migration: build the record again, or use
+  `with { StateCovarianceRtn = matrix }` with the changed matrix.
+- **Breaking: the CDM reader refuses a comma in a numeric value** ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717), Fixed above). `Cdm.ReadFromString`,
+  `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
+  comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
+  period. Documents written to the standard are read bit for bit as before.
 
 **Deprecated**
 
@@ -4204,6 +4500,19 @@ The open defects a caller can meet at this release, grouped by cause; each line 
 one. The other open issues (tests, the conformance runner, benchmarks, documentation warnings and feature requests) are
 not listed.
 
+- **A star takes no radial velocity** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)). `Star` moves along `iauStarpm`'s straight line with rv = 0, its distance
+  from the catalog parallax: Barnard's star's −110.47 km/s (Gaia DR3) would move it by 64 mas after 10 years, 6.5″ after
+  100 and 11.4′ after 1000, more than the straight line corrects (34 mas after 100 years). The radial velocity input
+  that #718 recommends would be a new constructor parameter, and the defect fixes of 11.0.0 keep the existing signatures
+  (#668, decided by S. Guillet, 2026-11-14): it is left to an additive constructor overload after 11.0.0, in
+  [#723](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/723) (decided by S. Guillet,
+  2026-11-17; [Stars](../reference/stars.md#limits)).
+- **A point target at the observer is in view of a rectangular field**
+  ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). The managed field-of-view
+  search of a rectangular instrument reports a point target at the observer, distance 0, in view, its margin taking
+  atan2(0, 0) = 0, where a circle and an ellipse throw `InvalidOperationException` since #715 (Fixed above). It is to
+  throw as they do (decision 9 of #719, decided by S. Guillet, 2026-11-17). No workaround is needed for a target away
+  from the observer.
 - **A front body without radii on the CSPICE path of the occultation search**
   ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
@@ -4239,11 +4548,7 @@ not listed.
   leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
-  before rewriting the file. `SpiceAPI.WriteEphemeris` rejects before the native call a centre that is not a celestial
-  body, a spacecraft or a site (`ArgumentException`), but leaves to the native writer a celestial-body identifier no
-  kernel names, with or without a GM: `InvalidOperationException` with the native message (`CelestialItem id2999991
-  can't be found`, followed by SPICE's for a missing GM, which SPICE also prints on standard output), nothing written, a
-  file it replaces kept (measured on 5a3e6c3; before #706 the process ended for one with a GM). Both writers enumerate the caller's
+  before rewriting the file. Both writers enumerate the caller's
   states once, under the SPICE lock: pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of

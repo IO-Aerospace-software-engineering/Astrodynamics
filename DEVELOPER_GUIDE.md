@@ -1012,6 +1012,10 @@ var opm = new Opm(header, metadata, data);
 opm.SaveToFile("complete_opm.xml");
 ```
 
+Every real value of the data model is a real number, as the readers read it: the components of `OpmStateVector`, the
+terms of `CovarianceMatrix` and the ΔV components of `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming
+the parameter for NaN or ±Infinity (#717), which the writer would write as `NaN` or `Infinity` and the reader refuse.
+
 #### ImpulseManeuver.ToOpmManeuverParameters()
 
 After executing maneuvers during propagation, export them to OPM format:
@@ -1316,9 +1320,9 @@ Represents a spacecraft with components.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, or `ArgumentException` naming the parameter, #707) |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite cross angle not negative, or `ArgumentOutOfRangeException`) |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite cross angle not negative, or `ArgumentOutOfRangeException`) |
+| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, and finite Euler angles, or `ArgumentException` naming the parameter, #707, #715) |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
 | `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
 | `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
@@ -3027,7 +3031,7 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 The breaking changes of 11.0.0, each with its migration, are the **Breaking** entries under **Changed** and the entries under **Removed** of the 11.0.0 release notes (`docs/contributing/versioning.md#1100`).
 
-The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy`, `ConvertStateVectorToConicOrbitalElementProxy` and `TransformFrameProxy` still drop their SPICE errors, SPICE reset, and return what the routine wrote; a native caller checks the result before using it.
+The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` return a NaN result and `TransformFrameProxy` a NaN rotation and angular velocity, with SPICE's message (#714: before, they dropped it, the two-body proxies aborted a process whose first native call they were and otherwise returned the stack's contents, and the transformation returned the zero quaternion). Each proxy that reports through `GetLastErrorProxy()` clears it when it starts, so the message read after a call is that call's, and a SPICE error with no long message is reported by its short one (#714); a native caller checks the result before using it.
 
 ### Breaking Changes in 8.5.0
 

@@ -25,7 +25,8 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// </para>
 /// <para>
 /// <b>The reference</b>, <c>tools/occultation_reference/star_occultation_reference.py</c> (spiceypy, CSPICE N0067): the
-/// star at its catalog position moved by its proper motion to t, minus DSS-13 from the barycenter at t (a catalog
+/// star at its catalog position moved by its proper motion to t along its straight line (SOFA's <c>iauStarpm</c>, rv = 0,
+/// the proper motion in right ascension a true angle; regenerated for #718), minus DSS-13 from the barycenter at t (a catalog
 /// position is the direction of the light that reaches the barycenter at its epoch, as SOFA's <c>iauPmsafe</c> reads
 /// it, confirmed by S. Guillet, 2026-11-11; the field-of-view search reads a star so since #517, as <c>gfrfov</c> reads
 /// a ray); the Moon from <c>spkpos</c> with the correction, a sphere of 1737.4 km; the entry and the exit the zeros of
@@ -34,7 +35,7 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// </para>
 /// <para>
 /// <b>The case</b> (#533's): the star on the Moon's LT direction from DSS-13 at S = 2026-03-01 12:00 TDB, at 20 pc and at
-/// 100 pc from DSS-13, without proper motion and with 0.1″/yr in right ascension (catalog epoch S); the search over
+/// 100 pc from DSS-13, without proper motion and with μα* = 0.1″/yr (catalog epoch S); the search over
 /// S ± 3 h, step 60 s, tolerance 1 µs, with each correction of the occultation search (None, LT, CN, XLT and XCN: before
 /// #533 the star was read at t − lt or t + lt, its light time from the observer, whatever the sign).
 /// </para>
@@ -89,21 +90,21 @@ public class StarOccultationTests
             (20.0, 0.0, Aberration.CN) => (825636730.5013449, 825640007.2589674),
             (20.0, 0.0, Aberration.XLT) => (825636662.8887165, 825639944.0466852),
             (20.0, 0.0, Aberration.XCN) => (825636662.8901455, 825639944.0479977),
-            (20.0, 0.1, Aberration.None) => (825636696.6894436, 825639975.6736829),
-            (20.0, 0.1, Aberration.LT) => (825636730.4999075, 825640007.2576656),
-            (20.0, 0.1, Aberration.CN) => (825636730.501337, 825640007.2589746),
-            (20.0, 0.1, Aberration.XLT) => (825636662.8887084, 825639944.0466921),
-            (20.0, 0.1, Aberration.XCN) => (825636662.8901374, 825639944.0480046),
+            (20.0, 0.1, Aberration.None) => (825636696.6894431, 825639975.6736832),
+            (20.0, 0.1, Aberration.LT) => (825636730.499907, 825640007.2576659),
+            (20.0, 0.1, Aberration.CN) => (825636730.5013368, 825640007.2589748),
+            (20.0, 0.1, Aberration.XLT) => (825636662.8887081, 825639944.0466924),
+            (20.0, 0.1, Aberration.XCN) => (825636662.890137, 825639944.0480049),
             (100.0, 0.0, Aberration.None) => (825636696.68943, 825639975.6736946),
             (100.0, 0.0, Aberration.LT) => (825636730.4998941, 825640007.2576776),
             (100.0, 0.0, Aberration.CN) => (825636730.5013239, 825640007.2589865),
             (100.0, 0.0, Aberration.XLT) => (825636662.8886945, 825639944.0467033),
             (100.0, 0.0, Aberration.XCN) => (825636662.8901236, 825639944.0480161),
-            (100.0, 0.1, Aberration.None) => (825636696.6894219, 825639975.6737015),
-            (100.0, 0.1, Aberration.LT) => (825636730.4998863, 825640007.2576845),
-            (100.0, 0.1, Aberration.CN) => (825636730.5013161, 825640007.2589934),
-            (100.0, 0.1, Aberration.XLT) => (825636662.8886864, 825639944.0467103),
-            (100.0, 0.1, Aberration.XCN) => (825636662.8901155, 825639944.048023),
+            (100.0, 0.1, Aberration.None) => (825636696.6894217, 825639975.6737018),
+            (100.0, 0.1, Aberration.LT) => (825636730.499886, 825640007.257685),
+            (100.0, 0.1, Aberration.CN) => (825636730.5013156, 825640007.2589939),
+            (100.0, 0.1, Aberration.XLT) => (825636662.888686, 825639944.0467107),
+            (100.0, 0.1, Aberration.XCN) => (825636662.890115, 825639944.0480232),
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -160,12 +161,12 @@ public class StarOccultationTests
         {
             (20.0, 0.0, false) => new Vector3(-0.7073567018437554, 0.6388348698644372, 0.302550004795922),
             (20.0, 0.0, true) => new Vector3(-0.7074207548950949, 0.638775468405415, 0.3025256625595529),
-            (20.0, 0.1, false) => new Vector3(-0.7073567018790867, 0.638834869825316, 0.302550004795922),
-            (20.0, 0.1, true) => new Vector3(-0.7074207549304246, 0.6387754683662894, 0.30252566255955143),
+            (20.0, 0.1, false) => new Vector3(-0.707356701880824, 0.6388348698233922, 0.3025500047959219),
+            (20.0, 0.1, true) => new Vector3(-0.7074207549321618, 0.6387754683643654, 0.30252566255955143),
             (100.0, 0.0, false) => new Vector3(-0.7073567019335424, 0.6388348697811483, 0.3025500047618656),
             (100.0, 0.0, true) => new Vector3(-0.7074207549848778, 0.6387754683221154, 0.30252566252549157),
-            (100.0, 0.1, false) => new Vector3(-0.7073567019688737, 0.6388348697420273, 0.3025500047618656),
-            (100.0, 0.1, true) => new Vector3(-0.7074207550202076, 0.6387754682829898, 0.30252566252549024),
+            (100.0, 0.1, false) => new Vector3(-0.7073567019706111, 0.6388348697401035, 0.3025500047618656),
+            (100.0, 0.1, true) => new Vector3(-0.7074207550219447, 0.6387754682810658, 0.3025256625254901),
             _ => throw new ArgumentOutOfRangeException()
         };
 

@@ -55,9 +55,34 @@ public class StarTests
     public void GetEquatorialCoordinates()
     {
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
-        var res = star.GetEquatorialCoordinates(new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame));
-        Assert.Equal(new Equatorial(1.4418429380022246, 6.160711018912988, 8.1373353929324900E+16, new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame)), res);
+        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeFrame.TDBFrame);
+        var res = star.GetEquatorialCoordinates(at);
+        // The straight line written here (#718), at dt = 366/365.25 yr: before, the linear angles 1.4418429380022246 and
+        // 6.160711018912988 rad (the declination 10 + 4 dt reduced across the poles) at the catalog distance
+        AssertIsTheStraightLine(star, at, res, "StarTests.GetEquatorialCoordinates");
+        Assert.InRange(res.Declination, -System.Math.PI / 2.0, System.Math.PI / 2.0);
+        Assert.InRange(res.RightAscension, 0.0, System.Math.BitDecrement(2.0 * System.Math.PI));
     }
+
+    /// <summary>
+    /// Asserts that <paramref name="coordinates"/> are the straight line of <paramref name="star"/> at
+    /// <paramref name="epoch"/> (<see cref="CatalogPosition"/>): its position within <see cref="StraightLinePositionTolerance"/>
+    /// of its length.
+    /// </summary>
+    private void AssertIsTheStraightLine(Star star, TimeSystem.Time epoch, Equatorial coordinates, string label)
+    {
+        var expected = CatalogPosition(star, epoch);
+        double relative = (coordinates.ToCartesian() - expected).Magnitude() / expected.Magnitude();
+        _output.WriteLine($"MEASURE {label}: relative position {relative:E3}");
+        Assert.True(relative <= StraightLinePositionTolerance, $"{relative:E3}");
+    }
+
+    // The record of a star against its straight line written here (StraightLinePosition, the sines and cosines of the
+    // runtime on both sides): twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit:
+    // 4.384e-16 relative on all three, GetEquatorialCoordinates_OffHalfDays_IsTheClosedForm (2.775e-16 for
+    // GetEquatorialCoordinates, 4.319e-16 across a pole, 1.033e-16 for Propagate and ScenarioTests.PropagateStar, the same on
+    // the three; CI run 43974478027, 2026-11-16). Before the fix (#718), the linear angles
+    internal const double StraightLinePositionTolerance = 8.8e-16;
 
     [Fact]
     public void GetEquatorialCoordinates2()
@@ -67,22 +92,12 @@ public class StarTests
             9, TimeSystem.Time.J2000TDB);
         var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeFrame.TDBFrame);
         var res = star.GetEquatorialCoordinates(at);
-        // The closed form (#709): the declination 10 - 5π + 4 dt = -1.69974 rad is past the south pole, so it crosses it,
-        // -π - d, and the right ascension turns by π; before, the declination was reduced modulo π/2 (-0.12895 rad)
-        var (declination, rightAscension) = ClosedFormAcrossPoles(
-            ClosedFormAngle(10 - (Astrodynamics.Constants.PI2 * 10), 4, star, at), ClosedFormAngle(20 - (Astrodynamics.Constants._2PI * 10), 5, star, at));
-        double delta = System.Math.Max(System.Math.Abs(res.Declination - declination), RightAscensionDelta(res.RightAscension, rightAscension));
-        _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates2: {delta:E3} rad");
-        Assert.True(delta <= LargeAngleTolerance, $"{delta:E3}");
-        Assert.InRange(res.Declination, -1.4418430, -1.4418428);
-        Assert.Equal(star.Distance, res.Distance);
+        // The straight line (#718) from catalog angles outside [−π/2, π/2] and [0, 2π): u0, e_α and e_δ of their sines and
+        // cosines; before, the linear angles, the declination 10 - 5π + 4 dt = -1.69974 rad crossing the south pole
+        AssertIsTheStraightLine(star, at, res, "StarTests.GetEquatorialCoordinates2");
+        Assert.InRange(res.Declination, -System.Math.PI / 2.0, System.Math.PI / 2.0);
+        Assert.InRange(res.RightAscension, 0.0, System.Math.BitDecrement(2.0 * System.Math.PI));
     }
-
-    // The record of GetEquatorialCoordinates2 against its closed form: twice the worst over Linux x64, Windows x64 and
-    // macOS arm64, rounded up at the second digit (2.132e-14 rad on Windows and locally on Linux, 1.421e-14 rad on the
-    // Linux and macOS arm64 runners, CI runs 43906476725 and 43926830045): its angles are about 40 rad before their
-    // reduction, whose ulp is 7.1e-15 rad. Before the fix (#709), 3.142 rad
-    internal const double LargeAngleTolerance = 4.3e-14;
 
     [Fact]
     public void GetDeclinationSigma()
@@ -118,20 +133,16 @@ public class StarTests
         var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
         await star.PropagateAsync(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
-        var eph0 = star.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None);
-        var eph1 = star.GetEphemeris(epoch.Add(TimeSpan.FromDays(365)), observer, Frames.Frame.ICRF, Aberration.None);
-        var eph2 = star.GetEphemeris(epoch.Add(TimeSpan.FromDays(365 + 365)), observer, Frames.Frame.ICRF, Aberration.None);
-        Assert.Equal(1.0, eph0.ToEquatorial().RightAscension, 12);
-        Assert.Equal(1.0, eph0.ToEquatorial().Declination, 12);
-        Assert.Equal(8.1373353929324900E+16, eph0.ToEquatorial().Distance);
-
-        Assert.Equal(1.1, eph1.ToEquatorial().RightAscension, 3);
-        Assert.Equal(1.1, eph1.ToEquatorial().Declination, 3);
-        Assert.Equal(8.1373353929324896E+16, eph1.ToEquatorial().Distance);
-
-        Assert.Equal(1.2, eph2.ToEquatorial().RightAscension, 3);
-        Assert.Equal(1.2, eph2.ToEquatorial().Declination, 3);
-        Assert.Equal(8.1373353929324910E+16, eph2.ToEquatorial().Distance);
+        // The straight line (#718) at 0, 365 and 730 days: before, the angles 1, 1.1 and 1.2 rad (to 3 decimals) at the
+        // catalog distance
+        foreach (var at in new[] { epoch, epoch.Add(TimeSpan.FromDays(365)), epoch.Add(TimeSpan.FromDays(365 + 365)) })
+        {
+            var eph = star.GetEphemeris(at, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var expected = CatalogPosition(star, at);
+            double relative = (eph.Position - expected).Magnitude() / expected.Magnitude();
+            _output.WriteLine($"MEASURE StarTests.Propagate ({(at - epoch).TotalDays} d): relative position {relative:E3}");
+            Assert.True(relative <= StraightLinePositionTolerance, $"{relative:E3}");
+        }
     }
 
     internal static Star NewStar(int catalogNumber, TimeSystem.Time epoch) =>
@@ -234,17 +245,31 @@ public class StarTests
     }
 
     /// <summary>
-    /// The position of the stars of <see cref="NewStar"/> from the solar system barycenter in ICRF at <paramref name="epoch"/>,
-    /// written here: the right ascension and the declination 1 + 0.1 dt rad, dt the Julian years from the catalog epoch, at
-    /// the star's distance.
+    /// The straight line of a star (SOFA's <c>iauStarpm</c>, Note 5, rv = 0), written here as a vector: its position from
+    /// the solar system barycenter in ICRF <paramref name="years"/> Julian years after its catalog epoch, r0 (u0 + x e_α +
+    /// y e_δ), r0 its catalog distance, u0 its catalog direction, e_α = (−sin α0, cos α0, 0) and e_δ = (−sin δ0 cos α0,
+    /// −sin δ0 sin α0, cos δ0), x = μα* dt and y = μδ dt from the exact decimals of the proper motions and of dt.
     /// </summary>
-    internal static Vector3 CatalogPosition(Star star, TimeSystem.Time epoch)
+    internal static Vector3 StraightLinePosition(Star star, decimal years)
     {
-        double dt = (epoch - star.Epoch).TotalDays / 365.25;
-        double angle = 1.0 + 0.1 * dt;
-        return new Vector3(System.Math.Cos(angle) * System.Math.Cos(angle), System.Math.Cos(angle) * System.Math.Sin(angle),
-            System.Math.Sin(angle)) * star.Distance;
+        double a = star.EquatorialCoordinatesAtEpoch.RightAscension;
+        double d = star.EquatorialCoordinatesAtEpoch.Declination;
+        double x = (double)(ExactDecimal(star.RightAscensionProperMotion) * years);
+        double y = (double)(ExactDecimal(star.DeclinationProperMotion) * years);
+        var u0 = new Vector3(System.Math.Cos(d) * System.Math.Cos(a), System.Math.Cos(d) * System.Math.Sin(a), System.Math.Sin(d));
+        var east = new Vector3(-System.Math.Sin(a), System.Math.Cos(a), 0.0);
+        var north = new Vector3(-System.Math.Sin(d) * System.Math.Cos(a), -System.Math.Sin(d) * System.Math.Sin(a), System.Math.Cos(d));
+        return (u0 + east * x + north * y) * star.Distance;
     }
+
+    /// <summary>The straight line of <see cref="StraightLinePosition(Star, decimal)"/>, dt given as a double.</summary>
+    internal static Vector3 StraightLinePosition(Star star, double years) => StraightLinePosition(star, ExactDecimal(years));
+
+    /// <summary>
+    /// The position of a star from the solar system barycenter in ICRF at <paramref name="epoch"/>, written here: its straight
+    /// line (<see cref="StraightLinePosition(Star, decimal)"/>) at dt, the Julian years of TDB from its catalog epoch.
+    /// </summary>
+    internal static Vector3 CatalogPosition(Star star, TimeSystem.Time epoch) => StraightLinePosition(star, JulianYearsFromCatalogEpoch(star, epoch));
 
     /// <summary>
     /// Writes the SPK of <paramref name="star"/>, loads it and checks through SPICE (<c>spkezr</c>, <see cref="SpiceAPI"/>)
@@ -286,27 +311,31 @@ public class StarTests
         }
     }
 
-    // The noise-level record of the SPK read against the catalog position written in the test: twice the worst, rounded up
-    // at the second digit (1.390e-16, StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone, Validation category, Linux
-    // only, CI run 43773937161, 2026-11-15; StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore
-    // the same on Linux x64, Windows x64 and macOS arm64), asserted by the Validation test alone (the epochs are whole half
+    // The noise-level record of the SPK read against the catalog position written in the test (its straight line, #718):
+    // twice the worst on Linux x64, rounded up at the second digit (2.780e-16,
+    // StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone, Validation category, Linux only, CI run 43974478027, 2026-11-16;
+    // StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore the same on Linux x64, 2.780e-16 and
+    // 1.966e-16 on Windows x64, 1.966e-16 on macOS arm64; 1.390e-16 for the linear angles before #718, CI run
+    // 43773937161), asserted by the Validation test alone (the epochs are whole half
     // days from the catalog epoch, whose Julian dates, which the star differences, are exact). The tests of every platform
     // assert CatalogMotionInOneMicrosecond
-    internal const double CatalogPositionTolerance = 2.8e-16;
+    internal const double CatalogPositionTolerance = 5.6e-16;
 
     /// <summary>
     /// The bound of the tests that run on every platform, where the rounding of the sines and cosines of each runtime is not
-    /// measured: the distance the star of <see cref="NewStar"/> moves in 1 µs, the resolution of the library's epochs,
-    /// relative to its distance, the least over <paramref name="epochs"/>. Its direction is (cos²a, cos a sin a, sin a), a =
-    /// 1 + 0.1 dt rad, dt in Julian years (<see cref="CatalogPosition"/>), whose derivative has the norm √(1 + cos²a): the
-    /// bound is √(1 + cos²a) · 0.1 · 1e-6 / (365.25 · 86400), 3.6e-15 near a = 1, so that a state of another epoch, or of
-    /// another star, fails it.
+    /// measured: the distance the star moves in 1 µs, the resolution of the library's epochs, relative to its distance from
+    /// the barycenter, the least over <paramref name="epochs"/>. Along its straight line the star moves r0 μ per Julian
+    /// year, μ = √(μα*² + μδ²), at the distance r0 √(1 + (μ dt)²): the bound is μ / √(1 + (μ dt)²) · 1e-6 / (365.25 · 86400),
+    /// 4.5e-15 for the star of <see cref="NewStar"/> near its catalog epoch, so that a state of another epoch, or of another
+    /// star, fails it.
     /// </summary>
     internal static double CatalogMotionInOneMicrosecond(Star star, IEnumerable<TimeSystem.Time> epochs) =>
         epochs.Min(epoch =>
         {
-            double angle = 1.0 + 0.1 * (epoch - star.Epoch).TotalDays / 365.25;
-            return System.Math.Sqrt(1.0 + System.Math.Cos(angle) * System.Math.Cos(angle)) * 0.1 * 1e-6 / (365.25 * 86400.0);
+            double mu = System.Math.Sqrt(star.RightAscensionProperMotion * star.RightAscensionProperMotion +
+                                         star.DeclinationProperMotion * star.DeclinationProperMotion);
+            double dt = (double)JulianYearsFromCatalogEpoch(star, epoch);
+            return mu / System.Math.Sqrt(1.0 + mu * dt * mu * dt) * 1e-6 / (365.25 * 86400.0);
         });
 
     [Fact]
@@ -368,10 +397,6 @@ public class StarTests
     private static decimal JulianYearsFromCatalogEpoch(Star star, TimeSystem.Time epoch) =>
         (decimal)(epoch.ToTDB().DateTime.Ticks - star.Epoch.ToTDB().DateTime.Ticks) / TimeSpan.TicksPerDay / 365.25m;
 
-    /// <summary>The closed form of the catalog motion, a + μ dt, in <see cref="decimal"/> and rounded once to a double.</summary>
-    private static double ClosedFormAngle(double angleAtEpoch, double properMotion, Star star, TimeSystem.Time epoch) =>
-        (double)(ExactDecimal(angleAtEpoch) + ExactDecimal(properMotion) * JulianYearsFromCatalogEpoch(star, epoch));
-
     /// <summary>
     /// The closed form of a sigma at an epoch, √(σ² + (dt σ_μ)²): its square in <see cref="decimal"/>, rounded once to a
     /// double, and the correctly rounded square root of IEEE 754.
@@ -404,57 +429,50 @@ public class StarTests
     private static Star SlowStar(int catalogNumber, TimeSystem.Time epoch) =>
         new(catalogNumber, $"star{catalogNumber}", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.01, 0.01, 0, 0, 0, 0, epoch);
 
-    // The record of the right ascension and the declination off half days against their closed form, IEEE 754 arithmetic
-    // alone (no sine nor cosine), so the same on every platform: twice the worst, rounded up at the second digit (4.441e-16
-    // rad, 2 ulp of a + μ dt near 1.4 rad, the slow star 40 years after its epoch; 2.220e-16 for the fast star; the same on
-    // Linux x64, Windows x64 and macOS arm64, CI run 43773937161, 2026-11-15).
-    // Before the fix, the Julian dates rounded before their difference put the fast star 6.328e-14 rad away, the position
-    // of an epoch up to about 20 µs away (half the 2^-31 day, 40.2 µs, a Julian date near 2.45e6 resolves)
-    internal const double ClosedFormAngleTolerance = 8.9e-16;
-
+    /// <summary>
+    /// #709 and #718: off whole and half days, the position is the straight line (<see cref="CatalogPosition"/>) at dt from
+    /// the exact difference of the ticks: the fast star within the distance it moves in 1 µs, the resolution of the
+    /// library's epochs, and every star within <see cref="StraightLinePositionTolerance"/>. Before #709, dt was the
+    /// difference of the two Julian dates, each rounded to a double: the fast star 6.328e-14 rad away, the position of an
+    /// epoch up to about 20 µs away (half the 2^-31 day, 40.2 µs, a Julian date near 2.45e6 resolves).
+    /// </summary>
     [Fact]
     public void GetEquatorialCoordinates_OffHalfDays_IsTheClosedForm()
     {
-        // Arrange: before, dt was the difference of the two Julian dates, each rounded to a double
+        // Arrange
         var epoch = new TimeSystem.Time(2001, 1, 1);
         var fast = NewStar(668021, epoch);
         var slow = SlowStar(668022, epoch);
-        double worstAngle = 0.0;
         double worstPosition = 0.0;
+        double worstFast = 0.0;
         double bound = double.PositiveInfinity;
 
-        foreach (var (label, star, properMotion, epochs) in OffHalfDayCases(fast, slow))
+        foreach (var (label, star, _, epochs) in OffHalfDayCases(fast, slow))
         {
             double worstOfCase = 0.0;
             foreach (var at in epochs)
             {
                 // Act
-                var coordinates = star.GetEquatorialCoordinates(at);
+                var position = star.GetEquatorialCoordinates(at).ToCartesian();
 
-                // Assert: the closed form, dt from the exact difference of the ticks
-                double expected = ClosedFormAngle(1.0, properMotion, star, at);
-                worstOfCase = System.Math.Max(worstOfCase, System.Math.Abs(coordinates.RightAscension - expected));
-                worstOfCase = System.Math.Max(worstOfCase, System.Math.Abs(coordinates.Declination - expected));
-                if (ReferenceEquals(star, fast))
-                {
-                    var catalog = CatalogPosition(star, at);
-                    worstPosition = System.Math.Max(worstPosition, (coordinates.ToCartesian() - catalog).Magnitude() / catalog.Magnitude());
-                }
+                // Assert: the straight line, dt from the exact difference of the ticks
+                var expected = CatalogPosition(star, at);
+                worstOfCase = System.Math.Max(worstOfCase, (position - expected).Magnitude() / expected.Magnitude());
             }
 
             if (ReferenceEquals(star, fast))
             {
                 bound = System.Math.Min(bound, CatalogMotionInOneMicrosecond(star, epochs));
+                worstFast = System.Math.Max(worstFast, worstOfCase);
             }
 
-            _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays ({label}): worst angle {worstOfCase:E3} rad");
-            worstAngle = System.Math.Max(worstAngle, worstOfCase);
+            _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays ({label}): worst relative position {worstOfCase:E3}");
+            worstPosition = System.Math.Max(worstPosition, worstOfCase);
         }
 
-        _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays: worst angle {worstAngle:E3} rad, worst relative position {worstPosition:E3} (bound {bound:E3})");
-        Assert.True(worstAngle <= ClosedFormAngleTolerance, $"{worstAngle:E3}");
-        // The position of the fast star within the distance it moves in 1 µs, the resolution of the library's epochs
-        Assert.True(worstPosition <= bound, $"{worstPosition:E3} > {bound:E3}");
+        _output.WriteLine($"MEASURE StarTests.GetEquatorialCoordinates_OffHalfDays: worst relative position {worstPosition:E3}, fast star {worstFast:E3} (bound {bound:E3})");
+        Assert.True(worstPosition <= StraightLinePositionTolerance, $"{worstPosition:E3}");
+        Assert.True(worstFast <= bound, $"{worstFast:E3} > {bound:E3}");
     }
 
     // The record of the right ascension and declination sigmas off half days against their closed form: twice the worst
@@ -502,15 +520,31 @@ public class StarTests
         Assert.True(worstDeclination <= ClosedFormSigmaTolerance, $"{worstDeclination:E3}");
     }
 
-    // The record of the position off half days against CSPICE's latrec_c (the radrec_c of SPICE) of the closed form of
-    // the right ascension and the declination: twice the worst, rounded up at the second digit (4.657e-16, the slow star 40
-    // years after its epoch; 3.711e-16 for the fast star; Validation category, Linux only, CI run 43773937161, 2026-11-15),
-    // asserted by the Validation test (7.287e-14 before the fix). A record of its own: CatalogPositionTolerance, the SPK read at half-day epochs,
-    // does not move
-    internal const double ClosedFormPositionTolerance = 9.4e-16;
+    // The record of the position off half days against the straight line whose catalog direction is CSPICE's latrec_c (the
+    // radrec_c of SPICE): twice the worst on Linux x64, rounded up at the second digit (the Validation test runs on Linux
+    // alone): 4.199e-16 relative (CI run 43974478027, 2026-11-16). Before #709, 7.287e-14; a record of its own: CatalogPositionTolerance, the SPK
+    // read at half-day epochs, does not move
+    internal const double ClosedFormPositionTolerance = 8.4e-16;
+
+    /// <summary>
+    /// The straight line of <paramref name="star"/> <paramref name="years"/> Julian years after its catalog epoch, its
+    /// catalog position r0 u0 from CSPICE's <c>latrec_c</c> (<see cref="CspiceDirect.Radrec"/>) and its motion
+    /// r0 (x e_α + y e_δ) written here, as <see cref="StraightLinePosition(Star, decimal)"/>.
+    /// </summary>
+    internal static Vector3 SpiceStraightLinePosition(Star star, decimal years)
+    {
+        double a = star.EquatorialCoordinatesAtEpoch.RightAscension;
+        double d = star.EquatorialCoordinatesAtEpoch.Declination;
+        var catalog = CspiceDirect.Radrec(star.Distance, a, d);
+        double x = (double)(ExactDecimal(star.RightAscensionProperMotion) * years);
+        double y = (double)(ExactDecimal(star.DeclinationProperMotion) * years);
+        var east = new Vector3(-System.Math.Sin(a), System.Math.Cos(a), 0.0);
+        var north = new Vector3(-System.Math.Sin(d) * System.Math.Cos(a), -System.Math.Sin(d) * System.Math.Sin(a), System.Math.Cos(d));
+        return new Vector3(catalog[0], catalog[1], catalog[2]) + (east * x + north * y) * star.Distance;
+    }
 
     // latrec_c through CspiceDirect, which the Windows DLL does not export (Linux, Validation); the cross-platform test
-    // above asserts the angles and the 1 µs bound of the position
+    // above asserts the straight line written here and the 1 µs bound of the position
     [Fact]
     [Trait("Category", "Validation")]
     public void GetEquatorialCoordinates_OffHalfDays_IsLatrecOfTheClosedForm()
@@ -521,7 +555,7 @@ public class StarTests
         var slow = SlowStar(668026, epoch);
         double worst = 0.0;
 
-        foreach (var (label, star, properMotion, epochs) in OffHalfDayCases(fast, slow))
+        foreach (var (label, star, _, epochs) in OffHalfDayCases(fast, slow))
         {
             double worstOfCase = 0.0;
             foreach (var at in epochs)
@@ -530,9 +564,7 @@ public class StarTests
                 var position = star.GetEquatorialCoordinates(at).ToCartesian();
 
                 // Assert
-                double angle = ClosedFormAngle(1.0, properMotion, star, at);
-                var expected = CspiceDirect.Radrec(star.Distance, angle, angle);
-                var reference = new Vector3(expected[0], expected[1], expected[2]);
+                var reference = SpiceStraightLinePosition(star, JulianYearsFromCatalogEpoch(star, at));
                 worstOfCase = System.Math.Max(worstOfCase, (position - reference).Magnitude() / reference.Magnitude());
             }
 
@@ -611,15 +643,11 @@ public class StarTests
         return 1.657e-3 * System.Math.Sin(m + 1.671e-2 * System.Math.Sin(m));
     }
 
-    // The bound of the angles below: the motion of the star of 0.1 rad/yr in 1 µs, 3.17e-15 rad, the resolution the
-    // library's epochs are documented to (the TDB − TT of a conversion is rounded to the tick, 100 ns)
-    private const double OneMicrosecondOfMotion = 0.1 * 1e-6 / (365.25 * 86400.0);
-
     /// <summary>
     /// #709: the same instant given in TDB, TT, TAI, GPS and UTC is one position. dt counts the Julian years of TDB between
     /// the catalog epoch and the epoch, whatever their time frames, as SOFA's <c>iauStarpm</c> takes TDB dates: the
     /// position of a time is that of its TDB time bit for bit, and the TDB time of a time converted from TDB is the time
-    /// within a tick. Before, dt was the difference of the two calendars, each in its own frame: 2.299e-7 relative between
+    /// within a tick: the position within the distance the star moves in 1 µs. Before, dt was the difference of the two calendars, each in its own frame: 2.299e-7 relative between
     /// UTC and TDB (the 64.18 s of TDB − UTC at 0.1 rad/yr), 1.153e-7 for TAI, 4.977e-12 for TT. Catalog epochs in TDB and
     /// in UTC.
     /// </summary>
@@ -631,6 +659,7 @@ public class StarTests
         var catalogs = new[] { new TimeSystem.Time(2001, 1, 1), new TimeSystem.Time(new DateTime(2001, 1, 1, 0, 0, 0), TimeFrame.UTCFrame) };
         var frames = new ITimeFrame[] { TimeFrame.TDBFrame, TimeFrame.TDTFrame, TimeFrame.TAIFrame, TimeFrame.GPSFrame, TimeFrame.UTCFrame };
         double worst = 0.0;
+        double bound = double.PositiveInfinity;
         int n = 0;
         foreach (var catalog in catalogs)
         {
@@ -648,20 +677,20 @@ public class StarTests
                 var ofTdb = star.GetEquatorialCoordinates(at.ToTDB());
                 Assert.Equal(ofTdb.Declination, coordinates.Declination);
                 Assert.Equal(ofTdb.RightAscension, coordinates.RightAscension);
-                double delta = System.Math.Max(System.Math.Abs(coordinates.Declination - reference.Declination),
-                    System.Math.Abs(coordinates.RightAscension - reference.RightAscension));
-                _output.WriteLine($"MEASURE StarTests.TheSameInstantInEveryFrame (catalog {catalog.Frame.GetType().Name}, epoch {frame.GetType().Name}): {delta:E3} rad");
+                double delta = (coordinates.ToCartesian() - reference.ToCartesian()).Magnitude() / reference.Distance;
+                _output.WriteLine($"MEASURE StarTests.TheSameInstantInEveryFrame (catalog {catalog.Frame.GetType().Name}, epoch {frame.GetType().Name}): relative position {delta:E3}");
                 worst = System.Math.Max(worst, delta);
+                bound = System.Math.Min(bound, CatalogMotionInOneMicrosecond(star, new[] { tdb }));
             }
         }
 
-        Assert.True(worst <= OneMicrosecondOfMotion, $"{worst:E3} > {OneMicrosecondOfMotion:E3}");
+        Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
     }
 
     /// <summary>
     /// #709: between two UTC times across the leap second of 2016-12-31, dt counts it: 86 401 s of TT plus the change of
-    /// TDB − TT over the day (the closed form of the leapseconds kernel, written here), not the 86 400 s of the calendars.
-    /// Before, the star was the position of an epoch 1 s earlier (3.2e-9 rad at 0.1 rad/yr).
+    /// TDB − TT over the day (the closed form of the leapseconds kernel, written here), not the 86 400 s of the calendars:
+    /// the straight line at that dt. Before, the star was the position of an epoch 1 s earlier (3.2e-9 rad at 0.1 rad/yr).
     /// </summary>
     [Fact]
     public void GetEquatorialCoordinates_AcrossALeapSecond_CountsIt()
@@ -674,20 +703,22 @@ public class StarTests
         double ttEpoch = (double)TtSecondsOfUtc(epochUtc);
         double seconds = (double)(TtSecondsOfUtc(epochUtc) - TtSecondsOfUtc(catalogUtc)) + (TdbMinusTt(ttEpoch) - TdbMinusTt(ttCatalog));
         Assert.Equal(86401.0, seconds, 3);
-        double expected = 1.0 + 0.1 * seconds / 86400.0 / 365.25;
+        var at = new TimeSystem.Time(epochUtc, TimeFrame.UTCFrame);
+        var expected = StraightLinePosition(star, seconds / 86400.0 / 365.25);
 
         // Act
-        var coordinates = star.GetEquatorialCoordinates(new TimeSystem.Time(epochUtc, TimeFrame.UTCFrame));
+        var coordinates = star.GetEquatorialCoordinates(at);
 
-        // Assert
-        double delta = System.Math.Max(System.Math.Abs(coordinates.Declination - expected), System.Math.Abs(coordinates.RightAscension - expected));
-        _output.WriteLine($"MEASURE StarTests.AcrossALeapSecond: {delta:E3} rad (dt {seconds:F9} s)");
-        Assert.True(delta <= OneMicrosecondOfMotion, $"{delta:E3} > {OneMicrosecondOfMotion:E3}");
+        // Assert: the straight line at that dt (#718), within the distance the star moves in 1 µs
+        double delta = (coordinates.ToCartesian() - expected).Magnitude() / expected.Magnitude();
+        double bound = CatalogMotionInOneMicrosecond(star, new[] { at });
+        _output.WriteLine($"MEASURE StarTests.AcrossALeapSecond: relative position {delta:E3} (dt {seconds:F9} s, bound {bound:E3})");
+        Assert.True(delta <= bound, $"{delta:E3} > {bound:E3}");
     }
 
     /// <summary>
-    /// #709, the reference: the coordinates of a star whose catalog epoch and epochs are UTC times, against dt from
-    /// CSPICE's ET (<c>unitim_c</c> TDT → TDB of the TT of each UTC time, TT from the leap-second table of the IERS):
+    /// #709, the reference: the position of a star whose catalog epoch and epochs are UTC times, against its straight line
+    /// (#718) at dt from CSPICE's ET (<c>unitim_c</c> TDT → TDB of the TT of each UTC time, TT from the leap-second table of the IERS):
     /// dt = (ET − ET_catalog) / 86 400 / 365.25. Epochs every 7 h 13 min over 2001 and over 2016-07 to 2017-06, across the
     /// leap second. Validation category: <c>unitim_c</c> through <see cref="CspiceDirect"/>, which the Windows DLL does not
     /// export; the cross-platform tests above assert the frame-independence and the leap second.
@@ -716,38 +747,25 @@ public class StarTests
 
                 // Assert
                 double et = CspiceDirect.TtToTdb((double)TtSecondsOfUtc(utc));
-                double expected = 1.0 + 0.1 * ((et - etCatalog) / 86400.0 / 365.25);
-                worstOfCase = System.Math.Max(worstOfCase, System.Math.Max(System.Math.Abs(coordinates.Declination - expected),
-                    System.Math.Abs(coordinates.RightAscension - expected)));
+                var expected = StraightLinePosition(star, (et - etCatalog) / 86400.0 / 365.25);
+                worstOfCase = System.Math.Max(worstOfCase, (coordinates.ToCartesian() - expected).Magnitude() / expected.Magnitude());
             }
 
-            _output.WriteLine($"MEASURE StarTests.UtcEpoch_IsTheClosedFormOfSpiceTdb ({catalogUtc:yyyy-MM}): worst angle {worstOfCase:E3} rad");
+            _output.WriteLine($"MEASURE StarTests.UtcEpoch_IsTheClosedFormOfSpiceTdb ({catalogUtc:yyyy-MM}): worst relative position {worstOfCase:E3}");
             worst = System.Math.Max(worst, worstOfCase);
         }
 
-        _output.WriteLine($"MEASURE StarTests.UtcEpoch_IsTheClosedFormOfSpiceTdb: worst angle {worst:E3} rad");
+        _output.WriteLine($"MEASURE StarTests.UtcEpoch_IsTheClosedFormOfSpiceTdb: worst relative position {worst:E3}");
         Assert.True(worst <= SpiceTdbAngleTolerance, $"{worst:E3}");
     }
 
-    // The record of the angles against dt from CSPICE's ET: twice the worst on Linux x64, rounded up at the second digit
-    // (3.553e-15 rad, 2016-07 and 2001-01 alike, 2026-11-16; the same on the Linux runner, CI run 43906476725): the Validation test
-    // runs on Linux alone. The ET of unitim_c, a double near 5e8 s (ulp 6e-8 s), and the tick of the
-    // library (1e-7 s) bound it near the motion of 1e-7 s, 3.2e-16 rad, plus the rounding of 1 + 0.1 dt. Before the fix
-    // (#709), dt skipped the leap second of 2016-12-31 (3.2e-9 rad) and the TDB − TT of each UTC time (up to 1.7 ms)
-    internal const double SpiceTdbAngleTolerance = 7.2e-15;
-
-    /// <summary>
-    /// The closed form of a declination dec0 + μ dt past a pole, written as the spherical identity: with k = ⌊(d + π/2) / π⌋,
-    /// the declination (−1)^k (d − kπ) and the right ascension a + kπ, which point where (cos d cos a, cos d sin a, sin d)
-    /// points. In <see cref="decimal"/> but for π.
-    /// </summary>
-    private static (double Declination, double RightAscension) ClosedFormAcrossPoles(double declination, double rightAscension)
-    {
-        double k = System.Math.Floor((declination + System.Math.PI / 2.0) / System.Math.PI);
-        double dec = (k % 2.0 == 0.0 ? 1.0 : -1.0) * (double)((decimal)declination - (decimal)k * (decimal)System.Math.PI);
-        double ra = (double)((decimal)rightAscension + (decimal)k * (decimal)System.Math.PI) % (2.0 * System.Math.PI);
-        return (dec, ra < 0.0 ? ra + 2.0 * System.Math.PI : ra);
-    }
+    // The record of the position against the straight line at dt from CSPICE's ET: twice the worst on Linux x64, rounded up
+    // at the second digit (the Validation test runs on Linux alone): 4.963e-15 relative, 2016-07 (4.941e-15 for 2001-01; CI run
+    // 43974478027, 2026-11-16; 3.553e-15 rad in the angles of the linear model before #718, CI run 43906476725). The ET of unitim_c, a
+    // double near 5e8 s (ulp 6e-8 s), and the tick of the library (1e-7 s) bound it near the motion of 1e-7 s, 4.5e-16
+    // relative, plus the rounding of the sines and cosines. Before the fix (#709), dt skipped the leap second of 2016-12-31
+    // (3.2e-9 rad) and the TDB − TT of each UTC time (up to 1.7 ms)
+    internal const double SpiceTdbAngleTolerance = 1.0e-14;
 
     // The difference of two right ascensions on the circle
     private static double RightAscensionDelta(double a, double b)
@@ -765,93 +783,82 @@ public class StarTests
         star.Epoch + TimeSpan.FromTicks((long)System.Math.Round(years * 365.25 * TimeSpan.TicksPerDay));
 
     /// <summary>
-    /// The stars past a pole: north (1.5 rad, +0.1 rad/yr) and south (−1.5 rad, −0.1 rad/yr), a right ascension of 1 rad
-    /// moving 0.05 rad/yr, every 0.01 yr over 2 yr, and a declination of 0 moving 1 rad/yr, which passes both poles.
+    /// The stars whose straight line passes near or over a pole (#718): north (1.5 rad, μδ 0.1 rad/yr, μα* 0.05 rad/yr)
+    /// and south (−1.5 rad, −0.1 and 0.05 rad/yr), which pass near it, and a star of no motion in right ascension
+    /// (1.5 rad, 0.1 rad/yr) that passes over the north pole after cot(1.5)/0.1 = 0.709 yr, every 0.01 yr over 2 yr; a
+    /// star at 0 moving 1 rad/yr in declination and 0.05 rad/yr in right ascension, every 0.01 yr over 8 yr, whose
+    /// direction tends to atan(0.05) from the north pole and never reaches it: a straight line never passes both poles
+    /// (#709's case of 1 rad/yr through both poles was an artefact of the linear angles).
     /// </summary>
-    private static IEnumerable<(string Label, Star Star, double Declination, double DeclinationMotion, double RightAscensionMotion, double[] Years)> PoleCases(
-        TimeSystem.Time catalog)
+    private static IEnumerable<(string Label, Star Star, double[] Years)> PoleCases(TimeSystem.Time catalog)
     {
         var grid = Enumerable.Range(0, 201).Select(i => i * 0.01).ToArray();
         yield return ("north", new Star(709031, "star709031", 1E+30, "spec", 2, 0.3792, new Equatorial(1.5, 1.0, catalog), 0.1, 0.05, 0, 0, 0, 0, catalog),
-            1.5, 0.1, 0.05, grid);
+            grid);
         yield return ("south", new Star(709032, "star709032", 1E+30, "spec", 2, 0.3792, new Equatorial(-1.5, 1.0, catalog), -0.1, 0.05, 0, 0, 0, 0, catalog),
-            -1.5, -0.1, 0.05, grid);
-        yield return ("both", new Star(709033, "star709033", 1E+30, "spec", 2, 0.3792, new Equatorial(0.0, 1.0, catalog), 1.0, 0.05, 0, 0, 0, 0, catalog),
-            0.0, 1.0, 0.05, Enumerable.Range(0, 801).Select(i => i * 0.01).ToArray());
+            grid);
+        yield return ("over the pole", new Star(709034, "star709034", 1E+30, "spec", 2, 0.3792, new Equatorial(1.5, 1.0, catalog), 0.1, 0.0, 0, 0, 0, 0, catalog),
+            grid);
+        yield return ("fast", new Star(709033, "star709033", 1E+30, "spec", 2, 0.3792, new Equatorial(0.0, 1.0, catalog), 1.0, 0.05, 0, 0, 0, 0, catalog),
+            Enumerable.Range(0, 801).Select(i => i * 0.01).ToArray());
     }
 
     /// <summary>
-    /// #709: a declination that passes a pole crosses it: the declination π − d (−π − d past the south pole) and the right
-    /// ascension turned by π, the direction of the linear model's angles, continuous from one epoch to the next. Before, the
-    /// declination was reduced modulo π/2, a jump of up to π/2 toward the equator (1.5 rad + 0.1 rad/yr read 0.009 rad
-    /// after 0.8 yr), and a star at the exact pole read the equator.
+    /// #709 and #718: a star whose straight line passes near or over a pole crosses it continuously: its declination in
+    /// [−π/2, π/2], its right ascension in [0, 2π), its position the straight line written here, and the angle between two
+    /// consecutive directions no more than μ Δt, the angular rate of a straight line at constant speed seen from the
+    /// barycenter being at most its speed over its least distance, μ. Before #709 the declination was reduced modulo π/2, a
+    /// jump of up to π/2 toward the equator, and a star at the exact pole read the equator; before #718 the angles moved
+    /// linearly.
     /// </summary>
     [Fact]
     public void GetEquatorialCoordinates_AcrossAPole_CrossesIt()
     {
         // Arrange
         var catalog = new TimeSystem.Time(2001, 1, 1);
-        double worstAngle = 0.0;
-        double worstDirection = 0.0;
+        double worstPosition = 0.0;
         double worstStep = 0.0;
-        foreach (var (label, star, declination, declinationMotion, rightAscensionMotion, years) in PoleCases(catalog))
+        foreach (var (label, star, years) in PoleCases(catalog))
         {
-            double caseAngle = 0.0;
-            double caseDirection = 0.0;
+            double casePosition = 0.0;
             double caseStep = 0.0;
             Vector3? previous = null;
-            double previousYears = 0.0;
+            decimal previousYears = 0m;
+            double mu = System.Math.Sqrt(star.RightAscensionProperMotion * star.RightAscensionProperMotion +
+                                         star.DeclinationProperMotion * star.DeclinationProperMotion);
             foreach (var dt in years)
             {
                 var at = AfterCatalogEpoch(star, dt);
-                double exactYears = (double)JulianYearsFromCatalogEpoch(star, at);
+                decimal exactYears = JulianYearsFromCatalogEpoch(star, at);
 
                 // Act
                 var coordinates = star.GetEquatorialCoordinates(at);
 
-                // Assert: the closed form of the crossing, and the direction of the unreduced angles
-                double d = ClosedFormAngle(declination, declinationMotion, star, at);
-                double a = ClosedFormAngle(1.0, rightAscensionMotion, star, at);
-                var (expectedDeclination, expectedRightAscension) = ClosedFormAcrossPoles(d, a);
+                // Assert
                 Assert.InRange(coordinates.Declination, -System.Math.PI / 2.0, System.Math.PI / 2.0);
-                Assert.InRange(coordinates.RightAscension, 0.0, 2.0 * System.Math.PI);
-                caseAngle = System.Math.Max(caseAngle, System.Math.Max(System.Math.Abs(coordinates.Declination - expectedDeclination),
-                    RightAscensionDelta(coordinates.RightAscension, expectedRightAscension)));
+                Assert.InRange(coordinates.RightAscension, 0.0, System.Math.BitDecrement(2.0 * System.Math.PI));
+                var position = coordinates.ToCartesian();
+                var expected = StraightLinePosition(star, exactYears);
+                casePosition = System.Math.Max(casePosition, (position - expected).Magnitude() / expected.Magnitude());
                 var direction = Direction(coordinates.Declination, coordinates.RightAscension);
-                caseDirection = System.Math.Max(caseDirection, (direction - Direction(d, a)).Magnitude());
                 if (previous.HasValue)
                 {
-                    // No more than the arc the angles move, √(μδ² + μα²) Δt
-                    double arc = System.Math.Sqrt(declinationMotion * declinationMotion + rightAscensionMotion * rightAscensionMotion) * (exactYears - previousYears);
-                    caseStep = System.Math.Max(caseStep, previous.Value.Angle(direction) - arc);
+                    caseStep = System.Math.Max(caseStep, Separation(previous.Value, direction) - mu * (double)(exactYears - previousYears));
                 }
 
                 previous = direction;
                 previousYears = exactYears;
             }
 
-            _output.WriteLine($"MEASURE StarTests.AcrossAPole ({label}): worst angle {caseAngle:E3} rad, direction {caseDirection:E3}, step over the arc {caseStep:E3} rad");
-            worstAngle = System.Math.Max(worstAngle, caseAngle);
-            worstDirection = System.Math.Max(worstDirection, caseDirection);
+            _output.WriteLine($"MEASURE StarTests.AcrossAPole ({label}): worst relative position {casePosition:E3}, step over μ Δt {caseStep:E3} rad");
+            worstPosition = System.Math.Max(worstPosition, casePosition);
             worstStep = System.Math.Max(worstStep, caseStep);
         }
 
-        _output.WriteLine($"MEASURE StarTests.AcrossAPole: worst angle {worstAngle:E3} rad, direction {worstDirection:E3}, step over the arc {worstStep:E3} rad");
-        Assert.True(worstAngle <= PoleAngleTolerance, $"{worstAngle:E3}");
-        Assert.True(worstDirection <= PoleDirectionTolerance, $"{worstDirection:E3}");
-        Assert.True(worstStep <= PoleDirectionTolerance, $"{worstStep:E3}");
+        _output.WriteLine($"MEASURE StarTests.AcrossAPole: worst relative position {worstPosition:E3}, step over μ Δt {worstStep:E3} rad");
+        Assert.True(worstPosition <= StraightLinePositionTolerance, $"{worstPosition:E3}");
+        Assert.True(worstStep <= 0.0, $"{worstStep:E3}");
     }
-
-    // The records of the crossing against its closed form, twice the worst over Linux x64, Windows x64 and macOS arm64,
-    // rounded up at the second digit (CI runs 43906476725 and 43926830045; the direction goes through the platform's
-    // sines and cosines): the angles 9.992e-15 rad on Windows and locally on Linux, 1.776e-15 rad on the Linux and
-    // macOS arm64 runners (the star of 1 rad/yr, its declination 8 rad after 8 yr, whose rounding the reduction
-    // carries; 3.553e-15 rad for the others), the directions 1.555e-15 on Windows, 1.539e-15 on Linux and macOS arm64
-    // (3.446e-16 for the others); a step between consecutive epochs longer than the arc of the angles by 0.000e+00 rad.
-    // Before the fix (#709), 3.142 rad (the right ascension not turned), a direction 2.0 away and a jump of 1.569 rad
-    // over 0.01 yr
-    internal const double PoleAngleTolerance = 2.0e-14;
-    internal const double PoleDirectionTolerance = 3.2e-15;
 
     /// <summary>
     /// #709: a star at a pole, with no motion, stays there: its declination ±π/2 (before, (π/2) mod (π/2) = 0, the equator).
@@ -875,10 +882,10 @@ public class StarTests
     }
 
     /// <summary>
-    /// #709, the reference: the coordinates past a pole against CSPICE, <c>latrec_c</c> of the unreduced angles (which
-    /// accepts any latitude) then <c>reclat_c</c>, whose latitude in [−π/2, π/2] and longitude modulo 2π are the reduced
-    /// pair. Validation category: CSPICE through <see cref="CspiceDirect"/>, which the Windows DLL does not export; the
-    /// cross-platform test above asserts the closed form of the crossing.
+    /// #709 and #718, the reference: the coordinates near and over a pole against CSPICE, <c>reclat_c</c> of the straight
+    /// line whose catalog position is <c>latrec_c</c>'s (<see cref="SpiceStraightLinePosition"/>): its latitude in
+    /// [−π/2, π/2] and its longitude modulo 2π. Validation category: CSPICE through <see cref="CspiceDirect"/>, which the
+    /// Windows DLL does not export; the cross-platform test above asserts the straight line written here.
     /// </summary>
     [Fact]
     [Trait("Category", "Validation")]
@@ -887,7 +894,7 @@ public class StarTests
         // Arrange
         var catalog = new TimeSystem.Time(2001, 1, 1);
         double worst = 0.0;
-        foreach (var (label, star, declination, declinationMotion, rightAscensionMotion, years) in PoleCases(catalog))
+        foreach (var (label, star, years) in PoleCases(catalog))
         {
             double worstOfCase = 0.0;
             foreach (var dt in years)
@@ -897,12 +904,11 @@ public class StarTests
                 // Act
                 var coordinates = star.GetEquatorialCoordinates(at);
 
-                // Assert
-                double d = ClosedFormAngle(declination, declinationMotion, star, at);
-                double a = ClosedFormAngle(1.0, rightAscensionMotion, star, at);
-                var (_, longitude, latitude) = CspiceDirect.Reclat(CspiceDirect.Radrec(1.0, a, d));
+                // Assert: the angles, the right ascension scaled by cos δ (its arc on the sky, which a pole leaves undefined)
+                var reference = SpiceStraightLinePosition(star, JulianYearsFromCatalogEpoch(star, at));
+                var (_, longitude, latitude) = CspiceDirect.Reclat(new[] { reference.X, reference.Y, reference.Z });
                 worstOfCase = System.Math.Max(worstOfCase, System.Math.Max(System.Math.Abs(coordinates.Declination - latitude),
-                    RightAscensionDelta(coordinates.RightAscension, longitude)));
+                    RightAscensionDelta(coordinates.RightAscension, longitude) * System.Math.Cos(latitude)));
             }
 
             _output.WriteLine($"MEASURE StarTests.AcrossAPole_IsReclatOfLatrec ({label}): worst angle {worstOfCase:E3} rad");
@@ -913,10 +919,10 @@ public class StarTests
         Assert.True(worst <= PoleReclatTolerance, $"{worst:E3}");
     }
 
-    // The record of the crossing against latrec_c then reclat_c: twice the worst on Linux x64, rounded up at the second
-    // digit (1.533e-15 rad, the star of 1 rad/yr; 8.882e-16 rad for the others; 2026-11-16; the same on the Linux runner,
-    // CI run 43906476725): the Validation test runs on Linux alone. Before the fix (#709), 3.142 rad
-    internal const double PoleReclatTolerance = 3.1e-15;
+    // The record of the crossing against reclat_c of the straight line: twice the worst on Linux x64, rounded up at the
+    // second digit (the Validation test runs on Linux alone): 2.220e-16 rad, every case (CI run 43974478027, 2026-11-16).
+    // Before #709, 3.142 rad
+    internal const double PoleReclatTolerance = 4.5e-16;
 
     /// <summary>
     /// #709: a sigma is a standard deviation, not an angle: √(σ² + (dt σ_μ)²) as it is, above π/2 for the declination and
@@ -965,7 +971,8 @@ public class StarTests
     /// 0, the double of [0, 2π) nearest to it on the circle; 2π − 1e-30 rounds to 2π, the end the interval excludes, which
     /// the reduction returned (`ra % 2π` keeps −1e-30, and −1e-30 + 2π rounds to 2π). A right ascension of −1e-15 rad is
     /// 2π − 1e-15, which rounds to the double below 2π (6.283185307179585), kept. The closed form: dt is one Julian year
-    /// exactly (365.25 days of TDB from a catalog epoch of TDB), so a + μ dt is μ exactly.
+    /// exactly (365.25 days of TDB from a catalog epoch of TDB), so the straight line turns the right ascension by
+    /// atan2(μ, cos δ0) (#718).
     /// </summary>
     [Theory]
     [InlineData(-1e-30)]
@@ -983,12 +990,445 @@ public class StarTests
         // Act
         var coordinates = star.GetEquatorialCoordinates(at);
 
-        // Assert: in [0, 2π), and the double of that interval nearest to μ on the circle (0 when 2π + μ rounds to 2π)
-        double shifted = 2.0 * System.Math.PI + rightAscensionMotion;
+        // Assert: in [0, 2π), and the double of that interval nearest to α0 + atan2(μ, cos δ0) on the circle (0 when its sum
+        // with 2π rounds to 2π), atan2(μ, cos δ0) = μ / cos δ0 to the rounding for these μ (#718: μ is a true angle); the
+        // declination 0.5 rad within (μ / cos δ0)² / 2 (a second order of 1e-30 at most) and its rounding
+        double shifted = 2.0 * System.Math.PI + rightAscensionMotion / System.Math.Cos(0.5);
         double expected = shifted < 2.0 * System.Math.PI ? shifted : 0.0;
-        _output.WriteLine($"MEASURE StarTests.RightAscensionJustBelowZero ({rightAscensionMotion:E3}): {coordinates.RightAscension:R} rad");
+        _output.WriteLine($"MEASURE StarTests.RightAscensionJustBelowZero ({rightAscensionMotion:E3}): {coordinates.RightAscension:R} rad, declination − 0.5 {coordinates.Declination - 0.5:E3} rad");
         Assert.InRange(coordinates.RightAscension, 0.0, System.Math.BitDecrement(2.0 * System.Math.PI));
         Assert.Equal(expected, coordinates.RightAscension);
-        Assert.Equal(0.5, coordinates.Declination);
+        Assert.True(System.Math.Abs(coordinates.Declination - 0.5) <= System.Math.BitIncrement(0.5) - 0.5, $"{coordinates.Declination:R}");
     }
+
+    // ---- #718: the straight line of iauStarpm, the proper motion in right ascension a true angle ----
+
+    /// <summary>
+    /// A row of <c>tools/sofa_reference/starpm_ref.c</c>: a star (its right ascension and declination in rad, μα* =
+    /// (dα/dt) cos δ and μδ in rad per Julian year, its parallax in arcsec, its catalog epoch in TDB days from J2000) at
+    /// <see cref="Years"/> Julian years of TDB from its catalog epoch; SOFA's <c>iauStarpm</c> (rv = 0, fed dα/dt =
+    /// μα*/cos δ; its <see cref="Status"/>, −9 where it cannot be fed, NaN then and for a status other than 0): its unit
+    /// direction and the ratio of the catalog parallax to its parallax, the distance in catalog distances; the closed form
+    /// of the straight line in long double: its unit direction and its length in catalog distances.
+    /// </summary>
+    internal sealed record StarpmCase(string Label, double RightAscension, double Declination, double RightAscensionProperMotion,
+        double DeclinationProperMotion, double Parallax, double EpochDays, double Years, int Status, Vector3 Starpm, double StarpmDistance,
+        Vector3 StraightLine, double StraightLineLength);
+
+    // Printed by tools/sofa_reference/starpm_ref.c (SOFA 2023-10-11, gcc 13.3, x86-64 Linux), never edited by hand
+    internal static readonly StarpmCase[] StarpmCases =
+    {
+        new("Barnard I/311", 4.7028598776368105, 0.081476992715215468, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 1.0, 0,
+            new Vector3(-0.0095011796364996431, -0.9966332215401521, 0.081436781051396262), 0.9999999937595595,
+            new Vector3(-0.0095011796364996865, -0.9966332215401521, 0.081436781051396262), 1.0000000012611043),
+        new("Barnard I/311", 4.7028598776368105, 0.081476992715215468, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 10.0, 0,
+            new Vector3(-0.0095356719968014113, -0.99659608981391223, 0.081885925086000247), 1.000000051094968,
+            new Vector3(-0.0095356719968006289, -0.99659608981391223, 0.081885925086000219), 1.0000001261104201),
+        new("Barnard I/311", 4.7028598776368105, 0.081476992715215468, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 100.0, 0,
+            new Vector3(-0.0098804841055939348, -0.99621357926272025, 0.086376388708946455), 1.0000118607999076,
+            new Vector3(-0.0098804841055915704, -0.99621357926272225, 0.086376388708922849), 1.000012610963287),
+        new("Barnard I/311", 4.7028598776368105, 0.081476992715215468, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 1000.0, 0,
+            new Vector3(-0.013313185071146394, -0.99127609698294716, 0.13112764259879037), 1.0012527991588618,
+            new Vector3(-0.01331318505322117, -0.99127609701412955, 0.13112764236488336), 1.0012603100897464),
+        new("Barnard DR3", 4.7027635336371842, 0.082718484526907429, -3.8860289090702973e-06, 5.0238303802473693e-05, 0.54697590000000007, 5844, 1.0, 0,
+            new Vector3(-0.0095962329535933151, -0.99653042121451263, 0.082674251778449157), 0.99999999369962467,
+            new Vector3(-0.0095962329535935077, -0.99653042121451263, 0.082674251778449157), 1.0000000012694943),
+        new("Barnard DR3", 4.7027635336371842, 0.082718484526907429, -3.8860289090702973e-06, 5.0238303802473693e-05, 0.54697590000000007, 5844, 10.0, 0,
+            new Vector3(-0.0096308448004147357, -0.99649260297802988, 0.083124840081054183), 1.000000051250711,
+            new Vector3(-0.0096308448004144113, -0.99649260297802988, 0.083124840081054183), 1.0000001269494114),
+        new("Barnard DR3", 4.7027635336371842, 0.082718484526907429, -3.8860289090702973e-06, 5.0238303802473693e-05, 0.54697590000000007, 5844, 100.0, 0,
+            new Vector3(-0.0099768499410058456, -0.99610315411649819, 0.0876297256895089), 1.0000119378653636,
+            new Vector3(-0.0099768499410037986, -0.9961031541165003, 0.087629725689484864), 1.0000126948613683),
+        new("Barnard DR3", 4.7027635336371842, 0.082718484526907429, -3.8860289090702973e-06, 5.0238303802473693e-05, 0.54697590000000007, 5844, 1000.0, 0,
+            new Vector3(-0.01342125493689973, -0.99108911546991763, 0.13252258340741371), 1.0012611100044226,
+            new Vector3(-0.013421254918629902, -0.99108911550203527, 0.13252258316906818), 1.0012686894084084),
+        new("Polaris I/311", 0.66228513378259868, 1.5579531082148617, 2.156451253575216e-07, -5.745042121148002e-08, 0.0075399999999999998, -3195.9375, 1.0, 0,
+            new Vector3(0.010127656653116421, 0.0078975464977979939, 0.99991752626405728), 0.99999999998925326,
+            new Vector3(0.010127656653116492, 0.0078975464977980494, 0.99991752626405728), 1.0000000000000249),
+        new("Polaris I/311", 0.66228513378259868, 1.5579531082148617, 2.156451253575216e-07, -5.745042121148002e-08, 0.0075399999999999998, -3195.9375, 10.0, 0,
+            new Vector3(0.010126870921005155, 0.0078993949171149106, 0.99991751962113995), 0.99999999989477351,
+            new Vector3(0.01012687092100509, 0.0078993949171148586, 0.99991751962113995), 1.0000000000024902),
+        new("Polaris I/311", 0.66228513378259868, 1.5579531082148617, 2.156451253575216e-07, -5.745042121148002e-08, 0.0075399999999999998, -3195.9375, 100.0, 0,
+            new Vector3(0.010119013597646115, 0.0079178791085256859, 0.99991745297011059), 0.99999999917184945,
+            new Vector3(0.010119013597646115, 0.0079178791085256859, 0.99991745297011059), 1.0000000002490168),
+        new("Polaris I/311", 0.66228513378259868, 1.5579531082148617, 2.156451253575216e-07, -5.745042121148002e-08, 0.0075399999999999998, -3195.9375, 1000.0, 0,
+            new Vector3(0.010040440141498139, 0.0081027208423543502, 0.9999167642742649), 1.0000000141300092,
+            new Vector3(0.01004044014149817, 0.0081027208423543745, 0.9999167642742649), 1.0000000249016852),
+        new("Barnard I/311 at +89.5 deg", 4.7028598776368105, 1.562069680534925, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 1.0, 0,
+            new Vector3(-8.6549126963275804e-05, -0.0086760344376858155, 0.99996235875941086), 0.9999999937595595,
+            new Vector3(-8.6549126963274666e-05, -0.0086760344376857531, 0.99996235875941086), 1.0000000012611043),
+        new("Barnard I/311 at +89.5 deg", 4.7028598776368105, 1.562069680534925, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 10.0, 0,
+            new Vector3(-0.00011709810166067247, -0.0082250897482506365, 0.9999661665209818), 1.000000051094968,
+            new Vector3(-0.00011709810166067056, -0.0082250897482505948, 0.9999661665209818), 1.0000001261104201),
+        new("Barnard I/311 at +89.5 deg", 4.7028598776368105, 1.562069680534925, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 100.0, 0,
+            new Vector3(-0.00042258268081029243, -0.0037156072970390788, 0.99999300781870071), 1.0000118607999076,
+            new Vector3(-0.00042258268080868017, -0.0037156072970627139, 0.9999930078187006), 1.000012610963287),
+        new("Barnard I/311 at +89.5 deg", 4.7028598776368105, 1.562069680534925, -3.8716250946045326e-06, 5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 1000.0, 0,
+            new Vector3(-0.0034731097662499951, 0.041326628026185155, 0.9991396535642737), 1.0012527991588618,
+            new Vector3(-0.0034731097502762051, 0.04132662779027272, 0.99913965357408707), 1.0012603100897464),
+        new("Barnard I/311 at -89.5 deg", 4.7028598776368105, -1.562069680534925, -3.8716250946045326e-06, -5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 1.0, 0,
+            new Vector3(-8.6549126963275804e-05, -0.0086760344376858155, -0.99996235875941086), 0.9999999937595595,
+            new Vector3(-8.6549126963274666e-05, -0.0086760344376857531, -0.99996235875941086), 1.0000000012611043),
+        new("Barnard I/311 at -89.5 deg", 4.7028598776368105, -1.562069680534925, -3.8716250946045326e-06, -5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 10.0, 0,
+            new Vector3(-0.00011709810166067247, -0.0082250897482506365, -0.9999661665209818), 1.000000051094968,
+            new Vector3(-0.00011709810166067056, -0.0082250897482505948, -0.9999661665209818), 1.0000001261104201),
+        new("Barnard I/311 at -89.5 deg", 4.7028598776368105, -1.562069680534925, -3.8716250946045326e-06, -5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 100.0, 0,
+            new Vector3(-0.00042258268081029243, -0.0037156072970390788, -0.99999300781870071), 1.0000118607999076,
+            new Vector3(-0.00042258268080868017, -0.0037156072970627139, -0.9999930078187006), 1.000012610963287),
+        new("Barnard I/311 at -89.5 deg", 4.7028598776368105, -1.562069680534925, -3.8716250946045326e-06, -5.0072138761410217e-05, 0.54830999999999996, -3195.9375, 1000.0, 0,
+            new Vector3(-0.0034731097662499951, 0.041326628026185155, -0.9991396535642737), 1.0012527991588618,
+            new Vector3(-0.0034731097502762051, 0.04132662779027272, -0.99913965357408707), 1.0012603100897464),
+        new("North pole", 1, 1.5707963267948966, 1.0000000000000001e-05, 2.0000000000000002e-05, 0.37919999999999998, 366.5, 1.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-1.9220755960603488e-05, -1.1426396634568409e-05, 0.99999999974999998), 1.00000000025),
+        new("North pole", 1, 1.5707963267948966, 1.0000000000000001e-05, 2.0000000000000002e-05, 0.37919999999999998, 366.5, 10.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.00019220755484919571, -0.00011426396351811477, 0.99999997500000093), 1.0000000249999996),
+        new("North pole", 1, 1.5707963267948966, 1.0000000000000001e-05, 2.0000000000000002e-05, 0.37919999999999998, 366.5, 100.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.0019220707913731711, -0.0011426368071591547, 0.99999750000937493), 1.0000024999968751),
+        new("North pole", 1, 1.5707963267948966, 1.0000000000000001e-05, 2.0000000000000002e-05, 0.37919999999999998, 366.5, 1000.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.019215952577645756, -0.01142354110909565, 0.99975009371095458), 1.0002499687578101),
+        new("South pole", 1, -1.5707963267948966, 1.0000000000000001e-05, -2.0000000000000002e-05, 0.37919999999999998, 366.5, 1.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-1.9220755960603488e-05, -1.1426396634568409e-05, -0.99999999974999998), 1.00000000025),
+        new("South pole", 1, -1.5707963267948966, 1.0000000000000001e-05, -2.0000000000000002e-05, 0.37919999999999998, 366.5, 10.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.00019220755484919571, -0.00011426396351811477, -0.99999997500000093), 1.0000000249999996),
+        new("South pole", 1, -1.5707963267948966, 1.0000000000000001e-05, -2.0000000000000002e-05, 0.37919999999999998, 366.5, 100.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.0019220707913731711, -0.0011426368071591547, -0.99999750000937493), 1.0000024999968751),
+        new("South pole", 1, -1.5707963267948966, 1.0000000000000001e-05, -2.0000000000000002e-05, 0.37919999999999998, 366.5, 1000.0, -9,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.019215952577645756, -0.01142354110909565, -0.99975009371095458), 1.0002499687578101),
+        new("1 rad, 0.1 rad/yr", 1, 1, 0.10000000000000001, 0.10000000000000001, 0.37919999999999998, 366.5, 1.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(0.16071541416630961, 0.43355749103016039, 0.88667832815569814), 1.0099504938362078),
+        new("1 rad, 0.1 rad/yr", 1, 1, 0.10000000000000001, 0.10000000000000001, 0.37919999999999998, 366.5, 10.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.57977116612635826, 0.16562886016610184, 0.79776718133084445), 1.7320508075688774),
+        new("1 rad, 0.1 rad/yr", 1, 1, 0.10000000000000001, 0.10000000000000001, 0.37919999999999998, 366.5, 100.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.89362143331063415, -0.086268170926741231, 0.44045264968303044), 14.177446878757825),
+        new("1 rad, 0.1 rad/yr", 1, 1, 0.10000000000000001, 0.10000000000000001, 0.37919999999999998, 366.5, 1000.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.91440793527323483, -0.11541435406318602, 0.38799182309105074), 141.42489172702238),
+        new("1.5 rad, 0.1 and 0.05 rad/yr", 1, 1.5, 0.050000000000000003, 0.10000000000000001, 0.37919999999999998, 366.5, 1.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.05739137806500462, 0.0025859968854076505, 0.99834840729271879), 1.0062305898749053),
+        new("1.5 rad, 0.1 and 0.05 rad/yr", 1, 1.5, 0.050000000000000003, 0.10000000000000001, 0.37919999999999998, 366.5, 10.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.61430990705753896, -0.33979242202313775, 0.7121547921811715), 1.5),
+        new("1.5 rad, 0.1 and 0.05 rad/yr", 1, 1.5, 0.050000000000000003, 0.10000000000000001, 0.37919999999999998, 366.5, 100.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.8515498949918564, -0.50179153895865591, 0.15188162419747189), 11.224972160321824),
+        new("1.5 rad, 0.1 and 0.05 rad/yr", 1, 1.5, 0.050000000000000003, 0.10000000000000001, 0.37919999999999998, 366.5, 1000.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.85799159855193774, -0.50856589797357077, 0.072188255503413873), 111.80787092150535),
+        new("-1.5 rad, -0.1 and 0.05 rad/yr", 1, -1.5, 0.050000000000000003, -0.10000000000000001, 0.37919999999999998, 366.5, 1.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.05739137806500462, 0.0025859968854076505, -0.99834840729271879), 1.0062305898749053),
+        new("-1.5 rad, -0.1 and 0.05 rad/yr", 1, -1.5, 0.050000000000000003, -0.10000000000000001, 0.37919999999999998, 366.5, 10.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.61430990705753896, -0.33979242202313775, -0.7121547921811715), 1.5),
+        new("-1.5 rad, -0.1 and 0.05 rad/yr", 1, -1.5, 0.050000000000000003, -0.10000000000000001, 0.37919999999999998, 366.5, 100.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.8515498949918564, -0.50179153895865591, -0.15188162419747189), 11.224972160321824),
+        new("-1.5 rad, -0.1 and 0.05 rad/yr", 1, -1.5, 0.050000000000000003, -0.10000000000000001, 0.37919999999999998, 366.5, 1000.0, 2,
+            new Vector3(double.NaN, double.NaN, double.NaN), double.NaN,
+            new Vector3(-0.85799159855193774, -0.50856589797357077, -0.072188255503413873), 111.80787092150535)
+    };
+
+    /// <summary>The star of a row, built as a caller builds one from its catalog values, and the epoch of its horizon.</summary>
+    private static (Star Star, TimeSystem.Time At) StarOf(StarpmCase row, int index)
+    {
+        var epoch = TimeSystem.Time.CreateTDB(row.EpochDays * 86400.0);
+        var star = new Star(718000 + index, $"star{718000 + index}", 1E+30, "spec", 2, row.Parallax, new Equatorial(row.Declination, row.RightAscension, epoch),
+            row.DeclinationProperMotion, row.RightAscensionProperMotion, 0, 0, 0, 0, epoch);
+        var at = epoch + TimeSpan.FromTicks((long)System.Math.Round(row.Years * 365.25 * TimeSpan.TicksPerDay));
+        Assert.Equal((decimal)row.Years, JulianYearsFromCatalogEpoch(star, at));
+        return (star, at);
+    }
+
+    /// <summary>
+    /// The angle between two directions, atan2(|a × b|, a · b), which resolves an angle near zero to the rounding of its
+    /// components; <see cref="Vector3.Angle"/>, the acos of the dot product, cannot (1.49e-8 rad at least).
+    /// </summary>
+    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+
+    // The records against iauStarpm, per horizon: twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at
+    // the second digit: the direction 1.780e-17, 1.777e-17, 2.419e-14 and 2.412e-10 rad after 1, 10, 100 and 1000 years,
+    // the distance 7.570e-9, 7.570e-8, 7.570e-7 and 7.570e-6 relative, the same on the three (CI run 43974478027,
+    // 2026-11-16). After 1 and 10 years the library and iauStarpm round the right ascension to the same double on the three,
+    // a worst below the resolution of the returned angles: one ulp of a right ascension below 2π, 8.9e-16 rad, and one of a
+    // declination, 2.2e-16 rad, 9.15e-16 rad together, which a one-ulp difference of another platform's atan2, sin or cos
+    // would show. So the direction threshold after 1 and 10 years is twice that resolution, 1.9e-15 rad, not twice the
+    // Linux worst (decided by S. Guillet, 2026-11-17); after 100 and 1000 years the direction is iauStarpm's light-time
+    // and relativistic terms of the observed place at rv = 0 (the straight line of its Note 5 is the same), growing as
+    // dt⁴, far above it, the distance iauStarpv's inertial radial velocity −v_t²/(2c) for an observed rv of 0, 7.6e-8
+    // relative per decade for Barnard's star. Before the fix (#718), Barnard's star fed its catalog μα* was 26.8 mas
+    // (1.3e-7 rad) away after 10 years, and fed dα/dt 0.33 mas (1.6e-9 rad), 34 mas after 100 years and 9.4″ after
+    // 1000; the distance the catalog's
+    internal const double AngleResolutionFloor = 1.9e-15;
+
+    internal static double StarpmDirectionTolerance(double years) => years switch
+    {
+        1.0 => AngleResolutionFloor,
+        10.0 => AngleResolutionFloor,
+        100.0 => 4.9e-14,
+        _ => 4.9e-10
+    };
+
+    internal static double StarpmDistanceTolerance(double years) => years switch
+    {
+        1.0 => 1.6e-8,
+        10.0 => 1.6e-7,
+        100.0 => 1.6e-6,
+        _ => 1.6e-5
+    };
+
+    /// <summary>
+    /// #718, the reference: the catalog stars (Barnard's star from Hipparcos I/311 and Gaia DR3, Polaris from I/311) and
+    /// stars at ±89.5° that cross a pole, 1, 10, 100 and 1000 Julian years of TDB from their catalog epoch, given their μα*
+    /// as the catalogs give it, against SOFA's <c>iauStarpm</c> (rv = 0): the direction, and the distance in catalog
+    /// distances. Before, the angles moved linearly and μα* was read as dα/dt.
+    /// </summary>
+    [Fact]
+    public void GetEquatorialCoordinates_CatalogStars_AreIauStarpm()
+    {
+        var worstDirection = new Dictionary<double, double>();
+        var worstDistance = new Dictionary<double, double>();
+        int compared = 0;
+        for (int i = 0; i < StarpmCases.Length; i++)
+        {
+            var row = StarpmCases[i];
+            if (row.Status != 0)
+            {
+                continue;
+            }
+
+            // Arrange
+            var (star, at) = StarOf(row, i);
+
+            // Act
+            var coordinates = star.GetEquatorialCoordinates(at);
+
+            // Assert
+            double direction = Separation(coordinates.ToCartesian(), row.Starpm);
+            double distance = System.Math.Abs(coordinates.Distance / star.Distance / row.StarpmDistance - 1.0);
+            _output.WriteLine($"MEASURE StarTests.CatalogStars_AreIauStarpm ({row.Label}, {row.Years:F0} yr): direction {direction:E3} rad, relative distance {distance:E3}");
+            worstDirection[row.Years] = System.Math.Max(worstDirection.GetValueOrDefault(row.Years), direction);
+            worstDistance[row.Years] = System.Math.Max(worstDistance.GetValueOrDefault(row.Years), distance);
+            compared++;
+        }
+
+        Assert.Equal(20, compared);
+        foreach (var years in worstDirection.Keys)
+        {
+            _output.WriteLine($"MEASURE StarTests.CatalogStars_AreIauStarpm ({years:F0} yr): worst direction {worstDirection[years]:E3} rad, relative distance {worstDistance[years]:E3}");
+            Assert.True(worstDirection[years] <= StarpmDirectionTolerance(years), $"{years} yr: {worstDirection[years]:E3}");
+            Assert.True(worstDistance[years] <= StarpmDistanceTolerance(years), $"{years} yr: {worstDistance[years]:E3}");
+        }
+    }
+
+    // The record against the closed form of the straight line in long double: twice the worst over Linux x64, Windows x64
+    // and macOS arm64, rounded up at the second digit: the direction 7.825e-16 rad on the three, Barnard's star after 10
+    // years, whose right ascension near 4.7 rad resolves 8.9e-16 rad and is reduced to [0, 2π) by the double of 2π, 2.4e-16
+    // below it; the length 2.220e-16 relative on the three (CI run 43974478027, 2026-11-16). Before the fix (#718),
+    // 2.213 rad and 0.993
+    internal const double StraightLineDirectionTolerance = 1.6e-15;
+    internal const double StraightLineLengthTolerance = 4.5e-16;
+
+    /// <summary>
+    /// #718: every star of <see cref="StarpmCases"/>, the stars at ±π/2 exactly (where <c>iauStarpm</c> cannot take
+    /// μα*/cos δ) and the synthetic stars of the suite (faster than <c>iauStarpv</c>'s 0.5c, which it would freeze) among
+    /// them, against the closed form of the straight line evaluated in long double: the direction, and the distance in
+    /// catalog distances, √(1 + (μ dt)²).
+    /// </summary>
+    [Fact]
+    public void GetEquatorialCoordinates_IsTheStraightLine_OfALongDoubleClosedForm()
+    {
+        double worstDirection = 0.0;
+        double worstLength = 0.0;
+        for (int i = 0; i < StarpmCases.Length; i++)
+        {
+            // Arrange
+            var row = StarpmCases[i];
+            var (star, at) = StarOf(row, i);
+
+            // Act
+            var coordinates = star.GetEquatorialCoordinates(at);
+
+            // Assert
+            double direction = Separation(coordinates.ToCartesian(), row.StraightLine);
+            double length = System.Math.Abs(coordinates.Distance / star.Distance / row.StraightLineLength - 1.0);
+            _output.WriteLine($"MEASURE StarTests.IsTheStraightLine ({row.Label}, {row.Years:F0} yr): direction {direction:E3} rad, relative length {length:E3}");
+            worstDirection = System.Math.Max(worstDirection, direction);
+            worstLength = System.Math.Max(worstLength, length);
+            Assert.InRange(coordinates.Declination, -System.Math.PI / 2.0, System.Math.PI / 2.0);
+            Assert.InRange(coordinates.RightAscension, 0.0, System.Math.BitDecrement(2.0 * System.Math.PI));
+        }
+
+        _output.WriteLine($"MEASURE StarTests.IsTheStraightLine: worst direction {worstDirection:E3} rad, relative length {worstLength:E3}");
+        Assert.True(worstDirection <= StraightLineDirectionTolerance, $"{worstDirection:E3}");
+        Assert.True(worstLength <= StraightLineLengthTolerance, $"{worstLength:E3}");
+    }
+
+    // The record of the second difference of the positions at 0, dt and 2 dt, relative to the position at dt: twice the
+    // worst over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit: 1.170e-15 on the three (CI run
+    // 43974478027, 2026-11-16). Before the fix (#718), 3.725, the curvature of the linear angles
+    internal const double OneLineTolerance = 2.4e-15;
+
+    /// <summary>
+    /// #718, the behaviour: a star moves along one line at constant speed, so its positions at t0, t0 + dt and t0 + 2 dt
+    /// (t0 the catalog epoch and later) satisfy p(2) − p(1) = p(1) − p(0), relative to |p(1)|. Every star of
+    /// <see cref="StarpmCases"/>, dt its horizon, from its catalog epoch and from one dt after it.
+    /// </summary>
+    [Fact]
+    public void GetEquatorialCoordinates_PositionsLieOnOneLineAtConstantSpeed()
+    {
+        double worst = 0.0;
+        for (int i = 0; i < StarpmCases.Length; i++)
+        {
+            // Arrange
+            var row = StarpmCases[i];
+            var (star, at) = StarOf(row, i);
+            var step = at - star.Epoch;
+            foreach (var start in new[] { star.Epoch, at })
+            {
+                // Act
+                var p0 = star.GetEquatorialCoordinates(start).ToCartesian();
+                var p1 = star.GetEquatorialCoordinates(start + step).ToCartesian();
+                var p2 = star.GetEquatorialCoordinates(start + step + step).ToCartesian();
+
+                // Assert
+                double secondDifference = (p2 - p1 - (p1 - p0)).Magnitude() / p1.Magnitude();
+                worst = System.Math.Max(worst, secondDifference);
+                _output.WriteLine($"MEASURE StarTests.OneLineAtConstantSpeed ({row.Label}, {row.Years:F0} yr, from {(start == star.Epoch ? "the catalog epoch" : "dt")}): {secondDifference:E3}");
+            }
+        }
+
+        _output.WriteLine($"MEASURE StarTests.OneLineAtConstantSpeed: worst {worst:E3}");
+        Assert.True(worst <= OneLineTolerance, $"{worst:E3}");
+    }
+
+    /// <summary>
+    /// #718: a star without proper motion at any epoch, and every star at its catalog epoch, is its catalog: its angles and
+    /// its distance, bit for bit.
+    /// </summary>
+    [Fact]
+    public void GetEquatorialCoordinates_WithoutProperMotion_IsTheCatalog_BitForBit()
+    {
+        // Arrange
+        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var still = new Star(718100, "star718100", 1E+30, "spec", 2, 0.3792, new Equatorial(1.2, 4.5, catalog), 0, 0, 0, 0, 0, 0, catalog);
+        foreach (var at in new[] { catalog, catalog.AddDays(-1000.0), catalog.AddDays(0.5), catalog + TimeSpan.FromDays(365250.0) })
+        {
+            // Act
+            var coordinates = still.GetEquatorialCoordinates(at);
+
+            // Assert
+            Assert.Equal(1.2, coordinates.Declination);
+            Assert.Equal(4.5, coordinates.RightAscension);
+            Assert.Equal(still.Distance, coordinates.Distance);
+        }
+
+        for (int i = 0; i < StarpmCases.Length; i++)
+        {
+            var (star, _) = StarOf(StarpmCases[i], i);
+
+            // Act
+            var coordinates = star.GetEquatorialCoordinates(star.Epoch);
+
+            // Assert
+            Assert.Equal(StarpmCases[i].Declination, coordinates.Declination);
+            Assert.Equal(StarpmCases[i].RightAscension, coordinates.RightAscension);
+            Assert.Equal(star.Distance, coordinates.Distance);
+        }
+    }
+
+    /// <summary>
+    /// #718, the convention: Barnard's star built from its Gaia DR3 record (4472832130942575872, VizieR I/355, read on
+    /// 2026-11-16, confirmed by S. Guillet, 2026-11-17) with the units converted and nothing else: ra and dec from
+    /// degrees to radians, pmra (μα* = μα cos δ, as Gaia gives it) and pmdec from mas/yr to rad/yr, the parallax from
+    /// mas to arcsec, the epoch J2016.0 TDB; against <c>iauStarpm</c> fed pmra/cos δ (its Note 4) and rv = 0. Before,
+    /// pmra was read as dα/dt: 27.7 mas away after 10 years.
+    /// </summary>
+    [Fact]
+    public void GetEquatorialCoordinates_FromAGaiaDr3Record_IsIauStarpm()
+    {
+        // Arrange: the record, converted as a caller converts it
+        const double deg = System.Math.PI / 180.0;
+        const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
+        var epoch = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
+        var star = new Star(718200, "Barnard", 1E+30, "M4V", 9.5, 546.9759 / 1000.0, new Equatorial(4.73942005111 * deg, 269.44850252544 * deg, epoch),
+            10362.394 * mas, -801.551 * mas, 0, 0, 0, 0, epoch);
+        var rows = StarpmCases.Where(x => x.Label == "Barnard DR3").ToArray();
+        Assert.Equal(4, rows.Length);
+        foreach (var row in rows)
+        {
+            // The doubles of the reference are those of the record
+            Assert.Equal(row.RightAscension, star.EquatorialCoordinatesAtEpoch.RightAscension);
+            Assert.Equal(row.Declination, star.EquatorialCoordinatesAtEpoch.Declination);
+            Assert.Equal(row.RightAscensionProperMotion, star.RightAscensionProperMotion);
+            Assert.Equal(row.DeclinationProperMotion, star.DeclinationProperMotion);
+            Assert.Equal(row.Parallax, star.Parallax);
+            Assert.Equal(row.EpochDays * 86400.0, star.Epoch.TimeSpanFromJ2000().TotalSeconds);
+            var at = epoch + TimeSpan.FromTicks((long)System.Math.Round(row.Years * 365.25 * TimeSpan.TicksPerDay));
+
+            // Act
+            var coordinates = star.GetEquatorialCoordinates(at);
+
+            // Assert
+            double direction = Separation(coordinates.ToCartesian(), row.Starpm);
+            double distance = System.Math.Abs(coordinates.Distance / star.Distance / row.StarpmDistance - 1.0);
+            _output.WriteLine($"MEASURE StarTests.FromAGaiaDr3Record ({row.Years:F0} yr): direction {direction:E3} rad ({direction / mas:E3} mas), relative distance {distance:E3}");
+            Assert.True(direction <= StarpmDirectionTolerance(row.Years), $"{row.Years} yr: {direction:E3}");
+            Assert.True(distance <= StarpmDistanceTolerance(row.Years), $"{row.Years} yr: {distance:E3}");
+        }
+    }
+
+    /// <summary>
+    /// #718, the convention: the proper motion in right ascension is a true angle, μα* = (dα/dt) cos δ, so the same value
+    /// moves a star on the equator, at 1 rad and at a pole (where dα/dt is undefined) by the same angle atan(μα* dt) along
+    /// e_α = (−sin α0, cos α0, 0), the direction of increasing right ascension. The position is r0 (u0 + μα* dt e_α),
+    /// written here. Before, the motion was cos δ0 times larger at 1 rad and none at a pole.
+    /// </summary>
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(1.0)]
+    [InlineData(-1.0)]
+    [InlineData(System.Math.PI / 2.0)]
+    [InlineData(-System.Math.PI / 2.0)]
+    public void RightAscensionProperMotion_IsTheTrueAngleRate(double declination)
+    {
+        // Arrange
+        var catalog = new TimeSystem.Time(2001, 1, 1);
+        const double rightAscension = 2.0;
+        const double motion = 1.0e-3;
+        var star = new Star(718300, "star718300", 1E+30, "spec", 2, 0.3792, new Equatorial(declination, rightAscension, catalog), 0, motion, 0, 0, 0, 0,
+            catalog);
+        var at = catalog + TimeSpan.FromDays(365.25);
+        var u0 = new Vector3(System.Math.Cos(declination) * System.Math.Cos(rightAscension), System.Math.Cos(declination) * System.Math.Sin(rightAscension),
+            System.Math.Sin(declination));
+        var east = new Vector3(-System.Math.Sin(rightAscension), System.Math.Cos(rightAscension), 0.0);
+        var expected = (u0 + east * motion) * star.Distance;
+
+        // Act
+        var position = star.GetEquatorialCoordinates(at).ToCartesian();
+
+        // Assert: the angle atan(μα* dt), and the position
+        double angle = Separation(position, u0) - System.Math.Atan(motion);
+        double relative = (position - expected).Magnitude() / expected.Magnitude();
+        _output.WriteLine($"MEASURE StarTests.RightAscensionProperMotion_IsTheTrueAngleRate ({declination:R}): angle − atan(μα* dt) {angle:E3} rad, relative position {relative:E3}");
+        Assert.True(System.Math.Abs(angle) <= TrueAngleTolerance, $"{angle:E3}");
+        Assert.True(relative <= TrueAngleTolerance, $"{relative:E3}");
+    }
+
+    // The record of the true-angle motion against r0 (u0 + μα* dt e_α): twice the worst over Linux x64, Windows x64 and
+    // macOS arm64, rounded up at the second digit: the position 1.475e-16 relative, the angle 1.364e-16 rad, the same on the
+    // three (CI run 43974478027, 2026-11-16). Before the fix (#718), the motion was dα/dt: the position 4.597e-4 relative
+    // at 1 rad and 1.000e-3 at a pole, where the star did not move
+    internal const double TrueAngleTolerance = 3.0e-16;
 }

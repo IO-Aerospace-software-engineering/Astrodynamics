@@ -551,20 +551,16 @@ namespace IO.Astrodynamics.Tests.Mission
 
             Assert.Equal(scenario.Window, summary.Window);
 
-            var eph0 = star.GetEphemeris(start, observer, Frames.Frame.ICRF, Aberration.None);
-            var eph1 = star.GetEphemeris(start.Add(TimeSpan.FromDays(365)), observer, Frames.Frame.ICRF, Aberration.None);
-            var eph2 = star.GetEphemeris(start.Add(TimeSpan.FromDays(365 + 365)), observer, Frames.Frame.ICRF, Aberration.None);
-            Assert.Equal(1.0, eph0.ToEquatorial().RightAscension, 12);
-            Assert.Equal(1.0, eph0.ToEquatorial().Declination, 12);
-            Assert.Equal(8.1373353929324900E+16, eph0.ToEquatorial().Distance);
-
-            Assert.Equal(1.1, eph1.ToEquatorial().RightAscension, 3);
-            Assert.Equal(1.1, eph1.ToEquatorial().Declination, 3);
-            Assert.Equal(8.1373353929324896E+16, eph1.ToEquatorial().Distance);
-
-            Assert.Equal(1.2, eph2.ToEquatorial().RightAscension, 3);
-            Assert.Equal(1.2, eph2.ToEquatorial().Declination, 3);
-            Assert.Equal(8.1373353929324910E+16, eph2.ToEquatorial().Distance);
+            // The straight line of the star (#718) at 0, 365 and 730 days, written in StarTests: before, the angles 1, 1.1 and 1.2
+            // rad (to 3 decimals) at the catalog distance
+            foreach (var at in new[] { start, start.Add(TimeSpan.FromDays(365)), start.Add(TimeSpan.FromDays(365 + 365)) })
+            {
+                var eph = star.GetEphemeris(at, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var expected = IO.Astrodynamics.Tests.Body.StarTests.CatalogPosition(star, at);
+                double relative = (eph.Position - expected).Magnitude() / expected.Magnitude();
+                _output.WriteLine($"MEASURE ScenarioTests.PropagateStar ({(at - start).TotalDays} d): relative position {relative:E3}");
+                Assert.True(relative <= IO.Astrodynamics.Tests.Body.StarTests.StraightLinePositionTolerance, $"{relative:E3}");
+            }
         }
 
 
@@ -634,9 +630,9 @@ namespace IO.Astrodynamics.Tests.Mission
             await scenario.SimulateAsync(false, false, step);
 
             // Assert: the stored states exist, and SPICE reads them back from the SPK the star writes, against the catalog
-            // position moved by its proper motion, written here: after k steps of 365 days, dt = 365 k / 365.25 Julian
-            // years, the declination and the right ascension 1 + 0.1 dt rad (no wrap over the window: at most 1.40 rad),
-            // and the position at the star's distance by CSPICE (latrec_c, the computation of radrec_c)
+            // position moved along its straight line (#718): after k steps of 365 days, dt = 365 k / 365.25 Julian years,
+            // the catalog position by CSPICE (latrec_c, the computation of radrec_c) plus r0 (μα* dt e_α + μδ dt e_δ)
+            // (StarTests.SpiceStraightLinePosition)
             Assert.True(star.IsPropagated);
             var directory = Directory.CreateTempSubdirectory("star668");
             var spk = new FileInfo(Path.Combine(directory.FullName, "star668005.bsp"));
@@ -650,10 +646,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 {
                     var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None)
                         .ToStateVector();
-                    double dt = 365.0 * k / 365.25;
-                    double angle = 1.0 + 0.1 * dt;
-                    var rectangular = IO.Astrodynamics.Tests.Body.CspiceDirect.Radrec(star.Distance, angle, angle);
-                    var catalog = new Vector3(rectangular[0], rectangular[1], rectangular[2]);
+                    var catalog = IO.Astrodynamics.Tests.Body.StarTests.SpiceStraightLinePosition(star, 365m * k / 365.25m);
                     double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
                     _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: step {k}, relative position {relative:E3}");
                     worst = System.Math.Max(worst, relative);
@@ -661,11 +654,12 @@ namespace IO.Astrodynamics.Tests.Mission
 
                 Assert.Equal(5, k);
 
-                // Twice the worst against latrec_c, rounded up at the second digit (1.982e-16, Validation category, Linux only,
-                // CI run 43773937161, 2026-11-15). The distance is the star's own (Distance, from its parallax): the parsec of
-                // the library is not what this test measures
+                // Twice the worst against the straight line from latrec_c on Linux x64, rounded up at the second digit
+                // (Validation category, Linux only): 2.182e-16 (CI run 43974478027, 2026-11-16; 1.982e-16 for the linear angles
+                // before #718, CI run 43773937161). The distance is the star's own
+                // (Distance, from its parallax): the parsec of the library is not what this test measures
                 _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: worst relative position {worst:E3}");
-                Assert.True(worst <= 4.0e-16, $"{worst:E3}");
+                Assert.True(worst <= 4.4e-16, $"{worst:E3}");
             }
             finally
             {

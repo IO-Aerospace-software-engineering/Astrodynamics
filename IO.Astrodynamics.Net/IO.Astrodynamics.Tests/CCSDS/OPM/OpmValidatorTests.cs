@@ -194,10 +194,10 @@ public class OpmValidatorTests
     [InlineData("CX_DOT_X_DOT")]
     [InlineData("CY_DOT_Y_DOT")]
     [InlineData("CZ_DOT_Z_DOT")]
-    public void Validate_NaNVariance_ReportsError(string keyword)
+    public void Validate_NegativeVariance_ReportsError(string keyword)
     {
-        // A variance is non-negative, and NaN is not (before: valid, the check "< 0" being false for NaN). The covariance
-        // constructors do not range-check their terms, so the validator is the check of a programmatic covariance
+        // A variance is non-negative. The covariance constructors refuse a non-finite term (#717; a NaN variance, reported
+        // invalid since #708, no longer builds) but take a negative one, so the validator is the check of its sign
         double V(string name, double value) => name == keyword ? value : 1.0e-6;
         CovarianceMatrix Covariance(double value) => new(
             V("CX_X", value), 0, V("CY_Y", value),
@@ -207,7 +207,7 @@ public class OpmValidatorTests
             0, 0, 0, 0, 0, V("CZ_DOT_Z_DOT", value), "ICRF");
 
         var read = Opm.LoadFromString(OpmReaderTests.KeywordBaseOpm());
-        var opm = new Opm(read.Header, read.Metadata, DataWith(read.Data, read.Data.Mass, Covariance(double.NaN)));
+        var opm = new Opm(read.Header, read.Metadata, DataWith(read.Data, read.Data.Mass, Covariance(-1.0e-6)));
         var error = Assert.Single(_validator.Validate(opm).Errors);
         Assert.Equal("OPM002", error.Code);
         Assert.Equal($"Data.Covariance.{keyword}", error.Path);

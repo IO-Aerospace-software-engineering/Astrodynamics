@@ -736,8 +736,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         /// ±Infinity. NaN and ±Infinity are not real numbers (IEEE 754). CCSDS 502.0-B-3 writes a KVN value in fixed-point or
         /// floating-point digits up to about 1.798E+308 (7.5.5 to 7.5.7), which holds neither, but an ODM/XML value follows
         /// the xsd:double of XML Schema Part 2 (8.13.4), whose value space holds NaN and ±INF
-        /// (CCSDS 502.0-B-3; to be verified by S. Guillet): the reader refuses them as a rule of the library, as #708
-        /// expects. The rows cover
+        /// (CCSDS 502.0-B-3; confirmed by S. Guillet, 2026-11-17): the reader refuses them as a rule of the library, as
+        /// #708 expects. The rows cover
         /// the mean elements (ranged or not by the data model), GM, the spacecraft parameters and the TLE parameters, which
         /// the data model does not range-check.
         /// </summary>

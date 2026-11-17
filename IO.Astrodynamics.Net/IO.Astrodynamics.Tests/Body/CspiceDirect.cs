@@ -14,7 +14,9 @@ namespace IO.Astrodynamics.Tests.Body;
 /// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
 /// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); <c>getfov_c</c>, the
 /// reference of the fields of view an instrument may hold (#707), and <c>reclat_c</c>, that of a star's crossing of a pole
-/// (#709); the list of the
+/// (#709); <c>prop2b_c</c>, <c>oscltx_c</c>, <c>sxform_c</c> and <c>conics_c</c>, the references of the errors of the two-body
+/// proxies, of a frame transformation and of the elements a conversion checks, and the CK writer <c>ckw03_c</c> with
+/// <c>sce2c_c</c> and <c>ckgp_c</c>, the reference of a CK without angular velocity (#714); the list of the
 /// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
 /// reference of the kernel registry and of the type of a text kernel (#673), with their handles and the files of open DAF
 /// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
@@ -107,6 +109,31 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void oscltx_c([In] double[] state, double et, double mu, [Out] double[] elts);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void sxform_c(string from, string to, double et, [Out] double[] xform);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void ckopn_c(string fname, string ifname, int ncomch, out int handle);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void ckw03_c(int handle, double begtim, double endtim, int inst, string reff, int avflag, string segid, int nrec,
+        [In] double[] sclkdp, [In] double[] quats, [In] double[] avvs, int nints, [In] double[] starts);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ckcls_c(int handle);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void sce2c_c(int sc, double et, out double sclkdp);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void ckgp_c(int inst, double sclkdp, double tol, string reff, [Out] double[] cmat, out double clkout, out int found);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void conics_c([In] double[] elts, double et, [Out] double[] state);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void prop2b_c(double gm, [In] double[] pvinit, double dt, [Out] double[] pvprop);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void latrec_c(double radius, double longitude, double latitude, [Out] double[] rectan);
@@ -279,6 +306,108 @@ internal static class CspiceDirect
             reset_c();
             return message.ToString().Trim();
         }
+    }
+
+    /// <summary>The state <c>prop2b_c</c> gives (m and m/s with a GM in m^3/s^2), or null with the short and long messages of
+    /// the error it signals, SPICE reset (#714).</summary>
+    internal static (double[] State, string Short, string Long) Prop2b(double gm, double[] state, double dt)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var result = new double[6];
+            prop2b_c(gm, state, dt, result);
+            var (shortMessage, longMessage) = TakeError();
+            return (shortMessage == null ? result : null, shortMessage, longMessage);
+        }
+    }
+
+    /// <summary>The elements <c>oscltx_c</c> gives (its 20 elements), or null with the short and long messages of the error it
+    /// signals, SPICE reset (#714).</summary>
+    internal static (double[] Elements, string Short, string Long) Oscltx(double[] state, double et, double mu)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var elements = new double[20];
+            oscltx_c(state, et, mu, elements);
+            var (shortMessage, longMessage) = TakeError();
+            return (shortMessage == null ? elements : null, shortMessage, longMessage);
+        }
+    }
+
+    /// <summary>The long message of the error <c>sxform_c</c> signals for a transformation between two frames, or null when it
+    /// gives one; SPICE is reset (#714).</summary>
+    internal static string SxformError(string from, string to, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            sxform_c(from, to, et, new double[36]);
+            return TakeError().Long;
+        }
+    }
+
+    /// <summary>The state <c>conics_c</c> gives for its eight elements (rp, e, i, node, argp, M0, t0, GM) at an epoch, with
+    /// the short message of the error it signals, null when none; SPICE is reset (#714).</summary>
+    internal static (double[] State, string Error) Conics(double[] elements, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var state = new double[6];
+            conics_c(elements, et, state);
+            return (state, TakeError().Short);
+        }
+    }
+
+    /// <summary>The continuous encoded clock of a spacecraft at an ephemeris time (<c>sce2c_c</c>), its clock kernel loaded.</summary>
+    internal static double Sce2c(int spacecraftId, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            sce2c_c(spacecraftId, et, out double sclk);
+            Check("sce2c");
+            return sclk;
+        }
+    }
+
+    /// <summary>Writes one type-3 CK segment of one interval with CSPICE's own writer (<c>ckopn</c>, <c>ckw03</c>,
+    /// <c>ckcls</c>): the SPICE quaternions (scalar first, 4 per record) and, when <paramref name="withRates"/>, the angular
+    /// velocities (3 per record); without them the segment carries pointing only (#714).</summary>
+    internal static void WriteType3Ck(string path, int instrument, string frame, bool withRates, double[] sclk, double[] quaternions,
+        double[] angularVelocities)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            ckopn_c(path, "IO.Astrodynamics", 0, out int handle);
+            Check("ckopn");
+            ckw03_c(handle, sclk[0], sclk[^1], instrument, frame, withRates ? 1 : 0, "IOA", sclk.Length, sclk, quaternions, angularVelocities, 1,
+                [sclk[0]]);
+            Check("ckw03");
+            ckcls_c(handle);
+            Check("ckcls");
+        }
+    }
+
+    /// <summary>The C-matrix (row-major) a CK gives at an encoded clock (<c>ckgp_c</c>), or null when it finds none.</summary>
+    internal static double[] Ckgp(int instrument, double sclk, double tolerance, string frame)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var cmat = new double[9];
+            ckgp_c(instrument, sclk, tolerance, frame, cmat, out _, out int found);
+            Check("ckgp");
+            return found != 0 ? cmat : null;
+        }
+    }
+
+    // The short and long messages of a pending SPICE error, SPICE reset, or nulls when none is pending
+    private static (string Short, string Long) TakeError()
+    {
+        if (failed_c() == 0) return (null, null);
+        var shortMessage = new StringBuilder(64);
+        getmsg_c("SHORT", shortMessage.Capacity, shortMessage);
+        var longMessage = new StringBuilder(1841);
+        getmsg_c("LONG", longMessage.Capacity, longMessage);
+        reset_c();
+        return (shortMessage.ToString().Trim(), longMessage.ToString().Trim());
     }
 
     /// <summary>Whether SPICE has an error pending (<c>failed_c</c>), which a failed proxy must not leave for the next call

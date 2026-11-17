@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -64,26 +65,30 @@ public class OpmStateVector
     /// Initializes a new instance of the <see cref="OpmStateVector"/> class.
     /// </summary>
     /// <param name="epoch">The epoch of the state vector.</param>
-    /// <param name="x">X position in km.</param>
-    /// <param name="y">Y position in km.</param>
-    /// <param name="z">Z position in km.</param>
-    /// <param name="xDot">X velocity in km/s.</param>
-    /// <param name="yDot">Y velocity in km/s.</param>
-    /// <param name="zDot">Z velocity in km/s.</param>
+    /// <param name="x">X position in km (finite).</param>
+    /// <param name="y">Y position in km (finite).</param>
+    /// <param name="z">Z position in km (finite).</param>
+    /// <param name="xDot">X velocity in km/s (finite).</param>
+    /// <param name="yDot">Y velocity in km/s (finite).</param>
+    /// <param name="zDot">Z velocity in km/s (finite).</param>
     /// <param name="comments">Optional comments.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A component is NaN or ±Infinity, which the OPM reader refuses (#708,
+    /// #717).</exception>
     public OpmStateVector(
         DateTime epoch,
         double x, double y, double z,
         double xDot, double yDot, double zDot,
         IReadOnlyList<string> comments = null)
     {
+        // Real numbers, as the reader reads them (#717: NaN and ±Infinity built, and the writers wrote NaN, Infinity or
+        // -Infinity, which the reader refuses)
         Epoch = epoch;
-        X = x;
-        Y = y;
-        Z = z;
-        XDot = xDot;
-        YDot = yDot;
-        ZDot = zDot;
+        X = CcsdsValues.RequireFinite(x, nameof(x));
+        Y = CcsdsValues.RequireFinite(y, nameof(y));
+        Z = CcsdsValues.RequireFinite(z, nameof(z));
+        XDot = CcsdsValues.RequireFinite(xDot, nameof(xDot));
+        YDot = CcsdsValues.RequireFinite(yDot, nameof(yDot));
+        ZDot = CcsdsValues.RequireFinite(zDot, nameof(zDot));
         Comments = comments ?? Array.Empty<string>();
     }
 
@@ -124,6 +129,8 @@ public class OpmStateVector
     /// <param name="stateVector">The framework state vector.</param>
     /// <param name="comments">Optional comments.</param>
     /// <returns>A new OpmStateVector in CCSDS units (km, km/s).</returns>
+    /// <exception cref="ArgumentOutOfRangeException">A component of the state is NaN or ±Infinity (#717), named as the
+    /// constructor's parameter (<c>x</c> ... <c>zDot</c>).</exception>
     /// <remarks>
     /// Converts from framework units (m, m/s) to CCSDS units (km, km/s). The epoch is written in UTC, whatever the time
     /// frame of the state's epoch (#479), as the library's OPM writers declare <c>TIME_SYSTEM = UTC</c>.

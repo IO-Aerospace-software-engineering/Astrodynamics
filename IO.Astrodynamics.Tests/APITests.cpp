@@ -222,6 +222,24 @@ TEST(API, ReadEphemerisProxyException)
     ASSERT_STRNE("", GetLastErrorProxy());
 }
 
+// A window read past the coverage names the first failed epoch, where SpiceAPI stops (#714, decision 1 of #719, decided
+// by S. Guillet, 2026-11-17; before, the message of each failed epoch replaced the earlier one, so the last was named).
+// de440s covers the Sun up to 2150 JAN 22 00:00:00 TDB (spkcov_c), so of the epochs every 12 h from 2150 JAN 20 TDB the
+// read at 2150 JAN 22 00:00 is the last one SPICE gives and 2150 JAN 22 12:00 the first one it cannot
+TEST(API, ReadEphemerisProxyPastTheCoverageNamesTheFirstFailedEpoch)
+{
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[11];
+    ReadEphemerisProxy(SearchWindow("2150 JAN 20 00:00:00 TDB", "2150 JAN 25 00:00:00 TDB"), 399, 10, "J2000", "NONE",
+                       43200.0, sv);
+    ASSERT_TRUE(std::isfinite(sv[4].position.x));
+    ASSERT_TRUE(std::isnan(sv[5].position.x));
+    ASSERT_TRUE(std::isnan(sv[10].position.x));
+    const std::string message = GetLastErrorProxy();
+    ASSERT_NE(std::string::npos, message.find("Insufficient ephemeris data")) << message;
+    ASSERT_NE(std::string::npos, message.find("2150 JAN 22 12:00:00.000")) << message;
+    ASSERT_EQ(std::string::npos, message.find("2150 JAN 25")) << message;
+}
+
 TEST(API, ReadSpacecraftOrientationProxyException)
 {
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
@@ -910,12 +928,15 @@ TEST(API, UnloadKernelsProxyOfADeletedFile)
     std::filesystem::remove(file);
     ASSERT_TRUE(UnloadKernelsProxy(file.string().c_str()));
 
-    // The frame is no longer known: the failed transformation is the zero quaternion (#454)
+    // The frame is no longer known: the failed transformation is a NaN rotation with SPICE's message (#714; the zero
+    // quaternion with no message before, #454)
     auto res = TransformFrameProxy("IOA_F02_CPP_A", "J2000", 0.0);
-    ASSERT_EQ(0.0, res.Rotation.w);
-    ASSERT_EQ(0.0, res.Rotation.x);
-    ASSERT_EQ(0.0, res.Rotation.y);
-    ASSERT_EQ(0.0, res.Rotation.z);
+    ASSERT_TRUE(std::isnan(res.Rotation.w));
+    ASSERT_TRUE(std::isnan(res.Rotation.x));
+    ASSERT_TRUE(std::isnan(res.Rotation.y));
+    ASSERT_TRUE(std::isnan(res.Rotation.z));
+    ASSERT_NE(nullptr, std::strstr(GetLastErrorProxy(), "The frame IOA_F02_CPP_A was not recognized as a known reference frame."))
+        << GetLastErrorProxy();
 }
 
 TEST(API, UnloadKernelsProxyOfANameNotLoaded)
@@ -2105,6 +2126,8 @@ TEST(API, ConvertConicElementsToStateVectorProxyOfACentreWithoutGmReturnsNaN)
     ASSERT_EQ(507, GetCelestialBodyInfoProxy(507).Id);
     IO::Astrodynamics::API::DTO::StateVectorDTO sv;
     EXPECT_NO_THROW(sv = ConvertConicElementsToStateVectorProxy(ConicsAbout(507)));
+    // The whole message, the same on every run (#714: before, "can't be found" on some runs only)
+    EXPECT_STREQ("CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.", GetLastErrorProxy());
     ExpectFailureReported("BODY507_GM");
     ExpectNaN(sv);
 }
@@ -2114,6 +2137,7 @@ TEST(API, ConvertEquinoctialElementsToStateVectorProxyOfACentreWithoutGmReturnsN
     ASSERT_TRUE(KernelTextValues("gm_de431.tpc", "BODY507_GM").empty());
     IO::Astrodynamics::API::DTO::StateVectorDTO sv;
     EXPECT_NO_THROW(sv = ConvertEquinoctialElementsToStateVectorProxy(EquinoctialAbout(507)));
+    EXPECT_STREQ("CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.", GetLastErrorProxy());
     ExpectFailureReported("BODY507_GM");
     ExpectNaN(sv);
 }
@@ -2127,9 +2151,11 @@ TEST(API, ConvertTLEToStateVectorProxyOfAFailedSgp4ReturnsNaN)
 {
     IO::Astrodynamics::API::DTO::StateVectorDTO sv;
     EXPECT_NO_THROW(sv = ConvertTLEToStateVectorProxy("ERR", FailedSgp4Line1, FailedSgp4Line2, 2.0e8));
-    std::cout << "MESSAGE #711 SGP4 error of 33334: " << GetLastErrorProxy() << std::endl;
+    // Taken before ExpectFailureReported, whose next proxy clears it (#714)
+    const std::string message = GetLastErrorProxy();
+    std::cout << "MESSAGE #711 SGP4 error of 33334: " << message << std::endl;
     ExpectFailureReported("");
-    EXPECT_STRNE("", GetLastErrorProxy());
+    EXPECT_NE("", message);
     ExpectNaN(sv);
 }
 
@@ -2213,6 +2239,7 @@ TEST(API, LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending)
     bool res = true;
     EXPECT_NO_THROW(res = LaunchProxy(launch));
     EXPECT_FALSE(res);
+    EXPECT_STREQ("CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.", GetLastErrorProxy());
     ExpectFailureReported("BODY507_GM");
 }
 
@@ -2272,3 +2299,426 @@ TEST(API, ReadOrientationProxyWithoutAClockReturnsSpicesMessage)
     auto kernel = LoadTextKernel("ioa_712_cpp_after_clock.tpc", "IOA712_CLOCK_VALUE = ( 1.0 )");
     UnloadTextKernel(kernel);
 }
+
+// #714: lastError held the message of the last failure until another failure replaced it, so that a proxy that failed
+// without a message of its own, or the .NET layer reading the message after a later successful call, reported the failure
+// of another call, about another body. Each proxy that reports through lastError now clears it when it starts: after a
+// failure (a conversion about ELARA, whose GM gm_de431.tpc lacks), every one of them that succeeds leaves it empty
+namespace
+{
+    void FailAConversion()
+    {
+        ConvertConicElementsToStateVectorProxy(ConicsAbout(507));
+        ASSERT_STRNE("", GetLastErrorProxy());
+    }
+
+    // The proxy succeeds and leaves lastError empty after a failure
+    void ExpectClearedBy(const std::string &proxy, const std::function<bool()> &succeeds)
+    {
+        FailAConversion();
+        EXPECT_TRUE(succeeds()) << proxy;
+        EXPECT_STREQ("", GetLastErrorProxy()) << proxy;
+    }
+
+    bool IsFinite(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv)
+    {
+        return std::isfinite(sv.position.x) && std::isfinite(sv.position.y) && std::isfinite(sv.position.z) &&
+               std::isfinite(sv.velocity.x) && std::isfinite(sv.velocity.y) && std::isfinite(sv.velocity.z);
+    }
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO EarthState()
+    {
+        IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+        sv.position = {7.0e6, 0.0, 0.0};
+        sv.velocity = {0.0, 7.5e3, 0.0};
+        sv.epoch = 0.0;
+        sv.centerOfMotionId = 399;
+        sv.SetFrame("J2000");
+        return sv;
+    }
+
+    const char *const IssLine1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
+    const char *const IssLine2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
+}
+
+TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
+{
+    const double earthGm = GetCelestialBodyInfoProxy(399).GM;
+    ExpectClearedBy("ConvertConicElementsToStateVectorProxy", [] { return IsFinite(ConvertConicElementsToStateVectorProxy(ConicsAbout(399))); });
+    ExpectClearedBy("ConvertEquinoctialElementsToStateVectorProxy",
+                    [] { return IsFinite(ConvertEquinoctialElementsToStateVectorProxy(EquinoctialAbout(399))); });
+    ExpectClearedBy("ConvertConicElementsToStateVectorAtEpochProxy",
+                    [earthGm] { return IsFinite(ConvertConicElementsToStateVectorAtEpochProxy(ConicsAbout(399), 100.0, earthGm)); });
+    ExpectClearedBy("ConvertStateVectorToEquatorialCoordinatesProxy",
+                    [] { return std::isfinite(ConvertStateVectorToEquatorialCoordinatesProxy(EarthState()).rightAscension); });
+    ExpectClearedBy("ConvertStateVectorToConicOrbitalElementProxy",
+                    [earthGm] { return std::isfinite(ConvertStateVectorToConicOrbitalElementProxy(EarthState(), earthGm).eccentricity); });
+    ExpectClearedBy("Propagate2BodiesProxy", [earthGm] { return IsFinite(Propagate2BodiesProxy(EarthState(), earthGm, 60.0)); });
+    ExpectClearedBy("ConvertTLEToStateVectorProxy", [] { return IsFinite(ConvertTLEToStateVectorProxy("ISS", IssLine1, IssLine2, 664440682.0)); });
+    ExpectClearedBy("GetTLEElementsProxy", [] { return std::isfinite(GetTLEElementsProxy("ISS", IssLine1, IssLine2).Epoch); });
+    ExpectClearedBy("GetCelestialBodyInfoProxy", [] { return GetCelestialBodyInfoProxy(399).Id == 399; });
+    ExpectClearedBy("TransformFrameProxy", [] { return std::isfinite(TransformFrameProxy("J2000", "ITRF93", 0.0).Rotation.w); });
+    ExpectClearedBy("ReadEphemerisAtGivenEpochProxy", [] { return IsFinite(ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE")); });
+    ExpectClearedBy("ReadEphemerisProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO window{};
+        window.start = 0.0;
+        window.end = 60.0;
+        IO::Astrodynamics::API::DTO::StateVectorDTO sv[2];
+        return ReadEphemerisProxy(window, 399, 301, "J2000", "NONE", 60.0, sv);
+    });
+    ExpectClearedBy("GetFrameNameProxy", []
+    {
+        char name[33];
+        return GetFrameNameProxy(1, name);
+    });
+    ExpectClearedBy("FindWindowsOnDistanceConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsOnDistanceConstraintProxy(SearchWindow("2007 JAN 1", "2007 JAN 2"), 399, 301, ">", 1.0, "NONE", 3600.0, windows);
+    });
+    ExpectClearedBy("FindWindowsOnCoordinateConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsOnCoordinateConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 2"), 399, 301, "J2000", "RECTANGULAR", "Z", "<",
+                                                      0.0, 0.0, "NONE", 3600.0, windows);
+    });
+    ExpectClearedBy("FindWindowsOnOccultationConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsOnOccultationConstraintProxy(SearchWindow("2001 DEC 14", "2001 DEC 15"), 399, 10, "IAU_SUN", "ELLIPSOID", 301,
+                                                       "IAU_MOON", "ELLIPSOID", "ANY", "LT", 3600.0, windows);
+    });
+    ExpectClearedBy("FindWindowsOnIlluminationConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD,
+                                                              48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
+        return FindWindowsOnIlluminationConstraintProxy(SearchWindow("2021 MAY 17", "2021 MAY 18"), 10, "SUN", 399, "IAU_EARTH", geodetic,
+                                                        "INCIDENCE", "<", IO::Astrodynamics::Constants::PI2, 0.0, "NONE", 3600.0,
+                                                        "Ellipsoid", windows);
+    });
+    const auto kernel = std::filesystem::temp_directory_path() / "ioa_714_cpp_clear.tpc";
+    std::ofstream(kernel.string()) << "KPL/PCK\n\\begindata\nIOA714_CLEAR = ( 1.0 )\n\\begintext\n";
+    ExpectClearedBy("LoadKernelsProxy", [&kernel] { return LoadKernelsProxy(kernel.string().c_str()); });
+    ExpectClearedBy("UnloadKernelsProxy", [&kernel] { return UnloadKernelsProxy(kernel.string().c_str()); });
+    ExpectClearedBy("UnloadEveryLoadProxy", [&kernel] { return UnloadEveryLoadProxy(kernel.string().c_str()); });
+    std::filesystem::remove(kernel);
+    auto folder = FreshFolder("ioa_714_cpp_clear_spk");
+    const auto spk = folder / "e.bsp";
+    auto states = EarthStates(5);
+    ExpectClearedBy("WriteEphemerisProxy", [&spk, &states] { return WriteEphemerisProxy(spk.string().c_str(), -1999714, states.data(), 5); });
+    std::filesystem::remove_all(folder);
+
+    // The CK pair (review of #714: these four proxies were not exercised): a native spacecraft writes and loads its clock, its
+    // CK is written, loaded and read back at the epochs of its records
+    auto ckFolder = FreshFolder("ioa_714_cpp_clear_ck");
+    {
+        const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbit = std::make_unique<
+            IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                               IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                               IO::Astrodynamics::Time::TDB(0.0s),
+                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+        IO::Astrodynamics::Body::Spacecraft::Spacecraft spacecraft(-1999714, "IOA714CK", 1000.0, 3000.0, ckFolder.string(),
+                                                                   std::move(orbit));
+        const auto ck = ckFolder / "o.bc";
+        auto records = Records(3);
+        ExpectClearedBy("WriteOrientationProxy", [&ck, &records] { return WriteOrientationProxy(ck.string().c_str(), -1999714, records.data(), 3); });
+        ASSERT_TRUE(LoadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+        ExpectClearedBy("ReadOrientationProxy", []
+        {
+            IO::Astrodynamics::API::DTO::WindowDTO window{};
+            window.start = 0.0;
+            window.end = 2.0;
+            IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+            return ReadOrientationProxy(window, -1999714, 0.0, "J2000", 1.0, so);
+        });
+        EXPECT_TRUE(UnloadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+    }
+    std::filesystem::remove_all(ckFolder);
+
+    // A field of view: an instrument kernel of a circle of 10 degrees about +Z of J2000, the Moon seen from the Earth
+    const auto ik = std::filesystem::temp_directory_path() / "ioa_714_cpp_clear.ti";
+    std::ofstream(ik.string()) << "KPL/IK\n\\begindata\n"
+                                  "INS-999714_FOV_FRAME = 'J2000'\nINS-999714_FOV_SHAPE = 'CIRCLE'\n"
+                                  "INS-999714_BORESIGHT = ( 0.0 0.0 1.0 )\nINS-999714_FOV_CLASS_SPEC = 'ANGLES'\n"
+                                  "INS-999714_FOV_REF_VECTOR = ( 1.0 0.0 0.0 )\nINS-999714_FOV_REF_ANGLE = ( 10.0 )\n"
+                                  "INS-999714_FOV_ANGLE_UNITS = 'DEGREES'\n\\begintext\n";
+    ASSERT_TRUE(LoadKernelsProxy(ik.string().c_str())) << GetLastErrorProxy();
+    ExpectClearedBy("FindWindowsInFieldOfViewConstraintProxy", []
+    {
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+        return FindWindowsInFieldOfViewConstraintProxy(SearchWindow("2024 MAR 1", "2024 MAR 2"), 399, -999714, 301, "IAU_MOON",
+                                                       "ELLIPSOID", "NONE", 3600.0, windows);
+    });
+    EXPECT_TRUE(UnloadKernelsProxy(ik.string().c_str())) << GetLastErrorProxy();
+    std::filesystem::remove(ik);
+
+    // A launch from a site on the Earth to an orbit of 51.6 degrees of inclination, over one day
+    ExpectClearedBy("LaunchProxy", []
+    {
+        auto launch = std::make_unique<IO::Astrodynamics::API::DTO::LaunchDTO>();
+        launch->launchSite.id = 399001;
+        launch->launchSite.name = "S1";
+        launch->launchSite.bodyId = 399;
+        launch->launchSite.coordinates.longitude = -81.0 * IO::Astrodynamics::Constants::DEG_RAD;
+        launch->launchSite.coordinates.latitude = 28.5 * IO::Astrodynamics::Constants::DEG_RAD;
+        launch->launchSite.directoryPath = SitePath.data();
+        launch->recoverySite = launch->launchSite;
+        const double inclination = 51.6 * IO::Astrodynamics::Constants::DEG_RAD;
+        launch->targetOrbit.position = {6.8e6, 0.0, 0.0};
+        launch->targetOrbit.velocity = {0.0, 7.6e3 * std::cos(inclination), 7.6e3 * std::sin(inclination)};
+        launch->targetOrbit.epoch = 675777669.0;
+        launch->targetOrbit.centerOfMotionId = 399;
+        launch->targetOrbit.SetFrame("J2000");
+        launch->window.start = 675777669.0;
+        launch->window.end = 675777669.0 + 86400.0;
+        return LaunchProxy(*launch);
+    });
+    EXPECT_FALSE(TakePendingSpiceError());
+}
+
+// #714: Propagate2BodiesProxy and ConvertStateVectorToConicOrbitalElementProxy activated no error management, checked SPICE
+// only to reset it, and returned the arrays prop2b_c and oscltx_c never wrote. As the first native call of a process, SPICE's
+// default action (ABORT, SPICE Error Handling Required Reading) ended the process with exit code 1; after another proxy, they
+// returned the stack's contents (about 7e-310) with no message. They now return a NaN result with SPICE's message. The
+// references are the errors of CSPICE N0067: prop2b.c signals SPICE(NONPOSITIVEMASS) for a GM not above 0,
+// SPICE(ZEROPOSITION), SPICE(ZEROVELOCITY) and, for r parallel to v, SPICE(NONCONICMOTION), all four with no long message;
+// oscelt.c (through oscltx_c) signals SPICE(NONPOSITIVEMASS) "MU = #; non-positive gravitational parameter" and
+// SPICE(DEGENERATECASE) "Zero vector for input position vector.", "Zero vector for input velocity vector." and "Input position
+// and velocity are too close to parallel"
+namespace
+{
+    IO::Astrodynamics::API::DTO::StateVectorDTO TwoBodyState(double x, double vx, double vy)
+    {
+        IO::Astrodynamics::API::DTO::StateVectorDTO sv;
+        sv.position = {x, 0.0, 0.0};
+        sv.velocity = {vx, vy, 0.0};
+        sv.epoch = 100.0;
+        sv.centerOfMotionId = 399;
+        sv.SetFrame("J2000");
+        return sv;
+    }
+
+    constexpr double EarthGm = 3.986004418e14;
+
+    bool IsNaN(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv)
+    {
+        return std::isnan(sv.position.x) && std::isnan(sv.position.y) && std::isnan(sv.position.z) && std::isnan(sv.velocity.x) &&
+               std::isnan(sv.velocity.y) && std::isnan(sv.velocity.z);
+    }
+
+    bool IsNaN(const IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO &elements)
+    {
+        return std::isnan(elements.perifocalDistance) && std::isnan(elements.eccentricity) && std::isnan(elements.inclination) &&
+               std::isnan(elements.ascendingNodeLongitude) && std::isnan(elements.periapsisArgument) && std::isnan(elements.meanAnomaly) &&
+               std::isnan(elements.trueAnomaly) && std::isnan(elements.semiMajorAxis) && std::isnan(elements.orbitalPeriod);
+    }
+
+    // The failed propagation: a NaN state at the epoch plus dt, the centre and the frame as given, and SPICE's message
+    void ExpectPropagationFails(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv, double gm, const std::string &message)
+    {
+        IO::Astrodynamics::API::DTO::StateVectorDTO res;
+        EXPECT_NO_THROW(res = Propagate2BodiesProxy(sv, gm, 60.0));
+        EXPECT_STREQ(message.c_str(), GetLastErrorProxy());
+        ExpectFailureReported(message);
+        ExpectNaN(res);
+        EXPECT_EQ(160.0, res.epoch);
+        EXPECT_EQ(399, res.centerOfMotionId);
+        EXPECT_STREQ("J2000", res.inertialFrame);
+    }
+
+    // The failed conversion: NaN elements, the epoch, the centre and the frame as given, and SPICE's message
+    void ExpectConversionFails(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv, double gm, const std::string &text)
+    {
+        IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO res;
+        EXPECT_NO_THROW(res = ConvertStateVectorToConicOrbitalElementProxy(sv, gm));
+        std::cout << "MESSAGE #714 oscltx_c: " << GetLastErrorProxy() << std::endl;
+        ExpectFailureReported(text);
+        EXPECT_TRUE(IsNaN(res));
+        EXPECT_EQ(100.0, res.epoch);
+        EXPECT_EQ(399, res.centerOfMotionId);
+        EXPECT_STREQ("J2000", res.frame);
+    }
+}
+
+TEST(API, Propagate2BodiesProxyOfAStateOutsideTheDomainOfProp2bReturnsNaN)
+{
+    // prop2b.c signals these four with no long message: the short one is the message (before, a failed SPICE call whose long
+    // message is empty was reported as a success by ReportNativeErrors)
+    ExpectPropagationFails(TwoBodyState(7.0e6, 0.0, 7.5e3), 0.0, "SPICE(NONPOSITIVEMASS)");
+    ExpectPropagationFails(TwoBodyState(7.0e6, 0.0, 7.5e3), -EarthGm, "SPICE(NONPOSITIVEMASS)");
+    ExpectPropagationFails(TwoBodyState(0.0, 0.0, 7.5e3), EarthGm, "SPICE(ZEROPOSITION)");
+    ExpectPropagationFails(TwoBodyState(7.0e6, 0.0, 0.0), EarthGm, "SPICE(ZEROVELOCITY)");
+    ExpectPropagationFails(TwoBodyState(7.0e6, 7.5e3, 0.0), EarthGm, "SPICE(NONCONICMOTION)");
+}
+
+TEST(API, ConvertStateVectorToConicOrbitalElementProxyOfAStateOutsideTheDomainOfOscltxReturnsNaN)
+{
+    ExpectConversionFails(TwoBodyState(7.0e6, 0.0, 7.5e3), 0.0, "non-positive gravitational parameter");
+    ExpectConversionFails(TwoBodyState(7.0e6, 0.0, 7.5e3), -EarthGm, "non-positive gravitational parameter");
+    ExpectConversionFails(TwoBodyState(0.0, 0.0, 7.5e3), EarthGm, "Zero vector for input position vector.");
+    ExpectConversionFails(TwoBodyState(7.0e6, 0.0, 0.0), EarthGm, "Zero vector for input velocity vector.");
+    ExpectConversionFails(TwoBodyState(7.0e6, 7.5e3, 0.0), EarthGm, "Input position and velocity are too close to parallel");
+}
+
+// The first native call of a process: the child gtest starts (threadsafe style) runs main, which loads the kernels through
+// KernelsLoader and sets no error action, then the proxy, the first to set it. Exit 0 when the result is NaN with SPICE's
+// message, 2 otherwise; before, SPICE's ABORT ended the child with exit code 1
+TEST(API, Propagate2BodiesProxyAsTheFirstCallReturnsNaN)
+{
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    EXPECT_EXIT(
+        {
+            const auto res = Propagate2BodiesProxy(TwoBodyState(7.0e6, 0.0, 0.0), EarthGm, 60.0);
+            const std::string message = GetLastErrorProxy();
+            std::exit(IsNaN(res) && message == "SPICE(ZEROVELOCITY)" ? 0 : 2);
+        },
+        ::testing::ExitedWithCode(0), "");
+}
+
+TEST(API, ConvertStateVectorToConicOrbitalElementProxyAsTheFirstCallReturnsNaN)
+{
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    EXPECT_EXIT(
+        {
+            const auto res = ConvertStateVectorToConicOrbitalElementProxy(TwoBodyState(7.0e6, 0.0, 7.5e3), 0.0);
+            const std::string message = GetLastErrorProxy();
+            std::exit(IsNaN(res) && message.find("non-positive gravitational parameter") != std::string::npos ? 0 : 2);
+        },
+        ::testing::ExitedWithCode(0), "");
+}
+
+// #714: TransformFrameProxy did not check SPICE after sxform_c: the unwritten matrix went on to the quaternion and xf2rav_c,
+// then SPICE was reset without its message and the zero quaternion returned, so that the .NET layer could only name a
+// cause of its own. It now returns a NaN rotation and angular velocity with SPICE's message. The references are SPICE's
+// messages: SPICE(UNKNOWNFRAME) of a frame name SPICE does not know (FRAMEX), SPICE(FRAMEDATANOTFOUND) of ITRF93 outside the
+// coverage of earth_latest_high_prec.bpc (PCKMAT)
+namespace
+{
+    void ExpectTransformationFails(const char *from, const char *to, double epoch, const std::string &text)
+    {
+        IO::Astrodynamics::API::DTO::FrameTransformationDTO res;
+        EXPECT_NO_THROW(res = TransformFrameProxy(from, to, epoch));
+        std::cout << "MESSAGE #714 TransformFrameProxy from " << from << " to " << to << ": " << GetLastErrorProxy() << std::endl;
+        ExpectFailureReported(text);
+        EXPECT_TRUE(std::isnan(res.Rotation.w));
+        EXPECT_TRUE(std::isnan(res.Rotation.x));
+        EXPECT_TRUE(std::isnan(res.Rotation.y));
+        EXPECT_TRUE(std::isnan(res.Rotation.z));
+        EXPECT_TRUE(std::isnan(res.AngularVelocity.x));
+        EXPECT_TRUE(std::isnan(res.AngularVelocity.y));
+        EXPECT_TRUE(std::isnan(res.AngularVelocity.z));
+    }
+}
+
+TEST(API, TransformFrameProxyOfAnUnknownFrameReturnsNaNWithSpicesMessage)
+{
+    ExpectTransformationFails("J2000", "NOT_A_FRAME", 0.0, "The frame NOT_A_FRAME was not recognized as a known reference frame.");
+}
+
+TEST(API, TransformFrameProxyOutsideTheCoverageOfAPckReturnsNaNWithSpicesMessage)
+{
+    ExpectTransformationFails("J2000", "ITRF93", 6.3e9, "PCK data required to compute the orientation of the body-fixed frame ITRF93");
+}
+
+// #714: ReadOrientationProxy fell back to ckgp_c only when ckgpav_c failed, but ckgpav_c skips a segment without angular
+// velocity and returns found = false with no error (ckgpav_c.c, Restrictions 1: "Segments containing only pointing data will
+// be skipped over"), so that a CK written without rates (a type-1 CK, a type-2 or type-3 CK with avflag false) gave "No
+// orientation found". The proxy now reads such a record through ckgp_c, with a zero angular velocity. A type-3 CK written by
+// ckw03_c without rates: 11 records 100 s apart, a rotation about z at 1e-3 rad/s (C-matrix of the SPICE quaternion
+// (cos(wt/2), 0, 0, sin(wt/2))), the clock of the native spacecraft; the references are ckgp_c at each epoch and the closed
+// form. The CSPICE writers are not exported by the Windows DLL
+#if !defined(_WIN32)
+namespace
+{
+    // The angle of the rotation between two quaternions of the library, rad (the sign of a quaternion is free)
+    double AngleBetween(const IO::Astrodynamics::Math::Quaternion &a, const IO::Astrodynamics::Math::Quaternion &b)
+    {
+        const auto d = a.Conjugate() * b;
+        const double v = std::sqrt(d.GetQ1() * d.GetQ1() + d.GetQ2() * d.GetQ2() + d.GetQ3() * d.GetQ3());
+        return 2.0 * std::atan2(v, std::abs(d.GetQ0()));
+    }
+
+    IO::Astrodynamics::Math::Quaternion QuaternionOf(SpiceDouble cmat[3][3])
+    {
+        IO::Astrodynamics::Math::Matrix mat(cmat);
+        return IO::Astrodynamics::Math::Quaternion(mat);
+    }
+}
+
+// Twice the worst over Linux x64 and macOS arm64 of the angles between a record and ckgp_c (0 rad on both) and the closed
+// form (1.110e-16 rad on both, the MEASURE line; CI run 43974478027, 2026-11-16), rounded up at the second digit; the test
+// does not run on Windows (ckw03_c is not exported by the DLL)
+constexpr double CkWithoutRatesAngleLimit = 2.3e-16;
+
+TEST(API, ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing)
+{
+    constexpr int spacecraftId = -1999715;
+    constexpr double rate = 1.0e-3;
+    auto folder = FreshFolder("ioa_714_cpp_ck_without_rates");
+    {
+        const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbit = std::make_unique<
+            IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                               IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                               IO::Astrodynamics::Time::TDB(0.0s),
+                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+        IO::Astrodynamics::Body::Spacecraft::Spacecraft spacecraft(spacecraftId, "IOA714CK", 1000.0, 3000.0, folder.string(),
+                                                                   std::move(orbit));
+        const auto ck = folder / "norates.bc";
+        SpiceDouble sclk[11], quats[11][4], avvs[11][3]{};
+        for (int i = 0; i < 11; ++i)
+        {
+            sce2c_c(spacecraftId, 100.0 * i, &sclk[i]);
+            const double angle = rate * 100.0 * i;
+            quats[i][0] = std::cos(angle / 2.0);
+            quats[i][1] = 0.0;
+            quats[i][2] = 0.0;
+            quats[i][3] = std::sin(angle / 2.0);
+        }
+        SpiceInt handle{};
+        ckopn_c(ck.string().c_str(), "IOA714", 0, &handle);
+        ckw03_c(handle, sclk[0], sclk[10], spacecraftId * 1000, "J2000", SPICEFALSE, "NO RATES", 11, sclk, quats, avvs, 1, sclk);
+        ckcls_c(handle);
+        ASSERT_FALSE(TakePendingSpiceError());
+        ASSERT_TRUE(LoadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+
+        IO::Astrodynamics::API::DTO::WindowDTO window{};
+        window.start = 0.0;
+        window.end = 1000.0;
+        IO::Astrodynamics::API::DTO::StateOrientationDTO so[11];
+        bool res{false};
+        EXPECT_NO_THROW(res = ReadOrientationProxy(window, spacecraftId, 1.0, "J2000", 100.0, so));
+        EXPECT_TRUE(res) << GetLastErrorProxy();
+        EXPECT_STREQ("", GetLastErrorProxy());
+        double worstSpice{}, worstClosedForm{};
+        for (int i = 0; i < 11 && res; ++i)
+        {
+            const IO::Astrodynamics::Math::Quaternion record(so[i].orientation.w, so[i].orientation.x, so[i].orientation.y,
+                                                             so[i].orientation.z);
+            SpiceDouble cmat[3][3]{}, clkout{};
+            SpiceBoolean found{SPICEFALSE};
+            ckgp_c(spacecraftId * 1000, sclk[i], 0.0, "J2000", cmat, &clkout, &found);
+            ASSERT_TRUE(found);
+            const double angle = rate * 100.0 * i;
+            SpiceDouble closedForm[3][3]{{std::cos(angle), -std::sin(angle), 0.0}, {std::sin(angle), std::cos(angle), 0.0}, {0.0, 0.0, 1.0}};
+            worstSpice = std::max(worstSpice, AngleBetween(record, QuaternionOf(cmat)));
+            worstClosedForm = std::max(worstClosedForm, AngleBetween(record, QuaternionOf(closedForm)));
+            EXPECT_NEAR(100.0 * i, so[i].epoch, 1.0e-3);
+            EXPECT_EQ(0.0, so[i].angularVelocity.x);
+            EXPECT_EQ(0.0, so[i].angularVelocity.y);
+            EXPECT_EQ(0.0, so[i].angularVelocity.z);
+            EXPECT_STREQ("J2000", so[i].frame);
+        }
+        std::printf("MEASURE #714 CK without rates: worst angle to ckgp_c %.3E rad, to the closed form %.3E rad\n", worstSpice,
+                    worstClosedForm);
+        EXPECT_LE(worstSpice, CkWithoutRatesAngleLimit);
+        EXPECT_LE(worstClosedForm, CkWithoutRatesAngleLimit);
+        EXPECT_FALSE(TakePendingSpiceError());
+        EXPECT_TRUE(UnloadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+    }
+    std::filesystem::remove_all(folder);
+}
+#endif

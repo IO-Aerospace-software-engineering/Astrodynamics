@@ -216,6 +216,44 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(0.0, maneuver.ManDuration);
             Assert.Equal(0.0, maneuver.ManDeltaMass);
         }
+        [Theory]
+        [InlineData("manDv1", double.NaN)]
+        [InlineData("manDv1", double.PositiveInfinity)]
+        [InlineData("manDv1", double.NegativeInfinity)]
+        [InlineData("manDv2", double.NaN)]
+        [InlineData("manDv2", double.PositiveInfinity)]
+        [InlineData("manDv2", double.NegativeInfinity)]
+        [InlineData("manDv3", double.NaN)]
+        [InlineData("manDv3", double.PositiveInfinity)]
+        [InlineData("manDv3", double.NegativeInfinity)]
+        public void Constructor_NonFiniteDeltaVComponent_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // MAN_DV_1..3 are xsd:double values the library reads as real numbers (#708, #717); before, NaN and ±Infinity
+            // built a maneuver that SaveToFile wrote and the reader refused
+            double V(string name, double given) => name == parameter ? value : given;
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new OpmManeuverParameters(_testEpoch, 120.0, -50.0, "RSW",
+                V("manDv1", 0.1), V("manDv2", 0.0), V("manDv3", -0.05)));
+            Assert.Equal(parameter, ex.ParamName);
+        }
+
+        [Theory]
+        [InlineData(0, double.NaN)]
+        [InlineData(0, double.PositiveInfinity)]
+        [InlineData(0, double.NegativeInfinity)]
+        [InlineData(1, double.NaN)]
+        [InlineData(1, double.PositiveInfinity)]
+        [InlineData(1, double.NegativeInfinity)]
+        [InlineData(2, double.NaN)]
+        [InlineData(2, double.PositiveInfinity)]
+        [InlineData(2, double.NegativeInfinity)]
+        public void CreateImpulsive_NonFiniteDeltaVComponent_ThrowsArgumentOutOfRangeException(int component, double value)
+        {
+            var dv = new[] { 0.1, 0.0, -0.05 };
+            dv[component] = value;
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                OpmManeuverParameters.CreateImpulsive(_testEpoch, new IO.Astrodynamics.Math.Vector3(dv[0], dv[1], dv[2]), "RSW", -1.0));
+            Assert.Equal($"manDv{component + 1}", ex.ParamName);
+        }
 
         #endregion
     }

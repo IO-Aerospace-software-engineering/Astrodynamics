@@ -31,7 +31,8 @@ extern "C" {
 
 /**
  * Get the last error message from a failed proxy call
- * @return Error message string, or empty string if no error
+ * @return Error message string, or empty string if no error; every proxy that reports through it clears it when it starts
+ * (#714), so the message is that of the last such call
  */
 MODULE_API const char *GetLastErrorProxy();
 
@@ -314,7 +315,8 @@ MODULE_API IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoPro
  * @param fromFrame Source reference frame
  * @param toFrame Target reference frame
  * @param epoch Epoch time
- * @return Frame transformation information
+ * @return Frame transformation information; a NaN rotation and angular velocity, SPICE's message in GetLastErrorProxy, when
+ * SPICE gives none (#714: an unknown frame, frame data that do not cover the epoch)
  */
 MODULE_API IO::Astrodynamics::API::DTO::FrameTransformationDTO TransformFrameProxy(
         const char *fromFrame, const char *toFrame, double epoch);
@@ -351,7 +353,8 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToSta
  * Convert state vector to conic orbital elements
  * @param stateVector State vector
  * @param mu Gravitational parameter
- * @return Conic orbital elements
+ * @return Conic orbital elements; NaN in every element (the epoch, centre and frame as given), SPICE's message in
+ * GetLastErrorProxy, when oscltx_c fails (#714)
  */
 MODULE_API IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOrbitalElementProxy(
         IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu);
@@ -376,7 +379,8 @@ MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialC
 /**
  * Propagate the state vector of a two-body system.
  * @param stateVector state vector elements of the two-body system
- * @return Propagated state vector
+ * @return Propagated state vector; a NaN state at the epoch plus dt (the centre and frame as given), SPICE's message in
+ * GetLastErrorProxy, when prop2b_c fails (#714)
  */
 MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
         IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double gm, double dt);

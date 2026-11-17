@@ -110,6 +110,17 @@ public class ColdStartTests
         }
     }
 
+    [Theory]
+    [InlineData("two-body-first-propagate")]
+    [InlineData("two-body-first-conic")]
+    public void TwoBodyCall_AsTheFirstNativeCall_ThrowsSpicesError(string mode)
+    {
+        // A child that loads no kernel and makes no native call before the two-body call (#714), about a body built from custom
+        // parameters, of a zero velocity: the call throws SPICE's error, checked by the child. Before the fix, SPICE's default
+        // action (ABORT) ended the child with exit code 1
+        RunChild(mode);
+    }
+
     // Runs the child with the mode, and the schedule and hold when given; returns its standard output
     private static string RunChild(string mode, string schedule = null, string hold = null)
     {

@@ -238,5 +238,63 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region Non-finite values (#717)
+
+        public static TheoryData<string, double> NonFiniteComponents()
+        {
+            var data = new TheoryData<string, double>();
+            foreach (var parameter in new[] { "x", "y", "z", "xDot", "yDot", "zDot" })
+            foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+                data.Add(parameter, value);
+            return data;
+        }
+
+        private static double[] Components(string parameter, double value)
+        {
+            var names = new[] { "x", "y", "z", "xDot", "yDot", "zDot" };
+            var components = new[] { 6778.137, 100.0, -50.0, 0.1, 7.5, 0.2 };
+            components[Array.IndexOf(names, parameter)] = value;
+            return components;
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteComponents))]
+        public void Constructor_NonFiniteComponent_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // Every component is an xsd:double the library reads as a real number (#708); before, NaN and ±Infinity built
+            // a state that Validate() passed, that SaveToFile wrote as NaN, Infinity or -Infinity and that the reader refused
+            var c = Components(parameter, value);
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new OpmStateVector(_testEpoch, c[0], c[1], c[2], c[3], c[4], c[5]));
+            Assert.Equal(parameter, ex.ParamName);
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteComponents))]
+        public void FromStateVector_NonFiniteComponent_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // A StateVector holds any value; its OPM state refuses a non-finite component (Opm.CreateFromStateVector and
+            // Spacecraft.ToOpm build it), where it was written as NaN or ±Infinity
+            var c = Components(parameter, value);
+            var stateVector = new AstroStateVector(new AstroVector3(c[0] * 1000.0, c[1] * 1000.0, c[2] * 1000.0),
+                new AstroVector3(c[3] * 1000.0, c[4] * 1000.0, c[5] * 1000.0), _earth,
+                new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame), AstroFrame.ICRF);
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => OpmStateVector.FromStateVector(stateVector));
+            Assert.Equal(parameter, ex.ParamName);
+        }
+
+        [Fact]
+        public void Constructor_LargestFiniteComponents_AreStoredAsGiven()
+        {
+            // The bounds of the finite doubles, the largest magnitude and the smallest subnormal, are real numbers
+            var sv = new OpmStateVector(_testEpoch, double.MaxValue, -double.MaxValue, double.Epsilon, -double.Epsilon, 0.0, -0.0);
+            Assert.Equal(double.MaxValue, sv.X);
+            Assert.Equal(-double.MaxValue, sv.Y);
+            Assert.Equal(double.Epsilon, sv.Z);
+            Assert.Equal(-double.Epsilon, sv.XDot);
+            Assert.Equal(BitConverter.DoubleToInt64Bits(-0.0), BitConverter.DoubleToInt64Bits(sv.ZDot));
+        }
+
+        #endregion
     }
 }

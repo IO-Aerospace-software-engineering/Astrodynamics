@@ -184,8 +184,10 @@ public abstract class ConjunctionDensePassTestBase
     // of spkezr_c's range rate to 1e-10 s); the CI of Linux x64, Windows x64 and macOS arm64 (run 43000949510, 2026-11-11,
     // by default and with the reads over the window) gives this test's figures on the three platforms, but CW600's miss
     // on Windows x64, 1.278e-5 m; with the nearest tick of #625 (merged 2026-11-11) they move in their fourth digit,
-    // the windows ending a tick apart (this test's column, Linux x64; before #625: CWM 3.543e-5 s 8.430e-7 m, CWM90
-    // 6.057e-6 s 6.567e-7 m, CWN 6.519e-5 s, CW600 3.107e-5 s, CWE600 1.016e-4 s, CWFM 3.223e-3 s 2.279e-6 m):
+    // the windows ending a tick apart (this test's column, Linux x64, which the CI of the three platforms gives after
+    // #625, run 43974478027 (2026-11-16), but CW600 on Windows x64, 3.108e-5 s 1.278e-5 m, and CWFM on Windows x64 and
+    // macOS arm64, 3.223e-3 s; before #625: CWM 3.543e-5 s 8.430e-7 m, CWM90 6.057e-6 s 6.567e-7 m, CWN 6.519e-5 s,
+    // CW600 3.107e-5 s, CWE600 1.016e-4 s, CWFM 3.223e-3 s 2.279e-6 m):
     //                                         this test                 the probe                 bound
     //   CWM (y0 = 1500 m, default and 60 s)   3.542e-5 s  8.427e-7 m    3.546e-5 s  8.433e-7 m    7.1e-5 s  1.7e-6 m
     //   CWM90 (y0 = 1490 m, default and 60 s) 6.067e-6 s  6.560e-7 m    6.066e-6 s  6.564e-7 m    1.3e-5 s  1.4e-6 m

@@ -337,7 +337,8 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   (the same reader). A shorter output step lowers it.
 
 `SpiceAPI.ReadOrientation` and `SpiceAPI.WriteOrientation` are the raw C-matrix pair of `ckgpav_c` and `ckw03_c`
-([SpiceAPI](spice-api.md#orientation-kernels)). `ReadOrientation` of a CK written by 11.0.0 returns the C-matrix of the
+([SpiceAPI](spice-api.md#orientation-kernels)); a CK segment without angular velocity is read by `ckgp_c`, with a zero
+angular velocity (#714). `ReadOrientation` of a CK written by 11.0.0 returns the C-matrix of the
 attitude.
 
 **CKs written before 11.0.0** hold the inverse of the attitude (3.14 rad off for a nadir attitude), in the initial frame
@@ -394,7 +395,7 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `Name` | Instrument name |
 | `Model` | Instrument model identifier |
 | `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad): finite and positive |
-| `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad): finite and not negative; `EllipticalInstrument` and `RectangularInstrument` |
+| `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad): finite and positive ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)); `EllipticalInstrument` and `RectangularInstrument` |
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
 | `Boresight` | Boresight direction in instrument frame: finite components, a non-zero magnitude |
 | `RefVector` | Reference vector in instrument frame: finite components, a non-zero magnitude, not parallel to the boresight (b × r ≠ 0) |
@@ -414,9 +415,15 @@ cannot read ([#707](https://github.com/IO-Aerospace-software-engineering/Astrody
 (SPICE(ZEROBORESIGHT); `boresight` checked first), a reference vector parallel to the boresight, |b × r| = 0 on the
 given vectors as `getfov` tests it (SPICE(BADREFVECTORSPEC)), and a field of view that is not a finite positive number;
 `AddEllipticalInstrument` and `AddRectangularInstrument` throw `ArgumentOutOfRangeException` naming `crossAngle` for a
-cross angle that is negative or not finite, which SPICE cannot read in the kernel (a cross angle of 0 is rejected by the
-search). A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
-angular radius, π/2 − 1e-6, is checked by the search.
+cross angle that is not a finite positive number: SPICE cannot read a NaN or an infinity in the kernel, and a cross angle
+of 0 is a field of no width, which CSPICE's `gftfov` rejects (SPICE(DEGENERATECASE): consecutive boundary vectors of the
+rectangle with a zero cross product, a semi-axis of the ellipse of zero length) or, for an ellipse whose computed
+semi-axis rounds to a non-zero length, searches as a segment ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, it was accepted and the library's
+searches threw). A reference vector off the boresight by any non-zero cross product is accepted, as `getfov` accepts it. The bound of the
+angular radius, π/2 − 1e-6, is checked by the search. The three methods throw `ArgumentException` naming `orientation`
+for Euler angles with a component that is NaN or infinite ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)): such an angle has no rotation, and SPICE cannot
+read it in the frame kernel (`ANGLES = ( NaN,0,0 )`, SPICE(NUMBEREXPECTED) when it is loaded); before, the instrument
+was built with a NaN `RotationToSpacecraft` and NaN spacecraft-frame getters.
 
 #### Instrument orientation
 
@@ -432,6 +439,12 @@ instrument frame is rotated by −z about Z, then by −y about Y, then by −x 
 `RotationToSpacecraft` is that rotation; the managed field-of-view path, `GetBoresightInSpacecraftFrame`,
 `GetRefVectorInSpacecraftFrame`, and the attitudes built from an instrument (`TriadAttitude`,
 `InstrumentPointingToAttitude`) all use it, so they agree with SPICE reading the frame kernel (#524).
+
+The angles are finite ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)), and any finite angle is accepted. SPICE reads each angle from the text of the
+kernel, the shortest decimal that reads back to the same double, and converts it with `CONVRT`; both can move it by a
+few ulps, so SPICE's frame and `RotationToSpacecraft` differ by up to 1.8e-15 rad for angles within [−2π, 2π], and by
+more for large angles (1.6e-2 rad near 1e13, 0.268 rad at 1e300; measured with CSPICE N0067 on 20 000 angles per
+decade, #715; every finite angle accepted, decided by S. Guillet, 2026-11-17). Give angles within a few turns.
 
 #### Field-of-view search
 
@@ -485,6 +498,26 @@ epoch: up to its light time before the start (reception, `LT` and `CN`) or after
 aspect ratio up to 1.0034 (the Earth, the Moon, the Sun) and fields of aspect ratio up to 10 311: no sign error. An
 elongated target stretches the limb of the field by its own aspect ratio.
 
+**Tiny half-angles.** The half-angles are finite and positive, checked when the instrument is built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707),
+[#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)), but a field with a half-angle below about 1e-16 rad can be degenerate for `gftfov`, whose tests of a
+zero length or a zero cross product are exact on computed vectors, so their threshold depends on the boresight
+(`fovtrg_c`, CSPICE N0067, measured in #715): SPICE(DEGENERATECASE) up to 1.53e-17 rad for a rectangle and 1.42e-17 rad
+for an ellipse with the boresight at the Moon; none down to 5e-324 with the boresight +Z, but for an ellipse and an
+ellipsoid target, SPICE(BADAXISLENGTH) up to 2.73e-319. The managed path searches such fields, so the two paths can
+then disagree (documented, not rejected: decided by S. Guillet, 2026-11-17). Its cone of a circle or an ellipse loses
+its precision far below (measured: the Moon's ellipsoid at the boresight not found for a half-angle of 1e-155 rad in the
+reference plane), and where the squares of its semi-axes underflow at the target's distance (a half-angle below about
+6e-171 rad at the Moon's distance) it throws `InvalidOperationException`, the field cannot be searched
+([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated
+`ArgumentException`, "The semi-axes of an ellipsoid must have positive lengths"). A point target at the observer,
+distance 0 (two spacecraft of the same state), has no direction: `IsInFOV` and the search of a circle or an ellipse
+throw `InvalidOperationException` naming the target at the observer, not the field (before, the same unrelated
+`ArgumentException`); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an observer
+inside the target. The rectangle's point margin takes the angles of the zero vector as 0 and reports such a target in
+view; it is to throw as the circle and the ellipse do
+([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), decided by S. Guillet,
+2026-11-17).
+
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
 gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the
 resolution of the search of an extreme between samples (Brent's `localmin`): an event or a gap narrower than about
@@ -504,16 +537,18 @@ search for a `+S` correction.
 - `ArgumentOutOfRangeException`: a step that is not positive;
 - `ArgumentException`: a search window that ends before it starts, a target that is the instrument's spacecraft, an
   ellipsoid target without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star);
-- `InvalidOperationException`: a cross angle that is not positive, a field whose angular radius (the larger half-angle
-  of a circle or an ellipse, the angle of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an instrument that is neither
-  an `EllipticalInstrument` nor a `RectangularInstrument`. The boresight, the reference vector and the field of view are
-  checked when the instrument is built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [Instrument](#instrument)).
+- `InvalidOperationException`: a field whose angular radius (the larger half-angle of a circle or an ellipse, the angle
+  of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an
+  instrument that is neither an `EllipticalInstrument` nor a `RectangularInstrument`. The boresight, the reference
+  vector, the field of view and the cross angle, whose half-angles are positive, are checked when the instrument is
+  built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), [Instrument](#instrument)).
 
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
 milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when the instrument's spacecraft
-has no attitude, or when the observer is inside the ellipsoid of the target. A managed spacecraft has no attitude while
+has no attitude, when the observer is inside the ellipsoid of the target, or when the half-angles of a circle or an
+ellipse are too small for its cone at the target's distance ([Tiny half-angles](#field-of-view-search)). A managed spacecraft has no attitude while
 its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by
 `Spacecraft.Propagate` ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)), or propagated by
 `TLEPropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
