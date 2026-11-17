@@ -205,9 +205,30 @@ public class RepropagationTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
+        var maneuvers = NewChain(env, engine, chain);
+        spacecraft.SetStandbyManeuver(maneuvers.Length > 0 ? maneuvers[0] : null, userGate);
+        // Read before any propagation: the minimum epoch each maneuver was given
+        return new Sc { Env = env, Spacecraft = spacecraft, Chain = maneuvers, Given = maneuvers.Select(m => m.MinimumEpoch).ToArray() };
+    }
+
+    /// <summary>
+    /// A chain of the case on <paramref name="engine"/>, linked: <c>apo-apo</c>, <c>lead2</c>, <c>lead&lt;H&gt;</c>,
+    /// <c>att&lt;H&gt;</c>; <c>apo1</c> and <c>apo2</c>, one <see cref="ApogeeHeightManeuver"/> to 8 378 137 m or to
+    /// 9 378 137 m (#584's m1 and m2); <c>none</c>, no maneuver.
+    /// </summary>
+    private static Maneuver.Maneuver[] NewChain(Env env, Engine engine, string chain)
+    {
         var c = env.Center;
         Maneuver.Maneuver[] maneuvers;
-        if (chain == "apo-apo")
+        if (chain == "none")
+        {
+            maneuvers = [];
+        }
+        else if (chain == "apo1" || chain == "apo2")
+        {
+            maneuvers = [new ApogeeHeightManeuver(c, S, TimeSpan.Zero, chain == "apo1" ? 8378137.0 : 9378137.0, engine)];
+        }
+        else if (chain == "apo-apo")
         {
             // About the Moon (orbit 100 × 300 km, period 7 654 s), a hold of 7 000 s puts the second burn of a run from
             // the perigee at S + 500 at the perigee 8 252 s later, before the gate of a run from the apogee at S (10 827 s)
@@ -242,9 +263,7 @@ public class RepropagationTests
         }
 
         for (int i = 0; i + 1 < maneuvers.Length; i++) maneuvers[i].SetNextManeuver(maneuvers[i + 1]);
-        spacecraft.SetStandbyManeuver(maneuvers[0], userGate);
-        // Read before any propagation: the minimum epoch each maneuver was given
-        return new Sc { Env = env, Spacecraft = spacecraft, Chain = maneuvers, Given = maneuvers.Select(m => m.MinimumEpoch).ToArray() };
+        return maneuvers;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -289,6 +308,22 @@ public class RepropagationTests
                 Assert.Equal("VV1", integrator);
                 solution = spacecraft.PropagateAsync(window, env.Bodies, false, false, VvStep).GetAwaiter().GetResult();
                 break;
+            case "Builder":
+            {
+                // CentralBodyPropagatorBuilder, the covariance by WithCovariancePropagation (#583)
+                var builder = new CentralBodyPropagatorBuilder(window, spacecraft, env.NewIntegrator(integrator), Output).WithPerturbingBodies(env.Bodies);
+                if (covariance != null) builder.WithCovariancePropagation(covariance);
+                using var propagator = builder.Build();
+                solution = propagator.Propagate();
+                break;
+            }
+            case "Direct":
+            {
+                // A CentralBodyPropagator built directly, the covariance by its constructor (#583)
+                using var propagator = new CentralBodyPropagator(window, spacecraft, env.NewIntegrator(integrator), env.Bodies, false, false, Output, covariance);
+                solution = propagator.Propagate();
+                break;
+            }
             case "Batch":
             {
                 var task = new PropagationTask(spacecraft, window, env.Bodies, false, false, Output, () => env.NewIntegrator(integrator))
@@ -531,7 +566,9 @@ public class RepropagationTests
 
     /// <summary>
     /// #573's case: after a run from the apogee at S, a run from the perigee at S + 500 fires as a fresh spacecraft, on every
-    /// activation path of <c>Spacecraft.Propagate</c> and <c>BatchPropagator</c>, both integrators.
+    /// activation path of <c>Spacecraft.Propagate</c> and <c>BatchPropagator</c>, and through
+    /// <see cref="CentralBodyPropagatorBuilder"/> and a <see cref="CentralBodyPropagator"/> built directly, which did not
+    /// re-arm the spacecraft before #583 (run 2 fired no burn and kept run 1's fuel), both integrators.
     /// </summary>
     [Theory]
     [InlineData("apo-apo", "RK", "Propagate")]
@@ -540,6 +577,12 @@ public class RepropagationTests
     [InlineData("apo-apo", "VV1", "Default")]
     [InlineData("apo-apo", "VV1", "Async")]
     [InlineData("apo-apo", "RK", "Batch")]
+    [InlineData("apo-apo", "RK", "Builder")]
+    [InlineData("apo-apo", "VV1", "Builder")]
+    [InlineData("apo-apo", "RK", "Direct")]
+    [InlineData("apo-apo", "VV1", "Direct")]
+    [InlineData("att1000", "RK", "Builder")]
+    [InlineData("att1000", "VV1", "Direct")]
     [InlineData("apo-apo", "VV1", "Batch")]
     [InlineData("att1000", "RK", "Propagate")]
     [InlineData("att1000", "VV1", "Propagate")]
@@ -923,8 +966,9 @@ public class RepropagationTests
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Covariance mode, P0 = diag(100 m², 1e-4 m²/s²), through <c>Spacecraft.Propagate</c> and
-    /// <c>PropagationTask.CovariancePropagation</c>, with and without <c>IncludeInStepControl</c>: run 2 from another state
+    /// Covariance mode, P0 = diag(100 m², 1e-4 m²/s²), through <c>Spacecraft.Propagate</c>,
+    /// <c>PropagationTask.CovariancePropagation</c>, <c>CentralBodyPropagatorBuilder.WithCovariancePropagation</c> and the
+    /// constructor of <see cref="CentralBodyPropagator"/> (#583), with and without <c>IncludeInStepControl</c>: run 2 from another state
     /// is a fresh spacecraft's, burns, state and P.
     /// </summary>
     [Theory]
@@ -932,6 +976,10 @@ public class RepropagationTests
     [InlineData("apo-apo", "PropagateOptions", true)]
     [InlineData("apo-apo", "Batch", false)]
     [InlineData("apo-apo", "Batch", true)]
+    [InlineData("apo-apo", "Builder", false)]
+    [InlineData("apo-apo", "Builder", true)]
+    [InlineData("apo-apo", "Direct", false)]
+    [InlineData("att1000", "Direct", true)]
     [InlineData("att1000", "PropagateOptions", false)]
     public void Covariance_AnotherState_FiresAsAFreshSpacecraft(string chain, string path, bool includeInStepControl)
     {
@@ -1090,5 +1138,188 @@ public class RepropagationTests
         var sv = env.PerigeeAt(epoch).ToStateVector();
         sc.Spacecraft.SetInitialOrbitalParameters(new StateVector(sv.Position, sv.Velocity, env.Center, epoch, new Frame("ITRF93")));
         return Assert.Throws<ArgumentException>(() => sc.Spacecraft.Propagate(Win(epoch), env.Bodies, env.NewIntegrator("RK"), false, false, Output));
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // #583: CentralBodyPropagatorBuilder and a CentralBodyPropagator built directly re-arm the spacecraft
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// An identical second run through <see cref="CentralBodyPropagatorBuilder"/> or a <see cref="CentralBodyPropagator"/>
+    /// built directly is a fresh spacecraft's (#583): before the fix run 2 fired no burn, started with the fuel left by
+    /// run 1 and kept run 1's <c>ExecutedManeuvers</c> (7.247e6 m off on the issue's case). The reference, a spacecraft
+    /// built identically and never propagated, run once on the same path, is checked against the Keplerian closed form.
+    /// </summary>
+    [Theory]
+    [InlineData("apo-apo", "RK", "Builder")]
+    [InlineData("apo-apo", "VV1", "Builder")]
+    [InlineData("apo-apo", "RK", "Direct")]
+    [InlineData("apo-apo", "VV1", "Direct")]
+    [InlineData("att1000", "RK", "Builder")]
+    [InlineData("att1000", "VV1", "Direct")]
+    public void PropagatorPaths_IdenticalRun_IsAFreshSpacecrafts(string chain, string integrator, string path)
+    {
+        // Arrange
+        string tag = $"#583 identical {chain} {integrator} {path}";
+        var env = Env.Of();
+        var reused = Build(env, env.Apogee(), chain);
+        var r1 = Propagate(reused, Win(S), integrator, path);
+        double fuelAfterRun1 = reused.Spacecraft.FuelTanks.Single().Quantity;
+
+        // Act
+        var r2 = Propagate(reused, Win(S), integrator, path);
+
+        // Assert
+        var (fresh, f) = Fresh(tag, reused, env.Apogee(), chain, Win(S), integrator, path, false);
+        AssertSame(tag + " run 1 against fresh", r1, f);
+        AssertSame(tag + " run 2 against fresh", r2, f, reused, fresh);
+        AssertSameSpacecraft(tag, reused, fresh, fuelAfterRun1);
+    }
+
+    /// <summary>
+    /// Run 1 through one path and run 2 through another: the reset belongs to the propagation, whatever built it (#583).
+    /// </summary>
+    [Theory]
+    [InlineData("Propagate", "Builder", "RK")]
+    [InlineData("Builder", "Propagate", "VV1")]
+    [InlineData("Direct", "Builder", "RK")]
+    public void PropagatorPaths_MixedRuns_AreAFreshSpacecrafts(string first, string second, string integrator)
+    {
+        string tag = $"#583 mixed {first} then {second} {integrator}";
+        var env = Env.Of();
+        var s2 = S.AddSeconds(500.0);
+        var reused = Build(env, env.Apogee(), "apo-apo");
+        Propagate(reused, Win(S), integrator, first);
+        double fuelAfterRun1 = reused.Spacecraft.FuelTanks.Single().Quantity;
+        reused.Spacecraft.SetInitialOrbitalParameters(env.PerigeeAt(s2));
+
+        var r2 = Propagate(reused, Win(s2), integrator, second);
+
+        var (fresh, f) = Fresh(tag, reused, env.PerigeeAt(s2), "apo-apo", Win(s2), integrator, second, true);
+        AssertSame(tag, r2, f, reused, fresh);
+        AssertSameSpacecraft(tag, reused, fresh, fuelAfterRun1);
+    }
+
+    /// <summary>
+    /// A propagator built after run 1 and never run, or whose <see cref="CentralBodyPropagatorBuilder.Build"/> rejects the
+    /// covariance asked for without P0, leaves run 1 as it was: the reset belongs to <see cref="PropagatorBase.Propagate"/>,
+    /// after its checks (#583). A valid run after it is a fresh spacecraft's.
+    /// </summary>
+    [Theory]
+    [InlineData("BuiltNotRun")]
+    [InlineData("BuilderCovarianceWithoutP0")]
+    [InlineData("DirectCovarianceWithoutP0")]
+    public void PropagatorPaths_NoRun_LeavesTheFirstAsItWas(string rejection)
+    {
+        // Arrange
+        string tag = $"#583 no run ({rejection})";
+        var env = Env.Of();
+        var reused = Build(env, env.Apogee(), "apo-apo");
+        var r1 = Propagate(reused, Win(S), "RK", "Builder");
+        var solution = reused.Spacecraft.LastPropagation;
+        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)).ToArray();
+        var windows = reused.Chain.Select(m => (m.ManeuverWindow, m.ThrustWindow)).ToArray();
+        double fuel = reused.Spacecraft.FuelTanks.Single().Quantity;
+        var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
+
+        // Act
+        switch (rejection)
+        {
+            case "BuiltNotRun":
+            {
+                using var unused = new CentralBodyPropagatorBuilder(Win(S), reused.Spacecraft, env.NewIntegrator("RK"), Output).WithPerturbingBodies(env.Bodies).Build();
+                break;
+            }
+            case "BuilderCovarianceWithoutP0":
+                Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagatorBuilder(Win(S), reused.Spacecraft, env.NewIntegrator("RK"), Output)
+                    .WithPerturbingBodies(env.Bodies).WithCovariancePropagation(options).Build());
+                break;
+            default:
+                Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Win(S), reused.Spacecraft, env.NewIntegrator("RK"), env.Bodies, false, false,
+                    Output, options));
+                break;
+        }
+
+        // Assert
+        Assert.Same(solution, reused.Spacecraft.LastPropagation);
+        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)).ToArray());
+        Assert.Equal(windows, reused.Chain.Select(m => (m.ManeuverWindow, m.ThrustWindow)).ToArray());
+        Assert.Equal(fuel, reused.Spacecraft.FuelTanks.Single().Quantity);
+        var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);
+        AssertSame(tag + " run 1 after", after, r1);
+        var r2 = Propagate(reused, Win(S), "RK", "Builder");
+        AssertSame(tag + " run 2 against run 1", r2, r1);
+    }
+
+    // The fuel, the maneuvers, the standby and the propagated flag of a reused spacecraft after its run, a fresh one's
+    private void AssertSameSpacecraft(string tag, Sc reused, Sc fresh, double fuelAfterRun1)
+    {
+        double fuel = reused.Spacecraft.FuelTanks.Single().Quantity, freshFuel = fresh.Spacecraft.FuelTanks.Single().Quantity;
+        _output.WriteLine($"MEASURE #583 {tag}: fuel left {F(fuel)} kg against {F(freshFuel)} kg (after run 1 {F(fuelAfterRun1)} kg), " +
+                          $"executed {reused.Spacecraft.ExecutedManeuvers.Count} against {fresh.Spacecraft.ExecutedManeuvers.Count}");
+        Assert.Equal(freshFuel, fuel);
+        Assert.Equal(fresh.Spacecraft.ExecutedManeuvers.Select(m => Array.IndexOf(fresh.Chain, m)).OrderBy(i => i),
+            reused.Spacecraft.ExecutedManeuvers.Select(m => Array.IndexOf(reused.Chain, m)).OrderBy(i => i));
+        Assert.Equal(Array.IndexOf(fresh.Chain, fresh.Spacecraft.StandbyManeuver), Array.IndexOf(reused.Chain, reused.Spacecraft.StandbyManeuver));
+        Assert.True(reused.Spacecraft.IsPropagated);
+        Assert.Equal(fresh.Spacecraft.IsPropagated, reused.Spacecraft.IsPropagated);
+        Assert.Equal(fresh.Spacecraft.PropagatedStates.Length, reused.Spacecraft.PropagatedStates.Length);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // #584: the public SetStandbyManeuver sets the head of the chain
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// <c>SetStandbyManeuver(m1)</c>, then <c>SetStandbyManeuver(x)</c> before the run (#584): the next propagation starts
+    /// from x, and <c>ExecutedManeuvers</c> stays empty until a maneuver runs. x is <c>m2</c> (an
+    /// <see cref="ApogeeHeightManeuver"/> to 9 378 137 m where m1 targets 8 378 137 m), <c>chain</c> (the head of
+    /// <c>apo-apo</c>), or <c>none</c> (null: no burn). Before the fix the second call was ignored: m1 fired (3.028e6 m
+    /// from the fresh m2 spacecraft on the issue's case) and <c>ExecutedManeuvers</c> listed m1 before anything ran.
+    /// <c>after-unfinished</c>: x set after a run of 1 000 s that ends before m1's perigee; <c>after-finished</c>, the
+    /// control: after a run whose chain finished, which worked before the fix. The reference: a fresh spacecraft given x
+    /// alone, run once, checked against the Keplerian closed form.
+    /// </summary>
+    [Theory]
+    [InlineData("m2", "RK", "Propagate")]
+    [InlineData("m2", "VV1", "Propagate")]
+    [InlineData("m2", "RK", "Builder")]
+    [InlineData("chain", "RK", "Propagate")]
+    [InlineData("chain", "VV1", "Propagate")]
+    [InlineData("none", "RK", "Propagate")]
+    [InlineData("none", "VV1", "Propagate")]
+    [InlineData("after-unfinished", "RK", "Propagate")]
+    [InlineData("after-unfinished", "VV1", "Propagate")]
+    [InlineData("after-finished", "RK", "Propagate")]
+    [InlineData("after-finished", "VV1", "Propagate")]
+    public void SetStandbyManeuver_ASecondCall_SetsTheHead(string setup, string integrator, string path)
+    {
+        // Arrange
+        string tag = $"#584 {setup} {integrator} {path}";
+        var env = Env.Of();
+        var first = Build(env, env.Apogee(), "apo1");
+        var spacecraft = first.Spacecraft;
+        if (setup == "after-unfinished") Propagate(first, new Window(S, S.AddSeconds(1000.0)), integrator, path);
+        if (setup == "after-finished") Propagate(first, Win(S), integrator, path);
+        var executedBefore = spacecraft.ExecutedManeuvers.ToArray();
+        string chain = setup switch { "chain" => "apo-apo", "none" => "none", _ => "apo2" };
+        var maneuvers = NewChain(env, spacecraft.Engines.Single(), chain);
+
+        // Act
+        spacecraft.SetStandbyManeuver(maneuvers.Length > 0 ? maneuvers[0] : null);
+
+        // Assert: the head of the chain, nothing added to ExecutedManeuvers
+        _output.WriteLine($"MEASURE #584 {tag}: before the run InitialManeuver is x {ReferenceEquals(spacecraft.InitialManeuver, maneuvers.FirstOrDefault())}, " +
+                          $"StandbyManeuver is x {ReferenceEquals(spacecraft.StandbyManeuver, maneuvers.FirstOrDefault())}, ExecutedManeuvers {spacecraft.ExecutedManeuvers.Count} " +
+                          $"(before the call {executedBefore.Length})");
+        Assert.Same(maneuvers.FirstOrDefault(), spacecraft.InitialManeuver);
+        Assert.Same(maneuvers.FirstOrDefault(), spacecraft.StandbyManeuver);
+        Assert.Equal(executedBefore, spacecraft.ExecutedManeuvers.ToArray());
+        var reused = new Sc { Env = env, Spacecraft = spacecraft, Chain = maneuvers, Given = maneuvers.Select(m => m.MinimumEpoch).ToArray() };
+        var r = Propagate(reused, Win(S), integrator, path);
+        var (fresh, f) = Fresh(tag, reused, env.Apogee(), chain, Win(S), integrator, path, false);
+        AssertSame(tag, r, f, reused, fresh);
+        Assert.Equal(fresh.Spacecraft.FuelTanks.Single().Quantity, spacecraft.FuelTanks.Single().Quantity);
+        if (setup != "after-finished") Assert.Null(first.Chain[0].ThrustWindow);
     }
 }

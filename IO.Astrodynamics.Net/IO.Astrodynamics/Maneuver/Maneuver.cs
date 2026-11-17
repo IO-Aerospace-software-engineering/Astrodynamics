@@ -253,7 +253,8 @@ namespace IO.Astrodynamics.Maneuver
         /// Clears what a propagation set on this maneuver: the fuel burned, the windows and the gate of the propagation, so
         /// that <see cref="MinimumEpoch"/> is again the minimum epoch the maneuver was given (#573). The next maneuvers of
         /// the chain are reset by <see cref="ResetChain"/>, which <c>Spacecraft.ResetPropagation</c> calls at the start of
-        /// every <c>Spacecraft.Propagate</c>, after the propagator is built (a loop since #585, no longer a recursion).
+        /// every propagation, once the checks of <see cref="Propagator.PropagatorBase.Propagate"/> pass, on every path (#583)
+        /// (a loop since #585, no longer a recursion).
         /// </summary>
         internal virtual void Reset()
         {

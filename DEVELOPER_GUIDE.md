@@ -1330,7 +1330,7 @@ Represents a spacecraft with components.
 | `GetTotalFuel()` | Get total fuel mass |
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
-| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
+| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set the head of the maneuver chain, which the next propagation starts from (a second call replaces the first, null clears it, #584); a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
 | `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit, returns `PropagationSolution` |
 | `PropagateAsync(...)` | Propagate orbit asynchronously, returns `PropagationSolution` |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |

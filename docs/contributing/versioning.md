@@ -3208,6 +3208,30 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
+- **A spacecraft propagated again through `CentralBodyPropagatorBuilder` or a `CentralBodyPropagator` built directly
+  was not re-armed** ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583)). Only
+  `Spacecraft.Propagate` reset the spacecraft (the private `ResetPropagation`), so a second run through the builder or a
+  propagator built directly fired no burn, started with the fuel the first run left, kept its `ExecutedManeuvers` (and
+  so `ToOpm` and the summary) and added to its attitude record: 1.465e7 m and 1.425e4 m/s from a fresh spacecraft at the
+  end of a 6 h run of two apogee raises (RK7(8) and Velocity-Verlet alike, with and without the covariance). The reset is
+  now internal and called by `PropagatorBase.Propagate` once its checks pass, on every path (decided by S. Guillet,
+  2026-11-17): a spacecraft propagated again, by any path or a mix of them, is bit for bit a spacecraft never
+  propagated, burns, state, fuel, `ExecutedManeuvers`, `ToOpm`, summary, attitudes and P alike
+  (`RepropagationTests.PropagatorPaths_IdenticalRun_IsAFreshSpacecrafts`, `PropagatorPaths_MixedRuns_AreAFreshSpacecrafts`,
+  and the builder and direct rows of `AnotherState_FiresAsAFreshSpacecraft` and
+  `Covariance_AnotherState_FiresAsAFreshSpacecraft`, red on a85098d, the fresh spacecraft checked against the Keplerian
+  closed form), and a propagator built and never run, or rejected by `Build` or its constructor, leaves the previous
+  propagation as it was (`PropagatorPaths_NoRun_LeavesTheFirstAsItWas`). The chain `Propagate` checks before the reset
+  is the one from `InitialManeuver`, the head it runs.
+- **A second `Spacecraft.SetStandbyManeuver` before a propagation was ignored**
+  ([#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584)). The public call shared the
+  bookkeeping of the chain's advance inside a propagation: it set `InitialManeuver` only when no maneuver was in standby
+  and added the maneuver in standby to `ExecutedManeuvers`. So `SetStandbyManeuver(m1)` then `SetStandbyManeuver(m2)`,
+  or a new head after a run whose chain did not finish, fired m1 and dropped m2 without an error,
+  `SetStandbyManeuver(null)` could not cancel m1, and `ExecutedManeuvers` listed m1 before anything ran. The call now
+  sets the head of the chain (see **Changed**); `SetStandbyManeuver_ASecondCall_SetsTheHead` (`RepropagationTests`, the
+  second head m2, the head of a chain of two, null, after an unfinished run, both integrators, red on a85098d; after a
+  finished run the control) is bit for bit a fresh spacecraft given the last call alone.
 
 **Changed**
 
@@ -4471,6 +4495,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
+- **Breaking: `Spacecraft.SetStandbyManeuver` sets the head of the maneuver chain**
+  ([#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584), decided by S. Guillet,
+  2026-11-17). `InitialManeuver` and `StandbyManeuver` both become the given maneuver, whatever was set before or left by
+  a propagation, null clears the chain, and nothing is added to `ExecutedManeuvers`, which lists the maneuvers of the
+  last propagation. The advance of the chain inside a propagation keeps its bookkeeping in the internal
+  `ChainStandbyManeuver`. Migration: a caller that called `SetStandbyManeuver` several times to build a chain links it
+  with `SetNextManeuver` and sets its head once; one that read `ExecutedManeuvers` between the call and the propagation
+  no longer finds the previous head there.
+- **Breaking: every numerical propagation re-arms the spacecraft and makes it `IsPropagated`**
+  ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583), decided by S. Guillet,
+  2026-11-17). `PropagatorBase.Propagate` resets the spacecraft once its checks pass (the tanks refuelled,
+  `ExecutedManeuvers`, the stored states, the attitude record and the gates cleared, the chain put back in standby from
+  `InitialManeuver`), and `IsPropagated` is true after a run through `CentralBodyPropagatorBuilder` or a
+  `CentralBodyPropagator` built directly, as after `Spacecraft.Propagate` (false before). A propagator built and not run
+  changes nothing. Migration: a caller that propagated one spacecraft several times through the builder to continue a
+  chain (the second run started from the fuel and the standby maneuver the first left) propagates once over the whole
+  window, or sets the next head with `SetStandbyManeuver` and the state with `SetInitialOrbitalParameters`.
 
 **Deprecated**
 
@@ -4606,14 +4647,6 @@ not listed.
   arc between them: a read at the first returns the state before both, and an SPK read between them throws
   SPKINSUFFDATA. The state that closes an arc carries its impulse's tick, up to half a tick from its instant (about 0.4
   mm at 8.6 km/s).
-- **State kept by the maneuver chain**
-  ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583),
-  [#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584)). A spacecraft propagated a
-  second time through `CentralBodyPropagatorBuilder.Build().Propagate()` or a `CentralBodyPropagator` built directly is
-  not reset: the second run fires no burn and starts with the fuel the first left. A second
-  `Spacecraft.SetStandbyManeuver` before a propagation does not replace the first, which fires while the new one is
-  dropped silently. Use `Spacecraft.Propagate` or a fresh spacecraft, and set the standby maneuver once (a maneuver on
-  another spacecraft's tank is rejected since #676).
 - **Event detection** ([#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578),
   [#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580),
   [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581)). The public

@@ -36,6 +36,12 @@ integrator of the builder: a second `Build`, or an integrator that already holds
 (`integrator`), and a step of zero or less throws `ArgumentOutOfRangeException` at the constructor. `Build` checks the covariance propagation options once
 all the forces are added, since the columns of Ψ follow them (Cd with drag, Cr with a radiation force).
 
+`Build` changes nothing on the spacecraft. `Propagate` re-arms it once its checks pass, as `Spacecraft.Propagate` does:
+it refuels the tanks, clears `ExecutedManeuvers`, the stored states and the attitude record of the previous propagation,
+and starts the maneuver chain again from its head ([Spacecraft](spacecraft.md)), so a spacecraft propagated again
+through a new builder fires its chain as a spacecraft never propagated (#583, decided by S. Guillet, 2026-11-17; before
+11.0.0 the second run fired no burn and started with the fuel the first left).
+
 ## Example
 
 ```csharp

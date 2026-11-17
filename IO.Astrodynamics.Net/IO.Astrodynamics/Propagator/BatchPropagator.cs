@@ -160,7 +160,7 @@ public static class BatchPropagator
                     $"Duplicate Spacecraft instance detected at index {i} " +
                     $"(name: '{tasks[i].Spacecraft.Name}'). " +
                     "Each task must use a distinct Spacecraft instance because Propagate() " +
-                    "calls ResetPropagation() which is not thread-safe.",
+                    "re-arms the spacecraft (ResetPropagation), which is not thread-safe.",
                     nameof(tasks));
             }
         }

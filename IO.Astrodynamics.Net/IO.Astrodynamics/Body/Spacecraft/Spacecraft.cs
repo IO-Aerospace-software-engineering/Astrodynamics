@@ -108,10 +108,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public override bool IsSpiceBacked => _isFromKernel;
 
         private bool _isPropagated;
+
+        /// <summary>
+        /// Whether a numerical propagation ran on the spacecraft, by any path: <c>Propagate</c>, <c>PropagateAsync</c>,
+        /// <c>Scenario.SimulateAsync</c>, <see cref="BatchPropagator"/>, <see cref="CentralBodyPropagatorBuilder"/> or a
+        /// <see cref="CentralBodyPropagator"/> built directly (#583: the last two left it false before 11.0.0).
+        /// </summary>
         public bool IsPropagated => _isPropagated;
 
-        // Whether the stored states are those of a numerical propagation, by any path (the builder and a propagator built
-        // directly included, which leave IsPropagated false): a TLE spacecraft then reads them, SGP4 otherwise (#675).
+        // Whether the stored states are those of a numerical propagation, by any path: a TLE spacecraft then reads them, SGP4
+        // otherwise (#675).
         // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator) leaves it
         private bool _holdsPropagatedStates;
 
@@ -547,10 +553,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Put a maneuver in standby. When no maneuver is in standby, it becomes the head of the maneuver chain
-        /// (<see cref="Maneuver.Maneuver.SetNextManeuver"/>), from which each <c>Propagate</c> starts the chain again.
+        /// Sets the head of the maneuver chain (<see cref="Maneuver.Maneuver.SetNextManeuver"/>): the maneuver every later
+        /// propagation starts the chain from. <see cref="InitialManeuver"/> and <see cref="StandbyManeuver"/> both become
+        /// <paramref name="maneuver"/>, whatever was set before or left by an earlier propagation, and nothing is added to
+        /// <see cref="ExecutedManeuvers"/>, which lists the maneuvers of the last propagation; null clears the chain, so the
+        /// next propagation fires nothing (#584, decided by S. Guillet, 2026-11-17: before 11.0.0 a second call before a
+        /// propagation, or a call after a propagation whose chain did not finish, left the first head in place, which fired,
+        /// and added it to <see cref="ExecutedManeuvers"/> before it ran).
         /// </summary>
-        /// <param name="maneuver">The maneuver to put in standby.</param>
+        /// <param name="maneuver">The head of the chain; null for no maneuver.</param>
         /// <param name="minimumEpoch">Null to keep the minimum epoch the maneuver was given. When later than that minimum
         /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
         /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it, and an <see cref="Maneuver.Attitude"/> never
@@ -573,15 +584,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 maneuver?.RaiseGivenMinimumEpoch(minimumEpoch.Value);
             }
 
-            Standby(maneuver);
+            InitialManeuver = maneuver;
+            StandbyManeuver = maneuver;
         }
 
         /// <summary>
         /// Put the next maneuver of the chain in standby during a propagation, gated at <paramref name="gate"/>, the end of
         /// the window of the maneuver that precedes it, for this propagation only: the gate is raised on
         /// <see cref="Maneuver.Maneuver.PropagationGate"/>, which the next <c>Propagate</c> clears, never on the minimum epoch
-        /// the maneuver was given (#573). The library's raises of a chain go through it, never through
-        /// <see cref="SetStandbyManeuver"/>.
+        /// the maneuver was given (#573). The maneuver in standby until then is added to <see cref="ExecutedManeuvers"/>.
+        /// The library's advances of a chain go through it, never through <see cref="SetStandbyManeuver"/>, which sets the
+        /// head of the chain (#584).
         /// </summary>
         /// <param name="maneuver">The next maneuver of the chain; null at its end.</param>
         /// <param name="gate">The end of the window of the maneuver before it; null for none.</param>
@@ -592,20 +605,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 maneuver?.RaisePropagationGate(gate.Value);
             }
 
-            Standby(maneuver);
-        }
-
-        // The bookkeeping of a maneuver put in standby, shared by the user's call and the chain's
-        private void Standby(Maneuver.Maneuver maneuver)
-        {
             if (StandbyManeuver != null)
             {
                 _executedManeuvers.Add(StandbyManeuver);
-            }
-
-            if (StandbyManeuver == null)
-            {
-                InitialManeuver = maneuver;
             }
 
             StandbyManeuver = maneuver;
@@ -709,14 +711,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
-            // Built before the reset, so that a rejected input leaves the previous propagation as it was
+            // The propagation resets the spacecraft once its checks pass, so that a rejected input leaves the previous
+            // propagation as it was (#583)
             using var propagator = new CentralBodyPropagator(window, this, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            ResetPropagation();
-
-            var solution = propagator.Propagate();
-            _isPropagated = true;
-            return solution;
+            return propagator.Propagate();
         }
 
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
@@ -767,15 +766,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
             PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
 
-            // Built, and so the options and P0 checked, before the reset: a rejected activation leaves the previous
-            // propagation as it was
+            // Built, and so the options and P0 checked, before the reset of the propagation (#583): a rejected activation
+            // leaves the previous propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, covariancePropagation);
-            ResetPropagation();
-
-            var solution = propagator.Propagate();
-            _isPropagated = true;
-            return solution;
+            return propagator.Propagate();
         }
 
         /// <summary>
@@ -790,7 +785,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
-            // Built and activated before the reset, so that a rejected input leaves the previous propagation as it was
+            // Built and activated before the reset of the propagation (#583), so that a rejected input leaves the previous
+            // propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             if (variationalOptions != null)
@@ -798,11 +794,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 propagator.EnableVariationalEquations(variationalOptions);
             }
 
-            ResetPropagation();
-
-            var solution = propagator.Propagate();
-            _isPropagated = true;
-            return solution;
+            return propagator.Propagate();
         }
 
         /// <summary>
@@ -1145,9 +1137,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Reset propagation elements
+        /// Re-arms the spacecraft for a propagation (#583): the solution, the force model, the stored states and the attitude
+        /// record of the previous propagation are dropped, <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
+        /// the chain from <see cref="InitialManeuver"/> reset (its windows and the gates of the last propagation) and put back
+        /// in standby. <see cref="PropagatorBase.Propagate"/> calls it once its checks pass, on every path: before 11.0.0
+        /// only <c>Spacecraft.Propagate</c> did, so a second run through <see cref="CentralBodyPropagatorBuilder"/> or a
+        /// <see cref="CentralBodyPropagator"/> built directly fired no burn and started with the fuel left by the first.
         /// </summary>
-        private void ResetPropagation()
+        internal void ResetPropagation()
         {
             LastPropagation = null;
             LastForceModel = null;
@@ -1167,6 +1164,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             Maneuver.Maneuver.ResetChain(InitialManeuver);
             StandbyManeuver = InitialManeuver;
+        }
+
+        /// <summary>
+        /// Marks the spacecraft as propagated, at the end of a numerical propagation by any path (#583): the next
+        /// propagation then drops its stored states and attitude record.
+        /// </summary>
+        internal void MarkPropagated()
+        {
+            _isPropagated = true;
         }
     }
 }
