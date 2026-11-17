@@ -66,7 +66,7 @@ time: J2016.0 is `Time.CreateTDB(5844.0 * 86400.0)` (Gaia DR3), J1991.25 `Time.C
 ## The model
 
 A star moves along a straight line at constant speed in ICRF, the space motion of SOFA's `iauStarpm` (release
-2023-10-11, `external-lib/sofa-src/starpm.c`, Note 5) with a radial velocity of 0. With x = μα* dt and y = μδ dt, its
+2023-10-11, `external-lib/sofa-src/starpm.c`, Note 5) with a radial velocity of 0 (decided by S. Guillet, 2026-11-17). With x = μα* dt and y = μδ dt, its
 position in catalog distances is
 
     p(dt) = u0 + x e_α + y e_δ
@@ -107,7 +107,7 @@ included: 7.8e-16 rad in direction (the resolution of a right ascension near 4.7
 thresholds of `StarTests` are twice the worst over Linux x64, Windows x64 and macOS arm64, the same on the three (CI run
 43974478027); after 1 and 10 years, where the worst lies below one ulp of the right ascension, the direction threshold is
 twice the resolution of the returned angles, 1.9e-15 rad (one ulp of a right ascension below 2π, 8.9e-16 rad, and one of
-a declination, 2.2e-16 rad), so that another platform's one-ulp difference passes.
+a declination, 2.2e-16 rad), so that another platform's one-ulp difference passes (decided by S. Guillet, 2026-11-17).
 
 ### Limits
 
@@ -116,7 +116,7 @@ a declination, 2.2e-16 rad), so that another platform's one-ulp difference passe
   11.4′ after 1000 (`iauStarpm` with and without it), more than the straight line corrects (34 mas after 100 years),
   and change its parallax after 100 years from 0.548303″ to 0.551722″. A radial velocity input would be a new
   constructor parameter, and the defect fixes of 11.0.0 keep the existing signatures (#668, decided by S. Guillet,
-  2026-11-14): whether `Star` takes one is S. Guillet's choice, open in the PR of #714 to #718.
+  2026-11-14): it is left to an additive constructor overload after 11.0.0, in its own issue (decided by S. Guillet, 2026-11-17).
 - **The state's velocity is zero.** `GetGeometricStateRelativeTo`, `Propagate` and the SPK of `WriteEphemeris` carry the
   moving position and a zero velocity.
 - **A catalog position is the direction of the light that reaches the barycenter at its epoch** (as SOFA's `iauPmsafe`
@@ -126,7 +126,7 @@ a declination, 2.2e-16 rad), so that another platform's one-ulp difference passe
 
 A Gaia DR3 record converts by its units alone: `ra` and `dec` from degrees to radians, `pmra` (μα*) and `pmdec` from
 mas/yr to rad/yr, `parallax` from mas to arcseconds, `ra_error` and `dec_error` from mas to radians, the epoch J2016.0
-TDB. Barnard's star, Gaia DR3 4472832130942575872 (VizieR I/355, read on 2026-11-16, to be verified by S. Guillet):
+TDB. Barnard's star, Gaia DR3 4472832130942575872 (VizieR I/355, read on 2026-11-16, confirmed by S. Guillet, 2026-11-17):
 
 ```csharp
 const double deg = Math.PI / 180.0;
@@ -140,5 +140,5 @@ var in2100 = barnard.GetEquatorialCoordinates(new Time(2100, 1, 1));
 
 Its coordinates are those of `iauStarpm` with rv = 0 to the figures of [Accuracy](#accuracy)
 (`StarTests.GetEquatorialCoordinates_FromAGaiaDr3Record_IsIauStarpm`). A Hipparcos record (I/239, μα* as `pmRA`; the new
-reduction I/311, whose `pmRA` is read here as μα* too, to be verified by S. Guillet) converts the same way, at the epoch
+reduction I/311, whose `pmRA` is read here as μα* too, confirmed by S. Guillet, 2026-11-17) converts the same way, at the epoch
 J1991.25 TDB.

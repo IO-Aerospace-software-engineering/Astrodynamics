@@ -1164,7 +1164,7 @@ public class StarTests
     // a worst below the resolution of the returned angles: one ulp of a right ascension below 2π, 8.9e-16 rad, and one of a
     // declination, 2.2e-16 rad, 9.15e-16 rad together, which a one-ulp difference of another platform's atan2, sin or cos
     // would show. So the direction threshold after 1 and 10 years is twice that resolution, 1.9e-15 rad, not twice the
-    // Linux worst; after 100 and 1000 years the direction is iauStarpm's light-time and relativistic terms of the observed
+    // Linux worst (decided by S. Guillet, 2026-11-17); after 100 and 1000 years the direction is iauStarpm's light-time and relativistic terms of the observed
     // place at rv = 0 (the straight line of its Note 5 is the same), growing as dt⁴, far above it, the distance
     // iauStarpv's inertial radial velocity −v_t²/(2c) for an observed rv of 0, 7.6e-8 relative per decade for Barnard's star.
     // Before the fix (#718), Barnard's star fed its catalog μα* was 26.8 mas (1.3e-7 rad) away after 10 years, and fed
@@ -1349,7 +1349,7 @@ public class StarTests
 
     /// <summary>
     /// #718, the convention: Barnard's star built from its Gaia DR3 record (4472832130942575872, VizieR I/355, read on
-    /// 2026-11-16, to be verified by S. Guillet) with the units converted and nothing else: ra and dec from degrees to
+    /// 2026-11-16, confirmed by S. Guillet, 2026-11-17) with the units converted and nothing else: ra and dec from degrees to
     /// radians, pmra (μα* = μα cos δ, as Gaia gives it) and pmdec from mas/yr to rad/yr, the parallax from mas to arcsec,
     /// the epoch J2016.0 TDB; against <c>iauStarpm</c> fed pmra/cos δ (its Note 4) and rv = 0. Before, pmra was read as
     /// dα/dt: 27.7 mas away after 10 years.

@@ -20,7 +20,7 @@
  * The rows of StarTests are printed by this program, never edited by hand. It builds as every harness of this directory
  * (README.md), from the repository root, and takes no argument.
  *
- * The catalog values (VizieR, read on 2026-11-16, #718; to be verified by S. Guillet): Barnard's star from the Hipparcos
+ * The catalog values (VizieR, read on 2026-11-16, #718; confirmed by S. Guillet, 2026-11-17): Barnard's star from the Hipparcos
  * new reduction I/311 (J1991.25) and from Gaia DR3 4472832130942575872 (J2016.0), Polaris from I/311; the synthetic stars
  * of the issue: Barnard's I/311 motion and parallax at +89.5 deg and, mirrored, at -89.5 deg, both crossing a pole before
  * 1000 years; stars at +-pi/2 exactly; the synthetic stars of the test suite (1 rad and 0.1 rad/yr, 1.5 rad and 0.1 and

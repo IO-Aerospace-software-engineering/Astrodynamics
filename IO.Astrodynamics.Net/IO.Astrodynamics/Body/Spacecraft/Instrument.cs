@@ -68,7 +68,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// SPICE reads from the kernel the library writes agrees with <see cref="RotationToSpacecraft"/> to a few ulps of
         /// each angle, which SPICE's text kernel reader and its unit conversion (<c>CONVRT</c>) can move by a few ulps:
         /// 1.8e-15 rad within [−2π, 2π], growing with the angle (1.6e-2 rad near 1e13, 0.268 rad at 1e300; measured with
-        /// CSPICE N0067, #715). Give angles within a few turns.
+        /// CSPICE N0067, #715; every finite angle accepted, decided by S. Guillet, 2026-11-17). Give angles within a few turns.
         /// </para>
         /// </remarks>
         public Vector3 Orientation { get; }
@@ -239,7 +239,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// on computed vectors, so their threshold depends on the boresight: SPICE(DEGENERATECASE) up to 1.53e-17 rad for a
         /// rectangle and 1.42e-17 rad for an ellipse with the boresight at the Moon, none down to 5e-324 with the boresight
         /// +Z but for an ellipse and an ellipsoid target, SPICE(BADAXISLENGTH) up to 2.73e-319 (measured with
-        /// <c>fovtrg_c</c>, CSPICE N0067, #715). The managed path searches such fields, so the two paths can then disagree;
+        /// <c>fovtrg_c</c>, CSPICE N0067, #715). The managed path searches such fields, so the two paths can then disagree (decided by S. Guillet, 2026-11-17);
         /// its own construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at the
         /// boresight not found for a half-angle of 1e-155 rad in the reference plane, measured), and it throws
         /// <see cref="InvalidOperationException"/> where the squares of the semi-axes of the cone of the field underflow

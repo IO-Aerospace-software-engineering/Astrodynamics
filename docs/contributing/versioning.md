@@ -3028,7 +3028,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadOrientationProxy` fell back to `ckgp_c` only on an error, so that `SpiceAPI.ReadOrientation` of a type-1 CK, or of
   a type-2 or type-3 CK written without rates, threw "No orientation found" (a type-3 CK written by `ckw03_c` without
   rates, measured on a80f6a5). The proxy falls back to `ckgp_c` when `ckgpav_c` finds nothing too; such a record has the
-  pointing of `ckgp_c` and a zero angular velocity (C++ `API.ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing`,
+  pointing of `ckgp_c` and a zero angular velocity (decided by S. Guillet, 2026-11-17; C++ `API.ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing`,
   within 2.3e-16 rad of `ckgp_c` and of the closed form R_z(1e-3 t), twice the worst on Linux x64 and macOS arm64, where
   it runs; `SpiceApiTest.ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing`, within 3.2e-16 rad, the CK
   with rates (0, 0, 1e-3) rad/s, twice the Linux worst, Validation; CI run 43974478027). The
@@ -3145,7 +3145,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
   guard blamed the half-angles 0.1 and 0.1 rad; the rectangle still reports such a point in view, its margin taking
   atan2(0, 0) = 0). Every other field and target is searched as before, bit for bit (the same vectors). Migration: a
-  caller that caught `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends, the constructors keep the rule "finite and positive" for both half-angles, and the
+  caller that caught `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends (decided by S. Guillet, 2026-11-17), the constructors keep the rule "finite and positive" for both half-angles, and the
   documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
   measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
   and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at
@@ -3194,12 +3194,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   parsed with `NumberStyles.AllowThousands`, which drops every comma wherever it stands: `MISS_DISTANCE` `118,1` read
   as 1181 m, `0,715` as 715 m, `COLLISION_PROBABILITY` `4,835E-05` as 0.04835 (1000 times the value), `CR_R` `4,1` as
   41 m², `X` `2,570.097065` km as 2 570 097.065 m (measured on a80f6a5). `xsd:double` has no comma (XML Schema Part 2,
-  3.2.5.1), nor a value of CCSDS 508.0-B-1 (6.3.2.2 to 6.3.2.4, to be verified by S. Guillet). The reader now parses
+  3.2.5.1), nor a value of CCSDS 508.0-B-1 (6.3.2.2 to 6.3.2.4, confirmed by S. Guillet, 2026-11-17). The reader now parses
   with `NumberStyles.Float` only, and a comma throws the existing `CdmParseException`
   (`Invalid numeric value for MISS_DISTANCE: '118,1'.`). Every `xsd:double` numeral (a sign, no integer digit, an
   exponent of either case, surrounding whitespace) reads bit for bit as before (`CdmTests`
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
-  `ReadFromString_XsdDoubleLexicalForms_AreRead`). The date half of #619 stays open.
+  `ReadFromString_XsdDoubleLexicalForms_AreRead`). Fixed with #717, #619 partly fixed (decided by S. Guillet, 2026-11-17); the date half of #619 stays open.
 
 **Changed**
 
@@ -3207,7 +3207,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
   a straight line at constant speed in ICRF, the closed form of `iauStarpm`'s space motion with a radial velocity of 0
-  (`external-lib/sofa-src/starpm.c`, Note 5): with x = μα* dt and y = μδ dt, the position r0 (u0 + x e_α + y e_δ), so
+  (`external-lib/sofa-src/starpm.c`, Note 5; decided by S. Guillet, 2026-11-17): with x = μα* dt and y = μδ dt, the position r0 (u0 + x e_α + y e_δ), so
   α = α0 + atan2(x, cos δ0 − y sin δ0), δ = atan2(sin δ0 + y cos δ0, √(x² + (cos δ0 − y sin δ0)²)), and the distance
   `Distance` · √(1 + x² + y²), as `iauStarpm`'s parallax decreases, no longer the catalog distance (Barnard's star:
   1.26e-5 relative after 100 years, 7.1e11 m). The form divides by no cos δ0 and crosses a pole by itself. The change is
@@ -3224,7 +3224,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   thresholds twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI run 43974478027;
   the Validation tests twice the Linux worst), but after 1 and 10 years against `iauStarpm`, where the worst lies below
   one ulp of the right ascension (8.9e-16 rad near 4.7 rad), twice the resolution of the returned angles, 1.9e-15 rad,
-  so that a one-ulp difference of another platform passes. A star without proper motion, and every star at its catalog epoch, is
+  so that a one-ulp difference of another platform passes (decided by S. Guillet, 2026-11-17). A star without proper motion, and every star at its catalog epoch, is
   unchanged, bit for bit (`WithoutProperMotion_IsTheCatalog_BitForBit`), and so are the stars of the field-of-view and
   kernel tests. `GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate` and `Scenario.SimulateAsync`,
   the SPK of `WriteEphemeris` and the occultation and field-of-view searches of a star with proper motion move with it.
@@ -3241,10 +3241,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   The constructor's `rightAscensionProperMotion`, `rightAscensionSigma` and `rightAscensionSigmaProperMotion` and their
   properties gave no unit and no convention, and the model added the proper motion to the right ascension, so it was
   dα/dt (SOFA's convention, `starpm.c` Note 4), while the catalogs a caller reads, Hipparcos (I/239 `pmRA`,
-  "mu_alpha.cos(delta)") and Gaia DR3 (I/355 `pmRA`, "pmRA*cosDE"; both cited from #718, to be verified by S. Guillet),
+  "mu_alpha.cos(delta)") and Gaia DR3 (I/355 `pmRA`, "pmRA*cosDE"; both cited from #718, confirmed by S. Guillet, 2026-11-17),
   give μα* = (dα/dt) cos δ: a catalog star given its `pmra` moved cos δ0 times too fast in right ascension (Barnard's
   star 26.8 mas away from `iauStarpm` after 10 years, Polaris 439 mas, a rate 77.9 times too large). They are now μα*,
-  σα* and σμα*, true angles in radians and radians per Julian year of TDB, as Hipparcos and Gaia give them, documented
+  σα* and σμα* (decided by S. Guillet, 2026-11-17), true angles in radians and radians per Julian year of TDB, as Hipparcos and Gaia give them, documented
   on the constructor, the properties and the new [Stars](../reference/stars.md) page with the units of every parameter
   and the conversion of a Gaia DR3 or Hipparcos record; `GetRightAscensionSigma` keeps its formula and returns σα*.
   Barnard's star built from its Gaia DR3 record by its units alone is `iauStarpm` fed `pmra`/cos δ to the figures above
@@ -3299,7 +3299,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `BODYnnn_GM` when that GM is not, as `ConvertConicElementsToStateVector(KeplerianElements, Time)` does; every overload
   throws `ArgumentNullException` for a null state and `ArgumentException` (`stateVector`) for a position or a velocity
   that is not finite, which SPICE turns into NaN with no error; and `InvalidOperationException` with SPICE's message for a
-  state SPICE rejects: a zero position, a zero velocity, a position parallel to the velocity, a time out of
+  state SPICE rejects (decided by S. Guillet, 2026-11-17: SPICE's own tolerances cannot be reproduced in .NET): a zero position, a zero velocity, a position parallel to the velocity, a time out of
   `prop2b_c`'s range (`SPICE(ZEROPOSITION)`, `SPICE(ZEROVELOCITY)`, `SPICE(NONCONICMOTION)`, `SPICE(DTOUTOFRANGE)`;
   `SPICE(DEGENERATECASE)` for the elements). Before, the process ended when the call was its first native call, and
   otherwise the stack's contents (about 7e-310) were returned. Native callers: both proxies return a NaN result with
@@ -3324,10 +3324,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   above, nothing written. `Star.WriteEphemeris` and `Site.WriteEphemeris` write about named bodies and are unchanged.
   Migration: catch `ArgumentException`, or load a kernel that names the body (`NAIF_BODY_NAME`, `NAIF_BODY_CODE`)
   (`SpiceApiTest.WriteEphemeris_AboutACentreSpiceDoesNotName_ThrowsArgumentExceptionAndKeepsTheFile`).
-- **`TransformFrameProxy` returns a NaN rotation when it fails** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above). A native caller gets a NaN rotation
-  and angular velocity with SPICE's message in `GetLastErrorProxy()`, where it got the zero quaternion with no message
+- **Breaking: `TransformFrameProxy` returns a NaN rotation when it fails** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above). A native caller gets a NaN rotation
+  and angular velocity with SPICE's message in `GetLastErrorProxy()` (decided by S. Guillet, 2026-11-17), where it got the zero quaternion with no message
   (#454); `GetLastErrorProxy()` is empty after a reporting proxy that succeeds. `SpiceAPI.TransformFrame` throws the same
-  `InvalidOperationException` on both, its message now SPICE's.
+  `InvalidOperationException` on both, its message now SPICE's. Migration (native callers): test the rotation for NaN, or
+  read `GetLastErrorProxy()`, where the zero quaternion was tested.
 - **Breaking: an instrument checks its field of view when it is built** ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)). The constructor of `Instrument`, so
   `AddCircularInstrument`, `AddEllipticalInstrument`, `AddRectangularInstrument` and any subclass, throws
   `ArgumentException` naming the parameter for a boresight or a reference vector with a component that is not finite or
@@ -3376,7 +3377,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   getters returned NaN vectors, and `WriteFrameAsync` wrote `TKFRAME_<id>_ANGLES = ( NaN,0,0 )` (or `Infinity`), which
   SPICE fails to load (SPICE(NUMBEREXPECTED), the variables before that line left in the kernel pool), measured on
   a80f6a5 (`InstrumentTests.AddInstrument_OrientationNotFinite_Throws`, red there for the 33 rows of the three
-  shapes). Every finite angle stays accepted, results unchanged bit for bit
+  shapes). Every finite angle stays accepted (decided by S. Guillet, 2026-11-17), results unchanged bit for bit
   (`AddInstrument_OrientationFinite_IsAccepted`); SPICE's frame agrees with `RotationToSpacecraft` to a few ulps of
   each angle, 1.8e-15 rad within [−2π, 2π] and more for large angles (0.268 rad at 1e300), as documented on
   `Instrument.Orientation`. Migration: give finite Euler angles, preferably within a few turns.
@@ -4490,8 +4491,8 @@ not listed.
   from the catalog parallax: Barnard's star's −110.47 km/s (Gaia DR3) would move it by 64 mas after 10 years, 6.5″ after
   100 and 11.4′ after 1000, more than the straight line corrects (34 mas after 100 years). The radial velocity input
   that #718 recommends would be a new constructor parameter, and the defect fixes of 11.0.0 keep the existing signatures
-  (#668, decided by S. Guillet, 2026-11-14): whether `Star` takes one is S. Guillet's choice, open in the PR of #714 to
-  #718 ([Stars](../reference/stars.md#limits)).
+  (#668, decided by S. Guillet, 2026-11-14): it is left to an additive constructor overload after 11.0.0, in its own
+  issue (decided by S. Guillet, 2026-11-17; [Stars](../reference/stars.md#limits)).
 - **A front body without radii on the CSPICE path of the occultation search**
   ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
