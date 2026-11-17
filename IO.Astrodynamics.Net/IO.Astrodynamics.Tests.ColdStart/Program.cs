@@ -45,6 +45,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// see <see cref="StaticBodiesChild"/>.
 /// The modes <c>two-body-first-propagate</c> and <c>two-body-first-conic</c> take no schedule and load no kernel: the two-body
 /// call is the first native call of the process, see <see cref="CheckTwoBodyAsFirstNativeCall"/> (#714).
+/// The mode <c>conversions-lock</c> (#664) takes the kernel directory alone: the element conversions and the two-body
+/// propagation of <see cref="SpiceAPI"/> on a probe provider, see <see cref="ConversionsLockChild"/>.
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// </para>
@@ -79,6 +81,12 @@ internal static class Program
         if (args.Length == 2 && args[1] == "memory-provider")
         {
             return MemoryProviderChild.Run(args[0]);
+        }
+
+        // #664: the element conversions and the two-body propagation read nothing from the provider under the SpiceAPI lock
+        if (args.Length == 2 && args[1] == "conversions-lock")
+        {
+            return ConversionsLockChild.Run(args[0]);
         }
 
         // The static objects of Barycenters, PlanetsAndMoons and Stars resolve their data at first read, retried on failure
@@ -234,7 +242,7 @@ internal static class Program
     private static int Usage()
     {
         Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
-                                "or <kernel directory> memory-provider|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic");
+                                "or <kernel directory> memory-provider|conversions-lock|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic");
         return 2;
     }
 

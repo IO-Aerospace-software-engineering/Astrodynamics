@@ -196,9 +196,9 @@ public class SpiceAPI
     //Use the same lock for all cspice calls because it doesn't support multithreading.
     // No code under it may read a static class whose type initializer takes it (PlanetsAndMoons, Stars, Barycenters):
     // the thread would wait for the initializer while it holds the lock, and a thread running the initializer would wait
-    // for the lock, forever (#623). The library's code does not; a custom IDataProvider (the bodies the element
-    // conversions build, the frames of a read in TEME, CIRS or TIRS) and the enumeration of the states given to
-    // WriteEphemeris or WriteOrientation also run under it.
+    // for the lock, forever (#623). The library's code does not; a custom IDataProvider (the frames of a read in TEME,
+    // CIRS or TIRS; no longer the bodies the element conversions built, #664, #725) and the enumeration of the states
+    // given to WriteEphemeris or WriteOrientation also run under it.
     private static object lockObject = new object();
 
     // The generation of the kernel pool: raised, under the lock, by each LoadKernels, UnloadKernels and ClearKernels, so
@@ -2368,15 +2368,16 @@ public class SpiceAPI
         double.IsFinite(elements.MeanAnomaly) && double.IsFinite(elements.TrueAnomaly);
 
     // The state of a native conversion, or the InvalidOperationException of its failure: a NaN state with SPICE's message,
-    // a centre whose GM the kernel pool lacks (#711: before, the zero state, silently)
-    private static OrbitalParameters.StateVector ConvertedState(StateVector state)
+    // a centre whose GM the kernel pool lacks (#711: before, the zero state, silently). Called under the lock, which holds
+    // SPICE's message; the managed result is built after it, about the observer and in the frame of the input (#725, #664)
+    private static StateVector CheckedState(StateVector state)
     {
         if (!IsFinite(state))
         {
             throw new InvalidOperationException($"The elements cannot be converted to a state vector: {LastProxyError()}");
         }
 
-        return state.Convert();
+        return state;
     }
 
     /// <summary>
@@ -2418,17 +2419,19 @@ public class SpiceAPI
             throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to OSCELT must be finite and above 0.");
         }
 
+        var input = stateVector.Convert();
+        DTO.KeplerianElements elements;
         lock (lockObject)
         {
-            var elements = ConvertStateVectorToConicOrbitalElementProxy(stateVector.Convert(), gm);
-            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            elements = ConvertStateVectorToConicOrbitalElementProxy(input, gm);
             if (!IsFinite(elements))
             {
                 throw new InvalidOperationException($"The state cannot be converted to conic elements: {LastProxyError()}");
             }
-
-            return elements.Convert();
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return elements.Convert(stateVector.Observer, stateVector.Frame);
     }
 
     /// <summary>
@@ -2449,11 +2452,16 @@ public class SpiceAPI
         ThrowIfNotFinite(equinoctialElements, nameof(equinoctialElements));
         ThrowIfOutsideEqncpvDomain(equinoctialElements, nameof(equinoctialElements));
         ThrowIfNotACelestialCentre(equinoctialElements.Observer, nameof(equinoctialElements));
+        var input = equinoctialElements.Convert();
+        StateVector state;
         lock (lockObject)
         {
             ReadCelestialBodyInfo(equinoctialElements.Observer.NaifId, nameof(equinoctialElements));
-            return ConvertedState(ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()));
+            state = CheckedState(ConvertEquinoctialElementsToStateVectorProxy(input));
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(equinoctialElements.Observer, equinoctialElements.Frame);
     }
 
     /// <summary>
@@ -2484,11 +2492,16 @@ public class SpiceAPI
         }
 
         ThrowIfNotACelestialCentre(keplerianElements.Observer, nameof(keplerianElements));
+        var input = keplerianElements.Convert();
+        StateVector state;
         lock (lockObject)
         {
             ReadCelestialBodyInfo(keplerianElements.Observer.NaifId, nameof(keplerianElements));
-            return ConvertedState(ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()));
+            state = CheckedState(ConvertConicElementsToStateVectorProxy(input));
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(keplerianElements.Observer, keplerianElements.Frame);
     }
 
     /// <summary>
@@ -2534,10 +2547,16 @@ public class SpiceAPI
             throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to CONICS must be finite and above 0.");
         }
 
+        var input = keplerianElements.Convert();
+        double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        StateVector state;
         lock (lockObject)
         {
-            return ConvertedState(ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, gm));
+            state = CheckedState(ConvertConicElementsToStateVectorAtEpochProxy(input, et, gm));
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(keplerianElements.Observer, keplerianElements.Frame);
     }
 
     /// <summary>
@@ -2582,17 +2601,19 @@ public class SpiceAPI
             throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to PROP2B must be finite and above 0.");
         }
 
+        var input = stateVector.Convert();
+        StateVector state;
         lock (lockObject)
         {
-            var state = Propagate2BodiesProxy(stateVector.Convert(), gm, dt.TotalSeconds);
-            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            state = Propagate2BodiesProxy(input, gm, dt.TotalSeconds);
             if (!IsFinite(state))
             {
                 throw new InvalidOperationException($"The state cannot be propagated by two-body motion: {LastProxyError()}");
             }
-
-            return state.Convert();
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(stateVector.Observer, stateVector.Frame);
     }
 
     /// <summary>

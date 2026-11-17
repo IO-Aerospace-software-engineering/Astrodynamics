@@ -200,6 +200,15 @@ The element conversions (`ConvertConicElementsToStateVector`, three overloads, a
 `ConvertEquinoctialElementsToStateVector`) throw `ArgumentException` for an element that is not finite (#714): CONICS checks
 its domain with comparisons NaN passes, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state.
 
+The result of each two-body call and element conversion is about the observer and in the frame of its input, the same
+instances ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)): a body with a geopotential
+or an atmospheric model, a barycentre or a body built from custom parameters comes back as given, so a propagation started
+from the result runs with the caller's models. Before 11.0.0 the result carried a new `CelestialBody` built from the
+identifier of the centre and a frame rebuilt from its name: the caller's models were lost, a barycentre threw, and a body
+SPICE does not name made the overloads with an explicit GM throw. The result is built after the SPICE lock, which holds
+only the native call ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)): before, the
+new body read the data provider 9 times under the lock, about 80 µs for a native call of 1.8 µs.
+
 Each proxy that reports through `GetLastErrorProxy()` clears it when it starts (#714), so the message read after a call is
 that call's: before, it held the message of the last failure, about another call, until another failure replaced it.
 `SpiceAPI` reads it before any other native call: `ReadEphemeris` over a window checks every state before it rotates any

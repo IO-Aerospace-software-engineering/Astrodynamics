@@ -319,10 +319,10 @@ release are listed under **Known limitations**.
   only the native call runs under the lock in `ConvertTleToStateVector`, the zero-state check and the Earth after it,
   and `ReadEphemeris` builds its observer before it; the states are the same bit for bit (same native calls, same
   inputs). No other code of the library under the lock reaches `PlanetsAndMoons`, `Stars` or `Barycenters`, the only type
-  initializers of the library that read SPICE. Code a caller supplies can still run under it: a custom `IDataProvider`,
-  through the bodies the element conversions of `SpiceAPI` build and the frames of an ephemeris read in TEME, CIRS or
-  TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`; it must not read the three
-  classes.
+  initializers of the library that read SPICE. Code a caller supplies could still run under it: a custom `IDataProvider`,
+  through the bodies the element conversions of `SpiceAPI` built (no longer since #664 and #725) and the frames of an
+  ephemeris read in TEME, CIRS or TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`;
+  it must not read the three classes.
   - **Measured** (Linux x64, 4 cores, Release, 2026-11-11), each run a fresh process, two threads started behind a
     barrier, a run hung when it had not ended 3 s after its start: before the fix, `ConvertTleToStateVector` against the
     first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `TLE.ToStateVector` 35 of 200, `ReadEphemeris` from
@@ -3208,6 +3208,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
+- **The element conversions of `SpiceAPI` read the data provider under the SPICE lock** ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
+  `ConvertStateVectorToConicOrbitalElement`, `ConvertEquinoctialElementsToStateVector`, `ConvertConicElementsToStateVector`
+  and `Propagate2Bodies` (every overload) built the observer of their result, `new CelestialBody(id)`, inside
+  `lock (lockObject)`: 9 calls of the data provider under the lock about the Earth (the information of 399, 3, 0, 10 and 0,
+  four states), about 80 µs held for a native call of 1.8 µs (the issue's measure, 016237bd), and a custom `IDataProvider`
+  ran under the lock. Only the native call, its check and the reading of SPICE's message now run under the lock, and the
+  result carries the caller's observer (#725, under Changed), so no call reads the provider at all
+  (`ColdStartTests.ElementConversions_ReadNoProviderUnderTheSpiceLock`, a child process on a probe provider that counts
+  the calls made while the thread holds the lock: 9 of 9 for each of the ten overloads on a85098d, 0 of 0 now).
 
 **Changed**
 
@@ -4471,6 +4480,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
+- **Breaking: the two-body calls of `SpiceAPI` return the caller's observer and frame** ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)).
+  The results of `Propagate2Bodies`, `ConvertStateVectorToConicOrbitalElement`, `ConvertConicElementsToStateVector` and
+  `ConvertEquinoctialElementsToStateVector` (every overload) carried a new `CelestialBody` built from the identifier of
+  the centre (`ProfilesConfiguration.Convert` of the native result) and a frame rebuilt from its name: the caller's
+  geopotential and atmospheric model were lost, so a propagation started from the result ran about a point-mass Earth
+  without the caller's atmosphere (#674 takes the models of the observer), a barycentre threw "Celestial celestialItem
+  frame can't be defined" (measured on a85098d), and a body built from custom parameters of an identifier SPICE does not
+  name threw `ArgumentException` from the overloads with an explicit GM. Each result now carries the observer and the
+  frame instances of its input (`SpiceApiElementConversionTests.TwoBodyCalls_ReturnTheObserverAndTheFrameOfTheirInput`:
+  the Earth with EGM2008 10×10 and the 1976 atmosphere, the Earth-Moon barycentre and a custom body, in
+  ECLIPJ2000, red on a85098d for all three). The positions, velocities, elements and epochs are unchanged, bit for bit.
+  Migration: none for a caller that read the observer's identifier or name; a caller that relied on a body read from the
+  kernels gets its own instance back (build the observer from the kernels to have one).
 
 **Deprecated**
 
@@ -4532,13 +4554,10 @@ not listed.
   returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every
   dropped crossing. Split the search window so that each part holds fewer than 1000 windows.
 - **The element conversions of `SpiceAPI`**
-  ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450),
-  [#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
+  ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450)).
   `SpiceAPI.ConvertEquinoctialElementsToStateVector` passes the true longitude where `EQNCPV` takes the mean longitude
   (1029 km off for an ordinary LEO, 27 900 km at e = 0.89) and throws `ArgumentException` for a ≤ 0 or e > 0.9, the
-  domain of `EQNCPV` (#711);
-  the conversions hold the SPICE lock while they build their result (about 80 µs for a native call of 1.8 µs). Use
-  `EquinoctialElements.ToStateVector()` and `KeplerianElements.ToStateVector()`.
+  domain of `EQNCPV` (#711). Use `EquinoctialElements.ToStateVector()`.
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),
   [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),

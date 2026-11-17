@@ -47,10 +47,16 @@ public static class ProfilesConfiguration
             stateVector.Velocity.Convert());
     }
 
-    internal static StateVector Convert(this DTO.StateVector stateVector)
+    /// <summary>
+    /// The state a two-body call of <see cref="SpiceAPI"/> returns, about the <paramref name="observer"/> and in the
+    /// <paramref name="frame"/> of its input (#725): before, a new <see cref="CelestialBody"/> built from the centre's
+    /// identifier, read again from the data provider under the SpiceAPI lock (#664), and a frame rebuilt from its name, so
+    /// that the caller's models, a barycentre or a body from custom parameters were lost.
+    /// </summary>
+    internal static StateVector Convert(this DTO.StateVector stateVector, ILocalizable observer, Frame frame)
     {
-        return new StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), new CelestialBody(stateVector.CenterOfMotionId),
-            Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), new Frame(stateVector.Frame));
+        return new StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
+            Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
     }
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
@@ -91,22 +97,26 @@ public static class ProfilesConfiguration
             keplerianElements.E, keplerianElements.I, keplerianElements.RAAN, keplerianElements.AOP, keplerianElements.M, keplerianElements.Frame.Name);
     }
 
-    internal static OrbitalParameters.KeplerianElements Convert(this DTO.KeplerianElements keplerianElements)
+    /// <summary>
+    /// The elements <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(OrbitalParameters.StateVector, double)"/>
+    /// returns, about the <paramref name="observer"/> and in the <paramref name="frame"/> of its state (#725, see
+    /// <see cref="Convert(DTO.StateVector, ILocalizable, Frame)"/>).
+    /// </summary>
+    internal static OrbitalParameters.KeplerianElements Convert(this DTO.KeplerianElements keplerianElements, ILocalizable observer, Frame frame)
     {
-        var observer = new CelestialBody(keplerianElements.CenterOfMotionId);
 
         // A parabola has no semi-major axis: SPICE gives its perifocal distance, the library an infinite axis (#373)
         if (System.Math.Abs(keplerianElements.Eccentricity - 1.0) < 1E-06)
         {
             return new KeplerianElements(double.PositiveInfinity, keplerianElements.Eccentricity, keplerianElements.Inclination,
                 keplerianElements.AscendingNodeLongitude, keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer,
-                Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame), new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly,
+                Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame), frame, keplerianElements.TrueAnomaly,
                 perigeeRadius: keplerianElements.PerifocalDistance);
         }
 
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
-            new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly, TimeSpan.FromSeconds(keplerianElements.OrbitalPeriod));
+            frame, keplerianElements.TrueAnomaly, TimeSpan.FromSeconds(keplerianElements.OrbitalPeriod));
     }
 
     internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)
