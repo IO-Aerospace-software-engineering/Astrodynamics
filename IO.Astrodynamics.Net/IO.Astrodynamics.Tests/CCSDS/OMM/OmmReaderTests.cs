@@ -650,6 +650,17 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         }
 
         [Fact]
+        public void ReadFromString_NegativeRevAtEpoch_NamesTheKeywordAndTheParameter()
+        {
+            // #734: the reader maps REV_AT_EPOCH to the parameter the data model names, revolutionNumberAtEpoch, the
+            // parameter of every TleParameters entry (revNumber before, the private validator's)
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(OmmWithKeyword("REV_AT_EPOCH", "-1")));
+            Assert.StartsWith("REV_AT_EPOCH '-1' in tleParameters is invalid", ex.Message);
+            var inner = Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
+            Assert.Equal("revolutionNumberAtEpoch", inner.ParamName);
+        }
+
+        [Fact]
         public void KeywordBaseDocument_IsSchemaValidAndReads()
         {
             var xml = KeywordBaseOmm();

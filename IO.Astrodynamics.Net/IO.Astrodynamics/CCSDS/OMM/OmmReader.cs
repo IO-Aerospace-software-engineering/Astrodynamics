@@ -353,7 +353,7 @@ public class OmmReader
         // A value the data model refuses throws OmmParseException naming its keyword (fourth round of #668)
         TleParameters Build(Func<TleParameters> create) => Construct(create, "tleParameters",
             new CcsdsKeyword("elementSetNumber", "ELEMENT_SET_NO", elementSetNoStr),
-            new CcsdsKeyword("revNumber", "REV_AT_EPOCH", revAtEpochStr));
+            new CcsdsKeyword("revolutionNumberAtEpoch", "REV_AT_EPOCH", revAtEpochStr));
 
         if (usesBStar && usesDDot)
         {
