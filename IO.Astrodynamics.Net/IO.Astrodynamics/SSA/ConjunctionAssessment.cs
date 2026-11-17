@@ -135,6 +135,9 @@ public static class ConjunctionAssessment
     /// <see cref="Spacecraft.HardBodyRadius"/> greater than 0, whatever <see cref="ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters"/>;
     /// the option, or 5 m when it is null, for a candidate that gives none (a radius of 0, or not a spacecraft) (#683).
     /// The analysis of each candidate, and the re-analysis of its avoidance options, carry that radius.
+    /// A candidate whose window holds no close approach is judged at the closest window end, flagged
+    /// <see cref="EncounterQualityFlags.TcaAtWindowEnd"/> (#621: at the window midpoint before 11.0.0, so that an object
+    /// closing at the window end could be dropped).
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters"/>
     /// is not finite or is negative.</exception>
@@ -194,7 +197,9 @@ public static class ConjunctionAssessment
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
     /// <returns>
-    /// The highest-priority encounter within the window. If no range-rate zero crossing is found, a midpoint fallback is used.
+    /// The highest-priority encounter within the window: the closest close approach (a zero of the range rate from negative
+    /// to positive); without one, the closest window end, the absolute minimum of the distance over the window, flagged
+    /// <see cref="EncounterQualityFlags.TcaAtWindowEnd"/> (#621: the window midpoint before 11.0.0).
     /// </returns>
     /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
     /// propagated secondary spacecraft, which would be extrapolated (#527); the secondary object has the NAIF identifier of
@@ -232,14 +237,14 @@ public static class ConjunctionAssessment
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
     /// <returns>
     /// The highest-priority encounter within the window: the closest interior local minimum of the distance when the window
-    /// holds one, a window end never preferred to it (#621); without an interior minimum, the end where the distance grows
-    /// into the window when the trajectories share their observer and frame (an end where the range rate is exactly zero
-    /// included), the midpoint otherwise. On that path a minimum lies inside the window when the range rate of the states
+    /// holds one, a window end never preferred to it (#621); without an interior minimum, the closest window end, the
+    /// absolute minimum of the distance over the window, flagged <see cref="EncounterQualityFlags.TcaAtWindowEnd"/>, on
+    /// every path (#621, decided by S. Guillet, 2026-11-17: before 11.0.0, the end where the distance grows into the
+    /// window when the trajectories share their observer and frame, the midpoint otherwise). On that path a minimum lies inside the window when the range rate of the states
     /// says so, the cubic Hermite of the stored steps only seeding the search (#363): a minimum whose range-rate zero lies
     /// outside the window is never returned, however near an end, and a range rate negative at the start and positive at
     /// the end returns the minimum between them, however flat the distance over the window; a minimum of the Hermite that
-    /// the range rate does not bracket, a maximum of the distance on a slow pass, is never returned in place of the end; the
-    /// midpoint is never returned on that path. The epoch of the encounter is labelled in the time frame of the window
+    /// the range rate does not bracket, a maximum of the distance on a slow pass, is never returned in place of the end. The epoch of the encounter is labelled in the time frame of the window
     /// start, as on the sampled path (#683).
     /// </returns>
     /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft; a
@@ -283,7 +288,9 @@ public static class ConjunctionAssessment
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
     /// <returns>
-    /// All detected encounters in the window. If no TCA is detected, a single midpoint fallback encounter is returned.
+    /// All detected encounters in the window, the zeros of the range rate from negative to positive, each at the tick nearer
+    /// its zero (#624): a window end for a zero in the half-tick next to it, unflagged; an empty list when the window holds
+    /// none (#621: a single encounter at the window midpoint before 11.0.0).
     /// </returns>
     /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
     /// propagated secondary spacecraft, which would be extrapolated (#527); the secondary object has the NAIF identifier of
@@ -320,9 +327,9 @@ public static class ConjunctionAssessment
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
     /// <returns>
-    /// All detected encounters in the window. When the trajectories share their observer and frame, the interior local
-    /// minima of the distance only, an empty list when the window holds none (#621: a window end was listed before 11.0.0);
-    /// otherwise, without a TCA, a single midpoint fallback encounter. On the first path a minimum lies inside the window
+    /// All detected encounters in the window, an empty list when the window holds none (#621: before 11.0.0, a window end
+    /// was listed when the trajectories share their observer and frame, a single midpoint encounter otherwise). When the
+    /// trajectories share their observer and frame, the interior local minima of the distance only. On that path a minimum lies inside the window
     /// when the range rate of the states says so, the cubic Hermite of the stored steps only seeding the search (#363): a
     /// minimum whose range-rate zero lies just inside a window end is listed, one whose zero lies just outside is not, nor
     /// one whose zero is exactly a window end (a window end is never listed), and a range rate negative at the start and
@@ -377,7 +384,9 @@ public static class ConjunctionAssessment
     /// <paramref name="options"/> gives (#683: the defaults of the avoidance before 11.0.0).
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters"/>
-    /// is not finite or is negative.</exception>
+    /// is not finite or is negative; <see cref="AvoidanceSearchOptions.AnalysisSampleStep"/> or
+    /// <see cref="AvoidanceSearchOptions.MaximumEventSearchStep"/> is given and not positive, the rule of the analysis (#640:
+    /// 0 s ended in an <see cref="OutOfMemoryException"/> and a negative step was accepted before 11.0.0).</exception>
     /// <exception cref="ArgumentException"><see cref="AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters"/> differs from
     /// the hard-body radius the secondary spacecraft gives (#683).</exception>
     public static IReadOnlyList<AvoidanceOption> EvaluateAvoidance(
@@ -772,7 +781,8 @@ public static class ConjunctionAssessment
             readRangeRateOverWindow: options.ReadRangeRateOverWindow);
 
         Time tca = SelectBestTcaEpoch(tcaEpochs, screeningWindow, protectedSource, secondarySource);
-        return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource, secondarySource,
+        return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, tcaEpochs.Count == 0, options,
+            protectedSource, secondarySource,
             protectedResolver ?? CreateResolver(protectedAsset.Spacecraft, protectedSource, options, tca),
             secondaryResolver ?? CreateResolver(secondaryObject, secondarySource, options, tca));
     }
@@ -800,30 +810,21 @@ public static class ConjunctionAssessment
             options.SampleStep,
             options.MaximumEventSearchStep,
             options.BisectionToleranceSeconds,
-            windowEndsWithoutInteriorMinimum: false,
             readRangeRateOverWindow: options.ReadRangeRateOverWindow);
 
-        // On the dense path, the interior minima only, none when the window holds none (#621); the sampled path keeps its
-        // midpoint fallback
-        if (tcaEpochs.Count == 0 && CanUseDensePolynomialSearch(protectedSource, secondarySource))
-        {
-            return Array.Empty<EncounterCase>();
-        }
-
+        // The close approaches only, none when the window holds none, on both paths (#621: the sampled path returned its
+        // midpoint before 11.0.0)
         if (tcaEpochs.Count == 0)
         {
-            return new[]
-            {
-                AnalyzeInternal(protectedAsset, secondaryObject, screeningWindow, options, protectedSource, secondarySource)
-            };
+            return Array.Empty<EncounterCase>();
         }
 
         var lastTca = tcaEpochs.Max();
         var protectedResolver = CreateResolver(protectedAsset.Spacecraft, protectedSource, options, lastTca);
         var secondaryResolver = CreateResolver(secondaryObject, secondarySource, options, lastTca);
         return tcaEpochs
-            .Select(tca => BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource,
-                secondarySource, protectedResolver, secondaryResolver))
+            .Select(tca => BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, false, options,
+                protectedSource, secondarySource, protectedResolver, secondaryResolver))
             .ToArray();
     }
 
@@ -833,10 +834,16 @@ public static class ConjunctionAssessment
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource)
     {
+        // No close approach in the window: the closest window end, the absolute minimum of the distance over a window
+        // without an interior minimum (CSPICE's ABSMIN), the start on a tie, flagged TcaAtWindowEnd (#621, decided by
+        // S. Guillet, 2026-11-17: the sampled path returned the window midpoint, the dense path the end where the distance
+        // grows into the window)
         if (tcaEpochs.Count == 0)
         {
-            return screeningWindow.StartDate + TimeSpan.FromSeconds(
-                (screeningWindow.EndDate - screeningWindow.StartDate).TotalSeconds * 0.5);
+            return DistanceSquared(protectedSource, secondarySource, screeningWindow.EndDate) <
+                   DistanceSquared(protectedSource, secondarySource, screeningWindow.StartDate)
+                ? screeningWindow.EndDate
+                : screeningWindow.StartDate;
         }
 
         var tca = tcaEpochs[0];
@@ -900,7 +907,6 @@ public static class ConjunctionAssessment
         TimeSpan sampleStep,
         TimeSpan maximumEventSearchStep,
         double bisectionToleranceSeconds,
-        bool windowEndsWithoutInteriorMinimum = true,
         bool readRangeRateOverWindow = false)
     {
         if (CanUseDensePolynomialSearch(protectedSource, secondarySource))
@@ -912,8 +918,7 @@ public static class ConjunctionAssessment
                 secondarySource,
                 window,
                 readRangeRateOverWindow ? maximumEventSearchStep : null,
-                bisectionToleranceSeconds,
-                windowEndsWithoutInteriorMinimum);
+                bisectionToleranceSeconds);
             return dense.Select(epoch => InWindowScale(epoch, window,
                 at => EvaluateRangeRate(protectedSource, secondarySource, at))).ToList();
         }
@@ -1029,30 +1034,26 @@ public static class ConjunctionAssessment
     /// which no epoch inside resolves). A window end is never a close approach, a zero of the range rate exactly there
     /// included. Every close approach is a zero of the range rate from negative to positive: a seed that the refinement
     /// does not bracket on the range rate, a maximum of the distance seeded by the error of the Hermite on a slow pass, is
-    /// none, and does not keep the dense <c>Analyze</c> from its window ends.
+    /// none. Without a close approach, <c>Analyze</c> returns the closest window end on both paths
+    /// (<see cref="SelectBestTcaEpoch"/>, #621).
     /// </summary>
     /// <param name="maximumReadSpacing">The largest spacing of the reads of the range rate over the window, the
     /// <see cref="ConjunctionAnalysisOptions.MaximumEventSearchStep"/> of the sampled search (60 s by default), with
     /// <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/>; null without it: the seeds alone.</param>
-    /// <param name="windowEndsWithoutInteriorMinimum">When the window holds no interior minimum, return the ends where the
-    /// distance grows into the window, on the range rate of the states (an end where it is exactly zero included), instead
-    /// of nothing; within a window one tick wide whose range-rate zero no epoch inside resolves, the closer end. <see cref="Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
-    /// keeps its former answer there, which #621's own change decides; <c>AnalyzeAll</c> lists the interior minima only.</param>
     private static List<Time> FindDenseCloseApproaches(
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource,
         Window window,
         TimeSpan? maximumReadSpacing,
-        double toleranceSeconds,
-        bool windowEndsWithoutInteriorMinimum)
+        double toleranceSeconds)
     {
         var protectedDense = protectedSource.DenseTrajectory;
         var secondaryDense = secondarySource.DenseTrajectory;
         var boundaries = BuildDenseIntervalBoundaries(protectedDense, secondaryDense, window, toleranceSeconds);
         if (boundaries.Count < 2)
         {
-            // A window of zero length: its one epoch for Analyze, nothing for AnalyzeAll
-            return windowEndsWithoutInteriorMinimum ? new List<Time> { window.StartDate } : new List<Time>();
+            // A window of zero length: no epoch inside, so no close approach (Analyze returns its one epoch, an end)
+            return new List<Time>();
         }
 
         var candidateEpochs = new List<Time>(boundaries);
@@ -1140,35 +1141,30 @@ public static class ConjunctionAssessment
                 DenseRangeRateReads++;
                 return EvaluateRangeRate(protectedSource, secondarySource, epoch);
             },
-            epoch => DistanceSquared(protectedSource, secondarySource, epoch), toleranceSeconds,
-            maximumReadSpacing?.TotalSeconds, windowEndsWithoutInteriorMinimum);
+            toleranceSeconds, maximumReadSpacing?.TotalSeconds);
     }
 
     /// <summary>
     /// The close approaches of the dense search from its seeds and candidates, on the range rate of the states
     /// (<see cref="FindDenseCloseApproaches"/>): the zeros of <see cref="RefineOnRangeRate"/> inside the window, then,
-    /// without one, the fallbacks over the window and, for <c>Analyze</c>, its ends.
+    /// without one, the bisection over the window; never a window end (#621).
     /// </summary>
     /// <param name="minima">The minima of the polynomial search, each one of <paramref name="candidates"/>.</param>
     /// <param name="candidates">The sorted candidate epochs of the polynomial search, the window ends first and last.</param>
     /// <param name="rangeRate">The range rate of the states, (r_s − r_p)·(v_s − v_p), at an epoch.</param>
-    /// <param name="distanceSquared">The squared distance of the states at an epoch.</param>
     /// <param name="toleranceSeconds">Tolerance of the bisection, in s.</param>
     /// <param name="maximumReadSpacingSeconds">The largest spacing of the reads of the range rate over the window, in s;
     /// null: no read over the window, the seeds alone (the default of the public options).</param>
-    /// <param name="windowEndsWithoutInteriorMinimum">As for <see cref="FindDenseCloseApproaches"/>.</param>
     /// <returns>The close approaches, in order.</returns>
     internal static List<Time> CloseApproachesOnRangeRate(
         IReadOnlyList<Time> minima,
         IReadOnlyList<Time> candidates,
         Func<Time, double> rangeRate,
-        Func<Time, double> distanceSquared,
         double toleranceSeconds,
-        double? maximumReadSpacingSeconds,
-        bool windowEndsWithoutInteriorMinimum)
+        double? maximumReadSpacingSeconds)
     {
-        // A window end is never a close approach (#621), not even a zero of the range rate exactly there, which the dense
-        // Analyze keeps by its end fallback below. Each epoch is read once, those of RefineOnRangeRate and of the
+        // A window end is never a close approach (#621), not even a zero of the range rate exactly there; Analyze returns
+        // the closest end without a close approach (SelectBestTcaEpoch). Each epoch is read once, those of RefineOnRangeRate and of the
         // fallbacks below alike (round 1 of the review of #628: the window ends were read again after the refinement)
         rangeRate = ReadOnce(rangeRate);
         var start = candidates[0];
@@ -1220,43 +1216,15 @@ public static class ConjunctionAssessment
         // only when theirs is the end, the range rate exactly zero there: the bisection over the window, whose middles are
         // not those of the last pair of reads, may then end on a minimum inside that pair, narrower than the reads, which
         // that pair's bisection stepped over (the limit of the reads; review round 3 of #628), or on the end again; or the
-        // window is one tick wide, for the end fallback below. With a tolerance coarser than a tick the bisection ends on
+        // window is one tick wide, whose zero no epoch inside resolves. With a tolerance coarser than a tick the bisection ends on
         // the middle of its last bracket, inside the window, which is then listed although the range rate is negative
         // there (as before #628; out of its scope)
         double startRate = StartRate();
         double endRate = EndRate();
-        Time? zero = null;
-        if (startRate < 0.0 && endRate >= 0.0)
+        if (startRate < 0.0 && endRate >= 0.0 &&
+            Inside(BisectForZero(rangeRate, start, startRate, end, endRate, toleranceSeconds)) is { } zero)
         {
-            zero = BisectForZero(rangeRate, start, startRate, end, endRate, toleranceSeconds);
-            if (Inside(zero.Value) is { } epoch)
-            {
-                closeApproaches.Add(epoch);
-                return closeApproaches;
-            }
-        }
-
-        if (!windowEndsWithoutInteriorMinimum)
-        {
-            return closeApproaches;
-        }
-
-        // No minimum inside the window: the ends where the distance grows into it, on the states (the first and last
-        // candidates are the window ends, BuildDenseIntervalBoundaries)
-        if (startRate >= 0.0)
-        {
-            closeApproaches.Add(start);
-        }
-
-        if (endRate <= 0.0)
-        {
-            closeApproaches.Add(end);
-        }
-
-        // A zero inside a window one tick wide, which no epoch inside resolves: the closer end, never the midpoint
-        if (closeApproaches.Count == 0 && zero.HasValue)
-        {
-            closeApproaches.Add(distanceSquared(start) <= distanceSquared(end) ? start : end);
+            closeApproaches.Add(zero);
         }
 
         return closeApproaches;
@@ -2436,13 +2404,19 @@ public static class ConjunctionAssessment
         ILocalizable secondaryObject,
         Window screeningWindow,
         Time tca,
+        bool windowHoldsNoCloseApproach,
         ConjunctionAnalysisOptions options,
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource,
         EncounterCovarianceResolver protectedResolver,
         EncounterCovarianceResolver secondaryResolver)
     {
-        var qualityFlags = EncounterQualityFlags.None;
+        // The closest end of a window without a close approach (#621); a close approach the search finds on an end (its
+        // range-rate zero in the half-tick next to it, or exactly on it) is one the window holds, not flagged (adversarial
+        // review of #621)
+        var qualityFlags = windowHoldsNoCloseApproach
+            ? EncounterQualityFlags.TcaAtWindowEnd
+            : EncounterQualityFlags.None;
         var protectedState = protectedSource.GetState(tca);
         var secondaryState = secondarySource.GetState(tca);
         var relativeState = BuildRelativeState(protectedState, secondaryState);
@@ -3070,6 +3044,20 @@ public static class ConjunctionAssessment
     // off, as before; the covariance propagation is set by each path
     private static ConjunctionAnalysisOptions ReanalysisOptions(EncounterCase encounterCase, AvoidanceSearchOptions options)
     {
+        // The steps of the re-analysis follow the rule of the analysis (ValidateAnalysisOptions), named after the options of
+        // the avoidance (#640: 0 s ended in an OutOfMemoryException, a negative step was accepted or stepped backwards)
+        if (options.AnalysisSampleStep <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options.AnalysisSampleStep), options.AnalysisSampleStep,
+                "The sample step of the re-analysis must be positive.");
+        }
+
+        if (options.MaximumEventSearchStep <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options.MaximumEventSearchStep), options.MaximumEventSearchStep,
+                "The maximum event search step of the re-analysis must be positive.");
+        }
+
         ThrowIfInvalidHardBodyRadius(options.SecondaryHardBodyRadiusMeters, nameof(options.SecondaryHardBodyRadiusMeters));
         var encounter = encounterCase.AnalysisOptions ?? new ConjunctionAnalysisOptions();
         return encounter with
@@ -3203,8 +3191,11 @@ public static class ConjunctionAssessment
         {
             foreach (var step in segment.Steps)
             {
-                var (stepStart, stepEnd) =
-                    trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
+                if (!TryStepEpochs(trajectory, segment, step, out var stepStart, out var stepEnd))
+                {
+                    continue;
+                }
+
                 if (stepStart >= screeningWindow.StartDate && stepStart <= screeningWindow.EndDate)
                 {
                     knots.Add(stepStart);
@@ -3232,8 +3223,11 @@ public static class ConjunctionAssessment
         {
             foreach (var step in segment.Steps)
             {
-                var (stepStart, stepEnd) =
-                    trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
+                if (!TryStepEpochs(trajectory, segment, step, out var stepStart, out var stepEnd))
+                {
+                    continue;
+                }
+
                 if (stepEnd < screeningWindow.StartDate || stepStart > screeningWindow.EndDate)
                 {
                     continue;
@@ -3246,6 +3240,34 @@ public static class ConjunctionAssessment
         return steps
             .OrderBy(step => step.StartEpoch)
             .ToArray();
+    }
+
+    /// <summary>
+    /// The epochs of an accepted step of a segment as the search reads it: its own, but for the step that holds the event
+    /// ending the segment, which ends at the event (#574). RK7(8) adds the step that holds an event before it detects the
+    /// event, and the segment keeps it past the event (<see cref="PropagationSegment.EventTime"/>): its cubic Hermite is the
+    /// trajectory without the burn there, and the next segment covers the time after the event. The position is continuous
+    /// at the event (an impulse changes the velocity only), so the step and the next segment join there. False for a step
+    /// that starts at or after the event, none of which RK7(8) keeps. Without an event (Velocity-Verlet, which locates the
+    /// event at a step end, or a segment that ends the propagation), the step epochs, bit for bit.
+    /// </summary>
+    private static bool TryStepEpochs(PropagationSolution trajectory, PropagationSegment segment, in AcceptedStep step,
+        out Time stepStart, out Time stepEnd)
+    {
+        (stepStart, stepEnd) = trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
+        if (segment.EventTime is not { } eventTime || eventTime >= step.CumulativeTime + step.StepSize)
+        {
+            return true;
+        }
+
+        if (eventTime <= step.CumulativeTime)
+        {
+            return false;
+        }
+
+        // The epoch of the event as the propagation labelled it, the base of the next segment
+        stepEnd = trajectory.TimeArgument.EpochAt(segment.BaseEpoch, eventTime);
+        return stepEnd > stepStart;
     }
 
     private static Spacecraft CloneSpacecraft(Spacecraft template, StateVector initialState)

@@ -104,8 +104,8 @@ Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
 | `LeadTimes` | `TimeSpan[]` | Burn lead times before TCA |
 | `DeltaVMagnitudesMetersPerSecond` | `double[]` | Candidate delta-V magnitudes (m/s) |
 | `ExecutionError` | `ManeuverExecutionError` | Execution error of the burns (model of Gates), added to the covariance at the burn when the covariance is propagated, not used otherwise; null by default |
-| `AnalysisSampleStep` | `TimeSpan?` | Sample step of the re-analysis of each option; null (default) for the `SampleStep` the encounter was analyzed with |
-| `MaximumEventSearchStep` | `TimeSpan?` | Largest interval between the search epochs of the re-analysis; null (default) for the encounter's |
+| `AnalysisSampleStep` | `TimeSpan?` | Sample step of the re-analysis of each option; null (default) for the `SampleStep` the encounter was analyzed with; a value of zero or less throws `ArgumentOutOfRangeException` ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)) |
+| `MaximumEventSearchStep` | `TimeSpan?` | Largest interval between the search epochs of the re-analysis; null (default) for the encounter's; a value of zero or less throws `ArgumentOutOfRangeException` (#640: 0 s ended in `OutOfMemoryException`, a negative step was accepted, before 11.0.0) |
 | `SecondaryHardBodyRadiusMeters` | `double?` | Hard-body radius of the secondary; null (default) for the radius the encounter resolved; a value that differs from the radius a secondary spacecraft gives throws `ArgumentException`, a value not finite or negative `ArgumentOutOfRangeException` (the rule of [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
 | `LowRelativeSpeedThresholdMetersPerSecond` | `double?` | Relative speed below which an option is flagged `LowRelativeVelocityEncounter`; null (default) for the encounter's |
 | `MaxReturnedOptions` | `int` | Number of options returned after ranking (10) |

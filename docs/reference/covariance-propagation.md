@@ -419,17 +419,33 @@ var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false,
 |------|--------|
 | Accepted by the propagation | `Remediated` false, `State` the state itself, its covariance untouched |
 | Symmetric within the tolerance, finite, non-negative variances, not positive semi-definite | `Remediated` true, `State` a new state with the same position, velocity, observer, epoch and frame, and the remediated covariance |
-| None, not 6×6, a value that is not finite, a negative variance, an asymmetry beyond the tolerance | `InvalidOperationException`, with the reason: rounding does not explain it |
+| None, not 6×6, a value that is not finite, a negative variance, an asymmetry beyond the tolerance, a defect deeper than the bound below | `InvalidOperationException`, with the reason: rounding does not explain it |
 
 - `SmallestCorrelationEigenvalue` is that of the correlation matrix of the covariance given, over its positive
-  variances: negative when it was remediated. The remediation has no bound on this depth: a correlation of −1.0001
-  changes the covariance by 7.1e-5 of √(P_ii P_jj), one of −10 by 5.5 times it, both remediated. A caller who wants a
-  bound tests this value ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443) will set
-  one for the analysis and this method together).
-- The clipping is made in the frame of the state, the frame in which the propagation takes P0, and depends on the
-  axes: the same covariance clipped in RTN comes out different, by 4.2e-5 of √(P_ii P_jj) for a correlation of −1.0001.
-  A covariance known in RTN (a CDM) is given to the state in its inertial frame (`RotateCovarianceFromRtn`), then
-  remediated there, as the analysis does.
+  variances: negative when it was remediated.
+- The depth of the defect is bounded ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17), for this method and the
+  conjunction analysis alike (`CovarianceChecks.RemediationDepthBound`): the smallest eigenvalue of the correlation matrix
+  must be at least −1e-3 of its trace (its number of positive variances) in the frame of the state, or in the RTN frame
+  of the state, the frame of the covariances of a CDM. Rounding each element of a positive semi-definite covariance to 4
+  significant digits, the form of the CDM's covariances (CCSDS 508.0-B-1, to be verified by S. Guillet), moves each
+  correlation by at most 2u/(1 − u), u = 5e-4, and so the smallest eigenvalue by at most 5 × 2u/(1 − u) = 5.0e-3, 8.34e-4
+  of the trace 6 (Weyl's inequality), in the frame it was rounded in; measured 1.5e-4 at worst over 6000 covariances of
+  LEO and GEO (Clohessy-Wiltshire propagations over up to 7 days of covariances of ranks 1 to 6, rounded in RTN or in the
+  frame of the state) and 2.1e-4 by an adversarial search. A rotation to another frame does not preserve this depth: the
+  same covariances rounded in RTN and rotated to the frame of the state reach −0.11 of the trace there, hence the second
+  frame. A correlation of −1.01 in RTN (1.67e-3 of the trace) is refused, as −10 (5.5 times the values changed before
+  11.0.0); −1.0001 changes the covariance by 7.1e-5 of √(P_ii P_jj), remediated. The analysis holds a refused covariance
+  in RTN, as its other refusals, unflagged. A covariance rounded to 3 digits or fewer may be refused: remediate it
+  yourself, or give it at its full precision.
+- The clipping is made in a frame where the depth passes the bound: the frame of the state, the frame in which the
+  propagation takes P0, when it passes there (bit for bit as before 11.0.0); otherwise the RTN frame of the state, the
+  result rotated back to the frame of the state (adversarial review of #443: clipped in the frame of the state, a
+  covariance rounded in RTN whose depth there reached −0.75 of the trace changed by up to 2.9 √(P_ii P_jj), +26 % on a
+  σ_N). Clipped in RTN, 83 such covariances of LEO and GEO changed in RTN by 4.4e-4 of √(P_ii P_jj) at worst, the size of
+  their rounding; a correlation moves by at most the largest clipped eigenvalue, 6e-3 within the bound. The clipping
+  depends on the axes: the same covariance clipped in RTN and in the frame of the state comes out different, by 4.2e-5
+  of √(P_ii P_jj) for a correlation of −1.0001. A covariance known in RTN (a CDM) is given to the state in its inertial
+  frame (`RotateCovarianceFromRtn`), then remediated, as the analysis does.
 - The conjunction analysis, given the remediated state, propagates the same covariance bit for bit as when it
   remediates the original state itself, but does not raise `EncounterQualityFlags.CovarianceRemediated`: the covariance
   it is given is valid.

@@ -578,20 +578,30 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <para>
         /// A covariance that the propagation accepts (each asymmetry within 1e-12 of √(P_ii P_jj), the smallest eigenvalue
         /// of C at least −1e-12 of its trace) is returned as it is: the state itself, not remediated. The clipping is made
-        /// in the frame of this state, as the analysis and the propagator take the covariance, and depends on the axes:
-        /// clipped in RTN, the same covariance comes out different (by 4.2e-5 of √(P_ii P_jj) for a correlation of −1.0001).
-        /// The depth of the defect is not bounded (#443): <see cref="CovarianceRemediation.SmallestCorrelationEigenvalue"/>
-        /// says how far from positive semi-definite the covariance was.
+        /// in the frame of this state, as the analysis and the propagator take the covariance, when the depth of its defect
+        /// passes the bound below there, and in the RTN frame of this state, rotated back, when it passes there only; it
+        /// depends on the axes: clipped in RTN, the same covariance comes out different (by 4.2e-5 of √(P_ii P_jj) for a
+        /// correlation of −1.0001).
+        /// <see cref="CovarianceRemediation.SmallestCorrelationEigenvalue"/> says how far from positive semi-definite the
+        /// covariance was.
+        /// </para>
+        /// <para>
+        /// The depth of the defect is bounded (#443, decided by S. Guillet, 2026-11-17): the smallest eigenvalue of C must be
+        /// at least −1e-3 of its trace in the frame of this state, or in its RTN frame (the frame of the covariances of a
+        /// CDM). Rounding every element of a positive semi-definite covariance to 4 significant digits, in the frame it was
+        /// rounded in, stays within it (8.34e-4 of the trace at worst, by Weyl's inequality); a correlation of −1.01 in RTN
+        /// does not (1.67e-3), nor −10, which was remediated before 11.0.0 by a change of 5.5 times the values.
         /// </para>
         /// </remarks>
         /// <exception cref="InvalidOperationException">The state carries no covariance, or one that rounding does not
-        /// explain: not 6×6, a value that is not finite, a negative variance, or an asymmetry beyond the tolerance.</exception>
+        /// explain: not 6×6, a value that is not finite, a negative variance, an asymmetry beyond the tolerance, or a defect
+        /// deeper than the bound in both frames, its depth in the message (#443).</exception>
         public CovarianceRemediation WithRemediatedCovariance()
         {
             if (!Covariance.HasValue)
                 throw new InvalidOperationException("The state vector carries no covariance to remediate.");
 
-            var refusal = Propagator.PropagatorBase.RemediateInitialCovariance(Covariance.Value, out var remediated,
+            var refusal = Propagator.PropagatorBase.RemediateInitialCovariance(Covariance.Value, this, out var remediated,
                 out double smallestEigenvalue);
             if (refusal != null)
                 throw new InvalidOperationException(

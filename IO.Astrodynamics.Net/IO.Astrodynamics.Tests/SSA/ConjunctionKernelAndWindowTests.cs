@@ -483,23 +483,132 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         AssertIsMinimum(encounter, CspiceLocalMinima(window).Single());
     }
 
-    [Fact]
-    public void Dense_MonotonicWindow_AnalyzeAllIsEmpty_AnalyzeKeepsTheEnd()
+    // ---- #621: a window without a close approach gives its closest end, flagged, on every path ----
+
+    // The windows of the reproduction of #621 without a local minimum of CSPICE: a monotonic approach well before the
+    // encounter and up to 1 s before it (7.6 km at the end, closing at 7.6 km/s), a recession after it, and a window
+    // that holds a maximum of the distance only (the two objects at their farthest about t0 + 3220 s)
+    [Theory]
+    [InlineData(1200.0, 1500.0, "dense")]
+    [InlineData(1200.0, 1500.0, "sampled")]
+    [InlineData(1780.0, 1799.0, "dense")]
+    [InlineData(1780.0, 1799.0, "sampled")]
+    [InlineData(1780.0, 1799.0, "screen")]
+    [InlineData(1801.0, 1900.0, "dense")]
+    [InlineData(1801.0, 1900.0, "sampled")]
+    [InlineData(1801.0, 1900.0, "screen")]
+    [InlineData(2400.0, 4400.0, "dense")]
+    [InlineData(2400.0, 4400.0, "sampled")]
+    public void NoCloseApproach_AnalyzeReturnsTheClosestEnd_Flagged_AnalyzeAllNothing(double start, double end, string path)
     {
-        // A monotonic approach: no local minimum (CSPICE), so AnalyzeAll lists none; Analyze keeps the end where the
-        // distance grows into the window, as before (what it returns there is #621's own change)
-        var window = _case.Seconds(1200.0, 1500.0);
+        // The reference: CSPICE's gfdist_c on the SPKs of the two propagations, LOCMIN (none in these windows) and
+        // ABSMIN, the absolute minimum of the distance over the window, an end here, and the distance of CSPICE's states
+        // there (#621, decided by S. Guillet, 2026-11-17: the closest end; before 11.0.0 the sampled path returned the
+        // midpoint, 79.9 km on [1780, 1799] s, where Screen dropped the object 7.6 km away at the end)
+        var window = _case.Seconds(start, end);
         Assert.Empty(CspiceLocalMinima(window));
+        var absolute = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, _case.ProtectedId, _case.SecondaryId,
+            RelationnalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
+        var (position, _) = CspiceRelative(absolute.StartDate, _case);
         var profile = new ProtectedSpacecraftProfile(_case.Sat1);
 
-        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options));
+        // Act
+        var encounter = path switch
+        {
+            "dense" => ConjunctionAssessment.Analyze(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options),
+            "sampled" => ConjunctionAssessment.Analyze(profile, _case.Sat2, window, Options),
+            _ => Assert.Single(ConjunctionAssessment.Screen(profile, new ILocalizable[] { _case.Sat2 }, window))
+        };
+        var all = path == "dense"
+            ? ConjunctionAssessment.AnalyzeAll(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options)
+            : ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, window, Options);
 
-        var encounter = ConjunctionAssessment.Analyze(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options);
-        Assert.Equal(window.EndDate, encounter.EncounterState.Epoch);
+        // Assert: the end of CSPICE's absolute minimum, the end itself, flagged; AnalyzeAll lists nothing on both paths
+        var state = encounter.EncounterState;
+        double tcaError = (state.Epoch - absolute.StartDate).TotalSeconds;
+        double missError = state.MissDistanceMeters - position.Magnitude();
+        _output.WriteLine($"MEASURE #621 [{start}, {end}] s {path}: TCA t0 + {(state.Epoch - _case.T0).TotalSeconds:F7} s, " +
+                          $"{tcaError:E3} s from CSPICE's ABSMIN, miss {state.MissDistanceMeters:F3} m, {missError:E3} m " +
+                          "from CSPICE's distance there");
+        Assert.True(state.Epoch == window.StartDate || state.Epoch == window.EndDate, "not a window end");
+        Assert.True(System.Math.Abs(tcaError) <= NoCloseApproachTcaBound, $"TCA {tcaError:E3} s");
+        Assert.True(System.Math.Abs(missError) <= NoCloseApproachMissBound, $"miss {missError:E3} m");
+        Assert.True(state.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd), state.QualityFlags.ToString());
+        Assert.Empty(all);
+    }
 
-        // The sampled path keeps its midpoint fallback
-        var sampled = ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, window, Options);
-        Assert.Equal(window.StartDate.AddSeconds(150.0), Assert.Single(sampled).EncounterState.Epoch);
+    // The bounds of the closest end against CSPICE's ABSMIN (Linux x64, 2026-11-17; provisional, to be set again from the
+    // Windows x64 and macOS arm64 CI logs): the TCA is the window end, CSPICE's ABSMIN the same tick on every row (0 s
+    // measured), so one tick, the resolution of a Time; the miss, the states of the propagation (dense: the solution;
+    // sampled and Screen: the stored states) against the degree-7 interpolation of their SPK at an epoch where the range
+    // rate is not zero, 2.268e-4 m at worst (t0 + 4400 s, 1795 km apart), twice that rounded up to two digits. At a
+    // minimum the same difference is below 2.3e-8 m (AssertIsMinimum): there the distance does not see the along-track
+    // part of the difference
+    private const double NoCloseApproachTcaBound = 1.0e-7;
+    private const double NoCloseApproachMissBound = 4.6e-4;
+
+    [Fact]
+    public void CloseApproachInside_IsNotFlaggedAtTheWindowEnd()
+    {
+        // The encounter at t0 + 1800 s inside the window, on both paths: an interior minimum, no flag (#621)
+        var window = _case.Seconds(1700.0, 1900.0);
+        var profile = new ProtectedSpacecraftProfile(_case.Sat1);
+
+        var dense = ConjunctionAssessment.Analyze(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options);
+        var sampled = ConjunctionAssessment.Analyze(profile, _case.Sat2, window, Options);
+
+        AssertIsMinimum(dense, CspiceLocalMinima(window).Single());
+        foreach (var state in new[] { dense.EncounterState, sampled.EncounterState })
+        {
+            Assert.False(state.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
+            Assert.True(state.Epoch > window.StartDate && state.Epoch < window.EndDate);
+        }
+    }
+
+    [Fact]
+    public void CloseApproachInTheLastHalfTick_IsListedAtTheEnd_NotFlagged()
+    {
+        // The encounter at t0 + 1800 s, its range-rate zero within half a tick of a window end, on the side of the window:
+        // the sampled search returns the tick nearer the zero (#624), the end itself, of a close approach the window holds.
+        // TcaAtWindowEnd says that the window holds none, so it is not raised, and AnalyzeAll lists it (adversarial review
+        // of #621: listed flagged, the flag saying to widen the window). The reference: CSPICE's LOCMIN on the SPKs of the
+        // two propagations, the TCA within the bound of AssertIsMinimum of its zero
+        var profile = new ProtectedSpacecraftProfile(_case.Sat1);
+        var reference = CspiceLocalMinima(_case.Seconds(1700.0, 1900.0)).Single();
+        var sampled = Assert.Single(ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, _case.Seconds(1700.0, 1900.0), Options));
+        var tick = sampled.EncounterState.Epoch;
+        double tickError = (tick - reference.Epoch).TotalSeconds - reference.Offset;
+        Assert.True(System.Math.Abs(tickError) <= 1.8e-7, $"TCA {tickError:E3} s");
+
+        // The windows ending and starting at that tick: the zero lies in one of them, within half a tick of its end
+        var listed = 0;
+        foreach (var window in new[] { new Window(_case.Seconds(1700.0, 1900.0).StartDate, tick),
+                     new Window(tick, _case.Seconds(1700.0, 1900.0).EndDate) })
+        {
+            // Act
+            var all = ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, window, Options);
+            var analyzed = ConjunctionAssessment.Analyze(profile, _case.Sat2, window, Options);
+
+            // Assert: the close approach at the tick, listed and returned, unflagged
+            _output.WriteLine($"[{(window.StartDate - _case.T0).TotalSeconds:F7}, {(window.EndDate - _case.T0).TotalSeconds:F7}] s: " +
+                              $"{all.Count} listed, Analyze t0 + {(analyzed.EncounterState.Epoch - _case.T0).TotalSeconds:F7} s " +
+                              $"{analyzed.EncounterState.QualityFlags}");
+            foreach (var encounter in all)
+            {
+                Assert.Equal(tick, encounter.EncounterState.Epoch);
+                Assert.False(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd),
+                    encounter.EncounterState.QualityFlags.ToString());
+                listed++;
+            }
+
+            if (all.Count > 0)
+            {
+                Assert.Equal(tick, analyzed.EncounterState.Epoch);
+                Assert.False(analyzed.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
+            }
+        }
+
+        Assert.True(listed > 0, "the close approach is listed in neither window");
     }
 
     // The local minima of CSPICE on a window of the crossing at 60 s steps (CspiceLocalMinima of the base)
@@ -582,7 +691,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         var tca = minima[minimum].Epoch;
         foreach (double offset in EndOffsets)
         {
-            // No minimum inside: AnalyzeAll lists none, Analyze returns the end, where the distance grows into the window
+            // No minimum inside: AnalyzeAll lists none, Analyze returns the closest end, where the distance grows into the window
             AssertWindowMatchesCspice(crossing, new Window(tca.AddSeconds(-600.0), tca.AddSeconds(-offset)), expectedCount: 0);
 
             // The previous minimum inside: AnalyzeAll lists it alone, Analyze returns it
@@ -688,8 +797,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
     }
 
     // AnalyzeAll lists the local minima of CSPICE's gfdist_c in the window, each within the bounds of #621, and Analyze
-    // returns the closest of them; without one, the window end where the distance grows into the window by CSPICE's range
-    // rate (the closer one when both do)
+    // returns the closest of them; without one, the closest window end by CSPICE's distance, flagged (#621)
     private void AssertWindowMatchesCspice(CrossingEncounterCase crossing, Window window, int expectedCount)
     {
         var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
@@ -711,13 +819,9 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
             return;
         }
 
-        var ends = new[] { window.StartDate, window.EndDate }
-            .Where(epoch => epoch == window.StartDate
-                ? CspiceRangeRate(epoch, crossing) >= 0.0
-                : CspiceRangeRate(epoch, crossing) <= 0.0)
-            .ToArray();
-        Assert.NotEmpty(ends);
-        Assert.Equal(ends.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()), encounter.EncounterState.Epoch);
+        Assert.Equal(new[] { window.StartDate, window.EndDate }.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()),
+            encounter.EncounterState.Epoch);
+        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
     }
 
     // ---- #527: the ILocalizable overloads do not extrapolate the propagated states ----

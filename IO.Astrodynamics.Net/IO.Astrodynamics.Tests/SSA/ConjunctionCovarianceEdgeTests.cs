@@ -173,6 +173,41 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         Assert.False(encounter.ProtectedCovariance.InitialCovarianceRemediated);
     }
 
+    [Theory]
+    [InlineData(-1.0059, true)] // −9.83e-4 of the trace in RTN: within the bound, remediated
+    [InlineData(-1.0061, false)] // −1.02e-3: beyond it
+    [InlineData(-10.0, false)] // #443: remediated before 11.0.0
+    public void Analyze_InitialCovarianceBeyondTheDepthBound_IsHeldInRtn(double rho, bool within)
+    {
+        // Arrange: the protected object with a T–Ṙ correlation ρ in RTN; the bound of #443 (decided by S. Guillet,
+        // 2026-11-17) on the smallest eigenvalue of the correlation matrix, 1 − |ρ| here, over its trace 6
+        var given = WithTrCorrelation(_case.ProtectedStart, rho, 1.0);
+        var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(within ? -44301 : rho < -2.0 ? -44302 : -44303, given);
+        var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(within ? -44304 : rho < -2.0 ? -44305 : -44306,
+            _case.SecondaryStart);
+        _case.Propagate(protectedCraft);
+        _case.Propagate(secondaryCraft);
+
+        // Act
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            ConjunctionCovarianceCase.AnalysisWindow);
+
+        // Assert: within the bound, remediated and propagated, flagged; beyond it, held in RTN as the other covariances
+        // that rounding does not explain, not flagged; the same rule as StateVector.WithRemediatedCovariance
+        Assert.Equal(within ? CovarianceSource.Propagated : CovarianceSource.InitialStateHeldInRtn,
+            encounter.EncounterState.ProtectedCovariance.Source);
+        Assert.Equal(within, encounter.ProtectedCovariance.InitialCovarianceRemediated);
+        Assert.Equal(within, encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceRemediated));
+        if (within)
+        {
+            Assert.True(given.WithRemediatedCovariance().Remediated);
+        }
+        else
+        {
+            Assert.Throws<InvalidOperationException>(() => given.WithRemediatedCovariance());
+        }
+    }
+
     [Fact]
     public void RemediateByEigenvalueClipping_RepairsRoundingOnly()
     {

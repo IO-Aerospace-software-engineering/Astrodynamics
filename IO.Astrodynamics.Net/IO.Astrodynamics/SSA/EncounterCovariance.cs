@@ -160,7 +160,7 @@ internal sealed class EncounterCovarianceResolver
             PropagatorBase.InertialInitialOrbit(_participant.InitialOrbitalParameters, _solution.Segments[0].BaseEpoch)
                 is not StateVector { Covariance: not null } initial ||
             initial.Epoch.ToTDB() != _solution.Segments[0].BaseEpoch ||
-            !ResolveInitialCovariance(initial.Covariance.Value))
+            !ResolveInitialCovariance(initial))
             return null;
 
         if (_replayed == null)
@@ -189,15 +189,16 @@ internal sealed class EncounterCovarianceResolver
 
     // P0 as the propagation takes it, or, when rounding made it indefinite (the propagation would reject it), remediated by
     // eigenvalue clipping (decision of S. Guillet, 2026-10-18, H3 review of step 10, N2); false when it is not one that
-    // rounding explains (a negative variance, not finite), then held in RTN
-    private bool ResolveInitialCovariance(Matrix p0)
+    // rounding explains (a negative variance, not finite, a defect deeper than the bound in the frame of the state and in
+    // its RTN frame, #443), then held in RTN
+    private bool ResolveInitialCovariance(StateVector initial)
     {
         if (_initialCovarianceResolved)
             return _initialCovarianceUsable;
 
         _initialCovarianceResolved = true;
         // The implementation shared with StateVector.WithRemediatedCovariance (#405)
-        if (PropagatorBase.RemediateInitialCovariance(p0, out var remediated, out _) != null)
+        if (PropagatorBase.RemediateInitialCovariance(initial.Covariance!.Value, initial, out var remediated, out _) != null)
             return false;
 
         _remediatedInitialCovariance = remediated;

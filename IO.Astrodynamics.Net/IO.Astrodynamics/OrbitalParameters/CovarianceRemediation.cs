@@ -11,5 +11,6 @@ namespace IO.Astrodynamics.OrbitalParameters;
 /// <param name="Remediated">True when the covariance was remediated, false when it is returned as it is.</param>
 /// <param name="SmallestCorrelationEigenvalue">The smallest eigenvalue of the correlation matrix of the covariance
 /// given, over its positive variances (zero when none is): negative when it was remediated, at least −1e-12 of the trace
-/// of that matrix otherwise. The remediation has no bound on this depth (#443): a caller who wants one tests it.</param>
+/// of that matrix otherwise. A remediated covariance's is at least −1e-3 of that trace in the frame of the state or in its
+/// RTN frame: <see cref="StateVector.WithRemediatedCovariance"/> refuses a deeper defect (#443).</param>
 public sealed record CovarianceRemediation(StateVector State, bool Remediated, double SmallestCorrelationEigenvalue);

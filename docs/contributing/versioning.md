@@ -3495,6 +3495,48 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and 1 s after it while the branch counted the burn from its impulse); a TLE spacecraft propagated numerically writes its propagated state in TEME, 53.7 km from SGP4
   after 1 h, one only sampled by `TLEPropagator` SGP4 as before.
 
+- **`EvaluateAvoidance` did not check the steps of its re-analysis** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).
+  `Analyze`, `AnalyzeAll` and `Screen` refuse a `SampleStep` or a `MaximumEventSearchStep` of zero or less;
+  `EvaluateAvoidance` passed `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep` to the re-analysis
+  of each option unchecked. Measured on a85098d with the heap limited to 2 GB: on the two-body path each of the four
+  values (either step, 0 s or −5 s) ended in `OutOfMemoryException` (about 15 s without the limit; a
+  `MaximumEventSearchStep` of −5 s gave a search step of four bisection tolerances, an `AnalysisSampleStep` of −5 s
+  stepped backwards); on the paths of a propagated participant (its force model, or its propagated covariance) a
+  `MaximumEventSearchStep` of 0 s ended the same way, −5 s and a sample step of 0 s or −5 s were accepted silently. Both now throw `ArgumentOutOfRangeException` naming the option of the avoidance, before any
+  option is analyzed (`ConjunctionAssessmentTests.EvaluateAvoidance_StepNotPositive_Throws`, the three paths, 0 s and
+  −5 s, 12 rows, red on a85098d).
+
+- **A window without a close approach gave its midpoint on the sampled path** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621)).
+  `Screen` and the `ILocalizable` overloads of `Analyze` and `AnalyzeAll` returned the window midpoint when the range
+  rate had no zero from negative to positive in the window, and the search on two propagations returned the end where
+  the distance grows into the window: the same window, two answers, neither a close approach. On the reproduction of
+  #621 (two LEO crossing at 60°, 250 m at t0 + 1800 s), the sampled `Analyze` returned t0 + 1789.5 s and 79 930.977 m
+  on [1780, 1799] s, where the end is 7 616.710 m away and closing at 7.6 km/s, and `Screen` dropped the object at its
+  default 25 km; on [1200, 1500] s the midpoint, 3 285 799 m, against 2 242 051 m at the end (measured on a85098d).
+  `Analyze` and `Screen` now return the closest window end on every path, the absolute minimum of the distance over the
+  window (CSPICE's `ABSMIN`), flagged by the new `EncounterQualityFlags.TcaAtWindowEnd`, and `AnalyzeAll` an empty
+  list, as on two propagations (decided by S. Guillet, 2026-11-17). Against CSPICE's `gfdist_c` on the SPKs of the two
+  propagations, over windows of a monotonic approach, a recession and a maximum only, through both paths and `Screen`:
+  the end of `ABSMIN` itself, the miss within 2.3e-4 m of CSPICE's distance there
+  (`ConjunctionKernelAndWindowTests.NoCloseApproach_AnalyzeReturnsTheClosestEnd_Flagged_AnalyzeAllNothing`, 10 rows, red
+  on a85098d: the midpoints, `Screen` empty, no flag on the dense path).
+
+- **The search on two propagations read the trajectory without the burn after an impulse** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574)).
+  RK7(8) adds the accepted step that holds an event before it detects the event, and the segment that ends at an
+  impulse keeps that step past it: between the impulse and the end of that step the polynomial search of `Analyze` and
+  `AnalyzeAll` on two `PropagationSolution`s read the cubic Hermite of the trajectory without the burn, so a close
+  approach there had no minimum on it and was missed. On #574's LEO (a 233.8 m/s apogee raise at S + 2963.2 s, the step
+  ending 12.4 s after it about a point-mass Earth), secondaries passing 30 m from the spacecraft 1, 3, 4.5 and 6 s after
+  the burn were listed only by the minimum before the burn, 2k s away (658.5 m off for a crossing), and `Analyze` returned
+  a minimum 4 s off for one passing 2 s before it (measured on a85098d). The step that holds the event of a segment now
+  ends at the event, the epoch the propagation labelled it (`TimeArgument.EpochAt(BaseEpoch, EventTime)`, the base of
+  the next segment), in the steps and the knots of the search, an `EventAction.Continue` included; the position is
+  continuous there. Against a brute force of the states of the two solutions every 10 ms, refined by golden section
+  (`ConjunctionPostBurnTests`, 8 rows red on a85098d, both sides of the burn, a crossing, a `Continue` event and
+  Velocity-Verlet, which locates its events at a step end and is unchanged): every minimum listed within 7e-7 s and
+  1.7e-9 m. Bit for bit without an event: the long-validation conjunction tests and the `conjunction` conformance cases,
+  without impulses, do not move.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -5052,6 +5094,46 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   state after every maneuver (the default epoch, the initial one, now carries no maneuver of a propagation that starts
   there); a caller that wanted the initial orbit writes `Opm.CreateFromStateVector` from `InitialOrbitalParameters`.
 
+- **Breaking: `EvaluateAvoidance` refuses a step of zero or less** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640), Fixed above).
+  `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep`, when given, must be positive, the rule of
+  `ConjunctionAnalysisOptions`: `ArgumentOutOfRangeException` (its `ParamName` the option), where a negative step was
+  accepted or the call ran out of memory. Migration: give a positive step, or null for the encounter's.
+
+- **Breaking: a window without a close approach gives its closest end, flagged, and `AnalyzeAll` nothing** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above).
+  `Analyze`, `Screen` and the re-analysis of each avoidance option return the closest window end where the sampled path
+  returned the midpoint (and where the search on two propagations returned the end the distance grows into, the same end
+  but for a minimum its seeds miss), with `EncounterQualityFlags.TcaAtWindowEnd` (new, `1 << 8`) raised; the
+  `ILocalizable` `AnalyzeAll` returns an empty list where it returned one midpoint encounter. Every encounter of a
+  window without a close approach carries the flag, the CDM export's comment of the flags included; a close approach the
+  sampled search finds on a window end (its range-rate zero in the half-tick next to the end, the tick nearer it #624
+  returns) does not, and `AnalyzeAll` lists it
+  (`ConjunctionKernelAndWindowTests.CloseApproachInTheLastHalfTick_IsListedAtTheEnd_NotFlagged`, red on 415442e, where
+  the flag was raised for any TCA on a window end). Migration: test
+  `QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd)` for an encounter whose closest approach lies outside the
+  window, and widen the window to find it; expect an empty list from `AnalyzeAll` where one midpoint encounter came.
+
+- **Breaking: the remediation of an initial covariance is bounded** ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17).
+  `StateVector.WithRemediatedCovariance()` and the conjunction analysis remediated any indefinite covariance by eigenvalue
+  clipping, however deep its defect: a T–Ṙ correlation of −10 by a change of 5.5 times the values, flagged
+  `CovarianceRemediated` only. Both now refuse a defect deeper than the rounding of the elements to 4 significant digits
+  (the form of the CDM's covariances, CCSDS 508.0-B-1, to be verified by S. Guillet) explains: the smallest eigenvalue
+  of the correlation matrix below −1e-3 of its trace (`CovarianceChecks.RemediationDepthBound`) in the frame of the state
+  and in its RTN frame (the frame a CDM rounds in; a rotation deepens a rounding defect, up to −0.11 of the trace measured
+  for covariances rounded in RTN). The bound is above the rigorous worst of that rounding, 8.34e-4 of the trace by Weyl's
+  inequality (measured: 1.5e-4 over 6000 LEO and GEO covariances of ranks 1 to 6, 2.1e-4 by an adversarial search). A
+  correlation of −1.01 in RTN (1.67e-3 of the trace) is refused; −1.0059 (9.8e-4) is remediated. The clipping is made in
+  the frame of the state when the depth passes there, bit for bit as before; otherwise in the RTN frame of the state,
+  rotated back: clipped in the frame of the state, a covariance rounded in RTN whose depth there reached −0.75 of the
+  trace changed by up to 2.9 √(M_ii M_jj) (adversarial review of #443); clipped in RTN, by the size of its rounding
+  (4.4e-4 at worst over 83 such covariances, `WithRemediatedCovariance_DeepOnlyInTheFrameOfTheState_IsClippedInRtn`, red
+  on b8e2e42).
+  `WithRemediatedCovariance` throws `InvalidOperationException` with the depth in both frames in its message; the
+  analysis holds such a covariance in RTN, as its other refusals, without `CovarianceRemediated`
+  (`CovarianceRemediationBoundTests`, `ConjunctionCovarianceEdgeTests.Analyze_InitialCovarianceBeyondTheDepthBound_IsHeldInRtn`,
+  red on a85098d for every case beyond the bound). Results change only for such a covariance. Migration: a covariance
+  refused by the bound is not one that rounding explains: correct its source, or give it at its full precision (one
+  rounded to 3 digits or fewer may be refused).
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -5294,34 +5376,22 @@ not listed.
 - **Mars atmosphere** ([#431](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/431)). Above 100 km
   `MarsStandardAtmosphere` extends an isothermal layer at 139 K: at 400 km its density is 4.6e7 times below Mars-GRAM,
   so drag in Mars orbit above about 120 km is underestimated by orders of magnitude.
-- **Covariance remediation and the non-linearity index**
-  ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403),
-  [#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)). The threshold 1.0 of the
+- **The non-linearity index**
+  ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403)). The threshold 1.0 of the
   non-linearity index is measured on two-body crossing encounters only (11 cases up to ν = 1.42), so the index stays off
-  by default. The eigenvalue clipping of the conjunction analysis and of `StateVector.WithRemediatedCovariance()`
-  remediates any indefinite covariance, however deep its defect (a correlation of −10 is accepted, a largest relative
-  change of 5.5): check an input covariance before relying on it.
-- **Close-approach search** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574),
-  [#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621),
-  [#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
-  [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). On two RK7(8) propagations the
-  dense search of `Analyze` and `AnalyzeAll` reads the trajectory without the burn between an impulse and the end of the
-  step that holds it, so a close approach there can be missed. Without an interior minimum, `Screen` and the
-  `ILocalizable` overloads of `Analyze` and `AnalyzeAll` return the window midpoint, so `Screen` can drop an object
-  closing at the window end. In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
+  by default.
+- **Close-approach search** ([#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
+  [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
   seed), or, with a `BisectionToleranceSeconds` coarser than a tick, a zero at the window end as the middle of its last
   bracket. The sampled search subdivides a step one tick longer than `MaximumEventSearchStep`, one sample more for a read
   100 ns closer ([#642](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/642)); results are unaffected.
   The `ILocalizable` overloads of `Analyze` and `AnalyzeAll` run the sampled search even for two participants propagated
   in RK7(8): the search on the polynomials of their steps is not inferred in 11.0.0 (D4 of the API review of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)); pass their `PropagationSolution` for it.
-- **Cost and input checks of the conjunction analysis**
-  ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447),
-  [#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).
+- **Cost of the conjunction analysis**
+  ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447)).
   `ConjunctionAssessment.Analyze` allocates about 403 MB per pair over a 2 h window (0.83 s with the covariance held in
-  RTN, 1.71 s propagated); results are unaffected. `EvaluateAvoidance` does not check
-  `AvoidanceSearchOptions.MaximumEventSearchStep`: 0 s runs about 15 s and ends in `OutOfMemoryException`, a negative
-  step is accepted; pass a positive step.
+  RTN, 1.71 s propagated); results are unaffected.
 - **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652),
   [#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)). The help of
   `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do

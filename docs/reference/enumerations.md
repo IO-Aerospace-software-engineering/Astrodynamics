@@ -74,11 +74,12 @@ the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-s
 | `MissingProtectedCovariance` | Protected object has no covariance |
 | `MissingSecondaryCovariance` | Secondary object has no covariance |
 | `CovarianceUnavailable` | No covariance for either participant |
-| `CovarianceRemediated` | Covariance was remediated: the encounter-plane covariance before the probability, or the initial covariance of a participant, indefinite from rounding, by eigenvalue clipping before its propagation |
+| `CovarianceRemediated` | Covariance was remediated: the encounter-plane covariance before the probability, or the initial covariance of a participant, indefinite from rounding, by eigenvalue clipping before its propagation; an initial covariance whose defect is deeper than rounding explains (the smallest eigenvalue of its correlation matrix below −1e-3 of its trace in the frame of the state and in its RTN frame, [#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)) is not remediated but held in RTN, unflagged (see [Covariance Propagation](covariance-propagation.md#an-initial-covariance-indefinite-from-rounding)) |
 | `StaleCovarianceUsed` | An initial-state covariance older than `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default) was used at TCA, held fixed in RTN |
 | `LowRelativeVelocityEncounter` | 2D assumption may be degraded |
 | `SingleCovarianceMaximumPcUsed` | Single-covariance maximum Pc was used |
 | `NonlinearCovariancePropagation` | A propagated covariance has a non-linearity index above `ConjunctionAnalysisOptions.NonlinearityIndexThreshold`: beyond the domain where Foster was validated against a Monte Carlo, not a wrong Pc; confirm a Pc that matters by a Monte Carlo |
+| `TcaAtWindowEnd` | The window holds no close approach (no range-rate zero from negative to positive): the TCA of `Analyze` and `Screen` is the closest window end, CSPICE's `ABSMIN`, where the objects are still closing or already receding; widen the window to find the closest approach. `AnalyzeAll` lists no such encounter; a close approach found on a window end (its range-rate zero in the half-tick next to it) is not flagged ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), new in 11.0.0, `1 << 8`) |
 
 ## AvoidanceTrajectory
 

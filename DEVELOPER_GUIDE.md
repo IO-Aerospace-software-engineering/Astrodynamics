@@ -1608,7 +1608,8 @@ or `Scenario.SimulateAsync`, an `RK78Integrator` propagates Φ, Ψ and P with th
 at any epoch: `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`,
 `GetStateVector`. `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, namespace `IO.Astrodynamics.Maneuver`)
 adds the execution error of a burn, `StateVector.WithRemediatedCovariance()` remediates an initial covariance that
-rounding made indefinite, and `ConjunctionAssessment.Analyze` propagates the covariance of a participant propagated in
+rounding made indefinite (a defect deeper than −1e-3 of the trace of its correlation matrix in the frame of the state and
+in its RTN frame refused, #443; clipped in RTN when its depth passes there only), and `ConjunctionAssessment.Analyze` propagates the covariance of a participant propagated in
 RK7(8) to the time of closest approach. See `docs/reference/covariance-propagation.md`,
 `docs/tutorials/covariance-propagation.md` and `docs/reference/conjunction-assessment.md`.
 
