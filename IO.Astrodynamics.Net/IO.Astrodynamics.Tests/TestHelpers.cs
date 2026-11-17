@@ -91,7 +91,9 @@ namespace IO.Astrodynamics.Tests
         internal static bool EquinoctialComparer(EquinoctialElements e1, EquinoctialElements e2)
         {
             var tolerance = 1E-06;
-            return (double.IsPositiveInfinity(e1.SemiMajorAxis()) && double.IsPositiveInfinity(e2.SemiMajorAxis()) ||
+            // P too, relative (#462: it was NaN or ±∞ for every parabola, unseen)
+            return System.Math.Abs(e1.P - e2.P) <= tolerance * System.Math.Max(1.0, System.Math.Abs(e1.P)) &&
+                   (double.IsPositiveInfinity(e1.SemiMajorAxis()) && double.IsPositiveInfinity(e2.SemiMajorAxis()) ||
                     System.Math.Abs(e1.SemiMajorAxis() - e2.SemiMajorAxis()) < tolerance) && System.Math.Abs(e1.Eccentricity() - e2.Eccentricity()) < tolerance &&
                    System.Math.Abs(e1.Inclination() - e2.Inclination()) < tolerance && AngleDifference(e1.AscendingNode(), e2.AscendingNode()) < tolerance &&
                    AngleDifference(e1.ArgumentOfPeriapsis(), e2.ArgumentOfPeriapsis()) < tolerance && AngleDifference(e1.MeanAnomaly(), e2.MeanAnomaly()) < tolerance &&

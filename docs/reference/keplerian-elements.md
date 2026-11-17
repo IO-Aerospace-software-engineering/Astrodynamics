@@ -48,7 +48,7 @@
 
 | Property | Description |
 |----------|-------------|
-| `P` | Semi-latus rectum a (1 − e²) (m) |
+| `P` | Semi-latus rectum a (1 − e²) (m); `ToEquinoctial()` gives q (1 + e) within 1e-6 of e = 1, q the perigee radius: 2q for a parabola, h²/μ for a state (#462) |
 | `F` / `G` | Eccentricity components e cos(ω + Ω) / e sin(ω + Ω) |
 | `H` / `K` | Inclination components tan(i/2) cos Ω / tan(i/2) sin Ω |
 | `L0` | True longitude Ω + ω + ν (rad) |

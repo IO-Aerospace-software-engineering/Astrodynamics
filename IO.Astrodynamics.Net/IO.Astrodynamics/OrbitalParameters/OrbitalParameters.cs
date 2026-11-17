@@ -710,7 +710,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Convert to equinoctial
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The equinoctial elements, of semi-latus rectum P = a(1 − e²); in the near-parabolic band |e − 1| &lt; 1e-6
+    /// (<see cref="IsParabolic"/>), P = q (1 + e) with q the <see cref="PerigeeRadius"/>, 2q for a parabola and h²/μ for a
+    /// <see cref="StateVector"/> (#462; before 11.0.0, NaN at e = 1 and ±∞ elsewhere in the band, its sign set by
+    /// rounding).</returns>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane and no elements (#687).</exception>
     public virtual EquinoctialElements ToEquinoctial()
@@ -723,7 +726,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double i = Inclination();
             double v = TrueAnomaly();
 
-            double p = SemiMajorAxis() * (1 - e * e);
+            // In the band |e − 1| < 1e-6 (IsParabolic) a(1 − e²) is ∞ × 0 or ±∞ (#462): the conic's p = q (1 + e), 2q at
+            // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, a(1 − e²) bit for bit
+            double p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
             double f = e * System.Math.Cos(o + w);
             double g = e * System.Math.Sin(o + w);
             double h = System.Math.Tan(i * 0.5) * System.Math.Cos(o);

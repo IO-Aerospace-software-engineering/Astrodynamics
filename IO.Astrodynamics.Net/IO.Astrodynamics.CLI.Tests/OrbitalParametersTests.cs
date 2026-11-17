@@ -255,6 +255,43 @@ public class OrbitalParametersTests
             new Math.Vector3(Number(4), Number(5), Number(6)), observer, epoch, Frames.Frame.ICRF);
     }
 
+    private static readonly Regex SemiLatusRectumRx = new(@" P : (\S+) F : ");
+
+    [Fact]
+    public void NearParabolicSvToEquinoctial_PrintsAFiniteSemiLatusRectum()
+    {
+        using (Configuration.Lock())
+        {
+            // Arrange: r = (7000 km, 0, 0), v = (0, 10671.729487052813, 0) m/s about the Earth, e − 1 about −5e-7, in the
+            // band |e − 1| < 1e-6 (#462: the converter printed P : Infinity)
+            var command = new OrbitalParametersConverterCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+
+            // Act
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "7000000.0 0.0 0.0 0.0 10671.729487052813 0.0", CenterOfMotionId = 399,
+                OrbitalParametersEpoch = "0.0", Frame = "ICRF", FromStateVector = true, FromKeplerian = false,
+                FromEquinoctial = false, FromTLE = false
+            }, false, false, true, new EpochParameters());
+            var res = sb.ToString();
+
+            // Assert: P = h²/μ of the state, with the GM of the kernels of these tests (gm_de431)
+            var match = SemiLatusRectumRx.Match(res);
+            Assert.True(match.Success, res);
+            double p = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+            double h = 7000000.0 * 10671.729487052813;
+            double expected = h * h / new Body.CelestialBody(399).GM;
+            _output.WriteLine($"MEASURE #462 CLI P relative error: {(p - expected) / expected:E3}");
+            Assert.True(double.IsFinite(p), res);
+            // Measured 0 on Linux (the printed double is h²/μ to its last bit); provisional, at most two ulps, until the
+            // Windows x64 and macOS arm64 CI logs
+            Assert.InRange((p - expected) / expected, -4.5e-16, 4.5e-16);
+        }
+    }
+
     [Fact]
     public async Task Exceptions()
     {

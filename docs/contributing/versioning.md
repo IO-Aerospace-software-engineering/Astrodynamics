@@ -3208,6 +3208,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
+- **`ToEquinoctial()` gave P = NaN or ±Infinity within 1e-6 of e = 1** ([#462](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/462)).
+  The semi-latus rectum was a(1 − e²) with the a = +Infinity of the band |e − 1| < 1e-6 (`IsParabolic()`): NaN at e = 1
+  (∞ × 0), +Infinity or −Infinity elsewhere in the band, its sign set by rounding (the same exact parabola gave +∞ in
+  ICRF and −∞ in `ECLIPTIC_J2000`; NaN, −∞ or +∞ for every one of 2724 exact parabolas, measured on a85098d), printed
+  by `ToString()` and the CLI converter, so that the six elements could not rebuild the orbit. In the band P is now the
+  conic's q (1 + e), q the `PerigeeRadius()`: 2q for a parabola, q (1 + e) for `KeplerianElements` of the band, h²/μ for a
+  `StateVector` (decided by S. Guillet, 2026-11-17: the fix of the issue, which reads no semi-major axis and so holds with
+  the conic's a of #459). Outside the band P is a(1 − e²) bit for bit, so no TLE fit moves; the state rebuilt from the
+  elements is unchanged (it took the perigee radius when P was not finite). Against 60-digit closed forms
+  (`tools/near_parabolic/near_parabolic_reference.py`): 4.8e-17 relative for Keplerian elements (exactly 2q at e = 1),
+  4.9e-16 for the states of the issue through `ToEquinoctial()`, `ToKeplerianElements()`, `AtEpoch` and
+  `ToFrame(ECLIPTIC_J2000)`, 2.9e-16 of h²/μ over the 2724 parabolas (`NearParabolicBandTests.Issue462_*`, red on
+  a85098d; provisional thresholds, twice the Linux worst); the CLI prints h²/μ to its last bit
+  (`OrbitalParametersTests.NearParabolicSvToEquinoctial_PrintsAFiniteSemiLatusRectum`). `TestHelpers.EquinoctialComparer`
+  now compares P, and the two #452 tests that encoded the NaN and ±∞ (`EquinoctialElementsSingularityTests`
+  `StateRoundTrip_NearParabolic_ThroughEquinoctial`, `Parabolic_FromKeplerianElements_TakesThePerigeeRadius`) state the
+  finite P.
 
 **Changed**
 
