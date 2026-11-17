@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.NotNull(so);
             Assert.Equal(new Quaternion(1, 2, 3, 4), so.Rotation);
             Assert.Equal(Vector3.VectorX, so.AngularVelocity);
-            Assert.Equal(new TimeSystem.Time(DateTime.MaxValue, TimeFrame.TDBFrame), so.Epoch);
+            LabelAssert.Equal(new TimeSystem.Time(DateTime.MaxValue, TimeFrame.TDBFrame), so.Epoch);
             Assert.Equal(Frames.Frame.ICRF, so.ReferenceFrame);
         }
 
@@ -39,7 +39,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             //Which is equal to ecliptic (23.44° + 10° relative to ecliptic)
             Assert.Equal(new Quaternion(0.9577239084752576, 0.2876889207718582, 0, 0), res.Rotation);
             Assert.Equal(Vector3.Zero, res.AngularVelocity);
-            Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(Frames.Frame.ICRF, res.ReferenceFrame);
         }
 
@@ -50,7 +50,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var res = so.RelativeToICRF();
             Assert.NotNull(so);
-            Assert.Equal(so, res);
+            LabelAssert.Equal(so, res);
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
 
             Assert.Equal(new Quaternion(0.6072910782107768, -0.3221176440801108, 0.2767233690846851, 0.6714625430359408), res.Rotation);
             Assert.Equal(Vector3.Zero, res.AngularVelocity);
-            Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(Frames.Frame.GALACTIC_SYSTEM2, res.ReferenceFrame);
         }
 
@@ -91,7 +91,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
 
             Assert.Equal(new Quaternion(0.75114277947940278, 0.15580379240149217, 0.13030227231228195, 0.62811704398107715), res.Rotation,TestHelpers.QuaternionComparer);
             Assert.Equal(new Vector3(-1.9637713280161757E-09, 2.9004497224156795E-05, 6.6904658702357438E-05), res.AngularVelocity,TestHelpers.VectorComparer);
-            Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(earth.Frame, res.ReferenceFrame);
         }
 
@@ -102,7 +102,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var res = so.AtDate(TimeSystem.Time.J2000TDB.AddSeconds(10));
             Assert.Equal(new Quaternion(0.7770290602413761, 0.531216294762412, 0.02967932804162496, 0.3363840442207327), res.Rotation);
             Assert.Equal(new Vector3(0.1, 0.0, 0.0), res.AngularVelocity);
-            Assert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10), res.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10), res.Epoch);
             Assert.Equal(Frames.Frame.ECLIPTIC_J2000, res.ReferenceFrame);
         }
         
@@ -136,7 +136,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             // Assert
             Assert.Equal(new Quaternion(0.7071067811865476, 0.7071067811865476, 0, 0), result.Rotation,TestHelpers.QuaternionComparer);
             Assert.Equal(new Vector3(15, 25, 35), result.AngularVelocity);
-            Assert.Equal(date, result.Epoch);
+            LabelAssert.Equal(date, result.Epoch);
             Assert.Equal(Frames.Frame.ICRF, result.ReferenceFrame);
         }
 

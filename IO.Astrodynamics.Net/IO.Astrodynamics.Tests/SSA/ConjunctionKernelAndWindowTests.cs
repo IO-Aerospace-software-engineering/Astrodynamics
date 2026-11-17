@@ -495,11 +495,11 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options));
 
         var encounter = ConjunctionAssessment.Analyze(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options);
-        Assert.Equal(window.EndDate, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(window.EndDate, encounter.EncounterState.Epoch);
 
         // The sampled path keeps its midpoint fallback
         var sampled = ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, window, Options);
-        Assert.Equal(window.StartDate.AddSeconds(150.0), Assert.Single(sampled).EncounterState.Epoch);
+        LabelAssert.Equal(window.StartDate.AddSeconds(150.0), Assert.Single(sampled).EncounterState.Epoch);
     }
 
     // The local minima of CSPICE on a window of the crossing at 60 s steps (CspiceLocalMinima of the base)
@@ -717,7 +717,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
                 : CspiceRangeRate(epoch, crossing) <= 0.0)
             .ToArray();
         Assert.NotEmpty(ends);
-        Assert.Equal(ends.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()), encounter.EncounterState.Epoch);
+        LabelAssert.Equal(ends.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()), encounter.EncounterState.Epoch);
     }
 
     // ---- #527: the ILocalizable overloads do not extrapolate the propagated states ----

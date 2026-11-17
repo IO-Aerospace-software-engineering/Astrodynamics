@@ -134,7 +134,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         // Assert: the same TCA and miss distance; the covariance used is that of the propagation with the covariance at
         // the TCA (E1, 1e-12), propagated for both participants, age zero, no process noise, never stale
         var state = encounter.EncounterState;
-        Assert.Equal(held.EncounterState.Epoch, state.Epoch);
+        LabelAssert.Equal(held.EncounterState.Epoch, state.Epoch);
         Assert.Equal(held.EncounterState.MissDistanceMeters, state.MissDistanceMeters);
         Assert.InRange(state.MissDistanceMeters, 150.0, 250.0);
         Assert.True(System.Math.Abs((state.Epoch - ConjunctionCovarianceCase.Tca).TotalSeconds) < 1.0);
@@ -192,7 +192,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         Assert.Equal(protectedReference.GetCovariance(state.Epoch).ToArray(), encounter.ProtectedState.Covariance.Value.ToArray());
         Assert.Equal(secondaryReference.GetCovariance(state.Epoch).ToArray(), encounter.SecondaryState.Covariance.Value.ToArray());
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, held.EncounterState.ProtectedCovariance.Source);
-        Assert.Equal(held.EncounterState.Epoch, state.Epoch);
+        LabelAssert.Equal(held.EncounterState.Epoch, state.Epoch);
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
             // Assert: the fallback, the same results bit for bit as without the propagation of the covariance
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, withDefaults.EncounterState.ProtectedCovariance.Source);
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, withDefaults.EncounterState.SecondaryCovariance.Source);
-            Assert.Equal(withoutPropagation.EncounterState.Epoch, withDefaults.EncounterState.Epoch);
+            LabelAssert.Equal(withoutPropagation.EncounterState.Epoch, withDefaults.EncounterState.Epoch);
             Assert.Equal(withoutPropagation.CollisionRisk.ProbabilityOfCollision, withDefaults.CollisionRisk.ProbabilityOfCollision);
             Assert.Equal(withoutPropagation.EncounterState.CombinedCovarianceRtn.ToArray(),
                 withDefaults.EncounterState.CombinedCovarianceRtn.ToArray());

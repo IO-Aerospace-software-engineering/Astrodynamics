@@ -89,7 +89,7 @@ namespace IO.Astrodynamics.Tests.Body
             spc1.AddFuelTank(fuelTank11);
             spc1.AddPayload(pl1);
             Assert.Null(spc1.StandbyManeuver);
-            Assert.Equal(ke, spc1.InitialOrbitalParameters);
+            LabelAssert.Equal(ke, spc1.InitialOrbitalParameters);
             Assert.Equal(clk1, spc1.Clock);
         }
 

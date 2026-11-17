@@ -294,8 +294,8 @@ public class PropagatedArcsTests
         Assert.Equal(run.ImpulseEpochs.Length + 1, arcs.Count);
         for (int k = 0; k < run.ImpulseEpochs.Length; k++)
         {
-            Assert.Equal(run.ImpulseEpochs[k], arcs[k][^1].Epoch);
-            Assert.Equal(run.ImpulseEpochs[k], arcs[k + 1][0].Epoch);
+            LabelAssert.Equal(run.ImpulseEpochs[k], arcs[k][^1].Epoch);
+            LabelAssert.Equal(run.ImpulseEpochs[k], arcs[k + 1][0].Epoch);
         }
 
         Assert.True(run.ImpulseEpochs.Length >= 1, "no impulse executed");
@@ -877,7 +877,7 @@ public class PropagatedArcsTests
         {
             var before = Spacecraft.PropagatedArcs[k][^1];
             var tc = ImpulseEpochs[k];
-            Assert.Equal(tc, before.Epoch);
+            LabelAssert.Equal(tc, before.Epoch);
             Assert.Equal(Stars.Sun.NaifId, before.Observer.NaifId);
             // The result is in the frame of the stored states, compared with managed reads in ICRF: every SSB row is in ICRF
             Assert.Equal(Frame.ICRF, before.Frame);

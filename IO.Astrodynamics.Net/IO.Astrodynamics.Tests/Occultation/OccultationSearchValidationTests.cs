@@ -355,7 +355,7 @@ public class OccultationSearchValidationTests
 
         for (int i = 0; i < concurrent.Length; i++)
         {
-            Assert.Equal(sequential[i % spacecraft.Length], concurrent[i]);
+            LabelAssert.Equal(sequential[i % spacecraft.Length], concurrent[i]);
         }
 
         Assert.All(sequential, s => Assert.NotEmpty(s));

@@ -22,7 +22,7 @@ public class NadirAttitudeTests
         FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
         Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
         NadirAttitude zenithAttitude = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromHours(1.0), eng);
-        Assert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), zenithAttitude.MinimumEpoch);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), zenithAttitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.ManeuverHoldDuration);
         Assert.NotNull(zenithAttitude.Engine);
         Assert.Equal(eng, zenithAttitude.Engine);
@@ -38,11 +38,11 @@ public class NadirAttitudeTests
         NadirAttitude maneuver = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
         maneuver.TryExecute(orbitalParams.ToStateVector());
 
-        Assert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, 0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+        LabelAssert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, 0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
             maneuver.StateOrientation);
         Assert.Equal(0.0, maneuver.FuelBurned);
-        Assert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
-        Assert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public class NadirAttitudeTests
         nadir.TryExecute(afterTheHold);
         Assert.Equal(prograde, spc.StandbyManeuver);
         Assert.Contains(nadir, spc.ExecutedManeuvers);
-        Assert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10.0), prograde.MinimumEpoch);
+        LabelAssert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10.0), prograde.MinimumEpoch);
         Assert.Equal(Vector3.Zero, nadir.DeltaVOf(start));
     }
 

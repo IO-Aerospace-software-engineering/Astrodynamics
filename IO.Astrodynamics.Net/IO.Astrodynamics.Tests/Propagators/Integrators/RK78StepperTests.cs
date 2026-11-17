@@ -98,7 +98,7 @@ public class RK78StepperTests : IClassFixture<PartialsTestCases>
         for (int s = 0; s < RK78ButcherTableau.Stages; s++)
         {
             var expectedEpoch = state.Epoch.AddSeconds(StepOffset + RK78ButcherTableau.C[s] * StepSize);
-            Assert.Equal(expectedEpoch, stepper.StageStates[s].Epoch);
+            LabelAssert.Equal(expectedEpoch, stepper.StageStates[s].Epoch);
             Assert.Same(state.Observer, stepper.StageStates[s].Observer);
             Assert.Same(state.Frame, stepper.StageStates[s].Frame);
         }

@@ -96,7 +96,7 @@ public class ForceBasePartialsTests : IClassFixture<PartialsTestCases>
         // Assert
         Assert.Equal(position, state.Position);
         Assert.Equal(velocity, state.Velocity);
-        Assert.Equal(epoch, state.Epoch);
+        LabelAssert.Equal(epoch, state.Epoch);
     }
 
     [Fact]

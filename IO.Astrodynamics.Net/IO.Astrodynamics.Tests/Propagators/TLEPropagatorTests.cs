@@ -135,7 +135,7 @@ public class TLEPropagatorTests
         Assert.Equal(before.Length, after.Length);
         for (int i = 0; i < before.Length; i++)
         {
-            Assert.Equal(before[i].Epoch, after[i].Epoch);
+            LabelAssert.Equal(before[i].Epoch, after[i].Epoch);
             Assert.Equal(before[i].Position, after[i].Position);
             Assert.Equal(before[i].Velocity, after[i].Velocity);
         }
@@ -154,7 +154,7 @@ public class TLEPropagatorTests
         var end = start.AddDays(1.0);
         TLEPropagator propagator = new TLEPropagator(new Window(start, end), spc, TimeSpan.FromHours(1.0));
         var solution = propagator.Propagate();
-        Assert.Equal(tle.ToStateVector(start), solution.StateVectors.First(x => x.Epoch == start));
-        Assert.Equal(tle.ToStateVector(end), solution.StateVectors.First(x => x.Epoch == end));
+        LabelAssert.Equal(tle.ToStateVector(start), solution.StateVectors.First(x => x.Epoch == start));
+        LabelAssert.Equal(tle.ToStateVector(end), solution.StateVectors.First(x => x.Epoch == end));
     }
 }

@@ -160,7 +160,7 @@ public class FrameTests
     public void ToInertialFrame()
     {
         var so = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB);
-        Assert.Equal(
+        LabelAssert.Equal(
             new StateOrientation(new Quaternion(0.9791532214288993, new Vector3(-0.20312303898231013, 0.0, 0.0)), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), so);
     }
 
@@ -172,7 +172,7 @@ public class FrameTests
         var earthFrame = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
         var q = moonFrame.ToFrame(earthFrame, epoch);
 
-        Assert.Equal(epoch, q.Epoch);
+        LabelAssert.Equal(epoch, q.Epoch);
         Assert.Equal(moonFrame, q.ReferenceFrame);
         Assert.Equal(new Quaternion(0.5044792585297516, 0.20093165566257334, 0.06427003630843892, 0.8372553433086475).VectorPart, q.Rotation.VectorPart,
             TestHelpers.VectorComparer);
@@ -439,8 +439,8 @@ public class FrameTests
         Assert.True(frame.AddStateOrientationToICRF(later));
         Assert.True(frame.AddStateOrientationToICRF(earlier));
         Assert.False(frame.AddStateOrientationToICRF(sameEpoch));
-        Assert.Equal(new[] { earlier, later }, frame.GetStateOrientationsToICRF());
-        Assert.Equal(later, frame.GetLatestStateOrientationToICRF());
+        LabelAssert.Equal(new[] { earlier, later }, frame.GetStateOrientationsToICRF());
+        LabelAssert.Equal(later, frame.GetLatestStateOrientationToICRF());
 
         frame.ClearStateOrientations();
         Assert.Empty(frame.GetStateOrientationsToICRF());

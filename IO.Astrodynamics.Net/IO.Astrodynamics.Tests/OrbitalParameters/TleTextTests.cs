@@ -208,9 +208,9 @@ public class TleTextTests
         {
             var opm = Opm.CreateMinimal("SAT", "2021-001A", "EARTH", "ICRF", system, opmStateVector);
             var read = opm.ToStateVector();
-            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), frame), read.Epoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), frame), read.Epoch);
             Assert.Equal(new Vector3(7000000.0, 0.0, 0.0), read.Position);
-            Assert.Equal(read.Epoch, opm.ToStateVector(earth).Epoch);
+            LabelAssert.Equal(read.Epoch, opm.ToStateVector(earth).Epoch);
         }
 
         Assert.Throws<InvalidOperationException>(() => Opm.CreateMinimal("SAT", "2021-001A", "EARTH", "ICRF", "UT1", opmStateVector).ToStateVector());

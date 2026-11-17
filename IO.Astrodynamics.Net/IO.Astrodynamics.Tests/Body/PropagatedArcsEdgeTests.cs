@@ -218,9 +218,9 @@ public class PropagatedArcsEdgeTests
         // The arc of the boundary: the output there and the impulse's state, unfilled
         var boundary = target < 1.0 ? arcs[0] : arcs[1];
         Assert.Equal(2, boundary.Length);
-        Assert.Equal(target < 1.0 ? window.StartDate : tc, boundary[0].Epoch);
-        Assert.Equal(target < 1.0 ? tc : window.EndDate, boundary[1].Epoch);
-        Assert.Equal(window, spacecraft.InterpolatedStatesWindow);
+        LabelAssert.Equal(target < 1.0 ? window.StartDate : tc, boundary[0].Epoch);
+        LabelAssert.Equal(target < 1.0 ? tc : window.EndDate, boundary[1].Epoch);
+        LabelAssert.Equal(window, spacecraft.InterpolatedStatesWindow);
 
         var spk = NewSpk(spacecraft.Name.ToLowerInvariant());
         spacecraft.WriteEphemeris(spk);
@@ -282,13 +282,13 @@ public class PropagatedArcsEdgeTests
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(10.0));
         var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
         Assert.Equal(2, events.Length);
-        Assert.Equal(events[0], events[1]);
+        LabelAssert.Equal(events[0], events[1]);
         Assert.True(first.ThrustWindow.HasValue && second.ThrustWindow.HasValue);
         var tc = events[0];
         var arcs = spacecraft.PropagatedArcs;
         Assert.Equal(2, arcs.Count);
-        Assert.Equal(tc, arcs[0][^1].Epoch);
-        Assert.Equal(tc, arcs[1][0].Epoch);
+        LabelAssert.Equal(tc, arcs[0][^1].Epoch);
+        LabelAssert.Equal(tc, arcs[1][0].Epoch);
         double boundary = (arcs[1][0].Position - arcs[0][^1].Position).Magnitude();
         double jump = (arcs[1][0].Velocity - arcs[0][^1].Velocity - first.DeltaV - second.DeltaV).Magnitude();
 
@@ -506,12 +506,12 @@ public class PropagatedArcsEdgeTests
         var arc = spacecraft.PropagatedArcs[0];
         var tc = solution.Segments[1].BaseEpoch;
         Assert.Equal(PropagatedEphemeris.FilledArcStates, arc.Length);
-        Assert.Equal(Start, arc[0].Epoch);
-        Assert.Equal(tc, arc[^1].Epoch);
+        LabelAssert.Equal(Start, arc[0].Epoch);
+        LabelAssert.Equal(tc, arc[^1].Epoch);
         double span = (tc - Start).TotalSeconds;
         for (int i = 1; i < arc.Length - 1; i++)
         {
-            Assert.Equal(Start.AddSeconds(span * i / (PropagatedEphemeris.FilledArcStates - 1)), arc[i].Epoch);
+            LabelAssert.Equal(Start.AddSeconds(span * i / (PropagatedEphemeris.FilledArcStates - 1)), arc[i].Epoch);
             var expected = solution.GetStateVector(arc[i].Epoch);
             Assert.Equal(expected.Position, arc[i].Position);
             Assert.Equal(expected.Velocity, arc[i].Velocity);
@@ -590,7 +590,7 @@ public class PropagatedArcsEdgeTests
         Assert.Throws<ArgumentNullException>(() => added.AddPropagatedStates(null));
         added.AddPropagatedStates(outputs.Reverse().ToArray());
         Assert.Single(added.PropagatedArcs);
-        Assert.Equal(outputs.Select(x => x.Epoch), added.PropagatedStates.Select(x => x.Epoch));
+        LabelAssert.Equal(outputs.Select(x => x.Epoch), added.PropagatedStates.Select(x => x.Epoch));
         for (double s = 1.3; s < 1990.0; s += 37.0)
         {
             var t = Start.AddSeconds(s);
@@ -644,7 +644,7 @@ public class PropagatedArcsEdgeTests
         propagated.AddPropagatedStates(first, last);
         Assert.Same(first, propagated.PropagatedArcs[0][0]);
         Assert.Same(last, propagated.PropagatedArcs[^1][^1]);
-        Assert.Equal(new Window(first.Epoch, last.Epoch), propagated.InterpolatedStatesWindow);
+        LabelAssert.Equal(new Window(first.Epoch, last.Epoch), propagated.InterpolatedStatesWindow);
     }
 
     // The segments of an SPK by dafus where the native library is known to export CSPICE (Linux), null elsewhere
@@ -814,7 +814,7 @@ public class PropagatedArcsEdgeTests
                 Chain(sc, engine, earth, start);
             }
         });
-        Assert.Equal(tc, run.Solution.Segments[1].BaseEpoch);
+        LabelAssert.Equal(tc, run.Solution.Segments[1].BaseEpoch);
         var search = new Window(tc.AddSeconds(-150.0), tc.AddSeconds(150.0));
         var step = TimeSpan.FromSeconds(5.0);
         double worst = 0.0;

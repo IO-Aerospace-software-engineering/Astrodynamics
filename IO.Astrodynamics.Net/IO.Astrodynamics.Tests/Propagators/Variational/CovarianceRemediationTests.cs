@@ -167,7 +167,7 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
         Assert.Equal(state.Position, remediation.State.Position);
         Assert.Equal(state.Velocity, remediation.State.Velocity);
         Assert.Same(state.Observer, remediation.State.Observer);
-        Assert.Equal(state.Epoch, remediation.State.Epoch);
+        LabelAssert.Equal(state.Epoch, remediation.State.Epoch);
         Assert.Equal(state.Frame, remediation.State.Frame);
 
         // The depth of the defect: the smallest eigenvalue of the correlation matrix given (−1.9e-4)
@@ -326,7 +326,7 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
 
         Assert.True(Distance(withItsForces, expectedWithItsForces) < 1e-10, $"{Distance(withItsForces, expectedWithItsForces):E2}");
         var last = spacecraft.PropagatedStates.Last();
-        Assert.Equal(end, last.Epoch);
+        LabelAssert.Equal(end, last.Epoch);
         Assert.True(Distance(last.Covariance.Value, expected) < 1e-10, $"{Distance(last.Covariance.Value, expected):E2}");
         Assert.Equal(6, stateTransitionOnly.GetStateTransitionMatrix(end).Rows);
     }

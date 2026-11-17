@@ -68,7 +68,7 @@ public class TwoBodyDynamicalTimeTests
         Assert.True(System.Math.Abs(elapsed - expected) <= bound, $"{elapsed - expected} s from the reference.");
         Assert.True(System.Math.Abs(elapsedOfElements - expected) <= bound,
             $"ToKeplerianElements: {elapsedOfElements - expected} s from the reference.");
-        Assert.Equal(target, elements.AtEpoch(target).Epoch);
+        LabelAssert.Equal(target, elements.AtEpoch(target).Epoch);
     }
 
     [Theory]
@@ -89,7 +89,7 @@ public class TwoBodyDynamicalTimeTests
         double bound = Bound(body, fromTag, toTag) * expected.Velocity.Magnitude() + 1e-3;
         _output.WriteLine($"MEASURE {body} {fromTag} -> {toTag}: |r - prop2b| {error:E3} m (bound {bound:E2})");
         Assert.True(error <= bound, $"{error} m from the Kepler state.");
-        Assert.Equal(target, state.Epoch);
+        LabelAssert.Equal(target, state.Epoch);
     }
 
     [Theory]
@@ -110,7 +110,7 @@ public class TwoBodyDynamicalTimeTests
             Assert.Equal(elements.MeanAnomaly(), at.MeanAnomaly());
             Assert.Equal(state.Position, at.ToStateVector().Position);
             Assert.Equal(state.Velocity, at.ToStateVector().Velocity);
-            Assert.Equal(epoch, at.Epoch);
+            LabelAssert.Equal(epoch, at.Epoch);
         }
     }
 

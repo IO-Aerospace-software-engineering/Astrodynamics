@@ -1316,7 +1316,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(withoutObserver.Observer.NaifId, withObserver.Observer.NaifId);
             Assert.Equal(withoutObserver.Position, withObserver.Position);
             Assert.Equal(withoutObserver.Velocity, withObserver.Velocity);
-            Assert.Equal(withoutObserver.Epoch, withObserver.Epoch);
+            LabelAssert.Equal(withoutObserver.Epoch, withObserver.Epoch);
         }
 
         [Fact]
@@ -1343,7 +1343,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(withObserver.Observer.NaifId, withoutObserver.Observer.NaifId);
             Assert.Equal(withObserver.Position, withoutObserver.Position);
             Assert.Equal(withObserver.Velocity, withoutObserver.Velocity);
-            Assert.Equal(withObserver.Epoch, withoutObserver.Epoch);
+            LabelAssert.Equal(withObserver.Epoch, withoutObserver.Epoch);
             Assert.Equal(withObserver.Frame, withoutObserver.Frame);
         }
 

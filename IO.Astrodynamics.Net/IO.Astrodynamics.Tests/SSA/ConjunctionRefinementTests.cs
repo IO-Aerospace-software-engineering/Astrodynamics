@@ -60,7 +60,7 @@ public class ConjunctionRefinementTests
         var zeros = tca.Select(epoch => referenceSeconds.Single(zero =>
             System.Math.Abs((epoch - Epoch).TotalSeconds - zero) <= 1.0e-7 * (1.0 + 1.0e-6))).ToArray();
         Assert.Equal(zeros.OrderBy(zero => zero).Distinct(), zeros);
-        Assert.Equal(tca.OrderBy(epoch => epoch), tca);
+        LabelAssert.Equal(tca.OrderBy(epoch => epoch), tca);
     }
 
     [Theory]
@@ -160,7 +160,7 @@ public class ConjunctionRefinementTests
         // Seeded at the three: each minimum once, in order, the epochs of their own seeds
         var fromTheThree = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1], candidates[5], candidates[9] },
             candidates, rangeRate, Tolerance, Reads(overTheWindow));
-        Assert.Equal(new[] { Refine(candidates, 1, rangeRate), Refine(candidates, 9, rangeRate) }, fromTheThree);
+        LabelAssert.Equal(new[] { Refine(candidates, 1, rangeRate), Refine(candidates, 9, rangeRate) }, fromTheThree);
 
         // Seeded at one of them: its own minimum; the other one, which no seed reaches, with the reads over the window
         // only (#628: the range rate closes at 800 s and recedes at 900 s); without them, the default, it is not guaranteed
@@ -169,10 +169,10 @@ public class ConjunctionRefinementTests
             var fromOne = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[seed] }, candidates, rangeRate, Tolerance,
                 Reads(overTheWindow));
             AssertMinimaOf(new[] { 150.0, 850.0 }, fromOne);
-            Assert.Contains(Refine(candidates, seed, rangeRate), fromOne);
+            LabelAssert.Contains(Refine(candidates, seed, rangeRate), fromOne);
             if (overTheWindow)
             {
-                Assert.Equal(fromTheThree, fromOne);
+                LabelAssert.Equal(fromTheThree, fromOne);
             }
         }
     }
@@ -186,7 +186,7 @@ public class ConjunctionRefinementTests
         var end = candidates[^1];
         var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : -1.0);
 
-        Assert.Equal(end, Assert.Single(
+        LabelAssert.Equal(end, Assert.Single(
             ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance)));
     }
 
@@ -342,7 +342,7 @@ public class ConjunctionRefinementTests
             return t < 300.0 ? -1.0 : t <= 300.5 ? 0.0 : 1.0;
         });
 
-        Assert.Equal(candidates[3], Assert.Single(
+        LabelAssert.Equal(candidates[3], Assert.Single(
             ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[3] }, candidates, rangeRate, Tolerance)));
     }
 
@@ -393,7 +393,7 @@ public class ConjunctionRefinementTests
         var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { minimum }, candidates, Rectilinear(170.0), Tolerance,
             Reads(overTheWindow));
 
-        Assert.Equal(ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates, Rectilinear(170.0),
+        LabelAssert.Equal(ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates, Rectilinear(170.0),
             Tolerance, Reads(overTheWindow)), tca);
         if (overTheWindow)
         {
@@ -492,7 +492,7 @@ public class ConjunctionRefinementTests
         var candidates = Candidates(4);
         Func<TimeSystem.Time, double> rangeRate = epoch => (epoch - Epoch).TotalSeconds;
 
-        Assert.Equal(candidates[0], Assert.Single(RefineInside(candidates, 0, rangeRate)));
+        LabelAssert.Equal(candidates[0], Assert.Single(RefineInside(candidates, 0, rangeRate)));
     }
 
     [Theory]
@@ -505,7 +505,7 @@ public class ConjunctionRefinementTests
         var candidates = Candidates(4);
         Func<TimeSystem.Time, double> rangeRate = epoch => (epoch - Epoch).TotalSeconds - 300.0;
 
-        Assert.Equal(candidates[^1], Assert.Single(RefineInside(candidates, minimumIndex, rangeRate)));
+        LabelAssert.Equal(candidates[^1], Assert.Single(RefineInside(candidates, minimumIndex, rangeRate)));
     }
 
     [Fact]
@@ -516,7 +516,7 @@ public class ConjunctionRefinementTests
         var candidates = Candidates(4);
         Func<TimeSystem.Time, double> rangeRate = epoch => (epoch - Epoch).TotalSeconds;
 
-        Assert.Equal(candidates[0], Assert.Single(RefineInside(candidates, 1, rangeRate)));
+        LabelAssert.Equal(candidates[0], Assert.Single(RefineInside(candidates, 1, rangeRate)));
     }
 
     /// <summary>
@@ -550,8 +550,8 @@ public class ConjunctionRefinementTests
         var tca = Refine(candidates, 2, rangeRate);
 
         // Assert: the epoch of the bisection between the candidates on the same values near the zero, the nearest tick
-        Assert.Equal(Refine(candidates, 2, FlatAwayFromTheZero(rangeRate, zeroSeconds)), tca);
-        Assert.Equal(NearestTick(zeroSeconds), tca);
+        LabelAssert.Equal(Refine(candidates, 2, FlatAwayFromTheZero(rangeRate, zeroSeconds)), tca);
+        LabelAssert.Equal(NearestTick(zeroSeconds), tca);
     }
 
     // The range rate within ten microseconds of a zero at zeroSeconds, and its sign alone (±1) farther: no secant from a
@@ -622,7 +622,7 @@ public class ConjunctionRefinementTests
         var tca = RefineInside(candidates, minimumIndex, rangeRate);
 
         // Assert: the nearest tick, half a tick from the zero at most; a zero exactly on a tick is that tick
-        Assert.Equal(NearestTick(zeroTicks, fraction), Assert.Single(tca));
+        LabelAssert.Equal(NearestTick(zeroTicks, fraction), Assert.Single(tca));
     }
 
     [Theory]
@@ -641,7 +641,7 @@ public class ConjunctionRefinementTests
 
         var tca = RefineInside(candidates, minimumIndex, LinearInTicks(zeroTicks, fraction));
 
-        Assert.Equal(NearestTick(zeroTicks, fraction), Assert.Single(tca));
+        LabelAssert.Equal(NearestTick(zeroTicks, fraction), Assert.Single(tca));
     }
 
     [Theory]
@@ -667,8 +667,8 @@ public class ConjunctionRefinementTests
         var byBisection = Refine(candidates, 1, flat);
 
         // Assert: the same epoch, the tick nearest the zero
-        Assert.Equal(byBisection, bySecants);
-        Assert.Equal(NearestTick(zeroSeconds), bySecants);
+        LabelAssert.Equal(byBisection, bySecants);
+        LabelAssert.Equal(NearestTick(zeroSeconds), bySecants);
     }
     // ---- #628: the minima that no seed reaches. With ReadRangeRateOverWindow (opt-in, decision 54 of #457), the range
     // rate is read at every candidate and, between two candidates farther apart than the spacing of the reads
@@ -719,7 +719,7 @@ public class ConjunctionRefinementTests
         {
             // No minimum inside: nothing for AnalyzeAll, for Analyze the end, closing there (the start recedes into the
             // window nowhere: closing there too)
-            Assert.Equal(windowEndsWithoutInteriorMinimum ? new[] { candidates[^1] } : Array.Empty<TimeSystem.Time>(), tca);
+            LabelAssert.Equal(windowEndsWithoutInteriorMinimum ? new[] { candidates[^1] } : Array.Empty<TimeSystem.Time>(), tca);
         }
         else
         {
@@ -882,7 +882,7 @@ public class ConjunctionRefinementTests
         var end = candidates[^1];
         var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : -1.0);
 
-        Assert.Equal(end, Assert.Single(ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates,
+        LabelAssert.Equal(end, Assert.Single(ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates,
             rangeRate, tolerance, ReadSpacing)));
     }
 

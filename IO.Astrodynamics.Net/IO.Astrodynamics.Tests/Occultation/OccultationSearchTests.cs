@@ -102,7 +102,7 @@ public class OccultationSearchTests
         var any = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, -470001, 10, ShapeType.Point, 399, ShapeType.Ellipsoid, OccultationType.Any,
             Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
         Assert.Equal(8, any.Length);
-        Assert.Equal(any, full);
+        LabelAssert.Equal(any, full);
     }
 
     [Fact]
@@ -118,12 +118,12 @@ public class OccultationSearchTests
 
         // Any holds until the end of the search: its last window ends there, and None has one window before each of Any's
         Assert.Equal(8, any.Length);
-        Assert.Equal(Eclipse001Window.EndDate, any[^1].EndDate);
+        LabelAssert.Equal(Eclipse001Window.EndDate, any[^1].EndDate);
         Assert.Equal(8, none.Length);
-        Assert.Equal(Eclipse001Window.StartDate, none[0].StartDate);
+        LabelAssert.Equal(Eclipse001Window.StartDate, none[0].StartDate);
         for (int i = 0; i < any.Length; i++)
         {
-            Assert.Equal(any[i].StartDate, none[i].EndDate);
+            LabelAssert.Equal(any[i].StartDate, none[i].EndDate);
         }
 
         double worstNone = WorstEdge(managedNone, none);

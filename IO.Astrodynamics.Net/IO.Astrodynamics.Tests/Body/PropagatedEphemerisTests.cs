@@ -70,8 +70,8 @@ public class PropagatedEphemerisTests
         var ephemeris = new PropagatedEphemeris();
         ephemeris.Set(outputs, Array.Empty<ImpulseBoundary>(), _ => throw new InvalidOperationException("filled"));
         Assert.Single(ephemeris.Arcs);
-        Assert.Equal(outputs, ephemeris.Arcs[0]);
-        Assert.Equal(new Window(T0, T0.AddSeconds(20.0)), ephemeris.Span);
+        LabelAssert.Equal(outputs, ephemeris.Arcs[0]);
+        LabelAssert.Equal(new Window(T0, T0.AddSeconds(20.0)), ephemeris.Span);
         Assert.Same(outputs[0], ephemeris.First);
         ephemeris.Clear();
         Assert.Equal(0, ephemeris.Count);
@@ -222,9 +222,9 @@ public class PropagatedEphemerisTests
         ephemeris.Set(outputs, ends, Fill);
         arcs = ephemeris.Arcs;
         Assert.Equal(3, arcs.Count);
-        Assert.Equal(new[] { outputs[0], ends[0].Before }, arcs[0]);
-        Assert.Equal(new[] { ends[1].After, outputs[^1] }, arcs[2]);
-        Assert.Equal(new Window(T0, T0.AddSeconds(200.0)), ephemeris.Span);
+        LabelAssert.Equal(new[] { outputs[0], ends[0].Before }, arcs[0]);
+        LabelAssert.Equal(new[] { ends[1].After, outputs[^1] }, arcs[2]);
+        LabelAssert.Equal(new Window(T0, T0.AddSeconds(200.0)), ephemeris.Span);
         Assert.Empty(filled);
         Assert.Same(outputs[0], ephemeris.Interpolate(T0));
         Assert.Same(outputs[^1], ephemeris.Interpolate(T0.AddSeconds(200.0)));
@@ -235,7 +235,7 @@ public class PropagatedEphemerisTests
         ephemeris.Set(outputs, new[] { uncarried }, Fill);
         Assert.Single(ephemeris.Arcs);
         Assert.Same(uncarried.Before, ephemeris.Arcs[0][^1]);
-        Assert.Equal(new Window(T0, T0.AddSeconds(195.0)), ephemeris.Span);
+        LabelAssert.Equal(new Window(T0, T0.AddSeconds(195.0)), ephemeris.Span);
 
         // 20 µs from the end: filled, the states 1.3 µs apart
         ephemeris.Set(outputs, new[] { Impulse(200.0 - 2e-5, 0.0, 1.0) }, Fill);
@@ -405,7 +405,7 @@ public class PropagatedEphemerisTests
                 var read = Lagrange.InterpolateSorted(sorted, epoch, k);
                 Assert.Equal(former.Position, read.Position);
                 Assert.Equal(former.Velocity, read.Velocity);
-                Assert.Equal(former.Epoch, read.Epoch);
+                LabelAssert.Equal(former.Epoch, read.Epoch);
             }
         }
 

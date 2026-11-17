@@ -506,8 +506,8 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         // Assert: the previous propagation is untouched (H3 review of step 8: it was reset before the checks)
         var after = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
         Assert.True(spacecraft.IsPropagated);
-        Assert.Equal(states.Select(s => (s.Epoch, s.Position, s.Velocity)),
-            spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)));
+        Assert.Equal(states.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)),
+            spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)));
         Assert.Equal(before.Position, after.Position);
         Assert.Equal(before.Velocity, after.Velocity);
     }

@@ -49,7 +49,7 @@ public class ConfigurationTest
 
         var result = dataProvider.FrameTransformationToICRF(date, frame);
 
-        Assert.Equal(stateOrientation, result);
+        LabelAssert.Equal(stateOrientation, result);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class ConfigurationTest
 
         Assert.Equal(Vector3.Zero, result.Position);
         Assert.Equal(Vector3.Zero, result.Velocity);
-        Assert.Equal(date, result.Epoch);
+        LabelAssert.Equal(date, result.Epoch);
         Assert.Equal(frame, result.Frame);
     }
 

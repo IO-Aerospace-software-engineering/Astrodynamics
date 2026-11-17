@@ -197,7 +197,7 @@ public partial class ConjunctionAssessmentTests
         var tcas = ConjunctionAssessment.FindCloseApproaches(primary, secondary, window, TimeSpan.FromSeconds(1.0), 1e-9,
             earth);
 
-        Assert.Equal(start.AddTicks(zeroTicks + (fraction > 0.5 ? 1 : 0)), Assert.Single(tcas));
+        LabelAssert.Equal(start.AddTicks(zeroTicks + (fraction > 0.5 ? 1 : 0)), Assert.Single(tcas));
     }
 
     [Fact]
@@ -297,7 +297,7 @@ public partial class ConjunctionAssessmentTests
         var encounters = ConjunctionAssessment.AnalyzeAll(profile, secondary1, window);
 
         var encounter = Assert.Single(encounters);
-        Assert.Equal(expectedMidpoint, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(expectedMidpoint, encounter.EncounterState.Epoch);
         Assert.True(encounter.EncounterState.MissDistanceMeters > 0.0);
     }
 
@@ -496,7 +496,7 @@ public partial class ConjunctionAssessmentTests
                 LowRelativeSpeedThresholdMetersPerSecond = 0.0
             });
 
-        Assert.Equal(end, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(end, encounter.EncounterState.Epoch);
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
     }
 
@@ -556,7 +556,7 @@ public partial class ConjunctionAssessmentTests
         var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
 
-        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(expected, encounter.EncounterState.Epoch);
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
         Assert.Empty(encounters);
     }
@@ -597,7 +597,7 @@ public partial class ConjunctionAssessmentTests
             Assert.Equal(50.0, state.MissDistanceMeters, 9);
         }
 
-        Assert.Equal(listed.EncounterState.Epoch, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(listed.EncounterState.Epoch, encounter.EncounterState.Epoch);
     }
 
     // The tick returned on the dense path (#624): the refinement returns the tick nearer the zero of the range rate, and a
@@ -642,7 +642,7 @@ public partial class ConjunctionAssessmentTests
         double offset = (expectedTicks - fraction) * 1.0e-7;
         foreach (var state in new[] { Assert.Single(encounters).EncounterState, encounter.EncounterState })
         {
-            Assert.Equal(expected, state.Epoch);
+            LabelAssert.Equal(expected, state.Epoch);
             Assert.True(state.Epoch > window.StartDate && state.Epoch < window.EndDate);
             Assert.Equal(System.Math.Sqrt(x * x + System.Math.Pow(vy * offset, 2.0)), state.MissDistanceMeters, 9);
         }
@@ -664,7 +664,7 @@ public partial class ConjunctionAssessmentTests
             window, RectilinearPassOptions));
         var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
-        Assert.Equal(oneSecond, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(oneSecond, encounter.EncounterState.Epoch);
         Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * 3.0e-8, 2.0)),
             encounter.EncounterState.MissDistanceMeters, 9);
     }
@@ -681,7 +681,7 @@ public partial class ConjunctionAssessmentTests
             window, RectilinearPassOptions));
         var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
-        Assert.Equal(oneSecond, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(oneSecond, encounter.EncounterState.Epoch);
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
     }
 
@@ -705,7 +705,7 @@ public partial class ConjunctionAssessmentTests
             window, RectilinearPassOptions);
 
         var expected = startOffset < 0.0 ? window.EndDate : window.StartDate;
-        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(expected, encounter.EncounterState.Epoch);
         Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * expectedFromMinimum, 2.0)),
             encounter.EncounterState.MissDistanceMeters, 9);
         Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
@@ -749,7 +749,7 @@ public partial class ConjunctionAssessmentTests
         var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
 
-        Assert.Equal(window.StartDate.AddSeconds(expectedSeconds), encounter.EncounterState.Epoch);
+        LabelAssert.Equal(window.StartDate.AddSeconds(expectedSeconds), encounter.EncounterState.Epoch);
         Assert.Equal(System.Math.Sqrt(100.0 + System.Math.Pow(y0 + vy * expectedSeconds, 2.0)),
             encounter.EncounterState.MissDistanceMeters, 9);
         Assert.Empty(encounters);

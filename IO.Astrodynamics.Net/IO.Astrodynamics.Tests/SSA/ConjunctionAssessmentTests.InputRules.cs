@@ -244,7 +244,7 @@ public partial class ConjunctionAssessmentTests
                 CovariancePropagation = null
             });
             Assert.Equal(analyzed.CollisionRisk.CombinedHardBodyRadiusMeters, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
-            Assert.Equal(analyzed.EncounterState.Epoch, encounter.EncounterState.Epoch);
+            LabelAssert.Equal(analyzed.EncounterState.Epoch, encounter.EncounterState.Epoch);
             Assert.Equal(analyzed.CollisionRisk.ProbabilityOfCollision, encounter.CollisionRisk.ProbabilityOfCollision);
 
             // The avoidance re-analyzes each option with the radius the screening resolved for the candidate: no conflict
@@ -425,7 +425,7 @@ public partial class ConjunctionAssessmentTests
         // Assert: the same encounter as without the protected spacecraft among the candidates
         var encounter = Assert.Single(screened);
         Assert.Same(secondaryCraft, encounter.SecondaryObject);
-        Assert.Equal(alone[0].EncounterState.Epoch, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(alone[0].EncounterState.Epoch, encounter.EncounterState.Epoch);
         Assert.Equal(alone[0].EncounterState.MissDistanceMeters, encounter.EncounterState.MissDistanceMeters);
     }
 
@@ -601,7 +601,7 @@ public partial class ConjunctionAssessmentTests
         {
             var a = fromAnalysis[i].PostManeuverEncounter;
             var b = fromHand[i].PostManeuverEncounter;
-            Assert.Equal(a.EncounterState.Epoch, b.EncounterState.Epoch);
+            LabelAssert.Equal(a.EncounterState.Epoch, b.EncounterState.Epoch);
             Assert.Equal(a.EncounterState.MissDistanceMeters, b.EncounterState.MissDistanceMeters);
             Assert.Equal(a.CollisionRisk.ProbabilityOfCollision, b.CollisionRisk.ProbabilityOfCollision);
             Assert.Equal(ProtectedHardBodyRadius + 3.0, b.CollisionRisk.CombinedHardBodyRadiusMeters);

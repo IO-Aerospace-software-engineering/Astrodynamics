@@ -97,7 +97,7 @@ public class TlePropagationTests
         Assert.Equal(expected.Count, actual.Count);
         for (int i = 0; i < expected.Count; i++)
         {
-            Assert.Equal(expected[i].Epoch, actual[i].Epoch);
+            LabelAssert.Equal(expected[i].Epoch, actual[i].Epoch);
             Assert.Equal(expected[i].Position, actual[i].Position);
             Assert.Equal(expected[i].Velocity, actual[i].Velocity);
         }
@@ -227,7 +227,7 @@ public class TlePropagationTests
 
         // Assert: the first state is SGP4 at the window start bit for bit, every state the twin's
         var first = solution?.StateVectors[0] ?? fromTle.PropagatedStates[0];
-        Assert.Equal(t0, first.Epoch);
+        LabelAssert.Equal(t0, first.Epoch);
         Assert.Equal(sgp4.Position, first.Position);
         Assert.Equal(sgp4.Velocity, first.Velocity);
         Assert.Equal(sgp4.Position, fromTle.PropagatedStates[0].Position);
@@ -415,7 +415,7 @@ public class TlePropagationTests
             Assert.Equal(state.Velocity, read.Velocity);
         }
 
-        Assert.Equal(new Window(stored[0].Epoch, stored[^1].Epoch), spacecraft.InterpolatedStatesWindow);
+        LabelAssert.Equal(new Window(stored[0].Epoch, stored[^1].Epoch), spacecraft.InterpolatedStatesWindow);
         var last = stored[^1];
         double fromSgp4 = (tle.ToStateVector(last.Epoch).ToFrame(Frames.Frame.ICRF).ToStateVector().Position - last.Position).Magnitude();
         _output.WriteLine($"MEASURE TlePropagationTests.PropagatedTleSpacecraft_ReadsItsStates {path}: {fromSgp4 / 1000.0:F3} km from SGP4 at 1 h");
@@ -486,9 +486,9 @@ public class TlePropagationTests
         for (int i = 0; i < avoidance.Count; i++)
         {
             Assert.Equal(AvoidanceTrajectory.Propagated, avoidance[i].Trajectory);
-            Assert.Equal(twinAvoidance[i].BurnEpoch, avoidance[i].BurnEpoch);
+            LabelAssert.Equal(twinAvoidance[i].BurnEpoch, avoidance[i].BurnEpoch);
             Assert.Equal(twinAvoidance[i].DeltaVInertial, avoidance[i].DeltaVInertial);
-            Assert.Equal(twinAvoidance[i].PostManeuverEncounter.EncounterState.Epoch, avoidance[i].PostManeuverEncounter.EncounterState.Epoch);
+            LabelAssert.Equal(twinAvoidance[i].PostManeuverEncounter.EncounterState.Epoch, avoidance[i].PostManeuverEncounter.EncounterState.Epoch);
             Assert.Equal(twinAvoidance[i].PostManeuverEncounter.EncounterState.MissDistanceMeters,
                 avoidance[i].PostManeuverEncounter.EncounterState.MissDistanceMeters);
         }
@@ -575,7 +575,7 @@ public class TlePropagationTests
         // Assert: executed, its ΔV, epoch and the final state bit for bit the twin's
         Assert.NotNull(maneuver.ThrustWindow);
         Assert.Single(fromTle.ExecutedManeuvers);
-        Assert.Equal(twinManeuver.ThrustWindow, maneuver.ThrustWindow);
+        LabelAssert.Equal(twinManeuver.ThrustWindow, maneuver.ThrustWindow);
         Assert.Equal(twinManeuver.DeltaV, maneuver.DeltaV);
         Assert.Equal(twinSolution.StateVectors[^1].Position, solution.StateVectors[^1].Position);
         Assert.Equal(twinSolution.StateVectors[^1].Velocity, solution.StateVectors[^1].Velocity);

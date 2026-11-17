@@ -683,8 +683,8 @@ public class TriadAttitudeTests
         maneuver.TryExecute(orbitalParams);
 
         Assert.Equal(0.0, maneuver.FuelBurned);
-        Assert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0), TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
-        Assert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0), TimeSpan.Zero), maneuver.ThrustWindow);
+        LabelAssert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0), TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
+        LabelAssert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0), TimeSpan.Zero), maneuver.ThrustWindow);
     }
 
     [Fact]

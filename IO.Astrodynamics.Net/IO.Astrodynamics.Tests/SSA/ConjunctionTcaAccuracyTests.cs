@@ -183,8 +183,8 @@ public class ConjunctionTcaAccuracyTests
             _output.WriteLine($"LABEL {frame} rk78={rk78} all={all}: {epoch} ({epoch.DateTime.Ticks}) miss " +
                               $"{encounter.EncounterState.MissDistanceMeters:R} m; sampled {sampled.EncounterState.Epoch}");
             Assert.Equal(window.StartDate.Frame, epoch.Frame);
-            Assert.Equal(epoch, encounter.ProtectedState.Epoch);
-            Assert.Equal(epoch, encounter.SecondaryState.Epoch);
+            LabelAssert.Equal(epoch, encounter.ProtectedState.Epoch);
+            LabelAssert.Equal(epoch, encounter.SecondaryState.Epoch);
             Assert.NotEqual(window.StartDate, epoch);
             Assert.NotEqual(window.EndDate, epoch);
             Assert.True(epoch > window.StartDate && epoch < window.EndDate);
@@ -309,7 +309,7 @@ public class ConjunctionTcaAccuracyTests
             "firstTick" => start.AddTicks(1),
             _ => window.EndDate.AddTicks(-1)
         };
-        Assert.Equal(expected, label);
+        LabelAssert.Equal(expected, label);
     }
 
     private static double KeplerianTca(double mu, StateVector first, StateVector second, double low, double high)

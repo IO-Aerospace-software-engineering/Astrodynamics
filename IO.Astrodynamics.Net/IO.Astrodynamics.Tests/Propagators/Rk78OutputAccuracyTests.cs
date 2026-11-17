@@ -286,7 +286,7 @@ public class Rk78OutputAccuracyTests
     {
         var epoch = Start.AddSeconds(t);
         double onGrid = RK78Integrator.OnEpochGrid(Start, epoch, 0.0, 4000.0);
-        Assert.Equal(epoch, Start.AddSeconds(onGrid));
+        LabelAssert.Equal(epoch, Start.AddSeconds(onGrid));
         Assert.True(System.Math.Abs(onGrid - t) < 1e-7);
     }
 
@@ -297,7 +297,7 @@ public class Rk78OutputAccuracyTests
         var epoch = Start.AddSeconds(1.00000015);
         double onGrid = RK78Integrator.OnEpochGrid(Start, epoch, 1.00000012, 2.0);
         Assert.InRange(onGrid, 1.00000012, 2.0);
-        Assert.Equal(epoch, Start.AddSeconds(onGrid));
+        LabelAssert.Equal(epoch, Start.AddSeconds(onGrid));
 
         // No time of the step reaches an epoch before it: the clamped time
         Assert.Equal(1.5, RK78Integrator.OnEpochGrid(Start, Start.AddSeconds(1.0), 1.5, 2.0));

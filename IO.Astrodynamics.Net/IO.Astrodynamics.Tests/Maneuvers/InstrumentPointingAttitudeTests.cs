@@ -29,7 +29,7 @@ public class InstrumentPointingAttitudeTests
         spc.AddCircularInstrument(-172600, "CAM602", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
         InstrumentPointingToAttitude attitude =
             new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromHours(1.0), spc.Instruments.First(), TestHelpers.EarthAtJ2000, eng);
-        Assert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), attitude.MinimumEpoch);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), attitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), attitude.ManeuverHoldDuration);
         Assert.NotNull(attitude.Engine);
         Assert.Equal(eng, attitude.Engine);
@@ -78,8 +78,8 @@ public class InstrumentPointingAttitudeTests
         Assert.True(pointing <= BoresightTolerance, $"boresight {pointing:E3} rad from the Moon");
         Assert.Equal(Frames.Frame.ICRF, maneuver.StateOrientation.ReferenceFrame);
         Assert.Equal(0.0, maneuver.FuelBurned);
-        Assert.Equal(new Window(epoch, TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
-        Assert.Equal(new Window(epoch, TimeSpan.Zero), maneuver.ThrustWindow);
+        LabelAssert.Equal(new Window(epoch, TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
+        LabelAssert.Equal(new Window(epoch, TimeSpan.Zero), maneuver.ThrustWindow);
     }
 
     private const double InstrumentPointingTolerance = 8.9e-16;

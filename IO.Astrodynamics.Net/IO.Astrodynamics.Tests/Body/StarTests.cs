@@ -36,8 +36,8 @@ public class StarTests
         Assert.Equal(6.674299999999999E+19, star.GM);
         Assert.Equal("spec", star.SpectralType);
         Assert.Equal(2, star.VisualMagnitude);
-        Assert.Equal(TimeSystem.Time.J2000TDB, star.Epoch);
-        Assert.Equal(new Equatorial(10, 20, TimeSystem.Time.J2000TDB), star.EquatorialCoordinatesAtEpoch);
+        LabelAssert.Equal(TimeSystem.Time.J2000TDB, star.Epoch);
+        LabelAssert.Equal(new Equatorial(10, 20, TimeSystem.Time.J2000TDB), star.EquatorialCoordinatesAtEpoch);
         Assert.Equal(4, star.DeclinationProperMotion);
         Assert.Equal(5, star.RightAscensionProperMotion);
         Assert.Equal(6, star.DeclinationSigma);

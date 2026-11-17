@@ -79,7 +79,7 @@ public class TimeToRadiusTests
         // from the closed form, within the tick of the epoch; twice each, the time at least two ticks
         Assert.InRange(soi, -3e-8, 3e-8);
         Assert.InRange(toSoi, -2e-7, 2e-7);
-        Assert.Equal(orbit.TimeToRadius(moon.SphereOfInfluence), orbit.TimeToSphereOfInfluence());
+        LabelAssert.Equal(orbit.TimeToRadius(moon.SphereOfInfluence), orbit.TimeToSphereOfInfluence());
     }
 
     [Fact]
@@ -227,7 +227,7 @@ public class TimeToRadiusTests
         double p = orbit.SemiLatusRectum();
         foreach (var radius in new[] { p, a, System.Math.BitIncrement(p), System.Math.BitDecrement(p) })
         {
-            Assert.Equal(Epoch, orbit.TimeToRadius(radius));
+            LabelAssert.Equal(Epoch, orbit.TimeToRadius(radius));
         }
 
         // Any other radius is never reached

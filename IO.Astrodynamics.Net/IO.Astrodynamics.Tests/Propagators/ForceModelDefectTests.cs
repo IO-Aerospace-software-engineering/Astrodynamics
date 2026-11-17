@@ -225,7 +225,7 @@ public class ForceModelDefectTests
 
     private static void AssertSameState(StateVector expected, StateVector actual, string label)
     {
-        Assert.True(expected.Epoch == actual.Epoch, $"{label}: epoch {expected.Epoch} != {actual.Epoch}");
+        Assert.True(expected.Epoch.HasSameLabel(actual.Epoch), $"{label}: epoch {expected.Epoch} != {actual.Epoch}");
         Assert.True(expected.Position.X == actual.Position.X && expected.Position.Y == actual.Position.Y &&
                     expected.Position.Z == actual.Position.Z,
             $"{label}: position {expected.Position} != {actual.Position}, {(expected.Position - actual.Position).Magnitude():E3} m");

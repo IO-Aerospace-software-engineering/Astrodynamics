@@ -122,8 +122,8 @@ namespace IO.Astrodynamics.Tests.Body
             // (gftfov: [S, 676556946.944] [676559033.610, E])
             Assert.Equal(2, expected.Length);
             Assert.Equal(expected.Length, res.Length);
-            Assert.Equal(searchWindow.StartDate, expected[0].StartDate);
-            Assert.Equal(searchWindow.StartDate, res[0].StartDate);
+            LabelAssert.Equal(searchWindow.StartDate, expected[0].StartDate);
+            LabelAssert.Equal(searchWindow.StartDate, res[0].StartDate);
             for (int i = 0; i < res.Length; i++)
             {
                 double startError = (res[i].StartDate - expected[i].StartDate).TotalSeconds;
@@ -136,7 +136,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             if (shape == ShapeType.Ellipsoid)
             {
-                Assert.Equal(searchWindow.EndDate, res[1].EndDate);
+                LabelAssert.Equal(searchWindow.EndDate, res[1].EndDate);
             }
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
@@ -1044,7 +1044,7 @@ namespace IO.Astrodynamics.Tests.Body
             if (error == null)
             {
                 Assert.Null(exception);
-                Assert.Equal(window, Assert.Single(windows));
+                LabelAssert.Equal(window, Assert.Single(windows));
             }
             else
             {
@@ -1105,7 +1105,7 @@ namespace IO.Astrodynamics.Tests.Body
                 Assert.Null(point);
                 Assert.True(inView);
                 Assert.Null(ellipsoid);
-                Assert.Equal(window, Assert.Single(windows));
+                LabelAssert.Equal(window, Assert.Single(windows));
             }
             else
             {

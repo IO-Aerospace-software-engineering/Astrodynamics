@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var epoch = new TimeSystem.Time(2021, 12, 12);
             StateVector sv = new StateVector(pos, vel, earth, epoch, Frames.Frame.ICRF);
             Assert.Equal(earth, sv.Observer);
-            Assert.Equal(epoch, sv.Epoch);
+            LabelAssert.Equal(epoch, sv.Epoch);
             Assert.Equal(Frames.Frame.ICRF, sv.Frame);
             Assert.Equal(pos, sv.Position);
             Assert.Equal(vel, sv.Velocity);
@@ -46,7 +46,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var epoch = new TimeSystem.Time(2021, 12, 12);
             StateVector sv = new StateVector(pos, vel, earth, epoch, Frames.Frame.ICRF);
             var res = sv.Inverse();
-            Assert.Equal(new StateVector(pos.Inverse(), vel.Inverse(), earth, epoch, Frames.Frame.ICRF), res);
+            LabelAssert.Equal(new StateVector(pos.Inverse(), vel.Inverse(), earth, epoch, Frames.Frame.ICRF), res);
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Vector3 vel2 = new Vector3(4.0, 5.0, 6.0);
             StateVector sv2 = new StateVector(pos2, vel2, earth, epoch, Frames.Frame.ICRF);
             var sv3 = sv + sv2;
-            Assert.Equal(new StateVector(new Vector3(2.0, 4.0, 6.0), new Vector3(8.0, 10.0, 12.0), earth, epoch, Frames.Frame.ICRF), sv3);
+            LabelAssert.Equal(new StateVector(new Vector3(2.0, 4.0, 6.0), new Vector3(8.0, 10.0, 12.0), earth, epoch, Frames.Frame.ICRF), sv3);
         }
 
         [Fact]
@@ -324,7 +324,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, earth.InitialOrbitalParameters.Epoch, Frames.Frame.ICRF);
             var sv2 = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, earth.InitialOrbitalParameters.Epoch, Frames.Frame.ICRF);
             var sv3 = new StateVector(new Vector3(6900000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, earth.InitialOrbitalParameters.Epoch, Frames.Frame.ICRF);
-            Assert.Equal(sv, sv2);
+            LabelAssert.Equal(sv, sv2);
             Assert.Equal(sv, (object)sv2);
             Assert.False(sv.Equals((object)null));
             Assert.True(sv.Equals((object)sv2));
@@ -342,7 +342,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var earth = TestHelpers.EarthAtJ2000;
             var sv = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            Assert.Equal(
+            LabelAssert.Equal(
                 new StateVector(new Vector3(-26499033677.425095, 132757417338.33946, 57556718470.53819),
                     new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv);
             var ke = sv.ToKeplerianElements();
@@ -364,7 +364,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 new StateVector(new Vector3(0, 6700000, 0), new Vector3(7900, 0, 0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
 
             var keOrigin = svOrigin.ToKeplerianElements();
-            Assert.Equal(new KeplerianElements(7045497.0180164594, 0.0490379908093026, 3.141592653589793, 0.0,
+            LabelAssert.Equal(new KeplerianElements(7045497.0180164594, 0.0490379908093026, 3.141592653589793, 0.0,
                 4.71238898038469, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), keOrigin);
             var svFinal = keOrigin.ToStateVector();
             Assert.Equal(svFinal, svOrigin, TestHelpers.StateVectorComparer);
@@ -388,7 +388,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var moon = TestHelpers.MoonAtJ2000;
             var ra = moon.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
-            Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), ra);
+            LabelAssert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), ra);
         }
 
         [Fact]
@@ -415,7 +415,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(Vector3.Zero, deltaP);
             Assert.Equal(Vector3.Zero, deltaV);
             Assert.Equal(TestHelpers.EarthAtJ2000, svEarth.Observer);
-            Assert.Equal(TimeSystem.Time.J2000TDB, svEarth.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB, svEarth.Epoch);
             Assert.Equal(Frames.Frame.ICRF, svEarth.Frame);
         }
 
@@ -521,7 +521,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var earthSv = TestHelpers.EarthAtJ2000.GetEphemeris(Astrodynamics.TimeSystem.Time.J2000TDB, TestHelpers.MoonAtJ2000, Frames.Frame.ICRF, Aberration.None)
                 .ToStateVector();
             var earthSvFromSun = earthSv.RelativeTo(TestHelpers.Sun, Aberration.None).ToStateVector();
-            Assert.Equal(
+            LabelAssert.Equal(
                 new StateVector(new Vector3(-26499033677.42509, 132757417338.33946, 57556718470.53819),
                     new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), earthSvFromSun);
         }
@@ -684,7 +684,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(sv.Position, read.Position);
             Assert.Equal(sv.Velocity, read.Velocity);
             // The same instant (#512), labelled as the tag is
-            Assert.Equal(tag, read.Epoch);
+            LabelAssert.Equal(tag, read.Epoch);
             Assert.Equal(tag.Frame, read.Epoch.Frame);
             Assert.Equal(tag.DateTime, read.Epoch.DateTime);
             Assert.Equal(sv.Frame, read.Frame);
@@ -714,7 +714,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var later = sv.ToStateVector(epoch + TimeSpan.FromSeconds(dt));
 
             Assert.False(later.Covariance.HasValue);
-            Assert.Equal(epoch + TimeSpan.FromSeconds(dt), later.Epoch);
+            LabelAssert.Equal(epoch + TimeSpan.FromSeconds(dt), later.Epoch);
             var expectedPosition = new Vector3(r * System.Math.Cos(n * dt), r * System.Math.Sin(n * dt), 0.0);
             var expectedVelocity = new Vector3(-v * System.Math.Sin(n * dt), v * System.Math.Cos(n * dt), 0.0);
             // Measured 0 m and 0 m/s on Linux and Windows, 9.313e-10 m (one ulp of r) and 1.286e-12 m/s on macOS arm64 (run
