@@ -599,11 +599,11 @@ public abstract class PropagatorBase : IPropagator
                 Integrator.Initialize(new StateVector(currentPos, currentVel, InitialState.Observer, currentEpoch,
                     InitialState.Frame));
 
-                // On Continue, the segment starts at the root just handled, which the detector must not find again;
-                // Velocity-Verlet locates the event at the end of a step, already past the root
+                // On Continue, the segment starts at the root just handled, which the detector must not find again: the
+                // event time is on the tick grid, possibly just before the root (#572)
                 if (!restart)
                 {
-                    rk78?.SkipRootOfLastEvent();
+                    (Integrator as Integrators.Integrator)?.SkipRootOfLastEvent();
                 }
             }
             else

@@ -90,12 +90,6 @@ public sealed class RK78Integrator : Integrator
     private double[] _variationalEntryQ;
     private ManeuverRecord? _variationalEntryManeuver;
 
-    // The detector of the last event and its g-value at the end of the step that contained the root, on the side past
-    // the root; the next segment starts from that value when the propagation continues after the event (#355)
-    private IEventDetector _lastEventDetector;
-    private double _lastEventGPastRoot;
-    private bool _skipRootOfLastEvent;
-
     /// <summary>
     /// Create an adaptive RK7(8) integrator.
     /// Forces are added externally via <see cref="Integrator.AddForce"/>;
@@ -164,26 +158,6 @@ public sealed class RK78Integrator : Integrator
         // nearby events (e.g., a periapsis crossing immediately after a burn).
         _currentH = _initialH;
         _controller?.Reset();
-        _skipRootOfLastEvent = false;
-    }
-
-    /// <summary>
-    /// The next segment starts at the root of the last event, which the propagation continues past (an
-    /// <see cref="EventAction.Continue"/>): its detector starts from its g-value past that root, so the root is not
-    /// found again. Call it after <see cref="Initialize"/>.
-    /// </summary>
-    /// <remarks>
-    /// The event time is the midpoint of the last bisection bracket, moved to the 100 ns grid of the epochs, so the
-    /// state the segment starts from can be just before the root, on the side the g-function crossed from. Its g-value
-    /// would then make the first step cross the same root again, at the same epoch, without end. Starting from the sign
-    /// past the root is the rule Hipparchus applies to a zero of a g-function at the start of a step (its
-    /// <c>EventState</c>; confirmed by S. Guillet, 2026-10-13). A later crossing in the same direction needs a crossing
-    /// in the other direction first, which a step of the integrator does not hold without being detected, so no event
-    /// is lost.
-    /// </remarks>
-    internal void SkipRootOfLastEvent()
-    {
-        _skipRootOfLastEvent = _lastEventDetector != null;
     }
 
     /// <summary>
@@ -278,27 +252,26 @@ public sealed class RK78Integrator : Integrator
         int collapseSteps = 0;
         double collapseStart = 0.0;
 
-        // Initialize event detector g-values
+        // Initialize event detector g-values: a gated detector open at the base from the start of its search (#581), the
+        // detector of the event just handled from its g-value past that root
         double[] prevG = null;
         double[] currG = null;
+        int[] crossed = null;
+        IEventDetector justHandled = null;
         if (eventDetectors != null && eventDetectors.Count > 0)
         {
-            prevG = new double[eventDetectors.Count];
-            currG = new double[eventDetectors.Count];
             UpdateEvalState(pos, vel, baseEpoch);
-            for (int i = 0; i < eventDetectors.Count; i++)
-            {
-                prevG[i] = eventDetectors[i].IsActive ? eventDetectors[i].Evaluate(EvalState) : 0.0;
-                if (_skipRootOfLastEvent && ReferenceEquals(eventDetectors[i], _lastEventDetector))
-                {
-                    prevG[i] = _lastEventGPastRoot;
-                }
-            }
+            (prevG, justHandled) = EventValuesAtBase(eventDetectors, EvalState);
+            currG = new double[eventDetectors.Count];
+            crossed = new int[eventDetectors.Count];
+        }
+        else
+        {
+            SkipRoot = false;
         }
 
         // The gates still closed at the base (#569), but that of the detector of the event just handled, which it decided
-        var gates = EventGates.Create(eventDetectors, baseEpoch, prevG, _skipRootOfLastEvent ? _lastEventDetector : null);
-        _skipRootOfLastEvent = false;
+        var gates = EventGates.Create(eventDetectors, baseEpoch, prevG, justHandled);
 
         while (true)
         {
@@ -391,13 +364,13 @@ public sealed class RK78Integrator : Integrator
                     var endEpoch = TimeArgument.EpochAt(baseEpoch, t);
                     gates?.AfterStep(segment.Steps[^1], baseEpoch, endEpoch, prevG, this);
                     UpdateEvalState(pos, vel, endEpoch);
-                    int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
+                    int count = CrossingsInStep(eventDetectors, EvalState, prevG, currG, gates, crossed);
 
-                    if (detIdx >= 0)
+                    if (count > 0)
                     {
                         _currentH = hNew;
                         return new IntegrationResult(segment,
-                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx], gates));
+                            LocateEarliestEvent(segment, eventDetectors, crossed, count, prevG, currG, gates));
                     }
 
                     (prevG, currG) = (currG, prevG);
@@ -429,12 +402,12 @@ public sealed class RK78Integrator : Integrator
                     var endEpoch = TimeArgument.EpochAt(baseEpoch, t);
                     gates?.AfterStep(segment.Steps[^1], baseEpoch, endEpoch, prevG, this);
                     UpdateEvalState(pos, vel, endEpoch);
-                    int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
+                    int count = CrossingsInStep(eventDetectors, EvalState, prevG, currG, gates, crossed);
 
-                    if (detIdx >= 0)
+                    if (count > 0)
                     {
                         return new IntegrationResult(segment,
-                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx], gates));
+                            LocateEarliestEvent(segment, eventDetectors, crossed, count, prevG, currG, gates));
                     }
 
                     (prevG, currG) = (currG, prevG);
@@ -500,7 +473,8 @@ public sealed class RK78Integrator : Integrator
     }
 
     /// <summary>
-    /// Locate the event detected in the last accepted step of <paramref name="segment"/>, and the state at the event.
+    /// The time of the event of <paramref name="detector"/> detected in the last accepted step of
+    /// <paramref name="segment"/>, in seconds of the time argument from its base.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -516,16 +490,16 @@ public sealed class RK78Integrator : Integrator
     /// compare before the gate, also for a UTC gate whose TDB label compares before it.
     /// </para>
     /// <para>
+    /// A g-value exactly zero at the step end is the root there, with no bisection (#580).
+    /// </para>
+    /// <para>
     /// The event time is then moved to the epoch the propagator restarts from, which <see cref="Time"/> holds to
     /// 100 ns, so that the state, the epoch of the next segment and the variational values refer to the same instant.
     /// </para>
     /// </remarks>
-    private EventInfo LocateEvent(PropagationSegment segment, IEventDetector detector, int detectorIndex, double gStart,
+    private double EventTime(PropagationSegment segment, IEventDetector detector, int detectorIndex, double gStart,
         double gEnd, EventGates gates)
     {
-        _lastEventDetector = detector;
-        _lastEventGPastRoot = gEnd;
-
         var step = segment.Steps[^1];
         double stepEnd = step.CumulativeTime + step.StepSize;
         var baseEpoch = segment.BaseEpoch;
@@ -536,18 +510,43 @@ public sealed class RK78Integrator : Integrator
             var gated = (IGatedEventDetector)detector;
             eventT = zeroAtGate
                 ? gateT
-                : System.Math.Max(FindRootInsideStep(step, baseEpoch, gateT, stepEnd, gated.EvaluateOpen, gStart, gEnd), gateT);
-            eventT = NotBeforeGate(baseEpoch, OnEpochGrid(baseEpoch, eventT, step.CumulativeTime, stepEnd), stepEnd,
+                : gEnd == 0.0
+                    ? stepEnd
+                    : System.Math.Max(FindRootInsideStep(step, baseEpoch, gateT, stepEnd, gated.EvaluateOpen, gStart, gEnd), gateT);
+            return NotBeforeGate(baseEpoch, OnEpochGrid(baseEpoch, eventT, step.CumulativeTime, stepEnd), stepEnd,
                 gated.Gate);
         }
-        else
+
+        // A zero at the step end is the root there (#580)
+        eventT = gEnd == 0.0
+            ? stepEnd
+            : FindRootInsideStep(step, baseEpoch, step.CumulativeTime, stepEnd, detector.Evaluate, gStart, gEnd);
+        return OnEpochGrid(baseEpoch, eventT, step.CumulativeTime, stepEnd);
+    }
+
+    /// <summary>
+    /// The earliest of the events detected in the last accepted step of <paramref name="segment"/> (#578): each located
+    /// as <see cref="EventTime"/> does, the earliest event time kept, ties in list order; and the state at it.
+    /// </summary>
+    private EventInfo LocateEarliestEvent(PropagationSegment segment, IReadOnlyList<IEventDetector> detectors,
+        int[] crossed, int count, double[] prevG, double[] currG, EventGates gates)
+    {
+        int index = crossed[0];
+        double eventT = EventTime(segment, detectors[index], index, prevG[index], currG[index], gates);
+        for (int k = 1; k < count; k++)
         {
-            eventT = FindRootInsideStep(step, baseEpoch, step.CumulativeTime, stepEnd, detector.Evaluate, gStart, gEnd);
-            eventT = OnEpochGrid(baseEpoch, eventT, step.CumulativeTime, stepEnd);
+            int candidate = crossed[k];
+            double t = EventTime(segment, detectors[candidate], candidate, prevG[candidate], currG[candidate], gates);
+            if (t < eventT)
+            {
+                eventT = t;
+                index = candidate;
+            }
         }
 
-        var (eventPos, eventVel) = StateInsideStep(step, baseEpoch, eventT);
-        return new EventInfo(detectorIndex, eventT, eventPos, eventVel);
+        RecordEvent(detectors[index], currG[index]);
+        var (eventPos, eventVel) = StateInsideStep(segment.Steps[^1], segment.BaseEpoch, eventT);
+        return new EventInfo(index, eventT, eventPos, eventVel);
     }
 
     // The root of g between tStart and tEnd inside the accepted step, by bisection on the states of shortened steps
