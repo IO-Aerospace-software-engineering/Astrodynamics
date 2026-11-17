@@ -935,7 +935,7 @@ var opm = spacecraft.ToOpm(
     epoch: null,                      // The initial epoch (or one within the propagation, #658)
     includeKeplerianElements: true,   // Include optional Keplerian elements
     includeSpacecraftParameters: true, // Include mass, drag, SRP
-    includeManeuvers: true);          // Include the maneuvers executed by the epoch
+    includeManeuvers: true);          // Include the maneuvers ignited by the epoch
 
 // Save for archival/sharing
 opm.SaveToFile("iss_state.opm");

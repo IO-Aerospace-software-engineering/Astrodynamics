@@ -3268,10 +3268,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `MASS` was the mass after every burn and its maneuvers every executed impulse: one burn later 1 212 km and 1 137 m/s off
   the propagated state on the issue's case, and at the default epoch a state before the burn with the mass after it. The
   OPM of a spacecraft that holds propagated states now carries the state, the mass and the maneuvers of its epoch (see
-  **Changed**): the state is `GetEphemeris`'s at the epoch, within 3.8e-9 m of the solution, the mass Tsiolkovsky's
-  after the burn from the burn's epoch on and the full mass before, the maneuvers the burn from its epoch on and none
-  before (`SpacecraftToOpmTests`, both integrators, from ICRF and ECLIPJ2000, the default epoch, before, at and after the
-  burn, red on b4f5dbb); a TLE spacecraft propagated numerically writes its propagated state in TEME, 53.7 km from SGP4
+  **Changed**): the state is `GetEphemeris`'s at the epoch, within 5.3e-9 m of the RK7(8) solution, the mass
+  Tsiolkovsky's after the burn from its ignition on and the full mass before, the maneuvers the burn from its ignition
+  on and none before (`SpacecraftToOpmTests`, both integrators, from ICRF and ECLIPJ2000, the default epoch, before the
+  burn, a tick before its ignition, at it, 1 s after it, at the impulse and after; red on b4f5dbb, and at the ignition
+  and 1 s after it while the branch counted the burn from its impulse); a TLE spacecraft propagated numerically writes its propagated state in TEME, 53.7 km from SGP4
   after 1 h, one only sampled by `TLEPropagator` SGP4 as before.
 
 **Changed**
@@ -4569,9 +4570,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: `Spacecraft.ToOpm` writes the propagated state, mass and maneuvers of its epoch**
   ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided by S. Guillet,
   2026-11-17). A spacecraft that holds propagated states writes `GetEphemeris(epoch, observer, frame, Aberration.None)`
-  with the observer and the frame of its initial orbital parameters, its mass at the epoch (its mass after the
-  propagation plus the fuel of the impulses executed after the epoch) and only the impulses executed by the epoch, an
-  impulse counting at its event; an epoch outside the propagated states, the default one included when the propagation
+  with the observer and the frame of its initial orbital parameters, with the mass and the impulses ignited by then
+  (its mass after the propagation plus the fuel of the impulses ignited after the epoch, and only the impulses ignited
+  by the epoch), an impulse counting from the start of its thrust window, the `MAN_EPOCH_IGNITION` written (between the
+  ignition and the event, about two thirds of the burn, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
   started later, throws `InvalidOperationException` (#527). A spacecraft without propagated states writes the motion of
   its initial orbit as before. Migration: pass the epoch of the instant to export, the end of the propagation for the
   state after every maneuver (the default epoch, the initial one, now carries no maneuver of a propagation that starts

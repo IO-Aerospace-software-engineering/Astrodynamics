@@ -185,9 +185,9 @@ namespace ClaudeMdSamples
         {
             #region net:8
             // spacecraft: a propagated spacecraft with a COSPAR id; end: an epoch of its propagation after its burns
-            // The OPM carries the state, the mass and the maneuvers executed by its epoch (#658)
+            // The OPM carries the state of its epoch, with the mass and the maneuvers ignited by then (#658)
             var opm = spacecraft.ToOpm(epoch: end, includeManeuvers: true);
-            // OPM will contain OpmManeuverParameters for each ImpulseManeuver executed by then
+            // OPM will contain OpmManeuverParameters for each ImpulseManeuver ignited by then
 
             // Manual maneuver export from ImpulseManeuver
             foreach (var maneuver in spacecraft.ExecutedManeuvers)

@@ -1083,8 +1083,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// and its maneuvers at that instant (#658, decided by S. Guillet, 2026-11-17). A spacecraft that holds propagated
         /// states (by <c>Propagate</c>, <c>Scenario.SimulateAsync</c>, the builder, a propagator built directly or
         /// <see cref="AddPropagatedStates"/>) writes the state read from them, <see cref="GetEphemeris"/> relative to the
-        /// observer and in the frame of its initial orbital parameters without aberration, the mass at the epoch and the
-        /// impulses executed by then; one without them, the motion of its initial orbital parameters (two-body for
+        /// observer and in the frame of its initial orbital parameters without aberration, with the mass and the impulses
+        /// ignited by then; one without them, the motion of its initial orbital parameters (two-body for
         /// osculating elements, SGP4 for a TLE, also when <see cref="TLEPropagator"/> sampled it) with its mass now and the
         /// maneuvers of its last propagation, none for a spacecraft never propagated, as before 11.0.0.
         /// </summary>
@@ -1092,18 +1092,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="epoch">The epoch of the state. If null, the epoch of the initial orbital parameters.</param>
         /// <param name="includeKeplerianElements">If true, includes optional Keplerian elements in the OPM.</param>
         /// <param name="includeSpacecraftParameters">If true, includes spacecraft parameters (mass, drag, SRP).</param>
-        /// <param name="includeManeuvers">If true, includes the maneuvers executed by the epoch.</param>
+        /// <param name="includeManeuvers">If true, includes the maneuvers ignited by the epoch (all those executed for a
+        /// spacecraft without propagated states).</param>
         /// <returns>A new OPM instance representing this spacecraft's state.</returns>
         /// <exception cref="InvalidOperationException">CosparId is not set; or the spacecraft holds propagated states and
         /// the epoch, given or by default, lies outside them (#527).</exception>
         /// <remarks>
         /// <para>
         /// The mass of a propagated spacecraft at the epoch is its mass after the propagation plus the fuel of the impulses
-        /// executed after the epoch; an impulse counts at its epoch, the instant the propagated state receives its delta-V
-        /// and the tanks lose its fuel (at that epoch the state read is the state after it), so that the state, the mass
-        /// and the maneuvers written are those of one instant. Before 11.0.0 the state was the motion of the initial orbit
-        /// whatever the propagation, with the mass and every maneuver after the propagation: 1 212 km and 1 137 m/s off the
-        /// propagated state one burn later.
+        /// ignited after the epoch; an impulse counts from its ignition, the start of its thrust window, the
+        /// <c>MAN_EPOCH_IGNITION</c> written (#658, decided by S. Guillet, 2026-11-17: "the mass and the maneuvers ignited by
+        /// then"). The propagated state receives the delta-V of an impulse at its event, about two thirds of the burn after
+        /// the ignition (<see cref="Maneuver.ImpulseManeuver"/>): at an epoch between the two (3.4 s for a 5.2 s burn) the
+        /// state written is the state before the impulse, with the burn listed and its fuel spent. Before 11.0.0 the state
+        /// was the motion of the initial orbit whatever the propagation, with the mass and every maneuver after the
+        /// propagation: 1 212 km and 1 137 m/s off the propagated state one burn later.
         /// </para>
         /// <para>
         /// Maneuver delta-V components are exported in the same inertial reference frame as the state vector
@@ -1142,10 +1145,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     initialState.Covariance);
             }
 
-            // The impulses of the last propagation executed by the epoch, whose delta-V and fuel the state and the mass
-            // hold; all of them for a spacecraft without propagated states, as before
-            bool ExecutedBy(Maneuver.Maneuver m) => !propagated || (m.ImpulseEpoch.HasValue && m.ImpulseEpoch.Value <= targetEpoch);
-            double laterFuel = propagated ? ExecutedManeuvers.OfType<Maneuver.ImpulseManeuver>().Where(m => m.ImpulseEpoch.HasValue && !ExecutedBy(m)).Sum(m => m.FuelBurned) : 0.0;
+            // The impulses of the last propagation ignited by the epoch (#658, decided by S. Guillet, 2026-11-17), whose
+            // fuel the mass has spent; all of them for a spacecraft without propagated states, as before
+            static bool IgnitedBy(Maneuver.Maneuver m, Time t) => m is Maneuver.ImpulseManeuver { ThrustWindow: { } thrust } && thrust.StartDate <= t;
+            bool ExecutedBy(Maneuver.Maneuver m) => !propagated || IgnitedBy(m, targetEpoch);
+            double laterFuel = propagated
+                ? ExecutedManeuvers.OfType<Maneuver.ImpulseManeuver>().Where(m => m.ThrustWindow.HasValue && !IgnitedBy(m, targetEpoch)).Sum(m => m.FuelBurned)
+                : 0.0;
 
             // Create header
             var header = originator != null

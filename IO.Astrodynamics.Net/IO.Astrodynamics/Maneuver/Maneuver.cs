@@ -129,13 +129,6 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         public double FuelBurned { get; internal set; }
 
-        /// <summary>
-        /// The epoch of the impulse of an executed <see cref="ImpulseManeuver"/>: the event at which the propagated state
-        /// receives its delta-V and the tanks lose its fuel, the label of the state it was executed on; null before it runs,
-        /// for an attitude, and after a reset. <c>Spacecraft.ToOpm</c> writes the maneuvers executed by its epoch (#658).
-        /// </summary>
-        internal Time? ImpulseEpoch { get; set; }
-
         protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
         {
             ManeuverCenter = maneuverCenter;
@@ -267,7 +260,6 @@ namespace IO.Astrodynamics.Maneuver
         {
             FuelBurned = 0.0;
             ManeuverWindow = ThrustWindow = null;
-            ImpulseEpoch = null;
             PropagationGate = null;
         }
     }

@@ -175,10 +175,12 @@ by S. Guillet, 2026-11-17).
 - A spacecraft that holds propagated states (after `Propagate`, `Scenario.SimulateAsync`, the builder, a
   `CentralBodyPropagator` built directly, or `AddPropagatedStates`) writes the state read from them,
   `GetEphemeris(epoch, observer, frame, Aberration.None)` with the observer and the frame of its initial orbital
-  parameters (TEME for a TLE), its mass at the epoch (its mass after the propagation plus the fuel of the impulses
-  executed after the epoch) and the impulses executed by the epoch. An impulse counts at its epoch, the event at which
-  the propagated state receives its ΔV and the tanks lose its fuel; at that epoch the state written is the state after
-  it. An epoch outside the propagated states throws `InvalidOperationException`, as every read there
+  parameters (TEME for a TLE), with the mass and the impulses ignited by then: its mass after the propagation plus the
+  fuel of the impulses ignited after the epoch, and the impulses ignited by the epoch. An impulse counts from its
+  ignition, the start of its thrust window, the `MAN_EPOCH_IGNITION` written. The propagated state receives its ΔV at
+  its event, about two thirds of the burn later (`ImpulseManeuver`): at an epoch between the two (3.4 s for a 5.2 s
+  burn) the state written is the state before the impulse, with the burn listed and its fuel spent; from the event on,
+  the state after it. An epoch outside the propagated states throws `InvalidOperationException`, as every read there
   ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)); so does the default epoch
   when the propagation started later.
 - A spacecraft without propagated states (never propagated, or a TLE spacecraft only sampled by `TLEPropagator`) writes

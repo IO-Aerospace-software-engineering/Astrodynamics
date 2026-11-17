@@ -25,7 +25,8 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// <summary>
 /// <c>Spacecraft.ToOpm</c> after a propagation writes the state, the mass and the maneuvers of one instant (#658, decided by
 /// S. Guillet, 2026-11-17): the state read from the propagated states at the epoch, relative to the observer and in the frame
-/// of the initial orbital parameters, the mass at the epoch and the impulses executed by then. Before, it wrote the two-body
+/// of the initial orbital parameters, the mass and the impulses ignited by then (the start of their thrust window, the
+/// <c>MAN_EPOCH_IGNITION</c> written). Before, it wrote the two-body
 /// (or SGP4) motion of the initial orbit with the mass and the maneuvers after the propagation, 1 212 km and 1 137 m/s off
 /// one burn later. The case of the issue: a 400 × 1 000 km LEO from its apogee about a point-mass Earth, an
 /// <see cref="ApogeeHeightManeuver"/> to ra + 500 km, 1 000 kg dry and 900 kg of fuel, Isp 450 s, 6 000 s at 10 s outputs.
@@ -39,10 +40,10 @@ public class SpacecraftToOpmTests
 
     /// <summary>The state of the OPM against the solution of the propagation, in the frame of the initial orbit, m: the read
     /// of the stored states against the solution (RK7(8): Lagrange of the outputs against its dense output; Velocity-Verlet:
-    /// against its cubic Hermite), 0 at an output. Worst 3.84e-9 m on Linux x64 (RK7(8), ICRF, S + 1 000 s). Provisional:
-    /// twice the Linux worst, rounded up at the second significant digit, to be set again from the Windows x64 and macOS
-    /// arm64 CI logs.</summary>
-    internal const double StateAgainstSolution = 7.7e-9;
+    /// against its cubic Hermite, at the output epochs and the impulse), 0 at an output. Worst 5.23e-9 m on Linux x64
+    /// (RK7(8), ECLIPJ2000, 1 s after the ignition). Provisional: twice the Linux worst, rounded up at the second
+    /// significant digit, to be set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    internal const double StateAgainstSolution = 1.1e-8;
 
     private readonly ITestOutputHelper _output;
 
@@ -71,10 +72,13 @@ public class SpacecraftToOpmTests
     }
 
     /// <summary>
-    /// Before the burn (S + 1 000 s), after it (S + 5 000 s), at the end and at the default epoch (the initial one): the state
-    /// is <c>GetEphemeris</c>'s at the epoch, in the frame of the initial orbit, the mass Tsiolkovsky's after the burn when
-    /// the burn is executed by then and the full mass before, and the maneuvers the burn when it is executed by then, none
-    /// before. Both integrators, from ICRF and from ECLIPJ2000. An epoch outside the propagated states throws.
+    /// Before the burn (S + 1 000 s), one tick before its ignition, at its ignition, 1 s after it (before the impulse, 3.4 s
+    /// after the ignition), at the impulse, after it (S + 5 000 s), at the end and at the default epoch (the initial one): the
+    /// state is <c>GetEphemeris</c>'s at the epoch, in the frame of the initial orbit, the mass Tsiolkovsky's after the burn
+    /// when the burn is ignited by then and the full mass before, and the maneuvers the burn when it is ignited by then, none
+    /// before (#658, decided by S. Guillet, 2026-11-17: "the mass and the maneuvers ignited by then"; the branch counted the
+    /// burn from its impulse at first, so the epochs between the ignition and the impulse were red). Both integrators, from
+    /// ICRF and from ECLIPJ2000. An epoch outside the propagated states throws.
     /// </summary>
     [Theory]
     [InlineData("RK", "ICRF", -6581)]
@@ -92,8 +96,18 @@ public class SpacecraftToOpmTests
         var initialFrame = spacecraft.InitialOrbitalParameters.Frame;
         var earth = (CelestialItem)spacecraft.InitialOrbitalParameters.Observer;
         double massAfter = (Dry + Fuel) * System.Math.Exp(-burn.DeltaV.Magnitude() / (Isp * IO.Astrodynamics.Constants.g0));
+        var ignition = burn.ThrustWindow!.Value.StartDate;
+        Assert.True(ignition.AddSeconds(1.0) < tc);
 
-        foreach (var (epoch, label) in new (Time?, string)[] { (null, "default"), (S.AddSeconds(1000.0), "before"), (tc, "at the burn"), (S.AddSeconds(5000.0), "after"), (S.AddSeconds(6000.0), "end") })
+        // The epochs off the output grid (about the ignition) are checked against the solution in RK7(8) only: there the
+        // cubic Hermite of Velocity-Verlet departs from the Lagrange read of its outputs by up to 3.1e-4 m anywhere in the
+        // window (1.4e-4 m at S + 2 000.25 s, far from the burn; measured on Linux x64), its own interpolation, not ToOpm's
+        foreach (var (epoch, label, onGrid) in new (Time?, string, bool)[]
+                 {
+                     (null, "default", true), (S.AddSeconds(1000.0), "before", true), (ignition.AddSeconds(-1e-7), "a tick before the ignition", false),
+                     (ignition, "at the ignition", false), (ignition.AddSeconds(1.0), "1 s after the ignition", false), (tc, "at the impulse", true),
+                     (S.AddSeconds(5000.0), "after", true), (S.AddSeconds(6000.0), "end", true)
+                 })
         {
             // Act
             var opm = spacecraft.ToOpm(epoch: epoch);
@@ -115,12 +129,16 @@ public class SpacecraftToOpmTests
             double dr = (new Vector3(sv.X, sv.Y, sv.Z) * 1000.0 - r).Magnitude();
 
             // The mass and the maneuvers of the epoch
-            bool executed = t >= tc;
+            bool executed = t >= ignition;
             double expectedMass = executed ? massAfter : Dry + Fuel;
             int maneuvers = opm.Data.Maneuvers?.Count() ?? 0;
             _output.WriteLine($"MEASURE #658 {integrator} {frame} {label} (S + {(t - S).TotalSeconds:R} s, burn at S + {(tc - S).TotalSeconds:R} s): |r - solution| {dr:E3} m, " +
-                              $"mass {opm.Data.Mass:R} kg against {expectedMass:R} kg, {maneuvers} maneuvers");
-            Assert.True(dr <= StateAgainstSolution, $"{label}: {dr:E3} m from the solution");
+                              $"mass {opm.Data.Mass:R} kg against {expectedMass:R} kg, {maneuvers} maneuvers, ignition at S + {(ignition - S).TotalSeconds:R} s");
+            if (onGrid || integrator == "RK")
+            {
+                Assert.True(dr <= StateAgainstSolution, $"{label}: {dr:E3} m from the solution");
+            }
+
             Assert.True(System.Math.Abs(opm.Data.Mass!.Value - expectedMass) <= 1e-9 * expectedMass, $"{label}: mass {opm.Data.Mass} against {expectedMass}");
             Assert.Equal(executed ? 1 : 0, maneuvers);
             if (executed)
