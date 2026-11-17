@@ -916,10 +916,16 @@ static IO::Astrodynamics::API::DTO::CelestialBodyDTO ReadCelestialBodyInfo(int b
     return res;
 }
 
+// SPICE returns from an error instead of aborting, and prints nothing: the proxies report each error through
+// GetLastErrorProxy, and SpiceAPI throws it (#727, decided by S. Guillet, 2026-11-17; before, SPICE's default error output
+// printed the banner of every error on the standard output, 2888 of them in one conjunction analysis past its SPKs, which
+// corrupted the output of a host application)
 void ActivateErrorManagement()
 {
     SpiceChar errorMode[7] = "RETURN";
     erract_c("SET", ERRORMSGLENGTH, errorMode);
+    SpiceChar errorOutput[5] = "NONE";
+    errprt_c("SET", ERRORMSGLENGTH, errorOutput);
 }
 
 char *HandleError()

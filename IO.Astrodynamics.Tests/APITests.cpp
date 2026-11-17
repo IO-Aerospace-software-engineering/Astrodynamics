@@ -197,6 +197,34 @@ TEST(API, FindWindowsOnDistanceConstraintProxyOutOfCoverage)
     AssertNoWindowWritten(windows);
 }
 
+// #727: ActivateErrorManagement set erract_c to RETURN only, so that SPICE also printed the banner of every error the
+// proxies report through GetLastErrorProxy on the standard output; its error output is NONE (errprt_c, decided by
+// S. Guillet, 2026-11-17). Failed calls of a window search, a read and a transformation: their messages, and nothing on the
+// standard output (captured at its file descriptor, which SPICE's f2c output writes through)
+TEST(API, FailedProxiesPrintNothingOnTheStandardOutput)
+{
+    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
+    FillWindows(windows);
+    testing::internal::CaptureStdout();
+    const bool searched = FindWindowsOnDistanceConstraintProxy(SearchWindow("2160 MAR 1", "2160 MAR 10"), 399, 301, ">", 400000000.0,
+                                                               "NONE", 3600.0, windows);
+    const std::string searchMessage = GetLastErrorProxy();
+    const auto state = ReadEphemerisAtGivenEpochProxy(IO::Astrodynamics::Time::TDB("2160 MAR 1").GetSecondsFromJ2000().count(), 399, 301,
+                                                      "J2000", "NONE");
+    const std::string readMessage = GetLastErrorProxy();
+    const auto rotation = TransformFrameProxy("NOT_A_FRAME_727", "J2000", 0.0);
+    const std::string transformMessage = GetLastErrorProxy();
+    std::fflush(nullptr);
+    const std::string output = testing::internal::GetCapturedStdout();
+    ASSERT_FALSE(searched);
+    ASSERT_NE(std::string::npos, searchMessage.find("Insufficient ephemeris data"));
+    ASSERT_TRUE(std::isnan(state.position.x));
+    ASSERT_NE(std::string::npos, readMessage.find("Insufficient ephemeris data"));
+    ASSERT_TRUE(std::isnan(rotation.Rotation.w));
+    ASSERT_FALSE(transformMessage.empty());
+    EXPECT_EQ(std::string(), output);
+}
+
 TEST(API, FindWindowsOnOccultationConstraintProxyOutOfCoverage)
 {
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];

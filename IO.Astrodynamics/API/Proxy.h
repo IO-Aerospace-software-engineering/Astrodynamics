@@ -418,7 +418,8 @@ static constexpr const int lenout = 33;
 char *HandleError();
 
 /**
- * Activate error management
+ * Activate error management: SPICE returns from an error (erract_c RETURN) and prints nothing (errprt_c NONE, #727); the
+ * proxies report the error through GetLastErrorProxy
  */
 void ActivateErrorManagement();
 

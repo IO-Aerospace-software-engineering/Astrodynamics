@@ -4,6 +4,13 @@
 
 `SpiceAPI` is the singleton entry point for SPICE-backed operations.
 
+SPICE reports its errors to the library only: the native layer sets SPICE to return from an error (`erract` RETURN) and
+to print nothing (`errprt` NONE), and each method throws with SPICE's message. Before 11.0.0 SPICE also printed the
+banner of every error on the standard output of the process, those the library handles included (a read past the
+coverage of a kernel; 2888 banners in one conjunction analysis past its SPKs), which corrupted the output of a host
+application such as a command-line tool ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727),
+decided by S. Guillet, 2026-11-17).
+
 | Method | Description |
 |--------|-------------|
 | `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |

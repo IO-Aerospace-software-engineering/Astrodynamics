@@ -3223,6 +3223,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   proxy itself is `gfoclt_c` bit for bit, 6.3e-7 s from that reference on the other Earth orientation kernel of the C++
   tests (`API.FindWindowsOnOccultationConstraintProxyOfAPointFrontBody`, red on a85098d).
 
+- **SPICE printed every error on the standard output** ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727)).
+  `ActivateErrorManagement`, which every proxy calls, set `erract_c` to RETURN but not `errprt_c`, so SPICE printed the
+  banner of each error it signalled on the standard output ("Toolkit version: N0067 ... SPICE(SPKINSUFFDATA) -- ... A
+  traceback follows"), the errors the proxies report through `GetLastErrorProxy()` and `SpiceAPI` throws included: a
+  read past a kernel's coverage, a search SPICE cannot run, an unknown frame (three banners from three failed calls,
+  measured on a85098d; 2888 in one conjunction analysis past its SPKs, #454), which corrupted the output of a host
+  application, a CLI's or a service's. Its error output is now NONE (`errprt_c`; a native change for a technical
+  reason), the messages reaching the caller through the exceptions only (decided by S. Guillet, 2026-11-17): nothing is
+  printed, in a child process whose three failed calls throw SPICE's messages
+  (`ColdStartTests.SpiceErrors_ReachTheCallerOnly_NothingOnTheStandardOutput`) and at the file descriptor of the C++
+  tests (`API.FailedProxiesPrintNothingOnTheStandardOutput`), both red on a85098d.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).

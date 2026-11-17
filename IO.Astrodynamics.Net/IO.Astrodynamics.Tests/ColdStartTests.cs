@@ -110,6 +110,20 @@ public class ColdStartTests
         }
     }
 
+    [Fact]
+    public void SpiceErrors_ReachTheCallerOnly_NothingOnTheStandardOutput()
+    {
+        // A child whose calls SPICE fails (#727): a read past de440s, a CSPICE window search past it and an orientation read
+        // without a CK, each throwing SPICE's message, checked by the child. Before, ActivateErrorManagement set erract_c to
+        // RETURN only, and SPICE printed the banner of each error on the standard output, which corrupts the output of a host
+        // application (a CLI's); its error output is now NONE (errprt_c, decided by S. Guillet, 2026-11-17)
+        string output = RunChild("spice-errors-silent");
+
+        Assert.DoesNotContain("SPICE(", output);
+        Assert.DoesNotContain("Toolkit", output);
+        Assert.Equal(string.Empty, output.Trim());
+    }
+
     [Theory]
     [InlineData("two-body-first-propagate")]
     [InlineData("two-body-first-conic")]
