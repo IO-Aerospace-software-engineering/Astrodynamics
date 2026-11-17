@@ -756,13 +756,24 @@ with SRP. Thresholds of the specification: R1 below 1e-7, R2 to R5 below 1e-4 ou
 | Case | Φ_rr | Φ_rv | Φ_vr | Φ_vv | Ψ, position | Ψ, velocity | In the penumbra |
 |------|------|------|------|------|-------------|-------------|-----------------|
 | R1 | 1.3e-8 | 1.6e-8 | 1.4e-8 | 1.7e-8 | | | |
-| R2 | 1.6e-8 | 9.1e-9 | 1.6e-8 | 8.2e-9 | Cd 1.1e-7 | Cd 1.1e-7 | |
-| R3 | 6.3e-7 | 5.9e-7 | 6.4e-7 | 5.9e-7 | Cr 1.3e-5 | Cr 1.9e-4 (local, a record) | 30 crossings: Φ 5.9e-7 to 6.3e-7, Ψ_Cr 1.1e-5 |
-| R4 | 1.1e-8 | 2.8e-9 | 1.8e-8 | 2.5e-9 | Cr 1.4e-6 | Cr 1.6e-8 | 2 crossings: Φ 2.2e-10 to 3.6e-9, Ψ_Cr 3.5e-9 |
-| R5 | 6.0e-7 | 3.8e-7 | 6.0e-7 | 3.8e-7 | Cd 6.3e-8 | Cd 6.5e-8 | |
+| R2 | 1.9e-8 | 2.1e-8 | 1.9e-8 | 2.1e-8 | Cd 1.3e-7 | Cd 1.3e-7 | |
+| R3 | 4.7e-7 | 3.7e-7 | 4.6e-7 | 3.6e-7 | Cr 2.0e-5 | Cr 1.5e-4 (local, a record) | 30 crossings: Φ 3.5e-7 to 4.6e-7, Ψ_Cr 9.0e-6 |
+| R4 | 6.5e-8 | 2.8e-9 | 5.2e-8 | 2.5e-9 | Cr 6.9e-7 | Cr 1.7e-8 | 2 crossings: Φ 2.5e-10 to 4.8e-8, Ψ_Cr 1.9e-9 |
+| R5 | 1.4e-7 | 7.9e-7 | 1.4e-7 | 7.8e-7 | Cd 6.4e-8 | Cd 6.5e-8 | |
 
 Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). R1 to R5
-measured again on 2026-11-11 with the nearest tick of
+measured again on 2026-11-17 with the exact SLERP of the orientation cache of
+[#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561) (Linux x64, Release), which moves
+the Earth's orientation by up to 3.4e-10 rad and so the steps of the references: another draw of their noise (the
+figures of 2026-11-11, which the table held before: R2 1.6e-8, 9.1e-9, 1.6e-8, 8.2e-9, Ψ_Cd 1.1e-7; R3 6.3e-7, 5.9e-7,
+6.4e-7, 5.9e-7, Ψ_Cr 1.3e-5 and 1.9e-4, in the penumbra Φ 5.9e-7 to 6.3e-7, Ψ_Cr 1.1e-5; R4 1.1e-8, 2.8e-9, 1.8e-8,
+2.5e-9, Ψ_Cr 1.4e-6 and 1.6e-8, in the penumbra Φ 2.2e-10 to 3.6e-9, Ψ_Cr 3.5e-9; R5 6.0e-7, 3.8e-7, 6.0e-7, 3.8e-7,
+Ψ_Cd 6.3e-8 and 6.5e-8; R1, which reads no orientation, unchanged bit for bit). Φ of R4 under test moves by 1.3e-9 at
+most per block. Over eleven draws of the reference of R4, its start moved by −5 to +5 ulps along x with Φ under test
+unchanged, the worst block in the penumbra spans 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d, before #561): the
+references one ulp apart differ among themselves by more than the measure. The penumbra record of R4 is set again at
+twice its measurement, 9.6e-8 (1.2e-8 before), provisional (to be confirmed by S. Guillet). R1 to R5 measured on
+2026-11-11 with the nearest tick of
 [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Linux CI job 130260609740, and
 the same figures in a session the same day), another draw of the noise of the central differences: about half of the
 TDB labels at which the forces read the bodies, the orientation and the UTC of the drag move by one tick; where the Φ
@@ -914,6 +925,16 @@ nominal burn (fixed in epoch and ΔV), the errors are as follows:
 - Ψ_Cr: 3.7e-6 in position and 6.2e-6 in velocity over the arc (3.3e-6 and 5.7e-6), 3.5e-5 relative to the local value
   after the burn (3.9e-5) and 8.5e-6 in the penumbra (7.9e-6), records rather than F1 figures (1.2e-5, 7.8e-5 and
   1.6e-5).
+
+With the exact SLERP of the orientation cache of
+[#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561) (Linux x64, Release, 2026-11-17),
+another draw of the noise of the references: Φ 3.2e-8 at most per block, 3.1e-8 in the penumbra; Ψ_Cd 1.4e-7 over the
+arc, 1.4e-6 after the burn, 2.0e-7 in the penumbra; Ψ_Cr 1.1e-5 and 1.9e-5 over the arc, 7.3e-5 after the burn, 1.5e-5
+in the penumbra, while Ψ_Cr under test moves by 4.3e-11 of its largest value and stays within 1.1e-10 over the arc of
+the same propagation at 1e-14 with the step control. Over eleven draws of the reference, its start moved by −5 to +5
+ulps along x with Ψ_Cr under test unchanged, Ψ_Cr over the arc in velocity spans 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
+a85098d, where 9 of the 11 exceed the record of 1.2e-5: it held at the nominal start alone). The arc record of Ψ_Cr is
+set again at twice its measurement, 3.9e-5, provisional (to be confirmed by S. Guillet).
 
 Another draw of the noise of the references, by analogy with R2, R4 and R5 above, where the Φ under test was compared
 on both behaviours (the burn case was not split): about half of the TDB labels at which the forces read the time move

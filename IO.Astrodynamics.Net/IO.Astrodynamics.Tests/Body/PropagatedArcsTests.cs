@@ -298,8 +298,8 @@ public class PropagatedArcsTests
         Assert.True(index >= 0, key);
         using var run = ArcRun.Run(-(5400 + index), key);
         var m = Measure(run);
-        _output.WriteLine($"MEASURE #540 arcs {key.Replace('|', ' ')}: near managed {m.NearManaged:E2} m SPK {m.NearSpk:E2} m, far managed {m.FarManaged:E2} m SPK {m.FarSpk:E2} m, " +
-                          $"SPK - managed {m.SpkAgainstManaged:E2} m, v at tc - 1 us managed {m.VelocityBeforeManaged:E2} SPK {m.VelocityBeforeSpk:E2} m/s, " +
+        _output.WriteLine($"MEASURE #540 arcs {key.Replace('|', ' ')}: near managed {m.NearManaged:E3} m SPK {m.NearSpk:E2} m, far managed {m.FarManaged:E2} m SPK {m.FarSpk:E2} m, " +
+                          $"SPK - managed {m.SpkAgainstManaged:E2} m, v at tc - 1 us managed {m.VelocityBeforeManaged:E3} SPK {m.VelocityBeforeSpk:E2} m/s, " +
                           $"v at tc managed {m.VelocityAtManaged:E2} SPK {m.VelocityAtSpk:E2} m/s, jump - dV {m.JumpAgainstDeltaV:E2} m/s, boundary positions {m.BoundaryPositions:E2} m, " +
                           $"at the outputs {m.AtOutputs:E2} m, twin {m.TwinStates:E2}, {m.Impulses} impulses, arcs [{string.Join(",", run.Spacecraft.PropagatedArcs.Select(a => a.Length))}], " +
                           $"{m.NearReads} near and {m.FarReads} far reads, {m.FarDiffering} far reads differing from the former sort" +

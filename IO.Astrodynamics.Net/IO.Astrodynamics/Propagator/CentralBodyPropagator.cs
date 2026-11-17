@@ -347,7 +347,8 @@ public class CentralBodyPropagator : PropagatorBase
         // Central body gravity (two-body + geopotential if configured)
         forces.Add(new GravitationalAcceleration(centralBody));
 
-        // Third-body perturbations via Battin's formula for all other bodies
+        // Third-body perturbations for all other bodies: Battin's form far from the perturbing body, the direct
+        // difference where |r - d| < |d|/2 (ThirdBodyPerturbation, #576)
         foreach (var body in items)
         {
             if (!body.Equals(centralBody))

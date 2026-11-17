@@ -55,9 +55,11 @@ public class MinimumEpochGateEdgeTests
     /// mode) they differed between platforms: worst 6.30e-6 / 2.19e-4 / 1.31e-4 s on the perigee raise (Linux / Windows /
     /// macOS arm64; the apogee raise 4.79e-5 / −1.38e-5 / −1.35e-5 s; CI run 41852583362), against the Keplerian residual of
     /// 0.64 s that the Sun makes. With the direct difference near the Earth: 1.51e-5 s on the perigee raise, 0 on the apogee
-    /// raise (Linux x64, 2026-11-17). Twice the Linux worst, provisional (to be set again from the Windows x64 and macOS
-    /// arm64 CI logs).</summary>
-    internal const double TwoPropagateSsb = 3.1e-5;
+    /// raise (Linux x64, 2026-11-17). As a stand-in for the step sequences of other platforms, 22 draws of the start moved
+    /// by −5 to +5 ulps along x, each at the tolerance and one ulp above it: 2.17e-5 s at worst on the perigee raise, 3.3e-6
+    /// s on the apogee raise (Linux x64, 2026-11-17). Twice that worst, provisional (to be set again from the Windows x64
+    /// and macOS arm64 CI logs).</summary>
+    internal const double TwoPropagateSsb = 4.4e-5;
 
     private static readonly Time S = MinimumEpochGateTests.S;
     private readonly ITestOutputHelper _output;
@@ -534,7 +536,7 @@ public class MinimumEpochGateEdgeTests
         double difference = (one.Segments[1].BaseEpoch - two.Segments[1].BaseEpoch).TotalSeconds;
         double expected = perigeeRaise ? k.NextApsis(1000.0, true) : k.T / 2.0;
         _output.WriteLine($"MEASURE #569 gate SSB two Propagate {(perigeeRaise ? "perigee raise, gate S+1000" : "apogee raise, gate 3 s before the perigee")}: " +
-                          $"one - two {difference:E2} s, one - Keplerian {MinimumEpochGateTests.Tt(one.Segments[1].BaseEpoch) - expected:E2} s");
+                          $"one - two {difference:E3} s, one - Keplerian {MinimumEpochGateTests.Tt(one.Segments[1].BaseEpoch) - expected:E2} s");
         Assert.True(System.Math.Abs(difference) <= TwoPropagateSsb, $"{difference:E3} s");
     }
 }

@@ -148,7 +148,8 @@ release are listed under **Known limitations**.
   0.62 mm (Velocity-Verlet) from it (`SsbModeThirdBodyTests`; thresholds twice the Linux figures, provisional). The SSB
   rows of `AttitudeRecordTests`, `PropagatedArcsTests` and `MinimumEpochGateEdgeTests` that the noise had turned into
   MEASURE lines are asserted again (positions against the solution across an impulse 4.1e-4 m, the velocity 1 µs before
-  it 5.4e-7 m/s, the two-`Propagate` burn 1.5e-5 s, Linux x64; provisional). Elsewhere the acceleration is Battin's bit for
+  it 5.4e-7 m/s, the two-`Propagate` burn 1.5e-5 s, 2.2e-5 s over 22 starts and tolerances one ulp apart, Linux x64;
+  provisional, to be set again from the Windows x64 and macOS arm64 CI logs). Elsewhere the acceleration is Battin's bit for
   bit (`Acceleration_FarFromThePerturber_IsBattinsBitForBit`), so propagations about the Earth with the Moon and the Sun,
   the goldens and the GMAT conformance runs do not move.
 - **The Mars curve fit took 273.15 where it publishes 273.1** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Changed below).
@@ -158,7 +159,7 @@ release are listed under **Known limitations**.
   its closed-form derivative; the published density to 1e-15 at 0 to 49.8 km outside the transitions
   (`MarsStandardAtmosphereDomainTests.CurveFit_TakesItsPublishedOffset`, red on a85098d at 2.07e-4 to 3.59e-4;
   `CelestialBodyTests.MarsAirDensity` against the published formula, where it held the code's former values).
- the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
+- **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
   for 0.691, with no flag, through `Analyze`, `AnalyzeAll` (sorted last), `EvaluateAvoidance` (a manoeuvre into such an
@@ -3267,7 +3268,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `GetState`, public, read the frame or the body at their epoch outside their grid, where they held its first or last
   point or extrapolated. A propagation whose step divides its window, as with the common 60 s, does not move. No code
   change is needed.
- its central body moves by the orientation it reads** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Fixed above).
+- **Breaking: a propagation with a geopotential or drag about its central body moves by the orientation it reads** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Fixed above).
   With the exact SLERP the orientation of the central body read by the geopotential and by drag moves by up to 3.4e-10
   rad (2.3 mm at a LEO radius): the bit-for-bit goldens of `PropagationGoldenTests` are recaptured, the GEO case moved by
   2.1e-6 m, the maneuver case by 1.1e-6 m (its maneuver epoch unchanged), the SRP case by 1.66 mm with 100 steps instead
@@ -3275,16 +3276,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   move. The references of the Validation records by central differences of whole propagations take other steps, another
   draw of their noise: the penumbra record of R4 (`StmValidationTests`) is set again at 9.6e-8 (its Φ 4.8e-8 there, 3.6e-9
   before, Φ under test moved by 1.3e-9) and the arc record of Ψ_Cr of the eclipsing case (`ManeuverStmValidationTests`)
-  at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), provisional. Migration: none in code; a golden of
+  at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), provisional. Eleven draws of each reference, its
+  start moved by −5 to +5 ulps with the quantity under test unchanged, show the noise of the references: R4 in the
+  penumbra 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d), Ψ_Cr over the arc 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
+  a85098d, 9 of 11 above the former record). Migration: none in code; a golden of
   a propagation with a geopotential or drag is to be captured again.
-, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
+- **Breaking: a propagation near a third body, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
   `ThirdBodyPerturbation.Apply` takes the direct difference where the spacecraft is closer to the perturbing body than
   half its distance to the central body (|r − d| < |d|/2): SSB mode near any planet, and a spacecraft near the Moon
   propagated about the Earth (within about 190 000 km of it). Those propagations take other steps and end elsewhere, within
   their integration error (an hour of LEO in SSB mode at 1e-10: 49 steps instead of 21 363); every other propagation is bit
   for bit unchanged. Migration: none in code; a result in SSB mode or near the Moon about the Earth is to be measured
   again, and an RK7(8) tolerance loosened for SSB mode (1e-9) can be tightened.
- rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
+- **Breaking: the density of Mars air below 54.887 km rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
   Below the isothermal layer (49.887 km) and through its transition (to 54.887 km), `MarsStandardAtmosphere` takes the
   curve fit's own 273.1 instead of 273.15 (decided by S. Guillet, 2026-11-17: 273.1 in the curve fit only, the 139 K
   layer unchanged). The layer is unchanged bit for bit (its base, where the fit's temperature reaches −134.15 °C, and
@@ -3295,7 +3299,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `MarsDragTests` across the base takes 36, 49 and 94 steps at 1e-11, 1e-12 and 1e-13 (35, 47 and 79 before); the
   ratios to Seiff (1982) move by at most 3.6e-4. Migration: none in code; a result that needs the former density
   multiplies it by (T + 273.1) / (T + 273.15) below the base.
- along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
+- **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
   a straight line at constant speed in ICRF, the closed form of `iauStarpm`'s space motion with a radial velocity of 0

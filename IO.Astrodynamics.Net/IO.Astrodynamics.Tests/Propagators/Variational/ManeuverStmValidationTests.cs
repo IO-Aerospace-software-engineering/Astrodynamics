@@ -283,8 +283,11 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
     // burn, outside and in the penumbra (twice 3.9e-5 and 7.9e-6; 7.5e-4 and 1.6e-4 before): the noise of the reference,
     // which a shift of the start by 2e-9 m moves by a factor of 2 to 30 (#398). The exact SLERP of the orientation cache
     // (#561) moved the arc measure in velocity from 6.2e-6 to 1.94e-5 (Linux x64, 2026-11-17) while Ψ_Cr under test moved
-    // by 4.3e-11 of its largest value: another draw of the reference's noise; set again at twice it, provisional (a record
-    // of the Validation category, to be confirmed by S. Guillet)
+    // by 4.3e-11 of its largest value: another draw of the reference's noise. Eleven draws of the reference, its start
+    // moved by −5 to +5 ulps along x (9.31e-10 m each), Ψ_Cr under test the same (Linux x64, Release, 2026-11-17), span
+    // 4.1e-6 to 4.6e-5 in velocity, and 6.2e-6 to 5.6e-5 on a85098d, where 9 of the 11 exceed the former record: it held
+    // at the start alone. Set again at twice the measurement at the start, provisional (a record of the Validation
+    // category, to be confirmed by S. Guillet)
     private const double PsiCrArcRecord = 3.9e-5;
 
     private const double PsiCrLocalRecord = 7.8e-5;
