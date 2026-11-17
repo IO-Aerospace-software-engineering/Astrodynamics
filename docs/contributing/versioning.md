@@ -110,7 +110,14 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
-- **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
+- **The Mars curve fit took 273.15 where it publishes 273.1** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Changed below).
+  `MarsStandardAtmosphere` computed the density of the NASA Glenn curve fit as p / [0.1921 (T + 273.15)], where the fit
+  ("Mars Atmosphere Model – Metric Units") takes 273.1: below the layer its density was 2.07e-4 (surface) to 3.59e-4
+  (49.8 km) under the published fit. It now takes the fit's own offset (internal `CurveFitKelvin`) in the density and in
+  its closed-form derivative; the published density to 1e-15 at 0 to 49.8 km outside the transitions
+  (`MarsStandardAtmosphereDomainTests.CurveFit_TakesItsPublishedOffset`, red on a85098d at 2.07e-4 to 3.59e-4;
+  `CelestialBodyTests.MarsAirDensity` against the published formula, where it held the code's former values).
+ the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
   for 0.691, with no flag, through `Analyze`, `AnalyzeAll` (sorted last), `EvaluateAvoidance` (a manoeuvre into such an
@@ -3211,7 +3218,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
-- **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
+- **Breaking: the density of the Mars curve fit rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
+  Below the isothermal layer (49.887 km) and through its transition (to 54.887 km), `MarsStandardAtmosphere` takes the
+  curve fit's own 273.1 instead of 273.15 (decided by S. Guillet, 2026-11-17: 273.1 in the curve fit only, the 139 K
+  layer unchanged). The layer is unchanged bit for bit (its base, where the fit's temperature reaches −134.15 °C, and
+  its pressures do not depend on the offset); through the transition the absolute temperature goes from the fit's
+  T + 273.1 (138.95 K at the base) to 139 K and the temperature in °C from the fit's to −134.15 °C by the existing
+  smootherstep, so the density and its first two derivatives stay continuous. `GetTemperature` and `GetPressure` are
+  unchanged. Every density, drag and propagation through Mars air below 54.887 km moves: the RK7(8) run of
+  `MarsDragTests` across the base takes 36, 49 and 94 steps at 1e-11, 1e-12 and 1e-13 (35, 47 and 79 before); the
+  ratios to Seiff (1982) move by at most 3.6e-4. Migration: none in code; a result that needs the former density
+  multiplies it by (T + 273.1) / (T + 273.15) below the base.
+ along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
   a straight line at constant speed in ICRF, the closed form of `iauStarpm`'s space motion with a radial velocity of 0
@@ -4782,10 +4800,6 @@ not listed.
 - **Mars atmosphere** ([#431](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/431)). Above 100 km
   `MarsStandardAtmosphere` extends an isothermal layer at 139 K: at 400 km its density is 4.6e7 times below Mars-GRAM,
   so drag in Mars orbit above about 120 km is underestimated by orders of magnitude.
-- **Kelvin offset of the standard atmospheres**
-  ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438)). `EarthStandardAtmosphere` and
-  `MarsStandardAtmosphere` take 273.15 where the NASA Glenn curve fits take 273.1: the Earth's density departs from the
-  published fit by up to 0.285 % (at 25 km), the Mars density by about 0.02 %.
 - **Covariance remediation and the non-linearity index**
   ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403),
   [#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)). The threshold 1.0 of the

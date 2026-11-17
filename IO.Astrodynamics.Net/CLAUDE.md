@@ -414,6 +414,7 @@ All models implement `IAtmosphericModel` with these methods:
 
 **Mars Models:**
 - **MarsStandardAtmosphere**: Simplified analytical model using altitude only: the NASA Glenn curve fit below 49.887 km,
+  ρ = p / [0.1921 (T + 273.1)] with the fit's own 273.1 (#438, decided by S. Guillet, 2026-11-17; 273.15 before 11.0.0),
   the isothermal layer of Seiff (1982) at 139 K above (5 km C² transition), the branches of the curve fit joined over
   500 m at 7 km (#433); positive and decreasing at every altitude;
   no thermosphere, so drag in orbit above about 120 km is underestimated (#431)

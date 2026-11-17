@@ -10,15 +10,20 @@ namespace IO.Astrodynamics.Atmosphere;
 /// Simplified analytical model. Uses only altitude - ignores time, position, and seasonal variations.
 /// Below <see cref="IsothermalLayerBase"/> (49.887 km), the curve fit of the NASA Glenn Research Center, "Mars
 /// Atmosphere Model - Metric Units" (Beginner's Guide to Aeronautics): T = −31 − 0.000998 h °C below 7 km,
-/// T = −23.4 − 0.00222 h °C above, p = 0.699 exp(−0.00009 h) kPa, ρ = p / (0.1921 T_K). Above it, where that
-/// temperature reaches 139 K, the isothermal layer of A. Seiff, "Post-Viking models for the structure of the summer
+/// T = −23.4 − 0.00222 h °C above, p = 0.699 exp(−0.00009 h) kPa, ρ = p / [0.1921 (T + 273.1)], the fit's own offset
+/// of 273.1, not the 273.15 of the Celsius scale (#438, decided by S. Guillet, 2026-11-17; before 11.0.0 the density took
+/// 273.15 and was 2.1e-4 to 3.6e-4 below the published fit). Above it, where that temperature reaches −134.15 °C, the
+/// 139 K of the isothermal layer of A. Seiff, "Post-Viking models for the structure of the summer
 /// atmosphere of Mars", in The Mars Reference Atmosphere, A. J. Kliore (ed.), Advances in Space Research 2(2) (1982),
 /// isothermal at 139 K from 72 to 100 km: the temperature held at 139 K and the hydrostatic pressure of Seiff's
 /// equation at constant temperature with the inverse-square gravity, p = p_b exp(−(GM / (R T_b)) (h − h_b) /
 /// ((R_M + h_b)(R_M + h))), R = 192.1 J/(kg K) the gas constant of the curve fit, GM and R_M the gravitational
 /// parameter and the volumetric mean radius of Mars of the NSSDC Mars fact sheet (confirmed by S. Guillet, 2026-10-24). The
 /// curve fit is not hydrostatic, so the layer is reached over <see cref="TransitionWidth"/> (5 km), where ln p and T go
-/// from one to the other by a quintic smootherstep: the density and its first two derivatives are continuous.
+/// from one to the other by a quintic smootherstep: the density and its first two derivatives are continuous. The
+/// absolute temperature goes there from that of the curve fit, T + 273.1 (138.95 K at the base), to 139 K, and the
+/// temperature in °C from that of the curve fit to 139 − 273.15 = −134.15 °C: the offset of the curve fit is blended into
+/// that of the Celsius scale by the same smootherstep. The layer above the transition does not depend on the offset.
 /// Without it the absolute temperature reached 0 K at 112.5 km, the density was infinite there and negative above,
 /// and drag pushed a spacecraft along its velocity (#422).
 /// </para>
@@ -49,7 +54,8 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
 
     /// <summary>
     /// Altitude of the base of the isothermal layer, m: where the temperature of the curve fit, −23.4 − 0.00222 h °C,
-    /// reaches <see cref="IsothermalLayerTemperature"/>, about 49 887.387 m.
+    /// reaches <see cref="IsothermalLayerTemperature"/> on the Celsius scale (−134.15 °C), about 49 887.387 m. With the
+    /// curve fit's own offset (273.1) its absolute temperature there is 138.95 K; the transition takes it to 139 K (#438).
     /// </summary>
     internal const double IsothermalLayerBase = (Constants.Kelvin - 23.4 - IsothermalLayerTemperature) / 0.00222;
 
@@ -59,6 +65,12 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
 
     // Gas constant of the curve fit, J/(kg K): ρ = p / (0.1921 T_K) with p in kPa
     private const double GasConstant = 192.1;
+
+    /// <summary>
+    /// The offset from °C to K of the curve fit of the NASA Glenn Research Center, ρ = p / [0.1921 (T + 273.1)]: its own
+    /// 273.1, not the 273.15 of the Celsius scale (<see cref="Constants.Kelvin"/>), which takes over in the layer (#438).
+    /// </summary>
+    internal const double CurveFitKelvin = 273.1;
 
     // GM / (R T_b), m: the exponent of the hydrostatic pressure of the layer
     private const double HydrostaticLength = MarsGravitationalParameter / (GasConstant * IsothermalLayerTemperature);
@@ -166,15 +178,17 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
         System.Math.Log(LayerBasePressure) - HydrostaticLength * (altitude - IsothermalLayerBase) /
         (LayerBaseRadius * (MarsMeanRadius + altitude));
 
-    // Absolute temperature of the curve fit, K
-    private static double CurveFitTemperature(double altitude) => Constants.Kelvin - 23.4 - 0.00222 * altitude;
+    // Absolute temperature of the curve fit above 7 km, K, with its own offset (#438)
+    private static double CurveFitTemperature(double altitude) => CurveFitKelvin - 23.4 - 0.00222 * altitude;
 
     /// <summary>
     /// dρ/dh, by differentiation of the closed form of the branch the altitude falls in. Below
-    /// <see cref="IsothermalLayerBase"/>: ρ = P / (0.1921 T_K), P ∝ exp(−0.00009 h), so dρ/dh = ρ (−0.00009 − T_K′ / T_K),
+    /// <see cref="IsothermalLayerBase"/>: ρ = P / (0.1921 T_K), T_K = T + 273.1 (#438), P ∝ exp(−0.00009 h), so
+    /// dρ/dh = ρ (−0.00009 − T_K′ / T_K),
     /// with T_K′ = −0.000998 K/m below 7 km and −0.00222 K/m above; in the transition around 7 km,
     /// T_K′ = (1 − w)(−0.000998) + w (−0.00222) + w′ (T_above − T_below). In the transition to the layer:
     /// d ln p/dh = (1 − w) s_fit + w s_layer + w′ (ln p_layer − ln p_fit) and T_K′ = (1 − w)(−0.00222) + w′ (139 − T_fit),
+    /// T_fit = T + 273.1 the absolute temperature of the curve fit,
     /// so dρ/dh = ρ (d ln p/dh − T_K′ / T_K).
     /// In the isothermal layer: d ln p/dh = −(GM / (R T_b)) / (R_M + h)², so dρ/dh = −ρ (GM / (R T_b)) / (R_M + h)².
     /// </summary>
@@ -204,14 +218,45 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
             double lower = LowerCurveFitTemperature(altitude);
             double upper = UpperCurveFitTemperature(altitude);
             double temperatureSlope = (1.0 - w) * -0.000998 + w * -0.00222 + dw * (upper - lower);
-            return Density(altitude) * (-0.00009 - temperatureSlope / (Temperature(altitude) + Constants.Kelvin));
+            return Density(altitude) * (-0.00009 - temperatureSlope / AbsoluteTemperature(altitude));
         }
 
         double slope = altitude < CurveFitBoundary ? -0.000998 : -0.00222;
-        return Density(altitude) * (-0.00009 - slope / (Temperature(altitude) + Constants.Kelvin));
+        return Density(altitude) * (-0.00009 - slope / AbsoluteTemperature(altitude));
     }
 
+    // Temperature in °C: that of the curve fit below the layer, its blend with the layer's 139 K on the Celsius scale
+    // (−134.15 °C) in the transition, and the layer's above
     private static double Temperature(double altitude)
+    {
+        if (altitude < IsothermalLayerBase)
+        {
+            return CurveFitCelsius(altitude);
+        }
+
+        var (w, _) = Blend(altitude);
+        return w >= 1.0
+            ? IsothermalLayerTemperature - Constants.Kelvin
+            : (1.0 - w) * UpperCurveFitTemperature(altitude) + w * (IsothermalLayerTemperature - Constants.Kelvin);
+    }
+
+    // Absolute temperature, K: the curve fit's °C plus its own 273.1 below the layer, its blend with 139 K in the
+    // transition, 139 K in the layer (#438)
+    private static double AbsoluteTemperature(double altitude)
+    {
+        if (altitude < IsothermalLayerBase)
+        {
+            return CurveFitCelsius(altitude) + CurveFitKelvin;
+        }
+
+        var (w, _) = Blend(altitude);
+        return w >= 1.0
+            ? IsothermalLayerTemperature
+            : (1.0 - w) * CurveFitTemperature(altitude) + w * IsothermalLayerTemperature;
+    }
+
+    // Temperature of the curve fit, °C, its two branches joined around 7 km
+    private static double CurveFitCelsius(double altitude)
     {
         if (altitude < CurveFitBoundary - CurveFitTransitionHalfWidth)
         {
@@ -224,15 +269,7 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
             return (1.0 - weight) * LowerCurveFitTemperature(altitude) + weight * UpperCurveFitTemperature(altitude);
         }
 
-        if (altitude < IsothermalLayerBase)
-        {
-            return UpperCurveFitTemperature(altitude);
-        }
-
-        var (w, _) = Blend(altitude);
-        return w >= 1.0
-            ? IsothermalLayerTemperature - Constants.Kelvin
-            : (1.0 - w) * CurveFitTemperature(altitude) + w * IsothermalLayerTemperature - Constants.Kelvin;
+        return UpperCurveFitTemperature(altitude);
     }
 
     private static double Pressure(double altitude)
@@ -255,6 +292,6 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
 
     private static double Density(double altitude)
     {
-        return Pressure(altitude) / (0.1921 * (Temperature(altitude) + Constants.Kelvin));
+        return Pressure(altitude) / (0.1921 * AbsoluteTemperature(altitude));
     }
 }
