@@ -447,18 +447,8 @@ public class OpmWriter
         return dateTime.ToString("yyyy-MM-ddTHH:mm:ss.ffffff", CultureInfo.InvariantCulture);
     }
 
-    private static string FormatDouble(double value)
-    {
-        // Format with enough precision to preserve value, removing trailing zeros
-        var formatted = value.ToString("G17", CultureInfo.InvariantCulture);
-
-        // If the number is in scientific notation, keep it
-        if (formatted.Contains('E') || formatted.Contains('e'))
-            return formatted;
-
-        // For regular decimal numbers, ensure reasonable precision
-        return value.ToString("0.##############", CultureInfo.InvariantCulture);
-    }
+    // The shortest round-trip form, read back bit for bit (#728; before, 14 decimals of a fixed-point value)
+    private static string FormatDouble(double value) => CcsdsValues.Format(value);
 
     private static XElement CreateElementWithUnits(string name, double value, string units)
     {

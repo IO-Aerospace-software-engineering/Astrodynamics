@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Globalization;
 using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.CCSDS.Common;
@@ -26,6 +27,20 @@ internal readonly record struct CcsdsKeyword(string Parameter, string Keyword, s
 /// </remarks>
 internal static class CcsdsValues
 {
+    /// <summary>
+    /// The text the OPM, OMM and CDM writers write for a real value: its shortest round-trip form (<c>"R"</c>, invariant
+    /// culture), which reads back as <c>xsd:double</c> (the IEEE double nearest the decimal number) bit for bit, in the
+    /// lexical space of <c>xsd:double</c> for every finite value (the data model holds no other).
+    /// </summary>
+    /// <remarks>
+    /// Before #728 the OPM and OMM writers kept <c>G17</c> only in scientific form and otherwise wrote
+    /// <c>0.##############</c>, at most 14 decimals and 15 significant digits: a value below 1e-3 lost up to 4.9e-11 of
+    /// itself (an eccentricity of 0.00012345678901234567 written 0.00012345678901), a written message no longer read back
+    /// as the values written. The CDM writer wrote <c>G17</c>, exact but not the shortest form (0.1 written
+    /// 0.10000000000000001).
+    /// </remarks>
+    internal static string Format(double value) => value.ToString("R", CultureInfo.InvariantCulture);
+
     /// <summary>
     /// Whether an optional parameter of the data model is absent or a finite value of 0 or more: the nonNegativeDouble of
     /// NDM/XML 4.0.0 (minInclusive 0.0, which excludes NaN but not +INF, XML Schema Part 2, 3.2.5) taken as a real number,

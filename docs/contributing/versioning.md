@@ -3244,6 +3244,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   has no registered value and a CDM carries both covariances: an encounter flagged so is refused, as one with a single
   covariance already was, and the dead branch is gone (`CdmTests.ToCdm_ManualEncounter_ExportsExpectedValues` and
   `ToCdm_SingleCovarianceMaximumPc_IsRefused`, red on a85098d). No number moves.
+- **The OPM and OMM writers lost digits** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). Their `FormatDouble` kept `G17` only in scientific
+  form and otherwise wrote `0.##############`: at most 14 decimals and, a .NET custom format, 15 significant digits.
+  A written message no longer read back as the values written: an eccentricity of 0.00012345678901234567 was written
+  0.00012345678901 (1.9e-11 relative), a mean motion of 10.270509831248424 rev/day 10.2705098312484, and over 1e5 values
+  in [1e-4, 1e3) 81.6 % were lost, by up to 4.9e-11 relative (measured on a85098d), every value of the OPM (state
+  vector, Keplerian elements, spacecraft parameters, covariance, maneuvers) and of the OMM (mean elements, spacecraft
+  and TLE parameters, covariance). The OPM, OMM and CDM writers now share one form (internal `CcsdsValues.Format`), the
+  shortest round-trip form `"R"`, which reads back bit for bit as `xsd:double` (`OpmWriterTests` and `OmmWriterTests`
+  `WriteToString_EveryRealValue_ReadsBackBitForBit`: each written text read by `double.Parse` and by the reader, the
+  value given bit for bit, 44 OPM and 35 or 36 OMM values, all but one lost before, red on a85098d).
 
 **Changed**
 
@@ -4529,6 +4539,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   encounter flagged `SingleCovarianceMaximumPcUsed`, where a case built by hand with both covariances was written
   `FOSTER-2D-MAX-PC`. Migration: a consumer that matched `FOSTER-2D` matches `FOSTER-1992`; a caller that sets
   `CdmExportOptions.CollisionProbabilityMethod` is unaffected.
+- **The OPM, OMM and CDM writers write the shortest round-trip form of each value** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728), Fixed above). The text
+  of the written messages changes: the OPM and OMM write the digits they dropped (0.00012345678901234567 where
+  0.00012345678901 was written), the CDM drops the digits `G17` added beyond the shortest exact form
+  (0.1 where 0.10000000000000001 was written). A value read from an OPM or OMM the library writes is the value given,
+  bit for bit; one read from a CDM is unchanged.
 
 **Deprecated**
 

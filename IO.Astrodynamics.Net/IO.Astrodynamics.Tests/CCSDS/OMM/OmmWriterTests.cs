@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Tests.CCSDS.Common;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.OMM
@@ -166,6 +167,67 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.Equal(expected, Text("EPOCH"));
             Assert.Equal(expected, Text("REF_FRAME_EPOCH"));
             Assert.Equal(Odm(creation.ToUniversalTime()), Text("CREATION_DATE"));
+        }
+
+        // Every real value an OMM writes, each with 17 significant digits below 1000 in magnitude, reads back from the text
+        // bit for bit, with the mean motion or the semi-major axis (#728: the writer kept 14 decimals and 15 significant digits of a
+        // fixed-point value, which lost every one of these 35 and 36 values on a85098d)
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void WriteToString_EveryRealValue_ReadsBackBitForBit(bool meanMotion)
+        {
+            double V(int index, double low, double high) => CcsdsRoundTripValues.Value(index, low, high);
+            string[] covarianceKeywords =
+            {
+                "CX_X", "CY_X", "CY_Y", "CZ_X", "CZ_Y", "CZ_Z", "CX_DOT_X", "CX_DOT_Y", "CX_DOT_Z", "CX_DOT_X_DOT", "CY_DOT_X",
+                "CY_DOT_Y", "CY_DOT_Z", "CY_DOT_X_DOT", "CY_DOT_Y_DOT", "CZ_DOT_X", "CZ_DOT_Y", "CZ_DOT_Z", "CZ_DOT_X_DOT",
+                "CZ_DOT_Y_DOT", "CZ_DOT_Z_DOT"
+            };
+            var expected = new Dictionary<string, double>
+            {
+                [meanMotion ? "MEAN_MOTION" : "SEMI_MAJOR_AXIS"] = meanMotion ? V(0, 1.0, 16.0) : V(0, 100.0, 999.0),
+                ["ECCENTRICITY"] = V(1, 1.0e-4, 1.0e-3), ["INCLINATION"] = V(2, 0.0, 180.0),
+                ["RA_OF_ASC_NODE"] = V(3, 0.0, 360.0), ["ARG_OF_PERICENTER"] = V(4, 0.0, 360.0), ["MEAN_ANOMALY"] = V(5, 0.0, 1.0),
+                ["MASS"] = V(6, 100.0, 999.0), ["SOLAR_RAD_AREA"] = V(7, 1.0, 10.0), ["SOLAR_RAD_COEFF"] = V(8, 1.0, 2.0),
+                ["DRAG_AREA"] = V(9, 1.0, 10.0), ["DRAG_COEFF"] = V(10, 2.0, 3.0), ["BSTAR"] = V(11, 1.0e-4, 1.0e-3),
+                ["MEAN_MOTION_DOT"] = V(12, 1.0e-4, 1.0e-3), ["MEAN_MOTION_DDOT"] = V(13, -1.0e-3, -1.0e-4)
+            };
+            if (!meanMotion)
+            {
+                expected["GM"] = V(14, 300.0, 400.0);
+            }
+
+            for (int i = 0; i < covarianceKeywords.Length; i++)
+            {
+                expected[covarianceKeywords[i]] = V(15 + i, 1.0e-4, 1.0e-3);
+            }
+
+            double E(string keyword) => expected[keyword];
+            var epoch = new DateTime(2010, 3, 13, 22, 37, 52, 618, DateTimeKind.Utc);
+            var elements = meanMotion
+                ? MeanElements.CreateWithMeanMotion(epoch, E("MEAN_MOTION"), E("ECCENTRICITY"), E("INCLINATION"),
+                    E("RA_OF_ASC_NODE"), E("ARG_OF_PERICENTER"), E("MEAN_ANOMALY"))
+                : MeanElements.CreateWithSemiMajorAxis(epoch, E("SEMI_MAJOR_AXIS"), E("ECCENTRICITY"), E("INCLINATION"),
+                    E("RA_OF_ASC_NODE"), E("ARG_OF_PERICENTER"), E("MEAN_ANOMALY"), E("GM"));
+            var covariance = new CovarianceMatrix(
+                E("CX_X"), E("CY_X"), E("CY_Y"), E("CZ_X"), E("CZ_Y"), E("CZ_Z"), E("CX_DOT_X"), E("CX_DOT_Y"), E("CX_DOT_Z"),
+                E("CX_DOT_X_DOT"), E("CY_DOT_X"), E("CY_DOT_Y"), E("CY_DOT_Z"), E("CY_DOT_X_DOT"), E("CY_DOT_Y_DOT"),
+                E("CZ_DOT_X"), E("CZ_DOT_Y"), E("CZ_DOT_Z"), E("CZ_DOT_X_DOT"), E("CZ_DOT_Y_DOT"), E("CZ_DOT_Z_DOT"));
+            var data = new OmmData(elements,
+                new SpacecraftParameters(E("MASS"), E("SOLAR_RAD_AREA"), E("SOLAR_RAD_COEFF"), E("DRAG_AREA"), E("DRAG_COEFF")),
+                new TleParameters(E("BSTAR"), E("MEAN_MOTION_DOT"), E("MEAN_MOTION_DDOT"), noradCatalogId: 25544),
+                covariance);
+            var omm = new Omm(new CcsdsHeader(epoch, "IO.Astrodynamics.Tests"),
+                new OmmMetadata("SAT", "2010-001A", "EARTH", "TEME", "UTC", "SGP4"), data);
+
+            var xml = _writer.WriteToString(omm);
+
+            CcsdsRoundTripValues.AssertWrittenExactly(xml, expected, expected.Count);
+            var read = _reader.ReadFromString(xml).Data;
+            Assert.Equal(BitConverter.DoubleToInt64Bits(E("ECCENTRICITY")), BitConverter.DoubleToInt64Bits(read.MeanElements.Eccentricity));
+            Assert.Equal(BitConverter.DoubleToInt64Bits(E("BSTAR")), BitConverter.DoubleToInt64Bits(read.TleParameters.BStar!.Value));
+            Assert.Equal(BitConverter.DoubleToInt64Bits(E("CZ_DOT_Z_DOT")), BitConverter.DoubleToInt64Bits(read.CovarianceMatrix.CzDotZDot));
         }
 
         private static Omm CreateOmmWithDates(string timeSystem, DateTime epoch, DateTime referenceFrameEpoch, DateTime creation)

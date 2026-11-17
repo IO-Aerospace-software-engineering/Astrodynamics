@@ -515,10 +515,8 @@ public sealed class CdmWriter
         return CcsdsDates.ToUtc(value).ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture);
     }
 
-    private static string FormatDouble(double value)
-    {
-        return value.ToString("G17", CultureInfo.InvariantCulture);
-    }
+    // The shortest round-trip form, shared with the OPM and OMM writers (#728; G17 before, exact as well)
+    private static string FormatDouble(double value) => CcsdsValues.Format(value);
 
     private static string FormatObjectType(ObjectType objectType)
     {

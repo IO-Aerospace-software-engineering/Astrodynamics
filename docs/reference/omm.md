@@ -107,6 +107,11 @@ valid, as for the other spacecraft parameters (#708: an error before 11.0.0).
 | `SaveToStream(stream, validateBeforeSave?)` | Save to stream |
 | `ToXml()` | Serialize to XML string |
 
+Each real value is written in its shortest round-trip form (`"R"`, invariant culture), which reads back bit for bit
+([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). Before 11.0.0 a value written
+in fixed-point form kept 14 decimals and 15 significant digits at most: an eccentricity of 0.00012345678901234567 was
+written 0.00012345678901, up to 4.9e-11 of a value below 1e-3 lost.
+
 The dates of the document follow the kind of their `DateTime`
 ([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617), decided by S. Guillet,
 2026-11-17). `EPOCH` and `REF_FRAME_EPOCH` are in `TIME_SYSTEM` (CCSDS 502.0-B-3): a date of kind `Utc` or `Unspecified` is written as

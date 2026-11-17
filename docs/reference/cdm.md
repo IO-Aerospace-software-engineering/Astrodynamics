@@ -208,7 +208,9 @@ The managed API stores values internally in SI units. The CDM writer emits CCSDS
 | Miss distance | m | m |
 | Relative position | m | m |
 
-The reader converts each value from its `units` attribute. A length of the `lengthTypeUO` type (`MISS_DISTANCE`,
+The writer writes each value in its shortest round-trip form (`"R"`), which reads back bit for bit (`G17` before
+11.0.0, exact as well but longer: 0.1 written 0.10000000000000001;
+[#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). The reader converts each value from its `units` attribute. A length of the `lengthTypeUO` type (`MISS_DISTANCE`,
 `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`), whose attribute the schema makes optional with `m` as its only unit, is
 read in m when the attribute is absent ([#613](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/613); km before 11.0.0). A state vector position, whose
 `units` the schema requires, defaults to km.

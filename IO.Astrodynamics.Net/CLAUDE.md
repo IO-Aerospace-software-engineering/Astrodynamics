@@ -370,6 +370,7 @@ var data = new OpmData(OpmStateVector.FromStateVector(stateVector), covariance: 
 - Framework uses SI units: m, m/s, rad, kg, m²
 - Conversions are automatic in `ToStateVector()`, `ToSpacecraft()`, and `ToOpm()`
 - XML output includes `units` attributes on all numeric elements per CCSDS standard
+- Each real value is written in its shortest round-trip form (`"R"`), read back bit for bit, in the OPM, OMM and CDM alike (#728)
 
 ### Atmospheric Modeling
 

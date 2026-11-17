@@ -1,10 +1,12 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Tests.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Math;
 using Xunit;
@@ -27,6 +29,61 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         private static string Text(string xml, string keyword)
         {
             return XDocument.Parse(xml).Descendants().Single(e => e.Name.LocalName == keyword).Value;
+        }
+
+        private static readonly string[] CovarianceKeywords =
+        {
+            "CX_X", "CY_X", "CY_Y", "CZ_X", "CZ_Y", "CZ_Z", "CX_DOT_X", "CX_DOT_Y", "CX_DOT_Z", "CX_DOT_X_DOT", "CY_DOT_X",
+            "CY_DOT_Y", "CY_DOT_Z", "CY_DOT_X_DOT", "CY_DOT_Y_DOT", "CZ_DOT_X", "CZ_DOT_Y", "CZ_DOT_Z", "CZ_DOT_X_DOT",
+            "CZ_DOT_Y_DOT", "CZ_DOT_Z_DOT"
+        };
+
+        // Every real value an OPM writes, each with 17 significant digits below 1000 in magnitude, reads back from the text
+        // bit for bit (#728: the writer kept 14 decimals of a fixed-point value, up to 4.9e-11 relative lost below 1e-3,
+        // measured over 1e5 values in [1e-4, 1e3) on a85098d; 43 of these 44 values lost)
+        [Fact]
+        public void WriteToString_EveryRealValue_ReadsBackBitForBit()
+        {
+            double V(int index, double low, double high) => CcsdsRoundTripValues.Value(index, low, high);
+            var expected = new Dictionary<string, double>
+            {
+                ["X"] = V(0, -999.0, 999.0), ["Y"] = V(1, -1.0, 1.0), ["Z"] = V(2, -1.0e-3, 1.0e-3),
+                ["X_DOT"] = V(3, -8.0, 8.0), ["Y_DOT"] = V(4, -1.0e-2, 1.0e-2), ["Z_DOT"] = V(5, 1.0e-4, 1.0e-3),
+                ["SEMI_MAJOR_AXIS"] = V(6, 100.0, 999.0), ["ECCENTRICITY"] = V(7, 1.0e-4, 1.0e-3),
+                ["INCLINATION"] = V(8, 0.0, 180.0), ["RA_OF_ASC_NODE"] = V(9, 0.0, 360.0),
+                ["ARG_OF_PERICENTER"] = V(10, 0.0, 360.0), ["TRUE_ANOMALY"] = V(11, 0.0, 1.0), ["GM"] = V(12, 300.0, 400.0),
+                ["MASS"] = V(13, 100.0, 999.0), ["SOLAR_RAD_AREA"] = V(14, 1.0, 10.0), ["SOLAR_RAD_COEFF"] = V(15, 1.0, 2.0),
+                ["DRAG_AREA"] = V(16, 1.0, 10.0), ["DRAG_COEFF"] = V(17, 2.0, 3.0), ["MAN_DURATION"] = V(18, 0.0, 100.0),
+                ["MAN_DELTA_MASS"] = V(19, -1.0, 0.0), ["MAN_DV_1"] = V(20, 1.0e-4, 1.0e-3), ["MAN_DV_2"] = V(21, -1.0e-3, 0.0),
+                ["MAN_DV_3"] = V(22, 0.0, 1.0e-2)
+            };
+            for (int i = 0; i < CovarianceKeywords.Length; i++)
+            {
+                expected[CovarianceKeywords[i]] = V(23 + i, 1.0e-4, 1.0e-3);
+            }
+
+            double E(string keyword) => expected[keyword];
+            var covariance = new CovarianceMatrix(
+                E("CX_X"), E("CY_X"), E("CY_Y"), E("CZ_X"), E("CZ_Y"), E("CZ_Z"), E("CX_DOT_X"), E("CX_DOT_Y"), E("CX_DOT_Z"),
+                E("CX_DOT_X_DOT"), E("CY_DOT_X"), E("CY_DOT_Y"), E("CY_DOT_Z"), E("CY_DOT_X_DOT"), E("CY_DOT_Y_DOT"),
+                E("CZ_DOT_X"), E("CZ_DOT_Y"), E("CZ_DOT_Z"), E("CZ_DOT_X_DOT"), E("CZ_DOT_Y_DOT"), E("CZ_DOT_Z_DOT"));
+            var data = new OpmData(
+                new OpmStateVector(Clock, E("X"), E("Y"), E("Z"), E("X_DOT"), E("Y_DOT"), E("Z_DOT")),
+                OpmKeplerianElements.CreateWithTrueAnomaly(E("SEMI_MAJOR_AXIS"), E("ECCENTRICITY"), E("INCLINATION"),
+                    E("RA_OF_ASC_NODE"), E("ARG_OF_PERICENTER"), E("TRUE_ANOMALY"), E("GM")),
+                E("MASS"), E("SOLAR_RAD_AREA"), E("SOLAR_RAD_COEFF"), E("DRAG_AREA"), E("DRAG_COEFF"), covariance,
+                new[] { new OpmManeuverParameters(Clock, E("MAN_DURATION"), E("MAN_DELTA_MASS"), "RSW", E("MAN_DV_1"), E("MAN_DV_2"), E("MAN_DV_3")) });
+            var opm = new Opm(new CcsdsHeader(Clock, "IO.Astrodynamics.Tests"),
+                new OpmMetadata("SAT", "2010-001A", "EARTH", "ICRF", "UTC"), data);
+
+            var xml = new OpmWriter().WriteToString(opm);
+
+            CcsdsRoundTripValues.AssertWrittenExactly(xml, expected, 43);
+            var read = new OpmReader().ReadFromString(xml).Data;
+            Assert.Equal(BitConverter.DoubleToInt64Bits(E("Z")), BitConverter.DoubleToInt64Bits(read.StateVector.Z));
+            Assert.Equal(BitConverter.DoubleToInt64Bits(E("ECCENTRICITY")), BitConverter.DoubleToInt64Bits(read.KeplerianElements.Eccentricity));
+            Assert.Equal(BitConverter.DoubleToInt64Bits(E("CZ_DOT_Z_DOT")), BitConverter.DoubleToInt64Bits(read.Covariance.CzDotZDot));
+            Assert.Equal(BitConverter.DoubleToInt64Bits(E("MAN_DV_1")), BitConverter.DoubleToInt64Bits(read.Maneuvers[0].ManDv1));
         }
 
         private static string Odm(DateTime value)
