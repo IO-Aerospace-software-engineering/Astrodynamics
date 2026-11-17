@@ -19,9 +19,12 @@ namespace IO.Astrodynamics.Maneuver;
 /// The direction is that of the target as the spacecraft sees it, corrected by <see cref="Aberration"/>, <see cref="Aberration.LT"/>
 /// by default: the target at t − lt from the spacecraft's position at t, lt the light time of CSPICE's <c>spkltc</c>, and
 /// for "+S" the stellar aberration of <c>stelab</c> from the spacecraft's velocity, as <c>spkcvo_c</c> corrects it
-/// (#549, decided by S. Guillet, 2026-11-17). Before 11.0.0 the law asked for LT, but a celestial target, the centre of the
-/// maneuver, was read relative to itself, so its direction was geometric (the Moon 4.2e-5 to 4.5e-5 rad, about 40 km,
-/// from its LT direction from a LEO), and a <see cref="Site"/> target took the light time from its body's centre.
+/// (#549, decided by S. Guillet, 2026-11-17); a <see cref="Star"/> takes no light time, its "+S" corrections the stellar
+/// aberration alone, as <see cref="Star.GetEphemeris"/> reads it. Before 11.0.0 the law asked for LT, but a celestial
+/// target, the centre of the maneuver, was read relative to itself, so its direction was geometric (the Moon 4.2e-5 to
+/// 4.5e-5 rad, about 40 km, from its LT direction from a LEO); a <see cref="Site"/> of the kernels took the light time
+/// from its body's centre, and a site given by its coordinates, read from the Earth with LT, met the correction #489
+/// dropped, so its direction was geometric too.
 /// </remarks>
 public class InstrumentPointingToAttitude : Attitude
 {

@@ -183,7 +183,10 @@ the `+S` corrections the stellar aberration of `stelab` (`stlabx` for transmissi
 and LRO, the sites at the poles and on the equator included, and to 6.8e-5 m from the Sun and the Mars barycenter.
 Without correction the state is unchanged, bit for bit. The window searches, `SubObserverPoint` and `IsInFOV` of such a
 site read it this way: the 400000 km window of the example below, with `LT`, is within 1e-7 s of the window of
-`spkcpt_c`.
+`spkcpt_c`, and so are its coordinate windows seen from the Moon with `LT` (its range and declination in J2000, its
+declination in the frame of another site given by its coordinates). A copy of a site of the kernels built from its
+coordinates (DSS-13's position at J2000 TDB) agrees with `spkcpt_c` at those coordinates as G does; the kernel site itself
+moves 0.47 m from them by 2024, the plate motion of its SPK.
 
 Before 11.0.0 the correction of a site given by its coordinates, seen from an observer of the kernels, was that of the
 observer seen from the site's body (`OrbitalParameters.RelativeTo`), the site never moved back in time: 82.7 km from

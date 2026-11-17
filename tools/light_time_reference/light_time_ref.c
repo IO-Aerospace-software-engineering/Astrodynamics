@@ -27,6 +27,21 @@
  * spkcpt_c with the locus CENTER, which this program checked against spkezr_c from DSS-13 to 8e-6 m): the Moon from
  * DSS-13, from G and from S, S from G, G from S and from the Moon, the Sun from S, S from the Earth.
  *
+ * Rows of the review of #593: states in a non-inertial frame centred on a third object, neither the observer nor the
+ * target: the topocentric frames of G and of H, a second site given by its coordinates (longitude 10 deg, latitude 45
+ * deg, altitude 200 m), each the TK frame the library writes for a site (Site.WriteFrameAsync: angles -longitude,
+ * -(pi/2 - latitude), pi about the axes 3, 2, 3 of ITRF93) centred on the site, written with an SPK of type 8 of the site
+ * fixed in ITRF93 (399491 and 399492) so that SPICE reads the centre; and S_TK, a frame of S oriented as ITRF93 (a TK
+ * frame, the identity relative to ITRF93, centred on S), which the library gives S as an attitude record. Rows: the Moon
+ * from S and from DSS-13 in G's frame; the Moon and S from G, and G from the Moon, in H's frame; the Moon from G and from
+ * DSS-13 in S_TK; spkezr_c, or spkcpo_c and spkcpt_c with the locus CENTER.
+ *
+ * Rows of the review of #489 (items 2 and 4 of its tests): C, the copy of DSS-13 from its coordinates (its position in
+ * ITRF93 at J2000 TDB, recgeo_c on the Earth ellipsoid of pck00011), seen from the Moon and from the Earth (spkcpt_c at
+ * those coordinates); the windows of G seen from the Moon with LT, 2024-01-01 TDB to 2024-01-02 TDB, from 60 s samples of
+ * spkcpt_c and a bisection to adjacent doubles: its range (J2000) above 405000 km, its declination (J2000) above -9.5 deg,
+ * and its declination in the frame of H (spkcpt_c, locus CENTER) above 0 deg.
+ *
  * Rows of #549: the Moon seen from a point of a LEO given by its state, as an attitude reads it (spkcvo_c, the observer's
  * state relative to the Earth in J2000 at the epoch): the LEO of the issue (a = 6778.137 km, e = 0, i = 51.6 deg, node,
  * argument of perigee and mean anomaly 0 at 2024-03-01 12:00:00 TDB, conics_c with BODY399_GM) every 600 s over 1 h, and
@@ -47,6 +62,11 @@
 #define NEPOCHS 3
 static const char *FLAGS[NFLAGS] = {"NONE", "LT", "LT+S", "CN", "CN+S", "XLT", "XLT+S", "XCN", "XCN+S"};
 static const char *SC = "-1001";
+
+/* The thresholds of the coordinate windows of the review of #489 (km, deg), each crossed over the day */
+#define RANGE_THRESHOLD 405000.0
+#define DECLINATION_THRESHOLD -9.5
+#define FRAME_THRESHOLD 0.0
 
 static double epochs[NEPOCHS];
 static double g_site[3];
@@ -151,7 +171,97 @@ static void guide_window(void) {
         fprevious = ft;
     }
     if (fprevious < 0.0) printf("%s%.17g", first ? "" : ", ", end);
-    printf("]\n");
+    printf("]");
+}
+
+/* The review of #489: a coordinate of G seen from the Moon with LT, minus a threshold */
+static const char *window_frame;
+static const char *window_refloc;
+static int window_declination;
+static double window_value;
+
+static double window_function(double et) {
+    double state[6], lt, range, ra, dec;
+    spkcpt_c(g_site, "EARTH", "ITRF93", et, window_frame, window_refloc, "LT", "MOON", state, &lt);
+    recrad_c(state, &range, &ra, &dec);
+    return (window_declination ? dec * dpr_c() : range) - window_value;
+}
+
+/* The windows where window_function is above 0: 60 s samples and a bisection of each sign change to adjacent doubles */
+static void coordinate_window(const char *label, const char *frame_name, const char *locus, int declination, double value) {
+    double start, end;
+    window_frame = frame_name;
+    window_refloc = locus;
+    window_declination = declination;
+    window_value = value;
+    str2et_c("2024-01-01 00:00:00 TDB", &start);
+    str2et_c("2024-01-02 00:00:00 TDB", &end);
+    printf("%s    \"%s\": {\"value\": %.17g, \"windows\": [", first_row ? "" : ",\n", label, value);
+    first_row = 0;
+    int first = 1;
+    double previous = start, fprevious = window_function(start);
+    double lowest = fprevious, highest = fprevious;
+    if (fprevious > 0.0) {
+        printf("%.17g", start);
+        first = 0;
+    }
+    for (double t = start + 60.0; t <= end + 1e-9; t += 60.0) {
+        double ft = window_function(t);
+        if (ft < lowest) lowest = ft;
+        if (ft > highest) highest = ft;
+        if ((fprevious > 0.0) != (ft > 0.0)) {
+            double a = previous, b = t, fa = fprevious;
+            for (;;) {
+                double m = 0.5 * (a + b);
+                if (m <= a || m >= b) break;
+                double fm = window_function(m);
+                if ((fa > 0.0) == (fm > 0.0)) {
+                    a = m;
+                    fa = fm;
+                } else {
+                    b = m;
+                }
+            }
+            printf("%s%.17g", first ? "" : ", ", fabs(window_function(a)) <= fabs(window_function(b)) ? a : b);
+            first = 0;
+        }
+        previous = t;
+        fprevious = ft;
+    }
+    if (fprevious > 0.0) printf("%s%.17g", first ? "" : ", ", end);
+    printf("]}");
+    fprintf(stderr, "%s: samples from %.6f to %.6f about the threshold\n", label, lowest, highest);
+}
+
+/* A site given by its coordinates as an SPK object: fixed in ITRF93 about the Earth (type 8, two equal states) */
+static void write_site_spk(SpiceInt handle, int id, const double position[3], double first, double last) {
+    double states[2][6] = {{position[0], position[1], position[2], 0.0, 0.0, 0.0}, {position[0], position[1], position[2], 0.0, 0.0, 0.0}};
+    spkw08_c(handle, id, 399, "ITRF93", first, last, "SITE", 1, 2, states, first, last - first);
+}
+
+/* Kernel pool assignments, one per line */
+static void pool(int count, const char *lines[]) {
+    char buffer[16][160];
+    for (int k = 0; k < count; k++) snprintf(buffer[k], 160, "%s", lines[k]);
+    lmpool_c(buffer, 160, count);
+}
+
+/* The TK frame the library writes for a site (SiteFrameTemplate.tf), centred on the site's SPK object */
+static void define_site_frame(const char *name, int frame_id, int center, double longitude, double latitude) {
+    char b[10][160];
+    snprintf(b[0], 160, "FRAME_%s = %d", name, frame_id);
+    snprintf(b[1], 160, "FRAME_%d_NAME = '%s'", frame_id, name);
+    snprintf(b[2], 160, "FRAME_%d_CLASS = 4", frame_id);
+    snprintf(b[3], 160, "FRAME_%d_CLASS_ID = %d", frame_id, frame_id);
+    snprintf(b[4], 160, "FRAME_%d_CENTER = %d", frame_id, center);
+    snprintf(b[5], 160, "TKFRAME_%d_SPEC = 'ANGLES'", frame_id);
+    snprintf(b[6], 160, "TKFRAME_%d_RELATIVE = 'ITRF93'", frame_id);
+    snprintf(b[7], 160, "TKFRAME_%d_ANGLES = (%.17g, %.17g, 3.141592653589793116)", frame_id, -longitude, -(halfpi_c() - latitude));
+    snprintf(b[8], 160, "TKFRAME_%d_AXES = (3, 2, 3)", frame_id);
+    snprintf(b[9], 160, "TKFRAME_%d_UNITS = 'RADIANS'", frame_id);
+    const char *lines[10];
+    for (int k = 0; k < 10; k++) lines[k] = b[k];
+    pool(10, lines);
 }
 
 /* #549: the Moon from a state relative to the Earth in J2000, for the nine corrections */
@@ -237,10 +347,38 @@ int main(int argc, char **argv) {
     spkcls_c(handle);
     furnsh_c(path);
 
+    /* The review of #593: G and H as SPK objects (399491, 399492), their frames, and S_TK */
+    double h_site[3];
+    georec_c(10.0 * rpd_c(), 45.0 * rpd_c(), 0.2, radii[0], f, h_site);
+    char site_path[1024];
+    snprintf(site_path, sizeof site_path, "%s/light_time_ref_sites.bsp", argv[2]);
+    remove(site_path);
+    spkopn_c(site_path, "sites", 0, &handle);
+    write_site_spk(handle, 399491, g_site, epochs[0] - 86400.0, epochs[0] + 2.0 * 86400.0);
+    write_site_spk(handle, 399492, h_site, epochs[0] - 86400.0, epochs[0] + 2.0 * 86400.0);
+    spkcls_c(handle);
+    furnsh_c(site_path);
+    define_site_frame("G491_TOPO", 1399491, 399491, -117.0 * rpd_c(), 34.0 * rpd_c());
+    define_site_frame("H491_TOPO", 1399492, 399492, 10.0 * rpd_c(), 45.0 * rpd_c());
+    const char *s_tk[] = {"FRAME_S_TK = -1001000", "FRAME_-1001000_NAME = 'S_TK'", "FRAME_-1001000_CLASS = 4",
+                          "FRAME_-1001000_CLASS_ID = -1001000", "FRAME_-1001000_CENTER = -1001",
+                          "TKFRAME_-1001000_SPEC = 'MATRIX'", "TKFRAME_-1001000_RELATIVE = 'ITRF93'",
+                          "TKFRAME_-1001000_MATRIX = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)"};
+    pool(8, s_tk);
+
+    /* The review of #489: C, the copy of DSS-13 from its coordinates at J2000 TDB */
+    double dss13[3], lt0, copy_lon, copy_lat, copy_alt, copy_site[3];
+    spkpos_c("DSS-13", 0.0, "ITRF93", "NONE", "EARTH", dss13, &lt0);
+    recgeo_c(dss13, radii[0], f, &copy_lon, &copy_lat, &copy_alt);
+    georec_c(copy_lon, copy_lat, copy_alt, radii[0], f, copy_site);
+
     printf("{\n  \"epochs_tdb\": [%.17g, %.17g, %.17g],\n", epochs[0], epochs[1], epochs[2]);
     printf("  \"spacecraft_state_e0\": [");
     for (int k = 0; k < 6; k++) printf("%s%.17g", k == 0 ? "" : ", ", s0[k] * 1000.0);
     printf("],\n  \"site\": {\"longitude_deg\": -117.0, \"latitude_deg\": 34.0, \"altitude_m\": 1000.0},\n");
+    printf("  \"other_site\": {\"longitude_deg\": 10.0, \"latitude_deg\": 45.0, \"altitude_m\": 200.0},\n");
+    printf("  \"dss13_copy\": {\"longitude_rad\": %.17g, \"latitude_rad\": %.17g, \"altitude_m\": %.17g},\n", copy_lon, copy_lat,
+           copy_alt * 1000.0);
     printf("  \"states\": {\n");
     row("moon_from_dss13", "MOON", "DSS-13", by_spkezr);
     row("moon_from_site", "MOON", NULL, by_spkcpo);
@@ -282,8 +420,24 @@ int main(int argc, char **argv) {
     row("site_from_moon_moon_me", NULL, "MOON", by_spkcpt);
     frame = "DSS-13_TOPO";
     row("moon_from_dss13_topo", "MOON", "DSS-13", by_spkezr);
+    /* The review of #593: a frame centred on a third object */
+    frame = "G491_TOPO";
+    row("moon_from_spacecraft_in_site_frame", "MOON", SC, by_spkezr);
+    row("moon_from_dss13_in_site_frame", "MOON", "DSS-13", by_spkezr);
+    frame = "H491_TOPO";
+    row("moon_from_site_in_other_site_frame", "MOON", NULL, by_spkcpo);
+    row("spacecraft_from_site_in_other_site_frame", SC, NULL, by_spkcpo);
+    row("site_from_moon_in_other_site_frame", NULL, "MOON", by_spkcpt);
+    frame = "S_TK";
+    row("moon_from_site_in_spacecraft_frame", "MOON", NULL, by_spkcpo);
+    row("moon_from_dss13_in_spacecraft_frame", "MOON", "DSS-13", by_spkezr);
     frame = "J2000";
     refloc = "OBSERVER";
+    /* The review of #489: C, the copy of DSS-13 */
+    site = copy_site;
+    row("dss13_copy_from_moon", NULL, "MOON", by_spkcpt);
+    row("dss13_copy_from_earth", NULL, "EARTH", by_spkcpt);
+    site = g_site;
     printf("\n  },\n  \"horizontal\": {\n");
     first_row = 1;
     horizontal("spacecraft_from_site", SC);
@@ -291,8 +445,15 @@ int main(int argc, char **argv) {
     printf("\n  },\n");
     pointing(gm);
     guide_window();
-    printf("}\n");
+    printf(",\n  \"coordinate_windows_lt\": {\n");
+    first_row = 1;
+    coordinate_window("range_above", "J2000", "OBSERVER", 0, RANGE_THRESHOLD);
+    coordinate_window("declination_above", "J2000", "OBSERVER", 1, DECLINATION_THRESHOLD);
+    coordinate_window("declination_in_other_site_frame_above", "H491_TOPO", "CENTER", 1, FRAME_THRESHOLD);
+    printf("\n  }\n}\n");
 
+    unload_c(site_path);
+    remove(site_path);
     unload_c(path);
     remove(path);
     return 0;

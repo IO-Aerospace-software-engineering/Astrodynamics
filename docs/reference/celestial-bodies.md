@@ -114,13 +114,19 @@ non-inertial frame at t − lt_c (t + lt_c for the transmission corrections), lt
 frame's centre by the method of the correction (that of the target when the centre is the target), with the derivative
 of the rotation scaled by 1 ∓ dlt_c/dt, as CSPICE's `zzcorsxf`. The centre of a SPICE frame is SPICE's (`frinfo_c`); that
 of the library's frames the site of a site frame, the spacecraft of a spacecraft frame, the Earth for TEME, CIRS and
-TIRS. Measured against `spkezr`, `spkcpo` and `spkcpt` (locus `CENTER`): 1.7e-5 m and 1.1e-8 m/s in ITRF93 and the
-topocentric frame of DSS-13, 2.4e-4 m in MOON_ME centred on the target, the resolution of SPICE's own MOON_ME rotation
-within a few ulps of its epoch. Before 11.0.0 the frame was evaluated at the epoch of the observation: the Moon from
+TIRS. The centre may be a third object, neither the observer nor the target: the site of a site frame (a site given by
+its coordinates included), the spacecraft of a spacecraft frame (a managed spacecraft with an attitude record or a
+spacecraft from a kernel), a site of the kernels, a body, or any other object, read from SPICE by its identifier (a frame
+given by name centred on a spacecraft), which throws `InvalidOperationException` where SPICE has no state of it, as
+`spkezr` does. Measured against `spkezr`, `spkcpo` and `spkcpt` (locus `CENTER`): 1.7e-5 m and 1.1e-8 m/s in ITRF93 and the
+topocentric frame of DSS-13, and in the frame of a site given by its coordinates centred on a third object; 2.4e-4 m in
+MOON_ME centred on the target, the resolution of SPICE's own MOON_ME rotation within a few ulps of its epoch; 1.7e-3 m
+in the frame of a spacecraft held as an attitude record of ITRF93, which the library reads at the 100 ns of the epoch of
+its centre where CSPICE reads the double of that epoch (6e-8 s apart at most in 2024). Before 11.0.0 the frame was evaluated at the epoch of the observation: the Moon from
 DSS-13 with `LT` 620 m off in ITRF93 and 1.48 km in MOON_ME, a site given by its coordinates 38 km off in its own
 topocentric frame from the Moon. The CSPICE path (an observer and a target SPICE reads) is `spkezr`'s; in a frame only
-the library holds (TEME, CIRS, TIRS, the frame of a site given by its coordinates), it reads J2000 and rotates at the
-epoch of the observation.
+the library holds (TEME, CIRS, TIRS, the frame of a site given by its coordinates, the frame of a managed spacecraft
+with an attitude record), it reads J2000 and rotates at the epoch of the observation.
 
 ## See Also
 

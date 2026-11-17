@@ -325,6 +325,223 @@ public class LightTimeCorrectionTests
         Assert.Throws<System.ArgumentNullException>(() => SpiceAPI.NonInertialFrameCenter(null));
     }
 
+    // Review of #593: a non-inertial frame centred on a third object, neither the observer nor the target (the frame of a
+    // site built from coordinates, of a managed spacecraft with an attitude record, or one given by name), against
+    // spkezr_c, spkcpo_c and spkcpt_c in the same frame with the locus CENTER: the frame of a site is the TK frame the
+    // library writes for it, centred on an SPK object of the site, and S_TK the frame of S oriented as ITRF93, which S
+    // holds as an attitude record of ITRF93 sampled every 10 s (tools/light_time_reference). Before, every corrected read
+    // threw ArgumentException: the site's identifier reached the kernel-site lookup, the spacecraft's CelestialItem.Create
+
+
+    private Site OtherSite()
+    {
+        var other = _reference.GetProperty("other_site");
+        return new Site(492, "H491", _earth, new Planetodetic(other.GetProperty("longitude_deg").GetDouble() * global::IO.Astrodynamics.Constants.Deg2Rad,
+            other.GetProperty("latitude_deg").GetDouble() * global::IO.Astrodynamics.Constants.Deg2Rad, other.GetProperty("altitude_m").GetDouble()));
+    }
+
+    /// <summary>The frame of S oriented as ITRF93: its attitude record, ITRF93 to ICRF sampled every 10 s over ±120 s about
+    /// each epoch of the reference, the samples of one law, interpolated by the exact SLERP of the record.</summary>
+    private Frames.Frame SpacecraftFrameAsItrf93()
+    {
+        var frame = (SpacecraftFrame)_spacecraft.Frame;
+        var law = new object();
+        foreach (var epoch in _epochs)
+        {
+            for (int k = -12; k <= 12; k++)
+            {
+                var t = epoch.AddSeconds(10.0 * k);
+                var orientation = Itrf93.ToFrame(Frames.Frame.ICRF, t);
+                frame.Record(new StateOrientation(orientation.Rotation, orientation.AngularVelocity, t, Frames.Frame.ICRF), law, false);
+            }
+        }
+
+        return frame;
+    }
+
+    [Fact]
+    public void MoonFromSpacecraftInTheFrameOfACoordinateSite() =>
+        AssertRow("moon_from_spacecraft_in_site_frame", (t, a) => InFrame(_moon.GetEphemeris(t, _spacecraft, _site.Frame, a), _site.Frame),
+            SpacecraftGeometric, Frame593SpacecraftCorrected);
+
+    [Fact]
+    public void MoonFromKernelSiteInTheFrameOfACoordinateSite() =>
+        AssertRow("moon_from_dss13_in_site_frame", (t, a) => InFrame(_moon.GetEphemeris(t, _dss13, _site.Frame, a), _site.Frame), Frame593Geometric,
+            Frame593Corrected);
+
+    [Fact]
+    public void MoonFromCoordinateSiteInTheFrameOfAnotherSite()
+    {
+        var other = OtherSite();
+        AssertRow("moon_from_site_in_other_site_frame", (t, a) => InFrame(_moon.GetEphemeris(t, _site, other.Frame, a), other.Frame), Frame593Geometric,
+            Frame593Corrected);
+    }
+
+    [Fact]
+    public void SpacecraftFromCoordinateSiteInTheFrameOfAnotherSite()
+    {
+        var other = OtherSite();
+        AssertRow("spacecraft_from_site_in_other_site_frame", (t, a) => InFrame(_spacecraft.GetEphemeris(t, _site, other.Frame, a), other.Frame),
+            SpacecraftGeometric, Frame593SpacecraftCorrected);
+    }
+
+    [Fact]
+    public void CoordinateSiteFromMoonInTheFrameOfAnotherSite()
+    {
+        var other = OtherSite();
+        AssertRow("site_from_moon_in_other_site_frame", (t, a) => InFrame(_site.GetEphemeris(t, _moon, other.Frame, a), other.Frame), Frame593Geometric,
+            Frame593Corrected);
+    }
+
+    [Fact]
+    public void MoonFromCoordinateSiteInTheFrameOfASpacecraft()
+    {
+        var frame = SpacecraftFrameAsItrf93();
+        AssertRow("moon_from_site_in_spacecraft_frame", (t, a) => InFrame(_moon.GetEphemeris(t, _site, frame, a), frame), Frame593ThirdSpacecraftGeometric,
+            Frame593ThirdSpacecraftCorrected);
+    }
+
+    [Fact]
+    public void MoonFromKernelSiteInTheFrameOfASpacecraft()
+    {
+        var frame = SpacecraftFrameAsItrf93();
+        AssertRow("moon_from_dss13_in_spacecraft_frame", (t, a) => InFrame(_moon.GetEphemeris(t, _dss13, frame, a), frame), Frame593ThirdSpacecraftGeometric,
+            Frame593ThirdSpacecraftCorrected);
+    }
+
+    /// <summary>
+    /// Review of #593: a frame given by name whose centre no object of the library holds, a TK frame of ITRF93 centred on
+    /// LRO (-85, the SPK of Data/LRO) that the test loads, read through SPICE by its identifier: the Moon from the
+    /// coordinate site G in it is the ICRF read rotated by ITRF93 at t − lt_c, lt_c the light time of LRO from G
+    /// (|p|/c and its rate p̂·ṗ/c, the identity of <c>spkltc</c>, from the read of LRO from G, whose path the rows
+    /// measure against CSPICE), the derivative of the rotation scaled by 1 − dlt_c/dt, as <c>spkezr_c</c> evaluates it.
+    /// </summary>
+    [Fact]
+    public void MoonFromCoordinateSiteInAFrameByNameCentredOnASpacecraft()
+    {
+        TestKernels.EnsureLro();
+        var lro = new Spacecraft(-85, "LRO", epoch: _epochs[0]);
+        var directory = Directory.CreateTempSubdirectory("lt593-");
+        var frameKernel = new FileInfo(Path.Combine(directory.FullName, "lt593.tf"));
+        File.WriteAllText(frameKernel.FullName, "KPL/FK\n\\begindata\nFRAME_LRO593_TK = 1593085\nFRAME_1593085_NAME = 'LRO593_TK'\n" +
+                                               "FRAME_1593085_CLASS = 4\nFRAME_1593085_CLASS_ID = 1593085\nFRAME_1593085_CENTER = -85\n" +
+                                               "TKFRAME_1593085_SPEC = 'MATRIX'\nTKFRAME_1593085_RELATIVE = 'ITRF93'\n" +
+                                               "TKFRAME_1593085_MATRIX = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)\n\\begintext\n");
+        Assert.Empty(KernelShadowing.Find([frameKernel], KernelShadowing.SolarSystem));
+        SpiceAPI.Instance.LoadKernels(frameKernel);
+        try
+        {
+            var frame = new Frames.Frame("LRO593_TK");
+            Assert.Equal(-85, SpiceAPI.NonInertialFrameCenter(frame));
+            double worstPosition = 0.0, worstVelocity = 0.0;
+            foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XCNS })
+            {
+                foreach (var t in _epochs)
+                {
+                    var read = InFrame(_moon.GetEphemeris(t, _site, frame, flag), frame);
+                    var icrf = _moon.GetEphemeris(t, _site, Frames.Frame.ICRF, flag).ToStateVector();
+                    var lightTimeOnly = flag == Aberration.XCNS ? Aberration.XCN : flag;
+                    var center = lro.GetEphemeris(t, _site, Frames.Frame.ICRF, lightTimeOnly).ToStateVector();
+                    double sign = flag is Aberration.LT or Aberration.CN ? -1.0 : 1.0;
+                    var expected = RotatedAtTheCentreEpoch(icrf, center, Itrf93, sign);
+                    worstPosition = System.Math.Max(worstPosition, (read.Position - expected.Position).Magnitude());
+                    worstVelocity = System.Math.Max(worstVelocity, (read.Velocity - expected.Velocity).Magnitude());
+                }
+            }
+
+            _output.WriteLine($"MEASURE #593 review frame by name centred on LRO: position {worstPosition:E3} m, velocity {worstVelocity:E3} m/s");
+            Assert.True(worstPosition <= FrameByNamePosition, $"{worstPosition:E3} m");
+            Assert.True(worstVelocity <= FrameByNameVelocity, $"{worstVelocity:E3} m/s");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(frameKernel);
+            directory.Delete(true);
+        }
+    }
+
+    /// <summary>
+    /// <paramref name="state"/>, light-time corrected in ICRF, in <paramref name="frame"/> at the epoch of its centre as
+    /// <c>spkezr_c</c> takes it: lt_c = |p|/c and dlt_c = p̂·ṗ/c of the light-time corrected <paramref name="center"/>,
+    /// the frame at t + sign·lt_c, carried to the exact double epoch by its angular velocity, and the derivative of the
+    /// rotation scaled by 1 + sign·dlt_c.
+    /// </summary>
+    private static StateVector RotatedAtTheCentreEpoch(StateVector state, StateVector center, Frames.Frame frame, double sign)
+    {
+        const double c = global::IO.Astrodynamics.Constants.C;
+        double lightTime = center.Position.Magnitude() / c;
+        double rate = center.Position.Normalize() * center.Velocity / c;
+        var t = state.Epoch;
+        var centerEpoch = t.AddSeconds(sign * lightTime);
+        double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds + sign * lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        var orientation = Frames.Frame.ICRF.ToFrame(frame, centerEpoch);
+        var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
+        var position = state.Position.Rotate(orientation.Rotation);
+        position -= angularVelocity.Cross(position) * residual;
+        var velocity = state.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(position) * (1.0 + sign * rate);
+        return new StateVector(position, velocity, state.Observer, t, frame);
+    }
+
+    // Review of #489, item 2 of its tests: C, the copy of the kernel site DSS-13 built from its coordinates (its position
+    // in ITRF93 at J2000 TDB, as the library takes them), against spkcpt_c at those coordinates, not against DSS-13, which
+    // the kernel moves 0.47 m by 2024
+
+    private Site Dss13Copy()
+    {
+        var copy = _reference.GetProperty("dss13_copy");
+        var site = new Site(913, "DSS13COPY", _earth, new Planetodetic(copy.GetProperty("longitude_rad").GetDouble(), copy.GetProperty("latitude_rad").GetDouble(),
+            copy.GetProperty("altitude_m").GetDouble()));
+        var planetodetic = _dss13.Planetodetic;
+        _output.WriteLine($"MEASURE DSS-13 coordinates of the library minus recgeo_c: longitude {planetodetic.Longitude - site.Planetodetic.Longitude:E3} rad, " +
+                          $"latitude {planetodetic.Latitude - site.Planetodetic.Latitude:E3} rad, altitude {planetodetic.Altitude - site.Planetodetic.Altitude:E3} m");
+        return site;
+    }
+
+    [Fact]
+    public void KernelSiteCopyFromMoon()
+    {
+        var copy = Dss13Copy();
+        AssertRow("dss13_copy_from_moon", (t, a) => Icrf(copy.GetEphemeris(t, _moon, Frames.Frame.ICRF, a)), Site489Geometric, Site489Corrected);
+    }
+
+    [Fact]
+    public void KernelSiteCopyFromItsBody()
+    {
+        var copy = Dss13Copy();
+        AssertRow("dss13_copy_from_earth", (t, a) => Icrf(copy.GetEphemeris(t, _earth, Frames.Frame.ICRF, a)), Site489Geometric, Site489Corrected);
+    }
+
+    /// <summary>
+    /// Review of #489, item 4 of its tests: the coordinate windows of G seen from the Moon with LT, against the windows of
+    /// <c>spkcpt_c</c> (60 s samples and a bisection to adjacent doubles, <c>tools/light_time_reference</c>): its range in
+    /// J2000 above 405000 km, its declination in J2000 above −9.5°, and its declination in the frame of H, a site built from
+    /// coordinates (#593's review: a frame centred on a third object, which threw before), above 0°.
+    /// </summary>
+    [Theory]
+    [InlineData("range_above", Coordinate.Range, false)]
+    [InlineData("declination_above", Coordinate.Declination, false)]
+    [InlineData("declination_in_other_site_frame_above", Coordinate.Declination, true)]
+    public void CoordinateSiteCoordinateWindows(string label, Coordinate coordinate, bool inOtherSiteFrame)
+    {
+        var row = _reference.GetProperty("coordinate_windows_lt").GetProperty(label);
+        double value = row.GetProperty("value").GetDouble();
+        value = coordinate == Coordinate.Range ? value * 1000.0 : value * global::IO.Astrodynamics.Constants.Deg2Rad;
+        var expected = row.GetProperty("windows").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
+        var frame = inOtherSiteFrame ? OtherSite().Frame : Frames.Frame.ICRF;
+        var windows = _site.FindWindowsOnCoordinateConstraint(new TimeSystem.Window(TimeSystem.Time.CreateTDB(757339200.0), TimeSystem.Time.CreateTDB(757425600.0)),
+            _moon, frame, CoordinateSystem.RaDec, coordinate, RelationnalOperator.Greater, value, 0.0, Aberration.LT, System.TimeSpan.FromMinutes(10)).ToArray();
+        Assert.Equal(expected.Length / 2, windows.Length);
+        double worst = 0.0;
+        for (int k = 0; k < windows.Length; k++)
+        {
+            worst = System.Math.Max(worst, System.Math.Abs((windows[k].StartDate - expected[2 * k]).TotalSeconds));
+            worst = System.Math.Max(worst, System.Math.Abs((windows[k].EndDate - expected[2 * k + 1]).TotalSeconds));
+        }
+
+        _output.WriteLine($"MEASURE #489 coordinate window {label}: worst bound {worst:E3} s");
+        Assert.True(worst <= CoordinateWindowBound, $"{label}: {worst:E3} s");
+    }
+
     // Provisional bounds of #489 and #593, twice the worst over the rows of each on Linux x64 (2026-11-17), rounded up at
     // two digits, to be set again from the Windows x64 and macOS arm64 CI logs (the MEASURE lines of each row). Positions
     // in m, velocities in m/s. A site given by its coordinates, as target: from the Moon, the Earth, LRO and the singular
@@ -348,6 +565,21 @@ public class LightTimeCorrectionTests
 
     // The guide window: 0 s and 1.0e-7 s from spkcpt_c's
     private const double GuideWindowBound = 2.0e-7;
+
+    // Reviews of #593 and #489, provisional, twice the worst on Linux x64 (2026-11-17), rounded up at two digits, to be set
+    // again from the Windows x64 and macOS arm64 CI logs (the MEASURE lines). The frame of a site centred on a third object
+    // takes the bounds above (geometric 4.5e-7 m and 7.1e-11 m/s, corrected 1.7e-5 m and 1.2e-8 m/s; the spacecraft rows
+    // 3.9e-4 m and 8.5e-7 m/s). The frame of S as a record of ITRF93: geometric 2.8e-7 m and 1.8e-8 m/s, the rate of the
+    // record (the mean of the SLERP rates of the intervals on either side of a sample); corrected 1.7e-3 m and 1.2e-7 m/s,
+    // the epoch of the centre, read on the record at its 100 ns tick (exact SLERP) where CSPICE and the residual of the
+    // library take the double of a 2024 epoch, 6e-8 s apart at most: 1.7 mm at the Moon for the Earth's rotation. The frame
+    // by name: the closed form of the same arithmetic, 0. The coordinate windows: 1.0e-7 s from spkcpt_c's, as the guide
+    // window.
+    private static readonly (double Position, double Velocity) Frame593ThirdSpacecraftGeometric = (5.6e-7, 3.6e-8);
+    private static readonly (double Position, double Velocity) Frame593ThirdSpacecraftCorrected = (3.4e-3, 2.4e-7);
+    private const double FrameByNamePosition = 0.0;
+    private const double FrameByNameVelocity = 0.0;
+    private const double CoordinateWindowBound = 2.0e-7;
 
     /// <summary>
     /// Azimuth, elevation, range (<see cref="Site.GetHorizontalCoordinates"/>) and range rate (from the state of the target

@@ -190,6 +190,44 @@ public class InstrumentPointingAttitudeTests
         }
     }
 
+    /// <summary>
+    /// Review of #549: a <see cref="Star"/> target takes no light time, its "+S" corrections the stellar aberration alone,
+    /// as <see cref="Star.GetEphemeris"/> reads it (its catalog position is the direction of the light at the barycenter,
+    /// confirmed by S. Guillet, 2026-11-11; that reading is checked against SOFA's <c>iauStarpm</c> and CSPICE in
+    /// <see cref="Occultation.StarOccultationTests"/>): the closed form, the star at its catalog position moved by its
+    /// proper motion to the epoch (<see cref="Star.GetEquatorialCoordinates"/>) minus the spacecraft from the barycenter at
+    /// the epoch, and for "+S" that direction rotated by <c>stelab</c> (<see cref="Star.GetEphemeris"/>). At 20 pc and
+    /// 0.1″/yr the light time moved the boresight by 4.47e-5 rad (9.22″, LT) before this fix, and at 2000 pc its epoch
+    /// was beyond the range of a <see cref="TimeSystem.Time"/>, which threw.
+    /// </summary>
+    [Theory]
+    [InlineData(20.0)]
+    [InlineData(2000.0)]
+    public void PointsAtAStarWithoutLightTime(double distancePc)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var (epoch, s, _) = Pointing()[3];
+        var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epoch, Frames.Frame.ICRF);
+        const double arcsec = System.Math.PI / 180.0 / 3600.0;
+        var star = new Star(9549, "S9549", 1.989e30, "G2V", 5.0, 1.0 / distancePc, new Equatorial(1.2, 0.3, 1.0, epoch.AddDays(-36525.0)),
+            0.1 * arcsec, 0.1 * arcsec, 0.0, 0.0, 0.0, 0.0, epoch.AddDays(-36525.0));
+        foreach (var flag in Flags)
+        {
+            var (spc, instrument) = PointingSpacecraft(-5493, state);
+            var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, instrument, star,
+                spc.Engines.First(), flag);
+            var (_, orientation) = attitude.TryExecute(state);
+            var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
+            var geometric = star.GetEquatorialCoordinates(epoch).ToCartesian() - (state.Position + earth.GetGeometricStateFromICRF(epoch).ToStateVector().Position);
+            var expected = flag is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS
+                ? star.GetEphemeris(epoch, spc, Frames.Frame.ICRF, flag).ToStateVector().Position
+                : geometric;
+            double angle = Body.AttitudeRecordTests.Angle(boresight, expected);
+            _output.WriteLine($"MEASURE #549 review: a star at {distancePc} pc {flag.GetDescription(),-6}: boresight from the closed form {angle:E3} rad");
+            Assert.True(angle <= StarPointingTolerance, $"{distancePc} pc {flag}: {angle:E3} rad");
+        }
+    }
+
     [Fact]
     public void RejectsAnUnknownAberration()
     {
@@ -207,4 +245,9 @@ public class InstrumentPointingAttitudeTests
     // of the library against CSPICE's at a range of a few thousand km; geometric 2.3e-16 and 2.9e-16 rad
     private const double MoonPointingTolerance = 2.1e-13;
     private const double SitePointingTolerance = 2.3e-12;
+
+    // Provisional, twice the worst over the corrections and the two distances on Linux x64 (2026-11-17), rounded up at two
+    // digits, to be set again from the Windows x64 and macOS arm64 CI logs (the MEASURE lines of PointsAtAStarWithoutLightTime):
+    // 1.60e-16 rad (XLT+S and XCN+S at 20 pc), where the light time moved the boresight by 4.5e-5 rad (9.2″) at 20 pc
+    private const double StarPointingTolerance = 3.2e-16;
 }

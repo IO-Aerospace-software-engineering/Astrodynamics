@@ -71,7 +71,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read, on the provider set at that time, and so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before `LoadKernels`), with `InvalidOperationException` naming the missing variable (third round of #668); once read, an object keeps the provider it read its data from, for its data and its ephemeris; on SPICE its data are read again at the first read after each `LoadKernels`, `UnloadKernels` or `ClearKernels`, data equal to those held keeping the instances held (third round of #668)
 
 **Key Namespaces**
-- `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments; where CSPICE cannot read a pair, the reference-body path (internal `CelestialItem.ApparentStateFromReferenceBody`) corrects as `spkaps` (#491) and rotates to a non-inertial frame at t ∓ lt of the frame's centre, as `spkezr_c` (#593, `SpiceAPI.NonInertialFrameCenter`, the native `GetFrameInfoProxy`); a site built from coordinates as a target takes it for every observer with a correction, as `spkcpt_c` (#489)
+- `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments; where CSPICE cannot read a pair, the reference-body path (internal `CelestialItem.ApparentStateFromReferenceBody`) corrects as `spkaps` (#491) and rotates to a non-inertial frame at t ∓ lt of the frame's centre, as `spkezr_c` (#593, `SpiceAPI.NonInertialFrameCenter`, the native `GetFrameInfoProxy`; a centre that is a third object, a site from coordinates or a managed spacecraft included, read as that path reads it); a site built from coordinates as a target takes it for every observer with a correction, as `spkcpt_c` (#489)
 - `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE, mean/osculating elements
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OmmParseException` naming its keyword (#708); `TleParameters` and `CovarianceMatrix` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717)
@@ -626,7 +626,7 @@ The framework provides a family of attitude maneuvers for spacecraft orientation
 - `RetrogradeAttitude`: Anti-velocity pointing
 - `NormalAttitude`: Orbital normal pointing (h = r × v)
 - `AntiNormalAttitude`: Anti-normal pointing (−h)
-- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target, its direction corrected by `Aberration` (`Aberration.LT` by default, the target as the spacecraft sees it, as `spkcvo_c`; `Aberration.None` geometric; #549)
+- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target, its direction corrected by `Aberration` (`Aberration.LT` by default, the target as the spacecraft sees it, as `spkcvo_c`; a `Star` without light time, as `Star.GetEphemeris`; `Aberration.None` geometric; #549)
 - `TriadAttitude`: Two-vector fully-constrained attitude (eliminates roll ambiguity)
 
 **TRIAD Attitude Determination**
