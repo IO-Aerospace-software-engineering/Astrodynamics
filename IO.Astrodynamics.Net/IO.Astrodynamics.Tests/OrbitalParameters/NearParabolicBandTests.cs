@@ -2,6 +2,7 @@
 
 using System;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -321,6 +322,177 @@ public class NearParabolicBandTests
             Assert.Equal(IO.Astrodynamics.OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(nu, ke.E, ke.EccentricAnomaly(nu)),
                 ke.MeanAnomaly(nu));
         }
+    }
+
+    #endregion
+
+    #region #477: parabolic equinoctial elements without a perigee radius
+
+    // Case 1 of the issue (the input of #469, section 9 (b)): e = 1, q = P / 2 = 7000 km
+    private EquinoctialElements Case1(double? perigeeRadius = null) =>
+        new(14e6, 1.0, 0.0, 0.1, 0.05, 0.5, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius);
+
+    // Case 2: F² + G² = 1 in doubles, q = P / 2 = 6 878 137 m
+    private EquinoctialElements Case2(double? perigeeRadius = null) =>
+        new(13756274.0, 0.6, 0.8, -0.2, 0.3, 2.0, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius);
+
+    private static double RelativeDistance(StateVector state, double[] r) =>
+        Distance(state.Position, new Vector3(r[0], r[1], r[2])) / new Vector3(r[0], r[1], r[2]).Magnitude();
+
+    [Fact]
+    public void Issue477_AFreshInstance_HasItsPerigeeRadiusAndKeplerianElements()
+    {
+        // Arrange: no perigee radius, a fresh instance for each call
+        foreach (var (name, build, q, nHi, nLo, angles) in new (string, Func<EquinoctialElements>, double, double, double, double[])[]
+                 {
+                     ("case 1", () => Case1(), 7000000.0, 0.0007622664872156607, -4.563587792784953e-21,
+                         [0.2226820286819278, 0.4636476090008061, 5.81953769817878, 0.2608913094738398]),
+                     ("case 2", () => Case2(), 6878137.0, 0.0007826140740306223, 3.212510836361077e-20,
+                         [0.6920938617784603, 2.1587989303424644, 5.051681594838734, 0.6645139575840776]),
+                 })
+        {
+            // Act
+            double perigeeRadius = build().PerigeeRadius();
+            double meanMotion = build().MeanMotion();
+            var ke = build().ToKeplerianElements();
+
+            // Assert: q = P / (1 + e) exactly (before: the cached h²/μ/(1 + e) of the state, 2 ulp above, or nothing on a
+            // fresh instance, where ToKeplerianElements threw), Barker's n = √(μ/(2q³)), and the Keplerian elements
+            Assert.Equal(q, perigeeRadius);
+            Measure($"#477 {name} MeanMotion relative error", (meanMotion - nHi - nLo) / nHi);
+            // Measured at most 4.1e-17 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            Assert.InRange((meanMotion - nHi - nLo) / nHi, -8.3e-17, 8.3e-17);
+            Assert.True(double.IsPositiveInfinity(ke.A));
+            Assert.Equal(q, ke.PerigeeRadius());
+            double[] actual = [ke.I, ke.RAAN, ke.AOP, ke.M];
+            for (int k = 0; k < 4; k++)
+            {
+                Measure($"#477 {name} angle {k} error (rad)", actual[k] - angles[k]);
+                // Measured at most 1.2e-16 rad on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+                Assert.InRange(actual[k] - angles[k], -2.3e-16, 2.3e-16);
+            }
+        }
+    }
+
+    [Fact]
+    public void Issue477_AFreshInstance_MovesInTime()
+    {
+        // Arrange: the 60-digit motion of the parabola (Barker's equation at q = P / (1 + e))
+        double[] r0 = [6546595.968654342, 3568802.005525925, 59848.915685823675];
+        double[] r600 = [4257611.299089934, 8735251.710614737, 1338014.3921153967];
+        double[] r3600 = [-10891598.240740746, 21999559.196883645, 5558553.58324132];
+        double[] r2At0 = [-4155698.622213448, 8276711.556639796, -939385.5739400573];
+        double[] r2At5400 = [-29871818.463815868, 3209062.704096721, 19125822.98465613];
+
+        // Act: each call on a fresh instance (before: ArgumentException from the KeplerianElements constructor)
+        var errors = new (string Name, double Error)[]
+        {
+            ("case 1 AtEpoch(t0)", RelativeDistance(Case1().AtEpoch(Epoch).ToStateVector(), r0)),
+            ("case 1 AtEpoch(t0 + 600 s)", RelativeDistance(Case1().AtEpoch(Epoch.AddSeconds(600.0)).ToStateVector(), r600)),
+            ("case 1 ToStateVector(t0 + 3600 s)", RelativeDistance(Case1().ToStateVector(Epoch.AddSeconds(3600.0)), r3600)),
+            ("case 2 AtEpoch(t0)", RelativeDistance(Case2().AtEpoch(Epoch).ToStateVector(), r2At0)),
+            ("case 2 ToStateVector(t0 + 5400 s)", RelativeDistance(Case2().ToStateVector(Epoch.AddSeconds(5400.0)), r2At5400)),
+        };
+        double nuError = Case1().TrueAnomaly(Epoch.AddSeconds(600.0)) - 1.129382094161676 + 2.903015728754372e-17;
+
+        // Assert
+        foreach (var (name, error) in errors)
+        {
+            Measure($"#477 {name}, |Δr| / |r|", error);
+            // Measured at most 8.8e-16 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            Assert.InRange(error, 0.0, 1.8e-15);
+        }
+
+        Measure("#477 case 1 TrueAnomaly(t0 + 600 s) error (rad)", nuError);
+        // Measured 2.9e-17 rad on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        Assert.InRange(nuError, -5.9e-17, 5.9e-17);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Issue477_APropagation_StartsFromTheElements(bool rk78)
+    {
+        // Arrange: a spacecraft whose initial orbit is case 1 without a perigee radius
+        var spacecraft = new Spacecraft(-1477, "BAND477", 100.0, 1000.0, new Clock("band477", 65536), Case1());
+        var window = new Window(Epoch, Epoch.AddSeconds(60.0));
+        var bodies = new CelestialItem[] { _earth };
+
+        // Act (before: ArgumentException from the constructor of the propagator)
+        using var propagator = rk78
+            ? new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft,
+                new IO.Astrodynamics.Propagator.Integrators.RK78Integrator(1e-12, 1e-12), bodies, false, false,
+                TimeSpan.FromSeconds(60.0))
+            : new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft, bodies, false, false,
+                TimeSpan.FromSeconds(10.0));
+        var first = propagator.Propagate().Segments[0].Steps[0];
+
+        // Assert: the state of the elements at the start
+        double[] r0 = [6546595.968654342, 3568802.005525925, 59848.915685823675];
+        double error = Distance(first.StartPosition, new Vector3(r0[0], r0[1], r0[2])) / new Vector3(r0[0], r0[1], r0[2]).Magnitude();
+        Measure($"#477 propagation start ({(rk78 ? "RK7(8)" : "Velocity-Verlet")}), |Δr| / |r|", error);
+        // Measured 2.9e-16 on Linux, both integrators; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        Assert.InRange(error, 0.0, 5.8e-16);
+    }
+
+    [Fact]
+    public void Issue477_TheResults_DoNotDependOnTheOrderOfTheCalls()
+    {
+        // Arrange: the calls that cached a perigee radius on #469 before ToKeplerianElements could run
+        var later = Epoch.AddSeconds(600.0);
+        var firstCalls = new (string Name, Action<EquinoctialElements> Call)[]
+        {
+            ("none", _ => { }), ("PerigeeRadius", e => e.PerigeeRadius()), ("MeanMotion", e => e.MeanMotion()),
+            ("ToStateVector()", e => e.ToStateVector()), ("ToKeplerianElements(Time)", e => e.ToKeplerianElements(later)),
+            ("ToStateVector(ν)", e => e.ToStateVector(1.0)), ("EpochAtMeanAnomaly", e => e.EpochAtMeanAnomaly(0.4)),
+        };
+        var fresh = Case1();
+        var withRadius = Case1(14e6 / 2.0);
+        var expectedElements = fresh.ToKeplerianElements();
+        var expectedLater = (KeplerianElements)Case1().AtEpoch(later);
+
+        foreach (var (name, call) in firstCalls)
+        {
+            // Act
+            var elements = Case1();
+            call(elements);
+            var ke = elements.ToKeplerianElements();
+            var atLater = (KeplerianElements)elements.AtEpoch(later);
+
+            // Assert: bit for bit those of a fresh instance (before: the order chose between an exception and two radii
+            // 2 ulp apart)
+            Assert.True(expectedElements.Equals(ke) && ke.PerigeeRadius() == expectedElements.PerigeeRadius(), name);
+            Assert.True(expectedLater.Equals(atLater) && atLater.PerigeeRadius() == expectedLater.PerigeeRadius(), name);
+        }
+
+        // And those of the same elements given P / (1 + e)
+        Assert.Equal(expectedElements, withRadius.ToKeplerianElements());
+        Assert.Equal(expectedLater, (KeplerianElements)withRadius.AtEpoch(later));
+    }
+
+    [Theory]
+    [InlineData(2e7, 1.0000004, new[] { 9352278.206717614, 5098287.626146383, 85498.4349949521 })]
+    [InlineData(1.6e7, 0.9999996, new[] { 7481825.362979214, 4078631.6259995797, 68398.77357164008 })]
+    public void Issue477_ElementsOfTheBand_MoveFromTheirState(double p, double f, double[] r)
+    {
+        // Arrange: e − 1 = ±4e-7, P finite, no perigee radius
+        var elements = new EquinoctialElements(p, f, 0.0, 0.1, 0.05, 0.5, _earth, Epoch, Frames.Frame.ICRF);
+        Assert.True(elements.IsParabolic());
+
+        // Act
+        var direct = elements.ToStateVector();
+        var atEpoch = elements.AtEpoch(Epoch).ToStateVector();
+
+        // Assert: the state of the elements, and the Keplerian path to it (before: ArgumentException; 7.26e6 and 1.19e7 m
+        // off with a perigee radius given, the mean anomaly of the band, #478)
+        double directError = RelativeDistance(direct, r);
+        double atEpochError = RelativeDistance(atEpoch, r);
+        Measure($"#477 band row e − 1 = {f - 1.0:E1}: direct |Δr| / |r|", directError);
+        Measure($"#477 band row e − 1 = {f - 1.0:E1}: AtEpoch(t0) |Δr| / |r|", atEpochError);
+        // Measured on Linux 2.3e-16 and 2.0e-7 (the semi-latus rectum 2q of the Keplerian state in the band, |e − 1| /
+        // (1 + e), until #459); provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        Assert.InRange(directError, 0.0, 4.6e-16);
+        Assert.InRange(atEpochError, 0.0, 4.0e-7);
     }
 
     #endregion

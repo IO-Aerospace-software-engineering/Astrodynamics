@@ -293,6 +293,37 @@ public class OrbitalParametersTests
     }
 
     [Fact]
+    public void ParabolicEquinoctialWithoutPerigeeRadiusToSv_PrintsItsState()
+    {
+        using (Configuration.Lock())
+        {
+            // Arrange: --from-equinoctial passes no perigee radius: case 1 of #477, P = 14 000 km, F = 1, G = 0, H = 0.1,
+            // K = 0.05, L0 = 0.5 rad, a parabola with q = P / 2 (before: ArgumentException from AtEpoch)
+            var command = new OrbitalParametersConverterCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+
+            // Act
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "14000000.0 1.0 0.0 0.1 0.05 0.5", CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
+                Frame = "ICRF", FromStateVector = false, FromKeplerian = false, FromEquinoctial = true, FromTLE = false
+            }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF");
+            var res = sb.ToString();
+
+            // Assert: the position of the elements at their epoch, the 60-digit closed form (its geometry does not read
+            // the GM; tools/near_parabolic/near_parabolic_reference.py)
+            var state = ParseState(res, new Body.CelestialBody(399), TimeSystem.Time.J2000TDB);
+            var expected = new Math.Vector3(6546595.968654342, 3568802.005525925, 59848.915685823675);
+            double error = (state.Position - expected).Magnitude() / expected.Magnitude();
+            _output.WriteLine($"MEASURE #477 CLI --from-equinoctial parabola, |Δr| / |r|: {error:E3}");
+            // Measured 2.9e-16 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            Assert.InRange(error, 0.0, 5.8e-16);
+        }
+    }
+
+    [Fact]
     public async Task Exceptions()
     {
         var command = new OrbitalParametersConverterCommand();

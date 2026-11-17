@@ -3244,6 +3244,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   state; over 2000 random exact parabolas, the equinoctial round trip within 5.9e-15 of |r| (`NearParabolicBandTests.Issue478_*`,
   red on a85098d; provisional thresholds, twice the Linux worst). The time of the band is Barker's, the motion the
   library takes there (#459): at e − 1 = −5e-7 it differs from the conic's by 1.7e-5 s at ν = 1 rad.
+- **Parabolic `EquinoctialElements` without a perigee radius threw, or depended on the order of the calls** ([#477](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/477)).
+  Elements of the band |e − 1| < 1e-6 with a finite P define a parabola of perigee radius q = P / (1 + e), but nothing
+  derived it: on a fresh instance `ToKeplerianElements()`, `AtEpoch`, `ToStateVector(Time)`, `TrueAnomaly(Time)` and the
+  `CentralBodyPropagator` constructors (so `Spacecraft.Propagate` and the CLI's `--from-equinoctial`) threw the
+  `ArgumentException` of the parabolic `KeplerianElements`, and after `PerigeeRadius()`, `MeanMotion()` or a few other
+  calls they worked with the h²/μ/(1 + e) of the state, 2 ulp above P / 2 (measured on a85098d). The constructor now
+  derives q = P / (1 + e) when no perigee radius is given, the orbit is in the band and P is finite (decided by
+  S. Guillet, 2026-11-17, the recommendation of the issue), exactly P / 2 at e = 1, so every path reads the same q from the
+  first call. Elements given a perigee radius, elements outside the band, a non-finite P without a radius (its state
+  undefined, as #452 left it) and `Equals`/`GetHashCode` are unchanged. Against 60-digit closed forms (the
+  equinoctial-to-Cartesian form of Walker, Ireland and Owens and Barker's equation; the two cases of the issue): q
+  exactly P / 2, Barker's n within 4.1e-17, the Keplerian angles within 1.2e-16 rad, `AtEpoch` and `ToStateVector(Time)` up
+  to 1.5 h within 8.8e-16 of |r|, the first state of a propagation by Velocity-Verlet and RK7(8) within 2.9e-16, every
+  first call of the issue giving bit for bit the results of a fresh instance and of the elements given P / (1 + e)
+  (`NearParabolicBandTests.Issue477_*`, red on a85098d; provisional thresholds, twice the Linux worst), and the CLI
+  converter prints the state (`OrbitalParametersTests.ParabolicEquinoctialWithoutPerigeeRadiusToSv_PrintsItsState`).
+  `EquinoctialElementsSingularityTests.Parabolic_WithAFinitePOrAPerigeeRadius_MatchesTheReference` now finds
+  `PerigeeRadius()` without a radius exactly P / (1 + e). Within the band with e ≠ 1 the Keplerian path runs too, with the
+  mean anomaly of #478.
 
 **Changed**
 

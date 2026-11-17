@@ -55,6 +55,11 @@
 
 The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F, p = K and q = H.
 
+A parabola (|e − 1| < 1e-6, e = √(F² + G²)) given a finite P and no perigee radius has its perigee radius
+q = P / (1 + e), P / 2 at e = 1, derived when it is built, so that every path (`PerigeeRadius()`,
+`ToKeplerianElements()`, `AtEpoch`, a propagation) reads the same q from the first call (#477). A non-finite P needs the
+`perigeeRadius` argument; its state is then the conic of p = q (1 + e).
+
 | Method | Description |
 |--------|-------------|
 | `ToStateVector()` | Convert to state vector |

@@ -23,7 +23,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="observer">The observer.</param>
         /// <param name="epoch">The epoch.</param>
         /// <param name="frame">The reference frame.</param>
-        /// <param name="perigeeRadius">The perigee radius (optional).</param>
+        /// <param name="perigeeRadius">The perigee radius (optional): for a parabolic orbit (|e − 1| &lt; 1e-6) the state of
+        /// a non-finite P; without it, a finite P gives q = P / (1 + e) (#477).</param>
         /// <param name="elementsType">The type of orbital elements (osculating or mean). Defaults to osculating.</param>
         public EquinoctialElements(double p, double f, double g, double h, double k, double l0, ILocalizable observer, Time epoch, Frame frame,
             double? perigeeRadius = null, OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer,
@@ -35,7 +36,13 @@ namespace IO.Astrodynamics.OrbitalParameters
             H = h;
             K = k;
             L0 = l0;
-            _perigeeRadius = perigeeRadius;
+
+            // A parabola of the band |e − 1| < 1e-6 given a finite P and no perigee radius has q = P / (1 + e), exactly P / 2
+            // at e = 1: derived here, so that every path reads the same q from the first call (#477; before, the
+            // Keplerian paths threw on a fresh instance, and after PerigeeRadius() read the h²/μ/(1 + e) of the state,
+            // 2 ulp away). e is the expression of Eccentricity()
+            double e = System.Math.Sqrt(f * f + g * g);
+            _perigeeRadius = perigeeRadius ?? (System.Math.Abs(e - 1.0) < 1E-06 && double.IsFinite(p) ? p / (1.0 + e) : null);
         }
 
         /// <summary>

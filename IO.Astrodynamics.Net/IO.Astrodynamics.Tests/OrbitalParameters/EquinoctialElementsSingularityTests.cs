@@ -746,7 +746,9 @@ public class EquinoctialElementsSingularityTests
         Assert.True(worst.Velocity < 1.8e-16, $"velocity {worst.Velocity:E2}");
         Assert.True(worstBand.Position < 3.8e-16, $"position {worstBand.Position:E2}");
         Assert.True(worstBand.Velocity < 3.4e-16, $"velocity {worstBand.Velocity:E2}");
-        Assert.True(perigeeRadiusError < 5.4e-16, $"perigee radius {perigeeRadiusError:E2}");
+        // Without a perigee radius, q = P / (1 + e) is derived when the elements are built (#477): exactly the reference
+        // (7 000 000.000000002 m, 2 ulp above, before, the h²/μ/(1 + e) of the state)
+        Assert.Equal(0.0, perigeeRadiusError);
         Assert.True(Worst(worstPeriapsis.Error) < 5.4e-16, $"periapsis {worstPeriapsis.Error:E2} ({worstPeriapsis.Name})");
     }
 
