@@ -198,9 +198,9 @@ var fromRemediated = remediated.Propagate(window, bodies, new RK78Integrator(1e-
 ```
 
 A covariance the propagation already accepts comes back as it is (`Remediated` false). One that rounding does not
-explain (a negative variance, an asymmetry beyond the tolerance, a value that is not finite) throws. The remediation has
-no bound on the depth of the defect: test `SmallestCorrelationEigenvalue` if you want one
-([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)).
+explain (a negative variance, an asymmetry beyond the tolerance, a value that is not finite, a defect deeper than the
+rounding of its elements to 4 significant digits explains: the smallest eigenvalue of its correlation matrix below −1e-3
+of its trace in the frame of the state and in its RTN frame) throws ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)).
 
 ## To a collision probability
 

@@ -339,14 +339,26 @@ public abstract class PropagatorBase : IPropagator
     /// of the conjunction analysis and of <see cref="StateVector.WithRemediatedCovariance"/> (#405); the propagation
     /// itself never calls it.
     /// </summary>
+    /// <remarks>
+    /// The depth of the defect is bounded (#443, decided by S. Guillet, 2026-11-17): the smallest eigenvalue of the
+    /// correlation matrix at least −<see cref="CovarianceChecks.RemediationDepthBound"/> of its trace in the frame of the
+    /// state, or in the RTN frame of <paramref name="state"/> (the frame of the covariances of a CDM): the bound covers the
+    /// rounding of every element to 4 significant digits in the frame it was rounded in, and a rotation to another frame
+    /// can deepen that defect without bound in the correlation matrix (a covariance of LEO rounded in RTN and rotated to
+    /// ICRF: up to 2.4e-2 of the trace measured for a full-rank covariance, near −1 for a degenerate one). The clipping
+    /// itself is made in the frame of the state, as before.
+    /// </remarks>
     /// <param name="p0">The initial covariance.</param>
+    /// <param name="state">The state the covariance belongs to, whose RTN frame is the second frame of the bound; null,
+    /// or a rectilinear state (no RTN frame), for the frame of the covariance only.</param>
     /// <param name="remediated">The remediated covariance; null when <paramref name="p0"/> is accepted as it is, or
     /// refused.</param>
     /// <param name="smallestEigenvalue">The smallest eigenvalue of the correlation matrix of <paramref name="p0"/>, its
     /// positive variances (zero when none is); NaN when it is refused.</param>
     /// <returns>Null when <paramref name="p0"/> is accepted or remediated; otherwise why it is not one that rounding
-    /// explains: not 6×6, not finite, a negative variance, an asymmetry beyond the tolerance.</returns>
-    internal static string RemediateInitialCovariance(Math.Matrix p0, out Math.Matrix? remediated,
+    /// explains: not 6×6, not finite, a negative variance, an asymmetry beyond the tolerance, a defect deeper than the
+    /// bound in both frames (its depth in the message).</returns>
+    internal static string RemediateInitialCovariance(Math.Matrix p0, StateVector state, out Math.Matrix? remediated,
         out double smallestEigenvalue)
     {
         remediated = null;
@@ -370,6 +382,23 @@ public abstract class PropagatorBase : IPropagator
         if (clipped == null)
             return refusal;
 
+        // The depth of the defect, in the frame of the covariance, then in the RTN frame of its state (#443)
+        int positive = Enumerable.Range(0, 6).Count(i => values[6 * i + i] > 0.0);
+        double depth = smallestEigenvalue / positive;
+        if (depth < -CovarianceChecks.RemediationDepthBound)
+        {
+            double rtnDepth = RtnRelativeDepth(p0, state);
+            if (!(rtnDepth >= -CovarianceChecks.RemediationDepthBound))
+            {
+                smallestEigenvalue = double.NaN;
+                return "The covariance is not positive semi-definite beyond what rounding explains: the smallest " +
+                       $"eigenvalue of its correlation matrix is {depth:E3} of its trace" +
+                       (double.IsNaN(rtnDepth) ? "" : $" ({rtnDepth:E3} in the RTN frame of its state)") +
+                       $", deeper than the bound of {CovarianceChecks.RemediationDepthBound:E1} that the rounding of its " +
+                       "elements to 4 significant digits explains (#443).";
+            }
+        }
+
         var matrix = new Math.Matrix(6, 6);
         for (int i = 0; i < 6; i++)
         {
@@ -381,6 +410,29 @@ public abstract class PropagatorBase : IPropagator
 
         remediated = matrix;
         return null;
+    }
+
+    // The depth of the defect of p0 in the RTN frame of its state (P_RTN = R P Rᵀ, R the block-diagonal rotation of the
+    // RTN axes, symmetrized); NaN without a state, for a rectilinear one, or for a matrix the check refuses there
+    private static double RtnRelativeDepth(Math.Matrix p0, StateVector state)
+    {
+        double h = state?.Position.Cross(state.Velocity).Magnitude() ?? double.NaN;
+        if (!(h > 0.0) || !(state.Position.Magnitude() > 0.0))
+            return double.NaN;
+
+        var rotation = state.CreateRtnRotation();
+        var r6 = Math.Matrix.CreateBlockDiagonal(rotation, rotation);
+        var rtn = r6 * p0 * r6.Transpose();
+        var values = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                values[6 * i + j] = 0.5 * (rtn.Get(i, j) + rtn.Get(j, i));
+            }
+        }
+
+        return CovarianceChecks.RelativeDepth(values, 6);
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one

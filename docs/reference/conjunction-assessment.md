@@ -33,7 +33,10 @@ during the search, in this order:
       `EncounterQualityFlags.CovarianceRemediated` is raised (decision of S. Guillet, 2026-10-18). A propagation by
       `CentralBodyPropagator` still rejects such a covariance: `StateVector.WithRemediatedCovariance()` applies the same
       remediation beforehand (see [Covariance Propagation](covariance-propagation.md#an-initial-covariance-indefinite-from-rounding));
-      the analysis then gives the same covariance bit for bit, without the flag.
+      the analysis then gives the same covariance bit for bit, without the flag. A defect deeper than rounding explains (the
+      smallest eigenvalue of the correlation matrix below −1e-3 of its trace in the frame of the state and in its RTN
+      frame, [#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17) is not remediated: the covariance is held in RTN, as a negative
+      variance is (before 11.0.0, a correlation of −10 was remediated by a change of 5.5 times the values).
 2. **Provided at the encounter** (`ProvidedAtEncounter`): the state of the participant at TCA carries a covariance,
    for a hand-built `ILocalizable` whose ephemeris gives one (age zero).
 3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not

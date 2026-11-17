@@ -32,6 +32,39 @@ internal static class CovarianceChecks
     internal const double RelativeTolerance = 1e-12;
 
     /// <summary>
+    /// The deepest defect that the remediation repairs (#443, decided by S. Guillet, 2026-11-17): the smallest eigenvalue of
+    /// the correlation matrix at least −1e-3 of its trace, the quantity of <see cref="RelativeTolerance"/>. Rounding each
+    /// element of a positive semi-definite covariance to 4 significant digits, as the covariances of a CDM (CCSDS 508.0-B-1,
+    /// to be verified by S. Guillet), changes each correlation by at most 2u/(1 − u), u = 5e-4, so the smallest eigenvalue
+    /// of a correlation matrix of order n by at most (n − 1) 2u/(1 − u) (Weyl), 8.34e-4 of the trace 6; measured: 1.6e-4 at
+    /// worst over 60 000 random covariances of ranks 1 to 6 (the Clohessy-Wiltshire covariances of LEO and GEO among them),
+    /// 2.1e-4 by an adversarial search. A correlation of −1.01 in RTN (1.67e-3 of the trace) is beyond it.
+    /// </summary>
+    internal const double RemediationDepthBound = 1e-3;
+
+    /// <summary>
+    /// The depth of the defect of <paramref name="matrix"/>, n×n row-major: the smallest eigenvalue of the correlation
+    /// matrix of its positive variances divided by its trace (their number); NaN when the matrix fails the checks before
+    /// the eigenvalue (size, a value not finite, a negative variance, an asymmetry, a zero variance with a covariance);
+    /// zero when no variance is positive.
+    /// </summary>
+    internal static double RelativeDepth(ReadOnlySpan<double> matrix, int dimension)
+    {
+        Validate(matrix, dimension, "The covariance", out _, out double smallest);
+        int positive = 0;
+        if (matrix.Length == dimension * dimension)
+        {
+            for (int i = 0; i < dimension; i++)
+            {
+                if (matrix[dimension * i + i] > 0.0)
+                    positive++;
+            }
+        }
+
+        return double.IsNaN(smallest) || positive == 0 ? smallest : smallest / positive;
+    }
+
+    /// <summary>
     /// Check <paramref name="matrix"/>, n×n row-major, and return it symmetrized, (M + Mᵀ) / 2.
     /// </summary>
     /// <param name="matrix">The matrix.</param>

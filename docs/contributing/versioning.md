@@ -4512,6 +4512,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd)` for an encounter whose closest approach lies outside the
   window, and widen the window to find it; expect an empty list from `AnalyzeAll` where one midpoint encounter came.
 
+- **Breaking: the remediation of an initial covariance is bounded** ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17).
+  `StateVector.WithRemediatedCovariance()` and the conjunction analysis remediated any indefinite covariance by eigenvalue
+  clipping, however deep its defect: a T–Ṙ correlation of −10 by a change of 5.5 times the values, flagged
+  `CovarianceRemediated` only. Both now refuse a defect deeper than the rounding of the elements to 4 significant digits
+  (the form of the CDM's covariances, CCSDS 508.0-B-1, to be verified by S. Guillet) explains: the smallest eigenvalue
+  of the correlation matrix below −1e-3 of its trace (`CovarianceChecks.RemediationDepthBound`) in the frame of the state
+  and in its RTN frame (the frame a CDM rounds in; a rotation deepens a rounding defect, up to −0.11 of the trace measured
+  for covariances rounded in RTN). The bound is above the rigorous worst of that rounding, 8.34e-4 of the trace by Weyl's
+  inequality (measured: 1.5e-4 over 6000 LEO and GEO covariances of ranks 1 to 6, 2.1e-4 by an adversarial search). A
+  correlation of −1.01 in RTN (1.67e-3 of the trace) is refused; −1.0059 (9.8e-4) is remediated as before.
+  `WithRemediatedCovariance` throws `InvalidOperationException` with the depth in both frames in its message; the
+  analysis holds such a covariance in RTN, as its other refusals, without `CovarianceRemediated`
+  (`CovarianceRemediationBoundTests`, `ConjunctionCovarianceEdgeTests.Analyze_InitialCovarianceBeyondTheDepthBound_IsHeldInRtn`,
+  red on a85098d for every case beyond the bound). Results change only for such a covariance. Migration: a covariance
+  refused by the bound is not one that rounding explains: correct its source, or give it at its full precision (one
+  rounded to 3 digits or fewer may be refused).
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4826,13 +4843,10 @@ not listed.
   ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438)). `EarthStandardAtmosphere` and
   `MarsStandardAtmosphere` take 273.15 where the NASA Glenn curve fits take 273.1: the Earth's density departs from the
   published fit by up to 0.285 % (at 25 km), the Mars density by about 0.02 %.
-- **Covariance remediation and the non-linearity index**
-  ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403),
-  [#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)). The threshold 1.0 of the
+- **The non-linearity index**
+  ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403)). The threshold 1.0 of the
   non-linearity index is measured on two-body crossing encounters only (11 cases up to ν = 1.42), so the index stays off
-  by default. The eigenvalue clipping of the conjunction analysis and of `StateVector.WithRemediatedCovariance()`
-  remediates any indefinite covariance, however deep its defect (a correlation of −10 is accepted, a largest relative
-  change of 5.5): check an input covariance before relying on it.
+  by default.
 - **Close-approach search** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574),
   [#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
   [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). On two RK7(8) propagations the
