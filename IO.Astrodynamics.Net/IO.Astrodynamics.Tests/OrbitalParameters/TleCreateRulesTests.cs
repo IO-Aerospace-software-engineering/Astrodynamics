@@ -1,5 +1,6 @@
 using System;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.CCSDS.OMM;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
@@ -10,8 +11,9 @@ using TleConfiguration = IO.Astrodynamics.OrbitalParameters.TLE.Configuration;
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 /// <summary>
-/// What <see cref="TLE.Create"/> and <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTLE"/> accept: SGP4
-/// mean elements of an Earth orbit in TEME only (#607).
+/// What <see cref="TLE.Create"/>, <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTLE"/> and
+/// <see cref="Omm.ToTle"/> accept and write by default: SGP4 mean elements of an Earth orbit in TEME only (#607), and one
+/// default element set number, 999 (#606).
 /// </summary>
 public class TleCreateRulesTests
 {
@@ -28,6 +30,71 @@ public class TleCreateRulesTests
         new(6_796_882.0, 0.0000493, 51.6423 * IO.Astrodynamics.Constants.Deg2Rad, 353.0312 * IO.Astrodynamics.Constants.Deg2Rad,
             320.8755 * IO.Astrodynamics.Constants.Deg2Rad, 39.2360 * IO.Astrodynamics.Constants.Deg2Rad, observer, Epoch, frame,
             elementsType: OrbitalElementsType.Mean);
+
+    /// <summary>
+    /// The checksum of a TLE line by the rule of the format (NORAD's Spacetrack Report No. 3; CelesTrak's "FAQs: Two-Line
+    /// Element Set Format"): the digits of columns 1 to 68 summed, each minus sign counting 1, modulo 10.
+    /// </summary>
+    private static int Checksum(string line)
+    {
+        int sum = 0;
+        foreach (var c in line.Substring(0, 68))
+        {
+            if (char.IsDigit(c)) sum += c - '0';
+            else if (c == '-') sum += 1;
+        }
+
+        return sum % 10;
+    }
+
+    /// <summary>The element set number of line 1 (columns 65 to 68) and its checksum (column 69).</summary>
+    private static void AssertElementSetNumber999(string line1)
+    {
+        Assert.Equal(69, line1.Length);
+        Assert.Equal(" 999", line1.Substring(64, 4));
+        Assert.Equal(Checksum(line1), line1[68] - '0');
+    }
+
+    #region #606, one default element set number
+
+    [Fact]
+    public void Create_WithoutElementSetNumber_Writes999()
+    {
+        // #606: TLE.Create defaulted to 9999, Omm.ToTle to 999; 999 is the value CelesTrak and Space-Track publish
+        // (decided by S. Guillet, 2026-11-17)
+        var tle = TLE.Create(MeanElements(EarthAtEpoch, Frames.Frame.TEME), "ISS", 25544, "98067A", 2570);
+        AssertElementSetNumber999(tle.Line1);
+        Assert.Equal(999, TLE.DefaultElementSetNumber);
+    }
+
+    [Fact]
+    public void Configuration_WithoutElementSetNumber_Is999()
+    {
+        Assert.Equal(999, new TleConfiguration(25544, "ISS", "98067A").ElementSetNumber);
+    }
+
+    [Fact]
+    public void OmmToTle_WithoutElementSetNumber_Writes999()
+    {
+        var omm = Omm.CreateForTle("ISS", "1998-067A", new DateTime(2021, 1, 20, 12, 50, 14), 15.49309423, 0.0000493, 51.6423,
+            353.0312, 320.8755, 39.2360, 0.0001027, 0.00016717, 0.0, noradCatalogId: 25544, revolutionNumber: 2570);
+        Assert.Null(omm.Data.TleParameters.ElementSetNumber);
+        AssertElementSetNumber999(omm.ToTle().Line1);
+    }
+
+    [Fact]
+    public void ToTle_WithTheDefaultConfiguration_Writes999()
+    {
+        // An Earth orbit in ICRF: the fit rotates it to TEME, and the TLE is written as by TLE.Create
+        var iss = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        var state = iss.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var tle = state.ToTLE(new TleConfiguration(25544, "ISS", "98067A"));
+        AssertElementSetNumber999(tle.Line1);
+    }
+
+    #endregion
 
     #region #607, SGP4 mean elements of an Earth orbit in TEME
 

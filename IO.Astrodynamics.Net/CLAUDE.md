@@ -171,6 +171,8 @@ identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — nev
 - `NoradCatalogNumber.Format` / `.Parse` / `.TryParse` / `.IsValid` handle the encoding
 - `TLE.NoradCatalogId` returns the decoded numeric value
 - Alpha-5 letters count as 0 in the TLE checksum, and SGP4/SDP4 ignores the field entirely
+- The element set number defaults to `TLE.DefaultElementSetNumber`, 999, on every path (`TLE.Create`, `Configuration`,
+  `Omm.ToTle` without `ELEMENT_SET_NO`; #606)
 - Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
   instead of being silently truncated
 - The `TLE` constructor rejects lines whose catalog numbers disagree (`InvalidOperationException`)

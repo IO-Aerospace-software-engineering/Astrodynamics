@@ -3211,6 +3211,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: one default element set number, 999** ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)).
+  The element set number written when none is given depended on the path: `Omm.ToTle` wrote 999 for an OMM without
+  `ELEMENT_SET_NO`, `TLE.Create` and the TLE `Configuration` (so `ToTLE`) 9999. The three now write the new
+  `TLE.DefaultElementSetNumber`, 999, the value CelesTrak and Space-Track publish (decided by S. Guillet, 2026-11-17);
+  9999 stays the bound of the field. A TLE created without an element set number changes in columns 65 to 68
+  (` 999`) and in its checksum (column 69); `Omm.ToTle` is unchanged (`TleCreateRulesTests`, red on a85098d for
+  `TLE.Create`, `Configuration` and `ToTLE`: `9999`). Migration: pass `elementSetNumber: 9999` (or
+  `ElementSetNumber = 9999` in the `Configuration`) to keep the former text.
 - **Breaking: `TLE.Create` accepts only SGP4 mean elements of an Earth orbit in TEME, and `ToTLE` only an Earth orbit** ([#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)).
   `TLE.Create` checked only that its elements were mean: mean elements in ICRF were written as a TLE, their angles
   taken as TEME's, and mean elements about the Moon with their mean motion from the Moon's GM, a valid text that
@@ -4659,8 +4667,7 @@ not listed.
   [#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). `TLEPropagator` counts its
   samples in whole seconds: a step below 1 s throws `DivideByZeroException`, and a window that is not a multiple of the
   step loses its end; use a whole-second step that divides the window. A TLE with a blank international designator can
-  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM. `Omm.ToTle` writes element set 999 for an OMM
-  without `ELEMENT_SET_NO`, `TLE.Create` 9999 by default ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)): pass the element set number.
+  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM.
   A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
   is NRLMSISE-00 at nominal space weather ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)), and an Earth with a geopotential or an atmosphere in the bodies throws
   `ArgumentException` (bodies of one identifier must have the same models, [#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)); give a TEME state on an Earth that

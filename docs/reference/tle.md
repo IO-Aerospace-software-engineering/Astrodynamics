@@ -65,7 +65,9 @@ The epoch is the UTC instant of the field, exact: the day fraction is read in de
 (#603). `Create` and `ToTLE` write the UTC of the elements' epoch, whatever its time frame (#479), each field the
 nearest value its columns hold: the epoch to the 1e-8 day with the carry into the next day and year (#600), B* and n̈/6
 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601), e in [0, 0.9999999] (#602), a zero without
-a sign (#480).
+a sign (#480). Without an element set number, `Create`, the TLE `Configuration` of `ToTLE` and `Omm.ToTle` (an OMM
+without `ELEMENT_SET_NO`) write `TLE.DefaultElementSetNumber`, 999, as CelesTrak and Space-Track publish (#606, decided
+by S. Guillet, 2026-11-17; before 11.0.0, `Create` and `ToTLE` wrote 9999).
 
 A TLE holds SGP4 mean elements of an Earth orbit in TEME, so `Create` throws `ArgumentException` (`meanElements`) for
 elements that are not mean, not in `Frame.TEME` (frames compared by name) or not about the Earth (NAIF id 399), and

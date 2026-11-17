@@ -331,7 +331,8 @@ public class Omm
         var bstar = tleParams.BStar.Value;
         var nDot = tleParams.MeanMotionDot;
         var nDDot = tleParams.MeanMotionDDot ?? 0.0;
-        var elementSetNumber = tleParams.ElementSetNumber ?? 999;
+        // One default with TLE.Create and the TLE Configuration (#606)
+        var elementSetNumber = tleParams.ElementSetNumber ?? OrbitalParameters.TLE.TLE.DefaultElementSetNumber;
 
         return OrbitalParameters.TLE.TLE.Create(
             keplerianElements,
