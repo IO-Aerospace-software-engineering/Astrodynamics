@@ -15,9 +15,17 @@ namespace IO.Astrodynamics.Propagator.Integrators;
 /// Produces a PropagationSegment with all accepted steps for dense output interpolation.
 /// </summary>
 /// <remarks>
+/// <para>
+/// The acceleration at the end of a step is evaluated at the new position with the predicted end velocity
+/// v(t) + h a(t), so that a force that depends on the velocity, as drag, keeps the integrator of second order (#439; with
+/// the half-step velocity, as before 11.0.0, it was of first order with drag). Forces that do not depend on the velocity
+/// give the same accelerations bit for bit.
+/// </para>
+/// <para>
 /// An event fires at the end of the step that holds its crossing. In the step that holds the gate of a gated detector
 /// (the minimum epoch of a maneuver, #569), the g-value at the gate, on the cubic Hermite of the step, replaces the
 /// previous g-value (<see cref="EventGates"/>).
+/// </para>
 /// </remarks>
 public sealed class VVIntegrator : Integrator
 {
@@ -94,8 +102,10 @@ public sealed class VVIntegrator : Integrator
             var halfVel = vel + accel * halfH;
             var newPos = pos + halfVel * h;
 
-            // Compute acceleration at new position
-            UpdateEvalState(newPos, halfVel, TimeArgument.EpochAt(baseEpoch, t + h));
+            // Acceleration at the new position, with the predicted end velocity v + h a (#439): a force that depends on the
+            // velocity (drag) then errs by O(h²) there, and the integrator stays of second order; the half-step velocity
+            // made it of first order with drag
+            UpdateEvalState(newPos, halfVel + startAccel * halfH, TimeArgument.EpochAt(baseEpoch, t + h));
             accel = ComputeAcceleration(EvalState);
             var newVel = halfVel + accel * halfH;
 

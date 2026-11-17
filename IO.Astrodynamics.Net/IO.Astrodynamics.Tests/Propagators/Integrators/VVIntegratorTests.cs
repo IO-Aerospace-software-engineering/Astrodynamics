@@ -1,5 +1,7 @@
 using System;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
@@ -60,5 +62,52 @@ public class VVIntegratorTests
 
         Assert.InRange(ratioOneToHalf, 3.5, 4.5);
         Assert.InRange(ratioTwoToOne, 3.5, 4.5);
+    }
+
+    /// <summary>
+    /// Velocity-Verlet is second order with drag too (#439): the acceleration at the end of a step is evaluated with the
+    /// predicted end velocity v + h a, not the half-step velocity, which made the drag at t + h wrong by O(h) and the
+    /// integrator first order (267 m, 27.2 m and 2.72 m at 1, 0.1 and 0.01 s on the dense pass below). The case of #439: a
+    /// point-mass Earth with the U.S. Standard Atmosphere 1976, perigee 20 km and apogee 400 km above the equatorial radius,
+    /// 45° in ICRF, 10 min from 300 s before the perigee, 1 000 kg, 1e-4 m², Cd 2.2; and a thin LEO, perigee 300 km and
+    /// apogee 400 km, 0.01 m². The reference is RK7(8) at 1e-13 of the same forces: the error must fall by about 100 per
+    /// decade of the step.
+    /// </summary>
+    [Theory]
+    [InlineData(20000.0, 1.0e-4)]
+    [InlineData(300000.0, 1.0e-2)]
+    public void GlobalErrorIsSecondOrderWithDrag(double perigeeHeight, double area)
+    {
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch, atmosphericModel: new EarthStandardAtmosphere());
+        double rp = earth.EquatorialRadius + perigeeHeight, ra = earth.EquatorialRadius + 400000.0;
+        double a = (rp + ra) / 2.0, e = (ra - rp) / (ra + rp);
+        double n = System.Math.Sqrt(earth.GM / (a * a * a));
+        var orbit = new KeplerianElements(a, e, System.Math.PI / 4.0, 0.0, 0.0, -300.0 * n, earth, epoch, Frames.Frame.ICRF);
+        var initialState = orbit.ToStateVector();
+        var spacecraft = new Spacecraft(-7439, "VV439", 1000.0, 1000.0, new Clock("VV439_CLK", 65536), initialState, sectionalArea: area, dragCoeff: 2.2);
+        const double duration = 600.0;
+
+        Vector3 FinalPosition(Integrator integrator)
+        {
+            integrator.AddForce(new GravitationalAcceleration(earth));
+            integrator.AddForce(new AtmosphericDrag(spacecraft, earth));
+            integrator.Initialize(initialState);
+            var result = integrator.IntegrateSegment(initialState.Position, initialState.Velocity, epoch, duration);
+            return result.Segment.InterpolateAt(duration).position;
+        }
+
+        var reference = FinalPosition(new RK78Integrator(1e-13, 1e-13));
+        double[] steps = { 1.0, 0.1, 0.01 };
+        var errors = new double[steps.Length];
+        for (int k = 0; k < steps.Length; k++)
+        {
+            errors[k] = (FinalPosition(new VVIntegrator(TimeSpan.FromSeconds(steps[k]))) - reference).Magnitude();
+        }
+
+        double first = errors[0] / errors[1], second = errors[1] / errors[2];
+        _output.WriteLine($"MEASURE #439 VV with drag, perigee {perigeeHeight / 1000.0} km, A {area} m²: errors {errors[0]:E3} / {errors[1]:E3} / {errors[2]:E3} m at 1 / 0.1 / 0.01 s, ratios per decade {first:F1}, {second:F1}");
+        Assert.InRange(first, 80.0, 125.0);
+        Assert.InRange(second, 80.0, 125.0);
     }
 }
