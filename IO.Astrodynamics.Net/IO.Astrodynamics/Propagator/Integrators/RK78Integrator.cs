@@ -593,7 +593,7 @@ public sealed class RK78Integrator : Integrator
 
     /// <inheritdoc />
     /// <remarks>A shortened RK7(8) step from the start of the step (13 force evaluations), the state
-    /// <see cref="LocateEvent"/> evaluates, at the accuracy of the integrator (#363).</remarks>
+    /// <see cref="EventTime"/> and <see cref="LocateEarliestEvent"/> evaluate, at the accuracy of the integrator (#363).</remarks>
     internal override StateVector StateInsideAcceptedStep(in AcceptedStep step, in Time baseEpoch, double t)
     {
         var (position, velocity) = StateInsideStep(step, baseEpoch, t);

@@ -3282,8 +3282,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `Segments` holds one more segment. The stored states end with a last arc of one state, the state after the
   impulse (the last output); the SPK, whose segments need two epochs, ends with the arc before it, so SPICE reads the
   state before the impulse at that last epoch. A segment shorter than the landing tolerance of RK7(8) is one step of zero
-  length too (it was a segment with no step). **Migration:** code that reads the last segment of a solution finds the
-  segment of zero length after a burn at the end; extend the window past the last maneuver to propagate after it.
+  length too (it was a segment with no step). The propagator asks the integrator for that segment with
+  `IntegrateSegment(..., duration: 0.0)`, a call the loop never made before: `IIntegrator.IntegrateSegment` now gives,
+  for a duration of zero, a segment of one step of zero length that holds the start state; for an integrator implemented
+  outside the library that returns no step there (a `while (t < duration)` loop), the propagator adds that step itself,
+  so the solution ends with the state after the burn on that path too. **Migration:** code that reads the last segment of
+  a solution finds the segment of zero length after a burn at the end; extend the window past the last maneuver to
+  propagate after it. A custom `IIntegrator` should return, for a duration of zero, one `AcceptedStep` of zero length
+  from the start state with its acceleration (the propagator otherwise gives that step the acceleration of its forces for
+  an `Integrator` subclass, and the end acceleration of the previous segment for a bare `IIntegrator`).
 - **Breaking: Velocity-Verlet is of second order with drag** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439)). The acceleration at the end of a step is
   evaluated with the predicted end velocity v + h a instead of the half-step velocity, which kept the drag at t + h wrong
   by O(h): on the dense pass of #439 the error against RK7(8) at 1e-13 is now 6.09 m, 6.09e-2 m and 6.11e-4 m at 1, 0.1

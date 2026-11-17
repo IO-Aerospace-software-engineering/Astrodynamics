@@ -80,6 +80,62 @@ public partial class IntegratorEventTests
         AssertEndsAfterTheBurn(spacecraft, impulse, solution, window, massBefore, earth);
     }
 
+    /// <summary>
+    /// The same burn in the last step through the public constructor of <see cref="CentralBodyPropagator"/> that takes a
+    /// bare <see cref="IIntegrator"/>, one that returns a segment of no step for a duration of zero (as the
+    /// <c>while (t &lt; duration)</c> loop of the Velocity-Verlet integrator did before 11.0.0): the propagator completes that
+    /// segment with one step of zero length, which holds the state after the burn, so that the solution still ends with it
+    /// and <c>InterpolateAt</c> at the end does not throw (#575: it threw "Segment contains no steps.", and the last output
+    /// held the state before the burn).
+    /// </summary>
+    [Fact]
+    public void ImpulseInTheLastStep_ACustomIntegratorWithoutAStepAtZeroDuration_TheSolutionEndsWithTheStateAfterIt()
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var (spacecraft, engine) = NewSpacecraft(-7933, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
+        var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
+        spacecraft.SetStandbyManeuver(maneuver);
+        var window = new Window(S, MinimumEpochGateTests.GateAtTt(2964.0));
+        double massBefore = spacecraft.GetTotalMass();
+        var integrator = new NoStepAtZeroDuration(new VVIntegrator([new GravitationalAcceleration(earth)], TimeSpan.FromSeconds(1.0),
+            spacecraft.InitialOrbitalParameters.ToStateVector()));
+        using var propagator = new CentralBodyPropagator(window, spacecraft, integrator, TimeSpan.FromSeconds(4.0));
+        var solution = propagator.Propagate();
+
+        Assert.Equal(1, integrator.ZeroDurationCalls);
+        AssertEndsAfterTheBurn(spacecraft, maneuver, solution, window, massBefore, earth);
+    }
+
+    /// <summary>The OPM ΔV in m/s less the jump of the final velocity at the burn, m/s: the rounding of the km/s of the OPM and
+    /// of the difference of two velocities. Linux worst 3.46e-13 m/s over the eight propagations of #575; twice it, provisional,
+    /// to be set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    internal const double OpmDeltaVAgainstFinalJump = 7.0e-13;
+
+    /// <summary>The fuel of the OPM maneuver less the drop of the spacecraft's mass, kg: the rounding of a difference of
+    /// masses near 2 000 kg. Linux worst 1.42e-13 kg; twice it, provisional, to be set again from the Windows x64 and macOS
+    /// arm64 CI logs.</summary>
+    internal const double OpmFuelAgainstMassDrop = 2.9e-13;
+
+    /// <summary>A bare <see cref="IIntegrator"/> that returns a segment of no step for a duration of zero or less.</summary>
+    private sealed class NoStepAtZeroDuration(IIntegrator inner) : IIntegrator
+    {
+        internal int ZeroDurationCalls { get; private set; }
+
+        public void Initialize(StateVector initialState) => inner.Initialize(initialState);
+
+        public IntegrationResult IntegrateSegment(Vector3 startPosition, Vector3 startVelocity, Time baseEpoch, double duration,
+            IReadOnlyList<IEventDetector> eventDetectors = null)
+        {
+            if (duration > 0.0)
+            {
+                return inner.IntegrateSegment(startPosition, startVelocity, baseEpoch, duration, eventDetectors);
+            }
+
+            ZeroDurationCalls++;
+            return new IntegrationResult(new PropagationSegment(baseEpoch), null);
+        }
+    }
+
     private void AssertEndsAfterTheBurn(Spacecraft spacecraft, ImpulseManeuver maneuver, PropagationSolution solution, Window window, double massBefore, CelestialBody earth)
     {
         var end = window.EndDate;
@@ -112,5 +168,16 @@ public partial class IntegratorEventTests
 
         Assert.Equal(0.0, atEnd);
         Assert.Equal(0.0, stored);
+
+        // The OPM of the spacecraft agrees with the final state and the fuel: its mass is the mass after the burn, its one
+        // maneuver the ΔV between the state before and the state after, and the fuel burned
+        var opm = spacecraft.ToOpm();
+        var entry = Assert.Single(opm.Data.Maneuvers);
+        double opmDeltaV = (entry.DeltaVKmPerSec * 1000.0 - (interpolated - before.EndVelocity)).Magnitude();
+        double opmFuel = System.Math.Abs(-entry.ManDeltaMass - (massBefore - spacecraft.GetTotalMass()));
+        _output.WriteLine($"MEASURE #575 ToOpm: ΔV less the jump of the final state {opmDeltaV:E3} m/s (limit {OpmDeltaVAgainstFinalJump:E3}), fuel less the mass drop {opmFuel:E3} kg (limit {OpmFuelAgainstMassDrop:E3})");
+        Assert.Equal(spacecraft.GetTotalMass(), opm.Data.Mass);
+        Assert.True(opmDeltaV <= OpmDeltaVAgainstFinalJump, $"OPM ΔV off the jump of the final state by {opmDeltaV:E3} m/s");
+        Assert.True(opmFuel <= OpmFuelAgainstMassDrop, $"OPM fuel off the mass drop by {opmFuel:E3} kg");
     }
 }

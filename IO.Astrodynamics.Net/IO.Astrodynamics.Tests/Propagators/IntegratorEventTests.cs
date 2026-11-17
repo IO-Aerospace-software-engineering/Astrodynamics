@@ -168,7 +168,8 @@ public partial class IntegratorEventTests
 
     private static (Spacecraft Spacecraft, Engine Engine) NewSpacecraft(int naifId, OrbitalParams orbit)
     {
-        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, 3000.0, new Clock($"IE{-naifId}_CLK", 65536), orbit);
+        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, 3000.0, new Clock($"IE{-naifId}_CLK", 65536), orbit,
+            cosparId: "2026-001A");
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);

@@ -20,6 +20,13 @@ propagator sets on them. A custom integrator, a bare `IIntegrator` or a subclass
 `IntegrateSegment` builds its own epochs from `baseEpoch`, keeps TDB seconds about the Earth too: its forces are then
 evaluated up to 3.4e-10 relative in time from the instants of the propagation.
 
+A `duration` of zero gives a segment of one step of zero length, which holds the start state: the propagator asks for it
+after an impulse executed with no time left, so that the solution ends with the state after the impulse
+([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)). A custom integrator that
+returns no step for it gets that step from the propagator, with the acceleration of its forces for a subclass of
+`Integrator`, the end acceleration of the previous segment for a bare `IIntegrator` (a step of zero length is never
+interpolated).
+
 ## AcceptedStep
 
 Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (`PropagationSegment.InterpolateAt`), which is exact at the step ends only.

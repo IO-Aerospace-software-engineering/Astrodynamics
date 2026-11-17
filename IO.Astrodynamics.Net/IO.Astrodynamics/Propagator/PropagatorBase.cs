@@ -501,6 +501,13 @@ public abstract class PropagatorBase : IPropagator
             var result = lastAfterImpulse
                 ? Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, 0.0)
                 : Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, remaining, eventDetectors);
+            if (lastAfterImpulse && result.Segment.Steps.Count == 0)
+            {
+                // An integrator implemented outside the library that takes no step for a duration of zero: the step of zero
+                // length that holds the state after the impulse, added here (#575)
+                result.Segment.AddStep(ZeroLengthStep(solution, currentPos, currentVel, currentEpoch));
+            }
+
             result.Segment.Context = context;
             if (rk78 != null)
             {
@@ -662,6 +669,31 @@ public abstract class PropagatorBase : IPropagator
         Spacecraft.LastForceModel = solution.ForceModel;
 
         return solution;
+    }
+
+    /// <summary>
+    /// The step of zero length that holds the state after an impulse at the end of the propagation, for an integrator that
+    /// returns no step for a duration of zero (#575): the integrators of the library return it themselves. Its
+    /// accelerations are those of the forces of an <see cref="Integrators.Integrator"/> at that state, and for a bare
+    /// <see cref="IIntegrator"/>, whose forces the propagator cannot reach, the end acceleration of the segment before the
+    /// impulse; a step of zero length is never interpolated, so they are not read by the solution.
+    /// </summary>
+    private AcceptedStep ZeroLengthStep(PropagationSolution solution, in Vector3 position, in Vector3 velocity,
+        in Time epoch)
+    {
+        Vector3 acceleration;
+        if (Integrator is Integrators.Integrator integrator)
+        {
+            acceleration = integrator.ComputeAcceleration(new StateVector(position, velocity, InitialState.Observer, epoch,
+                InitialState.Frame));
+        }
+        else
+        {
+            var previous = solution.Segments[^1];
+            acceleration = previous.Steps.Count > 0 ? previous.Steps[^1].EndAcceleration : Vector3.Zero;
+        }
+
+        return new AcceptedStep(0.0, 0.0, position, velocity, position, velocity, acceleration, acceleration);
     }
 
     // The covariance of the state from the cumulative Y and the carried Q, as the outputs of a propagation of the covariance

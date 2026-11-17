@@ -41,7 +41,12 @@ public interface IIntegrator
     /// an event with the same detector does not find it again (#580).
     /// </para>
     /// <para>
-    /// A <paramref name="duration"/> of zero gives a segment of one step of zero length, which holds the start state.
+    /// A <paramref name="duration"/> of zero gives a segment of one step of zero length, which holds the start state: the
+    /// propagator asks for it after an impulse executed with no time left (#575). For an implementation outside the library
+    /// that returns no step there, the propagator adds that step itself, with the acceleration of the forces of an
+    /// <see cref="Integrator"/> subclass at the start state, or the end acceleration of the previous segment for a bare
+    /// <see cref="IIntegrator"/> (a step of zero length is never interpolated), so that the solution ends with the state
+    /// after the impulse on every path.
     /// </para>
     /// <para>
     /// The integrators of the library evaluate the forces at the TDB label of each instant of the time argument. An
