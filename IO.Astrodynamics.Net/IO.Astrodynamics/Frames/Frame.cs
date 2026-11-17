@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -19,8 +14,12 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
-    protected ConcurrentDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
-    protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
+    // The orientation of the last epoch the frame read (LastOrientation), replaced at each read of another epoch or after a
+    // change of the kernel pool: a frame no longer keeps one orientation per epoch read, for its life (#541)
+    private LastOrientationEntry _lastOrientation;
+    private readonly Func<Time, StateOrientation> _readFromProvider;
+
+    private sealed record LastOrientationEntry(Time Date, long KernelPoolGeneration, StateOrientation Orientation);
 
     // The orientation cache active on the current thread, and the frame it belongs to (FrameOrientationCacheScope)
     [ThreadStatic] private static Frame _cachedFrame;
@@ -157,6 +156,7 @@ public class Frame : IEquatable<Frame>
 
         Name = name;
         Id = id;
+        _readFromProvider = date => _dataProvider.FrameTransformationToICRF(date, this);
     }
 
     /// <summary>
@@ -173,37 +173,52 @@ public class Frame : IEquatable<Frame>
     /// </remarks>
     /// <param name="date">Epoch of the transform.</param>
     /// <returns>A state orientation whose rotation is <c>this → ICRF</c>.</returns>
+    /// <remarks>
+    /// Outside the orientation cache of a propagation, a frame keeps the orientation of the last epoch it read only, while
+    /// the kernel pool is unchanged (<c>SpiceAPI.LoadKernels</c>, <c>UnloadKernels</c> and
+    /// <c>ClearKernels</c> make the next read read again), and so do the frames the library computes
+    /// (<see cref="CirsFrame"/>, <see cref="TirsFrame"/>, <see cref="TemeFrame"/>, the frame of a site from coordinates):
+    /// at most one orientation per frame, whatever the number of epochs read (#541, decided by S. Guillet, 2026-11-17).
+    /// Before 11.0.0 each orientation read was kept, by epoch, for the life of the frame (16.5 MB after 100 000 reads of
+    /// ITRF93), and the static frames live for the whole process. An orientation added to a <see cref="MemoryDataProvider"/>
+    /// at the epoch of the frame's last read is read once the frame has read another epoch.
+    /// </remarks>
     public virtual StateOrientation GetStateOrientationToICRF(Time date)
     {
         if (OrientationCache != null)
             return OrientationCache.GetOrientation(date);
-        return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformationToICRF(dt, this));
+        return LastOrientation(date, _readFromProvider);
     }
 
     /// <summary>
-    /// The orientation of this frame to ICRF read from the data provider, neither through the orientation cache active
-    /// on the current thread nor through the orientations stored by date: what
-    /// <see cref="GetStateOrientationToICRF(Time)"/> of a <see cref="Frame"/> reads when neither holds the epoch. Used by
-    /// <see cref="PropagationFrameOrientationCache"/> where its grid cannot give an orientation.
+    /// The orientation of this frame to ICRF read from the data provider, not through the orientation cache active on the
+    /// current thread: what <see cref="GetStateOrientationToICRF(Time)"/> of a <see cref="Frame"/> reads when the cache does
+    /// not hold the epoch. Used by <see cref="PropagationFrameOrientationCache"/> where its grid cannot give an orientation.
     /// </summary>
     internal StateOrientation ReadStateOrientationToICRF(in Time date)
     {
         return _dataProvider.FrameTransformationToICRF(date, this);
     }
 
-    public virtual bool AddStateOrientationToICRF(StateOrientation stateOrientation)
+    /// <summary>
+    /// The orientation of this frame at <paramref name="date"/>, kept from its last read when that was at the same epoch and
+    /// the same generation of the kernel pool (<see cref="SpiceAPI.KernelPoolGeneration"/>), else read by
+    /// <paramref name="read"/> and kept in place of the previous one: at most one orientation per frame, whatever the
+    /// number of epochs read (#541). The entry is replaced as a whole, so a read on another thread sees either entry, each
+    /// consistent.
+    /// </summary>
+    private protected StateOrientation LastOrientation(in Time date, Func<Time, StateOrientation> read)
     {
-        return _stateOrientationsToICRF.TryAdd(stateOrientation.Epoch, stateOrientation);
-    }
+        long generation = SpiceAPI.KernelPoolGeneration;
+        var last = Volatile.Read(ref _lastOrientation);
+        if (last != null && last.KernelPoolGeneration == generation && last.Date.Equals(date))
+        {
+            return last.Orientation;
+        }
 
-    public virtual StateOrientation GetLatestStateOrientationToICRF()
-    {
-        return _stateOrientationsToICRF.Values.OrderBy(x => x.Epoch).LastOrDefault();
-    }
-
-    public virtual IEnumerable<StateOrientation> GetStateOrientationsToICRF()
-    {
-        return _stateOrientationsToICRF.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+        var orientation = read(date);
+        Volatile.Write(ref _lastOrientation, new LastOrientationEntry(date, generation, orientation));
+        return orientation;
     }
 
     /// <summary>
@@ -343,11 +358,6 @@ public class Frame : IEquatable<Frame>
     /// the base frame does; a subclass that overrides it says so.
     /// </summary>
     private protected virtual bool ReadsOrientationCache => GetType() == typeof(Frame);
-
-    public virtual void ClearStateOrientations()
-    {
-        _stateOrientationsToICRF.Clear();
-    }
 
     #region Operators
 

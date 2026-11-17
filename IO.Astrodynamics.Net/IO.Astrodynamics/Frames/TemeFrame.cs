@@ -56,12 +56,13 @@ public sealed class TemeFrame : Frame
     }
 
     /// <remarks>
-    /// Computed once per epoch and kept; TEME is never the body-fixed frame of a propagation, so it reads no orientation
-    /// cache of a propagation (<see cref="Frame.UseOrientationCache"/>).
+    /// Computed at each epoch, the orientation of the last epoch kept (#541; before 11.0.0 every epoch's, for the life of
+    /// the frame); TEME is never the body-fixed frame of a propagation, so it reads no orientation cache of a propagation
+    /// (<see cref="Frame.UseOrientationCache"/>).
     /// </remarks>
     public override StateOrientation GetStateOrientationToICRF(Time date)
     {
-        return _stateOrientationsToICRF.GetOrAdd(date, ComputeOrientation);
+        return LastOrientation(date, ComputeOrientation);
     }
 
     private StateOrientation ComputeOrientation(Time date)

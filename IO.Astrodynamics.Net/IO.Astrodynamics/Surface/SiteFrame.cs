@@ -130,7 +130,7 @@ public class SiteFrame : Frame
                 : FromPlanetodetic(epoch);
         }
 
-        return _stateOrientationsToICRF.GetOrAdd(epoch, FromPlanetodetic);
+        return LastOrientation(epoch, FromPlanetodetic);
     }
 
     // The frame of the planetodetic coordinates of the site: north, west and zenith, fixed in the frame of its body

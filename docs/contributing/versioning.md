@@ -105,8 +105,8 @@ release are listed under **Known limitations**.
 - **`centerOfMotion`**, an optional parameter of the kernel-backed `Spacecraft(int, string, Time?, ...)` constructor:
   the centre about which it reads its initial orbital parameters, the Earth by default
   ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), under Fixed and Changed).
-- **`Frame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
-  `ClearStateOrientations` are virtual** ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), under Changed: `SpacecraftFrame`).
+- **`SpacecraftFrame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
+  `ClearStateOrientations`**, the attitude record of a spacecraft ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), [#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541); under Changed: `SpacecraftFrame`, and `Frame` keeps no orientations).
 
 **Fixed**
 
@@ -3245,6 +3245,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `sxform_c` and the barycentre of the issue within 2.2e-16 of the closed form (`MemoryDataProviderFrameTests`, 15 of 17
   cases red on a85098d; thresholds provisional, twice the Linux worst). The aberration: Changed below.
 
+- **A frame kept every orientation it read, for its life** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541)).
+  `Frame.GetStateOrientationToICRF` stored each orientation it read in a dictionary keyed by epoch, and so did
+  `CirsFrame`, `TirsFrame`, `TemeFrame`, `GcrfFrame` and the frame of a site from coordinates; nothing removed them but
+  the propagation of a spacecraft for its own frame, and the static frames live for the whole process. Measured on
+  a85098d in a fresh process: 16 479 752 bytes retained after 100 000 reads of ITRF93 0.5 s apart, about 940 kB after
+  5 000 reads of CIRS, TIRS, TEME or GCRF, 2.8 MB for a site frame. A frame now keeps the orientation of its last epoch
+  only, while the kernel pool is unchanged (a `LoadKernels`, `UnloadKernels` or `ClearKernels` makes the next read read
+  again), GCRF none (decided by S. Guillet, 2026-11-17): the same reads retain at most 8.2 kB, the noise of a full
+  collection (`ColdStartTests.FrameReads_RetainNoOrientationPerEpoch`, the child `frame-memory`, bound 17 000 bytes,
+  provisional, twice the Linux worst; `FrameTests.AFrame_HoldsNoOrientationStore_TheAttitudeRecordIsTheSpacecraftFrames`;
+  both red on a85098d). The orientations are bit for bit those of a fresh frame
+  (`AManagedFrame_ReadAgainAtAnEarlierEpoch_IsTheOrientationOfThatEpoch`). The cost, the best of 7 runs on Linux x64
+  (shared machine): 100 000 reads of ITRF93 at distinct epochs 286 ms (336 before), 100 000 at one epoch 0.9 ms (1.9),
+  the horizontal coordinates of the Moon from a site every minute over a day 13.2 ms (14.7), as many reads of the Moon
+  in TEME 15.1 ms (13.6) and in ITRF93 converted to ICRF 14.2 ms (12.7); before, an epoch read again by a long-lived
+  frame was found in its dictionary.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -3742,7 +3759,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `AddStateOrientationToICRF` takes the rotation from the spacecraft frame to ICRF so labelled, throws
   `ArgumentException` for another label, and replaces the entries within 2 µs, where it was dropped at an existing
   epoch. `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
-  `ClearStateOrientations` are virtual on `Frame`. Migration: keep the CK loaded while the frame of a kernel-backed
+  `ClearStateOrientations` are members of `SpacecraftFrame` since #541 (below). Migration: keep the CK loaded while the frame of a kernel-backed
   spacecraft is read, and label a rotation given to `AddStateOrientationToICRF` with the spacecraft frame.
 - **Breaking: `Instrument.Orientation` is the Euler angles 1-2-3 of the frame kernel.** With the Fixed entry above. A
   zero orientation is unchanged everywhere. About one axis, the managed field-of-view path is unchanged bit for bit,
@@ -4521,6 +4538,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Its reads in a frame other than ICRF's axes are rotated (Fixed above), so the orbit of a body built on it, in
   ECLIPJ2000 by default, changes numbers. Migration: read with `Aberration.None`, or with a `SpiceDataProvider`.
 
+- **Breaking: `Frame` keeps no orientations; the attitude record API is `SpacecraftFrame`'s** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541), Fixed above).
+  The protected `_stateOrientationsToICRF` and `StateOrientationsToICRF` of `Frame` are removed, and
+  `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
+  `ClearStateOrientations`, virtual on `Frame`, are members of `SpacecraftFrame`, the only frame that implemented them
+  as an attitude record (decided by S. Guillet, 2026-11-17); `Spacecraft.Frame` is a `SpacecraftFrame`, so its callers
+  compile unchanged. On another frame they stored the orientations given, which no read of that frame used. A frame
+  keeps the orientation of its last epoch only: an orientation added to a `MemoryDataProvider` at the epoch the frame
+  read last is read once the frame has read another epoch. Migration: a subclass of `Frame` that used the dictionary keeps its
+  own store; code that added orientations to another frame gives them to a `MemoryDataProvider`
+  (`AddStateOrientationToICRF(frame, date, orientation)`), whose frames read them.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4788,12 +4816,8 @@ not listed.
   searched by `gfilum_c` with the normal of `surfnm_c` at the point, and the same site built from its coordinates,
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
-- **Memory and cost of the reads**
-  ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
-  [#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
-  `Frame.GetStateOrientationToICRF` (and `CirsFrame`, `GcrfFrame`, `TirsFrame`, `SiteFrame`) keeps every orientation it
-  reads for the life of the frame, without bound (16.5 MB after 100 000 reads of ITRF93), and the static frames live for
-  the whole process. `SpiceAPI.ReadOrientation` costs about 1.4 ms a call whatever the window, and the window reads of
+- **Cost of the reads**
+  ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)). `SpiceAPI.ReadOrientation` costs about 1.4 ms a call whatever the window, and the window reads of
   `ReadOrientation` and `ReadEphemeris` step by epoch += step, so their samples drift (4.3e-4 s observed) and the last
   epoch of the window can be dropped.
 - **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389),

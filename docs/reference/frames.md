@@ -74,6 +74,16 @@ is reserved for changes between inertial frames.
 | `GetStateOrientationToICRF(Time epoch)` | Get orientation relative to ICRF |
 | `ToFrame(Frame target, Time epoch)` | Get transformation to another frame |
 
+A frame keeps no orientation per epoch ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
+decided by S. Guillet, 2026-11-17): a frame keeps the orientation of its last epoch only, read from the data provider (a
+SPICE frame, or one of a `MemoryDataProvider`) or computed by the library (`CirsFrame`, `TirsFrame`, `TemeFrame`, the
+frame of a site from coordinates; `GcrfFrame` keeps none), and reads again after a `LoadKernels`, `UnloadKernels` or
+`ClearKernels`. Before 11.0.0 each
+orientation read was kept for the life of the frame (16.5 MB after 100 000 reads of ITRF93, the static frames living for
+the whole process). The attitude record of a spacecraft, `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`,
+`GetLatestStateOrientationToICRF` and `ClearStateOrientations`, belongs to `SpacecraftFrame`
+([Spacecraft](spacecraft.md#attitude-and-kernels)); before 11.0.0 they were virtual members of `Frame`.
+
 ### Equality
 
 A frame is its name, compared ignoring case as SPICE compares frame names (`namfrm_c`), whatever the instance or its
