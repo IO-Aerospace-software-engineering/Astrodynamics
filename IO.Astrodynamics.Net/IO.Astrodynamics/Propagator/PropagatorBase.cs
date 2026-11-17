@@ -480,11 +480,15 @@ public abstract class PropagatorBase : IPropagator
         // event times: the time argument of each event, from which the windows of the chain count their seconds (#547)
         double segmentBaseTau = 0.0;
 
-        // 4. Segment loop
+        // 4. Segment loop. An impulse executed with no time left after it (located at the end of the propagation, which
+        // Velocity-Verlet does when the crossing falls in its last step) opens a last segment of zero length, which holds
+        // the state after it, so that the solution, its outputs and the stored states end with it (#575)
+        bool afterImpulse = false;
         while (true)
         {
             double remaining = TimeArgument.Remaining(Window.StartDate, propagationDuration, propagationEnd, currentEpoch);
-            if (remaining <= 0.0) break;
+            bool lastAfterImpulse = remaining <= 0.0;
+            if (lastAfterImpulse && !afterImpulse) break;
 
             // a. Integrate segment, with the mass and coefficients of the segment, recorded for the force model of the
             // propagation (#402) and, in RK7(8), for the evaluations of its solution
@@ -494,8 +498,16 @@ public abstract class PropagatorBase : IPropagator
                 rk78.BeginVariationalSegment(context, entryY, entryQ, entryManeuver);
             }
 
-            var result = Integrator.IntegrateSegment(
-                currentPos, currentVel, currentEpoch, remaining, eventDetectors);
+            var result = lastAfterImpulse
+                ? Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, 0.0)
+                : Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, remaining, eventDetectors);
+            if (lastAfterImpulse && result.Segment.Steps.Count == 0)
+            {
+                // An integrator implemented outside the library that takes no step for a duration of zero: the step of zero
+                // length that holds the state after the impulse, added here (#575)
+                result.Segment.AddStep(ZeroLengthStep(solution, currentPos, currentVel, currentEpoch));
+            }
+
             result.Segment.Context = context;
             if (rk78 != null)
             {
@@ -506,7 +518,7 @@ public abstract class PropagatorBase : IPropagator
             solution.AddSegment(result.Segment);
 
             // c. Handle event
-            if (result.Event.HasValue)
+            if (result.Event.HasValue && !lastAfterImpulse)
             {
                 var evt = result.Event.Value;
                 var eventEpoch = TimeArgument.EpochAt(currentEpoch, evt.EventTime);
@@ -540,6 +552,7 @@ public abstract class PropagatorBase : IPropagator
                 // state at the event, unchanged, on Continue (#355: the same segment used to be integrated again, without
                 // end)
                 bool restart = eventResult.Action == EventAction.StopAndRestart;
+                afterImpulse = restart;
 
                 // An executed impulse: its windows in seconds of the time argument, its attitude and the rest of the chain
                 // on the timeline, and the detector of the next impulse (#539, #547); the detector executes the impulse
@@ -599,11 +612,11 @@ public abstract class PropagatorBase : IPropagator
                 Integrator.Initialize(new StateVector(currentPos, currentVel, InitialState.Observer, currentEpoch,
                     InitialState.Frame));
 
-                // On Continue, the segment starts at the root just handled, which the detector must not find again;
-                // Velocity-Verlet locates the event at the end of a step, already past the root
+                // On Continue, the segment starts at the root just handled, which the detector must not find again: the
+                // event time is on the tick grid, possibly just before the root (#572)
                 if (!restart)
                 {
-                    rk78?.SkipRootOfLastEvent();
+                    (Integrator as Integrators.Integrator)?.SkipRootOfLastEvent();
                 }
             }
             else
@@ -656,6 +669,31 @@ public abstract class PropagatorBase : IPropagator
         Spacecraft.LastForceModel = solution.ForceModel;
 
         return solution;
+    }
+
+    /// <summary>
+    /// The step of zero length that holds the state after an impulse at the end of the propagation, for an integrator that
+    /// returns no step for a duration of zero (#575): the integrators of the library return it themselves. Its
+    /// accelerations are those of the forces of an <see cref="Integrators.Integrator"/> at that state, and for a bare
+    /// <see cref="IIntegrator"/>, whose forces the propagator cannot reach, the end acceleration of the segment before the
+    /// impulse; a step of zero length is never interpolated, so they are not read by the solution.
+    /// </summary>
+    private AcceptedStep ZeroLengthStep(PropagationSolution solution, in Vector3 position, in Vector3 velocity,
+        in Time epoch)
+    {
+        Vector3 acceleration;
+        if (Integrator is Integrators.Integrator integrator)
+        {
+            acceleration = integrator.ComputeAcceleration(new StateVector(position, velocity, InitialState.Observer, epoch,
+                InitialState.Frame));
+        }
+        else
+        {
+            var previous = solution.Segments[^1];
+            acceleration = previous.Steps.Count > 0 ? previous.Steps[^1].EndAcceleration : Vector3.Zero;
+        }
+
+        return new AcceptedStep(0.0, 0.0, position, velocity, position, velocity, acceleration, acceleration);
     }
 
     // The covariance of the state from the cumulative Y and the carried Q, as the outputs of a propagation of the covariance

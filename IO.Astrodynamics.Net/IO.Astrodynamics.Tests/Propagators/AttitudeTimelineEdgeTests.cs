@@ -405,8 +405,8 @@ public class AttitudeTimelineEdgeTests
     /// R5: a leading nadir held 0 s puts the gate of the impulse after it at S (choice 4), where the orbit given by Keplerian
     /// elements at its apogee has g = r·v exactly 0; by #577's rule of a zero at a gate equal to the base (choice 6) the
     /// perigee raise fires there in RK7(8), at the end of the first step in Velocity-Verlet. Without the leading attitude the
-    /// impulse has no gate (its minimum epoch is before the base) and the crossing at S is not taken: it fires one orbit
-    /// later (#580, out of scope). An intended move of the trajectory, stated in the notes.
+    /// impulse's minimum epoch is before the base, and the zero at S is a crossing there too (#580, GMAT's convention,
+    /// decided by S. Guillet, 2026-11-17): the same burn; before 11.0.0 it fired one orbit later.
     /// </summary>
     [Theory]
     [InlineData("RK")]
@@ -431,7 +431,7 @@ public class AttitudeTimelineEdgeTests
             Assert.InRange(burn, 0.0, 1.0 + 1e-6);
         }
 
-        Assert.True(later > orbit.T / 2.0, "without the leading attitude the crossing at S is taken (#580 fixed?)");
+        Assert.Equal(burn, later);
         var m = AttitudeTimelineTests.Verify(withLead);
         if (TimelineRules.Checked) Assert.True(m.Windows <= TimelineRules.RuleBound);
         Assert.True(m.Discrete <= AttitudeRecordTests.DiscreteLaw);

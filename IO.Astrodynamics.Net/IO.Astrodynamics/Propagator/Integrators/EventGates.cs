@@ -22,12 +22,15 @@ namespace IO.Astrodynamics.Propagator.Integrators;
 /// <para>
 /// A g-value exactly zero at the gate is a crossing at the gate when the sign that follows it is the target sign: inside a
 /// step, the sign of the step end; when the gate is a step end or the segment base, where the g-value there is zero too,
-/// the sign of the next step end.
+/// the sign of the next step end. A g-value exactly zero at the base of a segment whose gate is open there, at the base or
+/// before it, is judged the same way, a crossing at the base when the first step end has the target sign (#580, GMAT's
+/// convention, #577's choice 6, decided by S. Guillet, 2026-11-17): a minimum epoch at the base and one before it give the
+/// same burn.
 /// </para>
 /// <para>
 /// No gate is created for a detector whose gate is open at the segment base, nor for the detector of the event just
 /// handled (an <see cref="EventAction.Continue"/>, the integrator's skip of its root): that event decided its gate. A
-/// segment with neither a closed gate nor a zero at a gate equal to its base has no <see cref="EventGates"/> and is
+/// segment with neither a closed gate nor a zero at a gate open at its base has no <see cref="EventGates"/> and is
 /// integrated as before #569; so is every step that does not hold a gate.
 /// </para>
 /// </remarks>
@@ -89,10 +92,10 @@ internal sealed class EventGates
                 gates._closed[i] = true;
                 gates._closedCount++;
             }
-            else if (!(gate < baseEpoch) && prevG[i] == 0.0)
+            else if (prevG[i] == 0.0)
             {
-                // The gate at the base, and g zero there: a crossing at the base when the first step end has the target
-                // sign
+                // The gate open at the base, at it or before it (#580), and g zero there: a crossing at the base when the
+                // first step end has the target sign (GMAT's convention, #577's choice 6)
                 gates ??= new EventGates(detectors);
                 gates._pendingZero[i] = true;
                 gates._anyPendingZero = true;
@@ -149,6 +152,12 @@ internal sealed class EventGates
             prevG[i] = zero ? SignBeforeCrossing(i, step, endEpoch, integrator) : g;
         }
     }
+
+    /// <summary>
+    /// Whether the g-value of detector <paramref name="index"/> at the end of the last accepted step is a zero at its gate
+    /// that the next step end judges: no crossing at this step end (#580).
+    /// </summary>
+    internal bool JudgedAtNextStep(int index) => _anyPendingZero && _pendingZero[index];
 
     /// <summary>
     /// Whether the gate of detector <paramref name="index"/> opened in the last accepted step, with its time in seconds of

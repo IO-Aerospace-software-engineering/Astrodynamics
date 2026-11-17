@@ -912,6 +912,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// carried one (<see cref="CovariancePropagationMode.Covariance"/>), is not written. It is read from the
         /// <see cref="PropagationSolution"/> (<see cref="PropagationSolution.GetCovariance"/>) or from the output states.
         /// Before 11.0.0 the native writer wrote one segment of degree 15 across every impulse, of type 8 for equal steps.
+        /// An impulse at the end of the propagation opens a last arc of one state, the state after it (#575), which a segment
+        /// cannot hold: the SPK ends with the arc before it, and SPICE reads the state before the impulse at the last epoch,
+        /// where <c>GetEphemeris</c> reads the state after it.
         /// </remarks>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
@@ -922,7 +925,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public override void WriteEphemeris(FileInfo outputFile)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
-            SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, _propagatedStates.Arcs);
+            SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, SpkArcs(_propagatedStates.Arcs));
+        }
+
+        // The arcs an SPK holds: an impulse at the end of the propagation opens a last arc of one state at the epoch where
+        // the previous arc ends (#575), which no segment can hold (type 9 needs two epochs at least): it is not written, and
+        // SPICE reads the state before the impulse there
+        private static IReadOnlyList<StateVector[]> SpkArcs(IReadOnlyList<StateVector[]> arcs)
+        {
+            if (arcs.Count > 1 && arcs[^1].Length == 1 && arcs[^1][0].Epoch == arcs[^2][^1].Epoch)
+            {
+                return arcs.Take(arcs.Count - 1).ToArray();
+            }
+
+            return arcs;
         }
 
         /// <summary>

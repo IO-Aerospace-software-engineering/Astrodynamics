@@ -110,6 +110,36 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **A g-function exactly zero at the end of a step was never a crossing** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580)). The product of the two g-values
+  of a step was 0, no crossing, and the zero, the previous g-value of the next step, hid every later crossing: a
+  time-like user `ImpulseManeuver` or `IEventDetector` whose root fell on a Velocity-Verlet or fixed-step RK7(8) step
+  end never fired (TT 1 100 s from the start through `Spacecraft.Propagate`, VV1, VV10 and fixed-step RK7(8) at 10 s:
+  no burn in 3 000 s), and an apsis exactly at the base with the minimum epoch before it fired one orbit late
+  (S + 5 926.379 s in RK7(8)). Both now fire at the root (Changed, Breaking, below).
+- **`IIntegrator.IntegrateSegment` reported the first detector in list order, not the earliest crossing**
+  ([#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578)). Two crossings in one step (a perigee at T/2 and a time detector at T/2 + 2 s, RK7(8) at 1e-12): with the
+  time detector listed first, the time event, then the perigee one orbit late; the earliest is now reported, the
+  perigee within 4.2e-8 s of the closed form in either order, and two time detectors at 10 and 30 s in the first step
+  give the one at 10 s (Changed, Breaking, below).
+- **A plane alignment that started just past a node fired one orbit after it** ([#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581)). The first evaluation at the
+  base locked the node by dg/dt within 1e-6 |r| of the plane, the node just passed: 1 to 10 ms past a node of the
+  400 × 1 000 km orbit, the burn came at the passed node plus one period with that node's ΔV, 2 817.8 s after the node
+  ahead. The base now takes the search-start rule of a gate inside a step: the node ahead, within 7.8e-9 s and 4.4e-11
+  m/s of the closed form in RK7(8), at the end of the step that holds it in Velocity-Verlet.
+- **A Velocity-Verlet event started the next segment up to half a tick from the instant of its state** ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572)).
+  The event at the end of its step was labelled with the label of that time, rounded to the tick, while the next
+  segment started from the state of the step end: 4.9e-8 s apart, which moved the trajectory along the track at each
+  event (1.3e-3 to 2.0e-3 m after 7 events in 12 h without ΔV about the Earth). The step is now integrated again to the
+  time of its label (Changed, Breaking, below).
+- **An impulse Velocity-Verlet located at the end of the propagation was executed while no state carried it**
+  ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)). With the crossing in the last step, the ΔV, the fuel, `ExecutedManeuvers` and `ToOpm` held the burn while
+  the solution, its outputs and the stored states ended with the state before it (7 829.380 m/s where the state after
+  is 8 063 m/s); RK7(8) with a root at the end of the window did the same. The solution now ends with the state after
+  it (Changed, Breaking, below).
+- **Velocity-Verlet was of first order with drag** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439)). The acceleration at the end of a step took the
+  half-step velocity, so a force that depends on the velocity erred by O(h) there: on a dense perigee pass (20 × 400 km,
+  45°, 1e-4 m², 1 000 kg, the U.S. Standard Atmosphere 1976) 272.6 m, 27.8 m and 2.78 m against RK7(8) at 1e-13 at steps
+  of 1, 0.1 and 0.01 s. It now takes the predicted end velocity (Changed, Breaking, below).
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -3211,6 +3241,62 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
+  - **A g-value exactly zero at a step end** after a non-zero one is a crossing there, its direction read from the sign
+    before it (Hipparchus's rule); RK7(8) takes the step end as the root without bisecting. A zero at the base of a
+    segment followed by a non-zero value is not a crossing of a detector without a gate (Hipparchus's convention), so a
+    caller that restarts from an event with the same detector does not find it again.
+  - **A gated detector exactly zero at the base** (an impulse whose g-function is 0.0 at the start, its minimum epoch at
+    or before the start) fires at the base when the first step end has the target sign (GMAT's convention, #577's
+    choice 6): a minimum epoch before the start now gives the burn a minimum epoch at the start gives (RK7(8) at the
+    start, Velocity-Verlet at its first step end), not one orbit later.
+  - **Several detectors:** `IIntegrator.IntegrateSegment` reports one event per call, the earliest crossing of the step,
+    ties in list order: `RK78Integrator` locates each root and keeps the earliest, `VVIntegrator` estimates each on the
+    cubic Hermite of the step and reports the earliest at the step end. With Velocity-Verlet another crossing of the same
+    step falls before that step end: a caller that restarts from the event starts that detector from its g-value before
+    the step, or loses it. The protected `Integrator.CheckEventDetectors` evaluates every active detector and applies the
+    rule of a zero at a step end; it still returns the first crossing in list order, which a subclass with several
+    detectors orders by time itself. `Propagate`, `Scenario.SimulateAsync` and the batch pass one detector.
+  - **At the base of a segment** a gated detector whose gate is open there is evaluated from the start of its search
+    (`ComputeEventValueAtSearchStart`), the detector of the event just handled from its g-value past that root, now in
+    Velocity-Verlet too: a `PlaneAlignmentManeuver` whose propagation starts within 1e-6 |r| past a node takes the node
+    ahead.
+  - **Moves:** a burn whose g-function is exactly zero at a step end or at the base (time-like user impulses, apsides
+    given by Keplerian elements) and plane alignments started just past a node; every other event bit for bit in RK7(8),
+    and in Velocity-Verlet but for the label of the event (below).
+  - **Migration:** a caller of `IntegrateSegment` with several detectors takes the reported event as the earliest; a
+    custom `IEventDetector` whose g-function is exactly zero at step ends now fires there.
+- **Breaking: a Velocity-Verlet event is carried onto the tick of its label** ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572)). The step that holds the event
+  is integrated again, from its start, to the time of the label of its end (`PropagationTimeArgument.OnEpochGrid`, up to
+  half a tick of 100 ns from it, one more force evaluation), so the state the next segment starts from, the event time
+  and the base of the next segment are the same instant, as in RK7(8); a step end on the tick grid keeps its step. Every
+  Velocity-Verlet trajectory after an event about the Earth moves by up to v · 5e-8 s per event, the burn epochs by up
+  to half a tick: a chain of 7 events without ΔV in 12 h now ends within 1.2e-6 m (10 s steps) to 1.1e-4 m (0.7 s) of
+  the propagation without events, Velocity-Verlet's own sensitivity to the phase of its grid, where it ended 1.3e-3 to
+  2.0e-3 m away; about the Moon at whole-second steps (ticks) nothing moves. After an event that continues the
+  propagation, Velocity-Verlet starts the detector from its g-value past the root, as RK7(8).
+- **Breaking: an impulse at the end of the propagation leaves the solution with the state after it** ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575);
+  decided by S. Guillet, 2026-11-17). An impulse executed with no time left after it opens a last segment of zero length
+  from the state after it, one step of zero length, as RK7(8) ends after a root before the end: the last output at the
+  end, `InterpolateAt` and `GetEphemeris` there give the state after it, the same doubles as the state before plus the ΔV,
+  and `Segments` holds one more segment. The stored states end with a last arc of one state, the state after the
+  impulse (the last output); the SPK, whose segments need two epochs, ends with the arc before it, so SPICE reads the
+  state before the impulse at that last epoch. A segment shorter than the landing tolerance of RK7(8) is one step of zero
+  length too (it was a segment with no step). The propagator asks the integrator for that segment with
+  `IntegrateSegment(..., duration: 0.0)`, a call the loop never made before: `IIntegrator.IntegrateSegment` now gives,
+  for a duration of zero, a segment of one step of zero length that holds the start state; for an integrator implemented
+  outside the library that returns no step there (a `while (t < duration)` loop), the propagator adds that step itself,
+  so the solution ends with the state after the burn on that path too. **Migration:** code that reads the last segment of
+  a solution finds the segment of zero length after a burn at the end; extend the window past the last maneuver to
+  propagate after it. A custom `IIntegrator` should return, for a duration of zero, one `AcceptedStep` of zero length
+  from the start state with its acceleration (the propagator otherwise gives that step the acceleration of its forces for
+  an `Integrator` subclass, and the end acceleration of the previous segment for a bare `IIntegrator`).
+- **Breaking: Velocity-Verlet is of second order with drag** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439)). The acceleration at the end of a step is
+  evaluated with the predicted end velocity v + h a instead of the half-step velocity, which kept the drag at t + h wrong
+  by O(h): on the dense pass of #439 the error against RK7(8) at 1e-13 is now 6.09 m, 6.09e-2 m and 6.11e-4 m at 1, 0.1
+  and 0.01 s (272.6 m, 27.8 m and 2.78 m before), and on a 300 × 400 km LEO with 0.01 m² 0.947 m at 1 s, unchanged (its
+  drag error was below the truncation). Every Velocity-Verlet result with drag moves, the default integrator's included;
+  without a force that depends on the velocity, bit for bit. No golden of the propagator tests moved.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -4596,13 +4682,10 @@ not listed.
   past the coverage throws. Keep reads
   inside the propagated window, and choose an output step that divides it, or one of 240 s or less.
 - **Impulses at the edges of the stored states**
-  ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572),
-  [#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575),
-  [#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579),
-  [#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). With Velocity-Verlet the
-  segment after an impulse starts at the event's label rounded to the 100 ns tick (up to 5e-8 s per event, accumulating
-  over a chain), and an impulse whose crossing falls in the last step is executed (fuel, `ExecutedManeuvers`, `ToOpm`)
-  while the states end before it: extend the window past the last maneuver. Two impulses less than 2 µs apart store no
+  ([#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579),
+  [#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). An impulse at the end of the propagation opens a last arc of one state, the state after it ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)),
+  which an SPK segment cannot hold: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the
+  impulse at that last epoch where `GetEphemeris` reads the state after it. Two impulses less than 2 µs apart store no
   arc between them: a read at the first returns the state before both, and an SPK read between them throws
   SPKINSUFFDATA. The state that closes an arc carries its impulse's tick, up to half a tick from its instant (about 0.4
   mm at 8.6 km/s).
@@ -4614,14 +4697,6 @@ not listed.
   `Spacecraft.SetStandbyManeuver` before a propagation does not replace the first, which fires while the new one is
   dropped silently. Use `Spacecraft.Propagate` or a fresh spacecraft, and set the standby maneuver once (a maneuver on
   another spacecraft's tank is rejected since #676).
-- **Event detection** ([#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578),
-  [#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580),
-  [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581)). The public
-  `IIntegrator.IntegrateSegment`, given several detectors, reports the first in list order whose sign changed in a step,
-  not the earliest crossing (`Propagate` and `Scenario.SimulateAsync` pass one). A g-function exactly 0 at a step end
-  past the gate is never a crossing, so a time-like user `ImpulseManeuver` or `IEventDetector` landing on a
-  Velocity-Verlet or fixed-step RK7(8) step end never fires. A `PlaneAlignmentManeuver` whose propagation starts less
-  than 1e-6 |r| past a node fires one orbit late.
 - **A null target orbit** ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). The
   target-orbit constructors of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` throw `NullReferenceException` for a
   null `targetOrbit`, not an `ArgumentNullException` that names it.
@@ -4762,11 +4837,8 @@ not listed.
   propagation takes about 5 500 times more steps than relative to the Earth (125 641 against 23 for one hour at 1e-10)
   and fails at 1e-12, its steps depend on the platform, and a start from ECLIPJ2000 or GALACTIC ends 0.07 to 0.56 m from
   its ICRF twin after 1 h. Propagate relative to the Earth, or keep the tolerance at 1e-9 or looser.
-- **Integration accuracy** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439),
-  [#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445),
-  [#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561)). Velocity-Verlet is of first
-  order with drag: on a dense perigee pass its error against RK7(8) is 267 m, 27.2 m and 2.72 m at steps of 1, 0.1 and
-  0.01 s; use `RK78Integrator` when drag matters. At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
+- **Integration accuracy** ([#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445),
+  [#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561)). At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
   to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation interpolates the
   Earth's 60 s nodes with the normalised-Lerp fallback of `Quaternion.SLERP`, up to 3.4e-10 rad from the exact
   interpolation. It is built for every central body, whether or not a force rotates, so each of its 60 s points past the

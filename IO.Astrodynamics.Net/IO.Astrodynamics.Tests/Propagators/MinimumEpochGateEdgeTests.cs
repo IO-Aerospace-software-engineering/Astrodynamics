@@ -150,7 +150,7 @@ public class MinimumEpochGateEdgeTests
     /// <summary>
     /// A UTC gate whose TDB label compares before it (none in TT or TAI): the root of g = TT(epoch) − TT(gate), at the
     /// gate's instant, is labelled at the first TDB tick that does not compare before the gate in RK7(8), adaptive and
-    /// fixed-step; Velocity-Verlet fires at the step end after it. Both time arguments: TT, the one of every propagation
+    /// fixed-step; Velocity-Verlet fires at the step end after it, carried onto the tick of its label (#572). Both time arguments: TT, the one of every propagation
     /// about the Earth, and TDB. Before the review of #569, fixed-step RK7(8) at 10 s labelled it one tick before the gate
     /// (choice 1). Since the conversions round TDB − TT to the nearest tick (#625), such a gate is 1 UTC instant in
     /// 3 000 000 over 2024 (an exact replica of the conversions), none on 2024-03-01 where the gate of the truncation was
@@ -192,7 +192,13 @@ public class MinimumEpochGateEdgeTests
         if (integratorName.StartsWith("RK"))
             Assert.Equal(firstTickNotBefore, epoch);
         else
-            Assert.Equal(System.Math.Floor(gateSeconds / (integratorName == "VV1" ? 1.0 : 10.0) + 1.0) * (integratorName == "VV1" ? 1.0 : 10.0), t);
+        {
+            // The step end after the gate, carried onto the tick of its label (#572)
+            double stepEnd = System.Math.Floor(gateSeconds / (integratorName == "VV1" ? 1.0 : 10.0) + 1.0) * (integratorName == "VV1" ? 1.0 : 10.0);
+            var label = integrator.TimeArgument.EpochAt(from, stepEnd);
+            Assert.Equal(label, epoch);
+            Assert.Equal(integrator.TimeArgument.SecondsBetween(from, label), t);
+        }
     }
 
     /// <summary>

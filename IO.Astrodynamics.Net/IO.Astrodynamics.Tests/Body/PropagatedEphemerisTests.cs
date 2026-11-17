@@ -96,7 +96,7 @@ public class PropagatedEphemerisTests
         });
 
         var arcs = ephemeris.Arcs;
-        Assert.Equal(3, arcs.Count);
+        Assert.Equal(4, arcs.Count);
         // [0, 50): 5 outputs and the state before the first impulse
         Assert.Equal(new[] { 0.0, 10.0, 20.0, 30.0, 40.0, 50.0 }, arcs[0].Select(x => (x.Epoch - T0).TotalSeconds));
         Assert.Same(impulses[0].Before, arcs[0][^1]);
@@ -105,10 +105,11 @@ public class PropagatedEphemerisTests
         Assert.Equal(new[] { 60.0, 70.0, 80.0, 90.0, 100.0, 110.0 }, arcs[1].Skip(1).Take(6).Select(x => System.Math.Round((x.Epoch - T0).TotalSeconds, 6)));
         Assert.Same(impulses[1].Before, arcs[1][^1]);
         // (120.0000015, 200]: the state after, the outputs 130 to 190, the state before the last impulse at the end; the arc
-        // after it, of zero length, is not stored
+        // after it, of zero length, is the state after that impulse alone (#575: it was not stored)
         Assert.Same(impulses[1].After, arcs[2][0]);
         Assert.Same(impulses[2].Before, arcs[2][^1]);
         Assert.Equal(9, arcs[2].Length);
+        Assert.Same(impulses[2].After, Assert.Single(arcs[3]));
         Assert.Empty(filled);
         Assert.Equal(arcs.Sum(a => a.Length), ephemeris.Count);
         Assert.Equal(ephemeris.Count, ephemeris.All.Length);
@@ -118,9 +119,10 @@ public class PropagatedEphemerisTests
         Assert.Equal(0.0, ephemeris.Interpolate(T0.AddSeconds(50.0 - 1e-3)).Velocity.Y);
         Assert.Equal(1.0, ephemeris.Interpolate(T0.AddSeconds(50.0 + 1e-3)).Velocity.Y, 12);
         Assert.Equal(3.0, ephemeris.Interpolate(T0.AddSeconds(120.0000015 + 1e-3)).Velocity.Y, 12);
-        // Before every arc, the first; after every arc (past the impulse at the end), the last
+        // Before every arc, the first; at the impulse at the end and after it, the state after it (#575)
         Assert.Equal(0.0, ephemeris.Interpolate(T0.AddSeconds(-5.0)).Velocity.Y);
-        Assert.Equal(3.0, ephemeris.Interpolate(T0.AddSeconds(205.0)).Velocity.Y, 9);
+        Assert.Same(impulses[2].After, ephemeris.Interpolate(T0.AddSeconds(200.0)));
+        Assert.Equal(6.0, ephemeris.Interpolate(T0.AddSeconds(205.0)).Velocity.Y, 9);
     }
 
     [Fact]

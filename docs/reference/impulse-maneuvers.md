@@ -89,11 +89,15 @@ its g-function in its direction at or after the minimum epoch, searched from the
 - A g-function exactly zero at the minimum epoch is a crossing there when the sign that follows it is the target sign,
   a minimum epoch on a step end or equal to the start of the propagation included (an apsis given by Keplerian elements
   at the start, where r·v is 0.0): RK7(8) fires at the minimum epoch; Velocity-Verlet at the first step end whose sign is
-  known after it, the next one when the minimum epoch is a step end.
-- `PlaneAlignmentManeuver` takes the node it moves toward from the state at a minimum epoch after the start of the
-  segment, never a node just passed: within 1e-6 |r| of a node it moves away from, it waits for the next node. With the
-  minimum epoch at or before the start of the segment, the first evaluation there still locks the node by the sign of
-  its rate, so a start less than 1e-6 |r| past a node takes that node, a period later (#581).
+  known after it, the next one when the minimum epoch is a step end. A g-function exactly zero at the start with the
+  minimum epoch before it fires at the start the same way (GMAT's convention, #580; decided by S. Guillet, 2026-11-17):
+  a minimum epoch at the start and one before it give the same burn.
+- A g-function exactly zero at a step end after the minimum epoch is a crossing there (#580): a time-like user impulse
+  whose root is a step end of Velocity-Verlet or of fixed-step RK7(8) fires at its root.
+- `PlaneAlignmentManeuver` takes the node it moves toward from the state at its minimum epoch, or at the start of the
+  segment when the minimum epoch is at or before it, never a node just passed: within 1e-6 |r| of a node it moves away
+  from, it waits for the next node (#581; before 11.0.0 a start less than 1e-6 |r| past a node took that node, a period
+  later).
 - A chained impulse is gated by the end of the previous maneuver's window, the same way, in whichever step holds it:
   an impulse, or an attitude (#539). The last leading attitude gates the first impulse by the end of its hold, and an
   attitude chained after an impulse delays the next impulse by its hold from the end of the impulse's window. About the

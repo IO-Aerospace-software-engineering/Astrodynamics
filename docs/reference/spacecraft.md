@@ -169,8 +169,10 @@ across the jump:
   or more (the states then 1 µs apart, distinct epochs of the SPK; shorter, its interpolation is linear within 3e-10 m).
   Without an impulse the states make one arc, never filled, as before 11.0.0.
 - **An arc of zero length** is not stored: two impulses at one event; nor an arc between impulses within 2 µs, one
-  epoch. An impulse that no segment of the solution carries (Velocity-Verlet can locate the crossing at the end of its
-  last step) closes the last arc: the reads and the SPK end with the state before it, as the solution does.
+  epoch. An impulse at the end of the propagation (Velocity-Verlet locates a crossing of its last step at its end, RK7(8)
+  a root at the end of the window) is carried by a last segment of zero length (#575): it opens a last arc of one state,
+  the state after it, so the reads at the end give the state after it, as the solution does. An SPK segment needs two
+  epochs: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the impulse at that last epoch.
 - **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
   so that at an impulse it gives the state after it, as `PropagationSolution.InterpolateAt`, SPICE (the later segment of
