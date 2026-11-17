@@ -3228,6 +3228,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Site` in a frame built by those names is the library's, as in the instances, and
   `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it, as for the instances.
 
+- **`MemoryDataProvider.GetEphemeris` ignored the frame and the aberration** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
+  It subtracted the stored states and labelled the ICRF difference with the frame asked, and returned the geometric
+  state for an aberrated read: on a85098d an ECLIPJ2000 read of the Moon from the Earth was 1.06e8 m and 294 m/s from
+  `spkezr_c` on the same states, an ITRF93 read 7.6e8 m and 2.6e4 m/s, the Earth-Moon barycentre of the issue 5.76e10 m
+  off in z. The stored states are now taken in ICRF (a state stored in another frame rotated by the provider's
+  orientation of it), subtracted, then rotated into the frame asked by the provider's orientation of that frame, as
+  `ToFrame` does (r' = R r, v' = R v + ω × r'); a frame of ICRF's axes (ICRF, GCRF) is not rotated, so a read in ICRF is
+  bit for bit the stored difference as before. The provider knows ICRF and GCRF (the identity) and ECLIPJ2000, SPICE's
+  fixed rotation of the J2000 obliquity (84381.448″ about x, CSPICE `chgirf.c`), without stored orientations: ECLIPJ2000
+  is the default frame of the bodies, so a body built on the provider reads its orbit in it, which now needs that
+  rotation. A frame with stored orientations is read from them, TEME, CIRS and TIRS are the managed frames (#656), and any
+  other frame throws `ArgumentException` as before. Against `spkezr_c` on the states the test stores (read from SPICE
+  in J2000 every 10 min): 7.8e-5 m and 8.8e-12 m/s in ECLIPJ2000 and from ECLIPJ2000 states, 4.8e-5 m and 3.5e-9 m/s
+  in ITRF93 from SPICE's orientations stored at the epochs, 4.8e-5 m in TEME by name; ECLIPJ2000 within 1.1e-16 rad of
+  `sxform_c` and the barycentre of the issue within 2.2e-16 of the closed form (`MemoryDataProviderFrameTests`, 15 of 17
+  cases red on a85098d; thresholds provisional, twice the Linux worst). The aberration: Changed below.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -4496,6 +4513,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `AddStateOrientationToICRF` stored under that name. Migration: none to read the IAU frames; a caller who stored another
   frame under one of those names gives it another name.
 
+- **Breaking: `MemoryDataProvider.GetEphemeris` throws `NotSupportedException` for an aberration other than `None`** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559), Fixed above).
+  The provider holds geometric states only, and returned them for a read with light time or stellar aberration. It now
+  refuses them (decided by S. Guillet, 2026-11-17: an in-memory test provider; refusing is honest, and smaller than a
+  light-time iteration on the stored states), so a library path that reads with an aberration (an occultation or
+  illumination search with `LT`, `CelestialBody.TrueSolarDay`, a `CelestialAttitudeTarget` with `LT`) throws on it.
+  Its reads in a frame other than ICRF's axes are rotated (Fixed above), so the orbit of a body built on it, in
+  ECLIPJ2000 by default, changes numbers. Migration: read with `Aberration.None`, or with a `SpiceDataProvider`.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4763,9 +4788,6 @@ not listed.
   searched by `gfilum_c` with the normal of `surfnm_c` at the point, and the same site built from its coordinates,
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
-- **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
-  `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
-  read in ICRF without aberration and convert with `ToFrame`.
 - **Memory and cost of the reads**
   ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
   [#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).

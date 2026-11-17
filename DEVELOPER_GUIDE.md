@@ -2138,6 +2138,11 @@ S. Guillet, 2026-11-14): a frame never added, and the information of an identifi
 `InvalidOperationException`, as on SPICE. A body whose barycentre's data, information included, the provider lacks builds
 with `InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
 
+A read is the difference of the stored states, taken in ICRF, rotated into the frame asked by the provider's orientation
+of it; ICRF and GCRF are not rotated, and ICRF, GCRF, ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, the default
+frame of the bodies), TEME, CIRS and TIRS need no stored orientation. The provider holds geometric states only: an
+aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet, 2026-11-17).
+
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data, not in their type initializer: a provider set before their
 first read and lacking their data makes each such read throw the provider's exception until the data are there, where

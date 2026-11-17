@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <see cref="CelestialItem.Create"/> of L1 throws the provider's <see cref="InvalidOperationException"/> for its missing
 /// state, a provider-backed member of a static object the provider's <see cref="ArgumentException"/> naming
 /// <c>naifId</c>, at each read, and once the information and the states are added the members are the data given,
-/// combined by exact subtractions.
+/// combined by exact subtractions, the orbits rotated into ECLIPJ2000, the frame of the static objects (#559).
 /// </para>
 /// <para>
 /// <c>static-bodies-spice</c>: the kernels loaded before any read, the members of the static objects against SPICE
@@ -104,12 +104,14 @@ internal static class StaticBodiesChild
 
             Check("SOLAR_SYSTEM_BARYCENTER.GM, once its information exists, is the given GM", ssb.GM == SsbInfo.GM);
             Check("EARTH_BARYCENTER.GM is the given GM", Barycenters.EARTH_BARYCENTER.GM == EarthBarycenterInfo.GM);
-            Check("EARTH_BARYCENTER's orbit is its state about the solar system barycentre",
-                Barycenters.EARTH_BARYCENTER.InitialOrbitalParameters.ToStateVector().Position == s3.Position);
+            // The orbits of the static objects are in ECLIPJ2000, their frame: the stored ICRF difference rotated by SPICE's
+            // obliquity (#559; before, the ICRF numbers labelled ECLIPJ2000)
+            Check("EARTH_BARYCENTER's orbit is its state about the solar system barycentre, in ECLIPJ2000",
+                IsInEclipJ2000(Barycenters.EARTH_BARYCENTER.InitialOrbitalParameters.ToStateVector(), s3.Position, s3.Velocity));
 
             var l1 = CelestialItem.Create(391).InitialOrbitalParameters.ToStateVector();
-            Check("L1's state is the stored state of 391 minus that of the Earth barycentre",
-                l1.Position == s391.Position - s3.Position && l1.Velocity == s391.Velocity - s3.Velocity);
+            Check("L1's state is the stored state of 391 minus that of the Earth barycentre, in ECLIPJ2000",
+                IsInEclipJ2000(l1, s391.Position - s3.Position, s391.Velocity - s3.Velocity));
 
             var earth = PlanetsAndMoons.EARTH_BODY;
             Check("EARTH_BODY.GM is the given GM", earth.GM == EarthInfo.GM);
@@ -117,12 +119,12 @@ internal static class StaticBodiesChild
             Check("EARTH_BODY.J2 is the given J2", earth.J2 == EarthInfo.J2);
             Check("EARTH_BODY's frame is the given one", earth.Frame.Name == "ITRF93");
             var earthState = earth.InitialOrbitalParameters.ToStateVector();
-            Check("EARTH_BODY's orbit is the state of 399 minus that of its barycentre",
-                earthState.Position == s399.Position - s3.Position && earthState.Velocity == s399.Velocity - s3.Velocity);
+            Check("EARTH_BODY's orbit is the state of 399 minus that of its barycentre, in ECLIPJ2000",
+                IsInEclipJ2000(earthState, s399.Position - s3.Position, s399.Velocity - s3.Velocity));
             Check("EARTH_BODY's sphere of influence is finite", double.IsFinite(earth.SphereOfInfluence) && earth.SphereOfInfluence > 0.0);
             Check("SUN_BODY.GM is the given GM", Stars.SUN_BODY.GM == SunInfo.GM);
-            Check("SUN_BODY's orbit is its state about the solar system barycentre",
-                Stars.SUN_BODY.InitialOrbitalParameters.ToStateVector().Position == s10.Position);
+            Check("SUN_BODY's orbit is its state about the solar system barycentre, in ECLIPJ2000",
+                IsInEclipJ2000(Stars.SUN_BODY.InitialOrbitalParameters.ToStateVector(), s10.Position, s10.Velocity));
             return 0;
         }
         catch (Exception e)
@@ -423,6 +425,18 @@ internal static class StaticBodiesChild
         }
 
         throw new InvalidOperationException($"Failed: {label}: no exception");
+    }
+
+    // A state of the memory provider in ECLIPJ2000 against the ICRF vectors rotated by the closed form of SPICE's ECLIPJ2000,
+    // ROTATE(84381.448", 1) (CSPICE chgirf.c): y' = c y + s z, z' = -s y + c z, within 4.4e-16 relative, the bound of
+    // MemoryDataProviderFrameTests (#559)
+    private static bool IsInEclipJ2000(StateVector state, Vector3 icrfPosition, Vector3 icrfVelocity)
+    {
+        double eps = 84381.448 / 3600.0 * System.Math.PI / 180.0;
+        double c = System.Math.Cos(eps), s = System.Math.Sin(eps);
+        Vector3 Rotate(Vector3 v) => new(v.X, c * v.Y + s * v.Z, -s * v.Y + c * v.Z);
+        bool Close(Vector3 actual, Vector3 icrf) => (actual - Rotate(icrf)).Magnitude() <= 4.4e-16 * icrf.Magnitude();
+        return state.Frame == Frame.ECLIPTIC_J2000 && Close(state.Position, icrfPosition) && Close(state.Velocity, icrfVelocity);
     }
 
     private static void Check(string label, bool condition)

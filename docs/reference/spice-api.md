@@ -254,6 +254,16 @@ barycentre (SPICE names every barycentre), and the orientation cache of a propag
 reach unavailable. Before 11.0.0 the state and orientation reads threw `ArgumentException` and the information of an
 identifier never added `KeyNotFoundException`.
 
+`GetEphemeris` takes the stored states about the solar system barycentre in ICRF (a state stored in another frame is
+rotated by the provider's orientation of it), subtracts them and rotates the difference into the frame asked by the
+provider's orientation of that frame, r' = R r and v' = R v + ω × r' as `ToFrame`; a read in ICRF or GCRF is the
+stored difference, unrotated. Besides the frames whose orientations were added, the provider knows ICRF and GCRF (the
+identity), ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, 84381.448″ about x; the default frame of the bodies)
+and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. It holds geometric states
+only: an aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet,
+2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was
+geometric.
+
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data (see [Predefined Objects](predefined-objects.md)), so a
 provider set before they are first read, and lacking their data, does not leave them unusable: each read throws the
