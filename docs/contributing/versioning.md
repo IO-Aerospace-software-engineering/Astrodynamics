@@ -3124,8 +3124,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   read `MeanRssPosition` and `StdRssPosition`, which `EpochStatistics` does not have; the numerical propagation tutorial
   gave `Clock` its period instead of its ticks per second, read `Position` on the tuple of `InterpolateAt` and listed
   `PlanetsAndMoons.JUPITER_BODY` (now `Barycenters.JUPITER_BARYCENTER`); the Lambert reference named the third argument
-  of `Solve` `targetObjectOrbitalParameters`, which the library spells `targetOjectOrbitalParameters` (the example passes
-  its arguments by position, the listing shows the library's name); the SPICE API reference listed
+  of `Solve` `targetObjectOrbitalParameters`, which the library then spelled `targetOjectOrbitalParameters` (the example
+  passes its arguments by position, the listing shows the library's name, `targetObjectOrbitalParameters` since the
+  parameter's rename, #662, under Changed); the SPICE API reference listed
   `AddCelestialBodyInfo(params CelestialBody[])`, whose type is `IO.Astrodynamics.DTO.CelestialBody`; the covariance
   tutorial called a helper `WithRtnCovariance` defined nowhere (now in the block). Every csharp block is now the region
   of a method of the page's file under `IO.Astrodynamics.Tests/Documentation/Pages/`, its inputs the method's parameters
@@ -3235,6 +3236,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Every other target of a rectangle is searched as before, bit for bit (the same margin). Migration: a caller that
   searches or tests a target that can be at the instrument's spacecraft catches `InvalidOperationException`; no change
   for a target away from the observer.
+- **Breaking: the third parameter of `LambertSolver.Solve` is `targetObjectOrbitalParameters`**
+  ([#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662), item 3). The public parameter
+  was spelled `targetOjectOrbitalParameters`, a misspelling a caller passing it by name had to copy, and the
+  `ArgumentNullException` of a null target named it so. It is renamed (decided by S. Guillet, 2026-11-17;
+  `LambertSolverTests.Solve_ParametersAreSpelledAsTheirWords` and the reflection check of the listing of
+  `docs/reference/lambert.md`, `DocumentationPagesExamplesTests.SignatureBlocks_NameMembersOfTheLibrary`, red on
+  a85098d with the listing renamed). No result moves. Migration: a call that passes it by name writes
+  `targetObjectOrbitalParameters:`; a call by position is unchanged. With the documentation blocks compiled and checked
+  since #668 and #705, this closes #662.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
