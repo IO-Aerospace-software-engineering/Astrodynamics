@@ -68,20 +68,19 @@ MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId,
                                       IO::Astrodynamics::API::DTO::StateOrientationDTO so[100000], unsigned int size);
 
 /**
- * Read object ephemeris
- * @param searchWindow Time window for the search
+ * Read object ephemeris at given epochs (#563: before, over a window by epoch += stepSize)
+ * @param epochs The epochs, TDB seconds past J2000
+ * @param count The number of epochs, and of states the array holds
  * @param observerId ID of the observer
  * @param targetId ID of the target
  * @param frame Reference frame
  * @param aberration Aberration correction
- * @param stepSize Step size for the search
- * @param stateVectors Array to store the state vectors
- * @return true if successful, false otherwise (call GetLastErrorProxy for details)
+ * @param stateVectors Array to store the state vectors, one per epoch; a state SPICE cannot give is NaN
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details: the message of the first epoch that failed)
  */
 MODULE_API bool
-ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
-                   const char *aberration, double stepSize,
-                   IO::Astrodynamics::API::DTO::StateVectorDTO stateVectors[10000]);
+ReadEphemerisProxy(const double *epochs, int count, int observerId, int targetId, const char *frame, const char *aberration,
+                   IO::Astrodynamics::API::DTO::StateVectorDTO *stateVectors);
 
 /**
  * Read ephemeris at a given epoch
@@ -96,19 +95,18 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpoch
         double epoch, int observerId, int targetId, const char *frame, const char *aberration);
 
 /**
- * Read spacecraft orientation
- * @param searchWindow Time window for the search
+ * Read spacecraft orientation at given epochs (#563: before, over a window by epoch += stepSize, into 10000 records)
+ * @param epochs The epochs, TDB seconds past J2000
+ * @param count The number of epochs, and of records the array holds
  * @param spacecraftId ID of the spacecraft
- * @param tolerance Tolerance for the search
+ * @param tolerance Tolerance for the search, seconds, converted to clock ticks at the first epoch
  * @param frame Reference frame
- * @param stepSize Step size for the search
- * @param so Array to store the state orientations
+ * @param so Array to store the state orientations, one per epoch
  * @return true if successful, false otherwise (call GetLastErrorProxy for details)
  */
 MODULE_API bool
-ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
-                     const char *frame, double stepSize,
-                     IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000]);
+ReadOrientationProxy(const double *epochs, int count, int spacecraftId, double tolerance, const char *frame,
+                     IO::Astrodynamics::API::DTO::StateOrientationDTO *so);
 
 /**
  * Evaluate launch windows

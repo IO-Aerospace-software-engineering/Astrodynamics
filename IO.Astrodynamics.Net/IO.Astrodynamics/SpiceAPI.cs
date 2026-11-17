@@ -119,13 +119,13 @@ public class SpiceAPI
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
-    private static extern bool ReadOrientationProxy(Window searchWindow, int spacecraftId, double tolerance,
-        string frame, double stepSize, [In] [Out] StateOrientation[] stateOrientations);
+    private static extern bool ReadOrientationProxy([In] double[] epochs, int count, int spacecraftId, double tolerance,
+        string frame, [Out] StateOrientation[] stateOrientations);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
-    private static extern bool ReadEphemerisProxy(Window searchWindow, int observerId, int targetId,
-        string frame, string aberration, double stepSize, [In] [Out] StateVector[] stateVectors);
+    private static extern bool ReadEphemerisProxy([In] double[] epochs, int count, int observerId, int targetId,
+        string frame, string aberration, [Out] StateVector[] stateVectors);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern IntPtr GetLastErrorProxy();
@@ -1468,8 +1468,11 @@ public class SpiceAPI
     /// <param name="targetId"></param>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
+    /// <param name="stepSize">The step of the epochs read, positive: start + i·step in TDB, i from 0 while within the window, the
+    /// end included when it falls on the grid; each state is the read of its epoch alone, labelled with it (#563).</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563: before, a step of 0
+    /// ran until the process was out of memory and a negative step read 10000 epochs backwards).</exception>
     /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454), or the observer is a
     /// site whose SPK does not cover J2000 TDB (see the remarks).</exception>
     /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
@@ -1487,45 +1490,88 @@ public class SpiceAPI
         Aberration aberration, TimeSpan stepSize)
     {
         ArgumentNullException.ThrowIfNull(frame);
+        var grid = new WindowGrid(searchWindow, stepSize);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
         var observer = CreateObserver(observerId);
         lock (lockObject)
         {
-            const int messageSize = 10000;
             List<OrbitalParameters.OrbitalParameters> orbitalParameters = [];
-            int occurrences = (int)(searchWindow.Length / stepSize / messageSize);
-
-            for (int i = 0; i <= occurrences; i++)
+            // A managed frame is read in J2000, then rotated (#558)
+            var managed = ManagedReadFrame(frame);
+            string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
+            for (long first = 0; first < grid.Count; first += WindowReadChunk)
             {
-                var start = searchWindow.StartDate + i * messageSize * stepSize;
-                var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
-                var window = new TimeSystem.Window(start.ToTDB(), end.ToTDB());
-                var stateVectors = new StateVector[messageSize];
-                // A managed frame is read in J2000, then rotated (#558)
-                var managed = ManagedReadFrame(frame);
-                if (!ReadEphemerisProxy(window.Convert(), observerId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name,
-                    aberration.GetDescription(), stepSize.TotalSeconds,
-                    stateVectors))
+                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                var stateVectors = new StateVector[epochs.Length];
+                if (!ReadEphemerisProxy(epochs, epochs.Length, observerId, targetId, frameName, aberration.GetDescription(), stateVectors))
                     ThrowLastProxyError();
-                var read = stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).ToArray();
                 // Every state checked before any is converted: the rotation into a managed frame calls TransformFrameProxy,
                 // which clears the message of the failed epochs (#714, review of the branch: a site frame threw "Native proxy
                 // call failed" where J2000 threw SPICE's message)
-                foreach (var x in read)
+                foreach (var x in stateVectors)
                 {
                     ThrowOnFailedRead(x);
                 }
 
-                orbitalParameters.AddRange(read.Select(x =>
+                for (int i = 0; i < stateVectors.Length; i++)
                 {
-                    var epoch = Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame);
-                    return managed == null
+                    // Labelled with the epoch read, start + i·step, as ReadEphemeris(Time ...) labels its state (#563, #625)
+                    var epoch = grid.Epoch(first + i).ConvertTo(searchWindow.StartDate.Frame);
+                    var x = stateVectors[i];
+                    orbitalParameters.Add(managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
-                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame);
-                }));
+                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame));
+                }
             }
 
             return orbitalParameters;
+        }
+    }
+
+    // The epochs a native window read takes at most in one call: the size of the native buffers before #563
+    private const int WindowReadChunk = 10000;
+
+    /// <summary>
+    /// The epochs of a window read (#563): start + i·step in TDB, i from 0 while within the window, in exact tick arithmetic,
+    /// the end of the window included when it falls on the grid. Before 11.0.0 the native proxies stepped their epoch by
+    /// epoch += step in double TDB seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of
+    /// 0.1 s, 4.29e-4 s after 9000 of 1.2 s) and the last epoch of the window could be dropped.
+    /// </summary>
+    private readonly struct WindowGrid
+    {
+        private readonly Time _start;
+        private readonly long _stepTicks;
+
+        /// <summary>The number of epochs.</summary>
+        internal long Count { get; }
+
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive.</exception>
+        internal WindowGrid(TimeSystem.Window searchWindow, TimeSpan stepSize)
+        {
+            if (stepSize <= TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a window read must be positive.");
+            }
+
+            _start = searchWindow.StartDate.ToTDB();
+            _stepTicks = stepSize.Ticks;
+            Count = (searchWindow.EndDate.ToTDB() - _start).Ticks / _stepTicks + 1;
+        }
+
+        /// <summary>Epoch <paramref name="index"/>, TDB.</summary>
+        internal Time Epoch(long index) => _start + TimeSpan.FromTicks(_stepTicks * index);
+
+        /// <summary>The TDB seconds past J2000 of at most <paramref name="length"/> epochs from <paramref name="first"/>, as the
+        /// read of one epoch takes them.</summary>
+        internal double[] Seconds(long first, int length)
+        {
+            var seconds = new double[(int)System.Math.Min(length, Count - first)];
+            for (int i = 0; i < seconds.Length; i++)
+            {
+                seconds[i] = Epoch(first + i).TimeSpanFromJ2000().TotalSeconds;
+            }
+
+            return seconds;
         }
     }
 
@@ -1665,7 +1711,8 @@ public class SpiceAPI
     /// <param name="naifId">NAIF ID of the spacecraft (the CK bus frame ID is derived as naifId * 1000)</param>
     /// <param name="tolerance">Search tolerance — data within this duration of each step epoch will be returned</param>
     /// <param name="referenceFrame">Reference frame for the returned orientations</param>
-    /// <param name="stepSize">Time step between successive query epochs</param>
+    /// <param name="stepSize">Time step between successive query epochs, positive: start + i·step in TDB, i from 0 while within
+    /// the window, the end included when it falls on the grid (#563)</param>
     /// <returns>
     ///     The records of the CK, as <c>ckgpav_c</c> returns them: the C-matrix, the rotation from
     ///     <paramref name="referenceFrame"/> to the spacecraft frame, labelled with <paramref name="referenceFrame"/>, its
@@ -1681,23 +1728,36 @@ public class SpiceAPI
     ///     which <c>GetStateOrientationToICRF</c> of the frame of a kernel-backed spacecraft returns. On a CK written by
     ///     <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> before 11.0.0, which holds the inverse of the
     ///     attitude (#529), this method returns that inverse.
+    ///     Each record is the read of its epoch alone, in a buffer of the epochs read, whatever their number (#563: before
+    ///     11.0.0 the proxy stepped its epoch by epoch += step, so that the epochs drifted from start + i·step and the last
+    ///     one could be dropped, into a buffer of 10000 records, 1.4 ms for a read of one epoch, and a window of more than
+    ///     10000 steps threw).
     /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="referenceFrame"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563).</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no orientation at one of the epochs, with its message.</exception>
     public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
         int naifId, TimeSpan tolerance,
         Frame referenceFrame, TimeSpan stepSize)
     {
         if (referenceFrame == null) throw new ArgumentNullException(nameof(referenceFrame));
+        var grid = new WindowGrid(searchWindow, stepSize);
         lock (lockObject)
         {
-            var stateOrientations = new StateOrientation[10000];
-            if (!ReadOrientationProxy(searchWindow.Convert(), naifId, tolerance.TotalSeconds,
-                SpiceFrameName(referenceFrame), stepSize.TotalSeconds,
-                stateOrientations))
-                ThrowLastProxyError();
-            // ByValTStr marshaling returns "" (not null) for zero-padded unwritten slots;
-            // use IsNullOrEmpty to correctly exclude entries the proxy did not populate.
-            return stateOrientations.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x => new OrbitalParameters.StateOrientation(
-                x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
+            string frameName = SpiceFrameName(referenceFrame);
+            List<OrbitalParameters.StateOrientation> records = [];
+            for (long first = 0; first < grid.Count; first += WindowReadChunk)
+            {
+                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                // A buffer of the epochs read (#563: before, 10000 records whatever the window, 1.4 ms for one epoch)
+                var stateOrientations = new StateOrientation[epochs.Length];
+                if (!ReadOrientationProxy(epochs, epochs.Length, naifId, tolerance.TotalSeconds, frameName, stateOrientations))
+                    ThrowLastProxyError();
+                records.AddRange(stateOrientations.Select(x => new OrbitalParameters.StateOrientation(x.Rotation.Convert(),
+                    x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame)));
+            }
+
+            return records;
         }
     }
 

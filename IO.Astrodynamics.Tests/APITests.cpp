@@ -28,6 +28,31 @@ namespace
 {
     // The number of windows a search proxy wrote, for the tests that read the windows themselves (#653)
     int windowCount{};
+
+    // The epochs start + i·step of a window, i from 0 while within it, as SpiceAPI gives them to the read proxies (#563)
+    std::vector<double> WindowEpochs(const IO::Astrodynamics::API::DTO::WindowDTO &window, double step)
+    {
+        std::vector<double> epochs;
+        for (int i = 0; window.start + i * step <= window.end; ++i)
+        {
+            epochs.push_back(window.start + i * step);
+        }
+        return epochs;
+    }
+
+    bool ReadEphemerisOverWindow(const IO::Astrodynamics::API::DTO::WindowDTO &window, int observerId, int targetId, const char *frame,
+                                 const char *aberration, double step, IO::Astrodynamics::API::DTO::StateVectorDTO *stateVectors)
+    {
+        const auto epochs = WindowEpochs(window, step);
+        return ReadEphemerisProxy(epochs.data(), static_cast<int>(epochs.size()), observerId, targetId, frame, aberration, stateVectors);
+    }
+
+    bool ReadOrientationOverWindow(const IO::Astrodynamics::API::DTO::WindowDTO &window, int spacecraftId, double tolerance, const char *frame,
+                                   double step, IO::Astrodynamics::API::DTO::StateOrientationDTO *so)
+    {
+        const auto epochs = WindowEpochs(window, step);
+        return ReadOrientationProxy(epochs.data(), static_cast<int>(epochs.size()), spacecraftId, tolerance, frame, so);
+    }
 }
 
 TEST(API, TDBToString)
@@ -336,7 +361,7 @@ TEST(API, ReadEphemerisProxy)
     searchWindow.end = 100.0;
 
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[5000];
-    ASSERT_TRUE(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 10.0, sv));
+    ASSERT_TRUE(ReadEphemerisOverWindow(searchWindow, 399, 301, "J2000", "LT", 10.0, sv));
     ASSERT_DOUBLE_EQ(-291569264.48965073, sv[0].position.x);
     ASSERT_DOUBLE_EQ(-266709187.1624887, sv[0].position.y);
     ASSERT_DOUBLE_EQ(-76099155.244104564, sv[0].position.z);
@@ -348,15 +373,41 @@ TEST(API, ReadEphemerisProxy)
     ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
 }
 
+// A negative number of epochs: false with the message, nothing read (#563: before, a window of more than 10000 steps)
 TEST(API, ReadEphemerisProxyException)
 {
-    IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
-    searchWindow.start = 0.0;
-    searchWindow.end = 10001.0;
+    const double epoch{0.0};
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[1];
+    ASSERT_FALSE(ReadEphemerisProxy(&epoch, -1, 399, 301, "J2000", "LT", sv));
+    ASSERT_STREQ("The number of epochs must not be negative", GetLastErrorProxy());
+    IO::Astrodynamics::API::DTO::StateOrientationDTO so[1];
+    ASSERT_FALSE(ReadOrientationProxy(&epoch, -1, -172, 0.0, "J2000", so));
+    ASSERT_STREQ("The number of epochs must not be negative", GetLastErrorProxy());
+}
 
-    IO::Astrodynamics::API::DTO::StateVectorDTO sv[5000];
-    ASSERT_FALSE(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv));
-    ASSERT_STRNE("", GetLastErrorProxy());
+// #563: the read proxies stepped their epoch by epoch += step over a window, so that sample i drifted from start + i·step
+// (1.43e-4 s after 6000 steps of 0.1 s) and the last epoch could be dropped. They read at the caller's epochs: 6001 epochs
+// 0.1 s apart from 2026-04-01 00:00:00 TDB, each state labelled with its epoch and equal to the read of that epoch alone
+TEST(API, ReadEphemerisProxyReadsAtTheGivenEpochs)
+{
+    std::vector<double> epochs(6001);
+    for (size_t i = 0; i < epochs.size(); ++i)
+    {
+        epochs[i] = 828273600.0 + static_cast<double>(i) / 10.0;
+    }
+    std::vector<IO::Astrodynamics::API::DTO::StateVectorDTO> sv(epochs.size());
+    ASSERT_TRUE(ReadEphemerisProxy(epochs.data(), static_cast<int>(epochs.size()), 399, 301, "J2000", "LT", sv.data())) << GetLastErrorProxy();
+    for (size_t i = 0; i < epochs.size(); ++i)
+    {
+        ASSERT_EQ(epochs[i], sv[i].epoch);
+        const auto single = ReadEphemerisAtGivenEpochProxy(epochs[i], 399, 301, "J2000", "LT");
+        ASSERT_EQ(single.position.x, sv[i].position.x);
+        ASSERT_EQ(single.position.y, sv[i].position.y);
+        ASSERT_EQ(single.position.z, sv[i].position.z);
+        ASSERT_EQ(single.velocity.x, sv[i].velocity.x);
+        ASSERT_EQ(single.velocity.y, sv[i].velocity.y);
+        ASSERT_EQ(single.velocity.z, sv[i].velocity.z);
+    }
 }
 
 // A window read past the coverage names the first failed epoch, where SpiceAPI stops (#714, decision 1 of #719, decided
@@ -366,7 +417,7 @@ TEST(API, ReadEphemerisProxyException)
 TEST(API, ReadEphemerisProxyPastTheCoverageNamesTheFirstFailedEpoch)
 {
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[11];
-    ReadEphemerisProxy(SearchWindow("2150 JAN 20 00:00:00 TDB", "2150 JAN 25 00:00:00 TDB"), 399, 10, "J2000", "NONE",
+    ReadEphemerisOverWindow(SearchWindow("2150 JAN 20 00:00:00 TDB", "2150 JAN 25 00:00:00 TDB"), 399, 10, "J2000", "NONE",
                        43200.0, sv);
     ASSERT_TRUE(std::isfinite(sv[4].position.x));
     ASSERT_TRUE(std::isnan(sv[5].position.x));
@@ -381,10 +432,10 @@ TEST(API, ReadSpacecraftOrientationProxyException)
 {
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 0.0;
-    searchWindow.end = 10001.0;
+    searchWindow.end = 9.0;
 
-    IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000];
-    ASSERT_FALSE(ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so));
+    IO::Astrodynamics::API::DTO::StateOrientationDTO so[10];
+    ASSERT_FALSE(ReadOrientationOverWindow(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so));
     ASSERT_STRNE("", GetLastErrorProxy());
 }
 
@@ -432,7 +483,7 @@ TEST(API, WriteEphemeris)
     window.start = 0.0;
     window.end = 9.0;
     IO::Astrodynamics::API::DTO::StateVectorDTO svresult[size];
-    ReadEphemerisProxy(window, 399, -135, "J2000", "NONE", 1.0, svresult);
+    ReadEphemerisOverWindow(window, 399, -135, "J2000", "NONE", 1.0, svresult);
     for (int i = 0; i < size; ++i)
     {
         ASSERT_DOUBLE_EQ(svresult[i].position.x, 6800 + i);
@@ -489,7 +540,7 @@ TEST(API, WriteOrientation)
     window.start = 0.0;
     window.end = 9.0;
     IO::Astrodynamics::API::DTO::StateOrientationDTO soresult[size];
-    ReadOrientationProxy(window, -175, 0.0, "J2000", 1.0, soresult);
+    ReadOrientationOverWindow(window, -175, 0.0, "J2000", 1.0, soresult);
 
     ASSERT_DOUBLE_EQ(soresult[0].orientation.w, 0.0);
     ASSERT_DOUBLE_EQ(soresult[0].orientation.x, -0.57735026918962573);
@@ -2406,11 +2457,11 @@ TEST(API, ReadOrientationProxyOfAnUnknownFrameReturnsSpicesMessageAndLeavesNothi
         window.start = 0.0;
         window.end = 2.0;
         IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
-        ASSERT_TRUE(ReadOrientationProxy(window, -1999811, 0.0, "J2000", 1.0, so)) << GetLastErrorProxy();
+        ASSERT_TRUE(ReadOrientationOverWindow(window, -1999811, 0.0, "J2000", 1.0, so)) << GetLastErrorProxy();
         EXPECT_EQ(1.0, std::abs(so[2].orientation.w));
 
         bool res = true;
-        EXPECT_NO_THROW(res = ReadOrientationProxy(window, -1999811, 0.0, "NOPE_FRAME", 1.0, so));
+        EXPECT_NO_THROW(res = ReadOrientationOverWindow(window, -1999811, 0.0, "NOPE_FRAME", 1.0, so));
         EXPECT_FALSE(res);
         std::cout << "MESSAGE #712 ReadOrientationProxy in an unknown frame: " << GetLastErrorProxy() << std::endl;
         ExpectFailureReported("is not a recognized id-code for a reference frame");
@@ -2429,7 +2480,7 @@ TEST(API, ReadOrientationProxyWithoutAClockReturnsSpicesMessage)
     window.end = 2.0;
     IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
     bool res = true;
-    EXPECT_NO_THROW(res = ReadOrientationProxy(window, -1999812, 0.0, "J2000", 1.0, so));
+    EXPECT_NO_THROW(res = ReadOrientationOverWindow(window, -1999812, 0.0, "J2000", 1.0, so));
     EXPECT_FALSE(res);
     std::cout << "MESSAGE #712 ReadOrientationProxy without a clock: " << GetLastErrorProxy() << std::endl;
     ExpectFailureReported("SCLK_DATA_TYPE_");
@@ -2502,7 +2553,7 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
         window.start = 0.0;
         window.end = 60.0;
         IO::Astrodynamics::API::DTO::StateVectorDTO sv[2];
-        return ReadEphemerisProxy(window, 399, 301, "J2000", "NONE", 60.0, sv);
+        return ReadEphemerisOverWindow(window, 399, 301, "J2000", "NONE", 60.0, sv);
     });
     ExpectClearedBy("GetFrameNameProxy", []
     {
@@ -2569,7 +2620,7 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
             window.start = 0.0;
             window.end = 2.0;
             IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
-            return ReadOrientationProxy(window, -1999714, 0.0, "J2000", 1.0, so);
+            return ReadOrientationOverWindow(window, -1999714, 0.0, "J2000", 1.0, so);
         });
         EXPECT_TRUE(UnloadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
     }
@@ -2827,7 +2878,7 @@ TEST(API, ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing)
         window.end = 1000.0;
         IO::Astrodynamics::API::DTO::StateOrientationDTO so[11];
         bool res{false};
-        EXPECT_NO_THROW(res = ReadOrientationProxy(window, spacecraftId, 1.0, "J2000", 100.0, so));
+        EXPECT_NO_THROW(res = ReadOrientationOverWindow(window, spacecraftId, 1.0, "J2000", 100.0, so));
         EXPECT_TRUE(res) << GetLastErrorProxy();
         EXPECT_STREQ("", GetLastErrorProxy());
         double worstSpice{}, worstClosedForm{};

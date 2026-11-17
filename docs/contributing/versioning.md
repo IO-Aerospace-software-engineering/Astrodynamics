@@ -3259,6 +3259,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   windows are unchanged, bit for bit. The managed searches had no cap. `FindWindowsInFieldOfViewConstraint` takes the
   same path; no kernel of the tests gives it more than 1000 windows.
 
+- **The window reads of `SpiceAPI` drifted, dropped their last epoch, and cost 1.4 ms for one epoch** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
+  `ReadOrientationProxy` and `ReadEphemerisProxy` stepped their epoch by epoch += step in double TDB seconds, so that
+  sample i drifted from start + i·step and the last epoch of the window, pushed past its end, was dropped; and
+  `SpiceAPI.ReadOrientation` passed a buffer of 10000 records, each with a 32-character frame name, whatever the window.
+  Measured on a85098d: `ReadEphemeris` of the Moon from the Earth over 600 s at 0.1 s from 2026-04-01 TDB gave 6000
+  states for 6001, the last at 00:09:59.9001430 for 00:10:00, over 10798.8 s at 1.2 s 8999 for 9000 (the last 4.29e-4 s
+  off), over 1200.05 s at 0.1 s 12000 for 12001; `ReadOrientation` of PHSRM's CK gave 6000 records for 6001, its rates
+  at 1.2 s off those of the read of each epoch alone, and threw for 12001 epochs ("The number of State orientation must
+  be lower than 10000"); a read of one epoch allocated 720 408 bytes and took 1.83 ms; a step of 0 in `ReadEphemeris` ran
+  until the process was out of memory (1 min 40 s) and a negative one read 10000 epochs backwards. The proxies now read
+  at the epochs the caller gives (a native change for a technical reason, the P/Invoke declarations in step), and
+  `SpiceAPI` gives start + i·step in TDB, i from 0 while within the window, in exact tick arithmetic, in calls of 10000
+  epochs at most into buffers of their size, each state labelled with its epoch: each state and record is the read of its
+  epoch alone, bit for bit, the end of the window read when it falls on the grid (`SpiceApiTest.ReadEphemeris_WindowRead_IsTheReadAtEachStartPlusIStep`
+  and `ReadOrientation_WindowRead_IsTheReadAtEachStartPlusIStep`, the three windows above, red on a85098d; against
+  `spkezr_c` bit for bit, `ReadEphemeris_WindowRead_EqualsSpkezrAtEachStartPlusIStep`, Validation; the C++
+  `API.ReadEphemerisProxyReadsAtTheGivenEpochs`). A read of one epoch allocates 488 bytes and takes 1.28e-2 ms (Linux
+  x64; `ReadOrientation_OneEpoch_AllocatesForOneRecord`, red on a85098d), so the CLI's orientation reads, one epoch at a
+  time, no longer cost 1.4 ms each. A step of zero or less throws `ArgumentOutOfRangeException` (Changed below).
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -4532,6 +4552,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   splits it under 10000. The native proxies take two more arguments, the capacity of the buffer and the count written:
   the native library and the .NET library of 11.0.0 go together.
 
+- **Breaking: the window reads of `SpiceAPI` are on the grid start + i·step** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563), Fixed above).
+  `SpiceAPI.ReadEphemeris(Window, ...)` and `ReadOrientation` read at start + i·step in TDB, i from 0 while within the
+  window, the end included when it falls on the grid: one more state or record where the drift of the former stepping
+  dropped the last epoch (6001 for 6000 over 600 s at 0.1 s), and the epochs and labels of `ReadEphemeris` exactly on
+  the grid where they drifted (by up to 4.29e-4 s after 9000 steps). `ReadOrientation` reads any number of epochs, where
+  more than 10000 threw `InvalidOperationException`, and a step of zero or less throws `ArgumentOutOfRangeException`
+  (`stepSize`) in both, where `ReadEphemeris` ran out of memory for 0 and read 10000 epochs backwards for a negative step.
+  Migration: a caller that dropped or matched the drifting epochs reads the grid itself; one that relied on the last
+  epoch being absent drops it. The native read proxies take the epochs: the native library and the .NET library of
+  11.0.0 go together.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4798,14 +4829,11 @@ not listed.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.
-- **Memory and cost of the reads**
-  ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
-  [#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
+- **Memory of the reads**
+  ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541)).
   `Frame.GetStateOrientationToICRF` (and `CirsFrame`, `GcrfFrame`, `TirsFrame`, `SiteFrame`) keeps every orientation it
   reads for the life of the frame, without bound (16.5 MB after 100 000 reads of ITRF93), and the static frames live for
-  the whole process. `SpiceAPI.ReadOrientation` costs about 1.4 ms a call whatever the window, and the window reads of
-  `ReadOrientation` and `ReadEphemeris` step by epoch += step, so their samples drift (4.3e-4 s observed) and the last
-  epoch of the window can be dropped.
+  the whole process.
 - **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389),
   [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544),
   [#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576)). `ThirdBodyPerturbation`

@@ -285,21 +285,26 @@ bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics
     return ReportNativeErrors(std::move(writing));
 }
 
-bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
-                          const char *frame,
-                          double stepSize, IO::Astrodynamics::API::DTO::StateOrientationDTO *so)
+// The records at the caller's epochs, TDB seconds past J2000, one per epoch (#563: before, the proxy stepped its epoch by
+// epoch += stepSize over a window, so that sample i drifted from start + i·step and the last epoch could be dropped, into a
+// buffer of 10000 records whatever the window; SpiceAPI now gives the epochs start + i·step, exact, and a buffer of their
+// number)
+bool ReadOrientationProxy(const double *epochs, int count, int spacecraftId, double tolerance, const char *frame,
+                          IO::Astrodynamics::API::DTO::StateOrientationDTO *so)
 {
     try
     {
         ActivateErrorManagement();
         ClearLastError();
-        if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+        if (count < 0)
         {
-            std::strncpy(lastError,
-                    "Step size to small or search window to large. The number of State orientation must be lower than 10000",
-                    sizeof(lastError) - 1);
+            std::strncpy(lastError, "The number of epochs must not be negative", sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
+        }
+        if (count == 0)
+        {
+            return true;
         }
         //Build platform id
         SpiceInt id = spacecraftId * 1000;
@@ -308,8 +313,8 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
         // ckgpav_c requires tolerance in ticks, not seconds.
         // Computing once at window start is valid for linear (type 1) SCLK.
         SpiceDouble sclk0{}, sclkPlusTol{};
-        sce2c_c(spacecraftId, searchWindow.start, &sclk0);
-        sce2c_c(spacecraftId, searchWindow.start + tolerance, &sclkPlusTol);
+        sce2c_c(spacecraftId, epochs[0], &sclk0);
+        sce2c_c(spacecraftId, epochs[0] + tolerance, &sclkPlusTol);
         // SPICE's error of a missing clock (#712: before, reset by the fallback below and lost)
         if (failed_c())
         {
@@ -317,10 +322,9 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
         }
         SpiceDouble toleranceInTicks = std::abs(sclkPlusTol - sclk0);
 
-        double epoch = searchWindow.start;
-        int idx{0};
-        while (epoch <= searchWindow.end && idx < 10000)
+        for (int idx = 0; idx < count; ++idx)
         {
+            const double epoch = epochs[idx];
             //Get encoded clock
             SpiceDouble sclk = IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(spacecraftId,
                                                                                                         IO::Astrodynamics::Time::TDB(
@@ -383,9 +387,6 @@ bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
             so[idx].angularVelocity.x = av[0];
             so[idx].angularVelocity.y = av[1];
             so[idx].angularVelocity.z = av[2];
-
-            epoch += stepSize;
-            idx++;
         }
         if (failed_c())
         {
@@ -514,29 +515,25 @@ const char *UTCToStringProxy(double secondsFromJ2000)
 static IO::Astrodynamics::API::DTO::StateVectorDTO ReadStateAt(double epoch, int observerId, int targetId, const char *frame,
                                                               const char *aberration);
 
-bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                        const char *frame, const char *aberration, double stepSize,
+// The states at the caller's epochs, TDB seconds past J2000, one per epoch (#563: before, the proxy stepped its epoch by
+// epoch += stepSize over a window, so that sample i drifted from start + i·step and the last epoch could be dropped; SpiceAPI
+// now gives the epochs start + i·step, exact, each read as ReadEphemerisAtGivenEpochProxy reads it)
+bool ReadEphemerisProxy(const double *epochs, int count, int observerId, int targetId, const char *frame, const char *aberration,
                         IO::Astrodynamics::API::DTO::StateVectorDTO *stateVectors)
 {
     try
     {
         ActivateErrorManagement();
         ClearLastError();
-        if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+        if (count < 0)
         {
-            std::strncpy(lastError,
-                    "Step size to small or search window to large. The number of State vector must be lower than 10000",
-                    sizeof(lastError) - 1);
+            std::strncpy(lastError, "The number of epochs must not be negative", sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
-        int idx = 0;
-        double epoch = searchWindow.start;
-        while (epoch <= searchWindow.end && idx < 10000)
+        for (int idx = 0; idx < count; ++idx)
         {
-            stateVectors[idx] = ReadStateAt(epoch, observerId, targetId, frame, aberration);
-            epoch += stepSize;
-            idx++;
+            stateVectors[idx] = ReadStateAt(epochs[idx], observerId, targetId, frame, aberration);
         }
         if (failed_c())
         {
