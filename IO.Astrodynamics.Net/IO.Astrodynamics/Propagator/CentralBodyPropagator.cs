@@ -63,8 +63,10 @@ public class CentralBodyPropagator : PropagatorBase
         : this(window, spacecraft, integrator, deltaT,
             PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
-        InjectEphemerisCache(Window, plan.Forces, plan.Bodies, _centralBody, InitialState.Frame);
-        _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
+        // The caches cover the span the propagation integrates, up to half an output step past the window (#626)
+        var cacheWindow = Span.CacheWindow(Window);
+        InjectEphemerisCache(cacheWindow, plan.Forces, plan.Bodies, _centralBody, InitialState.Frame);
+        _orientationCache = CreateFrameOrientationCache(cacheWindow, _centralBody);
         foreach (var force in plan.Forces)
         {
             integrator.AddForce(force);
@@ -281,8 +283,8 @@ public class CentralBodyPropagator : PropagatorBase
             deltaT, PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
         // The Velocity-Verlet integrator is initialized by its constructor with the initial state, and the step checked
-        // by CreateDefaultIntegrator (PlanForces)
-        _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
+        // by CreateDefaultIntegrator (PlanForces); the cache covers the span the propagation integrates (#626)
+        _orientationCache = CreateFrameOrientationCache(Span.CacheWindow(Window), _centralBody);
     }
 
     /// <summary>
@@ -316,7 +318,9 @@ public class CentralBodyPropagator : PropagatorBase
         var initialState = StartState(InertialInitialOrbit(spacecraft.InitialOrbitalParameters, tdbStartDate), tdbStartDate)
             .RelativeTo(centralBody, Aberration.None).ToStateVector();
         var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
-        InjectEphemerisCache(tdbWindow, plan.Forces, plan.Bodies, centralBody, initialState.Frame);
+        // The span of the propagator these inputs build, before it exists (#626)
+        var span = SpanOf(PropagationTimeArgument.For(spacecraft.InitialOrbitalParameters.Observer), window, deltaT);
+        InjectEphemerisCache(span.CacheWindow(tdbWindow), plan.Forces, plan.Bodies, centralBody, initialState.Frame);
         return new VVIntegrator(plan.Forces, deltaT, initialState);
     }
 
@@ -414,8 +418,9 @@ public class CentralBodyPropagator : PropagatorBase
         }
     }
 
-    // The orientation cache of the central body frame over the window, kept by the propagator: it is active only on the
-    // thread that propagates (PropagatorBase.Propagate) or evaluates the solution, never set on the shared Frame
+    // The orientation cache of the central body frame over the span of the propagation (#626), kept by the propagator: it
+    // is active only on the thread that propagates (PropagatorBase.Propagate) or evaluates the solution, never set on the
+    // shared Frame
     private static PropagationFrameOrientationCache CreateFrameOrientationCache(Window tdbWindow,
         CelestialItem centralBody)
     {

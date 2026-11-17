@@ -1643,7 +1643,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
 - **Albedo radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeAlbedo()`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
 - **Thermal radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeThermalRadiation()`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
-- **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration.
+- **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration; with the orientation cache of the central body (exact SLERP, #561) it covers the span the propagation integrates, up to half an output step past the window when the step does not divide it, and a read outside its grid reads the data provider (#626).
 
 **Geopotential usage:**
 

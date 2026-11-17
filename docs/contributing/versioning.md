@@ -110,6 +110,20 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **A propagation past its window read a frozen central body and extrapolated third bodies** ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626), Changed below).
+  A propagation whose output step does not divide its window runs to its last output, round(L/ΔT)·ΔT, up to ΔT/2 past
+  the window, but `CentralBodyPropagator` built its orientation cache and its ephemeris cache over the window: past
+  window end + 120 s the orientation was held at the last grid point (the Earth stopped turning: 4.4e-3 rad 60 s past
+  the grid, 4.4e-2 rad 600 s past), past window end + 240 s the 8-point polynomial of the bodies was extrapolated (the
+  Moon 25 m off 1 680 s past). With EGM2008 10×10, the Moon and the Sun, a LEO propagated over 3 900 s at 600 s outputs
+  ended 7.0 mm and 1.7e-4 m/s from the same propagation over 4 200 s, over 88 200 s at 3 600 s outputs 4.76 m and
+  1.2e-2 m/s; the wrong states were stored and read back. The caches now cover the span the propagation integrates
+  (internal `PropagatorBase.PropagationSpan`, the step 1 of the propagation shared with the three cache sites, the
+  default Velocity-Verlet path included, which needs it before the propagator exists), and a read outside their grid
+  reads the data provider at its epoch instead of holding or extrapolating. Both propagations now take the same accepted
+  steps bit for bit, RK7(8) and the default Velocity-Verlet (`PropagationPastTheWindowTests`, red on a85098d), and the
+  reads outside the grid are `sxform`'s and `spkezr`'s own values. A propagation whose step divides its window builds
+  the same grids as before and is unchanged bit for bit.
 - **The orientation cache of a propagation interpolated by a normalised Lerp** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Changed below).
   `PropagationFrameOrientationCache`, which gives the geopotential and drag the orientation of the central body during a
   propagation and the RK7(8) evaluations after it, interpolated its 60 s points with `Quaternion.SLERP`, whose
@@ -3245,7 +3259,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
-- **Breaking: every propagation that rotates its central body moves by the orientation it reads** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Fixed above).
+- **A propagation whose output step does not divide its window moves** ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626), Fixed above).
+  Its caches cover the span it integrates, up to half an output step past the window: with a geopotential, drag or
+  third bodies, its states past window end + 120 s change (7.0 mm after 3 900 s at 600 s outputs, 4.76 m after 88 200 s
+  at 3 600 s outputs, 2.4 km after 129 600 s at 86 400 s outputs in #626's measurement), and so the stored states read
+  near the end of the window. `PropagationFrameOrientationCache.GetOrientation` and `PropagationEphemerisCache.GetPosition`
+  and `GetState`, public, read the frame or the body at their epoch outside their grid, where they held its first or last
+  point or extrapolated. A propagation whose step divides its window, as with the common 60 s, does not move. No code
+  change is needed.
+ its central body moves by the orientation it reads** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Fixed above).
   With the exact SLERP the orientation of the central body read by the geopotential and by drag moves by up to 3.4e-10
   rad (2.3 mm at a LEO radius): the bit-for-bit goldens of `PropagationGoldenTests` are recaptured, the GEO case moved by
   2.1e-6 m, the maneuver case by 1.1e-6 m (its maneuver epoch unchanged), the SRP case by 1.66 mm with 100 steps instead
@@ -4648,15 +4670,12 @@ not listed.
   `SpiceDataProvider` for an identifier SPICE does not name
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680); `KeyNotFoundException` before).
 - **Reads past the stored states of a propagated spacecraft**
-  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527),
-  [#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)).
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)).
   `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and the managed distance and coordinate searches extrapolate
   the 8-point polynomial past the stored states without an error (567 km off 6 min before the first state, 8 282 km 6
-  min after the last). A propagation whose output step does not divide its window runs up to half a step past its end,
-  where its orientation cache, which ends 120 s after the window, holds the Earth's orientation at its last grid point,
-  and its ephemeris cache, which ends 240 s after it, extrapolates the third bodies; a geopotential or drag read there
-  past the coverage throws. Keep reads
-  inside the propagated window, and choose an output step that divides it, or one of 240 s or less.
+  min after the last). A propagation whose output step does not divide its window runs up to half a step past its end
+  (its caches cover that span since #626), so a geopotential or drag read there past the coverage of the orientation
+  data throws. Keep reads inside the propagated window.
 - **Impulses at the edges of the stored states**
   ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572),
   [#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575),

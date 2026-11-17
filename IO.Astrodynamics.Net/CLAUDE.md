@@ -560,6 +560,7 @@ PropagatorBase (abstract)
 **Key Classes**
 - `PropagatorBase`: Abstract base with segment-based propagation loop, event detection, and dense output
 - `CentralBodyPropagator`: Concrete implementation with auto force-building and ephemeris cache injection
+- Force caches: `PropagationFrameOrientationCache` (the central body's orientation, 60 s grid, exact SLERP, #561) and `PropagationEphemerisCache` (the bodies, 8-point Lagrange) cover the span the propagation integrates, to its last output, up to ΔT/2 past the window (#626); a read outside their grid reads the data provider at its epoch
 - `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet. When the covariance propagation is on, Φ, Ψ and P at any epoch, by the same shortened step with the variational equations (the getters serialize on a lock of the solution and evaluate the forces, like `InterpolateAt`)
 - `PropagationSegment`: List of `AcceptedStep` records with Hermite interpolation
 - `AcceptedStep`: Start/end position, velocity, and acceleration for cubic Hermite dense output

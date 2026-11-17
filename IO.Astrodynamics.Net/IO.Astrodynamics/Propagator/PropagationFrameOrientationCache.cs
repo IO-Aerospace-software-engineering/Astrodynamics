@@ -32,6 +32,13 @@ namespace IO.Astrodynamics.Propagator;
 /// epoch from the data provider, never through this cache: it throws, with SPICE's message, only when SPICE has no
 /// orientation at that epoch. A grid SPICE gives entirely reads nothing and allocates nothing.
 /// </para>
+/// <para>
+/// A read before the first grid point or after the last reads the frame's orientation at its epoch the same way. Before
+/// 11.0.0 it was held at the nearest end of the grid: a propagation whose output step does not divide its window runs up
+/// to half a step past it, and the propagator built its cache over the window, so past window end + 120 s the central
+/// body stopped turning (4.4e-3 rad 60 s past the grid, 4.4e-2 rad 600 s past; #626). The propagator now builds it over the
+/// span it integrates, so that no propagation reads past the grid.
+/// </para>
 /// </remarks>
 public sealed class PropagationFrameOrientationCache
 {
@@ -188,11 +195,20 @@ public sealed class PropagationFrameOrientationCache
 
     /// <summary>
     /// The grid points around <paramref name="epoch"/> and its position between them, in [0, 1]; false when the grid
-    /// cannot give it (an unavailable point, or past the boundary point read at the window end).
+    /// cannot give it (outside the grid, an unavailable point, or past the boundary point read at the window end).
     /// </summary>
     private bool Locate(in Time epoch, out OrientationPoint p0, out OrientationPoint p1, out double ratio)
     {
         double t = epoch.TimeSpanFromJ2000().TotalSeconds;
+
+        // Outside the grid the frame is read at the epoch, never held at its first or last point (#626)
+        if (t < _points[0].EpochSeconds || t > _points[_gridSize - 1].EpochSeconds)
+        {
+            p0 = default;
+            p1 = default;
+            ratio = 0.0;
+            return false;
+        }
 
         int idx = (int)((t - _startEpochSeconds) / _gridStepSeconds);
         idx = System.Math.Clamp(idx, 0, _gridSize - 2);
