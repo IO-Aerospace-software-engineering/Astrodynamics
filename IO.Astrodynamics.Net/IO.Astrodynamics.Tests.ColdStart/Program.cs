@@ -114,6 +114,12 @@ internal static class Program
             return CheckTwoBodyAsFirstNativeCall(args[1] == "two-body-first-propagate");
         }
 
+        // SPICE's errors reach the caller through the exceptions only: nothing on the standard output (#727)
+        if (args.Length == 2 && args[1] == "spice-errors-silent")
+        {
+            return CheckSpiceErrorsSilent(args[0]);
+        }
+
         // Before any kernel is loaded: a TLE read before its kernels throws SPICE's error, and works once they are loaded
         if (args.Length == 2 && args[1] == "tle-before-kernels")
         {
@@ -337,6 +343,29 @@ internal static class Program
 
     // A body from custom parameters, which reads nothing from SPICE
     private sealed class CustomEarth() : CelestialBody(399, "IOA_714_EARTH", 5.972e24);
+
+    /// <summary>
+    /// The mode <c>spice-errors-silent</c> (#727): with the kernels loaded, three calls that SPICE fails, each throwing
+    /// <see cref="InvalidOperationException"/> with SPICE's message (checked here): a read past de440s, a CSPICE window search
+    /// past it, and an orientation read without a CK. The test checks that the standard output is empty: before, the native
+    /// layer left SPICE's error output on (<c>errprt_c</c> not set), so that SPICE printed the banner of each error there,
+    /// besides the message the exception carries.
+    /// </summary>
+    private static int CheckSpiceErrorsSilent(string kernels)
+    {
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+        var past = new Time(2160, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        int failures = 0;
+        failures += Expect<InvalidOperationException>("ReadEphemeris", () => SpiceAPI.Instance.ReadEphemeris(past, 399, 301, Frame.ICRF, Aberration.None),
+            e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
+        failures += Expect<InvalidOperationException>("FindWindowsOnDistanceConstraint", () => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+                new Window(past, past.AddDays(9.0)), 399, 301, RelationnalOperator.Greater, 4.0e8, Aberration.None, TimeSpan.FromDays(1.0)),
+            e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
+        failures += Expect<InvalidOperationException>("ReadOrientation", () => SpiceAPI.Instance.ReadOrientation(
+                new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(10.0)), -727, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)),
+            e => e.Message.Length > 0);
+        return failures == 0 ? 0 : 1;
+    }
 
     private static int Expect<TException>(string label, Func<object> create, Func<TException, bool> matches)
         where TException : Exception

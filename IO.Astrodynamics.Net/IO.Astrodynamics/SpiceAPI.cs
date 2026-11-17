@@ -91,7 +91,8 @@ public class SpiceAPI
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsOnDistanceConstraintProxy(Window searchWindow, int observerId,
-        int targetId, string constraint, double value, string aberration, double stepSize, [In] [Out] Window[] windows);
+        int targetId, string constraint, double value, string aberration, double stepSize, [Out] Window[] windows, int capacity,
+        out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -99,37 +100,37 @@ public class SpiceAPI
         int targetId,
         string targetFrame, string targetShape, int frontBodyId, string frontFrame, string frontShape,
         string occultationType,
-        string aberration, double stepSize, [In] [Out] Window[] windows);
+        string aberration, double stepSize, [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsOnCoordinateConstraintProxy(Window searchWindow, int observerId, int targetId,
         string frame, string coordinateSystem, string coordinate,
         string relationalOperator, double value, double adjustValue, string aberration, double stepSize,
-        [In] [Out] Window[] windows);
+        [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsOnIlluminationConstraintProxy(Window searchWindow, int observerId,
         string illuminationSource, int targetBody, string fixedFrame,
         Planetodetic geodetic, string illuminationType, string relationalOperator, double value, double adjustValue,
-        string aberration, double stepSize, string method, [In] [Out] Window[] windows);
+        string aberration, double stepSize, string method, [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool FindWindowsInFieldOfViewConstraintProxy(Window searchWindow, int observerId,
         int instrumentId, int targetId, string targetFrame, string targetShape, string aberration, double stepSize,
-        [In] [Out] Window[] windows);
+        [Out] Window[] windows, int capacity, out int count);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
-    private static extern bool ReadOrientationProxy(Window searchWindow, int spacecraftId, double tolerance,
-        string frame, double stepSize, [In] [Out] StateOrientation[] stateOrientations);
+    private static extern bool ReadOrientationProxy([In] double[] epochs, int count, int spacecraftId, double tolerance,
+        string frame, [Out] StateOrientation[] stateOrientations);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
-    private static extern bool ReadEphemerisProxy(Window searchWindow, int observerId, int targetId,
-        string frame, string aberration, double stepSize, [In] [Out] StateVector[] stateVectors);
+    private static extern bool ReadEphemerisProxy([In] double[] epochs, int count, int observerId, int targetId,
+        string frame, string aberration, [Out] StateVector[] stateVectors);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern IntPtr GetLastErrorProxy();
@@ -1131,16 +1132,57 @@ public class SpiceAPI
     /// within the search window: the rounding is monotone, and where an ulp is coarser than a tick the double after the seconds of a
     /// tick is more than half a tick past that tick (the double before, more than half a tick before it).
     /// </summary>
-    private static IEnumerable<TimeSystem.Window> WithinSearchWindow(Window[] windows, TimeSystem.Window searchWindow)
+    private static IEnumerable<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
     {
         var start = searchWindow.StartDate.ToTDB();
         var end = searchWindow.EndDate.ToTDB();
         double startSeconds = start.TimeSpanFromJ2000().TotalSeconds;
         double endSeconds = end.TimeSpanFromJ2000().TotalSeconds;
-        return windows.Where(x => !double.IsNaN(x.Start)).Select(x => new TimeSystem.Window(Label(x.Start), Label(x.End))).ToArray();
+        var result = new TimeSystem.Window[count];
+        for (int i = 0; i < count; i++)
+        {
+            result[i] = new TimeSystem.Window(Label(windows[i].Start), Label(windows[i].End));
+        }
+
+        return result;
 
         Time Label(double seconds) =>
             seconds <= startSeconds ? start : seconds >= endSeconds ? end : Time.Create(seconds, TimeFrame.TDBFrame);
+    }
+
+    /// <summary>
+    /// The number of windows a CSPICE search returns at most: the result cell of the native layer, which holds 10000
+    /// windows for each search (#653). A search of more throws <see cref="InvalidOperationException"/> with the long message
+    /// of CSPICE's <c>SPICE(WINDOWEXCESS)</c>, "Window has size, 20000, cardinality 20000. Cannot insert an additional
+    /// interval into the window." (the size counts the endpoints; the short code is not in the message).
+    /// </summary>
+    internal const int WindowSearchCapacity = 10000;
+
+    private delegate bool NativeWindowSearch(Window[] windows, int capacity, out int count);
+
+    /// <summary>
+    /// A native window search into a buffer of <see cref="WindowSearchCapacity"/> windows, rented from the shared pool and
+    /// returned: every window it found, labelled by <see cref="WithinSearchWindow"/>. Called under the lock. Before 11.0.0
+    /// the buffer held 1000 windows and the proxies dropped the rest without an error, so that a search that found more
+    /// returned its first 1000 (#653).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The native search failed: SPICE's message.</exception>
+    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search)
+    {
+        var windows = System.Buffers.ArrayPool<Window>.Shared.Rent(WindowSearchCapacity);
+        try
+        {
+            if (!search(windows, WindowSearchCapacity, out int count))
+            {
+                ThrowLastProxyError();
+            }
+
+            return WithinSearchWindow(windows, count, searchWindow);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<Window>.Shared.Return(windows);
+        }
     }
 
     /// <summary>
@@ -1222,7 +1264,7 @@ public class SpiceAPI
     /// crossing to the next, as the managed search gives it.
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, with
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), with
     /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1238,19 +1280,9 @@ public class SpiceAPI
     {
         lock (lockObject)
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
-            {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
-
-            if (!FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
-                aberration.GetDescription(), stepSize.TotalSeconds, windows))
-            {
-                ThrowLastProxyError();
-            }
-
-            return WithinSearchWindow(windows, searchWindow);
+            return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
+                    aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
         }
     }
 
@@ -1268,7 +1300,7 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
     /// the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1301,7 +1333,7 @@ public class SpiceAPI
     /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
     /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672).</exception>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
     /// the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1320,19 +1352,10 @@ public class SpiceAPI
             string targetFrameName = targetShape == ShapeType.Ellipsoid
                 ? targetFrame?.Name ?? ReadCelestialBodyInfo(targetId, nameof(targetId)).FrameName
                 : string.Empty;
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
-            {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
-
-            if (!FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
-                frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows))
-            {
-                ThrowLastProxyError();
-            }
-
-            return WithinSearchWindow(windows, searchWindow);
+            return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
+                    frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(),
+                    stepSize.TotalSeconds, windows, capacity, out count));
         }
     }
 
@@ -1370,7 +1393,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name.</exception>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// frame name it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
     /// error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1390,21 +1413,11 @@ public class SpiceAPI
         {
             lock (lockObject)
             {
-                var windows = new Window[1000];
-                for (var i = 0; i < 1000; i++)
-                {
-                    windows[i] = new Window(double.NaN, double.NaN);
-                }
-
-                if (!FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
-                    SpiceFrameName(frame), coordinateSystem.GetDescription(),
-                    coordinate.GetDescription(), relation, value, adjustValue,
-                    aberration.GetDescription(), stepSize.TotalSeconds, windows))
-                {
-                    ThrowLastProxyError();
-                }
-
-                return WithinSearchWindow(windows, searchWindow);
+                string frameName = SpiceFrameName(frame);
+                return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                    FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId, frameName,
+                        coordinateSystem.GetDescription(), coordinate.GetDescription(), relation, value, adjustValue,
+                        aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
             }
         });
     }
@@ -1440,7 +1453,7 @@ public class SpiceAPI
     /// Before 11.0.0 the altitude was read in km (#488).
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
     /// fixed frame it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
     /// error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1454,23 +1467,13 @@ public class SpiceAPI
         {
             lock (lockObject)
             {
-                var windows = new Window[1000];
-                for (var i = 0; i < 1000; i++)
-                {
-                    windows[i] = new Window(double.NaN, double.NaN);
-                }
-
-                if (!FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
-                    illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
-                    // The native layer hands the altitude to georec_c beside a radius in km (#488)
-                    (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
-                    illuminationType.GetDescription(), relation, value, adjustValue,
-                    aberration.GetDescription(), stepSize.TotalSeconds, method, windows))
-                {
-                    ThrowLastProxyError();
-                }
-
-                return WithinSearchWindow(windows, searchWindow);
+                return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                    FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
+                        illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
+                        // The native layer hands the altitude to georec_c beside a radius in km (#488)
+                        (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
+                        illuminationType.GetDescription(), relation, value, adjustValue,
+                        aberration.GetDescription(), stepSize.TotalSeconds, method, windows, capacity, out count));
             }
         });
     }
@@ -1489,7 +1492,7 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, an
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), an
     /// instrument whose field of view no loaded instrument kernel defines, with SPICE's message (fourth round of #668;
     /// before 11.0.0 the native layer dropped the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
@@ -1498,21 +1501,9 @@ public class SpiceAPI
         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
         lock (lockObject)
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
-            {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
-
-            var searchWindowDto = searchWindow.Convert();
-
-            if (!FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
-                aberration.GetDescription(), stepSize.TotalSeconds, windows))
-            {
-                ThrowLastProxyError();
-            }
-
-            return WithinSearchWindow(windows, searchWindow);
+            return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
+                FindWindowsInFieldOfViewConstraintProxy(searchWindow.Convert(), observerId, instrumentId, targetId, targetFrame.Name,
+                    targetShape.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
         }
     }
 
@@ -1524,8 +1515,12 @@ public class SpiceAPI
     /// <param name="targetId"></param>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
+    /// <param name="stepSize">The step of the epochs read, positive: start + i·step in the time frame of the window start (UTC
+    /// steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid; each state is the
+    /// read of its epoch alone, labelled with it in that frame (#563).</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563: before, a step of 0
+    /// ran until the process was out of memory and a negative step read 10000 epochs backwards).</exception>
     /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454), or the observer is a
     /// site whose SPK does not cover J2000 TDB (see the remarks).</exception>
     /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
@@ -1543,45 +1538,92 @@ public class SpiceAPI
         Aberration aberration, TimeSpan stepSize)
     {
         ArgumentNullException.ThrowIfNull(frame);
+        var grid = new WindowGrid(searchWindow, stepSize);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
         var observer = CreateObserver(observerId);
         lock (lockObject)
         {
-            const int messageSize = 10000;
             List<OrbitalParameters.OrbitalParameters> orbitalParameters = [];
-            int occurrences = (int)(searchWindow.Length / stepSize / messageSize);
-
-            for (int i = 0; i <= occurrences; i++)
+            // A managed frame is read in J2000, then rotated (#558)
+            var managed = ManagedReadFrame(frame);
+            string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
+            for (long first = 0; first < grid.Count; first += WindowReadChunk)
             {
-                var start = searchWindow.StartDate + i * messageSize * stepSize;
-                var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
-                var window = new TimeSystem.Window(start.ToTDB(), end.ToTDB());
-                var stateVectors = new StateVector[messageSize];
-                // A managed frame is read in J2000, then rotated (#558)
-                var managed = ManagedReadFrame(frame);
-                if (!ReadEphemerisProxy(window.Convert(), observerId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name,
-                    aberration.GetDescription(), stepSize.TotalSeconds,
-                    stateVectors))
+                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                var stateVectors = new StateVector[epochs.Length];
+                if (!ReadEphemerisProxy(epochs, epochs.Length, observerId, targetId, frameName, aberration.GetDescription(), stateVectors))
                     ThrowLastProxyError();
-                var read = stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).ToArray();
                 // Every state checked before any is converted: the rotation into a managed frame calls TransformFrameProxy,
                 // which clears the message of the failed epochs (#714, review of the branch: a site frame threw "Native proxy
                 // call failed" where J2000 threw SPICE's message)
-                foreach (var x in read)
+                foreach (var x in stateVectors)
                 {
                     ThrowOnFailedRead(x);
                 }
 
-                orbitalParameters.AddRange(read.Select(x =>
+                for (int i = 0; i < stateVectors.Length; i++)
                 {
-                    var epoch = Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame);
-                    return managed == null
+                    // Labelled with the epoch read, start + i·step in the frame of the window start (#563, #625)
+                    var epoch = grid.Epoch(first + i);
+                    var x = stateVectors[i];
+                    orbitalParameters.Add(managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
-                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame);
-                }));
+                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame));
+                }
             }
 
             return orbitalParameters;
+        }
+    }
+
+    // The epochs a native window read takes at most in one call: the size of the native buffers before #563
+    private const int WindowReadChunk = 10000;
+
+    /// <summary>
+    /// The epochs of a window read (#563): start + i·step in the time frame of the window start, i from 0 while within the
+    /// window, in exact tick arithmetic, the end of the window included when it falls on the grid; each epoch read at its TDB
+    /// seconds, as the read of that epoch alone takes them. Before 11.0.0 the native proxies stepped their epoch by
+    /// epoch += step in double TDB seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of
+    /// 0.1 s, 4.29e-4 s after 9000 of 1.2 s) and the last epoch of the window could be dropped; a grid taken in TDB for a
+    /// window of another frame still dropped it where TDB − TT made the window shorter in TDB (a UTC window of 600 s at
+    /// 0.1 s from the first of May to that of October 2026: 6000 states for 6001, review of #563), and its labels were off
+    /// start + i·step by up to 2 ticks.
+    /// </summary>
+    private readonly struct WindowGrid
+    {
+        private readonly Time _start;
+        private readonly long _stepTicks;
+
+        /// <summary>The number of epochs.</summary>
+        internal long Count { get; }
+
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive.</exception>
+        internal WindowGrid(TimeSystem.Window searchWindow, TimeSpan stepSize)
+        {
+            if (stepSize <= TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a window read must be positive.");
+            }
+
+            _start = searchWindow.StartDate;
+            _stepTicks = stepSize.Ticks;
+            Count = (searchWindow.EndDate.ConvertTo(_start.Frame) - _start).Ticks / _stepTicks + 1;
+        }
+
+        /// <summary>Epoch <paramref name="index"/>, in the time frame of the window start.</summary>
+        internal Time Epoch(long index) => _start + TimeSpan.FromTicks(_stepTicks * index);
+
+        /// <summary>The TDB seconds past J2000 of at most <paramref name="length"/> epochs from <paramref name="first"/>, as the
+        /// read of one epoch takes them.</summary>
+        internal double[] Seconds(long first, int length)
+        {
+            var seconds = new double[(int)System.Math.Min(length, Count - first)];
+            for (int i = 0; i < seconds.Length; i++)
+            {
+                seconds[i] = Epoch(first + i).ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            }
+
+            return seconds;
         }
     }
 
@@ -1721,7 +1763,9 @@ public class SpiceAPI
     /// <param name="naifId">NAIF ID of the spacecraft (the CK bus frame ID is derived as naifId * 1000)</param>
     /// <param name="tolerance">Search tolerance — data within this duration of each step epoch will be returned</param>
     /// <param name="referenceFrame">Reference frame for the returned orientations</param>
-    /// <param name="stepSize">Time step between successive query epochs</param>
+    /// <param name="stepSize">Time step between successive query epochs, positive: start + i·step in the time frame of the window
+    /// start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid (#563);
+    /// each record is labelled with the epoch of the CK's record, TDB</param>
     /// <returns>
     ///     The records of the CK, as <c>ckgpav_c</c> returns them: the C-matrix, the rotation from
     ///     <paramref name="referenceFrame"/> to the spacecraft frame, labelled with <paramref name="referenceFrame"/>, its
@@ -1737,23 +1781,36 @@ public class SpiceAPI
     ///     which <c>GetStateOrientationToICRF</c> of the frame of a kernel-backed spacecraft returns. On a CK written by
     ///     <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> before 11.0.0, which holds the inverse of the
     ///     attitude (#529), this method returns that inverse.
+    ///     Each record is the read of its epoch alone, in a buffer of the epochs read, whatever their number (#563: before
+    ///     11.0.0 the proxy stepped its epoch by epoch += step, so that the epochs drifted from start + i·step and the last
+    ///     one could be dropped, into a buffer of 10000 records, 1.4 ms for a read of one epoch, and a window of more than
+    ///     10000 steps threw).
     /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="referenceFrame"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563).</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no orientation at one of the epochs, with its message.</exception>
     public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
         int naifId, TimeSpan tolerance,
         Frame referenceFrame, TimeSpan stepSize)
     {
         if (referenceFrame == null) throw new ArgumentNullException(nameof(referenceFrame));
+        var grid = new WindowGrid(searchWindow, stepSize);
         lock (lockObject)
         {
-            var stateOrientations = new StateOrientation[10000];
-            if (!ReadOrientationProxy(searchWindow.Convert(), naifId, tolerance.TotalSeconds,
-                SpiceFrameName(referenceFrame), stepSize.TotalSeconds,
-                stateOrientations))
-                ThrowLastProxyError();
-            // ByValTStr marshaling returns "" (not null) for zero-padded unwritten slots;
-            // use IsNullOrEmpty to correctly exclude entries the proxy did not populate.
-            return stateOrientations.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x => new OrbitalParameters.StateOrientation(
-                x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
+            string frameName = SpiceFrameName(referenceFrame);
+            List<OrbitalParameters.StateOrientation> records = [];
+            for (long first = 0; first < grid.Count; first += WindowReadChunk)
+            {
+                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                // A buffer of the epochs read (#563: before, 10000 records whatever the window, 1.4 ms for one epoch)
+                var stateOrientations = new StateOrientation[epochs.Length];
+                if (!ReadOrientationProxy(epochs, epochs.Length, naifId, tolerance.TotalSeconds, frameName, stateOrientations))
+                    ThrowLastProxyError();
+                records.AddRange(stateOrientations.Select(x => new OrbitalParameters.StateOrientation(x.Rotation.Convert(),
+                    x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame)));
+            }
+
+            return records;
         }
     }
 

@@ -60,6 +60,16 @@ every window and every gap. Before 11.0.0 the library decided each transition fr
 windows, gaps and crossings between two samples
 ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)).
 
+A CSPICE search returns every window it finds, up to the 10000 its result cell holds; beyond, it throws
+`InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has size, 20000, cardinality
+20000. Cannot insert an additional interval into the window." (the size counts the endpoints; the short code is not in
+the message), never a partial list: split such a search window. The managed search
+has no such bound. Before 11.0.0 a CSPICE search returned its first 1000 windows and dropped the rest without an error
+(`NotEqual` then ending with one window across every dropped crossing), and an illumination search of more than 1000
+windows threw ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)): the Moon's X in
+`IAU_EARTH` crosses 0 2126 times in 1100 days, which `FindWindowsOnCoordinateConstraint` with `Equal` now returns, as
+`gfposc_c` does.
+
 Both searches take a distance in m. CSPICE searches the distance of a site from the kernels to a spacecraft from the
 kernels, and its illumination (`FindWindowsOnIlluminationConstraint`, `FindDayWindows`) whatever the source: its surface
 point is its `Planetodetic`, the coordinates of its position at J2000 TDB (DSS-13 has moved 0.467 m since, 1.4 ms of a

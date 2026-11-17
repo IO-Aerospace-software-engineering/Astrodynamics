@@ -399,7 +399,9 @@ release are listed under **Known limitations**.
   propagation up to the last instant of `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute).
   A propagation still reads past its window end when its output step does not divide the window:
   it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end, and a geopotential or drag read there past the coverage throws
-  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies keep #454.
+  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies kept #454
+  then; every path #454 lists reports SPICE's error since (#622, #714, #608, #668, #560, #706, #711), the GM read of the
+  native constructors tracked by #655, and SPICE prints nothing since #727.
 - **The `ILocalizable` conjunction overloads extrapolated past a propagated spacecraft's states** ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), its
   guard). `Analyze`, `AnalyzeAll` and `Screen` read a propagated protected or secondary spacecraft through its stored
   states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw
@@ -2905,7 +2907,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GeometryFinderTests` and the C++ `API` tests). A search SPICE runs
   is unchanged, bit for bit: the same native call, copy and labelling (the CSPICE goldens of `SpiceApiTest`,
   `KernelWindowSearchTests`, `OccultationSearchValidationTests` and `FieldOfViewSearchTests`). The 1000-window cap of
-  the copy stays ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+  the copy stayed in that round ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed below).
 - **`SpiceAPI.TransformFrame` threw for the frame of a site only the library holds** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round). The frame of
   a site built from coordinates, and of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel
   defines, is the library's: the reads in it are rotated (#682, third review of #690), and `ToFrame` and
@@ -3536,6 +3538,95 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Velocity-Verlet, which locates its events at a step end and is unchanged): every minimum listed within 7e-7 s and
   1.7e-9 m. Bit for bit without an event: the long-validation conjunction tests and the `conjunction` conformance cases,
   without impulses, do not move.
+
+- **A point front body on the CSPICE path of the occultation search threw** ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)).
+  The native search passed `"ELLIPSOID"` as the shape of every front body to `gfoclt_c`, whatever the shape given (the
+  shape it computed from it was unused), so a point front body, whose frame is blank, failed in SPICE ("The front
+  target shape is represented by an ellipsoid or by DSK data, but the associated body-fixed frame name is blank."):
+  `SpiceAPI.FindWindowsOnOccultationConstraint` and the CSPICE path of `FindWindowsOnOccultationConstraint` (a
+  spacecraft of the kernels with a point front body) threw `InvalidOperationException` since the fourth round of #668,
+  and returned no window before (measured on a85098d). `gfoclt_c` now receives the shape given (a one-token change of
+  the C++ layer, for a technical reason: the proxy could not run the search it was asked). The Moon's centre across the
+  Sun's disc from DSS-65 on 2005-10-03 against `gfoclt` with a POINT front body converged to 1e-9 s
+  (`tools/occultation_reference`): 1.0e-7 s, a tick, through `SpiceAPI` and the CSPICE path (`Annular`, which is `Any`
+  for a point front body) (`OccultationSearchTests.SpicePath_PointFrontBody_MatchesGfocltAny`, red on a85098d); the
+  proxy itself is `gfoclt_c` bit for bit, 6.3e-7 s from that reference on the other Earth orientation kernel of the C++
+  tests (`API.FindWindowsOnOccultationConstraintProxyOfAPointFrontBody`, red on a85098d).
+
+- **SPICE printed every error on the standard output** ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727)).
+  `ActivateErrorManagement`, which every proxy calls, set `erract_c` to RETURN but not `errprt_c`, so SPICE printed the
+  banner of each error it signalled on the standard output ("Toolkit version: N0067 ... SPICE(SPKINSUFFDATA) -- ... A
+  traceback follows"), the errors the proxies report through `GetLastErrorProxy()` and `SpiceAPI` throws included: a
+  read past a kernel's coverage, a search SPICE cannot run, an unknown frame (three banners from three failed calls,
+  measured on a85098d; 2888 in one conjunction analysis past its SPKs, #454), which corrupted the output of a host
+  application, a CLI's or a service's. Its error output is now NONE (`errprt_c`; a native change for a technical
+  reason), the messages reaching the caller through the exceptions only (decided by S. Guillet, 2026-11-17): nothing is
+  printed, in a child process whose three failed calls throw SPICE's messages
+  (`ColdStartTests.SpiceErrors_ReachTheCallerOnly_NothingOnTheStandardOutput`) and at the file descriptor of the C++
+  tests (`API.FailedProxiesPrintNothingOnTheStandardOutput`), both red on a85098d.
+
+- **A CSPICE window search returned at most 1000 windows** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+  Each native proxy of the window searches (`gfdist_c`, `gfposc_c`, `gfilum_c`, `gfoclt_c`, `gftfov_c`) copied the first
+  1000 windows of its result, whose cell holds 10000, and dropped the rest without an error; `SpiceAPI` could not tell a
+  full buffer from a search of exactly 1000 windows; `NotEqual`, built from the `=` crossings, ended with one window
+  across every dropped crossing; and the cell of `gfilum_c` held 1000 windows, so an illumination search of more threw
+  `SPICE(WINDOWEXCESS)`. Measured on a85098d: the Moon's X in `IAU_EARTH` from the Earth crosses 0 2126 times in 1100
+  days from J2000, of which `Equal` returned 1000, `NotEqual` 1001 for 2127, `Greater`, `LocalMax` and `AbsoluteMax`
+  (with an adjustment of 1e5 km) 1000 for 1064 and 1062; LRO's distance from the Moon crosses 1815.148 km 1904 times in
+  its 91-day SPK, of which `Equal` returned 1000, and passes 1121 times behind the Moon, of which the occultation search
+  returned 1000; the night at (0°, 0°) of the Earth, 1100 windows, threw. The proxies now take the capacity of the
+  caller's buffer and return the number of windows written (a native change for a technical reason, the P/Invoke
+  declarations in step), `SpiceAPI` passes a buffer of the native cell's 10000 windows, rented from the shared pool, and
+  `gfilum_c`'s cell holds 10000 windows like the others: every window CSPICE finds is returned, and a search of more
+  than 10000 throws `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has
+  size, 20000, cardinality 20000. Cannot insert an additional interval into the window." (the size counts the endpoints;
+  the short code is not in the message), never a partial list; a buffer smaller
+  than the windows found makes a proxy return false with its message, nothing written. The absolute extremes need no
+  exception of their own: their windows are in the cell like the others'. Against CSPICE's searches with a cell of
+  20000 windows in the test process, every window equal to the tick (`CspiceWindowCapacityTests`, Validation: the ten
+  relations of the coordinate search, three of the distance, the illumination, the occultation and the field of view),
+  and on every platform against the same searches over four parts of the window, each under 1000 windows, joined at the
+  seams, within 4.0e-7 s (Linux x64; `CspiceWindowCapacityTests`, 16 rows, red on a85098d, and a 17th, the field of
+  view, added at the review); the search past the cell throws (`PastTheNativeCell_ThrowsSpicesError`: 11594 crossings in
+  6000 days); the C++ proxies write the 2126 crossings of `gfposc_c` bit for bit
+  (`API.FindWindowsProxiesWriteEveryWindowOfTheirCell`). `FindWindowsInFieldOfViewConstraint` takes the same path: an
+  instrument of the Earth written by the test, a rectangle of 40° by 15° along the prime meridian in `IAU_EARTH`, sees the
+  Moon 1062 times in 1100 days, every window returned, equal to `gftfov_c`'s with a cell of 20000 windows to the tick
+  (Validation) and to the four joined parts exactly (`FieldOfView_PastAThousandWindows_*`; not run on a85098d). The
+  searches under 1000 windows are unchanged, bit for bit. The managed searches had no cap.
+
+- **The window reads of `SpiceAPI` drifted, dropped their last epoch, and cost 1.4 ms for one epoch** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
+  `ReadOrientationProxy` and `ReadEphemerisProxy` stepped their epoch by epoch += step in double TDB seconds, so that
+  sample i drifted from start + i·step and the last epoch of the window, pushed past its end, was dropped; and
+  `SpiceAPI.ReadOrientation` passed a buffer of 10000 records, each with a 32-character frame name, whatever the window.
+  Measured on a85098d: `ReadEphemeris` of the Moon from the Earth over 600 s at 0.1 s from 2026-04-01 TDB gave 6000
+  states for 6001, the last at 00:09:59.9001430 for 00:10:00, over 10798.8 s at 1.2 s 8999 for 9000 (the last 4.29e-4 s
+  off), over 1200.05 s at 0.1 s 12000 for 12001; `ReadOrientation` of PHSRM's CK gave 6000 records for 6001, its rates
+  at 1.2 s off those of the read of each epoch alone, and threw for 12001 epochs ("The number of State orientation must
+  be lower than 10000"); a read of one epoch allocated 720 408 bytes and took 1.83 ms; a step of 0 in `ReadEphemeris` ran
+  until the process was out of memory (1 min 40 s) and a negative one read 10000 epochs backwards. The proxies now read
+  at the epochs the caller gives (a native change for a technical reason, the P/Invoke declarations in step), and
+  `SpiceAPI` gives start + i·step in the time frame of the window start, i from 0 while within the window, in exact tick
+  arithmetic, each epoch read at its TDB seconds, in calls of 10000 epochs at most into buffers of their size, each state
+  labelled with its epoch in that frame: each state and record is the read of its epoch alone, bit for bit, the end of
+  the window read when it falls on the grid (`SpiceApiTest.ReadEphemeris_WindowRead_IsTheReadAtEachStartPlusIStep`
+  and `ReadOrientation_WindowRead_IsTheReadAtEachStartPlusIStep`, the three windows above, red on a85098d; against
+  `spkezr_c` bit for bit, `ReadEphemeris_WindowRead_EqualsSpkezrAtEachStartPlusIStep`, Validation; the C++
+  `API.ReadEphemerisProxyReadsAtTheGivenEpochs`). A UTC window is stepped in UTC: TDB − TT makes a UTC window of 600 s
+  from 2 ticks shorter to 2 ticks longer in TDB, so a grid in TDB (a85098d's, and this fix's first form) read 6000 states
+  for 6001 from the first of May to that of October 2026 and labelled the others up to 2 ticks off start + i·step
+  (00:09:59.9999998Z for 00:10:00Z in January); the 12 windows from the first of each month of 2026 now give 6001 states
+  at start + i·step in UTC, the last at the end (`ReadEphemeris_UtcWindowRead_IsTheReadAtEachStartPlusIStepInUtc`, red
+  on the first form for 11 of 12), each `spkezr_c`'s at the TDB seconds of its UTC epoch bit for bit (Validation, July
+  and October; those seconds are the library's one-term TDB − TT, within 1.07e-6 s of `str2et_c`'s, as
+  `docs/reference/time-and-windows.md` states), and PHSRM's CK over UTC windows from the first of January, April, July
+  and October 2012 gives 6001 records, each the read of its epoch alone, its epoch that of start + i·step to the tick
+  (`ReadOrientation_UtcWindowRead_ReadsEachStartPlusIStepInUtc`, red on the first form for January and July). The
+  records against CSPICE (`ReadOrientation_WindowRead_EqualsCkgpavAtEachStartPlusIStep`, Validation: `sce2c_c`,
+  `ckgpav_c` and `sct2e_c` at each epoch): the epoch to the tick, start + i·step exactly, the angular velocity bit for
+  bit, the rotation within 1.6e-16 rad. A read of one epoch allocates 488 bytes and takes 1.28e-2 ms (Linux
+  x64; `ReadOrientation_OneEpoch_AllocatesForOneRecord`, red on a85098d), so the CLI's orientation reads, one epoch at a
+  time, no longer cost 1.4 ms each. A step of zero or less throws `ArgumentOutOfRangeException` (Changed below).
 
 **Changed**
 
@@ -5134,6 +5225,30 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   refused by the bound is not one that rounding explains: correct its source, or give it at its full precision (one
   rounded to 3 digits or fewer may be refused).
 
+- **Breaking: a CSPICE window search returns every window, up to 10000** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed above).
+  `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint`, `FindWindowsOnIlluminationConstraint`,
+  `FindWindowsOnOccultationConstraint` and `FindWindowsInFieldOfViewConstraint`, and the CSPICE paths of the searches of
+  `CelestialItem`, `Site` and `Instrument`, return every window CSPICE finds where they returned the first 1000, and an
+  illumination search of 1001 to 10000 windows returns them where it threw; beyond 10000 each throws
+  `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)` ("Window has size, 20000,
+  cardinality 20000. Cannot insert an additional interval into the window."; the short code is not in the message).
+  Migration: a caller that split its search window to stay under 1000 windows (the workaround of
+  the known limitation of the earlier previews) can search the whole window; one that needs more than 10000 windows
+  splits it under 10000. The native proxies take two more arguments, the capacity of the buffer and the count written:
+  the native library and the .NET library of 11.0.0 go together.
+
+- **Breaking: the window reads of `SpiceAPI` are on the grid start + i·step** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563), Fixed above).
+  `SpiceAPI.ReadEphemeris(Window, ...)` and `ReadOrientation` read at start + i·step in the time frame of the window
+  start (UTC steps for a UTC window, which the native layer stepped in TDB), i from 0 while within the window, the end
+  included when it falls on the grid: one more state or record where the drift of the former stepping dropped the last
+  epoch (6001 for 6000 over 600 s at 0.1 s), and the epochs and labels of `ReadEphemeris` exactly on the grid where they
+  drifted (by up to 4.29e-4 s after 9000 steps), labelled in the frame of the window start as before. `ReadOrientation` reads any number of epochs, where
+  more than 10000 threw `InvalidOperationException`, and a step of zero or less throws `ArgumentOutOfRangeException`
+  (`stepSize`) in both, where `ReadEphemeris` ran out of memory for 0 and read 10000 epochs backwards for a negative step.
+  Migration: a caller that dropped or matched the drifting epochs reads the grid itself; one that relied on the last
+  epoch being absent drops it. The native read proxies take the epochs: the native library and the .NET library of
+  11.0.0 go together.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -5175,11 +5290,6 @@ not listed.
   atan2(0, 0) = 0, where a circle and an ellipse throw `InvalidOperationException` since #715 (Fixed above). It is to
   throw as they do (decision 9 of #719, decided by S. Guillet, 2026-11-17). No workaround is needed for a target away
   from the observer.
-- **A front body without radii on the CSPICE path of the occultation search**
-  ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
-  `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
-  cannot be searched there: SPICE's error, `InvalidOperationException` since the fourth round of #668 (before, no
-  window). The other SPICE errors of the CSPICE window searches throw since that round (Changed above).
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
@@ -5189,10 +5299,6 @@ not listed.
   exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
   `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short", and the `stepSize`
   of the distance, coordinate and illumination searches of `CelestialItem` and `Site` "every window and gap").
-- **At most 1000 windows from a CSPICE search**
-  ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
-  returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every
-  dropped crossing. Split the search window so that each part holds fewer than 1000 windows.
 - **The element conversions of `SpiceAPI`**
   ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450),
   [#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
@@ -5215,7 +5321,8 @@ not listed.
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
-  (`SPICE(FILENAMETOOLONG)`, reported as "more details on standard output"), while `Spacecraft.WriteEphemeris` and the
+  (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard
+  output since #727), while `Spacecraft.WriteEphemeris` and the
   text kernel writers still write it: load it through a meta-kernel that names it by a shorter relative path, or write
   it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
   are two entries.
@@ -5348,14 +5455,11 @@ not listed.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.
-- **Memory and cost of the reads**
-  ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
-  [#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
+- **Memory of the reads**
+  ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541)).
   `Frame.GetStateOrientationToICRF` (and `CirsFrame`, `GcrfFrame`, `TirsFrame`, `SiteFrame`) keeps every orientation it
   reads for the life of the frame, without bound (16.5 MB after 100 000 reads of ITRF93), and the static frames live for
-  the whole process. `SpiceAPI.ReadOrientation` costs about 1.4 ms a call whatever the window, and the window reads of
-  `ReadOrientation` and `ReadEphemeris` step by epoch += step, so their samples drift (4.3e-4 s observed) and the last
-  epoch of the window can be dropped.
+  the whole process.
 - **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).
   With the variational equations in the step control (`IncludeInStepControl`) the columns of Y are scaled by |r0|
   relative to the barycentre, about 1.5e11 m, and the step control fails, with or without drag; propagate relative to
@@ -5364,8 +5468,8 @@ not listed.
   At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
   to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation is built for
   every central body, whether or not a force rotates, so each of its 60 s points past the
-  coverage of the orientation kernel goes through the native read, which prints its SPICE message on standard output
-  (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); the native read is unchanged): a point-mass
+  coverage of the orientation kernel goes through the native read, which printed its SPICE message on standard output
+  (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); nothing since #727): a point-mass
   propagation there still runs ([#595](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/595)).
 - **Force model inputs** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). A configured `Nrlmsise00Model` shared by parallel propagations serializes their
   density calls on its lock (4 threads × 200 000 densities: 5.8 s on one instance, 0.9 s on one per thread); the default

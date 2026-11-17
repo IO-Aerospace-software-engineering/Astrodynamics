@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests;
 /// searches in spiceypy, the window ends and the results each the nearest tick of its ET (#625):
 /// <c>tools/seconds_to_ticks/spice_windows_reference.py</c>, whose truncated mode gives the strings held before #625.
 /// </remarks>
-public class SpiceApiTest
+public partial class SpiceApiTest
 {
     private readonly ITestOutputHelper _output;
 

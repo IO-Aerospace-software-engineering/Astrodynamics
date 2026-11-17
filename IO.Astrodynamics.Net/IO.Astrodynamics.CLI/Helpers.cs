@@ -101,7 +101,7 @@ public class Helpers
 
         return epoch =>
         {
-            // The window of the one epoch; the step only bounds the native loop, which runs once
+            // The window of the one epoch: one record, read in a buffer of one (#563); the step is that of an empty grid
             var read = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), objectId, TimeSpan.Zero, referenceFrame, TimeSpan.FromSeconds(1.0)).Single();
             return new StateOrientation(read.Rotation, read.AngularVelocity, epoch, referenceFrame);
         };

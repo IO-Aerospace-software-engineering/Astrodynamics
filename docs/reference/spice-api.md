@@ -4,6 +4,13 @@
 
 `SpiceAPI` is the singleton entry point for SPICE-backed operations.
 
+SPICE reports its errors to the library only: the native layer sets SPICE to return from an error (`erract` RETURN) and
+to print nothing (`errprt` NONE), and each method throws with SPICE's message. Before 11.0.0 SPICE also printed the
+banner of every error on the standard output of the process, those the library handles included (a read past the
+coverage of a kernel; 2888 banners in one conjunction analysis past its SPKs), which corrupted the output of a host
+application such as a command-line tool ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727),
+decided by S. Guillet, 2026-11-17).
+
 | Method | Description |
 |--------|-------------|
 | `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |
@@ -11,8 +18,8 @@
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
-| `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
-| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714) |
+| `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454); over a window, at start + i·step in the time frame of the window start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid, each state the read of its epoch alone and labelled with it in that frame (#563) |
+| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714); at start + i·step in the time frame of the window start, i from 0 while within the window, in a buffer of the epochs read, each record labelled with the TDB epoch of the CK's record (#563) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, or that SPICE does not name, #714, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
@@ -157,8 +164,11 @@ and the launch windows of a kernel site, and the CLI commands `find-windows-from
 error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never
 holds. The checks made before the native call keep their `ArgumentException`: a frame of the library SPICE does not
 know in `FindWindowsOnCoordinateConstraint`, an occultation body without a frame, an illumination method other than
-ELLIPSOID. A search SPICE runs is unchanged, and returns at most 1000 windows
-([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+ELLIPSOID. A search SPICE runs returns every window it finds, up to the 10000 of its result cell; more throw
+`InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has size, 20000,
+cardinality 20000. Cannot insert an additional interval into the window." (the size counts the endpoints; the short code
+is not in the message): before 11.0.0 the native layer copied the first 1000 and dropped the rest without an error, and
+the cell of `gfilum_c` held 1000 ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
 
 ### Orientation kernels
 
