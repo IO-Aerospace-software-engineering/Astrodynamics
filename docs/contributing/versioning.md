@@ -245,7 +245,9 @@ release are listed under **Known limitations**.
   propagation up to the last instant of `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute).
   A propagation still reads past its window end when its output step does not divide the window:
   it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end, and a geopotential or drag read there past the coverage throws
-  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies keep #454.
+  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies kept #454
+  then; every path #454 lists reports SPICE's error since (#622, #714, #608, #668, #560, #706, #711), the GM read of the
+  native constructors tracked by #655, and SPICE prints nothing since #727.
 - **The `ILocalizable` conjunction overloads extrapolated past a propagated spacecraft's states** ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), its
   guard). `Analyze`, `AnalyzeAll` and `Screen` read a propagated protected or secondary spacecraft through its stored
   states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw
@@ -4635,7 +4637,8 @@ not listed.
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
-  (`SPICE(FILENAMETOOLONG)`, reported as "more details on standard output"), while `Spacecraft.WriteEphemeris` and the
+  (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard
+  output since #727), while `Spacecraft.WriteEphemeris` and the
   text kernel writers still write it: load it through a meta-kernel that names it by a shorter relative path, or write
   it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
   are two entries.
@@ -4849,8 +4852,8 @@ not listed.
   to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation interpolates the
   Earth's 60 s nodes with the normalised-Lerp fallback of `Quaternion.SLERP`, up to 3.4e-10 rad from the exact
   interpolation. It is built for every central body, whether or not a force rotates, so each of its 60 s points past the
-  coverage of the orientation kernel goes through the native read, which prints its SPICE message on standard output
-  (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); the native read is unchanged): a point-mass
+  coverage of the orientation kernel goes through the native read, which printed its SPICE message on standard output
+  (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); nothing since #727): a point-mass
   propagation there still runs ([#595](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/595)).
 - **Force model inputs** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). A configured `Nrlmsise00Model` shared by parallel propagations serializes their
   density calls on its lock (4 threads × 200 000 densities: 5.8 s on one instance, 0.9 s on one per thread); the default
