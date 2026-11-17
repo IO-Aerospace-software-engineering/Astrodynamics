@@ -377,7 +377,9 @@ public static class ConjunctionAssessment
     /// <paramref name="options"/> gives (#683: the defaults of the avoidance before 11.0.0).
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters"/>
-    /// is not finite or is negative.</exception>
+    /// is not finite or is negative; <see cref="AvoidanceSearchOptions.AnalysisSampleStep"/> or
+    /// <see cref="AvoidanceSearchOptions.MaximumEventSearchStep"/> is given and not positive, the rule of the analysis (#640:
+    /// 0 s ended in an <see cref="OutOfMemoryException"/> and a negative step was accepted before 11.0.0).</exception>
     /// <exception cref="ArgumentException"><see cref="AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters"/> differs from
     /// the hard-body radius the secondary spacecraft gives (#683).</exception>
     public static IReadOnlyList<AvoidanceOption> EvaluateAvoidance(
@@ -3070,6 +3072,20 @@ public static class ConjunctionAssessment
     // off, as before; the covariance propagation is set by each path
     private static ConjunctionAnalysisOptions ReanalysisOptions(EncounterCase encounterCase, AvoidanceSearchOptions options)
     {
+        // The steps of the re-analysis follow the rule of the analysis (ValidateAnalysisOptions), named after the options of
+        // the avoidance (#640: 0 s ended in an OutOfMemoryException, a negative step was accepted or stepped backwards)
+        if (options.AnalysisSampleStep <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options.AnalysisSampleStep), options.AnalysisSampleStep,
+                "The sample step of the re-analysis must be positive.");
+        }
+
+        if (options.MaximumEventSearchStep <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options.MaximumEventSearchStep), options.MaximumEventSearchStep,
+                "The maximum event search step of the re-analysis must be positive.");
+        }
+
         ThrowIfInvalidHardBodyRadius(options.SecondaryHardBodyRadiusMeters, nameof(options.SecondaryHardBodyRadiusMeters));
         var encounter = encounterCase.AnalysisOptions ?? new ConjunctionAnalysisOptions();
         return encounter with

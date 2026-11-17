@@ -3209,6 +3209,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
   half stays open.
 
+- **`EvaluateAvoidance` did not check the steps of its re-analysis** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).
+  `Analyze`, `AnalyzeAll` and `Screen` refuse a `SampleStep` or a `MaximumEventSearchStep` of zero or less;
+  `EvaluateAvoidance` passed `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep` to the re-analysis
+  of each option unchecked. Measured on a85098d with the heap limited to 2 GB: on the two-body path each of the four
+  values (either step, 0 s or −5 s) ended in `OutOfMemoryException` (about 15 s without the limit; a
+  `MaximumEventSearchStep` of −5 s gave a search step of four bisection tolerances, an `AnalysisSampleStep` of −5 s
+  stepped backwards); on the paths of a propagated participant (its force model, or its propagated covariance) a
+  `MaximumEventSearchStep` of 0 s ended the same way, −5 s and a sample step of 0 s or −5 s were accepted silently. Both now throw `ArgumentOutOfRangeException` naming the option of the avoidance, before any
+  option is analyzed (`ConjunctionAssessmentTests.EvaluateAvoidance_StepNotPositive_Throws`, the three paths, 0 s and
+  −5 s, 12 rows, red on a85098d).
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -4472,6 +4483,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
 
+- **Breaking: `EvaluateAvoidance` refuses a step of zero or less** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640), Fixed above).
+  `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep`, when given, must be positive, the rule of
+  `ConjunctionAnalysisOptions`: `ArgumentOutOfRangeException` (its `ParamName` the option), where a negative step was
+  accepted or the call ran out of memory. Migration: give a positive step, or null for the encounter's.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4807,13 +4823,10 @@ not listed.
   The `ILocalizable` overloads of `Analyze` and `AnalyzeAll` run the sampled search even for two participants propagated
   in RK7(8): the search on the polynomials of their steps is not inferred in 11.0.0 (D4 of the API review of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)); pass their `PropagationSolution` for it.
-- **Cost and input checks of the conjunction analysis**
-  ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447),
-  [#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).
+- **Cost of the conjunction analysis**
+  ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447)).
   `ConjunctionAssessment.Analyze` allocates about 403 MB per pair over a 2 h window (0.83 s with the covariance held in
-  RTN, 1.71 s propagated); results are unaffected. `EvaluateAvoidance` does not check
-  `AvoidanceSearchOptions.MaximumEventSearchStep`: 0 s runs about 15 s and ends in `OutOfMemoryException`, a negative
-  step is accepted; pass a positive step.
+  RTN, 1.71 s propagated); results are unaffected.
 - **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652),
   [#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)). The help of
   `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do

@@ -608,4 +608,55 @@ public partial class ConjunctionAssessmentTests
             Assert.Equal(a.EncounterState.QualityFlags, b.EncounterState.QualityFlags);
         }
     }
+
+    public static IEnumerable<object[]> InvalidAvoidanceStepRows()
+    {
+        foreach (var path in new[] { "twoBody", "forceModel", "propagatedCovariance" })
+        {
+            foreach (var option in new[] { "MaximumEventSearchStep", "AnalysisSampleStep" })
+            {
+                foreach (double seconds in new[] { 0.0, -5.0 })
+                {
+                    yield return new object[] { path, option, seconds };
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidAvoidanceStepRows))]
+    public async System.Threading.Tasks.Task EvaluateAvoidance_StepNotPositive_Throws(string path, string option, double seconds)
+    {
+        // Arrange: the encounter of the pair, the protected spacecraft not propagated (two-body options), propagated
+        // without the covariance in the analysis (options on its force model) or with it (options propagated with
+        // their covariance); the step an option of the avoidance only, the analysis with valid settings
+        var earth = CreateEarth();
+        var (protectedStart, secondaryStart) = InputRulePair(earth);
+        var protectedCraft = InputRuleSpacecraft(NextInputRuleId(), protectedStart, ProtectedHardBodyRadius);
+        var secondaryCraft = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 3.0);
+        if (path != "twoBody")
+        {
+            PropagateRk78(protectedCraft, earth);
+        }
+
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            InputRuleWindow, path == "forceModel" ? new ConjunctionAnalysisOptions { CovariancePropagation = null } : null);
+        Assert.Equal(path == "propagatedCovariance" ? CovarianceSource.Propagated : CovarianceSource.InitialStateHeldInRtn,
+            encounter.EncounterState.ProtectedCovariance.Source);
+        var step = TimeSpan.FromSeconds(seconds);
+        var options = option == "MaximumEventSearchStep"
+            ? InputRuleAvoidance with { MaximumEventSearchStep = step }
+            : InputRuleAvoidance with { AnalysisSampleStep = step };
+
+        // Act: bounded, so that a regression fails instead of filling the memory (#640: 0 s ended in an
+        // OutOfMemoryException after about 15 s, -5 s was accepted, a sample step of -5 s stepped backwards without end)
+        var avoidance = System.Threading.Tasks.Task.Run(() => ConjunctionAssessment.EvaluateAvoidance(encounter, options));
+        var completed = await System.Threading.Tasks.Task.WhenAny(avoidance,
+            System.Threading.Tasks.Task.Delay(TimeSpan.FromMinutes(1)));
+
+        // Assert: the rule of the analysis, ArgumentOutOfRangeException naming the option of the avoidance
+        Assert.Same(avoidance, completed);
+        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => avoidance);
+        Assert.Equal(option, exception.ParamName);
+    }
 }
