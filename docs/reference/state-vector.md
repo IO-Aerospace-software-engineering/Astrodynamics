@@ -57,7 +57,11 @@ conjunction analysis; see
 | `Observer` | Central body |
 | `Epoch` | Time of state |
 | `Frame` | Reference frame |
-| `Covariance` | `Matrix?`: the 6×6 covariance, null when the state carries none |
+| `Covariance` | `Matrix?`: the 6×6 covariance, null when the state carries none; a copy of the one the state holds, which its constructor copied too (#722) |
+
+Two states are equal (`==`, `Equals`, through `OrbitalParameters` or not) when their position, velocity, observer (by
+NAIF id), epoch (an instant, whatever its time frame, #512) and frame are; the covariance does not take part. A state is
+never equal to a set of elements, its own included ([Keplerian Elements](keplerian-elements.md#equality)).
 
 ## Orbital Element Methods
 
