@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
 using Xunit;
@@ -123,6 +124,56 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         {
             var omm = CreateMinimalOmm();
             Assert.Throws<ArgumentNullException>(() => _writer.WriteToStream(omm, null));
+        }
+
+        // The EPOCH and REF_FRAME_EPOCH of an OMM are in TIME_SYSTEM (CCSDS 502.0-B-3): a local time is refused under any
+        // time system but UTC (#617, decided by S. Guillet, 2026-11-17; before, its clock reading was written as a reading
+        // in TIME_SYSTEM, whatever the zone)
+        [Theory]
+        [InlineData("TDB", "EPOCH")]
+        [InlineData("TT", "REF_FRAME_EPOCH")]
+        [InlineData("MET", "EPOCH")]
+        public void WriteToString_LocalDateUnderAnotherTimeSystemThanUtc_ThrowsArgumentException(string timeSystem, string keyword)
+        {
+            var clock = new DateTime(2010, 3, 13, 22, 37, 52, 618, DateTimeKind.Unspecified);
+            var local = DateTime.SpecifyKind(clock, DateTimeKind.Local);
+            var omm = CreateOmmWithDates(timeSystem, keyword == "EPOCH" ? local : clock, keyword == "REF_FRAME_EPOCH" ? local : clock,
+                DateTime.UtcNow);
+
+            var exception = Assert.Throws<ArgumentException>(() => _writer.WriteToString(omm));
+            Assert.Equal("omm", exception.ParamName);
+            Assert.Contains(keyword, exception.Message);
+            Assert.Contains($"TIME_SYSTEM = {timeSystem}", exception.Message);
+        }
+
+        // Under TIME_SYSTEM = UTC a local time is written as its UTC; a date of kind Utc or Unspecified is the clock reading
+        // in TIME_SYSTEM, written as given; CREATION_DATE is UTC (CCSDS 502.0-B-3, Table 3-1), a local one converted
+        [Theory]
+        [InlineData("UTC", DateTimeKind.Local)]
+        [InlineData("UTC", DateTimeKind.Unspecified)]
+        [InlineData("TDB", DateTimeKind.Utc)]
+        [InlineData("TDB", DateTimeKind.Unspecified)]
+        public void WriteToString_DateOfEachKind_WrittenAsTheReadingInTimeSystem(string timeSystem, DateTimeKind kind)
+        {
+            var given = new DateTime(2010, 3, 13, 22, 37, 52, 618, kind);
+            var creation = new DateTime(2010, 3, 13, 22, 37, 52, 618, DateTimeKind.Local);
+            var xml = _writer.WriteToString(CreateOmmWithDates(timeSystem, given, given, creation));
+
+            string Text(string keyword) => System.Xml.Linq.XDocument.Parse(xml).Descendants()
+                .Single(e => e.Name.LocalName == keyword).Value;
+            string Odm(DateTime value) => value.ToString("yyyy-MM-ddTHH:mm:ss.ffffff", System.Globalization.CultureInfo.InvariantCulture);
+            var expected = Odm(kind == DateTimeKind.Local ? given.ToUniversalTime() : given);
+            Assert.Equal(expected, Text("EPOCH"));
+            Assert.Equal(expected, Text("REF_FRAME_EPOCH"));
+            Assert.Equal(Odm(creation.ToUniversalTime()), Text("CREATION_DATE"));
+        }
+
+        private static Omm CreateOmmWithDates(string timeSystem, DateTime epoch, DateTime referenceFrameEpoch, DateTime creation)
+        {
+            var elements = MeanElements.CreateWithMeanMotion(epoch, 15.5, 0.0005, 51.6, 10.0, 20.0, 30.0);
+            return new Omm(new CcsdsHeader(creation, "IO.Astrodynamics.Tests"),
+                new OmmMetadata("SAT", "2010-001A", "EARTH", "TEME", timeSystem, "SGP4", referenceFrameEpoch),
+                OmmData.CreateMinimal(elements));
         }
 
         [Fact]

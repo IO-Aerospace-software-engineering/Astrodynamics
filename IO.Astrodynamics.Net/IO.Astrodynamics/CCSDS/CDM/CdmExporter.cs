@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -98,7 +99,7 @@ internal static class CdmExporter
 
         var header = new CdmHeader
         {
-            CreationDateUtc = EnsureUtc(options.CreationDateUtc ?? DateTime.UtcNow),
+            CreationDateUtc = CcsdsDates.ToUtc(options.CreationDateUtc ?? DateTime.UtcNow),
             Originator = options.Originator,
             MessageFor = options.MessageFor ?? protectedMetadata.ObjectName,
             MessageId = string.IsNullOrWhiteSpace(options.MessageId)
@@ -123,7 +124,7 @@ internal static class CdmExporter
         return new CdmRelativeMetadataData
         {
             Comments = comments,
-            TcaUtc = EnsureUtc(encounterCase.EncounterState.Epoch.ToUTC().DateTime),
+            TcaUtc = CcsdsDates.ToUtc(encounterCase.EncounterState.Epoch.ToUTC().DateTime),
             MissDistanceMeters = encounterCase.EncounterState.MissDistanceMeters,
             RelativeSpeedMetersPerSecond = encounterCase.EncounterState.RelativeState.RelativeVelocityInertial.Magnitude(),
             RelativeStateVector = options.IncludeRelativeStateVector
@@ -134,10 +135,10 @@ internal static class CdmExporter
                 }
                 : null,
             StartScreenPeriodUtc = options.IncludeScreeningWindow
-                ? EnsureUtc(encounterCase.ScreeningWindow.StartDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.StartDate.ToUTC().DateTime)
                 : null,
             StopScreenPeriodUtc = options.IncludeScreeningWindow
-                ? EnsureUtc(encounterCase.ScreeningWindow.EndDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.EndDate.ToUTC().DateTime)
                 : null,
             CollisionProbability = encounterCase.CollisionRisk.ProbabilityOfCollision,
             CollisionProbabilityMethod = options.CollisionProbabilityMethod ?? InferCollisionProbabilityMethod(encounterCase)
@@ -477,16 +478,6 @@ internal static class CdmExporter
             "ITRF93" => CdmReferenceFrame.Itrf,
             _ => throw new InvalidOperationException(
                 $"CDM export only supports J2000/ICRF/GCRF/EME2000/ITRF participant states. Encounter state frame '{frameName}' is not supported.")
-        };
-    }
-
-    private static DateTime EnsureUtc(DateTime value)
-    {
-        return value.Kind switch
-        {
-            DateTimeKind.Utc => value,
-            DateTimeKind.Local => value.ToUniversalTime(),
-            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
         };
     }
 

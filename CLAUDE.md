@@ -187,7 +187,7 @@ The C# blocks of this file and of `IO.Astrodynamics.Net/CLAUDE.md` are compiled 
 - Check `omm.IsTleCompatible` (tleParameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH; #679) before calling `ToTle()`, which otherwise throws naming each keyword at fault
 - OPM uses CCSDS units (km, km/s, deg); framework uses SI (m, m/s, rad) — conversions are automatic
 - Maneuver conversion is one-way: `Spacecraft → OPM` (OPM maneuvers are archival)
-- `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT, GPS; another throws) by `Opm.ToStateVector` and `Omm.ToTle` (#485); the writers write UTC under `TIME_SYSTEM = UTC`, `MAN_EPOCH_IGNITION` included (#479)
+- `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT, GPS; another throws) by `Opm.ToStateVector` and `Omm.ToTle` (#485); the writers write UTC under `TIME_SYSTEM = UTC`, `MAN_EPOCH_IGNITION` included (#479); the OPM and OMM writers write `EPOCH`, `REF_FRAME_EPOCH` and `MAN_EPOCH_IGNITION` of kind `Utc` or `Unspecified` as the clock reading in `TIME_SYSTEM`, one of kind `Local` as its UTC under `TIME_SYSTEM = UTC` and refuse it (`ArgumentException`) under any other, `CREATION_DATE` converted; the CDM writer takes `Unspecified` as UTC and converts `Local` (internal `CCSDS/Common/CcsdsDates`, #617, decided by S. Guillet, 2026-11-17)
 
 ### Attitude Maneuvers
 

@@ -190,7 +190,7 @@ OMM: meanMotion = 15.49309423 rev/day
 - `FirstDerivationMeanMotion` and `SecondDerivativeMeanMotion` hold the TLE fields ṅ/2 and n̈/6 (OMM's
   `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`); `TLE.Create` writes the UTC of the epoch and the nearest value of each field
   (#479, #480, #600 to #602)
-- OPM and OMM epochs are read in their `TIME_SYSTEM` (#485)
+- OPM and OMM epochs are read in their `TIME_SYSTEM` (#485); the writers write a date of kind `Utc` or `Unspecified` as its clock reading in `TIME_SYSTEM`, one of kind `Local` as its UTC under `TIME_SYSTEM = UTC` and throw `ArgumentException` under any other (`CREATION_DATE` always UTC), and the CDM writer takes `Unspecified` as UTC (#617)
 
 **Osculating vs Mean Accessors in TLE**
 | Accessor | Returns | Use Case |

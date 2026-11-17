@@ -230,6 +230,53 @@ public class CdmTests
         Assert.Empty(validation.Issues);
     }
 
+    // Every date of a CDM is UTC (CCSDS 508.0-B-1 Cor. 2, 6.3.2.6): a DateTime of kind Utc or Unspecified is written as the
+    // clock reading given, one of kind Local as its UTC, .NET's meaning of Local (#617; CcsdsLocalTimeTests checks the same
+    // in time zones other than UTC, where an Unspecified date was written shifted by the zone's offset)
+    [Theory]
+    [InlineData(DateTimeKind.Utc)]
+    [InlineData(DateTimeKind.Unspecified)]
+    [InlineData(DateTimeKind.Local)]
+    public void WriteToString_DateOfEachKind_WrittenAsItsUtc(DateTimeKind kind)
+    {
+        var exported = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 5, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-617"
+        });
+        var given = new DateTime(2010, 3, 13, 22, 37, 52, 618, kind);
+        var expected = (kind == DateTimeKind.Local ? given.ToUniversalTime() : given)
+            .ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture) + "Z";
+        var cdm = new Cdm(exported.Header with { CreationDateUtc = given },
+            exported.RelativeMetadataData with
+            {
+                TcaUtc = given, StartScreenPeriodUtc = given, StopScreenPeriodUtc = given, ScreenEntryTimeUtc = given,
+                ScreenExitTimeUtc = given
+            },
+            exported.Segments.Select(segment => segment with
+            {
+                Data = segment.Data! with
+                {
+                    OdParameters = new CdmOdParameters { TimeLastObservationStartUtc = given, TimeLastObservationEndUtc = given }
+                }
+            }).ToList());
+
+        var document = XDocument.Parse(cdm.WriteToString());
+
+        var dates = new[]
+        {
+            "CREATION_DATE", "TCA", "START_SCREEN_PERIOD", "STOP_SCREEN_PERIOD", "SCREEN_ENTRY_TIME", "SCREEN_EXIT_TIME",
+            "TIME_LASTOB_START", "TIME_LASTOB_END"
+        };
+        foreach (var keyword in dates)
+        {
+            Assert.All(document.Descendants().Where(e => e.Name.LocalName == keyword), e => Assert.Equal(expected, e.Value));
+        }
+
+        Assert.Equal(dates.Length + 2, document.Descendants().Count(e => dates.Contains(e.Name.LocalName)));
+    }
+
     // The form written before #615, the root in the namespace: still read, and still checked by Cdm.ValidateSchema
     [Theory]
     [InlineData(true)]
@@ -1349,7 +1396,7 @@ public class CdmTests
         Assert.Contains("covariance", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static EncounterCase CreateManualEncounterCase(bool withEngines = false)
+    internal static EncounterCase CreateManualEncounterCase(bool withEngines = false)
     {
         var earth = CreateEarth();
         var epoch = TimeSystem.Time.J2000TDB.AddMinutes(5.0);

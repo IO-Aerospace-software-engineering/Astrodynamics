@@ -16,6 +16,13 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// <remarks>
 /// Generates XML conforming to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// Supports both standalone OMM documents and OMM messages wrapped in NDM containers.
+/// <para>
+/// <c>EPOCH</c> and <c>REF_FRAME_EPOCH</c> are written in <c>TIME_SYSTEM</c>: a <see cref="System.DateTime"/> of kind
+/// <see cref="System.DateTimeKind.Utc"/> or <see cref="System.DateTimeKind.Unspecified"/> as the clock reading given, one of
+/// kind <see cref="System.DateTimeKind.Local"/> as its UTC under <c>TIME_SYSTEM = UTC</c>; under any other time system a
+/// local date throws <see cref="System.ArgumentException"/> (<c>omm</c>) naming its keyword. <c>CREATION_DATE</c> is
+/// UTC, a local one converted (#617, decided by S. Guillet, 2026-11-17).
+/// </para>
 /// </remarks>
 public class OmmWriter
 {
@@ -160,7 +167,7 @@ public class OmmWriter
             headerElement.Add(new XElement("CLASSIFICATION", header.Classification));
         }
 
-        headerElement.Add(new XElement("CREATION_DATE", FormatDateTime(header.CreationDate)));
+        headerElement.Add(new XElement("CREATION_DATE", FormatDateTime(CcsdsDates.ToUtc(header.CreationDate))));
         headerElement.Add(new XElement("ORIGINATOR", header.Originator));
 
         if (!string.IsNullOrEmpty(header.MessageId))
@@ -177,7 +184,7 @@ public class OmmWriter
         var segmentElement = new XElement("segment");
 
         segmentElement.Add(CreateMetadataElement(omm.Metadata));
-        segmentElement.Add(CreateDataElement(omm.Data));
+        segmentElement.Add(CreateDataElement(omm.Data, omm.Metadata));
 
         bodyElement.Add(segmentElement);
         return bodyElement;
@@ -199,7 +206,8 @@ public class OmmWriter
 
         if (metadata.ReferenceFrameEpoch.HasValue)
         {
-            metadataElement.Add(new XElement("REF_FRAME_EPOCH", FormatDateTime(metadata.ReferenceFrameEpoch.Value)));
+            metadataElement.Add(new XElement("REF_FRAME_EPOCH",
+                FormatDateTime(InTimeSystem(metadata.ReferenceFrameEpoch.Value, metadata, "REF_FRAME_EPOCH"))));
         }
 
         metadataElement.Add(new XElement("TIME_SYSTEM", metadata.TimeSystem));
@@ -208,7 +216,7 @@ public class OmmWriter
         return metadataElement;
     }
 
-    private XElement CreateDataElement(OmmData data)
+    private XElement CreateDataElement(OmmData data, OmmMetadata metadata)
     {
         var dataElement = new XElement("data");
 
@@ -217,7 +225,7 @@ public class OmmWriter
             dataElement.Add(new XElement("COMMENT", comment));
         }
 
-        dataElement.Add(CreateMeanElementsElement(data.MeanElements));
+        dataElement.Add(CreateMeanElementsElement(data.MeanElements, metadata));
 
         if (data.HasSpacecraftParameters)
         {
@@ -242,7 +250,7 @@ public class OmmWriter
         return dataElement;
     }
 
-    private XElement CreateMeanElementsElement(MeanElements meanElements)
+    private XElement CreateMeanElementsElement(MeanElements meanElements, OmmMetadata metadata)
     {
         var element = new XElement("meanElements");
 
@@ -251,7 +259,7 @@ public class OmmWriter
             element.Add(new XElement("COMMENT", comment));
         }
 
-        element.Add(new XElement("EPOCH", FormatDateTime(meanElements.Epoch)));
+        element.Add(new XElement("EPOCH", FormatDateTime(InTimeSystem(meanElements.Epoch, metadata, "EPOCH"))));
 
         if (meanElements.UsesMeanMotion)
         {
@@ -431,6 +439,12 @@ public class OmmWriter
     }
 
     #region Formatting Helpers
+
+    // A date in TIME_SYSTEM: a local time converted under UTC and refused under any other time system (#617)
+    private static DateTime InTimeSystem(DateTime value, OmmMetadata metadata, string keyword)
+    {
+        return CcsdsDates.InTimeSystem(value, metadata.TimeSystemEnum, metadata.TimeSystem, keyword, "omm");
+    }
 
     private static string FormatDateTime(DateTime dateTime)
     {

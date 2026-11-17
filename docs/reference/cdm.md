@@ -215,7 +215,13 @@ read in m when the attribute is absent ([#613](https://github.com/IO-Aerospace-s
 
 Dates are read in both forms of the NDM/XML `epochType` ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)): calendar (`2026-01-13T05:00:55.752768`)
 and day of year (`2026-013T05:00:55.752768`), with any fraction, an optional `Z` or `±hh:mm` offset, as UTC. The OPM
-and OMM readers share the parser (`CcsdsEpochParser`). The writer emits the calendar form.
+and OMM readers share the parser (`CcsdsEpochParser`). The writer emits the calendar form, in UTC as every date of a
+CDM (CCSDS 508.0-B-1 Cor. 2, 6.3.2.6), by the kind of each `DateTime`
+([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617)): `Utc` as given, `Unspecified`
+taken as UTC (the clock reading given, as `EncounterCase.ToCdm` already took it), `Local` converted to UTC. Before
+11.0.0 the writer read a date of kind `Unspecified`, the kind of `new DateTime(y, M, d, h, m, s)`, as local time: a CDM
+built by hand on a machine outside UTC was written with its dates shifted by the zone's offset (one hour early in
+Paris in winter, five hours late in New York).
 
 Standards-compliant CDM export requires covariance for both participants, so the exported
 `COLLISION_PROBABILITY_METHOD` is `FOSTER-2D`.

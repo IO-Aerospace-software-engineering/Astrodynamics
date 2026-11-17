@@ -3222,6 +3222,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   embedded master compiled in the test with no synthetic root, 4 cases red on a85098d). `Cdm.ValidateSchema` checks it
   as a standard form; a root in the namespace, the form written before, is still read and checked as before
   (`ReadFromString_RootInTheNamespace_FormWrittenBefore615_IsStillReadAndValidated`).
+- **The CDM writer read a date without a kind as local time** ([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617)). `CdmWriter` wrote every date
+  through `ToUniversalTime()`, which takes a `DateTime` of kind `Unspecified`, that of `new DateTime(y, M, d, h, m, s)`,
+  as local time: on a machine outside UTC a CDM built by hand was written with its eight dates (`CREATION_DATE`, `TCA`,
+  the screen period, the screen entry and exit, `TIME_LASTOB_START`/`END`) shifted by the zone's offset, a TCA of
+  2010-03-13T22:37:52.618 written `2010-03-13T21:37:52.6180000Z` under Europe/Paris and `2010-03-14T03:37:52.6180000Z`
+  under America/New_York (measured on a85098d), while `EncounterCase.ToCdm` took such a date as UTC. The writer and the
+  exporter now share one rule (internal `CcsdsDates.ToUtc`): `Utc` as given, `Unspecified` taken as UTC, `Local`
+  converted. The OPM and OMM writers wrote a local time as its clock reading whatever `TIME_SYSTEM`; their dates in
+  `TIME_SYSTEM` now convert it under UTC and refuse it under any other, `CREATION_DATE` converting it (Changed, below).
+  `CcsdsLocalTimeTests` runs the three writers in child processes under `TZ=Europe/Paris` and `TZ=America/New_York`,
+  the expected texts from the IANA rules of each zone (2 cases red on a85098d); `CdmTests`,
+  `OpmWriterTests` and `OmmWriterTests` check each kind in the test process (8 refusals red on a85098d).
 
 **Changed**
 
@@ -4493,6 +4505,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   namespace-aware consumer that looked for the root `{urn:ccsds:schema:ndmxml}ndm` or `{urn:ccsds:schema:ndmxml}cdm`
   looks for `ndm` or `cdm` in no namespace (the elements below it keep the namespace); one that removed the namespace of
   the root to validate against the SANA schema no longer needs to.
+- **Breaking: the CCSDS writers follow the kind of each date** ([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617), Fixed above; decided by S. Guillet,
+  2026-11-17). `CdmWriter` (`Cdm.WriteTo*`) writes a date of kind `Unspecified` as the UTC clock reading given, where it
+  shifted it by the offset of the machine's zone; a CDM written in UTC, read by `Cdm.ReadFrom*` (kind `Utc`) or exported
+  by `ToCdm` is unchanged. `OpmWriter` and `OmmWriter` (`Opm.SaveTo*`, `ToXmlString`, `Omm.SaveTo*`, `ToXml`) write a date
+  of kind `Local` as its UTC under `TIME_SYSTEM = UTC` and throw `ArgumentException` (`opm`, `omm`) naming the keyword
+  for an `EPOCH`, `REF_FRAME_EPOCH` or `MAN_EPOCH_IGNITION` of kind `Local` under any other time system, where they wrote
+  its clock reading; a local `CREATION_DATE` is converted to UTC. Dates of kind `Utc` and `Unspecified` are written as
+  before. Migration: give a CDM's dates in UTC, with any kind but `Local` for a UTC clock reading; give an OPM or OMM
+  epoch outside `TIME_SYSTEM = UTC` as its clock reading in that time system, of kind `Utc` or `Unspecified`.
 
 **Deprecated**
 
@@ -4685,10 +4706,8 @@ not listed.
   ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Set
   `CdmExportOptions.CollisionProbabilityMethod`.
 - **CDM dates and numbers** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616),
-  [#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617),
   [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). A date in a leap second throws
-  `CdmParseException`. `CdmWriter` reads a `DateTime` of kind `Unspecified` as local time: build its dates with
-  `DateTimeKind.Utc`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
+  `CdmParseException`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
   free-text or time-only dates (a time gets today's date) instead of rejecting them.
 - **Orbits within 1e-6 of e = 1**
   ([#459](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/459),

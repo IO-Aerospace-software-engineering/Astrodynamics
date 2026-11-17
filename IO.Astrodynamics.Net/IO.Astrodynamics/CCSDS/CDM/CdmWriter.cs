@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
@@ -16,7 +17,9 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// Writes a <see cref="Cdm"/> as NDM/XML 4.0.0 (CCSDS 508.0-B-1 Cor. 2), in the qualified form of its 4.3.3: the root,
 /// <c>cdm</c> or the <c>ndm</c> that wraps it, in no namespace with <c>xmlns:ndm="urn:ccsds:schema:ndmxml"</c> declared on
 /// it, and every element below it in that namespace under the prefix <c>ndm</c>, which the SANA NDM/XML 4.0.0 qualified
-/// master accepts.
+/// master accepts. Every date is written in UTC (CCSDS 508.0-B-1 Cor. 2, 6.3.2.6): a <see cref="DateTime"/> of kind
+/// <see cref="DateTimeKind.Utc"/> or <see cref="DateTimeKind.Unspecified"/> as the clock reading given, one of kind
+/// <see cref="DateTimeKind.Local"/> converted (#617; before, an unspecified date was read as local time).
 /// </summary>
 /// <remarks>
 /// Before 11.0.0 the root was in the namespace too (#615), which the SANA master rejects at the root; the reader and
@@ -505,9 +508,11 @@ public sealed class CdmWriter
         }
     }
 
+    // Every date of a CDM is UTC (CCSDS 508.0-B-1 Cor. 2, 6.3.2.6): a date without a kind is the UTC clock reading given, a
+    // local time converted (#617; before, ToUniversalTime() read a date without a kind as local time)
     private static string FormatDateTime(DateTime value)
     {
-        return value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture);
+        return CcsdsDates.ToUtc(value).ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture);
     }
 
     private static string FormatDouble(double value)

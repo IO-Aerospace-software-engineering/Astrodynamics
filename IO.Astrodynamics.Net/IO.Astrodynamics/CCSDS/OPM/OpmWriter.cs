@@ -16,6 +16,13 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// <remarks>
 /// Generates XML conforming to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// Supports both standalone OPM documents and OPM messages wrapped in NDM containers.
+/// <para>
+/// <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> and <c>MAN_EPOCH_IGNITION</c> are written in <c>TIME_SYSTEM</c>: a <see cref="System.DateTime"/> of kind
+/// <see cref="System.DateTimeKind.Utc"/> or <see cref="System.DateTimeKind.Unspecified"/> as the clock reading given, one of
+/// kind <see cref="System.DateTimeKind.Local"/> as its UTC under <c>TIME_SYSTEM = UTC</c>; under any other time system a
+/// local date throws <see cref="System.ArgumentException"/> (<c>opm</c>) naming its keyword. <c>CREATION_DATE</c> is
+/// UTC, a local one converted (#617, decided by S. Guillet, 2026-11-17).
+/// </para>
 /// </remarks>
 public class OpmWriter
 {
@@ -159,7 +166,7 @@ public class OpmWriter
             headerElement.Add(new XElement("CLASSIFICATION", header.Classification));
         }
 
-        headerElement.Add(new XElement("CREATION_DATE", FormatDateTime(header.CreationDate)));
+        headerElement.Add(new XElement("CREATION_DATE", FormatDateTime(CcsdsDates.ToUtc(header.CreationDate))));
         headerElement.Add(new XElement("ORIGINATOR", header.Originator));
 
         if (!string.IsNullOrEmpty(header.MessageId))
@@ -176,7 +183,7 @@ public class OpmWriter
         var segmentElement = new XElement("segment");
 
         segmentElement.Add(CreateMetadataElement(opm.Metadata));
-        segmentElement.Add(CreateDataElement(opm.Data));
+        segmentElement.Add(CreateDataElement(opm.Data, opm.Metadata));
 
         bodyElement.Add(segmentElement);
         return bodyElement;
@@ -198,7 +205,8 @@ public class OpmWriter
 
         if (metadata.ReferenceFrameEpoch.HasValue)
         {
-            metadataElement.Add(new XElement("REF_FRAME_EPOCH", FormatDateTime(metadata.ReferenceFrameEpoch.Value)));
+            metadataElement.Add(new XElement("REF_FRAME_EPOCH",
+                FormatDateTime(InTimeSystem(metadata.ReferenceFrameEpoch.Value, metadata, "REF_FRAME_EPOCH"))));
         }
 
         metadataElement.Add(new XElement("TIME_SYSTEM", metadata.TimeSystem));
@@ -206,7 +214,7 @@ public class OpmWriter
         return metadataElement;
     }
 
-    private XElement CreateDataElement(OpmData data)
+    private XElement CreateDataElement(OpmData data, OpmMetadata metadata)
     {
         var dataElement = new XElement("data");
 
@@ -217,7 +225,7 @@ public class OpmWriter
         }
 
         // State vector (required)
-        dataElement.Add(CreateStateVectorElement(data.StateVector));
+        dataElement.Add(CreateStateVectorElement(data.StateVector, metadata));
 
         // Keplerian elements (optional)
         if (data.HasKeplerianElements)
@@ -240,7 +248,7 @@ public class OpmWriter
         // Maneuver parameters (0..*)
         foreach (var maneuver in data.Maneuvers)
         {
-            dataElement.Add(CreateManeuverParametersElement(maneuver));
+            dataElement.Add(CreateManeuverParametersElement(maneuver, metadata));
         }
 
         // User-defined parameters (optional)
@@ -252,7 +260,7 @@ public class OpmWriter
         return dataElement;
     }
 
-    private XElement CreateStateVectorElement(OpmStateVector stateVector)
+    private XElement CreateStateVectorElement(OpmStateVector stateVector, OpmMetadata metadata)
     {
         var element = new XElement("stateVector");
 
@@ -261,7 +269,7 @@ public class OpmWriter
             element.Add(new XElement("COMMENT", comment));
         }
 
-        element.Add(new XElement("EPOCH", FormatDateTime(stateVector.Epoch)));
+        element.Add(new XElement("EPOCH", FormatDateTime(InTimeSystem(stateVector.Epoch, metadata, "EPOCH"))));
         element.Add(CreateElementWithUnits("X", stateVector.X, "km"));
         element.Add(CreateElementWithUnits("Y", stateVector.Y, "km"));
         element.Add(CreateElementWithUnits("Z", stateVector.Z, "km"));
@@ -385,7 +393,7 @@ public class OpmWriter
         return element;
     }
 
-    private XElement CreateManeuverParametersElement(OpmManeuverParameters maneuver)
+    private XElement CreateManeuverParametersElement(OpmManeuverParameters maneuver, OpmMetadata metadata)
     {
         var element = new XElement("maneuverParameters");
 
@@ -394,7 +402,8 @@ public class OpmWriter
             element.Add(new XElement("COMMENT", comment));
         }
 
-        element.Add(new XElement("MAN_EPOCH_IGNITION", FormatDateTime(maneuver.ManEpochIgnition)));
+        element.Add(new XElement("MAN_EPOCH_IGNITION",
+            FormatDateTime(InTimeSystem(maneuver.ManEpochIgnition, metadata, "MAN_EPOCH_IGNITION"))));
         element.Add(CreateElementWithUnits("MAN_DURATION", maneuver.ManDuration, "s"));
         element.Add(CreateElementWithUnits("MAN_DELTA_MASS", maneuver.ManDeltaMass, "kg"));
         element.Add(new XElement("MAN_REF_FRAME", maneuver.ManRefFrame));
@@ -425,6 +434,12 @@ public class OpmWriter
     }
 
     #region Formatting Helpers
+
+    // A date in TIME_SYSTEM: a local time converted under UTC and refused under any other time system (#617)
+    private static DateTime InTimeSystem(DateTime value, OpmMetadata metadata, string keyword)
+    {
+        return CcsdsDates.InTimeSystem(value, metadata.TimeSystemEnum, metadata.TimeSystem, keyword, "opm");
+    }
 
     private static string FormatDateTime(DateTime dateTime)
     {

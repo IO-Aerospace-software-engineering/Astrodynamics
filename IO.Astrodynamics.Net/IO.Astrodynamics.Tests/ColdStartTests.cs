@@ -134,6 +134,16 @@ public class ColdStartTests
     /// </summary>
     internal static string RunChild(string description, params string[] arguments)
     {
+        return RunChildWithEnvironment(description, null, arguments);
+    }
+
+    /// <summary>
+    /// <see cref="RunChild(string, string[])"/> with the variables of <paramref name="environment"/> set in the child's
+    /// environment (<c>TZ</c> for <c>CcsdsLocalTimeTests</c>, #617).
+    /// </summary>
+    internal static string RunChildWithEnvironment(string description, System.Collections.Generic.IReadOnlyDictionary<string, string> environment,
+        params string[] arguments)
+    {
         // ColdStart/, or beside the tests when the build was given an output directory (-o), which the child is built into
         string child = Path.Combine(AppContext.BaseDirectory, "ColdStart", "IO.Astrodynamics.Tests.ColdStart.dll");
         if (!File.Exists(child))
@@ -150,6 +160,11 @@ public class ColdStartTests
             RedirectStandardError = true,
             WorkingDirectory = AppContext.BaseDirectory
         };
+        foreach (var variable in environment ?? new System.Collections.Generic.Dictionary<string, string>())
+        {
+            start.Environment[variable.Key] = variable.Value;
+        }
+
         start.ArgumentList.Add(child);
         start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"));
         foreach (var argument in arguments)

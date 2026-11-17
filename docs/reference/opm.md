@@ -120,6 +120,15 @@ information levels (an unusual drag coefficient, a large eccentricity) are uncha
 | `SaveToStream(stream, validateBeforeSave?, wrapInNdm?, indent?)` | Save to stream |
 | `ToXmlString(wrapInNdm?, indent?)` | Serialize to XML string |
 
+The dates of the document follow the kind of their `DateTime`
+([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617), decided by S. Guillet,
+2026-11-17). `EPOCH`, `REF_FRAME_EPOCH` and `MAN_EPOCH_IGNITION` are in `TIME_SYSTEM` (CCSDS 502.0-B-3): a date of kind `Utc` or `Unspecified` is written as
+the clock reading given, under any time system; a date of kind `Local` is written as its UTC under `TIME_SYSTEM = UTC`,
+and under any other time system the writer throws `ArgumentException` (`opm`) naming the keyword, a local time having
+no reading in TDB, TT, TAI or GPS that the writer could give without a conversion of time scales. `CREATION_DATE` is UTC
+(Table 3-1): `Utc` and `Unspecified` as given, `Local` converted, whatever `TIME_SYSTEM`. Before 11.0.0 a local time was
+written as its clock reading under every time system. The library's own conversions (`Opm.CreateFromStateVector`, `Spacecraft.ToOpm`) give dates of kind `Utc`.
+
 ### Factory Methods
 
 | Method | Description |
