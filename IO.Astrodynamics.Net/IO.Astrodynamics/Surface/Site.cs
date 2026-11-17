@@ -262,8 +262,9 @@ namespace IO.Astrodynamics.Surface
         /// <remarks>For a site from the kernels and a spacecraft from the kernels, CSPICE's <c>gfdist_c</c> searches;
         /// otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfdist_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
         public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
@@ -292,8 +293,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="stepSize"></param>
         /// <returns>The windows, in TDB.</returns>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
@@ -318,8 +320,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
         /// <returns>The windows, in TDB.</returns>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize, OccultationSearchOptions options)
         {
@@ -359,8 +362,9 @@ namespace IO.Astrodynamics.Surface
         /// #690; before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
         /// </remarks>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
@@ -468,8 +472,9 @@ namespace IO.Astrodynamics.Surface
         /// before 11.0.0 gave no window on the path of <c>gfilum_c</c> and was ignored on the managed one (#682).</exception>
         /// <exception cref="ArgumentNullException"><paramref name="method"/> is null.</exception>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+        /// search returned no window, and its result cell held 1000 windows, #653).</exception>
         public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, IlluminationAngle illuminationType,
             RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
             string method = "Ellipsoid")
@@ -612,8 +617,9 @@ namespace IO.Astrodynamics.Surface
         /// the library does (<see cref="GeometryFinder"/>), and a day or a night shorter than the minute (the Sun grazing
         /// the twilight angle) is found as an extreme of the incidence between two samples (#678).</remarks>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+        /// search returned no window, and its result cell held 1000 windows, #653).</exception>
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             var sun = Stars.SUN_BODY;

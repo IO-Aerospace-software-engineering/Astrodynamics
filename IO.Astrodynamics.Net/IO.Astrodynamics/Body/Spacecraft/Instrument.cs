@@ -272,8 +272,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// is inside the ellipsoid of the target (at its center included, an unrelated <see cref="ArgumentException"/> before
         /// 11.0.0 for a circle or an ellipse); or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no
         /// instrument kernel defines the field of view, a body or an epoch without ephemeris data, an epoch outside the coverage
-        /// of the frame data or of the C-kernel), with SPICE's message (fourth round of #668; before 11.0.0 the search returned
-        /// no window).</exception>
+        /// of the frame data or of the C-kernel, more windows than the 10000 of its result cell, #653), with SPICE's message
+        /// (fourth round of #668; before 11.0.0 the search returned no window, and a search of more than 1000 windows its
+        /// first 1000, #653).</exception>
         public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {

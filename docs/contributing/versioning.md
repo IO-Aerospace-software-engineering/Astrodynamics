@@ -3250,16 +3250,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   caller's buffer and return the number of windows written (a native change for a technical reason, the P/Invoke
   declarations in step), `SpiceAPI` passes a buffer of the native cell's 10000 windows, rented from the shared pool, and
   `gfilum_c`'s cell holds 10000 windows like the others: every window CSPICE finds is returned, and a search of more
-  than 10000 throws SPICE's `SPICE(WINDOWEXCESS)` (`InvalidOperationException`), never a partial list; a buffer smaller
+  than 10000 throws `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has
+  size, 20000, cardinality 20000. Cannot insert an additional interval into the window." (the size counts the endpoints;
+  the short code is not in the message), never a partial list; a buffer smaller
   than the windows found makes a proxy return false with its message, nothing written. The absolute extremes need no
   exception of their own: their windows are in the cell like the others'. Against CSPICE's searches with a cell of
   20000 windows in the test process, every window equal to the tick (`CspiceWindowCapacityTests`, Validation: the ten
-  relations of the coordinate search, three of the distance, the illumination and the occultation), and on every
-  platform against the same searches over four parts of the window, each under 1000 windows, joined at the seams,
-  within 4.0e-7 s (Linux x64; `CspiceWindowCapacityTests`, 31 rows, red on a85098d); the C++ proxies write the 2126
-  crossings of `gfposc_c` bit for bit (`API.FindWindowsProxiesWriteEveryWindowOfTheirCell`). The searches under 1000
-  windows are unchanged, bit for bit. The managed searches had no cap. `FindWindowsInFieldOfViewConstraint` takes the
-  same path; no kernel of the tests gives it more than 1000 windows.
+  relations of the coordinate search, three of the distance, the illumination, the occultation and the field of view),
+  and on every platform against the same searches over four parts of the window, each under 1000 windows, joined at the
+  seams, within 4.0e-7 s (Linux x64; `CspiceWindowCapacityTests`, 16 rows, red on a85098d, and a 17th, the field of
+  view, added at the review); the search past the cell throws (`PastTheNativeCell_ThrowsSpicesError`: 11594 crossings in
+  6000 days); the C++ proxies write the 2126 crossings of `gfposc_c` bit for bit
+  (`API.FindWindowsProxiesWriteEveryWindowOfTheirCell`). `FindWindowsInFieldOfViewConstraint` takes the same path: an
+  instrument of the Earth written by the test, a rectangle of 40° by 15° along the prime meridian in `IAU_EARTH`, sees the
+  Moon 1062 times in 1100 days, every window returned, equal to `gftfov_c`'s with a cell of 20000 windows to the tick
+  (Validation) and to the four joined parts exactly (`FieldOfView_PastAThousandWindows_*`; not run on a85098d). The
+  searches under 1000 windows are unchanged, bit for bit. The managed searches had no cap.
 
 - **The window reads of `SpiceAPI` drifted, dropped their last epoch, and cost 1.4 ms for one epoch** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
   `ReadOrientationProxy` and `ReadEphemerisProxy` stepped their epoch by epoch += step in double TDB seconds, so that
@@ -3272,12 +3278,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   be lower than 10000"); a read of one epoch allocated 720 408 bytes and took 1.83 ms; a step of 0 in `ReadEphemeris` ran
   until the process was out of memory (1 min 40 s) and a negative one read 10000 epochs backwards. The proxies now read
   at the epochs the caller gives (a native change for a technical reason, the P/Invoke declarations in step), and
-  `SpiceAPI` gives start + i·step in TDB, i from 0 while within the window, in exact tick arithmetic, in calls of 10000
-  epochs at most into buffers of their size, each state labelled with its epoch: each state and record is the read of its
-  epoch alone, bit for bit, the end of the window read when it falls on the grid (`SpiceApiTest.ReadEphemeris_WindowRead_IsTheReadAtEachStartPlusIStep`
+  `SpiceAPI` gives start + i·step in the time frame of the window start, i from 0 while within the window, in exact tick
+  arithmetic, each epoch read at its TDB seconds, in calls of 10000 epochs at most into buffers of their size, each state
+  labelled with its epoch in that frame: each state and record is the read of its epoch alone, bit for bit, the end of
+  the window read when it falls on the grid (`SpiceApiTest.ReadEphemeris_WindowRead_IsTheReadAtEachStartPlusIStep`
   and `ReadOrientation_WindowRead_IsTheReadAtEachStartPlusIStep`, the three windows above, red on a85098d; against
   `spkezr_c` bit for bit, `ReadEphemeris_WindowRead_EqualsSpkezrAtEachStartPlusIStep`, Validation; the C++
-  `API.ReadEphemerisProxyReadsAtTheGivenEpochs`). A read of one epoch allocates 488 bytes and takes 1.28e-2 ms (Linux
+  `API.ReadEphemerisProxyReadsAtTheGivenEpochs`). A UTC window is stepped in UTC: TDB − TT makes a UTC window of 600 s
+  from 2 ticks shorter to 2 ticks longer in TDB, so a grid in TDB (a85098d's, and this fix's first form) read 6000 states
+  for 6001 from the first of May to that of October 2026 and labelled the others up to 2 ticks off start + i·step
+  (00:09:59.9999998Z for 00:10:00Z in January); the 12 windows from the first of each month of 2026 now give 6001 states
+  at start + i·step in UTC, the last at the end (`ReadEphemeris_UtcWindowRead_IsTheReadAtEachStartPlusIStepInUtc`, red
+  on the first form for 11 of 12), each `spkezr_c`'s at the TDB seconds of its UTC epoch bit for bit (Validation, July
+  and October; those seconds are the library's one-term TDB − TT, within 1.07e-6 s of `str2et_c`'s, as
+  `docs/reference/time-and-windows.md` states), and PHSRM's CK over UTC windows from the first of January, April, July
+  and October 2012 gives 6001 records, each the read of its epoch alone, its epoch that of start + i·step to the tick
+  (`ReadOrientation_UtcWindowRead_ReadsEachStartPlusIStepInUtc`, red on the first form for January and July). The
+  records against CSPICE (`ReadOrientation_WindowRead_EqualsCkgpavAtEachStartPlusIStep`, Validation: `sce2c_c`,
+  `ckgpav_c` and `sct2e_c` at each epoch): the epoch to the tick, start + i·step exactly, the angular velocity bit for
+  bit, the rotation within 1.6e-16 rad. A read of one epoch allocates 488 bytes and takes 1.28e-2 ms (Linux
   x64; `ReadOrientation_OneEpoch_AllocatesForOneRecord`, red on a85098d), so the CLI's orientation reads, one epoch at a
   time, no longer cost 1.4 ms each. A step of zero or less throws `ArgumentOutOfRangeException` (Changed below).
 
@@ -4549,16 +4568,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `FindWindowsOnOccultationConstraint` and `FindWindowsInFieldOfViewConstraint`, and the CSPICE paths of the searches of
   `CelestialItem`, `Site` and `Instrument`, return every window CSPICE finds where they returned the first 1000, and an
   illumination search of 1001 to 10000 windows returns them where it threw; beyond 10000 each throws
-  `SPICE(WINDOWEXCESS)`. Migration: a caller that split its search window to stay under 1000 windows (the workaround of
+  `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)` ("Window has size, 20000,
+  cardinality 20000. Cannot insert an additional interval into the window."; the short code is not in the message).
+  Migration: a caller that split its search window to stay under 1000 windows (the workaround of
   the known limitation of the earlier previews) can search the whole window; one that needs more than 10000 windows
   splits it under 10000. The native proxies take two more arguments, the capacity of the buffer and the count written:
   the native library and the .NET library of 11.0.0 go together.
 
 - **Breaking: the window reads of `SpiceAPI` are on the grid start + i·step** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563), Fixed above).
-  `SpiceAPI.ReadEphemeris(Window, ...)` and `ReadOrientation` read at start + i·step in TDB, i from 0 while within the
-  window, the end included when it falls on the grid: one more state or record where the drift of the former stepping
-  dropped the last epoch (6001 for 6000 over 600 s at 0.1 s), and the epochs and labels of `ReadEphemeris` exactly on
-  the grid where they drifted (by up to 4.29e-4 s after 9000 steps). `ReadOrientation` reads any number of epochs, where
+  `SpiceAPI.ReadEphemeris(Window, ...)` and `ReadOrientation` read at start + i·step in the time frame of the window
+  start (UTC steps for a UTC window, which the native layer stepped in TDB), i from 0 while within the window, the end
+  included when it falls on the grid: one more state or record where the drift of the former stepping dropped the last
+  epoch (6001 for 6000 over 600 s at 0.1 s), and the epochs and labels of `ReadEphemeris` exactly on the grid where they
+  drifted (by up to 4.29e-4 s after 9000 steps), labelled in the frame of the window start as before. `ReadOrientation` reads any number of epochs, where
   more than 10000 threw `InvalidOperationException`, and a step of zero or less throws `ArgumentOutOfRangeException`
   (`stepSize`) in both, where `ReadEphemeris` ran out of memory for 0 and read 10000 epochs backwards for a negative step.
   Migration: a caller that dropped or matched the drifting epochs reads the grid itself; one that relied on the last

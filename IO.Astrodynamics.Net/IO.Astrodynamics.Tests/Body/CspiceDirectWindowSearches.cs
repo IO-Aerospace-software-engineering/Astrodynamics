@@ -7,7 +7,7 @@ namespace IO.Astrodynamics.Tests.Body;
 
 /// <summary>
 /// CSPICE's window searches called in the test process with a result cell of <see cref="WindowCapacity"/> windows, twice
-/// the native layer's: <c>gfposc_c</c>, <c>gfdist_c</c>, <c>gfilum_c</c> and <c>gfoclt_c</c>, the references of the
+/// the native layer's: <c>gfposc_c</c>, <c>gfdist_c</c>, <c>gfilum_c</c>, <c>gfoclt_c</c> and <c>gftfov_c</c>, the references of the
 /// searches past 1000 windows (#653). The cells are the <c>SpiceCell</c> of <c>SpiceCel.h</c> over pinned arrays, as the
 /// <c>SPICEDOUBLE_CELL</c> macro builds them (an empty, set window); <c>SpiceInt</c> and <c>SpiceBoolean</c> are 32-bit on
 /// 64-bit Linux (<c>SpiceZdf.h</c>).
@@ -62,6 +62,10 @@ internal static partial class CspiceDirect
     private static extern void gfoclt_c(string occtyp, string front, string fshape, string fframe, string back, string bshape,
         string bframe, string abcorr, string obsrvr, double step, ref SpiceCell cnfine, ref SpiceCell result);
 
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void gftfov_c(string inst, string target, string tshape, string tframe, string abcorr, string obsrvr,
+        double step, ref SpiceCell cnfine, ref SpiceCell result);
+
     /// <summary><c>gfposc_c</c> over [<paramref name="start"/>, <paramref name="end"/>] (TDB seconds past J2000): its windows,
     /// [start, end] in TDB seconds.</summary>
     internal static double[][] Gfposc(double start, double end, string target, string frame, string abcorr, string observer,
@@ -86,6 +90,12 @@ internal static partial class CspiceDirect
         string back, string backShape, string backFrame, string abcorr, string observer, double step) =>
         Windows("gfoclt", start, end, (ref SpiceCell cnfine, ref SpiceCell result) => gfoclt_c(type, front, frontShape, frontFrame,
             back, backShape, backFrame, abcorr, observer, step, ref cnfine, ref result));
+
+    /// <summary><c>gftfov_c</c>.</summary>
+    internal static double[][] Gftfov(double start, double end, string instrument, string target, string targetShape, string targetFrame,
+        string abcorr, string observer, double step) =>
+        Windows("gftfov", start, end, (ref SpiceCell cnfine, ref SpiceCell result) => gftfov_c(instrument, target, targetShape, targetFrame,
+            abcorr, observer, step, ref cnfine, ref result));
 
     private static double[][] Windows(string routine, double start, double end, Search search)
     {

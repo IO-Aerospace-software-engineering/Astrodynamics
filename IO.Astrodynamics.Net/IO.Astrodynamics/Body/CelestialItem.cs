@@ -1187,8 +1187,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <remarks>When both objects come from the kernels and one of them is a spacecraft, CSPICE's <c>gfdist_c</c>
     /// searches; otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
     /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfdist_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
     public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
@@ -1218,8 +1219,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="stepSize">The step of the search.</param>
     /// <returns>The windows, in TDB.</returns>
     /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
@@ -1269,8 +1271,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns>The windows, in TDB.</returns>
     /// <exception cref="ArgumentException">Both bodies are points, or a body modeled as an ellipsoid has no radii.</exception>
     /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize,
         OccultationSearchOptions options)
@@ -1313,8 +1316,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
-    /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
+    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
+    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
+    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
     public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
         CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         in TimeSpan stepSize)

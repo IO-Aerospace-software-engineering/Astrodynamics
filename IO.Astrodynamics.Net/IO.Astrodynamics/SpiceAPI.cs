@@ -1107,7 +1107,9 @@ public class SpiceAPI
 
     /// <summary>
     /// The number of windows a CSPICE search returns at most: the result cell of the native layer, which holds 10000
-    /// windows for each search (#653). A search of more throws SPICE's <c>SPICE(WINDOWEXCESS)</c>.
+    /// windows for each search (#653). A search of more throws <see cref="InvalidOperationException"/> with the long message
+    /// of CSPICE's <c>SPICE(WINDOWEXCESS)</c>, "Window has size, 20000, cardinality 20000. Cannot insert an additional
+    /// interval into the window." (the size counts the endpoints; the short code is not in the message).
     /// </summary>
     internal const int WindowSearchCapacity = 10000;
 
@@ -1468,8 +1470,9 @@ public class SpiceAPI
     /// <param name="targetId"></param>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
-    /// <param name="stepSize">The step of the epochs read, positive: start + i·step in TDB, i from 0 while within the window, the
-    /// end included when it falls on the grid; each state is the read of its epoch alone, labelled with it (#563).</param>
+    /// <param name="stepSize">The step of the epochs read, positive: start + i·step in the time frame of the window start (UTC
+    /// steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid; each state is the
+    /// read of its epoch alone, labelled with it in that frame (#563).</param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563: before, a step of 0
     /// ran until the process was out of memory and a negative step read 10000 epochs backwards).</exception>
@@ -1515,8 +1518,8 @@ public class SpiceAPI
 
                 for (int i = 0; i < stateVectors.Length; i++)
                 {
-                    // Labelled with the epoch read, start + i·step, as ReadEphemeris(Time ...) labels its state (#563, #625)
-                    var epoch = grid.Epoch(first + i).ConvertTo(searchWindow.StartDate.Frame);
+                    // Labelled with the epoch read, start + i·step in the frame of the window start (#563, #625)
+                    var epoch = grid.Epoch(first + i);
                     var x = stateVectors[i];
                     orbitalParameters.Add(managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
@@ -1532,10 +1535,14 @@ public class SpiceAPI
     private const int WindowReadChunk = 10000;
 
     /// <summary>
-    /// The epochs of a window read (#563): start + i·step in TDB, i from 0 while within the window, in exact tick arithmetic,
-    /// the end of the window included when it falls on the grid. Before 11.0.0 the native proxies stepped their epoch by
+    /// The epochs of a window read (#563): start + i·step in the time frame of the window start, i from 0 while within the
+    /// window, in exact tick arithmetic, the end of the window included when it falls on the grid; each epoch read at its TDB
+    /// seconds, as the read of that epoch alone takes them. Before 11.0.0 the native proxies stepped their epoch by
     /// epoch += step in double TDB seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of
-    /// 0.1 s, 4.29e-4 s after 9000 of 1.2 s) and the last epoch of the window could be dropped.
+    /// 0.1 s, 4.29e-4 s after 9000 of 1.2 s) and the last epoch of the window could be dropped; a grid taken in TDB for a
+    /// window of another frame still dropped it where TDB − TT made the window shorter in TDB (a UTC window of 600 s at
+    /// 0.1 s from the first of May to that of October 2026: 6000 states for 6001, review of #563), and its labels were off
+    /// start + i·step by up to 2 ticks.
     /// </summary>
     private readonly struct WindowGrid
     {
@@ -1553,12 +1560,12 @@ public class SpiceAPI
                 throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a window read must be positive.");
             }
 
-            _start = searchWindow.StartDate.ToTDB();
+            _start = searchWindow.StartDate;
             _stepTicks = stepSize.Ticks;
-            Count = (searchWindow.EndDate.ToTDB() - _start).Ticks / _stepTicks + 1;
+            Count = (searchWindow.EndDate.ConvertTo(_start.Frame) - _start).Ticks / _stepTicks + 1;
         }
 
-        /// <summary>Epoch <paramref name="index"/>, TDB.</summary>
+        /// <summary>Epoch <paramref name="index"/>, in the time frame of the window start.</summary>
         internal Time Epoch(long index) => _start + TimeSpan.FromTicks(_stepTicks * index);
 
         /// <summary>The TDB seconds past J2000 of at most <paramref name="length"/> epochs from <paramref name="first"/>, as the
@@ -1568,7 +1575,7 @@ public class SpiceAPI
             var seconds = new double[(int)System.Math.Min(length, Count - first)];
             for (int i = 0; i < seconds.Length; i++)
             {
-                seconds[i] = Epoch(first + i).TimeSpanFromJ2000().TotalSeconds;
+                seconds[i] = Epoch(first + i).ToTDB().TimeSpanFromJ2000().TotalSeconds;
             }
 
             return seconds;
@@ -1711,8 +1718,9 @@ public class SpiceAPI
     /// <param name="naifId">NAIF ID of the spacecraft (the CK bus frame ID is derived as naifId * 1000)</param>
     /// <param name="tolerance">Search tolerance — data within this duration of each step epoch will be returned</param>
     /// <param name="referenceFrame">Reference frame for the returned orientations</param>
-    /// <param name="stepSize">Time step between successive query epochs, positive: start + i·step in TDB, i from 0 while within
-    /// the window, the end included when it falls on the grid (#563)</param>
+    /// <param name="stepSize">Time step between successive query epochs, positive: start + i·step in the time frame of the window
+    /// start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid (#563);
+    /// each record is labelled with the epoch of the CK's record, TDB</param>
     /// <returns>
     ///     The records of the CK, as <c>ckgpav_c</c> returns them: the C-matrix, the rotation from
     ///     <paramref name="referenceFrame"/> to the spacecraft frame, labelled with <paramref name="referenceFrame"/>, its

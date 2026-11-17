@@ -136,14 +136,53 @@ public class CspiceWindowCapacityTests
         Compare("occultation any", whole, joined, 1121);
     }
 
+    // An instrument of the Earth whose field, in IAU_EARTH, looks along the prime meridian at the equator: a rectangle of
+    // half-angles 40° in latitude and 15° in longitude, which the Moon crosses once a day (review of #653)
+    private const int MeridianInstrument = -7653001;
+
+    private static string MeridianKernel()
+    {
+        string n = Environment.NewLine;
+        return $"KPL/IK{n}\\begindata{n}" +
+               $"INS{MeridianInstrument}_FOV_CLASS_SPEC       = 'ANGLES'{n}" +
+               $"INS{MeridianInstrument}_FOV_SHAPE            = 'RECTANGLE'{n}" +
+               $"INS{MeridianInstrument}_FOV_FRAME            = 'IAU_EARTH'{n}" +
+               $"INS{MeridianInstrument}_BORESIGHT            = ( 1.0, 0.0, 0.0 ){n}" +
+               $"INS{MeridianInstrument}_FOV_REF_VECTOR       = ( 0.0, 0.0, 1.0 ){n}" +
+               $"INS{MeridianInstrument}_FOV_REF_ANGLE        = 40.0{n}" +
+               $"INS{MeridianInstrument}_FOV_CROSS_ANGLE      = 15.0{n}" +
+               $"INS{MeridianInstrument}_FOV_ANGLE_UNITS      = 'DEGREES'{n}\\begintext{n}";
+    }
+
+    private static IEnumerable<Window> FieldOfView(Window window) =>
+        SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, MeridianInstrument, 301, new Frames.Frame("IAU_MOON"), ShapeType.Point,
+            Aberration.None, TimeSpan.FromHours(1.0));
+
+    [Fact]
+    public void FieldOfView_PastAThousandWindows_EveryWindow()
+    {
+        var ik = FrameKernelFiles.NewFile("ik653", ".ti");
+        System.IO.File.WriteAllText(ik.FullName, MeridianKernel());
+        FrameKernelFiles.Load(ik, () =>
+        {
+            var whole = FieldOfView(CoordinateWindow).ToArray();
+            var joined = Joined(CoordinateWindow, FieldOfView);
+            Compare("field of view", whole, joined, FieldOfViewCount);
+        });
+    }
+
+    // The Moon's passes through the field over the 1100 days of CoordinateWindow (gftfov_c with a larger cell)
+    private const int FieldOfViewCount = 1062;
+
     [Fact]
     public void PastTheNativeCell_ThrowsSpicesError()
     {
         // More windows than the 10000 of the native cell: the X crossings of the Moon over 6000 days, 11594 (gfposc_c with a
-        // larger cell): SPICE(WINDOWEXCESS), with its message, never a partial list
+        // larger cell): SPICE(WINDOWEXCESS), never a partial list. The exception carries SPICE's long message, the size of
+        // the cell counted in endpoints, without the short code
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(6000.0));
         var exception = Assert.Throws<InvalidOperationException>(() => Coordinate(window, RelationnalOperator.Equal, 0.0).ToArray());
-        Assert.Contains("Cannot insert an additional interval into the window", exception.Message);
+        Assert.Contains("Window has size, 20000, cardinality 20000. Cannot insert an additional interval into the window.", exception.Message);
     }
 
     [Theory]
@@ -202,6 +241,23 @@ public class CspiceWindowCapacityTests
             "-85", 300.0), LroWindow);
         Assert.Equal(1121, occultation.Length);
         Assert.Equal(occultation, Occultation(LroWindow).ToArray());
+    }
+
+    [Fact]
+    [Trait("Category", "Validation")]
+    public void FieldOfView_PastAThousandWindows_EqualsGftfov()
+    {
+        var ik = FrameKernelFiles.NewFile("ik653", ".ti");
+        System.IO.File.WriteAllText(ik.FullName, MeridianKernel());
+        FrameKernelFiles.Load(ik, () =>
+        {
+            var reference = ToWindows(CspiceDirect.Gftfov(Seconds(CoordinateWindow.StartDate), Seconds(CoordinateWindow.EndDate),
+                MeridianInstrument.ToString(System.Globalization.CultureInfo.InvariantCulture), "301", "POINT", "IAU_MOON", "NONE", "399", 3600.0),
+                CoordinateWindow);
+            _output.WriteLine($"MEASURE #653 gftfov: {reference.Length} windows");
+            Assert.Equal(FieldOfViewCount, reference.Length);
+            Assert.Equal(reference, FieldOfView(CoordinateWindow).ToArray());
+        });
     }
 
     private static Window[] Gfposc(string relation, double adjust) =>
