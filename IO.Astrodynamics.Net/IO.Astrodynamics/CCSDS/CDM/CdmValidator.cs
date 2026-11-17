@@ -233,13 +233,10 @@ public sealed class CdmValidator
             result.AddError(ContentValidationCode, "State vector is required.", $"{path}.Data.StateVector");
         }
 
+        // A covariance holds a 6×6 matrix, its init accessor refusing another size (#730)
         if (segment.Data.CovarianceMatrix == null)
         {
             result.AddError(ContentValidationCode, "Covariance matrix is required.", $"{path}.Data.CovarianceMatrix");
-        }
-        else if (segment.Data.CovarianceMatrix.StateCovarianceRtn.Rows != 6 || segment.Data.CovarianceMatrix.StateCovarianceRtn.Columns != 6)
-        {
-            result.AddError(ContentValidationCode, "Covariance matrix must be 6x6.", $"{path}.Data.CovarianceMatrix.StateCovarianceRtn");
         }
     }
 

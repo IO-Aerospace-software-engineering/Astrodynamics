@@ -365,7 +365,8 @@ public sealed record CdmStateVector
 /// <see cref="ArgumentOutOfRangeException"/> naming its property for NaN or ±Infinity, a term of
 /// <see cref="StateCovarianceRtn"/> included, which the writer would write as <c>NaN</c>, <c>Infinity</c> or <c>-Infinity</c> and the reader refuses (#717).
 /// The record holds a copy of the matrix it is given and returns a copy of the one it holds, so a term set afterwards on
-/// either matrix does not reach it (review of #717). <see cref="Cdm.Validate"/> checks its size, 6×6.
+/// either matrix does not reach it (review of #717). The init accessor refuses a matrix that is not 6×6 (#730), so the
+/// record always holds the 21 terms <c>CR_R</c> ... <c>CNDOT_NDOT</c> that the writer writes.
 /// </remarks>
 public sealed record CdmCovarianceMatrix
 {
@@ -382,11 +383,25 @@ public sealed record CdmCovarianceMatrix
     /// and the getter returns a copy of the one it holds, so a term set afterwards on either <see cref="Matrix"/> (whose
     /// <see cref="Matrix.Set"/> writes its shared array) does not reach the record (review of #717).
     /// </remarks>
+    /// <exception cref="ArgumentException">The matrix given is not 6×6, <c>default(Matrix)</c> included (#730: it was
+    /// accepted, and <see cref="CdmWriter"/> then threw <see cref="IndexOutOfRangeException"/> or
+    /// <see cref="NullReferenceException"/>); checked before its terms.</exception>
     /// <exception cref="ArgumentOutOfRangeException">A term of the matrix given is NaN or ±Infinity.</exception>
     public Matrix StateCovarianceRtn
     {
         get => CcsdsValues.Copy(_stateCovarianceRtn);
-        init => _stateCovarianceRtn = CcsdsValues.RequireFinite(CcsdsValues.Copy(value), nameof(StateCovarianceRtn));
+        init => _stateCovarianceRtn =
+            CcsdsValues.RequireFinite(CcsdsValues.Copy(RequireSixBySix(value)), nameof(StateCovarianceRtn));
+    }
+
+    // The size of the state covariance: 6×6, the matrix whose lower triangle CCSDS 508.0-B-1 table 3-5 lists (#730)
+    private static Matrix RequireSixBySix(Matrix value)
+    {
+        if (value.Rows != 6 || value.Columns != 6)
+            throw new ArgumentException(
+                $"{nameof(StateCovarianceRtn)} must be a 6x6 matrix; the matrix given is {value.Rows}x{value.Columns}.",
+                nameof(StateCovarianceRtn));
+        return value;
     }
 
     private readonly double? _cdrgR;

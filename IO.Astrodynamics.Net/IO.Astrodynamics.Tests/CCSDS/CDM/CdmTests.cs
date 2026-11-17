@@ -691,6 +691,49 @@ public class CdmTests
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
     }
 
+    public static TheoryData<int, int> NotSixBySixSizes() => new()
+    {
+        { 3, 3 }, { 6, 5 }, { 5, 6 }, { 7, 7 }, { 6, 1 }, { 1, 6 }, { 0, 0 }
+    };
+
+    [Theory]
+    [MemberData(nameof(NotSixBySixSizes))]
+    public void Init_CovarianceNotSixBySix_ThrowsArgumentExceptionNamingTheProperty(int rows, int columns)
+    {
+        // #730: the 21 terms CR_R ... CNDOT_NDOT of CCSDS 508.0-B-1 table 3-5 are the lower triangle of a 6×6 matrix; the
+        // init accessor accepted any size, and CdmWriter then threw IndexOutOfRangeException (Cdm.Validate reported it only
+        // when it ran)
+        var matrix = new Matrix(rows, columns);
+        var ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+        Assert.Contains("6x6", ex.Message);
+
+        // A with expression on a covariance read from a document, the same refusal
+        var read = Cdm.ReadFromString(ManualCdmXml()).Segments[0].Data!.CovarianceMatrix!;
+        ex = Assert.Throws<ArgumentException>(() => read with { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+    }
+
+    [Fact]
+    public void Init_DefaultCovarianceMatrix_ThrowsArgumentExceptionNamingTheProperty()
+    {
+        // #730: default(Matrix), 0×0 over a null array, was accepted, and CdmWriter then threw NullReferenceException
+        var ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = default });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+
+        // A size error before a term error: a 3×3 matrix with a NaN throws ArgumentException for its size, not the
+        // ArgumentOutOfRangeException of a term (Assert.Throws checks the exact type)
+        var matrix = new Matrix(3, 3);
+        matrix.Set(0, 0, double.NaN);
+        ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+
+        // The record without an init holds a 6×6 zero matrix, written and read back
+        var covariance = new CdmCovarianceMatrix();
+        Assert.Equal(6, covariance.StateCovarianceRtn.Rows);
+        Assert.Equal(6, covariance.StateCovarianceRtn.Columns);
+    }
+
     [Fact]
     public void With_NonFiniteCollisionProbability_ThrowsAndTheWrittenCdmReadsBack()
     {
