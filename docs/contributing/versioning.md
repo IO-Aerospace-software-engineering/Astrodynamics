@@ -3238,7 +3238,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   product is not finite (Changed below), and the OPM and OMM readers report it as `OpmParseException` or
   `OmmParseException` naming the keyword and its text. `KeplerianElements.FromOMM` computed (n × 2π) / 86400, whose
   product overflowed above about 2.86e307 rev/day where the quotient is finite: it now takes the same two roundings on
-  n × 2⁻¹⁰ and 86400 × 2⁻¹⁰ there, the value an unbounded exponent gives, and is bit for bit unchanged below. References:
+  n × 2⁻¹⁰ and 86400 × 2⁻¹⁰ there, the value an unbounded exponent gives, and is bit for bit unchanged below.
+  `Omm.ToTle`, its one caller in the library, converted that value back with `TLE.Create`, whose product overflowed over
+  the same range: an OMM with `MEAN_MOTION` 3e307 gave, without an exception, a TLE whose mean motion field was the text
+  `Infinity` (measured with the `FromOMM` change above). `ToTle` now refuses a `MEAN_MOTION` above the 99.99999999 rev/day of its
+  11-character field (columns 53 to 63 of line 2), naming the keyword (Changed below;
+  `OmmTests.ToTle_MeanMotionBeyondTheTleField_ThrowsNamingMeanMotion`, 5 rows red, two of them with no exception). References:
   the IEEE 754 bounds (the largest double whose product is finite, 1.7976931348623156e305 for 1000 and
   1.7976931348623154e302 for 1e6, stored and converted as given) and the two roundings in exact rational arithmetic
   (`OpmStateVectorTests`, `CovarianceMatrixTests`, `OpmReaderTests`, `OmmReaderTests` `*OverflowingInSiUnits*` and
@@ -4538,6 +4543,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   it and the conversions gave ±Infinity; the OPM and OMM readers throw their parse exception naming the keyword. Values of
   a `StateVector` (`FromStateVector`, `FromMatrixWithUnitConversion`) always convert back. Migration: none for a physical
   state; such a value carries no orbit.
+- **Breaking: `Omm.ToTle` refuses a `MEAN_MOTION` its TLE field cannot hold** ([#729]({L}729), Fixed above). A mean
+  motion above the 99.99999999 rev/day of the 11-character field throws `InvalidOperationException` naming `MEAN_MOTION`
+  and its value, as a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent, where `TLE`'s constructor threw its
+  line-length `ArgumentException` and, above about 2.86e307 rev/day, a TLE was returned with the text `Infinity`.
+  Migration: catch `InvalidOperationException` instead of `ArgumentException`; such an object has no TLE form.
 - **Breaking: `CdmCovarianceMatrix.StateCovarianceRtn` refuses a matrix that is not 6×6** ([#730]({L}730), Fixed above).
   An object initializer or a `with` expression with another size or `default(Matrix)` throws `ArgumentException` naming
   `StateCovarianceRtn`, where it built and the writer failed. `Cdm.Validate` no longer checks the size, which no record

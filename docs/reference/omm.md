@@ -77,9 +77,12 @@ and `1.5` or `1,5` 5 January of the current year.
 A term of the covariance (`CX_X` ... `CZ_DOT_Z_DOT`, km², km²/s, km²/s²) whose value in m², m²/s or m²/s², its product by
 1e6, is beyond the range of a `double` (above about 1.8e302) throws `OmmParseException` naming the keyword and the text,
 and `new CovarianceMatrix(...)` and its factories `ArgumentOutOfRangeException` naming the term
-([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)): `ToMatrixWithUnitConversion` gave ±Infinity before 11.0.0. `KeplerianElements.FromOMM`, which converts
-the mean motion to rad/s for `ToTle`, gives a finite value above about 2.86e307 rev/day, where (n × 2π) / 86400 gave
-+Infinity ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). A negative `REV_AT_EPOCH` names `revolutionNumberAtEpoch` in the `ArgumentOutOfRangeException` of
+([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)): `ToMatrixWithUnitConversion` gave ±Infinity before 11.0.0. `ToTle` throws `InvalidOperationException`
+naming `MEAN_MOTION` and its value for a mean motion above the 99.99999999 rev/day its 11-character TLE field holds, as
+for a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent; before 11.0.0 it threw the TLE's line-length
+`ArgumentException`, and above about 2.86e307 rev/day, where the conversion to rad/s and back overflowed, it returned a
+TLE whose mean motion was the text `Infinity` ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). `KeplerianElements.FromOMM` gives a finite mean motion in rad/s above about 2.86e307
+rev/day, where (n × 2π) / 86400 gave +Infinity; such elements carry no orbit a TLE can hold. A negative `REV_AT_EPOCH` names `revolutionNumberAtEpoch` in the `ArgumentOutOfRangeException` of
 `TleParameters` (its constructor and the four `CreateWith*` factories), the parameter they take, where it named
 `revNumber` ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734)).
 
@@ -143,7 +146,7 @@ valid, as for the other spacecraft parameters (#708: an error before 11.0.0).
 
 | Method | Description |
 |--------|-------------|
-| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485) |
+| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485); a `NORAD_CAT_ID`, `REV_AT_EPOCH` or `MEAN_MOTION` its TLE field cannot hold throws `InvalidOperationException` naming it (#729 for `MEAN_MOTION`, above 99.99999999 rev/day) |
 | `Validate()` | Validate and return `OmmValidationResult` |
 | `IsValid()` | Quick validity check (returns `bool`) |
 
