@@ -56,6 +56,53 @@ public class StarTests
         Assert.True(star.IsStar);
     }
 
+    /// <summary>
+    /// #732: a parallax that gives no distance in front of the star is refused with <see cref="ArgumentOutOfRangeException"/>
+    /// naming <c>parallax</c> (decided by S. Guillet, 2026-11-17: 0 refused, not a star at infinity). Before, each was
+    /// accepted silently: 0 gave a <see cref="Star.Distance"/> of +∞ (−0 of −∞) and positions of infinities, a negative
+    /// parallax a negative distance that put the star in the opposite direction (cosine −1 with its catalog direction for
+    /// −0.5″), NaN a NaN distance, +∞ (−∞) a distance of 0 (−0), and a positive parallax below about 1.7e-292″ a
+    /// distance that overflowed to +∞ (1e-300″ and the least subnormal, 4.9e-324″).
+    /// </summary>
+    public static TheoryData<double> RefusedParallaxes() => new()
+    {
+        0.0, -0.0, -0.5, -double.Epsilon, double.NaN, double.PositiveInfinity, double.NegativeInfinity, 1e-300, double.Epsilon
+    };
+
+    [Theory]
+    [MemberData(nameof(RefusedParallaxes))]
+    public void Constructor_AParallaxThatGivesNoDistance_Throws(double parallax)
+    {
+        // Act
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new Star(732, "star732", 1E+30, "spec", 2, parallax,
+            new Equatorial(0.3, 1.2, TimeSystem.Time.J2000TDB), 0, 0, 0, 0, 0, 0, TimeSystem.Time.J2000TDB));
+
+        // Assert
+        Assert.Equal("parallax", exception.ParamName);
+        Assert.Equal(parallax, exception.ActualValue);
+    }
+
+    /// <summary>
+    /// #732: the parallaxes at the ends of the accepted range build a star at a finite positive distance, 1/parallax
+    /// parsecs: the least normal parallax whose distance is finite (1/p · pc ≤ <see cref="double.MaxValue"/>, p ≥ about
+    /// 1.7e-292″) and a large one whose inverse is a normal double (1/p of a larger p is subnormal and holds fewer digits).
+    /// </summary>
+    [Theory]
+    [InlineData(1.0e-291)]
+    [InlineData(1.0e-6)]
+    [InlineData(1.0e300)]
+    public void Constructor_APositiveParallax_GivesAFiniteDistance(double parallax)
+    {
+        // Act
+        var star = new Star(732, "star732", 1E+30, "spec", 2, parallax, new Equatorial(0.3, 1.2, TimeSystem.Time.J2000TDB), 0, 0, 0, 0, 0, 0,
+            TimeSystem.Time.J2000TDB);
+
+        // Assert: the closed form 1/parallax parsecs, to the two roundings of the constructor
+        double expected = Astrodynamics.Constants.Parsec2Meters / parallax;
+        Assert.True(double.IsFinite(star.Distance) && star.Distance > 0.0, $"{star.Distance}");
+        Assert.True(System.Math.Abs(star.Distance / expected - 1.0) <= 2.0 * DoubleUnitRoundoff, $"{star.Distance} {expected}");
+    }
+
     // The unit roundoff of a double, 2^-53
     private const double DoubleUnitRoundoff = 1.1102230246251565e-16;
 

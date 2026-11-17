@@ -45,7 +45,8 @@ public class Star : CelestialBody
     /// <param name="mass">The mass of the star.</param>
     /// <param name="spectralType">The spectral type of the star.</param>
     /// <param name="visualMagnitude">The visual magnitude of the star.</param>
-    /// <param name="parallax">The parallax of the star in arcseconds; its distance is 1/parallax parsecs.</param>
+    /// <param name="parallax">The parallax of the star in arcseconds, finite and positive; its distance is 1/parallax
+    /// parsecs (<see cref="Constants.Parsec2Meters"/>).</param>
     /// <param name="equatorialCoordinatesAtEpoch">The right ascension and declination of the star in ICRF at the catalog
     /// epoch, in radians (its distance is not read).</param>
     /// <param name="declinationProperMotion">The proper motion in declination, dδ/dt, in radians per Julian year of TDB.</param>
@@ -60,10 +61,29 @@ public class Star : CelestialBody
     /// <param name="rightAscensionSigmaProperMotion">The standard deviation of the proper motion in right ascension as a
     /// true angle, σμα*, in radians per Julian year of TDB (Gaia's <c>pmra_error</c>).</param>
     /// <param name="epoch">The catalog epoch, read in its own time frame and converted to TDB (#709).</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="parallax"/> is 0, negative, NaN or infinite, or so small
+    /// that 1/parallax parsecs overflows a double (below about 1.7e-292″): no distance in front of the star (#732, decided
+    /// by S. Guillet, 2026-11-17). Before 11.0.0 it was accepted: 0 gave an infinite distance, a negative parallax put the
+    /// star in the opposite direction, NaN a NaN distance, an infinite one a distance of 0.</exception>
     public Star(int catalogNumber, string name, double mass, string spectralType, double visualMagnitude, double parallax, Equatorial equatorialCoordinatesAtEpoch,
         double declinationProperMotion, double rightAscensionProperMotion, double declinationSigma, double rightAscensionSigma, double declinationSigmaProperMotion,
         double rightAscensionSigmaProperMotion, Time epoch) : base((int)1E+09 + catalogNumber, name, mass)
     {
+        // A parallax that gives no distance in front of the star (#732, decided by S. Guillet, 2026-11-17): 0, a negative
+        // value, NaN or an infinity, and a positive value so small that 1/parallax parsecs overflows a double
+        if (!(parallax > 0.0) || double.IsPositiveInfinity(parallax))
+        {
+            throw new ArgumentOutOfRangeException(nameof(parallax), parallax,
+                "The parallax must be a finite positive number of arcseconds: 0, a negative value, NaN and an infinity give no distance.");
+        }
+
+        double distance = (1 / parallax) * Constants.Parsec2Meters;
+        if (double.IsPositiveInfinity(distance))
+        {
+            throw new ArgumentOutOfRangeException(nameof(parallax), parallax,
+                "The parallax is so small that its distance, 1/parallax parsecs, overflows a double.");
+        }
+
         CatalogNumber = catalogNumber;
         SpectralType = spectralType ?? throw new ArgumentNullException(nameof(spectralType));
         VisualMagnitude = visualMagnitude;
@@ -77,7 +97,7 @@ public class Star : CelestialBody
         DeclinationSigma = declinationSigma;
         RightAscensionSigmaProperMotion = rightAscensionSigmaProperMotion;
         DeclinationSigmaProperMotion = declinationSigmaProperMotion;
-        Distance = (1 / Parallax) * Constants.Parsec2Meters;
+        Distance = distance;
     }
 
     /// <summary>

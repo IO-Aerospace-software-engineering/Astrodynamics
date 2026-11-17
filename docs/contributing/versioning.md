@@ -3225,6 +3225,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   regenerated, its worst edge 2.38 µs and direction 1.19e-16 rad on Linux x64, within the thresholds of 4.8e-6 s and
   4.4e-16 rad.
 
+- **A `Star` accepted a parallax that gives no distance** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732)).
+  The constructor stored any parallax and set `Distance` to 1/parallax parsecs, silently: 0 gave +∞ (−0 −∞) and
+  positions of infinities, a negative parallax a negative distance that put the star in the opposite direction (cosine −1
+  with its catalog direction for −0.5″; Gaia DR3 holds many negative parallaxes), NaN a NaN distance, ±∞ a distance of
+  0, and a positive parallax below about 1.7e-292″ a distance that overflowed to +∞ (measured on a85098d). The
+  constructor now throws `ArgumentOutOfRangeException` naming `parallax`, its value as `ActualValue`, for each of them,
+  0 included (decided by S. Guillet, 2026-11-17: refused, not a star at infinity, which every state, SPK and occultation
+  path would have to handle) (`StarTests.Constructor_AParallaxThatGivesNoDistance_Throws`, 9 values, red on a85098d;
+  `Constructor_APositiveParallax_GivesAFiniteDistance` for 1e-291″, 1e-6″ and 1e300″). Every star of the test suite
+  keeps its parallax.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -3285,6 +3296,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   thresholds of 4.8e-6 s and 4.4e-16 rad. Migration: a caller that passed dα/dt passes `RightAscensionProperMotion` ×
   cos δ0, and multiplies its right ascension sigma and sigma rate by cos δ0; a caller that passed a catalog's `pmra`
   needs no change and now gets the star of the catalog.
+- **Breaking: the `Star` constructor refuses a parallax that is not finite and positive** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732), Fixed above).
+  `ArgumentOutOfRangeException` (`parallax`) for 0, a negative value, NaN, ±∞ and a positive value whose distance
+  overflows a double. Migration: a catalog record with a parallax of 0 or less (a Gaia DR3 star whose parallax is below
+  its error) is not a star with a distance: leave it out, or give it a parallax of its own choosing (the catalog's
+  parallax plus a prior, an upper bound of the distance).
 - **Breaking: `Constants.Parsec2Meters` is 648000/π au** ([#733](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/733), Fixed above).
   3.0856775814913673e16 m, 1.592e-10 relative above the 3.085677581e16 m of 10.x, and so every `Star.Distance` and star
   position from the barycenter. A public `const`: an assembly compiled against an earlier version keeps the old value
