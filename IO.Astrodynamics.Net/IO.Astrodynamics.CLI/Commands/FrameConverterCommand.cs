@@ -25,19 +25,9 @@ public class FrameConverterCommand
     {
         SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
-        if (from.Equals("ICRF", StringComparison.InvariantCultureIgnoreCase))
-        {
-            from = "J2000";
-        }
-        
-        if (to.Equals("ICRF", StringComparison.InvariantCultureIgnoreCase))
-        {
-            to = "J2000";
-        }
-        
         var inputEpoch = Helpers.ConvertDateTimeInput(epoch.Epoch);
 
-        var q = new Frame(from).ToFrame(new Frame(to), inputEpoch);
+        var q = Helpers.ResolveFrame(from).ToFrame(Helpers.ResolveFrame(to), inputEpoch);
         Console.WriteLine(q);
         return Task.CompletedTask;
     }

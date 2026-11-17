@@ -49,6 +49,7 @@ dotnet run --project IO.Astrodynamics.CLI -- [command]
 # Install CLI globally
 dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.Astrodynamics.CLI
 ```
+Every command resolves its frame arguments by one rule (internal `Helpers.ResolveFrame`, #657): ICRF or J2000, in any case, is `Frame.ICRF`, printed `J2000` on every path; any other name is `new Frame(name)`.
 
 ## Architecture
 

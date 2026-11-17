@@ -3262,6 +3262,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in TEME 15.1 ms (13.6) and in ITRF93 converted to ICRF 14.2 ms (12.7); before, an epoch read again by a long-lived
   frame was found in its dictionary.
 
+- **The command line labelled ICRF `j2000` on the SPICE path and `J2000` from a site** ([#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)).
+  `ephemeris`, `orientation` and `geometry-finder` rewrote their frame argument ICRF as `j2000` and built `new
+  Frame("j2000")`: a body or kernel-backed spacecraft observer printed `Frame : j2000` (the frame SPICE was given), a
+  site observer `Frame : J2000` (the state computed in `Frame.ICRF`, which equals the frame asked), and so did the
+  orientation of a kernel-backed spacecraft; `frame-converter`, `orbital-parameters` and the orbital parameters of
+  `propagate` rewrote it as `J2000`. Every command now resolves its frame arguments by one rule (internal
+  `Helpers.ResolveFrame`): ICRF or J2000, in any case, is `Frame.ICRF`, labelled `J2000` on every path; any other name
+  is `new Frame(name)`, which the library routes by its name (TEME, GCRF, CIRS, TIRS, #656). The numbers are unchanged
+  (`EphemerisTests.IcrfIsLabelledJ2000_OnTheSpiceAndTheSitePaths`, ICRF, icrf and j2000 red on a85098d; the expected
+  labels of `EphemerisTests` and `SpacecraftKernelsTests` updated). The output: Changed below.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -4549,6 +4560,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   own store; code that added orientations to another frame gives them to a `MemoryDataProvider`
   (`AddStateOrientationToICRF(frame, date, orientation)`), whose frames read them.
 
+- **Breaking: the command line prints `Frame : J2000` for ICRF on every path** ([#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657), Fixed above).
+  `astro ephemeris` from a body or a kernel-backed spacecraft, and `astro orientation` of a kernel-backed spacecraft, in
+  the default frame ICRF or a frame named `icrf` or `j2000`, printed `Frame : j2000`; they print `Frame : J2000`, as a
+  site observer did. Numbers unchanged. Migration: a script that parses the label reads `J2000`, or compares it ignoring
+  case.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -4879,11 +4896,9 @@ not listed.
   RTN, 1.71 s propagated); results are unaffected. `EvaluateAvoidance` does not check
   `AvoidanceSearchOptions.MaximumEventSearchStep`: 0 s runs about 15 s and ends in `OutOfMemoryException`, a negative
   step is accepted; pass a positive step.
-- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652),
-  [#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)). The help of
+- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652)). The help of
   `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do
   not exist, and its `RA/DEC` and `RIGHT ASCENSION` are rejected: pass the member names (`RaDec`, `RightAscension`).
-  `ephemeris` labels ICRF states `j2000` on the SPICE path and `J2000` from a site observer, the numbers the same.
 
 ### 10.2.0-preview-1
 
