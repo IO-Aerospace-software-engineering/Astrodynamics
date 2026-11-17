@@ -3159,15 +3159,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` of an observer inside the target, never a message about the half-angles
   (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
   guard blamed the half-angles 0.1 and 0.1 rad; the rectangle reported such a point in view, its margin taking
-  atan2(0, 0) = 0, until [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), under
-  Changed). Every other
-  field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
+  atan2(0, 0) = 0, until [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721),
+  below). Every other field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
   `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends (decided by
   S. Guillet, 2026-11-17), the constructors keep the rule "finite and positive" for both half-angles, and the
   documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
   measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
   and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at the
   boresight not found for a half-angle of 1e-155 rad in the reference plane, measured).
+- **A rectangular field reported a point target at the observer in view** ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)).
+  `Instrument.IsInFOV` and the managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` reported a
+  point target at the observer, distance 0 (two spacecraft of the same state), in view: its margin took the angles of
+  the zero vector as atan2(0, 0) = 0, so the search returned the whole search window (a85098d: `IsInFOV` true and the
+  window [2024-01-01T00:00:00, 00:02:00] TDB, for a field of 0.1 and 0.2 rad). A point at the observer has no
+  direction, so it is neither in nor out of the field; since #715 the circle and the ellipse throw
+  `InvalidOperationException` naming the target at the observer. The rectangle now throws the same exception, its
+  distance checked before its margin (decision 9 of #719, decided by S. Guillet, 2026-11-17;
+  `InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance` and
+  `PointTargetAtTheObserver_ManagedSearchThrowsInvalidOperationNamingTheDistance`, red on a85098d for the rectangle).
+  Every other target of a rectangle is searched as before, bit for bit (the same margin). The result changes from
+  "in view" to an exception: Breaking, under Changed.
 - **Six csharp blocks of three tutorials did not compile with the directives of their page** ([#716](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/716)).
   `DocumentationPagesExamplesTests.PageBlocks_CompileWithTheUsingsOfTheirPage` compiled, as a reader who copies them,
   only the blocks that declare using directives (15 of 174), so a block without a list of its own that used a namespace
@@ -3222,20 +3233,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
-- **Breaking: a point target at the observer throws for a rectangular field too**
-  ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). `Instrument.IsInFOV` and the
-  managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` reported a point target at the observer,
-  distance 0 (two spacecraft of the same state), in view: its margin took the angles of the zero vector as
-  atan2(0, 0) = 0, so the search returned the whole search window (a85098d: `IsInFOV` true and the window
-  [2024-01-01T00:00:00, 00:02:00] TDB, for a field of 0.1 and 0.2 rad). A point at the observer has no direction, so
-  it is neither in nor out of the field; since #715 the circle and the ellipse throw `InvalidOperationException` naming
-  the target at the observer. The rectangle now throws the same exception, its distance checked before its margin
-  (decision 9 of #719, decided by S. Guillet, 2026-11-17;
-  `InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance` and
-  `PointTargetAtTheObserver_ManagedSearchThrowsInvalidOperationNamingTheDistance`, red on a85098d for the rectangle).
-  Every other target of a rectangle is searched as before, bit for bit (the same margin). Migration: a caller that
-  searches or tests a target that can be at the instrument's spacecraft catches `InvalidOperationException`; no change
-  for a target away from the observer.
+- **Breaking: a point target at the observer throws for a rectangular field too** ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), Fixed above).
+  `Instrument.IsInFOV` and the managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` throw
+  `InvalidOperationException` naming the target at the observer for a point target at distance 0, where they reported
+  it in view (`IsInFOV` true, the whole search window), as the circle and the ellipse have since #715. Migration: a
+  caller that searches or tests a target that can be at the instrument's spacecraft catches
+  `InvalidOperationException`; no change for a target away from the observer.
 - **Breaking: the third parameter of `LambertSolver.Solve` is `targetObjectOrbitalParameters`**
   ([#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662), item 3). The public parameter
   was spelled `targetOjectOrbitalParameters`, a misspelling a caller passing it by name had to copy, and the

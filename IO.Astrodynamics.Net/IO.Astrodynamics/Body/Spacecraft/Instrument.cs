@@ -389,8 +389,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="aberration">The aberration correction.</param>
         /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
         /// <exception cref="InvalidOperationException">The field of view cannot be searched (see
-        /// <see cref="FindWindowsInFieldOfViewConstraint"/>), or the spacecraft is managed and has no attitude (#682; before
-        /// 11.0.0 the identity of ICRF was used).</exception>
+        /// <see cref="FindWindowsInFieldOfViewConstraint"/>), the target is at the observer, whatever the shape of the field
+        /// (distance 0: it has no direction; #715 and #721, before 11.0.0 an unrelated <see cref="ArgumentException"/> for a
+        /// circle or an ellipse and <c>true</c> for a rectangle), or the spacecraft is managed and has no attitude (#682;
+        /// before 11.0.0 the identity of ICRF was used).</exception>
         public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
         {
             return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;
