@@ -8,9 +8,19 @@ public class TDTTimeFrame : TimeFrame
     {
     }
 
+    /// <summary>
+    /// TT − TAI, 32.184 s, in ticks.
+    /// </summary>
+    internal static readonly long TtMinusTaiTicks = TimeSpan.FromSeconds(32.184).Ticks;
+
     public override Time ConvertToTAI(Time time)
     {
-        return new TimeSystem.Time(time.Add(TimeSpan.FromSeconds(-32.184)).DateTime, TAIFrame);
+        return FromTaiTicks(TaiTicks(time));
+    }
+
+    internal override long TaiTicks(in Time time)
+    {
+        return time.DateTime.Ticks - TtMinusTaiTicks;
     }
 
     public override Time ConvertFromTAI(Time time)

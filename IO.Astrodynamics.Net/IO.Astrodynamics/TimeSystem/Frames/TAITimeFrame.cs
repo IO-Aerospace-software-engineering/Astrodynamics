@@ -15,4 +15,9 @@ public class TAITimeFrame : TimeFrame
     {
         return taiTimeWithReference;
     }
+
+    internal override long TaiTicks(in Time time)
+    {
+        return time.DateTime.Ticks;
+    }
 }

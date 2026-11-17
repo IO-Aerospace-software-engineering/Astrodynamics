@@ -611,6 +611,13 @@ public class PropagatedArcsEdgeTests
         if (segments != null) Assert.Single(segments);
         spk.Delete();
 
+        // So does a state at the same instant labelled in another time frame: one instant, one state (#512)
+        var utcReplacement = new StateVector(outputs[6].Position + new Vector3(1.0, 0.0, 0.0), outputs[6].Velocity, earth,
+            outputs[6].Epoch.ToUTC(), Frame.ICRF);
+        added.AddPropagatedStates(utcReplacement);
+        Assert.Equal(outputs.Length, added.PropagatedStates.Length);
+        Assert.Same(utcReplacement, added.PropagatedStates[6]);
+
         // After a propagation: the arc of each epoch
         var (propagated, _) = Apogee(-5543, Leo(earth), earth);
         propagated.AddPropagatedStates(new StateVector(Leo(earth).Position, Leo(earth).Velocity, earth, Start.AddSeconds(3.3), Frame.ICRF));

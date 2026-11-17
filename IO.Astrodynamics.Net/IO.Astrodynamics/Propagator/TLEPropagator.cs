@@ -13,7 +13,8 @@ public class TLEPropagator : IPropagator
 {
     private uint _svCacheSize;
     private StateVector[] _svCache;
-    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>();
+    // Keyed by label (#512), as the orientations of a frame
+    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.LabelComparer);
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }

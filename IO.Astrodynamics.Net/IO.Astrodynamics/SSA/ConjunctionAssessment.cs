@@ -1594,10 +1594,11 @@ public static class ConjunctionAssessment
             toleranceSeconds);
     }
 
-    // The range rate read once per epoch, each value kept for the later reads of the same epoch
+    // The range rate read once per epoch, each value kept for the later reads of the same epoch, by label (#512): two
+    // consecutive TDB ticks of one TAI tick, which are equal times, are two reads of the bisection in ticks (#624)
     private static Func<Time, double> ReadOnce(Func<Time, double> rangeRate)
     {
-        var values = new Dictionary<Time, double>();
+        var values = new Dictionary<Time, double>(Time.LabelComparer);
         return epoch =>
         {
             if (!values.TryGetValue(epoch, out double value))

@@ -131,7 +131,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return base.ToStateVector(epoch);
             }
 
-            return epoch == Epoch ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
+            return epoch.HasSameLabel(Epoch) ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
         }
 
         /// <summary>

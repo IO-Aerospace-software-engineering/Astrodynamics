@@ -19,7 +19,8 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
-    protected ConcurrentDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
+    // Keyed by label (#512): an epoch in another time frame is read again, so that an orientation carries the epoch asked
+    protected ConcurrentDictionary<Time, StateOrientation> _stateOrientationsToICRF = new(Time.LabelComparer);
     protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
 
     // The orientation cache active on the current thread, and the frame it belongs to (FrameOrientationCacheScope)

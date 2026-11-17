@@ -98,6 +98,24 @@ public abstract class TimeFrame : ITimeFrame, IEquatable<TimeFrame>
     public abstract Time ConvertToTAI(Time time);
     public abstract Time ConvertFromTAI(Time time);
 
+    /// <summary>
+    /// The ticks of <paramref name="time"/> (in this frame) converted to TAI: the key of the order and the equality of
+    /// times (<see cref="Time.CompareTo(Time)"/>, #512). The frames of the library compute them in integer arithmetic,
+    /// tick for tick what <see cref="ConvertToTAI"/> gives, which they build from them; another frame converts.
+    /// </summary>
+    internal virtual long TaiTicks(in Time time)
+    {
+        return ConvertToTAI(time).DateTime.Ticks;
+    }
+
+    /// <summary>
+    /// The time of <paramref name="taiTicks"/> in TAI.
+    /// </summary>
+    private protected static Time FromTaiTicks(long taiTicks)
+    {
+        return new Time(new DateTime(taiTicks), TAIFrame);
+    }
+
     #region Compare
 
     public bool Equals(TimeFrame other)

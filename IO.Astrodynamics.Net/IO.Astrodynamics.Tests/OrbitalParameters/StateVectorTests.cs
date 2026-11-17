@@ -677,13 +677,16 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 "TT" => epoch.ToTDT(),
                 _ => epoch.ConvertTo(TimeFrame.GPSFrame)
             };
-            Assert.NotEqual(epoch, tag);
+            Assert.NotEqual(epoch.Frame, tag.Frame);
 
             var read = sv.ToStateVector(tag);
 
             Assert.Equal(sv.Position, read.Position);
             Assert.Equal(sv.Velocity, read.Velocity);
+            // The same instant (#512), labelled as the tag is
             Assert.Equal(tag, read.Epoch);
+            Assert.Equal(tag.Frame, read.Epoch.Frame);
+            Assert.Equal(tag.DateTime, read.Epoch.DateTime);
             Assert.Equal(sv.Frame, read.Frame);
             Assert.Equal(sv.Observer, read.Observer);
             Assert.True(read.Covariance.HasValue);
