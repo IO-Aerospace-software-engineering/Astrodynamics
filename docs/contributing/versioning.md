@@ -147,6 +147,16 @@ release are listed under **Known limitations**.
   few ulps of its epoch; the spacecraft rows as in ICRF. An inertial frame, a frame centred on the observer (the
   topocentric frame of the observing site, so the visibility searches of a spacecraft from a site) and `None` are
   unchanged, bit for bit.
+- **`InstrumentPointingToAttitude` ignored the light time for a celestial target** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549)). The law asked for
+  `Aberration.LT`, but a celestial target is the centre of the maneuver, so `Attitude.TryExecute` made the state
+  relative to it and the law read the target relative to itself, the zero vector: the pointing was geometric, the Moon
+  9.2e-5 rad from its LT direction from a LEO (4.4e-5 rad in the issue's LEO); a site target took the light time from
+  its body's centre, 4.6e-5 rad off `spkcpt_c` from a LEO with `LT` for a site given by its coordinates. The direction
+  is now the target as the spacecraft's position sees it (the internal `CelestialItem.ApparentPositionFromState`): the
+  target at t ∓ lt from the point at t, the light time of `spkltc`, and for `+S` the stellar aberration from the
+  spacecraft's velocity relative to the solar system barycenter, as `spkcvo_c` corrects it. Measured on Linux x64
+  (2026-11-17), the nine corrections: the boresight 1.0e-13 rad from `spkcvo_c`'s Moon from a LEO (8 states), 1.1e-12
+  rad from `spkcpt_c`'s site from a LEO (3 states). See Changed for the new parameter.
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -1240,7 +1250,7 @@ release are listed under **Known limitations**.
   rotation of the frame kernel's boresight onto the Moon's direction from `spkezr`, for five orientations. The light
   time it requests is not applied to a celestial target, whose direction stays geometric (4.3e-5 to 4.5e-5 rad from the
   light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue,
-  [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
+  [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), fixed in this release (above) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
 - **A state in GCRF propagates.** `PropagatorBase` rejected `Frame.GCRF` as an initial frame ("must be defined in
   inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceAPI` hands a frame named
   GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000` in `ReadEphemeris`, `ReadOrientation`,
@@ -3256,6 +3266,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   it with `ToFrame(frame)`, which rotates at the state's epoch. The native library exports `GetFrameInfoProxy`, which
   the .NET layer of the same release calls: a native library of an earlier release throws `EntryPointNotFoundException`
   there.
+- **Breaking: `InstrumentPointingToAttitude` applies its light time, and takes an `Aberration`** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), Fixed
+  above; decided by S. Guillet, 2026-11-17). The constructor takes an optional `aberration`, `Aberration.LT` by default,
+  what the law requested, exposed as `Aberration`; an undefined value throws `ArgumentOutOfRangeException`. Every
+  pointing at a celestial target moves to its light-time direction (the Moon by 4.4e-5 to 9.2e-5 rad from a LEO), and
+  so do the attitude records and the CKs written from them; a site target takes the light time from the spacecraft.
+  Migration: pass `Aberration.None` for the former geometric direction of a celestial target; recompile, the
+  constructor's signature changed.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -4670,13 +4687,10 @@ not listed.
 - **A null target orbit** ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). The
   target-orbit constructors of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` throw `NullReferenceException` for a
   null `targetOrbit`, not an `ArgumentNullException` that names it.
-- **Attitudes** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549),
-  [#592](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/592)). Between output epochs the
+- **Attitudes** ([#592](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/592)). Between output epochs the
   attitude record is the spherical linear interpolation of its samples, not the law: a `NadirAttitude` 1.47e-3 rad off
   nadir at 60 s outputs in LEO and up to 1.04° near the roll singularity, a TRIAD law up to 3.8e-4 rad on a Molniya;
-  shorten the output step where it matters. `InstrumentPointingToAttitude` points at a celestial target geometrically
-  although it requests LT (the Moon 4.2e-5 to 4.5e-5 rad, about 40 km, from its light-time direction from LEO); a `Site`
-  target is correct. `TriadAttitude` rejects vectors collinear to the rounding of normal components at every separation
+  shorten the output step where it matters. `TriadAttitude` rejects vectors collinear to the rounding of normal components at every separation
   (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)), but a
   subnormal component (below about 2.2e-308) rounds by an absolute 4.9e-324: v = (1, 2, 3)·1e-320 and fl(0.7 v) have a
   sine of 1.1e-4 and pass a separation below that, with a roll set by rounding; give body vectors of a normal magnitude.

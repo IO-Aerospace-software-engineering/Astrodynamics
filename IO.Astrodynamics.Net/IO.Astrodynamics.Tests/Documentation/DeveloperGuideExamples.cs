@@ -1671,7 +1671,8 @@ internal static class DeveloperGuideExamples
             spacecraft.Instruments.First(), // Instrument to point
             groundStation,                  // Target
             engine                          // Engine for attitude control
-        );
+        );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
+                                            // pass Aberration.None as a sixth argument for the geometric direction
 
         spacecraft.SetStandbyManeuver(pointingManeuver);
 

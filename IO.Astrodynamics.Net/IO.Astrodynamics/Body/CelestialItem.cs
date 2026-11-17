@@ -676,6 +676,53 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new StateVector(position, velocity, observer, epoch, frame);
     }
 
+    /// <summary>
+    /// The position of <paramref name="target"/> as a point of known state sees it, <paramref name="observerState"/>
+    /// (relative to its <see cref="OrbitalParameters.OrbitalParameters.Observer"/>, in an inertial frame), in that frame:
+    /// the target at t ∓ lt from the point at t, lt the light time of <c>spkltc</c>, and for "+S" the stellar aberration
+    /// of <c>stelab</c> (<c>stlabx</c> for transmission) from the point's velocity relative to the solar system
+    /// barycenter, as CSPICE's <c>spkcvo_c</c> corrects it (#549). The position only: its velocity would need the point's
+    /// acceleration. Read relative to the observer of the state when it is a <see cref="CelestialItem"/> (the target
+    /// itself included), else relative to that observer's reference body (<see cref="GetReferenceBodyFor"/>).
+    /// </summary>
+    /// <param name="target">The target.</param>
+    /// <param name="observerState">The state of the observing point.</param>
+    /// <param name="aberration">The correction.</param>
+    internal static Vector3 ApparentPositionFromState(ILocalizable target, StateVector observerState, Aberration aberration)
+    {
+        var epoch = observerState.Epoch;
+        var icrf = observerState.Frame == Frame.ICRF ? observerState : observerState.ToFrame(Frame.ICRF).ToStateVector();
+        CelestialItem referenceBody;
+        StateVector observerCB;
+        if (observerState.Observer is CelestialItem center)
+        {
+            referenceBody = center;
+            observerCB = icrf;
+        }
+        else
+        {
+            referenceBody = GetReferenceBodyFor(observerState.Observer);
+            var origin = observerState.Observer.GetGeometricStateRelativeTo(epoch, referenceBody);
+            observerCB = new StateVector(origin.Position + icrf.Position, origin.Velocity + icrf.Velocity, referenceBody, epoch, Frame.ICRF);
+        }
+
+        var targetCB = target.GetGeometricStateRelativeTo(epoch, referenceBody);
+        var relative = new StateVector(targetCB.Position - observerCB.Position, targetCB.Velocity - observerCB.Velocity,
+            observerState.Observer, epoch, Frame.ICRF);
+        var position = CorrectFromAberrationCB(target, epoch, observerState.Observer, LightTimeOnly(aberration), relative, observerCB,
+            referenceBody).Position;
+        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        {
+            var observerSsbVelocity = referenceBody.NaifId == 0
+                ? observerCB.Velocity
+                : observerCB.Velocity + referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector().Velocity;
+            bool transmission = LightTimeIterations(aberration).Sign > 0.0;
+            position = ApparentPositionReader.StellarAberration(position, transmission ? observerSsbVelocity.Inverse() : observerSsbVelocity);
+        }
+
+        return observerState.Frame == Frame.ICRF ? position : position.Rotate(Frame.ICRF.ToFrame(observerState.Frame, epoch).Rotation);
+    }
+
     /// <summary>The object at the centre of a frame, as the reference-body path reads it: the reference body itself, a
     /// site of the kernels, or the barycenter, Lagrange point or body of <see cref="Create"/>.</summary>
     private static ILocalizable CenterOf(int centerId, CelestialItem referenceBody)

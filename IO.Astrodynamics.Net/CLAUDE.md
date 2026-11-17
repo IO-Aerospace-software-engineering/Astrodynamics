@@ -626,7 +626,7 @@ The framework provides a family of attitude maneuvers for spacecraft orientation
 - `RetrogradeAttitude`: Anti-velocity pointing
 - `NormalAttitude`: Orbital normal pointing (h = r × v)
 - `AntiNormalAttitude`: Anti-normal pointing (−h)
-- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target
+- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target, its direction corrected by `Aberration` (`Aberration.LT` by default, the target as the spacecraft sees it, as `spkcvo_c`; `Aberration.None` geometric; #549)
 - `TriadAttitude`: Two-vector fully-constrained attitude (eliminates roll ambiguity)
 
 **TRIAD Attitude Determination**

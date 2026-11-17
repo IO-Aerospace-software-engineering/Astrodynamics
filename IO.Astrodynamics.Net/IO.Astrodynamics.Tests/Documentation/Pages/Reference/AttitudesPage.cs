@@ -82,6 +82,10 @@ internal static class AttitudesPage
         // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody), engine (Engine)
         var pointing = new InstrumentPointingToAttitude(
             minimumEpoch, holdDuration, camera, moon, engine);
+
+        // The geometric direction
+        var geometric = new InstrumentPointingToAttitude(
+            minimumEpoch, holdDuration, camera, moon, engine, Aberration.None);
         #endregion
     }
 

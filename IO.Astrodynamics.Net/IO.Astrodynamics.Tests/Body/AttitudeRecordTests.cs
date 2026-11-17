@@ -50,8 +50,8 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
 /// <c>Spacecraft.Propagate</c> with the scenario's bodies, whose stored states equal the scenario's to the bit. The
 /// directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric, as the attitudes read them
-/// (<c>Aberration.None</c>; for the instrument pointing, whose light time is not applied to a celestial target, a pin of a
-/// defect outside #537 with its own issue, #549, <see cref="PropagatedCase.LawAt"/>). The angular velocity of a law: the
+/// (<c>Aberration.None</c>, which the instrument pointing is given here: its light-time direction, its default since #549,
+/// is checked against <c>spkcvo_c</c> in <see cref="Maneuvers.InstrumentPointingAttitudeTests"/>). The angular velocity of a law: the
 /// rotation of its closed form over 0.1 s.
 /// </para>
 /// <para>
@@ -934,7 +934,7 @@ public class AttitudeRecordTests
                 Triad(Spacecraft.Front, Spacecraft.Up, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
             ("InstrumentTriad", new TriadAttitude(Min, TimeSpan.Zero, instrument, earth, sun, engine),
                 Triad(boresight, reference, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
-            ("InstrumentPointing", new InstrumentPointingToAttitude(Min, TimeSpan.Zero, instrument, moon, engine), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
+            ("InstrumentPointing", new InstrumentPointingToAttitude(Min, TimeSpan.Zero, instrument, moon, engine, Aberration.None), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
         };
         foreach (var (name, attitude, law) in cases)
         {
@@ -1386,7 +1386,7 @@ public class AttitudeRecordTests
                         spacecraft.SetStandbyManeuver(new TriadAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), earth, sun, engine));
                         break;
                     case "InstrumentPointing":
-                        spacecraft.SetStandbyManeuver(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine));
+                        spacecraft.SetStandbyManeuver(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine, Aberration.None));
                         break;
                     case "ImpulseAlone":
                         spacecraft.SetStandbyManeuver(Apogee());
@@ -1660,10 +1660,9 @@ public class AttitudeRecordTests
         /// the next one, the impulse's attitude from the opening of its thrust window to the end of its maneuver window, the
         /// epochs of the rules (<see cref="Change"/>, <see cref="TriadStart"/>); null within
         /// <see cref="TimelineRules.RuleBound"/> of one of them, where the rules do not resolve the side.</summary>
-        /// <remarks>One expectation pins the behaviour of the library where it departs from its documentation, a defect
-        /// outside #537 with its own issue: the instrument pointing at the Moon takes its geometric direction, although
-        /// the maneuver asks for <c>Aberration.LT</c> (its light time is not applied to a celestial target, 4.4e-5 rad from
-        /// this LEO, #549).</remarks>
+        /// <remarks>The instrument pointing at the Moon is given <c>Aberration.None</c>, its geometric direction (its default
+        /// light-time direction, #549, is checked against <c>spkcvo_c</c> in
+        /// <see cref="Maneuvers.InstrumentPointingAttitudeTests"/>).</remarks>
         internal (Func<Vector3, Vector3> Law, bool Continuous) LawAt(Time t)
         {
             switch (Law)
@@ -1749,7 +1748,7 @@ public class AttitudeRecordTests
                 }
                 case "InstrumentPointing":
                 {
-                    // Pin: the geometric direction of the Moon, the light time not applied (#549, above)
+                    // The geometric direction of the Moon, the correction the maneuver is given (above)
                     var (b1, _) = InstrumentAxesInSpacecraft();
                     return MinimalRotation(b1, FromEarth(Moon, t) - StateAt(t).Position);
                 }
