@@ -674,7 +674,8 @@ public static class ConjunctionAssessment
         internal EncounterCase Analyze(StateVector burnState, Vector3 deltaV, double fuelCost)
         {
             var burnEpoch = burnState.Epoch;
-            var covariance = Copy(burnState.Covariance!.Value);
+            // A copy: the state's covariance is read as a copy (#722)
+            var covariance = burnState.Covariance!.Value;
             if (_options.ExecutionError != null)
             {
                 var execution = new double[9];
@@ -719,20 +720,6 @@ public static class ConjunctionAssessment
             var profile = new ProtectedSpacecraftProfile(trial, _encounterCase.ProtectedAsset.ManeuverConstraints);
             return AnalyzeInternal(profile, _encounterCase.SecondaryObject, window, _analysisOptions, protectedSource,
                 _secondarySource, secondaryResolver: _secondaryResolver);
-        }
-
-        private static Matrix Copy(Matrix matrix)
-        {
-            var copy = new Matrix(matrix.Rows, matrix.Columns);
-            for (int i = 0; i < matrix.Rows; i++)
-            {
-                for (int j = 0; j < matrix.Columns; j++)
-                {
-                    copy.Set(i, j, matrix.Get(i, j));
-                }
-            }
-
-            return copy;
         }
 
         // C0 = cov(δx(t_b), δp), the cross block of the extended covariance at the burn, unchanged by the execution error

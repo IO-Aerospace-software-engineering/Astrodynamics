@@ -103,8 +103,7 @@ internal static class CcsdsValues
     /// </summary>
     /// <param name="value">The matrix.</param>
     /// <returns>A matrix of the same size and terms over a new array.</returns>
-    internal static Matrix Copy(Matrix value) =>
-        value.Rows == 0 || value.Columns == 0 ? value : new Matrix(value.ToArray());
+    internal static Matrix Copy(Matrix value) => value.Copy();
 
     /// <summary>
     /// Runs <paramref name="construct"/>; an <see cref="ArgumentException"/> it throws (an

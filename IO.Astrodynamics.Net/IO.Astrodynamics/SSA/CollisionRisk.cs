@@ -21,7 +21,7 @@ public sealed class CollisionRisk
     {
         CombinedHardBodyRadiusMeters = combinedHardBodyRadiusMeters;
         ProbabilityOfCollision = probabilityOfCollision;
-        ProjectedCovariance = projectedCovariance;
+        _projectedCovariance = projectedCovariance.Copy();
         RadialSigmaMeters = radialSigmaMeters;
         InTrackSigmaMeters = inTrackSigmaMeters;
         CrossTrackSigmaMeters = crossTrackSigmaMeters;
@@ -38,9 +38,12 @@ public sealed class CollisionRisk
     public double? ProbabilityOfCollision { get; }
 
     /// <summary>
-    /// Gets the encounter-plane covariance used by the 2D collision-probability model.
+    /// Gets the encounter-plane covariance used by the 2D collision-probability model: a copy of the one the result holds,
+    /// which the constructor copied too, so that a term set on the matrix given or returned does not reach it (#722).
     /// </summary>
-    public Matrix ProjectedCovariance { get; }
+    public Matrix ProjectedCovariance => _projectedCovariance.Copy();
+
+    private readonly Matrix _projectedCovariance;
 
     /// <summary>
     /// Gets the radial 1-sigma value from the combined RTN covariance, in meters.

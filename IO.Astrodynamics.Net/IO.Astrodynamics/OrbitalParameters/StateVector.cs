@@ -77,7 +77,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// the initial orbital parameters, the propagated states carry none, and no partial derivative is evaluated.
         /// </para>
         /// </remarks>
-        public Matrix? Covariance { get; }
+        /// <value>A copy of the covariance the state holds, which the constructor copied too: a term set on the matrix given
+        /// or on the one returned does not reach the state (#722; before 11.0.0 the state shared the caller's array).</value>
+        public Matrix? Covariance => Matrix.Copy(_covariance);
+
+        private readonly Matrix? _covariance;
 
         /// <summary>
         /// Constructor
@@ -93,7 +97,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             Position = position;
             Velocity = velocity;
-            Covariance = covariance;
+            _covariance = Matrix.Copy(covariance);
         }
 
         public override StateVector ToStateVector()

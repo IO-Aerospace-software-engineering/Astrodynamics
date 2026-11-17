@@ -504,6 +504,19 @@ public readonly record struct Matrix
     }
 
     /// <summary>
+    /// A copy of this matrix that shares no array with it, since <see cref="Set"/> writes the array a <see cref="Matrix"/>
+    /// wraps and a copy of the struct shares it: the public types that hold a matrix copy it in and out with it, so that a
+    /// term set afterwards on the matrix given or returned does not reach them (#722). A matrix without terms
+    /// (<c>default(Matrix)</c> included, whose array is null) is returned as it is.
+    /// </summary>
+    internal Matrix Copy() => _data is null || Rows == 0 || Columns == 0 ? this : new Matrix((double[,])_data.Clone());
+
+    /// <summary>
+    /// The copy of a nullable matrix (<see cref="Copy()"/>), null for null (#722).
+    /// </summary>
+    internal static Matrix? Copy(Matrix? matrix) => matrix?.Copy();
+
+    /// <summary>
     /// Converts the matrix to a 2D double array.
     /// </summary>
     /// <returns>A 2D array containing the matrix data.</returns>
