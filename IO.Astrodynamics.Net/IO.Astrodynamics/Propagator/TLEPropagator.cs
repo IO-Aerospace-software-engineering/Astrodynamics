@@ -57,8 +57,9 @@ public class TLEPropagator : IPropagator
         // Counted in ticks: i·ΔT from the start, then the window end (#598), ceil(L/ΔT) + 1 samples; a grid point closer
         // to the end than a tenth of the step is dropped, the last step then up to 1.1 ΔT long, as the stored states drop
         // an output that close to an impulse: a window given in UTC is a few ticks longer or shorter in TDB than in UTC,
-        // and its last step would otherwise be a few ticks long, two near-equal samples that the Lagrange interpolation
-        // of the stored states cannot take
+        // and its last step would otherwise be a few ticks long, two stored states a few ticks apart, whose read is
+        // ill-conditioned (4.3 km off SGP4 for the ISS over one UTC hour at 60 s; a defect of the stored-state read, not
+        // fixed here, listed under the known limitations of 11.0.0)
         long lengthTicks = Window.Length.Ticks;
         long stepTicks = DeltaT.Ticks;
         long intervals = lengthTicks / stepTicks + (lengthTicks % stepTicks == 0 ? 0 : 1);

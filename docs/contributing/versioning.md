@@ -116,11 +116,13 @@ release are listed under **Known limitations**.
   end (1.5 s over 10 s: 11 samples to +15 s), and a window that the step does not divide lost its end (90 s at 60 s:
   2 samples, the last at +60 s, with no state and no solution after it). The samples are now counted in ticks: i·ΔT from
   the start for i = 0 … ceil(L/ΔT) − 1, then the window end, so ceil(L/ΔT) + 1 samples, each the SGP4 state of its
-  epoch, the steps of the solution the intervals between them, the last shorter; a grid point closer to the end than
-  ΔT/10 is dropped, the last step then up to 1.1 ΔT, as the stored states drop an output that close to an impulse (a
-  window given in UTC is a few ticks longer or shorter in TDB: one UTC hour from the ISS TLE's epoch is 3600 s and 11
-  ticks, whose 62nd sample 1.1 µs after the 61st the Lagrange read of the stored states could not take); a step of zero
-  or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
+  epoch, the steps of the solution the intervals between them, the last shorter. Beyond the issue, a grid point closer
+  to the end than ΔT/10 is dropped, the last step then up to 1.1 ΔT, as the stored states drop an output that close to an
+  impulse (an open choice of this release, recommended, to be decided by S. Guillet): a window given in UTC is a few
+  ticks longer or shorter in TDB, one UTC hour from the ISS TLE's epoch 3600 s and 11 ticks, and with ceil(L/ΔT) + 1
+  samples its 62nd, 1.1 µs after the 61st, puts the stored-state read of the sampled spacecraft 4.336e3 m off SGP4 at
+  +3570 s (`TlePropagationTests`, Linux x64), the defect of two stored states a few ticks apart listed under **Known
+  limitations**, which the rule keeps `TLEPropagator` from meeting without fixing it; a step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
   whole-second step divides keeps its samples and its solution, bit for bit (`TLEPropagatorTests`: 121 samples at 0.5 s
   over 1 min, 3 at 60 s over 90 s, 8 at 1.5 s over 10 s, 61 at 60 s over 3600.5 s and over one UTC hour, the last at the
   window end, red on a85098d; 61 at 60 s over 3600 s unchanged; between +60 s and +90 s the Hermite of the 30 s step is
@@ -4683,6 +4685,15 @@ not listed.
   from `GetEphemeris` at the epoch. `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
   which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
   and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
+- **Two stored states a few ticks apart** (found by the review of #598, its issue to be opened). The read of the
+  stored states of a propagated spacecraft (`GetEphemeris` from its centre without aberration, through its 8 nearest
+  states) is ill-conditioned when two of them are a few ticks apart: the ISS's SGP4 states every 60 s over one hour,
+  plus one 11 ticks after the last, given to the public `Spacecraft.AddPropagatedStates`, read up to 4.934e3 m off SGP4
+  over the last 90 s (every 15 s; 4.336e3 m at +3570 s), 9.8 m with the extra state 100 µs after the last, 4.6e-4 m
+  with it 1 s after, 7.6e-4 m without it (Linux x64, 2026-11-17): each SGP4 state carries the tick rounding of its epoch, about 0.77 mm per tick
+  at 7.7 km/s, which the near-coincident pair amplifies. The propagations do not meet it: the stored states drop an
+  output closer to an impulse than a tenth of the output step, and `TLEPropagator` a grid point that close to the window
+  end (#598, Fixed above). Workaround: give `AddPropagatedStates` states at least a tenth of their spacing apart.
 - **TLEs** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). A TLE with a blank international designator can
   be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM.
   A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,

@@ -282,7 +282,8 @@ public class TLEPropagatorTests
     public void LastShortStep_InterpolatesSgp4()
     {
         // Between the last two samples (+60 s and +90 s) the solution is the cubic Hermite of a 30 s step, its error that
-        // of the 60 s steps of InterpolatedVelocity_FollowsSgp4 divided by about 2⁴ (measured: 16 times in position).
+        // of the 60 s steps of InterpolatedVelocity_FollowsSgp4 divided by about 16 in velocity and 10 in position
+        // (measured on Linux x64, 2026-11-17: 4.282e-4 / 2.701e-5 m/s and 0.3762 / 3.726e-2 m; 2⁴ for an h⁴ error).
         // The reference is SGP4 at the exact instant (CSPICE evsgp4_c); before #598 the solution ended at +60 s
         var start = Iss.Epoch.ToTDB();
         var spacecraft = new Spacecraft(-1006, "S1006", 100.0, 10000.0, new Clock("c1006", 256), Iss);

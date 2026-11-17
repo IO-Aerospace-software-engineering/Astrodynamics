@@ -111,7 +111,7 @@ small angular momentum.
 | `ToFrame(Frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable, Aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(TLE.Configuration)` | Convert to TLE format |
+| `ToTLE(TLE.Configuration)` | Convert to TLE format (a fit of SGP4 mean elements in TEME); an orbit about the Earth only, `InvalidOperationException` naming the centre otherwise (#607) |
 
 ## See Also
 
