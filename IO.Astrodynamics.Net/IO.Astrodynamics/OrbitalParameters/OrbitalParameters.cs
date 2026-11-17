@@ -1249,9 +1249,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// type combines with its own values: equal sets share it (#475; before 11.0.0 it held the identity of the instance).
     /// </summary>
     /// <remarks>
-    /// The sets are immutable, but for the work states of an integration: the state an integrator hands to
-    /// <see cref="Propagator.Events.IEventDetector.Evaluate"/> is updated in place at each evaluation, so keep a copy of
-    /// it, not the instance, as a key.
+    /// The sets are immutable, but for the work states of an integration, which the integrator updates in place at each
+    /// evaluation: the state it hands to <see cref="Propagator.Events.IEventDetector.Evaluate"/>, and the states it hands to
+    /// <see cref="Propagator.Forces.ForceBase.Apply(StateVector)"/> of a force added by
+    /// <see cref="Propagator.Integrators.Integrator.AddForce"/> (its evaluation state, the stage states of RK7(8)). A
+    /// detector or a force that keeps such a state as a key keeps a copy of it, not the instance, whose hash code would
+    /// change.
     /// </remarks>
     public override int GetHashCode()
     {

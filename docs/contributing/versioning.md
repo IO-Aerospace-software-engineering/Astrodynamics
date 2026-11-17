@@ -1058,11 +1058,10 @@ release are listed under **Known limitations**.
   eccentric anomaly is within 0.60 of the rounding floor on ellipses and 2.2 on hyperbolas (1124 before), and the same
   states are within 7.7e-8 m, 1.4e-7 m and 2.5e-8 m. A non-finite mean anomaly or eccentricity of orbital parameters
   given by M now throws `InvalidOperationException`, naming e and M, where NaN was returned: from these paths, from the
-  constructors of `CentralBodyPropagator` (Velocity-Verlet propagated NaN, RK7(8) failed after 100 rejected steps), and
-  from `Equals`, `==` and `!=` of two such parameters typed `OrbitalParameters`, which compare their states (they
-  compared equal). With a NaN eccentricity only `EccentricAnomaly()` changes: `TrueAnomaly()` and `ToStateVector()`
-  already threw `InvalidOperationException`. A hyperbola with e < 2 and |M| above max(3.0e307, 1.8e308 (e − 1)) rad
-  throws too, its start overflowing (a finite H was returned; no orbit reaches such a mean anomaly). M = 0 and e = 0 are
+  constructors of `CentralBodyPropagator` (Velocity-Verlet propagated NaN, RK7(8) failed after 100 rejected steps). The
+  equality of such parameters computes no state and does not throw (#475). With a NaN eccentricity only
+  `EccentricAnomaly()` changes: `TrueAnomaly()` and `ToStateVector()` already threw `InvalidOperationException`. A
+  hyperbola with e < 2 and |M| above max(3.0e307, 1.8e308 (e − 1)) rad throws too, its start overflowing (a finite H was returned; no orbit reaches such a mean anomaly). M = 0 and e = 0 are
   unchanged, bit for bit; other states move by up to the former error, so a propagation started from elements takes
   slightly different steps. The round trip of a near-circular state of #398 now returns it to 1.9e-15 of its radius
   (1.4e-15 in 10.2.0-preview-1).
@@ -3248,16 +3247,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the calendars, as before; within TDB too, but for two consecutive TDB ticks that convert to one TAI tick (TDB − TT,
   rounded to the tick, gains one there, about every 300 s near its steepest), which are now equal and compare to 0,
   where they compared by their calendars, so that equality stays transitive. `Window` equality is that of its two ends
-  as instants, `Length` excluded (a UTC window built from a length across a leap second equals the window of its ends).
-  The library's comparisons follow: `AddPropagatedStates` replaces a stored state at the same instant in another frame,
-  and `StateVector.ToStateVector(epoch)` still relabels a state read at its instant in another frame (a label
-  comparison, internal `Time.HasSameLabel`); the library's caches whose values carry their key as a label (the
-  orientations of a `Frame` and of `TLEPropagator`, the range rates read once by the conjunction search) stay keyed by
-  label (internal `Time.LabelComparer`), so an orientation carries the epoch asked and the bisection of a TCA in ticks
-  (#624) reads both of two consecutive TDB ticks, bit for bit as before. Results move only for two TDB ticks of one TAI
-  tick, by a tick at most. Within TDB, `-` still counts the ticks of the calendars: two equal consecutive TDB ticks
-  differ by one tick.
-  Migration: code that told two labels of one instant apart by `==` compares `DateTime` and `Frame`.
+  as instants, `Length` excluded (a UTC window built from a length across a leap second equals the window of its ends),
+  and so the equality of every record that holds a time (`StateOrientation`, `Equatorial`, a tuple) compares it as an
+  instant. A local time (`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the
+  zone of the machine, local times compared with each other included, where they compared by their calendars: in a zone
+  with daylight saving time, two labels of the skipped hour and the hour after it are one instant (in America/New_York,
+  local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, and 02:30 comes after 03:00), and a label of the repeated hour is
+  read with the standard offset (`ColdStartTests.LocalTimes_AreTheInstantsOfTheirZone`, skipped on Windows, where `TZ`
+  does not set the zone; red with a85098d's comparison of local calendars restored). The default time (no frame) comes
+  before every time with a frame and equals only itself, so comparing it no longer throws `NullReferenceException` (`<`,
+  `SortedSet`, `Window` of it). The library's comparisons follow: `AddPropagatedStates` replaces a stored state at the
+  same instant in another frame, and `StateVector.ToStateVector(epoch)` still relabels a state read at its instant in
+  another frame (a label comparison, internal `Time.HasSameLabel`); the library's caches whose values carry their key as
+  a label (the orientations of a `Frame` and of `TLEPropagator`, the range rates read once by the conjunction search)
+  stay keyed by label (internal `Time.LabelComparer`), so an orientation carries the epoch asked and the bisection of a
+  TCA in ticks (#624) reads both of two consecutive TDB ticks, bit for bit as before. Results move only for two TDB
+  ticks of one TAI tick, by a tick at most. Within TDB, `-` still counts the ticks of the calendars: two equal
+  consecutive TDB ticks differ by one tick.
+  Migration: code that told two labels of one instant apart by `==`, `Equals` or `Assert.Equal` compares `DateTime` and
+  `Frame` (the tests of the library's labels do so through `LabelAssert`: 380 assertions that `Assert.Equal` or `==`
+  made on a time, a window, orbital parameters, a `StateOrientation` or an `Equatorial`).
 - **Breaking: equality of orbital parameters is value equality within one concrete type** ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475), Fixed
   above; choices 1 and 2 decided by S. Guillet, 2026-11-17). `OrbitalParameters.Equals(OrbitalParameters)` (still
   virtual) is the type's `Equals(object)`: the same concrete type, its values (A, E, I, RAAN, AOP, M; P, F, G, H, K, L0;

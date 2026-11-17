@@ -52,7 +52,10 @@ instant, #512), frame and `ElementsType`. Equality never throws, mean elements a
 is false, and equal sets share a hash code, so hash sets and dictionaries keep one of equal copies. A mean set and an
 osculating set of the same numbers are different orbits, and so are a set and its own `ToStateVector()`, and a TLE and
 its `ToMeanKeplerianElements()`: to compare two orbits, compare their states, `x.ToStateVector() == y.ToStateVector()`
-(which throws for mean elements). NaN equals NaN and +0 equals −0, as for `double.Equals`.
+(which throws for mean elements). NaN equals NaN and +0 equals −0, as for `double.Equals`. The sets are immutable, but
+for the work states of an integration, which the integrator updates in place: the state it hands to
+`IEventDetector.Evaluate`, and those it hands to `ForceBase.Apply` of a force added by `Integrator.AddForce`. A detector
+or a force that keeps such a state as a key keeps a copy of it, whose hash code does not change.
 
 Before 11.0.0, through `OrbitalParameters` `==` and `Equals` compared the states of both operands: they threw for mean
 elements (even against null) and e = NaN, ran SGP4 for a TLE, and found two different sets whose states were NaN equal;

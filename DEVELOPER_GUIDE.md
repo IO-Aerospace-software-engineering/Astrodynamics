@@ -250,7 +250,7 @@ Represents a precise instant in time with time frame awareness.
 | `AddDays(double days)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddHours(double hours)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds |
-| `==`, `Equals`, `CompareTo` | The same instant, whatever the frames: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; compare `DateTime` and `Frame` to tell two labels apart |
+| `==`, `Equals`, `CompareTo` | The same instant, whatever the frames: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; local times compare as the instants of their zone, the default time before every other; compare `DateTime` and `Frame` to tell two labels apart (a test of a label: `LabelAssert`, not `Assert.Equal`) |
 
 ```csharp
 // Create times
