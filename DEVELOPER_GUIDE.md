@@ -1181,6 +1181,7 @@ Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
 var windows = mySite.FindWindowsOnDistanceConstraint(
     new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
     moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+// One window, 2024-01-01 09:42:24.997 to 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
 ```
 
 #### LaunchSite
@@ -2893,7 +2894,8 @@ var pointingManeuver = new InstrumentPointingToAttitude(
     spacecraft.Instruments.First(), // Instrument to point
     groundStation,                  // Target
     engine                          // Engine for attitude control
-);
+);                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
+                                    // pass Aberration.None as a sixth argument for the geometric direction
 
 spacecraft.SetStandbyManeuver(pointingManeuver);
 

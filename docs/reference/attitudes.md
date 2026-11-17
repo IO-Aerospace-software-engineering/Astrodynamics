@@ -51,15 +51,22 @@ new AntiNormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
 
 Points an instrument boresight at a celestial target: the minimal rotation that takes the boresight, in the spacecraft frame (`Instrument.GetBoresightInSpacecraftFrame()`, through the Euler angles of the frame kernel, [Instrument orientation](spacecraft.md#instrument-orientation)), to the direction of the target. This is a single-vector attitude (roll unconstrained). Before 11.0.0 it returned the inverse rotation, which took the target's direction to the boresight: at zero orientation the boresight landed at twice the angle between them from the target.
 
+The direction is that of the target as the spacecraft sees it, corrected by the attitude's `Aberration`, `Aberration.LT` by default: the target at t − lt from the spacecraft's position at t, lt the light time of CSPICE's `spkltc` (one iteration for `LT` and `XLT`, converged for `CN` and `XCN`), and for the `+S` corrections the stellar aberration of `stelab` (`stlabx` for transmission) from the spacecraft's velocity relative to the solar system barycenter, as `spkcvo_c` corrects it; a `Star` takes no light time, its `+S` corrections the stellar aberration alone, as `Star.GetEphemeris` reads it; `Aberration.None` points at the geometric direction ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), decided by S. Guillet, 2026-11-17). The boresight agrees with `spkcvo_c` (the Moon from a LEO) and `spkcpt_c` (a site given by its coordinates) to about 1e-13 and 1e-12 rad. Before 11.0.0 the law asked for LT but read a celestial target, the centre of the maneuver, relative to itself, so its direction was geometric: the Moon 4.4e-5 to 9.2e-5 rad from its LT direction from a LEO; a site of the kernels took the light time from its body's centre, and a site given by its coordinates met the correction #489 dropped, so its direction was geometric.
+
 | Property | Description |
 |----------|-------------|
 | `Instrument` | The instrument whose boresight defines the pointing axis |
 | `Target` | The `ILocalizable` target to track |
+| `Aberration` | The correction of the target's direction, `Aberration.LT` by default |
 
 ```csharp
 // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody), engine (Engine)
 var pointing = new InstrumentPointingToAttitude(
     minimumEpoch, holdDuration, camera, moon, engine);
+
+// The geometric direction
+var geometric = new InstrumentPointingToAttitude(
+    minimumEpoch, holdDuration, camera, moon, engine, Aberration.None);
 ```
 
 ## TriadAttitude

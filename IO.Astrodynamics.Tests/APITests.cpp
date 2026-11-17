@@ -887,6 +887,38 @@ TEST(API, GetFrameNameProxy)
     ASSERT_STREQ("SPICE knows no frame of id -999999000", GetLastErrorProxy());
 }
 
+TEST(API, GetFrameInfoProxy)
+{
+    // SPICE's built-in frame table (Frames Required Reading, "Built-in Inertial Reference Frames" and "Built-in PCK-Based
+    // IAU Body-Fixed Reference Frames"): J2000 is the inertial frame 1 (class 1, centre the solar system barycenter),
+    // IAU_EARTH the PCK frame 10013 about the Earth (class 2, centre 399); the frame kernels of the tests define MOON_ME,
+    // a TK frame about the Moon (moon_080317.tf: class 4, centre 301), and DSS-13_TOPO, a TK frame about DSS-13
+    // (earth_topo_201023.tf: frame 1399013, centre 399013)
+    int id = -1, center = -1, frameClass = -1;
+    ASSERT_TRUE(GetFrameInfoProxy("J2000", &id, &center, &frameClass)) << GetLastErrorProxy();
+    ASSERT_EQ(1, id);
+    ASSERT_EQ(0, center);
+    ASSERT_EQ(1, frameClass);
+    ASSERT_TRUE(GetFrameInfoProxy("iau_earth", &id, &center, &frameClass)) << GetLastErrorProxy();
+    ASSERT_EQ(10013, id);
+    ASSERT_EQ(399, center);
+    ASSERT_EQ(2, frameClass);
+    ASSERT_TRUE(GetFrameInfoProxy("MOON_ME", &id, &center, &frameClass)) << GetLastErrorProxy();
+    ASSERT_EQ(301, center);
+    ASSERT_EQ(4, frameClass);
+    ASSERT_TRUE(GetFrameInfoProxy("DSS-13_TOPO", &id, &center, &frameClass)) << GetLastErrorProxy();
+    ASSERT_EQ(1399013, id);
+    ASSERT_EQ(399013, center);
+    ASSERT_EQ(4, frameClass);
+
+    // No frame of that name: false, zeros and the message
+    ASSERT_FALSE(GetFrameInfoProxy("NO_SUCH_FRAME", &id, &center, &frameClass));
+    ASSERT_EQ(0, id);
+    ASSERT_EQ(0, center);
+    ASSERT_EQ(0, frameClass);
+    ASSERT_STREQ("SPICE knows no frame named NO_SUCH_FRAME", GetLastErrorProxy());
+}
+
 namespace
 {
     // A TK frame kernel whose frame is rotated by 90 deg about z from J2000: TKFRAME_ANGLES (90, 0, 0) about the axes
@@ -2371,6 +2403,11 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
     {
         char name[33];
         return GetFrameNameProxy(1, name);
+    });
+    ExpectClearedBy("GetFrameInfoProxy", []
+    {
+        int id, center, frameClass;
+        return GetFrameInfoProxy("J2000", &id, &center, &frameClass);
     });
     ExpectClearedBy("FindWindowsOnDistanceConstraintProxy", []
     {
