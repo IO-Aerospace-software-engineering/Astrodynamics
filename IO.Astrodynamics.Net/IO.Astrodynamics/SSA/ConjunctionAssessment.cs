@@ -3186,8 +3186,11 @@ public static class ConjunctionAssessment
         {
             foreach (var step in segment.Steps)
             {
-                var (stepStart, stepEnd) =
-                    trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
+                if (!TryStepEpochs(trajectory, segment, step, out var stepStart, out var stepEnd))
+                {
+                    continue;
+                }
+
                 if (stepStart >= screeningWindow.StartDate && stepStart <= screeningWindow.EndDate)
                 {
                     knots.Add(stepStart);
@@ -3215,8 +3218,11 @@ public static class ConjunctionAssessment
         {
             foreach (var step in segment.Steps)
             {
-                var (stepStart, stepEnd) =
-                    trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
+                if (!TryStepEpochs(trajectory, segment, step, out var stepStart, out var stepEnd))
+                {
+                    continue;
+                }
+
                 if (stepEnd < screeningWindow.StartDate || stepStart > screeningWindow.EndDate)
                 {
                     continue;
@@ -3229,6 +3235,34 @@ public static class ConjunctionAssessment
         return steps
             .OrderBy(step => step.StartEpoch)
             .ToArray();
+    }
+
+    /// <summary>
+    /// The epochs of an accepted step of a segment as the search reads it: its own, but for the step that holds the event
+    /// ending the segment, which ends at the event (#574). RK7(8) adds the step that holds an event before it detects the
+    /// event, and the segment keeps it past the event (<see cref="PropagationSegment.EventTime"/>): its cubic Hermite is the
+    /// trajectory without the burn there, and the next segment covers the time after the event. The position is continuous
+    /// at the event (an impulse changes the velocity only), so the step and the next segment join there. False for a step
+    /// that starts at or after the event, none of which RK7(8) keeps. Without an event (Velocity-Verlet, which locates the
+    /// event at a step end, or a segment that ends the propagation), the step epochs, bit for bit.
+    /// </summary>
+    private static bool TryStepEpochs(PropagationSolution trajectory, PropagationSegment segment, in AcceptedStep step,
+        out Time stepStart, out Time stepEnd)
+    {
+        (stepStart, stepEnd) = trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
+        if (segment.EventTime is not { } eventTime || eventTime >= step.CumulativeTime + step.StepSize)
+        {
+            return true;
+        }
+
+        if (eventTime <= step.CumulativeTime)
+        {
+            return false;
+        }
+
+        // The epoch of the event as the propagation labelled it, the base of the next segment
+        stepEnd = trajectory.TimeArgument.EpochAt(segment.BaseEpoch, eventTime);
+        return stepEnd > stepStart;
     }
 
     private static Spacecraft CloneSpacecraft(Spacecraft template, StateVector initialState)

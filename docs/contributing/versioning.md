@@ -3235,6 +3235,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`ConjunctionKernelAndWindowTests.NoCloseApproach_AnalyzeReturnsTheClosestEnd_Flagged_AnalyzeAllNothing`, 10 rows, red
   on a85098d: the midpoints, `Screen` empty, no flag on the dense path).
 
+- **The search on two propagations read the trajectory without the burn after an impulse** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574)).
+  RK7(8) adds the accepted step that holds an event before it detects the event, and the segment that ends at an
+  impulse keeps that step past it: between the impulse and the end of that step the polynomial search of `Analyze` and
+  `AnalyzeAll` on two `PropagationSolution`s read the cubic Hermite of the trajectory without the burn, so a close
+  approach there had no minimum on it and was missed. On #574's LEO (a 233.8 m/s apogee raise at S + 2963.2 s, the step
+  ending 12.4 s after it about a point-mass Earth), secondaries passing 30 m from the spacecraft 1, 3, 4.5 and 6 s after
+  the burn were listed only by the minimum before the burn, 2k s away (658.5 m off for a crossing), and `Analyze` returned
+  a minimum 4 s off for one passing 2 s before it (measured on a85098d). The step that holds the event of a segment now
+  ends at the event, the epoch the propagation labelled it (`TimeArgument.EpochAt(BaseEpoch, EventTime)`, the base of
+  the next segment), in the steps and the knots of the search, an `EventAction.Continue` included; the position is
+  continuous there. Against a brute force of the states of the two solutions every 10 ms, refined by golden section
+  (`ConjunctionPostBurnTests`, 8 rows red on a85098d, both sides of the burn, a crossing, a `Continue` event and
+  Velocity-Verlet, which locates its events at a step end and is unchanged): every minimum listed within 7e-7 s and
+  1.7e-9 m. Bit for bit without an event: the long-validation conjunction tests and the `conjunction` conformance cases,
+  without impulses, do not move.
+
 **Changed**
 
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
@@ -4847,11 +4863,8 @@ not listed.
   ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403)). The threshold 1.0 of the
   non-linearity index is measured on two-body crossing encounters only (11 cases up to ν = 1.42), so the index stays off
   by default.
-- **Close-approach search** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574),
-  [#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
-  [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). On two RK7(8) propagations the
-  dense search of `Analyze` and `AnalyzeAll` reads the trajectory without the burn between an impulse and the end of the
-  step that holds it, so a close approach there can be missed. In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
+- **Close-approach search** ([#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
+  [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
   seed), or, with a `BisectionToleranceSeconds` coarser than a tick, a zero at the window end as the middle of its last
   bracket. The sampled search subdivides a step one tick longer than `MaximumEventSearchStep`, one sample more for a read
   100 ns closer ([#642](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/642)); results are unaffected.
