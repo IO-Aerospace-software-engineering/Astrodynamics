@@ -324,9 +324,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public bool IsMoon => (NaifId is > 100 and < 1000 && (NaifId % 100) != 99) && !IsLagrangePoint;
 
     /// <summary>
-    /// Gets a value indicating whether the celestial item is an asteroid.
+    /// Gets a value indicating whether the celestial item is an asteroid: an identifier from 1001 to 999999999 that is
+    /// not a site's (its body's identifier times 1000 plus its own, a planet or a moon, as <see cref="Surface.Site.NaifId"/>
+    /// builds it: 399013 is DSS-13 on the Earth). Before 11.0.0 a site identifier was an asteroid, about the Sun (#651).
     /// </summary>
-    public bool IsAsteroid => this.NaifId is > 1000 and < 1000000000;
+    public bool IsAsteroid => this.NaifId is > 1000 and < 1000000000 && !SpiceAPI.IsSiteId(NaifId);
 
     /// <summary>
     /// Gets a value indicating whether the celestial item is a star.
@@ -1118,6 +1120,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             return (int)(celestialItem.NaifId / 100);
         }
 
+        // A site identifier: the barycentre of its body (#651)
+        if (SpiceAPI.IsSiteId(celestialItem.NaifId))
+        {
+            return SiteBarycenterId(celestialItem.NaifId);
+        }
+
         if (celestialItem.IsLagrangePoint)
         {
             if (celestialItem.NaifId is 391 or 392)
@@ -1130,6 +1138,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         throw new ArgumentException("Invalid Naif Id : " + celestialItem.NaifId);
     }
+
+    /// <summary>The body of a site identifier (<see cref="SpiceAPI.IsSiteId"/>): its identifier divided by 1000 (#651).</summary>
+    internal static int SiteBodyId(int siteId) => siteId / 1000;
+
+    /// <summary>The barycentre of the body of a site identifier (<see cref="SpiceAPI.IsSiteId"/>), that of a planet or a
+    /// moon: its identifier divided by 100000 (#651).</summary>
+    internal static int SiteBarycenterId(int siteId) => siteId / 100000;
 
     /// <summary>
     /// Find center of motion identifier
@@ -1152,6 +1167,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (celestialItem.IsMoon)
         {
             return celestialItem.NaifId - (celestialItem.NaifId % 100) + 99;
+        }
+
+        // A site identifier: its body (#651)
+        if (SpiceAPI.IsSiteId(celestialItem.NaifId))
+        {
+            return SiteBodyId(celestialItem.NaifId);
         }
 
         if (celestialItem.IsLagrangePoint)

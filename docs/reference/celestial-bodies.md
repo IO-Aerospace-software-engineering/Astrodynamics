@@ -49,8 +49,9 @@ loaded kernels through the data provider (`SpiceAPI.GetCelestialBodyInfo` for th
 
 Before #672 a missing `BODYnnn_RADII` or `BODYnnn_GM` left the GM 0 and the frame undefined, so Pallas could not be
 built and Elara was built with a garbage frame name. A site identifier (399013, DSS-13) builds a body named after the site,
-of GM 0 and frame `DSS-13_TOPO`, classed as an asteroid around the Sun
-([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)): build a `Site` instead.
+of GM 0 and frame `DSS-13_TOPO`, about its body (`CenterOfMotionId` 399, `BarycenterOfMotionId` 3, `IsAsteroid` false;
+before 11.0.0 an asteroid about the Sun, [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)):
+build a `Site` instead.
 
 ### Methods
 

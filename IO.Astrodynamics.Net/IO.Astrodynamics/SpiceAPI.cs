@@ -2029,7 +2029,9 @@ public class SpiceAPI
     /// <remarks>
     /// A body the kernel pool gives no <c>BODYnnn_RADII</c> has radii 0, one it gives no <c>BODYnnn_GM</c> a GM of 0, and a
     /// barycentre has no frame (an empty <c>FrameName</c>, <c>FrameId</c> 0); before #672 a missing variable left the GM 0
-    /// and the frame name undefined.
+    /// and the frame name undefined. A site identifier (<see cref="IsSiteId"/>, 399013 for DSS-13) has its body as centre
+    /// of motion and its body's barycentre as barycentre (399 and 3 for DSS-13, the centre of its SPK segment): before
+    /// 11.0.0 the Sun and 0, every identifier above 1000 being classed as an asteroid (#651).
     /// </remarks>
     /// <exception cref="ArgumentException"><paramref name="naifId"/> is not the identifier of a celestial body
     /// (<see cref="IsCelestialBodyId"/>): a spacecraft, an instrument or a site of a negative identifier, 11 to 100, or 1000.
@@ -2046,7 +2048,8 @@ public class SpiceAPI
     }
 
     // The body information of an identifier SPICE names, under the lock: the record's Id, -1 until bodc2n_c finds the
-    // identifier, is the found flag (#672)
+    // identifier, is the found flag (#672). A site identifier is about its body and its body's barycentre, where the
+    // native layer, which classes every identifier above 1000 as an asteroid, gives the Sun and 0 (#651)
     private static CelestialBody ReadCelestialBodyInfo(int naifId, string paramName)
     {
         var info = GetCelestialBodyInfoProxy(naifId);
@@ -2055,6 +2058,12 @@ public class SpiceAPI
             throw new ArgumentException(
                 $"The NAIF identifier {naifId} has no name in SPICE: neither SPICE's built-in names nor the loaded kernels name it.",
                 paramName);
+        }
+
+        if (IsSiteId(naifId))
+        {
+            info.CenterOfMotionId = Body.CelestialItem.SiteBodyId(naifId);
+            info.BarycenterOfMotionId = Body.CelestialItem.SiteBarycenterId(naifId);
         }
 
         return info;

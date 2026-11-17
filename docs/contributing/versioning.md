@@ -3239,6 +3239,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the thread holds the lock at each item, and has another thread take the lock during its first item: on a85098d one
   enumeration, all 10 items under the lock and the other thread blocked for its 60 s, both writers; now one enumeration,
   none under the lock, the lock taken). An array writes the same file, byte for byte.
+- **The body information of a site identifier gave the Sun as centre** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)).
+  Both layers classed every identifier above 1000 as an asteroid, so `SpiceAPI.GetCelestialBodyInfo` of DSS-13 (399013),
+  DSS-14 and DSS-65 gave the centre 10 and the barycentre 0 (measured on a85098d), where SPICE's SPK of the stations
+  (`earthstns_itrf93_201023.bsp`) has their segments about the Earth (399, spiceypy `spksfs`), and
+  `CelestialItem.IsAsteroid` was true for them. A site identifier (body × 1000 + site, the body a planet or a moon, the
+  rule of `Site.NaifId`, internal `SpiceAPI.IsSiteId`) now has its body as centre and its body's barycentre as
+  barycentre, in the record (`SpiceAPI` corrects the native record, the C++ layer unchanged) and in
+  `CelestialItem.FindCenterOfMotionId`/`FindBarycenterOfMotionId`, and is no asteroid (`SiteIdentifierCentreTests`: the
+  three stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the
+  rule, and an asteroid, a comet, 391001 and 399000, not sites, unchanged).
 
 **Changed**
 
@@ -4520,6 +4530,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `EquinoctialElements.ToStateVector()` gives it (within 1.0e-15 relative of the 60-digit closed form). Circular orbits,
   whose two longitudes coincide, give the same state. Migration: a caller that passed the mean longitude as L0 to work
   around the defect passes the true longitude.
+- **Breaking: a site identifier is about its body, not an asteroid** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651), Fixed above).
+  `SpiceAPI.GetCelestialBodyInfo` (so `SpiceDataProvider.GetCelestialBodyInfo` and the command `celestial-body-info`) of a
+  site identifier, 100001 to 999999 with a planet or a moon as body (399013 for DSS-13), gives its body as
+  `CenterOfMotionId` and its body's barycentre as `BarycenterOfMotionId` (399 and 3), where it gave 10 and 0;
+  `CelestialItem.IsAsteroid` is false for it, and a `CelestialBody` of that identifier is about its body, its
+  `ToString` naming no type. Every other identifier is classed as before. Migration: a caller that read the Sun as the
+  centre of a station reads its body.
 
 **Deprecated**
 
@@ -4615,11 +4632,11 @@ not listed.
   identifiers throws `ArgumentException` for a spacecraft observer: with `Aberration.None`, read with the spacecraft as
   target and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives); so does a site observer
   that no loaded kernel names, and one whose SPK does not cover J2000 TDB, which its `Site` constructor reads, throws
-  `InvalidOperationException`, with the same workaround (documented in the fourth round of #668). `SpiceAPI.GetCelestialBodyInfo` of a site identifier (DSS-13, 399013) gives the Sun as centre and the
-  barycentre 0, every identifier above 1000 being classed as an asteroid, so `new CelestialBody(399013)` and
-  `CelestialItem.Create(399013)` build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Sun (they threw or were
-  built with a garbage frame name before
-  [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)): build a `Site`.
+  `InvalidOperationException`, with the same workaround (documented in the fourth round of #668). `new CelestialBody(399013)` and
+  `CelestialItem.Create(399013)` of a site identifier build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Earth
+  (they threw or were built with a garbage frame name before
+  [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672), and about the Sun before #651,
+  under Changed): build a `Site`.
   `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI follow
   the same rule and build the same site (its SPICE name), under Changed.
   `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as
