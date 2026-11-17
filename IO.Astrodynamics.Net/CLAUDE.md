@@ -49,6 +49,7 @@ dotnet run --project IO.Astrodynamics.CLI -- [command]
 # Install CLI globally
 dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.Astrodynamics.CLI
 ```
+Every command resolves its frame arguments by one rule (internal `Helpers.ResolveFrame`, #657): ICRF or J2000, in any case, is `Frame.ICRF`, printed `J2000` on every path; any other name is `new Frame(name)`.
 
 ## Architecture
 
@@ -66,7 +67,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 **Data Provider Pattern**
 - `IDataProvider` interface with implementations:
   - `SpiceDataProvider`: Default, uses SPICE kernel files
-  - `MemoryDataProvider`: In-memory for testing
+  - `MemoryDataProvider`: In-memory for testing; a read is the difference of its stored states in ICRF rotated into the frame asked (ICRF, GCRF, ECLIPJ2000, TEME, CIRS and TIRS known without stored orientations), and an aberration other than `None` throws `NotSupportedException` (#559)
 - Configured via `Configuration.Instance.SetDataProvider()`
 - The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read, on the provider set at that time, and so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before `LoadKernels`), with `InvalidOperationException` naming the missing variable (third round of #668); once read, an object keeps the provider it read its data from, for its data and its ephemeris; on SPICE its data are read again at the first read after each `LoadKernels`, `UnloadKernels` or `ClearKernels`, data equal to those held keeping the instances held (third round of #668)
 
@@ -78,7 +79,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OpmParseException` naming its keyword, and the four angles of `OpmKeplerianElements` are in [-360, 360), the schema's `angleRange` (#708); `OpmStateVector`, `CovarianceMatrix` and the ΔV of `OpmManeuverParameters` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717)
 - `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708, and a value with a comma, #717; every real value of the CDM records refuses NaN and ±Infinity at init with `ArgumentOutOfRangeException` naming the property, and `CdmCovarianceMatrix` copies its covariance `Matrix` in and out, #717)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
-- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451)
+- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451); a frame named TEME, CIRS or TIRS, in any case, is routed to `Frame.TEME`, `Frame.CIRS` or `Frame.TIRS` by both data providers, the ephemeris reads and `SpiceAPI.TransformFrame`, which composes such an end through ICRF (#656); a frame keeps the orientation of its last epoch only, not one per epoch, and the attitude record API (`AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, ...) is `SpacecraftFrame`'s (#541)
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution, AcceptedStep
 - `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet), RK78Integrator (adaptive Prince-Dormand 7(8))

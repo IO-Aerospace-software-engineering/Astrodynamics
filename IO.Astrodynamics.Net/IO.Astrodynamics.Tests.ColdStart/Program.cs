@@ -45,6 +45,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// see <see cref="StaticBodiesChild"/>.
 /// The modes <c>two-body-first-propagate</c> and <c>two-body-first-conic</c> take no schedule and load no kernel: the two-body
 /// call is the first native call of the process, see <see cref="CheckTwoBodyAsFirstNativeCall"/> (#714).
+/// The mode <c>frame-memory</c> takes the kernel directory alone: the memory a frame retains after its reads, see
+/// <see cref="FrameMemoryChild"/> (#541).
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// </para>
@@ -100,6 +102,12 @@ internal static class Program
         if (args.Length == 2 && args[1] == "static-bodies-before-kernels")
         {
             return StaticBodiesChild.RunBeforeKernels(args[0]);
+        }
+
+        // The memory a frame retains after its reads, alone in the process (#541)
+        if (args.Length == 2 && args[1] == "frame-memory")
+        {
+            return FrameMemoryChild.Run(args[0]);
         }
 
         // Before the schedule check and before any kernel is loaded: the text of a TLE is checked before any SPICE read

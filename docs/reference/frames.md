@@ -74,6 +74,16 @@ is reserved for changes between inertial frames.
 | `GetStateOrientationToICRF(Time epoch)` | Get orientation relative to ICRF |
 | `ToFrame(Frame target, Time epoch)` | Get transformation to another frame |
 
+A frame keeps no orientation per epoch ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
+decided by S. Guillet, 2026-11-17): a frame keeps the orientation of its last epoch only, read from the data provider (a
+SPICE frame, or one of a `MemoryDataProvider`) or computed by the library (`CirsFrame`, `TirsFrame`, `TemeFrame`, the
+frame of a site from coordinates; `GcrfFrame` keeps none), and reads again after a `LoadKernels`, `UnloadKernels` or
+`ClearKernels`. Before 11.0.0 each
+orientation read was kept for the life of the frame (16.5 MB after 100 000 reads of ITRF93, the static frames living for
+the whole process). The attitude record of a spacecraft, `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`,
+`GetLatestStateOrientationToICRF` and `ClearStateOrientations`, belongs to `SpacecraftFrame`
+([Spacecraft](spacecraft.md#attitude-and-kernels)); before 11.0.0 they were virtual members of `Frame`.
+
 ### Equality
 
 A frame is its name, compared ignoring case as SPICE compares frame names (`namfrm_c`), whatever the instance or its
@@ -94,10 +104,15 @@ kernel frame of its id (1000000 + NaifId) when a loaded kernel defines it, whate
 exact ([Sites](sites.md#reads-in-the-sites-frame), #690); when none does, the frame of its J2000 coordinates, in which an
 ephemeris is read in J2000 and rotated, as in the frame of a site from coordinates.
 `Frame.ICRF` is named `J2000`: `new Frame("ICRF")` is another name, not this frame. `Id` takes no part.
-Equality is not routing: a frame named TEME or GCRF is routed to the managed rotation by its name (see [TEME](#teme)
-and [ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)), but a frame named CIRS or TIRS that is not a `CirsFrame` or a
-`TirsFrame` is still handed to SPICE, which does not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws. Use
-`Frame.CIRS` and `Frame.TIRS`.
+The routing follows the name too: a frame named TEME, GCRF, CIRS or TIRS, in any case, is routed to the managed
+rotation of `Frame.TEME`, `Frame.GCRF`, `Frame.CIRS` or `Frame.TIRS` (see [TEME](#teme) and
+[ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)) by both data providers, the ephemeris reads and
+`SpiceAPI.TransformFrame`, so `new Frame("CIRS").ToFrame(Frame.ICRF, t)` is `Frame.CIRS.ToFrame(Frame.ICRF, t)` bit for
+bit ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656), decided by S. Guillet,
+2026-11-17; before, a frame built by the names CIRS and TIRS was handed to SPICE, which does not know them, and threw).
+An instance of `TirsFrame` or `TemeFrame` built with a provider keeps its own Earth orientation parameters; a frame built
+by name takes those of the static frame (UT1 = UTC). A `MemoryDataProvider` therefore never reads orientations stored
+under those names.
 
 ## StateOrientation
 
@@ -154,7 +169,7 @@ named GCRF (`Frame.GCRF`, or `new Frame("GCRF")` as the CLI builds it, in any ca
 `J2000` and labels the result with the frame given. An ephemeris, an orientation (CK), a frame
 transformation or a coordinate search in GCRF are then the same numbers as in J2000, and a state in
 GCRF propagates as its ICRF twin (#543). `Frame.CIRS` and `Frame.TIRS` are not SPICE frames either,
-and they rotate: an ephemeris read in `Frame.CIRS` or `Frame.TIRS` (an instance of `CirsFrame` or `TirsFrame`) is read in
+and they rotate: an ephemeris read in `Frame.CIRS` or `Frame.TIRS` (an instance of `CirsFrame` or `TirsFrame`, or a frame of those names, #656) is read in
 J2000 and rotated by the frame at the epoch of the read, the numbers `ToFrame` gives on the state read in ICRF (#558). So
 are the frames only the library holds, the `SiteFrame` of a site built from coordinates and the `SpacecraftFrame` of a
 managed spacecraft whose attitude record holds an entry (#682; before 11.0.0 a read in them reached SPICE by name and threw
@@ -171,7 +186,7 @@ loaded kernel defines under its name (third review of #690; before, no window), 
 SPICE's message for any other name SPICE does not know (fourth round of #668; before, no window).
 `SpiceAPI.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
 coordinates, or from the kernels with no frame kernel of its id loaded), decided at each call (fourth round of #668;
-before, a site's frame threw); CIRS and TIRS throw there (#656), and the frame of a spacecraft is SPICE's by name,
+before, a site's frame threw), and so a CIRS or TIRS end, by instance or by name (#656; before, it threw); the frame of a spacecraft is SPICE's by name,
 which reads the frame kernel and the CK written for it.
 
 ### TEME

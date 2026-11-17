@@ -35,11 +35,6 @@ public class EphemerisCommand
         [Option('q', Description = "Display result as equinoctial elements")]
         bool toEquinoctial = false)
     {
-        if (frame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
-        {
-            frame = "j2000";
-        }
-
         SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var window = Helpers.ConvertWindowInput(windowParameters.Begin, windowParameters.End);
@@ -47,7 +42,7 @@ public class EphemerisCommand
 
         var observerItem = Helpers.CreateLocalizable(observerId, window.StartDate);
 
-        var ephemeris = localizableObject.GetEphemeris(window, observerItem, new Frame(frame),
+        var ephemeris = localizableObject.GetEphemeris(window, observerItem, Helpers.ResolveFrame(frame),
             Enum.Parse<Aberration>(aberration, true), step);
 
 

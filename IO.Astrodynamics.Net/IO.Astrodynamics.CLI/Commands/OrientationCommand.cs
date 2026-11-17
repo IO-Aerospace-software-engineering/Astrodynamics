@@ -24,14 +24,9 @@ public class OrientationCommand
         [Argument(Description = "Step size <d.hh:mm:ss.fff>")] TimeSpan step,
         [Argument(Description = "Frame")] string frame="ICRF")
     {
-        if (frame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
-        {
-            frame = "j2000";
-        }
-        
         SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
         
-        Frame targetFrame = new Frame(frame);
+        Frame targetFrame = Helpers.ResolveFrame(frame);
         var orientationAt = Helpers.CreateOrientationReader(objectId, targetFrame);
 
         List<StateOrientation> orientations = new List<StateOrientation>();

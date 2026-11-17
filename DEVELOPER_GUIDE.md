@@ -2133,12 +2133,18 @@ the entries only, not on the reads before it (#548): an orientation is the exact
 two entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
 states. Missing data throw `InvalidOperationException`, as on SPICE (#680): a state read for a target without entries or
 outside them, an orientation read outside a frame's entries. A bad argument throws `ArgumentException` (#680, decided by
-S. Guillet, 2026-11-14): a frame never added, and the information of an identifier never added, whose `ParamName` is
+S. Guillet, 2026-11-14): a frame neither added nor known (below), from `GetEphemeris` too since #559, and the
+information of an identifier never added, whose `ParamName` is
 `naifId`, as `SpiceDataProvider` for an identifier SPICE does not name, through `GetCelestialBodyInfo`,
 `new CelestialBody(id)` and `CelestialItem.Create(id)` alike. A Lagrange point (391 to 395) is the exception of
 `CelestialItem.Create`, which builds it from its state without reading its information: its missing state throws
 `InvalidOperationException`, as on SPICE. A body whose barycentre's data, information included, the provider lacks builds
 with `InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
+
+A read is the difference of the stored states, taken in ICRF, rotated into the frame asked by the provider's orientation
+of it; ICRF and GCRF are not rotated, and ICRF, GCRF, ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, the default
+frame of the bodies), TEME, CIRS and TIRS need no stored orientation. The provider holds geometric states only: an
+aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet, 2026-11-17).
 
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data, not in their type initializer: a provider set before their

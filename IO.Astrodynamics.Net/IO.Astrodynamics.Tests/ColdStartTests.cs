@@ -124,6 +124,21 @@ public class ColdStartTests
         Assert.Equal(string.Empty, output.Trim());
     }
 
+    [Fact]
+    public void FrameReads_RetainNoOrientationPerEpoch()
+    {
+        // A frame keeps at most the orientation of its last epoch (#541): in a fresh process, 100 000 reads of ITRF93 by name
+        // and 5 000 of each managed frame retain nothing that grows with them, checked by the child against its bound.
+        // Before the fix, ITRF93 retained 16.5 MB (the issue's probe) and each frame one orientation per epoch read
+        string output = RunChild("frame-memory");
+        foreach (var line in output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
+        {
+            _output.WriteLine(line.TrimEnd('\r'));
+        }
+
+        Assert.Equal(6, output.Split('\n').Count(x => x.StartsWith("MEASURE #541", StringComparison.Ordinal)));
+    }
+
     [Theory]
     [InlineData("two-body-first-propagate")]
     [InlineData("two-body-first-conic")]

@@ -1,4 +1,8 @@
 using System;
+using System.Linq;
+using System.Reflection;
+using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -425,26 +429,61 @@ public class FrameTests
     }
 
     [Fact]
-    public void TheOrientationsAddedToAFrame_AreKeptByEpoch_TheFirstAtAnEpochKept()
+    public void AFrame_HoldsNoOrientationStore_TheAttitudeRecordIsTheSpacecraftFrames()
     {
-        // The members of Frame that the attitude record of a spacecraft overrides (#523, virtual since #537): on another
-        // frame they keep the orientations added, in epoch order, the first one at an epoch, until they are cleared
-        var frame = new Frames.Frame("FRAME_ORIENTATIONS_TEST");
-        var t0 = TimeSystem.Time.J2000TDB;
-        var t1 = t0.AddSeconds(10.0);
-        var later = new StateOrientation(new Quaternion(Vector3.VectorZ, 0.1), Vector3.Zero, t1, frame);
-        var earlier = new StateOrientation(new Quaternion(Vector3.VectorZ, 0.2), Vector3.Zero, t0, frame);
-        var sameEpoch = new StateOrientation(new Quaternion(Vector3.VectorZ, 0.3), Vector3.Zero, t1, frame);
+        // #541 (decided by S. Guillet, 2026-11-17): a frame no longer stores the orientations it reads, by epoch, for its
+        // life; the attitude record API, which only a spacecraft frame implements, is SpacecraftFrame's. Before, Frame had a
+        // protected ConcurrentDictionary keyed by epoch, and the four virtual members of the record
+        string[] recordMembers = ["AddStateOrientationToICRF", "GetStateOrientationsToICRF", "GetLatestStateOrientationToICRF", "ClearStateOrientations"];
+        const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        foreach (var name in recordMembers.Concat(["_stateOrientationsToICRF", "StateOrientationsToICRF"]))
+        {
+            Assert.Empty(typeof(Frames.Frame).GetMember(name, all));
+        }
 
-        Assert.True(frame.AddStateOrientationToICRF(later));
-        Assert.True(frame.AddStateOrientationToICRF(earlier));
-        Assert.False(frame.AddStateOrientationToICRF(sameEpoch));
-        Assert.Equal(new[] { earlier, later }, frame.GetStateOrientationsToICRF());
-        Assert.Equal(later, frame.GetLatestStateOrientationToICRF());
+        foreach (var name in recordMembers)
+        {
+            var method = typeof(SpacecraftFrame).GetMethod(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            Assert.NotNull(method);
+        }
 
-        frame.ClearStateOrientations();
-        Assert.Empty(frame.GetStateOrientationsToICRF());
-        Assert.Null(frame.GetLatestStateOrientationToICRF());
-        Assert.Equal(new Frames.Frame("FRAME_ORIENTATIONS_TEST").GetHashCode(), frame.GetHashCode());
+        // No frame of the library but the spacecraft's holds a collection
+        foreach (var type in new[]
+                 {
+                     typeof(Frames.Frame), typeof(CirsFrame), typeof(TirsFrame), typeof(TemeFrame), typeof(GcrfFrame),
+                     typeof(IO.Astrodynamics.Surface.SiteFrame)
+                 })
+        {
+            foreach (var field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                Assert.False(field.FieldType != typeof(string) && typeof(System.Collections.IEnumerable).IsAssignableFrom(field.FieldType),
+                    $"{type.Name}.{field.Name} is a collection ({field.FieldType.Name})");
+            }
+        }
+    }
+
+    [Fact]
+    public void AManagedFrame_ReadAgainAtAnEarlierEpoch_IsTheOrientationOfThatEpoch()
+    {
+        // The last epoch a frame keeps (#541) is replaced by each read at another epoch: reads at t1, t2 and t1 again are
+        // those of fresh frames, bit for bit
+        var t1 = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var t2 = t1.AddSeconds(3600.0);
+        foreach (var (frame, fresh) in new (Frames.Frame, Func<Frames.Frame>)[]
+                 {
+                     (new CirsFrame(), () => new CirsFrame()), (new TirsFrame(), () => new TirsFrame()), (new TemeFrame(), () => new TemeFrame()),
+                     (new Frames.Frame("ITRF93"), () => new Frames.Frame("ITRF93"))
+                 })
+        {
+            var first = frame.GetStateOrientationToICRF(t1);
+            var second = frame.GetStateOrientationToICRF(t2);
+            var again = frame.GetStateOrientationToICRF(t1);
+            Assert.Equal(fresh().GetStateOrientationToICRF(t1).Rotation, first.Rotation);
+            Assert.Equal(fresh().GetStateOrientationToICRF(t2).Rotation, second.Rotation);
+            Assert.Equal(first.Rotation, again.Rotation);
+            Assert.Equal(first.AngularVelocity, again.AngularVelocity);
+            Assert.Equal(t1, again.Epoch);
+            Assert.NotEqual(first.Rotation, second.Rotation);
+        }
     }
 }

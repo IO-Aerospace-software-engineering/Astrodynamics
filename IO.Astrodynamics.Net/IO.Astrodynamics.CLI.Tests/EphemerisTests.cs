@@ -34,7 +34,7 @@ public class EphemerisTests
             var res = sb.ToString();
 
             OutputAssert.EqualApprox(
-                $"Epoch : 2023-01-01T01:00:00.0000000 TDB A : 149548023692.8589, Ecc. : 0.016383768660595866, Inc. : 0.4090475386632512, AN : 6.283111166910646, AOP : 1.8230020944251075, M : 6.208211132464601, Frame : j2000{Environment.NewLine}Epoch : 2023-01-01T01:01:00.0000000 TDB A : 149548005605.26834, Ecc. : 0.016383648084550295, Inc. : 0.4090475387953283, AN : 6.283111165029856, AOP : 1.8230010654683242, M : 6.20822406354363, Frame : j2000{Environment.NewLine}"
+                $"Epoch : 2023-01-01T01:00:00.0000000 TDB A : 149548023692.8589, Ecc. : 0.016383768660595866, Inc. : 0.4090475386632512, AN : 6.283111166910646, AOP : 1.8230020944251075, M : 6.208211132464601, Frame : J2000{Environment.NewLine}Epoch : 2023-01-01T01:01:00.0000000 TDB A : 149548005605.26834, Ecc. : 0.016383648084550295, Inc. : 0.4090475387953283, AN : 6.283111165029856, AOP : 1.8230010654683242, M : 6.20822406354363, Frame : J2000{Environment.NewLine}"
                 , res);
         }
     }
@@ -55,9 +55,9 @@ public class EphemerisTests
             }, TimeSpan.FromMinutes(1));
             var res = sb.ToString();
             Assert.Equal(
-                $"Epoch : 2023-01-01T01:00:00.0000000 TDB Position : X : -25577262731.326492 Y : 132913320450.42278 Z: 57617007553.115654 Velocity : X : -29812.532391293124 Y : -4864.249418137372 Z: -2109.60702632249 Frame : j2000{
+                $"Epoch : 2023-01-01T01:00:00.0000000 TDB Position : X : -25577262731.326492 Y : 132913320450.42278 Z: 57617007553.115654 Velocity : X : -29812.532391293124 Y : -4864.249418137372 Z: -2109.60702632249 Frame : J2000{
                     Environment.NewLine
-                }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : -25579051481.302353 Y : 132913028585.51353 Z: 57616880972.382614 Velocity : X : -29812.466803377927 Y : -4864.580889886812 Z: -2109.7507418164614 Frame : j2000{
+                }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : -25579051481.302353 Y : 132913028585.51353 Z: 57616880972.382614 Velocity : X : -29812.466803377927 Y : -4864.580889886812 Z: -2109.7507418164614 Frame : J2000{
                     Environment.NewLine}"
                 , res);
         }
@@ -89,7 +89,48 @@ public class EphemerisTests
 
             var icrf = Run("ICRF");
             Assert.Contains("Position : X : -25577262731.326492 Y : 132913320450.42278 Z: 57617007553.115654", icrf);
-            Assert.Equal(icrf.Replace("Frame : j2000", $"Frame : {frame}"), Run(frame));
+            Assert.Equal(icrf.Replace("Frame : J2000", $"Frame : {frame}"), Run(frame));
+        }
+    }
+
+    [Theory]
+    [InlineData("ICRF")]
+    [InlineData("icrf")]
+    [InlineData("J2000")]
+    [InlineData("j2000")]
+    public void IcrfIsLabelledJ2000_OnTheSpiceAndTheSitePaths(string frame)
+    {
+        // #657: one rule for the frame argument of every command (Helpers.ResolveFrame): ICRF or J2000, in any case, is
+        // Frame.ICRF, whose name is J2000. Before, the command rewrote ICRF as j2000, which the SPICE path (a body observer)
+        // printed as given and the site path as J2000; the numbers are the same
+        using (Configuration.Lock())
+        {
+            foreach (var observer in new[] { 10, 399013 })
+            {
+                var command = new EphemerisCommand();
+                StringBuilder sb = new StringBuilder();
+                StringWriter sw = new StringWriter(sb);
+                Console.SetOut(sw);
+                command.Ephemeris("Data", observer == 10 ? 399 : 301, observer, new WindowParameters
+                {
+                    Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame).ToString(),
+                    End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeFrame.TDBFrame).ToString()
+                }, TimeSpan.FromMinutes(1), frame);
+                var lines = sb.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+                Assert.Equal(2, lines.Length);
+                Assert.All(lines, line => Assert.EndsWith("Frame : J2000", line));
+            }
+
+            var orientation = new OrientationCommand();
+            StringBuilder osb = new StringBuilder();
+            Console.SetOut(new StringWriter(osb));
+            orientation.Orientation("Data", 399, new WindowParameters
+            {
+                Begin = new Time(2023, 01, 01, 1, 0, 0).ToString(),
+                End = new Time(2023, 01, 01, 1, 1, 0).ToString()
+            }, TimeSpan.FromMinutes(1), frame);
+            Assert.All(osb.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries),
+                line => Assert.EndsWith("Frame : J2000", line));
         }
     }
 
@@ -98,9 +139,8 @@ public class EphemerisTests
     {
         // A site is given by its NAIF identifier, here 399013, DSS-13 on the Earth; the expected states are SPICE's
         // spkezr("301", et, "J2000", "NONE", "399013") on the kernels of Data/SolarSystem (spiceypy, CSPICE N0067)
-        // The states from a site observer are computed in ICRF and converted to the frame of the command, j2000, which is
-        // Frame.ICRF (#562: a frame is its name ignoring case, as SPICE compares frame names): the conversion is the identity
-        // and keeps the frame of the state, J2000
+        // The states from a site observer are computed in ICRF and converted to the frame of the command, Frame.ICRF (#657):
+        // the conversion is the identity and keeps the frame of the state, J2000, the label of the SPICE path too
         using (Configuration.Lock())
         {
             var command = new EphemerisCommand();

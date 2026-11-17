@@ -38,10 +38,6 @@ public class GeometryFinderCommand
         [Argument(Description = "Frame")] string frame = "ICRF")
     {
         SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
-        if (frame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
-        {
-            frame = "j2000";
-        }
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
@@ -49,7 +45,7 @@ public class GeometryFinderCommand
         var coor = Enum.Parse<Coordinate>(coordinate, true);
         var op = Enumeration.GetValueFromDescription<RelationnalOperator>(relationalOperator);
 
-        var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(win, observerId, targetId, new Frame(frame), coorSys, coor, op, value, adjustValue, abe, step);
+        var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(win, observerId, targetId, Helpers.ResolveFrame(frame), coorSys, coor, op, value, adjustValue, abe, step);
 
         foreach (var windowResult in res)
         {
@@ -159,7 +155,7 @@ public class GeometryFinderCommand
         var abe = Enum.Parse<Aberration>(aberration, true);
         var targetShp = Enum.Parse<ShapeType>(targetShape, true);
 
-        var res = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(win, observerId, instrumentId, targetId, new Frame(targetFrame), targetShp, abe, step);
+        var res = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(win, observerId, instrumentId, targetId, Helpers.ResolveFrame(targetFrame), targetShp, abe, step);
 
         foreach (var windowResult in res)
         {
@@ -202,7 +198,7 @@ public class GeometryFinderCommand
         var coordinates = Helpers.ConvertToPlanetodetic(planetodetic.Planetodetic);
         var illuminationAngle = Enum.Parse<IlluminationAngle>(illuminationType, true);
         var relOperator = Enumeration.GetValueFromDescription<RelationnalOperator>(relationalOperator);
-        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(win, observerId, targetId, new Frame(fixedFrame), coordinates, illuminationAngle, relOperator, value,
+        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(win, observerId, targetId, Helpers.ResolveFrame(fixedFrame), coordinates, illuminationAngle, relOperator, value,
             adjustValue, abe, step, illuminationId);
 
         foreach (var windowResult in res)

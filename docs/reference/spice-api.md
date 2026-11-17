@@ -122,7 +122,9 @@ from the kernels whose frame id no loaded kernel defines, the frame only the lib
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, its name went to SPICE,
 which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrameAsync` writes for
 the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define and the frame of a spacecraft are
-SPICE's by name; CIRS and TIRS throw ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+SPICE's by name. A CIRS or TIRS end, `Frame.CIRS`, `Frame.TIRS`, any `CirsFrame` or `TirsFrame` or a frame of those names
+in any case, is composed through ICRF by its managed orientation, as TEME's
+([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656); before, it threw).
 A transformation SPICE cannot give throws `InvalidOperationException` "SPICE gives no transformation from {from} to {to} at
 {epoch}: " followed by SPICE's message, `SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known
 reference frame." for a frame SPICE does not know, `SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the
@@ -257,7 +259,8 @@ entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange
 states. Missing data throw `InvalidOperationException`, which the library's handlers of missing data catch (#680): a
 state read for a target without entries or outside them and an orientation read outside a frame's entries, the type
 SPICE throws for the same reads. A bad argument throws `ArgumentException` (#680, decided by S. Guillet, 2026-11-14): a
-frame never added, and the information of an identifier never added, whose `ParamName` is `naifId`, the type and the
+frame neither added nor known (below), from `GetEphemeris` too since #559, and the information of an identifier never
+added, whose `ParamName` is `naifId`, the type and the
 parameter `SpiceDataProvider.GetCelestialBodyInfo` throws for an identifier SPICE does not name or that is not a
 celestial body's (#672); `new CelestialBody(id)` and `CelestialItem.Create(id)` of that identifier throw it too, on both
 providers, except `CelestialItem.Create` of a Lagrange point (391 to 395), which reads the point's state and not its
@@ -267,6 +270,16 @@ information (above): a provider without that state throws `InvalidOperationExcep
 barycentre (SPICE names every barycentre), and the orientation cache of a propagation keeps the points the entries do not
 reach unavailable. Before 11.0.0 the state and orientation reads threw `ArgumentException` and the information of an
 identifier never added `KeyNotFoundException`.
+
+`GetEphemeris` takes the stored states about the solar system barycentre in ICRF (a state stored in another frame is
+rotated by the provider's orientation of it), subtracts them and rotates the difference into the frame asked by the
+provider's orientation of that frame, r' = R r and v' = R v + ω × r' as `ToFrame`; a read in ICRF or GCRF is the
+stored difference, unrotated. Besides the frames whose orientations were added, the provider knows ICRF and GCRF (the
+identity), ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, 84381.448″ about x; the default frame of the bodies)
+and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. It holds geometric states
+only: an aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet,
+2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was
+geometric.
 
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data (see [Predefined Objects](predefined-objects.md)), so a

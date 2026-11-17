@@ -105,8 +105,8 @@ release are listed under **Known limitations**.
 - **`centerOfMotion`**, an optional parameter of the kernel-backed `Spacecraft(int, string, Time?, ...)` constructor:
   the centre about which it reads its initial orbital parameters, the Earth by default
   ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), under Fixed and Changed).
-- **`Frame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
-  `ClearStateOrientations` are virtual** ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), under Changed: `SpacecraftFrame`).
+- **`SpacecraftFrame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
+  `ClearStateOrientations`**, the attitude record of a spacecraft ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), [#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541); under Changed: `SpacecraftFrame`, and `Frame` keeps no orientations).
 
 **Fixed**
 
@@ -2917,7 +2917,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's
   `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (the same on Linux
   x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
-  frame kernel and the CK written for them) and CIRS and TIRS ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)) keep their path; TEME's composition is the same code, bit for bit.
+  frame kernel and the CK written for them) keep their path; CIRS and TIRS are composed the same way since [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656) (below); TEME's composition is the same code, bit for bit.
 - **The documentation of a site observer of `SpiceAPI.ReadEphemeris` by identifiers stated no condition** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth
   round). The observer of a site identifier is a `Site` built from its SPICE name and read at J2000 TDB (#672), so a
   site no loaded kernel names throws `ArgumentException` (`naifId`, "has no name in SPICE") and one whose SPK does not
@@ -3627,6 +3627,73 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   bit, the rotation within 1.6e-16 rad. A read of one epoch allocates 488 bytes and takes 1.28e-2 ms (Linux
   x64; `ReadOrientation_OneEpoch_AllocatesForOneRecord`, red on a85098d), so the CLI's orientation reads, one epoch at a
   time, no longer cost 1.4 ms each. A step of zero or less throws `ArgumentOutOfRangeException` (Changed below).
+- **A frame named CIRS or TIRS went to SPICE, and `SpiceAPI.TransformFrame` threw for CIRS and TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+  Since #562 a frame is its name, so `new Frame("CIRS")` equals `Frame.CIRS` and `new Frame("tirs")` equals
+  `Frame.TIRS`, but the routing went by type: a frame built by those names (user code, a CCSDS file, the CLI) was handed
+  to SPICE, which does not know them, and `SpiceAPI.TransformFrame` handed even the instances to SPICE. Measured on
+  a85098d: `new Frame("CIRS").ToFrame(Frame.ICRF, t)`, an ICRF state `ToFrame(new Frame("CIRS"))`, `GetEphemeris` in
+  `new Frame("TIRS")` and `SpiceAPI.Instance.TransformFrame(t, Frame.CIRS, Frame.ICRF)` threw
+  `InvalidOperationException` (SPICE(UNKNOWNFRAME)), `MemoryDataProvider.FrameTransformationToICRF` `ArgumentException`
+  ("Frame not found"). One internal rule, `SpiceAPI.ManagedFrame`, now resolves a `TemeFrame`, `CirsFrame` or
+  `TirsFrame` instance as it is and a frame named TEME, CIRS or TIRS, in any case, to `Frame.TEME`, `Frame.CIRS` or
+  `Frame.TIRS`; both data providers, the ephemeris reads and the CSPICE coordinate search's frame check use it, and
+  `SpiceAPI.TransformFrame` composes a CIRS or TIRS end through ICRF, as TEME's (decided by S. Guillet, 2026-11-17). A
+  frame built by name is now the static frame bit for bit (its orientation, its reads with or without light time and
+  stellar aberration), labelled with the frame given; against SOFA (`Data/SofaReference/iau2006_sweep.json`, IAU
+  2006/2000A: `iauC2ixys` from its X, Y and s for CIRS, its GCRS → TIRS for TIRS) at 2000, 2012, 2020 and 2024 the axes
+  are within 1.1e-9 rad and the Moon's position read from the Earth within 5.9e-10 rad, under the 5e-9 rad bound of
+  the SOFA sweep (IAU 2000B against 2000A); `TransformFrame` toward ITRF93 is `ToFrame`'s composition bit for bit, the
+  same formula on the same orientations (measured 0 rad and 0 rad/s), and a frame to itself by name the identity, 0 rad
+  (`ManagedFrameByNameTests`, 31 cases, all red on a85098d). A coordinate search of `CelestialItem` or
+  `Site` in a frame built by those names is the library's, as in the instances, and
+  `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it, as for the instances.
+
+- **`MemoryDataProvider.GetEphemeris` ignored the frame and the aberration** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
+  It subtracted the stored states and labelled the ICRF difference with the frame asked, and returned the geometric
+  state for an aberrated read: on a85098d an ECLIPJ2000 read of the Moon from the Earth was 1.06e8 m and 294 m/s from
+  `spkezr_c` on the same states, an ITRF93 read 7.6e8 m and 2.6e4 m/s, the Earth-Moon barycentre of the issue 5.76e10 m
+  off in z. The stored states are now taken in ICRF (a state stored in another frame rotated by the provider's
+  orientation of it), subtracted, then rotated into the frame asked by the provider's orientation of that frame, as
+  `ToFrame` does (r' = R r, v' = R v + ω × r'); a frame of ICRF's axes (ICRF, GCRF) is not rotated, so a read in ICRF is
+  bit for bit the stored difference as before. The provider knows ICRF and GCRF (the identity) and ECLIPJ2000, SPICE's
+  fixed rotation of the J2000 obliquity (84381.448″ about x, CSPICE `chgirf.c`), without stored orientations: ECLIPJ2000
+  is the default frame of the bodies, so a body built on the provider reads its orbit in it, which now needs that
+  rotation. A frame with stored orientations is read from them, TEME, CIRS and TIRS are the managed frames (#656), and any
+  other frame throws `ArgumentException`: `FrameTransformationToICRF` threw it before, but `GetEphemeris`, which never
+  read the frame, returned the ICRF difference labelled with it, a body-fixed frame without stored orientations such as
+  `IAU_EARTH` or the Earth's `ITRF93` included (Changed below). Against `spkezr_c` on the states the test stores (read from SPICE
+  in J2000 every 10 min): 7.8e-5 m and 8.8e-12 m/s in ECLIPJ2000 and from ECLIPJ2000 states, 4.8e-5 m and 3.5e-9 m/s
+  in ITRF93 from SPICE's orientations stored at the epochs, 4.8e-5 m in TEME by name; ECLIPJ2000 within 1.1e-16 rad of
+  `sxform_c` and the barycentre of the issue within 2.2e-16 of the closed form (`MemoryDataProviderFrameTests`, 17 of 19
+  cases red on a85098d; thresholds provisional, twice the Linux worst). The aberration: Changed below.
+
+- **A frame kept every orientation it read, for its life** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541)).
+  `Frame.GetStateOrientationToICRF` stored each orientation it read in a dictionary keyed by epoch, and so did
+  `CirsFrame`, `TirsFrame`, `TemeFrame`, `GcrfFrame` and the frame of a site from coordinates; nothing removed them but
+  the propagation of a spacecraft for its own frame, and the static frames live for the whole process. Measured on
+  a85098d in a fresh process: 16 479 752 bytes retained after 100 000 reads of ITRF93 0.5 s apart, about 940 kB after
+  5 000 reads of CIRS, TIRS, TEME or GCRF, 2.8 MB for a site frame. A frame now keeps the orientation of its last epoch
+  only, while the kernel pool is unchanged (a `LoadKernels`, `UnloadKernels` or `ClearKernels` makes the next read read
+  again), GCRF none (decided by S. Guillet, 2026-11-17): the same reads retain at most 8.2 kB, the noise of a full
+  collection (`ColdStartTests.FrameReads_RetainNoOrientationPerEpoch`, the child `frame-memory`, bound 17 000 bytes,
+  provisional, twice the Linux worst; `FrameTests.AFrame_HoldsNoOrientationStore_TheAttitudeRecordIsTheSpacecraftFrames`;
+  both red on a85098d). The orientations are bit for bit those of a fresh frame
+  (`AManagedFrame_ReadAgainAtAnEarlierEpoch_IsTheOrientationOfThatEpoch`). The cost, the best of 7 runs on Linux x64
+  (shared machine): 100 000 reads of ITRF93 at distinct epochs 286 ms (336 before), 100 000 at one epoch 0.9 ms (1.9),
+  the horizontal coordinates of the Moon from a site every minute over a day 13.2 ms (14.7), as many reads of the Moon
+  in TEME 15.1 ms (13.6) and in ITRF93 converted to ICRF 14.2 ms (12.7); before, an epoch read again by a long-lived
+  frame was found in its dictionary.
+
+- **The command line labelled ICRF `j2000` on the SPICE path and `J2000` from a site** ([#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)).
+  `ephemeris`, `orientation` and `geometry-finder` rewrote their frame argument ICRF as `j2000` and built `new
+  Frame("j2000")`: a body or kernel-backed spacecraft observer printed `Frame : j2000` (the frame SPICE was given), a
+  site observer `Frame : J2000` (the state computed in `Frame.ICRF`, which equals the frame asked), and so did the
+  orientation of a kernel-backed spacecraft; `frame-converter`, `orbital-parameters` and the orbital parameters of
+  `propagate` rewrote it as `J2000`. Every command now resolves its frame arguments by one rule (internal
+  `Helpers.ResolveFrame`): ICRF or J2000, in any case, is `Frame.ICRF`, labelled `J2000` on every path; any other name
+  is `new Frame(name)`, which the library routes by its name (TEME, GCRF, CIRS, TIRS, #656). The numbers are unchanged
+  (`EphemerisTests.IcrfIsLabelledJ2000_OnTheSpiceAndTheSitePaths`, ICRF, icrf and j2000 red on a85098d; the expected
+  labels of `EphemerisTests` and `SpacecraftKernelsTests` updated). The output: Changed below.
 
 **Changed**
 
@@ -4246,7 +4313,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `AddStateOrientationToICRF` takes the rotation from the spacecraft frame to ICRF so labelled, throws
   `ArgumentException` for another label, and replaces the entries within 2 µs, where it was dropped at an existing
   epoch. `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
-  `ClearStateOrientations` are virtual on `Frame`. Migration: keep the CK loaded while the frame of a kernel-backed
+  `ClearStateOrientations` are members of `SpacecraftFrame` since #541 (below). Migration: keep the CK loaded while the frame of a kernel-backed
   spacecraft is read, and label a rotation given to `AddStateOrientationToICRF` with the spacecraft frame.
 - **Breaking: `Instrument.Orientation` is the Euler angles 1-2-3 of the frame kernel.** With the Fixed entry above. A
   zero orientation is unchanged everywhere. About one axis, the managed field-of-view path is unchanged bit for bit,
@@ -5248,6 +5315,46 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Migration: a caller that dropped or matched the drifting epochs reads the grid itself; one that relied on the last
   epoch being absent drops it. The native read proxies take the epochs: the native library and the .NET library of
   11.0.0 go together.
+- **Breaking: a `MemoryDataProvider` no longer reads orientations stored under the name CIRS or TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656), Fixed above).
+  `FrameTransformationToICRF` of a frame named CIRS or TIRS, in any case, returns the managed `Frame.CIRS` or
+  `Frame.TIRS` (an instance of `CirsFrame` or `TirsFrame` its own), as it did for TEME, where it read the orientations
+  `AddStateOrientationToICRF` stored under that name. Migration: none to read the IAU frames; a caller who stored another
+  frame under one of those names gives it another name.
+
+- **Breaking: `MemoryDataProvider.GetEphemeris` throws `NotSupportedException` for an aberration other than `None`, and `ArgumentException` for a frame it neither stores nor knows** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559), Fixed above).
+  The provider holds geometric states only, and returned them for a read with light time or stellar aberration. It now
+  refuses them (decided by S. Guillet, 2026-11-17: an in-memory test provider; refusing is honest, and smaller than a
+  light-time iteration on the stored states), so a library path that reads with an aberration (an occultation or
+  illumination search with `LT`, `CelestialBody.TrueSolarDay`, a `CelestialAttitudeTarget` with `LT`) throws on it.
+  Its reads in a frame other than ICRF's axes are rotated (Fixed above), so the orbit of a body built on it, in
+  ECLIPJ2000 by default, changes numbers. A read in a frame without stored orientations other than ICRF, GCRF,
+  ECLIPJ2000, TEME, CIRS and TIRS (any body-fixed frame, such as `IAU_EARTH` or the Earth's `ITRF93`) throws
+  `ArgumentException` ("Frame not found"), where it returned the ICRF difference labelled with that frame. Migration:
+  read with `Aberration.None`, or with a `SpiceDataProvider`; for another frame, store its orientations with
+  `AddStateOrientationToICRF(frame, date, orientation)` over the epochs read (from SPICE, for example
+  `SpiceAPI.Instance.TransformFrame(date, frame, Frame.ICRF)`), or read in ICRF, the numbers returned before.
+
+- **Breaking: `Frame` keeps no orientations; the attitude record API is `SpacecraftFrame`'s** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541), Fixed above).
+  The protected `_stateOrientationsToICRF` and `StateOrientationsToICRF` of `Frame` are removed, and
+  `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
+  `ClearStateOrientations`, virtual on `Frame`, are members of `SpacecraftFrame`, the only frame that implemented them
+  as an attitude record (decided by S. Guillet, 2026-11-17); `Spacecraft.Frame` is a `SpacecraftFrame`, so its callers
+  compile unchanged. On another frame they stored the orientations given in the frame's own dictionary, the one its
+  reads filled, so an orientation added at an epoch that instance had not read yet replaced the data provider's at that
+  exact epoch, for that instance only and outside a propagation's orientation cache (measured on a85098d: a 0.3 rad
+  rotation about z added to `new Frame("ITRF93")` at an epoch was read back there, not SPICE's; `CirsFrame` alike); that
+  override is removed, and the frame reads its provider. A frame
+  keeps the orientation of its last epoch only: an orientation added to a `MemoryDataProvider` at the epoch the frame
+  read last is read once the frame has read another epoch. Migration: a subclass of `Frame` that used the dictionary keeps its
+  own store; code that added orientations to another frame to override its provider gives them to a `MemoryDataProvider`
+  (`AddStateOrientationToICRF(frame, date, orientation)`), set as the data provider, whose frames read them (the managed
+  TEME, CIRS and TIRS excepted, #656).
+
+- **Breaking: the command line prints `Frame : J2000` for ICRF on every path** ([#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657), Fixed above).
+  `astro ephemeris` from a body or a kernel-backed spacecraft, and `astro orientation` of a kernel-backed spacecraft, in
+  the default frame ICRF or a frame named `icrf` or `j2000`, printed `Frame : j2000`; they print `Frame : J2000`, as a
+  site observer did. Numbers unchanged. Migration: a script that parses the label reads `J2000`, or compares it ignoring
+  case.
 
 **Deprecated**
 
@@ -5326,15 +5433,10 @@ not listed.
   text kernel writers still write it: load it through a meta-kernel that names it by a shorter relative path, or write
   it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
   are two entries.
-- **CIRS and TIRS by name, and searches in a managed frame**
-  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558),
-  [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)). A frame built by name as CIRS
-  or TIRS (`new Frame("CIRS")`, a CCSDS file, the CLI) equals `Frame.CIRS` or `Frame.TIRS` but goes to SPICE, which does
-  not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws, and `SpiceAPI.TransformFrame` in CIRS or TIRS throws
-  even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in a frame built by the
-  name CIRS or TIRS throws SPICE's error (no window before the fourth round of #668), and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances
-  `Frame.CIRS` and `Frame.TIRS`, which the coordinate searches of `CelestialItem` and `Site` search in with the library
-  (third review of #690). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
+- **Orientations read in CIRS or TIRS, and frames of the library built by name**
+  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)). `SpiceAPI.ReadOrientation` in
+  CIRS or TIRS throws: SPICE does not know them (a frame built by those names is routed to `Frame.CIRS` and `Frame.TIRS`
+  everywhere else since #656, Fixed above). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
   record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), and searched in by the library (third review of #690), but a frame built by
   such a name (`new Frame("MYSITE_TOPO")`) still goes to SPICE, as does any frame built by a name SPICE does not know,
   whose CSPICE search throws SPICE's error (no window before the fourth round of #668).
@@ -5452,14 +5554,6 @@ not listed.
   searched by `gfilum_c` with the normal of `surfnm_c` at the point, and the same site built from its coordinates,
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
-- **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
-  `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
-  read in ICRF without aberration and convert with `ToFrame`.
-- **Memory of the reads**
-  ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541)).
-  `Frame.GetStateOrientationToICRF` (and `CirsFrame`, `GcrfFrame`, `TirsFrame`, `SiteFrame`) keeps every orientation it
-  reads for the life of the frame, without bound (16.5 MB after 100 000 reads of ITRF93), and the static frames live for
-  the whole process.
 - **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).
   With the variational equations in the step control (`IncludeInStepControl`) the columns of Y are scaled by |r0|
   relative to the barycentre, about 1.5e11 m, and the step control fails, with or without drag; propagate relative to
@@ -5496,11 +5590,9 @@ not listed.
   ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447)).
   `ConjunctionAssessment.Analyze` allocates about 403 MB per pair over a 2 h window (0.83 s with the covariance held in
   RTN, 1.71 s propagated); results are unaffected.
-- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652),
-  [#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)). The help of
+- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652)). The help of
   `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do
   not exist, and its `RA/DEC` and `RIGHT ASCENSION` are rejected: pass the member names (`RaDec`, `RightAscension`).
-  `ephemeris` labels ICRF states `j2000` on the SPICE path and `J2000` from a site observer, the numbers the same.
 
 ### 10.2.0-preview-1
 

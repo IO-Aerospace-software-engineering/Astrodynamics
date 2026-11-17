@@ -336,9 +336,43 @@ public class SpiceAPI
         string.Equals(frame.Name, Frame.TEME.Name, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
+    /// The managed frame of the IAU and SGP4 chains that <paramref name="frame"/> stands for, or null: an instance of
+    /// <see cref="TemeFrame"/>, <see cref="CirsFrame"/> or <see cref="TirsFrame"/> as it is (its own Earth orientation
+    /// parameters kept), and <see cref="Frame.TEME"/>, <see cref="Frame.CIRS"/> or <see cref="Frame.TIRS"/> for a frame of
+    /// that name, compared ignoring case as SPICE compares frame names (#451, #562, #656: a frame is its name, so a frame
+    /// built by name is routed as the frame it equals; before #656 CIRS and TIRS were routed by type only, and a frame built
+    /// by their name reached SPICE, which does not know them). SPICE knows none of these frames.
+    /// </summary>
+    internal static Frame ManagedFrame(Frame frame) => frame switch
+    {
+        TemeFrame or CirsFrame or TirsFrame => frame,
+        _ when IsTeme(frame) => Frame.TEME,
+        _ when string.Equals(frame.Name, Frame.CIRS.Name, StringComparison.OrdinalIgnoreCase) => Frame.CIRS,
+        _ when string.Equals(frame.Name, Frame.TIRS.Name, StringComparison.OrdinalIgnoreCase) => Frame.TIRS,
+        _ => null
+    };
+
+    /// <summary>
+    /// The orientation to ICRF of a frame that <see cref="ManagedFrame"/> resolves, labelled with <paramref name="source"/>,
+    /// or null for any other frame: the routing of both data providers (#451, #656).
+    /// </summary>
+    internal static OrbitalParameters.StateOrientation ManagedOrientationToIcrf(in Time date, Frame source)
+    {
+        var managed = ManagedFrame(source);
+        if (managed == null)
+        {
+            return null;
+        }
+
+        var orientation = managed.GetStateOrientationToICRF(date);
+        return new OrbitalParameters.StateOrientation(orientation.Rotation, orientation.AngularVelocity, date, source);
+    }
+
+    /// <summary>
     /// The managed frame whose orientation an ephemeris read in <paramref name="frame"/> rotates by, or null for a frame
-    /// that SPICE knows: an instance of <see cref="TemeFrame"/>, <see cref="CirsFrame"/> or <see cref="TirsFrame"/>, and
-    /// <see cref="Frame.TEME"/> for a frame named TEME (#558); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
+    /// that SPICE knows: the frame <see cref="ManagedFrame"/> resolves, an instance of <see cref="TemeFrame"/>,
+    /// <see cref="CirsFrame"/> or <see cref="TirsFrame"/> (#558), or <see cref="Frame.TEME"/>, <see cref="Frame.CIRS"/> or
+    /// <see cref="Frame.TIRS"/> for a frame of that name in any case (#656); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
     /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
     /// (#682), which only the library holds; the <see cref="Surface.SiteFrame"/> of a site of the kernels whose frame id,
     /// 1000000 + NaifId, no loaded kernel defines, the frame of its J2000 coordinates that
@@ -352,7 +386,8 @@ public class SpiceAPI
     /// whose record is empty (never propagated, no orientation added, from a TLE or the TLE propagator): the library holds no
     /// attitude for it, and its name reaches SPICE as before 11.0.0, which reads the frame and C-kernels of that id when they
     /// are loaded (those the library wrote for an earlier object of the id) and rejects the frame otherwise
-    /// (SPICE(UNKNOWNFRAME)), rather than the identity of the empty record. A frame built by name is SPICE's but for TEME (#656).
+    /// (SPICE(UNKNOWNFRAME)), rather than the identity of the empty record. A frame built by name is SPICE's but for TEME,
+    /// CIRS and TIRS (#656; before, CIRS and TIRS built by name reached <c>spkezr_c</c>, which threw SPICE(UNKNOWNFRAME)).
     /// </summary>
     /// <remarks>
     /// Called under the lock of the SPICE calls, which the lookup of a site's kernel frame (<c>frmnam_c</c>) needs.
@@ -363,12 +398,10 @@ public class SpiceAPI
     /// </remarks>
     internal static Frame ManagedReadFrame(Frame frame) => frame switch
     {
-        TemeFrame or CirsFrame or TirsFrame => frame,
         Surface.SiteFrame { Site.IsSpiceBacked: false } => frame,
         Surface.SiteFrame { Site.IsSpiceBacked: true, Id: { } id } when KernelFrameName(id) == null => frame,
         Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: false, HasAttitude: true } => frame,
-        _ when IsTeme(frame) => Frame.TEME,
-        _ => null
+        _ => ManagedFrame(frame)
     };
 
     /// <summary>
@@ -394,8 +427,8 @@ public class SpiceAPI
 
     /// <summary>
     /// Whether SPICE knows <paramref name="frame"/> by the name it is handed (<see cref="SpiceFrameName"/>), decided under
-    /// the lock of the SPICE calls at each call: false for TEME, CIRS and TIRS, which only the library holds (a frame named
-    /// TEME included, #451), and for the frame of a site or a spacecraft whose frame id no loaded kernel defines under that
+    /// the lock of the SPICE calls at each call: false for TEME, CIRS and TIRS, which only the library holds (a frame of
+    /// those names included, #451, #656), and for the frame of a site or a spacecraft whose frame id no loaded kernel defines under that
     /// name; true for any other frame, whose name is handed as it is (third review of #690).
     /// </summary>
     internal static bool SpiceKnowsFrame(Frame frame)
@@ -404,13 +437,11 @@ public class SpiceAPI
         {
             switch (frame)
             {
-                case TemeFrame or CirsFrame or TirsFrame:
-                    return false;
                 case Surface.SiteFrame or Body.Spacecraft.SpacecraftFrame when frame.Id is { } id:
                     var kernelName = KernelFrameName(id);
                     return kernelName != null && string.Equals(kernelName, SpiceFrameName(frame), StringComparison.OrdinalIgnoreCase);
                 default:
-                    return !IsTeme(frame);
+                    return ManagedFrame(frame) == null;
             }
         }
     }
@@ -2166,8 +2197,10 @@ public class SpiceAPI
     /// reads in it, <see cref="Frame.ToFrame"/> and the horizontal coordinates use (fourth round of #668; before, the call
     /// handed its name, <c>Name + "_TOPO"</c>, to SPICE, which does not know it, and threw). The frame of a site whose frame
     /// the kernels define is that kernel frame, read by SPICE, and the frame of a spacecraft is SPICE's by name, which reads
-    /// the frame kernel and the C-kernel loaded for it. CIRS and TIRS are not composed: SPICE does not know them, and the
-    /// call throws (#656). SPICE must give a rotation: for a frame SPICE does not know, or outside the coverage of the frame
+    /// the frame kernel and the C-kernel loaded for it. CIRS and TIRS, <see cref="Frame.CIRS"/>, <see cref="Frame.TIRS"/>,
+    /// any instance of <see cref="CirsFrame"/> or <see cref="TirsFrame"/> or a frame of those names in any case, are
+    /// composed through ICRF as TEME, by their managed orientation (#656; before, the call handed them to SPICE, which does
+    /// not know them, and threw). SPICE must give a rotation: for a frame SPICE does not know, or outside the coverage of the frame
     /// data, the native layer returns a NaN rotation with SPICE's message, and the call throws with it (#714; before, the zero
     /// quaternion and a message of the library's that named the coverage whatever the cause, #454; before 11.0.0 the zero
     /// quaternion was returned, except on the TEME path).
@@ -2181,8 +2214,8 @@ public class SpiceAPI
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
         if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
-        // TEME and the frame of a site that only the library holds (TransformedThroughIcrf) are composed through ICRF, as the
-        // reads in them are rotated (fourth round of #668; before, only TEME was, and a site's frame threw)
+        // TEME, CIRS, TIRS and the frame of a site that only the library holds (TransformedThroughIcrf) are composed through
+        // ICRF, as the reads in them are rotated (fourth round of #668, #656; before, only TEME was, and the others threw)
         Frame fromManaged, toManaged;
         lock (lockObject)
         {
@@ -2229,12 +2262,12 @@ public class SpiceAPI
         return new OrbitalParameters.StateOrientation(rotation, angularVelocity, epoch, fromFrame);
     }
 
-    // The managed frame a transform composes through ICRF, or null: TEME (#451) and the SiteFrame of a site from coordinates
-    // or of a site whose frame no loaded kernel defines (ManagedReadFrame, decided at each call). Not CIRS and TIRS, which
-    // #656 owns, nor the frame of a managed spacecraft, which stays SPICE's by name: it reads the frame kernel and the CK
+    // The managed frame a transform composes through ICRF, or null: TEME (#451), CIRS and TIRS (#656), by instance or name
+    // (ManagedFrame), and the SiteFrame of a site from coordinates or of a site whose frame no loaded kernel defines
+    // (ManagedReadFrame, decided at each call). Not the frame of a managed spacecraft, which stays SPICE's by name: it reads the frame kernel and the CK
     // the library wrote, the independent reference of its attitude record. Called under the lock
     private static Frame TransformedThroughIcrf(Frame frame) =>
-        ManagedReadFrame(frame) is { } managed and (TemeFrame or Surface.SiteFrame) ? managed : null;
+        ManagedReadFrame(frame) is { } managed and not Body.Spacecraft.SpacecraftFrame ? managed : null;
 
     private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed)
     {
