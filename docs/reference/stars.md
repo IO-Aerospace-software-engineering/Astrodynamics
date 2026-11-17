@@ -123,6 +123,14 @@ minus the velocity of the reference body, `GetEphemeris` minus the observer's, a
 (`StarVelocityTests`). Barnard's star moves at 89 km/s. Before 11.0.0 the velocity was zero while the position moved:
 from the barycenter a zero velocity, from an observer the opposite of the observer's velocity.
 
+A star as observer moves at the same velocity: a state whose observer is a star, converted to another centre
+(`OrbitalParameters.RelativeTo`), takes the star's space velocity, a target seen from a star (`GetEphemeris`,
+`GetGeometricStateRelativeTo`) its velocity minus the star's, and a spacecraft whose initial orbit is about a star,
+propagated about the Sun (the central body of a star observer), starts with the star's velocity and moves with it.
+Barnard's star moves such a spacecraft by 1.93e9 m in 6 hours where it stood still before 11.0.0: a state that was
+written relative to the barycenter's motion subtracts the star's space velocity
+(`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`) to keep its former trajectory.
+
 Its accuracy, Linux x64, 2026-11-17 (provisional until the Windows x64 and macOS arm64 logs):
 
 - against the derivative of the straight line in long double (`tools/sofa_reference/starpm_ref.c --velocity`), every
@@ -134,7 +142,9 @@ Its accuracy, Linux x64, 2026-11-17 (provisional until the Windows x64 and macOS
   1 − (ṙ(dt) − ṙ(0))/c (1.5e-8 per year for Barnard's star): 3.6e-10 relative, the resolution of the central difference
   for Polaris's 0.046″/yr;
 - against the central difference of the library's own positions over ±1 year: within 6.2e-16 of the position;
-- read back from the SPK: 1.8e-16 relative.
+- read back from the SPK: 1.8e-16 relative;
+- a star as observer, against the state's velocity plus the star's minus the target's from SPICE: 0, within bounds of
+  8.0e-16 relative, the rounding of the two orders of summation.
 
 ### Limits
 

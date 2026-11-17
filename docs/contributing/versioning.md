@@ -3255,8 +3255,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   positions (`IsTheRateOfThePosition`); from the Earth, the space velocity minus the Earth's velocity from SPICE
   (`GetEphemeris_FromTheEarth_IsTheSpaceVelocityMinusTheEarths`); and read back by `spkezr` from the SPK of
   `WriteEphemeris`, 1.84e-16 relative (`WriteEphemeris_TheSpkHoldsTheSpaceVelocity`); all red on a85098d. Thresholds
-  twice the Linux x64 worst, provisional until the Windows x64 and macOS arm64 logs. The positions are unchanged, bit
-  for bit; the rate of the stellar aberration of the `+S` corrections, which takes the relative velocity, follows. The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
+  twice the Linux x64 worst, provisional until the Windows x64 and macOS arm64 logs. The positions of the star's own
+  states are unchanged, bit for bit; the rate of the stellar aberration of the `+S` corrections, which takes the
+  relative velocity, follows. A star as observer takes its space velocity too, which moves positions on the paths that
+  integrate it (the Changed entry below). The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
 
 **Changed**
 
@@ -3323,7 +3325,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Scenario.SimulateAsync` and the SPK of `WriteEphemeris` carry r0 (μα* e_α + μδ e_δ) per Julian year of TDB, where
   they carried a zero velocity (from an observer, the opposite of its velocity). Migration: code that took the
   velocity of a star's state as the observer's opposite subtracts the star's (its velocity from the barycenter);
-  the positions are unchanged.
+  the positions of these states are unchanged.
+- **Breaking: a star as observer moves at its space velocity** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731), Fixed above).
+  Every path that converts a state whose observer is a `Star` to another centre takes the star's space velocity where it
+  took a zero velocity: `OrbitalParameters.RelativeTo`, `GetEphemeris` and
+  `GetGeometricStateRelativeTo` of any target seen from a star (its velocity the target's minus the star's), and the
+  initial state of a spacecraft whose initial orbit is about a star, which `CentralBodyPropagator` converts to the Sun,
+  its central body for a star observer. The converted velocity moves by the star's velocity relative to the
+  barycenter, and a propagation from such a state by that velocity times the elapsed time: Barnard's star from Gaia DR3,
+  a state of (1e11, 2e11, 3e10) m and (1000, −2000, 300) m/s about it on 2026-11-17, converted to the Sun, went from
+  (989.8, −2004.7, 298.2) m/s to (−5885.2, 5482.1, 89798.8) m/s, and after 6 hours of propagation about the Sun its
+  position moved by 1.93e9 m (its 89.8 km/s times 6 hours; measured on a85098d and on the fix). The velocity of these
+  conversions is the state's plus the star's space velocity minus the target's from SPICE, its position the star's
+  position from the barycenter plus the state's minus the target's, 0 on Linux x64 against bounds of 8.0e-16 relative,
+  the rounding of the two orders of summation (`StarVelocityTests.RelativeTo_AStateAboutAStar_TakesTheStarsSpaceVelocity`,
+  `GetEphemeris_FromAStar_IsTheTargetsVelocityMinusTheStars`, `Propagate_ASpacecraftAboutAStar_StartsWithTheStarsSpaceVelocity`;
+  0.999, 0.84 to 1.12 and 0.999 relative on a85098d), provisional until the Windows x64 and macOS arm64 logs. Migration:
+  a state about a star whose velocity was given relative to the barycenter's motion (as the zero velocity of the star
+  made it) subtracts the star's space velocity (`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`)
+  to keep its former heliocentric velocity and trajectory; a state given relative to the star itself needs no change and
+  now moves with it.
 - **Breaking: the `Star` constructor refuses a parallax that is not finite and positive** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732), Fixed above).
   `ArgumentOutOfRangeException` (`parallax`) for 0, a negative value, NaN, ±∞ and a positive value whose distance
   overflows a double. Migration: a catalog record with a parallax of 0 or less (a Gaia DR3 star whose parallax is below
