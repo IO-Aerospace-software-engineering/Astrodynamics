@@ -1217,20 +1217,54 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     #region Operators
 
+    /// <summary>
+    /// Value equality within one concrete type (#475, decided by S. Guillet, 2026-11-17): each type of the library
+    /// overrides this method to compare, for an object of its own type, its values, its observer's NAIF id, its
+    /// <see cref="Epoch"/> (an instant, whatever its time frame, #512), its <see cref="Frame"/> and its
+    /// <see cref="ElementsType"/>, without computing a state; a type that does not override it has reference equality.
+    /// </summary>
+    /// <remarks>
+    /// Two sets of different types are different, an element set and its own <see cref="ToStateVector()"/> included; to
+    /// compare two orbits, compare their states, <c>x.ToStateVector() == y.ToStateVector()</c>, which throws for mean
+    /// elements. Before 11.0.0 equality through <see cref="OrbitalParameters"/> compared the states of both operands: it
+    /// threw for mean elements (even against null) and for e = NaN, ran SGP4 for a TLE, and found equal two sets whose
+    /// states were both NaN.
+    /// </remarks>
     public override bool Equals(object obj)
     {
-        return Equals(obj as OrbitalParameters);
+        return ReferenceEquals(this, obj);
     }
 
+    /// <summary>
+    /// Whether <paramref name="other"/> is equal to this set: <see cref="Equals(object)"/>, the value equality of the
+    /// concrete type (#475). Never throws, and is false for null.
+    /// </summary>
     public virtual bool Equals(OrbitalParameters other)
     {
-        return other is not null &&
-            base.Equals(other) || ToStateVector() == other?.ToStateVector();
+        return Equals((object)other);
     }
 
+    /// <summary>
+    /// The hash code of the observer's NAIF id, the epoch (its instant, #512), the frame and the element type, which every
+    /// type combines with its own values: equal sets share it (#475; before 11.0.0 it held the identity of the instance).
+    /// </summary>
+    /// <remarks>
+    /// The sets are immutable, but for the work states of an integration: the state an integrator hands to
+    /// <see cref="Propagator.Events.IEventDetector.Evaluate"/> is updated in place at each evaluation, so keep a copy of
+    /// it, not the instance, as a key.
+    /// </remarks>
     public override int GetHashCode()
     {
-        return HashCode.Combine(base.GetHashCode(), Observer, Epoch, Frame);
+        return HashCode.Combine(Observer.NaifId, Epoch, Frame, ElementsType);
+    }
+
+    /// <summary>
+    /// Whether this set and <paramref name="other"/> have the same observer (by NAIF id), epoch (an instant, #512), frame
+    /// and element type: the part of the equality of every type held by <see cref="OrbitalParameters"/> (#475).
+    /// </summary>
+    private protected bool HasSameReference(OrbitalParameters other)
+    {
+        return Observer.NaifId == other.Observer.NaifId && Epoch == other.Epoch && Frame == other.Frame && ElementsType == other.ElementsType;
     }
 
     public static bool operator ==(OrbitalParameters left, OrbitalParameters right)

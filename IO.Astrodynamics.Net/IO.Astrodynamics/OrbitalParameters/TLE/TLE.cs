@@ -902,7 +902,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return base.Equals(other) && Line1 == other.Line1 && Line2 == other.Line2 && Name == other.Name;
+        // The lines hold the elements and the epoch, the constructor sets the observer (the Earth) and the frame (TEME):
+        // no state is computed (#475; before 11.0.0 the base comparison ran SGP4 on both)
+        return GetType() == other.GetType() && Line1 == other.Line1 && Line2 == other.Line2 && Name == other.Name;
     }
 
     /// <summary>
