@@ -321,8 +321,8 @@ release are listed under **Known limitations**.
   inputs). No other code of the library under the lock reaches `PlanetsAndMoons`, `Stars` or `Barycenters`, the only type
   initializers of the library that read SPICE. Code a caller supplies could still run under it: a custom `IDataProvider`,
   through the bodies the element conversions of `SpiceAPI` built (no longer since #664 and #725) and the frames of an
-  ephemeris read in TEME, CIRS or TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`;
-  it must not read the three classes.
+  ephemeris read in TEME, CIRS or TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`
+  (before the lock since #661); it must not read the three classes.
   - **Measured** (Linux x64, 4 cores, Release, 2026-11-11), each run a fresh process, two threads started behind a
     barrier, a run hung when it had not ended 3 s after its start: before the fix, `ConvertTleToStateVector` against the
     first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `TLE.ToStateVector` 35 of 200, `ReadEphemeris` from
@@ -3228,6 +3228,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   within the domain of EQNCPV and a turn of its true longitude, 79 cases) the worst relative error is 1.0e-15 in position
   and velocity (`SpiceApiElementConversionTests.EquinoctialToState_MatchesTheReference`; 7.6 and 0.94 on a85098d).
   The domain checks of #711 are unchanged.
+- **`SpiceAPI.WriteEphemeris` and `WriteOrientation` enumerated the caller's states under the SPICE lock** ([#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661)).
+  Both materialized the caller's `IEnumerable` inside `lock (lockObject)` (`WriteEphemeris` twice on 016237bd, when the
+  issue was filed, once on a85098d), so a lazy sequence ran under the lock, and one that read `PlanetsAndMoons`, `Stars` or
+  `Barycenters` for the first time could wait for a thread waiting for the lock (#623); the release note only warned the
+  caller to pass an array. Each writer now materializes the sequence once, before the lock, with its checks on the array
+  (empty, three states or more, one frame, the category of the centres; the names of the centres are still read from
+  SPICE under the lock) and the conversion to the native records; only the unload of a replaced file and the native
+  call run under the lock (`SpiceApiWriterEnumerationTests`: a sequence that counts its enumerations, records whether
+  the thread holds the lock at each item, and has another thread take the lock during its first item: on a85098d one
+  enumeration, all 10 items under the lock and the other thread blocked for its 60 s, both writers; now one enumeration,
+  none under the lock, the lock taken). An array writes the same file, byte for byte.
 
 **Changed**
 
@@ -4578,8 +4589,7 @@ not listed.
   leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
-  before rewriting the file. Both writers enumerate the caller's
-  states once, under the SPICE lock: pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
+  before rewriting the file. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them

@@ -197,8 +197,8 @@ public class SpiceAPI
     // No code under it may read a static class whose type initializer takes it (PlanetsAndMoons, Stars, Barycenters):
     // the thread would wait for the initializer while it holds the lock, and a thread running the initializer would wait
     // for the lock, forever (#623). The library's code does not; a custom IDataProvider (the frames of a read in TEME,
-    // CIRS or TIRS; no longer the bodies the element conversions built, #664, #725) and the enumeration of the states
-    // given to WriteEphemeris or WriteOrientation also run under it.
+    // CIRS or TIRS; no longer the bodies the element conversions built, #664, #725) also runs under it. The writers
+    // enumerate the caller's states before it (#661).
     private static object lockObject = new object();
 
     // The generation of the kernel pool: raised, under the lock, by each LoadKernels, UnloadKernels and ClearKernels, so
@@ -1778,6 +1778,8 @@ public class SpiceAPI
     /// <param name="stateVectors"></param>
     /// <returns></returns>
     /// <remarks>
+    /// The states are enumerated once, before the SPICE lock, so that nothing of the caller's sequence runs under it
+    /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// The native writer unloads the file it replaces and, once written, the file itself; like every native load and unload
     /// (<see cref="UnloadKernels"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
     /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
@@ -1818,18 +1820,21 @@ public class SpiceAPI
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateVectors == null) throw new ArgumentNullException(nameof(stateVectors));
         Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
+        // The caller's sequence enumerated once, before the lock, so that nothing the caller supplies runs under it (#661)
+        var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
+        if (enumerable.Length == 0)
+            throw new ArgumentException("Value cannot be an empty collection.", nameof(stateVectors));
+        ThrowIfNativeWriterRejects(enumerable);
+        var states = enumerable.Select(x => x.Convert()).ToArray();
+        var centres = enumerable.Select(x => x.Observer.NaifId).Distinct().ToArray();
         lock (lockObject)
         {
-            var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
-            if (!enumerable.Any())
-                throw new ArgumentException("Value cannot be an empty collection.", nameof(stateVectors));
-            ThrowIfNativeWriterRejects(enumerable);
+            ThrowIfCentreNotNamed(centres);
             UnloadReplacedKernel(filePath);
             bool res;
             try
             {
-                res = WriteEphemerisProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(),
-                    (uint)enumerable.Length);
+                res = WriteEphemerisProxy(filePath.FullName, naifId, states, (uint)states.Length);
             }
             finally
             {
@@ -1860,6 +1865,8 @@ public class SpiceAPI
     /// </param>
     /// <returns>True when the CK is written.</returns>
     /// <remarks>
+    /// The records are enumerated once, before the SPICE lock, so that nothing of the caller's sequence runs under it
+    /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
     /// convention, the conjugate of the record's rotation, in J2000. The native writer unloads the file it replaces and, once
     /// written, the file itself; like every native load and unload (<see cref="UnloadKernels"/>), it first closes and
@@ -1888,23 +1895,24 @@ public class SpiceAPI
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateOrientations == null) throw new ArgumentNullException(nameof(stateOrientations));
         Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
+        // The caller's sequence enumerated once, before the lock, so that nothing the caller supplies runs under it (#661)
+        var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
+        if (enumerable.Length == 0)
+            throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
+        string frame = enumerable[0].ReferenceFrame.Name;
+        var other = enumerable.FirstOrDefault(x => !string.Equals(x.ReferenceFrame.Name, frame, StringComparison.Ordinal));
+        if (other != null)
+            throw new ArgumentException(
+                $"Every orientation must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.ReferenceFrame.Name}.",
+                nameof(stateOrientations));
+        var orientations = enumerable.Select(x => x.Convert()).ToArray();
         lock (lockObject)
         {
-            var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
-            if (!enumerable.Any())
-                throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
-            string frame = enumerable[0].ReferenceFrame.Name;
-            var other = enumerable.FirstOrDefault(x => !string.Equals(x.ReferenceFrame.Name, frame, StringComparison.Ordinal));
-            if (other != null)
-                throw new ArgumentException(
-                    $"Every orientation must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.ReferenceFrame.Name}.",
-                    nameof(stateOrientations));
             UnloadReplacedKernel(filePath);
             bool res;
             try
             {
-                res = WriteOrientationProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(),
-                    (uint)enumerable.Length);
+                res = WriteOrientationProxy(filePath.FullName, naifId, orientations, (uint)orientations.Length);
             }
             finally
             {
@@ -1926,7 +1934,8 @@ public class SpiceAPI
     /// and reads the centre of motion of each as a celestial body (<see cref="IsCelestialBodyId"/>, a barycenter, a body or
     /// a star the library builds, not a spacecraft nor a site) that SPICE names (#714). Each threw a C++ exception across
     /// P/Invoke, which ended the process, or, for a spacecraft centre, read the uninitialised GM of a failed read; a centre
-    /// SPICE does not name threw <see cref="InvalidOperationException"/> from the native writer. Called under the lock.
+    /// SPICE does not name threw <see cref="InvalidOperationException"/> from the native writer. Called before the lock
+    /// (#661), the names read under it by <see cref="ThrowIfCentreNotNamed"/>.
     /// </summary>
     private static void ThrowIfNativeWriterRejects(OrbitalParameters.StateVector[] stateVectors)
     {
@@ -1954,13 +1963,16 @@ public class SpiceAPI
                 "a planet, a moon or a Lagrange point (101 to 999), or an identifier above 1000, not a spacecraft nor a site.",
                 nameof(stateVectors));
         }
+    }
 
-        // A centre SPICE does not name, which the native writer cannot build (#714, the last row of #655: before, it threw
-        // InvalidOperationException from the native layer, "CelestialItem id<id> can't be found"); #680's rule, as the element
-        // conversions check it (ReadCelestialBodyInfo)
-        foreach (var naifId in stateVectors.Select(x => x.Observer.NaifId).Distinct())
+    // A centre SPICE does not name, which the native writer cannot build (#714, the last row of #655: before, it threw
+    // InvalidOperationException from the native layer, "CelestialItem id<id> can't be found"); #680's rule, as the element
+    // conversions check it (ReadCelestialBodyInfo). Called under the lock
+    private static void ThrowIfCentreNotNamed(int[] centres)
+    {
+        foreach (var naifId in centres)
         {
-            ReadCelestialBodyInfo(naifId, nameof(stateVectors));
+            ReadCelestialBodyInfo(naifId, "stateVectors");
         }
     }
 
