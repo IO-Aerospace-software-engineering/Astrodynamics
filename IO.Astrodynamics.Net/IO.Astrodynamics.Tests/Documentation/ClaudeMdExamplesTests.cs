@@ -184,7 +184,7 @@ public class ClaudeMdExamplesTests
             case "net:27":
                 var (frame, epoch, deg2Rad) = ClaudeMdTestProcessExamples.Net27();
                 Assert.Same(IO.Astrodynamics.Frames.Frame.ICRF, frame);
-                Assert.Equal(TimeSystem.Time.J2000TDB, epoch);
+                LabelAssert.Equal(TimeSystem.Time.J2000TDB, epoch);
                 Assert.Equal(System.Math.PI / 180.0, deg2Rad);
                 break;
             case "root:2": ClaudeMdTestProcessExamples.Root02(); break;

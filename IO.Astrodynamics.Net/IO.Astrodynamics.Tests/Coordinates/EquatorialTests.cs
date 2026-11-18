@@ -41,7 +41,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             Equatorial eq = new Equatorial(new StateVector(
                 new Vector3(-291608.38463344, -266716.83339423, -76102.48709990), new Vector3(), earth, epoch,
                 Frames.Frame.ICRF));
-            Assert.Equal(new Equatorial(-0.19024413568211371, 3.8824377884371972, 402448.63988732797, epoch), eq);
+            LabelAssert.Equal(new Equatorial(-0.19024413568211371, 3.8824377884371972, 402448.63988732797, epoch), eq);
         }
 
         [Fact]
@@ -55,7 +55,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
                 new Vector3(-202831.34150844064, 284319.70678317308, 150458.88140126597),
                 new Vector3(-0.48702480142667454, -0.26438331399030518, -0.17175837261637006), earth, epoch,
                 Frames.Frame.ICRF));
-            Assert.Equal(new Equatorial(0.406773808779999, 2.1904536325374035, 380284.26703704614, epoch), eq);
+            LabelAssert.Equal(new Equatorial(0.406773808779999, 2.1904536325374035, 380284.26703704614, epoch), eq);
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             var earth = TestHelpers.EarthAtJ2000;
             var eq = moon.GetEphemeris(TimeSystem.Time.J2000TDB, earth, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
 
-            Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), eq);
+            LabelAssert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), eq);
             if (OperatingSystem.IsWindows())
             {
                 Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian(),TestHelpers.VectorComparer);
@@ -132,7 +132,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
                     var fromMethod = state.ToEquatorial();
                     var fromConstructor = new Equatorial(state);
 
-                    Assert.Equal(fromMethod, fromConstructor);
+                    LabelAssert.Equal(fromMethod, fromConstructor);
                     double dRa = Ulps(RaDifference(fromMethod.RightAscension, ra), ra);
                     double dDec = Ulps(System.Math.Abs(fromMethod.Declination - dec), dec);
                     worstRa = System.Math.Max(worstRa, dRa);
@@ -140,7 +140,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
                     Assert.True(dRa <= RaToleranceUlps, $"{epoch} {frame.Name}: RA off by {dRa} ulps");
                     Assert.True(dDec <= DecToleranceUlps, $"{epoch} {frame.Name}: Dec off by {dDec} ulps");
                     Assert.Equal(state.Position.Magnitude(), fromMethod.Distance);
-                    Assert.Equal(epoch, fromMethod.Epoch);
+                    LabelAssert.Equal(epoch, fromMethod.Epoch);
                 }
             }
 

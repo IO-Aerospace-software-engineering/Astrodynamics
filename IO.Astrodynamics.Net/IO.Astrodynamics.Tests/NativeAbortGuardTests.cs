@@ -173,7 +173,7 @@ public class NativeAbortGuardTests
             _output.WriteLine($"MEASURE Lagrange observer |dr| m: {dr:E3}, |dv| m/s: {dv:E3}");
             Assert.Equal(0.0, dr);
             Assert.Equal(0.0, dv);
-            Assert.Equal(reversed.Epoch, read.Epoch);
+            LabelAssert.Equal(reversed.Epoch, read.Epoch);
         }
     }
 

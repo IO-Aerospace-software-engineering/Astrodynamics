@@ -76,7 +76,7 @@ public class EventContinueTests
 
         Assert.Null(maneuver.ThrustWindow);
         Assert.Same(maneuver, spacecraft.StandbyManeuver);
-        Assert.Equal(window.EndDate, solution.StateVectors[^1].Epoch);
+        LabelAssert.Equal(window.EndDate, solution.StateVectors[^1].Epoch);
     }
 
     [Fact]

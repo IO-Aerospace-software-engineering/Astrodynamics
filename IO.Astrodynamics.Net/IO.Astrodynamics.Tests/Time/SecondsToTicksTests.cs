@@ -90,8 +90,8 @@ public class SecondsToTicksTests
         {
             double seconds = double.Parse($"{k}.5e-7", CultureInfo.InvariantCulture);
             Assert.Equal(-TimeSystem.Time.SecondsToTicks(seconds), TimeSystem.Time.SecondsToTicks(-seconds));
-            Assert.Equal(start, start.AddSeconds(seconds).AddSeconds(-seconds));
-            Assert.Equal(start, start.AddSeconds(-seconds).AddSeconds(seconds));
+            LabelAssert.Equal(start, start.AddSeconds(seconds).AddSeconds(-seconds));
+            LabelAssert.Equal(start, start.AddSeconds(-seconds).AddSeconds(seconds));
             double any = (random.NextDouble() - 0.5) * System.Math.Pow(10.0, random.Next(-9, 6));
             Assert.Equal(-TimeSystem.Time.SecondsToTicks(any), TimeSystem.Time.SecondsToTicks(-any));
             Assert.Equal(ExactTicks.Nearest(any), TimeSystem.Time.SecondsToTicks(any));

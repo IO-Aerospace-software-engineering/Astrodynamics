@@ -176,7 +176,7 @@ public class OpenOrbitTests
         double meanAnomaly = System.Math.Abs(spice.M - m);
         _output.WriteLine($"e = {e}, M = {m}: q {q:E2} (relative), e {eccentricity:E2}, i {i:E2}, Ω {node:E2}, " +
                           $"ω {periapsis:E2}, M {meanAnomaly:E2}");
-        Assert.Equal(elements.Epoch, state.Epoch);
+        LabelAssert.Equal(elements.Epoch, state.Epoch);
         Assert.True(q < OpenOrbitSpiceTolerance, $"q: {q:E2}");
         Assert.True(eccentricity < OpenOrbitSpiceTolerance, $"e: {eccentricity:E2}");
         Assert.True(i < OpenOrbitSpiceTolerance, $"i: {i:E2}");

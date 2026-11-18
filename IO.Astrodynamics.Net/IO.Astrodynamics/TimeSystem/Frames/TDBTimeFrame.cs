@@ -14,9 +14,18 @@ public class TDBTimeFrame : TimeFrame
 
     public override Time ConvertToTAI(Time time)
     {
-        var tempTAI = time.Add(TimeSpan.FromSeconds(-32.184));
-        var epoch = tempTAI.DateTime.AddTicks(-Time.SecondsToTicks(TdbMinusTt(time.Centuries())));
-        return new TimeSystem.Time(epoch, TAIFrame);
+        return FromTaiTicks(TaiTicks(time));
+    }
+
+    /// <summary>
+    /// The TAI ticks of a TDB time: its ticks less TT − TAI and less TDB − TT at its own centuries, rounded to the tick.
+    /// Not one to one: where the rounded TDB − TT gains a tick, two consecutive TDB ticks give one TAI tick (about every
+    /// 300 s near its steepest), and where it loses one a TAI tick has no TDB tick; since TDB − TT changes by less than
+    /// 3.4e-10 s per second, two TDB ticks two or more apart never give one TAI tick nor change their order (#512).
+    /// </summary>
+    internal override long TaiTicks(in Time time)
+    {
+        return time.DateTime.Ticks - TDTTimeFrame.TtMinusTaiTicks - Time.SecondsToTicks(TdbMinusTt(time.Centuries()));
     }
 
     public override Time ConvertFromTAI(Time time)

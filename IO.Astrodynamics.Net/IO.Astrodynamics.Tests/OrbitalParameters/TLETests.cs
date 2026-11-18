@@ -66,9 +66,9 @@ public class TLETests
         var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 18, 50, 13, 663, DateTimeKind.Utc), TimeFrame.UTCFrame);
         var stateVector = tle.AtEpoch(epoch).ToStateVector().ToFrame(Frames.Frame.ICRF) as StateVector;
 
-        Assert.Equal(stateVector, tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF) as StateVector);
+        LabelAssert.Equal(stateVector, tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF) as StateVector);
         var reference = Frame.TemeFrameTests.Reference("ISS 2021 +6 h");
-        Assert.Equal(epoch, Frame.TemeFrameTests.Instant(reference.Instant));
+        LabelAssert.Equal(epoch, Frame.TemeFrameTests.Instant(reference.Instant));
         var position = Frame.TemeFrameTests.Position(reference.Gmat);
         var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat);
         // Twice the 0.0660 m and 7.57e-5 m/s measured on Linux x64, Windows x64 and macOS arm64 (CI run 42490199772,
@@ -80,7 +80,7 @@ public class TLETests
         Assert.InRange((stateVector.Velocity - velocity).Magnitude(), 0.0, 1.6e-4);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
-        Assert.Equal(epoch, stateVector.Epoch);
+        LabelAssert.Equal(epoch, stateVector.Epoch);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class TLETests
             "2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848    13");
         var earth = tle.Observer.InitialOrbitalParameters;
         Assert.Equal(Frames.Frame.ECLIPTIC_J2000, earth.Frame);
-        Assert.Equal(tle.Epoch, earth.Epoch);
+        LabelAssert.Equal(tle.Epoch, earth.Epoch);
         Assert.Equal(3, earth.Observer.NaifId);
         Assert.InRange(earth.ToStateVector().Position.Magnitude(), 4.2e6, 5.0e6);
         Assert.Same(Frames.Frame.TEME, tle.Frame);
@@ -577,7 +577,7 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        Assert.Equal(tle1, tle2);
+        LabelAssert.Equal(tle1, tle2);
     }
 
     [Fact]

@@ -194,7 +194,7 @@ public class MinimumEpochGateEdgeTests
         _output.WriteLine($"MEASURE #569 gate UTC {integratorName} {timeArgument}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
         Assert.False(epoch < gate);
         if (integratorName.StartsWith("RK"))
-            Assert.Equal(firstTickNotBefore, epoch);
+            LabelAssert.Equal(firstTickNotBefore, epoch);
         else
         {
             // The step end after the gate, carried onto the tick of its label (#572)
@@ -429,7 +429,7 @@ public class MinimumEpochGateEdgeTests
 
         Assert.Equal(1.0, detector.Evaluate(state));
         var gated = (IGatedEventDetector)detector;
-        Assert.Equal(gate, gated.Gate);
+        LabelAssert.Equal(gate, gated.Gate);
         Assert.Equal(rv, gated.EvaluateOpen(state));
         var atGate = new StateVector(state.Position, state.Velocity, earth, gate, Frame.ICRF);
         Assert.Equal(rv, detector.Evaluate(atGate));

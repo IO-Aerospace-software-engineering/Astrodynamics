@@ -302,7 +302,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var after = solution.Segments[1];
         var entry = after.Variational.EntryManeuver;
         Assert.NotNull(entry);
-        Assert.Equal(after.BaseEpoch, entry.Value.Epoch);
+        LabelAssert.Equal(after.BaseEpoch, entry.Value.Epoch);
         AssertSameBits(maneuver.DeltaV, entry.Value.DeltaV, "ΔV");
         Assert.Null(before.Variational.EntryManeuver);
         Assert.Equal(initialMass, before.Context.Value.TotalMass);

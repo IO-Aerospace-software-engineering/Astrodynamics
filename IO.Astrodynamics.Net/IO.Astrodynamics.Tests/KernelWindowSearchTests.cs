@@ -255,7 +255,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             .Select(w => w.Window).ToArray();
         _output.WriteLine($"MEASURE launch by day {byDay}: {actual.Length} of {all.Length} windows");
         Assert.NotEmpty(actual);
-        Assert.Equal(expected, actual);
+        LabelAssert.Equal(expected, actual);
     }
 
     [Theory]
@@ -422,7 +422,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             {
                 var actual = site.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
                     Aberration.LTS, Step, TestHelpers.Sun, method).ToArray();
-                Assert.Equal(expected, actual);
+                LabelAssert.Equal(expected, actual);
             }
         }
 
@@ -761,7 +761,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
                 var actual = site.FindWindowsOnCoordinateConstraint(LeoWindow, leo, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
                     RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
                 Assert.NotEmpty(expected);
-                Assert.Equal(expected, actual);
+                LabelAssert.Equal(expected, actual);
             }
             finally
             {

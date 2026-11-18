@@ -389,7 +389,7 @@ public class AttitudeTimelineTests
                 // states are the scenario's to the bit
                 var (twin, _, _, _) = Build(naifId - 100000, letter, orbit, center);
                 solution = twin.Propagate(window, bodies, NewIntegrator(), false, false, step);
-                Assert.Equal(twin.PropagatedStates.Select(x => (x.Epoch, x.Position, x.Velocity)), spacecraft.PropagatedStates.Select(x => (x.Epoch, x.Position, x.Velocity)));
+                Assert.Equal(twin.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Frame, x.Position, x.Velocity)), spacecraft.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Frame, x.Position, x.Velocity)));
             }
 
             var burns = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToList();

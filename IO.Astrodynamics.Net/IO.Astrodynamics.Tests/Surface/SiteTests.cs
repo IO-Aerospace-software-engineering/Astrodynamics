@@ -285,8 +285,8 @@ namespace IO.Astrodynamics.Tests.Surface
             // station (#690): the Moon is up at the start and at the end of the search window, whose bounds close the windows
             var windows = res as Window[] ?? res.ToArray();
             GeometryReference.AssertWindows(null, "dss13_moon_z > 0", windows, GeometryReference.ThresholdCrossing);
-            Assert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
-            Assert.Equal(new TimeSystem.Time("2000-01-02 12:00:00").ToTDB(), windows[1].EndDate);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
+            LabelAssert.Equal(new TimeSystem.Time("2000-01-02 12:00:00").ToTDB(), windows[1].EndDate);
         }
 
         [Theory]
@@ -365,7 +365,7 @@ namespace IO.Astrodynamics.Tests.Surface
                     TestHelpers.VectorComparer);
                 Assert.Equal(new Vector3(349.96683087822703, 295.68160057531139, 0.01769212216143207), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                     TestHelpers.VectorComparer);
-                Assert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
+                LabelAssert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
                 Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
                 Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 
@@ -578,7 +578,7 @@ namespace IO.Astrodynamics.Tests.Surface
                     {
                         var state = read.ToStateVector();
                         Assert.Equal(site.Frame, state.Frame);
-                        Assert.Equal(expected.Epoch, state.Epoch);
+                        LabelAssert.Equal(expected.Epoch, state.Epoch);
                         double angle = AngleBetween(expected.Position, state.Position);
                         double relative = System.Math.Abs(state.Position.Magnitude() - expected.Position.Magnitude()) / expected.Position.Magnitude();
                         double velocity = (state.Velocity - expected.Velocity).Magnitude();

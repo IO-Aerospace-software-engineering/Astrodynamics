@@ -230,7 +230,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.NotEqual(Vector3.Zero, impulse.DeltaV);
             Assert.Equal(position, after.Position);
             Assert.Equal(velocity + impulse.DeltaV, after.Velocity);
-            Assert.Equal(given.Epoch, after.Epoch);
+            LabelAssert.Equal(given.Epoch, after.Epoch);
             Assert.Equal(given.Frame, after.Frame);
             Assert.Same(given.Observer, after.Observer);
             Assert.Equal(given.Covariance.HasValue, after.Covariance.HasValue);
@@ -388,11 +388,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Contains("ECLIPJ2000", exception.Message);
             Assert.Contains("ToFrame(Frame.ICRF)", exception.Message);
             Assert.Equal(previous, spacecraft.IsPropagated);
-            Assert.Equal(leadingThrust, leading.ThrustWindow);
-            Assert.Equal(rejectedThrust, rejected.ThrustWindow);
+            LabelAssert.Equal(leadingThrust, leading.ThrustWindow);
+            LabelAssert.Equal(rejectedThrust, rejected.ThrustWindow);
             if (previous)
             {
-                Assert.Equal(previousStates, spacecraft.PropagatedStates.ToArray());
+                LabelAssert.Equal(previousStates, spacecraft.PropagatedStates.ToArray());
             }
             else
             {
@@ -519,7 +519,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             bool chained, string integrator)
         {
             Assert.NotNull(run.Maneuver.ThrustWindow);
-            Assert.Equal(twin.Maneuver.ThrustWindow, run.Maneuver.ThrustWindow);
+            LabelAssert.Equal(twin.Maneuver.ThrustWindow, run.Maneuver.ThrustWindow);
             Assert.Equal(twin.Maneuver.DeltaV, run.Maneuver.DeltaV);
             Assert.Equal(twin.Final.Position, run.Final.Position);
             Assert.Equal(twin.Final.Velocity, run.Final.Velocity);
@@ -640,7 +640,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var (gcrfManeuver, gcrfEnd) = Run(-1566, Frames.Frame.GCRF);
             var (icrfManeuver, icrfEnd) = Run(-1567, Frames.Frame.ICRF);
             Assert.NotNull(gcrfManeuver.ThrustWindow);
-            Assert.Equal(icrfManeuver.ThrustWindow, gcrfManeuver.ThrustWindow);
+            LabelAssert.Equal(icrfManeuver.ThrustWindow, gcrfManeuver.ThrustWindow);
             Assert.Equal(icrfManeuver.DeltaV, gcrfManeuver.DeltaV);
             Assert.Equal(icrfEnd.Position, gcrfEnd.Position);
             Assert.Equal(icrfEnd.Velocity, gcrfEnd.Velocity);

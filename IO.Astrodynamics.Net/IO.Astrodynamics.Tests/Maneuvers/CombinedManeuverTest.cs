@@ -104,7 +104,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.NotNull(maneuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), maneuver.ManeuverHoldDuration);
-            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), maneuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), maneuver.MinimumEpoch);
             Assert.Equal(151000000.0, maneuver.TargetPerigeeHeight);
             Assert.Equal(1.0, maneuver.TargetInclination);
         }
@@ -170,8 +170,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(767.1890047800779, maneuver.DeltaV.Z);
             // The window at the apogee, half a period in TT seconds: 6.4e-6 s after that at the half period in TDB
             // seconds (17:15:44.8323340), the change of TDB − TT over the 5 h 16 min (#501, #508)
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323404").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296482").ToTDB()), maneuver.ManeuverWindow);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323404").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296482").ToTDB()), maneuver.ThrustWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323404").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296482").ToTDB()), maneuver.ManeuverWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323404").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296482").ToTDB()), maneuver.ThrustWindow);
             Assert.Equal(3394.8653913932048, maneuver.FuelBurned,3);
         }
 
@@ -203,8 +203,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(-186.70162770583374, maneuver.DeltaV.Y);
             Assert.Equal(767.1890047800779, maneuver.DeltaV.Z);
             // 6.4e-6 s after the window at the half period in TDB seconds (17:16:08.2299721) (#501, #508)
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299785").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956975").ToTDB()), maneuver.ThrustWindow);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299785").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956975").ToTDB()), maneuver.ManeuverWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299785").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956975").ToTDB()), maneuver.ThrustWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299785").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956975").ToTDB()), maneuver.ManeuverWindow);
             Assert.Equal(1638.2859502950841, maneuver.FuelBurned);
         }
     }

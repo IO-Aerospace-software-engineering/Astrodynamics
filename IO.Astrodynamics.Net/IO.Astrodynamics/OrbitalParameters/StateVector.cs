@@ -77,7 +77,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// the initial orbital parameters, the propagated states carry none, and no partial derivative is evaluated.
         /// </para>
         /// </remarks>
-        public Matrix? Covariance { get; }
+        /// <value>A copy of the covariance the state holds, which the constructor copied too: a term set on the matrix given
+        /// or on the one returned does not reach the state (#722; before 11.0.0 the state shared the caller's array).</value>
+        public Matrix? Covariance => Matrix.Copy(_covariance);
+
+        private readonly Matrix? _covariance;
 
         /// <summary>
         /// Constructor
@@ -93,7 +97,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             Position = position;
             Velocity = velocity;
-            Covariance = covariance;
+            _covariance = Matrix.Copy(covariance);
         }
 
         public override StateVector ToStateVector()
@@ -131,7 +135,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return base.ToStateVector(epoch);
             }
 
-            return epoch == Epoch ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
+            return epoch.HasSameLabel(Epoch) ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
         }
 
         /// <summary>
@@ -632,7 +636,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Position.Equals(other.Position) && Velocity.Equals(other.Velocity) && Observer.NaifId == other.Observer.NaifId && Epoch == other.Epoch && Frame == other.Frame;
+            return GetType() == other.GetType() && Position.Equals(other.Position) && Velocity.Equals(other.Velocity) && HasSameReference(other);
         }
 
         public override bool Equals(object obj)

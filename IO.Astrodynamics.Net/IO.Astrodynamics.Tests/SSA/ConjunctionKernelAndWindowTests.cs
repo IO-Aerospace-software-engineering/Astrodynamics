@@ -603,7 +603,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
 
             if (all.Count > 0)
             {
-                Assert.Equal(tick, analyzed.EncounterState.Epoch);
+                LabelAssert.Equal(tick, analyzed.EncounterState.Epoch);
                 Assert.False(analyzed.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
             }
         }
@@ -819,7 +819,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
             return;
         }
 
-        Assert.Equal(new[] { window.StartDate, window.EndDate }.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()),
+        LabelAssert.Equal(new[] { window.StartDate, window.EndDate }.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()),
             encounter.EncounterState.Epoch);
         Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
     }

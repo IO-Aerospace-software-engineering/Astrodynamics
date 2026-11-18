@@ -460,14 +460,15 @@ public class RepropagationTests
                           $"ExecutedManeuvers equal {executed}, ToOpm equal {opm}, summary equal {summary} (fuel {F(actual.Summary.Fuel)} against {F(expected.Summary.Fuel)} kg)" +
                           (expected.P.HasValue ? $"; max|ΔP| {dp:E3}" : "") + attitudes);
 
-        Assert.Equal(expected.Burns, actual.Burns);
+        LabelAssert.Equal(expected.Burns, actual.Burns);
         Assert.Equal(expected.DeltaV, actual.DeltaV);
         Assert.Equal(expected.R, actual.R);
         Assert.Equal(expected.V, actual.V);
-        if (compareGates) Assert.Equal(expected.Gates, actual.Gates);
+        if (compareGates) LabelAssert.Equal(expected.Gates, actual.Gates);
         Assert.Equal(expected.Executed, actual.Executed);
         Assert.Equal(expected.Opm, actual.Opm);
-        Assert.Equal(expected.Summary, actual.Summary);
+        LabelAssert.Equal(expected.Summary.Window, actual.Summary.Window);
+        Assert.Equal((expected.Summary.Fuel, expected.Summary.Count), (actual.Summary.Fuel, actual.Summary.Count));
         Assert.Equal(qe, qa);
         Assert.Equal(ce, ca);
         Assert.Equal(0.0, dp);
@@ -484,7 +485,7 @@ public class RepropagationTests
             : Later(sc.Given[i], sc.Chain[i - 1].ManeuverWindow.Value.EndDate)).ToArray();
         _output.WriteLine($"MEASURE #573 {tag} MinimumEpoch: {Fs(sc.Chain.Select(m => Tt(m.MinimumEpoch)))}, the given ones and the windows before them " +
                           $"{Fs(expected.Select(Tt))}");
-        Assert.Equal(expected, sc.Chain.Select(m => m.MinimumEpoch).ToArray());
+        LabelAssert.Equal(expected, sc.Chain.Select(m => m.MinimumEpoch).ToArray());
     }
 
     /// <summary>
@@ -603,7 +604,7 @@ public class RepropagationTests
         reused.Spacecraft.SetInitialOrbitalParameters(env.PerigeeAt(s2));
         // Between two runs, MinimumEpoch shows the gates of the last run, with its windows: SetInitialOrbitalParameters
         // clears nothing
-        Assert.Equal(r1.Gates, reused.Chain.Select(m => m.MinimumEpoch).ToArray());
+        LabelAssert.Equal(r1.Gates, reused.Chain.Select(m => m.MinimumEpoch).ToArray());
 
         // Act
         var r2 = Propagate(reused, Win(s2), integrator, path);
@@ -642,7 +643,7 @@ public class RepropagationTests
     {
         var (reused, r2, _, f, tag) = AnotherStateAtt600(integrator, "(MinimumEpoch)");
         _output.WriteLine($"MEASURE #573 {tag}: MinimumEpoch after run 2 {Fs(r2.Gates.Select(Tt))} against {Fs(f.Gates.Select(Tt))}");
-        Assert.Equal(f.Gates, r2.Gates);
+        LabelAssert.Equal(f.Gates, r2.Gates);
         AssertGatesFollowTheWindows(tag + " reused", reused);
     }
 
@@ -1025,8 +1026,8 @@ public class RepropagationTests
         var reused = Build(env, env.Apogee(), "apo-apo", userGate);
         var fresh1 = Build(env, env.Apogee(), "apo-apo", userGate);
         var before = reused.Chain.Select(m => m.MinimumEpoch).ToArray();
-        Assert.Equal(fresh1.Chain.Select(m => m.MinimumEpoch), before);
-        Assert.Equal(userGate, before[0]);
+        LabelAssert.Equal(fresh1.Chain.Select(m => m.MinimumEpoch), before);
+        LabelAssert.Equal(userGate, before[0]);
 
         // Act
         var r1 = Propagate(reused, Win(S), integrator, "Propagate");
@@ -1038,13 +1039,13 @@ public class RepropagationTests
         var f1 = Propagate(fresh1, Win(S), integrator, "Propagate");
         AssertOnTheClosedForm(tag + " run 1", fresh1, f1, integrator, false);
         AssertSame(tag + " run 1", r1, f1);
-        Assert.Equal(r1.Gates, between);
+        LabelAssert.Equal(r1.Gates, between);
         var (fresh2, f2) = Fresh(tag + " run 2", reused, env.PerigeeAt(s2), "apo-apo", Win(s2), integrator, "Propagate", true, userGate: userGate);
         _output.WriteLine($"MEASURE #573 {tag} MinimumEpoch as a user reads it: before run 1 {Fs(before.Select(Tt))}, after run 1 {Fs(r1.Gates.Select(Tt))}, " +
                           $"after SetInitialOrbitalParameters {Fs(between.Select(Tt))}, after run 2 {Fs(r2.Gates.Select(Tt))} (fresh {Fs(f2.Gates.Select(Tt))}); " +
                           $"first burn − user gate: run 1 {F(Tt(r1.Burns[0]) - Tt(userGate))} s, run 2 {F(Tt(r2.Burns[0]) - Tt(userGate))} s");
-        Assert.Equal(userGate, r1.Gates[0]);
-        Assert.Equal(userGate, r2.Gates[0]);
+        LabelAssert.Equal(userGate, r1.Gates[0]);
+        LabelAssert.Equal(userGate, r2.Gates[0]);
         Assert.True(r1.Burns[0] >= userGate && r2.Burns[0] >= userGate);
         AssertSame(tag + " run 2", r2, f2, reused, fresh2);
         AssertGatesFollowTheWindows(tag + " reused", reused);
@@ -1076,10 +1077,10 @@ public class RepropagationTests
         var r2 = Propagate(reused, Win(s2), integrator, "Propagate");
 
         // Assert
-        Assert.Equal(S.AddSeconds(4000.0), afterEarlier);
-        Assert.Equal(S.AddSeconds(6000.0), afterLater);
+        LabelAssert.Equal(S.AddSeconds(4000.0), afterEarlier);
+        LabelAssert.Equal(S.AddSeconds(6000.0), afterLater);
         var (fresh, f) = Fresh(tag, reused, env.PerigeeAt(s2), "apo-apo", Win(s2), integrator, "Propagate", true, userGate: S.AddSeconds(6000.0));
-        Assert.Equal(S.AddSeconds(6000.0), r2.Gates[0]);
+        LabelAssert.Equal(S.AddSeconds(6000.0), r2.Gates[0]);
         AssertSame(tag, r2, f, reused, fresh);
         AssertGatesFollowTheWindows(tag + " reused", reused);
     }

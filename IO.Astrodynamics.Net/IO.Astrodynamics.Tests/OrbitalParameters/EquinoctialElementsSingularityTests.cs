@@ -501,7 +501,7 @@ public class EquinoctialElementsSingularityTests
                           $"{droppedTilt}; P {equinoctial.P:R}, F {equinoctial.F:R}, G {equinoctial.G:R}, " +
                           $"H {equinoctial.H:R}, K {equinoctial.K:R}");
         Assert.Equal(state.Frame, back.Frame);
-        Assert.Equal(state.Epoch, back.Epoch);
+        LabelAssert.Equal(state.Epoch, back.Epoch);
         Assert.True(position < 1.5e-15, $"position {position:E2}");
         Assert.True(positionK < 2.9e-15, $"(K) position {positionK:E2}");
         Assert.True(velocity < (droppedTilt ? StateVector.EquatorialTolerance : 1.2e-15), $"velocity {velocity:E2}");
@@ -795,7 +795,7 @@ public class EquinoctialElementsSingularityTests
 
                 // Assert: the same numbers in the frame, at the epoch and about the observer of the elements
                 Assert.Equal(frame, state.Frame);
-                Assert.Equal(Epoch, state.Epoch);
+                LabelAssert.Equal(Epoch, state.Epoch);
                 Assert.Equal(_earth, state.Observer);
                 Assert.Equal(icrf.Position, state.Position);
                 Assert.Equal(icrf.Velocity, state.Velocity);

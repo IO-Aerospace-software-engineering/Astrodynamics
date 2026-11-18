@@ -124,7 +124,31 @@ not enter the managed conversions.
 | `Time + TimeSpan` | Add duration to time: calendar arithmetic in the frame of the time, so across a leap second a UTC (or local) time and the time a span after it are the span plus the leap second apart, `(t + d) - t` is `d + 1 s` |
 | `Time - TimeSpan` | Subtract duration from time, calendar arithmetic as `+` |
 | `Time - Time` | Duration between two instants: the difference of the calendars in TDB, TT, TAI and GPS, through TAI for UTC and local times, so that leap seconds count ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)) |
-| `<`, `>`, `<=`, `>=` | Comparison operators |
+| `<`, `>`, `<=`, `>=` | Comparison of the instants, by their TAI ticks, within a frame and across frames (`CompareTo`) |
+| `==`, `!=`, `Equals` | The same instant, whatever the frames: `CompareTo` returns 0 ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)) |
+
+### Equality and Order
+
+Two times are equal when they are the same instant, whatever their frames (decided by S. Guillet, 2026-11-17):
+`==`, `!=`, `Equals` and `GetHashCode` follow `CompareTo`, the one order of times, which compares their ticks converted
+to TAI. So `utc == utc.ToTDB()`, both hash alike, and a `Dictionary`, a `HashSet`, `Distinct` or `IndexOf` keyed by times
+finds the same instant in another frame, as `SortedSet` did. Within UTC, TAI, TT and GPS the order is that of the
+calendars; within TDB too for times two ticks or more apart, but two consecutive TDB ticks can convert to one TAI tick
+(TDB − TT, rounded to the tick, gains one there, about every 300 s near its steepest), and then they are one instant,
+equal to each other and to that TAI time, so that equality stays transitive. A UTC time is never equal to a TAI time in
+an inserted leap second (UTC 23:59:60 has no `Time`). The default time (`default(Time)`, no frame) comes before every
+time with a frame and equals only itself, so comparing or sorting it does not throw. A local time
+(`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the zone of the machine, and two
+local times compare as instants too (before 11.0.0, by their calendars): in a zone with daylight saving time a label of
+the skipped hour is read with the standard offset, so it is the instant of a label an hour later (in America/New_York,
+local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, after local 03:00), and a label of the repeated hour is read with
+the standard offset too, so the `ToLocal()` of an instant in the first of the two hours is not that instant.
+To tell two labels of one instant apart, compare `DateTime` and `Frame`. Within TDB, `-` still counts the ticks of the
+calendars, so two equal consecutive TDB ticks differ by one tick. The library's caches whose values carry their key as a
+label (the orientations of a frame, the range rates of the conjunction search) stay keyed by label, an epoch in another
+frame read again, bit for bit as before. Before 11.0.0 equality was the record's, on the
+calendar and the frame, while `CompareTo` compared through TAI across frames: the same instant in two frames compared to
+0 and was not equal.
 
 ### Example
 
@@ -154,6 +178,7 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
 | Member | Description |
 |--------|-------------|
 | `StartDate` / `EndDate` | Interval boundaries |
+| `==`, `!=`, `Equals` | The same two ends, instants compared whatever their frames (#512): a window and the window of the same instants in TDB are equal; `Length` does not take part |
 | `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31; the length given to `Window(Time, TimeSpan)`, whose `EndDate` is `start + length` in calendar arithmetic, so a UTC window built from a length across a leap second keeps that length while `EndDate - StartDate`, and a propagation over it, count the leap second |
 | `Merge(Window)` | Merge two overlapping windows |
 | `Intersects(Window)` / `Intersects(Time)` | Check overlap |

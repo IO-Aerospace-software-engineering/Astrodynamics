@@ -86,6 +86,25 @@ accepts), the next double, 0.9999990000000001, inside it; the double nearest 1.0
 e = 0.999999 can come back in the band from their state, whose eccentricity carries rounding (about one time in four,
 #459): their semi-major axis is then the conic's (since 11.0.0) and their anomalies Barker's.
 
+## Equality
+
+`==`, `!=`, `Equals` and `GetHashCode` of every orbital parameters type are value equality within one concrete type,
+and compute no state (#475, decided by S. Guillet, 2026-11-17), whether the operands are typed `OrbitalParameters` or
+as their type: two sets are equal when they are of the same type, with the same values (A, E, I, RAAN, AOP and M; P, F,
+G, H, K and L0; position and velocity; the two lines and the name of a TLE), the same observer (by NAIF id), epoch (an
+instant, #512), frame and `ElementsType`. Equality never throws, mean elements and NaN elements included, `x.Equals(null)`
+is false, and equal sets share a hash code, so hash sets and dictionaries keep one of equal copies. A mean set and an
+osculating set of the same numbers are different orbits, and so are a set and its own `ToStateVector()`, and a TLE and
+its `ToMeanKeplerianElements()`: to compare two orbits, compare their states, `x.ToStateVector() == y.ToStateVector()`
+(which throws for mean elements). NaN equals NaN and +0 equals −0, as for `double.Equals`. The sets are immutable, but
+for the work states of an integration, which the integrator updates in place: the state it hands to
+`IEventDetector.Evaluate`, and those it hands to `ForceBase.Apply` of a force added by `Integrator.AddForce`. A detector
+or a force that keeps such a state as a key keeps a copy of it, whose hash code does not change.
+
+Before 11.0.0, through `OrbitalParameters` `==` and `Equals` compared the states of both operands: they threw for mean
+elements (even against null) and e = NaN, ran SGP4 for a TLE, and found two different sets whose states were NaN equal;
+the hash code held the identity of the instance, so equal copies hashed differently.
+
 ## EquinoctialElements
 
 `EquinoctialElements` has no singularity for circular orbits (e = 0) or for prograde equatorial ones (i = 0), where the Keplerian ω and Ω are undefined: `ToStateVector()` computes the state from the elements directly, and `ToKeplerianElements()` takes ω = 0 for an exactly circular orbit (f = g = 0) and Ω = 0 for an exactly equatorial one (h = k = 0). Its only singular orbit is the retrograde equatorial one (i = 180°), where h = tan(i/2) cos Ω and k = tan(i/2) sin Ω grow without bound.

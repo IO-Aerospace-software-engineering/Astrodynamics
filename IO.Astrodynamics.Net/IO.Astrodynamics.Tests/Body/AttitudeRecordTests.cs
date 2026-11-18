@@ -743,7 +743,7 @@ public class AttitudeRecordTests
         Assert.Equal(b.Length, a.Length);
         for (int i = 0; i < a.Length; i++)
         {
-            Assert.Equal(b[i].Epoch, a[i].Epoch);
+            LabelAssert.Equal(b[i].Epoch, a[i].Epoch);
             Assert.Equal(b[i].Rotation, a[i].Rotation);
             Assert.Equal(b[i].AngularVelocity, a[i].AngularVelocity);
         }
@@ -877,7 +877,7 @@ public class AttitudeRecordTests
         // The lead (1 µs) and the entries at least 2 µs apart
         Assert.True(gaps.All(x => x >= SpacecraftFrame.SameEpochTolerance || System.Math.Abs(x - SpacecraftFrame.DiscreteChangeLead) < 1e-9), $"smallest gap {smallest:E3} s");
         Assert.True(nearest < 1e-6, $"the activation is {nearest:E3} s from the nearest entry");
-        Assert.Equal(activation, prograde.ManeuverWindow!.Value.StartDate);
+        LabelAssert.Equal(activation, prograde.ManeuverWindow!.Value.StartDate);
         Assert.InRange(outputGap, 1e-8, SpacecraftFrame.SameEpochTolerance);
         Assert.DoesNotContain(record, x => x.Epoch == output);
         if (TimelineRules.Checked)
@@ -942,7 +942,7 @@ public class AttitudeRecordTests
         {
             var (_, orientation) = attitude.TryExecute(inF);
             Assert.Equal(Frame.ICRF, orientation.ReferenceFrame);
-            Assert.Equal(start, orientation.Epoch);
+            LabelAssert.Equal(start, orientation.Epoch);
             double angle = RotationAngle(law, v => v.Rotate(orientation.Rotation));
             _output.WriteLine($"MEASURE #535 TryExecute {name} from {frame}: {angle:E2} rad");
             Assert.True(angle <= TryExecuteLaw, $"{name}: {angle:E3} rad");

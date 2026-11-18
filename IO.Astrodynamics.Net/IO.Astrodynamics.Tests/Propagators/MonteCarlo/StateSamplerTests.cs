@@ -161,7 +161,7 @@ public class StateSamplerTests
         foreach (var sample in samples)
         {
             Assert.Equal(nominal.Observer.NaifId, sample.Observer.NaifId);
-            Assert.Equal(nominal.Epoch, sample.Epoch);
+            LabelAssert.Equal(nominal.Epoch, sample.Epoch);
             Assert.Equal(nominal.Frame, sample.Frame);
             Assert.Null(sample.Covariance);
         }
@@ -384,7 +384,7 @@ public class StateSamplerTests
         Assert.Equal(0.15, StandardDeviation(coefficients.Select(c => c.ReflectivityCoefficient)), 0.15 * 0.02);
         Assert.Equal(10.0, StandardDeviation(states.Select(s => s.Position.X)), 10.0 * 0.02);
         Assert.Equal(0.1, StandardDeviation(states.Select(s => s.Velocity.Z)), 0.1 * 0.02);
-        Assert.All(states, s => Assert.Equal(nominal.Epoch, s.Epoch));
+        Assert.All(states, s => LabelAssert.Equal(nominal.Epoch, s.Epoch));
     }
 
     [Fact]

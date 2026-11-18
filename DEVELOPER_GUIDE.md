@@ -250,6 +250,7 @@ Represents a precise instant in time with time frame awareness.
 | `AddDays(double days)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddHours(double hours)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds |
+| `==`, `Equals`, `CompareTo` | The same instant, whatever the frames: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; local times compare as the instants of their zone, the default time before every other; compare `DateTime` and `Frame` to tell two labels apart (a test of a label: `LabelAssert`, not `Assert.Equal`) |
 
 ```csharp
 // Create times
@@ -281,6 +282,7 @@ Represents a time interval.
 | `Intersects(Window other)` | Check if windows overlap |
 | `Intersects(Time time)` | Check if time is within window |
 | `GetIntersection(Window other)` | Get overlapping portion |
+| `==`, `Equals` | The same two ends as instants, whatever their frames, `Length` excluded (#512) |
 
 ```csharp
 var window = new Window(
@@ -377,6 +379,11 @@ Discriminant for orbital element types.
 |-------|-------------|
 | `Osculating` | Instantaneous (true) orbital elements |
 | `Mean` | Time-averaged elements (e.g., TLE mean elements) |
+
+Equality of orbital parameters (`==`, `Equals`, `GetHashCode`, typed as `OrbitalParameters` or as their type) is value
+equality within one concrete type, computing no state (#475): the type's values, the observer's NAIF id, the epoch (an
+instant), the frame and `ElementsType`. A set and its own `ToStateVector()`, a mean and an osculating set of the same
+numbers, and a TLE and its mean elements are different; to compare two orbits, compare their states.
 
 All orbital parameter classes (`StateVector`, `KeplerianElements`, `EquinoctialElements`, `TLE`) have an `ElementsType` property indicating whether elements are osculating or mean. Most conversions preserve the elements type. **Important:** Mean elements cannot be directly converted to `StateVector` as they require a propagation model (e.g., SGP4 for TLE).
 
@@ -2056,7 +2063,7 @@ Matrix operations.
 | Method | Description |
 |--------|-------------|
 | `Get(int row, int col)` | Get element |
-| `Set(int row, int col, double value)` | Set element |
+| `Set(int row, int col, double value)` | Set element: it writes the array every copy of the struct shares; the public holders of a matrix (`StateVector.Covariance`, `EncounterState`, `CollisionRisk`, `EpochStatistics`, `CdmCovarianceMatrix`, `Iau2006Model.FrameBias()`) copy it in and out, so a term set afterwards does not reach them (#722) |
 | `Multiply(Matrix other)` | Matrix multiplication |
 | `Multiply(double[] vector)` | Matrix-vector multiplication |
 | `Inverse()` | Get inverse matrix |

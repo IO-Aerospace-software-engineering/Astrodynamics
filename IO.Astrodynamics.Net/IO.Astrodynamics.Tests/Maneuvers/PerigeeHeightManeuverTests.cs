@@ -27,7 +27,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.NotNull(perigeeHeightManeuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.ManeuverHoldDuration);
-            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), perigeeHeightManeuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), perigeeHeightManeuver.MinimumEpoch);
             Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeHeight);
         }
 
@@ -42,7 +42,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.NotNull(perigeeHeightManeuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.ManeuverHoldDuration);
-            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), perigeeHeightManeuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), perigeeHeightManeuver.MinimumEpoch);
             Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeHeight);
         }
 
@@ -72,15 +72,16 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(-1.0, res.so.Rotation.VectorPart.X);
             Assert.InRange(System.Math.Abs(res.so.Rotation.VectorPart.Y), 0.0, ApogeeTurn(maneuverPoint));
             Assert.Equal((0.0, 0.0), (res.so.Rotation.W, res.so.Rotation.VectorPart.Z));
-            Assert.Equal((maneuverPoint.Epoch, maneuverPoint.Frame), (res.so.Epoch, res.so.ReferenceFrame));
+            LabelAssert.Equal(maneuverPoint.Epoch, res.so.Epoch);
+            Assert.Equal(maneuverPoint.Frame, res.so.ReferenceFrame);
             // The x component of ΔV likewise, to |a| 1e-7 s (6.6e-8 m/s on main, 9.7e-8 m/s with the label of TT)
             Assert.InRange(System.Math.Abs(maneuver.DeltaV.X), 0.0,
                 ApogeeTurn(maneuverPoint) * maneuverPoint.Velocity.Magnitude());
             Assert.Equal((-2425.783652387101, 0.0), (maneuver.DeltaV.Y, maneuver.DeltaV.Z));
             // The window at the apogee, half a period in TT seconds: 9e-7 s after that at the half period in TDB seconds
             // (12:45:06.0273038), the change of TDB − TT over the 45 min (#501, #508)
-            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 304).AddTicks(7), TimeSpan.FromSeconds(16.0691385)), maneuver.ThrustWindow);
-            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 304).AddTicks(7), TimeSpan.FromSeconds(16.0691385)), maneuver.ManeuverWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 304).AddTicks(7), TimeSpan.FromSeconds(16.0691385)), maneuver.ThrustWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 304).AddTicks(7), TimeSpan.FromSeconds(16.0691385)), maneuver.ManeuverWindow);
             Assert.Equal(803.45692655552136, maneuver.FuelBurned,3);
         }
 
@@ -101,8 +102,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
             var res = maneuver.TryExecute(maneuverPoint);
             // The state after the impulse, the given state unchanged (#588)
-            Assert.Equal(new StateVector(maneuverPoint.Position, maneuverPoint.Velocity + maneuver.DeltaV, maneuverPoint.Observer, maneuverPoint.Epoch, maneuverPoint.Frame), res.sv);
-            Assert.Equal(new StateOrientation(new Quaternion(1.0, 0.0, 0.0, 0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame), res.so);
+            LabelAssert.Equal(new StateVector(maneuverPoint.Position, maneuverPoint.Velocity + maneuver.DeltaV, maneuverPoint.Observer, maneuverPoint.Epoch, maneuverPoint.Frame), res.sv);
+            LabelAssert.Equal(new StateOrientation(new Quaternion(1.0, 0.0, 0.0, 0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame), res.so);
             // The x component of ΔV is zero at the apogee, to the radial velocity of a tick, |a| 1e-7 s (1.6e-10 m/s on
             // main, 5.7e-9 m/s with the label of TT, #501)
             Assert.InRange(System.Math.Abs(maneuver.DeltaV.X), 0.0,
@@ -111,8 +112,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             // The window at the apogee, half a period in TT seconds: 1.44e-5 s after that at the half period in TDB seconds
             // (23:58:08.6636582), the change of TDB − TT over the 12 h (#501, #508); the label of the apogee is the nearest
             // tick of 43095.81915755211 s from J2000 TDB, 0.52 tick past a tick, so a tick later than its truncation (#625)
-            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ThrustWindow);
-            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ManeuverWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ThrustWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ManeuverWindow);
             Assert.Equal(537.19856491695327, maneuver.FuelBurned,3);
         }
 

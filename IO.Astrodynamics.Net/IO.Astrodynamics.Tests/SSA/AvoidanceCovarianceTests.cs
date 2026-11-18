@@ -84,7 +84,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             var reference = without.Single(o => o.DeltaVInertial == option.DeltaVInertial);
             var encounterWith = option.PostManeuverEncounter;
             var encounterWithout = reference.PostManeuverEncounter;
-            Assert.Equal(encounterWithout.EncounterState.Epoch, encounterWith.EncounterState.Epoch);
+            LabelAssert.Equal(encounterWithout.EncounterState.Epoch, encounterWith.EncounterState.Epoch);
             Assert.Equal(encounterWithout.ProtectedState.Position, encounterWith.ProtectedState.Position);
             Assert.Equal(CovarianceSource.Propagated, encounterWith.EncounterState.ProtectedCovariance.Source);
             Assert.Equal(CovarianceSource.Propagated, encounterWith.EncounterState.SecondaryCovariance.Source);
@@ -409,9 +409,9 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             Assert.True(state.QualityFlags.HasFlag(EncounterQualityFlags.LowRelativeVelocityEncounter));
 
             var other = explicitly[i];
-            Assert.Equal(other.BurnEpoch, avoidance[i].BurnEpoch);
+            LabelAssert.Equal(other.BurnEpoch, avoidance[i].BurnEpoch);
             Assert.Equal(other.DeltaVInertial, avoidance[i].DeltaVInertial);
-            Assert.Equal(other.PostManeuverEncounter.EncounterState.Epoch, state.Epoch);
+            LabelAssert.Equal(other.PostManeuverEncounter.EncounterState.Epoch, state.Epoch);
             Assert.Equal(other.PostManeuverEncounter.EncounterState.MissDistanceMeters, state.MissDistanceMeters);
             Assert.Equal(other.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision, post.CollisionRisk.ProbabilityOfCollision);
             Assert.Equal(other.PostManeuverEncounter.EncounterState.QualityFlags, state.QualityFlags);

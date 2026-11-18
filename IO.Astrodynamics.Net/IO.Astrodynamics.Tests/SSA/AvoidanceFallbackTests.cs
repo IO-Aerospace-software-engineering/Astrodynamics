@@ -491,9 +491,9 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         {
             var a = inherited[i];
             var b = explicitly[i];
-            Assert.Equal(b.BurnEpoch, a.BurnEpoch);
+            LabelAssert.Equal(b.BurnEpoch, a.BurnEpoch);
             Assert.Equal(b.DeltaVInertial, a.DeltaVInertial);
-            Assert.Equal(b.PostManeuverEncounter.EncounterState.Epoch, a.PostManeuverEncounter.EncounterState.Epoch);
+            LabelAssert.Equal(b.PostManeuverEncounter.EncounterState.Epoch, a.PostManeuverEncounter.EncounterState.Epoch);
             Assert.Equal(b.PostManeuverEncounter.EncounterState.MissDistanceMeters, a.PostManeuverEncounter.EncounterState.MissDistanceMeters);
             Assert.Equal(b.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision, a.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision);
             Assert.Equal(b.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters,
@@ -610,8 +610,8 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         // force model with the lock of its dynamics
         Assert.Null(spacecraft.LastPropagation);
         Assert.Same(solution.ForceModel, spacecraft.LastForceModel);
-        Assert.Equal(AvoidanceFallbackCase.Start, spacecraft.LastForceModel.Start);
-        Assert.Equal(AvoidanceFallbackCase.PropagationWindow.EndDate, spacecraft.LastForceModel.End);
+        LabelAssert.Equal(AvoidanceFallbackCase.Start, spacecraft.LastForceModel.Start);
+        LabelAssert.Equal(AvoidanceFallbackCase.PropagationWindow.EndDate, spacecraft.LastForceModel.End);
         Assert.Equal(spacecraft.GetTotalMass(), spacecraft.LastForceModel.ContextAt(AvoidanceFallbackCase.Tca).TotalMass);
         _case.Propagate(spacecraft, true);
         Assert.Same(spacecraft.LastPropagation.ForceModel, spacecraft.LastForceModel);

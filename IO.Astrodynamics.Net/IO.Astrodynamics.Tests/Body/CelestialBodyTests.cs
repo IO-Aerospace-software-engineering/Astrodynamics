@@ -69,7 +69,7 @@ public class CelestialBodyTests
         Assert.Equal(7.3457892489962231E+22, moon.Mass);
         Assert.NotNull(moon.InitialOrbitalParameters);
         Assert.Equal(3, moon.InitialOrbitalParameters.Observer.NaifId);
-        Assert.Equal(TimeSystem.Time.J2000TDB, moon.InitialOrbitalParameters.Epoch);
+        LabelAssert.Equal(TimeSystem.Time.J2000TDB, moon.InitialOrbitalParameters.Epoch);
         Assert.Equal(new Vector3(-288065172.3454155, -271638576.61683005, 35830480.397877164), moon.InitialOrbitalParameters.ToStateVector().Position, TestHelpers.VectorComparer);
         Assert.Equal(new Vector3(635.7121052811876, -722.1021012684569, -11.36665431333672), moon.InitialOrbitalParameters.ToStateVector().Velocity, TestHelpers.VectorComparer);
         Assert.Equal(Frames.Frame.ECLIPTIC_J2000, moon.InitialOrbitalParameters.Frame);
@@ -101,7 +101,7 @@ public class CelestialBodyTests
         // window (#461: it started 18.5 h before it)
         var windows = res as Window[] ?? res.ToArray();
         GeometryReference.AssertWindows(null, "earth_moon_distance > 400000 km", windows, GeometryReference.ThresholdCrossing);
-        Assert.Equal(new TimeSystem.Time("2000-01-01 12:00:00.0000 TDB"), windows[0].StartDate);
+        LabelAssert.Equal(new TimeSystem.Time("2000-01-01 12:00:00.0000 TDB"), windows[0].StartDate);
     }
 
     [Fact]
@@ -289,7 +289,7 @@ public class CelestialBodyTests
         var orientation = TestHelpers.EarthAtJ2000.GetOrientation(Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
         Assert.Equal(new Vector3(-1.9637713280171745E-09, -2.0389347198634933E-09, 7.29211506433339E-05), orientation.AngularVelocity,TestHelpers.VectorComparer);
         Assert.Equal(new Quaternion(0.7671312120778745, -1.8618836714990174E-05, 8.468840548096465E-07, 0.6414902205868405), orientation.Rotation,TestHelpers.QuaternionComparer);
-        Assert.Equal(TimeSystem.Time.J2000TDB, orientation.Epoch);
+        LabelAssert.Equal(TimeSystem.Time.J2000TDB, orientation.Epoch);
         Assert.Equal(Frames.Frame.ICRF, orientation.ReferenceFrame);
     }
 
@@ -450,7 +450,7 @@ public class CelestialBodyTests
         Assert.Equal(270.0, res.AOP * Astrodynamics.Constants.Rad2Deg, 3);
         Assert.Equal(270.0, res.TrueAnomaly() * Astrodynamics.Constants.Rad2Deg, 3);
         Assert.Equal(270.01999999999998, res.MeanAnomaly() * Astrodynamics.Constants.Rad2Deg, 3);
-        Assert.Equal(epoch, res.Epoch);
+        LabelAssert.Equal(epoch, res.Epoch);
     }
 
     [Fact]
@@ -465,7 +465,7 @@ public class CelestialBodyTests
         Assert.Equal(270.0, res.AOP * Astrodynamics.Constants.Rad2Deg, 3);
         Assert.Equal(270.0, res.TrueAnomaly() * Astrodynamics.Constants.Rad2Deg, 3);
         Assert.Equal(270.01999999999998, res.MeanAnomaly() * Astrodynamics.Constants.Rad2Deg, 3);
-        Assert.Equal(epoch, res.Epoch);
+        LabelAssert.Equal(epoch, res.Epoch);
     }
 
     [Fact]
@@ -753,11 +753,11 @@ public class CelestialBodyTests
             {
                 var states = item.GetEphemeris(window, observer, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(step)).ToArray();
                 Assert.Equal(count, states.Length);
-                Assert.Equal(start, states[0].Epoch);
+                LabelAssert.Equal(start, states[0].Epoch);
                 Assert.All(states, s => Assert.True(s.Epoch <= end, $"{item.Name} at {step} s: {s.Epoch} after {end}"));
                 if (step == 1.0)
                 {
-                    Assert.Equal(end, states[^1].Epoch);
+                    LabelAssert.Equal(end, states[^1].Epoch);
                 }
             }
         }
@@ -786,7 +786,7 @@ public class CelestialBodyTests
             {
                 var epoch = window.StartDate + step * i;
                 var single = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                Assert.Equal(epoch, states[i].Epoch);
+                LabelAssert.Equal(epoch, states[i].Epoch);
                 Assert.Equal(single.Position, states[i].Position);
                 Assert.Equal(single.Velocity, states[i].Velocity);
             }

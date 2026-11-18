@@ -368,7 +368,7 @@ public partial class SpiceApiTest
         _output.WriteLine($"MEASURE site observer {label} |dr| m: {dr:E3}, |dv| m/s: {dv:E3}");
         Assert.True(dr <= SiteObserverNegationTolerance, $"{label}: |dr| {dr:E3} m");
         Assert.True(dv <= SiteObserverNegationTolerance, $"{label}: |dv| {dv:E3} m/s");
-        Assert.Equal(expectedReversed.Epoch, actual.Epoch);
+        LabelAssert.Equal(expectedReversed.Epoch, actual.Epoch);
     }
 
     private static void AssertSiteObserver(StateVector state, string frameName)
@@ -561,7 +561,7 @@ public partial class SpiceApiTest
         {
             var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, gcrf, aberration).ToStateVector();
             Assert.Equal(gcrf.Name, read.Frame.Name);
-            Assert.Equal(j2000.Epoch, read.Epoch);
+            LabelAssert.Equal(j2000.Epoch, read.Epoch);
             Assert.Equal(j2000.Position, read.Position);
             Assert.Equal(j2000.Velocity, read.Velocity);
 
@@ -571,7 +571,7 @@ public partial class SpiceApiTest
             for (int i = 0; i < j2000Window.Length; i++)
             {
                 Assert.Equal(gcrf.Name, readWindow[i].Frame.Name);
-                Assert.Equal(j2000Window[i].Epoch, readWindow[i].Epoch);
+                LabelAssert.Equal(j2000Window[i].Epoch, readWindow[i].Epoch);
                 Assert.Equal(j2000Window[i].Position, readWindow[i].Position);
                 Assert.Equal(j2000Window[i].Velocity, readWindow[i].Velocity);
             }
@@ -625,7 +625,7 @@ public partial class SpiceApiTest
         Assert.True(j2000.Length >= 2, string.Join("; ", j2000.Select(x => $"{x.StartDate} {x.EndDate}")));
         foreach (var gcrf in GcrfFrames())
         {
-            Assert.Equal(j2000, Search(gcrf));
+            LabelAssert.Equal(j2000, Search(gcrf));
         }
     }
 
@@ -819,7 +819,7 @@ public partial class SpiceApiTest
                 for (int i = 0; i < j2000.Length; i++)
                 {
                     Assert.Equal(gcrf.Name, read[i].ReferenceFrame.Name);
-                    Assert.Equal(j2000[i].Epoch, read[i].Epoch);
+                    LabelAssert.Equal(j2000[i].Epoch, read[i].Epoch);
                     Assert.Equal(j2000[i].Rotation, read[i].Rotation);
                     Assert.Equal(j2000[i].AngularVelocity, read[i].AngularVelocity);
                 }
@@ -1322,7 +1322,7 @@ public partial class SpiceApiTest
         Assert.Equal(ke.RAAN, ke2.RAAN, 6);
         Assert.Equal(ke.AOP, ke2.AOP, 6);
         Assert.Equal(ke.M, ke2.M, 6);
-        Assert.Equal(ke.Epoch, ke2.Epoch);
+        LabelAssert.Equal(ke.Epoch, ke2.Epoch);
         Assert.Equal(ke.Frame, ke2.Frame);
         Assert.Equal(ke.Observer, ke2.Observer);
     }
@@ -1458,7 +1458,7 @@ public partial class SpiceApiTest
         Assert.Equal(ke.RAAN, ke2.RAAN, 6);
         Assert.Equal(ke.AOP, ke2.AOP, 6);
         Assert.Equal(ke.M, ke2.M, 6);
-        Assert.Equal(ke.Epoch, ke2.Epoch);
+        LabelAssert.Equal(ke.Epoch, ke2.Epoch);
         Assert.Equal(ke.Frame, ke2.Frame);
         Assert.Equal(ke.Observer, ke2.Observer);
     }

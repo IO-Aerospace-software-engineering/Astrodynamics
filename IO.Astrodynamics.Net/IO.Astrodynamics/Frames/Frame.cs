@@ -211,7 +211,7 @@ public class Frame : IEquatable<Frame>
     {
         long generation = SpiceAPI.KernelPoolGeneration;
         var last = Volatile.Read(ref _lastOrientation);
-        if (last != null && last.KernelPoolGeneration == generation && last.Date.Equals(date))
+        if (last != null && last.KernelPoolGeneration == generation && last.Date.HasSameLabel(date))
         {
             return last.Orientation;
         }

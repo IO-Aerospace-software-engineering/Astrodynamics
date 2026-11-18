@@ -135,7 +135,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
 
         // Assert: one implementation, the same covariance at TCA bit for bit; the flag raised by the analysis only, the
         // covariance it was given being valid in the second case
-        Assert.Equal(remediatedInside.EncounterState.Epoch, remediatedBeforehand.EncounterState.Epoch);
+        LabelAssert.Equal(remediatedInside.EncounterState.Epoch, remediatedBeforehand.EncounterState.Epoch);
         Assert.Equal(remediatedInside.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
             remediatedBeforehand.ProtectedCovariance.CovarianceInertial.Value.ToArray());
         Assert.True(remediatedInside.ProtectedCovariance.InitialCovarianceRemediated);
@@ -389,7 +389,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         {
             var (actual, expected) = (encounters[k], encounters[k + 1]);
             Assert.Equal(CovarianceSource.Propagated, actual.EncounterState.ProtectedCovariance.Source);
-            Assert.Equal(expected.EncounterState.Epoch, actual.EncounterState.Epoch);
+            LabelAssert.Equal(expected.EncounterState.Epoch, actual.EncounterState.Epoch);
             Assert.Equal(expected.ProtectedCovariance.CovarianceInertial.Value.ToArray(), actual.ProtectedCovariance.CovarianceInertial.Value.ToArray());
             Assert.Equal(expected.CollisionRisk.ProbabilityOfCollision, actual.CollisionRisk.ProbabilityOfCollision);
             Assert.NotNull(actual.EncounterState.ProtectedCovariance.NonlinearityIndex);
@@ -409,7 +409,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(temeVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
         var twinHeld = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twinVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, held.EncounterState.ProtectedCovariance.Source);
-        Assert.Equal(twinHeld.EncounterState.Epoch, held.EncounterState.Epoch);
+        LabelAssert.Equal(twinHeld.EncounterState.Epoch, held.EncounterState.Epoch);
         var a = held.ProtectedCovariance.CovarianceInertial.Value;
         var b = twinHeld.ProtectedCovariance.CovarianceInertial.Value;
         double difference = 0.0, norm = 0.0;
@@ -460,7 +460,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.ProtectedCovariance.Source);
         Assert.True(encounter.ProtectedCovariance.InitialCovarianceRemediated);
         Assert.True(twinEncounter.ProtectedCovariance.InitialCovarianceRemediated);
-        Assert.Equal(twinEncounter.EncounterState.Epoch, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(twinEncounter.EncounterState.Epoch, encounter.EncounterState.Epoch);
         Assert.Equal(twinEncounter.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
             encounter.ProtectedCovariance.CovarianceInertial.Value.ToArray());
         var expected = referenceSolution.GetCovariance(encounter.EncounterState.Epoch);

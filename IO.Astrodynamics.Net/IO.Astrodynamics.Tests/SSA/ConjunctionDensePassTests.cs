@@ -533,14 +533,14 @@ public abstract class ConjunctionDensePassTestBase
             Assert.Equal(matched.Count, matched.Distinct().Count());
             if (all.Count > 0)
             {
-                Assert.Equal(all.MinBy(e => e.EncounterState.MissDistanceMeters).EncounterState.Epoch,
+                LabelAssert.Equal(all.MinBy(e => e.EncounterState.MissDistanceMeters).EncounterState.Epoch,
                     encounter.EncounterState.Epoch);
             }
             else if (locmin.Length > 0 && locmin.All(m => NearAnEnd(m.Epoch)))
             {
                 // Only minima within the band of an end, none listed: an end, as AssertSlowPassLists
-                Assert.True(encounter.EncounterState.Epoch == window.StartDate ||
-                            encounter.EncounterState.Epoch == window.EndDate);
+                Assert.True(encounter.EncounterState.Epoch.HasSameLabel(window.StartDate) ||
+                            encounter.EncounterState.Epoch.HasSameLabel(window.EndDate));
             }
             else
             {
@@ -640,7 +640,7 @@ public abstract class ConjunctionDensePassTestBase
             }
             else
             {
-                Assert.Contains(encounter.EncounterState.Epoch, all.Select(e => e.EncounterState.Epoch));
+                LabelAssert.Contains(encounter.EncounterState.Epoch, all.Select(e => e.EncounterState.Epoch));
             }
 
             return;
@@ -649,7 +649,7 @@ public abstract class ConjunctionDensePassTestBase
         if (locmin.Length > 0)
         {
             // Only minima within the band of an end, none listed: an end
-            Assert.True(encounter.EncounterState.Epoch == window.StartDate || encounter.EncounterState.Epoch == window.EndDate);
+            Assert.True(encounter.EncounterState.Epoch.HasSameLabel(window.StartDate) || encounter.EncounterState.Epoch.HasSameLabel(window.EndDate));
             return;
         }
 
@@ -690,11 +690,11 @@ public abstract class ConjunctionDensePassTestBase
         var distances = ends.Select(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()).ToArray();
         if (System.Math.Abs(distances[0] - distances[1]) <= 2.0 * missBound)
         {
-            Assert.Contains(encounter.EncounterState.Epoch, ends);
+            LabelAssert.Contains(encounter.EncounterState.Epoch, ends);
             return;
         }
 
-        Assert.Equal(distances[1] < distances[0] ? window.EndDate : window.StartDate, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(distances[1] < distances[0] ? window.EndDate : window.StartDate, encounter.EncounterState.Epoch);
     }
 
     private double _worstSlowTcaError;

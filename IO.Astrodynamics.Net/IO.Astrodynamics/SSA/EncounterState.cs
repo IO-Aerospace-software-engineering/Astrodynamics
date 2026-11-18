@@ -59,7 +59,7 @@ public sealed class EncounterState
         Epoch = epoch;
         RelativeState = relativeState ?? throw new ArgumentNullException(nameof(relativeState));
         MissDistanceMeters = missDistanceMeters;
-        CombinedCovarianceRtn = combinedCovarianceRtn;
+        _combinedCovarianceRtn = combinedCovarianceRtn.Copy();
         QualityFlags = qualityFlags;
         ProtectedCovariance = protectedCovariance ?? throw new ArgumentNullException(nameof(protectedCovariance));
         SecondaryCovariance = secondaryCovariance ?? throw new ArgumentNullException(nameof(secondaryCovariance));
@@ -81,9 +81,12 @@ public sealed class EncounterState
     public double MissDistanceMeters { get; }
 
     /// <summary>
-    /// Gets the combined 6x6 relative covariance expressed in the encounter RTN frame.
+    /// Gets the combined 6x6 relative covariance expressed in the encounter RTN frame: a copy of the one the state holds,
+    /// which the constructor copied too, so that a term set on the matrix given or returned does not reach it (#722).
     /// </summary>
-    public Matrix CombinedCovarianceRtn { get; }
+    public Matrix CombinedCovarianceRtn => _combinedCovarianceRtn.Copy();
+
+    private readonly Matrix _combinedCovarianceRtn;
 
     /// <summary>
     /// Gets quality flags that indicate missing data, remediation, or regime warnings for this encounter.

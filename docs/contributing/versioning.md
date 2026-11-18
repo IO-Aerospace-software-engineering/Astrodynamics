@@ -264,6 +264,35 @@ release are listed under **Known limitations**.
   The observer is now read at its geometric position: the COBE determination is that of SPICE's site again (ratios 4.002
   and 4.001), and Mars's error falls with the spacing, 7.06e-2, 1.07e-2 and 1.56e-3 % (Linux x64, `PlanetObject`, bounds
   at 2.5 days twice those figures, provisional). See Changed.
+- **The same instant in two time frames was not equal** ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)). `Time` kept the record's equality, on the
+  calendar and the frame, while `CompareTo` compared through TAI across frames: `utc == utc.ToTDB()` was false and their
+  hashes differed while `CompareTo` returned 0 and `utc - tdb` 0 ticks, so `Dictionary`, `HashSet`, `Distinct` and
+  `IndexOf` keyed by times missed what `SortedDictionary` found, and `Window` equality failed for the same instants in
+  UTC and TDB. In the library, `Spacecraft.AddPropagatedStates` given a state at a stored instant labelled in another
+  frame stored a second state at that instant instead of replacing it (201 states for 200,
+  `PropagatedArcsEdgeTests.AddPropagatedStates_ToTheArcOfTheirEpoch_AndReplacedByAPropagation`). Time equality is now by
+  instant (Changed below); `TimeEqualityTests` checks it on the definitions of the scales (TAI − UTC 37 s,
+  TT = TAI + 32.184 s, GPS = TAI − 19 s), the leap second of 2016-12-31 and two TDB ticks of one TAI tick (red on
+  a85098d: 10 of its 15 tests, the 5 that expect inequality or the default time passing).
+- **Equality of orbital parameters threw, and equal copies hashed differently** ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). Typed
+  `OrbitalParameters`, `==`, `!=` and `Equals` compared `ToStateVector()` of both operands (`&&` bound before `||`, and
+  `base.Equals` was reference equality, so every two instances reached the states): they threw
+  `InvalidOperationException` for mean elements (`FromOMM`, `ToMeanKeplerianElements()`, a mean `EquinoctialElements`),
+  against any operand and even against null, and for e = NaN, found two different sets with M = NaN or a = NaN equal
+  (NaN states), ran SGP4 twice for a TLE (`TLE.Equals(TLE)` called the base, and threw for a TLE whose SGP4 fails), and
+  every `GetHashCode` combined the identity of the instance, so equal copies hashed differently and a
+  `HashSet<OrbitalParameters>` of identical mean copies threw at the first identity-hash collision. Equality is now
+  value equality within one concrete type, computing no state, with a hash code of the same values (Changed below);
+  `OrbitalParametersEqualityTests` checks the contract (CA1065, `Object.GetHashCode`) over the four types, osculating and
+  mean, typed and as `OrbitalParameters`, in hash sets, dictionaries, `Distinct`, `List.Contains` and tuples (red on
+  a85098d: its 17 tests, 10 of them on an `InvalidOperationException` of the comparison).
+- **The holders of a `Matrix` shared the caller's array** ([#722](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/722)). `Matrix.Set` writes the array a matrix
+  wraps, which a copy of the struct shares: `StateVector`, `EncounterState`, `CollisionRisk` and `EpochStatistics` kept
+  the matrix given and returned it, so a term set afterwards on either reached them (a loop that reuses one matrix to
+  build the covariances of several states gave every state the last one, and the conjunction analysis and its Pc ran on
+  it), and `Iau2006Model.FrameBias()` returned its cached static, which any caller could corrupt for the next. They now
+  copy in and out (internal `Matrix.Copy`, which `CdmCovarianceMatrix` takes since #717), `Matrix` kept mutable (decided
+  by S. Guillet, 2026-11-17: `Set` is how callers build a covariance); `MatrixHoldersTests` (red on a85098d: 6 of its 7 tests, the default matrix held as it is passing).
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -1183,11 +1212,10 @@ release are listed under **Known limitations**.
   eccentric anomaly is within 0.60 of the rounding floor on ellipses and 2.2 on hyperbolas (1124 before), and the same
   states are within 7.7e-8 m, 1.4e-7 m and 2.5e-8 m. A non-finite mean anomaly or eccentricity of orbital parameters
   given by M now throws `InvalidOperationException`, naming e and M, where NaN was returned: from these paths, from the
-  constructors of `CentralBodyPropagator` (Velocity-Verlet propagated NaN, RK7(8) failed after 100 rejected steps), and
-  from `Equals`, `==` and `!=` of two such parameters typed `OrbitalParameters`, which compare their states (they
-  compared equal). With a NaN eccentricity only `EccentricAnomaly()` changes: `TrueAnomaly()` and `ToStateVector()`
-  already threw `InvalidOperationException`. A hyperbola with e < 2 and |M| above max(3.0e307, 1.8e308 (e − 1)) rad
-  throws too, its start overflowing (a finite H was returned; no orbit reaches such a mean anomaly). M = 0 and e = 0 are
+  constructors of `CentralBodyPropagator` (Velocity-Verlet propagated NaN, RK7(8) failed after 100 rejected steps). The
+  equality of such parameters computes no state and does not throw (#475). With a NaN eccentricity only
+  `EccentricAnomaly()` changes: `TrueAnomaly()` and `ToStateVector()` already threw `InvalidOperationException`. A
+  hyperbola with e < 2 and |M| above max(3.0e307, 1.8e308 (e − 1)) rad throws too, its start overflowing (a finite H was returned; no orbit reaches such a mean anomaly). M = 0 and e = 0 are
   unchanged, bit for bit; other states move by up to the former error, so a propagation started from elements takes
   slightly different steps. The round trip of a near-circular state of #398 now returns it to 1.9e-15 of its radius
   (1.4e-15 in 10.2.0-preview-1).
@@ -3817,6 +3845,48 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   from the Earth's centre for a site read by CSPICE (a kernel site), a site given by its coordinates already read
   geometric before this release. Migration: none in code; observations are the target's directions from the observer
   at each epoch, corrected for the target's light time as before.
+- **Breaking: two times are equal when they are the same instant** ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512), Fixed above; decided by S. Guillet,
+  2026-11-17). `Time.Equals`, `==`, `!=` and `GetHashCode` follow `CompareTo`, the one order of times by their ticks
+  converted to TAI, within a frame and across frames: `utc == utc.ToTDB()` is true and both hash alike, so a hash
+  collection keyed by times finds the same instant in another frame. Within UTC, TAI, TT and GPS the order is that of
+  the calendars, as before; within TDB too, but for two consecutive TDB ticks that convert to one TAI tick (TDB − TT,
+  rounded to the tick, gains one there, about every 300 s near its steepest), which are now equal and compare to 0,
+  where they compared by their calendars, so that equality stays transitive. `Window` equality is that of its two ends
+  as instants, `Length` excluded (a UTC window built from a length across a leap second equals the window of its ends),
+  and so the equality of every record that holds a time (`StateOrientation`, `Equatorial`, a tuple) compares it as an
+  instant. A local time (`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the
+  zone of the machine, local times compared with each other included, where they compared by their calendars: in a zone
+  with daylight saving time, two labels of the skipped hour and the hour after it are one instant (in America/New_York,
+  local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, and 02:30 comes after 03:00), and a label of the repeated hour is
+  read with the standard offset (`ColdStartTests.LocalTimes_AreTheInstantsOfTheirZone`, skipped on Windows, where `TZ`
+  does not set the zone; red with a85098d's comparison of local calendars restored). The default time (no frame) comes
+  before every time with a frame and equals only itself, so comparing it no longer throws `NullReferenceException` (`<`,
+  `SortedSet`, `Window` of it). The library's comparisons follow: `AddPropagatedStates` replaces a stored state at the
+  same instant in another frame, and `StateVector.ToStateVector(epoch)` still relabels a state read at its instant in
+  another frame (a label comparison, internal `Time.HasSameLabel`); the library's caches whose values carry their key as
+  a label (the orientations of a `Frame` and of `TLEPropagator`, the range rates read once by the conjunction search)
+  stay keyed by label (internal `Time.LabelComparer`), so an orientation carries the epoch asked and the bisection of a
+  TCA in ticks (#624) reads both of two consecutive TDB ticks, bit for bit as before. Results move only for two TDB
+  ticks of one TAI tick, by a tick at most. Within TDB, `-` still counts the ticks of the calendars: two equal
+  consecutive TDB ticks differ by one tick.
+  Migration: code that told two labels of one instant apart by `==`, `Equals` or `Assert.Equal` compares `DateTime` and
+  `Frame` (the tests of the library's labels do so through `LabelAssert`: 380 assertions that `Assert.Equal` or `==`
+  made on a time, a window, orbital parameters, a `StateOrientation` or an `Equatorial`).
+- **Breaking: equality of orbital parameters is value equality within one concrete type** ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475), Fixed
+  above; choices 1 and 2 decided by S. Guillet, 2026-11-17). `OrbitalParameters.Equals(OrbitalParameters)` (still
+  virtual) is the type's `Equals(object)`: the same concrete type, its values (A, E, I, RAAN, AOP, M; P, F, G, H, K, L0;
+  position and velocity; a TLE's lines and name), observer by NAIF id, epoch (an instant, #512), frame and
+  `ElementsType`; the base `Equals(object)` is reference equality for a type that defines no values, and
+  `GetHashCode` combines the observer's NAIF id, the epoch, the frame and the element type with the type's values.
+  Choice 1: a set and its own `ToStateVector()` are different (through `OrbitalParameters` they were equal). Choice 2:
+  a mean set and an osculating set of the same numbers are different (through their type they were equal), and so are
+  a TLE and its `ToMeanKeplerianElements()`. Equality never throws. Migration: to compare two orbits, compare their
+  states, `x.ToStateVector() == y.ToStateVector()`, which throws for mean elements.
+- **Breaking: the covariances a holder returns are copies** ([#722](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/722), Fixed above). `StateVector.Covariance`,
+  `EncounterState.CombinedCovarianceRtn`, `CollisionRisk.ProjectedCovariance`, `EpochStatistics.SampleCovariance` and
+  `Iau2006Model.FrameBias()` return a new copy at each read, and the constructors copy the matrix given. Migration: code
+  that changed a held covariance through `Set` on the matrix it gave or read builds a new `StateVector` (or holder) with
+  the matrix it wants.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -5519,20 +5589,12 @@ not listed.
   e = 0.999999 (155 m at the apoapsis of a 7000 km periapsis). Near the periapsis Kepler's equation stops at its
   cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r| off at e = 0.999999, and
   `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
-- **Equality of orbital parameters**
-  ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). Typed
-  `OrbitalParameters`, `==`, `!=` and `Equals` compare `ToStateVector()`, so they throw for mean elements (even against
-  null) or e = NaN, and `GetHashCode` includes the reference, so equal copies hash differently and hash sets keep
-  duplicates: compare the element values.
 - **Angles brought into [0, 2π)**
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and
   `SpecialFunctions.NormalizeAngle(-1e-17)` returns 2π (360°, which can appear in an OPM or OMM).
-- **Time equality and truncated spans**
-  ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512),
-  [#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)). The same instant in two time
-  frames has `CompareTo` 0, but `==` and `Equals` are false and the hashes differ, so `Dictionary`, `HashSet`,
-  `Distinct` and `IndexOf` keyed by `Time` miss it: convert keys to one frame (`ToTDB()`). `AddDays`, `AddHours`,
+- **Truncated spans**
+  ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)). `AddDays`, `AddHours`,
   `AddMinutes`, `CreateFromJD` and the spans computed through `TimeSpan.FromSeconds` (`Period()`,
   `SideralRotationPeriod`, `TrueSolarDay`, the windows of an impulse, the hold of `PhasingManeuver`, `Launch`, the
   epochs of the conjunction search) truncate to the tick below, so each can be a tick early.

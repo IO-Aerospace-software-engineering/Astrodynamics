@@ -113,11 +113,11 @@ public class SpacecraftFrameRecordTests
         Assert.True(frame.AddStateOrientationToICRF(replacing));
         var record = frame.GetStateOrientationsToICRF().ToArray();
         Assert.Equal(2, record.Length);
-        Assert.Equal(replacing, record[1]);
+        LabelAssert.Equal(replacing, record[1]);
         // Exactly 2 µs apart: two epochs
         Assert.True(frame.AddStateOrientationToICRF(new StateOrientation(At(60.0), Vector3.Zero, Start.AddSeconds(10.0 + 3e-6), frame)));
         Assert.Equal(3, frame.GetStateOrientationsToICRF().Count());
-        Assert.Equal(Start.AddSeconds(10.0 + 3e-6), frame.GetLatestStateOrientationToICRF().Epoch);
+        LabelAssert.Equal(Start.AddSeconds(10.0 + 3e-6), frame.GetLatestStateOrientationToICRF().Epoch);
 
         // Discrete entries: the earlier one holds until the next, without angular velocity
         var between = frame.GetStateOrientationToICRF(Start.AddSeconds(4.0));
@@ -192,7 +192,7 @@ public class SpacecraftFrameRecordTests
         var change = Start.AddSeconds(15.0);
         var discrete = new StateOrientation(new Quaternion(Vector3.VectorX, 1.0), Vector3.Zero, change, Frame.ICRF);
         Assert.True(frame.Record(discrete, null, true));
-        Assert.Equal(new[] { change }, frame.ChangesAfterSamplesOf(Law));
+        LabelAssert.Equal(new[] { change }, frame.ChangesAfterSamplesOf(Law));
         Assert.Empty(frame.ChangesAfterSamplesOf(new object()));
 
         // Not a change after a sample of the law: no lead
@@ -221,7 +221,7 @@ public class SpacecraftFrameRecordTests
 
         // The CK: the C-matrices of the entries, the lead as the record before the change (no other record added)
         var records = frame.CkRecords();
-        Assert.Equal(new[] { Start, Start.AddSeconds(10.0), change.AddSeconds(-1e-6), change }, records.Select(x => x.Epoch));
+        LabelAssert.Equal(new[] { Start, Start.AddSeconds(10.0), change.AddSeconds(-1e-6), change }, records.Select(x => x.Epoch));
         Assert.All(records, x => Assert.Equal(Frame.ICRF, x.ReferenceFrame));
         Rotation(Angle(lead.Rotation.Conjugate(), records[2].Rotation), "CK record of the lead");
         Rotation(Angle(discrete.Rotation.Conjugate(), records[3].Rotation), "CK record of the change");
@@ -239,7 +239,7 @@ public class SpacecraftFrameRecordTests
         Rotation(Angle(lead.Rotation, ramp.Rotation), "demoted lead held");
         Rate((ramp.AngularVelocity - rate * (2.0 / 3.0)).Magnitude(), "demoted lead ramp");
         records = frame.CkRecords();
-        Assert.Equal(new[] { Start, Start.AddSeconds(10.0), change.AddSeconds(-1e-6), change.AddSeconds(0.5e-6), change.AddSeconds(1.5e-6) },
+        LabelAssert.Equal(new[] { Start, Start.AddSeconds(10.0), change.AddSeconds(-1e-6), change.AddSeconds(0.5e-6), change.AddSeconds(1.5e-6) },
             records.Select(x => x.Epoch));
         Rotation(Angle(lead.Rotation.Conjugate(), records[3].Rotation), "CK repeated record after demotion");
     }
@@ -259,7 +259,7 @@ public class SpacecraftFrameRecordTests
         // The angular velocity it carried is not kept: a lone discrete entry has the CK's, zero by construction (NodeRate),
         // as the read at its epoch
         Assert.Equal(Vector3.Zero, entry.AngularVelocity);
-        Assert.Equal(frame.GetStateOrientationToICRF(Start), entry);
+        LabelAssert.Equal(frame.GetStateOrientationToICRF(Start), entry);
         Assert.Equal(spacecraft.Frame, entry.ReferenceFrame);
     }
 
@@ -286,10 +286,10 @@ public class SpacecraftFrameRecordTests
         Assert.Equal(7, entries.Length);
         foreach (var entry in entries)
         {
-            Assert.Equal(frame.GetStateOrientationToICRF(entry.Epoch), entry);
+            LabelAssert.Equal(frame.GetStateOrientationToICRF(entry.Epoch), entry);
         }
 
-        Assert.Equal(frame.GetStateOrientationToICRF(Start.AddSeconds(50.0)), frame.GetLatestStateOrientationToICRF());
+        LabelAssert.Equal(frame.GetStateOrientationToICRF(Start.AddSeconds(50.0)), frame.GetLatestStateOrientationToICRF());
         // The law's rate at a sample between two interpolated intervals, -ω a in the convention of the frames
         Rate((entries[1].AngularVelocity - Axis * -Omega).Magnitude(), "entry of a sample");
         // A discrete entry, and the attitude added with a rate it does not keep: zero

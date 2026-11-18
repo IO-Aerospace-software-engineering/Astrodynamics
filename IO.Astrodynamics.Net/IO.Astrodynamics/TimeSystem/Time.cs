@@ -458,17 +458,109 @@ public readonly record struct Time : IComparable<Time>, IComparable
 
     #region COMPARATOR
 
+    /// <summary>
+    /// The ticks of this time converted to TAI, the key of the order, the equality and the hash code of times (#512).
+    /// </summary>
+    internal long TaiTicks()
+    {
+        return Frame is TimeFrame frame ? frame.TaiTicks(this) : Frame.ConvertToTAI(this).DateTime.Ticks;
+    }
+
+    /// <summary>
+    /// Compares the instants of two times, within a frame and across frames alike, by their ticks converted to TAI: one
+    /// total order, so that two times compare to 0 exactly when they are equal (<see cref="Equals(Time)"/>, #512).
+    /// </summary>
+    /// <remarks>
+    /// Within UTC, TAI, TT or GPS the conversion to TAI keeps the order of the calendars, which are compared directly.
+    /// Within TDB it does too for times two ticks or more apart; two consecutive TDB ticks can convert to one TAI tick
+    /// (TDB − TT, rounded to the tick, gains one there), and then compare to 0. Before 11.0.0, times of one frame were
+    /// compared by their calendars, and so two such TDB ticks were in order while each compared to 0 with their TAI time.
+    /// Within TDB, <c>-</c> still counts the ticks of the calendars: two such equal ticks differ by one tick. A local
+    /// time is the instant <see cref="System.DateTime.ToUniversalTime"/> gives its calendar in the time zone of the
+    /// machine, local times included (#512: before 11.0.0 they were compared by their calendars). The default time (no
+    /// frame) comes before every time with a frame and compares to 0 with itself, so that comparing it never throws.
+    /// </remarks>
     public int CompareTo(Time other)
     {
-        // Convert both times to TAI to ensure correct physical time comparison
-        // when the times are in different frames (e.g., UTC vs TDB)
+        // The default time, the only time without a frame, before every time with one
+        if (Frame is null)
+        {
+            return other.Frame is null ? DateTime.Ticks.CompareTo(other.DateTime.Ticks) : -1;
+        }
+
+        if (other.Frame is null)
+        {
+            return 1;
+        }
+
         if (this.Frame.Equals(other.Frame))
         {
-            return this.DateTime.CompareTo(other.DateTime);
+            switch (Frame)
+            {
+                case UTCTimeFrame or TAITimeFrame or TDTTimeFrame or GPSTimeFrame:
+                    return this.DateTime.CompareTo(other.DateTime);
+                case TDBTimeFrame:
+                    long difference = this.DateTime.Ticks - other.DateTime.Ticks;
+                    if (difference is not (1 or -1))
+                    {
+                        return difference.CompareTo(0L);
+                    }
+
+                    break;
+            }
         }
-        var thisTai = this.ToTAI();
-        var otherTai = other.ToTAI();
-        return thisTai.DateTime.CompareTo(otherTai.DateTime);
+
+        return TaiTicks().CompareTo(other.TaiTicks());
+    }
+
+    /// <summary>
+    /// Whether two times are the same instant, whatever their frames: <see cref="CompareTo(Time)"/> returns 0 (#512,
+    /// decided by S. Guillet, 2026-11-17). <c>==</c>, <c>!=</c>, <see cref="object.Equals(object)"/> and the hash
+    /// collections follow it, and <see cref="GetHashCode"/> hashes the TAI ticks. Two default times (no frame) are equal
+    /// when their calendars are, and a default time equals no time with a frame.
+    /// </summary>
+    /// <remarks>
+    /// Before 11.0.0 the frame took part (the record's default equality on the calendar and the frame), so that the same
+    /// instant in two frames was not equal while it compared to 0, and a <see cref="Dictionary{TKey,TValue}"/> or a
+    /// <see cref="HashSet{T}"/> keyed by times missed it. To tell the labels apart, compare <see cref="DateTime"/> and
+    /// <see cref="Frame"/>.
+    /// </remarks>
+    public bool Equals(Time other)
+    {
+        return CompareTo(other) == 0;
+    }
+
+    /// <summary>
+    /// Whether two times carry the same label: the same calendar in the same frame. Equal times (<see cref="Equals(Time)"/>)
+    /// can carry different labels, the same instant in two frames (#512).
+    /// </summary>
+    internal bool HasSameLabel(Time other)
+    {
+        return DateTime.Ticks == other.DateTime.Ticks && object.Equals(Frame, other.Frame);
+    }
+
+    /// <summary>
+    /// The equality of labels (<see cref="HasSameLabel"/>), for the library's caches whose values carry their key as a
+    /// label (the orientations of a <see cref="IO.Astrodynamics.Frames.Frame"/>, the range rates of the conjunction
+    /// search): a key in another frame, or a TDB tick next to one of the same TAI tick, is read again rather than given
+    /// the value of another label, as before 11.0.0, bit for bit (#512).
+    /// </summary>
+    internal static IEqualityComparer<Time> LabelComparer { get; } = new TimeLabelComparer();
+
+    private sealed class TimeLabelComparer : IEqualityComparer<Time>
+    {
+        public bool Equals(Time x, Time y) => x.HasSameLabel(y);
+
+        public int GetHashCode(Time time) => HashCode.Combine(time.DateTime.Ticks, time.Frame);
+    }
+
+    /// <summary>
+    /// The hash code of the instant: that of its TAI ticks (of its calendar for a default time), so that equal times,
+    /// in any frames, share it (#512).
+    /// </summary>
+    public override int GetHashCode()
+    {
+        return Frame is null ? DateTime.Ticks.GetHashCode() : TaiTicks().GetHashCode();
     }
 
     public int CompareTo(object obj)

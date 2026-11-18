@@ -30,8 +30,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.NotNull(planeAlignmentManeuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), planeAlignmentManeuver.ManeuverHoldDuration);
-            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), planeAlignmentManeuver.MinimumEpoch);
-            Assert.Equal(targetOrbit, planeAlignmentManeuver.TargetOrbit.AtEpoch(new TimeSystem.Time(2021, 01, 01)));
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), planeAlignmentManeuver.MinimumEpoch);
+            LabelAssert.Equal(targetOrbit, planeAlignmentManeuver.TargetOrbit.AtEpoch(new TimeSystem.Time(2021, 01, 01)));
             Assert.Equal(eng, planeAlignmentManeuver.Engine);
         }
 

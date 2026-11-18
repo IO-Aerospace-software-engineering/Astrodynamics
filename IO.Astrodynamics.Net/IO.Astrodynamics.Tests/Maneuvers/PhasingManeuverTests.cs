@@ -36,7 +36,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.NotNull(maneuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), maneuver.ManeuverHoldDuration);
-            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), maneuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), maneuver.MinimumEpoch);
             Assert.Equal(3.0, maneuver.TargetTrueLongitude);
             Assert.Equal((uint)2, maneuver.RevolutionNumber);
         }
@@ -55,8 +55,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.Equal(new Vector3(0.0, 14.039767793719875, 0.0), maneuver.DeltaV,TestHelpers.VectorComparer);
             Assert.Equal(6.0351723087570868, maneuver.FuelBurned,3);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T11:59:59.9196115"), TimeSpan.Parse("2.17:31:12.7762440")), maneuver.ManeuverWindow);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T11:59:59.9196115"), TimeSpan.FromSeconds(0.1207034)), maneuver.ThrustWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T11:59:59.9196115"), TimeSpan.Parse("2.17:31:12.7762440")), maneuver.ManeuverWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T11:59:59.9196115"), TimeSpan.FromSeconds(0.1207034)), maneuver.ThrustWindow);
         }
 
         // ---------------------------------------------------------------------------------------------------------------
