@@ -46,6 +46,8 @@
  * state relative to the Earth in J2000 at the epoch): the LEO of the issue (a = 6778.137 km, e = 0, i = 51.6 deg, node,
  * argument of perigee and mean anomaly 0 at 2024-03-01 12:00:00 TDB, conics_c with BODY399_GM) every 600 s over 1 h, and
  * the state of InstrumentPointingAttitudeTests.Execute (6678 km on +x, 7.727 km/s on +y at 2021-01-01 13:00:00 TDB).
+ * Rows of #740: the Sun and the Earth, the centre of those states, seen from the same points (spkcvo_c), as a
+ * CelestialAttitudeTarget reads them.
  *
  * Build and run from the repository root with the vendored CSPICE (N0067):
  *   gcc -O2 -I external-lib/includeLinux tools/light_time_reference/light_time_ref.c external-lib/cspice.a -lm -o light_time_ref
@@ -269,14 +271,20 @@ static void pointing_state(double et, const double obssta[6]) {
     printf("%s    {\"epoch_tdb\": %.17g, \"state\": [", first_row ? "" : ",\n", et);
     first_row = 0;
     for (int k = 0; k < 6; k++) printf("%s%.17g", k == 0 ? "" : ", ", obssta[k] * 1000.0);
-    printf("], \"moon\": {");
-    for (int f = 0; f < NFLAGS; f++) {
-        double state[6], lt;
-        spkcvo_c("MOON", et, "J2000", "OBSERVER", FLAGS[f], obssta, et, "EARTH", "J2000", state, &lt);
-        printf("%s\"%s\": [%.17g, %.17g, %.17g]", f == 0 ? "" : ", ", FLAGS[f], state[0] * 1000.0, state[1] * 1000.0,
-               state[2] * 1000.0);
+    printf("]");
+    /* #549: the Moon; #740: the Sun and the Earth, the centre of the state, as a CelestialAttitudeTarget reads them */
+    static const char *TARGETS[3][2] = {{"moon", "MOON"}, {"sun", "SUN"}, {"earth", "EARTH"}};
+    for (int t = 0; t < 3; t++) {
+        printf(", \"%s\": {", TARGETS[t][0]);
+        for (int f = 0; f < NFLAGS; f++) {
+            double state[6], lt;
+            spkcvo_c(TARGETS[t][1], et, "J2000", "OBSERVER", FLAGS[f], obssta, et, "EARTH", "J2000", state, &lt);
+            printf("%s\"%s\": [%.17g, %.17g, %.17g]", f == 0 ? "" : ", ", FLAGS[f], state[0] * 1000.0, state[1] * 1000.0,
+                   state[2] * 1000.0);
+        }
+        printf("}");
     }
-    printf("}}");
+    printf("}");
 }
 
 static void pointing(double gm) {

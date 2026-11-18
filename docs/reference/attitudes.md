@@ -265,6 +265,15 @@ Wraps an `ILocalizable` (celestial body, site) for use as an attitude target.
 - **`Aberration.None`** (default) — geometric instantaneous direction, consistent with the attitude pipeline and industry practice.
 - **`Aberration.LT`** — light-time corrected apparent direction, for photon-based scenarios (e.g., optical sensors observing distant targets).
 
+Every correction other than `None` is the target as the spacecraft sees it, as CSPICE's `spkcvo_c` corrects it from
+the spacecraft's state: the light time of `spkltc` from the spacecraft's position, and for the `+S` corrections the
+stellar aberration of `stelab` from its velocity relative to the solar system barycenter, the rule of
+`InstrumentPointingToAttitude` (a `Star` without light time). Before 11.0.0 the correction was the central body's: its
+light time, the stellar aberration of its velocity, and none at all for a target that is the central body itself
+([#740](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/740): from a LEO, 1.0e-6 rad for the
+Moon with `LT`, 2.5e-5 rad with `LT+S`, 1.0e-4 rad for the Earth with `LT`). `None` is the geometric direction, bit for
+bit as before.
+
 ```csharp
 // Inputs: sun and moon (CelestialBody)
 // Default: geometric (Aberration.None)

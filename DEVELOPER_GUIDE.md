@@ -1537,7 +1537,7 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 
 **IAttitudeTarget system**: The `IAttitudeTarget` interface enables orbital directions and celestial bodies to be used interchangeably as TRIAD targets:
 - `OrbitalDirectionTarget` — predefined static instances: `.Prograde`, `.Retrograde`, `.Nadir`, `.Zenith`, `.Normal`, `.AntiNormal`
-- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris (default: `Aberration.None`; configurable, e.g. `new CelestialAttitudeTarget(moon, Aberration.LT)` for photon-based scenarios)
+- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris (default: `Aberration.None`; configurable, e.g. `new CelestialAttitudeTarget(moon, Aberration.LT)` for photon-based scenarios, the target as the spacecraft sees it, as `spkcvo_c` corrects it from the spacecraft's state, #740)
 - `OrbitalDirection` enum: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
 
 Key features:

@@ -256,6 +256,22 @@ release are listed under **Known limitations**.
   (2026-11-17), the nine corrections: the boresight 1.0e-13 rad from `spkcvo_c`'s Moon from a LEO (8 states), 1.1e-12
   rad from `spkcpt_c`'s site from a LEO (3 states), 1.6e-16 rad from the closed form of a star at 20 and 2000 pc. See
   Changed for the new parameter.
+- **`CelestialAttitudeTarget` corrected the light time from the central body, not the spacecraft** ([#740](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/740)).
+  `GetDirection` read the target from the observer of the state, the central body, with the correction asked, and
+  subtracted the spacecraft's position: the light time was the central body's, the stellar aberration of `+S` took the
+  central body's velocity, and a target that is the central body itself got no correction (measured on f70ee32 from the
+  LEO of the `pointing` rows of `tools/light_time_reference`, 8 states: the Moon 1.0e-6 rad from `spkcvo_c` with `LT`,
+  the Earth 1.0e-4 rad with `LT`; a TRIAD on the Moon with `LT` and the Sun with `LT+S` 1.0e-6 rad on its primary and
+  1.9e-5 rad on the plane of its secondary). Every correction other than `None` is now the target as the spacecraft
+  sees it, `CelestialItem.ApparentPositionFromState`, as `spkcvo_c` corrects it, the rule of
+  `InstrumentPointingToAttitude` since #549; `None` keeps the geometric difference, bit for bit
+  (`CelestialAttitudeTargetTests`: the Moon, the Sun and the Earth against `spkcvo_c`, nine corrections, 1.1e-13,
+  1.6e-16 and 6.2e-12 rad, the Earth's 4.2e-5 m across the line of sight below the 3.6 mm the Earth covers in the
+  resolution of a double 2024 epoch; through `TriadAttitude`, 5.8e-14 rad on the primary and 7.4e-15 rad on the plane;
+  Linux x64, thresholds provisional; red on f70ee32). The conformance runner keeps the model of `pointing_triad`, the
+  directions LT-corrected from the Earth's centre (`TriadSolver.EarthCentreLightTimeTarget`), at 3.8e-16 rad from its
+  golden as before; with `CelestialAttitudeTarget` it would be 1.022e-6 rad away, the variant `lt_from_spacecraft`
+  (`spkcpo`, 1.0225e-6 rad) of the case's reference check.
 - **`InitialOrbitDetermination.CreateFromObservation_Gauss` read its observer with light time from the centre of motion**
   ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), found when the fixes of this
   release were merged). The method takes the observer's position R at the epoch of each observation (H. D. Curtis,
@@ -4140,6 +4156,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star` target takes no light time, so only its `+S` corrections move it, by its stellar aberration.
   Migration: pass `Aberration.None` for the former geometric direction of a celestial target; recompile, the
   constructor's signature changed.
+- **`CelestialAttitudeTarget` corrects from the spacecraft** ([#740](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/740), Fixed above). An attitude built
+  on a `CelestialAttitudeTarget` with a correction other than `None` (`TriadAttitude` and its records and CKs) moves:
+  from a LEO by 1.0e-6 rad for the Moon with `LT`, about 2.5e-5 rad with a `+S` correction, 1.0e-4 rad for the central
+  body with `LT`. `None`, the default, is unchanged, bit for bit. No signature changes.
 - **Breaking: `InitialOrbitDetermination.CreateFromObservation_Gauss` reads the observer at its geometric position**
   ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), Fixed above). The observer's
   position relative to the centre of motion at each observation epoch is read without light time (`Aberration.None`),
