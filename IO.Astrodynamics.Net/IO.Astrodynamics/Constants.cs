@@ -18,7 +18,13 @@ public static class Constants
     public const double CivilTwilight = 6.0 * Deg2Rad;
     public const double NauticalTwilight = 12.0 * Deg2Rad;
     public const double AstronomicalTwilight = 18.0 * Deg2Rad;
-    public const double Parsec2Meters = 3.085677581E+16;
+
+    /// <summary>
+    /// The parsec in meters: 648000/π astronomical units (IAU 2015 Resolution B2) of 149597870700 m (IAU 2012 Resolution
+    /// B2), 30856775814913672.789 m, the nearest double. Before 11.0.0 it was 3.085677581e16 m, 1.59e-10 relative too small
+    /// (#733).
+    /// </summary>
+    public const double Parsec2Meters = 3.0856775814913673E+16;
     public const double SolarMeanRadiativeLuminosity = 3.828E+26;
     public const double C = 299792458.0;
     public const double StefanBoltzmann = 5.670374419e-8; // W m^-2 K^-4

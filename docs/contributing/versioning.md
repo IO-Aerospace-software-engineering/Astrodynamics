@@ -53,8 +53,9 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, the equality of frames, the axes the TRIAD factories point, and the straight-line motion of a star and
-its proper motion in right ascension as a true angle. **Deprecated** lists
+public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
+proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked and the
+parsec of 648000/π au. **Deprecated** lists
 `Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
 `Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -3888,6 +3889,56 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`TleParametersTests.Entry_NegativeRevolutionNumber_NamesRevolutionNumberAtEpoch` and
   `OmmReaderTests.ReadFromString_NegativeRevAtEpoch_NamesTheKeywordAndTheParameter`, 6 rows red on a85098d).
 
+- **`Constants.Parsec2Meters` was truncated** ([#733](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/733)).
+  It was 3.085677581e16 m, 1.592e-10 relative below the parsec, 648000/π au exactly (IAU 2015 Resolution B2) with the
+  au of 149597870700 m (IAU 2012 Resolution B2), 30856775814913672.789 m. It is now 3.0856775814913673e16, the nearest
+  double, 30856775814913672 m (decided by S. Guillet, 2026-11-17): the quotient at 40 digits (mpmath) and in decimal (28
+  digits), each read back by `double.Parse` (`StarTests.Parsec2Meters_Is648000OverPiAstronomicalUnits`, red on a85098d).
+  It sets a star's distance from its parallax: every `Star.Distance`, and every position of a star from the solar system
+  barycenter, grows by 1.592e-10 relative (a parallax of 0.3792″: 8.13733539293249e16 m before, 8.13733539422829e16 m
+  now, within 3 roundings of the exact quotient, `StarTests.Create`, which held the old snapshot), its direction from
+  the barycenter unchanged bit for bit; from an observer at r_obs the direction moves by at most |r_obs|/r · 1.6e-10
+  (6e-16 rad for a star at 1.3 pc seen from 1 au). The tests of the straight line of #718 measure against the star's own
+  `Distance` and do not move. The reference of `StarOccultationTests`
+  (`tools/occultation_reference/star_occultation_reference.py`, spiceypy 8.4.0, CSPICE N0067) takes the new parsec: its
+  parallaxes, declinations and directions move in their last digit, its edges not at all; the test's literals are
+  regenerated, its worst edge 2.38 µs and direction 1.19e-16 rad on Linux x64, within the thresholds of 4.8e-6 s and
+  4.4e-16 rad.
+
+- **A `Star` accepted a parallax that gives no distance** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732)).
+  The constructor stored any parallax and set `Distance` to 1/parallax parsecs, silently: 0 gave +∞ (−0 −∞) and
+  positions of infinities, a negative parallax a negative distance that put the star in the opposite direction (cosine −1
+  with its catalog direction for −0.5″; Gaia DR3 holds many negative parallaxes), NaN a NaN distance, ±∞ a distance of
+  0, and a positive parallax below about 1.7e-292″ a distance that overflowed to +∞ (measured on a85098d). The
+  constructor now throws `ArgumentOutOfRangeException` naming `parallax`, its value as `ActualValue`, for each of them,
+  0 included (decided by S. Guillet, 2026-11-17: refused, not a star at infinity, which every state, SPK and occultation
+  path would have to handle) (`StarTests.Constructor_AParallaxThatGivesNoDistance_Throws`, 9 values, red on a85098d;
+  `Constructor_APositiveParallax_GivesAFiniteDistance` for 1e-291″, 1e-6″ and 1e300″). Every star of the test suite
+  keeps its parallax.
+
+- **The state of a star carried a zero velocity while its position moved** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731)).
+  Since #718 a star moves along a straight line, but `GetGeometricStateRelativeTo` gave a zero velocity from the
+  barycenter and the opposite of the reference body's velocity from another, `GetEphemeris` the opposite of the
+  observer's, and `Propagate`, `PropagateAsync`, `Scenario.SimulateAsync` and so the SPK of `WriteEphemeris` a zero
+  velocity: Barnard's star seen from the Earth had a velocity 1.12 relative away from the reference (its 89 km/s
+  missing), its range rate 53.4 m/s (its velocity along the line of sight, turned by its proper motion since 2016;
+  measured on a85098d). The state now carries the star's space velocity, the derivative of its straight line,
+  r0 (μα* e_α + μδ e_δ) per Julian year of TDB, constant (decided by S. Guillet, 2026-11-17): against the derivative of
+  the straight line in long double (`tools/sofa_reference/starpm_ref.c --velocity`), every star of the harness at 0 to
+  1000 years, 1.98e-16 relative (`StarVelocityTests.GetGeometricStateRelativeTo_Velocity_IsTheDerivativeOfTheStraightLine`,
+  1 before); against the derivative of `iauStarpm` (rv = 0, central differences over ±1 year) with its two terms the
+  model does not take added in closed form (`iauStarpv`'s inertial radial velocity −c β²/(√(1 − β²) + 1) ≈ −v_t²/(2c)
+  along the catalog direction, 1.5e-4 of Barnard's speed, and its light time from the catalog epoch, a rate scaled by
+  1 − (ṙ(dt) − ṙ(0))/c), 3.62e-10 relative, the resolution of the central difference for Polaris
+  (`IsTheDerivativeOfIauStarpm`); within 6.2e-16 of the position of the central difference of the library's own
+  positions (`IsTheRateOfThePosition`); from the Earth, the space velocity minus the Earth's velocity from SPICE
+  (`GetEphemeris_FromTheEarth_IsTheSpaceVelocityMinusTheEarths`); and read back by `spkezr` from the SPK of
+  `WriteEphemeris`, 1.84e-16 relative (`WriteEphemeris_TheSpkHoldsTheSpaceVelocity`); all red on a85098d. Thresholds
+  twice the Linux x64 worst, provisional until the Windows x64 and macOS arm64 logs. The positions of the star's own
+  states are unchanged, bit for bit; the rate of the stellar aberration of the `+S` corrections, which takes the
+  relative velocity, follows. A star as observer takes its space velocity too, which moves positions on the paths that
+  integrate it (the Changed entry below). The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -4132,6 +4183,40 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   thresholds of 4.8e-6 s and 4.4e-16 rad. Migration: a caller that passed dα/dt passes `RightAscensionProperMotion` ×
   cos δ0, and multiplies its right ascension sigma and sigma rate by cos δ0; a caller that passed a catalog's `pmra`
   needs no change and now gets the star of the catalog.
+- **Breaking: the state of a star carries its space velocity** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731), Fixed above).
+  `Star.GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate`, `PropagateAsync` and
+  `Scenario.SimulateAsync` and the SPK of `WriteEphemeris` carry r0 (μα* e_α + μδ e_δ) per Julian year of TDB, where
+  they carried a zero velocity (from an observer, the opposite of its velocity). Migration: code that took the
+  velocity of a star's state as the observer's opposite subtracts the star's (its velocity from the barycenter);
+  the positions of these states are unchanged.
+- **Breaking: a star as observer moves at its space velocity** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731), Fixed above).
+  Every path that converts a state whose observer is a `Star` to another centre takes the star's space velocity where it
+  took a zero velocity: `OrbitalParameters.RelativeTo`, `GetEphemeris` and
+  `GetGeometricStateRelativeTo` of any target seen from a star (its velocity the target's minus the star's), and the
+  initial state of a spacecraft whose initial orbit is about a star, which `CentralBodyPropagator` converts to the Sun,
+  its central body for a star observer. The converted velocity moves by the star's velocity relative to the
+  barycenter, and a propagation from such a state by that velocity times the elapsed time: Barnard's star from Gaia DR3,
+  a state of (1e11, 2e11, 3e10) m and (1000, −2000, 300) m/s about it on 2026-11-17, converted to the Sun, went from
+  (989.8, −2004.7, 298.2) m/s to (−5885.2, 5482.1, 89798.8) m/s, and after 6 hours of propagation about the Sun its
+  position moved by 1.93e9 m (its 89.8 km/s times 6 hours; measured on a85098d and on the fix). The velocity of these
+  conversions is the state's plus the star's space velocity minus the target's from SPICE, its position the star's
+  position from the barycenter plus the state's minus the target's, 0 on Linux x64 against bounds of 8.0e-16 relative,
+  the rounding of the two orders of summation (`StarVelocityTests.RelativeTo_AStateAboutAStar_TakesTheStarsSpaceVelocity`,
+  `GetEphemeris_FromAStar_IsTheTargetsVelocityMinusTheStars`, `Propagate_ASpacecraftAboutAStar_StartsWithTheStarsSpaceVelocity`;
+  0.999, 0.84 to 1.12 and 0.999 relative on a85098d), provisional until the Windows x64 and macOS arm64 logs. Migration:
+  a state about a star whose velocity was given relative to the barycenter's motion (as the zero velocity of the star
+  made it) subtracts the star's space velocity (`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`)
+  to keep its former heliocentric velocity and trajectory; a state given relative to the star itself needs no change and
+  now moves with it.
+- **Breaking: the `Star` constructor refuses a parallax that is not finite and positive** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732), Fixed above).
+  `ArgumentOutOfRangeException` (`parallax`) for 0, a negative value, NaN, ±∞ and a positive value whose distance
+  overflows a double. Migration: a catalog record with a parallax of 0 or less (a Gaia DR3 star whose parallax is below
+  its error) is not a star with a distance: leave it out, or give it a parallax of its own choosing (the catalog's
+  parallax plus a prior, an upper bound of the distance).
+- **Breaking: `Constants.Parsec2Meters` is 648000/π au** ([#733](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/733), Fixed above).
+  3.0856775814913673e16 m, 1.592e-10 relative above the 3.085677581e16 m of 10.x, and so every `Star.Distance` and star
+  position from the barycenter. A public `const`: an assembly compiled against an earlier version keeps the old value
+  inlined until it is recompiled. Migration: none; a caller that needs the former value writes 3.085677581e16.
 - **Breaking: the element conversions of `SpiceAPI` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   Fixed above). `ConvertConicElementsToStateVector(KeplerianElements)` (an ellipse) and
   `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` (parameter `keplerianElements`, `equinoctialElements`)

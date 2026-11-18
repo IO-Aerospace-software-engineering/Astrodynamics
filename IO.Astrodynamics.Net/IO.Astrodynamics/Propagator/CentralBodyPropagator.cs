@@ -18,7 +18,8 @@ namespace IO.Astrodynamics.Propagator;
 /// <summary>
 /// Central-body-centered propagator for missions around any celestial body (LEO, GEO, lunar, interplanetary, etc.).
 /// The central body is inferred from the spacecraft's initial orbital parameters observer.
-/// When the observer is a Star or Barycenter, the Sun is used as the central body.
+/// When the observer is a Star or Barycenter, the Sun is used as the central body; an initial state about a star is
+/// converted to the Sun with the star's space velocity (before 11.0.0 a zero velocity, #731).
 /// </summary>
 public class CentralBodyPropagator : PropagatorBase
 {
