@@ -626,7 +626,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `ToKeplerianElements()` | Get osculating Keplerian elements (via SGP4) |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly from TLE data |
 | `AtEpoch(Time epoch)` | Get propagated orbital parameters |
-| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607) |
+| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607); a null or blank `cosparId` writes blank columns 10-17 (#604) |
 
 ```csharp
 // Parse TLE
@@ -857,6 +857,8 @@ OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format (
 |--------|---------|---------|
 | Full COSPAR ID | 1998-067A | OMM ObjectId |
 | TLE COSPAR ID | 98067A | TLE Line 1 |
+| No designator | `UNKNOWN` | OMM ObjectId of a TLE whose columns 10-17 are blank (#604) |
+| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`) |
 
 ```csharp
 // OMM automatically converts COSPAR ID format during ToTle()

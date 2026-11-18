@@ -242,7 +242,9 @@ public class Omm
     /// including the NORAD catalog ID which is mandatory for TLE format.
     /// </para>
     /// <para>
-    /// The object ID (international designator) is used as the COSPAR ID in the TLE.
+    /// The object ID (international designator) is used as the COSPAR ID in the TLE. <c>OBJECT_ID = UNKNOWN</c> (trimmed,
+    /// in any letter case), which <see cref="OrbitalParameters.TLE.TLE.ToOmm"/> writes for a TLE without a designator, gives
+    /// blank columns 10-17 (#604, decided by S. Guillet, 2026-11-18; before 11.0.0 the TLE could not be built).
     /// </para>
     /// <para>
     /// The OMM must be an SGP4 OMM in TEME about the Earth (<see cref="IsTleCompatible"/>): the TLE is in TEME, the frame
@@ -368,7 +370,8 @@ public class Omm
     /// Converts an OMM Object ID (international designator) to TLE COSPAR format.
     /// </summary>
     /// <param name="objectId">The OMM Object ID (e.g., "1998-067A").</param>
-    /// <returns>The TLE COSPAR ID (e.g., "98067A").</returns>
+    /// <returns>The TLE COSPAR ID (e.g., "98067A"); null, the blank designator, for <c>UNKNOWN</c> (trimmed, in any letter
+    /// case) or no value (#604).</returns>
     /// <remarks>
     /// OMM format: YYYY-NNNP (e.g., "1998-067A")
     /// TLE format: YYNNNP (e.g., "98067A")
@@ -376,10 +379,13 @@ public class Omm
     /// - NNN: Sequential launch number
     /// - P: Piece identifier (A, B, C, etc.)
     /// </remarks>
-    private static string ConvertObjectIdToCosparId(string objectId)
+    internal static string ConvertObjectIdToCosparId(string objectId)
     {
-        if (string.IsNullOrWhiteSpace(objectId))
-            throw new ArgumentException("Object ID cannot be null or empty.", nameof(objectId));
+        // UNKNOWN (trimmed, any case), or no value, is the blank designator of a TLE (#604); OmmMetadata refuses an empty
+        // OBJECT_ID (#708), so only UNKNOWN reaches here from an OMM
+        if (string.IsNullOrWhiteSpace(objectId) ||
+            string.Equals(objectId.Trim(), OmmMetadata.UnknownObjectId, StringComparison.OrdinalIgnoreCase))
+            return null;
 
         // Remove hyphen if present
         var cleanId = objectId.Replace("-", "");
