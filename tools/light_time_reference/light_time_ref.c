@@ -36,6 +36,9 @@
  * from S and from DSS-13 in G's frame; the Moon and S from G, and G from the Moon, in H's frame; the Moon from G and from
  * DSS-13 in S_TK; spkezr_c, or spkcpo_c and spkcpt_c with the locus CENTER.
  *
+ * Rows of #739: the Moon from the Earth and the Earth from the Moon in G's frame and in S_TK (spkezr_c), two objects of
+ * the kernels that the library reads by spkezr_c in J2000 and rotates to those frames, which only it holds.
+ *
  * Rows of the review of #489 (items 2 and 4 of its tests): C, the copy of DSS-13 from its coordinates (its position in
  * ITRF93 at J2000 TDB, recgeo_c on the Earth ellipsoid of pck00011), seen from the Moon and from the Earth (spkcpt_c at
  * those coordinates); the windows of G seen from the Moon with LT, 2024-01-01 TDB to 2024-01-02 TDB, from 60 s samples of
@@ -439,6 +442,13 @@ int main(int argc, char **argv) {
     frame = "S_TK";
     row("moon_from_site_in_spacecraft_frame", "MOON", NULL, by_spkcpo);
     row("moon_from_dss13_in_spacecraft_frame", "MOON", "DSS-13", by_spkezr);
+    /* #739: the same frames between two objects of the kernels, which the library reads by spkezr_c in J2000 and rotates */
+    frame = "G491_TOPO";
+    row("moon_from_earth_in_site_frame", "MOON", "EARTH", by_spkezr);
+    row("earth_from_moon_in_site_frame", "EARTH", "MOON", by_spkezr);
+    frame = "S_TK";
+    row("moon_from_earth_in_spacecraft_frame", "MOON", "EARTH", by_spkezr);
+    row("earth_from_moon_in_spacecraft_frame", "EARTH", "MOON", by_spkezr);
     frame = "J2000";
     refloc = "OBSERVER";
     /* The review of #489: C, the copy of DSS-13 */

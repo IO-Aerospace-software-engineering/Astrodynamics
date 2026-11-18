@@ -697,17 +697,85 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 referenceBody, out centerLightTime, out centerLightTimeRate);
         }
 
+        return RotatedAtTheCenterEpoch(corrected, frame, frame, observer, sign, centerLightTime, centerLightTimeRate);
+    }
+
+    /// <summary>
+    /// A light-time corrected state, in ICRF at the epoch of the observation, rotated to <paramref name="orientationFrame"/>
+    /// at t + <paramref name="sign"/>·lt_c, the epoch of the frame's centre, read at the 100 ns of a <see cref="Time"/> and
+    /// carried to the exact epoch by the frame's angular velocity, the derivative of the rotation scaled by
+    /// 1 + <paramref name="sign"/>·dlt_c, as CSPICE's <c>zzcorsxf</c> scales it (#593), labelled with
+    /// <paramref name="label"/>.
+    /// </summary>
+    private static StateVector RotatedAtTheCenterEpoch(StateVector corrected, Frame orientationFrame, Frame label, ILocalizable observer, double sign,
+        double centerLightTime, double centerLightTimeRate)
+    {
         var epoch = corrected.Epoch;
         double shift = sign * centerLightTime;
         var centerEpoch = ApparentPositionReader.Shift(epoch, shift);
         double residual = (epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds + shift) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
-        var orientation = Frame.ICRF.ToFrame(frame, centerEpoch);
+        var orientation = Frame.ICRF.ToFrame(orientationFrame, centerEpoch);
         // The angular velocity of the frame relative to ICRF, in the frame, as OrbitalParameters.ToFrame forms it
         var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
         var position = corrected.Position.Rotate(orientation.Rotation);
         position -= angularVelocity.Cross(position) * residual;
         var velocity = corrected.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(position) * (1.0 + sign * centerLightTimeRate);
-        return new StateVector(position, velocity, observer, epoch, frame);
+        return new StateVector(position, velocity, observer, epoch, label);
+    }
+
+    /// <summary>
+    /// A state that CSPICE read in J2000 with a light-time correction (<paramref name="corrected"/>, relative to
+    /// <paramref name="observer"/>, labelled ICRF at the epoch of the observation), in a frame that only the library holds
+    /// (<see cref="SpiceAPI.ManagedReadFrame"/>: TEME, CIRS, TIRS, the frame of a site built from coordinates or of a
+    /// managed spacecraft with an attitude record) as <c>spkezr_c</c> rotates a non-inertial frame (#739): at t ∓ lt_c,
+    /// lt_c the light time from the observer to the frame's centre (<see cref="SpiceAPI.NonInertialFrameCenter"/>) by the
+    /// light-time method of <paramref name="aberration"/>, the derivative of the rotation scaled by 1 ∓ dlt_c/dt, the rule
+    /// of the reference-body path (<see cref="ToApparentFrame"/>, #593). The centre's light time is that of <c>spkltc</c>,
+    /// both read from the solar system barycenter as CSPICE reads them: the observer from SPICE by its identifier, the
+    /// centre as the object of the frame when it is the frame's site or spacecraft, from SPICE by its identifier
+    /// otherwise (the Earth of TEME, CIRS and TIRS). Null for <see cref="Aberration.None"/>, a frame without a centre and a
+    /// frame centred on the observer, which the caller rotates at the epoch.
+    /// </summary>
+    /// <remarks>Called under the lock of the SPICE calls, which is re-entrant; it reads no static class whose type
+    /// initializer reads SPICE (the static objects read their data at their first use, #668).</remarks>
+    /// <param name="corrected">The state of the target relative to <paramref name="observer"/>, in ICRF.</param>
+    /// <param name="managed">The frame that gives the orientation (<see cref="SpiceAPI.ManagedReadFrame"/>).</param>
+    /// <param name="frame">The frame the caller gave, the label of the state.</param>
+    /// <param name="observer">The observer, read by SPICE by its identifier.</param>
+    /// <param name="aberration">The correction of the read.</param>
+    internal static StateVector ToManagedFrameAtTheCenterEpoch(StateVector corrected, Frame managed, Frame frame, ILocalizable observer,
+        Aberration aberration)
+    {
+        if (aberration == Aberration.None)
+        {
+            return null;
+        }
+
+        int? center = SpiceAPI.NonInertialFrameCenter(frame);
+        if (center == null || center == observer.NaifId)
+        {
+            return null;
+        }
+
+        var epoch = corrected.Epoch;
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var observerSsb = SpiceAPI.Instance.ReadEphemerisRaw(epoch, ssb, observer.NaifId, Frame.ICRF, Aberration.None);
+        ILocalizable centerObject = frame switch
+        {
+            SiteFrame { Site: var site } when site.NaifId == center => site,
+            Spacecraft.SpacecraftFrame { Spacecraft: var spacecraft } when spacecraft.NaifId == center => spacecraft,
+            _ => null
+        };
+        int centerId = center.Value;
+        Func<Time, double, StateVector> centerRead = centerObject != null
+            ? (t, shift) => ApparentPositionReader.StateAtCorrectedEpoch(centerObject, t, ssb, shift)
+            : (t, _) => SpiceAPI.Instance.ReadEphemerisRaw(t, ssb, centerId, Frame.ICRF, Aberration.None);
+        var centerSsb = centerRead(epoch, 0.0);
+        var centerRelative = new StateVector(centerSsb.Position - observerSsb.Position, centerSsb.Velocity - observerSsb.Velocity, observer, epoch,
+            Frame.ICRF);
+        CorrectFromAberrationCB(centerRead, epoch, observer, LightTimeOnly(aberration), centerRelative, observerSsb, ssb, out double centerLightTime,
+            out double centerLightTimeRate);
+        return RotatedAtTheCenterEpoch(corrected, managed, frame, observer, LightTimeIterations(aberration).Sign, centerLightTime, centerLightTimeRate);
     }
 
     /// <summary>

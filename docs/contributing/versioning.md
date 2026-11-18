@@ -242,6 +242,27 @@ release are listed under **Known limitations**.
   from those found on `spkcpt_c`. An inertial frame, a frame centred on the observer (the
   topocentric frame of the observing site, so the visibility searches of a spacecraft from a site) and `None` are
   unchanged, bit for bit.
+- **On the CSPICE path, a frame only the library holds took its orientation at the epoch of the observation** ([#739](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/739)).
+  When CSPICE reads the pair (an observer and a target both of the kernels), a frame that only the library holds (TEME,
+  CIRS, TIRS, the frame of a site given by its coordinates, the frame of a managed spacecraft with an attitude record) is
+  read in J2000 and rotated by the library, and that rotation was at t whatever the correction, where `spkezr_c` and the
+  reference-body path since #593 take a non-inertial frame at t ∓ lt_c of its centre (measured on f70ee32: the Earth
+  from the Moon with `LT` 3.93e4 m off in TIRS, in the frame of a site given by its coordinates and in that of a
+  spacecraft; the Moon from the Earth 618 m off in the site's frame and 671 m in the spacecraft's; TEME 4.3 mm, CIRS
+  0.93 mm). `SpiceAPI.ReadEphemeris` (by identifiers, both overloads, and the reads of `SpiceDataProvider`, so
+  `GetEphemeris` of a pair CSPICE reads) now rotates such a read by the rule of the reference-body path (the internal
+  `CelestialItem.ToManagedFrameAtTheCenterEpoch`): lt_c the light time of `spkltc` from the observer to the frame's
+  centre by the light-time method of the correction, both read from the solar system barycenter (the observer and, for
+  TEME, CIRS and TIRS, the Earth from SPICE by identifier; the frame's site or spacecraft as the library holds them), the
+  frame at t ∓ lt_c and the derivative of its rotation scaled by 1 ∓ dlt_c/dt; a geometric read, a frame without a centre
+  and a frame centred on the observer (the Moon from the Earth in TIRS) at t, bit for bit as before. Tests
+  (`LightTimeCorrectionTests`, red on f70ee32): the Moon from the Earth and the Earth from the Moon in the frame of a site
+  given by its coordinates and in the frame of a spacecraft held as an attitude record of ITRF93, against `spkezr_c` in
+  the TK frames of `tools/light_time_reference` (new rows), 2.7e-7 m and 7.6e-9 m/s, and 1.6e-3 m and 1.2e-7 m/s, the
+  resolution of the record's epoch as for #593; the Earth from the Moon in TIRS, CIRS, TEME and a frame named "tirs",
+  through `GetEphemeris`, `SpiceAPI.ReadEphemeris` and its window read, 0 from the ICRF read rotated at t ∓ lt of the
+  Earth with the rate of its light time, a closed form that reproduces `spkezr_c` in ITRF93 to 2.4e-7 m and 7.7e-9 m/s;
+  the Moon from the Earth in TIRS and every geometric read bit for bit (Linux x64, thresholds provisional).
 - **`InstrumentPointingToAttitude` ignored the light time for a celestial target** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549)). The law asked for
   `Aberration.LT`, but a celestial target is the centre of the maneuver, so `Attitude.TryExecute` made the state
   relative to it and the law read the target relative to itself, the zero vector: the pointing was geometric, the Moon
@@ -4165,6 +4186,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   it with `ToFrame(frame)`, which rotates at the state's epoch. The native library exports `GetFrameInfoProxy`, which
   the .NET layer of the same release calls: a native library of an earlier release throws `EntryPointNotFoundException`
   there.
+- **A light-time corrected read of two objects of the kernels in a frame only the library holds moves** ([#739](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/739), Fixed above).
+  With a correction other than `None`, a state read by CSPICE in TEME, CIRS, TIRS, the frame of a site given by its
+  coordinates or the frame of a managed spacecraft with an attitude record, not centred on the observer, takes the frame
+  at the epoch of its centre: the Earth from the Moon in TIRS with `LT` by 3.9e4 m, the Moon from the Earth in the frame
+  of a site by 620 m, TEME and CIRS by millimetres; the coordinate searches that read such states move with them.
+  `None`, inertial frames and frames centred on the observer are unchanged, bit for bit. Migration: for the former value,
+  read the state in ICRF and rotate it with `ToFrame(frame)`, which rotates at the state's epoch.
 - **Breaking: `InstrumentPointingToAttitude` applies its light time, and takes an `Aberration`** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), Fixed
   above; decided by S. Guillet, 2026-11-17). The constructor takes an optional `aberration`, `Aberration.LT` by default,
   what the law requested, exposed as `Aberration`; an undefined value throws `ArgumentOutOfRangeException`. Every
@@ -6089,10 +6117,7 @@ not listed.
   the tick, [Time Scales](../reference/time-and-windows.md#time-scales)): a UTC epoch at a coverage bound of a kernel,
   as `str2et` computes it, can be read up to about 1.1 µs outside it and throw SPKINSUFFDATA. Read 2 µs inside the
   bound.
-- **A light-time corrected state in a frame only the library holds, read by CSPICE.** An observer and a target SPICE
-  reads, in TEME, CIRS, TIRS, the frame of a site given by its coordinates or the frame of a managed spacecraft with an
-  attitude record, are read in J2000 and rotated at the epoch of the observation, not at the epoch of the frame's centre as the reference-body path rotates them since #593. **The
-  equatorial coordinates of a light-time corrected state in a non-inertial frame.** `ToEquatorial` of such a state
+- **The equatorial coordinates of a light-time corrected state in a non-inertial frame.** `ToEquatorial` of such a state
   (ITRF93, MOON_ME) rotates it to ICRF at its epoch
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)): 3.05e-6 rad in RA and 1.15e-6 rad in Dec for the Moon from the Earth with LT in MOON_ME; read it in ICRF.
 - **Illumination of a site above the ellipsoid**

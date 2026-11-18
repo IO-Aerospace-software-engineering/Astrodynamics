@@ -394,7 +394,9 @@ public class SpiceAPI
     /// The rotation (<see cref="ToManagedFrame"/>) runs under the lock of the SPICE calls: a <see cref="Surface.SiteFrame"/> reads
     /// the frame of its body through SPICE, under the same lock, which is re-entrant, and no static class whose type
     /// initializer takes it (#623); a <see cref="Body.Spacecraft.SpacecraftFrame"/> takes the lock of its attitude record inside it, which is
-    /// safe because no region of that lock calls SPICE.
+    /// safe because no region of that lock calls SPICE. With a light-time correction it also reads, under the same lock, the
+    /// observer and the frame's centre from the solar system barycenter (#739): SPICE by identifier, or the frame's site or
+    /// managed spacecraft, whose reads take the same re-entrant lock.
     /// </remarks>
     internal static Frame ManagedReadFrame(Frame frame) => frame switch
     {
@@ -475,15 +477,25 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558, #682): rotated by
-    /// <see cref="OrbitalParameters.OrbitalParameters.ToFrame"/> at the epoch of the read, as a state in ICRF converted
-    /// by the caller would be, then labelled with the frame the caller gave.
+    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558, #682), as <c>spkezr_c</c>
+    /// rotates a non-inertial frame (#739): with a light-time correction, at the epoch of the frame's centre seen from the
+    /// observer (<see cref="Body.CelestialItem.ToManagedFrameAtTheCenterEpoch"/>, the rule of the reference-body path,
+    /// #593); geometric, in a frame without a centre or in a frame centred on the observer, rotated by
+    /// <see cref="OrbitalParameters.OrbitalParameters.ToFrame"/> at the epoch of the read, as a state in ICRF converted by
+    /// the caller would be; then labelled with the frame the caller gave. Before 11.0.0 every correction was rotated at
+    /// the epoch of the read: 3.6e4 m for the Earth from the Moon in TIRS with LT.
     /// </summary>
     private static OrbitalParameters.StateVector ToManagedFrame(Vector3 position, Vector3 velocity, ILocalizable observer,
-        Time epoch, Frame managed, Frame frame)
+        Time epoch, Frame managed, Frame frame, Aberration aberration)
     {
-        var rotated = new OrbitalParameters.StateVector(position, velocity, observer, epoch, Frame.ICRF).ToFrame(managed)
-            .ToStateVector();
+        var icrf = new OrbitalParameters.StateVector(position, velocity, observer, epoch, Frame.ICRF);
+        var atTheCenterEpoch = Body.CelestialItem.ToManagedFrameAtTheCenterEpoch(icrf, managed, frame, observer, aberration);
+        if (atTheCenterEpoch != null)
+        {
+            return atTheCenterEpoch;
+        }
+
+        var rotated = icrf.ToFrame(managed).ToStateVector();
         return new OrbitalParameters.StateVector(rotated.Position, rotated.Velocity, observer, epoch, frame);
     }
 
@@ -1602,7 +1614,7 @@ public class SpiceAPI
                     var x = stateVectors[i];
                     orbitalParameters.Add(managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
-                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame));
+                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame, aberration));
                 }
             }
 
@@ -1794,7 +1806,9 @@ public class SpiceAPI
 
     /// <summary>
     /// The state of <paramref name="targetId"/> from <paramref name="observer"/> at <paramref name="epoch"/> (TDB label):
-    /// in a frame SPICE knows, as <c>spkezr_c</c> returns it; in a managed frame, read in J2000 and rotated (#558).
+    /// in a frame SPICE knows, as <c>spkezr_c</c> returns it; in a managed frame, read in J2000 and rotated (#558), a
+    /// light-time corrected read at the epoch of the frame's centre seen from the observer (<see cref="ToManagedFrame"/>,
+    /// #739).
     /// </summary>
     private static OrbitalParameters.StateVector ReadEphemerisAtGivenEpoch(Time epoch, ILocalizable observer, int targetId,
         Frame frame, Aberration aberration)
@@ -1809,7 +1823,7 @@ public class SpiceAPI
         var tdb = epoch.ToTDB();
         return managed == null
             ? new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, frame)
-            : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame);
+            : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame, aberration);
     }
 
     // The bound of | |q| − 1 | of a rotation from the native layer, a unit quaternion to rounding; the NaN rotation of a
