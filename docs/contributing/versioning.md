@@ -1253,7 +1253,7 @@ release are listed under **Known limitations**.
   of Φ and Ψ rejects, the state meeting its tolerance, is now accepted on the error of the state (decided by
   S. Guillet, 2026-10-26), the step that Hipparchus, Orekit and GMAT take, which keep Φ out of the step control. Φ of
   such a start stays within 1.3e-7 of central differences of whole propagations at 1e-14, the resolution of that
-  reference, and within 4.6e-11 of Φ at 1e-14 on the steps of the state. Only a step that its retry would repeat is
+  reference, and within 2.7e-10 of Φ at 1e-14 on the steps of the state (1.34e-10 at worst, Windows x64, CI run 44225490669). Only a step that its retry would repeat is
   accepted so, and only with a minimum step size below 10 ms, where the guard of 10 000 steps within 100 s can stop a Φ
   that stays noisy (its message naming Y). A propagation that completed before takes the same steps, bit for bit, and
   without `IncludeInStepControl` nothing changes. In SSB mode at 1e-11 that guard now stops the propagation, where the
@@ -3790,7 +3790,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a85098d in a fresh process: 16 479 752 bytes retained after 100 000 reads of ITRF93 0.5 s apart, about 940 kB after
   5 000 reads of CIRS, TIRS, TEME or GCRF, 2.8 MB for a site frame. A frame now keeps the orientation of its last epoch
   only, while the kernel pool is unchanged (a `LoadKernels`, `UnloadKernels` or `ClearKernels` makes the next read read
-  again), GCRF none (decided by S. Guillet, 2026-11-17): the same reads retain at most 9.0 kB, the noise of a full
+  again), GCRF none (decided by S. Guillet, 2026-11-17): the same reads retain at most 24 bytes, and the measure varies by up to 9.0 kB of either sign, the noise of a full
   collection (`ColdStartTests.FrameReads_RetainNoOrientationPerEpoch`, the child `frame-memory`, bound 18 000 bytes,
   twice the worst magnitude over Linux x64, Windows x64 and macOS arm64; `FrameTests.AFrame_HoldsNoOrientationStore_TheAttitudeRecordIsTheSpacecraftFrames`;
   both red on a85098d). The orientations are bit for bit those of a fresh frame
@@ -4083,7 +4083,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   were drawn again on every platform and set again at twice the worst over Linux x64, Windows x64 and macOS arm64 (CI
   run 44225490669), their distributions unchanged over draws one ulp apart: `AvoidanceFallbackTests` in RK7(8), the
   option at 1e-13 against its reference at 1e-14, state 9.26e-5 m, miss 7.56e-5 m and Pc 7.12e-7 on Windows x64
-  (4.42e-5 m, 3.63e-5 m and 3.67e-7 on main a85098d at worst, macOS arm64 6.36e-5 m), thresholds 1.9e-4 m, 1.6e-4 m and
+  (on main a85098d at worst 6.36e-5 m, 5.21e-5 m and 4.98e-7, macOS arm64), thresholds 1.9e-4 m, 1.6e-4 m and
   1.5e-6 (8.3e-5 m, 6.8e-5 m and 6.4e-7 before; over 81 draws on Linux x64, 4.9e-7 to 1.02e-4 m after and 7.3e-7 to
   9.62e-5 m before); `MinimumStepNoiseTests`, Φ at 1e-13 against Φ at 1e-14 on the steps of the state, 1.34e-10 on
   Windows x64 (4.95e-11 on main a85098d at worst), threshold 2.7e-10 (9.1e-11 before; over 40 draws on Linux x64,

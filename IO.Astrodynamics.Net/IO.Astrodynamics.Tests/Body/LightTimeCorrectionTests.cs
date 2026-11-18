@@ -554,8 +554,8 @@ public class LightTimeCorrectionTests
     private static readonly (double Position, double Velocity) Site489SunCorrected = (1.4e-4, 6.9e-9);
 
     // A non-inertial frame (#593), the frame of a site centred on a third object included (its rows below): geometric
-    // 4.510e-7 m and 7.122e-11 m/s on Linux x64, 3.083e-7 m and 5.719e-11 m/s on Windows x64 and macOS arm64
-    // (moon_from_dss13_in_site_frame); corrected 1.733e-5 m (moon_from_dss13_topo, LT+S) and 1.151e-8 m/s
+    // 4.510e-7 m and 7.122e-11 m/s on Linux x64, 3.083e-7 m (moon_from_dss13_in_site_frame) and 5.719e-11 m/s
+    // (site_from_moon_in_other_site_frame) on Windows x64 and macOS arm64; corrected 1.733e-5 m (moon_from_dss13_topo, LT+S) and 1.151e-8 m/s
     // (moon_from_dss13_in_site_frame) on the three, in ITRF93, the topocentric frame and MOON_ME centred on the observer;
     // MOON_ME centred on the target, 2.418e-4 m and 1.180e-9 m/s on the three, the resolution of the reference, whose
     // MOON_ME rotation changes by steps of 3.7e-4 m at 384000 km within a few ulps of its epoch (sxform_c from MOON_PA's

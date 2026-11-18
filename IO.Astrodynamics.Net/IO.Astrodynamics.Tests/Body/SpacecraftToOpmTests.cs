@@ -41,7 +41,8 @@ public class SpacecraftToOpmTests
     /// <summary>The state of the OPM against the solution of the propagation, in the frame of the initial orbit, m: the read
     /// of the stored states against the solution (RK7(8): Lagrange of the outputs against its dense output; Velocity-Verlet:
     /// against its cubic Hermite, at the output epochs and the impulse), 0 at an output. Worst 3.840e-9 m on Linux x64 and
-    /// Windows x64, 3.799e-9 m on macOS arm64 (RK7(8), ICRF, before the ignition; CI run 44225490669). Twice the worst,
+    /// Windows x64 (RK7(8), ICRF, before the ignition), 3.799e-9 m on macOS arm64 (RK7(8), ECLIPJ2000, after the ignition;
+    /// CI run 44225490669). Twice the worst,
     /// rounded up at the second significant digit.</summary>
     internal const double StateAgainstSolution = 7.7e-9;
 

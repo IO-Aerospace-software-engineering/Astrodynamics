@@ -71,7 +71,7 @@ public class SsbModeThirdBodyTests
     /// below 1e-10, the step control still meets a floor of about 1e-8 m/s² on the Earth's attraction, the quantization of
     /// the epoch at which the third bodies are read (ticks of 100 ns, TDB seconds near 7.6e8 s in a double, 1.2e-7 s,
     /// millimetres of the Earth's position at 30 km/s), absent about the Earth. Draws one ulp apart on Linux x64 (the
-    /// tolerance or the start moved by 1 to 40 ulps) take 38 to 62 steps, two consecutive draws up to 20 steps apart, so a
+    /// tolerance moved by 1 to 40 ulps or the start by 1 to 30 ulps) take 38 to 62 steps, two consecutive draws up to 20 steps apart, so a
     /// later redraw of the dynamics may cross <see cref="NudgedStepDifference"/> without a defect.</remarks>
     [Fact]
     public void Rk78_StepsFollowTheDynamics_NotTheRounding()

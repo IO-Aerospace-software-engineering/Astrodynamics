@@ -323,6 +323,7 @@ public partial class SpiceApiTest
     }
 
     // Twice the bytes a read of one epoch allocates after #563: 488 bytes on Linux x64, Windows x64 and macOS arm64 alike
-    // (CI run 44225490669; 1.28e-2 ms a read on Linux x64, where it was 720 408 bytes and 1.83 ms before, 2026-11-17)
+    // (CI run 44225490669: 6.05e-2 ms a read on Linux x64, 4.67e-2 ms on Windows x64, 1.28e-2 ms on macOS arm64; locally on
+    // Linux x64 it was 720 408 bytes and 1.83 ms a read before, 2026-11-17)
     private const long OneEpochOrientationReadBytes = 976;
 }

@@ -134,8 +134,8 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
 // (its frame blank) made SPICE fail. The Moon's center across the Sun's disc from DSS-65 on 2005-10-03, against gfoclt_c
 // with a POINT front body converged to 1e-9 s (tools/occultation_reference, "dss65_2005_point_front ANY NONE POINT":
 // 181599513.5947857 to 181604529.2431715 TDB seconds, on the kernels of the .NET tests). The C++ tests load another
-// earth_latest_high_prec.bpc, which moves DSS-65 and the edges by up to 6.26e-7 s (Linux x64, 2026-11-17): within 1.3e-6
-// s, twice that, provisional until the Windows x64 and macOS arm64 CI logs. Where the test calls CSPICE (not on Windows,
+// earth_latest_high_prec.bpc, which moves DSS-65 and the edges by up to 6.26e-7 s on Linux x64, Windows x64 and macOS
+// arm64 alike (CI run 44225490669): within 1.3e-6 s, twice that. Where the test calls CSPICE (not on Windows,
 // whose DLL does not export it), the proxy is gfoclt_c on the same kernels, step and window, bit for bit
 TEST(API, FindWindowsOnOccultationConstraintProxyOfAPointFrontBody)
 {
