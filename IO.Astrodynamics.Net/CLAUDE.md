@@ -860,6 +860,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Use `Opm.ToStateVector()` for simple state vector extraction
    - Unit conversions (km↔m, deg↔rad) are automatic
    - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)
+   - `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` write `REF_FRAME` and `MAN_REF_FRAME` as the CCSDS name of the frame: `ICRF` for `Frame.ICRF` (SPICE `J2000`, written before 11.0.0), the frame's own name otherwise (#339)
    - User-defined parameters support custom mission-specific data
 10. **Attitude Maneuvers**: When implementing attitude control:
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)

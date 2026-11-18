@@ -1105,7 +1105,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </para>
         /// <para>
         /// Maneuver delta-V components are exported in the same inertial reference frame as the state vector
-        /// (typically ICRF or EME2000). This is the frame in which the framework stores maneuver data.
+        /// (typically ICRF or EME2000). This is the frame in which the framework stores maneuver data. <c>REF_FRAME</c> and
+        /// each <c>MAN_REF_FRAME</c> carry the CCSDS name of that frame (#339): <c>ICRF</c> for <see cref="Frame.ICRF"/>
+        /// (the SPICE frame <c>J2000</c>, written before 11.0.0), the frame's own name otherwise.
         /// </para>
         /// <para>
         /// If you need maneuvers in an orbital frame (RSW, RTN, TNW), you must perform the frame transformation
@@ -1158,7 +1160,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 objectName: Name,
                 objectId: CosparId,
                 centerName: stateVector.Observer.Name,
-                referenceFrame: stateVector.Frame.Name,
+                referenceFrame: CcsdsFrameNames.ToCcsdsName(stateVector.Frame),
                 timeSystem: "UTC");
 
             // Create state vector DTO (converts m to km, m/s to km/s)
@@ -1188,7 +1190,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 {
                     if (maneuver is Maneuver.ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
                     {
-                        maneuverList.Add(impulseManeuver.ToOpmManeuverParameters(stateVector.Frame.Name));
+                        maneuverList.Add(impulseManeuver.ToOpmManeuverParameters(CcsdsFrameNames.ToCcsdsName(stateVector.Frame)));
                     }
                 }
 

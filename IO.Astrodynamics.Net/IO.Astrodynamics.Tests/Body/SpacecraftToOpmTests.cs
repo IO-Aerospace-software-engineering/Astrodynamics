@@ -123,7 +123,9 @@ public class SpacecraftToOpmTests
             Assert.Equal(read.Velocity.X / 1000.0, sv.XDot);
             Assert.Equal(read.Velocity.Y / 1000.0, sv.YDot);
             Assert.Equal(read.Velocity.Z / 1000.0, sv.ZDot);
-            Assert.Equal(initialFrame.Name, opm.Metadata.ReferenceFrame);
+            // The CCSDS name of the frame (#339): ICRF for Frame.ICRF (SPICE J2000), ECLIPJ2000 kept
+            Assert.Equal(frame, opm.Metadata.ReferenceFrame);
+            Assert.All(opm.Data.Maneuvers ?? [], m => Assert.Equal(frame, m.ManRefFrame));
 
             // Against the solution, in the frame of the initial orbit, which the integration keeps (#529)
             var (r, _) = solution.InterpolateAt(t);
@@ -174,7 +176,7 @@ public class SpacecraftToOpmTests
         var written = new Vector3(opm.Data.StateVector.X, opm.Data.StateVector.Y, opm.Data.StateVector.Z) * 1000.0;
         double fromSgp4 = (written - sgp4.Position).Magnitude();
         _output.WriteLine($"MEASURE #658 TLE propagated: the OPM state {fromSgp4:E3} m from SGP4 at the end of 1 h");
-        Assert.Equal(Frame.TEME.Name, opm.Metadata.ReferenceFrame);
+        Assert.Equal("TEME", opm.Metadata.ReferenceFrame);
         Assert.Equal(read.Position.X / 1000.0, opm.Data.StateVector.X);
         Assert.Equal(read.Velocity.Z / 1000.0, opm.Data.StateVector.ZDot);
         Assert.True(fromSgp4 > 1000.0, $"{fromSgp4:E3} m");

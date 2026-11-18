@@ -1514,5 +1514,51 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region CCSDS frame names (#339)
+
+        /// <summary>
+        /// <c>Opm.CreateFromStateVector</c> writes <c>REF_FRAME</c> as the CCSDS name of the state's frame (#339, decided by
+        /// S. Guillet, 2026-11-18): <c>ICRF</c> for <see cref="Frames.Frame.ICRF"/>, whose SPICE name is <c>J2000</c>, and
+        /// <c>GCRF</c> for <see cref="Frames.Frame.GCRF"/>; a frame whose name is already a CCSDS one keeps it. The expected
+        /// names are literals of CCSDS's list of reference frames, the values of <c>CcsdsReferenceFrame</c> that the validator
+        /// accepts. Before 11.0.0 <c>J2000</c> was written, which no CCSDS list holds and <c>OpmValidator</c> warned about.
+        /// The OPM read back is in <see cref="Frames.Frame.ICRF"/> for both names (they share the ICRF axes), its state the
+        /// state written.
+        /// </summary>
+        [Theory]
+        [InlineData("ICRF", "ICRF")]
+        [InlineData("GCRF", "GCRF")]
+        [InlineData("TEME", "TEME")]
+        [InlineData("ECLIPJ2000", "ECLIPJ2000")]
+        public void CreateFromStateVector_WritesTheCcsdsNameOfTheFrame(string frameName, string expected)
+        {
+            var frame = frameName switch
+            {
+                "ICRF" => Frames.Frame.ICRF,
+                "GCRF" => Frames.Frame.GCRF,
+                "TEME" => Frames.Frame.TEME,
+                _ => Frames.Frame.ECLIPTIC_J2000
+            };
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, CentreEpoch);
+            var written = new StateVector(new Vector3(6778137.0, 1000.0, -2000.0), new Vector3(10.0, 7500.0, 1.0), earth, CentreEpoch, frame);
+
+            var opm = Opm.CreateFromStateVector("SAT", "2024-002A", written);
+            var xml = opm.ToXmlString();
+
+            Assert.Equal(expected, opm.Metadata.ReferenceFrame);
+            Assert.Contains($"<REF_FRAME>{expected}</REF_FRAME>", xml);
+            Assert.NotNull(opm.Metadata.ReferenceFrameEnum);
+            Assert.DoesNotContain(opm.Validate().Issues, i => i.Path == "Metadata.ReferenceFrame");
+
+            // Read back: ICRF and GCRF in Frame.ICRF, the others in their own frame; the state is the state written
+            var read = Opm.LoadFromString(xml).ToStateVector(earth);
+            var expectedFrame = frameName is "ICRF" or "GCRF" ? Frames.Frame.ICRF : frame;
+            Assert.Equal(expectedFrame.Name, read.Frame.Name);
+            Assert.Equal(written.Position, read.Position);
+            Assert.Equal(written.Velocity, read.Velocity);
+        }
+
+        #endregion
     }
 }
