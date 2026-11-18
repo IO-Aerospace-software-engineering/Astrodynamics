@@ -169,9 +169,10 @@ public partial class IntegratorEventTests
         Assert.Equal(0.0, atEnd);
         Assert.Equal(0.0, stored);
 
-        // The OPM of the spacecraft agrees with the final state and the fuel: its mass is the mass after the burn, its one
-        // maneuver the ΔV between the state before and the state after, and the fuel burned
-        var opm = spacecraft.ToOpm();
+        // The OPM of the spacecraft at the end agrees with the final state and the fuel: its mass is the mass after the burn,
+        // its one maneuver the ΔV between the state before and the state after, and the fuel burned (at the end: since #658
+        // the OPM carries the state, the mass and the maneuvers of its epoch, the initial one by default)
+        var opm = spacecraft.ToOpm(epoch: end);
         var entry = Assert.Single(opm.Data.Maneuvers);
         double opmDeltaV = (entry.DeltaVKmPerSec * 1000.0 - (interpolated - before.EndVelocity)).Magnitude();
         double opmFuel = System.Math.Abs(-entry.ManDeltaMass - (massBefore - spacecraft.GetTotalMass()));
