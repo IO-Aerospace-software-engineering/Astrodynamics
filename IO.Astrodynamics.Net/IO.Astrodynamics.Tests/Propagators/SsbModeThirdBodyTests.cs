@@ -71,8 +71,8 @@ public class SsbModeThirdBodyTests
     /// below 1e-10, the step control still meets a floor of about 1e-8 m/s² on the Earth's attraction, the quantization of
     /// the epoch at which the third bodies are read (ticks of 100 ns, TDB seconds near 7.6e8 s in a double, 1.2e-7 s,
     /// millimetres of the Earth's position at 30 km/s), absent about the Earth. Draws one ulp apart on Linux x64 (the
-    /// tolerance moved by 1 to 40 ulps or the start by 1 to 30 ulps) take 38 to 62 steps, two consecutive draws up to 20 steps apart, so a
-    /// later redraw of the dynamics may cross <see cref="NudgedStepDifference"/> without a defect.</remarks>
+    /// tolerance moved by 1 to 40 ulps or the start by 1 to 30 ulps) take 38 to 62 steps, two consecutive draws up to 20 steps apart, so
+    /// <see cref="NudgedStepDifference"/> is set from those draws (decided by S. Guillet, 2026-11-18).</remarks>
     [Fact]
     public void Rk78_StepsFollowTheDynamics_NotTheRounding()
     {
@@ -101,9 +101,11 @@ public class SsbModeThirdBodyTests
     /// 44225490669).</summary>
     private const int Rk78StepBudget = 98;
 
-    /// <summary>Twice the worst difference with the fix, 5 steps on macOS arm64 (46 and 41; 2 on Linux x64 and Windows
-    /// x64; CI run 44225490669).</summary>
-    private const int NudgedStepDifference = 10;
+    /// <summary>Twice the worst difference of the draws one ulp apart on Linux x64, 20 steps (the start moved by one
+    /// ulp; 16 for the tolerance), above the CI's 5 steps on macOS arm64 (46 and 41; 2 on Linux x64 and Windows x64; CI
+    /// run 44225490669): the rule's 10 would be crossed by a later redraw of the dynamics without a defect (decided by
+    /// S. Guillet, 2026-11-18).</summary>
+    private const int NudgedStepDifference = 40;
 
     /// <summary>Twice the worst distance with the fix, 5.632e-3 m on Linux x64 and Windows x64 (2.636e-3 m on macOS arm64;
     /// CI run 44225490669), rounded up.</summary>
