@@ -21,7 +21,8 @@ The band model of the library before #753 (#459, option 1, decided by S. Guillet
 advanced at Barker's rate sqrt(mu / (2 q^3)), with the conic's semi-latus rectum q (1 + e) for the state; its distance
 to the exact motion of the conic is the model error the tests print. Since #753 (decided by S. Guillet, 2026-11-18) the
 library moves the band as the exact conic, in universal variables, which sections 9 and 10 measure: the conic's times
-to a true anomaly and a radius, and its two-body states over |e - 1| from 1e-12 to 1e-5.
+to a true anomaly and a radius, and its two-body states over |e - 1| from 1e-12 to 1e-5; section 11 gives the functions
+of the universal variables themselves (UniversalKeplerTests).
 
 Each value is written as a C# literal, a double or a pair (hi, lo) of doubles whose sum is the 60-digit value, so that
 an error of the order of an ulp is measured without the rounding of the reference. mu is the Earth GM of gm_de440.tpc
@@ -343,3 +344,56 @@ for de in (-1e-5, -1.1e-6, -9.9e-7, -5e-7, -1e-7, -1e-8, -1e-10, -1e-12, 1e-12, 
         for dt in (600, 86400, -3600):
             after = c.conic_after(dt)
             print(f'        new({de!r}, {nu0!r}, {vec(state[0])}, {vec(state[1])}, {dt!r}.0, {vec(after[0])}, {vec(after[1])}),')
+
+# 11. #753: the functions of the universal variables at 60 digits, as the C# tables of UniversalKeplerTests: the Stumpff
+# functions C(z) = (1 - cos sqrt z) / z, S(z) = (sqrt z - sin sqrt z) / z^(3/2) (cosh and sinh for z < 0), 1 - z S and
+# 2 - z C of a double z; and, for doubles e, q and Barker's D = tan(nu / 2), the universal anomaly chi of D (sqrt(a) E,
+# sqrt(-a) H), its time from the periapsis (q chi + e chi^3 S(z)) / sqrt(mu) and the root chi of the universal Kepler
+# equation for that time rounded to a double, on ellipses and hyperbolas of the band and beyond it (z up to 30)
+
+
+def stumpff(z):
+    z = mp.mpf(z)
+    if z == 0:
+        return mp.mpf(1) / 2, mp.mpf(1) / 6
+    if z > 0:
+        y = mp.sqrt(z)
+        return (1 - mp.cos(y)) / z, (y - mp.sin(y)) / y ** 3
+    y = mp.sqrt(-z)
+    return (mp.cosh(y) - 1) / -z, (mp.sinh(y) - y) / y ** 3
+
+
+def universal_of_barker(d, q, e):
+    d, q, e = mp.mpf(d), mp.mpf(q), mp.mpf(e)
+    if e == 1:
+        return mp.sqrt(2 * q) * d
+    a = q / (1 - e)
+    if e < 1:
+        return mp.sqrt(a) * 2 * mp.atan(mp.sqrt((1 - e) / (1 + e)) * d)
+    return mp.sqrt(-a) * 2 * mp.atanh(mp.sqrt((e - 1) / (e + 1)) * d)
+
+
+def time_of_universal(chi, q, e):
+    q, e = mp.mpf(q), mp.mpf(e)
+    c, s = stumpff((1 - e) / q * chi * chi)
+    return (q * chi + e * chi ** 3 * s) / mp.sqrt(MU)
+
+
+print('\nC# Stumpff (#753)')
+for z in (-50.0, -4.0, -1.0, -0.999, -0.5, -1e-6, 0.0, 1e-6, 0.5, 0.999, 1.0, 4.0, 30.0, 100.0):
+    c, s = stumpff(z)
+    zm = mp.mpf(z)
+    print(f'        ({z!r}, {pair(c)}, {pair(s)}, {pair(1 - zm * s)}, {pair(2 - zm * c)}),')
+
+print('\nC# Universal (#753)')
+for e in (1 - 5e-7, 1 + 5e-7, 1 - 1e-12, 0.5, 0.9, 1.5, 3.0):
+    for d in (0.3, -2.0, 30.0, 300.0):
+        if e > 1 and abs(d) * math.sqrt((e - 1) / (e + 1)) >= 1:
+            continue
+        q = 7e6
+        chi = universal_of_barker(d, q, e)
+        t = time_of_universal(chi, q, e)
+        td = float(t)
+        root = mp.findroot(lambda x: time_of_universal(x, q, e) - mp.mpf(td), chi)
+        nu = 2 * mp.atan(mp.mpf(d))
+        print(f'        ({e!r}, {d!r}, {pair(chi)}, {pair(t)}, {pair(root)}, {pair(mp.mpf((1 - e) / q) * chi * chi)}),')
