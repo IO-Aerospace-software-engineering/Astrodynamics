@@ -175,6 +175,8 @@ identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — nev
 - `NoradCatalogNumber.Format` / `.Parse` / `.TryParse` / `.IsValid` handle the encoding
 - `TLE.NoradCatalogId` returns the decoded numeric value
 - Alpha-5 letters count as 0 in the TLE checksum, and SGP4/SDP4 ignores the field entirely
+- The element set number defaults to `TLE.DefaultElementSetNumber`, 999, on every path (`TLE.Create`, `Configuration`,
+  `Omm.ToTle` without `ELEMENT_SET_NO`; #606)
 - Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
   instead of being silently truncated
 - The `TLE` constructor rejects lines whose catalog numbers disagree (`InvalidOperationException`)
@@ -556,7 +558,7 @@ The propagation system uses a segment-based architecture with event-driven maneu
 **Propagator Hierarchy**
 ```
 PropagatorBase (abstract)
-├── TLEPropagator         — SGP4/SDP4 from Two-Line Elements
+├── TLEPropagator         — SGP4/SDP4 from Two-Line Elements, sampled every ΔT from the start and at the window end (#598)
 └── CentralBodyPropagator — All numerical propagation (LEO, GEO, lunar, interplanetary)
 ```
 
@@ -836,7 +838,9 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 7. **Mean vs Osculating Elements**: Always check `ElementsType` when working with orbital parameters:
    - Use `ToOsculating()` for TLE position/velocity calculations
    - Never call `ToStateVector()` directly on mean KeplerianElements
-   - Use `TLE.Create()` only with mean elements (validates `ElementsType.Mean`)
+   - Use `TLE.Create()` only with mean elements of an Earth orbit in TEME (it validates `ElementsType.Mean`, `Frame.TEME` and
+     the Earth, NAIF id 399, `ArgumentException` otherwise; `ToTLE` refuses an orbit not about the Earth with
+     `InvalidOperationException`, #607)
    - NORAD catalog numbers are `int`, not `ushort`; values above 99999 use Alpha-5 encoding, and
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:

@@ -9,9 +9,21 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;
 
+/// <summary>
+/// Samples the SGP4/SDP4 state of a spacecraft whose initial orbital parameters are a <see cref="TLE"/> over a window,
+/// adds the samples to the spacecraft's stored states and returns them as a synthetic <see cref="PropagationSolution"/>.
+/// </summary>
+/// <remarks>
+/// The samples are those of the closed form of the grid, counted in ticks (#598): sample i at the window start plus
+/// i·<see cref="DeltaT"/>, i = 0 … ceil(L/ΔT) − 1, then the window end, so ceil(L/ΔT) + 1 samples, the last step shorter
+/// when ΔT does not divide the window length L; a grid point closer to the end than ΔT/10 is dropped, the last step then
+/// longer, up to 1.1 ΔT (a window given in UTC is a few ticks longer or shorter in TDB). Before 11.0.0 they were counted
+/// in whole seconds: a step below 1 s divided by zero, a fractional step ran past the window end, and a window that ΔT
+/// does not divide lost its end.
+/// </remarks>
 public class TLEPropagator : IPropagator
 {
-    private uint _svCacheSize;
+    private readonly Time[] _sampleEpochs;
     private StateVector[] _svCache;
     // Keyed by label (#512), as the orientations of a frame
     private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.LabelComparer);
@@ -19,6 +31,14 @@ public class TLEPropagator : IPropagator
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }
 
+    /// <summary>
+    /// Builds the propagator of <paramref name="spacecraft"/> over <paramref name="window"/>, sampled every
+    /// <paramref name="deltaT"/> and at the window end.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="spacecraft"/> is null.</exception>
+    /// <exception cref="ArgumentException">The initial orbital parameters of the spacecraft are not a TLE.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is zero or less (#598; before 11.0.0, a
+    /// step below 1 s threw <see cref="DivideByZeroException"/>), or gives more samples than an array holds.</exception>
     public TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan deltaT)
     {
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
@@ -28,20 +48,51 @@ public class TLEPropagator : IPropagator
             throw new ArgumentException("Spacecraft orbital parameters must be a two lines elements");
         }
 
-        DeltaT = deltaT;
-        var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector();
+        if (deltaT <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(deltaT), deltaT, "The step must be above zero.");
+        }
 
-        _svCacheSize = (uint)Window.Length.TotalSeconds / (uint)DeltaT.TotalSeconds + 1;
-        _svCache = new StateVector[_svCacheSize];
+        DeltaT = deltaT;
+
+        // Counted in ticks: i·ΔT from the start, then the window end (#598), ceil(L/ΔT) + 1 samples; a grid point closer
+        // to the end than a tenth of the step is dropped, the last step then up to 1.1 ΔT long, as the stored states drop
+        // an output that close to an impulse: a window given in UTC is a few ticks longer or shorter in TDB than in UTC,
+        // and its last step would otherwise be a few ticks long, two stored states a few ticks apart, whose read is
+        // ill-conditioned (4.3 km off SGP4 for the ISS over one UTC hour at 60 s; a defect of the stored-state read, not
+        // fixed here, listed under the known limitations of 11.0.0)
+        long lengthTicks = Window.Length.Ticks;
+        long stepTicks = DeltaT.Ticks;
+        long intervals = lengthTicks / stepTicks + (lengthTicks % stepTicks == 0 ? 0 : 1);
+        if (intervals > 1 && (lengthTicks - (intervals - 1) * stepTicks) * 10 < stepTicks)
+        {
+            intervals--;
+        }
+        if (intervals >= Array.MaxLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(deltaT), deltaT, $"The step gives {intervals + 1} samples over the window, more than an array holds.");
+        }
+
+        _sampleEpochs = new Time[intervals + 1];
+        for (long i = 0; i < intervals; i++)
+        {
+            _sampleEpochs[i] = Window.StartDate.Add(TimeSpan.FromTicks(stepTicks * i));
+        }
+
+        _sampleEpochs[intervals] = Window.EndDate;
+
+        var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector();
+        _svCache = new StateVector[_sampleEpochs.Length];
         _svCache[0] = initialState;
     }
 
     public PropagationSolution Propagate()
     {
         _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.StartDate, Frame.ICRF);
-        for (int i = 1; i < _svCacheSize; i++)
+        int sampleCount = _sampleEpochs.Length;
+        for (int i = 1; i < sampleCount; i++)
         {
-            _svCache[i] = Spacecraft.InitialOrbitalParameters.ToStateVector(Window.StartDate.Add(DeltaT * i));
+            _svCache[i] = Spacecraft.InitialOrbitalParameters.ToStateVector(_sampleEpochs[i]);
         }
 
         _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.EndDate, Frame.ICRF);
@@ -49,21 +100,23 @@ public class TLEPropagator : IPropagator
         // Build synthetic PropagationSolution from TLE states, with the accelerations of SGP4 at the samples, which the cubic
         // Hermite of a step interpolates the velocity with (#675: zero before, up to 49.9 m/s off SGP4 between samples).
         // Read before the spacecraft receives the samples: an SGP4 that fails within 1 s of a window end leaves it as it was
-        var accelerations = new Vector3[_svCacheSize];
-        for (int i = 0; i < _svCacheSize; i++)
+        var accelerations = new Vector3[sampleCount];
+        for (int i = 0; i < sampleCount; i++)
         {
-            accelerations[i] = Sgp4Acceleration(Window.StartDate.Add(DeltaT * i));
+            accelerations[i] = Sgp4Acceleration(_sampleEpochs[i]);
         }
 
         Spacecraft.AddPropagatedStates(_svCache);
 
         var solution = new PropagationSolution { Owner = Spacecraft };
-        var segment = new PropagationSegment(Window.StartDate, (int)_svCacheSize);
+        var segment = new PropagationSegment(Window.StartDate, sampleCount);
 
-        for (int i = 0; i < _svCacheSize - 1; i++)
+        // The steps join the samples, in TDB seconds from the start (the solution's time argument): ΔT each, the last
+        // shorter, or up to 1.1 ΔT, when ΔT does not divide the window (#598); i·ΔT exactly for a whole-second step
+        for (int i = 0; i < sampleCount - 1; i++)
         {
-            double stepSize = DeltaT.TotalSeconds;
-            double cumulativeTime = i * stepSize;
+            double cumulativeTime = (_sampleEpochs[i] - Window.StartDate).TotalSeconds;
+            double stepSize = (_sampleEpochs[i + 1] - Window.StartDate).TotalSeconds - cumulativeTime;
             segment.AddStep(new AcceptedStep(
                 cumulativeTime, stepSize,
                 _svCache[i].Position, _svCache[i].Velocity,

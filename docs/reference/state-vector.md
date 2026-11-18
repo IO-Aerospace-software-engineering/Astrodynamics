@@ -115,7 +115,7 @@ small angular momentum.
 | `ToFrame(Frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable, Aberration)` | Transform to a different center: the state minus the new center as the current center sees it, corrected by the aberration; the state itself is not moved in time, so the result is not the object seen from the new center with light time (for a site, `Site.GetEphemeris`, [#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)) |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(TLE.Configuration)` | Convert to TLE format |
+| `ToTLE(TLE.Configuration)` | Convert to TLE format (a fit of SGP4 mean elements in TEME); an orbit about the Earth only, `InvalidOperationException` naming the centre otherwise (#607) |
 
 ## See Also
 

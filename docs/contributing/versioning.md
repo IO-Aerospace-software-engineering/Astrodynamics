@@ -293,6 +293,28 @@ release are listed under **Known limitations**.
   it), and `Iau2006Model.FrameBias()` returned its cached static, which any caller could corrupt for the next. They now
   copy in and out (internal `Matrix.Copy`, which `CdmCovarianceMatrix` takes since #717), `Matrix` kept mutable (decided
   by S. Guillet, 2026-11-17: `Set` is how callers build a covariance); `MatrixHoldersTests` (red on a85098d: 6 of its 7 tests, the default matrix held as it is passing).
+- **`TLEPropagator` counted its samples in whole seconds** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598)). Its
+  sample count was `(uint)L / (uint)ΔT + 1` for a window of L seconds: a step below 1 s divided by zero
+  (`DivideByZeroException`), a fractional step was counted as its whole seconds, so its samples i·ΔT ran past the window
+  end (1.5 s over 10 s: 11 samples to +15 s), and a window that the step does not divide lost its end (90 s at 60 s:
+  2 samples, the last at +60 s, with no state and no solution after it). The samples are now counted in ticks: i·ΔT from
+  the start for i = 0 … ceil(L/ΔT) − 1, then the window end, so ceil(L/ΔT) + 1 samples, each the SGP4 state of its
+  epoch, the steps of the solution the intervals between them, the last shorter. Beyond the issue, a grid point closer
+  to the end than ΔT/10 is dropped, the last step then up to 1.1 ΔT, as the stored states drop an output that close to an
+  impulse (an open choice of this release, recommended, to be decided by S. Guillet): a window given in UTC is a few
+  ticks longer or shorter in TDB, one UTC hour from the ISS TLE's epoch 3600 s and 11 ticks, and with ceil(L/ΔT) + 1
+  samples its 62nd, 1.1 µs after the 61st, puts the stored-state read of the sampled spacecraft 4.336e3 m off SGP4 at
+  +3570 s (`TlePropagationTests`, Linux x64), the defect of two stored states a few ticks apart listed under **Known
+  limitations**, which the rule keeps `TLEPropagator` from meeting without fixing it; a step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
+  whole-second step divides keeps its samples and its solution, bit for bit (`TLEPropagatorTests`: 121 samples at 0.5 s
+  over 1 min, 3 at 60 s over 90 s, 8 at 1.5 s over 10 s, 61 at 60 s over 3600.5 s and over one UTC hour, the last at the
+  window end, red on a85098d; 61 at 60 s over 3600 s unchanged; between +60 s and +90 s the Hermite of the 30 s step is
+  2.7e-5 m/s and 0.037 m off SGP4, Linux x64, bounds 5.5e-5 m/s and 0.075 m provisional; 251 m/s and 222 km before,
+  past the end of the solution). A window given in UTC whose TDB length the step does not divide ends at its TDB end
+  instead of the grid point before it: for the ISS at 60 s over one UTC hour the last sample moves by 1.1 µs, and the
+  Lagrange read of the samples between them, 7.593e-4 m from SGP4 before, is 9.062e-4 m (the SGP4 state of an instant off
+  the grid of the other samples carries its own tick rounding, 0.77 mm per tick; `TlePropagationTests`, bound 1.9e-3 m
+  provisional, 1.6e-3 m before). No numerical propagation and no conformance case moves.
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -4031,6 +4053,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Iau2006Model.FrameBias()` return a new copy at each read, and the constructors copy the matrix given. Migration: code
   that changed a held covariance through `Set` on the matrix it gave or read builds a new `StateVector` (or holder) with
   the matrix it wants.
+- **Breaking: one default element set number, 999** ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)).
+  The element set number written when none is given depended on the path: `Omm.ToTle` wrote 999 for an OMM without
+  `ELEMENT_SET_NO`, `TLE.Create` and the TLE `Configuration` (so `ToTLE`) 9999. The three now write the new
+  `TLE.DefaultElementSetNumber`, 999, the value CelesTrak and Space-Track publish (decided by S. Guillet, 2026-11-17);
+  9999 stays the bound of the field. A TLE created without an element set number changes in columns 65 to 68
+  (` 999`) and in its checksum (column 69); `Omm.ToTle` is unchanged (`TleCreateRulesTests`, red on a85098d for
+  `TLE.Create`, `Configuration` and `ToTLE`: `9999`). Migration: pass `elementSetNumber: 9999` (or
+  `ElementSetNumber = 9999` in the `Configuration`) to keep the former text.
+- **Breaking: `TLE.Create` accepts only SGP4 mean elements of an Earth orbit in TEME, and `ToTLE` only an Earth orbit** ([#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)).
+  `TLE.Create` checked only that its elements were mean: mean elements in ICRF were written as a TLE, their angles
+  taken as TEME's, and mean elements about the Moon with their mean motion from the Moon's GM, a valid text that
+  describes another orbit. It now throws `ArgumentException` (`meanElements`) for elements whose frame is not
+  `Frame.TEME` (frames compared by name) or whose observer is not the Earth (NAIF id 399), naming the frame or the
+  centre (decided by S. Guillet, 2026-11-17). `OrbitalParameters.ToTLE`, whose fit rotates the state to TEME but kept
+  its centre, threw an `InvalidOperationException` of a failed fit for an orbit about the Moon (a state 8000 km from it
+  with the speed of a circular Earth orbit there), after its fit iterations; it now throws
+  `InvalidOperationException` naming the centre before the fit. `Omm.ToTle` (TEME and the Earth through
+  `IsTleCompatible`) and `ToTLE` of an Earth orbit in any frame are unchanged, bit for bit
+  (`TleCreateRulesTests`, red on a85098d: no exception for mean elements in ICRF, about the Moon or about the Earth-Moon
+  barycentre). Migration: rotate mean elements to TEME with `ToFrame(Frame.TEME)` before `Create`, or give `ToTLE` the
+  osculating state, which it rotates itself; a TLE holds no orbit about another centre.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -5770,14 +5813,17 @@ not listed.
   `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
   which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
   and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
-- **TLEs** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598),
-  [#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604),
-  [#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)). `TLEPropagator` counts its
-  samples in whole seconds: a step below 1 s throws `DivideByZeroException`, and a window that is not a multiple of the
-  step loses its end; use a whole-second step that divides the window. A TLE with a blank international designator can
-  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM. `TLE.Create` checks only that its
-  elements are mean: pass mean elements about the Earth in `Frame.TEME`. `Omm.ToTle` writes element set 999 for an OMM
-  without `ELEMENT_SET_NO`, `TLE.Create` 9999 by default ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)): pass the element set number.
+- **Two stored states a few ticks apart** (found by the review of #598, its issue to be opened). The read of the
+  stored states of a propagated spacecraft (`GetEphemeris` from its centre without aberration, through its 8 nearest
+  states) is ill-conditioned when two of them are a few ticks apart: the ISS's SGP4 states every 60 s over one hour,
+  plus one 11 ticks after the last, given to the public `Spacecraft.AddPropagatedStates`, read up to 4.934e3 m off SGP4
+  over the last 90 s (every 15 s; 4.336e3 m at +3570 s), 9.8 m with the extra state 100 µs after the last, 4.6e-4 m
+  with it 1 s after, 7.6e-4 m without it (Linux x64, 2026-11-17): each SGP4 state carries the tick rounding of its epoch, about 0.77 mm per tick
+  at 7.7 km/s, which the near-coincident pair amplifies. The propagations do not meet it: the stored states drop an
+  output closer to an impulse than a tenth of the output step, and `TLEPropagator` a grid point that close to the window
+  end (#598, Fixed above). Workaround: give `AddPropagatedStates` states at least a tenth of their spacing apart.
+- **TLEs** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). A TLE with a blank international designator can
+  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM.
   A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
   is NRLMSISE-00 at nominal space weather ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)), and an Earth with a geopotential or an atmosphere in the bodies throws
   `ArgumentException` (bodies of one identifier must have the same models, [#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)); give a TEME state on an Earth that

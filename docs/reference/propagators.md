@@ -121,6 +121,14 @@ var solution = propagator.Propagate();
 | `Spacecraft` | The spacecraft being propagated |
 | `DeltaT` | Output time step |
 
+The samples are the window start plus i·`DeltaT`, counted in ticks, then the window end: ceil(L/ΔT) + 1 samples for a
+window of length L, the last step shorter when ΔT does not divide L (#598); a grid point closer to the end than ΔT/10
+is dropped, the last step then up to 1.1 ΔT (a window given in UTC is a few ticks longer or shorter in TDB, its
+samples counted on its TDB start and end). A step of zero or less throws
+`ArgumentOutOfRangeException` (`deltaT`). Before 11.0.0 the samples were counted in whole seconds: a step below 1 s
+threw `DivideByZeroException`, a fractional step ran past the window end (1.5 s over 10 s: to +15 s), and a window
+that the step does not divide lost its end (90 s at 60 s: the last sample at +60 s).
+
 The solution holds the SGP4 states at the samples, and between them the cubic Hermite of `PropagationSegment` on the
 positions, the velocities and the accelerations of SGP4 at the samples (the central difference of its velocity at
 ±1 s, #675; zero before 11.0.0, which put the interpolated velocity up to 49.9 m/s off SGP4). For the ISS at 60 s,
