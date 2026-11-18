@@ -1466,8 +1466,14 @@ public class MatirxTests
     }
 
     /// <summary>
-    /// The library's results built from arrays share none with their inputs (#745): the product, the inverse and the
-    /// Jacobian, each a fresh array, are not changed by a later write to the matrices or arrays they came from.
+    /// The library's results built in an array of their own share it with nothing (#745): the product, the inverse and
+    /// the copy of a matrix, both overloads of <see cref="Jacobian.Evaluate(Func{double[], double}[], double[])"/>, and
+    /// <see cref="IO.Astrodynamics.CCSDS.Common.CovarianceMatrix.ToMatrix"/> and
+    /// <see cref="IO.Astrodynamics.CCSDS.Common.CovarianceMatrix.ToMatrixWithUnitConversion"/>, which wrap their array
+    /// (internal <c>Matrix.Wrap</c>), are not changed by a later write to the matrices or arrays they came from, and a
+    /// write to one result reaches neither its source nor the next result of the same call. The rotation of
+    /// <c>SiteFrame.FromPlanetodetic</c>, the last array wrapped, is local to that method and leaves it as a quaternion,
+    /// so no matrix of it can be written. Expected values are closed forms.
     /// </summary>
     [Fact]
     public void Results_ShareNoArrayWithTheirInputs()
@@ -1476,6 +1482,7 @@ public class MatirxTests
         var matrix = new Matrix(array);
         var inverse = matrix.Inverse();
         var product = matrix.Multiply(matrix);
+        var copy = matrix.Copy();
         array[0, 0] = 100.0;
         matrix.Set(1, 1, 100.0);
 
@@ -1484,5 +1491,54 @@ public class MatirxTests
         Assert.Equal(0.4, inverse.Get(1, 1), 15);
         Assert.Equal(5.0, product.Get(0, 0));
         Assert.Equal(10.0, product.Get(1, 1));
+        Assert.Equal(2.0, copy.Get(0, 0));
+        Assert.Equal(3.0, copy.Get(1, 1));
+        copy.Set(0, 0, -1.0);
+        Assert.Equal(2.0, matrix.Get(0, 0));
+
+        // The Jacobian of (x0 x1, x0 + x1) at (2, 3) is [[3, 2], [1, 1]] (central differences are exact for these terms but
+        // for rounding); a write to the result or to x does not reach the next evaluation
+        var f = new Func<double[], double>[] { v => v[0] * v[1], v => v[0] + v[1] };
+        var x = new[] { 2.0, 3.0 };
+        var jacobian = new Jacobian();
+        foreach (Func<Matrix> evaluate in new Func<Matrix>[]
+                 {
+                     () => jacobian.Evaluate(f, (double[])x.Clone()),
+                     () => jacobian.Evaluate(f, (double[])x.Clone(), new[] { 6.0, 5.0 })
+                 })
+        {
+            var first = evaluate();
+            first.Set(0, 0, 100.0);
+            first.Set(1, 1, 100.0);
+            var second = evaluate();
+            Assert.Equal(3.0, second.Get(0, 0), 8);
+            Assert.Equal(2.0, second.Get(0, 1), 8);
+            Assert.Equal(1.0, second.Get(1, 0), 8);
+            Assert.Equal(1.0, second.Get(1, 1), 8);
+        }
+
+        // A covariance's matrices: a write to one leaves the covariance and the next matrix as they were (the terms in km²,
+        // km²/s, km²/s², times 1e6 in SI)
+        var covariance = new IO.Astrodynamics.CCSDS.Common.CovarianceMatrix(
+            1.0, 0.1, 2.0,
+            0.2, 0.3, 3.0,
+            0.01, 0.02, 0.03, 4.0e-4,
+            0.04, 0.05, 0.06, 1.0e-5, 5.0e-4,
+            0.07, 0.08, 0.09, 2.0e-5, 3.0e-5, 6.0e-4);
+        foreach (Func<Matrix> read in new Func<Matrix>[] { covariance.ToMatrix, covariance.ToMatrixWithUnitConversion })
+        {
+            var first = read();
+            double scale = first.Get(0, 0);
+            first.Set(0, 0, -7.0);
+            first.Set(2, 1, -7.0);
+            var second = read();
+            Assert.Equal(scale, second.Get(0, 0));
+            Assert.Equal(0.3 * scale, second.Get(2, 1));
+            Assert.Equal(0.3 * scale, second.Get(1, 2));
+        }
+
+        Assert.Equal(1.0, covariance.CxX);
+        Assert.Equal(0.3, covariance.CzY);
+        Assert.Equal(1.0e6, covariance.ToMatrixWithUnitConversion().Get(0, 0));
     }
 }
