@@ -2962,9 +2962,10 @@ TEST(API, ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing)
 // ckgp_c reads, and the angular velocity of that segment, zero without rates. The CSPICE writers are not exported by the
 // Windows DLL
 #if !defined(_WIN32)
-// Twice the worst on Linux x64 of the angles between a record and ckgp_c (0 rad) and the closed form (3.331e-16 rad, the
-// MEASURE lines, 2026-11-18, the reads after a search with angular velocity below included), rounded up at the second digit; provisional, to be set again from the macOS arm64 CI log (the
-// test does not run on Windows: ckw03_c is not exported by the DLL)
+// Twice the worst over Linux x64 and macOS arm64 of the angles between a record and ckgp_c (0 rad) and the closed form
+// (3.331e-16 rad on both, the reads after a search with angular velocity below included; the MEASURE lines of the
+// build-native jobs of CI run 44395076184, 2026-11-18), rounded up at the second digit (the test does not run on Windows:
+// ckw03_c is not exported by the DLL)
 constexpr double CkPriorityAngleLimit = 6.7e-16;
 
 namespace

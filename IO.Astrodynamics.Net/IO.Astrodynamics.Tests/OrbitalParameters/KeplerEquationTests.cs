@@ -80,11 +80,12 @@ public class KeplerEquationTests
     // Twice the worst of the error of the states against the state at 60 digits, rounded up to two digits. Before #472,
     // 1.652 of the floor of the position and 1.677 of that of the velocity over Linux, Windows and macOS arm64 (CI run
     // 40272754260, 2026-10-26, #453), at the NaN regression, whose p = a (1 − e²) lost 4.1e-13: bounds 3.4 and 3.4. With
-    // p = (a (1 − e))(1 + e) and the half-angle forms (#472) the NaN regression is at 0.006 and 0.007 of the floor, and the
-    // worst 0.903 of the position (e = 0.1, the control) and 0.899 of the velocity (e = 0.99) on Linux x64 (2026-11-18):
-    // provisional, to be set again from the Windows x64 and macOS arm64 CI logs
+    // p = (a (1 − e))(1 + e) and the half-angle forms (#472) the NaN regression is at 0.006 and 0.007 of the floor on the
+    // three, and the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184,
+    // 2026-11-18) is at e = 0.1, ν = 110° (the control): 0.903 of the position on Linux x64 and Windows x64 (0.556 on
+    // macOS arm64), 0.842 of the velocity on macOS arm64 (0.784 on Linux x64 and Windows x64)
     private const double StatePositionFloor = 1.9;
-    private const double StateVelocityFloor = 1.8;
+    private const double StateVelocityFloor = 1.7;
 
     // Twice the worst over Linux, Windows and macOS arm64 (CI run 40272754260, 2026-10-26) of the difference of the
     // states and SPICE CONICS where CONICS resolves them, rounded up to two digits (#453): 0.841 of the floor of the

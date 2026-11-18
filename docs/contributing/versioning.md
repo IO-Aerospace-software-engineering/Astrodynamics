@@ -269,11 +269,12 @@ release are listed under **Known limitations**.
   and a frame centred on the observer (the Moon from the Earth in TIRS) at t, bit for bit as before. Tests
   (`LightTimeCorrectionTests`, red on f70ee32): the Moon from the Earth and the Earth from the Moon in the frame of a site
   given by its coordinates and in the frame of a spacecraft held as an attitude record of ITRF93, against `spkezr_c` in
-  the TK frames of `tools/light_time_reference` (new rows), 2.7e-7 m and 7.6e-9 m/s, and 1.6e-3 m and 1.2e-7 m/s, the
+  the TK frames of `tools/light_time_reference` (new rows), 3.3e-7 m and 7.6e-9 m/s, and 1.6e-3 m and 1.2e-7 m/s, the
   resolution of the record's epoch as for #593; the Earth from the Moon in TIRS, CIRS, TEME and a frame named "tirs",
   through `GetEphemeris`, `SpiceAPI.ReadEphemeris` and its window read, 0 from the ICRF read rotated at t ∓ lt of the
   Earth with the rate of its light time, a closed form that reproduces `spkezr_c` in ITRF93 to 2.4e-7 m and 7.7e-9 m/s;
-  the Moon from the Earth in TIRS and every geometric read bit for bit (Linux x64, thresholds provisional).
+  the Moon from the Earth in TIRS and every geometric read bit for bit (thresholds twice the worst over Linux x64,
+  Windows x64 and macOS arm64, CI run 44395076184).
 - **`InstrumentPointingToAttitude` ignored the light time for a celestial target** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549)). The law asked for
   `Aberration.LT`, but a celestial target is the centre of the maneuver, so `Attitude.TryExecute` made the state
   relative to it and the law read the target relative to itself, the zero vector: the pointing was geometric, the Moon
@@ -300,7 +301,8 @@ release are listed under **Known limitations**.
   (`CelestialAttitudeTargetTests`: the Moon, the Sun and the Earth against `spkcvo_c`, nine corrections, 1.1e-13,
   1.6e-16 and 6.2e-12 rad, the Earth's 4.2e-5 m across the line of sight below the 3.6 mm the Earth covers in the
   resolution of a double 2024 epoch; through `TriadAttitude`, 5.8e-14 rad on the primary and 7.4e-15 rad on the plane;
-  Linux x64, thresholds provisional; red on f70ee32). The conformance runner keeps the model of `pointing_triad`, the
+  the same on Linux x64, Windows x64 and macOS arm64, thresholds twice the worst, CI run 44395076184; red on f70ee32).
+  The conformance runner keeps the model of `pointing_triad`, the
   directions LT-corrected from the Earth's centre (`TriadSolver.EarthCentreLightTimeTarget`), at 3.8e-16 rad from its
   golden as before; with `CelestialAttitudeTarget` it would be 1.022e-6 rad away, the variant `lt_from_spacecraft`
   (`spkcpo`, 1.0225e-6 rad) of the case's reference check.
@@ -3357,9 +3359,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   holds none, never a lower-priority segment's pointing or rate (decided by S. Guillet, 2026-11-18; the P/Invoke
   signature is unchanged). C++ `API.ReadOrientationProxyReadsAHigherPrioritySegmentWithoutAngularVelocity` and
   `...WithAngularVelocity` (each record `ckgp_c`'s C-matrix and epoch, 0 rad and 0 s, and within 6.7e-16 rad of the
-  closed form, twice the Linux worst, provisional; Linux and macOS arm64); `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority`
+  closed form, twice the worst over Linux x64 and macOS arm64, where it runs); `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority`
   on the committed kernels of `tools/ck_priority_reference` and the `ckgp_c` reads it writes (within 1.2e-15 rad of
-  them and of the closed form, twice the Linux worst, provisional, every platform) and
+  them and of the closed form, twice the worst over the three platforms) and
   `SpiceApiTest.ReadOrientation_InAnotherFrame_FollowsTheCkSegmentPriority` in ECLIPJ2000 (within 5.0e-16 rad of
   `ckgp_c`, `ckgpav_c`'s rate bit for bit, Validation). The priority is that of a search in a fresh process, whatever
   the calls before (review of #724): CSPICE keeps, per instrument, the segment of its last search and the interval over
@@ -4158,10 +4160,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`tools/conic_state/conic_state_reference.py`, mpmath), 301 points of e = 0.1 to 3 with ν at the periapsis, the
   apoapsis (π ± 1e-1 to 1e-6, fl(π)) and up to 0.9999 of the asymptote: p within 1.7e-16, the state within 4.5e-16 in
   position and 3.1e-16 in velocity away from the apsides, 3.7e-15 near them for e = 0.999 to 1.001
-  (`ConicStateTests`, red on f70ee32; provisional thresholds, twice the Linux worst). Near the asymptote of a hyperbola
+  (`ConicStateTests`, red on f70ee32; the same on Linux x64, Windows x64 and macOS arm64, thresholds twice the worst,
+  CI run 44395076184). Near the asymptote of a hyperbola
   beyond e = 1.01 the rounding of cos ν divided by 1 + e cos ν stays (2.8e-13 at e = 1.2, 0.9999 of ν∞), which neither
   form lowers. Below e = 0.5 and above e = 2 p and the state are unchanged, bit for bit. The state floors of
-  `KeplerEquationTests`, set by this loss at its NaN regression (1.652 of the floor), tighten from 3.4 to 1.9 and 1.8.
+  `KeplerEquationTests`, set by this loss at its NaN regression (1.652 of the floor), tighten from 3.4 to 1.9 and 1.7.
 
 - **Kepler's equation near the periapsis at e → 1** ([#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)). Near the periapsis x − e sin x and e sinh x − x
   differ by about (1 − e) x + x³/6, so the residual of the solver and the reverse direction kept the rounding of
@@ -4172,8 +4175,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   for 0.5 ≤ e ≤ 2 (decided by S. Guillet, 2026-11-18; the same rewriting as R. H. Gooding and A. W. Odell's EMKEP,
   Celestial Mechanics 44, 1988, confirmed by S. Guillet, 2026-11-18): against the root and M* at 60 digits
   (`tools/kepler_equation/kepler_periapsis_reference.py`, mpmath), E within 1.9 ulp in 6 iterations at most, M within
-  6.4e-16, the states within 9.7e-16 of |r| and the anomaly of the round trip state → elements within 1 ulp (6.2e5
-  before) (`KeplerPeriapsisTests`, red on f70ee32; provisional thresholds, twice the Linux worst). The derivative, the
+  6.4e-16, the states within 9.7e-16 of |r| and the anomaly of the round trip state → elements within 2 ulp (6.2e5
+  before) (`KeplerPeriapsisTests`, red on f70ee32; the worst over Linux x64, Windows x64 and macOS arm64, thresholds
+  twice that, CI run 44395076184). The derivative, the
   start, the stop and the cap of the solver are unchanged. Below e = 0.5 and above e = 2, where the former forms lose at
   most a factor 2, every result is unchanged, bit for bit.
 
@@ -4198,9 +4202,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   S. Guillet, 2026-11-18), the elements at the new epoch carrying its true anomaly and Barker's mean anomaly of it, the anomalies of
   the band (decided by S. Guillet, 2026-11-18: in the band only, `IsParabolic()` keeping its meaning). Against the exact
   conic at 60 digits (`tools/near_parabolic`, sections 9 and 10), 108 motions of the band (|e − 1| from 1e-12 to 9.9e-7 on
-  both sides, ν0 from −1.5 to 2 rad, 600 s, a day, −1 h): within 4.2e-15 of |r| and 3.6e-15 of |v| (1.2e-7 m after a
+  both sides, ν0 from −1.5 to 2 rad, 600 s, a day, −1 h): within 6.8e-15 of |r| and 3.6e-15 of |v| (1.2e-7 m after a
   day), the states of #459 600 s later within 3 nm, and the times to a radius to the tick
-  (`NearParabolicBandTests.Issue753_*`, red on f70ee32; provisional thresholds, twice the Linux worst). At e = 1 exactly
+  (`NearParabolicBandTests.Issue753_*`, red on f70ee32; the worst over Linux x64, Windows x64 and macOS arm64,
+  thresholds twice that, CI run 44395076184). At e = 1 exactly
   Barker's law and outside the band Kepler's equation are unchanged, bit for bit. Next to the band, at e = 1 − 1.1e-6
   before the periapsis, the ellipse is still 3.1 m off after 600 s (1.9e-7 of |r|): the constructor keeps its mean
   anomaly in [0, 2π), where it rounds (#471, not part of 11.0.0); on the hyperbola side 9.4e-10.
@@ -6199,7 +6204,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   from its energy) by a few 1e-16 relative in 40 to 100 % of the cases, by up to 8.1e-11 near e = 1; below e = 0.5 and
   above e = 2 every result is unchanged, bit for bit. The equatorial hyperbola of
   `EquinoctialElementsSingularityTests.AtAnotherEpoch_MatchesTheTwoBodyReference` (e = 1.5) moves from 9.4e-17 to
-  3.6e-16 in velocity, another draw of one rounding of p (its bound 7.2e-16, provisional). The initial state of the
+  3.6e-16 in velocity on the three platforms, another draw of one rounding of p (its bound 7.2e-16), and that of
+  `AtATrueAnomaly_MatchesTheReference` from 1.2e-16 and 1.7e-16 to 3.2e-16 and 1.2e-16 on macOS arm64 (1.8e-16 and
+  3.9e-17 on Linux x64 and Windows x64; its bounds 6.4e-16 and 2.4e-16, CI run 44395076184). The initial state of the
   Molniya case R5 (e = 0.74) moves by one ulp per position component, so `Data/GmatReference/cases.json` is recaptured
   (G4 starts from it; its GMAT outputs pass unchanged, regenerated by `gmat-reference.yml`), and the universal Kepler
   solver of the reference `KeplerianStm` stops at its rounding floor, where a perturbed R5 state oscillated above its

@@ -76,14 +76,14 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     ];
 
     // The NOTO SPK against the site it was written from, the interpolation of the native writer's segment between its 60 s
-    // states: 8.872e-9 m and 6.483e-13 m/s (Linux x64, measured on f70ee32 with the fix, 2026-11-18), twice the worst
-    // rounded up at two digits; provisional, to be set again from the Windows x64 and macOS arm64 CI logs
+    // states: 8.872e-9 m on the three and 6.483e-13 m/s on Linux x64 (6.105e-13 m/s on Windows x64 and macOS arm64; the
+    // MEASURE lines, CI run 44395076184, 2026-11-18), twice the worst rounded up at two digits
     private const double SpkPositionTolerance = 1.8e-8;
     private const double SpkVelocityTolerance = 1.3e-12;
 
     // A frame centred on NOTO against its closed form, the same arithmetic as the library's (the light time of NOTO from the
-    // site, its rate and the rotation of the frame at its epoch): 0 on Linux x64 (f70ee32 with the fix, 2026-11-18), as the
-    // frame by name centred on LRO of LightTimeCorrectionTests is 0 on the three platforms; provisional
+    // site, its rate and the rotation of the frame at its epoch): 0 on Linux x64, Windows x64 and macOS arm64 (CI run
+    // 44395076184, 2026-11-18), as the frame by name centred on LRO of LightTimeCorrectionTests
     private const double FramePositionTolerance = 0.0;
     private const double FrameVelocityTolerance = 0.0;
 

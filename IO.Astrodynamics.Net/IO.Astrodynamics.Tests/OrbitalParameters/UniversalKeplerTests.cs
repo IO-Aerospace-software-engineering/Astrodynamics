@@ -19,13 +19,15 @@ public class UniversalKeplerTests
     private const double Mu = 398600435507022.6;
     private const double Q = 7.0e6;
 
-    // Twice the worst on Linux x64 (2026-11-18), rounded up to two digits; provisional, to be set again from the Windows
-    // x64 and macOS arm64 CI logs (#753): the Stumpff functions 4.9e-16 (z = −50), χ of D 1.8e-16, its time 2.1e-16, the
-    // root 5.9e-16 (e = 1 − 1e-12, D = 300), D and ν of the root 2.1e-14 (e = 0.5 at D = 300, ν within 0.4° of the
-    // apoapsis, where D = tan(ν/2) carries the rounding of the root's time divided by 1 + cos ν)
-    private const double StumpffBound = 1.0e-15;
-    private const double UniversalBound = 3.6e-16;
-    private const double TimeBound = 4.3e-16;
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184, 2026-11-18),
+    // rounded up to two digits (#753): the Stumpff functions 5.381e-16 on Windows x64 (z = −50; 4.941e-16 there on Linux
+    // x64, 4.480e-16 at z = −1 on macOS arm64), χ of D 2.564e-16 on Windows x64 (2.327e-16 on Linux x64, 1.971e-16 on
+    // macOS arm64), its time 3.615e-16 on Windows x64 (2.129e-16 on Linux x64 and macOS arm64), the root 5.858e-16 on the
+    // three (e = 1 − 1e-12, D = 300), D and ν of the root 2.141e-14 on the three (e = 0.5 at D = 300, ν within 0.4° of
+    // the apoapsis, where D = tan(ν/2) carries the rounding of the root's time divided by 1 + cos ν)
+    private const double StumpffBound = 1.1e-15;
+    private const double UniversalBound = 5.2e-16;
+    private const double TimeBound = 7.3e-16;
     private const double RootBound = 1.2e-15;
     private const double BarkerBound = 4.3e-14;
 

@@ -30,21 +30,21 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// The reference is the two-body motion of the initial state (<see cref="OrbitalParameters.OrbitalParameters.AtEpoch"/>,
 /// the closed form, TT seconds about the Earth, TDB about the Moon) for a point-mass propagation in RK7(8) at 1e-12, and
 /// the solution itself (<see cref="PropagationSolution.InterpolateAt"/>) for the state stored at the window end.
-/// Thresholds: twice the Linux x64 worst, rounded up at the second significant digit, provisional (to be set again from
-/// the Windows x64 and macOS arm64 CI logs), the MEASURE lines printing them.
+/// Thresholds: twice the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184,
+/// 2026-11-18), rounded up at the second significant digit.
 /// </remarks>
 public class PropagationToTheWindowEndTests
 {
     /// <summary>The read at 3 605 s and at the window end of a point-mass propagation in RK7(8) at 1e-12 against the
     /// two-body closed form, m: the integration error over an hour and the Lagrange interpolation over the last, shorter,
-    /// interval. Worst 9.647e-7 m on Linux x64 (about the Earth; 3.787e-7 m about the Moon), 2026-11-18. Provisional:
-    /// twice the Linux x64 worst, rounded up, to be set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    /// interval. Worst 9.664e-7 m on Windows x64 (about the Earth; 9.647e-7 m on Linux x64 and macOS arm64; 3.787e-7 m
+    /// about the Moon on the three), CI run 44395076184, 2026-11-18; twice that, rounded up.</summary>
     internal const double AgainstTwoBody = 2.0e-6;
 
     /// <summary>The SPK written by <c>WriteEphemeris</c> against the managed reads at 3 605 s and at the window end, m: the
     /// resolution of the ET doubles of the nodes (1.2e-7 s) times the speed, as <c>PropagatedArcsTests.SpkAgainstManaged</c>.
-    /// Worst 1.738e-5 m on Linux x64, 2026-11-18. Provisional: twice the Linux x64 worst, rounded up, to be set again from
-    /// the Windows x64 and macOS arm64 CI logs.</summary>
+    /// Worst 1.738e-5 m on Linux x64, Windows x64 and macOS arm64, CI run 44395076184, 2026-11-18; twice that, rounded
+    /// up.</summary>
     internal const double SpkAgainstManaged = 3.5e-5;
 
     private readonly ITestOutputHelper _output;

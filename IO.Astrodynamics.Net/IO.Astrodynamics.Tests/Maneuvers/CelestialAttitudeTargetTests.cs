@@ -31,8 +31,8 @@ public class CelestialAttitudeTargetTests
     ];
 
     // #740: twice the worst angle from spkcvo_c over the eight states of the "pointing" rows and the nine corrections
-    // (Linux x64, measured on f70ee32 with the fix, 2026-11-18), rounded up at two digits; provisional, to be set again
-    // from the Windows x64 and macOS arm64 CI logs. The Moon 1.120e-13 rad (CN+S), the Sun 1.629e-16 rad (CN), the Earth,
+    // over Linux x64, Windows x64 and macOS arm64, the same on the three (the MEASURE lines, CI run 44395076184,
+    // 2026-11-18), rounded up at two digits. The Moon 1.120e-13 rad (CN+S), the Sun 1.629e-16 rad (CN), the Earth,
     // the centre of the state at 6778 km, 6.235e-12 rad (LT): 4.2e-5 m across the line of sight, below the 3.6 mm that the
     // Earth's 30 km/s cover in the 1.2e-7 s of a double 2024 epoch; the TRIAD primary 5.834e-14 rad and the plane of its
     // secondary 7.418e-15 rad

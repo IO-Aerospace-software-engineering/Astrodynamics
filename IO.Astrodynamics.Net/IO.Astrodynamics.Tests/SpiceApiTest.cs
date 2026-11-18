@@ -2098,9 +2098,9 @@ public partial class SpiceApiTest
     // tool writes (299.5 s and 700.5 s, within the tolerance of the CK without rates, take its records at 300 s and 700 s),
     // and the closed form of the segment ckgp_c reads, whose angular velocity is (0, 0, 1e-3) rad/s or zero. The kernels are
     // read, not written, so the test runs on every platform
-    // Twice the worst on Linux x64 of the angle of a record to ckgp_c and to the closed form (5.551e-16 rad for both, either
-    // order, and for the reads after a search with angular velocity below, the MEASURE lines, 2026-11-18), rounded up at the
-    // second digit; provisional, to be set again from the Windows x64 and macOS arm64 CI logs
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 of the angle of a record to ckgp_c and to the closed form
+    // (5.551e-16 rad for both on the three, either order, and for the reads after a search with angular velocity below,
+    // the MEASURE lines, CI run 44395076184, 2026-11-18), rounded up at the second digit
     private const double CkPriorityAngleLimit = 1.2e-15;
 
     private static readonly int CkPrioritySpacecraft = -472401;
@@ -2329,9 +2329,9 @@ public partial class SpiceApiTest
     // #724 in a frame other than the segments' (ECLIPJ2000), where ckgp_c rotates the C-matrix by refchg and ckgpav_c the
     // state by frmchg: the same kernels, each record ckgp_c's C-matrix (CspiceDirect, the CSPICE of the native library) and,
     // read from the CK with rates, ckgpav_c's angular velocity. CspiceDirect is not exported by the Windows DLL
-    // Twice the worst on Linux x64 of the angle of a record to ckgp_c (2.483e-16 rad, the MEASURE lines, 2026-11-18), rounded
-    // up at the second digit; provisional (the Validation category runs on Linux alone). The angular velocity read from the CK
-    // with rates is ckgpav_c's own, bit for bit (0 rad/s measured)
+    // Twice the worst on Linux x64 of the angle of a record to ckgp_c (2.483e-16 rad, the MEASURE lines, CI run 44395076184,
+    // 2026-11-18), rounded up at the second digit (the Validation category runs on Linux alone). The angular velocity read
+    // from the CK with rates is ckgpav_c's own, bit for bit (0 rad/s measured)
     private const double CkPriorityEclipticAngleLimit = 5.0e-16;
 
     [Theory]

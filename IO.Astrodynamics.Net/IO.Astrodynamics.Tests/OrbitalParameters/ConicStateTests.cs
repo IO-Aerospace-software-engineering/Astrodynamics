@@ -33,18 +33,18 @@ public class ConicStateTests
     private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
     private static readonly Lazy<ConicReference> Reference = new(Load);
 
-    // Twice the worst on Linux x64 (2026-11-18), rounded up to two digits; provisional, to be set again from the Windows
-    // x64 and macOS arm64 CI logs (#472). p: 1.74e-16 relative (2.2e-11 near e = 1 before); the state away from the
-    // apoapsis and the asymptote, 4.46e-16 in position (2.2e-11 near e = 1 before); the velocity everywhere, 3.10e-16
-    // (3.6e-11 near e = 1 before)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184, 2026-11-18),
+    // rounded up to two digits (#472), the worsts the same on the three. p: 1.735e-16 relative (2.2e-11 near e = 1
+    // before); the state away from the apoapsis and the asymptote, 4.455e-16 in position (2.2e-11 near e = 1 before); the
+    // velocity everywhere, 3.101e-16 (3.6e-11 near e = 1 before)
     private const double SemiLatusRectumBound = 3.5e-16;
     private const double PositionBound = 9.0e-16;
     private const double VelocityBound = 6.3e-16;
 
-    // Near the apoapsis or the asymptote (|1 + e cos ν| < 0.05) near e = 1: 3.70e-15 in position, at e = 1.001 near its
-    // asymptote (8.1e-11 at e = 1.000002 and 4.6e-11 at e = 0.999999 before); of the controls, 2.79e-13 at e = 1.2 near
+    // Near the apoapsis or the asymptote (|1 + e cos ν| < 0.05) near e = 1: 3.695e-15 in position, at e = 1.001 near its
+    // asymptote (8.1e-11 at e = 1.000002 and 4.6e-11 at e = 0.999999 before); of the controls, 2.785e-13 at e = 1.2 near
     // its asymptote, the rounding of cos(ν/2) divided by 1 + e cos ν, which neither form lowers there (2.9e-13 before).
-    // Twice the worst on Linux x64 (2026-11-18), provisional
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64, the same on the three (CI run 44395076184, 2026-11-18)
     private const double ClosePositionBound = 7.4e-15;
     private const double AsymptotePositionBound = 5.6e-13;
 

@@ -31,19 +31,22 @@ public class KeplerPeriapsisTests
     private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
     private static readonly Lazy<PeriapsisReference> Reference = new(Load);
 
-    // Twice the worst on Linux x64 (2026-11-18), rounded up to two digits; provisional, to be set again from the Windows
-    // x64 and macOS arm64 CI logs (#484). The solver: 1.88 ulp of E* for 0.5 ≤ e ≤ 2 (e = 1.00001; before, 9.3e5 ulp at
-    // e = 0.999999, 1.4e5 at 1.00001, 902 at 0.999), 2.42 ulp outside it (e = 3, unchanged), 6 iterations (10 before);
-    // the reverse direction 6.4e-16 of M (e = 1.001; 1.9e-10 at e = 0.999999 before); the states from M within 2q,
-    // 9.7e-16 of |r| and 5.2e-16 of |v| (6.7e-11 and 3.3e-11 before); the anomaly round trip state → elements, 1 ulp of E
-    // (6.2e5 ulp before)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184, 2026-11-18),
+    // rounded up to two digits (#484). The solver: 1.879 ulp of E* for 0.5 ≤ e ≤ 2 (e = 1.00001, Linux x64 and macOS
+    // arm64; 1.832 at e = 0.99999 on Windows x64; before, 9.3e5 ulp at e = 0.999999, 1.4e5 at 1.00001, 902 at 0.999),
+    // 2.424 ulp outside it (e = 3, Linux x64; 2.005 on macOS arm64, 1.743 on Windows x64; unchanged), 6 iterations on the
+    // three (10 before); the reverse direction 6.385e-16 of M (e = 1.001, Linux x64; 4.373e-16 at e = 1.00001 on
+    // Windows x64 and macOS arm64; 1.9e-10 at e = 0.999999 before); the states from M within 2q, 9.669e-16 of |r| and
+    // 5.224e-16 of |v| (Linux x64; 7.057e-16 and 4.213e-16 on Windows x64 and macOS arm64; 6.7e-11 and 3.3e-11 before);
+    // the anomaly round trip state → elements, 2 ulp of E on Windows x64 and macOS arm64 (1 on Linux x64; 6.2e5 ulp
+    // before)
     private const double SolverUlps = 3.8;
     private const double SolverUlpsOutsideTheBand = 4.9;
     private const int SolverIterations = 12;
     private const double ReverseRelative = 1.3e-15;
     private const double StatePosition = 2.0e-15;
     private const double StateVelocity = 1.1e-15;
-    private const double RoundTripUlps = 2.0;
+    private const double RoundTripUlps = 4.0;
 
     private readonly ITestOutputHelper _output;
     private readonly CelestialBody _earth;

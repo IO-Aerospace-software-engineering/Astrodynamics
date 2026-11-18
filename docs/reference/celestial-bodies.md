@@ -137,7 +137,7 @@ lt_c, lt_c the light time of the frame's centre from the observer (both read fro
 centre the frame's site or spacecraft, or the Earth from SPICE for TEME, CIRS and TIRS), at the epoch for a geometric
 read and in a frame centred on the observer. Measured against `spkezr` in the frame of a site given by its coordinates
 (an SPK and a TK frame of the site) and in the frame of a spacecraft held as an attitude record of ITRF93, the Moon from
-the Earth and the Earth from the Moon: 2.7e-7 m and 7.6e-9 m/s, and 1.6e-3 m (the resolution of the record's epoch, as
+the Earth and the Earth from the Moon: 3.3e-7 m and 7.6e-9 m/s, and 1.6e-3 m (the resolution of the record's epoch, as
 above); TEME, CIRS and TIRS 0 from the ICRF read rotated at the epoch of the Earth, the closed form that reproduces
 `spkezr` in ITRF93 to 2.4e-7 m. Before 11.0.0 this path rotated at the epoch of the observation whatever the correction:
 the Earth from the Moon with `LT` 3.9e4 m off in TIRS and in those two frames, the Moon from the Earth 620 m in the frame

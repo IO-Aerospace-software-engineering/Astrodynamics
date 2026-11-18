@@ -83,7 +83,7 @@ and the Stumpff functions C(z) = (1 − cos √z)/z and S(z) = (√z − sin √
 Applications*, 4th ed., 2013, algorithm 8, confirmed by S. Guillet, 2026-11-18). Nothing cancels on either side of e = 1, and at
 e = 1 it is Barker's equation; the elements at the new epoch carry the true anomaly of the motion and Barker's mean
 anomaly of it. Against the exact two-body motion of the conic at 60 digits (`tools/near_parabolic`), |e − 1| from 1e-12
-to 9.9e-7 on both sides, ν0 from −1.5 to 2 rad, 600 s and a day later and an hour earlier, the state is within 4.2e-15
+to 9.9e-7 on both sides, ν0 from −1.5 to 2 rad, 600 s and a day later and an hour earlier, the state is within 6.8e-15
 of |r| and 3.6e-15 of |v| (`NearParabolicBandTests.Issue753_*`). Before 11.0.0 the band advanced Barker's anomaly at
 Barker's rate √(μ/(2q³)): 0.088 m off after 600 s at |e − 1| = 5e-7, 0.16 m at 9e-7, 0.54 m from the periapsis, and
 3.1 km after a day at 9.9e-7; Kepler's equation of the conic in doubles is 2.3 to 5.8 mm off at the edges and 2.8 to

@@ -28,14 +28,15 @@ public class NearParabolicBandTests
     private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
     private const double Mu = 398600435507022.6;
 
-    // The motion of the band against the exact conic (#753): twice the worst on Linux x64 (2026-11-18), rounded up to two
-    // digits; provisional, to be set again from the Windows x64 and macOS arm64 CI logs. In the band, 4.18e-15 of |r| and
-    // 3.63e-15 of |v| (before: the band model, up to 0.16 m after 600 s at the edges and 0.54 m from the periapsis, a few
-    // 1e-8 relative). Outside it, Kepler's equation of the conic, unchanged: 1.90e-7 of |r| and 9.48e-8 of |v| at
-    // e = 1 − 1.1e-6 before the periapsis (3.1 m), where KeplerianElements keeps the mean anomaly in [0, 2π) (#471), 9.4e-10
-    // and 4.7e-10 on the hyperbola side. The times to a radius, ticks of Time: 4.59e-8 s to ν = 1 rad and 4.55e-8 s to
-    // 2e7 m (Barker's times were up to 1.5e-3 s off the conic's)
-    private const double MotionPositionBound = 8.4e-15;
+    // The motion of the band against the exact conic (#753): twice the worst over Linux x64, Windows x64 and macOS arm64
+    // (the MEASURE lines, CI run 44395076184, 2026-11-18), rounded up to two digits. In the band, 6.816e-15 of |r| on
+    // macOS arm64 (4.180e-15 on Linux x64 and Windows x64) and 3.634e-15 of |v| on Linux x64 and macOS arm64 (3.510e-15
+    // on Windows x64) (before: the band model, up to 0.16 m after 600 s at the edges and 0.54 m from the periapsis, a few
+    // 1e-8 relative). Outside it, Kepler's equation of the conic, unchanged: 1.895e-7 of |r| and 9.477e-8 of |v| on the
+    // three at e = 1 − 1.1e-6 before the periapsis (3.1 m), where KeplerianElements keeps the mean anomaly in [0, 2π)
+    // (#471), 9.4e-10 and 4.7e-10 on the hyperbola side. The times to a radius, ticks of Time: 4.589e-8 s to ν = 1 rad
+    // and 4.551e-8 s to 2e7 m on the three (Barker's times were up to 1.5e-3 s off the conic's)
+    private const double MotionPositionBound = 1.4e-14;
     private const double MotionVelocityBound = 7.3e-15;
     private const double OutsidePositionBound = 3.8e-7;
     private const double OutsideVelocityBound = 1.9e-7;
@@ -370,8 +371,8 @@ public class NearParabolicBandTests
         // At its own epoch the state is itself (StateVector.ToStateVector(Time), #551)
         Assert.Equal(0.0, offset);
         Assert.Equal(0.0, distance);
-        // The epoch is a tick of Time, the conic's time rounded to its tick: twice the worst on Linux x64 (2026-11-18),
-        // provisional, to be set again from the Windows x64 and macOS arm64 CI logs
+        // The epoch is a tick of Time, the conic's time rounded to its tick: twice the worst over Linux x64, Windows x64
+        // and macOS arm64 (CI run 44395076184, 2026-11-18)
         Assert.InRange(toNu1, -TimeToNu1Bound, TimeToNu1Bound);
     }
 
@@ -728,7 +729,8 @@ public class NearParabolicBandTests
             var there = ke.AtEpoch(epoch);
 
             // Assert: the mean anomaly again, to the motion over half a tick (50 ns) and the rounding of Barker's closed
-            // form: 1.25e-11 of max(1, |m|) on Linux x64 (2026-11-18), twice that provisional
+            // form: 1.250e-11 of max(1, |m|) on Linux x64, Windows x64 and macOS arm64 (CI run 44395076184, 2026-11-18),
+            // twice that
             double error = (there.MeanAnomaly() - m) / System.Math.Max(1.0, System.Math.Abs(m));
             Measure($"#753 AtEpoch(EpochAtMeanAnomaly({m:R})): (M − m) / max(1, |m|)", error);
             Assert.InRange(error, -2.5e-11, 2.5e-11);

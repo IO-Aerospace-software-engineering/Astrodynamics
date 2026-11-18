@@ -40,9 +40,9 @@ public class ImpulseThrustWindowTests
     private const double Isp = 300.0;
     private const double FuelFlow = 10.0;
 
-    /// <summary>f against mpmath and the quadrature: worst 5.551e-15 at u = 0.1 (Linux x64, 2026-11-18), the cancellation
-    /// of the closed form where the library leaves its series, about ε/u; twice that, rounded up, provisional (to be set
-    /// again from the Windows x64 and macOS arm64 CI logs).</summary>
+    /// <summary>f against mpmath and the quadrature: worst 5.551e-15 at u = 0.1 on Linux x64, Windows x64 and macOS arm64
+    /// (the MEASURE lines, CI run 44395076184, 2026-11-18), the cancellation of the closed form where the library leaves
+    /// its series, about ε/u; twice that, rounded up.</summary>
     private const double LeadBound = 1.2e-14;
 
     private readonly ITestOutputHelper _output;
