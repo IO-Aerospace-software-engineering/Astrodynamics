@@ -5612,7 +5612,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`NearParabolicBandTests.Issue459_KeplersEquationForTheConic_AgainstBarkersLaw`, on the 60-digit references of
   `tools/near_parabolic`): neither holds over the whole band, so Barker's law is kept as decided. A motion that holds
   over it (universal variables, or a band narrowed to where Barker's law is the better one) would change what
-  `IsParabolic()` means across the library: it is not part of 11.0.0 and needs its own issue (not opened yet). The tests of #477 that measured the 2q of the band now measure
+  `IsParabolic()` means across the library: it is not part of 11.0.0 and needs its own issue, #753. The tests of #477 that measured the 2q of the band now measure
   rounding (3.6e-16 where 2.0e-7), and `TestHelpers.KeplerComparer` and `EquinoctialComparer` compare two orbits of the
   band by their perigee radii, their semi-major axes being ill-conditioned there (`StateVectorTests.ToParabolicKeplerian`,
   `KeplerianElementsTests.ParabolicToState`, `EquinoctialElementsTests.ParabolicToStateVector`: the state of an exact
