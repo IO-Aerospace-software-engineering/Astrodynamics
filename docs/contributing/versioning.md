@@ -5985,7 +5985,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a (1 − e) ≤ 0, a = 0 included, where it built elements whose state had a NaN velocity. The elements the library builds
   (from states, equinoctial elements, SPICE's `oscltx`, the maneuvers, the TLE fit) have the sign of their conic.
   Migration: give a hyperbola its negative semi-major axis, a = −μ/(2ξ) (`KeplerianElementsTests.IsHyperbolic` gave
-  a = 20 000 m with e = 1.1).
+  a = 20 000 m with e = 1.1). Such elements used to reach the `CONICS` check of the three
+  `SpiceAPI.ConvertConicElementsToStateVector` overloads (#711, `ArgumentException` naming `keplerianElements`); they now
+  throw at their construction (`semiMajorAxis`), and that check is left with the elements it still sees, mean elements of
+  e ≥ 1 from `FromOMM` and an a (1 − e) that overflows (`SpiceApiTest.ConvertConicElementsToStateVector_OfAPeriapsisNotFiniteAndAboveZero_ThrowsArgumentException`).
 
 - **Breaking: the motion of the near-parabolic band is the conic's** ([#753](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/753), Fixed above). Within 1e-6 of
   e = 1 but at e = 1 exactly, `AtEpoch`, `ToStateVector(Time)`, `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`,

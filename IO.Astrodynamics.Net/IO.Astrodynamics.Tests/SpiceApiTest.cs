@@ -1387,16 +1387,27 @@ public partial class SpiceApiTest
         AssertNothingPending();
     }
 
-    // CONICS needs a periapsis radius above 0 (conics.c, SPICE(BADPERIAPSEVALUE)): an ellipse of negative semi-major axis, a
-    // hyperbola of positive one, a bad argument on every overload. Before #711 the zero state was returned silently, then
-    // InvalidOperationException with SPICE's message (measured on 46e6975 and a77531f)
-    [Theory]
-    [InlineData(-7.0e6, 0.1)]
-    [InlineData(7.0e6, 1.5)]
-    void ConvertConicElementsToStateVector_OfAPeriapsisNotAboveZero_ThrowsArgumentException(double a, double e)
+    // CONICS needs a periapsis radius above 0 (conics.c, SPICE(BADPERIAPSEVALUE)), a bad argument on every overload. Before
+    // #711 the zero state was returned silently, then InvalidOperationException with SPICE's message (measured on 46e6975 and
+    // a77531f). Since #738 an osculating ellipse of negative semi-major axis and a hyperbola of positive one are refused by
+    // the KeplerianElements constructor itself (ElementsValidationTests.Issue738_*); the elements that still reach the guard
+    // are mean elements of e >= 1, whose semi-major axis comes from the mean motion (FromOMM, a > 0, so a (1 - e) < 0), and a
+    // hyperbola whose a (1 - e) overflows to +Infinity
+    public static TheoryData<string> ElementsOutsideTheConicsDomain => new() { "mean elements of e = 1.5", "a (1 - e) overflowing" };
+
+    private static KeplerianElements ElementsOutsideTheConicsDomainNamed(string name) => name switch
     {
-        var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Assert.True(ke.PerigeeRadius() < 0.0);
+        "mean elements of e = 1.5" => KeplerianElements.FromOMM(15.5, 1.5, 51.6, 10.0, 20.0, 30.0, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+        _ => new KeplerianElements(-1.0e300, 1.0e10, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF)
+    };
+
+    [Theory]
+    [MemberData(nameof(ElementsOutsideTheConicsDomain))]
+    void ConvertConicElementsToStateVector_OfAPeriapsisNotFiniteAndAboveZero_ThrowsArgumentException(string name)
+    {
+        var ke = ElementsOutsideTheConicsDomainNamed(name);
+        Assert.False(ke.PerigeeRadius() > 0.0 && double.IsFinite(ke.PerigeeRadius()));
         var gm = TestHelpers.EarthAtJ2000.GM;
         foreach (var conversion in new Func<IO.Astrodynamics.OrbitalParameters.StateVector>[]
                  {
@@ -1407,8 +1418,22 @@ public partial class SpiceApiTest
         {
             var error = Assert.Throws<ArgumentException>(conversion);
             Assert.Equal("keplerianElements", error.ParamName);
+            Assert.Contains("CONICS", error.Message);
         }
 
+        AssertNothingPending();
+    }
+
+    // The osculating elements of the former theory, an ellipse of negative semi-major axis and a hyperbola of positive one,
+    // are refused at their construction since #738, before any conversion
+    [Theory]
+    [InlineData(-7.0e6, 0.1)]
+    [InlineData(7.0e6, 1.5)]
+    void KeplerianElements_OfASemiMajorAxisOfTheWrongSign_NeverReachTheConversion(double a, double e)
+    {
+        var error = Assert.Throws<ArgumentException>(() =>
+            new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Assert.Equal("semiMajorAxis", error.ParamName);
         AssertNothingPending();
     }
 
