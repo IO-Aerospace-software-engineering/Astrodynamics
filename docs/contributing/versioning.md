@@ -4026,13 +4026,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   called `DateTime.SpecifyKind(…, Local)`, which drops that mark, so the label was read back with the standard offset:
   in America/New_York, 2025-11-02T05:30Z gave local 01:30, whose `ToUTC()` is 06:30Z, and `utc == utc.ToLocal()` was
   false, for every instant of 05:00Z to 06:00Z, 60 of the 481 minutes about the transition (measured on f70ee32). The
-  constructor keeps a `DateTime` already of kind `Local` as it is, so a conversion changes the label, not the instant
+  constructor keeps a `DateTime` of kind `Local` in the repeated hour as it is, so a conversion changes the label, not the instant
   (#512): over both transitions of 2025, every minute from 4 h before to 4 h after each, `ToLocal()` is the calendar of
   the zone's rule, equals the instant and converts back to it to the tick
   (`ColdStartTests.ToLocal_KeepsTheInstant_AcrossTheTransitionsOfDaylightSavingTime`, a child in America/New_York,
   skipped on Windows, where `TZ` does not set the zone; red on f70ee32). A label built from the calendar of the repeated
   hour still reads with the standard offset (documented on [Time and Windows](../reference/time-and-windows.md)). The
-  limit stated there since #512 is removed.
+  mark is kept only while the label is in the repeated hour, and dropped outside it (`TimeZoneInfo.Local.IsAmbiguousTime`):
+  the arithmetic of a local time, that of its calendar, carries the mark (`DateTime.AddTicks` keeps it), and a mark kept
+  everywhere made a label moved out of the hour and back read with the daylight offset where an equal label of the same
+  calendar read with the standard one, 1 h after the local time of 05:30Z then 1 h before giving 05:30Z, and the same steps from the local time
+  of 07:30Z, the same instant, calendar and frame, 06:30Z (630 of 2706 such pairs of labels about the transition
+  differed after the same step of ±30, ±60 or ±90 min; the child's check, red before the mark was dropped). The limit
+  stated there since #512 is removed.
 
 **Changed**
 
@@ -5942,7 +5948,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   null array throws `ArgumentNullException`, where it threw `NullReferenceException`. The library's own results built in a
   fresh array (the inverse, the Jacobian, `CovarianceMatrix.ToMatrix`, `ToMatrixWithUnitConversion`, a site frame) wrap
   it without the copy, through the internal `Matrix.Wrap`, so their cost is unchanged; results are unchanged, bit for bit
-  (`MatirxTests.Constructor_FromArray_CopiesTheArray`, red on f70ee32; `Results_ShareNoArrayWithTheirInputs`).
+  (`MatirxTests.Constructor_FromArray_CopiesTheArray`, red on f70ee32; `Results_ShareNoArrayWithTheirInputs` guards the
+  product, the inverse, the copy, both Jacobian overloads and both covariance matrices: a write to a result reaches
+  neither its source nor the next result).
   Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
 
 **Deprecated**

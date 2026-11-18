@@ -23,10 +23,12 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// The time of the calendar <paramref name="dateTime"/> in <paramref name="frame"/>. The kind of the
     /// <see cref="System.DateTime"/> is set to the frame's (<see cref="DateTimeKind.Utc"/> for UTC,
     /// <see cref="DateTimeKind.Local"/> for local time, <see cref="DateTimeKind.Unspecified"/> otherwise); a local
-    /// <see cref="System.DateTime"/> given for local time is kept as it is, so the daylight time mark that
-    /// <see cref="System.DateTime.ToLocalTime"/> sets on an instant of the first of two repeated hours survives and
-    /// <see cref="ToLocal"/> keeps the instant (#751). A calendar of another kind in the repeated hour reads with the
-    /// standard offset of the zone.
+    /// <see cref="System.DateTime"/> of the repeated hour given for local time is kept as it is, so the daylight time mark
+    /// that <see cref="System.DateTime.ToLocalTime"/> sets on an instant of the first of the two hours survives and
+    /// <see cref="ToLocal"/> keeps the instant (#751). The mark is dropped outside the repeated hour, where it holds no
+    /// information, so that the arithmetic of a local time, that of its calendar, keeps it while the label stays in the
+    /// repeated hour and two local times of one instant and one calendar give the same result (second review of #751). A
+    /// calendar of another kind in the repeated hour reads with the standard offset of the zone.
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="frame"/> is null.</exception>
     public Time(in DateTime dateTime, ITimeFrame frame)
@@ -39,10 +41,12 @@ public readonly record struct Time : IComparable<Time>, IComparable
         }
         else if (frame is LocalTimeFrame)
         {
-            // A local DateTime is kept as it is: SpecifyKind would drop the daylight time mark DateTime.ToLocalTime sets on
-            // an instant of the first of two repeated hours, which ToUniversalTime then read with the standard offset, an
-            // hour later (#751)
-            if (DateTime.Kind != DateTimeKind.Local)
+            // A local DateTime of the repeated hour is kept as it is: SpecifyKind would drop the daylight time mark
+            // DateTime.ToLocalTime sets on an instant of the first of the two hours, which ToUniversalTime then read with the
+            // standard offset, an hour later (#751). Outside that hour the mark, which DateTime.AddTicks carries, is dropped:
+            // a label moved out of the repeated hour and back would read with the daylight offset where an equal label of
+            // the same calendar reads with the standard one (second review of #751)
+            if (DateTime.Kind != DateTimeKind.Local || !TimeZoneInfo.Local.IsAmbiguousTime(DateTime))
             {
                 DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Local);
             }

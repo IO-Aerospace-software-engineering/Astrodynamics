@@ -158,6 +158,11 @@ too, the second of the two hours (06:30 UTC). The `ToLocal()` of an instant chan
 repeated hour too: `t.ToLocal() == t` and `t.ToLocal().ToUTC()` is `t` to the tick, 2025-11-02T05:30Z giving local 01:30
 of the first hour, which is 05:30Z (#751, decided by S. Guillet, 2026-11-18: the `DateTime` that `ToLocalTime` marks as
 daylight time is kept; before, the constructor's `SpecifyKind` dropped the mark, and that local 01:30 was 06:30Z).
+The mark is kept only while the label is in the repeated hour: the arithmetic of a local time is that of its calendar
+(`AddHours`, `AddMinutes`, `+ TimeSpan`, ...), so 10 min after local 01:30 of the first hour is 01:40 of the first hour
+(05:40Z), but 1 h after it is local 02:30 (07:30Z, 2 h later), and 1 h before that is local 01:30 read with the standard
+offset (06:30Z), as from any other label of that calendar. Two local times of one instant and one calendar so give the
+same result after the same arithmetic.
 To tell two labels of one instant apart, compare `DateTime` and `Frame`. Within TDB, `-` still counts the ticks of the
 calendars, so two equal consecutive TDB ticks differ by one tick. The library's caches whose values carry their key as a
 label (the orientation a frame keeps from its last read, #541, the range rates of the conjunction search) stay keyed by

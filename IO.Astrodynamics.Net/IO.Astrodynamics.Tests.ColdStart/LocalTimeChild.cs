@@ -1,6 +1,8 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Tests.ColdStart;
@@ -124,6 +126,68 @@ internal static class LocalTimeChild
                                                            first.ToLocal() != second.ToLocal() && first.ToLocal() < second.ToLocal());
         // A label built from the calendar of the repeated hour keeps the standard offset (documented)
         failures += Check("calendar 01:30 is 06:30Z", Local(2025, 11, 2, 1, 30) == second);
+        failures += CheckLocalArithmetic();
+        return failures;
+    }
+
+    /// <summary>
+    /// The arithmetic of a local time is that of its calendar, and two local times of one instant, calendar and frame give
+    /// the same instant after the same arithmetic (second review of #751): the daylight time mark of
+    /// <see cref="DateTime.ToLocalTime"/> is kept while the label stays in the repeated hour, where it tells the two hours
+    /// apart, and dropped outside it. The labels are the <see cref="Time.ToLocal"/> of every minute from 4 h before to 4 h
+    /// after the November transition of 2025 and those labels moved by ±30, ±60 and ±90 min; each pair of one instant and
+    /// one calendar must agree on the instant and the text of each label moved again by ±30, ±60 and ±90 min, and on
+    /// their text. Expected instants of the review's probe are the zone's rule: 05:30Z is local 01:30 of the first hour
+    /// (UTC − 4 h), and local 01:30 read from a label outside the repeated hour is the second (UTC − 5 h), 06:30Z. Before,
+    /// a label moved out of the repeated hour kept the mark, and moved back into it read with the daylight offset: 1 h
+    /// after the local time of 05:30Z, then 1 h before, was 05:30Z, where the same steps from the local time of 07:30Z,
+    /// the same instant, calendar and frame, gave 06:30Z.
+    /// </summary>
+    private static int CheckLocalArithmetic()
+    {
+        int failures = 0;
+        var transition = new DateTime(2025, 11, 2, 6, 0, 0, DateTimeKind.Utc);
+        var steps = new[] { -90.0, -60.0, -30.0, 30.0, 60.0, 90.0 };
+        var labels = new List<Time>();
+        for (int minute = -240; minute <= 240; minute++)
+        {
+            var local = new Time(transition.AddMinutes(minute), TimeFrame.UTCFrame).ToLocal();
+            labels.Add(local);
+            labels.AddRange(steps.Select(local.AddMinutes));
+        }
+
+        int pairs = 0;
+        int wrong = 0;
+        foreach (var group in labels.GroupBy(l => (l.DateTime.Ticks, Utc: l.ToUTC().DateTime.Ticks)))
+        {
+            var first = group.First();
+            foreach (var other in group.Skip(1))
+            {
+                pairs++;
+                bool same = other.Frame.Equals(first.Frame) && other.ToString() == first.ToString() &&
+                            steps.All(step => first.AddMinutes(step).ToUTC().DateTime.Ticks == other.AddMinutes(step).ToUTC().DateTime.Ticks &&
+                                              first.AddMinutes(step).ToString() == other.AddMinutes(step).ToString());
+                if (!same && wrong++ == 0)
+                {
+                    Console.Error.WriteLine($"Two labels {first} of {first.ToUTC()} differ after the same arithmetic.");
+                }
+            }
+        }
+
+        failures += Check($"local labels of one instant and calendar agree after the same arithmetic ({wrong} of {pairs} pairs differ)",
+            wrong == 0 && pairs > 0);
+
+        // The review's probe
+        var a = new Time(new DateTime(2025, 11, 2, 5, 30, 0), TimeFrame.UTCFrame).ToLocal().AddHours(1.0);
+        var b = new Time(new DateTime(2025, 11, 2, 7, 30, 0), TimeFrame.UTCFrame).ToLocal();
+        var utc0630 = new DateTime(2025, 11, 2, 6, 30, 0, DateTimeKind.Utc);
+        failures += Check("1 h after local 05:30Z is local 02:30, 07:30Z", a == b && a.DateTime.Ticks == b.DateTime.Ticks && a.DateTime.Hour == 2);
+        failures += Check("then 1 h before is local 01:30 of the second hour, 06:30Z, from both",
+            a.AddHours(-1.0).ToUTC().DateTime == utc0630 && b.AddHours(-1.0).ToUTC().DateTime == utc0630);
+        // Inside the repeated hour the mark is kept: 10 min after local 01:30 of the first hour is 05:40Z
+        var firstHour = new Time(new DateTime(2025, 11, 2, 5, 30, 0), TimeFrame.UTCFrame).ToLocal();
+        failures += Check("10 min after local 01:30 of the first hour is 05:40Z",
+            firstHour.AddMinutes(10.0).ToUTC().DateTime == new DateTime(2025, 11, 2, 5, 40, 0, DateTimeKind.Utc));
         return failures;
     }
 
