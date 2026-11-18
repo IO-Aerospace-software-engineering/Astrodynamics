@@ -37,7 +37,7 @@ internal static class CovarianceChecks
     /// the clipping is made in (that of the state, or the RTN frame of the state when the depth passes there only,
     /// <see cref="PropagatorBase.RemediateInitialCovariance"/>), so that each correlation moves by at most 6e-3 there. Rounding each
     /// element of a positive semi-definite covariance to 4 significant digits, as the covariances of a CDM (CCSDS 508.0-B-1,
-    /// to be verified by S. Guillet), changes each correlation by at most 2u/(1 − u), u = 5e-4, so the smallest eigenvalue
+    /// confirmed by S. Guillet, 2026-11-18), changes each correlation by at most 2u/(1 − u), u = 5e-4, so the smallest eigenvalue
     /// of a correlation matrix of order n by at most (n − 1) 2u/(1 − u) (Weyl), 8.34e-4 of the trace 6; measured: 1.6e-4 at
     /// worst over 60 000 random covariances of ranks 1 to 6 (the Clohessy-Wiltshire covariances of LEO and GEO among them),
     /// 2.1e-4 by an adversarial search. A correlation of −1.01 in RTN (1.67e-3 of the trace) is beyond it.

@@ -5725,7 +5725,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `StateVector.WithRemediatedCovariance()` and the conjunction analysis remediated any indefinite covariance by eigenvalue
   clipping, however deep its defect: a T–Ṙ correlation of −10 by a change of 5.5 times the values, flagged
   `CovarianceRemediated` only. Both now refuse a defect deeper than the rounding of the elements to 4 significant digits
-  (the form of the CDM's covariances, CCSDS 508.0-B-1, to be verified by S. Guillet) explains: the smallest eigenvalue
+  (the form of the CDM's covariances, CCSDS 508.0-B-1, confirmed by S. Guillet, 2026-11-18) explains: the smallest eigenvalue
   of the correlation matrix below −1e-3 of its trace (`CovarianceChecks.RemediationDepthBound`) in the frame of the state
   and in its RTN frame (the frame a CDM rounds in; a rotation deepens a rounding defect, up to −0.11 of the trace measured
   for covariances rounded in RTN). The bound is above the rigorous worst of that rounding, 8.34e-4 of the trace by Weyl's
