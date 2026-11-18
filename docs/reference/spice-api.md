@@ -273,7 +273,7 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 |--------|-------------|
 | `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add celestial body data: the records of `IO.Astrodynamics.DTO`, not `IO.Astrodynamics.Body.CelestialBody` |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
+| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
 
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
@@ -298,7 +298,11 @@ rotated by the provider's orientation of it), subtracts them and rotates the dif
 provider's orientation of that frame, r' = R r and v' = R v + ω × r' as `ToFrame`; a read in ICRF or GCRF is the
 stored difference, unrotated. Besides the frames whose orientations were added, the provider knows ICRF and GCRF (the
 identity), ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, 84381.448″ about x; the default frame of the bodies)
-and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. It holds geometric states
+and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. No orientation can be added
+under ICRF, GCRF, TEME, CIRS or TIRS, the frames it defines and never reads from stored entries: `AddStateOrientationToICRF`
+throws `ArgumentException` naming `frame` for them, by name in any case, and stores nothing (#744, decided by S. Guillet,
+2026-11-18; before, an orientation stored under ICRF or GCRF was returned by `FrameTransformationToICRF` while
+`GetEphemeris` took the identity, and one stored under TEME, CIRS or TIRS was never read). It holds geometric states
 only: an aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet,
 2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was
 geometric.

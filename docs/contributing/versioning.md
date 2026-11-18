@@ -5907,6 +5907,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ArgumentOutOfRangeException` of `new TleParameters(...)` and the four `CreateWith*` factories has the `ParamName`
   `revolutionNumberAtEpoch`, where it was `revNumber`. Migration: a caller that tests `ParamName` compares with
   `revolutionNumberAtEpoch` (`nameof` of the parameter).
+- **Breaking: `MemoryDataProvider.AddStateOrientationToICRF` refuses the frames the provider defines** ([#744](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/744);
+  decided by S. Guillet, 2026-11-18). An orientation added under ICRF (J2000) or GCRF, the identity of the provider (its
+  states are ICRF, #559; GCRF shares its axes, #543), or under TEME, CIRS or TIRS, the managed frames (#656), by name in
+  any case, throws `ArgumentException` naming `frame` and stores nothing. Before, an orientation stored under ICRF or GCRF
+  was returned by `FrameTransformationToICRF` while `GetEphemeris` took the identity: 90° about z stored under ICRF read
+  back 1.5708 rad from the identity, and the stored state (1e11, 0, 0) m came back unrotated (measured on f70ee32);
+  one stored under TEME, CIRS or TIRS was never read
+  (`MemoryDataProviderFrameTests.AddStateOrientation_UnderAFrameTheProviderDefines_Throws`, 10 names,
+  `_UnderTheLibrarysDefinedFrames_Throws`, red on f70ee32; the three `ConfigurationTest` tests of stored orientations
+  now store under a frame of their own). ECLIPJ2000 and any other frame still take stored orientations, which come
+  first. Migration: none for a read, which already took the definition of these frames in `GetEphemeris`; drop the
+  call, or store the orientation under a frame of its own name.
 
 **Deprecated**
 

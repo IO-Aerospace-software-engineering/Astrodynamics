@@ -109,7 +109,7 @@ Configuration.Instance.SetDataProvider(new SpiceDataProvider());
 // In-memory, no kernel files required (in IO.Astrodynamics.Tests, in a child process only)
 Configuration.Instance.SetDataProvider(new MemoryDataProvider());
 ```
-A `MemoryDataProvider` read is the difference of its stored states in ICRF, rotated into the frame asked by its orientation of that frame (ICRF and GCRF unrotated; ICRF, GCRF, ECLIPJ2000, TEME, CIRS and TIRS known without stored orientations), and an aberration other than `None` throws `NotSupportedException` (#559, decided by S. Guillet, 2026-11-17; before, the ICRF difference labelled with the frame asked, and geometric whatever the aberration).
+A `MemoryDataProvider` read is the difference of its stored states in ICRF, rotated into the frame asked by its orientation of that frame (ICRF and GCRF unrotated; ICRF, GCRF, ECLIPJ2000, TEME, CIRS and TIRS known without stored orientations, and `AddStateOrientationToICRF` throwing `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, by name in any case, #744, decided by S. Guillet, 2026-11-18), and an aberration other than `None` throws `NotSupportedException` (#559, decided by S. Guillet, 2026-11-17; before, the ICRF difference labelled with the frame asked, and geometric whatever the aberration).
 
 Test classes of `IO.Astrodynamics.Tests` load the solar system kernels in their constructor through the helper, which loads them once per test process (`LoadKernels` of a loaded path unloads and reloads it under the SPICE lock, which cost 63 % of the CI time):
 ```csharp

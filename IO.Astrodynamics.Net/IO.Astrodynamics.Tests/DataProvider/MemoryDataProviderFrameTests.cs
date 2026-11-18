@@ -203,7 +203,7 @@ public class MemoryDataProviderFrameTests
     [Fact]
     public void FrameTransformation_StoredOrientationsComeFirst()
     {
-        // A frame whose orientations were added is read from them, as before; ICRF included (ConfigurationTest)
+        // A frame whose orientations were added is read from them, as before (ConfigurationTest); ICRF and GCRF take none (#744)
         var provider = new MemoryDataProvider();
         var rotation = new Quaternion(Vector3.VectorZ, 0.3);
         provider.AddStateOrientationToICRF(Frames.Frame.ECLIPTIC_J2000, Start,
@@ -250,5 +250,63 @@ public class MemoryDataProviderFrameTests
             var ex = Assert.Throws<NotSupportedException>(() => provider.GetEphemeris(Start, target, PlanetsAndMoons.EARTH_BODY, frame, aberration));
             Assert.Contains(aberration.ToString(), ex.Message);
         }
+    }
+
+    /// <summary>
+    /// The frames the provider defines and never reads from stored entries, ICRF and GCRF (the identity: its states are
+    /// ICRF, #559, and GCRF shares its axes, #543) and the managed TEME, CIRS and TIRS (#656), by name in any case: storing
+    /// an orientation under one of them throws <see cref="ArgumentException"/> naming <c>frame</c> and stores nothing
+    /// (#744, decided by S. Guillet, 2026-11-18). Before, an orientation stored under ICRF or GCRF was returned by
+    /// <see cref="MemoryDataProvider.FrameTransformationToICRF"/> while <see cref="MemoryDataProvider.GetEphemeris"/> took
+    /// the identity: the probe of the issue, 90° about z under ICRF, gave 1.5708 rad from the identity and the stored state
+    /// (1e11, 0, 0) m unrotated. The references are the definitions: the identity, and the managed frame's own orientation.
+    /// </summary>
+    [Theory]
+    [InlineData("J2000")]
+    [InlineData("j2000")]
+    [InlineData("GCRF")]
+    [InlineData("gcrf")]
+    [InlineData("TEME")]
+    [InlineData("teme")]
+    [InlineData("CIRS")]
+    [InlineData("Cirs")]
+    [InlineData("TIRS")]
+    [InlineData("tirs")]
+    public void AddStateOrientation_UnderAFrameTheProviderDefines_Throws(string name)
+    {
+        var provider = new MemoryDataProvider();
+        var frame = new Frames.Frame(name);
+        var rotation = new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.PI2);
+
+        var ex = Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToICRF(frame, Start, new StateOrientation(rotation, Vector3.Zero, Start, frame)));
+        Assert.Equal("frame", ex.ParamName);
+        Assert.Contains(name, ex.Message);
+
+        // Nothing stored: the read is the definition
+        var read = provider.FrameTransformationToICRF(Start, frame);
+        var expected = name.Equals("J2000", StringComparison.OrdinalIgnoreCase) || name.Equals("GCRF", StringComparison.OrdinalIgnoreCase)
+            ? Quaternion.Identity
+            : (name.ToUpperInvariant() switch { "TEME" => Frames.Frame.TEME, "CIRS" => Frames.Frame.CIRS, _ => Frames.Frame.TIRS })
+                .GetStateOrientationToICRF(Start).Rotation;
+        var delta = read.Rotation * expected.Conjugate();
+        Assert.Equal(0.0, 2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W)));
+    }
+
+    [Fact]
+    public void AddStateOrientation_UnderTheLibrarysDefinedFrames_Throws()
+    {
+        // The library's own instances, the probe of #744 under ICRF among them
+        var provider = new MemoryDataProvider();
+        foreach (var frame in new[] { Frames.Frame.ICRF, Frames.Frame.GCRF, Frames.Frame.TEME, Frames.Frame.CIRS, Frames.Frame.TIRS })
+        {
+            var orientation = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.PI2), Vector3.Zero, Start, frame);
+            Assert.Equal("frame", Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToICRF(frame, Start, orientation)).ParamName);
+        }
+
+        // The provider's two answers for ICRF agree: the identity, and the stored state unrotated
+        Assert.Equal(Quaternion.Identity, provider.FrameTransformationToICRF(Start, Frames.Frame.ICRF).Rotation);
+        provider.AddStateVector(399, Start, new StateVector(new Vector3(1e11, 0.0, 0.0), Vector3.Zero, TestHelpers.SsbAtJ2000, Start, Frames.Frame.ICRF));
+        var state = provider.GetEphemeris(Start, PlanetsAndMoons.EARTH_BODY, new Barycenter(0), Frames.Frame.ICRF, Aberration.None);
+        Assert.Equal(new Vector3(1e11, 0.0, 0.0), state.ToStateVector().Position);
     }
 }
