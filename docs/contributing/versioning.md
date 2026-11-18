@@ -4005,6 +4005,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   relative velocity, follows. A star as observer takes its space velocity too, which moves positions on the paths that
   integrate it (the Changed entry below). The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
 
+- **The CLI's coordinate search read neither the coordinate systems nor the coordinates its help listed**
+  ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652)). The help of
+  `find-windows-from-coordinate-constraint` listed the coordinate systems `LATITUDINAL`, `SPHERICAL` and `CYLINDRICAL`
+  and the coordinate `COLATITUDE`, which the library has not, and the command read both arguments by member name only
+  (`Enum.Parse`), so that `RA/DEC` and `RIGHT ASCENSION`, the values the help showed, ended in "Requested value was not
+  found" (measured on f70ee32). The help now lists exactly the members of `CoordinateSystem` (`RECTANGULAR`, `RA/DEC`,
+  `GEODETIC`, `PLANETOGRAPHIC`) and `Coordinate` (`X`, `Y`, `Z`, `ALTITUDE`, `DECLINATION`, `LATITUDE`, `LONGITUDE`,
+  `RADIUS`, `RANGE`, `RIGHT ASCENSION`); both arguments are read by description, as the relational operator, or by
+  member name (`RaDec`, `RightAscension`), in any case, before the kernels are loaded; an unknown value throws
+  `ArgumentException` naming its argument and listing the values the command reads; a coordinate the system has not is
+  SPICE's error, as before (`GeometryFinderTests.CoordinateConstraint_HelpListsTheValuesOfTheEnumerations`,
+  `_ReadsDescriptionsAndMemberNames` against the search of `SpiceAPI` with the members, `_UnknownValue_ThrowsListingTheValues`,
+  `_EveryListedValueIsRead`, red on f70ee32; `_CoordinateOfAnotherSystem_ThrowsSpiceError`). The latitudinal, spherical
+  and cylindrical systems and the colatitude are not added. The entry under Known limitations is removed.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -6084,9 +6099,6 @@ not listed.
   ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447)).
   `ConjunctionAssessment.Analyze` allocates about 403 MB per pair over a 2 h window (0.83 s with the covariance held in
   RTN, 1.71 s propagated); results are unaffected.
-- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652)). The help of
-  `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do
-  not exist, and its `RA/DEC` and `RIGHT ASCENSION` are rejected: pass the member names (`RaDec`, `RightAscension`).
 
 ### 10.2.0-preview-1
 

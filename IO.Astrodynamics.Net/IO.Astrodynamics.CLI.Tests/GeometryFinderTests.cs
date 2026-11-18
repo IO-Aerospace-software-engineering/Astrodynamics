@@ -203,4 +203,155 @@ public class GeometryFinderTests
             Assert.Equal(string.Empty, sb.ToString());
         }
     }
+
+    /// <summary>
+    /// The help of <c>find-windows-from-coordinate-constraint</c> lists exactly the coordinate systems and coordinates of
+    /// the library, by their descriptions (#652: it listed LATITUDINAL, SPHERICAL, CYLINDRICAL and COLATITUDE, which the
+    /// library has not). The reference is the enumerations themselves, <see cref="CoordinateSystem"/> and
+    /// <see cref="Coordinate"/>.
+    /// </summary>
+    [Fact]
+    public void CoordinateConstraint_HelpListsTheValuesOfTheEnumerations()
+    {
+        var parameters = typeof(GeometryFinderCommand).GetMethod(nameof(GeometryFinderCommand.CoordinateConstraint))!.GetParameters();
+
+        Assert.Equal(Enum.GetValues<CoordinateSystem>().Select(x => x.GetDescription()), ListedValues(parameters, "coordinateSystem"));
+        Assert.Equal(Enum.GetValues<Coordinate>().Select(x => x.GetDescription()), ListedValues(parameters, "coordinate"));
+    }
+
+    private static IEnumerable<string> ListedValues(System.Reflection.ParameterInfo[] parameters, string name)
+    {
+        var description = parameters.Single(x => x.Name == name).GetCustomAttributes(typeof(Cocona.ArgumentAttribute), false)
+            .Cast<Cocona.ArgumentAttribute>().Single().Description!;
+        var open = description.IndexOf('(');
+        return description.Substring(open + 1, description.IndexOf(')', open) - open - 1).Split(',').Select(x => x.Trim());
+    }
+
+    /// <summary>
+    /// Every coordinate system and coordinate the help lists, by its description or its member name in any case, reads as
+    /// its member (#652: they were read by member name only, so RA/DEC and RIGHT ASCENSION, the values the help showed,
+    /// were rejected). The reference is the search SpiceAPI runs with the members themselves: the Earth's right ascension
+    /// and declination seen from the Sun in ICRF, which cross π and 0 at the March equinox of 2024.
+    /// </summary>
+    [Theory]
+    [InlineData("RA/DEC", "RIGHT ASCENSION", 3.0)]
+    [InlineData("ra/dec", "right ascension", 3.0)]
+    [InlineData("RaDec", "RightAscension", 3.0)]
+    [InlineData("RA/DEC", "DECLINATION", 0.0)]
+    [InlineData("radec", "declination", 0.0)]
+    public void CoordinateConstraint_ReadsDescriptionsAndMemberNames(string coordinateSystem, string coordinate, double value)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            StringBuilder sb = new StringBuilder();
+            Console.SetOut(new StringWriter(sb));
+            var window = new WindowParameters { Begin = "2024-03-01T00:00:00", End = "2024-05-01T00:00:00" };
+            command.CoordinateConstraint("Data", 10, 399, coordinateSystem, coordinate, "=", value, window, TimeSpan.FromDays(20));
+
+            var member = coordinate.Contains("asc", StringComparison.OrdinalIgnoreCase) ? Coordinate.RightAscension : Coordinate.Declination;
+            var expected = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
+                    new TimeSystem.Window(new TimeSystem.Time(new DateTime(2024, 3, 1), TimeSystem.TimeFrame.TDBFrame), new TimeSystem.Time(new DateTime(2024, 5, 1), TimeSystem.TimeFrame.TDBFrame)), 10, 399,
+                    Frames.Frame.ICRF, CoordinateSystem.RaDec, member, RelationnalOperator.Equal, value, 0.0, Aberration.None, TimeSpan.FromDays(20))
+                .ToArray();
+            Assert.Single(expected);
+            Assert.Equal(2024, expected[0].StartDate.DateTime.Year);
+            Assert.Equal(3, expected[0].StartDate.DateTime.Month);
+            Assert.Equal($"{expected[0]}{Environment.NewLine}", sb.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Every listed value, by its description and by its member name, is read; an unknown one ends the command with an
+    /// <see cref="ArgumentException"/> naming its argument and the values the command reads, before any search (#652:
+    /// LATITUDINAL, SPHERICAL, CYLINDRICAL and COLATITUDE, which the help listed, ended in <c>Enum.Parse</c>'s "Requested
+    /// value was not found").
+    /// </summary>
+    [Theory]
+    [InlineData("LATITUDINAL", "Z", "coordinateSystem")]
+    [InlineData("SPHERICAL", "Z", "coordinateSystem")]
+    [InlineData("CYLINDRICAL", "Z", "coordinateSystem")]
+    [InlineData("1", "Z", "coordinateSystem")]
+    [InlineData("RECTANGULAR", "COLATITUDE", "coordinate")]
+    [InlineData("RECTANGULAR", "", "coordinate")]
+    public void CoordinateConstraint_UnknownValue_ThrowsListingTheValues(string coordinateSystem, string coordinate, string parameter)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            StringBuilder sb = new StringBuilder();
+            Console.SetOut(new StringWriter(sb));
+            var window = new WindowParameters { Begin = "2024-03-01T00:00:00", End = "2024-05-01T00:00:00" };
+
+            var e = Assert.Throws<ArgumentException>(() => { _ = command.CoordinateConstraint("Data", 10, 399, coordinateSystem, coordinate, "=", 0.0, window,
+                TimeSpan.FromDays(20)); });
+            Assert.Equal(parameter, e.ParamName);
+            var listed = parameter == "coordinateSystem"
+                ? Enum.GetValues<CoordinateSystem>().Select(x => x.GetDescription())
+                : Enum.GetValues<Coordinate>().Select(x => x.GetDescription());
+            foreach (var value in listed)
+            {
+                Assert.Contains(value, e.Message);
+            }
+
+            Assert.Equal(string.Empty, sb.ToString());
+        }
+    }
+
+    /// <summary>
+    /// A coordinate the coordinate system has not is SPICE's error (<c>gfposc_c</c> signals it), which ends the command
+    /// with <see cref="InvalidOperationException"/>, as the help says (#652).
+    /// </summary>
+    [Theory]
+    [InlineData("RECTANGULAR", "RADIUS")]
+    [InlineData("RA/DEC", "LATITUDE")]
+    [InlineData("GEODETIC", "RIGHT ASCENSION")]
+    public void CoordinateConstraint_CoordinateOfAnotherSystem_ThrowsSpiceError(string coordinateSystem, string coordinate)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            StringBuilder sb = new StringBuilder();
+            Console.SetOut(new StringWriter(sb));
+            var window = new WindowParameters { Begin = "2024-03-01T00:00:00", End = "2024-05-01T00:00:00" };
+
+            var e = Assert.Throws<InvalidOperationException>(() => { _ = command.CoordinateConstraint("Data", 10, 399, coordinateSystem, coordinate, "=", 0.0, window,
+                TimeSpan.FromDays(20)); });
+            Assert.Contains(coordinate, e.Message);
+            Assert.Equal(string.Empty, sb.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Each coordinate system and coordinate of the help reads as its member, by description and by member name (#652).
+    /// </summary>
+    [Fact]
+    public void CoordinateConstraint_EveryListedValueIsRead()
+    {
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            Console.SetOut(new StringWriter(new StringBuilder()));
+            var window = new WindowParameters { Begin = "2024-03-01T00:00:00", End = "2024-03-02T00:00:00" };
+            foreach (var system in Enum.GetValues<CoordinateSystem>())
+            {
+                foreach (var spelling in new[] { system.GetDescription(), system.ToString() })
+                {
+                    var e = Record.Exception(() => { _ = command.CoordinateConstraint("Data", 10, 399, spelling, "NOT_A_COORDINATE_652", "=", 0.0, window,
+                        TimeSpan.FromDays(1)); });
+                    Assert.Equal("coordinate", Assert.IsType<ArgumentException>(e).ParamName);
+                }
+            }
+
+            foreach (var coordinate in Enum.GetValues<Coordinate>())
+            {
+                foreach (var spelling in new[] { coordinate.GetDescription(), coordinate.ToString() })
+                {
+                    var e = Record.Exception(() => { _ = command.CoordinateConstraint("Data", 10, 399, "RECTANGULAR", spelling, "NOT_AN_OPERATOR_652", 0.0, window,
+                        TimeSpan.FromDays(1)); });
+                    Assert.Equal("description", Assert.IsType<ArgumentException>(e).ParamName);
+                }
+            }
+        }
+    }
 }
