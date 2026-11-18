@@ -1277,7 +1277,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <remarks>
     /// This method uses the <see cref="MeanElementsConverter"/> to compute the mean orbital elements
     /// from the current orbital parameters. The resulting TLE includes metadata such as the satellite's
-    /// classification, drag term, and epoch information.
+    /// classification, drag term, and epoch information. A null or blank <c>config.CosparId</c> writes blank columns 10-17 of
+    /// line 1, the TLE without an international designator of <see cref="TLE.TLE.Create"/> (#604).
     /// </remarks>
     /// <exception cref="ArgumentNullException">
     /// Thrown if the <paramref name="config"/> parameter is null.

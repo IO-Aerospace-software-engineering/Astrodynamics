@@ -3925,7 +3925,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   back as the blank columns (internal `OmmMetadata.UnknownObjectId`). Both TLEs go through `Create`, and through
   `ToOmm`, the XML written and read and `ToTle`, to their own text, each field at its columns, but for the ephemeris type
   of 11801, blank in the set and written 0 (SGP4's) by `Create` as for every TLE (`TleBlankDesignatorTests`, 15 cases
-  red on f70ee32). An empty `OBJECT_ID` is still refused by the reader and `OmmMetadata` (#708). No number moves.
+  red on f70ee32). The fit of `OrbitalParameters.ToTLE(Configuration)` goes through `TLE.Create` too: a null or blank
+  `Configuration.CosparId` threw "TLE conversion using Equinoctial elements failed after 15 iterations"
+  (`InvalidOperationException`; the `ArgumentException` of the designator was caught inside the fit) and now writes the
+  blank columns, the lines otherwise those of the same fit with a designator, the checksum of line 1 recomputed
+  (`TleBlankDesignatorTests.ToTLE_NullOrBlankCosparId_WritesBlankColumns`, 3 cases red on f70ee32). An empty `OBJECT_ID`
+  is still refused by the reader and `OmmMetadata`, as #708 decided (S. Guillet, 2026-11-16); the decision of #604 also
+  reads an empty value as the blank columns, which the internal conversion does, but no OMM reaches it with one: whether
+  the reader should accept an empty `OBJECT_ID` is open, for S. Guillet to settle. No number moves.
 - **The CCSDS readers loaded a date outside the standard's forms** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), the date half).
   `CcsdsEpochParser`, which the CDM, OPM and OMM readers share since #490, passed a text outside the date branch of
   `epochType`, and a calendar text with a field out of range, to `DateTime.TryParse`: a `TCA` or an `EPOCH` of
@@ -5918,8 +5925,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   S. Guillet, 2026-11-18). An OMM whose `OBJECT_ID` is `UNKNOWN` (trimmed, in any letter case) gives a TLE with blank
   columns 10-17, where `UNKNOWN ` (or `unknown `, as given) was written there (measured on f70ee32); `TLE.ToOmm` writes
   `UNKNOWN` for a TLE without a designator, where it threw, and `TLE.Create` writes blank columns for a null or blank
-  `cosparId`, where it threw `ArgumentException`. Migration: a consumer that read `UNKNOWN` in the designator columns
-  reads blanks; a caller that passed a placeholder designator to `TLE.Create` (`00000A`) can pass null.
+  `cosparId`, where it threw `ArgumentException`, and `OrbitalParameters.ToTLE` for a null or blank
+  `Configuration.CosparId`, where it threw `InvalidOperationException` ("TLE conversion using Equinoctial elements
+  failed"). Migration: a consumer that read `UNKNOWN` in the designator columns reads blanks; a caller that passed a
+  placeholder designator to `TLE.Create` or `Configuration` (`00000A`) can pass null.
 - **Breaking: the OPM writers write the CCSDS name of `Frame.ICRF`** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339), Fixed above; decided by S. Guillet,
   2026-11-18). `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` write `REF_FRAME = ICRF` for a state in `Frame.ICRF`,
   and `ToOpm` `MAN_REF_FRAME = ICRF` for its impulses, where they wrote `J2000`; every other frame keeps its name, and

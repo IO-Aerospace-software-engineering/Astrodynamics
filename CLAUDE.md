@@ -189,7 +189,7 @@ The C# blocks of this file and of `IO.Astrodynamics.Net/CLAUDE.md` are compiled 
 ### CCSDS OMM/OPM
 
 - OMM COSPAR ID format: `"1998-067A"` (with hyphen); TLE format: `"98067A"` — conversion is automatic
-- A blank designator (columns 10-17 of a TLE) is carried through (#604, decided by S. Guillet, 2026-11-18): `TLE.Create` takes a null or blank `cosparId` (eight blanks), `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN`, `Omm.ToTle` reads `UNKNOWN` (trimmed, any case) back as blank columns (internal `OmmMetadata.UnknownObjectId`; CCSDS's value to be verified by S. Guillet); an empty `OBJECT_ID` stays refused (#708)
+- A blank designator (columns 10-17 of a TLE) is carried through (#604, decided by S. Guillet, 2026-11-18): `TLE.Create` and the fit of `ToTLE` take a null or blank `cosparId`/`Configuration.CosparId` (eight blanks), `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN`, `Omm.ToTle` reads `UNKNOWN` (trimmed, any case) back as blank columns (internal `OmmMetadata.UnknownObjectId`; CCSDS's value to be verified by S. Guillet); an empty `OBJECT_ID` stays refused (#708), the empty value of #604's decision reaching no public path (open, for S. Guillet to settle)
 - Check `omm.IsTleCompatible` (tleParameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH; #679) before calling `ToTle()`, which otherwise throws naming each keyword at fault
 - OPM uses CCSDS units (km, km/s, deg); framework uses SI (m, m/s, rad) — conversions are automatic
 - Maneuver conversion is one-way: `Spacecraft → OPM` (OPM maneuvers are archival)

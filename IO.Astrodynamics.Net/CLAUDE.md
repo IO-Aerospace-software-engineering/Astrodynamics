@@ -251,7 +251,7 @@ issOmm.SaveToFile("iss.omm");
 - OMM uses full format: `"1998-067A"` (9 chars with hyphen)
 - TLE uses abbreviated format: `"98067A"` (6-8 chars)
 - Conversion is automatic in `ToTle()` and `ToOmm()` methods
-- A TLE without a designator (blank columns 10-17) gives `OBJECT_ID = UNKNOWN`, which `ToTle()` reads back (trimmed, any case) as blank columns, and `TLE.Create` takes a null or blank `cosparId` (#604)
+- A TLE without a designator (blank columns 10-17) gives `OBJECT_ID = UNKNOWN`, which `ToTle()` reads back (trimmed, any case) as blank columns, and `TLE.Create` and the fit of `ToTLE` take a null or blank `cosparId`/`Configuration.CosparId` (#604); an empty `OBJECT_ID` stays refused (#708), the empty value of #604's decision reaching no public path (open, for S. Guillet to settle)
 
 **TLE Precision Limitations**
 When converting OMM → TLE → OMM, expect some precision loss:

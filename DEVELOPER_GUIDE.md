@@ -429,7 +429,7 @@ Cartesian position and velocity state.
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607) |
+| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607); a null or blank `CosparId` writes blank columns 10-17 (#604) |
 
 A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
 no RTN frame: the members that read the plane (inclination, node, argument of periapsis, node vectors, longitudes, the
@@ -858,7 +858,7 @@ OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format (
 | Full COSPAR ID | 1998-067A | OMM ObjectId |
 | TLE COSPAR ID | 98067A | TLE Line 1 |
 | No designator | `UNKNOWN` | OMM ObjectId of a TLE whose columns 10-17 are blank (#604) |
-| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`) |
+| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`, `ToTLE` with a null or blank `Configuration.CosparId`) |
 
 ```csharp
 // OMM automatically converts COSPAR ID format during ToTle()
