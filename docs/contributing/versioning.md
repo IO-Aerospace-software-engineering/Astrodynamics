@@ -111,6 +111,17 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **The stored states of a propagation ended before its window when the output step rounded it down**
+  ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by S. Guillet,
+  2026-11-18). The outputs were the round(L/ΔT) + 1 points of the grid i·ΔT, while the propagation ran to the window
+  end: a window of 3 610 s at 60 s outputs stored its states, and wrote its SPK, to 3 600 s, and a read of the spacecraft
+  at the window end, or at 3 605 s, threw "lies outside the propagated states" (#527), as did a window shorter than
+  ΔT/2, whose single output was its start. The window end is now the last output, the solution there, in place of the
+  last grid point when that lies within ΔT/10 of the end (the rule of #598 and #540: no two nodes near-coincident): 62
+  outputs for 3 610 s at 60 s (the reads at 3 605 s and at the end within 9.7e-7 m of the two-body closed form in
+  RK7(8) at 1e-12, the SPK within 1.8e-5 m of them), 61 for 3 603 s, the last at 3 603 s, the start and the end for
+  20 s. `PropagationSolution.StateVectors`, the stored states, the attitude samples at the outputs and the SPK gain that
+  epoch; the integration is unchanged, and a window the step divides, or rounds up, keeps its outputs bit for bit.
 - **A g-function exactly zero at the end of a step was never a crossing** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580)). The product of the two g-values
   of a step was 0, no crossing, and the zero, the previous g-value of the next step, hid every later crossing: a
   time-like user `ImpulseManeuver` or `IEventDetector` whose root fell on a Velocity-Verlet or fixed-step RK7(8) step
@@ -494,8 +505,8 @@ release are listed under **Known limitations**.
   throws for that point: the point after the window end is replaced by the orientation read there, and a read the grid
   cannot interpolate reads the frame at its epoch, so only an epoch SPICE does not cover throws, with SPICE's message (a
   propagation up to the last instant of `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute).
-  A propagation still reads past its window end when its output step does not divide the window:
-  it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end, and a geopotential or drag read there past the coverage throws
+  A propagation still reads past its window end when its output step rounds the window up:
+  it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end (a step that rounds it down ends at the window end, #741), and a geopotential or drag read there past the coverage throws
   (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies kept #454
   then; every path #454 lists reports SPICE's error since (#622, #714, #608, #668, #560, #706, #711), the GM read of the
   native constructors tracked by #655, and SPICE prints nothing since #727.
@@ -1213,7 +1224,7 @@ release are listed under **Known limitations**.
   - **The fix.** A propagation lays its chain on an attitude timeline: an attitude activates at the later of its
     `MinimumEpoch` and the end of the previous maneuver's window, and its law is in force to the next activation,
     sampled on the solution at its activation, at each output of its interval and 1 µs before the change that ends it;
-    the impulse's attitude is in force over [tc − 0.666 dt, end of its maneuver window], its start no earlier than the
+    the impulse's attitude is in force over [tc − f dt, end of its maneuver window] (f dt the lead of the centroid of the burn's acceleration, #335), its start no earlier than the
     start of the propagation or the previous activation; after an impulse the law in force before it resumes, unless an
     attitude chained after it activates there; an activation after the end is not executed; an activation at a minimum
     epoch given in another frame is labelled TDB, as every epoch of the propagation; no sentinel. Every executed
@@ -1440,7 +1451,7 @@ release are listed under **Known limitations**.
   tick of its ICRF twin and 4.0e-7 s of `gfoclt` on the SPK; the 20 field-of-view dynamics variants on those kernels
   within the 2.4e-6 s of #515 (971.8 s and 232.6 s before); the partial step before an RK7(8) event 1.2e-4 rad from the
   law (7.1e-2 rad before, where the last output sample held; since #539 the change is the opening of the impulse's
-  thrust window, 9.3e-5 rad over a partial step of 34.3 s); reads before, during and after a propagation leave the record and the CK identical. See
+  thrust window, 1.0e-4 rad over a partial step of 35.6 s since #335); reads before, during and after a propagation leave the record and the CK identical. See
   [Spacecraft](../reference/spacecraft.md#attitude-and-kernels); the changes of behaviour are under **Changed**.
 - **The states of a propagated spacecraft across an impulse** ([#540](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/540)).
   The stored states were one set of output states, read by a Lagrange polynomial of the 8 nearest and written as one
@@ -4131,6 +4142,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
+  ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), proposed after
+  S. Guillet's remark of 2026-11-18 that the acceleration grows during the burn, to be confirmed by S. Guillet). The
+  equivalent constant-thrust burn of duration dt is placed on [t − f dt, t + (1 − f) dt], t the impulse epoch,
+  f = 1/x + 1/ln(1 − x) for the mass fraction burned x = Δm/m0 (Tsiolkovsky, the engine's Isp and fuel flow, the mass
+  before the burn): the centroid of the acceleration F/(m0 − q τ), which grows as the mass drops, where an impulse
+  gives the burn's velocity change and, in a field-free space, its displacement after it. f → 1/2 for a small burn,
+  0.509 at x = 0.1, 0.557 at 0.5, 2/3 only at x ≈ 0.89. Before 11.0.0 the window opened a fixed 0.666 dt before t, a
+  split of no recorded derivation: 1.6 s earlier for a burn of 10 s at x = 0.1, 5.4 s for one of 50 s at x = 0.5, to the
+  tick against the centroid by quadrature now (`ImpulseThrustWindowTests`). The same split in
+  `ImpulseManeuver.TryExecute` and in the TT windows of a propagation about the Earth (#547). It moves, by
+  (0.666 − f) dt later: `ThrustWindow`, `ManeuverWindow` (its length unchanged), `MAN_EPOCH_IGNITION` of
+  `ToOpmManeuverParameters` and `Spacecraft.ToOpm` (`MAN_DURATION` unchanged), the opening of the impulse's attitude in
+  the attitude record and the CK, the instant from which `ToOpm` counts an impulse as ignited, and the gate of the next
+  maneuver of the chain, so an attitude chained after an impulse activates later and an impulse gated by it fires later
+  where the gate binds (a crossing between the old and the new gate now waits for the next one). The propagated state
+  of an impulse is unchanged (the whole ΔV at t). Migration: none for the state; a caller that reads the windows, the
+  ignition epoch or the epochs of a chain whose gates bind sees the new ones, and one that relied on 2/3 computes
+  t − 0.666 dt from the event and the burn duration itself.
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
   - **A g-value exactly zero at a step end** after a non-zero one is a crossing there, its direction read from the sign
     before it (Hipparchus's rule); RK7(8) takes the step end as the root without bisecting. A zero at the base of a
@@ -5832,17 +5862,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   correction reads allowed up to its light time outside them. The window checks of the conjunction overloads and of the
   field-of-view search (`ArgumentException`, #622) are unchanged. Migration: read a propagated spacecraft within its
   propagation window, or propagate it over the epochs read. The stored states run from the first output to the last,
-  round(L/ΔT)·ΔT after the start for a window of length L at outputs ΔT: when ΔT does not divide L, up to ΔT/2 before or
-  after the end of the window, so a read at the end of such a window throws when the last output falls before it (a
-  3 610 s window at 60 s outputs stores its states to 3 600 s); read the solution there, or choose an output step that
-  divides the window.
+  round(L/ΔT)·ΔT after the start for a window of length L at outputs ΔT, up to ΔT/2 after the end of the window when ΔT
+  rounds it up, and to the window end when ΔT rounds it down (#741, under Fixed: they stopped up to ΔT/2 before it, a
+  3 610 s window at 60 s outputs storing its states to 3 600 s), so every epoch of the window can be read.
 - **Breaking: `Spacecraft.ToOpm` writes the propagated state, mass and maneuvers of its epoch**
   ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided by S. Guillet,
   2026-11-17). A spacecraft that holds propagated states writes `GetEphemeris(epoch, observer, frame, Aberration.None)`
   with the observer and the frame of its initial orbital parameters, with the mass and the impulses ignited by then
   (its mass after the propagation plus the fuel of the impulses ignited after the epoch, and only the impulses ignited
   by the epoch), an impulse counting from the start of its thrust window, the `MAN_EPOCH_IGNITION` written (between the
-  ignition and the event, about two thirds of the burn, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
+  ignition and the event, about half of the burn since #335, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
   started later, throws `InvalidOperationException` (#527). A spacecraft without propagated states writes the motion of
   its initial orbit as before. Migration: pass the epoch of the instant to export, the end of the propagation for the
   state after every maneuver (the default epoch, the initial one, kept, decided by S. Guillet, 2026-11-18, now carries no maneuver of a propagation that starts

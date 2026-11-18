@@ -51,12 +51,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             PhasingManeuver maneuver = new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, 3, spc.Engines.First());
-            maneuver.TryExecute(orbitalParams.ToStateVector());
+            var atStart = orbitalParams.ToStateVector();
+            maneuver.TryExecute(atStart);
 
             Assert.Equal(new Vector3(0.0, 14.039767793719875, 0.0), maneuver.DeltaV,TestHelpers.VectorComparer);
             Assert.Equal(6.0351723087570868, maneuver.FuelBurned,3);
-            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T11:59:59.9196115"), TimeSpan.Parse("2.17:31:12.7762440")), maneuver.ManeuverWindow);
-            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T11:59:59.9196115"), TimeSpan.FromSeconds(0.1207034)), maneuver.ThrustWindow);
+            // The burn's acceleration centred on the impulse (#335): from 11:59:59.9396163 (11:59:59.9196115 at 0.666 of
+            // the burn before 11.0.0); the maneuver window its hold from there
+            TimelineRules.AssertThrustWindow(atStart.Epoch, maneuver.DeltaV.Magnitude(), 450.0, TimeSpan.FromSeconds(0.1207034), maneuver.ThrustWindow);
+            LabelAssert.Equal(new Window(maneuver.ThrustWindow!.Value.StartDate, TimeSpan.Parse("2.17:31:12.7762440")), maneuver.ManeuverWindow);
         }
 
         // ---------------------------------------------------------------------------------------------------------------
@@ -119,7 +122,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Null(maneuver.TargetOrbit);
 
             var (_, _, dv) = ClosedFormPhasing(ClosedForm(orbitalParams.ToStateVector(), 0.0), 345.0 * Deg, 3);
-            maneuver.TryExecute(orbitalParams.ToStateVector());
+            var atStart = orbitalParams.ToStateVector();
+            maneuver.TryExecute(atStart);
 
             double error = System.Math.Abs(maneuver.DeltaV.Y - dv);
             _output.WriteLine($"MEASURE #588 345 deg, 3 rev: dV {maneuver.DeltaV.Y:R} m/s, closed form {dv:R} m/s, |delta| {error:E2} m/s");

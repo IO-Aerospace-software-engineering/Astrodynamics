@@ -207,8 +207,8 @@ by S. Guillet, 2026-11-17).
   parameters (TEME for a TLE), with the mass and the impulses ignited by then: its mass after the propagation plus the
   fuel of the impulses ignited after the epoch, and the impulses ignited by the epoch. An impulse counts from its
   ignition, the start of its thrust window, the `MAN_EPOCH_IGNITION` written. The propagated state receives its ΔV at
-  its event, about two thirds of the burn later (`ImpulseManeuver`): at an epoch between the two (3.4 s for a 5.2 s
-  burn) the state written is the state before the impulse, with the burn listed and its fuel spent; from the event on,
+  its event, the centroid of the acceleration of the burn, about half of the burn later (`ImpulseManeuver`, #335): at
+  an epoch between the two (2.6 s for a 5.2 s burn) the state written is the state before the impulse, with the burn listed and its fuel spent; from the event on,
   the state after it. An epoch outside the propagated states throws `InvalidOperationException`, as every read there
   ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)); so does the default epoch
   when the propagation started later.

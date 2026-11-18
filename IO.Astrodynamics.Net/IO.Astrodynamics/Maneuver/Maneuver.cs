@@ -13,9 +13,11 @@ namespace IO.Astrodynamics.Maneuver
         public CelestialItem ManeuverCenter { get; }
         /// <summary>
         /// Gets or sets the ThrustWindow instance.
-        /// For an <see cref="ImpulseManeuver"/>, this is the window of the equivalent finite burn: it lasts the burn duration
-        /// given by the rocket equation and starts two thirds of that duration before the impulse epoch
-        /// (<c>[t - 0.666 dt, t + 0.334 dt]</c>). The propagated state receives the full delta-V at the impulse epoch;
+        /// For an <see cref="ImpulseManeuver"/>, this is the window of the equivalent constant-thrust burn: it lasts the burn
+        /// duration dt given by the rocket equation, and the impulse epoch t is the centroid of its acceleration,
+        /// <c>[t - f dt, t + (1 - f) dt]</c> with f = 1/x + 1/ln(1 - x) for the mass fraction burned x (1/2 for a small burn,
+        /// 0.509 at x = 0.1, 0.557 at 0.5; #335, proposed after S. Guillet's remark of 2026-11-18, to be confirmed by S. Guillet; a fixed 0.666 before 11.0.0). The
+        /// propagated state receives the full delta-V at the impulse epoch;
         /// the window is reported, and the end of <see cref="ManeuverWindow"/> sets the earliest epoch of the next maneuver.
         /// In a propagation about the Earth, both windows count TT seconds from the time argument of the event (#547).
         /// The attitude of the impulse, its front along the delta-V, is in force from the start of this window to the end

@@ -1629,7 +1629,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Propagation Architecture:**
 1. **Build event detectors** from the spacecraft's maneuver chain: the leading attitudes on the attitude timeline, each at the later of its minimum epoch and the end of the previous hold, the last hold gating the first impulse (#539)
 2. **Segment loop**: Integrator advances with event detection; on event → the detector executes the impulse only, the propagation counts its windows in TT seconds about the Earth (#547), lays its attitude and the attitudes chained after it on the timeline and builds the next detector, reinitialize
-3. **Output**: Evaluate `PropagationSolution.InterpolateAt` at fixed `DeltaT` epochs: a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
+3. **Output**: Evaluate `PropagationSolution.InterpolateAt` at fixed `DeltaT` epochs, round(L/ΔT) + 1 of them, the window end last when the grid ends before it (in place of a grid point within ΔT/10 of it; #741, decided by S. Guillet, 2026-11-18): a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
 4. **Attitude record**: from the timeline, on the solution: each law at its activation, at each output epoch of its interval and 1 µs before the change that ends it; the impulse's attitude over its window (`docs/reference/attitudes.md#the-attitude-timeline`)
 
 **Key Supporting Types:**
