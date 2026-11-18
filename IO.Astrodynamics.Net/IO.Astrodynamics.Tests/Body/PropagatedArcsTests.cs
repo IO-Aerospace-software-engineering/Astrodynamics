@@ -75,8 +75,8 @@ public class PropagatedArcsTests
 
     /// <summary>The same in SSB mode, RK7(8) at <see cref="AttitudeRecordTests.SsbRk78Tolerance"/>, whose error about the Sun
     /// it measures: 2.1e-4 to 3.4e-4 m on a85098d with the noise of #576 (CI run 41651463194, no assertion), 1.57e-4 m with
-    /// the direct difference near the Earth (Apogee, 10 s, Linux x64, 2026-11-17). Twice the Linux worst, provisional (to be
-    /// set again from the Windows x64 and macOS arm64 CI logs).</summary>
+    /// the direct difference near the Earth (Apogee, 10 s; 1.573e-4 m on Linux x64, Windows x64 and macOS arm64 alike, CI
+    /// run 44225490669). Twice that worst, rounded up.</summary>
     internal const double NearRkSsb = 3.2e-4;
 
     /// <summary>The same on the chain of four of <c>ScenarioTests</c> (Earth, Moon and Sun, 24.7 h). Worst 2.25e-8 / 2.25e-8
@@ -153,9 +153,9 @@ public class PropagatedArcsTests
 
     /// <summary>The managed velocity 1 µs before an impulse in SSB mode, RK7(8), against the solution there: with the noise of
     /// #576 3.29e-8 / 3.83e-7 / 1.98e-6 m/s on Linux / Windows / macOS arm64 (CI run 41651463194, no assertion); with the
-    /// direct difference near the Earth 5.41e-7 m/s (Apogee, 10 s, Linux x64, 2026-11-17), the error of the shortened step of
-    /// <c>InterpolateAt</c> at the SSB tolerance of 1e-9 (the managed read is 9.1e-13 m/s from the anchored reference). Twice
-    /// the Linux worst, provisional.</summary>
+    /// direct difference near the Earth 5.412e-7 m/s on Linux x64, Windows x64 and macOS arm64 alike (Apogee, 10 s, CI run
+    /// 44225490669), the error of the shortened step of <c>InterpolateAt</c> at the SSB tolerance of 1e-9 (the managed read
+    /// is 9.1e-13 m/s from the anchored reference). Twice that worst, rounded up.</summary>
     internal const double VelocityBeforeSsbRkSolution = 1.1e-6;
 
     /// <summary>The same in SSB mode, Velocity-Verlet, against the anchored reference. Worst 1.02e-10 m/s, the same on the

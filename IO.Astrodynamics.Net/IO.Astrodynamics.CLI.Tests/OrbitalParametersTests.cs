@@ -286,8 +286,8 @@ public class OrbitalParametersTests
             double expected = h * h / new Body.CelestialBody(399).GM;
             _output.WriteLine($"MEASURE #462 CLI P relative error: {(p - expected) / expected:E3}");
             Assert.True(double.IsFinite(p), res);
-            // Measured 0 on Linux (the printed double is h²/μ to its last bit); provisional, at most two ulps, until the
-            // Windows x64 and macOS arm64 CI logs
+            // Measured 0 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669: the printed double is h²/μ to its
+            // last bit); the bound is a stated allowance of two ulps for the round trip through the text, not a record
             Assert.InRange((p - expected) / expected, -4.5e-16, 4.5e-16);
         }
     }
@@ -318,7 +318,7 @@ public class OrbitalParametersTests
             var expected = new Math.Vector3(6546595.968654342, 3568802.005525925, 59848.915685823675);
             double error = (state.Position - expected).Magnitude() / expected.Magnitude();
             _output.WriteLine($"MEASURE #477 CLI --from-equinoctial parabola, |Δr| / |r|: {error:E3}");
-            // Measured 2.9e-16 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            // Worst 2.9e-16 on Linux x64 and macOS arm64, 1.3e-16 on Windows x64 (CI run 44225490669); twice the worst
             Assert.InRange(error, 0.0, 5.8e-16);
         }
     }

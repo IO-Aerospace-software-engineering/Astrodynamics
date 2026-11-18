@@ -26,9 +26,9 @@ namespace IO.Astrodynamics.Tests;
 /// </summary>
 public class CspiceWindowCapacityTests
 {
-    // The joined parts against the whole, both at CSPICE's convergence tolerance of 1e-6 s on other grids: twice the worst on
-    // Linux x64 (4.000e-7 s, the X crossings of the Moon and NotEqual, 2026-11-17), rounded up at the second significant
-    // digit; provisional, to be set again from the Windows x64 and macOS arm64 CI logs
+    // The joined parts against the whole, both at CSPICE's convergence tolerance of 1e-6 s on other grids: twice the worst
+    // on Linux x64, Windows x64 and macOS arm64 alike (4.000e-7 s, the X crossings of the Moon and NotEqual, CI run
+    // 44225490669), rounded up at the second significant digit
     private const double JoinedThreshold = 8.0e-7;
 
     // The Moon's X in IAU_EARTH from the Earth crosses 0 about twice a day: 2126 crossings over 1100 days (#653)

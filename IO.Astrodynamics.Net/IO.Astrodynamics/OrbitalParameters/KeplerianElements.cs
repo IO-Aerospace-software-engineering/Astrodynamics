@@ -49,9 +49,9 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <summary>
         /// The rounding allowed between a semi-major axis and a perigee radius of one conic within 1e-6 of e = 1:
         /// |q/a − (1 − e)| ≤ 6 ε (1 + e). The elements the library builds there, from a state (−μ/(2ξ) and h²/(μ(1 + e))),
-        /// through equinoctial elements, along the two-body motion and from SPICE's oscltx, measured at most 3.0 ε (1 + e)
-        /// on Linux over 6400 states of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU, |M| up to 2e6 rad);
-        /// twice, provisional until the Windows x64 and macOS arm64 CI logs (the review of #459).
+        /// through equinoctial elements, along the two-body motion and from SPICE's oscltx, measured at most 2.983 ε (1 + e)
+        /// over 6400 states of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU, |M| up to 2e6 rad) on Linux x64,
+        /// Windows x64 and macOS arm64 alike (CI run 44225490669); twice that, rounded up (the review of #459).
         /// </summary>
         private const double OneConicTolerance = 6.0 * 2.220446049250313e-16;
 

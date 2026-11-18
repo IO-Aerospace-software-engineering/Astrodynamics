@@ -235,8 +235,8 @@ In SSB mode the solution's dense output carried, before 11.0.0, the noise of the
 which lost about eight digits there (#576), and the RK7(8) step sequence, so the noise, differed per platform: the reads
 against the solution, 2.1e-4 to 3.4e-4 m within ±150 s of the impulse and 3.3e-8 to 2.0e-6 m/s at tc − 1 µs over Linux,
 Windows and macOS arm64 (CI run 41651463194), were measured, not asserted. With the direct difference near the Earth they
-are asserted again: 1.6e-4 m and 5.4e-7 m/s on Linux x64, the error of RK7(8) at the SSB tolerance of 1e-9 (provisional
-limits, twice the Linux worst). The velocity 1 µs before the impulse is also measured against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
+are asserted again: 1.6e-4 m and 5.4e-7 m/s on Linux x64, Windows x64 and macOS arm64 alike, the error of RK7(8) at the
+SSB tolerance of 1e-9 (limits twice the worst, CI run 44225490669). The velocity 1 µs before the impulse is also measured against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
 acceleration of the Sun and the Earth (point masses, kernel GMs, the Earth from the Sun of `spkezr` at the impulse),
 whose floor is a few 1e-12 m/s (the roundings of its 1 µs, an ulp of 4.55e-13 s near 2 963 s, and of the heliocentric
 velocity, an ulp of 3.64e-12 m/s), the size of the managed figure: 2.6e-12 to 9.1e-12 m/s over 26 step sequences on

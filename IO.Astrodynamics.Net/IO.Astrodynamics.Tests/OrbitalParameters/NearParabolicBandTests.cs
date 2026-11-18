@@ -129,9 +129,11 @@ public class NearParabolicBandTests
                 // for 0.26 at ν = 0.5)
                 double error = m - hi - lo;
                 Measure($"#478 e − 1 = {BandStates[index].EccentricityMinusOne:R} {name} ν = {nu:R}, M error (rad)", error);
-                // Measured at most 2.8e-17 rad on Linux (the rounding of tan(ν/2) and of the cube); provisional, twice,
-                // until the Windows x64 and macOS arm64 CI logs
-                Assert.InRange(error, -5.5e-17, 5.5e-17);
+                // The rounding of tan(ν/2) and of the cube, to an ulp of M: worst 2.7e-17 rad on Linux x64 and Windows x64,
+                // 2.2e-16 rad on macOS arm64 (CI run 44225490669: at ν = 1.5, M ≈ 1.2011, whose ulp is 2.2e-16, arm64's libm
+                // rounds one ulp low; the state form alone measured there, each row stopping at its first ν = 1.5); twice
+                // the worst, the bound of the equinoctial form below
+                Assert.InRange(error, -4.5e-16, 4.5e-16);
             }
         }
     }
@@ -153,8 +155,8 @@ public class NearParabolicBandTests
         Assert.Equal(eq.MeanAnomaly(eq.TrueAnomaly()), m);
         double error = m - (d + d * d * d / 3.0);
         Measure($"#478 e − 1 = {BandStates[index].EccentricityMinusOne:R} equinoctial M error (rad)", error);
-        // Measured at most 2.3e-16 rad on Linux (one ulp of M near 0.26 rad, through ν0 of the elements); provisional,
-        // twice, until the Windows x64 and macOS arm64 CI logs
+        // One ulp of M near 0.26 rad, through ν0 of the elements: worst 2.2e-16 rad on Linux x64, Windows x64 and macOS
+        // arm64 (CI run 44225490669); twice the worst
         Assert.InRange(error, -4.5e-16, 4.5e-16);
     }
 
@@ -180,8 +182,8 @@ public class NearParabolicBandTests
         // At its own epoch the state is itself (StateVector.ToStateVector(Time), #551)
         Assert.Equal(0.0, offset);
         Assert.Equal(0.0, distance);
-        // The epoch is a tick of Time: measured at most 7.8e-9 s on Linux, Barker's time rounded to its tick; provisional,
-        // twice, until the Windows x64 and macOS arm64 CI logs
+        // The epoch is a tick of Time, Barker's time rounded to its tick: worst 7.8e-9 s on Linux x64, Windows x64 and
+        // macOS arm64 (CI run 44225490669); twice the worst
         Assert.InRange(toNu1, -1.6e-8, 1.6e-8);
     }
 
@@ -211,10 +213,10 @@ public class NearParabolicBandTests
         Measure($"#478 e − 1 = {c.EccentricityMinusOne:R} TimeToRadius(r at 1 rad) − Barker's (s)", toR1);
         Measure($"#478 e − 1 = {c.EccentricityMinusOne:R} TimeToRadius(2e7 m) − Barker's (s)", to2e7);
         Measure($"#478 e − 1 = {c.EccentricityMinusOne:R} TimeToSphereOfInfluence − Barker's (s)", toSoi);
-        // The epochs are ticks of Time. Measured on Linux at most 7.8e-9 s to the radius at 1 rad (Barker's time rounded to
-        // its tick), 4.6e-8 s to 2e7 m and 4.6e-8 s to the sphere of influence (with the rounding of the anomalies, and of
-        // the closed form in doubles for the sphere of influence); provisional, twice, until the Windows x64 and macOS
-        // arm64 CI logs
+        // The epochs are ticks of Time. Worst on Linux x64, Windows x64 and macOS arm64 alike (CI run 44225490669):
+        // 7.785e-9 s to the radius at 1 rad (Barker's time rounded to its tick), 4.603e-8 s to 2e7 m and 4.587e-8 s to the
+        // sphere of influence (with the rounding of the anomalies, and of the closed form in doubles for the sphere of
+        // influence); twice the worst
         Assert.InRange(toR1, -1.6e-8, 1.6e-8);
         Assert.InRange(to2e7, -9.3e-8, 9.3e-8);
         Assert.InRange(toSoi, -9.2e-8, 9.2e-8);
@@ -242,8 +244,8 @@ public class NearParabolicBandTests
         Measure($"#478 exact parabola M = {m:R}: e − 1 of the equinoctial elements", eq.Eccentricity() - 1.0);
         Measure($"#478 exact parabola M = {m:R}: M error (rad)", mError);
         Measure($"#478 exact parabola M = {m:R}: |Δr| (m), ToKeplerianElements and ToStateVector(Epoch)", System.Math.Max(rError, rErrorAtEpoch));
-        // Measured at most 1.7e-16 rad and 2.3e-9 m on Linux; provisional, twice, until the Windows x64 and macOS arm64
-        // CI logs
+        // Worst 1.7e-16 rad on Linux x64 and Windows x64, 1.1e-16 rad on macOS arm64, and 2.2e-9 m on all three (CI run
+        // 44225490669); twice the worst
         Assert.InRange(mError, -3.4e-16, 3.4e-16);
         Assert.InRange(System.Math.Max(rError, rErrorAtEpoch), 0.0, 4.5e-9);
     }
@@ -283,12 +285,13 @@ public class NearParabolicBandTests
         Measure("#478 sweep, equinoctial round trip, worst |Δr| / |r|", worstRoundTrip);
         Measure("#478 sweep, Keplerian through equinoctial, worst |Δr| / |r|", worstKeplerian);
         Measure("#478 sweep, Keplerian through equinoctial, worst |ΔM| (rad)", worstM);
-        // At its own epoch a state is itself (#551). Measured on Linux 5.9e-15 for the round trip, 4.0e-15 and 1.3e-14 rad
-        // for the Keplerian elements (before: up to 5.1e8 m, more than 1 km off for every state whose e rounding moved off
-        // 1); provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // At its own epoch a state is itself (#551). Worst on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669):
+        // the round trip 5.8e-15, 6.9e-15 and 5.8e-15, the Keplerian elements 3.9e-15, 3.7e-15 and 4.2e-15, and their M
+        // 1.2e-14, 1.2e-14 and 1.2e-14 rad (before: up to 5.1e8 m, more than 1 km off for every state whose e rounding
+        // moved off 1); twice the worst
         Assert.Equal(0.0, worstOwnNu);
-        Assert.InRange(worstRoundTrip, 0.0, 1.2e-14);
-        Assert.InRange(worstKeplerian, 0.0, 7.9e-15);
+        Assert.InRange(worstRoundTrip, 0.0, 1.4e-14);
+        Assert.InRange(worstKeplerian, 0.0, 8.5e-15);
         Assert.InRange(worstM, 0.0, 2.5e-14);
     }
 
@@ -375,8 +378,8 @@ public class NearParabolicBandTests
         Measure($"#459 {name}: a relative error", aError);
         Measure($"#459 {name}: n relative error", nError);
         // The specific energy ξ = v²/2 − μ/r cancels near e = 1: its rounding is about ε v²/(2|ξ|) ∝ ε / |e − 1| relative,
-        // 6e-10 at |e − 1| = 5e-7 and 6e-4 at 1e-12, so the errors are bounded scaled by |e − 1|. Measured at most 6.2e-16
-        // for a and 9.3e-16 for n, times |e − 1|, on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // 6e-10 at |e − 1| = 5e-7 and 6e-4 at 1e-12, so the errors are bounded scaled by |e − 1|. Worst 6.2e-16 for a and
+        // 9.3e-16 for n, times |e − 1|, on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice the worst
         Measure($"#459 {name}: a relative error × |e − 1|", aError * distanceToOne);
         Measure($"#459 {name}: n relative error × |e − 1|", nError * distanceToOne);
         Assert.InRange(aError * distanceToOne, -1.3e-15, 1.3e-15);
@@ -405,7 +408,7 @@ public class NearParabolicBandTests
         {
             double error = Distance(state.Position, sv.Position) / sv.Position.Magnitude();
             Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} {name}: |Δr| / |r|", error);
-            // Measured at most 6.0e-16 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            // Worst 6.0e-16 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice the worst
             Assert.InRange(error, 0.0, 1.2e-15);
         }
     }
@@ -429,8 +432,8 @@ public class NearParabolicBandTests
         double conicError = Distance(later.Position, conic);
         Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} +600 s: |Δr| / |r| to the band model", modelError);
         Measure($"#459 e − 1 = {c.EccentricityMinusOne:R} +600 s: |Δr| to the exact conic (m)", conicError);
-        // Measured at most 6.1e-16 to the band model and 0.16 m to the conic on Linux (1.8e-7 m at |e − 1| = 1e-12;
-        // before: 2.0 to 5.1 m, p = 2q); provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // Worst 6.1e-16 to the band model and 0.16 m to the conic on Linux x64, Windows x64 and macOS arm64 (CI run
+        // 44225490669; 1.8e-7 m at |e − 1| = 1e-12; before: 2.0 to 5.1 m, p = 2q); twice the worst
         Assert.InRange(modelError, 0.0, 1.3e-15);
         Assert.InRange(conicError, 0.0, 0.32);
     }
@@ -445,8 +448,8 @@ public class NearParabolicBandTests
             new Vector3(c.ConicR600[0], c.ConicR600[1], c.ConicR600[2]));
         Measure($"#459 periapsis vy = {c.Vy:R} +600 s: |Δr| to the exact conic (m)", error);
         // The model error of the band, 0.54 m at |e − 1| = 5e-7 from the periapsis (the reference script), 8.6e-3 m at
-        // 7.9e-9: measured at most 0.55 m on Linux (before: 2.3 m, p = 2q); provisional, twice, until the Windows x64 and
-        // macOS arm64 CI logs
+        // 7.9e-9: worst 0.54 m on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669; before: 2.3 m, p = 2q);
+        // twice the worst
         Assert.InRange(error, 0.0, 1.1);
     }
 
@@ -470,10 +473,10 @@ public class NearParabolicBandTests
         Assert.Equal(a, ke.SemiMajorAxis());
         double error = Distance(state.Position, new Vector3(r[0], r[1], r[2])) / new Vector3(r[0], r[1], r[2]).Magnitude();
         Measure($"#459 edge e = {e:R}: |Δr| / |r|", error);
-        // Measured on Linux 1.7e-12 at e = 0.999999, outside the band, near the apoapsis (#472: the cancellations of
-        // p = a(1 − e²) and 1 + e cos ν, its own issue), and at most 2.7e-16 inside; provisional, twice, until the Windows
-        // x64 and macOS arm64 CI logs
-        Assert.InRange(error, 0.0, inBand ? 5.3e-16 : 3.3e-12);
+        // Worst 1.6e-12 at e = 0.999999, outside the band, near the apoapsis (#472: the cancellations of p = a(1 − e²) and
+        // 1 + e cos ν, its own issue), on Linux x64, Windows x64 and macOS arm64, and inside 2.6e-16 on Linux x64 and
+        // Windows x64, 2.9e-16 on macOS arm64 (CI run 44225490669); twice the worst
+        Assert.InRange(error, 0.0, inBand ? 5.8e-16 : 3.3e-12);
 
         // In the band the perigee radius is still required
         if (inBand)
@@ -601,8 +604,8 @@ public class NearParabolicBandTests
             }
         }
 
-        // Assert: every state of the band is built (the constructor checks the same rule); measured at most 2.8 and 3.0 ε (1 + e)
-        // on Linux, the tolerance of the constructor twice that, provisional until the Windows x64 and macOS arm64 CI logs
+        // Assert: every state of the band is built (the constructor checks the same rule); worst 2.8 and 3.0 ε (1 + e) on
+        // Linux x64, Windows x64 and macOS arm64 (CI run 44225490669), the tolerance of the constructor twice that
         Measure($"#459 sweep of {count} states: ToKeplerianElements() |q/a − (1 − e)| / (ε (1 + e))", worstState);
         Measure($"#459 sweep of {count} states: SPICE |q/a − (1 − e)| / (ε (1 + e))", worstSpice);
         Assert.Equal(6400, count);
@@ -715,7 +718,7 @@ public class NearParabolicBandTests
             // fresh instance, where ToKeplerianElements threw), Barker's n = √(μ/(2q³)), and the Keplerian elements
             Assert.Equal(q, perigeeRadius);
             Measure($"#477 {name} MeanMotion relative error", (meanMotion - nHi - nLo) / nHi);
-            // Measured at most 4.1e-17 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            // Worst 4.1e-17 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice the worst
             Assert.InRange((meanMotion - nHi - nLo) / nHi, -8.3e-17, 8.3e-17);
             Assert.True(double.IsPositiveInfinity(ke.A));
             Assert.Equal(q, ke.PerigeeRadius());
@@ -723,7 +726,7 @@ public class NearParabolicBandTests
             for (int k = 0; k < 4; k++)
             {
                 Measure($"#477 {name} angle {k} error (rad)", actual[k] - angles[k]);
-                // Measured at most 1.2e-16 rad on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+                // Worst 1.1e-16 rad on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice the worst
                 Assert.InRange(actual[k] - angles[k], -2.3e-16, 2.3e-16);
             }
         }
@@ -754,12 +757,13 @@ public class NearParabolicBandTests
         foreach (var (name, error) in errors)
         {
             Measure($"#477 {name}, |Δr| / |r|", error);
-            // Measured at most 8.8e-16 on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
-            Assert.InRange(error, 0.0, 1.8e-15);
+            // Worst 8.8e-16 on Linux x64, 9.5e-16 on Windows x64 and 8.6e-16 on macOS arm64 (CI run 44225490669); twice
+            // the worst
+            Assert.InRange(error, 0.0, 1.9e-15);
         }
 
         Measure("#477 case 1 TrueAnomaly(t0 + 600 s) error (rad)", nuError);
-        // Measured 2.9e-17 rad on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // 2.9e-17 rad on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice that
         Assert.InRange(nuError, -5.9e-17, 5.9e-17);
     }
 
@@ -786,7 +790,8 @@ public class NearParabolicBandTests
         double[] r0 = [6546595.968654342, 3568802.005525925, 59848.915685823675];
         double error = Distance(first.StartPosition, new Vector3(r0[0], r0[1], r0[2])) / new Vector3(r0[0], r0[1], r0[2]).Magnitude();
         Measure($"#477 propagation start ({(rk78 ? "RK7(8)" : "Velocity-Verlet")}), |Δr| / |r|", error);
-        // Measured 2.9e-16 on Linux, both integrators; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // Worst 2.9e-16 on Linux x64 and macOS arm64, 1.3e-16 on Windows x64, both integrators (CI run 44225490669);
+        // twice the worst
         Assert.InRange(error, 0.0, 5.8e-16);
     }
 
@@ -844,8 +849,9 @@ public class NearParabolicBandTests
         double atEpochError = RelativeDistance(atEpoch, r);
         Measure($"#477 band row e − 1 = {f - 1.0:E1}: direct |Δr| / |r|", directError);
         Measure($"#477 band row e − 1 = {f - 1.0:E1}: AtEpoch(t0) |Δr| / |r|", atEpochError);
-        // Measured on Linux 2.3e-16 and 3.6e-16 (2.0e-7 before #459, the semi-latus rectum 2q of the Keplerian state in
-        // the band, |e − 1| / (1 + e)); provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // Worst 2.3e-16 and 3.6e-16 on Linux x64 and macOS arm64, 2.3e-16 and 2.0e-16 on Windows x64 (CI run 44225490669;
+        // 2.0e-7 before #459, the semi-latus rectum 2q of the Keplerian state in the band, |e − 1| / (1 + e)); twice the
+        // worst
         Assert.InRange(directError, 0.0, 4.6e-16);
         Assert.InRange(atEpochError, 0.0, 7.2e-16);
     }
@@ -878,8 +884,8 @@ public class NearParabolicBandTests
             Assert.Equal(13600000.0, eq.P);
         }
 
-        // Measured at most 4.8e-17 relative on Linux (the rounding of q (1 + e)); provisional, twice, until the Windows x64
-        // and macOS arm64 CI logs
+        // The rounding of q (1 + e): worst 4.8e-17 relative on Linux x64, Windows x64 and macOS arm64 (CI run
+        // 44225490669); twice the worst
         Assert.InRange(error, -9.6e-17, 9.6e-17);
         Assert.DoesNotContain("NaN", eq.ToString());
         Assert.DoesNotContain("Infinity", eq.ToString());
@@ -913,8 +919,8 @@ public class NearParabolicBandTests
             double error = (p - hi - lo) / hi;
             Measure($"#462 vy = {vy:R} {path}, P relative error", error);
             Assert.True(double.IsFinite(p));
-            // Measured at most 4.9e-16 relative on Linux (the rounding of e, q and the rotation to the ecliptic);
-            // provisional, twice, until the Windows x64 and macOS arm64 CI logs
+            // The rounding of e, q and the rotation to the ecliptic: worst 4.8e-16 relative on Linux x64, Windows x64 and
+            // macOS arm64 (CI run 44225490669); twice the worst
             Assert.InRange(error, -9.7e-16, 9.7e-16);
         }
     }
@@ -937,8 +943,8 @@ public class NearParabolicBandTests
             Measure($"#462 exact parabola in {name}, P − h²/μ relative", (p - SemiLatusRectumOf(state)) / p);
             Measure($"#462 exact parabola in {name}, P − 2q relative", (p - 13600000.0) / 13600000.0);
             Assert.True(double.IsFinite(p));
-            // Measured at most 2.8e-16 relative to h²/μ and 5.5e-16 to 2q on Linux; provisional, twice, until the Windows
-            // x64 and macOS arm64 CI logs
+            // Worst 2.7e-16 relative to h²/μ and 5.5e-16 to 2q on Linux x64, Windows x64 and macOS arm64 (CI run
+            // 44225490669); twice the worst
             Assert.InRange((p - SemiLatusRectumOf(state)) / p, -5.5e-16, 5.5e-16);
             Assert.InRange((p - 13600000.0) / 13600000.0, -1.1e-15, 1.1e-15);
         }
@@ -973,7 +979,7 @@ public class NearParabolicBandTests
         }
 
         Measure($"#462 {count} exact parabolas, worst |P − h²/μ| relative", worst);
-        // Measured 2.9e-16 relative on Linux; provisional, twice, until the Windows x64 and macOS arm64 CI logs
+        // Worst 2.8e-16 relative on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice the worst
         Assert.InRange(worst, 0.0, 5.7e-16);
     }
 

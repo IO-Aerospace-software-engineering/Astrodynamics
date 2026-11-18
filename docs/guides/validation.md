@@ -772,7 +772,8 @@ figures of 2026-11-11, which the table held before: R2 1.6e-8, 9.1e-9, 1.6e-8, 8
 most per block. Over eleven draws of the reference of R4, its start moved by −5 to +5 ulps along x with Φ under test
 unchanged, the worst block in the penumbra spans 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d, before #561): the
 references one ulp apart differ among themselves by more than the measure. The penumbra record of R4 is set again at
-twice its measurement, 9.6e-8 (1.2e-8 before), provisional (to be confirmed by S. Guillet). R1 to R5 measured on
+twice its measurement, 9.6e-8 (1.2e-8 before; 4.78e-8 on Linux x64 in CI run 44225490669), twice the Linux worst as
+every record of the Validation category, which CI runs on Linux x64 alone (to be confirmed by S. Guillet). R1 to R5 measured on
 2026-11-11 with the nearest tick of
 [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Linux CI job 130260609740, and
 the same figures in a session the same day), another draw of the noise of the central differences: about half of the
@@ -934,7 +935,8 @@ in the penumbra, while Ψ_Cr under test moves by 4.3e-11 of its largest value an
 the same propagation at 1e-14 with the step control. Over eleven draws of the reference, its start moved by −5 to +5
 ulps along x with Ψ_Cr under test unchanged, Ψ_Cr over the arc in velocity spans 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
 a85098d, where 9 of the 11 exceed the record of 1.2e-5: it held at the nominal start alone). The arc record of Ψ_Cr is
-set again at twice its measurement, 3.9e-5, provisional (to be confirmed by S. Guillet).
+set again at twice its measurement, 3.9e-5 (1.94e-5 on Linux x64 in CI run 44225490669), twice the Linux worst as every
+record of the Validation category, which CI runs on Linux x64 alone (to be confirmed by S. Guillet).
 
 Another draw of the noise of the references, by analogy with R2, R4 and R5 above, where the Φ under test was compared
 on both behaviours (the burn case was not split): about half of the TDB labels at which the forces read the time move

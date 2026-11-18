@@ -163,7 +163,7 @@ release are listed under **Known limitations**.
   relative rotation (internal `Quaternion.SlerpByAxisAngle`, that of a type-3 CK and of the attitude record): 2.38e-12 rad
   over the 6 840 epochs of 6 h (`PropagationFrameOrientationCacheTests.Interpolation_IsTheExactSlerp_AgainstSxform`, red
   on a85098d; the bound of the KR-1 tests of lot 6, 6.9e-10 rad from the Lerp, measured again at 1.0e-13 rad and set to
-  2.1e-13, provisional).
+  2.1e-13; both bounds twice the worst over Linux x64, Windows x64 and macOS arm64, CI run 44225490669).
 - **The third body's attraction lost eight digits near the perturbing body** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Changed below).
   `ThirdBodyPerturbation` computed |r − d|³ as |d|³ (1 + q)^1.5 with Battin's q = r·(r − 2d)/|d|², whose 1 + q = |r − d|²/|d|²
   a cancellation of terms of order 1 gives to about ε |d|²/|r − d|²: in SSB mode about the Earth (the Sun the central body,
@@ -175,12 +175,16 @@ release are listed under **Known limitations**.
   ρ = r − d formed once: within 4.1e-16 of the exact acceleration there, 2.7e-15 at most around the switch, Battin's side
   (`ThirdBodyNearThePerturberTests`, an integer reference of 2 200 bits, |r − d|/|d| from 1e-6 to 1.5, about the Sun with
   the Earth and about the Earth with the Moon; red on a85098d); the same LEO takes 49 steps at 1e-10 (47 one ulp looser,
-  5.6 mm apart), 5 210 at 1e-12, its twins end 1.1 cm (RK7(8), the integration error of two step sequences at 1e-10) and
-  0.62 mm (Velocity-Verlet) from it (`SsbModeThirdBodyTests`; thresholds twice the Linux figures, provisional). The SSB
-  rows of `AttitudeRecordTests`, `PropagatedArcsTests` and `MinimumEpochGateEdgeTests` that the noise had turned into
-  MEASURE lines are asserted again (positions against the solution across an impulse 4.1e-4 m, the velocity 1 µs before
-  it 5.4e-7 m/s, the two-`Propagate` burn 1.5e-5 s, 2.2e-5 s over 22 starts and tolerances one ulp apart, Linux x64;
-  provisional, to be set again from the Windows x64 and macOS arm64 CI logs). Elsewhere the acceleration is Battin's bit for
+  5.6 mm apart; 46 and 41, 2.6 mm apart, on macOS arm64), 5 210 at 1e-12 (5 216 on Windows x64, 5 172 on macOS arm64),
+  its twins end 1.1 cm (2.0 cm on macOS arm64; RK7(8), the integration error of two step sequences at 1e-10) and 0.62 mm
+  (Velocity-Verlet) from it (`SsbModeThirdBodyTests`; thresholds twice the worst over Linux x64, Windows x64 and macOS
+  arm64, CI run 44225490669). Below 1e-10 in SSB mode the step control still meets a floor of about 1e-8 m/s² on the
+  Earth's attraction, the quantization of the epoch at which the third bodies are read (draws one ulp apart take 38 to
+  62 steps at 1e-10 on Linux x64), a hundred times below Battin's noise. The SSB rows of `AttitudeRecordTests`,
+  `PropagatedArcsTests` and `MinimumEpochGateEdgeTests` that the noise had turned into MEASURE lines are asserted again
+  (positions against the solution across an impulse 4.1e-4 m, the velocity 1 µs before it 5.4e-7 m/s, the
+  two-`Propagate` burn 1.5e-5 s, on Linux x64, Windows x64 and macOS arm64 alike, CI run 44225490669; 2.2e-5 s over 22
+  starts and tolerances one ulp apart, Linux x64). Elsewhere the acceleration is Battin's bit for
   bit (`Acceleration_FarFromThePerturber_IsBattinsBitForBit`), so propagations about the Earth with the Moon and the Sun,
   the goldens and the GMAT conformance runs do not move.
 - **The Mars curve fit took 273.15 where it publishes 273.1** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Changed below).
@@ -263,8 +267,8 @@ release are listed under **Known limitations**.
   Earth's centre, and the determination from the exact site of the COBE observations lost its second order in the spacing
   (`FromTheExactSite_TheErrorIsOfSecondOrderInTheSpacing`: a ratio of 3.32 instead of 4.00 when the spacing is halved).
   The observer is now read at its geometric position: the COBE determination is that of SPICE's site again (ratios 4.002
-  and 4.001), and Mars's error falls with the spacing, 7.06e-2, 1.07e-2 and 1.56e-3 % (Linux x64, `PlanetObject`, bounds
-  at 2.5 days twice those figures, provisional). See Changed.
+  and 4.001), and Mars's error falls with the spacing, 7.06e-2, 1.07e-2 and 1.56e-3 % (Linux x64, Windows x64 and macOS
+  arm64 alike, `PlanetObject`, bounds at 2.5 days twice those figures). See Changed.
 - **The same instant in two time frames was not equal** ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)). `Time` kept the record's equality, on the
   calendar and the frame, while `CompareTo` compared through TAI across frames: `utc == utc.ToTDB()` was false and their
   hashes differed while `CompareTo` returned 0 and `utc - tdb` 0 ticks, so `Dictionary`, `HashSet`, `Distinct` and
@@ -310,12 +314,12 @@ release are listed under **Known limitations**.
   whole-second step divides keeps its samples and its solution, bit for bit (`TLEPropagatorTests`: 121 samples at 0.5 s
   over 1 min, 3 at 60 s over 90 s, 8 at 1.5 s over 10 s, 61 at 60 s over 3600.5 s and over one UTC hour, the last at the
   window end, red on a85098d; 61 at 60 s over 3600 s unchanged; between +60 s and +90 s the Hermite of the 30 s step is
-  2.7e-5 m/s and 0.037 m off SGP4, Linux x64, bounds 5.5e-5 m/s and 0.075 m provisional; 251 m/s and 222 km before,
+  2.7e-5 m/s and 0.037 m off SGP4 on the three platforms, bounds 5.5e-5 m/s and 0.075 m; 251 m/s and 222 km before,
   past the end of the solution). A window given in UTC whose TDB length the step does not divide ends at its TDB end
   instead of the grid point before it: for the ISS at 60 s over one UTC hour the last sample moves by 1.1 µs, and the
   Lagrange read of the samples between them, 7.593e-4 m from SGP4 before, is 9.062e-4 m (the SGP4 state of an instant off
-  the grid of the other samples carries its own tick rounding, 0.77 mm per tick; `TlePropagationTests`, bound 1.9e-3 m
-  provisional, 1.6e-3 m before). No numerical propagation and no conformance case moves.
+  the grid of the other samples carries its own tick rounding, 0.77 mm per tick; `TlePropagationTests`, bound 1.9e-3 m,
+  1.6e-3 m before). No numerical propagation and no conformance case moves.
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -3484,7 +3488,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`tools/near_parabolic/near_parabolic_reference.py`): 4.8e-17 relative for Keplerian elements (exactly 2q at e = 1),
   4.9e-16 for the states of the issue through `ToEquinoctial()`, `ToKeplerianElements()`, `AtEpoch` and
   `ToFrame(ECLIPTIC_J2000)`, 2.9e-16 of h²/μ over the 2724 parabolas (`NearParabolicBandTests.Issue462_*`, red on
-  a85098d; provisional thresholds, twice the Linux worst); the CLI prints h²/μ to its last bit
+  a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS arm64); the CLI prints h²/μ to its last bit
   (`OrbitalParametersTests.NearParabolicSvToEquinoctial_PrintsAFiniteSemiLatusRectum`). `TestHelpers.EquinoctialComparer`
   now compares P, and the two #452 tests that encoded the NaN and ±∞ (`EquinoctialElementsSingularityTests`
   `StateRoundTrip_NearParabolic_ThroughEquinoctial`, `Parabolic_FromKeplerianElements_TakesThePerigeeRadius`) state the
@@ -3506,8 +3510,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Keplerian and its equinoctial elements at e − 1 = ±9e-7, ±5e-7, ±1e-12; the state at its own true anomaly is itself,
   at its epoch; the times within 7.8e-9 s (ν = 1 rad), 4.6e-8 s (2e7 m) and 4.6e-8 s (the sphere of influence) of
   Barker's, their epochs ticks of `Time`; the exact parabola within 1.7e-16 rad of its M and 2.3e-9 m of Barker's
-  state; over 2000 random exact parabolas, the equinoctial round trip within 5.9e-15 of |r| (`NearParabolicBandTests.Issue478_*`,
-  red on a85098d; provisional thresholds, twice the Linux worst). The time of the band is Barker's, the motion the
+  state; over 2000 random exact parabolas, the equinoctial round trip within 6.9e-15 of |r| (`NearParabolicBandTests.Issue478_*`,
+  red on a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS arm64, where Barker's M at ν = 1.5 is
+  one ulp low on macOS arm64). The time of the band is Barker's, the motion the
   library takes there (#459): at e − 1 = −5e-7 it differs from the conic's by 1.7e-5 s at ν = 1 rad.
 - **Parabolic `EquinoctialElements` without a perigee radius threw, or depended on the order of the calls** ([#477](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/477)).
   Elements of the band |e − 1| < 1e-6 with a finite P define a parabola of perigee radius q = P / (1 + e), but nothing
@@ -3521,9 +3526,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   undefined, as #452 left it) and `Equals`/`GetHashCode` are unchanged. Against 60-digit closed forms (the
   equinoctial-to-Cartesian form of Walker, Ireland and Owens and Barker's equation; the two cases of the issue): q
   exactly P / 2, Barker's n within 4.1e-17, the Keplerian angles within 1.2e-16 rad, `AtEpoch` and `ToStateVector(Time)` up
-  to 1.5 h within 8.8e-16 of |r|, the first state of a propagation by Velocity-Verlet and RK7(8) within 2.9e-16, every
+  to 1.5 h within 9.5e-16 of |r|, the first state of a propagation by Velocity-Verlet and RK7(8) within 2.9e-16, every
   first call of the issue giving bit for bit the results of a fresh instance and of the elements given P / (1 + e)
-  (`NearParabolicBandTests.Issue477_*`, red on a85098d; provisional thresholds, twice the Linux worst), and the CLI
+  (`NearParabolicBandTests.Issue477_*`, red on a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS
+  arm64), and the CLI
   converter prints the state (`OrbitalParametersTests.ParabolicEquinoctialWithoutPerigeeRadiusToSv_PrintsItsState`).
   `EquinoctialElementsSingularityTests.Parabolic_WithAFinitePOrAPerigeeRadius_MatchesTheReference` now finds
   `PerigeeRadius()` without a radius exactly P / (1 + e). Within the band with e ≠ 1 the Keplerian path runs too, with the
@@ -3599,7 +3605,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `MASS` was the mass after every burn and its maneuvers every executed impulse: one burn later 1 212 km and 1 137 m/s off
   the propagated state on the issue's case, and at the default epoch a state before the burn with the mass after it. The
   OPM of a spacecraft that holds propagated states now carries the state, the mass and the maneuvers of its epoch (see
-  **Changed**): the state is `GetEphemeris`'s at the epoch, within 5.3e-9 m of the RK7(8) solution, the mass
+  **Changed**): the state is `GetEphemeris`'s at the epoch, within 3.9e-9 m of the RK7(8) solution, the mass
   Tsiolkovsky's after the burn from its ignition on and the full mass before, the maneuvers the burn from its ignition
   on and none before (`SpacecraftToOpmTests`, both integrators, from ICRF and ECLIPJ2000, the default epoch, before the
   burn, a tick before its ignition, at it, 1 s after it, at the impulse and after; red on b4f5dbb, and at the ignition
@@ -3644,8 +3650,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the next segment), in the steps and the knots of the search, an `EventAction.Continue` included; the position is
   continuous there. Against a brute force of the states of the two solutions every 10 ms, refined by golden section
   (`ConjunctionPostBurnTests`, 8 rows red on a85098d, both sides of the burn, a crossing, a `Continue` event and
-  Velocity-Verlet, which locates its events at a step end and is unchanged): every minimum listed within 7e-7 s and
-  1.7e-9 m. Bit for bit without an event: the long-validation conjunction tests and the `conjunction` conformance cases,
+  Velocity-Verlet, which locates its events at a step end and is unchanged): every minimum listed within 9e-7 s and
+  1.9e-9 m (macOS arm64; 7e-7 s and 1.7e-9 m on Linux x64 and Windows x64). Bit for bit without an event: the long-validation conjunction tests and the `conjunction` conformance cases,
   without impulses, do not move.
 
 - **A point front body on the CSPICE path of the occultation search threw** ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)).
@@ -3695,7 +3701,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   20000 windows in the test process, every window equal to the tick (`CspiceWindowCapacityTests`, Validation: the ten
   relations of the coordinate search, three of the distance, the illumination, the occultation and the field of view),
   and on every platform against the same searches over four parts of the window, each under 1000 windows, joined at the
-  seams, within 4.0e-7 s (Linux x64; `CspiceWindowCapacityTests`, 16 rows, red on a85098d, and a 17th, the field of
+  seams, within 4.0e-7 s (Linux x64, Windows x64 and macOS arm64; `CspiceWindowCapacityTests`, 16 rows, red on a85098d, and a 17th, the field of
   view, added at the review); the search past the cell throws (`PastTheNativeCell_ThrowsSpicesError`: 11594 crossings in
   6000 days); the C++ proxies write the 2126 crossings of `gfposc_c` bit for bit
   (`API.FindWindowsProxiesWriteEveryWindowOfTheirCell`). `FindWindowsInFieldOfViewConstraint` takes the same path: an
@@ -3774,7 +3780,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in J2000 every 10 min): 7.8e-5 m and 8.8e-12 m/s in ECLIPJ2000 and from ECLIPJ2000 states, 4.8e-5 m and 3.5e-9 m/s
   in ITRF93 from SPICE's orientations stored at the epochs, 4.8e-5 m in TEME by name; ECLIPJ2000 within 1.1e-16 rad of
   `sxform_c` and the barycentre of the issue within 2.2e-16 of the closed form (`MemoryDataProviderFrameTests`, 17 of 19
-  cases red on a85098d; thresholds provisional, twice the Linux worst). The aberration: Changed below.
+  cases red on a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS arm64). The aberration: Changed
+  below.
 
 - **A frame kept every orientation it read, for its life** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541)).
   `Frame.GetStateOrientationToICRF` stored each orientation it read in a dictionary keyed by epoch, and so did
@@ -3783,9 +3790,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a85098d in a fresh process: 16 479 752 bytes retained after 100 000 reads of ITRF93 0.5 s apart, about 940 kB after
   5 000 reads of CIRS, TIRS, TEME or GCRF, 2.8 MB for a site frame. A frame now keeps the orientation of its last epoch
   only, while the kernel pool is unchanged (a `LoadKernels`, `UnloadKernels` or `ClearKernels` makes the next read read
-  again), GCRF none (decided by S. Guillet, 2026-11-17): the same reads retain at most 8.2 kB, the noise of a full
-  collection (`ColdStartTests.FrameReads_RetainNoOrientationPerEpoch`, the child `frame-memory`, bound 17 000 bytes,
-  provisional, twice the Linux worst; `FrameTests.AFrame_HoldsNoOrientationStore_TheAttitudeRecordIsTheSpacecraftFrames`;
+  again), GCRF none (decided by S. Guillet, 2026-11-17): the same reads retain at most 9.0 kB, the noise of a full
+  collection (`ColdStartTests.FrameReads_RetainNoOrientationPerEpoch`, the child `frame-memory`, bound 18 000 bytes,
+  twice the worst magnitude over Linux x64, Windows x64 and macOS arm64; `FrameTests.AFrame_HoldsNoOrientationStore_TheAttitudeRecordIsTheSpacecraftFrames`;
   both red on a85098d). The orientations are bit for bit those of a fresh frame
   (`AManagedFrame_ReadAgainAtAnEarlierEpoch_IsTheOrientationOfThatEpoch`). The cost, the best of 7 runs on Linux x64
   (shared machine): 100 000 reads of ITRF93 at distinct epochs 286 ms (336 before), 100 000 at one epoch 0.9 ms (1.9),
@@ -3989,7 +3996,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   positions (`IsTheRateOfThePosition`); from the Earth, the space velocity minus the Earth's velocity from SPICE
   (`GetEphemeris_FromTheEarth_IsTheSpaceVelocityMinusTheEarths`); and read back by `spkezr` from the SPK of
   `WriteEphemeris`, 1.84e-16 relative (`WriteEphemeris_TheSpkHoldsTheSpaceVelocity`); all red on a85098d. Thresholds
-  twice the Linux x64 worst, provisional until the Windows x64 and macOS arm64 logs. The positions of the star's own
+  twice the worst over Linux x64, Windows x64 and macOS arm64 (the same figures on the three). The positions of the star's own
   states are unchanged, bit for bit; the rate of the stellar aberration of the `+S` corrections, which takes the
   relative velocity, follows. A star as observer takes its space velocity too, which moves positions on the paths that
   integrate it (the Changed entry below). The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
@@ -4068,11 +4075,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   move. The references of the Validation records by central differences of whole propagations take other steps, another
   draw of their noise: the penumbra record of R4 (`StmValidationTests`) is set again at 9.6e-8 (its Φ 4.8e-8 there, 3.6e-9
   before, Φ under test moved by 1.3e-9) and the arc record of Ψ_Cr of the eclipsing case (`ManeuverStmValidationTests`)
-  at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), provisional. Eleven draws of each reference, its
+  at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), twice the Linux worst, the Validation category
+  running on Linux x64 alone (to be confirmed by S. Guillet). Eleven draws of each reference, its
   start moved by −5 to +5 ulps with the quantity under test unchanged, show the noise of the references: R4 in the
   penumbra 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d), Ψ_Cr over the arc 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
-  a85098d, 9 of 11 above the former record). Migration: none in code; a golden of
-  a propagation with a geopotential or drag is to be captured again.
+  a85098d, 9 of 11 above the former record). Two records of the test suite that compare propagations at two tolerances
+  were drawn again on every platform and set again at twice the worst over Linux x64, Windows x64 and macOS arm64 (CI
+  run 44225490669), their distributions unchanged over draws one ulp apart: `AvoidanceFallbackTests` in RK7(8), the
+  option at 1e-13 against its reference at 1e-14, state 9.26e-5 m, miss 7.56e-5 m and Pc 7.12e-7 on Windows x64
+  (4.42e-5 m, 3.63e-5 m and 3.67e-7 on main a85098d at worst, macOS arm64 6.36e-5 m), thresholds 1.9e-4 m, 1.6e-4 m and
+  1.5e-6 (8.3e-5 m, 6.8e-5 m and 6.4e-7 before; over 81 draws on Linux x64, 4.9e-7 to 1.02e-4 m after and 7.3e-7 to
+  9.62e-5 m before); `MinimumStepNoiseTests`, Φ at 1e-13 against Φ at 1e-14 on the steps of the state, 1.34e-10 on
+  Windows x64 (4.95e-11 on main a85098d at worst), threshold 2.7e-10 (9.1e-11 before; over 40 draws on Linux x64,
+  2.9e-12 to 2.30e-10 after and 4.9e-12 to 6.35e-10 before), and against central differences 1.14e-7, threshold 2.3e-7
+  (2.6e-7 before). Migration: none in code; a golden of a propagation with a geopotential or drag is to be captured
+  again.
 - **Breaking: a propagation near a third body, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
   `ThirdBodyPerturbation.Apply` takes the direct difference where the spacecraft is closer to the perturbing body than
   half its distance to the central body (|r − d| < |d|/2): SSB mode near any planet, and a spacecraft near the Moon
@@ -4270,10 +4287,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (989.8, −2004.7, 298.2) m/s to (−5885.2, 5482.1, 89798.8) m/s, and after 6 hours of propagation about the Sun its
   position moved by 1.93e9 m (its 89.8 km/s times 6 hours; measured on a85098d and on the fix). The velocity of these
   conversions is the state's plus the star's space velocity minus the target's from SPICE, its position the star's
-  position from the barycenter plus the state's minus the target's, 0 on Linux x64 against bounds of 8.0e-16 relative,
+  position from the barycenter plus the state's minus the target's, 0 on Linux x64, Windows x64 and macOS arm64 against
+  bounds of 8.0e-16 relative,
   the rounding of the two orders of summation (`StarVelocityTests.RelativeTo_AStateAboutAStar_TakesTheStarsSpaceVelocity`,
   `GetEphemeris_FromAStar_IsTheTargetsVelocityMinusTheStars`, `Propagate_ASpacecraftAboutAStar_StartsWithTheStarsSpaceVelocity`;
-  0.999, 0.84 to 1.12 and 0.999 relative on a85098d), provisional until the Windows x64 and macOS arm64 logs. Migration:
+  0.999, 0.84 to 1.12 and 0.999 relative on a85098d). Migration:
   a state about a star whose velocity was given relative to the barycenter's motion (as the zero velocity of the star
   made it) subtracts the star's space velocity (`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`)
   to keep its former heliocentric velocity and trajectory; a state given relative to the star itself needs no change and
@@ -5556,9 +5574,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   q / (1 − e) for a non-finite P given its perigee radius); `MeanMotion()` is √(μ/|a|³), Barker's only for an infinite semi-major
   axis; the state of elements in the band takes the conic's p = q (1 + e), 2q at e = 1 bit for bit; and
   `KeplerianElements` accepts in the band, with the perigee radius q it requires, the semi-major axis of the same conic,
-  a (1 − e) = q to rounding: |q/a − (1 − e)| ≤ 6 ε (1 + e), twice the 3.0 ε (1 + e) measured on Linux over 6400 states
-  of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU) through every path that builds elements there (the
-  state, equinoctial elements, `AtEpoch`, SPICE's `oscltx`), provisional until the Windows x64 and macOS arm64 CI logs;
+  a (1 − e) = q to rounding: |q/a − (1 − e)| ≤ 6 ε (1 + e), twice the 3.0 ε (1 + e) measured on Linux x64, Windows x64
+  and macOS arm64 over 6400 states of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU) through every path
+  that builds elements there (the state, equinoctial elements, `AtEpoch`, SPICE's `oscltx`);
   +Infinity at e = 1 exactly, and within a few ulps of it only (the state of an exact parabola, whose e rounds off 1
   where ξ rounds to 0). The a of another conic throws `ArgumentException` (`semiMajorAxis`), as it did on a85098d: the
   review of #459 measured `new KeplerianElements(7e6, 1 − 5e-7, ..., perigeeRadius: 7e6)` built with the semi-major axis,
@@ -5577,8 +5595,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ±1e-12), the round trips within 6.0e-16 of |r|, the state 600 s later within 6.1e-16 of the band model and 0.16 m of
   the exact conic (1.8e-7 m at |e − 1| = 1e-12; 0.54 m from the periapsis at 5e-7), and the double edges of the band as
   Keplerian elements (0.9999990000000001 and the double nearest 1.000001, both inside it, with their finite a, red on
-  a85098d) within 2.7e-16 (`NearParabolicBandTests.Issue459_*`, red on a85098d; provisional thresholds, twice the Linux
-  worst). The comment of the issue asked for the solvers of #467 to be measured inside the band before Barker's law is
+  a85098d) within 2.9e-16 (`NearParabolicBandTests.Issue459_*`, red on a85098d; thresholds twice the worst over Linux
+  x64, Windows x64 and macOS arm64). The comment of the issue asked for the solvers of #467 to be measured inside the band before Barker's law is
   kept for all of it: Kepler's equation for the conic, solved by `KeplerEquation` in doubles from the state's a, e and
   ν, is 2.3 to 5.8 mm from the exact motion at |e − 1| = 5e-7 to 9e-7, better than Barker's law there (0.09 to 0.16 m),
   and 2.8 to 5.0 km off at |e − 1| = 1e-12, where Barker's law is within 1.8e-7 m
@@ -5630,8 +5648,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   unchanged, bit for bit (only labels change), so no golden moves. Tests: `MeanElementsTypeTests` (mean Keplerian and
   equinoctial sets from `FromOMM`, `TLE.ToMeanKeplerianElements()`, `ToEquinoctial()` and the constructors, in ICRF and
   `ECLIPTIC_J2000`, at their epoch and an hour later; the seven propagation paths, Velocity-Verlet and RK7(8), windows at
-  and after the epoch; the TLE's osculating set within 8.9e-16 of CSPICE `prop2b` over the TT seconds of the hour,
-  provisional threshold twice the Linux worst), red on a85098d. Migration: propagate a TLE with `TLEPropagator` or
+  and after the epoch; the TLE's osculating set within 8.9e-16 of CSPICE `prop2b` over the TT seconds of the hour on
+  Linux x64 and macOS arm64, 3.8e-15 on Windows x64, whose native library MSVC builds, threshold twice the worst), red
+  on a85098d. Migration: propagate a TLE with `TLEPropagator` or
   start from `TLE.ToOsculating()` (or the TLE itself, whose SGP4 state starts the propagation); build osculating
   elements for a numerical propagation.
 - **Breaking: `Spacecraft.SetStandbyManeuver` sets the head of the maneuver chain**

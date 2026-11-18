@@ -101,9 +101,9 @@ public partial class IntegratorEventTests
 
     /// <summary>The final position of a Velocity-Verlet propagation with continued events less the same propagation without
     /// them, m: Velocity-Verlet's own restart noise, its global error moved by the grid of its steps shifted by up to half a
-    /// tick at each event (the trajectory of Velocity-Verlet depends on the phase of its grid). Linux worst 1.08e-4 m
-    /// (Earth, 0.7 s steps, 7 events; 1.60e-5 m at 1 s, 1.21e-6 m at 10 s, Moon 2.90e-5 m at 0.7 s and 0 at 1 s, where the
-    /// step ends are ticks); before #572, 1.32e-3 to 2.03e-3 m about the Earth. Twice the Linux worst, provisional, to be
-    /// set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    /// tick at each event (the trajectory of Velocity-Verlet depends on the phase of its grid). Worst 1.077e-4 m on Linux
+    /// x64, Windows x64 and macOS arm64 alike (CI run 44225490669; Earth, 0.7 s steps, 7 events; 1.60e-5 m at 1 s, 1.21e-6 m
+    /// at 10 s, Moon 2.90e-5 m at 0.7 s and 0 at 1 s, where the step ends are ticks); before #572, 1.32e-3 to 2.03e-3 m
+    /// about the Earth. Twice the worst, rounded up.</summary>
     internal const double ContinueChainAgainstFree = 2.2e-4;
 }

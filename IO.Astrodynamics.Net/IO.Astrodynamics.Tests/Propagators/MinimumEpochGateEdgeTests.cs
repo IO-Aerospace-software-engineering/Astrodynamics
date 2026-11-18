@@ -54,12 +54,11 @@ public class MinimumEpochGateEdgeTests
     /// RK7(8) at 1e-9 over two step sequences. With the noise of #576 (the third body's acceleration near the Earth in SSB
     /// mode) they differed between platforms: worst 6.30e-6 / 2.19e-4 / 1.31e-4 s on the perigee raise (Linux / Windows /
     /// macOS arm64; the apogee raise 4.79e-5 / −1.38e-5 / −1.35e-5 s; CI run 41852583362), against the Keplerian residual of
-    /// 0.64 s that the Sun makes. With the direct difference near the Earth: 1.51e-5 s on the perigee raise, 0 on the apogee
-    /// raise (Linux x64, 2026-11-17). As a stand-in for the step sequences of other platforms, 22 draws of the start moved
-    /// by −5 to +5 ulps along x, each at the tolerance and one ulp above it: 2.17e-5 s at worst on the perigee raise, 3.3e-6
-    /// s on the apogee raise (Linux x64, 2026-11-17). Twice that worst, provisional (to be set again from the Windows x64
-    /// and macOS arm64 CI logs).</summary>
-    internal const double TwoPropagateSsb = 4.4e-5;
+    /// 0.64 s that the Sun makes. With the direct difference near the Earth: 1.510e-5 s on the perigee raise, 0 on the
+    /// apogee raise, on Linux x64, Windows x64 and macOS arm64 alike (CI run 44225490669). Twice that worst, rounded up; 22
+    /// draws of the start moved by −5 to +5 ulps along x, each at the tolerance and one ulp above it, reach 2.17e-5 s on the
+    /// perigee raise and 3.3e-6 s on the apogee raise (Linux x64, 2026-11-17), under it.</summary>
+    internal const double TwoPropagateSsb = 3.1e-5;
 
     private static readonly Time S = MinimumEpochGateTests.S;
     private readonly ITestOutputHelper _output;

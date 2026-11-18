@@ -109,9 +109,9 @@ public class SpiceApiElementConversionTests
         }
     }
 
-    // Twice the worst, rounded up at the second significant digit, of EquinoctialToState_MatchesTheReference on Linux x64
-    // (2026-11-17: position 1.007e-15, velocity 1.020e-15 relative, both at "keplerian e 0.05, i 0, node 180, aop 300
-    // (h = -0.0)"); provisional, to be set again from the CI logs of Windows x64 and macOS arm64
+    // Twice the worst, rounded up at the second significant digit, of EquinoctialToState_MatchesTheReference over Linux x64,
+    // Windows x64 and macOS arm64 alike (CI run 44225490669, 79 cases: position 1.007e-15, velocity 1.020e-15 relative,
+    // both at "keplerian e 0.05, i 0, node 180, aop 300 (h = -0.0)")
     private const double EqncpvPosition = 2.1e-15;
     private const double EqncpvVelocity = 2.1e-15;
 

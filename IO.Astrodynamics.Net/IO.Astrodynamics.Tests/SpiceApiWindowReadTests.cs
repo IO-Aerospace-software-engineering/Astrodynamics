@@ -90,8 +90,8 @@ public partial class SpiceApiTest
         // Against CSPICE, for the two months whose UTC window is shortest in TDB: each state is spkezr_c's at the TDB seconds of
         // start + i·step in UTC, bit for bit. Those seconds are the library's TDB − TT, its one-term series, which differs from
         // SPICE's (str2et_c) by up to 1.06 µs (docs/reference/time-and-windows.md); measured here, and bounded by twice the
-        // worst on Linux x64 (1.073e-6 s, 2026-11-17), rounded up at the second significant digit; provisional, to be set
-        // again from the Windows x64 and macOS arm64 CI logs
+        // worst on Linux x64 (1.073e-6 s, CI run 44225490669), rounded up at the second significant digit: a record of the
+        // Validation category, which CI runs on Linux x64 alone
         var start = new TimeSystem.Time(2026, month, 1, frame: TimeSystem.TimeFrame.UTCFrame);
         var stepSize = TimeSpan.FromSeconds(0.1);
         var window = new Window(start, start.AddSeconds(600.0));
@@ -278,13 +278,14 @@ public partial class SpiceApiTest
         }
     }
 
-    // The record's epoch, sct2e_c of the clock of sce2c_c of the epoch read, against start + i·step: 0 on Linux x64
-    // (2026-11-17, the TDB window and the four UTC windows), so equal to the tick; provisional, to be set again from the
-    // Windows x64 and macOS arm64 CI logs
+    // The record's epoch, sct2e_c of the clock of sce2c_c of the epoch read, against start + i·step: 0 on Linux x64 (the
+    // TDB window and the four UTC windows), Windows x64 and macOS arm64 (the four UTC windows; CI run 44225490669), so
+    // equal to the tick
     private const double RecordEpochThreshold = 0.0;
 
-    // The rotation of the record's quaternion against ckgpav_c's C-matrix: twice the worst on Linux x64 (1.570e-16 rad,
-    // 2026-11-17), rounded up at the second significant digit; Validation, Linux
+    // The rotation of the record's quaternion against ckgpav_c's C-matrix: twice the worst on Linux x64 (1.570e-16 rad, CI
+    // run 44225490669), rounded up at the second significant digit: a record of the Validation category, which CI runs on
+    // Linux x64 alone
     private const double CkgpavAngleThreshold = 3.2e-16;
 
     [Fact]
@@ -321,8 +322,7 @@ public partial class SpiceApiTest
         }
     }
 
-    // Twice the bytes a read of one epoch allocates on Linux x64 after #563 (488 bytes, 1.28e-2 ms a read; 720 408 bytes and
-    // 1.83 ms before, 2026-11-17), rounded up at the second significant digit;
-    // provisional, to be set again from the Windows x64 and macOS arm64 CI logs
-    private const long OneEpochOrientationReadBytes = 980;
+    // Twice the bytes a read of one epoch allocates after #563: 488 bytes on Linux x64, Windows x64 and macOS arm64 alike
+    // (CI run 44225490669; 1.28e-2 ms a read on Linux x64, where it was 720 408 bytes and 1.83 ms before, 2026-11-17)
+    private const long OneEpochOrientationReadBytes = 976;
 }

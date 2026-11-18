@@ -89,16 +89,17 @@ public class PropagatedArcsEdgeTests
 
     /// <summary>The managed reads at, between and after two impulses within 2 µs against the state after both, the solution
     /// after the first with the second ΔV added, carried by the two-body Taylor of the second order, m and m/s (#579). Worst
-    /// 1.92e-9 m and 2.03e-12 m/s on Linux x64 (1 and 1.5 µs apart): the read of the solution at the first impulse against
-    /// the integrator's state there. Provisional: twice the Linux worst, rounded up at the second significant digit, to be
-    /// set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    /// 1.920e-9 m and 2.034e-12 m/s on Linux x64, Windows x64 and macOS arm64 alike (CI run 44225490669; 1 and 1.5 µs
+    /// apart): the read of the solution at the first impulse against the integrator's state there. Twice the worst, rounded
+    /// up at the second significant digit.</summary>
     internal const double CloseImpulsesPosition = 3.9e-9;
 
     internal const double CloseImpulsesVelocity = 4.1e-12;
 
     /// <summary>The SPK against the managed reads at and between two impulses 1, 1.5 and 3 µs apart, m/s (#579); the
-    /// position is <see cref="PropagatedArcsTests.SpkAgainstManaged"/>'s. Worst 4.98e-7 m/s on Linux x64 (3 µs apart, the
-    /// epochs of the SPK doubles of 1.2e-7 s resolution). Provisional, as above.</summary>
+    /// position is <see cref="PropagatedArcsTests.SpkAgainstManaged"/>'s. Worst 4.978e-7 m/s on Linux x64, Windows x64 and
+    /// macOS arm64 alike (CI run 44225490669; 3 µs apart, the epochs of the SPK doubles of 1.2e-7 s resolution). Twice the
+    /// worst, rounded up.</summary>
     internal const double CloseImpulsesSpkVelocity = 1.0e-6;
 
     /// <summary>The SPK of the Cosmographia export at tc - 1 µs, tc and tc + 1 µs against the solution, m and m/s. Worst

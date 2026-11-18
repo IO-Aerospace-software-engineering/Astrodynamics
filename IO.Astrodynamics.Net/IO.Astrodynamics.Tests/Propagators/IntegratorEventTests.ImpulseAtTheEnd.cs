@@ -107,13 +107,13 @@ public partial class IntegratorEventTests
     }
 
     /// <summary>The OPM ΔV in m/s less the jump of the final velocity at the burn, m/s: the rounding of the km/s of the OPM and
-    /// of the difference of two velocities. Linux worst 3.46e-13 m/s over the eight propagations of #575; twice it, provisional,
-    /// to be set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    /// of the difference of two velocities. Worst 3.458e-13 m/s over the eight propagations of #575 on Linux x64, Windows x64
+    /// and macOS arm64 alike (CI run 44225490669); twice it, rounded up.</summary>
     internal const double OpmDeltaVAgainstFinalJump = 7.0e-13;
 
     /// <summary>The fuel of the OPM maneuver less the drop of the spacecraft's mass, kg: the rounding of a difference of
-    /// masses near 2 000 kg. Linux worst 1.42e-13 kg; twice it, provisional, to be set again from the Windows x64 and macOS
-    /// arm64 CI logs.</summary>
+    /// masses near 2 000 kg. Worst 1.421e-13 kg on Linux x64, Windows x64 and macOS arm64 alike (CI run 44225490669); twice
+    /// it, rounded up.</summary>
     internal const double OpmFuelAgainstMassDrop = 2.9e-13;
 
     /// <summary>A bare <see cref="IIntegrator"/> that returns a segment of no step for a duration of zero or less.</summary>

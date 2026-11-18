@@ -131,7 +131,7 @@ Barnard's star moves such a spacecraft by 1.93e9 m in 6 hours where it stood sti
 written relative to the barycenter's motion subtracts the star's space velocity
 (`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`) to keep its former trajectory.
 
-Its accuracy, Linux x64, 2026-11-17 (provisional until the Windows x64 and macOS arm64 logs):
+Its accuracy, the same on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669):
 
 - against the derivative of the straight line in long double (`tools/sofa_reference/starpm_ref.c --velocity`), every
   star of the harness at 0 to 1000 years, the poles and the synthetic stars included: 2.0e-16 relative;

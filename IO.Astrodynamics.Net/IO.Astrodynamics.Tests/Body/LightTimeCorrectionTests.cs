@@ -542,39 +542,43 @@ public class LightTimeCorrectionTests
         Assert.True(worst <= CoordinateWindowBound, $"{label}: {worst:E3} s");
     }
 
-    // Provisional bounds of #489 and #593, twice the worst over the rows of each on Linux x64 (2026-11-17), rounded up at
-    // two digits, to be set again from the Windows x64 and macOS arm64 CI logs (the MEASURE lines of each row). Positions
-    // in m, velocities in m/s. A site given by its coordinates, as target: from the Moon, the Earth, LRO and the singular
-    // sites, geometric 6.8e-8 m and 4.6e-13 m/s, corrected 2.4e-5 m (the equator site) and 3.7e-9 m/s; from the Sun and
-    // the Mars barycenter, geometric 6.1e-5 m (the double of 2.3e11 m) and 3.8e-12 m/s, corrected 6.8e-5 m and 3.4e-9 m/s.
-    private static readonly (double Position, double Velocity) Site489Geometric = (1.4e-7, 9.2e-13);
-    private static readonly (double Position, double Velocity) Site489Corrected = (4.9e-5, 7.5e-9);
+    // Bounds of #489 and #593, twice the worst over the rows of each on Linux x64, Windows x64 and macOS arm64 (the MEASURE
+    // lines of each row, CI run 44225490669), rounded up at two digits. Positions in m, velocities in m/s. A site given by
+    // its coordinates, as target: from the Moon, the Earth, LRO and the singular sites, geometric 6.829e-8 m on the three
+    // platforms and 4.583e-13 m/s on Linux x64, 5.124e-13 m/s on Windows x64 and macOS arm64 (site_from_moon), corrected
+    // 3.036e-5 m (dss13_copy_from_moon, XCN) and 3.732e-9 m/s on the three; from the Sun and the Mars barycenter, geometric
+    // 6.115e-5 m (the double of 2.3e11 m) and 3.777e-12 m/s, corrected 6.835e-5 m and 3.423e-9 m/s on the three.
+    private static readonly (double Position, double Velocity) Site489Geometric = (1.4e-7, 1.1e-12);
+    private static readonly (double Position, double Velocity) Site489Corrected = (6.1e-5, 7.5e-9);
     private static readonly (double Position, double Velocity) Site489SunGeometric = (1.3e-4, 7.6e-12);
     private static readonly (double Position, double Velocity) Site489SunCorrected = (1.4e-4, 6.9e-9);
 
-    // A non-inertial frame (#593): geometric 3.0e-7 m and 4.4e-11 m/s; corrected 1.7e-5 m and 1.1e-8 m/s in ITRF93, the
-    // topocentric frame and MOON_ME centred on the observer; MOON_ME centred on the target, 2.4e-4 m, the resolution of
-    // the reference, whose MOON_ME rotation changes by steps of 3.7e-4 m at 384000 km within a few ulps of its epoch
-    // (sxform_c from MOON_PA's Chebyshev angles, measured with CSPICE N0067 on these kernels); the spacecraft rows 3.9e-4 m
-    // and 8.3e-7 m/s, the Sun from it 2.9e-2 m and 6.4e-5 m/s, as in ICRF (above).
-    private static readonly (double Position, double Velocity) Frame593Geometric = (5.9e-7, 8.9e-11);
-    private static readonly (double Position, double Velocity) Frame593Corrected = (3.5e-5, 2.3e-8);
-    private static readonly (double Position, double Velocity) Frame593TargetCentredCorrected = (4.9e-4, 2.3e-8);
+    // A non-inertial frame (#593), the frame of a site centred on a third object included (its rows below): geometric
+    // 4.510e-7 m and 7.122e-11 m/s on Linux x64, 3.083e-7 m and 5.719e-11 m/s on Windows x64 and macOS arm64
+    // (moon_from_dss13_in_site_frame); corrected 1.733e-5 m (moon_from_dss13_topo, LT+S) and 1.151e-8 m/s
+    // (moon_from_dss13_in_site_frame) on the three, in ITRF93, the topocentric frame and MOON_ME centred on the observer;
+    // MOON_ME centred on the target, 2.418e-4 m and 1.180e-9 m/s on the three, the resolution of the reference, whose
+    // MOON_ME rotation changes by steps of 3.7e-4 m at 384000 km within a few ulps of its epoch (sxform_c from MOON_PA's
+    // Chebyshev angles, measured with CSPICE N0067 on these kernels); the spacecraft rows 3.907e-4 m and 8.474e-7 m/s, the
+    // Sun from it 2.916e-2 m and 6.437e-5 m/s, as in ICRF (above), on the three.
+    private static readonly (double Position, double Velocity) Frame593Geometric = (9.1e-7, 1.5e-10);
+    private static readonly (double Position, double Velocity) Frame593Corrected = (3.5e-5, 2.4e-8);
+    private static readonly (double Position, double Velocity) Frame593TargetCentredCorrected = (4.9e-4, 2.4e-9);
     private static readonly (double Position, double Velocity) Frame593SpacecraftCorrected = (7.9e-4, 1.7e-6);
     private static readonly (double Position, double Velocity) Frame593SunCorrected = (5.9e-2, 1.3e-4);
 
-    // The guide window: 0 s and 1.0e-7 s from spkcpt_c's
+    // The guide window: 0 s and 1.0e-7 s from spkcpt_c's on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669),
+    // twice the tick
     private const double GuideWindowBound = 2.0e-7;
 
-    // Reviews of #593 and #489, provisional, twice the worst on Linux x64 (2026-11-17), rounded up at two digits, to be set
-    // again from the Windows x64 and macOS arm64 CI logs (the MEASURE lines). The frame of a site centred on a third object
-    // takes the bounds above (geometric 4.5e-7 m and 7.1e-11 m/s, corrected 1.7e-5 m and 1.2e-8 m/s; the spacecraft rows
-    // 3.9e-4 m and 8.5e-7 m/s). The frame of S as a record of ITRF93: geometric 2.8e-7 m and 1.8e-8 m/s, the rate of the
-    // record (the mean of the SLERP rates of the intervals on either side of a sample); corrected 1.7e-3 m and 1.2e-7 m/s,
+    // Reviews of #593 and #489, twice the worst on Linux x64, Windows x64 and macOS arm64 alike (the MEASURE lines, CI run
+    // 44225490669), rounded up at two digits. The frame of a site centred on a third object takes the bounds above. The
+    // frame of S as a record of ITRF93: geometric 2.752e-7 m and 1.774e-8 m/s, the rate of the
+    // record (the mean of the SLERP rates of the intervals on either side of a sample); corrected 1.666e-3 m and 1.195e-7 m/s,
     // the epoch of the centre, read on the record at its 100 ns tick (exact SLERP) where CSPICE and the residual of the
     // library take the double of a 2024 epoch, 6e-8 s apart at most: 1.7 mm at the Moon for the Earth's rotation. The frame
-    // by name: the closed form of the same arithmetic, 0. The coordinate windows: 1.0e-7 s from spkcpt_c's, as the guide
-    // window.
+    // by name: the closed form of the same arithmetic, 0 on the three. The coordinate windows: 1.0e-7 s from spkcpt_c's on
+    // the three, as the guide window.
     private static readonly (double Position, double Velocity) Frame593ThirdSpacecraftGeometric = (5.6e-7, 3.6e-8);
     private static readonly (double Position, double Velocity) Frame593ThirdSpacecraftCorrected = (3.4e-3, 2.4e-7);
     private const double FrameByNamePosition = 0.0;

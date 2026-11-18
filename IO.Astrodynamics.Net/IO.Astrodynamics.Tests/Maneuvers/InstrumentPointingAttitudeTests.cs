@@ -85,9 +85,10 @@ public class InstrumentPointingAttitudeTests
         LabelAssert.Equal(new Window(epoch, TimeSpan.Zero), maneuver.ThrustWindow);
     }
 
-    // Provisional, twice the worst over the five orientations on Linux x64 (2026-11-17), rounded up at two digits, to be set
-    // again from the Windows x64 and macOS arm64 CI logs: the attitude against the closed form on spkcvo_c's direction,
-    // 5.21e-14 rad at (-pi/2, 0, 0), and the boresight from it, 3.89e-14 rad; the light time of the library against
+    // Twice the worst over the five orientations on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669), rounded up
+    // at two digits: the attitude against the closed form on spkcvo_c's direction, 5.210e-14 rad at (-pi/2, 0, 0) on Linux
+    // x64 and macOS arm64, 5.239e-14 rad on Windows x64, and the boresight from it, 3.885e-14 rad on Linux x64 and macOS
+    // arm64, 3.897e-14 rad on Windows x64; the light time of the library against
     // CSPICE's (the Moon's position 1.5e-5 m apart at 384000 km), where the geometric direction held 4.4e-16 rad
     private const double InstrumentPointingTolerance = 1.1e-13;
     private const double BoresightTolerance = 7.8e-14;
@@ -240,14 +241,15 @@ public class InstrumentPointingAttitudeTests
         Assert.Equal("aberration", exception.ParamName);
     }
 
-    // Provisional, twice the worst over the corrections on Linux x64 (2026-11-17), rounded up at two digits, to be set again
-    // from the Windows x64 and macOS arm64 CI logs: the Moon 1.01e-13 rad (CN), the site 1.14e-12 rad (XCN), the light time
-    // of the library against CSPICE's at a range of a few thousand km; geometric 2.3e-16 and 2.9e-16 rad
+    // Twice the worst over the corrections on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669), rounded up at two
+    // digits: the Moon 1.012e-13 rad (CN), the site 1.140e-12 rad (XCN) on the three, the light time of the library against
+    // CSPICE's at a range of a few thousand km; geometric 2.3e-16 rad for the Moon, 2.9e-16 rad for the site on Linux x64
+    // and 5.4e-16 rad on Windows x64 and macOS arm64
     private const double MoonPointingTolerance = 2.1e-13;
     private const double SitePointingTolerance = 2.3e-12;
 
-    // Provisional, twice the worst over the corrections and the two distances on Linux x64 (2026-11-17), rounded up at two
-    // digits, to be set again from the Windows x64 and macOS arm64 CI logs (the MEASURE lines of PointsAtAStarWithoutLightTime):
-    // 1.60e-16 rad (XLT+S and XCN+S at 20 pc), where the light time moved the boresight by 4.5e-5 rad (9.2″) at 20 pc
+    // Twice the worst over the corrections and the two distances on Linux x64, Windows x64 and macOS arm64 (the MEASURE
+    // lines of PointsAtAStarWithoutLightTime, CI run 44225490669), rounded up at two digits: 1.573e-16 rad on the three
+    // (XLT+S and XCN+S at 20 pc), where the light time moved the boresight by 4.5e-5 rad (9.2″) at 20 pc
     private const double StarPointingTolerance = 3.2e-16;
 }

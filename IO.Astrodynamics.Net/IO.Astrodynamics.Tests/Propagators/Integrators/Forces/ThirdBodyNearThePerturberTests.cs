@@ -85,12 +85,12 @@ public class ThirdBodyNearThePerturberTests
         Assert.True(worst < RelativeError, $"{worst:E3}");
     }
 
-    /// <summary>Twice the Linux worst of the theories above and of the switch, 2.66e-15 (Battin's side of the switch),
-    /// rounded up, provisional (to be set again from the Windows x64 and macOS arm64 CI logs).</summary>
+    /// <summary>Twice the worst of the theories above and of the switch, 2.657e-15 (Battin's side of the switch) on Linux
+    /// x64, Windows x64 and macOS arm64 alike (CI run 44225490669), rounded up.</summary>
     private const double RelativeError = 5.4e-15;
 
-    /// <summary>Twice the Linux worst relative step between two neighbours across the switch, 2.34e-15, rounded up,
-    /// provisional.</summary>
+    /// <summary>Twice the worst relative step between two neighbours across the switch, 2.339e-15 on Linux x64, Windows x64
+    /// and macOS arm64 alike (CI run 44225490669), rounded up.</summary>
     private const double StepAcrossTheSwitch = 4.7e-15;
 
     /// <summary>

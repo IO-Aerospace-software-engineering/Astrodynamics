@@ -95,10 +95,11 @@ public class InitialOrbitDeterminationTests
             return (Position: deltaRange, Velocity: deltaVelocity);
         }).ToArray();
 
-        // Assert: the error of the method falls with the spacing. Measured 2026-11-17 (Linux x64): 7.057e-2, 1.071e-2 and
-        // 1.559e-3 % in position, 1.469e-1, 3.164e-2 and 7.957e-3 % in velocity at 10, 5 and 2.5 days. The observer read
-        // with light time from the Sun (before 11.0.0), about 500 s of the Earth's orbit, gave 5.8e-2 % at 10 days by a
-        // cancellation and 3.7 % at 2.5 days. Bounds twice the Linux figures at 2.5 days, provisional
+        // Assert: the error of the method falls with the spacing. Measured on Linux x64, Windows x64 and macOS arm64 alike
+        // (CI run 44225490669): 7.057e-2, 1.071e-2 and 1.559e-3 % in position, 1.469e-1, 3.164e-2 and 7.957e-3 % in
+        // velocity at 10, 5 and 2.5 days. The observer read with light time from the Sun (before 11.0.0), about 500 s of the
+        // Earth's orbit, gave 5.8e-2 % at 10 days by a cancellation and 3.7 % at 2.5 days. Bounds twice the figures at 2.5
+        // days, rounded up
         for (int k = 1; k < departures.Length; k++)
         {
             Assert.True(departures[k - 1].Position / departures[k].Position > 3.5, $"position at step {k}");

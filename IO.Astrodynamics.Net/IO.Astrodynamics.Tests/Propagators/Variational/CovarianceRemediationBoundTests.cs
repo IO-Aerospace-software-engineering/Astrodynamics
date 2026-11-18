@@ -265,8 +265,8 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
         }
 
         // The reference: the clipping of the same matrix in RTN, the two rotations and decompositions differing by rounding,
-        // which a variance ratio of up to 1e15 amplifies in the correlations (1.64e-9 measured on Linux; provisional, twice
-        // it, to be set again from the Windows x64 and macOS arm64 CI logs). The change in RTN of the order of the
+        // which a variance ratio of up to 1e15 amplifies in the correlations (1.640e-9 on Linux x64, Windows x64 and macOS
+        // arm64 alike, CI run 44225490669; twice it, rounded up). The change in RTN of the order of the
         // rounding: each correlation moves by at most the largest clipped eigenvalue, 6 × 1e-3 within the bound (a
         // rigorous bound: |ΔC_ij| ≤ ‖ΔC‖₂)
         _output.WriteLine($"MEASURE #443 deep only in the frame of the state: {cases} cases, depth there down to " +

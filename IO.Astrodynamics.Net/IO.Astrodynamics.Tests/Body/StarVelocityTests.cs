@@ -257,8 +257,8 @@ public class StarVelocityTests
         Assert.True(worst <= StraightLineVelocityTolerance, $"{worst:E3}");
     }
 
-    // The record against the derivative of the straight line in long double: twice the Linux x64 worst, rounded up at the
-    // second digit: 1.978e-16 (2026-11-17), provisional until the Windows x64 and macOS arm64 logs. Before the fix (#731),
+    // The record against the derivative of the straight line in long double: twice the worst over Linux x64, Windows x64
+    // and macOS arm64, rounded up at the second digit: 1.978e-16 on the three (CI run 44225490669). Before the fix (#731),
     // 1 (a zero velocity)
     internal const double StraightLineVelocityTolerance = 4.0e-16;
 
@@ -323,10 +323,10 @@ public class StarVelocityTests
         Assert.True(worst <= StarpmVelocityTolerance, $"{worst:E3}");
     }
 
-    // The record against the derivative of iauStarpm with its two terms: twice the Linux x64 worst, rounded up at the
-    // second digit: 3.622e-10, Polaris after 10 years, whose 0.046″/yr the central difference resolves to about
+    // The record against the derivative of iauStarpm with its two terms: twice the worst over Linux x64, Windows x64 and
+    // macOS arm64, rounded up at the second digit: 3.622e-10 on the three, Polaris after 10 years, whose 0.046″/yr the central difference resolves to about
     // 1.1e-16 / (2 · 2.2e-7) (Barnard's star 1.7e-12 to 7.1e-12 up to 100 years, 3.4e-10 after 1000, the light time's terms
-    // of higher order) (2026-11-17), provisional until the Windows x64 and macOS arm64 logs. Without the two terms the
+    // of higher order) (CI run 44225490669). Without the two terms the
     // library's velocity is 1.50e-4 away (Barnard's star from Gaia DR3), 1.51e-5 more after 1000 years; before the fix
     // (#731), 1 (a zero velocity)
     internal const double StarpmVelocityTolerance = 7.3e-10;
@@ -370,8 +370,8 @@ public class StarVelocityTests
         Assert.True(worst <= PositionRateTolerance, $"{worst:E3}");
     }
 
-    // Twice the Linux x64 worst, rounded up at the second digit: 6.178e-16, Barnard's star from I/311 after 10 years
-    // (2026-11-17), provisional until the Windows x64 and macOS arm64 logs. Before the fix (#731), the chord itself
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit: 6.178e-16 on the three,
+    // Barnard's star from I/311 after 10 years (CI run 44225490669). Before the fix (#731), the chord itself
     internal const double PositionRateTolerance = 1.3e-15;
 
     /// <summary>
@@ -419,7 +419,8 @@ public class StarVelocityTests
     }
 
     // The space velocity and the Earth's are the same doubles on both sides (the same operations of the runtime), and their
-    // difference rounds the same: 0 on Linux x64 (2026-11-17). The bounds are not a record of that 0, which another
+    // difference rounds the same: 0 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669). The bounds are not a
+    // record of that 0, which another
     // platform's rounding could leave, but the rounding of the difference, one unit roundoff per component, 1.9e-16 for
     // the vector, 2.3e-16 with margin, and for the range rate one unit roundoff of the 120 km/s of the two speeds,
     // 1.4e-11 m/s, 1e-10 m/s with margin. Before, the velocity was the Earth's
@@ -562,7 +563,8 @@ public class StarVelocityTests
     }
 
     // The library and the test sum the same doubles in another order (the library v − (v_target − v_star), the test
-    // v + v_star − v_target): 0 on Linux x64 (2026-11-17). The bounds are not a record of that 0, which another platform's
+    // v + v_star − v_target): 0 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669). The bounds are not a
+    // record of that 0, which another platform's
     // rounding could leave, but the rounding of the two orders, two roundings on each side of terms as large as the
     // result (the star's 89 km/s, its 5.8e16 m from the Sun), 4 unit roundoffs per component, 7.7e-16 for the vector,
     // 8.0e-16 with margin. Before (#731), the star's velocity was missing: 0.999 relative for the state about the star
@@ -626,7 +628,7 @@ public class StarVelocityTests
         Assert.True(worst <= SpkVelocityTolerance, $"{worst:E3}");
     }
 
-    // Twice the Linux x64 worst, rounded up at the second digit: 1.839e-16, the SPK's km/s read back in m/s (2026-11-17),
-    // provisional until the Windows x64 and macOS arm64 logs. Before the fix (#731), 1 (a zero velocity)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit: 1.839e-16 on the three,
+    // the SPK's km/s read back in m/s (CI run 44225490669). Before the fix (#731), 1 (a zero velocity)
     internal const double SpkVelocityTolerance = 3.7e-16;
 }

@@ -113,9 +113,10 @@ public class MeanElementsTypeTests
         var reference = SpiceAPI.Instance.Propagate2Bodies(start, start.Observer.GM, TimeSpan.FromTicks((long)System.Math.Round(dt * 1e7)));
         double error = (state.Position - reference.Position).Magnitude() / reference.Position.Magnitude();
         _output.WriteLine($"MEASURE #463 tle.ToKeplerianElements(t0 + 1 h) against prop2b, |Δr| / |r|: {error:E3}");
-        // Measured 8.9e-16 on Linux, the rounding of the element conversions over an hour; provisional, twice, until the
-        // Windows x64 and macOS arm64 CI logs
-        Assert.InRange(error, 0.0, 1.8e-15);
+        // The rounding of the element conversions over an hour, against prop2b from evsgp4_c's state (both of the native
+        // library, which MSVC builds on Windows): 8.9e-16 on Linux x64 and macOS arm64, 3.8e-15 on Windows x64 (CI run
+        // 44225490669, about 2.6e-8 m at the ISS's |r|); twice the worst
+        Assert.InRange(error, 0.0, 7.7e-15);
         var sgp4 = tle.ToOsculating(t);
         var atEpoch = tle.AtEpoch(t).ToStateVector();
         Assert.Equal(sgp4.Position, atEpoch.Position);

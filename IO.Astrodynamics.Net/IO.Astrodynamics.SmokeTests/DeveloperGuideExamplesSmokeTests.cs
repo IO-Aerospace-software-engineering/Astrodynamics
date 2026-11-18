@@ -109,7 +109,8 @@ public class DeveloperGuideExamplesSmokeTests
 
     private const double RangeBound = 1e-3;
 
-    // Provisional: twice the worst of the library's test of the window on Linux x64 (2026-11-17, 1.0e-7 s), to be set
-    // again from the Windows x64 and macOS arm64 CI logs
+    // Twice the worst of the library's test of the window (LightTimeCorrectionTests.GuideWindowBound): 1.0e-7 s, one tick,
+    // on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); the smoke tests run in cd.yml alone, so this test's
+    // own line is in no CI log of the test job
     private const double WindowBound = 2.0e-7;
 }

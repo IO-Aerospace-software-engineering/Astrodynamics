@@ -36,16 +36,16 @@ public class PropagatedStatesSpanTests
 
     /// <summary>The light-time reads at the ends of the states against the same correction written in the test on the
     /// two-body motion of the end state, m (#527): the Lagrange read 1.3 s outside the states. Worst 3.27e-5 m in RK7(8) and
-    /// 2.20e-3 m in Velocity-Verlet at 1 s (whose stored states depart from the two-body motion of the end state) on Linux
-    /// x64. Provisional: twice the Linux worst, rounded up at the second significant digit, to be set again from the Windows
-    /// x64 and macOS arm64 CI logs.</summary>
+    /// 2.203e-3 m in Velocity-Verlet at 1 s (whose stored states depart from the two-body motion of the end state, XLT) on
+    /// Linux x64, Windows x64 and macOS arm64 alike (CI run 44225490669). Twice the worst, rounded up at the second
+    /// significant digit.</summary>
     internal const double LightTimeAtTheEnds = 4.5e-3;
 
     /// <summary>The light-time reads of <c>ApparentPositionReader</c> at the ends of the states of a spacecraft target
     /// against the same correction written in the test on the two-body motion of the end state, m (#527): the read 0.67 ms
-    /// outside the states. Worst 1.26e-5 m in RK7(8) and 2.77e-5 m in Velocity-Verlet at 1 s on Linux x64, at the
-    /// resolution of the barycentric positions in double (1.5e11 m × 1.1e-16). Provisional: twice the Linux worst, rounded
-    /// up at the second significant digit, to be set again from the Windows x64 and macOS arm64 CI logs.</summary>
+    /// outside the states. Worst 2.772e-5 m (Velocity-Verlet at 1 s) on Linux x64 and macOS arm64, 2.773e-5 m on Windows
+    /// x64 (CI run 44225490669), at the resolution of the barycentric positions in double (1.5e11 m × 1.1e-16). Twice the
+    /// worst, rounded up at the second significant digit.</summary>
     internal const double ReaderLightTimeAtTheEnds = 5.6e-5;
 
     private readonly ITestOutputHelper _output;

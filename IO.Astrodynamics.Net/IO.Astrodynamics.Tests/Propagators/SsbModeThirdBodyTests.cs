@@ -61,13 +61,18 @@ public class SsbModeThirdBodyTests
     private static int Steps(PropagationSolution solution) => solution.Segments.Sum(s => s.Steps.Count);
 
     /// <summary>
-    /// RK7(8) at 1e-10 takes about as many steps as relative to the Earth (23 there), and the same number when the
-    /// tolerance moves by one ulp: the step control no longer follows the rounding noise of the Earth's attraction.
+    /// RK7(8) at 1e-10 takes steps of the order of those relative to the Earth (23 there), not tens of thousands, and
+    /// about as many when the tolerance moves by one ulp: the step control no longer follows Battin's noise of 1e-6 m/s².
     /// </summary>
     /// <remarks>Measured on a85098d (Linux x64, Release, 2026-11-17): 21 363 steps, 21 317 one ulp looser, the final
-    /// positions 8.8e-2 m apart; with the fix 49 and 47 steps, 5.6e-3 m apart (the tolerance relative to 1.5e11 m allows
-    /// metres per step). Thresholds twice the Linux figures with the fix, provisional (to be set again from the Windows x64
-    /// and macOS arm64 CI logs).</remarks>
+    /// positions 8.8e-2 m apart. With the fix (CI run 44225490669): 49 and 47 steps, 5.632e-3 m apart, on Linux x64 and
+    /// Windows x64; 46 and 41 steps, 2.636e-3 m apart, on macOS arm64 (the tolerance relative to 1.5e11 m allows metres per
+    /// step). Thresholds twice the worst of the three platforms. The step count is not the same one ulp apart: in SSB mode,
+    /// below 1e-10, the step control still meets a floor of about 1e-8 m/s² on the Earth's attraction, the quantization of
+    /// the epoch at which the third bodies are read (ticks of 100 ns, TDB seconds near 7.6e8 s in a double, 1.2e-7 s,
+    /// millimetres of the Earth's position at 30 km/s), absent about the Earth. Draws one ulp apart on Linux x64 (the
+    /// tolerance or the start moved by 1 to 40 ulps) take 38 to 62 steps, two consecutive draws up to 20 steps apart, so a
+    /// later redraw of the dynamics may cross <see cref="NudgedStepDifference"/> without a defect.</remarks>
     [Fact]
     public void Rk78_StepsFollowTheDynamics_NotTheRounding()
     {
@@ -92,19 +97,23 @@ public class SsbModeThirdBodyTests
         Assert.True(apart < NudgedApart, $"{apart:E3} m");
     }
 
-    /// <summary>Twice the Linux count with the fix, 49, provisional.</summary>
+    /// <summary>Twice the worst count with the fix, 49 on Linux x64 and Windows x64 (46 on macOS arm64; CI run
+    /// 44225490669).</summary>
     private const int Rk78StepBudget = 98;
 
-    /// <summary>Twice the Linux difference with the fix, 2 steps, provisional.</summary>
-    private const int NudgedStepDifference = 4;
+    /// <summary>Twice the worst difference with the fix, 5 steps on macOS arm64 (46 and 41; 2 on Linux x64 and Windows
+    /// x64; CI run 44225490669).</summary>
+    private const int NudgedStepDifference = 10;
 
-    /// <summary>Twice the Linux distance with the fix, 5.63e-3 m, rounded up, provisional.</summary>
+    /// <summary>Twice the worst distance with the fix, 5.632e-3 m on Linux x64 and Windows x64 (2.636e-3 m on macOS arm64;
+    /// CI run 44225490669), rounded up.</summary>
     private const double NudgedApart = 1.2e-2;
 
     /// <summary>
     /// RK7(8) at 1e-12 in SSB mode takes the steps of its dynamics (#389, #544: it did not finish in minutes in the attitude
     /// tests, hence their tolerance of 1e-9 in SSB mode); measured on a85098d (Linux x64, Release, 2026-11-17): 2 093 091
-    /// steps for the hour; with the fix 5 210.
+    /// steps for the hour; with the fix 5 210 on Linux x64, 5 216 on Windows x64 and 5 172 on macOS arm64 (CI run
+    /// 44225490669).
     /// </summary>
     [Fact]
     public void Rk78_AtOneEMinus12_Finishes()
@@ -119,8 +128,8 @@ public class SsbModeThirdBodyTests
         Assert.True(steps <= Rk78StepBudgetAt1e12, $"{steps} steps");
     }
 
-    /// <summary>Twice the Linux count with the fix, 5 210, rounded up, provisional.</summary>
-    private const int Rk78StepBudgetAt1e12 = 11000;
+    /// <summary>Twice the worst count with the fix, 5 216 on Windows x64.</summary>
+    private const int Rk78StepBudgetAt1e12 = 10432;
 
     /// <summary>
     /// The same state given in ECLIPJ2000 and in GALACTIC ends where its ICRF twin ends, to the integration error:
@@ -154,12 +163,13 @@ public class SsbModeThirdBodyTests
         Assert.True(apart < (integrator == "VV" ? TwinApartVelocityVerlet : TwinApartRk78), $"{apart:E3} m");
     }
 
-    /// <summary>Twice the Linux worst with the fix, 6.19e-4 m (GALACTIC; 1.14 m on a85098d), rounded up,
-    /// provisional.</summary>
+    /// <summary>Twice the worst with the fix, 6.187e-4 m (GALACTIC) on Linux x64, Windows x64 and macOS arm64 alike (CI run
+    /// 44225490669; 1.14 m on a85098d), rounded up.</summary>
     private const double TwinApartVelocityVerlet = 1.3e-3;
 
-    /// <summary>Twice the Linux worst with the fix, 1.05e-2 m (ECLIPJ2000; 6.0e-2 m on a85098d), rounded up, provisional:
-    /// the integration error at 1e-10 of two step sequences, the ecliptic twin taking 405 steps where the ICRF one takes 49
-    /// (its z, of geocentric size, tightens the relative error control).</summary>
-    private const double TwinApartRk78 = 2.2e-2;
+    /// <summary>Twice the worst with the fix, 2.029e-2 m on macOS arm64 (ECLIPJ2000, 421 and 46 steps; 1.051e-2 m on
+    /// Linux x64 and Windows x64, 405 and 49 steps; CI run 44225490669; 6.0e-2 m on a85098d), rounded up: the integration
+    /// error at 1e-10 of two step sequences (the ecliptic twin's z, of geocentric size, tightens the relative error
+    /// control).</summary>
+    private const double TwinApartRk78 = 4.1e-2;
 }

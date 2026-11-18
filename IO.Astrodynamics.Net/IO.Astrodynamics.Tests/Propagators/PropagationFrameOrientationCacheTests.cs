@@ -218,8 +218,8 @@ public class PropagationFrameOrientationCacheTests
     /// same points 2.4e-12 rad (measured in #561, 2026-11-03).
     /// </summary>
     /// <remarks>Measured on a85098d (Linux x64, Release, 2026-11-17): 3.371e-10 rad; with the exact SLERP 2.381e-12 rad, the
-    /// angular velocity 3.7e-15 rad/s (linear between the points, unchanged). The bound is twice the Linux worst with the
-    /// fix, rounded up, provisional (to be set again from the Windows x64 and macOS arm64 CI logs).</remarks>
+    /// angular velocity 3.7e-15 rad/s (linear between the points, unchanged); with the exact SLERP 2.381e-12 rad on Linux
+    /// x64, Windows x64 and macOS arm64 alike (CI run 44225490669). The bound is twice that worst, rounded up.</remarks>
     [Fact]
     public void Interpolation_IsTheExactSlerp_AgainstSxform()
     {
@@ -249,7 +249,8 @@ public class PropagationFrameOrientationCacheTests
         Assert.True(worst < ExactSlerpAgainstSxform, $"{worst:E3} rad");
     }
 
-    /// <summary>Twice the Linux worst with the exact SLERP, 2.381e-12 rad, rounded up, provisional.</summary>
+    /// <summary>Twice the worst with the exact SLERP, 2.381e-12 rad on the three platforms (CI run 44225490669), rounded
+    /// up.</summary>
     private const double ExactSlerpAgainstSxform = 4.8e-12;
 
     // ---- KR-1 of lot 6 (#457): a window that ends (or starts) inside the PCK coverage, its next grid point outside ----
@@ -268,8 +269,8 @@ public class PropagationFrameOrientationCacheTests
     // worst 3.43e-10 rad with the normalised-Lerp fallback (a window starting 59.999 s after the coverage start),
     // angular velocity 1.117e-17 rad/s (1.116e-17 on Linux x64); bounds twice the worst over Linux x64, Windows x64 and
     // macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10), rounded up to two digits. With the exact SLERP (#561) the angle is
-    // 1.012e-13 rad at worst (the window start, Linux x64, 2026-11-17): twice that, provisional (to be set again from the
-    // Windows x64 and macOS arm64 CI logs); the angular velocity bound unchanged
+    // 1.012e-13 rad at worst (the window start) on Linux x64, Windows x64 and macOS arm64 alike (CI run 44225490669):
+    // twice that, rounded up; the angular velocity bound unchanged
     private const double AngleBound = 2.1e-13;
     private const double AngularVelocityBound = 2.3e-17;
 

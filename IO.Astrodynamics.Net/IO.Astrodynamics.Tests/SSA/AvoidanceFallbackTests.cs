@@ -33,8 +33,9 @@ public sealed class AvoidanceFallbackCase
     internal static readonly ManeuverExecutionError Gates = new()
         { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
 
-    // The options at 1e-13 in RK7(8), their references at 1e-14 (a reference at 1e-13 is off by up to 1.8e-5 m at the TCA,
-    // its own integration error); by Velocity-Verlet at 1 s
+    // The options at 1e-13 in RK7(8), their references at 1e-14 (the reference resolves to about 1e-6 m at the TCA, against
+    // a reference at 1e-15; the integration error at 1e-13 ranges from 5e-7 to 1.0e-4 m over draws one ulp apart); by
+    // Velocity-Verlet at 1 s
     internal const double Tolerance = 1e-13;
     internal const double ReferenceTolerance = 1e-14;
     internal static readonly TimeSpan VelocityVerletStep = TimeSpan.FromSeconds(1.0);
@@ -697,20 +698,28 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovarianceAge);
         }
 
-        // Twice the worst departure over Linux, macOS arm64 and Windows, rounded up at the second significant digit
+        // Twice the worst departure over Linux x64, Windows x64 and macOS arm64, rounded up at the second significant digit
         // (decision of S. Guillet, 2026-10-21; the integration error of the option at 1e-13 depends on the platform, its
-        // steps parting differently with the floating point of arm64). Measured by the CI of every platform:
-        // - RK7(8), the option at 1e-13 against its reference at 1e-14 (a reference at 1e-13 is off by up to 1.8e-5 m, its
-        //   own integration error): state 2.24e-5 / 4.14e-5 / 2.42e-5 m, miss distance 1.90e-5 / 3.37e-5 / 1.99e-5 m, Pc
-        //   1.24e-7 / 3.18e-7 / 1.87e-7 relative (Linux / macOS arm64 / Windows);
-        // - Velocity-Verlet at 1 s, against the reference in two parts: state 1.86e-4 m, miss distance 1.52e-4 m, Pc
-        //   1.53e-6 on the three platforms, the burn state of a trajectory passed to the analysis being its cubic Hermite
-        //   interpolation (9e-8 m at most from the ephemeris of the spacecraft);
-        // - the TCA 0 on the three platforms.
+        // steps parting differently with the floating point of each). Measured by CI run 44225490669 (Linux / Windows /
+        // macOS arm64):
+        // - RK7(8), the option at 1e-13 against its reference at 1e-14: state 4.08e-5 / 9.26e-5 / 2.19e-5 m, miss distance
+        //   3.33e-5 / 7.56e-5 / 1.79e-5 m, Pc 3.13e-7 / 7.12e-7 / 1.75e-7 relative (on Windows the first option of each
+        //   case alone, the 8.3e-5 m before stopping the five RK7(8) cases there). The exact SLERP of the orientation cache
+        //   (#561), whose co-rotating frames the force model reads, redrew the step sequences of every platform: on main
+        //   a85098d (run 44055569759) state 4.42e-5 / 2.20e-5 / 6.36e-5 m, miss 3.63e-5 / 1.80e-5 / 5.21e-5 m, Pc 3.67e-7 /
+        //   1.70e-7 / 4.98e-7, thresholds 8.3e-5 m, 6.8e-5 m and 6.4e-7. A redraw, not a loss of accuracy: over 81 draws one
+        //   ulp apart on Linux x64 (the tolerance or the start moved by 1 to 40 ulps), the state error ranges from 4.9e-7 to
+        //   1.02e-4 m after #561 (median 2.50e-5 m) and from 7.3e-7 to 9.62e-5 m before (median 2.07e-5 m); the option and
+        //   its reference share the force model, and the reference resolves to 1.1e-6 m against one at 1e-15;
+        // - Velocity-Verlet at 1 s, against the reference in two parts: state 2.05e-4 m, miss distance 1.86e-4 m, Pc
+        //   2.19e-6 on the three platforms (1.86e-4 m, 1.52e-4 m and 1.53e-6 on main, moved by the Velocity-Verlet changes
+        //   of #439 and #572; thresholds 3.8e-4 m, 3.1e-4 m and 3.1e-6), the burn state of a trajectory passed to the
+        //   analysis being its cubic Hermite interpolation (9e-8 m at most from the ephemeris of the spacecraft);
+        // - the TCA within 1e-5 s on the three platforms.
         // Before: RK7(8) 5e-5 m, 4e-5 m and 3e-7, set on Linux alone (and first 1e-5 m, 1e-5 m and 1e-7 against references at
         // 1e-13, which measured how close the steps of two propagations at one tolerance fall); Velocity-Verlet 4e-4 m,
         // 3e-4 m and 3e-6
-        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (8.3e-5, 6.8e-5, 6.4e-7) : (3.8e-4, 3.1e-4, 3.1e-6);
+        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (1.9e-4, 1.6e-4, 1.5e-6) : (4.1e-4, 3.8e-4, 4.4e-6);
         Assert.True(tcaError < 1e-5, $"{tcaError:E2} s");
         Assert.True(stateError < stateThreshold, $"{stateError:E2} m");
         Assert.True(missError < missThreshold, $"{missError:E2} m");

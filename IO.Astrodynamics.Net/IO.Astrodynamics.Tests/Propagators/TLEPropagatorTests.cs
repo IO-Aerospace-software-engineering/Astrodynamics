@@ -24,8 +24,8 @@ public class TLEPropagatorTests
     private const double InterpolatedVelocityBound = 8.6e-4;
     private const double InterpolatedPositionBound = 0.76;
 
-    // Twice the worst of LastShortStep_InterpolatesSgp4 on Linux x64 (2026-11-17), rounded up at the second significant
-    // digit, provisional until the Windows x64 and macOS arm64 CI logs: velocity 2.701e-5 m/s, position 3.726e-2 m
+    // Twice the worst of LastShortStep_InterpolatesSgp4 over Linux x64, Windows x64 and macOS arm64 alike (CI run
+    // 44225490669), rounded up at the second significant digit: velocity 2.701e-5 m/s, position 3.726e-2 m
     private const double LastShortStepVelocityBound = 5.5e-5;
     private const double LastShortStepPositionBound = 0.075;
 

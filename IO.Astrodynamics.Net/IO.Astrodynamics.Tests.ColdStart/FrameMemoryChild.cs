@@ -31,11 +31,11 @@ internal static class FrameMemoryChild
     private const int ItrfReads = 100_000;
     private const int ManagedReads = 5_000;
 
-    // Provisional, twice the Linux x64 worst rounded up at the second significant digit (2026-11-17), to be set again from
-    // the Windows x64 and macOS arm64 CI logs; before the fix, ITRF93 retained 16.5 MB (#541) and every frame grew with its
-    // reads. Measured on Linux x64: 8 248 bytes (CIRS), 7 568 (ITRF93), 3 072 (TIRS), 0 for the others, the noise of a
-    // full collection
-    private const long RetainedBound = 17_000;
+    // Twice the worst magnitude over Linux x64, Windows x64 and macOS arm64, the noise of a full collection, of either sign
+    // (CI run 44225490669): 656 bytes on Linux x64 (−656, ITRF93; 0 for the others), 24 on Windows x64 (CIRS, TIRS), 9 000
+    // on macOS arm64 (−9 000, CIRS); 8 248 bytes (CIRS) on Linux x64 locally, 2026-11-17. Before the fix, ITRF93 retained
+    // 16.5 MB (#541) and every frame grew with its reads
+    private const long RetainedBound = 18_000;
 
     internal static int Run(string kernels)
     {

@@ -142,9 +142,10 @@ the start of the window. This example runs as a smoke test against the packed Nu
   of 201 initial steps 60 s ± 100 ulp of that case on Linux (measured 2026-10-26), and on macOS arm64 for its start
   moved by 1e-5 m (the CI of [#467](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/467)). The
   state is never accepted above its tolerance: the step accepted is the one Hipparchus, Orekit and GMAT take, which keep
-  Φ out of the step control. Φ of such a start stays within 1.3e-7 of central differences of whole propagations at
-  1e-14, the resolution of that reference, and within 4.6e-11 of Φ at 1e-14 on the steps of the state (Linux,
-  Windows and macOS arm64).
+  Φ out of the step control. Φ of such a start stays within 1.2e-7 of central differences of whole propagations at
+  1e-14, the resolution of that reference, and within 1.4e-10 of Φ at 1e-14 on the steps of the state (Linux x64,
+  Windows x64 and macOS arm64, CI run 44225490669; starts one ulp apart reach 2.3e-10 on Linux x64, the noise of two
+  step sequences).
   - Only a step that its retry would repeat is accepted so: the step at the minimum step size, or the time remaining
     below it. A first step below the minimum step size (`initialStepSize`) is retried at the minimum step size, as
     before. So a propagation that completed before takes the same steps, bit for bit (on Linux, 586 of 586 initial

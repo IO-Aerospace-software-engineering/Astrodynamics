@@ -537,11 +537,11 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         Assert.Empty(all);
     }
 
-    // The bounds of the closest end against CSPICE's ABSMIN (Linux x64, 2026-11-17; provisional, to be set again from the
-    // Windows x64 and macOS arm64 CI logs): the TCA is the window end, CSPICE's ABSMIN the same tick on every row (0 s
-    // measured), so one tick, the resolution of a Time; the miss, the states of the propagation (dense: the solution;
-    // sampled and Screen: the stored states) against the degree-7 interpolation of their SPK at an epoch where the range
-    // rate is not zero, 2.268e-4 m at worst (t0 + 4400 s, 1795 km apart), twice that rounded up to two digits. At a
+    // The bounds of the closest end against CSPICE's ABSMIN (Linux x64, Windows x64 and macOS arm64 alike, CI run
+    // 44225490669): the TCA is the window end, CSPICE's ABSMIN the same tick on every row (0 s measured on the three), so one
+    // tick, the resolution of a Time; the miss, the states of the propagation (dense: the solution; sampled and Screen: the
+    // stored states) against the degree-7 interpolation of their SPK at an epoch where the range rate is not zero,
+    // 2.268e-4 m at worst on the three (t0 + 4400 s, 1795 km apart), twice that rounded up to two digits. At a
     // minimum the same difference is below 2.3e-8 m (AssertIsMinimum): there the distance does not see the along-track
     // part of the difference
     private const double NoCloseApproachTcaBound = 1.0e-7;

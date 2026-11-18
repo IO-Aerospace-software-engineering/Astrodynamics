@@ -254,10 +254,11 @@ public class ConjunctionPostBurnTests
         Assert.True(System.Math.Abs(missError) <= MissBound, $"{label}: miss {missError:E3} m");
     }
 
-    // Provisional bounds (Linux x64, 2026-11-17, to be set again from the Windows x64 and macOS arm64 CI logs): twice the
-    // worst over every row, 7.0e-7 s (the tick of the TCA against the golden section of the reference, to 1e-7 s) and
-    // 1.694e-9 m, rounded up to two digits. Before the fix (a85098d), the rows k = 1, 3, 6 and 4.5 s listed the minimum
+    // Twice the worst over every row on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669), rounded up to two
+    // digits: the TCA 9.0e-7 s on macOS arm64 (RK7(8), k = −2 s along ΔV, Analyze; 7.0e-7 s on Linux x64 and Windows x64),
+    // the tick of the TCA against the golden section of the reference, to 1e-7 s; the miss 1.914e-9 m on macOS arm64 (the
+    // crossing, k = −5 s; 1.694e-9 m on Linux x64 and Windows x64). Before the fix (a85098d), the rows k = 1, 3, 6 and 4.5 s listed the minimum
     // before the burn only, 2k s away (658.5 m off for the crossing), and Analyze returned a minimum 4 s off for k = −2 s
-    private const double TcaBound = 1.4e-6;
-    private const double MissBound = 3.4e-9;
+    private const double TcaBound = 1.8e-6;
+    private const double MissBound = 3.9e-9;
 }

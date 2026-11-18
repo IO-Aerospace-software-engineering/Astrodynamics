@@ -63,7 +63,8 @@ S. Guillet, 2026-11-17). The geometry is that of the conic:
   gives P = q (1 + e) (#462).
 - `KeplerianElements` in the band need the perigee radius q, with the semi-major axis of the same conic: a (1 − e) = q to
   rounding, |q/a − (1 − e)| ≤ 6 ε (1 + e) (twice the 3.0 ε (1 + e) measured over the elements the library builds there,
-  from states, equinoctial elements, the two-body motion and SPICE's `oscltx`; provisional), and +Infinity at e = 1
+  from states, equinoctial elements, the two-body motion and SPICE's `oscltx`, on Linux x64, Windows x64 and macOS
+  arm64), and +Infinity at e = 1
   exactly; a = +Infinity is accepted within a few ulps of e = 1 only (the state of an exact parabola, whose e rounds off
   1). Any other a, the a of another conic, throws `ArgumentException` (`semiMajorAxis`), as before 11.0.0: the semi-major
   axis, the mean motion, the period and the apoapsis come from a, the state and P from q. Migration from 10.x, where the

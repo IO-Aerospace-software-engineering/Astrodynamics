@@ -33,10 +33,9 @@ public class MemoryDataProviderFrameTests
     // Stored states every 10 minutes over 80 minutes; the reads at stored epochs, so that no interpolation enters
     private static readonly TimeSystem.Time[] Epochs = Enumerable.Range(0, 9).Select(k => Start.AddSeconds(600.0 * k)).ToArray();
 
-    // Provisional, twice the Linux x64 worst rounded up at the second significant digit (2026-11-17), to be set again from
-    // the Windows x64 and macOS arm64 CI logs: the rounding of the subtraction of two states of 1.5e11 m about the
-    // barycentre (an ulp of 3.1e-5 m) and of the rotation, against spkezr's own rounding of the same states. Measured on
-    // Linux x64: |dr| 7.831e-5 m (ECLIPJ2000 states read in ICRF; 4.78e-5 m for the others), |dv| 8.778e-12 m/s in the
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at the second significant digit: the rounding
+    // of the subtraction of two states of 1.5e11 m about the barycentre (an ulp of 3.1e-5 m) and of the rotation, against
+    // spkezr's own rounding of the same states. Measured on the three platforms alike (CI run 44225490669): |dr| 7.831e-5 m (ECLIPJ2000 states read in ICRF; 4.78e-5 m for the others), |dv| 8.778e-12 m/s in the
     // inertial frames, 3.481e-9 m/s in ITRF93 (1.2e-13 of the 2.8e4 m/s of the Moon in it, the rounding of ω × r, ω read
     // by sxform_c and xf2rav_c), the closed form 2.152e-16 relative, sxform 1.110e-16 rad
     private const double PositionTolerance = 1.6e-4;
