@@ -3858,6 +3858,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
   stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the rule, and
   an asteroid, a comet, 391001, 399000, NOTO, NEW NORCIA and 101001, not sites, unchanged).
+- **A spacecraft or a custom body had the solar system barycentre as centre of motion** ([#747](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/747)).
+  The constructor of an item built from custom parameters (`Spacecraft`, both constructors, and the custom
+  `CelestialBody`) never set `CenterOfMotionId` and `BarycenterOfMotionId`: both stayed 0 whatever the orbit (a
+  spacecraft about the Earth, 0 and 0, measured on f70ee32), while the natural-body constructors give the Moon 399 and
+  3. They now are the observer of the initial orbital parameters and that observer's barycentre (the observer itself
+  when it is a barycentre, that of its body for a site, that of a spacecraft for a spacecraft about it), 0 and 0
+  without an initial orbit, as before (`CustomItemCenterOfMotionTests`: a spacecraft and a custom body about the Earth,
+  the Moon, the Sun, the Earth-Moon and the Mars barycentres and the solar system barycentre, the static Earth, a
+  spacecraft about a spacecraft, LRO from its kernels about the Earth and the Moon, the barycentre against the record of
+  `SpiceAPI.GetCelestialBodyInfo`; red on f70ee32). No library code reads the two values of such an item.
 - **No CDM the library wrote validated against the SANA schema** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)). `CdmWriter` put the root,
   `cdm` or the `ndm` that wraps it, in the namespace `urn:ccsds:schema:ndmxml` with every other element, so the SANA
   NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace (no `targetNamespace`), rejected every
