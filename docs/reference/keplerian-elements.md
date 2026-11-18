@@ -14,7 +14,10 @@ Every element is finite (#726): the constructor throws `ArgumentException` namin
 NaN, −∞, or +∞ outside the parabolic band, and for an angle (i, Ω, ω, M, the optional true anomaly) that is not
 finite; `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity not finite or negative (#476), and
 (`perigeeRadius`) for a perigee radius given and not finite and above 0. The one infinite element is the semi-major
-axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the band](#the-near-parabolic-band)). `FromOMM` checks the same, its mean motion finite and above 0.
+axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the band](#the-near-parabolic-band)). Outside
+the band the semi-major axis has the sign of the conic, a (1 − e) > 0: a > 0 for e < 1 and a < 0 for e > 1, a = 0
+refused, or `ArgumentException` (`semiMajorAxis`, its message naming a and e; #738: before 11.0.0, accepted, with a NaN
+velocity and an `AtEpoch` that named the mean anomaly). `FromOMM` checks the same, its mean motion finite and above 0.
 
 ### Factory Methods
 
@@ -45,7 +48,7 @@ axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the ban
 | `EccentricAnomaly()` / `TrueAnomaly()` | From M, on an ellipse or a hyperbola by Kepler's equation: Newton's method from an upper bound of the root, to its rounding floor, at most 50 iterations; a non-finite M or e throws `InvalidOperationException` (#453). For 0.5 ≤ e ≤ 2 the residual is (1 − e) E + e (E − sin E) − M, (e − 1) H + e (sinh H − H) − M on the hyperbola, which does not cancel near the periapsis at e → 1: E within 2 ulp of the root (#484; before 11.0.0, up to 9.3e5 ulp at e = 0.999999); `StateVector.MeanAnomaly()` and `TrueAnomalyToMeanAnomaly` take the same forms. On a parabola, Barker's closed form |
 | `Period()` | Orbital period of an ellipse, 2π √(a³/μ) (or the `period` given); a parabola or a hyperbola (a not finite and above 0) has none and throws `InvalidOperationException` naming e and a, whatever period was given (#663) |
 | `PerigeeRadius()` / `ApogeeVector().Magnitude()` | Apse radii (m) |
-| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂, P̂ the perifocal axis of Ω, ω and i, defined at e = 0 (#686); mean elements have no position and throw `InvalidOperationException`, as `ToStateVector()` does: read `PerigeeRadius()` |
+| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂, P̂ the perifocal axis of Ω, ω and i, defined at e = 0 (#686); within 1e-6 of e = 1 the periapsis is q P̂, q the perigee radius, and `PerigeeVelocity()` √(2μ/q) for a parabola (#737: NaN before 11.0.0); an open orbit (a not finite and above 0) has no apoapsis, and `ApogeeVector()` and `ApogeeVelocity()` throw `InvalidOperationException` naming e and a, as `Period()` (#737); mean elements have no position and throw `InvalidOperationException`, as `ToStateVector()` does: read `PerigeeRadius()` |
 | `IsCircular()` / `IsElliptical()` / `IsParabolic()` / `IsHyperbolic()` | Orbit type checks |
 
 ## The near-parabolic band

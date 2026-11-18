@@ -417,7 +417,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void IsHyperbolic()
         {
-            KeplerianElements ke = new KeplerianElements(20000, 1.1, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
+            // A hyperbola has a < 0 (#738: a = 20000 m with e = 1.1 is refused since 11.0.0)
+            KeplerianElements ke = new KeplerianElements(-20000, 1.1, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.Now, TimeFrame.TDBFrame),

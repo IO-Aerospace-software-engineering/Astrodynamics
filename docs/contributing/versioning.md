@@ -4035,6 +4035,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   start, the stop and the cap of the solver are unchanged. Below e = 0.5 and above e = 2, where the former forms lose at
   most a factor 2, every result is unchanged, bit for bit.
 
+- **The periapsis of a parabola** ([#737](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/737)). `PerigeeVector()` was a(1 − e) P̂, ∞ × 0 = NaN at e = 1
+  exactly, and so `PerigeeVelocity()`; within 1e-6 of e = 1 it is now q P̂, q the perigee radius of the band, from which
+  its state comes (outside the band a(1 − e) P̂ as before, bit for bit): for the parabola of the issue (q = 7000 km), 7000 km
+  and √(2μ/q) = 10 671.73 m/s, vis-viva (`ElementsValidationTests.Issue737_*`, red on f70ee32).
+- **Keplerian elements of a semi-major axis of the wrong sign** ([#738](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/738)). The constructor accepted a < 0 for
+  e < 1, a > 0 for e > 1 and a = 0 outside the parabolic band, which no conic has (p = a (1 − e²) > 0): `ToStateVector()`
+  returned a NaN velocity without an exception, and `AtEpoch` threw naming the mean anomaly (the mean motion NaN). It
+  throws now (Changed below; `ElementsValidationTests.Issue738_*`, red on f70ee32).
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -5939,6 +5948,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ToKeplerianElements()` of a state, `MeanAnomaly(ν)`, `ToStateVector(ν)`, `EquinoctialElements.MeanAnomaly()`,
   `TimeToRadius`, `EpochAtMeanAnomaly`) move by an ulp or so for these eccentricities, by up to 9.3e5 ulp near the
   periapsis at e → 1. Below e = 0.5 and above e = 2 nothing moves. No migration.
+
+- **Breaking: an open orbit has no apoapsis** ([#737](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/737), Fixed above). `ApogeeVector()` and `ApogeeVelocity()`
+  of a parabola or a hyperbola (a semi-major axis not finite and above 0, the test of `Period()`, #663) throw
+  `InvalidOperationException` naming e and a, where they returned a point of the other branch of a hyperbola (and its
+  speed), or ±Infinity and 0 for a parabola; the `ApogeeHeightManeuver` built from such a target orbit throws
+  `ArgumentException` (`targetOrbit`). An ellipse of the band, of a finite a above 0, keeps its apoapsis. The impulses
+  that read the apoapsis of the current state (`PerigeeHeightManeuver`, `CombinedManeuver`) fire at an apoapsis, which an
+  open orbit never reaches. Migration: test `IsElliptical()` (or a finite `SemiMajorAxis()` above 0) before reading the
+  apoapsis; give an ellipse as the target orbit of an apogee maneuver.
+- **Breaking: `KeplerianElements` refuses a semi-major axis of the wrong sign** ([#738](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/738), Fixed above). Outside
+  the band |e − 1| < 1e-6 the constructor throws `ArgumentException` (`semiMajorAxis`, its message naming a and e) when
+  a (1 − e) ≤ 0, a = 0 included, where it built elements whose state had a NaN velocity. The elements the library builds
+  (from states, equinoctial elements, SPICE's `oscltx`, the maneuvers, the TLE fit) have the sign of their conic.
+  Migration: give a hyperbola its negative semi-major axis, a = −μ/(2ξ) (`KeplerianElementsTests.IsHyperbolic` gave
+  a = 20 000 m with e = 1.1).
 
 **Deprecated**
 

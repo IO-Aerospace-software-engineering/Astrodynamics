@@ -80,6 +80,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// +Infinity only within 1e-6 of e = 1 given the perigee radius; or an orbit within 1e-6 of e = 1 has no perigee
         /// radius (<paramref name="perigeeRadius"/>), or a semi-major axis that is not the conic's of its perigee radius,
         /// finite at e = 1 exactly or +Infinity beyond a few ulps of it (<paramref name="semiMajorAxis"/>, #459);
+        /// or, outside that band, a semi-major axis of the wrong sign, a (1 − e) ≤ 0 (a ≤ 0 for e &lt; 1, a ≥ 0 for e &gt; 1,
+        /// <paramref name="semiMajorAxis"/>, #738; before 11.0.0, accepted with a NaN velocity);
         /// or <paramref name="inclination"/> is outside [−π, π]. The exception names the parameter.</exception>
         public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
             ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null,
@@ -94,6 +96,15 @@ namespace IO.Astrodynamics.OrbitalParameters
             {
                 throw new ArgumentException(
                     $"The semi-major axis must be finite, +Infinity only for a parabola (|e − 1| < 1e-6): a = {semiMajorAxis:R} m, e = {eccentricity:R}.",
+                    nameof(semiMajorAxis));
+            }
+
+            // Outside the band a conic has p = a (1 − e²) > 0: a > 0 for e < 1, a < 0 for e > 1, a ≠ 0 (#738; before, a NaN
+            // velocity without an exception, and AtEpoch named the mean anomaly)
+            if (!parabolic && !(semiMajorAxis * (1.0 - eccentricity) > 0.0))
+            {
+                throw new ArgumentException(
+                    $"No conic has this semi-major axis: a = {semiMajorAxis:R} m, e = {eccentricity:R} (a must be above 0 for e < 1 and below 0 for e > 1).",
                     nameof(semiMajorAxis));
             }
 

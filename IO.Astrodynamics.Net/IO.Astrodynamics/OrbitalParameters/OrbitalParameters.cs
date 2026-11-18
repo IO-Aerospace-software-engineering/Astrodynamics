@@ -571,11 +571,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // Only an ellipse has a period: tested on a, not on e, so that the conic's finite a of the band keeps it (#663);
         // before the cache, so that a period given to the elements of an open orbit (KeplerianElements' period) is not
         // returned either
-        if (!(double.IsFinite(a) && a > 0.0))
-        {
-            throw new InvalidOperationException(
-                $"An open orbit has no period: e = {Eccentricity():R}, a = {a:R} m (a period needs a finite semi-major axis above 0, an ellipse).");
-        }
+        ThrowIfOpen("period");
 
         _period ??= Time.SecondsToSpan(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
         return _period.Value;
@@ -848,7 +844,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     /// <summary>
     /// Get perigee vector: the position of the periapsis relative to the observer, a(1 − e) P̂, with P̂ the direction of
-    /// the periapsis (#686).
+    /// the periapsis (#686); within 1e-6 of e = 1 (<see cref="IsParabolic"/>), q P̂, q the <see cref="PerigeeRadius"/> of the
+    /// band (#737: before 11.0.0, NaN for a parabola, a = +Infinity).
     /// </summary>
     /// <returns>The periapsis position, in the frame of the orbital parameters.</returns>
     /// <remarks>
@@ -871,7 +868,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 PerigeeVector()
     {
-        _perigeevector ??= PeriapsisDirection() * SemiMajorAxis() * (1.0 - Eccentricity());
+        // In the band |e − 1| < 1e-6 the perigee radius q of the band, which a (1 − e) is not at e = 1 (∞ × 0, NaN) and
+        // carries 1e-16/|1 − e| of rounding elsewhere in it (#737); outside the band a (1 − e) P̂, bit for bit
+        _perigeevector ??= IsParabolic()
+            ? PeriapsisDirection() * PerigeeRadius()
+            : PeriapsisDirection() * SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeevector.Value;
     }
 
@@ -919,13 +920,43 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// the periapsis of <see cref="PerigeeVector"/> (#686).
     /// </summary>
     /// <returns>The apoapsis position, in the frame of the orbital parameters.</returns>
+    /// <exception cref="InvalidOperationException">The orbit is not an ellipse: a parabola or a hyperbola, whose
+    /// semi-major axis is not finite and above 0, has no apoapsis, as it has no period (#737; before 11.0.0, a point of the
+    /// other branch of a hyperbola, ±Infinity for a parabola).</exception>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
     /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 ApogeeVector()
     {
-        _apogeeVector ??= PeriapsisDirection().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
+        if (!_apogeeVector.HasValue)
+        {
+            // The perifocal axis first, so that mean elements and a state without an orbit plane report that (#686, #687)
+            var direction = PeriapsisDirection();
+            ThrowIfOpen("apoapsis");
+            _apogeeVector = direction.Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
+        }
+
         return _apogeeVector.Value;
+    }
+
+    /// <summary>
+    /// Whether the orbit is an ellipse, whose semi-major axis is finite and above 0: only it has a period and an apoapsis
+    /// (#663, #737). Tested on a, not on e, so that the conic's finite a of the band keeps them.
+    /// </summary>
+    private bool IsClosed()
+    {
+        double a = SemiMajorAxis();
+        return double.IsFinite(a) && a > 0.0;
+    }
+
+    /// <exception cref="InvalidOperationException">The orbit is not an ellipse (<see cref="IsClosed"/>).</exception>
+    private void ThrowIfOpen(string what)
+    {
+        if (!IsClosed())
+        {
+            throw new InvalidOperationException(
+                $"An open orbit has no {what}: e = {Eccentricity():R}, a = {SemiMajorAxis():R} m (a {what} needs a finite semi-major axis above 0, an ellipse).");
+        }
     }
 
     /// <summary>
@@ -1144,7 +1175,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Computes the velocity at perigee, by vis-viva at the radius of <see cref="PerigeeVector"/>.
+    /// Computes the velocity at perigee, by vis-viva at the radius of <see cref="PerigeeVector"/>: √(2μ/q) for a parabola
+    /// (#737; NaN before 11.0.0).
     /// </summary>
     /// <returns>The velocity at perigee.</returns>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
@@ -1160,6 +1192,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Computes the velocity at apogee, by vis-viva at the radius of <see cref="ApogeeVector"/>.
     /// </summary>
     /// <returns>The velocity at apogee.</returns>
+    /// <exception cref="InvalidOperationException">The orbit is not an ellipse and has no apoapsis (#737; before 11.0.0, 0
+    /// for a parabola and the speed at the other branch of a hyperbola).</exception>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
     /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>

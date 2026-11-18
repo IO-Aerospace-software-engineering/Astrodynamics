@@ -390,4 +390,147 @@ public class ElementsValidationTests
     }
 
     #endregion
+
+    #region #737: the apsides of open orbits
+
+    [Fact]
+    public void Issue737_TheParabola_HasItsPeriapsis()
+    {
+        // Arrange: an exact parabola, a = +Infinity, q = 7000 km (the issue's), at its periapsis
+        var ke = Keplerian(a: double.PositiveInfinity, e: 1.0, i: 0.5, raan: 0.3, aop: 0.2, m: 0.0, perigeeRadius: 7.0e6);
+
+        // Act
+        var periapsis = ke.PerigeeVector();
+        double speed = ke.PerigeeVelocity();
+
+        // Assert: q P̂, P̂ the perifocal axis (Vallado, algorithm 10 COE2RV at ν = 0), and the speed of vis-viva at q of a
+        // parabola, √(2μ/q), 10 671.73 m/s (before: NaN, a(1 − e) = ∞ × 0); to the rounding of P̂ and of the square root
+        Assert.Equal(ke.PeriapsisDirection() * 7.0e6, periapsis);
+        Assert.Equal(7.0e6, periapsis.Magnitude(), 4e-16 * 7.0e6);
+        double visViva = System.Math.Sqrt(2.0 * _earth.GM / 7.0e6);
+        Assert.Equal(visViva, speed, 4e-16 * visViva);
+        Assert.Equal(visViva, ke.ToStateVector().Velocity.Magnitude(), 4e-16 * visViva);
+        Assert.Equal(periapsis.Magnitude(), ke.ToStateVector().Position.Magnitude(), 4e-16 * 7.0e6);
+    }
+
+    [Theory]
+    [InlineData(0.9999995)]
+    [InlineData(1.0000005)]
+    public void Issue737_InTheBand_ThePeriapsisIsAtThePerigeeRadius(double e)
+    {
+        // Arrange: the conic's a of the band, q / (1 − e)
+        const double q = 7.0e6;
+        var ke = Keplerian(a: q / (1.0 - e), e: e, perigeeRadius: q);
+
+        // Act, assert: q P̂, the radius of the state at ν = 0, and vis-viva there
+        Assert.Equal(ke.PeriapsisDirection() * q, ke.PerigeeVector());
+        double visViva = System.Math.Sqrt(_earth.GM * (2.0 / q - 1.0 / ke.SemiMajorAxis()));
+        Assert.Equal(visViva, ke.PerigeeVelocity(), 4e-16 * visViva);
+    }
+
+    [Theory]
+    [InlineData(7.0e6, 0.1)]
+    [InlineData(-1e7, 1.7)]
+    public void Issue737_OutsideTheBand_ThePeriapsisIsUnchanged(double a, double e)
+    {
+        // a (1 − e) P̂ in the order of the products before 11.0.0, bit for bit
+        var ke = Keplerian(a: a, e: e);
+        Assert.Equal(ke.PeriapsisDirection() * a * (1.0 - e), ke.PerigeeVector());
+        Assert.Equal(System.Math.Sqrt(_earth.GM * (2 / ke.PerigeeVector().Magnitude() - 1.0 / a)), ke.PerigeeVelocity());
+    }
+
+    [Fact]
+    public void Issue737_AnOpenOrbit_HasNoApoapsis()
+    {
+        // Arrange: a hyperbola and a parabola as elements and as states (e one ulp above 1 at escape speed)
+        double r = 7000000.0;
+        double escape = System.Math.Sqrt(2.0 * _earth.GM / r);
+        var orbits = new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[]
+        {
+            Keplerian(a: -1e7, e: 1.7),
+            Keplerian(a: double.PositiveInfinity, e: 1.0, perigeeRadius: 7.0e6),
+            Keplerian(a: -7.0e6 / 5e-7, e: 1.0000005, perigeeRadius: 7.0e6),
+            new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, escape, 0.0), _earth, Epoch, Frames.Frame.ICRF),
+            new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, 1.2 * escape, 0.0), _earth, Epoch, Frames.Frame.ICRF),
+            Equinoctial(7000000.0, 1.5, 0.0, 0.2, 0.1, 0.5),
+        };
+
+        foreach (var orbit in orbits)
+        {
+            // Act, assert: InvalidOperationException naming e and a, as Period() (before: a point of the other branch for a
+            // hyperbola, ±Infinity for a parabola, and an apoapsis speed of 0 or NaN)
+            var vector = Assert.Throws<InvalidOperationException>(() => orbit.ApogeeVector());
+            var speed = Assert.Throws<InvalidOperationException>(() => orbit.ApogeeVelocity());
+            Assert.Contains("no apoapsis", vector.Message);
+            Assert.Contains("e = ", speed.Message);
+            Assert.Contains("a = ", speed.Message);
+        }
+    }
+
+    [Fact]
+    public void Issue737_AnEllipseOfTheBand_KeepsItsApoapsis()
+    {
+        // The conic of a finite a above 0, e = 1 − 5e-7: its apoapsis −a (1 + e) P̂ and vis-viva there
+        const double q = 7.0e6;
+        const double e = 0.9999995;
+        var ke = Keplerian(a: q / (1.0 - e), e: e, perigeeRadius: q);
+        double a = ke.SemiMajorAxis();
+        Assert.Equal(ke.PeriapsisDirection().Inverse() * a * (1.0 + e), ke.ApogeeVector());
+        Assert.Equal(System.Math.Sqrt(_earth.GM * (2 / ke.ApogeeVector().Magnitude() - 1.0 / a)), ke.ApogeeVelocity());
+    }
+
+    [Fact]
+    public void Issue737_AnApogeeManeuverToAnOpenOrbit_IsRefused()
+    {
+        // Arrange: a target orbit without an apoapsis, and an engine on a spacecraft
+        var clock = new IO.Astrodynamics.Body.Spacecraft.Clock("clk737", 256);
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-737, "S737", 1000.0, 10000.0, clock,
+            Keplerian(a: 7.0e6, e: 0.1));
+        var tank = new IO.Astrodynamics.Body.Spacecraft.FuelTank("ft737", "model", "sn737", 1000.0, 900.0);
+        spacecraft.AddFuelTank(tank);
+        var engine = new IO.Astrodynamics.Body.Spacecraft.Engine("eng737", "model", "sn737", 450.0, 50.0, tank);
+        spacecraft.AddEngine(engine);
+
+        // Act, assert: a bad argument (before: the apogee radius of the other branch, or +Infinity)
+        var exception = Assert.Throws<ArgumentException>(() =>
+            new IO.Astrodynamics.Maneuver.ApogeeHeightManeuver(Epoch, TimeSpan.Zero, Keplerian(a: -1e7, e: 1.7), engine));
+        Assert.Equal("targetOrbit", exception.ParamName);
+    }
+
+    #endregion
+
+    #region #738: the sign of the semi-major axis
+
+    [Theory]
+    [InlineData(-7.0e6, 0.1)]
+    [InlineData(7.0e6, 1.5)]
+    [InlineData(0.0, 0.1)]
+    [InlineData(0.0, 0.0)]
+    [InlineData(-0.0, 1.5)]
+    [InlineData(-7.0e6, 0.0)]
+    [InlineData(7.0e12, 1.0000011)]
+    [InlineData(-7.0e12, 0.9999989)]
+    public void Issue738_ASemiMajorAxisOfTheWrongSign_IsRefused(double a, double e)
+    {
+        // A conic has p = a (1 − e²) > 0: a > 0 for e < 1, a < 0 for e > 1, a ≠ 0 (the energy −μ/(2a) negative for an
+        // ellipse, positive for a hyperbola); before, a NaN velocity without an exception
+        var exception = Assert.Throws<ArgumentException>(() => Keplerian(a: a, e: e));
+        Assert.Equal("semiMajorAxis", exception.ParamName);
+        Assert.Contains($"a = {a:R}", exception.Message);
+        Assert.Contains($"e = {e:R}", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(7.0e6, 0.0)]
+    [InlineData(7.0e6, 0.1)]
+    [InlineData(7.0e12, 0.999999)]
+    [InlineData(-7.0e12, 1.0000011)]
+    [InlineData(-1e7, 1.7)]
+    public void Issue738_ASemiMajorAxisOfTheSignOfTheConic_IsAccepted(double a, double e)
+    {
+        var state = Keplerian(a: a, e: e).ToStateVector();
+        Assert.True(double.IsFinite(state.Velocity.Magnitude()) && double.IsFinite(state.Position.Magnitude()));
+    }
+
+    #endregion
 }
