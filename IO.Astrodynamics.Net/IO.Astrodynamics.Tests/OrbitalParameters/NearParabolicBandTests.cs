@@ -984,13 +984,20 @@ public class NearParabolicBandTests
     }
 
     [Fact]
-    public void Issue462_OutsideTheBand_PIsUnchanged()
+    public void Issue462_OutsideTheBand_PIsTheProductOfTheConic()
     {
-        // a (1 − e²) bit for bit outside the band, an ellipse and a hyperbola
-        foreach (var (a, e) in new[] { (6800000.0, 0.2), (-7954545.45, 1.88), (7e12, 0.999998) })
+        // Outside the band, a (1 − e·e) bit for bit below e = 0.5 and above e = 2, and (a (1 − e))(1 + e) between them,
+        // where 1 − e is exact (#472, choice 1, decided by S. Guillet, 2026-11-18): an ellipse and hyperbolas
+        foreach (var (a, e) in new[] { (6800000.0, 0.2), (-680000.0, 11.0) })
         {
             var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, _earth, Epoch, Frames.Frame.ICRF);
             Assert.Equal(a * (1 - e * e), ke.ToEquinoctial().P);
+        }
+
+        foreach (var (a, e) in new[] { (-7954545.45, 1.88), (7e12, 0.999998) })
+        {
+            var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, _earth, Epoch, Frames.Frame.ICRF);
+            Assert.Equal(a * (1 - e) * (1 + e), ke.ToEquinoctial().P);
         }
     }
 

@@ -38,7 +38,7 @@ axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the ban
 
 | Method | Description |
 |--------|-------------|
-| `ToStateVector()` | Convert to state vector at epoch |
+| `ToStateVector()` | Convert to state vector at epoch: the perifocal state of the conic, p / (1 + e cos ν) and √(μ/p)(−sin ν, e + cos ν), with p = (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2 and the half-angle forms (1 − e) + 2e cos²(ν/2) and 2 cos²(ν/2) − (1 − e) for 0.5 ≤ e ≤ 1.2, which do not cancel near e = 1, the apoapsis and the asymptote (#472, decided by S. Guillet, 2026-11-18; before 11.0.0, up to 8.1e-11 off there); unchanged below e = 0.5 and above e = 2 |
 | `ToStateVector(Time)` | Convert at specified epoch |
 | `ToEquinoctial()` | Convert to equinoctial elements |
 | `AtEpoch(Time)` | Two-body propagation to new epoch; within 1e-6 of e = 1, Barker's anomaly at Barker's rate ([the band](#the-near-parabolic-band)) |

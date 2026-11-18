@@ -4005,6 +4005,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   relative velocity, follows. A star as observer takes its space velocity too, which moves positions on the paths that
   integrate it (the Changed entry below). The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
 
+- **The state of Keplerian elements near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472)). `ToStateVector()` took p = a(1 − e·e),
+  r = p / (1 + e cos ν) and v ∝ e + cos ν: 1 − e·e kept the rounding of e·e divided by |1 − e²|, and near the apoapsis
+  and the asymptote of a hyperbola the two other products kept the rounding of cos ν divided by 1 + e cos ν or 1 − e.
+  Outside the parabolic band the state was off by up to 2.2e-11 relative away from the apsides and 8.1e-11 near them
+  (e = 0.999 to 1.001, q = 7000 km: 155 m at the apoapsis of e = 0.999999), and `ToEquinoctial().P` of
+  `KeplerianElements` by 2.2e-11. Now p = (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2, where 1 − e is exact (Sterbenz's lemma),
+  and 1 + e cos ν = (1 − e) + 2e cos²(ν/2), e + cos ν = 2 cos²(ν/2) − (1 − e) for 0.5 ≤ e ≤ 1.2 (choices 1 and 2,
+  decided by S. Guillet, 2026-11-18). Against the conic state of the double elements at 60 digits
+  (`tools/conic_state/conic_state_reference.py`, mpmath), 301 points of e = 0.1 to 3 with ν at the periapsis, the
+  apoapsis (π ± 1e-1 to 1e-6, fl(π)) and up to 0.9999 of the asymptote: p within 1.7e-16, the state within 4.5e-16 in
+  position and 3.1e-16 in velocity away from the apsides, 3.7e-15 near them for e = 0.999 to 1.001
+  (`ConicStateTests`, red on f70ee32; provisional thresholds, twice the Linux worst). Near the asymptote of a hyperbola
+  beyond e = 1.01 the rounding of cos ν divided by 1 + e cos ν stays (2.8e-13 at e = 1.2, 0.9999 of ν∞), which neither
+  form lowers. Below e = 0.5 and above e = 2 p and the state are unchanged, bit for bit. The state floors of
+  `KeplerEquationTests`, set by this loss at its NaN regression (1.652 of the floor), tighten from 3.4 to 1.9 and 1.8.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -5893,6 +5909,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `revolutionNumberAtEpoch`, where it was `revNumber`. Migration: a caller that tests `ParamName` compares with
   `revolutionNumberAtEpoch` (`nameof` of the parameter).
 
+- **Breaking: the states of Keplerian elements with 0.5 ≤ e ≤ 2 move by rounding** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472), Fixed above).
+  p = (a (1 − e))(1 + e) and, for 0.5 ≤ e ≤ 1.2, the half-angle forms of 1 + e cos ν and e + cos ν move
+  `ToStateVector()`, `ToEquinoctial().P`, and every path through them (`ToStateVector(Time)`, `AtEpoch`, the first state
+  of a propagation from elements, `ToTLE`'s fit, the conversions of a `StateVector` with e in the band, whose a comes
+  from its energy) by a few 1e-16 relative in 40 to 100 % of the cases, by up to 8.1e-11 near e = 1; below e = 0.5 and
+  above e = 2 every result is unchanged, bit for bit. The equatorial hyperbola of
+  `EquinoctialElementsSingularityTests.AtAnotherEpoch_MatchesTheTwoBodyReference` (e = 1.5) moves from 9.4e-17 to
+  3.6e-16 in velocity, another draw of one rounding of p (its bound 7.2e-16, provisional). No migration: a caller that
+  compared such states bit for bit with an earlier version compares them within a few ulps.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -6020,12 +6046,9 @@ not listed.
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
 - **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
   leap second throws `CdmParseException`.
-- **Precision near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472),
-  [#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
-  `KeplerianElements.ToStateVector()` loses digits through p = a(1 − e²), 1 + e cos ν and e + cos ν: 1.1e-11 relative at
-  e = 0.999999 (155 m at the apoapsis of a 7000 km periapsis). Near the periapsis Kepler's equation stops at its
-  cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r| off at e = 0.999999, and
-  `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
+- **Precision near e = 1** ([#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
+  Near the periapsis Kepler's equation stops at its cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r|
+  off at e = 0.999999, and `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
 - **Angles brought into [0, 2π)**
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and

@@ -634,7 +634,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Get the state vector
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The perifocal state of the conic, r = p / (1 + e cos ν) and v = √(μ/p)(−sin ν, e + cos ν), turned by
+    /// R3(Ω) R1(i) R3(ω).</returns>
+    /// <remarks>Near e = 1 the products are taken where they do not cancel (#472, decided by S. Guillet, 2026-11-18):
+    /// p = (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2 (q (1 + e) in the band |e − 1| &lt; 1e-6), and 1 + e cos ν and e + cos ν in
+    /// their half-angle forms (1 − e) + 2e cos²(ν/2) and 2 cos²(ν/2) − (1 − e) for 0.5 ≤ e ≤ 1.2, so that the state is
+    /// within about 1e-15 of the conic's near the apoapsis and the asymptote; before 11.0.0, up to 8.1e-11 off (155 m at
+    /// the apoapsis of e = 0.999999, q = 7000 km). Below e = 0.5 and above e = 2 the state is unchanged, bit for bit.</remarks>
     /// <exception cref="InvalidOperationException">
     /// Thrown when attempting to convert mean elements directly to a state vector.
     /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
@@ -651,15 +657,37 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             var e = Eccentricity();
 
             // In the band |e − 1| < 1e-6 the conic's p = q (1 + e), 2q at e = 1 (#459; before, 2q on both sides, which put
-            // the periapsis up to 5e-7 of q away and moved a round trip by |r| |e − 1| / (1 + e), metres to 4.2e7 m)
-            var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
+            // the periapsis up to 5e-7 of q away and moved a round trip by |r| |e − 1| / (1 + e), metres to 4.2e7 m);
+            // outside it a (1 − e)(1 + e) near e = 1 (#472)
+            var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : ConicSemiLatusRectum(SemiMajorAxis(), e);
 
             var v = TrueAnomaly();
-            var r0 = p / (1 + e * System.Math.Cos(v));
-            var x = r0 * System.Math.Cos(v);
+            double cosNu = System.Math.Cos(v);
+            double denominator, velocityFactor;
+            if (e is >= HalfAngleLowestEccentricity and <= HalfAngleHighestEccentricity)
+            {
+                // 1 + e cos ν = (1 − e) + 2e cos²(ν/2) and e + cos ν = 2 cos²(ν/2) − (1 − e), 1 − e exact (Sterbenz): near
+                // the apoapsis and the asymptote 1 + e cos ν and e + cos ν cancel, the rounding of e cos ν and cos ν, about
+                // ε, divided by them; the half-angle forms carry about ε (1 − e) there (#472, choice 2, decided by
+                // S. Guillet, 2026-11-18; up to 4.6e-11 of the state at e = 0.999999 before, 8.1e-11 at e = 1.000002).
+                // Beyond e = 1.2 they lose near the asymptote (2.6e-12 against 2.5e-13 at e = 1.4), so they stop there
+                double halfCos = System.Math.Cos(0.5 * v);
+                double onePlusCos = 2.0 * halfCos * halfCos;
+                double oneMinusE = 1.0 - e;
+                denominator = oneMinusE + e * onePlusCos;
+                velocityFactor = onePlusCos - oneMinusE;
+            }
+            else
+            {
+                denominator = 1 + e * cosNu;
+                velocityFactor = e + cosNu;
+            }
+
+            var r0 = p / denominator;
+            var x = r0 * cosNu;
             var y = r0 * System.Math.Sin(v);
             var dotX = -System.Math.Sqrt(Observer.GM / p) * System.Math.Sin(v);
-            var dotY = System.Math.Sqrt(Observer.GM / p) * (e + System.Math.Cos(v));
+            var dotY = System.Math.Sqrt(Observer.GM / p) * velocityFactor;
             Matrix r3 = Matrix.CreateRotationMatrixZ(AscendingNode());
             Matrix r1 = Matrix.CreateRotationMatrixX(Inclination());
             Matrix r3W = Matrix.CreateRotationMatrixZ(ArgumentOfPeriapsis());
@@ -674,6 +702,20 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         return _stateVector;
     }
+
+    // The band of the half-angle forms of 1 + e cos ν and e + cos ν in ToStateVector (#472, choice 2)
+    private const double HalfAngleLowestEccentricity = 0.5;
+    private const double HalfAngleHighestEccentricity = 1.2;
+
+    /// <summary>
+    /// The semi-latus rectum a (1 − e²) of the conic of a semi-major axis and an eccentricity outside the near-parabolic
+    /// band: (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2, where 1 − e is exact (Sterbenz's lemma) and nothing cancels, and
+    /// a (1 − e·e) elsewhere, the more accurate product there, bit for bit as before 11.0.0 (#472, choice 1, decided by
+    /// S. Guillet, 2026-11-18). Near e = 1, 1 − e·e kept the rounding of e·e, about ε, divided by |1 − e²|: 1.1e-11
+    /// relative at e = 0.999999, 2.2e-11 at 1.000002; the rewritten product is within 3.2e-16.
+    /// </summary>
+    internal static double ConicSemiLatusRectum(double semiMajorAxis, double e) =>
+        e is >= 0.5 and <= 2.0 ? semiMajorAxis * (1 - e) * (1 + e) : semiMajorAxis * (1 - e * e);
 
     /// <summary>
     /// The check of <see cref="ToStateVector()"/> and of its overrides: mean elements have no state vector of their
@@ -768,10 +810,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Convert to equinoctial
     /// </summary>
-    /// <returns>The equinoctial elements, of semi-latus rectum P = a(1 − e²); in the near-parabolic band |e − 1| &lt; 1e-6
-    /// (<see cref="IsParabolic"/>), P = q (1 + e) with q the <see cref="PerigeeRadius"/>, 2q for a parabola and h²/μ for a
-    /// <see cref="StateVector"/> (#462; before 11.0.0, NaN at e = 1 and ±∞ elsewhere in the band, its sign set by
-    /// rounding).</returns>
+    /// <returns>The equinoctial elements, of semi-latus rectum P = a(1 − e²), evaluated as (a (1 − e))(1 + e) for
+    /// 0.5 ≤ e ≤ 2 (#472; before 11.0.0, a (1 − e·e), which lost up to 1.1e-11 relative at e = 0.999999); in the
+    /// near-parabolic band |e − 1| &lt; 1e-6 (<see cref="IsParabolic"/>), P = q (1 + e) with q the
+    /// <see cref="PerigeeRadius"/>, 2q for a parabola and h²/μ for a <see cref="StateVector"/> (#462; before 11.0.0, NaN at
+    /// e = 1 and ±∞ elsewhere in the band, its sign set by rounding).</returns>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane and no elements (#687).</exception>
     public virtual EquinoctialElements ToEquinoctial()
@@ -785,8 +828,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double v = TrueAnomaly();
 
             // In the band |e − 1| < 1e-6 (IsParabolic) a(1 − e²) is ∞ × 0 or ±∞ (#462): the conic's p = q (1 + e), 2q at
-            // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, a(1 − e²) bit for bit
-            double p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
+            // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, the p of ToStateVector
+            // (#472)
+            double p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : ConicSemiLatusRectum(SemiMajorAxis(), e);
             double f = e * System.Math.Cos(o + w);
             double g = e * System.Math.Sin(o + w);
             double h = System.Math.Tan(i * 0.5) * System.Math.Cos(o);
