@@ -24,13 +24,8 @@ internal static class LocalTimeChild
 {
     internal static int Run()
     {
-        Environment.SetEnvironmentVariable("TZ", "America/New_York");
-        TimeZoneInfo.ClearCachedData();
-        var zone = TimeZoneInfo.Local;
-        if (zone.BaseUtcOffset != TimeSpan.FromHours(-5.0) || !zone.IsInvalidTime(new DateTime(2025, 3, 9, 2, 30, 0)) ||
-            !zone.IsAmbiguousTime(new DateTime(2025, 11, 2, 1, 30, 0)))
+        if (!SetZone())
         {
-            Console.Error.WriteLine($"The zone America/New_York could not be set: the local zone is {zone.Id}.");
             return 4;
         }
 
@@ -49,6 +44,87 @@ internal static class LocalTimeChild
         failures += Check("01:30 repeated read as EST, 06:30 UTC", repeated == Utc(2025, 11, 2, 6, 30));
         failures += Check("01:30 repeated after 05:30 UTC", repeated > Utc(2025, 11, 2, 5, 30));
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// The mode <c>local-tolocal</c> (#751): <see cref="CheckToLocal"/> in America/New_York. Exit codes as <see cref="Run"/>.
+    /// </summary>
+    internal static int RunToLocal()
+    {
+        if (!SetZone())
+        {
+            return 4;
+        }
+
+        return CheckToLocal() == 0 ? 0 : 1;
+    }
+
+    // America/New_York as the local zone of the process, set before its first read; false when the platform ignores TZ
+    private static bool SetZone()
+    {
+        Environment.SetEnvironmentVariable("TZ", "America/New_York");
+        TimeZoneInfo.ClearCachedData();
+        var zone = TimeZoneInfo.Local;
+        if (zone.BaseUtcOffset != TimeSpan.FromHours(-5.0) || !zone.IsInvalidTime(new DateTime(2025, 3, 9, 2, 30, 0)) ||
+            !zone.IsAmbiguousTime(new DateTime(2025, 11, 2, 1, 30, 0)))
+        {
+            Console.Error.WriteLine($"The zone America/New_York could not be set: the local zone is {zone.Id}.");
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// <see cref="Time.ToLocal"/> changes the label, not the instant (#751, decided by S. Guillet, 2026-11-18): over both
+    /// transitions of 2025, every minute from 4 h before to 4 h after each, the local time of a UTC instant is the calendar
+    /// of the zone's rule (UTC − 4 h before the transition, UTC − 5 h after it in November, the reverse in March), equals
+    /// the instant, and its <see cref="Time.ToUTC"/> is that instant to the tick. Before, the label of an instant in the
+    /// first of the two repeated hours lost the daylight time mark of <see cref="DateTime.ToLocalTime"/> (the
+    /// <see cref="DateTimeKind.Local"/> <c>SpecifyKind</c> of the constructor) and was read back with the standard offset:
+    /// 2025-11-02T05:30Z gave local 01:30, which is 06:30Z.
+    /// </summary>
+    private static int CheckToLocal()
+    {
+        int failures = 0;
+        // The transitions as UTC instants: 2025-03-09 02:00 EST is 07:00Z, 2025-11-02 02:00 EDT is 06:00Z
+        foreach (var (transition, offsetBefore, offsetAfter) in new[]
+                 {
+                     (new DateTime(2025, 3, 9, 7, 0, 0, DateTimeKind.Utc), -5.0, -4.0),
+                     (new DateTime(2025, 11, 2, 6, 0, 0, DateTimeKind.Utc), -4.0, -5.0)
+                 })
+        {
+            int wrong = 0;
+            for (int minute = -240; minute <= 240; minute++)
+            {
+                var instant = transition.AddMinutes(minute);
+                var utc = new Time(instant, TimeFrame.UTCFrame);
+                var local = utc.ToLocal();
+                var calendar = DateTime.SpecifyKind(instant.AddHours(minute < 0 ? offsetBefore : offsetAfter), DateTimeKind.Unspecified);
+                if (DateTime.SpecifyKind(local.DateTime, DateTimeKind.Unspecified) != calendar || local != utc || local.ToUTC().DateTime != instant ||
+                    local.ToUTC().DateTime.Ticks != instant.Ticks)
+                {
+                    if (wrong++ == 0)
+                    {
+                        Console.Error.WriteLine(
+                            $"ToLocal of {instant:O}: local {local.DateTime:O}, expected {calendar:O}, back to UTC {local.ToUTC().DateTime:O}.");
+                    }
+                }
+            }
+
+            failures += Check($"ToLocal around {transition:O} is the instant ({wrong} of 481 minutes wrong)", wrong == 0);
+        }
+
+        // The issue's probe: 05:30Z, in the first repeated hour, and 06:30Z, in the second, both local 01:30
+        var first = new Time(new DateTime(2025, 11, 2, 5, 30, 0), TimeFrame.UTCFrame);
+        var second = new Time(new DateTime(2025, 11, 2, 6, 30, 0), TimeFrame.UTCFrame);
+        failures += Check("05:30Z ToLocal is 05:30Z", first == first.ToLocal() && first.ToLocal().ToUTC().DateTime == first.DateTime);
+        failures += Check("06:30Z ToLocal is 06:30Z", second == second.ToLocal() && second.ToLocal().ToUTC().DateTime == second.DateTime);
+        failures += Check("both local 01:30, two instants", first.ToLocal().DateTime.Hour == 1 && second.ToLocal().DateTime.Hour == 1 &&
+                                                           first.ToLocal() != second.ToLocal() && first.ToLocal() < second.ToLocal());
+        // A label built from the calendar of the repeated hour keeps the standard offset (documented)
+        failures += Check("calendar 01:30 is 06:30Z", Local(2025, 11, 2, 1, 30) == second);
+        return failures;
     }
 
     private static Time Local(int year, int month, int day, int hour, int minute) =>

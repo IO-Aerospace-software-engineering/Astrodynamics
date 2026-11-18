@@ -4020,6 +4020,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `_EveryListedValueIsRead`, red on f70ee32; `_CoordinateOfAnotherSystem_ThrowsSpiceError`). The latitudinal, spherical
   and cylindrical systems and the colatitude are not added. The entry under Known limitations is removed.
 
+- **`Time.ToLocal()` of an instant in the first repeated hour was an hour later** ([#751](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/751);
+  decided by S. Guillet, 2026-11-18). `LocalTimeFrame` builds the local label with `DateTime.ToLocalTime()`, which marks
+  an instant of the first of the two repeated hours of a fall transition as daylight time, but the `Time` constructor
+  called `DateTime.SpecifyKind(…, Local)`, which drops that mark, so the label was read back with the standard offset:
+  in America/New_York, 2025-11-02T05:30Z gave local 01:30, whose `ToUTC()` is 06:30Z, and `utc == utc.ToLocal()` was
+  false, for every instant of 05:00Z to 06:00Z, 60 of the 481 minutes about the transition (measured on f70ee32). The
+  constructor keeps a `DateTime` already of kind `Local` as it is, so a conversion changes the label, not the instant
+  (#512): over both transitions of 2025, every minute from 4 h before to 4 h after each, `ToLocal()` is the calendar of
+  the zone's rule, equals the instant and converts back to it to the tick
+  (`ColdStartTests.ToLocal_KeepsTheInstant_AcrossTheTransitionsOfDaylightSavingTime`, a child in America/New_York,
+  skipped on Windows, where `TZ` does not set the zone; red on f70ee32). A label built from the calendar of the repeated
+  hour still reads with the standard offset (documented on [Time and Windows](../reference/time-and-windows.md)). The
+  limit stated there since #512 is removed.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -4166,8 +4180,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   instant. A local time (`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the
   zone of the machine, local times compared with each other included, where they compared by their calendars: in a zone
   with daylight saving time, two labels of the skipped hour and the hour after it are one instant (in America/New_York,
-  local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, and 02:30 comes after 03:00), and a label of the repeated hour is
-  read with the standard offset (`ColdStartTests.LocalTimes_AreTheInstantsOfTheirZone`, skipped on Windows, where `TZ`
+  local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, and 02:30 comes after 03:00), and a label of the repeated hour
+  built from its calendar is read with the standard offset (the `ToLocal()` of an instant keeps the instant, #751, Fixed
+  above) (`ColdStartTests.LocalTimes_AreTheInstantsOfTheirZone`, skipped on Windows, where `TZ`
   does not set the zone; red with a85098d's comparison of local calendars restored). The default time (no frame) comes
   before every time with a frame and equals only itself, so comparing it no longer throws `NullReferenceException` (`<`,
   `SortedSet`, `Window` of it). The library's comparisons follow: `AddPropagatedStates` replaces a stored state at the

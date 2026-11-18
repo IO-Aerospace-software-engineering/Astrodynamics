@@ -19,6 +19,16 @@ public readonly record struct Time : IComparable<Time>, IComparable
     public DateTime DateTime { get; }
     public ITimeFrame Frame { get; }
 
+    /// <summary>
+    /// The time of the calendar <paramref name="dateTime"/> in <paramref name="frame"/>. The kind of the
+    /// <see cref="System.DateTime"/> is set to the frame's (<see cref="DateTimeKind.Utc"/> for UTC,
+    /// <see cref="DateTimeKind.Local"/> for local time, <see cref="DateTimeKind.Unspecified"/> otherwise); a local
+    /// <see cref="System.DateTime"/> given for local time is kept as it is, so the daylight time mark that
+    /// <see cref="System.DateTime.ToLocalTime"/> sets on an instant of the first of two repeated hours survives and
+    /// <see cref="ToLocal"/> keeps the instant (#751). A calendar of another kind in the repeated hour reads with the
+    /// standard offset of the zone.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="frame"/> is null.</exception>
     public Time(in DateTime dateTime, ITimeFrame frame)
     {
         Frame = frame ?? throw new ArgumentNullException(nameof(frame));
@@ -29,7 +39,13 @@ public readonly record struct Time : IComparable<Time>, IComparable
         }
         else if (frame is LocalTimeFrame)
         {
-            DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Local);
+            // A local DateTime is kept as it is: SpecifyKind would drop the daylight time mark DateTime.ToLocalTime sets on
+            // an instant of the first of two repeated hours, which ToUniversalTime then read with the standard offset, an
+            // hour later (#751)
+            if (DateTime.Kind != DateTimeKind.Local)
+            {
+                DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Local);
+            }
         }
         else
         {

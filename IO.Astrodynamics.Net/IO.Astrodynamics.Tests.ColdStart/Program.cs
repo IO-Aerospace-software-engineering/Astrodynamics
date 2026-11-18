@@ -54,7 +54,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// The mode <c>local-dst</c> takes no schedule and loads no kernel: the local times of a zone with daylight saving time,
-/// see <see cref="LocalTimeChild"/> (#512).
+/// see <see cref="LocalTimeChild"/> (#512). The mode <c>local-tolocal</c> likewise: <see cref="Time.ToLocal"/> over the
+/// transitions of 2025 in that zone (#751).
 /// </para>
 /// <para>
 /// The schedules: <c>race</c> starts the two threads behind a <see cref="Barrier"/>, the reproduction of #623;
@@ -151,6 +152,12 @@ internal static class Program
         if (args.Length == 2 && args[1] == "local-dst")
         {
             return LocalTimeChild.Run();
+        }
+
+        // No kernel loaded: ToLocal over both transitions of 2025 in America/New_York, the instant kept (#751)
+        if (args.Length == 2 && args[1] == "local-tolocal")
+        {
+            return LocalTimeChild.RunToLocal();
         }
 
         // Before any kernel is loaded: a TLE read before its kernels throws SPICE's error, and works once they are loaded
