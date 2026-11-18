@@ -4005,6 +4005,64 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   relative velocity, follows. A star as observer takes its space velocity too, which moves positions on the paths that
   integrate it (the Changed entry below). The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
 
+- **The state of Keplerian elements near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472)). `ToStateVector()` took p = a(1 − e·e),
+  r = p / (1 + e cos ν) and v ∝ e + cos ν: 1 − e·e kept the rounding of e·e divided by |1 − e²|, and near the apoapsis
+  and the asymptote of a hyperbola the two other products kept the rounding of cos ν divided by 1 + e cos ν or 1 − e.
+  Outside the parabolic band the state was off by up to 2.2e-11 relative away from the apsides and 8.1e-11 near them
+  (e = 0.999 to 1.001, q = 7000 km: 155 m at the apoapsis of e = 0.999999), and `ToEquinoctial().P` of
+  `KeplerianElements` by 2.2e-11. Now p = (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2, where 1 − e is exact (Sterbenz's lemma),
+  and 1 + e cos ν = (1 − e) + 2e cos²(ν/2), e + cos ν = 2 cos²(ν/2) − (1 − e) for 0.5 ≤ e ≤ 1.2 (choices 1 and 2,
+  decided by S. Guillet, 2026-11-18). Against the conic state of the double elements at 60 digits
+  (`tools/conic_state/conic_state_reference.py`, mpmath), 301 points of e = 0.1 to 3 with ν at the periapsis, the
+  apoapsis (π ± 1e-1 to 1e-6, fl(π)) and up to 0.9999 of the asymptote: p within 1.7e-16, the state within 4.5e-16 in
+  position and 3.1e-16 in velocity away from the apsides, 3.7e-15 near them for e = 0.999 to 1.001
+  (`ConicStateTests`, red on f70ee32; provisional thresholds, twice the Linux worst). Near the asymptote of a hyperbola
+  beyond e = 1.01 the rounding of cos ν divided by 1 + e cos ν stays (2.8e-13 at e = 1.2, 0.9999 of ν∞), which neither
+  form lowers. Below e = 0.5 and above e = 2 p and the state are unchanged, bit for bit. The state floors of
+  `KeplerEquationTests`, set by this loss at its NaN regression (1.652 of the floor), tighten from 3.4 to 1.9 and 1.8.
+
+- **Kepler's equation near the periapsis at e → 1** ([#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)). Near the periapsis x − e sin x and e sinh x − x
+  differ by about (1 − e) x + x³/6, so the residual of the solver and the reverse direction kept the rounding of
+  e sin x, about ε x, divided by 1 − e: E up to 9.3e5 ulp off at e = 0.999999 (1.4e5 at e = 1.00001, 902 at 0.999,
+  9 to 10 iterations), M = E − e sin E (`StateVector.MeanAnomaly()`, `TrueAnomalyToMeanAnomaly`) up to 1.9e-10 of M,
+  and the states from a mean anomaly within two periapsis radii up to 6.7e-11 of |r|. Both directions now evaluate
+  (1 − e) x + e (x − sin x) and (e − 1) x + e (sinh x − x), x − sin x and sinh x − x by their series to x¹⁹/19! below 1,
+  for 0.5 ≤ e ≤ 2 (decided by S. Guillet, 2026-11-18; the same rewriting as R. H. Gooding and A. W. Odell's EMKEP,
+  Celestial Mechanics 44, 1988, to be verified by S. Guillet): against the root and M* at 60 digits
+  (`tools/kepler_equation/kepler_periapsis_reference.py`, mpmath), E within 1.9 ulp in 6 iterations at most, M within
+  6.4e-16, the states within 9.7e-16 of |r| and the anomaly of the round trip state → elements within 1 ulp (6.2e5
+  before) (`KeplerPeriapsisTests`, red on f70ee32; provisional thresholds, twice the Linux worst). The derivative, the
+  start, the stop and the cap of the solver are unchanged. Below e = 0.5 and above e = 2, where the former forms lose at
+  most a factor 2, every result is unchanged, bit for bit.
+
+- **The periapsis of a parabola** ([#737](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/737)). `PerigeeVector()` was a(1 − e) P̂, ∞ × 0 = NaN at e = 1
+  exactly, and so `PerigeeVelocity()`; within 1e-6 of e = 1 it is now q P̂, q the perigee radius of the band, from which
+  its state comes (outside the band a(1 − e) P̂ as before, bit for bit): for the parabola of the issue (q = 7000 km), 7000 km
+  and √(2μ/q) = 10 671.73 m/s, vis-viva (`ElementsValidationTests.Issue737_*`, red on f70ee32).
+- **Keplerian elements of a semi-major axis of the wrong sign** ([#738](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/738)). The constructor accepted a < 0 for
+  e < 1, a > 0 for e > 1 and a = 0 outside the parabolic band, which no conic has (p = a (1 − e²) > 0): `ToStateVector()`
+  returned a NaN velocity without an exception, and `AtEpoch` threw naming the mean anomaly (the mean motion NaN). It
+  throws now (Changed below; `ElementsValidationTests.Issue738_*`, red on f70ee32).
+
+- **The two-body motion of the near-parabolic band** ([#753](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/753)). Within 1e-6 of e = 1 the motion advanced
+  Barker's anomaly at Barker's rate √(μ/(2q³)) (#459), exact at e = 1 only: 0.088 m from the exact motion of the conic
+  after 600 s at |e − 1| = 5e-7, 0.16 m at 9e-7, 0.54 m from the periapsis, 3.1 km after a day at 9.9e-7 (1.3e-5 of
+  |r|), and `TimeToRadius` up to 1.5e-3 s off; Kepler's equation of the conic, the other model measured by #459, is
+  kilometres off near e = 1. The motion of the band but at e = 1 exactly (`AtEpoch`, `ToStateVector(Time)`,
+  `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`, `TimeToRadius`, the first state of a propagation from such elements)
+  is now that of the conic of e and q in universal variables from the periapsis, √μ t = q χ + e χ³ S(z) with the
+  Stumpff functions, solved by a safeguarded Newton's method from Barker's root (internal `UniversalKepler`, the form of
+  CSPICE's `prop2b_c`; D. A. Vallado, *Fundamentals of Astrodynamics and Applications*, algorithm 8, to be verified by
+  S. Guillet), the elements at the new epoch carrying its true anomaly and Barker's mean anomaly of it, the anomalies of
+  the band (decided by S. Guillet, 2026-11-18: in the band only, `IsParabolic()` keeping its meaning). Against the exact
+  conic at 60 digits (`tools/near_parabolic`, sections 9 and 10), 108 motions of the band (|e − 1| from 1e-12 to 9.9e-7 on
+  both sides, ν0 from −1.5 to 2 rad, 600 s, a day, −1 h): within 4.2e-15 of |r| and 3.6e-15 of |v| (1.2e-7 m after a
+  day), the states of #459 600 s later within 3 nm, and the times to a radius to the tick
+  (`NearParabolicBandTests.Issue753_*`, red on f70ee32; provisional thresholds, twice the Linux worst). At e = 1 exactly
+  Barker's law and outside the band Kepler's equation are unchanged, bit for bit. Next to the band, at e = 1 − 1.1e-6
+  before the periapsis, the ellipse is still 3.1 m off after 600 s (1.9e-7 of |r|): the constructor keeps its mean
+  anomaly in [0, 2π), where it rounds (#471, not part of 11.0.0); on the hyperbola side 9.4e-10.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -5893,6 +5951,53 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `revolutionNumberAtEpoch`, where it was `revNumber`. Migration: a caller that tests `ParamName` compares with
   `revolutionNumberAtEpoch` (`nameof` of the parameter).
 
+- **Breaking: the states of Keplerian elements with 0.5 ≤ e ≤ 2 move by rounding** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472), Fixed above).
+  p = (a (1 − e))(1 + e) and, for 0.5 ≤ e ≤ 1.2, the half-angle forms of 1 + e cos ν and e + cos ν move
+  `ToStateVector()`, `ToEquinoctial().P`, and every path through them (`ToStateVector(Time)`, `AtEpoch`, the first state
+  of a propagation from elements, `ToTLE`'s fit, the conversions of a `StateVector` with e in the band, whose a comes
+  from its energy) by a few 1e-16 relative in 40 to 100 % of the cases, by up to 8.1e-11 near e = 1; below e = 0.5 and
+  above e = 2 every result is unchanged, bit for bit. The equatorial hyperbola of
+  `EquinoctialElementsSingularityTests.AtAnotherEpoch_MatchesTheTwoBodyReference` (e = 1.5) moves from 9.4e-17 to
+  3.6e-16 in velocity, another draw of one rounding of p (its bound 7.2e-16, provisional). The initial state of the
+  Molniya case R5 (e = 0.74) moves by one ulp per position component, so `Data/GmatReference/cases.json` is recaptured
+  (G4 starts from it; its GMAT outputs pass unchanged, regenerated by `gmat-reference.yml`), and the universal Kepler
+  solver of the reference `KeplerianStm` stops at its rounding floor, where a perturbed R5 state oscillated above its
+  1e-15 stop. No migration: a caller that compared such states bit for bit with an earlier version compares them within
+  a few ulps.
+
+- **Breaking: the anomalies with 0.5 ≤ e ≤ 2 move by rounding** ([#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484), Fixed above). E and ν from M
+  (`EccentricAnomaly()`, `TrueAnomaly()`, `AtEpoch`, `ToStateVector(Time)`, the start of a propagation from elements,
+  `Spacecraft.GetGeometricStateRelativeTo` before a propagation), and M from E (`StateVector.MeanAnomaly()`, so
+  `ToKeplerianElements()` of a state, `MeanAnomaly(ν)`, `ToStateVector(ν)`, `EquinoctialElements.MeanAnomaly()`,
+  `TimeToRadius`, `EpochAtMeanAnomaly`) move by an ulp or so for these eccentricities, by up to 9.3e5 ulp near the
+  periapsis at e → 1. Below e = 0.5 and above e = 2 nothing moves. No migration.
+
+- **Breaking: an open orbit has no apoapsis** ([#737](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/737), Fixed above). `ApogeeVector()` and `ApogeeVelocity()`
+  of a parabola or a hyperbola (a semi-major axis not finite and above 0, the test of `Period()`, #663) throw
+  `InvalidOperationException` naming e and a, where they returned a point of the other branch of a hyperbola (and its
+  speed), or ±Infinity and 0 for a parabola; the `ApogeeHeightManeuver` built from such a target orbit throws
+  `ArgumentException` (`targetOrbit`). An ellipse of the band, of a finite a above 0, keeps its apoapsis. The impulses
+  that read the apoapsis of the current state (`PerigeeHeightManeuver`, `CombinedManeuver`) fire at an apoapsis, which an
+  open orbit never reaches. Migration: test `IsElliptical()` (or a finite `SemiMajorAxis()` above 0) before reading the
+  apoapsis; give an ellipse as the target orbit of an apogee maneuver.
+- **Breaking: `KeplerianElements` refuses a semi-major axis of the wrong sign** ([#738](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/738), Fixed above). Outside
+  the band |e − 1| < 1e-6 the constructor throws `ArgumentException` (`semiMajorAxis`, its message naming a and e) when
+  a (1 − e) ≤ 0, a = 0 included, where it built elements whose state had a NaN velocity. The elements the library builds
+  (from states, equinoctial elements, SPICE's `oscltx`, the maneuvers, the TLE fit) have the sign of their conic.
+  Migration: give a hyperbola its negative semi-major axis, a = −μ/(2ξ) (`KeplerianElementsTests.IsHyperbolic` gave
+  a = 20 000 m with e = 1.1). Such elements used to reach the `CONICS` check of the three
+  `SpiceAPI.ConvertConicElementsToStateVector` overloads (#711, `ArgumentException` naming `keplerianElements`); they now
+  throw at their construction (`semiMajorAxis`), and that check is left with the elements it still sees, mean elements of
+  e ≥ 1 from `FromOMM` and an a (1 − e) that overflows (`SpiceApiTest.ConvertConicElementsToStateVector_OfAPeriapsisNotFiniteAndAboveZero_ThrowsArgumentException`).
+
+- **Breaking: the motion of the near-parabolic band is the conic's** ([#753](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/753), Fixed above). Within 1e-6 of
+  e = 1 but at e = 1 exactly, `AtEpoch`, `ToStateVector(Time)`, `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`,
+  `TimeToRadius`, `TimeToSphereOfInfluence` and the start of a propagation from such elements move by up to the former
+  model error (0.16 m after 600 s at the band's edges, 3.1 km after a day); the elements at the new epoch carry the true
+  anomaly of the motion (`TrueAnomaly()` returns it). `IsParabolic()`, the anomalies of the band (Barker's), its
+  geometry and `MeanMotion()` are unchanged; the motion is no longer a constant rate of the mean anomaly there. No
+  migration.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -6020,12 +6125,6 @@ not listed.
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
 - **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
   leap second throws `CdmParseException`.
-- **Precision near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472),
-  [#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
-  `KeplerianElements.ToStateVector()` loses digits through p = a(1 − e²), 1 + e cos ν and e + cos ν: 1.1e-11 relative at
-  e = 0.999999 (155 m at the apoapsis of a 7000 km periapsis). Near the periapsis Kepler's equation stops at its
-  cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r| off at e = 0.999999, and
-  `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
 - **Angles brought into [0, 2π)**
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and

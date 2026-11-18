@@ -420,7 +420,7 @@ Cartesian position and velocity state.
 | `EccentricityVector()` | Compute eccentricity vector |
 | `AscendingNodeVector()` | Compute ascending node vector |
 | `PerigeeVector()` | Compute perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); a state at the centre has none and throws (#687) |
-| `ApogeeVector()` | Compute apogee position vector, −a(1 + e) P̂ |
+| `ApogeeVector()` | Compute apogee position vector, −a(1 + e) P̂; an open orbit has none and throws `InvalidOperationException` (#737) |
 | `PerigeeVelocity()` | Compute velocity at perigee (m/s) |
 | `ApogeeVelocity()` | Compute velocity at apogee (m/s) |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
@@ -495,8 +495,8 @@ Classical Keplerian orbital elements (osculating or mean).
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
 | `Period()` | Get orbital period of an ellipse; an open orbit throws `InvalidOperationException`, a period given to the constructor included (#663) |
 | `PerigeeRadius()` | Get perigee radius (m) |
-| `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
-| `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ (its `Magnitude()` is the apogee radius, m, a(1 + e)); mean elements throw |
+| `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂ (q P̂ within 1e-6 of e = 1, #737), P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
+| `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ (its `Magnitude()` is the apogee radius, m, a(1 + e)); an open orbit has none and throws `InvalidOperationException` (#737); mean elements throw |
 | `PerigeeVelocity()` | Get the speed at perigee (m/s); mean elements throw |
 | `ApogeeVelocity()` | Get the speed at apogee (m/s); mean elements throw |
 | `IsCircular()` | Check if orbit is circular (e ≈ 0) |
@@ -504,7 +504,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |
 | `IsHyperbolic()` | Check if orbit is hyperbolic (e > 1) |
 | `AtEpoch(Time epoch)` | Get elements at different epoch, of the same `ElementsType` (#463) |
-| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. Within 1e-6 of e = 1 the time is Barker's, the motion of the band (#478; before 11.0.0 about 8 times off, and possibly before `Epoch`) |
+| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. Within 1e-6 of e = 1 the time is the conic's in universal variables, the motion of the band (#753; Barker's time before, up to 1.5e-3 s off; before #478 about 8 times off, and possibly before `Epoch`) |
 | `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the center of motion (`TimeToRadius`); throws when it is infinite |
 
 ```csharp

@@ -414,7 +414,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         // Barker's equation M = D + D³/3, solved in closed form: with D = 2 sinh θ, D + D³/3 = (2/3) sinh 3θ, so
         // θ = asinh(3M/2) / 3 (#368). The cubic has a single real root.
-        return 2.0 * System.Math.Sinh(System.Math.Asinh(1.5 * MeanAnomaly()) / 3.0);
+        return BarkerAnomaly(MeanAnomaly());
     }
 
     /// <summary>
@@ -519,7 +519,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// D = tan(ν/2) for e = 1. It must match <paramref name="eccentricity"/>, whose value alone chooses the equation; within
     /// 1e-6 of e = 1, where <see cref="EccentricAnomaly(double)"/> gives Barker's D on either side, use
     /// <see cref="MeanAnomaly(double)"/> (#478).</param>
-    /// <returns>The mean anomaly in radians.</returns>
+    /// <returns>The mean anomaly in radians: E − e sin E evaluated as (1 − e) E + e (E − sin E) for 0.5 ≤ e &lt; 1, and
+    /// e sinh H − H as (e − 1) H + e (sinh H − H) for 1 &lt; e ≤ 2, which do not cancel near the periapsis at e → 1 (#484;
+    /// before 11.0.0, up to 1.9e-10 of M off at e = 0.999999); the former forms elsewhere, bit for bit.</returns>
     public static double TrueAnomalyToMeanAnomaly(double trueAnomaly, double eccentricity, double eccentricAnomaly)
     {
         if (trueAnomaly < 0.0)
@@ -536,12 +538,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
                 return Constants.PI;
             }
 
-            var res = (eccentricAnomaly - eccentricity * System.Math.Sin(eccentricAnomaly)) % Constants._2PI;
+            // Kepler's equation in the forms that do not cancel near the periapsis at e → 1 (#484)
+            var res = KeplerEquation.EllipticMeanAnomaly(eccentricAnomaly, eccentricity) % Constants._2PI;
             return res < 0 ? res + Constants._2PI : res;
         }
         else if (eccentricity > 1)
         {
-            return eccentricity * System.Math.Sinh(eccentricAnomaly) - eccentricAnomaly;
+            return KeplerEquation.HyperbolicMeanAnomaly(eccentricAnomaly, eccentricity);
         }
         else
         {
@@ -568,11 +571,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // Only an ellipse has a period: tested on a, not on e, so that the conic's finite a of the band keeps it (#663);
         // before the cache, so that a period given to the elements of an open orbit (KeplerianElements' period) is not
         // returned either
-        if (!(double.IsFinite(a) && a > 0.0))
-        {
-            throw new InvalidOperationException(
-                $"An open orbit has no period: e = {Eccentricity():R}, a = {a:R} m (a period needs a finite semi-major axis above 0, an ellipse).");
-        }
+        ThrowIfOpen("period");
 
         _period ??= Time.SecondsToSpan(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
         return _period.Value;
@@ -586,8 +585,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the conic of a finite semi-major axis has its own mean
     /// motion, √(μ/|a|³), which this returns since 11.0.0 (#459, option 1, decided by S. Guillet, 2026-11-17; before,
     /// Barker's, 2e9 times larger at |e − 1| = 5e-7). The two-body motion of the band (<see cref="AtEpoch"/>,
-    /// <see cref="EpochAtMeanAnomaly"/>, <see cref="TimeToRadius"/>) still advances Barker's anomaly at Barker's
-    /// rate.</remarks>
+    /// <see cref="EpochAtMeanAnomaly"/>, <see cref="TimeToRadius"/>) is the conic's in universal variables, which no mean
+    /// motion describes, and at e = 1 Barker's (#753; before 11.0.0, Barker's anomaly at Barker's rate over the whole
+    /// band).</remarks>
     public double MeanMotion(double orbitingBodyMass = 0.0)
     {
         if (_meanMotion.HasValue)
@@ -624,17 +624,73 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
 
     /// <summary>
-    /// The rate of <see cref="MeanAnomaly()"/> in the two-body motion: Barker's √(μ/(2q³)) within 1e-6 of e = 1, where the
-    /// mean anomaly is Barker's on both sides of e = 1 (#459, option 1: Barker's anomaly kept for the motion, well
-    /// conditioned there), <see cref="MeanMotion"/> elsewhere, cached mean motion of mean elements included.
+    /// The rate of <see cref="MeanAnomaly()"/> in the two-body motion: Barker's √(μ/(2q³)) at e = 1 exactly (a parabola,
+    /// whose mean anomaly is Barker's), <see cref="MeanMotion"/> outside the band |e − 1| &lt; 1e-6, cached mean motion of
+    /// mean elements included. Elsewhere in the band the motion is that of the conic in universal variables
+    /// (<see cref="MotionAfter"/>, #753), which no rate describes.
     /// </summary>
     private double MeanAnomalyRate() => IsParabolic() ? BarkerMeanMotion() : MeanMotion();
+
+    /// <summary>
+    /// Whether the two-body motion takes the universal variables of the conic (#753): within 1e-6 of e = 1 but at e = 1
+    /// exactly, where Barker's law is the conic's motion and is kept, bit for bit.
+    /// </summary>
+    private bool MovesInUniversalVariables() => IsParabolic() && Eccentricity() != 1.0;
+
+    /// <summary>
+    /// The two-body motion of the mean anomaly over <paramref name="elapsed"/> seconds of the dynamical time of the
+    /// observer: M + n Δt outside the band |e − 1| &lt; 1e-6 and at e = 1 (Barker's rate), bit for bit as before 11.0.0;
+    /// elsewhere in the band the exact motion of the conic of e and q, in universal variables from the periapsis
+    /// (<see cref="UniversalKepler"/>, #753, decided by S. Guillet, 2026-11-18), its true anomaly at the end with Barker's
+    /// mean anomaly D + D³/3 of it, D = tan(ν/2), the anomalies of the band (#459).
+    /// </summary>
+    /// <remarks>Before 11.0.0 Barker's anomaly moved at Barker's rate √(μ/(2q³)) over the whole band: 0.088 to 0.16 m from
+    /// the exact motion of the conic at its edges after 600 s, 0.54 m from the periapsis.</remarks>
+    private (double MeanAnomaly, double? TrueAnomaly) MotionAfter(double meanAnomaly, double elapsed)
+    {
+        if (!MovesInUniversalVariables() || elapsed == 0.0)
+        {
+            return (meanAnomaly + MeanAnomalyRate() * elapsed, null);
+        }
+
+        double e = Eccentricity();
+        double q = PerigeeRadius();
+        double gm = Observer.GM;
+        double time = TimeFromPeriapsis(EccentricAnomaly()) + elapsed;
+        double universal = UniversalKepler.Solve(time, q, e, gm);
+        var (barker, trueAnomaly) = UniversalKepler.Anomalies(universal, q, e);
+        trueAnomaly %= Constants._2PI;
+        if (trueAnomaly < 0.0)
+        {
+            trueAnomaly += Constants._2PI;
+        }
+
+        return (barker + System.Math.Pow(barker, 3) / 3.0, trueAnomaly);
+    }
+
+    /// <summary>The time of the conic of the band from its periapsis to Barker's anomaly D, s (#753).</summary>
+    private double TimeFromPeriapsis(double barkerAnomaly)
+    {
+        double e = Eccentricity();
+        double q = PerigeeRadius();
+        return UniversalKepler.TimeFromPeriapsis(UniversalKepler.FromBarkerAnomaly(barkerAnomaly, q, e), q, e, Observer.GM);
+    }
+
+    /// <summary>Barker's anomaly D of Barker's mean anomaly D + D³/3, in closed form (#368).</summary>
+    private static double BarkerAnomaly(double meanAnomaly) =>
+        2.0 * System.Math.Sinh(System.Math.Asinh(1.5 * meanAnomaly) / 3.0);
 
 
     /// <summary>
     /// Get the state vector
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The perifocal state of the conic, r = p / (1 + e cos ν) and v = √(μ/p)(−sin ν, e + cos ν), turned by
+    /// R3(Ω) R1(i) R3(ω).</returns>
+    /// <remarks>Near e = 1 the products are taken where they do not cancel (#472, decided by S. Guillet, 2026-11-18):
+    /// p = (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2 (q (1 + e) in the band |e − 1| &lt; 1e-6), and 1 + e cos ν and e + cos ν in
+    /// their half-angle forms (1 − e) + 2e cos²(ν/2) and 2 cos²(ν/2) − (1 − e) for 0.5 ≤ e ≤ 1.2, so that the state is
+    /// within about 1e-15 of the conic's near the apoapsis and the asymptote; before 11.0.0, up to 8.1e-11 off (155 m at
+    /// the apoapsis of e = 0.999999, q = 7000 km). Below e = 0.5 and above e = 2 the state is unchanged, bit for bit.</remarks>
     /// <exception cref="InvalidOperationException">
     /// Thrown when attempting to convert mean elements directly to a state vector.
     /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
@@ -651,15 +707,37 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             var e = Eccentricity();
 
             // In the band |e − 1| < 1e-6 the conic's p = q (1 + e), 2q at e = 1 (#459; before, 2q on both sides, which put
-            // the periapsis up to 5e-7 of q away and moved a round trip by |r| |e − 1| / (1 + e), metres to 4.2e7 m)
-            var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
+            // the periapsis up to 5e-7 of q away and moved a round trip by |r| |e − 1| / (1 + e), metres to 4.2e7 m);
+            // outside it a (1 − e)(1 + e) near e = 1 (#472)
+            var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : ConicSemiLatusRectum(SemiMajorAxis(), e);
 
             var v = TrueAnomaly();
-            var r0 = p / (1 + e * System.Math.Cos(v));
-            var x = r0 * System.Math.Cos(v);
+            double cosNu = System.Math.Cos(v);
+            double denominator, velocityFactor;
+            if (e is >= HalfAngleLowestEccentricity and <= HalfAngleHighestEccentricity)
+            {
+                // 1 + e cos ν = (1 − e) + 2e cos²(ν/2) and e + cos ν = 2 cos²(ν/2) − (1 − e), 1 − e exact (Sterbenz): near
+                // the apoapsis and the asymptote 1 + e cos ν and e + cos ν cancel, the rounding of e cos ν and cos ν, about
+                // ε, divided by them; the half-angle forms carry about ε (1 − e) there (#472, choice 2, decided by
+                // S. Guillet, 2026-11-18; up to 4.6e-11 of the state at e = 0.999999 before, 8.1e-11 at e = 1.000002).
+                // Beyond e = 1.2 they lose near the asymptote (2.6e-12 against 2.5e-13 at e = 1.4), so they stop there
+                double halfCos = System.Math.Cos(0.5 * v);
+                double onePlusCos = 2.0 * halfCos * halfCos;
+                double oneMinusE = 1.0 - e;
+                denominator = oneMinusE + e * onePlusCos;
+                velocityFactor = onePlusCos - oneMinusE;
+            }
+            else
+            {
+                denominator = 1 + e * cosNu;
+                velocityFactor = e + cosNu;
+            }
+
+            var r0 = p / denominator;
+            var x = r0 * cosNu;
             var y = r0 * System.Math.Sin(v);
             var dotX = -System.Math.Sqrt(Observer.GM / p) * System.Math.Sin(v);
-            var dotY = System.Math.Sqrt(Observer.GM / p) * (e + System.Math.Cos(v));
+            var dotY = System.Math.Sqrt(Observer.GM / p) * velocityFactor;
             Matrix r3 = Matrix.CreateRotationMatrixZ(AscendingNode());
             Matrix r1 = Matrix.CreateRotationMatrixX(Inclination());
             Matrix r3W = Matrix.CreateRotationMatrixZ(ArgumentOfPeriapsis());
@@ -674,6 +752,20 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         return _stateVector;
     }
+
+    // The band of the half-angle forms of 1 + e cos ν and e + cos ν in ToStateVector (#472, choice 2)
+    private const double HalfAngleLowestEccentricity = 0.5;
+    private const double HalfAngleHighestEccentricity = 1.2;
+
+    /// <summary>
+    /// The semi-latus rectum a (1 − e²) of the conic of a semi-major axis and an eccentricity outside the near-parabolic
+    /// band: (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2, where 1 − e is exact (Sterbenz's lemma) and nothing cancels, and
+    /// a (1 − e·e) elsewhere, the more accurate product there, bit for bit as before 11.0.0 (#472, choice 1, decided by
+    /// S. Guillet, 2026-11-18). Near e = 1, 1 − e·e kept the rounding of e·e, about ε, divided by |1 − e²|: 1.1e-11
+    /// relative at e = 0.999999, 2.2e-11 at 1.000002; the rewritten product is within 3.2e-16.
+    /// </summary>
+    internal static double ConicSemiLatusRectum(double semiMajorAxis, double e) =>
+        e is >= 0.5 and <= 2.0 ? semiMajorAxis * (1 - e) * (1 + e) : semiMajorAxis * (1 - e * e);
 
     /// <summary>
     /// The check of <see cref="ToStateVector()"/> and of its overrides: mean elements have no state vector of their
@@ -754,6 +846,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// vector is zero, or a non-finite one has no orbit plane to count from (#687).</exception>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
+        // In the band but at e = 1, the conic's time between Barker's anomalies of the two mean anomalies (#753)
+        if (MovesInUniversalVariables())
+        {
+            return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch,
+                TimeFromPeriapsis(BarkerAnomaly(meanAnomaly)) - TimeFromPeriapsis(EccentricAnomaly()));
+        }
+
         var res = meanAnomaly - MeanAnomaly();
 
         // The next passage on an ellipse, whatever the turn of either anomaly; an open orbit passes once (#474)
@@ -768,10 +867,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Convert to equinoctial
     /// </summary>
-    /// <returns>The equinoctial elements, of semi-latus rectum P = a(1 − e²); in the near-parabolic band |e − 1| &lt; 1e-6
-    /// (<see cref="IsParabolic"/>), P = q (1 + e) with q the <see cref="PerigeeRadius"/>, 2q for a parabola and h²/μ for a
-    /// <see cref="StateVector"/> (#462; before 11.0.0, NaN at e = 1 and ±∞ elsewhere in the band, its sign set by
-    /// rounding).</returns>
+    /// <returns>The equinoctial elements, of semi-latus rectum P = a(1 − e²), evaluated as (a (1 − e))(1 + e) for
+    /// 0.5 ≤ e ≤ 2 (#472; before 11.0.0, a (1 − e·e), which lost up to 1.1e-11 relative at e = 0.999999); in the
+    /// near-parabolic band |e − 1| &lt; 1e-6 (<see cref="IsParabolic"/>), P = q (1 + e) with q the
+    /// <see cref="PerigeeRadius"/>, 2q for a parabola and h²/μ for a <see cref="StateVector"/> (#462; before 11.0.0, NaN at
+    /// e = 1 and ±∞ elsewhere in the band, its sign set by rounding).</returns>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane and no elements (#687).</exception>
     public virtual EquinoctialElements ToEquinoctial()
@@ -785,8 +885,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double v = TrueAnomaly();
 
             // In the band |e − 1| < 1e-6 (IsParabolic) a(1 − e²) is ∞ × 0 or ±∞ (#462): the conic's p = q (1 + e), 2q at
-            // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, a(1 − e²) bit for bit
-            double p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
+            // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, the p of ToStateVector
+            // (#472)
+            double p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : ConicSemiLatusRectum(SemiMajorAxis(), e);
             double f = e * System.Math.Cos(o + w);
             double g = e * System.Math.Sin(o + w);
             double h = System.Math.Tan(i * 0.5) * System.Math.Cos(o);
@@ -801,7 +902,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     /// <summary>
     /// Get perigee vector: the position of the periapsis relative to the observer, a(1 − e) P̂, with P̂ the direction of
-    /// the periapsis (#686).
+    /// the periapsis (#686); within 1e-6 of e = 1 (<see cref="IsParabolic"/>), q P̂, q the <see cref="PerigeeRadius"/> of the
+    /// band (#737: before 11.0.0, NaN for a parabola, a = +Infinity).
     /// </summary>
     /// <returns>The periapsis position, in the frame of the orbital parameters.</returns>
     /// <remarks>
@@ -824,7 +926,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 PerigeeVector()
     {
-        _perigeevector ??= PeriapsisDirection() * SemiMajorAxis() * (1.0 - Eccentricity());
+        // In the band |e − 1| < 1e-6 the perigee radius q of the band, which a (1 − e) is not at e = 1 (∞ × 0, NaN) and
+        // carries 1e-16/|1 − e| of rounding elsewhere in it (#737); outside the band a (1 − e) P̂, bit for bit
+        _perigeevector ??= IsParabolic()
+            ? PeriapsisDirection() * PerigeeRadius()
+            : PeriapsisDirection() * SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeevector.Value;
     }
 
@@ -872,13 +978,43 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// the periapsis of <see cref="PerigeeVector"/> (#686).
     /// </summary>
     /// <returns>The apoapsis position, in the frame of the orbital parameters.</returns>
+    /// <exception cref="InvalidOperationException">The orbit is not an ellipse: a parabola or a hyperbola, whose
+    /// semi-major axis is not finite and above 0, has no apoapsis, as it has no period (#737; before 11.0.0, a point of the
+    /// other branch of a hyperbola, ±Infinity for a parabola).</exception>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
     /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 ApogeeVector()
     {
-        _apogeeVector ??= PeriapsisDirection().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
+        if (!_apogeeVector.HasValue)
+        {
+            // The perifocal axis first, so that mean elements and a state without an orbit plane report that (#686, #687)
+            var direction = PeriapsisDirection();
+            ThrowIfOpen("apoapsis");
+            _apogeeVector = direction.Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
+        }
+
         return _apogeeVector.Value;
+    }
+
+    /// <summary>
+    /// Whether the orbit is an ellipse, whose semi-major axis is finite and above 0: only it has a period and an apoapsis
+    /// (#663, #737). Tested on a, not on e, so that the conic's finite a of the band keeps them.
+    /// </summary>
+    private bool IsClosed()
+    {
+        double a = SemiMajorAxis();
+        return double.IsFinite(a) && a > 0.0;
+    }
+
+    /// <exception cref="InvalidOperationException">The orbit is not an ellipse (<see cref="IsClosed"/>).</exception>
+    private void ThrowIfOpen(string what)
+    {
+        if (!IsClosed())
+        {
+            throw new InvalidOperationException(
+                $"An open orbit has no {what}: e = {Eccentricity():R}, a = {SemiMajorAxis():R} m (a {what} needs a finite semi-major axis above 0, an ellipse).");
+        }
     }
 
     /// <summary>
@@ -896,6 +1032,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// second: <see cref="Time"/> + <see cref="TimeSpan"/> adds calendar seconds to a UTC time, so across a leap second
     /// <c>Epoch + Period()</c> is a period and one second of TT later.
     /// <para>
+    /// Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) but at e = 1 exactly the motion is the conic's of e and q in
+    /// universal variables from the periapsis (Stumpff functions, the form of CSPICE's <c>prop2b_c</c>; #753, decided by
+    /// S. Guillet, 2026-11-18): the elements at <paramref name="epoch"/> carry the true anomaly of that motion and Barker's
+    /// mean anomaly of it, the anomalies of the band. Against the exact conic at 60 digits, within 4.2e-15 of |r| over
+    /// |e − 1| from 1e-12 to 9.9e-7, a day included; before 11.0.0, Barker's anomaly at Barker's rate, 0.16 m off after 600 s
+    /// at the edges of the band and 3.1 km after a day. At e = 1 Barker's law, and outside the band Kepler's equation, bit
+    /// for bit as before.
+    /// </para>
+    /// <para>
     /// The elements keep their <see cref="ElementsType"/> (#463; before 11.0.0 mean elements came back labelled
     /// osculating, which let <see cref="ToStateVector()"/> take mean numbers for a state). Of mean elements, the mean
     /// anomaly advances at the two-body mean motion only, without the secular rates of the node and of the periapsis of
@@ -908,12 +1053,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         var ke = this.ToKeplerianElements();
         double elapsed = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanAnomalyRate();
+        var (meanAnomaly, trueAnomaly) = MotionAfter(ke.MeanAnomaly(), elapsed);
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it. Mean elements stay mean, so that the guard of
-        // ToStateVector holds (#463)
+        // ToStateVector holds (#463). In the band the true anomaly of the conic's motion is given with Barker's mean
+        // anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
-            perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
+            trueAnomaly: trueAnomaly, perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
     }
 
     /// <summary>
@@ -1014,11 +1160,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     public virtual KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        double m = MeanAnomaly() + MeanAnomalyRate() * ellapsedTime;
+        var (m, trueAnomaly) = MotionAfter(MeanAnomaly(), ellapsedTime);
 
-        // An angle on an ellipse only (#368); KeplerianElements reduces it
+        // An angle on an ellipse only (#368); KeplerianElements reduces it. In the band, the true anomaly of the conic's
+        // motion with Barker's mean anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,
-            perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
+            trueAnomaly: trueAnomaly, perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
     }
 
     /// <summary>
@@ -1097,7 +1244,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Computes the velocity at perigee, by vis-viva at the radius of <see cref="PerigeeVector"/>.
+    /// Computes the velocity at perigee, by vis-viva at the radius of <see cref="PerigeeVector"/>: √(2μ/q) for a parabola
+    /// (#737; NaN before 11.0.0).
     /// </summary>
     /// <returns>The velocity at perigee.</returns>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
@@ -1113,6 +1261,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Computes the velocity at apogee, by vis-viva at the radius of <see cref="ApogeeVector"/>.
     /// </summary>
     /// <returns>The velocity at apogee.</returns>
+    /// <exception cref="InvalidOperationException">The orbit is not an ellipse and has no apoapsis (#737; before 11.0.0, 0
+    /// for a parabola and the speed at the other branch of a hyperbola).</exception>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
     /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
@@ -1182,9 +1332,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// open orbit its one outbound crossing, an epoch before <see cref="Epoch"/> when the orbit is already past the
     /// radius; on a circular orbit (e = 0), at its radius at every instant, <see cref="Epoch"/> itself.
     /// </summary>
-    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the time is Barker's, the motion of the band; before 11.0.0
-    /// Kepler's equation took Barker's anomaly there, and the epoch was up to 8 times off, before <see cref="Epoch"/> even for
-    /// a radius not yet reached (#478).</remarks>
+    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the time is the conic's in universal variables, the motion
+    /// of the band (#753; Barker's time at Barker's rate before, up to 1.5e-3 s off at |e − 1| = 9e-7 to 2e7 m); before
+    /// #478 Kepler's equation took Barker's anomaly there, and the epoch was up to 8 times off, before <see cref="Epoch"/>
+    /// even for a radius not yet reached.</remarks>
     /// <param name="radius">The distance from the center of motion, in meters.</param>
     /// <returns>The epoch at the radius, in the frame of <see cref="Epoch"/>.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="radius"/> is not finite, is below the periapsis, or

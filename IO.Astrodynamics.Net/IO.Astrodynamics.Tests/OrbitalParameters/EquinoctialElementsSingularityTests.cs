@@ -211,8 +211,15 @@ public class EquinoctialElementsSingularityTests
             // median of 3.43e-15 and 1.99e-15 and reaches 9.42e-15 and 5.40e-15, h = −6.73e-320 at −3000 s 1.09e-15 and
             // 9.93e-16 and 2.59e-15 and 2.55e-15 (Linux, Release; a probe of the review of #505, not a committed test).
             // The bounds of e <= 0.05 rise from 3.2e-15 to 4.6e-15 and of e 0.9 from 6.3e-15 and 3.6e-15 to 1.2e-14 and
-            // 6.9e-15, by that draw; those of the hyperbola and large L fall
-            ["e <= 0.05"] = (4.6e-15, 4.6e-15), ["e 0.9"] = (1.2e-14, 6.9e-15), ["hyperbola"] = (8.7e-16, 1.9e-16),
+            // 6.9e-15, by that draw; those of the hyperbola and large L fall. With #472 the hyperbola takes p = (a (1 − e))(1 + e)
+            // for a (1 − e·e): its e, sqrt(f² + g²) of the reference's f and g, is 1.5000000000000002, not 1.5, so the two
+            // forms round differently, and p of the elements' state is now the reference's p exactly where a (1 − e·e) was
+            // 2.13e-16 off (2.98e-16 for suite 153), a closed-form evaluation of both forms in exact rationals. The velocity
+            // at 600 s goes from 9.38e-17 to 3.59e-16 on Linux (2026-11-18): measured at 092230b (#472 alone) and at
+            // c7da8c5 (#484 added) alike, so the move is #472's p, and the former 9.38e-17 was that error of p compensating
+            // the other roundings of the path. Twice the new worst, 7.2e-16, is provisional, to be set again from the
+            // Windows and macOS arm64 CI logs
+            ["e <= 0.05"] = (4.6e-15, 4.6e-15), ["e 0.9"] = (1.2e-14, 6.9e-15), ["hyperbola"] = (8.7e-16, 7.2e-16),
             ["large L"] = (1.6e-15, 1.6e-15)
         };
 

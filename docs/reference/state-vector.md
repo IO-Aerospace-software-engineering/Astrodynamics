@@ -80,7 +80,7 @@ never equal to a set of elements, its own included ([Keplerian Elements](kepleri
 | `SpecificOrbitalEnergy()` | Vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Angular momentum vector |
 | `EccentricityVector()` | Eccentricity vector |
-| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂: P̂ the perifocal axis of the elements (Ω, ω, i), defined at e = 0 (at ω from the node); for a state, the part of its eccentricity vector in its orbit plane, normalized, or its unit node vector when that part is zero, x̂ for an equatorial orbit (#686); for a TLE, the axis of its osculating elements at its epoch; mean elements throw, as `ToStateVector()` and `EccentricityVector()` do |
+| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ (q P̂ within 1e-6 of e = 1, #737) and −a(1 + e) P̂, the apoapsis of an ellipse only (an open orbit throws `InvalidOperationException`, #737): P̂ the perifocal axis of the elements (Ω, ω, i), defined at e = 0 (at ω from the node); for a state, the part of its eccentricity vector in its orbit plane, normalized, or its unit node vector when that part is zero, x̂ for an equatorial orbit (#686); for a TLE, the axis of its osculating elements at its epoch; mean elements throw, as `ToStateVector()` and `EccentricityVector()` do |
 | `PerigeeVelocity()` / `ApogeeVelocity()` | Apse velocities (m/s) |
 
 A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and

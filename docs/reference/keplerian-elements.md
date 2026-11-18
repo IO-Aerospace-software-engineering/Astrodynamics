@@ -14,7 +14,10 @@ Every element is finite (#726): the constructor throws `ArgumentException` namin
 NaN, −∞, or +∞ outside the parabolic band, and for an angle (i, Ω, ω, M, the optional true anomaly) that is not
 finite; `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity not finite or negative (#476), and
 (`perigeeRadius`) for a perigee radius given and not finite and above 0. The one infinite element is the semi-major
-axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the band](#the-near-parabolic-band)). `FromOMM` checks the same, its mean motion finite and above 0.
+axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the band](#the-near-parabolic-band)). Outside
+the band the semi-major axis has the sign of the conic, a (1 − e) > 0: a > 0 for e < 1 and a < 0 for e > 1, a = 0
+refused, or `ArgumentException` (`semiMajorAxis`, its message naming a and e; #738: before 11.0.0, accepted, with a NaN
+velocity and an `AtEpoch` that named the mean anomaly). `FromOMM` checks the same, its mean motion finite and above 0.
 
 ### Factory Methods
 
@@ -38,23 +41,23 @@ axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the ban
 
 | Method | Description |
 |--------|-------------|
-| `ToStateVector()` | Convert to state vector at epoch |
+| `ToStateVector()` | Convert to state vector at epoch: the perifocal state of the conic, p / (1 + e cos ν) and √(μ/p)(−sin ν, e + cos ν), with p = (a (1 − e))(1 + e) for 0.5 ≤ e ≤ 2 and the half-angle forms (1 − e) + 2e cos²(ν/2) and 2 cos²(ν/2) − (1 − e) for 0.5 ≤ e ≤ 1.2, which do not cancel near e = 1, the apoapsis and the asymptote (#472, decided by S. Guillet, 2026-11-18; before 11.0.0, up to 8.1e-11 off there); unchanged below e = 0.5 and above e = 2 |
 | `ToStateVector(Time)` | Convert at specified epoch |
 | `ToEquinoctial()` | Convert to equinoctial elements |
-| `AtEpoch(Time)` | Two-body propagation to new epoch; within 1e-6 of e = 1, Barker's anomaly at Barker's rate ([the band](#the-near-parabolic-band)) |
-| `EccentricAnomaly()` / `TrueAnomaly()` | From M, on an ellipse or a hyperbola by Kepler's equation: Newton's method from an upper bound of the root, to its rounding floor, at most 50 iterations; a non-finite M or e throws `InvalidOperationException` (#453). On a parabola, Barker's closed form |
+| `AtEpoch(Time)` | Two-body propagation to new epoch; within 1e-6 of e = 1, the conic's motion in universal variables, Barker's law at e = 1 ([the band](#the-near-parabolic-band)) |
+| `EccentricAnomaly()` / `TrueAnomaly()` | From M, on an ellipse or a hyperbola by Kepler's equation: Newton's method from an upper bound of the root, to its rounding floor, at most 50 iterations; a non-finite M or e throws `InvalidOperationException` (#453). For 0.5 ≤ e ≤ 2 the residual is (1 − e) E + e (E − sin E) − M, (e − 1) H + e (sinh H − H) − M on the hyperbola, which does not cancel near the periapsis at e → 1: E within 2 ulp of the root (#484; before 11.0.0, up to 9.3e5 ulp at e = 0.999999); `StateVector.MeanAnomaly()` and `TrueAnomalyToMeanAnomaly` take the same forms. On a parabola, Barker's closed form |
 | `Period()` | Orbital period of an ellipse, 2π √(a³/μ) (or the `period` given); a parabola or a hyperbola (a not finite and above 0) has none and throws `InvalidOperationException` naming e and a, whatever period was given (#663) |
 | `PerigeeRadius()` / `ApogeeVector().Magnitude()` | Apse radii (m) |
-| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂, P̂ the perifocal axis of Ω, ω and i, defined at e = 0 (#686); mean elements have no position and throw `InvalidOperationException`, as `ToStateVector()` does: read `PerigeeRadius()` |
+| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂, P̂ the perifocal axis of Ω, ω and i, defined at e = 0 (#686); within 1e-6 of e = 1 the periapsis is q P̂, q the perigee radius, and `PerigeeVelocity()` √(2μ/q) for a parabola (#737: NaN before 11.0.0); an open orbit (a not finite and above 0) has no apoapsis, and `ApogeeVector()` and `ApogeeVelocity()` throw `InvalidOperationException` naming e and a, as `Period()` (#737); mean elements have no position and throw `InvalidOperationException`, as `ToStateVector()` does: read `PerigeeRadius()` |
 | `IsCircular()` / `IsElliptical()` / `IsParabolic()` / `IsHyperbolic()` | Orbit type checks |
 
 ## The near-parabolic band
 
 Within 1e-6 of e = 1 (`IsParabolic()`, |e − 1| < 1e-6) the library takes the anomalies of a parabola, Barker's equation
-(#368): the eccentric anomaly is D = tan(ν/2) and the mean anomaly D + D³/3, on both sides of e = 1, and the two-body
-motion (`AtEpoch`, `ToStateVector(Time)`, `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`, `TimeToRadius`) advances
-it at Barker's rate √(μ/(2q³)), q the perigee radius, where it is well conditioned (#459, option 1, decided by
-S. Guillet, 2026-11-17). The geometry is that of the conic:
+(#368): the eccentric anomaly is D = tan(ν/2) and the mean anomaly D + D³/3, on both sides of e = 1. The two-body
+motion (`AtEpoch`, `ToStateVector(Time)`, `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`, `TimeToRadius`) is the
+exact motion of the conic of e and q in universal variables (#753, decided by S. Guillet, 2026-11-18; below). The
+geometry is that of the conic (#459, option 1, decided by S. Guillet, 2026-11-17):
 
 - `SemiMajorAxis()` is the conic's, −μ/(2ξ) for a state (about 1.4e10 km at |e − 1| = 5e-7, negative above e = 1), and
   +Infinity for e = 1 exactly or a zero energy (ξ = 0, which rounding can give the state of a parabola whose e is off 1); `MeanMotion()` is √(μ/|a|³), Barker's √(μ/(2q³)) only when the semi-major axis is
@@ -73,15 +76,19 @@ S. Guillet, 2026-11-17). The geometry is that of the conic:
 - `SpiceAPI.ConvertStateVectorToConicOrbitalElement` gives in the band the conic's a of `oscltx` (−μ/(2ξ)), +Infinity
   where `oscltx` gives none (e = 1 or a zero energy), and the perigee radius.
 
-The band model is Barker's anomaly on the conic: at |e − 1| = 5e-7 and q = 7000 km, 600 s after ν0 = 0.5 rad, it is
-0.088 m from the exact motion of the conic, 0.16 m at 9e-7 and 0.54 m from the periapsis at 5e-7, and 1.8e-7 m at
-|e − 1| = 1e-12 (60-digit references of `tools/near_parabolic`). Kepler's equation solved for the conic in doubles
-(`KeplerEquation`, the solvers of #467, from the state's a, e and ν) is better at the edges of the band (2.3 to 5.8 mm at
-|e − 1| = 5e-7 to 9e-7) and kilometres off near e = 1 (2.8 to 5.0 km at 1e-12), where a (cos E − e) cancels and Barker's
-law holds (`NearParabolicBandTests.Issue459_KeplersEquationForTheConic_AgainstBarkersLaw`, on the same references).
-Neither holds over the whole band, so Barker's law is kept for the motion (decided by S. Guillet, 2026-11-17); a motion
-that holds over it (universal variables, or a band narrowed to where Barker's law is the better one) would change what
-`IsParabolic()` means across the library and is not part of 11.0.0.
+The motion of the band counts from the periapsis in universal variables, the universal anomaly χ with z = (1 − e) χ²/q
+and the Stumpff functions C(z) = (1 − cos √z)/z and S(z) = (√z − sin √z)/z^(3/2) (their hyperbolic forms for z < 0):
+√μ t = q χ + e χ³ S(z), solved by Newton's method from Barker's root inside its bracket, and D = tan(ν/2) =
+√((1 + e)/q) χ (1 − z S)/(2 − z C), the form of CSPICE's `prop2b_c` (D. A. Vallado, *Fundamentals of Astrodynamics and
+Applications*, 4th ed., 2013, algorithm 8, to be verified by S. Guillet). Nothing cancels on either side of e = 1, and at
+e = 1 it is Barker's equation; the elements at the new epoch carry the true anomaly of the motion and Barker's mean
+anomaly of it. Against the exact two-body motion of the conic at 60 digits (`tools/near_parabolic`), |e − 1| from 1e-12
+to 9.9e-7 on both sides, ν0 from −1.5 to 2 rad, 600 s and a day later and an hour earlier, the state is within 4.2e-15
+of |r| and 3.6e-15 of |v| (`NearParabolicBandTests.Issue753_*`). Before 11.0.0 the band advanced Barker's anomaly at
+Barker's rate √(μ/(2q³)): 0.088 m off after 600 s at |e − 1| = 5e-7, 0.16 m at 9e-7, 0.54 m from the periapsis, and
+3.1 km after a day at 9.9e-7; Kepler's equation of the conic in doubles is 2.3 to 5.8 mm off at the edges and 2.8 to
+5.0 km at |e − 1| = 1e-12, where a (cos E − e) cancels. `IsParabolic()` keeps its meaning, at e = 1 exactly the motion is
+Barker's law and outside the band Kepler's equation, both bit for bit as before.
 
 In doubles the band is not symmetric: fl(1 − 1e-6) = 0.999999 is outside it (the largest eccentricity `IsElliptical()`
 accepts), the next double, 0.9999990000000001, inside it; the double nearest 1.000001 is inside it. So elements given at
