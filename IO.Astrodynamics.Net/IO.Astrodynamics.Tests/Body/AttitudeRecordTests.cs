@@ -861,10 +861,10 @@ public class AttitudeRecordTests
         // The output sample the activation replaced: an output epoch (a stored state) within 2 µs of it, not in the record
         var output = run.Spacecraft.PropagatedStates.Select(x => x.Epoch).OrderBy(x => System.Math.Abs((x - activation).TotalSeconds)).First();
         double outputGap = System.Math.Abs((output - activation).TotalSeconds);
-        // The rules: the TRIAD from the end of the impulse's maneuver window, tc − 0.666 dt + dt in TT seconds, to its hold
+        // The rules: the TRIAD from the end of the impulse's maneuver window, tc − f dt + dt in TT seconds, to its hold
         // in TT seconds later; the prograde at its minimum epoch
         double dt = TimelineRules.BurnDuration(2000.0, impulse.DeltaV.Magnitude(), 300.0, 10.0);
-        var triadStart = TimelineRules.ManeuverEnd(run.ImpulseEpoch, dt, 0.0, true);
+        var triadStart = TimelineRules.ManeuverEnd(run.ImpulseEpoch, dt, TimelineRules.ThrustLead(impulse.DeltaV.Magnitude(), 300.0), 0.0, true);
         var triadEnd = TimelineRules.After(triadStart, hold, true);
         double startDelta = (triad.ManeuverWindow!.Value.StartDate - triadStart).TotalSeconds;
         double endDelta = (triad.ManeuverWindow.Value.EndDate - triadEnd).TotalSeconds;
@@ -1635,15 +1635,19 @@ public class AttitudeRecordTests
 
         private Time? _change;
 
-        /// <summary>The opening of the impulse's thrust window by the rules (<see cref="TimelineRules"/>), tc − 0.666 dt in TT
+        /// <summary>The lead of the centroid of the impulse's burn, by quadrature (<see cref="TimelineRules.ThrustLead"/>,
+        /// #335).</summary>
+        internal double ThrustLead => TimelineRules.ThrustLead(Impulse.DeltaV.Magnitude(), 300.0);
+
+        /// <summary>The opening of the impulse's thrust window by the rules (<see cref="TimelineRules"/>), tc − f dt in TT
         /// seconds about the Earth, TDB in SSB mode: the impulse's attitude from there (#539, #547).</summary>
-        internal Time Change => _change ??= TimelineRules.ThrustStart(ImpulseEpoch, BurnDuration, !Ssb);
+        internal Time Change => _change ??= TimelineRules.ThrustStart(ImpulseEpoch, BurnDuration, ThrustLead, !Ssb);
 
         private Time? _triadStart;
 
         /// <summary>The activation of the TRIAD chained after the impulse by the rules, or the resumption of the law before
-        /// it when none is chained: the end of the impulse's maneuver window, tc − 0.666 dt + max(0, dt).</summary>
-        internal Time TriadStart => _triadStart ??= TimelineRules.ManeuverEnd(ImpulseEpoch, BurnDuration, 0.0, !Ssb);
+        /// it when none is chained: the end of the impulse's maneuver window, tc − f dt + max(0, dt).</summary>
+        internal Time TriadStart => _triadStart ??= TimelineRules.ManeuverEnd(ImpulseEpoch, BurnDuration, ThrustLead, 0.0, !Ssb);
 
         /// <summary>The epochs of the changes of the case by the rules, in the order of the record: the opening of the
         /// thrust window, then the TRIAD's activation; none without an impulse.</summary>

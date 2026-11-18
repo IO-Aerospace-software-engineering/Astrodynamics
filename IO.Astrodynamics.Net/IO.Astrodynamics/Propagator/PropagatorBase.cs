@@ -1000,7 +1000,8 @@ public abstract class PropagatorBase : IPropagator
         else
         {
             double dt = thrust.Length.TotalSeconds;
-            double thrustStartTau = eventTau - dt * 0.666;
+            // The burn's lead before the impulse, the centroid of its acceleration (#335), as TryExecute set it
+            double thrustStartTau = eventTau - dt * impulse.ThrustLead;
             var thrustStart = TimeArgument.EpochAt(Window.StartDate, thrustStartTau);
             thrust = new Window(thrustStart, TimeArgument.EpochAt(Window.StartDate, thrustStartTau + dt));
             maneuverEndTau = thrustStartTau + System.Math.Max(impulse.ManeuverHoldDuration.TotalSeconds, dt);

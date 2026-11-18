@@ -94,9 +94,10 @@ public class AttitudeTimelineEdgeTests
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// The impulse's attitude clipped to S: the apogee raise at the perigee 2 s after S, whose thrust window opens 0.666 dt
-    /// (10.2 s) before, before S; with and without a leading nadir held 0 s, which the impulse's attitude replaces at S
-    /// (the same epoch, later in the chain). The windows of the impulse stay [tc − 0.666 dt, …]: only its attitude is
+    /// The impulse's attitude clipped to S: the apogee raise at the perigee 2 s after S, whose thrust window opens f dt
+    /// (about 8 s, f the lead of the centroid of the burn, #335) before, before S; with and without a leading nadir held 0
+    /// s, which the impulse's attitude replaces at S (the same epoch, later in the chain). The windows of the impulse stay
+    /// [tc − f dt, …]: only its attitude is
     /// clipped. The CK is written and is the managed attitude.
     /// </summary>
     [Theory]
@@ -389,7 +390,7 @@ public class AttitudeTimelineEdgeTests
         var solution = spacecraft.Propagate(new Window(S, S.AddHours(2.0)), [earth], propagator, false, false, TimeSpan.FromSeconds(10.0));
         var tc = solution.Segments[1].BaseEpoch;
         double dt = TimelineRules.BurnDuration(2000.0, impulse.DeltaV.Magnitude(), 300.0, 10.0);
-        var end = TimelineRules.ManeuverEnd(tc, dt, 0.0, true);
+        var end = TimelineRules.ManeuverEnd(tc, dt, TimelineRules.ThrustLead(impulse.DeltaV.Magnitude(), 300.0), 0.0, true);
         double rule = System.Math.Abs((lvlh.ManeuverWindow!.Value.StartDate - end).TotalSeconds);
         double identity = 0.0;
         for (var t = S; t < end.AddSeconds(-1e-3); t = t.AddSeconds(1.0))

@@ -73,8 +73,8 @@ public class SpacecraftToOpmTests
     }
 
     /// <summary>
-    /// Before the burn (S + 1 000 s), one tick before its ignition, at its ignition, 1 s after it (before the impulse, 3.4 s
-    /// after the ignition), at the impulse, after it (S + 5 000 s), at the end and at the default epoch (the initial one): the
+    /// Before the burn (S + 1 000 s), one tick before its ignition, at its ignition, 1 s after it (before the impulse, 2.6 s
+    /// after the ignition, the centroid of the burn's acceleration, #335; 3.4 s before 11.0.0), at the impulse, after it (S + 5 000 s), at the end and at the default epoch (the initial one): the
     /// state is <c>GetEphemeris</c>'s at the epoch, in the frame of the initial orbit, the mass Tsiolkovsky's after the burn
     /// when the burn is ignited by then and the full mass before, and the maneuvers the burn when it is ignited by then, none
     /// before (#658, decided by S. Guillet, 2026-11-17: "the mass and the maneuvers ignited by then"; the branch counted the

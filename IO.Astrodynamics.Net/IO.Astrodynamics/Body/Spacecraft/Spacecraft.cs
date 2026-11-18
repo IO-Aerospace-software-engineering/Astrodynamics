@@ -1097,9 +1097,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// The mass of a propagated spacecraft at the epoch is its mass after the propagation plus the fuel of the impulses
         /// ignited after the epoch; an impulse counts from its ignition, the start of its thrust window, the
         /// <c>MAN_EPOCH_IGNITION</c> written (#658, decided by S. Guillet, 2026-11-17: "the mass and the maneuvers ignited by
-        /// then"). The propagated state receives the delta-V of an impulse at its event, about two thirds of the burn after
-        /// the ignition (<see cref="Maneuver.ImpulseManeuver"/>): at an epoch between the two (3.4 s for a 5.2 s burn) the
-        /// state written is the state before the impulse, with the burn listed and its fuel spent. Before 11.0.0 the state
+        /// then"). The propagated state receives the delta-V of an impulse at its event, the centroid of the acceleration of
+        /// the burn, about half of the burn after the ignition (<see cref="Maneuver.Maneuver.ThrustWindow"/>, #335): at an
+        /// epoch between the two (2.6 s for a 5.2 s burn) the state written is the state before the impulse, with the burn
+        /// listed and its fuel spent. Before 11.0.0 the state
         /// was the motion of the initial orbit whatever the propagation, with the mass and every maneuver after the
         /// propagation: 1 212 km and 1 137 m/s off the propagated state one burn later.
         /// </para>

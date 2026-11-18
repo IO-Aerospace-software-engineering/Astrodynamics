@@ -1,3 +1,4 @@
+using IO.Astrodynamics.Tests.Propagators;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -104,8 +105,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             LabelAssert.Equal(new StateVector(orbitalParams.Position, orbitalParams.Velocity + maneuver.DeltaV, orbitalParams.Observer, orbitalParams.Epoch, orbitalParams.Frame), res.sv);
             LabelAssert.Equal(new StateOrientation(Quaternion.Identity, Vector3.Zero, orbitalParams.Epoch, orbitalParams.Frame), res.so);
             Assert.Equal(new Vector3(0.0, 2424.6084273080614, 0.0), maneuver.DeltaV);
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 49, 301, 844), TimeSpan.FromSeconds(16.0632973)), maneuver.ThrustWindow);
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 49, 301, 844), TimeSpan.FromSeconds(16.0632973)), maneuver.ManeuverWindow);
+            // The burn's acceleration centred on the impulse (#335): 11:59:51.2365604, 0.5455 of the burn before it (1.93 s
+            // later than the 0.666 of 11:59:49.3018440 before 11.0.0)
+            TimelineRules.AssertThrustWindow(orbitalParams.Epoch, maneuver.DeltaV.Magnitude(), 450.0, TimeSpan.FromSeconds(16.0632973), maneuver.ThrustWindow);
+            LabelAssert.Equal(maneuver.ThrustWindow, maneuver.ManeuverWindow);
             Assert.Equal(803.16486707364015, maneuver.FuelBurned);
         }
         
@@ -125,8 +128,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             LabelAssert.Equal(new StateVector(orbitalParams.Position, orbitalParams.Velocity + maneuver.DeltaV, orbitalParams.Observer, orbitalParams.Epoch, orbitalParams.Frame), res.sv);
             LabelAssert.Equal(new StateOrientation(new Quaternion(0.0,-1.0,0.0,0.0), Vector3.Zero, orbitalParams.Epoch, orbitalParams.Frame), res.so);
             Assert.Equal(new Vector3(0.0, -1467.1724438487042, 0.0), maneuver.DeltaV);
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 52, 841, 699).AddTicks(3), TimeSpan.FromSeconds(10.7481993)), maneuver.ThrustWindow);
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 52, 841, 699).AddTicks(3), TimeSpan.FromSeconds(10.7481993)), maneuver.ManeuverWindow);
+            // The burn's acceleration centred on the impulse (#335): 11:59:54.3286628 (11:59:52.8416993 before 11.0.0)
+            TimelineRules.AssertThrustWindow(orbitalParams.Epoch, maneuver.DeltaV.Magnitude(), 450.0, TimeSpan.FromSeconds(10.7481993), maneuver.ThrustWindow);
+            LabelAssert.Equal(maneuver.ThrustWindow, maneuver.ManeuverWindow);
             Assert.Equal(537.40996740060154, maneuver.FuelBurned);
         }
 

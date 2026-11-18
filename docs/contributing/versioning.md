@@ -1187,7 +1187,7 @@ release are listed under **Known limitations**.
   - **The fix.** A propagation lays its chain on an attitude timeline: an attitude activates at the later of its
     `MinimumEpoch` and the end of the previous maneuver's window, and its law is in force to the next activation,
     sampled on the solution at its activation, at each output of its interval and 1 µs before the change that ends it;
-    the impulse's attitude is in force over [tc − 0.666 dt, end of its maneuver window], its start no earlier than the
+    the impulse's attitude is in force over [tc − f dt, end of its maneuver window] (f dt the lead of the centroid of the burn's acceleration, #335), its start no earlier than the
     start of the propagation or the previous activation; after an impulse the law in force before it resumes, unless an
     attitude chained after it activates there; an activation after the end is not executed; an activation at a minimum
     epoch given in another frame is labelled TDB, as every epoch of the propagation; no sentinel. Every executed
@@ -4018,6 +4018,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
+  ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), decided by S. Guillet,
+  2026-11-18). The equivalent constant-thrust burn of duration dt is placed on [t − f dt, t + (1 − f) dt], t the impulse
+  epoch, f = 1/x + 1/ln(1 − x) for the mass fraction burned x = Δm/m0 (Tsiolkovsky, the engine's Isp and fuel flow, the
+  mass before the burn): the centroid of the acceleration F/(m0 − q τ), which grows as the mass drops, where an impulse
+  gives the burn's velocity change and, in a field-free space, its displacement after it. f → 1/2 for a small burn,
+  0.509 at x = 0.1, 0.557 at 0.5, 2/3 only at x ≈ 0.89. Before 11.0.0 the window opened a fixed 0.666 dt before t, a
+  split of no recorded derivation: 1.6 s earlier for a burn of 10 s at x = 0.1, 5.4 s for one of 50 s at x = 0.5, to the
+  tick against the centroid by quadrature now (`ImpulseThrustWindowTests`). The same split in
+  `ImpulseManeuver.TryExecute` and in the TT windows of a propagation about the Earth (#547). It moves, by
+  (0.666 − f) dt later: `ThrustWindow`, `ManeuverWindow` (its length unchanged), `MAN_EPOCH_IGNITION` of
+  `ToOpmManeuverParameters` and `Spacecraft.ToOpm` (`MAN_DURATION` unchanged), the opening of the impulse's attitude in
+  the attitude record and the CK, the instant from which `ToOpm` counts an impulse as ignited, and the gate of the next
+  maneuver of the chain, so an attitude chained after an impulse activates later and an impulse gated by it fires later
+  where the gate binds (a crossing between the old and the new gate now waits for the next one). The propagated state
+  of an impulse is unchanged (the whole ΔV at t). Migration: none for the state; a caller that reads the windows, the
+  ignition epoch or the epochs of a chain whose gates bind sees the new ones, and one that relied on 2/3 computes
+  t − 0.666 dt from the event and the burn duration itself.
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
   - **A g-value exactly zero at a step end** after a non-zero one is a crossing there, its direction read from the sign
     before it (Hipparchus's rule); RK7(8) takes the step end as the root without bisecting. A zero at the base of a
@@ -5707,7 +5725,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with the observer and the frame of its initial orbital parameters, with the mass and the impulses ignited by then
   (its mass after the propagation plus the fuel of the impulses ignited after the epoch, and only the impulses ignited
   by the epoch), an impulse counting from the start of its thrust window, the `MAN_EPOCH_IGNITION` written (between the
-  ignition and the event, about two thirds of the burn, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
+  ignition and the event, about half of the burn since #335, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
   started later, throws `InvalidOperationException` (#527). A spacecraft without propagated states writes the motion of
   its initial orbit as before. Migration: pass the epoch of the instant to export, the end of the propagation for the
   state after every maneuver (the default epoch, the initial one, kept, decided by S. Guillet, 2026-11-18, now carries no maneuver of a propagation that starts

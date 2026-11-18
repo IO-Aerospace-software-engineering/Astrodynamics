@@ -30,7 +30,7 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// <summary>
 /// The attitude timeline of a propagation (#539, #547, #570; design of #554, §4.1 and §4.2): each attitude law in force
 /// from its activation to the next one, an attitude activated at the later of its minimum epoch and the end of the window
-/// of the maneuver before it, the impulse's attitude over [tc − 0.666 dt, end of its maneuver window], the law in force
+/// of the maneuver before it, the impulse's attitude over [tc − f dt, end of its maneuver window] (f the lead of the centroid of the burn's acceleration, #335), the law in force
 /// before an impulse resumed after it, no activation past the end, the holds and the windows in TT seconds about the
 /// Earth. The cases of the design on the grid of both integrators, every activation path, the inertial frames, SSB mode
 /// and the Moon.
@@ -474,7 +474,7 @@ public class AttitudeTimelineTests
         double hours = 4.0;
         // The clip to the previous activation (#577 choice 12, its chain-peri-apo): the perigee raised at the apogee after
         // S + 3 500, its hold ending 5 s before the next perigee, where the apogee raise fires: its thrust window opens
-        // 0.666 dt (10.7 s) before, before the end of the window of the first
+        // f dt (about 8 s, f the lead of the centroid of the burn, #335) before, before the end of the window of the first
         double a2 = (MinimumEpochGateTests.Apogee0 + 6878137.0) / 2.0;
         double halfT2 = System.Math.PI * System.Math.Sqrt(a2 * a2 * a2 / center.GM);
         Maneuver.Maneuver PeriThenHold() => new PerigeeHeightManeuver(center, MinimumEpochGateTests.GateAtTt(3500.0), TimeSpan.FromSeconds(halfT2 - 5.0), 6878137.0, engine);
@@ -582,9 +582,10 @@ public class AttitudeTimelineTests
             double burned = TimelineRules.FuelBurned(mass, dv, 300.0);
             mass -= burned;
             fuel += burned;
-            var thrustStart = TimelineRules.ThrustStart(tc, dt, run.Tt);
+            double lead = TimelineRules.ThrustLead(dv, 300.0);
+            var thrustStart = TimelineRules.ThrustStart(tc, dt, lead, run.Tt);
             var thrustEnd = TimelineRules.After(thrustStart, dt, run.Tt);
-            var maneuverEnd = TimelineRules.ManeuverEnd(tc, dt, impulse.ManeuverHoldDuration.TotalSeconds, run.Tt);
+            var maneuverEnd = TimelineRules.ManeuverEnd(tc, dt, lead, impulse.ManeuverHoldDuration.TotalSeconds, run.Tt);
             expected.Windows[impulse] = (new Window(thrustStart, thrustEnd), new Window(thrustStart, maneuverEnd));
             var attitudeStart = TimelineRules.Activation(thrustStart, run.Window.StartDate);
             if (expected.Activations.Count > 0) attitudeStart = TimelineRules.Activation(attitudeStart, expected.Activations[^1].Epoch);

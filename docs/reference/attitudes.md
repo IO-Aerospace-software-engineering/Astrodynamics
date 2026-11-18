@@ -179,9 +179,9 @@ each in force from its epoch to the next one.
    with a hold therefore delays the first impulse, and an attitude chained after an impulse starts at the end of the
    impulse's `ManeuverWindow`, not at its event.
 2. **An impulse** puts its attitude, the front along ΔV, in force from the opening of its thrust window,
-   `tc − 0.666 dt`, no earlier than the start of the propagation or the previous activation, to the end of its
-   `ManeuverWindow`. Its windows themselves stay `[tc − 0.666 dt, …]` ([Thrust Window
-   Convention](impulse-maneuvers.md#thrust-window-convention)).
+   `tc − f dt` (tc the centroid of the acceleration of the burn, #335), no earlier than the start of the propagation or
+   the previous activation, to the end of its `ManeuverWindow`. Its windows themselves stay `[tc − f dt, …]` ([Thrust
+   Window Convention](impulse-maneuvers.md#thrust-window-convention)).
 3. **After an impulse**, the attitude law in force before it resumes at the end of its `ManeuverWindow`, unless an
    attitude chained after the impulse activates there (it is later in the chain, so it holds). With no law before, the
    impulse's attitude holds to the next activation.

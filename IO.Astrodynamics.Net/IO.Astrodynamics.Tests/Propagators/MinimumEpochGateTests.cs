@@ -817,8 +817,9 @@ public class MinimumEpochGateTests
             }
             case "chain-peri-apo":
             {
-                // The perigee raised at the apogee; the hold puts the gate of the apogee raise x + 1.24 s before the next
-                // perigee (the gate is the thrust start, 0.666 dt before the burn, plus the hold)
+                // The perigee raised at the apogee; the hold puts the gate of the apogee raise x + f dt before the next
+                // perigee (the gate is the thrust start, f dt before the burn, f the lead of the centroid of the burn's
+                // acceleration, about 1/2 here, #335, plus the hold)
                 double x = Value(item[1..]);
                 return new GateCase
                 {
