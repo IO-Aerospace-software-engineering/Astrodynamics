@@ -47,10 +47,16 @@ public static class ProfilesConfiguration
             stateVector.Velocity.Convert());
     }
 
-    internal static StateVector Convert(this DTO.StateVector stateVector)
+    /// <summary>
+    /// The state a two-body call of <see cref="SpiceAPI"/> returns, about the <paramref name="observer"/> and in the
+    /// <paramref name="frame"/> of its input (#725): before, a new <see cref="CelestialBody"/> built from the centre's
+    /// identifier, read again from the data provider under the SpiceAPI lock (#664), and a frame rebuilt from its name, so
+    /// that the caller's models, a barycentre or a body from custom parameters were lost.
+    /// </summary>
+    internal static StateVector Convert(this DTO.StateVector stateVector, ILocalizable observer, Frame frame)
     {
-        return new StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), new CelestialBody(stateVector.CenterOfMotionId),
-            Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), new Frame(stateVector.Frame));
+        return new StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
+            Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
     }
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
@@ -91,9 +97,13 @@ public static class ProfilesConfiguration
             keplerianElements.E, keplerianElements.I, keplerianElements.RAAN, keplerianElements.AOP, keplerianElements.M, keplerianElements.Frame.Name);
     }
 
-    internal static OrbitalParameters.KeplerianElements Convert(this DTO.KeplerianElements keplerianElements)
+    /// <summary>
+    /// The elements <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(OrbitalParameters.StateVector, double)"/>
+    /// returns, about the <paramref name="observer"/> and in the <paramref name="frame"/> of its state (#725, see
+    /// <see cref="Convert(DTO.StateVector, ILocalizable, Frame)"/>).
+    /// </summary>
+    internal static OrbitalParameters.KeplerianElements Convert(this DTO.KeplerianElements keplerianElements, ILocalizable observer, Frame frame)
     {
-        var observer = new CelestialBody(keplerianElements.CenterOfMotionId);
 
         // Within 1e-6 of e = 1 the elements need the perigee radius, with the conic's semi-major axis, oscltx's −μ/(2ξ),
         // +Infinity where oscltx gives none (0: e = 1, or a zero energy) (#459; before, +Infinity in the whole band)
@@ -102,7 +112,7 @@ public static class ProfilesConfiguration
             double semiMajorAxis = keplerianElements.SemiMajorAxis == 0.0 ? double.PositiveInfinity : keplerianElements.SemiMajorAxis;
             return new KeplerianElements(semiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination,
                 keplerianElements.AscendingNodeLongitude, keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer,
-                Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame), new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly,
+                Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame), frame, keplerianElements.TrueAnomaly,
                 perigeeRadius: keplerianElements.PerifocalDistance);
         }
 
@@ -112,22 +122,19 @@ public static class ProfilesConfiguration
         TimeSpan? period = tau > 0.0 && tau * TimeSpan.TicksPerSecond < long.MaxValue ? TimeSpan.FromSeconds(tau) : null;
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
-            new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly, period);
+            frame, keplerianElements.TrueAnomaly, period);
     }
 
+    /// <summary>
+    /// The elements EQNCPV takes (eqncpv.c): a, h = e sin ϖ (G), k = e cos ϖ (F), p (K), q (H), the mean longitude
+    /// λ = Ω + ω + M at the epoch, and a pole at (−π/2, π/2), which applies no rotation. λ is
+    /// <see cref="OrbitalParameters.OrbitalParameters.MeanLongitude"/>, right for every set since #469, circular and
+    /// equatorial ones included (#450: before, the true longitude L0, the state of another point of the orbit).
+    /// </summary>
     internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)
     {
         return new EquinoctialElements(equinoctialElements.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
             equinoctialElements.SemiMajorAxis(), equinoctialElements.G, equinoctialElements.F,
-            equinoctialElements.K, equinoctialElements.H, equinoctialElements.L0, 0.0, -Constants.PI2, Constants.PI2, 0.0);
-    }
-
-    internal static OrbitalParameters.EquinoctialElements Convert(this DTO.EquinoctialElements equinoctialElements)
-    {
-        var observer = new CelestialBody(equinoctialElements.CenterOfMotionId);
-        var e = System.Math.Sqrt(equinoctialElements.H * equinoctialElements.H + equinoctialElements.K * equinoctialElements.K);
-        var p = equinoctialElements.SemiMajorAxis / (1 - e * e);
-        return new OrbitalParameters.EquinoctialElements(p, equinoctialElements.K, equinoctialElements.H, equinoctialElements.Q, equinoctialElements.P, equinoctialElements.L,
-            observer, Time.Create(equinoctialElements.Epoch, TimeFrame.TDBFrame), new Frame(equinoctialElements.Frame));
+            equinoctialElements.K, equinoctialElements.H, equinoctialElements.MeanLongitude(), 0.0, -Constants.PI2, Constants.PI2, 0.0);
     }
 }

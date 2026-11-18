@@ -160,6 +160,19 @@ public class ColdStartTests
         RunChild("local-dst");
     }
 
+    [Fact]
+    public void ElementConversions_ReadNoProviderUnderTheSpiceLock()
+    {
+        // A child with a probe provider set as the global provider (#664): each element conversion and two-body propagation
+        // of SpiceAPI, every overload, makes no provider call under the SpiceAPI lock, checked by the child. Before the fix
+        // each built the observer of its result under the lock: 9 provider calls about the Earth, all under the lock
+        string output = RunChild("conversions-lock");
+        foreach (var line in output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
+        {
+            _output.WriteLine(line.TrimEnd('\r'));
+        }
+    }
+
     // Runs the child with the mode, and the schedule and hold when given; returns its standard output
     private static string RunChild(string mode, string schedule = null, string hold = null)
     {

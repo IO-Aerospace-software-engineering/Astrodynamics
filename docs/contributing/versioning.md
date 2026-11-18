@@ -504,10 +504,10 @@ release are listed under **Known limitations**.
   only the native call runs under the lock in `ConvertTleToStateVector`, the zero-state check and the Earth after it,
   and `ReadEphemeris` builds its observer before it; the states are the same bit for bit (same native calls, same
   inputs). No other code of the library under the lock reaches `PlanetsAndMoons`, `Stars` or `Barycenters`, the only type
-  initializers of the library that read SPICE. Code a caller supplies can still run under it: a custom `IDataProvider`,
-  through the bodies the element conversions of `SpiceAPI` build and the frames of an ephemeris read in TEME, CIRS or
-  TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`; it must not read the three
-  classes.
+  initializers of the library that read SPICE. Code a caller supplies could still run under it: a custom `IDataProvider`,
+  through the bodies the element conversions of `SpiceAPI` built (no longer since #664 and #725) and the frames of an
+  ephemeris read in TEME, CIRS or TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`
+  (before the lock since #661); it must not read the three classes.
   - **Measured** (Linux x64, 4 cores, Release, 2026-11-11), each run a fresh process, two threads started behind a
     barrier, a run hung when it had not ended 3 s after its start: before the fix, `ConvertTleToStateVector` against the
     first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `TLE.ToStateVector` 35 of 200, `ReadEphemeris` from
@@ -3722,6 +3722,50 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   is `new Frame(name)`, which the library routes by its name (TEME, GCRF, CIRS, TIRS, #656). The numbers are unchanged
   (`EphemerisTests.IcrfIsLabelledJ2000_OnTheSpiceAndTheSitePaths`, ICRF, icrf and j2000 red on a85098d; the expected
   labels of `EphemerisTests` and `SpacecraftKernelsTests` updated). The output: Changed below.
+- **The element conversions of `SpiceAPI` read the data provider under the SPICE lock** ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
+  `ConvertStateVectorToConicOrbitalElement`, `ConvertEquinoctialElementsToStateVector`, `ConvertConicElementsToStateVector`
+  and `Propagate2Bodies` (every overload) built the observer of their result, `new CelestialBody(id)`, inside
+  `lock (lockObject)`: 9 calls of the data provider under the lock about the Earth (the information of 399, 3, 0, 10 and 0,
+  four states), about 80 µs held for a native call of 1.8 µs (the issue's measure, 016237bd), and a custom `IDataProvider`
+  ran under the lock. Only the native call, its check and the reading of SPICE's message now run under the lock, and the
+  result carries the caller's observer (#725, under Changed), so no call reads the provider at all
+  (`ColdStartTests.ElementConversions_ReadNoProviderUnderTheSpiceLock`, a child process on a probe provider that counts
+  the calls made while the thread holds the lock: 9 of 9 for each of the ten overloads on a85098d, 0 of 0 now).
+- **`SpiceAPI.ConvertEquinoctialElementsToStateVector` gave the state of another point of the orbit** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450)).
+  `ProfilesConfiguration.Convert` passed the true longitude L0 to `eqncpv_c`, whose fourth element is the mean longitude
+  (NAIF's documentation of `eqncpv_c`: "the mean longitude (mean0+argp+node) at the epoch of the elements"): every orbit
+  whose mean and true longitudes differ came back off, 0.18 |r| for a LEO of e = 0.1 and 7.6 |r| at e = 0.89 (measured on
+  a85098d; the issue's 1029 km and 27 900 km on 732bcc3). It now passes `MeanLongitude()`, right on every branch since
+  #469, circular elements of f = −0.0 and equatorial ones included (#450's comment), and the unused reverse converter,
+  which read the mean longitude as a true one and took p = a / (1 − e²), is removed. Against the 60-digit closed form of
+  `tools/equinoctial_elements/equinoctial_reference.py` (the cases of #450 added under `eqncpv`, and every reference case
+  within the domain of EQNCPV and a turn of its true longitude, 79 cases) the worst relative error is 1.0e-15 in position
+  and velocity (`SpiceApiElementConversionTests.EquinoctialToState_MatchesTheReference`; 7.6 and 0.94 on a85098d).
+  The domain checks of #711 are unchanged.
+- **`SpiceAPI.WriteEphemeris` and `WriteOrientation` enumerated the caller's states under the SPICE lock** ([#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661)).
+  Both materialized the caller's `IEnumerable` inside `lock (lockObject)` (`WriteEphemeris` twice on 016237bd, when the
+  issue was filed, once on a85098d), so a lazy sequence ran under the lock, and one that read `PlanetsAndMoons`, `Stars` or
+  `Barycenters` for the first time could wait for a thread waiting for the lock (#623); the release note only warned the
+  caller to pass an array. Each writer now materializes the sequence once, before the lock, with its checks on the array
+  (empty, three states or more, one frame, the category of the centres; the names of the centres are still read from
+  SPICE under the lock) and the conversion to the native records; only the unload of a replaced file and the native
+  call run under the lock (`SpiceApiWriterEnumerationTests`: a sequence that counts its enumerations, records whether
+  the thread holds the lock at each item, and has another thread take the lock during its first item: on a85098d one
+  enumeration, all 10 items under the lock and the other thread blocked for its 60 s, both writers; now one enumeration,
+  none under the lock, the lock taken). An array writes the same file, byte for byte.
+- **The body information of a site identifier gave the Sun as centre** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)).
+  Both layers classed every identifier above 1000 as an asteroid, so `SpiceAPI.GetCelestialBodyInfo` of DSS-13 (399013),
+  DSS-14 and DSS-65 gave the centre 10 and the barycentre 0 (measured on a85098d), where SPICE's SPK of the stations
+  (`earthstns_itrf93_201023.bsp`) has their segments about the Earth (399, spiceypy `spksfs`), and
+  `CelestialItem.IsAsteroid` was true for them. A site identifier (body × 1000 + site, the body a planet or a moon, the
+  rule of `Site.NaifId`, internal `SpiceAPI.IsSiteId`) of a body SPICE names (internal `SpiceAPI.IsSiteOfNamedBody`, the
+  body's name read under the SPICE lock) now has its body as centre and its body's barycentre as barycentre, in the
+  record (`SpiceAPI` corrects the native record, the C++ layer unchanged) and in
+  `CelestialItem.FindCenterOfMotionId`/`FindBarycenterOfMotionId`, and is no asteroid. SPICE's built-in NOTO (398989)
+  and NEW NORCIA (398990), ESA stations whose identifiers have the form of a site of 398, a body SPICE does not name
+  (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
+  stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the rule, and
+  an asteroid, a comet, 391001, 399000, NOTO, NEW NORCIA and 101001, not sites, unchanged).
 
 **Changed**
 
@@ -5425,6 +5469,31 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the default frame ICRF or a frame named `icrf` or `j2000`, printed `Frame : j2000`; they print `Frame : J2000`, as a
   site observer did. Numbers unchanged. Migration: a script that parses the label reads `J2000`, or compares it ignoring
   case.
+- **Breaking: the two-body calls of `SpiceAPI` return the caller's observer and frame** ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)).
+  The results of `Propagate2Bodies`, `ConvertStateVectorToConicOrbitalElement`, `ConvertConicElementsToStateVector` and
+  `ConvertEquinoctialElementsToStateVector` (every overload) carried a new `CelestialBody` built from the identifier of
+  the centre (`ProfilesConfiguration.Convert` of the native result) and a frame rebuilt from its name: the caller's
+  geopotential and atmospheric model were lost, so a propagation started from the result ran about a point-mass Earth
+  without the caller's atmosphere (#674 takes the models of the observer), a barycentre threw "Celestial celestialItem
+  frame can't be defined" (measured on a85098d), and a body built from custom parameters of an identifier SPICE does not
+  name threw `ArgumentException` from the overloads with an explicit GM. Each result now carries the observer and the
+  frame instances of its input (`SpiceApiElementConversionTests.TwoBodyCalls_ReturnTheObserverAndTheFrameOfTheirInput`:
+  the Earth with EGM2008 10×10 and the 1976 atmosphere, the Earth-Moon barycentre and a custom body, in
+  ECLIPJ2000, red on a85098d for all three). The positions, velocities, elements and epochs are unchanged, bit for bit.
+  Migration: none for a caller that read the observer's identifier or name; a caller that relied on a body read from the
+  kernels gets its own instance back (build the observer from the kernels to have one).
+- **Breaking: `SpiceAPI.ConvertEquinoctialElementsToStateVector` returns the state of its elements** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450), Fixed above).
+  Its state was that of the elements with L0 read as a mean longitude; it is now the state at the true longitude L0, as
+  `EquinoctialElements.ToStateVector()` gives it (within 1.0e-15 relative of the 60-digit closed form). Circular orbits,
+  whose two longitudes coincide, give the same state. Migration: a caller that passed the mean longitude as L0 to work
+  around the defect passes the true longitude.
+- **Breaking: a site identifier is about its body, not an asteroid** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651), Fixed above).
+  `SpiceAPI.GetCelestialBodyInfo` (so `SpiceDataProvider.GetCelestialBodyInfo` and the command `celestial-body-info`) of a
+  site identifier, 100001 to 999999 with a planet or a moon SPICE names as body (399013 for DSS-13), gives its body as
+  `CenterOfMotionId` and its body's barycentre as `BarycenterOfMotionId` (399 and 3), where it gave 10 and 0;
+  `CelestialItem.IsAsteroid` is false for it, and a `CelestialBody` of that identifier is about its body, its
+  `ToString` naming no type. Every other identifier is classed as before. Migration: a caller that read the Sun as the
+  centre of a station reads its body.
 
 **Deprecated**
 
@@ -5476,14 +5545,6 @@ not listed.
   exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
   `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short", and the `stepSize`
   of the distance, coordinate and illumination searches of `CelestialItem` and `Site` "every window and gap").
-- **The element conversions of `SpiceAPI`**
-  ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450),
-  [#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
-  `SpiceAPI.ConvertEquinoctialElementsToStateVector` passes the true longitude where `EQNCPV` takes the mean longitude
-  (1029 km off for an ordinary LEO, 27 900 km at e = 0.89) and throws `ArgumentException` for a ≤ 0 or e > 0.9, the
-  domain of `EQNCPV` (#711);
-  the conversions hold the SPICE lock while they build their result (about 80 µs for a native call of 1.8 µs). Use
-  `EquinoctialElements.ToStateVector()` and `KeplerianElements.ToStateVector()`.
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),
   [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
@@ -5493,8 +5554,7 @@ not listed.
   leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
-  before rewriting the file. Both writers enumerate the caller's
-  states once, under the SPICE lock: pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
+  before rewriting the file. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
@@ -5516,11 +5576,11 @@ not listed.
   identifiers throws `ArgumentException` for a spacecraft observer: with `Aberration.None`, read with the spacecraft as
   target and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives); so does a site observer
   that no loaded kernel names, and one whose SPK does not cover J2000 TDB, which its `Site` constructor reads, throws
-  `InvalidOperationException`, with the same workaround (documented in the fourth round of #668). `SpiceAPI.GetCelestialBodyInfo` of a site identifier (DSS-13, 399013) gives the Sun as centre and the
-  barycentre 0, every identifier above 1000 being classed as an asteroid, so `new CelestialBody(399013)` and
-  `CelestialItem.Create(399013)` build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Sun (they threw or were
-  built with a garbage frame name before
-  [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)): build a `Site`.
+  `InvalidOperationException`, with the same workaround (documented in the fourth round of #668). `new CelestialBody(399013)` and
+  `CelestialItem.Create(399013)` of a site identifier build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Earth
+  (they threw or were built with a garbage frame name before
+  [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672), and about the Sun before #651,
+  under Changed): build a `Site`.
   `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI follow
   the same rule and build the same site (its SPICE name), under Changed.
   `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as

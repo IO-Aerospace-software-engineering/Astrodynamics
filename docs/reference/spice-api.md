@@ -40,6 +40,14 @@ information, whether the kernels name it or not (`Data/SolarSystem` names none o
 reads its state at J2000 TDB, so its SPK must cover that epoch), while `GetCelestialBodyInfo` and `new CelestialBody` of
 an unnamed one throw.
 
+The record of a site identifier, its body's identifier times 1000 plus its own (399013 for DSS-13, the body a planet or a
+moon SPICE names), has its body as centre of motion and its body's barycentre as barycentre, 399 and 3 for DSS-13 as its
+SPK segment ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651): before 11.0.0 the Sun
+and 0, the native layer classing every identifier above 1000 as an asteroid); `CelestialItem.IsAsteroid` is false for it.
+An identifier of that form whose body SPICE does not name keeps 10 and 0 and stays an asteroid: SPICE's built-in names
+include two ESA stations, NOTO (398989) and NEW NORCIA (398990), whose identifiers do not follow the rule, 398 being no
+body.
+
 A body the kernel pool gives no `BODYnnn_RADII` has radii 0, one it gives no `BODYnnn_GM` a GM of 0, and its frame is
 still read (`cnmfrm_c`); a barycentre has no frame (an empty `FrameName`, `FrameId` 0). Before #672 a missing variable
 left the GM 0 and the frame name undefined (Pallas, Nix, Hydra, Didymos and Dimorphos read GM 0; Elara a garbage frame).
@@ -217,6 +225,20 @@ the conversion).
 The element conversions (`ConvertConicElementsToStateVector`, three overloads, and
 `ConvertEquinoctialElementsToStateVector`) throw `ArgumentException` for an element that is not finite (#714): CONICS checks
 its domain with comparisons NaN passes, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state.
+
+`ConvertEquinoctialElementsToStateVector` gives `eqncpv_c` the mean longitude of the elements, `MeanLongitude()`, its
+fourth element ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450): before 11.0.0 the
+true longitude L0, the state of another point of the orbit, 1029 km off for an ordinary LEO); its state is that of
+`EquinoctialElements.ToStateVector()` within 1.0e-15 relative.
+
+The result of each two-body call and element conversion is about the observer and in the frame of its input, the same
+instances ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)): a body with a geopotential
+or an atmospheric model, a barycentre or a body built from custom parameters comes back as given, so a propagation started
+from the result runs with the caller's models. Before 11.0.0 the result carried a new `CelestialBody` built from the
+identifier of the centre and a frame rebuilt from its name: the caller's models were lost, a barycentre threw, and a body
+SPICE does not name made the overloads with an explicit GM throw. The result is built after the SPICE lock, which holds
+only the native call ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)): before, the
+new body read the data provider 9 times under the lock, about 80 µs for a native call of 1.8 µs.
 
 Each proxy that reports through `GetLastErrorProxy()` clears it when it starts (#714), so the message read after a call is
 that call's: before, it held the message of the last failure, about another call, until another failure replaced it.

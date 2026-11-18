@@ -202,9 +202,9 @@ public class SpiceAPI
     //Use the same lock for all cspice calls because it doesn't support multithreading.
     // No code under it may read a static class whose type initializer takes it (PlanetsAndMoons, Stars, Barycenters):
     // the thread would wait for the initializer while it holds the lock, and a thread running the initializer would wait
-    // for the lock, forever (#623). The library's code does not; a custom IDataProvider (the bodies the element
-    // conversions build, the frames of a read in TEME, CIRS or TIRS) and the enumeration of the states given to
-    // WriteEphemeris or WriteOrientation also run under it.
+    // for the lock, forever (#623). The library's code does not; a custom IDataProvider (the frames of a read in TEME,
+    // CIRS or TIRS; no longer the bodies the element conversions built, #664, #725) also runs under it. The writers
+    // enumerate the caller's states before it (#661).
     private static object lockObject = new object();
 
     // The generation of the kernel pool: raised, under the lock, by each LoadKernels, UnloadKernels and ClearKernels, so
@@ -1731,6 +1731,31 @@ public class SpiceAPI
     }
 
     /// <summary>
+    /// Whether <paramref name="naifId"/> is a site identifier (<see cref="IsSiteId"/>) whose body SPICE names, by its built-in
+    /// names or the loaded kernels: the identifiers that are about their body (#651). SPICE's built-in NOTO (398989) and
+    /// NEW NORCIA (398990) have the form of a site of 398, a body SPICE does not name: they are not, and keep the
+    /// classification of an identifier above 1000 (the Sun as centre, the solar system barycentre).
+    /// </summary>
+    /// <remarks>
+    /// Reads SPICE under the shared lock, for an identifier of the form of a site only: the static objects of
+    /// <see cref="SolarSystemObjects"/>, whose identifiers are at most 999, never reach it (#623).
+    /// </remarks>
+    internal static bool IsSiteOfNamedBody(int naifId)
+    {
+        if (!IsSiteId(naifId))
+        {
+            return false;
+        }
+
+        int body = naifId / 1000;
+        lock (lockObject)
+        {
+            // The record's Id stays -1 when bodc2n_c does not find the identifier (#672)
+            return GetCelestialBodyInfoProxy(body).Id == body;
+        }
+    }
+
+    /// <summary>
     /// Read ephemeris at a given epoch using the caller-provided observer object.
     /// Avoids CelestialItem.Create() which can't handle spacecraft/site NAIF IDs.
     /// </summary>
@@ -1911,6 +1936,8 @@ public class SpiceAPI
     /// <param name="stateVectors"></param>
     /// <returns></returns>
     /// <remarks>
+    /// The states are enumerated once, before the SPICE lock, so that nothing of the caller's sequence runs under it
+    /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// The native writer unloads the file it replaces and, once written, the file itself; like every native load and unload
     /// (<see cref="UnloadKernels"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
     /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
@@ -1951,18 +1978,21 @@ public class SpiceAPI
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateVectors == null) throw new ArgumentNullException(nameof(stateVectors));
         Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
+        // The caller's sequence enumerated once, before the lock, so that nothing the caller supplies runs under it (#661)
+        var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
+        if (enumerable.Length == 0)
+            throw new ArgumentException("Value cannot be an empty collection.", nameof(stateVectors));
+        ThrowIfNativeWriterRejects(enumerable);
+        var states = enumerable.Select(x => x.Convert()).ToArray();
+        var centres = enumerable.Select(x => x.Observer.NaifId).Distinct().ToArray();
         lock (lockObject)
         {
-            var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
-            if (!enumerable.Any())
-                throw new ArgumentException("Value cannot be an empty collection.", nameof(stateVectors));
-            ThrowIfNativeWriterRejects(enumerable);
+            ThrowIfCentreNotNamed(centres);
             UnloadReplacedKernel(filePath);
             bool res;
             try
             {
-                res = WriteEphemerisProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(),
-                    (uint)enumerable.Length);
+                res = WriteEphemerisProxy(filePath.FullName, naifId, states, (uint)states.Length);
             }
             finally
             {
@@ -1993,6 +2023,8 @@ public class SpiceAPI
     /// </param>
     /// <returns>True when the CK is written.</returns>
     /// <remarks>
+    /// The records are enumerated once, before the SPICE lock, so that nothing of the caller's sequence runs under it
+    /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
     /// convention, the conjugate of the record's rotation, in J2000. The native writer unloads the file it replaces and, once
     /// written, the file itself; like every native load and unload (<see cref="UnloadKernels"/>), it first closes and
@@ -2021,23 +2053,24 @@ public class SpiceAPI
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateOrientations == null) throw new ArgumentNullException(nameof(stateOrientations));
         Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
+        // The caller's sequence enumerated once, before the lock, so that nothing the caller supplies runs under it (#661)
+        var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
+        if (enumerable.Length == 0)
+            throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
+        string frame = enumerable[0].ReferenceFrame.Name;
+        var other = enumerable.FirstOrDefault(x => !string.Equals(x.ReferenceFrame.Name, frame, StringComparison.Ordinal));
+        if (other != null)
+            throw new ArgumentException(
+                $"Every orientation must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.ReferenceFrame.Name}.",
+                nameof(stateOrientations));
+        var orientations = enumerable.Select(x => x.Convert()).ToArray();
         lock (lockObject)
         {
-            var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
-            if (!enumerable.Any())
-                throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
-            string frame = enumerable[0].ReferenceFrame.Name;
-            var other = enumerable.FirstOrDefault(x => !string.Equals(x.ReferenceFrame.Name, frame, StringComparison.Ordinal));
-            if (other != null)
-                throw new ArgumentException(
-                    $"Every orientation must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.ReferenceFrame.Name}.",
-                    nameof(stateOrientations));
             UnloadReplacedKernel(filePath);
             bool res;
             try
             {
-                res = WriteOrientationProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(),
-                    (uint)enumerable.Length);
+                res = WriteOrientationProxy(filePath.FullName, naifId, orientations, (uint)orientations.Length);
             }
             finally
             {
@@ -2059,7 +2092,8 @@ public class SpiceAPI
     /// and reads the centre of motion of each as a celestial body (<see cref="IsCelestialBodyId"/>, a barycenter, a body or
     /// a star the library builds, not a spacecraft nor a site) that SPICE names (#714). Each threw a C++ exception across
     /// P/Invoke, which ended the process, or, for a spacecraft centre, read the uninitialised GM of a failed read; a centre
-    /// SPICE does not name threw <see cref="InvalidOperationException"/> from the native writer. Called under the lock.
+    /// SPICE does not name threw <see cref="InvalidOperationException"/> from the native writer. Called before the lock
+    /// (#661), the names read under it by <see cref="ThrowIfCentreNotNamed"/>.
     /// </summary>
     private static void ThrowIfNativeWriterRejects(OrbitalParameters.StateVector[] stateVectors)
     {
@@ -2087,13 +2121,16 @@ public class SpiceAPI
                 "a planet, a moon or a Lagrange point (101 to 999), or an identifier above 1000, not a spacecraft nor a site.",
                 nameof(stateVectors));
         }
+    }
 
-        // A centre SPICE does not name, which the native writer cannot build (#714, the last row of #655: before, it threw
-        // InvalidOperationException from the native layer, "CelestialItem id<id> can't be found"); #680's rule, as the element
-        // conversions check it (ReadCelestialBodyInfo)
-        foreach (var naifId in stateVectors.Select(x => x.Observer.NaifId).Distinct())
+    // A centre SPICE does not name, which the native writer cannot build (#714, the last row of #655: before, it threw
+    // InvalidOperationException from the native layer, "CelestialItem id<id> can't be found"); #680's rule, as the element
+    // conversions check it (ReadCelestialBodyInfo). Called under the lock
+    private static void ThrowIfCentreNotNamed(int[] centres)
+    {
+        foreach (var naifId in centres)
         {
-            ReadCelestialBodyInfo(naifId, nameof(stateVectors));
+            ReadCelestialBodyInfo(naifId, "stateVectors");
         }
     }
 
@@ -2150,7 +2187,11 @@ public class SpiceAPI
     /// <remarks>
     /// A body the kernel pool gives no <c>BODYnnn_RADII</c> has radii 0, one it gives no <c>BODYnnn_GM</c> a GM of 0, and a
     /// barycentre has no frame (an empty <c>FrameName</c>, <c>FrameId</c> 0); before #672 a missing variable left the GM 0
-    /// and the frame name undefined.
+    /// and the frame name undefined. A site identifier of a body SPICE names (<see cref="IsSiteOfNamedBody"/>, 399013 for
+    /// DSS-13) has its body as centre of motion and its body's barycentre as barycentre (399 and 3 for DSS-13, the centre of
+    /// its SPK segment): before 11.0.0 the Sun and 0, every identifier above 1000 being classed as an asteroid (#651). An
+    /// identifier of that form whose body SPICE does not name keeps the Sun and 0: SPICE's NOTO (398989) and NEW NORCIA
+    /// (398990), ESA stations whose identifiers do not follow the rule, 398 being no body.
     /// </remarks>
     /// <exception cref="ArgumentException"><paramref name="naifId"/> is not the identifier of a celestial body
     /// (<see cref="IsCelestialBodyId"/>): a spacecraft, an instrument or a site of a negative identifier, 11 to 100, or 1000.
@@ -2167,7 +2208,8 @@ public class SpiceAPI
     }
 
     // The body information of an identifier SPICE names, under the lock: the record's Id, -1 until bodc2n_c finds the
-    // identifier, is the found flag (#672)
+    // identifier, is the found flag (#672). A site identifier of a body SPICE names is about its body and its body's
+    // barycentre, where the native layer, which classes every identifier above 1000 as an asteroid, gives the Sun and 0 (#651)
     private static CelestialBody ReadCelestialBodyInfo(int naifId, string paramName)
     {
         var info = GetCelestialBodyInfoProxy(naifId);
@@ -2176,6 +2218,12 @@ public class SpiceAPI
             throw new ArgumentException(
                 $"The NAIF identifier {naifId} has no name in SPICE: neither SPICE's built-in names nor the loaded kernels name it.",
                 paramName);
+        }
+
+        if (IsSiteOfNamedBody(naifId))
+        {
+            info.CenterOfMotionId = Body.CelestialItem.SiteBodyId(naifId);
+            info.BarycenterOfMotionId = Body.CelestialItem.SiteBarycenterId(naifId);
         }
 
         return info;
@@ -2504,15 +2552,16 @@ public class SpiceAPI
         double.IsFinite(elements.MeanAnomaly) && double.IsFinite(elements.TrueAnomaly);
 
     // The state of a native conversion, or the InvalidOperationException of its failure: a NaN state with SPICE's message,
-    // a centre whose GM the kernel pool lacks (#711: before, the zero state, silently)
-    private static OrbitalParameters.StateVector ConvertedState(StateVector state)
+    // a centre whose GM the kernel pool lacks (#711: before, the zero state, silently). Called under the lock, which holds
+    // SPICE's message; the managed result is built after it, about the observer and in the frame of the input (#725, #664)
+    private static StateVector CheckedState(StateVector state)
     {
         if (!IsFinite(state))
         {
             throw new InvalidOperationException($"The elements cannot be converted to a state vector: {LastProxyError()}");
         }
 
-        return state.Convert();
+        return state;
     }
 
     /// <summary>
@@ -2554,22 +2603,30 @@ public class SpiceAPI
             throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to OSCELT must be finite and above 0.");
         }
 
+        var input = stateVector.Convert();
+        DTO.KeplerianElements elements;
         lock (lockObject)
         {
-            var elements = ConvertStateVectorToConicOrbitalElementProxy(stateVector.Convert(), gm);
-            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            elements = ConvertStateVectorToConicOrbitalElementProxy(input, gm);
             if (!IsFinite(elements))
             {
                 throw new InvalidOperationException($"The state cannot be converted to conic elements: {LastProxyError()}");
             }
-
-            return elements.Convert();
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return elements.Convert(stateVector.Observer, stateVector.Frame);
     }
 
     /// <summary>
-    /// The state of equinoctial elements, through CSPICE's <c>eqncpv_c</c> in the native layer.
+    /// The state of equinoctial elements, through CSPICE's <c>eqncpv_c</c> in the native layer, at the epoch of the
+    /// elements, about their observer and in their frame (#725).
     /// </summary>
+    /// <remarks>
+    /// EQNCPV takes the mean longitude λ = Ω + ω + M, which the elements give by
+    /// <see cref="OrbitalParameters.OrbitalParameters.MeanLongitude"/> (#450: before 11.0.0 the true longitude L0 was passed
+    /// in its place, the state of another point of the orbit, 1029 km off for an ordinary LEO).
+    /// </remarks>
     /// <exception cref="ArgumentException">The centre of the elements is not a celestial body SPICE names: a spacecraft, a
     /// site, or an identifier no loaded kernel names (#711: before, the native layer ended the process for a centre with a
     /// GM, and the conversion of the result threw for the others).</exception>
@@ -2585,11 +2642,16 @@ public class SpiceAPI
         ThrowIfNotFinite(equinoctialElements, nameof(equinoctialElements));
         ThrowIfOutsideEqncpvDomain(equinoctialElements, nameof(equinoctialElements));
         ThrowIfNotACelestialCentre(equinoctialElements.Observer, nameof(equinoctialElements));
+        var input = equinoctialElements.Convert();
+        StateVector state;
         lock (lockObject)
         {
             ReadCelestialBodyInfo(equinoctialElements.Observer.NaifId, nameof(equinoctialElements));
-            return ConvertedState(ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()));
+            state = CheckedState(ConvertEquinoctialElementsToStateVectorProxy(input));
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(equinoctialElements.Observer, equinoctialElements.Frame);
     }
 
     /// <summary>
@@ -2620,11 +2682,16 @@ public class SpiceAPI
         }
 
         ThrowIfNotACelestialCentre(keplerianElements.Observer, nameof(keplerianElements));
+        var input = keplerianElements.Convert();
+        StateVector state;
         lock (lockObject)
         {
             ReadCelestialBodyInfo(keplerianElements.Observer.NaifId, nameof(keplerianElements));
-            return ConvertedState(ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()));
+            state = CheckedState(ConvertConicElementsToStateVectorProxy(input));
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(keplerianElements.Observer, keplerianElements.Frame);
     }
 
     /// <summary>
@@ -2670,10 +2737,16 @@ public class SpiceAPI
             throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to CONICS must be finite and above 0.");
         }
 
+        var input = keplerianElements.Convert();
+        double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        StateVector state;
         lock (lockObject)
         {
-            return ConvertedState(ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, gm));
+            state = CheckedState(ConvertConicElementsToStateVectorAtEpochProxy(input, et, gm));
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(keplerianElements.Observer, keplerianElements.Frame);
     }
 
     /// <summary>
@@ -2718,17 +2791,19 @@ public class SpiceAPI
             throw new ArgumentOutOfRangeException(nameof(gm), gm, "The GM given to PROP2B must be finite and above 0.");
         }
 
+        var input = stateVector.Convert();
+        StateVector state;
         lock (lockObject)
         {
-            var state = Propagate2BodiesProxy(stateVector.Convert(), gm, dt.TotalSeconds);
-            // Checked before the conversion, which builds the observer from the kernels (a native call)
+            state = Propagate2BodiesProxy(input, gm, dt.TotalSeconds);
             if (!IsFinite(state))
             {
                 throw new InvalidOperationException($"The state cannot be propagated by two-body motion: {LastProxyError()}");
             }
-
-            return state.Convert();
         }
+
+        // After the lock, about the caller's observer and frame (#725, #664)
+        return state.Convert(stateVector.Observer, stateVector.Frame);
     }
 
     /// <summary>
