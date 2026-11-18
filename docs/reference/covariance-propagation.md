@@ -428,7 +428,7 @@ var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false,
   conjunction analysis alike (`CovarianceChecks.RemediationDepthBound`): the smallest eigenvalue of the correlation matrix
   must be at least −1e-3 of its trace (its number of positive variances) in the frame of the state, or in the RTN frame
   of the state, the frame of the covariances of a CDM. Rounding each element of a positive semi-definite covariance to 4
-  significant digits, the form of the CDM's covariances (CCSDS 508.0-B-1, to be verified by S. Guillet), moves each
+  significant digits, the form of the CDM's covariances (CCSDS 508.0-B-1, confirmed by S. Guillet, 2026-11-18), moves each
   correlation by at most 2u/(1 − u), u = 5e-4, and so the smallest eigenvalue by at most 5 × 2u/(1 − u) = 5.0e-3, 8.34e-4
   of the trace 6 (Weyl's inequality), in the frame it was rounded in; measured 1.5e-4 at worst over 6000 covariances of
   LEO and GEO (Clohessy-Wiltshire propagations over up to 7 days of covariances of ranks 1 to 6, rounded in RTN or in the
