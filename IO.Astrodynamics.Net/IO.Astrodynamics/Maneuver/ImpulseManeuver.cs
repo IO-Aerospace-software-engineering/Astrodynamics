@@ -156,7 +156,7 @@ namespace IO.Astrodynamics.Maneuver
 
             //Compute thrust windows and maneuver windows.
             //The impulse is applied at the event epoch t, the centroid of the acceleration of the equivalent constant-thrust
-            //burn of duration dt (#335, proposed after S. Guillet's remark of 2026-11-18, to be confirmed by S. Guillet): the burn is placed on [t - f dt, t + (1 - f) dt],
+            //burn of duration dt (#335, derived from S. Guillet's remark of 2026-11-18, decided by S. Guillet, 2026-11-18): the burn is placed on [t - f dt, t + (1 - f) dt],
             //f = 1/x + 1/ln(1 - x) for the mass fraction burned x (ThrustLeadFraction), 1/2 for a small burn and more as the
             //acceleration grows while the mass drops. Before 11.0.0, f was a fixed 0.666 of no recorded derivation.
             //The propagated state receives the full delta-V at t. The windows are reported, and the end of the
@@ -189,7 +189,7 @@ namespace IO.Astrodynamics.Maneuver
 
         /// <summary>
         /// The fraction f of the burn of a constant thrust and fuel flow that precedes the centroid of its acceleration
-        /// (#335, proposed after S. Guillet's remark of 2026-11-18, to be confirmed by S. Guillet): with the mass fraction burned x = Δm/m0 = 1 − exp(−u),
+        /// (#335, derived from S. Guillet's remark of 2026-11-18, decided by S. Guillet, 2026-11-18): with the mass fraction burned x = Δm/m0 = 1 − exp(−u),
         /// u = Δv / (Isp g0) (Tsiolkovsky, m0 the mass before the burn), the acceleration F / (m0 − q τ) over the burn
         /// [0, dt] has its centroid at f dt, f = 1/x + 1/ln(1 − x) = 1/(1 − exp(−u)) − 1/u. The impulse at the centroid
         /// gives the burn's velocity change and, in a field-free space, its displacement after the burn

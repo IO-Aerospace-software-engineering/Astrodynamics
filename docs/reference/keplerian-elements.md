@@ -80,7 +80,7 @@ The motion of the band counts from the periapsis in universal variables, the uni
 and the Stumpff functions C(z) = (1 − cos √z)/z and S(z) = (√z − sin √z)/z^(3/2) (their hyperbolic forms for z < 0):
 √μ t = q χ + e χ³ S(z), solved by Newton's method from Barker's root inside its bracket, and D = tan(ν/2) =
 √((1 + e)/q) χ (1 − z S)/(2 − z C), the form of CSPICE's `prop2b_c` (D. A. Vallado, *Fundamentals of Astrodynamics and
-Applications*, 4th ed., 2013, algorithm 8, to be verified by S. Guillet). Nothing cancels on either side of e = 1, and at
+Applications*, 4th ed., 2013, algorithm 8, confirmed by S. Guillet, 2026-11-18). Nothing cancels on either side of e = 1, and at
 e = 1 it is Barker's equation; the elements at the new epoch carry the true anomaly of the motion and Barker's mean
 anomaly of it. Against the exact two-body motion of the conic at 60 digits (`tools/near_parabolic`), |e − 1| from 1e-12
 to 9.9e-7 on both sides, ν0 from −1.5 to 2 rad, 600 s and a day later and an hour earlier, the state is within 4.2e-15

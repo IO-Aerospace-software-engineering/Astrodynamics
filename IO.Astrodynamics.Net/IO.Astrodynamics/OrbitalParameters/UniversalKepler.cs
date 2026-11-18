@@ -10,7 +10,7 @@ namespace IO.Astrodynamics.OrbitalParameters;
 /// periapsis: the universal anomaly χ, z = α χ², α = (1 − e)/q, and the Stumpff functions C(z) = (1 − cos √z)/z and
 /// S(z) = (√z − sin √z)/z^(3/2) (their hyperbolic forms for z &lt; 0), which hold through e = 1 without a branch
 /// (the form of CSPICE's <c>prop2b_c</c>; D. A. Vallado, <i>Fundamentals of Astrodynamics and Applications</i>, 4th ed.,
-/// 2013, algorithm 8, to be verified by S. Guillet).
+/// 2013, algorithm 8, confirmed by S. Guillet, 2026-11-18).
 /// </summary>
 /// <remarks>
 /// <para>

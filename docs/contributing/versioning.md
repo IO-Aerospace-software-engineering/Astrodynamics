@@ -4034,7 +4034,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`objectId`), its blank columns giving an empty `OBJECT_ID` that `OmmMetadata` refuses: of the 15 919 TLEs of the
   study of lot 5 of #457, 11801 and 88888 of Vallado's `SGP4-VER.TLE`. `TLE.Create` now writes eight blanks for a null
   or blank `cosparId`, `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an
-  unknown designator, to be verified by S. Guillet), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case,
+  unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case,
   back as the blank columns (internal `OmmMetadata.UnknownObjectId`). Both TLEs go through `Create`, and through
   `ToOmm`, the XML written and read and `ToTle`, to their own text, each field at its columns, but for the ephemeris type
   of 11801, blank in the set and written 0 (SGP4's) by `Create` as for every TLE (`TleBlankDesignatorTests`, 15 cases
@@ -4170,7 +4170,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and the states from a mean anomaly within two periapsis radii up to 6.7e-11 of |r|. Both directions now evaluate
   (1 − e) x + e (x − sin x) and (e − 1) x + e (sinh x − x), x − sin x and sinh x − x by their series to x¹⁹/19! below 1,
   for 0.5 ≤ e ≤ 2 (decided by S. Guillet, 2026-11-18; the same rewriting as R. H. Gooding and A. W. Odell's EMKEP,
-  Celestial Mechanics 44, 1988, to be verified by S. Guillet): against the root and M* at 60 digits
+  Celestial Mechanics 44, 1988, confirmed by S. Guillet, 2026-11-18): against the root and M* at 60 digits
   (`tools/kepler_equation/kepler_periapsis_reference.py`, mpmath), E within 1.9 ulp in 6 iterations at most, M within
   6.4e-16, the states within 9.7e-16 of |r| and the anomaly of the round trip state → elements within 1 ulp (6.2e5
   before) (`KeplerPeriapsisTests`, red on f70ee32; provisional thresholds, twice the Linux worst). The derivative, the
@@ -4194,8 +4194,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`, `TimeToRadius`, the first state of a propagation from such elements)
   is now that of the conic of e and q in universal variables from the periapsis, √μ t = q χ + e χ³ S(z) with the
   Stumpff functions, solved by a safeguarded Newton's method from Barker's root (internal `UniversalKepler`, the form of
-  CSPICE's `prop2b_c`; D. A. Vallado, *Fundamentals of Astrodynamics and Applications*, algorithm 8, to be verified by
-  S. Guillet), the elements at the new epoch carrying its true anomaly and Barker's mean anomaly of it, the anomalies of
+  CSPICE's `prop2b_c`; D. A. Vallado, *Fundamentals of Astrodynamics and Applications*, algorithm 8, confirmed by
+  S. Guillet, 2026-11-18), the elements at the new epoch carrying its true anomaly and Barker's mean anomaly of it, the anomalies of
   the band (decided by S. Guillet, 2026-11-18: in the band only, `IsParabolic()` keeping its meaning). Against the exact
   conic at 60 digits (`tools/near_parabolic`, sections 9 and 10), 108 motions of the band (|e − 1| from 1e-12 to 9.9e-7 on
   both sides, ν0 from −1.5 to 2 rad, 600 s, a day, −1 h): within 4.2e-15 of |r| and 3.6e-15 of |v| (1.2e-7 m after a
@@ -4243,8 +4243,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 **Changed**
 
 - **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
-  ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), proposed after
-  S. Guillet's remark of 2026-11-18 that the acceleration grows during the burn, to be confirmed by S. Guillet). The
+  ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), derived from
+  S. Guillet's remark of 2026-11-18 that the acceleration grows during the burn, decided by S. Guillet, 2026-11-18). The
   equivalent constant-thrust burn of duration dt is placed on [t − f dt, t + (1 − f) dt], t the impulse epoch,
   f = 1/x + 1/ln(1 − x) for the mass fraction burned x = Δm/m0 (Tsiolkovsky, the engine's Isp and fuel flow, the mass
   before the burn): the centroid of the acceleration F/(m0 − q τ), which grows as the mass drops, where an impulse

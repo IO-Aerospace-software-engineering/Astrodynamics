@@ -60,9 +60,9 @@ centroid of its acceleration, F / (m0 − q τ), which grows as the mass drops: 
 f = 1/x + 1/ln(1 − x) = 1/(1 − e^(−u)) − 1/u, x = Δm / m0 = 1 − e^(−u), u = Δv / (Isp g0),
 
 x the mass fraction burned, m0 the mass before the burn
-([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), proposed after
-S. Guillet's remark of 2026-11-18 that the acceleration is stronger at the end of the burn than at its start, to be
-confirmed by S. Guillet). f → 1/2 as x → 0 (1/2 + u/12 − u³/720 + …), 0.509 at x = 0.1, 0.557 at 0.5, 2/3 only at x ≈ 0.89, and f → 1 as x → 1. The impulse
+([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), derived from
+S. Guillet's remark of 2026-11-18 that the acceleration is stronger at the end of the burn than at its start, decided by
+S. Guillet, 2026-11-18). f → 1/2 as x → 0 (1/2 + u/12 − u³/720 + …), 0.509 at x = 0.1, 0.557 at 0.5, 2/3 only at x ≈ 0.89, and f → 1 as x → 1. The impulse
 at the centroid gives the burn's velocity change and, in a field-free space, its displacement after the burn: the
 position after a burn of acceleration a(τ) gains ∫ (T − τ) a(τ) dτ = Δv (T − f dt) at T after its start, as from Δv at
 f dt. `ManeuverWindow` runs from the start of the thrust window to the later of the end of the hold and the end of the

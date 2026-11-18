@@ -186,7 +186,7 @@ internal static class KeplerEquation
     /// e = 0.999999 before 11.0.0; within 4.2e-16 rewritten). Below e = 0.5, E − e sin E as before, bit for bit.
     /// </summary>
     /// <remarks>The same rewriting as R. H. Gooding and A. W. Odell's EMKEP, "The hyperbolic Kepler equation (and the
-    /// elliptic equation revisited)", Celestial Mechanics 44, 1988 (to be verified by S. Guillet).</remarks>
+    /// elliptic equation revisited)", Celestial Mechanics 44, 1988 (confirmed by S. Guillet, 2026-11-18).</remarks>
     internal static double EllipticMeanAnomaly(double anomaly, double e) =>
         e >= RewrittenLowestEccentricity
             ? (1.0 - e) * anomaly + e * AnomalyMinusSine(anomaly)

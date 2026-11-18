@@ -59,7 +59,7 @@ public class OmmMetadata
     /// <summary>
     /// The <c>OBJECT_ID</c> of an object without an international designator, which
     /// <see cref="OrbitalParameters.TLE.TLE.ToOmm"/> writes for blank columns 10-17 and <see cref="Omm.ToTle"/> reads back as them, trimmed and in any letter case (#604, decided by
-    /// S. Guillet, 2026-11-18; CCSDS's value for an unknown designator, to be verified by S. Guillet).
+    /// S. Guillet, 2026-11-18; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18).
     /// </summary>
     internal const string UnknownObjectId = "UNKNOWN";
 

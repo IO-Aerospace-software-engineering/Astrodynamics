@@ -6,8 +6,8 @@ measure the computation alone:
 
 - the conic of a state: h = r x v, e = |v x h / mu - r / |r||, p = h^2 / mu, q = p / (1 + e), the specific energy
   xi = v^2 / 2 - mu / |r|, the semi-major axis a = -mu / (2 xi) and the mean motion n = sqrt(mu / |a|^3) of every
-  e != 1 (Vallado, Fundamentals of Astrodynamics and Applications, 4th ed., 2013, algorithm 9 RV2COE; to be verified by
-  S. Guillet);
+  e != 1 (Vallado, Fundamentals of Astrodynamics and Applications, 4th ed., 2013, algorithm 9 RV2COE; confirmed by
+  S. Guillet, 2026-11-18);
 - Barker's equation: D = tan(nu / 2), M = D + D^3 / 3, t - T = sqrt(2 q^3 / mu) M (Vallado, section 2.2), and its
   inverse in closed form;
 - the exact two-body motion of the conic: Kepler's elliptic (M = E - e sin E) or hyperbolic (M = e sinh H - H) equation

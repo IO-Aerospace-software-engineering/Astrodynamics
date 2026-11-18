@@ -21,7 +21,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// The rules (design of #554, §4.1): an attitude activates at max(its minimum epoch, the end of the previous maneuver's
 /// window) and its window ends its hold later; an impulse at its event tc has the thrust window [tc − f dt,
 /// tc + (1 − f) dt], tc the centroid of the acceleration of the burn (f, <see cref="ThrustLead"/>, by quadrature here;
-/// #335, proposed after S. Guillet's remark of 2026-11-18, to be confirmed by S. Guillet: a fixed 0.666 before 11.0.0), and the maneuver window [tc − f dt,
+/// #335, derived from S. Guillet's remark of 2026-11-18, decided by S. Guillet, 2026-11-18: a fixed 0.666 before 11.0.0), and the maneuver window [tc − f dt,
 /// tc − f dt + max(hold, dt)], whose end gates the next maneuver; its attitude is in force from the start of its thrust window (no earlier than the start of the propagation or
 /// the previous activation) to the end of its maneuver window. About the Earth the seconds are TT seconds (#547), about
 /// any other body, SSB mode included, TDB seconds.

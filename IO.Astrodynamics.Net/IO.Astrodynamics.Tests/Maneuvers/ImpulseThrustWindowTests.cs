@@ -24,7 +24,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 
 /// <summary>
 /// The thrust window of an impulse is the equivalent constant-thrust burn whose acceleration has its centroid at the
-/// impulse epoch t (#335, proposed after S. Guillet's remark of 2026-11-18, to be confirmed by S. Guillet): [t − f dt, t + (1 − f) dt], f = 1/x + 1/ln(1 − x) for the
+/// impulse epoch t (#335, derived from S. Guillet's remark of 2026-11-18, decided by S. Guillet, 2026-11-18): [t − f dt, t + (1 − f) dt], f = 1/x + 1/ln(1 − x) for the
 /// mass fraction burned x. The reference is the centroid of the acceleration F / (m0 − q τ) over [0, dt], by quadrature
 /// (<see cref="TimelineRules.ThrustLead"/>), and the 40-digit values of f by mpmath 1.4.1 for the closed form. On
 /// f70ee32 the window opened a fixed 0.666 dt before t: 1.88 s early for the 16.1 s burn of an apogee raise from
