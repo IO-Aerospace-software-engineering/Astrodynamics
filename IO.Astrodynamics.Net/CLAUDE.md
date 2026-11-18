@@ -251,6 +251,7 @@ issOmm.SaveToFile("iss.omm");
 - OMM uses full format: `"1998-067A"` (9 chars with hyphen)
 - TLE uses abbreviated format: `"98067A"` (6-8 chars)
 - Conversion is automatic in `ToTle()` and `ToOmm()` methods
+- A TLE without a designator (blank columns 10-17) gives `OBJECT_ID = UNKNOWN`, which `ToTle()` reads back (trimmed, any case) as blank columns, and `TLE.Create` and the fit of `ToTLE` take a null or blank `cosparId`/`Configuration.CosparId` (#604); an empty `OBJECT_ID` stays refused (#708), the empty value of #604's decision reaching no public path (open, for S. Guillet to settle)
 
 **TLE Precision Limitations**
 When converting OMM → TLE → OMM, expect some precision loss:
@@ -860,6 +861,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Use `Opm.ToStateVector()` for simple state vector extraction
    - Unit conversions (km↔m, deg↔rad) are automatic
    - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)
+   - `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` write `REF_FRAME` and `MAN_REF_FRAME` as the CCSDS name of the frame: `ICRF` for `Frame.ICRF` (SPICE `J2000`, written before 11.0.0), the frame's own name otherwise (#339)
    - User-defined parameters support custom mission-specific data
 10. **Attitude Maneuvers**: When implementing attitude control:
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)

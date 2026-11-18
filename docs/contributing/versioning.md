@@ -4017,6 +4017,35 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   shortest round-trip form `"R"`, which reads back bit for bit as `xsd:double` (`OpmWriterTests` and `OmmWriterTests`
   `WriteToString_EveryRealValue_ReadsBackBitForBit`: each written text read by `double.Parse` and by the reader, the
   value given bit for bit, 44 OPM and 35 or 36 OMM values, all but one lost before, red on a85098d).
+- **The OPM writers wrote `REF_FRAME = J2000`, which is not a CCSDS frame name** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339); decided by
+  S. Guillet, 2026-11-18). `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` wrote the SPICE name of the state's
+  frame, `J2000` for `Frame.ICRF`, under `REF_FRAME`, and `ToOpm` under each `MAN_REF_FRAME` too: no CCSDS list of
+  reference frames holds it, `OpmValidator` warned "Reference frame 'J2000' is not a standard CCSDS frame." on the
+  library's own OPMs, and a receiver that maps the frame through the CCSDS names could not read them. Both now write
+  the CCSDS name of the frame (internal `CCSDS/Common/CcsdsFrameNames`): `ICRF` for `Frame.ICRF`, the frame's own name
+  otherwise, which is already the CCSDS one for `Frame.GCRF` (`GCRF`), `Frame.TEME`, `ECLIPJ2000`, `ITRF93`, `B1950`
+  and `FK4`. `ICRF` and `GCRF` both read back as `Frame.ICRF` (they share its axes), the state bit for bit
+  (`OpmTests.CreateFromStateVector_WritesTheCcsdsNameOfTheFrame`, `SpacecraftTests.ToOpm_CarriesTheExecutedImpulses`
+  and `ToOpm_ExportsTheCovarianceOfTheInitialStateInKm2`, `SpacecraftToOpmTests.Propagated_WritesTheStateMassAndManeuversOfTheEpoch`:
+  7 cases red on f70ee32, each `Expected: "ICRF"`, `Actual: "J2000"`). No number moves.
+- **A TLE without an international designator could not be re-created or carried through an OMM** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604); decided by
+  S. Guillet, 2026-11-18). Columns 10-17 of line 1 may be blank, and `new TLE(...)` reads such a TLE, but `TLE.Create`
+  threw `ArgumentException` (`cosparId`) for a null or blank designator and `TLE.ToOmm` "Object ID is required."
+  (`objectId`), its blank columns giving an empty `OBJECT_ID` that `OmmMetadata` refuses: of the 15 919 TLEs of the
+  study of lot 5 of #457, 11801 and 88888 of Vallado's `SGP4-VER.TLE`. `TLE.Create` now writes eight blanks for a null
+  or blank `cosparId`, `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an
+  unknown designator, to be verified by S. Guillet), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case,
+  back as the blank columns (internal `OmmMetadata.UnknownObjectId`). Both TLEs go through `Create`, and through
+  `ToOmm`, the XML written and read and `ToTle`, to their own text, each field at its columns, but for the ephemeris type
+  of 11801, blank in the set and written 0 (SGP4's) by `Create` as for every TLE (`TleBlankDesignatorTests`, 15 cases
+  red on f70ee32). The fit of `OrbitalParameters.ToTLE(Configuration)` goes through `TLE.Create` too: a null or blank
+  `Configuration.CosparId` threw "TLE conversion using Equinoctial elements failed after 15 iterations"
+  (`InvalidOperationException`; the `ArgumentException` of the designator was caught inside the fit) and now writes the
+  blank columns, the lines otherwise those of the same fit with a designator, the checksum of line 1 recomputed
+  (`TleBlankDesignatorTests.ToTLE_NullOrBlankCosparId_WritesBlankColumns`, 3 cases red on f70ee32). An empty `OBJECT_ID`
+  is still refused by the reader and `OmmMetadata`, as #708 decided (S. Guillet, 2026-11-16); the decision of #604 also
+  reads an empty value as the blank columns, which the internal conversion does, but no OMM reaches it with one: whether
+  the reader should accept an empty `OBJECT_ID` is open, for S. Guillet to settle. No number moves.
 - **The CCSDS readers loaded a date outside the standard's forms** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), the date half).
   `CcsdsEpochParser`, which the CDM, OPM and OMM readers share since #490, passed a text outside the date branch of
   `epochType`, and a calendar text with a field out of range, to `DateTime.TryParse`: a `TCA` or an `EPOCH` of
@@ -6112,6 +6141,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ArgumentOutOfRangeException` of `new TleParameters(...)` and the four `CreateWith*` factories has the `ParamName`
   `revolutionNumberAtEpoch`, where it was `revNumber`. Migration: a caller that tests `ParamName` compares with
   `revolutionNumberAtEpoch` (`nameof` of the parameter).
+- **Breaking: `Omm.ToTle` reads `OBJECT_ID = UNKNOWN` as no designator** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), Fixed above; decided by
+  S. Guillet, 2026-11-18). An OMM whose `OBJECT_ID` is `UNKNOWN` (trimmed, in any letter case) gives a TLE with blank
+  columns 10-17, where `UNKNOWN ` (or `unknown `, as given) was written there (measured on f70ee32); `TLE.ToOmm` writes
+  `UNKNOWN` for a TLE without a designator, where it threw, and `TLE.Create` writes blank columns for a null or blank
+  `cosparId`, where it threw `ArgumentException`, and `OrbitalParameters.ToTLE` for a null or blank
+  `Configuration.CosparId`, where it threw `InvalidOperationException` ("TLE conversion using Equinoctial elements
+  failed"). Migration: a consumer that read `UNKNOWN` in the designator columns reads blanks; a caller that passed a
+  placeholder designator to `TLE.Create` or `Configuration` (`00000A`) can pass null.
+- **Breaking: the OPM writers write the CCSDS name of `Frame.ICRF`** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339), Fixed above; decided by S. Guillet,
+  2026-11-18). `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` write `REF_FRAME = ICRF` for a state in `Frame.ICRF`,
+  and `ToOpm` `MAN_REF_FRAME = ICRF` for its impulses, where they wrote `J2000`; every other frame keeps its name, and
+  `ImpulseManeuver.ToOpmManeuverParameters` still writes the name it is given. `Opm.ToStateVector` reads the OPM back in
+  `Frame.ICRF` as before. Migration: a consumer that matched `J2000` in an OPM the library writes matches `ICRF`; a test
+  that compared `opm.Metadata.ReferenceFrame` with `Frame.ICRF.Name` compares it with `"ICRF"`.
 
 - **Breaking: the states of Keplerian elements with 0.5 ≤ e ≤ 2 move by rounding** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472), Fixed above).
   p = (a (1 − e))(1 + e) and, for 0.5 ≤ e ≤ 1.2, the half-angle forms of 1 + e cos ν and e + cos ν move
@@ -6263,10 +6306,6 @@ not listed.
   (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)), but a
   subnormal component (below about 2.2e-308) rounds by an absolute 4.9e-324: v = (1, 2, 3)·1e-320 and fl(0.7 v) have a
   sine of 1.1e-4 and pass a separation below that, with a roll set by rounding; give body vectors of a normal magnitude.
-- **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)).
-  `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
-  which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
-  and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
 - **Two stored states a few ticks apart** (found by the review of #598, its issue to be opened). The read of the
   stored states of a propagated spacecraft (`GetEphemeris` from its centre without aberration, through its 8 nearest
   states) is ill-conditioned when two of them are a few ticks apart: the ISS's SGP4 states every 60 s over one hour,
@@ -6276,9 +6315,7 @@ not listed.
   at 7.7 km/s, which the near-coincident pair amplifies. The propagations do not meet it: the stored states drop an
   output closer to an impulse than a tenth of the output step, and `TLEPropagator` a grid point that close to the window
   end (#598, Fixed above). Workaround: give `AddPropagatedStates` states at least a tenth of their spacing apart.
-- **TLEs** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). A TLE with a blank international designator can
-  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM.
-  A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
+- **TLEs**. A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
   is NRLMSISE-00 at nominal space weather ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)), and an Earth with a geopotential or an atmosphere in the bodies throws
   `ArgumentException` (bodies of one identifier must have the same models, [#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)); give a TEME state on an Earth that
   carries the models

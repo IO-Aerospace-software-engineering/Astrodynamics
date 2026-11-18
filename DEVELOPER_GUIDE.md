@@ -429,7 +429,7 @@ Cartesian position and velocity state.
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607) |
+| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607); a null or blank `CosparId` writes blank columns 10-17 (#604) |
 
 A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
 no RTN frame: the members that read the plane (inclination, node, argument of periapsis, node vectors, longitudes, the
@@ -626,7 +626,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `ToKeplerianElements()` | Get osculating Keplerian elements (via SGP4) |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly from TLE data |
 | `AtEpoch(Time epoch)` | Get propagated orbital parameters |
-| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607) |
+| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607); a null or blank `cosparId` writes blank columns 10-17 (#604) |
 
 ```csharp
 // Parse TLE
@@ -857,6 +857,8 @@ OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format (
 |--------|---------|---------|
 | Full COSPAR ID | 1998-067A | OMM ObjectId |
 | TLE COSPAR ID | 98067A | TLE Line 1 |
+| No designator | `UNKNOWN` | OMM ObjectId of a TLE whose columns 10-17 are blank (#604) |
+| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`, `ToTLE` with a null or blank `Configuration.CosparId`) |
 
 ```csharp
 // OMM automatically converts COSPAR ID format during ToTle()
@@ -882,7 +884,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a state or covariance value whose value in SI units overflows (above about 1.8e305 km or 1.8e302 km²; ±Infinity from `ToStateVector` before 11.0.0, #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
-| `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector |
+| `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector; writes `REF_FRAME` as the CCSDS name of the state's frame: `ICRF` for `Frame.ICRF` (SPICE `J2000`), the frame's own name otherwise (`GCRF`, `TEME`, `ECLIPJ2000`, ...); `J2000` before 11.0.0 ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)) |
 
 | Property | Description |
 |----------|-------------|
@@ -949,6 +951,9 @@ var opm = spacecraft.ToOpm(
 // Save for archival/sharing
 opm.SaveToFile("iss_state.opm");
 ```
+
+`REF_FRAME` and each `MAN_REF_FRAME` carry the CCSDS name of the frame of the initial orbital parameters: `ICRF` for
+`Frame.ICRF` (SPICE `J2000`, written before 11.0.0), the frame's own name otherwise (#339).
 
 The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported in km², km²/s and km²/s²
 when the OPM is written at the initial epoch (the default, or the same instant in any time frame). At another epoch the

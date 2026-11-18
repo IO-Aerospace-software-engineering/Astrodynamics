@@ -330,7 +330,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// The NORAD catalog number, between 0 and <see cref="NoradCatalogNumber.MaxValue"/> (339999).
     /// Values above 99999 are encoded with the Alpha-5 convention.
     /// </param>
-    /// <param name="cosparId">The COSPAR international designator (6-8 characters).</param>
+    /// <param name="cosparId">The COSPAR international designator (6-8 characters), or null or blank for none: columns 10-17
+    /// of line 1 are then blank, as a TLE without a designator holds them (#604; before 11.0.0 it threw).</param>
     /// <param name="revolutionsAtEpoch">The revolution number at epoch (0 to 99999).</param>
     /// <param name="classification">The security classification of the object (default: Unclassified).</param>
     /// <param name="bstar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
@@ -351,7 +352,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <exception cref="ArgumentException">Thrown when meanElements are not mean elements, are not in <see cref="Frame.TEME"/>
     /// or are not about the Earth (NAIF id 399): a TLE holds SGP4 mean elements of an Earth orbit in TEME (#607; before
     /// 11.0.0, elements in another frame or about another centre were written as if they were, their angles taken as
-    /// TEME's and their mean motion from their centre's GM); or when cosparId is null, whitespace, or not between 6-8
+    /// TEME's and their mean motion from their centre's GM); or when cosparId is neither null nor blank and not between 6-8
     /// characters.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
@@ -385,10 +386,15 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
         if (name == null) throw new ArgumentNullException(nameof(name));
-        if (string.IsNullOrWhiteSpace(cosparId)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(cosparId));
-        if (cosparId.Length is < 6 or > 8)
+        // A null or blank designator is written as blank columns 10-17, which a TLE may hold (#604)
+        if (string.IsNullOrWhiteSpace(cosparId))
         {
-            throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long.", nameof(cosparId));
+            cosparId = string.Empty;
+        }
+        else if (cosparId.Length is < 6 or > 8)
+        {
+            throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long, or null or blank for no designator.",
+                nameof(cosparId));
         }
 
         if (!NoradCatalogNumber.IsValid(noradId))
@@ -1000,7 +1006,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// The resulting OMM is configured for SGP4 propagation with TEME reference frame and UTC time system.
     /// </para>
     /// <para>
-    /// The international designator (COSPAR ID) is extracted from TLE line 1.
+    /// The international designator (COSPAR ID) is extracted from TLE line 1. Blank columns 10-17 (a TLE without a
+    /// designator) give <c>OBJECT_ID = UNKNOWN</c>, which <see cref="CCSDS.OMM.Omm.ToTle"/> reads back as blank columns
+    /// (#604, decided by S. Guillet, 2026-11-18; before 11.0.0 it threw <see cref="ArgumentException"/>).
     /// </para>
     /// </remarks>
     public CCSDS.OMM.Omm ToOmm(string originator = null)
@@ -1012,8 +1020,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         // Extract COSPAR ID (international designator) from line 1 positions 9-16
         // TLE format: "98067A" -> OMM format: "1998-067A"
+        // Blank columns: OBJECT_ID UNKNOWN, the element being mandatory in the ODM (#604)
         var tleCosparId = Line1.Substring(9, 8).Trim();
-        var objectId = ConvertCosparIdToObjectId(tleCosparId);
+        var objectId = tleCosparId.Length == 0 ? CCSDS.OMM.OmmMetadata.UnknownObjectId : ConvertCosparIdToObjectId(tleCosparId);
 
         // Create metadata for SGP4/TEME configuration
         var metadata = CCSDS.OMM.OmmMetadata.CreateForSgp4(Name, objectId);
