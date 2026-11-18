@@ -3766,6 +3766,52 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
   stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the rule, and
   an asteroid, a comet, 391001, 399000, NOTO, NEW NORCIA and 101001, not sites, unchanged).
+- **No CDM the library wrote validated against the SANA schema** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)). `CdmWriter` put the root,
+  `cdm` or the `ndm` that wraps it, in the namespace `urn:ccsds:schema:ndmxml` with every other element, so the SANA
+  NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace (no `targetNamespace`), rejected every
+  CDM written by `CdmWriter`, `Cdm.WriteTo*` and `EncounterCase.ToCdm(...).WriteTo*`, wrapped or not, at the root ("No
+  matching global declaration available for the validation root", lxml 6.1.3 and .NET's validator on the embedded
+  master, measured on a85098d); the library's own check accepted it through a synthetic root in the namespace. The writer
+  now writes the qualified form of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root in no namespace with
+  `xmlns:ndm="urn:ccsds:schema:ndmxml"` and `xsi:noNamespaceSchemaLocation` (SANA's qualified master, identical to the
+  embedded one) declared on it, every element below it, the `cdm` of an `ndm` included, in the namespace under the
+  prefix `ndm` (`CdmTests.WriteTo_RootOutsideTheNamespace_ValidatesAgainstTheSanaQualifiedMaster`:
+  the written text, through `WriteToString` wrapped and bare, `WriteToStream` and `WriteToFile`, validated against the
+  embedded master compiled in the test with no synthetic root, 4 cases red on a85098d). `Cdm.ValidateSchema` checks it
+  as a standard form; a root in the namespace, the form written before, is still read and checked as before
+  (`ReadFromString_RootInTheNamespace_FormWrittenBefore615_IsStillReadAndValidated`).
+- **The CDM writer read a date without a kind as local time** ([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617)). `CdmWriter` wrote every date
+  through `ToUniversalTime()`, which takes a `DateTime` of kind `Unspecified`, that of `new DateTime(y, M, d, h, m, s)`,
+  as local time: on a machine outside UTC a CDM built by hand was written with its eight dates (`CREATION_DATE`, `TCA`,
+  the screen period, the screen entry and exit, `TIME_LASTOB_START`/`END`) shifted by the zone's offset, a TCA of
+  2010-03-13T22:37:52.618 written `2010-03-13T21:37:52.6180000Z` under Europe/Paris and `2010-03-14T03:37:52.6180000Z`
+  under America/New_York (measured on a85098d), while `EncounterCase.ToCdm` took such a date as UTC. The writer and the
+  exporter now share one rule (internal `CcsdsDates.ToUtc`): `Utc` as given, `Unspecified` taken as UTC, `Local`
+  converted. The OPM and OMM writers wrote a local time as its clock reading whatever `TIME_SYSTEM`; their dates in
+  `TIME_SYSTEM` now convert it under UTC and refuse it under any other, `CREATION_DATE` converting it (Changed, below).
+  `CcsdsLocalTimeTests` runs the three writers in child processes under `TZ=Europe/Paris` and `TZ=America/New_York`,
+  the expected texts from the IANA rules of each zone (2 cases red on a85098d); `CdmTests`,
+  `OpmWriterTests` and `OmmWriterTests` check each kind in the test process (8 refusals red on a85098d).
+- **The CDM named its collision probability method `FOSTER-2D`, which no registry holds** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), with
+  [#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). `EncounterCase.ToCdm` wrote
+  `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, or `FOSTER-2D-MAX-PC` for an encounter flagged
+  `SingleCovarianceMaximumPcUsed` (reached only by a case built by hand with both covariances), neither in the SANA
+  registry `cdm_cpm`, so a receiver that maps the method through the registry could not tell which Pc it was given. The
+  method the analysis computes, Foster and Estes (1992), is `FOSTER-1992` there and in the examples of CCSDS 508.0-B-1
+  Cor. 2 (annex E, 3.6.3, 4.4): it is now written (decided by S. Guillet, 2026-11-17). The single-covariance maximum Pc
+  has no registered value and a CDM carries both covariances: an encounter flagged so is refused, as one with a single
+  covariance already was, and the dead branch is gone (`CdmTests.ToCdm_ManualEncounter_ExportsExpectedValues` and
+  `ToCdm_SingleCovarianceMaximumPc_IsRefused`, red on a85098d). No number moves.
+- **The OPM and OMM writers lost digits** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). Their `FormatDouble` kept `G17` only in scientific
+  form and otherwise wrote `0.##############`: at most 14 decimals and, a .NET custom format, 15 significant digits.
+  A written message no longer read back as the values written: an eccentricity of 0.00012345678901234567 was written
+  0.00012345678901 (1.9e-11 relative), a mean motion of 10.270509831248424 rev/day 10.2705098312484, and over 1e5 values
+  in [1e-4, 1e3) 81.6 % were lost, by up to 4.9e-11 relative (measured on a85098d), every value of the OPM (state
+  vector, Keplerian elements, spacecraft parameters, covariance, maneuvers) and of the OMM (mean elements, spacecraft
+  and TLE parameters, covariance). The OPM, OMM and CDM writers now share one form (internal `CcsdsValues.Format`), the
+  shortest round-trip form `"R"`, which reads back bit for bit as `xsd:double` (`OpmWriterTests` and `OmmWriterTests`
+  `WriteToString_EveryRealValue_ReadsBackBitForBit`: each written text read by `double.Parse` and by the reader, the
+  value given bit for bit, 44 OPM and 35 or 36 OMM values, all but one lost before, red on a85098d).
 
 **Changed**
 
@@ -5494,6 +5540,35 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CelestialItem.IsAsteroid` is false for it, and a `CelestialBody` of that identifier is about its body, its
   `ToString` naming no type. Every other identifier is classed as before. Migration: a caller that read the Sun as the
   centre of a station reads its body.
+- **Breaking: the CDM writer puts the root outside the NDM/XML namespace** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615), Fixed above). The text of
+  every written CDM changes: `<ndm xmlns:xsi="..." xmlns:ndm="urn:ccsds:schema:ndmxml" xsi:noNamespaceSchemaLocation="..."><ndm:cdm ...><ndm:header>...`, or
+  `<cdm xmlns:xsi="..." xmlns:ndm="urn:ccsds:schema:ndmxml" xsi:noNamespaceSchemaLocation="..." id="CCSDS_CDM_VERS" version="1.0"><ndm:header>...` with
+  `wrapInNdmContainer: false`, where it was `<ndm xmlns="urn:ccsds:schema:ndmxml"><cdm ...>` and
+  `<cdm ... xmlns="urn:ccsds:schema:ndmxml">`. The values are unchanged and the library reads both forms. Migration: a
+  namespace-aware consumer that looked for the root `{urn:ccsds:schema:ndmxml}ndm` or `{urn:ccsds:schema:ndmxml}cdm`
+  looks for `ndm` or `cdm` in no namespace (the elements below it keep the namespace); one that removed the namespace of
+  the root to validate against the SANA schema no longer needs to.
+- **Breaking: the CCSDS writers follow the kind of each date** ([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617), Fixed above; decided by S. Guillet,
+  2026-11-17). `CdmWriter` (`Cdm.WriteTo*`) writes a date of kind `Unspecified` as the UTC clock reading given, where it
+  shifted it by the offset of the machine's zone; a CDM written in UTC, read by `Cdm.ReadFrom*` (kind `Utc`) or exported
+  by `ToCdm` is unchanged. `OpmWriter` and `OmmWriter` (`Opm.SaveTo*`, `ToXmlString`, `Omm.SaveTo*`, `ToXml`) write a date
+  of kind `Local` as its UTC under `TIME_SYSTEM = UTC` and throw `ArgumentException` (`opm`, `omm`) naming the keyword
+  for an `EPOCH`, `REF_FRAME_EPOCH` or `MAN_EPOCH_IGNITION` of kind `Local` under any other time system, where they wrote
+  its clock reading; a local `CREATION_DATE` is converted to UTC. Dates of kind `Utc` and `Unspecified` are written as
+  before. Migration: give a CDM's dates in UTC, with any kind but `Local` for a UTC clock reading; give an OPM or OMM
+  epoch outside `TIME_SYSTEM = UTC` as its clock reading in that time system, of kind `Utc` or `Unspecified`.
+- **Breaking: the exported CDM names its method `FOSTER-1992`** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), Fixed above). `EncounterCase.ToCdm` writes
+  `COLLISION_PROBABILITY_METHOD = FOSTER-1992` where it wrote `FOSTER-2D`, and throws `InvalidOperationException` for an
+  encounter flagged `SingleCovarianceMaximumPcUsed`, where a case built by hand with both covariances was written
+  `FOSTER-2D-MAX-PC`, or with the method `CdmExportOptions.CollisionProbabilityMethod` named. Migration: a consumer that
+  matched `FOSTER-2D` matches `FOSTER-1992`; a caller that sets `CdmExportOptions.CollisionProbabilityMethod` keeps its
+  method, except for an encounter flagged `SingleCovarianceMaximumPcUsed`, which is refused whatever the option says
+  (that maximum is not the Pc of two covariances): such an encounter is no longer exported.
+- **The OPM, OMM and CDM writers write the shortest round-trip form of each value** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728), Fixed above). The text
+  of the written messages changes: the OPM and OMM write the digits they dropped (0.00012345678901234567 where
+  0.00012345678901 was written), the CDM drops the digits `G17` added beyond the shortest exact form
+  (0.1 where 0.10000000000000001 was written). A value read from an OPM or OMM the library writes is the value given,
+  bit for bit; one read from a CDM is unchanged.
 
 **Deprecated**
 
@@ -5625,23 +5700,9 @@ not listed.
   ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
   as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
-- **CDM writing and validation** ([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614),
-  [#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615),
-  [#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618)). `CdmWriter` puts the `cdm` and
-  `ndm` roots in the NDM/XML namespace, so the SANA schema rejects every CDM the library writes, which
-  `Cdm.ValidateSchema` accepts in that form (it checks the standard forms since the third round of
-  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), which closes
-  [#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
-  `CdmExporter` writes `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, which SANA does not register (Foster's method is
-  FOSTER-1992). `CdmExporter` refuses an encounter with one covariance, so its `FOSTER-2D-MAX-PC` is never written
-  ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Remove the namespace of the
-  written CDM before exchanging it (the result validates with `Cdm.ValidateSchemaFromXml`), and set
-  `CdmExportOptions.CollisionProbabilityMethod`.
 - **CDM dates and numbers** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616),
-  [#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617),
   [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). A date in a leap second throws
-  `CdmParseException`. `CdmWriter` reads a `DateTime` of kind `Unspecified` as local time: build its dates with
-  `DateTimeKind.Utc`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
+  `CdmParseException`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
   free-text or time-only dates (a time gets today's date) instead of rejecting them.
 - **Precision near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472),
   [#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).

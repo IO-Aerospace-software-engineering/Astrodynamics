@@ -619,6 +619,7 @@ public class Omm
     /// <param name="validateBeforeSave">If true, validates the OMM before saving.</param>
     /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c> or <c>REF_FRAME_EPOCH</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>omm</c>, #617).</exception>
     public void SaveToFile(string filePath, bool validateBeforeSave = true)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -643,6 +644,7 @@ public class Omm
     /// <param name="validateBeforeSave">If true, validates the OMM before saving.</param>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c> or <c>REF_FRAME_EPOCH</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>omm</c>, #617).</exception>
     public void SaveToStream(Stream stream, bool validateBeforeSave = true)
     {
         if (stream == null)
@@ -664,6 +666,7 @@ public class Omm
     /// Converts the OMM to an XML string.
     /// </summary>
     /// <returns>The OMM as an XML string.</returns>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c> or <c>REF_FRAME_EPOCH</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>omm</c>, #617).</exception>
     public string ToXml()
     {
         return DefaultWriter.WriteToString(this);

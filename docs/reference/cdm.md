@@ -72,13 +72,34 @@ against the CCSDS NDM/XML 4.0.0 schemas (CCSDS 505.0-B-3) in its form, as SANA p
 (SANA's `ndmxml_unqualified` set) or every element below the root in the namespace `urn:ccsds:schema:ndmxml` (the
 qualified set). Any other root is a `CDM001` error, and so is an `ndm`, without a namespace or in it, that holds no `cdm`
 child (an empty `ndm`, or one of other messages only), which the NDM schema accepts but in which the reader finds no CDM
-(reported valid before 11.0.0). A root in the namespace, the form `CdmWriter` writes
+(reported valid before 11.0.0). A root in the namespace, the form `CdmWriter` wrote before 11.0.0
 ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)), is checked as before, against
-the CDM schema with that root declared in the namespace. Before the third round of
+the CDM schema with that root declared in the namespace, so that those files still validate. Before the third round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) a document in a standard form
 matched no declaration of the validator, so it was reported valid with a warning per element and nothing below its root
 was checked: a `COLLISION_PROBABILITY` of 1.5 was reported valid
 ([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
+
+### Written form
+
+`CdmWriter`, `Cdm.WriteToString`, `Cdm.WriteToFile` and so `EncounterCase.ToCdm(...).WriteTo*` write the qualified form
+of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root, `cdm` or the `ndm` that wraps it (`wrapInNdmContainer`, the default), in no
+namespace with `xmlns:ndm="urn:ccsds:schema:ndmxml"` declared on it, and every element below it in that namespace under
+the prefix `ndm`:
+
+```xml
+<ndm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ndm="urn:ccsds:schema:ndmxml"
+     xsi:noNamespaceSchemaLocation="https://sanaregistry.org/r/ndmxml_qualified/ndmxml-4.0.0-master-4.0.xsd">
+  <ndm:cdm id="CCSDS_CDM_VERS" version="1.0">
+    <ndm:header>
+```
+
+The SANA NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace and which
+`xsi:noNamespaceSchemaLocation` names (4.3.3.4), accepts it. Before 11.0.0 the
+root was in the namespace too (`<ndm xmlns="urn:ccsds:schema:ndmxml">`,
+[#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)), which that master rejects at the
+root ("No matching global declaration available for the validation root"); the reader and `Cdm.ValidateSchema` still
+accept that form. A reader that matches local names reads both.
 
 ## Instance Methods
 
@@ -106,7 +127,7 @@ was checked: a `COLLISION_PROBABILITY` of 1.5 was reported valid
 | `Originator` | `string` | Originating organization |
 | `MessageId` | `string` | Unique message identifier |
 | `MessageFor` | `string` | Intended recipient |
-| `CollisionProbabilityMethod` | `string` | Overrides the method name, `FOSTER-2D` by default |
+| `CollisionProbabilityMethod` | `string` | Overrides the method name, `FOSTER-1992` by default |
 | `AllowStaleCovariance` | `bool` | Allows exporting an encounter flagged `StaleCovarianceUsed` (refused by default) |
 
 The covariance of each participant is the one the conjunction analysis used (see
@@ -187,17 +208,30 @@ The managed API stores values internally in SI units. The CDM writer emits CCSDS
 | Miss distance | m | m |
 | Relative position | m | m |
 
-The reader converts each value from its `units` attribute. A length of the `lengthTypeUO` type (`MISS_DISTANCE`,
+The writer writes each value in its shortest round-trip form (`"R"`), which reads back bit for bit (`G17` before
+11.0.0, exact as well but longer: 0.1 written 0.10000000000000001;
+[#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). The reader converts each value from its `units` attribute. A length of the `lengthTypeUO` type (`MISS_DISTANCE`,
 `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`), whose attribute the schema makes optional with `m` as its only unit, is
 read in m when the attribute is absent ([#613](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/613); km before 11.0.0). A state vector position, whose
 `units` the schema requires, defaults to km.
 
 Dates are read in both forms of the NDM/XML `epochType` ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)): calendar (`2026-01-13T05:00:55.752768`)
 and day of year (`2026-013T05:00:55.752768`), with any fraction, an optional `Z` or `±hh:mm` offset, as UTC. The OPM
-and OMM readers share the parser (`CcsdsEpochParser`). The writer emits the calendar form.
+and OMM readers share the parser (`CcsdsEpochParser`). The writer emits the calendar form, in UTC as every date of a
+CDM (CCSDS 508.0-B-1 Cor. 2, 6.3.2.6), by the kind of each `DateTime`
+([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617)): `Utc` as given, `Unspecified`
+taken as UTC (the clock reading given, as `EncounterCase.ToCdm` already took it), `Local` converted to UTC. Before
+11.0.0 the writer read a date of kind `Unspecified`, the kind of `new DateTime(y, M, d, h, m, s)`, as local time: a CDM
+built by hand on a machine outside UTC was written with its dates shifted by the zone's offset (one hour early in
+Paris in winter, five hours late in New York).
 
 Standards-compliant CDM export requires covariance for both participants, so the exported
-`COLLISION_PROBABILITY_METHOD` is `FOSTER-2D`.
+`COLLISION_PROBABILITY_METHOD` is `FOSTER-1992`: Foster and Estes (1992), the 2D Gaussian integrated over the
+hard-body disc, under its name in the SANA registry `cdm_cpm` (CCSDS 508.0-B-1 Cor. 2, annex E, which gives it as an
+example; [#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), decided by S. Guillet,
+2026-11-17; `FOSTER-2D`, which the registry does not hold, before 11.0.0). An encounter whose Pc is the maximum of a
+single covariance (`SingleCovarianceMaximumPcUsed`), which no registered value names, is refused with
+`InvalidOperationException`, whatever `CollisionProbabilityMethod` says.
 
 ## Example
 

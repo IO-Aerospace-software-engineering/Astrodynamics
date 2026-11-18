@@ -49,6 +49,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <see cref="FrameMemoryChild"/> (#541).
 /// The mode <c>conversions-lock</c> (#664) takes the kernel directory alone: the element conversions and the two-body
 /// propagation of <see cref="SpiceAPI"/> on a probe provider, see <see cref="ConversionsLockChild"/>.
+/// The mode <c>ccsds-local-time</c> takes the path of a CDM and loads no kernel: the CCSDS writers in the time zone the
+/// parent gives through <c>TZ</c>, see <see cref="CcsdsLocalTimeChild"/> (#617).
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// The mode <c>local-dst</c> takes no schedule and loads no kernel: the local times of a zone with daylight saving time,
@@ -118,6 +120,13 @@ internal static class Program
         if (args.Length == 2 && args[1] == "frame-memory")
         {
             return FrameMemoryChild.Run(args[0]);
+        }
+
+
+        // #617: the CCSDS writers in the local time zone the parent sets through TZ
+        if (args.Length == 3 && args[1] == "ccsds-local-time")
+        {
+            return CcsdsLocalTimeChild.Run(args[2]);
         }
 
         // Before the schedule check and before any kernel is loaded: the text of a TLE is checked before any SPICE read
