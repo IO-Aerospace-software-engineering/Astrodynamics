@@ -41,7 +41,8 @@ public class ConfigurationTest
     public void FrameTransformationToICRF_ReturnsStateOrientation_WhenDateExists()
     {
         var dataProvider = new MemoryDataProvider();
-        var frame = Frames.Frame.ICRF;
+        // A frame the provider does not define: no orientation can be added under ICRF (#744)
+        var frame = new Frames.Frame("MEMORY_CONFIGURATION_FRAME");
         var date = TimeSystem.Time.J2000TDB;
         var stateOrientation = new StateOrientation(Quaternion.Identity, Vector3.Zero, date, frame);
 
@@ -56,7 +57,8 @@ public class ConfigurationTest
     public void FrameTransformationToICRF_InterpolatesStateOrientation_WhenDateDoesNotExist()
     {
         var dataProvider = new MemoryDataProvider();
-        var frame = Frames.Frame.ICRF;
+        // A frame the provider does not define: no orientation can be added under ICRF (#744)
+        var frame = new Frames.Frame("MEMORY_CONFIGURATION_FRAME");
         var date1 = TimeSystem.Time.J2000TDB;
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(0.5);
@@ -75,7 +77,8 @@ public class ConfigurationTest
     public void FrameTransformationToICRF_InterpolatesStateOrientation_WhenDateOutOfRange()
     {
         var dataProvider = new MemoryDataProvider();
-        var frame = Frames.Frame.ICRF;
+        // A frame the provider does not define: no orientation can be added under ICRF (#744)
+        var frame = new Frames.Frame("MEMORY_CONFIGURATION_FRAME");
         var date1 = TimeSystem.Time.J2000TDB;
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(2);

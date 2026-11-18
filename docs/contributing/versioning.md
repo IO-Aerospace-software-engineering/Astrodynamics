@@ -4205,6 +4205,41 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   before the periapsis, the ellipse is still 3.1 m off after 600 s (1.9e-7 of |r|): the constructor keeps its mean
   anomaly in [0, 2π), where it rounds (#471, not part of 11.0.0); on the hyperbola side 9.4e-10.
 
+- **The CLI's coordinate search read neither the coordinate systems nor the coordinates its help listed**
+  ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652)). The help of
+  `find-windows-from-coordinate-constraint` listed the coordinate systems `LATITUDINAL`, `SPHERICAL` and `CYLINDRICAL`
+  and the coordinate `COLATITUDE`, which the library has not, and the command read both arguments by member name only
+  (`Enum.Parse`), so that `RA/DEC` and `RIGHT ASCENSION`, the values the help showed, ended in "Requested value was not
+  found" (measured on f70ee32). The help now lists exactly the members of `CoordinateSystem` (`RECTANGULAR`, `RA/DEC`,
+  `GEODETIC`, `PLANETOGRAPHIC`) and `Coordinate` (`X`, `Y`, `Z`, `ALTITUDE`, `DECLINATION`, `LATITUDE`, `LONGITUDE`,
+  `RADIUS`, `RANGE`, `RIGHT ASCENSION`); both arguments are read by description, as the relational operator, or by
+  member name (`RaDec`, `RightAscension`), in any case, before the kernels are loaded; an unknown value throws
+  `ArgumentException` naming its argument and listing the values the command reads; a coordinate the system has not is
+  SPICE's error, as before (`GeometryFinderTests.CoordinateConstraint_HelpListsTheValuesOfTheEnumerations`,
+  `_ReadsDescriptionsAndMemberNames` against the search of `SpiceAPI` with the members, `_UnknownValue_ThrowsListingTheValues`,
+  `_EveryListedValueIsRead`, red on f70ee32; `_CoordinateOfAnotherSystem_ThrowsSpiceError`). The latitudinal, spherical
+  and cylindrical systems and the colatitude are not added. The entry under Known limitations is removed.
+
+- **`Time.ToLocal()` of an instant in the first repeated hour was an hour later** ([#751](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/751);
+  decided by S. Guillet, 2026-11-18). `LocalTimeFrame` builds the local label with `DateTime.ToLocalTime()`, which marks
+  an instant of the first of the two repeated hours of a fall transition as daylight time, but the `Time` constructor
+  called `DateTime.SpecifyKind(…, Local)`, which drops that mark, so the label was read back with the standard offset:
+  in America/New_York, 2025-11-02T05:30Z gave local 01:30, whose `ToUTC()` is 06:30Z, and `utc == utc.ToLocal()` was
+  false, for every instant of 05:00Z to 06:00Z, 60 of the 481 minutes about the transition (measured on f70ee32). The
+  constructor keeps a `DateTime` of kind `Local` in the repeated hour as it is, so a conversion changes the label, not the instant
+  (#512): over both transitions of 2025, every minute from 4 h before to 4 h after each, `ToLocal()` is the calendar of
+  the zone's rule, equals the instant and converts back to it to the tick
+  (`ColdStartTests.ToLocal_KeepsTheInstant_AcrossTheTransitionsOfDaylightSavingTime`, a child in America/New_York,
+  skipped on Windows, where `TZ` does not set the zone; red on f70ee32). A label built from the calendar of the repeated
+  hour still reads with the standard offset (documented on [Time and Windows](../reference/time-and-windows.md)). The
+  mark is kept only while the label is in the repeated hour, and dropped outside it (`TimeZoneInfo.Local.IsAmbiguousTime`):
+  the arithmetic of a local time, that of its calendar, carries the mark (`DateTime.AddTicks` keeps it), and a mark kept
+  everywhere made a label moved out of the hour and back read with the daylight offset where an equal label of the same
+  calendar read with the standard one, 1 h after the local time of 05:30Z then 1 h before giving 05:30Z, and the same steps from the local time
+  of 07:30Z, the same instant, calendar and frame, 06:30Z (630 of 2706 such pairs of labels about the transition
+  differed after the same step of ±30, ±60 or ±90 min; the child's check, red before the mark was dropped). The limit
+  stated there since #512 is removed.
+
 **Changed**
 
 - **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
@@ -4391,8 +4426,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   instant. A local time (`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the
   zone of the machine, local times compared with each other included, where they compared by their calendars: in a zone
   with daylight saving time, two labels of the skipped hour and the hour after it are one instant (in America/New_York,
-  local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, and 02:30 comes after 03:00), and a label of the repeated hour is
-  read with the standard offset (`ColdStartTests.LocalTimes_AreTheInstantsOfTheirZone`, skipped on Windows, where `TZ`
+  local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, and 02:30 comes after 03:00), and a label of the repeated hour
+  built from its calendar is read with the standard offset (the `ToLocal()` of an instant keeps the instant, #751, Fixed
+  above) (`ColdStartTests.LocalTimes_AreTheInstantsOfTheirZone`, skipped on Windows, where `TZ`
   does not set the zone; red with a85098d's comparison of local calendars restored). The default time (no frame) comes
   before every time with a frame and equals only itself, so comparing it no longer throws `NullReferenceException` (`<`,
   `SortedSet`, `Window` of it). The library's comparisons follow: `AddPropagatedStates` replaces a stored state at the
@@ -6203,6 +6239,31 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   geometry and `MeanMotion()` are unchanged; the motion is no longer a constant rate of the mean anomaly there. No
   migration.
 
+- **Breaking: `MemoryDataProvider.AddStateOrientationToICRF` refuses the frames the provider defines** ([#744](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/744);
+  decided by S. Guillet, 2026-11-18). An orientation added under ICRF (J2000) or GCRF, the identity of the provider (its
+  states are ICRF, #559; GCRF shares its axes, #543), or under TEME, CIRS or TIRS, the managed frames (#656), by name in
+  any case, throws `ArgumentException` naming `frame` and stores nothing. Before, an orientation stored under ICRF or GCRF
+  was returned by `FrameTransformationToICRF` while `GetEphemeris` took the identity: 90° about z stored under ICRF read
+  back 1.5708 rad from the identity, and the stored state (1e11, 0, 0) m came back unrotated (measured on f70ee32);
+  one stored under TEME, CIRS or TIRS was never read
+  (`MemoryDataProviderFrameTests.AddStateOrientation_UnderAFrameTheProviderDefines_Throws`, 10 names,
+  `_UnderTheLibrarysDefinedFrames_Throws`, red on f70ee32; the three `ConfigurationTest` tests of stored orientations
+  now store under a frame of their own). ECLIPJ2000 and any other frame still take stored orientations, which come
+  first. Migration: none for a read, which already took the definition of these frames in `GetEphemeris`; drop the
+  call, or store the orientation under a frame of its own name.
+- **Breaking: `new Matrix(double[,])` copies its array** ([#745](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/745);
+  decided by S. Guillet, 2026-11-18). The constructor kept the caller's array as its own, so a write to the array
+  afterwards changed the matrix and its hash code: `a[0, 0] = 5` after `new Matrix(a)` gave `Get(0, 0)` 5 (measured on
+  f70ee32), and a matrix used as a key was lost. It now copies the array, as `Matrix(rows, columns, double[])` and
+  `ToArray()` did, so the terms of a matrix change only through its own `Set` (#722 kept `Matrix` mutable by `Set`); a
+  null array throws `ArgumentNullException`, where it threw `NullReferenceException`. The library's own results built in a
+  fresh array (the inverse, the Jacobian, `CovarianceMatrix.ToMatrix`, `ToMatrixWithUnitConversion`, a site frame) wrap
+  it without the copy, through the internal `Matrix.Wrap`, so their cost is unchanged; results are unchanged, bit for bit
+  (`MatirxTests.Constructor_FromArray_CopiesTheArray`, red on f70ee32; `Results_ShareNoArrayWithTheirInputs` guards the
+  product, the inverse, the copy, both Jacobian overloads and both covariance matrices: a write to a result reaches
+  neither its source nor the next result).
+  Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -6379,9 +6440,6 @@ not listed.
   ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447)).
   `ConjunctionAssessment.Analyze` allocates about 403 MB per pair over a 2 h window (0.83 s with the covariance held in
   RTN, 1.71 s propagated); results are unaffected.
-- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652)). The help of
-  `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do
-  not exist, and its `RA/DEC` and `RIGHT ASCENSION` are rejected: pass the member names (`RaDec`, `RightAscension`).
 
 ### 10.2.0-preview-1
 

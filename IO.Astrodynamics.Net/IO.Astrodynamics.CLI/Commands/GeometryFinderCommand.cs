@@ -22,9 +22,10 @@ public class GeometryFinderCommand
         int observerId,
         [Argument(Description = "Target identifier (Naif Identifier)")]
         int targetId,
-        [Argument(Description = "CoordinateSystem (RECTANGULAR, LATITUDINAL, RA/DEC, SPHERICAL, CYLINDRICAL, GEODETIC, PLANETOGRAPHIC)")]
+        [Argument(Description = "CoordinateSystem (RECTANGULAR, RA/DEC, GEODETIC, PLANETOGRAPHIC), in any case; the member name RaDec is read too")]
         string coordinateSystem,
-        [Argument(Description = "Coordinate (X,Y,Z,ALTITUDE,COLATITUDE,DECLINATION,LATITUDE,LONGITUDE,RADIUS,RANGE,RIGHT ASCENSION)")] string coordinate,
+        [Argument(Description = "Coordinate (X, Y, Z, ALTITUDE, DECLINATION, LATITUDE, LONGITUDE, RADIUS, RANGE, RIGHT ASCENSION), in any case; the member name RightAscension is read too; a coordinate of the system, SPICE's error otherwise")]
+        string coordinate,
         [Argument(Description = "Relational operator used to define search constraint (<,>,=,<=,>=,!,ABSMIN,ABSMAX,LOCMIN,LOCMAX; <= and >= are searched as < and >, whose windows are closed; ! is the search window less the instants of =)")]
         string relationalOperator,
         [Argument(Description = "Value used by operator")]
@@ -37,12 +38,12 @@ public class GeometryFinderCommand
         double adjustValue = 0.0,
         [Argument(Description = "Frame")] string frame = "ICRF")
     {
+        var coorSys = Helpers.ParseEnumeration<CoordinateSystem>(coordinateSystem, nameof(coordinateSystem));
+        var coor = Helpers.ParseEnumeration<Coordinate>(coordinate, nameof(coordinate));
         SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
-        var coorSys = Enum.Parse<CoordinateSystem>(coordinateSystem, true);
-        var coor = Enum.Parse<Coordinate>(coordinate, true);
         var op = Enumeration.GetValueFromDescription<RelationnalOperator>(relationalOperator);
 
         var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(win, observerId, targetId, Helpers.ResolveFrame(frame), coorSys, coor, op, value, adjustValue, abe, step);

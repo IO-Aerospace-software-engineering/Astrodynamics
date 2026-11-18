@@ -169,6 +169,29 @@ public class Helpers
     }
 
     /// <summary>
+    /// The member of <typeparamref name="T"/> a command argument names, by its description (the value its help lists, e.g.
+    /// <c>RA/DEC</c>, <c>RIGHT ASCENSION</c>) or by its member name (<c>RaDec</c>, <c>RightAscension</c>), in any case (#652:
+    /// the coordinate system and the coordinate were read by member name only, so the values the help showed were rejected).
+    /// </summary>
+    /// <exception cref="ArgumentException">The value names no member: the message lists the values the command reads, and
+    /// <see cref="ArgumentException.ParamName"/> is <paramref name="parameterName"/>.</exception>
+    internal static T ParseEnumeration<T>(string value, string parameterName) where T : struct, Enum
+    {
+        foreach (var member in Enum.GetValues<T>())
+        {
+            if (member.GetDescription().Equals(value, StringComparison.InvariantCultureIgnoreCase) ||
+                member.ToString().Equals(value, StringComparison.OrdinalIgnoreCase))
+            {
+                return member;
+            }
+        }
+
+        throw new ArgumentException(
+            $"Unknown {parameterName} '{value}': the command reads {string.Join(", ", Enum.GetValues<T>().Select(x => x.GetDescription()))}, in any case, or the member names {string.Join(", ", Enum.GetValues<T>())}.",
+            parameterName);
+    }
+
+    /// <summary>
     /// The frame a command argument names, the one rule of every command (#657): ICRF or J2000, in any case, is
     /// <see cref="Frame.ICRF"/>, whose name is J2000, so that every path labels it J2000; any other name is
     /// <c>new Frame(name)</c>, which the library routes by its name (TEME, GCRF, CIRS, TIRS: the managed frames, #656).
