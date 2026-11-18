@@ -34,6 +34,10 @@ public class MinimumStepNoiseTests
     private const double Tolerance = 1e-13;
     private const double ReferenceTolerance = 1e-14;
 
+    // The longest step of AfterAManeuver_ASegmentStartingInDenseAir_Completes, under half the 0.114 s its trajectory spends
+    // above the target plane before the node
+    private const double MaximumStepAcrossTheNode = 0.05;
+
     private static readonly TimeSystem.Time Epoch = StandardAtmosphereBoundaryTests.Epoch;
     private static readonly TimeSystem.Window Window = StandardAtmosphereBoundaryTests.Window;
     private readonly ITestOutputHelper _output;
@@ -172,9 +176,18 @@ public class MinimumStepNoiseTests
         var maneuver = new PlaneAlignmentManeuver(Epoch, TimeSpan.Zero, target, engine);
         spacecraft.SetStandbyManeuver(maneuver);
 
-        // Act
-        var solution = spacecraft.Propagate(Window, new CelestialItem[] { body }, new RK78Integrator(Tolerance, Tolerance),
-            true, false, Window.Length, new CovariancePropagationOptions { IncludeInStepControl = true });
+        // Act. The node is a grazing one: the trajectory, below the target plane at the start (the ascending node is locked),
+        // rises above it from 2.381 s to 2.495 s only, 0.10 m at most (2026-11-18, Linux), where the steps of RK7(8) are
+        // 0.10 to 0.115 s long. The event is seen only when a step end falls in that excursion, so a step sequence
+        // that straddles it (the rounding of the platform, as on the ubuntu-26.04 runner of CI run 44395076184, 862
+        // steps in the test above where ubuntu-24.04 takes 880) fires no burn and leaves one segment: 7 in 294 initial
+        // step sizes from 7.2e-4 to 96 s on Linux x64, by a step such as [2.380445 s, 2.506085 s]. Steps of at most
+        // 0.05 s put at least two step ends in the excursion whatever the platform; the first steps after the burn, in
+        // the dense air, are below 1e-2 s on every platform (CI run 44395076184), under that bound, so the segment still
+        // starts in the regime of the issue
+        var solution = spacecraft.Propagate(Window, new CelestialItem[] { body },
+            new RK78Integrator(Tolerance, Tolerance, maxStepSize: MaximumStepAcrossTheNode), true, false, Window.Length,
+            new CovariancePropagationOptions { IncludeInStepControl = true });
 
         // Assert: the burn splits the propagation in two segments, the second reaches the end of the window, and Φ runs
         // through the burn
