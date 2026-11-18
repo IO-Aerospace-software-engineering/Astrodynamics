@@ -295,8 +295,21 @@ namespace
     // each segment until one gives a pointing; the flag is ICD(4) of that segment's descriptor, which ckbsr.c reads to keep
     // a segment for ckgpav_c (needav: ICD(4) not 0). ckgpav_c's candidates are those of ckgp_c that hold angular velocity,
     // in the same order, and whether a segment gives a pointing does not depend on needav (ckr01, ckr03, ckr04 and ckr06
-    // read it only to reject a segment without angular velocity, ckr02 and ckr05 not at all), so that ckgpav_c finds the
-    // segment of ckgp_c exactly when that segment holds angular velocity. SPICE's error (no CK loaded) is left pending
+    // read it only to reject a segment without angular velocity, ckr02 and ckr05 not at all).
+    //
+    // CSPICE keeps, per instrument, the segment of its last search and the interval over which that segment has the highest
+    // priority (ckbsr.c, the re-use interval), and returns that segment first to a search inside the interval. A search with
+    // angular velocity (ckgpav_c, or sxform_c through ckfxfm) skips a segment without rates that holds the epoch and does
+    // not shrink the interval by it (the CHECK LIST block trims it only by the segments that do not hold the epoch), so that
+    // a later search without angular velocity inside it returned the lower-priority segment with rates first (review of
+    // #724: a ckgpav_c or a TransformFrame to the spacecraft's CK frame at 500 s, or a read of the same call in the gap of
+    // the higher-priority segment's interpolation intervals, then 0.5 to 1.5 rad from ckgp_c in a fresh process). The search
+    // first voids that interval: a search at an epoch before every encoded clock (-dpmax_c, tolerance 0) lies outside it, so
+    // that cksns_ invalidates it (its '?' block) before it checks the list, and finds no segment. The search that follows
+    // then checks every segment from the highest priority, as in a fresh process (decided by S. Guillet, 2026-11-18). Its
+    // own re-use interval holds the epoch's priority, which ckgpav_c or ckgp_c then follow: the interval of a search without
+    // angular velocity is trimmed by every segment checked before the one it keeps, and ckgpav_c reuses it only when that
+    // segment holds rates. SPICE's error (no CK loaded) is left pending
     bool FindPrioritySegment(SpiceInt instrument, SpiceDouble sclk, SpiceDouble tolerance, bool &withAngularVelocity)
     {
         withAngularVelocity = false;
@@ -308,6 +321,14 @@ namespace
         doublereal descr[5]{};
         char segid[41]{};
         logical segmentFound{};
+        doublereal beforeEveryClock = -dpmax_c();
+        doublereal noTolerance = 0.0;
+        ckbss_(&inst, &beforeEveryClock, &noTolerance, &needav);
+        cksns_(&handle, descr, segid, &segmentFound, 40);
+        if (failed_c())
+        {
+            return false;
+        }
         ckbss_(&inst, &sclkdp, &tol, &needav);
         cksns_(&handle, descr, segid, &segmentFound, 40);
         while (segmentFound && !failed_c())

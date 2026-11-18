@@ -3313,8 +3313,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   on the committed kernels of `tools/ck_priority_reference` and the `ckgp_c` reads it writes (within 1.2e-15 rad of
   them and of the closed form, twice the Linux worst, provisional, every platform) and
   `SpiceApiTest.ReadOrientation_InAnotherFrame_FollowsTheCkSegmentPriority` in ECLIPJ2000 (within 5.0e-16 rad of
-  `ckgp_c`, `ckgpav_c`'s rate bit for bit, Validation). The search is a second pass over the segments per epoch; the
-  window reads of `SpiceApiTest` (6001 to 12001 epochs) took 212 to 325 ms, 249 to 348 ms on the base.
+  `ckgp_c`, `ckgpav_c`'s rate bit for bit, Validation). The priority is that of a search in a fresh process, whatever
+  the calls before (review of #724): CSPICE keeps, per instrument, the segment of its last search and the interval over
+  which it has the highest priority (`ckbsr.c`, the re-use interval), which a search with angular velocity (`ckgpav_c`,
+  or `sxform_c` of a `TransformFrame` to the spacecraft's CK frame) leaves unshrunk by a segment without rates it skips,
+  so that the search of the segment `ckgp_c` reads took the lower-priority segment with rates first: after a
+  `ckgpav_c` or a `TransformFrame` at 500 s, the reads at 500 s and 650 s, and in one call, after the epochs of the gap
+  of a CK without rates of two interpolation intervals ([300, 400] s, [600, 700] s, loaded last), the epochs 600 to 700
+  s, 1.43 to 1.54 rad from `ckgp_c` in a fresh process with the rate (0, 0, 1e-3) rad/s (measured on the first fix).
+  The search now first voids that interval (a search at an encoded clock of -dpmax, before every segment, outside it).
+  C++ `API.ReadOrientationProxyFollowsTheSegmentPriorityAfterAReadOfALowerPrioritySegment` and
+  `...AfterASearchWithAngularVelocity` (`ckgp_c` with the CKs loaded again before each reference read, 0 rad, and
+  within 6.7e-16 rad of the closed form, 3.331e-16 rad measured); `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority_AfterAReadOfALowerPrioritySegment`
+  and `..._AfterATransformFrame` on the kernels of `tools/ck_priority_reference`, which now also writes `ckprio_gap.bc`,
+  the frame kernel `ckprio.tf` and the `ckgp_c` reads `gap_last`, each reference read with the CKs loaded again (within
+  1.2e-15 rad, 5.551e-16 rad measured, every platform), and `..._AfterACkgpav` (Validation). `TransformFrame` and
+  CSPICE's own routines keep CSPICE's re-use interval. The search is a further pass over the segments per epoch; the
+  window reads of `SpiceApiTest` (6001 to 12001 epochs) took 189 to 332 ms, 212 to 325 ms before the voiding search
+  and 249 to 348 ms on the base (a shared machine: no measurable change).
 - **The position of a star depended on the time frame of its epoch** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates`,
   `GetRightAscensionSigma` and `GetDeclinationSigma` took dt from the calendars of the catalog epoch and of the epoch,
   each in its own time frame, so that the same instant gave two positions (relative to the epoch in TDB: 2.299e-7 in UTC,
@@ -4410,7 +4426,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Where a segment without angular velocity has the higher priority at an epoch (a CK without rates loaded after one with
   rates), the record is its pointing with a zero angular velocity, where it was the pointing and the rate of the
   lower-priority segment with rates; the record of an epoch within the tolerance of that segment is its record (its
-  epoch the record's). The same holds for `ReadOrientationProxy` and for the CLI's orientation of a spacecraft. A CK
+  epoch the record's), whatever the calls before the read (an earlier `TransformFrame` to the spacecraft's CK frame or
+  `ckgpav_c` no longer makes it read the lower-priority segment). The same holds for `ReadOrientationProxy` and for the
+  CLI's orientation of a spacecraft. A CK
   holding rates everywhere, as the library writes them, reads as before, bit for bit. Migration: a caller that needs the
   angular velocity loads the CK that carries it last, or one CK with rates over the whole span.
 - **Breaking: an instrument checks its field of view when it is built** ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)). The constructor of `Instrument`, so

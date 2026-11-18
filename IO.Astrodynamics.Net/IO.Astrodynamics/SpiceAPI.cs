@@ -1835,7 +1835,12 @@ public class SpiceAPI
     ///     segment of a file) that gives a pointing within the tolerance, with <c>ckgpav_c</c>'s angular velocity when that
     ///     segment holds one and a zero angular velocity when it holds none, never the pointing or the rate of a
     ///     lower-priority segment (#724, decided by S. Guillet, 2026-11-18: before, a segment without rates loaded over one
-    ///     with rates gave the record of the one with rates).
+    ///     with rates gave the record of the one with rates). The priority is that of a search in a fresh process, whatever
+    ///     the calls before: the read first voids the segment CSPICE keeps from its last search of the spacecraft (its
+    ///     re-use interval), which a search with angular velocity (<c>ckgpav_c</c>, or <see cref="TransformFrame(Time, Frame, Frame)"/>
+    ///     to the spacecraft's CK frame through <c>sxform_c</c>) leaves over a segment without rates it skips (review of #724:
+    ///     before, a read after such a search, or after an epoch of the same call in a gap of the higher-priority segment's
+    ///     interpolation intervals, could take the lower-priority segment's record).
     /// </returns>
     /// <remarks>
     ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,

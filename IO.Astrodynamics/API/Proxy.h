@@ -104,7 +104,10 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpoch
  * @param so Array to store the state orientations, one per epoch: the record of the CK segment ckgp_c reads, the one of
  * highest priority that gives a pointing within the tolerance, with ckgpav_c's angular velocity when that segment holds
  * one and a zero angular velocity when it holds none (#724, decided by S. Guillet, 2026-11-18: before, ckgpav_c, which
- * skips a segment without angular velocity, was read first, so that a lower-priority segment with rates gave the record)
+ * skips a segment without angular velocity, was read first, so that a lower-priority segment with rates gave the record).
+ * The priority is that of a search in a fresh process: the read first voids the re-use interval CSPICE keeps for the
+ * instrument (ckbsr.c), which a search with angular velocity (ckgpav_c, sxform_c) leaves unshrunk by a segment without
+ * rates it skips (review of #724)
  * @return true if successful, false otherwise (call GetLastErrorProxy for details)
  */
 MODULE_API bool
