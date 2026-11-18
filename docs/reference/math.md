@@ -96,7 +96,7 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | Constructor | Description |
 |-------------|-------------|
 | `Matrix(int rows, int columns)` | Zero matrix |
-| `Matrix(double[,] data)` | From 2D array |
+| `Matrix(double[,] data)` | From 2D array, copied: a later write to the array does not change the matrix (#745) |
 | `Matrix(int rows, int columns, double[] data)` | From flat array |
 
 ### Members
@@ -127,7 +127,9 @@ returned does not reach them (#722, decided by S. Guillet, 2026-11-17: copies in
 `EpochStatistics.SampleCovariance`, `CdmCovarianceMatrix.StateCovarianceRtn` (#717) and `Iau2006Model.FrameBias()`. One
 matrix can so build the covariances of several states in a loop. Each read of these members returns a new copy; the
 results of `PropagationSolution` (`GetStateTransitionMatrix`, `GetCovariance`, ...) and of the conversions are new
-matrices too.
+matrices too. `new Matrix(double[,])` copies the array it is given, as `Matrix(rows, columns, double[])` and `ToArray()`
+do, so the terms of a matrix change only through its own `Set` (#745, decided by S. Guillet, 2026-11-18; before 11.0.0
+the matrix wrapped the caller's array, and a write to the array changed its terms and its hash code).
 
 ### Static Methods
 

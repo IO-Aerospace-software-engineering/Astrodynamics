@@ -5919,6 +5919,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   now store under a frame of their own). ECLIPJ2000 and any other frame still take stored orientations, which come
   first. Migration: none for a read, which already took the definition of these frames in `GetEphemeris`; drop the
   call, or store the orientation under a frame of its own name.
+- **Breaking: `new Matrix(double[,])` copies its array** ([#745](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/745);
+  decided by S. Guillet, 2026-11-18). The constructor kept the caller's array as its own, so a write to the array
+  afterwards changed the matrix and its hash code: `a[0, 0] = 5` after `new Matrix(a)` gave `Get(0, 0)` 5 (measured on
+  f70ee32), and a matrix used as a key was lost. It now copies the array, as `Matrix(rows, columns, double[])` and
+  `ToArray()` did, so the terms of a matrix change only through its own `Set` (#722 kept `Matrix` mutable by `Set`); a
+  null array throws `ArgumentNullException`, where it threw `NullReferenceException`. The library's own results built in a
+  fresh array (the inverse, the Jacobian, `CovarianceMatrix.ToMatrix`, `ToMatrixWithUnitConversion`, a site frame) wrap
+  it without the copy, through the internal `Matrix.Wrap`, so their cost is unchanged; results are unchanged, bit for bit
+  (`MatirxTests.Constructor_FromArray_CopiesTheArray`, red on f70ee32; `Results_ShareNoArrayWithTheirInputs`).
+  Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
 
 **Deprecated**
 

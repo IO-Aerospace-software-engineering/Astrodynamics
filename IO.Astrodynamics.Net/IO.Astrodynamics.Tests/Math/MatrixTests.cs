@@ -1434,4 +1434,55 @@ public class MatirxTests
         Console.WriteLine($"MEASURE FromQuaternion against SPICE q2m of q / |q|: {worst:E3}");
         Assert.True(worst <= FromQuaternionTolerance, $"{worst:E3}");
     }
+
+    /// <summary>
+    /// <c>new Matrix(double[,])</c> copies the caller's array (#745, decided by S. Guillet, 2026-11-18): a write to that
+    /// array afterwards leaves the matrix, its equality and its hash code unchanged, as <c>Matrix(rows, columns, double[])</c>
+    /// and <see cref="Matrix.ToArray"/> already did. Before, the matrix wrapped the array: the probe of the issue,
+    /// <c>a[0, 0] = 5</c> after <c>new Matrix(a)</c>, gave <c>Get(0, 0)</c> 5 and another hash code. The expected terms
+    /// are those given; the reference hash code is that of a matrix built from a fresh copy of the same terms.
+    /// </summary>
+    [Fact]
+    public void Constructor_FromArray_CopiesTheArray()
+    {
+        var array = new double[,] { { 1.0, 0.0 }, { 0.0, 1.0 } };
+        var matrix = new Matrix(array);
+        var reference = new Matrix(2, 2, new[] { 1.0, 0.0, 0.0, 1.0 });
+        int hash = matrix.GetHashCode();
+
+        array[0, 0] = 5.0;
+        array[1, 0] = -3.0;
+
+        Assert.Equal(1.0, matrix.Get(0, 0));
+        Assert.Equal(0.0, matrix.Get(1, 0));
+        Assert.Equal(hash, matrix.GetHashCode());
+        Assert.Equal(reference.GetHashCode(), matrix.GetHashCode());
+        Assert.Equal(reference, matrix);
+
+        // The matrix still changes through its own Set, which the array does not see (#722 kept Matrix mutable by Set)
+        matrix.Set(0, 1, 7.0);
+        Assert.Equal(7.0, matrix.Get(0, 1));
+        Assert.Equal(0.0, array[0, 1]);
+    }
+
+    /// <summary>
+    /// The library's results built from arrays share none with their inputs (#745): the product, the inverse and the
+    /// Jacobian, each a fresh array, are not changed by a later write to the matrices or arrays they came from.
+    /// </summary>
+    [Fact]
+    public void Results_ShareNoArrayWithTheirInputs()
+    {
+        var array = new double[,] { { 2.0, 1.0 }, { 1.0, 3.0 } };
+        var matrix = new Matrix(array);
+        var inverse = matrix.Inverse();
+        var product = matrix.Multiply(matrix);
+        array[0, 0] = 100.0;
+        matrix.Set(1, 1, 100.0);
+
+        // Closed forms: [[2, 1], [1, 3]]^-1 = [[3, -1], [-1, 2]] / 5 and [[2, 1], [1, 3]]^2 = [[5, 5], [5, 10]]
+        Assert.Equal(0.6, inverse.Get(0, 0), 15);
+        Assert.Equal(0.4, inverse.Get(1, 1), 15);
+        Assert.Equal(5.0, product.Get(0, 0));
+        Assert.Equal(10.0, product.Get(1, 1));
+    }
 }

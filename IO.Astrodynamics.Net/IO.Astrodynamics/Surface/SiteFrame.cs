@@ -147,7 +147,7 @@ public class SiteFrame : Frame
         rotationMatrix[2, 0] = System.Math.Cos(Site.Planetodetic.Latitude) * System.Math.Cos(Site.Planetodetic.Longitude);
         rotationMatrix[2, 1] = System.Math.Cos(Site.Planetodetic.Latitude) * System.Math.Sin(Site.Planetodetic.Longitude);
         rotationMatrix[2, 2] = System.Math.Sin(Site.Planetodetic.Latitude);
-        Matrix mtx = new Matrix(rotationMatrix);
+        Matrix mtx = Matrix.Wrap(rotationMatrix);
 
         var bodyToTopocentric = mtx.ToQuaternion();
         var rotation = celestialBodyFrameToICRF.Rotation * bodyToTopocentric.Conjugate();

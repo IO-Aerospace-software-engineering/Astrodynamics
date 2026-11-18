@@ -22,15 +22,32 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// Constructor
+    /// A matrix of the terms of <paramref name="data"/>, copied: a write to the array afterwards does not change the
+    /// matrix, its equality or its hash code, which change only through <see cref="Set"/> (#745, decided by S. Guillet,
+    /// 2026-11-18; before 11.0.0 the matrix wrapped the caller's array).
     /// </summary>
-    /// <param name="data"></param>
-    public Matrix(double[,] data)
+    /// <param name="data">The terms, row by row.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="data"/> is null.</exception>
+    public Matrix(double[,] data) : this(CloneArray(data), true)
+    {
+    }
+
+    // The matrix that wraps data, an array no one else holds: the library's own results, built in a fresh array (#745)
+    private Matrix(double[,] data, bool _)
     {
         Rows = data.GetLength(0);
         Columns = data.GetLength(1);
         _data = data;
     }
+
+    private static double[,] CloneArray(double[,] data) =>
+        (double[,])(data ?? throw new ArgumentNullException(nameof(data))).Clone();
+
+    /// <summary>
+    /// The matrix that wraps <paramref name="data"/> without copying it, for an array that the caller built and holds
+    /// nowhere else, so that the library's results cost no copy (#745). Never for an array another holder keeps.
+    /// </summary>
+    internal static Matrix Wrap(double[,] data) => new(data, true);
 
     /// <summary>
     /// Constructor
@@ -158,7 +175,7 @@ public readonly record struct Matrix
                 result[j, i] = x[j];
         }
 
-        return new Matrix(result);
+        return Wrap(result);
     }
 
 
@@ -509,7 +526,7 @@ public readonly record struct Matrix
     /// term set afterwards on the matrix given or returned does not reach them (#722). A matrix without terms
     /// (<c>default(Matrix)</c> included, whose array is null) is returned as it is.
     /// </summary>
-    internal Matrix Copy() => _data is null || Rows == 0 || Columns == 0 ? this : new Matrix((double[,])_data.Clone());
+    internal Matrix Copy() => _data is null || Rows == 0 || Columns == 0 ? this : Wrap((double[,])_data.Clone());
 
     /// <summary>
     /// The copy of a nullable matrix (<see cref="Copy()"/>), null for null (#722).

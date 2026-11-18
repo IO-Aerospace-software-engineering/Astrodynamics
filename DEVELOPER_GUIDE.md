@@ -2064,7 +2064,7 @@ Matrix operations.
 
 | Constructor | Description |
 |------------|-------------|
-| `Matrix(double[,] data)` | Create from 2D array |
+| `Matrix(double[,] data)` | Create from 2D array, copied: a later write to the array does not change the matrix (#745) |
 
 | Method | Description |
 |--------|-------------|
