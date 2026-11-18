@@ -266,8 +266,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
         /// or, on the managed path, a circle or an ellipse whose half-angles are so small that the squares of the semi-axes of
-        /// the cone of the field underflow at the target's distance, or a point target at the observer (distance 0: it has no
-        /// direction) (#715; before 11.0.0 an unrelated <see cref="ArgumentException"/> for both), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
+        /// the cone of the field underflow at the target's distance, or a point target at the observer, for any shape
+        /// (distance 0: it has no direction) (#715; before 11.0.0 an unrelated <see cref="ArgumentException"/> for both for a
+        /// circle or an ellipse, and for a rectangle the target in view, #721), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
         /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
         /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
         /// is inside the ellipsoid of the target (at its center included, an unrelated <see cref="ArgumentException"/> before
@@ -390,8 +391,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="aberration">The aberration correction.</param>
         /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
         /// <exception cref="InvalidOperationException">The field of view cannot be searched (see
-        /// <see cref="FindWindowsInFieldOfViewConstraint"/>), or the spacecraft is managed and has no attitude (#682; before
-        /// 11.0.0 the identity of ICRF was used).</exception>
+        /// <see cref="FindWindowsInFieldOfViewConstraint"/>), the target is at the observer, whatever the shape of the field
+        /// (distance 0: it has no direction; #715 and #721, before 11.0.0 an unrelated <see cref="ArgumentException"/> for a
+        /// circle or an ellipse and <c>true</c> for a rectangle), or the spacecraft is managed and has no attitude (#682;
+        /// before 11.0.0 the identity of ICRF was used).</exception>
         public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
         {
             return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;

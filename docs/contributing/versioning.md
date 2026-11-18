@@ -1447,6 +1447,15 @@ release are listed under **Known limitations**.
   check: `NullReferenceException`, the `ArgumentException` unreachable. It throws `ArgumentNullException` (an
   `ArgumentException`) naming `targetOrbit`, before the check of the engine, whether the fuel tank is attached to a
   spacecraft or not ([#552](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/552)).
+- **A null target orbit of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` is an argument error**
+  ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). Their target-orbit
+  constructors chain to the maneuver-centre constructor of `ImpulseManeuver`, not to the one #552 fixed, and read the
+  observer and the apogee or perigee vector of the target in that chain: a null `targetOrbit` threw
+  `NullReferenceException` with no parameter name, whether the fuel tank of the engine was attached to a spacecraft or
+  not (a85098d, the four cases of `ImpulseManeuverTests.ANullTargetOrbit_IsAnArgumentError` and the two of
+  `ANullEngine_IsAnArgumentError` for these maneuvers). They throw the `ArgumentNullException` of the three maneuvers of
+  #552, naming `targetOrbit`, before the check of the engine. Migration: a caller that caught `NullReferenceException`
+  catches `ArgumentNullException`.
 - **The XML documentation of `OpmManeuverParameters`.** A bare `<= 0` in three comments (`ManDeltaMass`, the
   constructor's `manDeltaMass`, `CreateImpulsive`'s `deltaMass`) was badly formed XML (CS1570 with
   `GenerateDocumentationFile`), and the whole documentation of the three members was dropped from the generated file.
@@ -3324,8 +3333,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   read `MeanRssPosition` and `StdRssPosition`, which `EpochStatistics` does not have; the numerical propagation tutorial
   gave `Clock` its period instead of its ticks per second, read `Position` on the tuple of `InterpolateAt` and listed
   `PlanetsAndMoons.JUPITER_BODY` (now `Barycenters.JUPITER_BARYCENTER`); the Lambert reference named the third argument
-  of `Solve` `targetObjectOrbitalParameters`, which the library spells `targetOjectOrbitalParameters` (the example passes
-  its arguments by position, the listing shows the library's name); the SPICE API reference listed
+  of `Solve` `targetObjectOrbitalParameters`, which the library then spelled `targetOjectOrbitalParameters` (the example
+  passes its arguments by position, the listing shows the library's name, `targetObjectOrbitalParameters` since the
+  parameter's rename, #662, under Changed); the SPICE API reference listed
   `AddCelestialBodyInfo(params CelestialBody[])`, whose type is `IO.Astrodynamics.DTO.CelestialBody`; the covariance
   tutorial called a helper `WithRtnCovariance` defined nowhere (now in the block). Every csharp block is now the region
   of a method of the page's file under `IO.Astrodynamics.Tests/Documentation/Pages/`, its inputs the method's parameters
@@ -3357,15 +3367,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` naming the target at the observer, which has no direction, and an ellipsoid target the
   `InvalidOperationException` of an observer inside the target, never a message about the half-angles
   (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
-  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle still reports such a point in view, its margin taking
-  atan2(0, 0) = 0, [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). Every other
-  field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
+  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle reported such a point in view, its margin taking
+  atan2(0, 0) = 0, until [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721),
+  below). Every other field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
   `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends (decided by
   S. Guillet, 2026-11-17), the constructors keep the rule "finite and positive" for both half-angles, and the
   documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
   measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
   and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at the
   boresight not found for a half-angle of 1e-155 rad in the reference plane, measured).
+- **A rectangular field reported a point target at the observer in view** ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)).
+  `Instrument.IsInFOV` and the managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` reported a
+  point target at the observer, distance 0 (two spacecraft of the same state), in view: its margin took the angles of
+  the zero vector as atan2(0, 0) = 0, so the search returned the whole search window (a85098d: `IsInFOV` true and the
+  window [2024-01-01T00:00:00, 00:02:00] TDB, for a field of 0.1 and 0.2 rad). A point at the observer has no
+  direction, so it is neither in nor out of the field; since #715 the circle and the ellipse throw
+  `InvalidOperationException` naming the target at the observer. The rectangle now throws the same exception, its
+  distance checked before its margin (decision 9 of #719, decided by S. Guillet, 2026-11-17;
+  `InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance` and
+  `PointTargetAtTheObserver_ManagedSearchThrowsInvalidOperationNamingTheDistance`, red on a85098d for the rectangle).
+  Every other target of a rectangle is searched as before, bit for bit (the same margin). The result changes from
+  "in view" to an exception: Breaking, under Changed.
 - **Six csharp blocks of three tutorials did not compile with the directives of their page** ([#716](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/716)).
   `DocumentationPagesExamplesTests.PageBlocks_CompileWithTheUsingsOfTheirPage` compiled, as a reader who copies them,
   only the blocks that declare using directives (15 of 174), so a block without a list of its own that used a namespace
@@ -4125,6 +4147,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`TleCreateRulesTests`, red on a85098d: no exception for mean elements in ICRF, about the Moon or about the Earth-Moon
   barycentre). Migration: rotate mean elements to TEME with `ToFrame(Frame.TEME)` before `Create`, or give `ToTLE` the
   osculating state, which it rotates itself; a TLE holds no orbit about another centre.
+- **Breaking: a point target at the observer throws for a rectangular field too** ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), Fixed above).
+  `Instrument.IsInFOV` and the managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` throw
+  `InvalidOperationException` naming the target at the observer for a point target at distance 0, where they reported
+  it in view (`IsInFOV` true, the whole search window), as the circle and the ellipse have since #715. Migration: a
+  caller that searches or tests a target that can be at the instrument's spacecraft catches
+  `InvalidOperationException`; no change for a target away from the observer.
+- **Breaking: the third parameter of `LambertSolver.Solve` is `targetObjectOrbitalParameters`**
+  ([#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662), item 3). The public parameter
+  was spelled `targetOjectOrbitalParameters`, a misspelling a caller passing it by name had to copy, and the
+  `ArgumentNullException` of a null target named it so. It is renamed (decided by S. Guillet, 2026-11-17;
+  `LambertSolverTests.Solve_ParametersAreSpelledAsTheirWords` and the reflection check of the listing of
+  `docs/reference/lambert.md`, `DocumentationPagesExamplesTests.SignatureBlocks_NameMembersOfTheLibrary`, red on
+  a85098d with the listing renamed). No result moves. Migration: a call that passes it by name writes
+  `targetObjectOrbitalParameters:`; a call by position is unchanged. With the documentation blocks compiled and checked
+  since #668 and #705, this closes #662.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -5818,12 +5855,6 @@ not listed.
   (#668, decided by S. Guillet, 2026-11-14): it is left to an additive constructor overload after 11.0.0, in
   [#723](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/723) (decided by S. Guillet,
   2026-11-17; [Stars](../reference/stars.md#limits)).
-- **A point target at the observer is in view of a rectangular field**
-  ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). The managed field-of-view
-  search of a rectangular instrument reports a point target at the observer, distance 0, in view, its margin taking
-  atan2(0, 0) = 0, where a circle and an ellipse throw `InvalidOperationException` since #715 (Fixed above). It is to
-  throw as they do (decision 9 of #719, decided by S. Guillet, 2026-11-17). No workaround is needed for a target away
-  from the observer.
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
@@ -5884,9 +5915,6 @@ not listed.
   which an SPK segment cannot hold: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the
   impulse at that last epoch where `GetEphemeris` reads the state after it. The state that closes an arc carries its
   impulse's tick, up to half a tick from its instant (about 0.4 mm at 8.6 km/s).
-- **A null target orbit** ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). The
-  target-orbit constructors of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` throw `NullReferenceException` for a
-  null `targetOrbit`, not an `ArgumentNullException` that names it.
 - **Attitudes** ([#592](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/592)). Between output epochs the
   attitude record is the spherical linear interpolation of its samples, not the law: a `NadirAttitude` 1.47e-3 rad off
   nadir at 60 s outputs in LEO and up to 1.04° near the roll singularity, a TRIAD law up to 3.8e-4 rad on a Molniya;

@@ -43,6 +43,27 @@ public class LambertSolverTests
         Assert.Throws<ArgumentNullException>(() => solver.Solve(false, op, op, null, 0));
     }
 
+    /// <summary>
+    /// #662, item 3: the parameters of <see cref="LambertSolver.Solve"/> are spelled as the words they name, so that a
+    /// caller passing them by name writes <c>targetObjectOrbitalParameters</c> (decided by S. Guillet, 2026-11-17). On
+    /// a85098d the third was <c>targetOjectOrbitalParameters</c>, and the exception of a null target named it so.
+    /// </summary>
+    [Fact]
+    public void Solve_ParametersAreSpelledAsTheirWords()
+    {
+        // Arrange
+        var solver = new LambertSolver();
+        var op = CreateStateVector(new Vector3(1, 0, 0), new Vector3(0, 1, 0), TimeSystem.Time.J2000TDB);
+
+        // Act
+        var names = Array.ConvertAll(typeof(LambertSolver).GetMethod(nameof(LambertSolver.Solve))!.GetParameters(), p => p.Name);
+        var exception = Assert.Throws<ArgumentNullException>(() => solver.Solve(false, op, null, TestHelpers.EarthAtJ2000, 0));
+
+        // Assert
+        Assert.Equal(new[] { "isRetrograde", "initialOrbitalParameters", "targetObjectOrbitalParameters", "centerOfMotion", "maxRevolution" }, names);
+        Assert.Equal("targetObjectOrbitalParameters", exception.ParamName);
+    }
+
     [Fact]
     public void Solve_ThrowsOnNonPositiveTimeOfFlight()
     {

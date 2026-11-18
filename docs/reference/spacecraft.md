@@ -531,13 +531,13 @@ reference plane), and where the squares of its semi-axes underflow at the target
 6e-171 rad at the Moon's distance) it throws `InvalidOperationException`, the field cannot be searched
 ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated
 `ArgumentException`, "The semi-axes of an ellipsoid must have positive lengths"). A point target at the observer,
-distance 0 (two spacecraft of the same state), has no direction: `IsInFOV` and the search of a circle or an ellipse
-throw `InvalidOperationException` naming the target at the observer, not the field (before, the same unrelated
-`ArgumentException`); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an observer
-inside the target. The rectangle's point margin takes the angles of the zero vector as 0 and reports such a target in
-view; it is to throw as the circle and the ellipse do
-([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), decided by S. Guillet,
-2026-11-17).
+distance 0 (two spacecraft of the same state), has no direction: `IsInFOV` and the search of every shape throw
+`InvalidOperationException` naming the target at the observer, not the field (before 11.0.0, for a circle or an
+ellipse the same unrelated `ArgumentException`, and for a rectangle, whose point margin took the angles of the zero
+vector as 0, the target in view; the rectangle throws as the circle and the ellipse do since
+[#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), decision 9 of #719, decided by
+S. Guillet, 2026-11-17); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an
+observer inside the target.
 
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
 gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the

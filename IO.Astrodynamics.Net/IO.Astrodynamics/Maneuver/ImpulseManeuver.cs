@@ -102,9 +102,10 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
-        /// The target orbit, checked before the constructor chain dereferences it (#552).
+        /// The target orbit, checked before the constructor chain dereferences it (#552); the target-orbit constructors of
+        /// <see cref="ApogeeHeightManeuver"/> and <see cref="PerigeeHeightManeuver"/> too (#555).
         /// </summary>
-        private static OrbitalParameters.OrbitalParameters RequireTargetOrbit(OrbitalParameters.OrbitalParameters targetOrbit)
+        private protected static OrbitalParameters.OrbitalParameters RequireTargetOrbit(OrbitalParameters.OrbitalParameters targetOrbit)
         {
             return targetOrbit ?? throw new ArgumentNullException(nameof(targetOrbit), "Target orbit must be defined");
         }

@@ -1572,7 +1572,7 @@ Solve Lambert's problem for transfer orbits.
 
 | Method | Description |
 |--------|-------------|
-| `Solve(bool isRetrograde, OrbitalParameters initialOrbitalParameters, OrbitalParameters targetOjectOrbitalParameters, CelestialItem centerOfMotion, ushort maxRevolution)` | Solve Lambert problem; the `LambertResult` holds the solutions (`GetZeroRevolutionSolution()`, `GetMultiRevolutionSolutions(n)`), each with `V1`, `V2`, `DeltaV1`, `DeltaV2` and `DeltaV` |
+| `Solve(bool isRetrograde, OrbitalParameters initialOrbitalParameters, OrbitalParameters targetObjectOrbitalParameters, CelestialItem centerOfMotion, ushort maxRevolution)` | Solve Lambert problem; the `LambertResult` holds the solutions (`GetZeroRevolutionSolution()`, `GetMultiRevolutionSolutions(n)`), each with `V1`, `V2`, `DeltaV1`, `DeltaV2` and `DeltaV` |
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;

@@ -25,8 +25,11 @@ namespace IO.Astrodynamics.Maneuver
         /// <param name="maneuverHoldDuration">Duration to hold after the maneuver.</param>
         /// <param name="targetOrbit">The orbit whose perigee radius is the target; its observer is the maneuver centre.</param>
         /// <param name="engine">Engine used for the maneuver.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null, checked before the engine; or
+        /// <paramref name="engine"/> is null (before 11.0.0 a null target orbit threw <see cref="NullReferenceException"/>,
+        /// #555).</exception>
         public PerigeeHeightManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
-            targetOrbit.Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, targetOrbit.PerigeeVector().Magnitude(), engine)
+            RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, targetOrbit.PerigeeVector().Magnitude(), engine)
         {
         }
 

@@ -18,21 +18,21 @@ public class LambertSolver
     /// </summary>
     /// <param name="isRetrograde">Indicates whether the transfer is retrograde (true) or prograde (false).</param>
     /// <param name="initialOrbitalParameters">The initial position and velocity of the spacecraft at the start of the transfer.</param>
-    /// <param name="targetOjectOrbitalParameters">The orbital parameters of the target object at the end of the transfer.</param>
+    /// <param name="targetObjectOrbitalParameters">The orbital parameters of the target object at the end of the transfer.</param>
     /// <param name="centerOfMotion">The celestial body around which the transfer is being performed.</param>
     /// <param name="maxRevolution">The maximum number of revolutions allowed in the transfer.</param>
     /// <returns>A <see cref="LambertResult"/> containing the computed velocity vectors and other parameters for the transfer.</returns>
-    public LambertResult Solve(bool isRetrograde, OrbitalParameters.OrbitalParameters initialOrbitalParameters, OrbitalParameters.OrbitalParameters targetOjectOrbitalParameters,
+    public LambertResult Solve(bool isRetrograde, OrbitalParameters.OrbitalParameters initialOrbitalParameters, OrbitalParameters.OrbitalParameters targetObjectOrbitalParameters,
         CelestialItem centerOfMotion, ushort maxRevolution)
     {
         // Validate input parameters
         ArgumentNullException.ThrowIfNull(initialOrbitalParameters);
-        ArgumentNullException.ThrowIfNull(targetOjectOrbitalParameters);
+        ArgumentNullException.ThrowIfNull(targetObjectOrbitalParameters);
         ArgumentNullException.ThrowIfNull(centerOfMotion);
 
         // Convert the start and final positions to ICRF frame relative to the center of motion
         var startICRF = initialOrbitalParameters.ToFrame(Frames.Frame.ICRF).RelativeTo(centerOfMotion, Aberration.None).ToStateVector();
-        var finalICRF = targetOjectOrbitalParameters.ToFrame(Frames.Frame.ICRF).RelativeTo(centerOfMotion, Aberration.None).ToStateVector();
+        var finalICRF = targetObjectOrbitalParameters.ToFrame(Frames.Frame.ICRF).RelativeTo(centerOfMotion, Aberration.None).ToStateVector();
 
         // Compute the position vectors in ICRF frame and the time of flight
         Vector3 r1 = startICRF.Position;
