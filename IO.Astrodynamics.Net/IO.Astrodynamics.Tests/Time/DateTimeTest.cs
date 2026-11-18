@@ -512,10 +512,11 @@ public class DateTimeTests
     }
 
     [Fact]
-    public void AddDaysHoursMinutes_FiniteArguments_Unchanged()
+    public void AddDaysHoursMinutes_FiniteArguments_AreTheNearestTick()
     {
-        // A non-regression check of the guard, not a correctness reference: the result is DateTime's arithmetic, bit for bit
-        // (its truncation is #637's, not this guard's), for 1e5 random spans within ±1e5 days in each unit
+        // The guard of #680 lets every finite span through, and the span is its nearest tick, ties to even (#637; DateTime's
+        // truncation before 11.0.0): the exact integer reference of ExactTicks, for 1e5 random spans within ±1e5 days in
+        // each unit; the days of CreateFromJD are exact (Sterbenz's lemma)
         var random = new Random(680);
         var baseDate = new DateTime(2024, 6, 21, 12, 0, 0);
         var tdb = new TimeSystem.Time(baseDate, TimeFrame.TDBFrame);
@@ -523,14 +524,14 @@ public class DateTimeTests
         for (int i = 0; i < 100000; i++)
         {
             double days = (random.NextDouble() * 2.0 - 1.0) * 1.0e5;
-            Assert.Equal(baseDate.AddDays(days).Ticks, tdb.AddDays(days).DateTime.Ticks);
-            Assert.Equal(baseDate.AddHours(days * 24.0).Ticks, tdb.AddHours(days * 24.0).DateTime.Ticks);
-            Assert.Equal(baseDate.AddMinutes(days * 1440.0).Ticks, utc.AddMinutes(days * 1440.0).DateTime.Ticks);
+            Assert.Equal(baseDate.Ticks + ExactTicks.Nearest(days, TimeSpan.TicksPerDay), tdb.AddDays(days).DateTime.Ticks);
+            Assert.Equal(baseDate.Ticks + ExactTicks.Nearest(days * 24.0, TimeSpan.TicksPerHour), tdb.AddHours(days * 24.0).DateTime.Ticks);
+            Assert.Equal(baseDate.Ticks + ExactTicks.Nearest(days * 1440.0, TimeSpan.TicksPerMinute), utc.AddMinutes(days * 1440.0).DateTime.Ticks);
             Assert.Equal(TimeFrame.TDBFrame, tdb.AddDays(days).Frame);
             Assert.Equal(TimeFrame.UTCFrame, utc.AddMinutes(days * 1440.0).Frame);
 
             double julianDate = TimeSystem.Time.JULIAN_J2000 + days;
-            Assert.Equal(TimeSystem.Time.J2000.AddDays(julianDate - TimeSystem.Time.JULIAN_J2000).Ticks,
+            Assert.Equal(TimeSystem.Time.J2000.Ticks + ExactTicks.Nearest(julianDate - TimeSystem.Time.JULIAN_J2000, TimeSpan.TicksPerDay),
                 TimeSystem.Time.CreateFromJD(julianDate, TimeFrame.TDBFrame).DateTime.Ticks);
         }
     }

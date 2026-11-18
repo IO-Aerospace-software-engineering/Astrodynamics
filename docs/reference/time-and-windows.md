@@ -28,7 +28,7 @@
 | `Create(int year, int doy, double sec)` | Create a UTC time from year (1 to 9999), day of year (1 to 365, or 366 in a Gregorian leap year) and seconds of day (finite, in [0, 86400)), to the nearest tick; `ArgumentOutOfRangeException` names an argument out of its range (#680) |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds, to the nearest tick |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds, to the nearest tick |
-| `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date; a non-finite date throws `ArgumentOutOfRangeException` (#680) |
+| `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date, J2000 plus the nearest tick of the days `julianDate` − 2451545.0 (#637); a non-finite date throws `ArgumentOutOfRangeException` (#680) |
 
 A span of seconds becomes the nearest tick (100 ns) of the exact value of its double, ties to even, in `Create`,
 `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
@@ -56,11 +56,18 @@ What a double can hold limits both directions:
   first tick inside: one tick later at a start, one tick earlier at an end. The coverage of ITRF93 in the test kernels starts at
   −43135.816087188054 s, whose nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it).
 
-Still truncating: `CreateFromJD`, `AddDays`, `AddHours`, `AddMinutes` (which throw for a non-finite argument, #680: NaN
-returned the epoch, or J2000 for `CreateFromJD`), and every `TimeSpan.FromSeconds` of the library
-outside `Time`, for example `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`,
-`Launch`, the thrust windows of an impulse (`Tsiolkovski`), the hold of `PhasingManeuver`, the candidate, secant and
-subdivision epochs of the conjunction search and the period of the element conversions of `SpiceAPI`.
+The same rule holds for `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, with the ticks per day, hour and
+minute (the days of `CreateFromJD` from J2000, `julianDate − 2451545.0`, are exact from JD 1225772.5 to 4903090 by
+Sterbenz's lemma), which throw for a non-finite argument (#680: NaN returned the epoch, or J2000 for `CreateFromJD`),
+and for the spans the library computes outside `Time` (internal `Time.SecondsToSpan`, which keeps the exceptions of
+`TimeSpan.FromSeconds`): `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the
+offsets of the launch windows after the first (`Launch`), the thrust window of an impulse (`Tsiolkovski.DeltaT`), the
+hold of `PhasingManeuver`, the step, candidate, seed, secant and subdivision epochs of the conjunction search and the
+period of the element conversions of `SpiceAPI`
+([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637), decided by S. Guillet,
+2026-11-17). Before 11.0.0 they truncated toward zero, a tick early for about half of the values (8 733 of 20 000
+random spans, 16 of 23 orbital periods, 43 of 80 sidereal periods of the Earth and the Moon). `TimeSpan.FromSeconds`
+of a constant that a tick holds exactly (60 s, 32.184 s, 19 s, whole leap seconds) is not concerned.
 
 ### Time Scales
 
@@ -102,9 +109,9 @@ not enter the managed conversions.
 | `Add(TimeSpan)` | Add a duration |
 | `AddYears(int)` | Add calendar years |
 | `AddMonths(int)` | Add calendar months |
-| `AddDays(double)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
-| `AddHours(double)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
-| `AddMinutes(double)` | Add minutes; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddDays(double)` | Add days, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddHours(double)` | Add hours, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddMinutes(double)` | Add minutes, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double)` | Add seconds, to the nearest tick |
 | `AddMilliseconds(double)` | Add milliseconds, to the nearest tick |
 | `AddMicroseconds(double)` | Add microseconds, to the nearest tick |

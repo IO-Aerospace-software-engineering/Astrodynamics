@@ -553,12 +553,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Get orbital period
     /// </summary>
-    /// <returns>The period of an ellipse, 2π √(a³/μ), truncated to the tick of <see cref="TimeSpan"/>.</returns>
+    /// <returns>The period of an ellipse, 2π √(a³/μ), to the nearest tick, ties to even (#637; truncated to the tick below
+    /// before 11.0.0), or the period given to the elements.</returns>
     /// <exception cref="InvalidOperationException">The semi-major axis is not finite and above 0: a parabola (+Infinity) or
     /// a hyperbola (a &lt; 0) has no period (#663; before 11.0.0, the NaN <see cref="ArgumentException"/> or the
     /// <see cref="OverflowException"/> of <see cref="TimeSpan"/>).</exception>
-    /// <exception cref="OverflowException">The period of an ellipse exceeds <see cref="TimeSpan.MaxValue"/>, 29 227 years:
-    /// a within 1e-6 of e = 1, for instance (#455).</exception>
+    /// <exception cref="OverflowException">The period of an ellipse is 922 337 203 685 s or more, about
+    /// <see cref="TimeSpan.MaxValue"/> (29 227 years; from 11.0.0 also the last 0.48 s below it, #637): a within 1e-6 of e = 1,
+    /// for instance (#455).</exception>
     public TimeSpan Period()
     {
         double a = SemiMajorAxis();
@@ -572,7 +574,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
                 $"An open orbit has no period: e = {Eccentricity():R}, a = {a:R} m (a period needs a finite semi-major axis above 0, an ellipse).");
         }
 
-        _period ??= TimeSpan.FromSeconds(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
+        _period ??= Time.SecondsToSpan(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
         return _period.Value;
     }
 

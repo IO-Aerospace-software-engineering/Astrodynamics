@@ -624,6 +624,37 @@ release are listed under **Known limitations**.
     time, and a read there throws: the coverage of ITRF93 in the test kernels starts at −43135.816087188054 s, whose
     nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it), so the test of the orientation
     cache of a window starting inside the coverage starts one tick later; read from the first tick inside a bound.
+- **The spans computed outside `Time`, and `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, were truncated to the tick** ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)).
+  #625 made every conversion of seconds inside `Time` the nearest tick; the spans the library computes elsewhere still
+  went through `TimeSpan.FromSeconds`, and `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD` through
+  `DateTime.AddDays`, `AddHours` and `AddMinutes`, which truncate toward zero: a tick early for about half of the values.
+  They now take the nearest tick of the exact value of their double, ties to even, through the helper of #625
+  (`Time.SecondsToTicks`, with the ticks per day, hour and minute for the four methods of `Time`, and the internal
+  `Time.SecondsToSpan` for a span, which keeps the exceptions of `TimeSpan.FromSeconds`): `OrbitalParameters.Period()`
+  (so the period of the element conversions of `SpiceAPI` and `ProfilesConfiguration`), `CelestialBody.SideralRotationPeriod`
+  and `TrueSolarDay`, the offsets of the launch windows after the first (`Launch.FindLaunchWindows`), the thrust window of
+  an impulse (`Tsiolkovski.DeltaT`), the hold of `PhasingManeuver`, and the step of the sampled close-approach search,
+  its candidate, seed, secant and subdivision epochs (decided by S. Guillet, 2026-11-17, with the four methods of `Time`).
+  The days of `CreateFromJD` from J2000, `julianDate − 2451545.0`, are exact from JD 1225772.5 to 4903090 (Sterbenz's
+  lemma). `TimeSpan.FromSeconds` of a constant a tick holds (60 s, 32.184 s, 19 s, whole leap seconds) is not concerned.
+  - **Measured** (Linux x64, 2026-11-18, `NearestTickSpanTests`, red on fe72f8e): against the exact integer nearest tick
+    of the double (`ExactTicks`) or the closed form evaluated in `decimal` from the double inputs (a value within 0.01
+    tick of a half tick not counted), the former truncation was a tick off for 8 733 of 20 000 random spans of magnitude
+    up to 5e9 s, 16 of 23 orbital periods, 10 of 24 periods of the element conversions of `SpiceAPI`, 43 of 80 sidereal periods
+    of the Earth and the Moon from SPICE's angular velocity, 24 of 40 angle spans of the true solar day, 16 of 29 burn
+    durations of the rocket equation, 15 of 36 phasing holds, 15 of 30 launch window offsets, 278 of 5 000 steps of the
+    close-approach search, 9 of 27 spans of `AddDays`, `AddHours` and `AddMinutes` and 2 of 6 Julian dates; each now
+    gives the nearest tick. `DateTimeTests` checks 1e5 random spans of the four methods of `Time` against the exact
+    reference, where it checked `DateTime`'s arithmetic.
+  - **What moves:** each of these spans by a tick at most, and what is computed from them. One expected value of the
+    tests is recaptured: the thrust window of `ApsidalAlignmentManeuevrTests.ExecuteAtP`, 107 386 319 ticks where it was
+    107 386 318 (the rocket equation at 40 digits, mpmath, gives 107 386 318.546 ticks for the |Δv| of the execution). The
+    runner on the suite's main (33286d2), on `orbital_elements`, `maneuver` and `conjunction` (68 cases): 11 of the 759
+    delta entries move, all `period_s`, whose largest delta falls from 9.54e-8 s to 4.28e-8 s, within half a tick; the
+    maneuver and conjunction deltas do not move (the runner's engine burns in 1e-12 s, below a tick, and a step of the
+    search moved by a tick changes no refined TCA). The thrust window and the phasing hold gate the next maneuver, so a
+    propagation whose next event lies within a tick of the gate can take it at another step: none of the tests run
+    (`Category!=LongValidation`) moves.
 - **`TimeToRadius` returned an apsis for a radius the orbit never reaches, and failed with NaN or an overflow far out** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627)).
   It clamped cos ν to [−1, 1], so a radius below the periapsis gave the periapsis and a radius above the apoapsis of an
   ellipse the apoapsis, both silently, and an infinite radius on a hyperbola, the asymptote, gave a NaN mean anomaly
@@ -2189,10 +2220,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`Time.AddDays`, `AddHours` and `AddMinutes` of NaN returned the epoch, `CreateFromJD(NaN)` J2000** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). They
   forwarded to `DateTime`, whose range check is false for NaN, which it converts to 0 ticks; the infinities threw with
   `DateTime`'s parameter name, `value`. A non-finite argument now throws `ArgumentOutOfRangeException` naming `days`,
-  `hours`, `minutes` or `julianDate`, as `AddSeconds` already did; a finite argument gives the result of `DateTime`, bit
-  for bit, still truncated to the tick ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)). The command line's epoch `NaN JD` ran at J2000 and is now
-  rejected. `DateTimeTests` checks the four methods in UTC and TDB, and 1e5 finite arguments against `DateTime`'s
-  arithmetic (Changed, Breaking, below).
+  `hours`, `minutes` or `julianDate`, as `AddSeconds` already did; a finite argument gives the nearest tick since
+  [#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637) (above), where it gave the result of `DateTime`, truncated to the tick. The command line's epoch `NaN JD` ran at J2000 and is now
+  rejected. `DateTimeTests` checks the four methods in UTC and TDB, and 1e5 finite arguments against the exact nearest
+  tick (Changed, Breaking, below).
 - **`Time.Create(year, doy, sec)` checked nothing** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). Year 0 was read as 2000, and a day or seconds outside
   their range rolled into the neighbouring day or year: `Create(2023, 366, 0)` was 2024-01-01, `Create(2024, 1, -1)`
   2023-12-31T23:59:59Z. It now throws `ArgumentOutOfRangeException` naming `year` outside [1, 9999], `doy` outside the
@@ -4736,10 +4767,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   as seconds can now be a tick outside the coverage, where the truncation kept a start from 1983 to J2000 or an end from 2000
   to 2017 inside, and a read there throws: read from the first tick inside. `SpiceAPI.ReadEphemeris(Time …)` and a
   kernel-backed spacecraft label their state with the epoch asked, and an end of a CSPICE search at an end of its search
-  window is that end. `AddDays`, `AddHours`, `AddMinutes`, `CreateFromJD` and the `TimeSpan.FromSeconds` of the library
-  outside `Time` (`Period()`, `SideralRotationPeriod`, `TrueSolarDay`, `Launch`, the windows of an impulse, the hold of
-  `PhasingManeuver`, the epochs of the conjunction search) still truncate. Migration: pass a finite span, and expect an
-  epoch built from seconds to differ from its former value by a tick.
+  window is that end. `AddDays`, `AddHours`, `AddMinutes`, `CreateFromJD` and the spans the library computes outside
+  `Time` follow the same rule since #637 (next entry). Migration: pass a finite span, and expect an epoch built from
+  seconds to differ from its former value by a tick.
+- **Breaking: the spans computed outside `Time`, and `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, are the nearest tick** ([#637]({I}637), Fixed above;
+  decided by S. Guillet, 2026-11-17): `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and
+  `TrueSolarDay`, `Tsiolkovski.DeltaT` (the thrust window of an impulse), the hold of `PhasingManeuver`, the launch
+  windows after the first, the period of the element conversions and the epochs of the conjunction search give the
+  nearest tick, ties to even, where they truncated, so each can be a tick longer (or a time a tick later); the four
+  methods of `Time` keep their exceptions (#680). The thrust window and the phasing hold are a change of the dynamics at
+  the level of a tick: they gate the next maneuver. Migration: expect these spans and the epochs built from them to
+  differ from their former values by a tick; a comparison to the tick takes the nearest tick of the closed form.
 - **Breaking: `TimeToRadius` and `TimeToSphereOfInfluence` throw where the orbit never reaches the radius** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627), Fixed above):
   a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
   of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of
@@ -5956,11 +5994,6 @@ not listed.
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and
   `SpecialFunctions.NormalizeAngle(-1e-17)` returns 2π (360°, which can appear in an OPM or OMM).
-- **Truncated spans**
-  ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)). `AddDays`, `AddHours`,
-  `AddMinutes`, `CreateFromJD` and the spans computed through `TimeSpan.FromSeconds` (`Period()`,
-  `SideralRotationPeriod`, `TrueSolarDay`, the windows of an impulse, the hold of `PhasingManeuver`, `Launch`, the
-  epochs of the conjunction search) truncate to the tick below, so each can be a tick early.
 - **The ephemeris time given to CSPICE**
   ([#665](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/665), item 4 of
   [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)). CSPICE is

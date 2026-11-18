@@ -119,7 +119,7 @@ public static class ProfilesConfiguration
         // oscltx's period is 0 for an open orbit, which has none (#663), and can exceed TimeSpan.MaxValue on an ellipse
         // (above 29 227 years, e within about 5e-6 of 1): no period is given then, Period() computing its own or throwing
         double tau = keplerianElements.OrbitalPeriod;
-        TimeSpan? period = tau > 0.0 && tau * TimeSpan.TicksPerSecond < long.MaxValue ? TimeSpan.FromSeconds(tau) : null;
+        TimeSpan? period = tau > 0.0 && tau < Time.MaximumSpanSeconds ? Time.SecondsToSpan(tau) : null;
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
             frame, keplerianElements.TrueAnomaly, period);

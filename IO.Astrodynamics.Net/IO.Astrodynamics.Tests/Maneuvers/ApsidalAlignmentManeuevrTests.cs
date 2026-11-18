@@ -64,9 +64,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(maneuver.DeltaV, new Vector3(-1352.4744534060974, 564.6811827253609, 0.0),TestHelpers.VectorComparer);
             // The epoch of the true anomaly counts TT seconds from the epoch of the elements, the time of a two-body
             // motion about the Earth (#501, #508): 2.4e-6 s after the 13:55:44.2314095 of the TDB seconds, the change of
-            // TDB − TT over the 2 h to it
-            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314119"), TimeSpan.FromSeconds(10.7386318)), maneuver.ManeuverWindow);
-            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314119"), TimeSpan.FromSeconds(10.7386318)), maneuver.ThrustWindow);
+            // TDB − TT over the 2 h to it. The thrust lasts the nearest tick of the rocket equation (#637): 1900 kg / 50 kg/s
+            // (1 − exp(−|Δv| / (450 s g0))) = 10.73863185460560 s at 40 digits (mpmath) from the |Δv| of 1465.623413476362 m/s
+            // this execution gives, 107 386 319 ticks (107 386 318, truncated, before 11.0.0)
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314119"), TimeSpan.FromTicks(107386319)), maneuver.ManeuverWindow);
+            LabelAssert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314119"), TimeSpan.FromTicks(107386319)), maneuver.ThrustWindow);
             Assert.Equal(536.93159217329242, maneuver.FuelBurned, 3);
         }
 

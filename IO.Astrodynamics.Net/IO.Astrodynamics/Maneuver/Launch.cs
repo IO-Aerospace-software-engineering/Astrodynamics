@@ -134,7 +134,7 @@ namespace IO.Astrodynamics.Maneuver
                         }
 
                         // Increment next launch date
-                        date = date.Add(halfSiderealRotation).Add(TimeSpan.FromSeconds(deltaLDuration));
+                        date = date.Add(halfSiderealRotation).Add(Time.SecondsToSpan(deltaLDuration));
 
                         // Build next window
                         Window nextWindow = new Window(date, date);

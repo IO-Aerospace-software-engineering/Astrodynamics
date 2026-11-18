@@ -383,9 +383,10 @@ public class ElementsValidationTests
     [Fact]
     public void Issue663_AnEllipse_KeepsItsPeriod()
     {
-        // 2π √(a³/μ), the closed form, as before
+        // 2π √(a³/μ), the closed form, to the nearest tick (#637; ExactTicks, the exact integer reference)
         var ke = Keplerian(a: 7000000.0, e: 0.1);
-        Assert.Equal(TimeSpan.FromSeconds(IO.Astrodynamics.Constants._2PI * System.Math.Sqrt(7e6 * 7e6 * 7e6 / _earth.GM)), ke.Period());
+        Assert.Equal(IO.Astrodynamics.Tests.Time.ExactTicks.Nearest(IO.Astrodynamics.Constants._2PI * System.Math.Sqrt(7e6 * 7e6 * 7e6 / _earth.GM)),
+            ke.Period().Ticks);
     }
 
     #endregion

@@ -120,46 +120,37 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// This time plus <paramref name="days"/>, by <see cref="System.DateTime.AddDays"/>, which truncates to the tick (#637).
+    /// This time plus <paramref name="days"/>, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet,
+    /// 2026-11-17; before 11.0.0, <see cref="System.DateTime.AddDays"/>, which truncates toward zero, one tick early for
+    /// about half of the spans).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="days"/> is not finite (#680: NaN returned this time
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddDays(double days)
     {
-        return new Time(DateTime.AddDays(Finite(days, nameof(days))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(days, TimeSpan.TicksPerDay, nameof(days))), Frame);
     }
 
     /// <summary>
-    /// This time plus <paramref name="hours"/>, by <see cref="System.DateTime.AddHours"/>, which truncates to the tick (#637).
+    /// This time plus <paramref name="hours"/>, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet,
+    /// 2026-11-17; before 11.0.0, <see cref="System.DateTime.AddHours"/>, which truncates toward zero).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="hours"/> is not finite (#680: NaN returned this time
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddHours(double hours)
     {
-        return new Time(DateTime.AddHours(Finite(hours, nameof(hours))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(hours, TimeSpan.TicksPerHour, nameof(hours))), Frame);
     }
 
     /// <summary>
-    /// This time plus <paramref name="minutes"/>, by <see cref="System.DateTime.AddMinutes"/>, which truncates to the tick
-    /// (#637).
+    /// This time plus <paramref name="minutes"/>, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet,
+    /// 2026-11-17; before 11.0.0, <see cref="System.DateTime.AddMinutes"/>, which truncates toward zero).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minutes"/> is not finite (#680: NaN returned this time
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMinutes(double minutes)
     {
-        return new Time(DateTime.AddMinutes(Finite(minutes, nameof(minutes))), Frame);
-    }
-
-    // A non-finite span has no instant (#680): DateTime's range check is false for NaN, which it converts to 0 ticks, and
-    // names its own parameter for the infinities
-    private static double Finite(double value, string paramName)
-    {
-        if (!double.IsFinite(value))
-        {
-            throw new ArgumentOutOfRangeException(paramName, value, "The span is not a finite number.");
-        }
-
-        return value;
+        return new Time(DateTime.AddTicks(ToNearestTicks(minutes, TimeSpan.TicksPerMinute, nameof(minutes))), Frame);
     }
 
     /// <summary>
@@ -201,6 +192,37 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="seconds"/> is not finite or its ticks do not fit in
     /// a <see cref="long"/>.</exception>
     internal static long SecondsToTicks(double seconds) => ToNearestTicks(seconds, TimeSpan.TicksPerSecond, nameof(seconds));
+
+    /// <summary>
+    /// The <see cref="TimeSpan"/> of the tick count nearest <paramref name="seconds"/>, ties to even
+    /// (<see cref="SecondsToTicks"/>): the spans the library computes outside <see cref="Time"/> (the period of an orbit,
+    /// the sidereal period and true solar day of a body, the thrust window of an impulse, the hold of a phasing maneuver,
+    /// the offsets of the launch windows, the steps and epochs of the conjunction search; #637, decided by S. Guillet,
+    /// 2026-11-17). Before 11.0.0 they went through <see cref="TimeSpan.FromSeconds(double)"/>, which truncates toward
+    /// zero; its exceptions are kept.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="seconds"/> is NaN.</exception>
+    /// <exception cref="OverflowException"><paramref name="seconds"/> is infinite, or its ticks do not fit in a
+    /// <see cref="TimeSpan"/> (|seconds| of 922 337 203 685 or more).</exception>
+    internal static TimeSpan SecondsToSpan(double seconds)
+    {
+        if (double.IsNaN(seconds))
+        {
+            throw new ArgumentException("A span cannot be NaN seconds.", nameof(seconds));
+        }
+
+        if (!(System.Math.Abs(seconds) < MaximumSpanSeconds))
+        {
+            throw new OverflowException($"A span of {seconds:R} s is outside the range of a TimeSpan.");
+        }
+
+        return TimeSpan.FromTicks(SecondsToTicks(seconds));
+    }
+
+    /// <summary>
+    /// The seconds below which a span has its ticks in a <see cref="long"/>, the bound <see cref="SecondsToTicks"/> checks.
+    /// </summary>
+    internal const double MaximumSpanSeconds = long.MaxValue / TimeSpan.TicksPerSecond;
 
     // The magnitude of the value, its whole units and its fraction apart, so that the whole part and the fraction are
     // exact (a fraction 1 - |value| of a negative value above -1 would round to the ulp of [0.5, 1)); the fraction times
@@ -439,15 +461,16 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// The time of <paramref name="julianDate"/> in <paramref name="frame"/>, by <see cref="System.DateTime.AddDays"/> from
-    /// J2000, which truncates to the tick (#637).
+    /// The time of <paramref name="julianDate"/> in <paramref name="frame"/>: J2000 plus the nearest tick of the days
+    /// <paramref name="julianDate"/> − 2451545.0, ties to even (#637, decided by S. Guillet, 2026-11-17; before 11.0.0,
+    /// <see cref="System.DateTime.AddDays"/>, which truncates toward zero). The difference is exact for a Julian date from
+    /// 1225772.5 to 4903090 (Sterbenz's lemma), about the years −1356 to 8711.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="julianDate"/> is not finite (#680: NaN gave J2000
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public static Time CreateFromJD(double julianDate, ITimeFrame frame)
     {
-        var sinceEpoch = Finite(julianDate, nameof(julianDate)) - JULIAN_J2000;
-        var date = J2000.AddDays(sinceEpoch);
+        var date = J2000.AddTicks(ToNearestTicks(julianDate - JULIAN_J2000, TimeSpan.TicksPerDay, nameof(julianDate)));
         if (frame is UTCTimeFrame)
         {
             date = DateTime.SpecifyKind(date, DateTimeKind.Utc);

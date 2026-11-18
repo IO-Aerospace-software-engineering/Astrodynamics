@@ -1107,7 +1107,7 @@ public static class ConjunctionAssessment
                     continue;
                 }
 
-                candidateEpochs.Add(left + TimeSpan.FromSeconds(durationSeconds * root));
+                candidateEpochs.Add(left.AddSeconds(durationSeconds * root));
             }
         }
 
@@ -1768,7 +1768,7 @@ public static class ConjunctionAssessment
              ;
              distance += System.Math.Min(distance, SeedSearchMaximumSpacingSeconds))
         {
-            var offset = TimeSpan.FromSeconds(distance);
+            var offset = Time.SecondsToSpan(distance);
             var read = backward
                 ? (seed - bound > offset ? seed - offset : bound)
                 : (bound - seed > offset ? seed + offset : bound);
@@ -1801,7 +1801,7 @@ public static class ConjunctionAssessment
         Time windowEnd, double toleranceSeconds, out Time zero)
     {
         zero = minimum;
-        var secantBase = TimeSpan.FromSeconds(SecantBaseSeconds);
+        var secantBase = Time.SecondsToSpan(SecantBaseSeconds);
         var second = minimum + secantBase;
         if (second > windowEnd)
         {
@@ -1817,7 +1817,7 @@ public static class ConjunctionAssessment
             return false;
         }
 
-        var halfWidth = TimeSpan.FromSeconds(SecantBracketHalfWidthSeconds);
+        var halfWidth = Time.SecondsToSpan(SecantBracketHalfWidthSeconds);
         var left = estimate - halfWidth;
         var right = estimate + halfWidth;
         if (left <= lowest || right >= highest)
@@ -1878,7 +1878,7 @@ public static class ConjunctionAssessment
             return false;
         }
 
-        estimate = first + TimeSpan.FromSeconds(offset);
+        estimate = first.AddSeconds(offset);
         return estimate > lowest && estimate < highest;
     }
 
@@ -2844,12 +2844,12 @@ public static class ConjunctionAssessment
         yield return Vector3.VectorZ.Inverse();
     }
 
-    private static TimeSpan ComputeCloseApproachSearchStep(TimeSpan sampleStep, TimeSpan maximumEventSearchStep, double bisectionToleranceSeconds)
+    internal static TimeSpan ComputeCloseApproachSearchStep(TimeSpan sampleStep, TimeSpan maximumEventSearchStep, double bisectionToleranceSeconds)
     {
         double searchStepSeconds = System.Math.Min(sampleStep.TotalSeconds / 16.0, maximumEventSearchStep.TotalSeconds);
         searchStepSeconds = System.Math.Max(searchStepSeconds, bisectionToleranceSeconds * 4.0);
         searchStepSeconds = System.Math.Min(searchStepSeconds, sampleStep.TotalSeconds);
-        return TimeSpan.FromSeconds(searchStepSeconds);
+        return Time.SecondsToSpan(searchStepSeconds);
     }
 
     private static List<Time> BuildSearchEpochs(
@@ -2885,7 +2885,7 @@ public static class ConjunctionAssessment
                 int subdivisions = (int)System.Math.Ceiling(intervalSeconds / maximumEventSearchStep.TotalSeconds);
                 for (int subdivision = 1; subdivision < subdivisions; subdivision++)
                 {
-                    epochs.Add(left + TimeSpan.FromSeconds(intervalSeconds * subdivision / subdivisions));
+                    epochs.Add(left.AddSeconds(intervalSeconds * subdivision / subdivisions));
                 }
             }
 
