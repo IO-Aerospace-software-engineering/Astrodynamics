@@ -496,10 +496,18 @@ public sealed class CdmReader
     }
 
     // lengthTypeUO (MISS_DISTANCE, RELATIVE_POSITION_R/T/N, SCREEN_VOLUME_X/Y/Z): units optional, m the only unit of the
-    // schema and of CCSDS 508.0 table 3-2, so m when absent (#613)
+    // schema (lengthUnits, an xsd:string enumerating m) and of CCSDS 508.0 table 3-2, so m when absent (#613), and any
+    // other units refused (#619, decided by S. Guillet, 2026-11-17: km was read and converted)
     private static double ParseLengthToMeters(XElement element)
     {
-        return ParseLengthToMeters(element, "m");
+        var units = element.Attribute("units")?.Value;
+        if (units != null && units != "m")
+        {
+            throw new CdmParseException(
+                $"Unsupported units '{units}' for {element.Name.LocalName}: a length of this keyword is in m, its only unit.");
+        }
+
+        return ParseDouble(element.Value, element.Name.LocalName);
     }
 
     private static double? ParseOptionalLength(XElement parent, string localName)

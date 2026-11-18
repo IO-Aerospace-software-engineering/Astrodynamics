@@ -48,6 +48,12 @@ var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0));
 - `ToStateVector(epoch)` propagates with SGP4/SDP4 to the given epoch and returns the osculating state.
 - `ToMeanKeplerianElements()` returns the raw mean elements for inspection.
 
+Mean elements stay mean through `AtEpoch(t)` and `ToKeplerianElements(t)` (#463), so their `ToStateVector()` throws
+there too, and a numerical propagation (`CentralBodyPropagator`, `Spacecraft.Propagate`, `Scenario.SimulateAsync`)
+refuses a spacecraft whose initial orbit is a set of mean elements other than a TLE, with an `ArgumentException` that
+points to `TLEPropagator` and `TLE.ToOsculating()`. `AtEpoch` of mean elements advances the mean anomaly at the two-body
+mean motion only, without the secular rates of the node and of the periapsis of SGP4: a TLE's own `AtEpoch` is SGP4.
+
 ## SGP4 Propagation
 
 Propagate the TLE to a future epoch using the built-in SGP4/SDP4 propagator:
@@ -129,7 +135,8 @@ var newTle = sv.ToTLE(config);
 ```
 
 The fitting process converts osculating elements to mean elements consistent with SGP4. The state may be in any frame,
-elements already in TEME included; the TLE's epoch is the UTC of the state's epoch, rounded to the 1e-8 day of the
+elements already in TEME included, but must be about the Earth: `ToTLE` throws `InvalidOperationException` for an
+orbit about another centre (#607); the TLE's epoch is the UTC of the state's epoch, rounded to the 1e-8 day of the
 field. Each field of the text is the nearest value its columns hold.
 
 A `NoradId` above 99999 is encoded with the Alpha-5 convention, up to 339999:

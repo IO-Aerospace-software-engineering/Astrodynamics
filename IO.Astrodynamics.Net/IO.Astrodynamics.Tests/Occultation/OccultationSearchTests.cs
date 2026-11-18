@@ -62,8 +62,8 @@ public class OccultationSearchTests
     {
         // The annular eclipse of 2005-10-03 from DSS-65: the Sun's center hidden by the Moon, the Moon's center across the
         // Sun's disc. A point back body is hidden (Full is Any), a point front body transits (Annular is Any). The
-        // reference is gfoclt at 1e-9 s (tools/occultation_reference): the native proxy passes ELLIPSOID for every front
-        // body, so gfoclt cannot be run in the process with a point front body
+        // reference is gfoclt at 1e-9 s (tools/occultation_reference); the CSPICE path is measured against it in
+        // SpicePath_PointFrontBody_MatchesGfocltAny
         var site = new Site(65, "DSS-65", TestHelpers.EarthAtJ2000);
         var managed = site.FindWindowsOnOccultationConstraint(Eclipse2005Window, TestHelpers.Sun, targetShape, TestHelpers.MoonAtJ2000, frontShape, type,
             Aberration.None, TimeSpan.FromSeconds(360.0)).ToArray();
@@ -93,6 +93,30 @@ public class OccultationSearchTests
             Aberration.None, TimeSpan.FromSeconds(60.0)));
     }
 
+    [Theory]
+    [InlineData(OccultationType.Any)]
+    [InlineData(OccultationType.Annular)]
+    public void SpicePath_PointFrontBody_MatchesGfocltAny(OccultationType type)
+    {
+        // #496: the native search passed "ELLIPSOID" as the shape of every front body to gfoclt_c, so that a point front
+        // body (an empty frame) failed in SPICE and the CSPICE path threw (no window before the fourth round of #668). The
+        // Moon's center across the Sun's disc from DSS-65 (399065, in the kernels) on 2005-10-03, against gfoclt with a
+        // POINT front body at 1e-9 s (tools/occultation_reference); SpiceAPI and the CSPICE path of the search (Annular is
+        // Any for a point front body), gfoclt at its 1e-6 s
+        var expected = JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/OccultationReference/occultation_reference.json"))[
+                "dss65_2005_point_front ANY NONE POINT"]
+            .Select(w => new Window(TimeSystem.Time.CreateTDB(w[0]), TimeSystem.Time.CreateTDB(w[1]))).ToArray();
+        var spice = type == OccultationType.Any
+            ? SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse2005Window, 399065, 10, ShapeType.Ellipsoid, 301, ShapeType.Point, type,
+                Aberration.None, TimeSpan.FromSeconds(360.0)).ToArray()
+            : OccultationSearch.Spice(Eclipse2005Window, 399065, 10, ShapeType.Ellipsoid, 301, ShapeType.Point, type, Aberration.None,
+                TimeSpan.FromSeconds(360.0), null).ToArray();
+        double worst = WorstEdge(spice, expected);
+        _output.WriteLine($"MEASURE #496 dss65_2005 point front {type}, CSPICE path (1 us) - gfoclt (1e-9 s): {expected.Length} windows, worst {worst:E3} s");
+        Assert.Single(expected);
+        Assert.True(worst < GfocltThreshold, $"{worst:E2} s");
+    }
+
     [Fact]
     public void SpicePath_PointBackBody_FullIsAny()
     {
@@ -102,7 +126,7 @@ public class OccultationSearchTests
         var any = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, -470001, 10, ShapeType.Point, 399, ShapeType.Ellipsoid, OccultationType.Any,
             Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
         Assert.Equal(8, any.Length);
-        Assert.Equal(any, full);
+        LabelAssert.Equal(any, full);
     }
 
     [Fact]
@@ -118,12 +142,12 @@ public class OccultationSearchTests
 
         // Any holds until the end of the search: its last window ends there, and None has one window before each of Any's
         Assert.Equal(8, any.Length);
-        Assert.Equal(Eclipse001Window.EndDate, any[^1].EndDate);
+        LabelAssert.Equal(Eclipse001Window.EndDate, any[^1].EndDate);
         Assert.Equal(8, none.Length);
-        Assert.Equal(Eclipse001Window.StartDate, none[0].StartDate);
+        LabelAssert.Equal(Eclipse001Window.StartDate, none[0].StartDate);
         for (int i = 0; i < any.Length; i++)
         {
-            Assert.Equal(any[i].StartDate, none[i].EndDate);
+            LabelAssert.Equal(any[i].StartDate, none[i].EndDate);
         }
 
         double worstNone = WorstEdge(managedNone, none);

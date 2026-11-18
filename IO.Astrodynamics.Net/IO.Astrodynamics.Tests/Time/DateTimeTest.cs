@@ -76,7 +76,7 @@ public class DateTimeTests
     {
         var utc = new TimeSystem.Time(2020, 1, 1, frame: TimeFrame.UTCFrame);
         var tdt = utc.ToTDT();
-        Assert.Equal(new TimeSystem.Time("2020-01-01 00:01:09.184000 TDT"), tdt);
+        LabelAssert.Equal(new TimeSystem.Time("2020-01-01 00:01:09.184000 TDT"), tdt);
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class DateTimeTests
     [Fact]
     public void CreateFromEllapsedSeconds()
     {
-        Assert.Equal(new TimeSystem.Time(2000, 01, 01, 12),
+        LabelAssert.Equal(new TimeSystem.Time(2000, 01, 01, 12),
             TimeSystem.Time.Create(0.0, TimeFrame.TDBFrame));
         Assert.Equal(new TimeSystem.Time(1990, 01, 01, 12, 0, 57, 184, frame: TimeFrame.UTCFrame),
             TimeSystem.Time.Create(-315532742.816, TimeFrame.UTCFrame), TestHelpers.TimeComparer);
@@ -195,21 +195,21 @@ public class DateTimeTests
     public void TDBFromJulian()
     {
         var date = TimeSystem.Time.CreateFromJD(TimeSystem.Time.JULIAN_J2000, TimeFrame.TDBFrame);
-        Assert.Equal(TimeSystem.Time.J2000TDB, date);
+        LabelAssert.Equal(TimeSystem.Time.J2000TDB, date);
     }
 
     [Fact]
     public void UTCFromJulian()
     {
         var date = TimeSystem.Time.CreateFromJD(TimeSystem.Time.JULIAN_J2000, TimeFrame.UTCFrame);
-        Assert.Equal(TimeSystem.Time.J2000UTC, date);
+        LabelAssert.Equal(TimeSystem.Time.J2000UTC, date);
     }
 
     [Fact]
     public void FromJulian2()
     {
         var date = TimeSystem.Time.CreateFromJD(2433282.5000000000, TimeFrame.TDBFrame);
-        Assert.Equal(new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame), date);
+        LabelAssert.Equal(new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame), date);
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public class DateTimeTests
     {
         var tdt = new TimeSystem.Time("2000-01-01T12:00:00.0000000 TDT");
         var expectedTdt = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.TDTFrame);
-        Assert.Equal(expectedTdt, tdt);
+        LabelAssert.Equal(expectedTdt, tdt);
     }
     
     [Fact]
@@ -225,7 +225,7 @@ public class DateTimeTests
     {
         var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000 TDB");
         var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.TDBFrame);
-        Assert.Equal(expected, source);
+        LabelAssert.Equal(expected, source);
     }
     
     [Fact]
@@ -233,7 +233,7 @@ public class DateTimeTests
     {
         var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000 TAI");
         var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.TAIFrame);
-        Assert.Equal(expected, source);
+        LabelAssert.Equal(expected, source);
     }
     
     [Fact]
@@ -241,7 +241,7 @@ public class DateTimeTests
     {
         var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000Z");
         var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.UTCFrame);
-        Assert.Equal(expected, source);
+        LabelAssert.Equal(expected, source);
     }
     
     [Fact]
@@ -249,7 +249,7 @@ public class DateTimeTests
     {
         var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000 GPS");
         var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.GPSFrame);
-        Assert.Equal(expected, source);
+        LabelAssert.Equal(expected, source);
     }
 
     /// <summary>
@@ -286,16 +286,16 @@ public class DateTimeTests
         var parsed = new TimeSystem.Time(timeString);
 
         Assert.Same(frame, parsed.Frame);
-        Assert.Equal(new TimeSystem.Time(new DateTime(2024, 6, 21, 12, 0, 0), frame), parsed);
-        Assert.Equal(TimeSystem.Time.Create(772243200.0, frame), parsed);
+        LabelAssert.Equal(new TimeSystem.Time(new DateTime(2024, 6, 21, 12, 0, 0), frame), parsed);
+        LabelAssert.Equal(TimeSystem.Time.Create(772243200.0, frame), parsed);
         Assert.Equal(frame is UTCTimeFrame ? DateTimeKind.Utc : DateTimeKind.Unspecified, parsed.DateTime.Kind);
         if (frame is UTCTimeFrame)
         {
-            Assert.Equal(TimeSystem.Time.CreateUTC(772243200.0), parsed);
+            LabelAssert.Equal(TimeSystem.Time.CreateUTC(772243200.0), parsed);
         }
         else if (frame is TDBTimeFrame)
         {
-            Assert.Equal(TimeSystem.Time.CreateTDB(772243200.0), parsed);
+            LabelAssert.Equal(TimeSystem.Time.CreateTDB(772243200.0), parsed);
         }
 
         if (taiMinusCalendarTicks.HasValue)
@@ -308,7 +308,7 @@ public class DateTimeTests
     public void TheUtcExampleOfTheDocumentationIsTheUtcInstant()
     {
         // docs/reference/time-and-windows.md and DEVELOPER_GUIDE.md: the same instant as its Z form
-        Assert.Equal(new TimeSystem.Time("2024-06-21T12:00:00.000Z"), new TimeSystem.Time("2024-06-21T12:00:00.000 UTC"));
+        LabelAssert.Equal(new TimeSystem.Time("2024-06-21T12:00:00.000Z"), new TimeSystem.Time("2024-06-21T12:00:00.000 UTC"));
     }
 
     [Fact]
@@ -320,7 +320,7 @@ public class DateTimeTests
             var time = new TimeSystem.Time(calendar, frame);
             var read = new TimeSystem.Time(time.ToString());
             Assert.Same(frame, read.Frame);
-            Assert.Equal(time, read);
+            LabelAssert.Equal(time, read);
         }
     }
 
@@ -353,7 +353,7 @@ public class DateTimeTests
         var parsed = new TimeSystem.Time(timeString);
 
         Assert.Same(frame, parsed.Frame);
-        Assert.Equal(new TimeSystem.Time(new DateTime(year, month, day, hour, minute, second, millisecond), frame), parsed);
+        LabelAssert.Equal(new TimeSystem.Time(new DateTime(year, month, day, hour, minute, second, millisecond), frame), parsed);
     }
 
     [Theory]
@@ -512,10 +512,11 @@ public class DateTimeTests
     }
 
     [Fact]
-    public void AddDaysHoursMinutes_FiniteArguments_Unchanged()
+    public void AddDaysHoursMinutes_FiniteArguments_AreTheNearestTick()
     {
-        // A non-regression check of the guard, not a correctness reference: the result is DateTime's arithmetic, bit for bit
-        // (its truncation is #637's, not this guard's), for 1e5 random spans within ±1e5 days in each unit
+        // The guard of #680 lets every finite span through, and the span is its nearest tick, ties to even (#637; DateTime's
+        // truncation before 11.0.0): the exact integer reference of ExactTicks, for 1e5 random spans within ±1e5 days in
+        // each unit; the days of CreateFromJD are exact (Sterbenz's lemma)
         var random = new Random(680);
         var baseDate = new DateTime(2024, 6, 21, 12, 0, 0);
         var tdb = new TimeSystem.Time(baseDate, TimeFrame.TDBFrame);
@@ -523,14 +524,14 @@ public class DateTimeTests
         for (int i = 0; i < 100000; i++)
         {
             double days = (random.NextDouble() * 2.0 - 1.0) * 1.0e5;
-            Assert.Equal(baseDate.AddDays(days).Ticks, tdb.AddDays(days).DateTime.Ticks);
-            Assert.Equal(baseDate.AddHours(days * 24.0).Ticks, tdb.AddHours(days * 24.0).DateTime.Ticks);
-            Assert.Equal(baseDate.AddMinutes(days * 1440.0).Ticks, utc.AddMinutes(days * 1440.0).DateTime.Ticks);
+            Assert.Equal(baseDate.Ticks + ExactTicks.Nearest(days, TimeSpan.TicksPerDay), tdb.AddDays(days).DateTime.Ticks);
+            Assert.Equal(baseDate.Ticks + ExactTicks.Nearest(days * 24.0, TimeSpan.TicksPerHour), tdb.AddHours(days * 24.0).DateTime.Ticks);
+            Assert.Equal(baseDate.Ticks + ExactTicks.Nearest(days * 1440.0, TimeSpan.TicksPerMinute), utc.AddMinutes(days * 1440.0).DateTime.Ticks);
             Assert.Equal(TimeFrame.TDBFrame, tdb.AddDays(days).Frame);
             Assert.Equal(TimeFrame.UTCFrame, utc.AddMinutes(days * 1440.0).Frame);
 
             double julianDate = TimeSystem.Time.JULIAN_J2000 + days;
-            Assert.Equal(TimeSystem.Time.J2000.AddDays(julianDate - TimeSystem.Time.JULIAN_J2000).Ticks,
+            Assert.Equal(TimeSystem.Time.J2000.Ticks + ExactTicks.Nearest(julianDate - TimeSystem.Time.JULIAN_J2000, TimeSpan.TicksPerDay),
                 TimeSystem.Time.CreateFromJD(julianDate, TimeFrame.TDBFrame).DateTime.Ticks);
         }
     }

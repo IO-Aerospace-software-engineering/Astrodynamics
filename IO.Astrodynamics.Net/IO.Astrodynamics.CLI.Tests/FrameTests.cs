@@ -51,4 +51,37 @@ public class FrameTests
             Assert.Equal(icrf.Replace("Frame : J2000", $"Frame : {frame}"), Run(frame));
         }
     }
+
+    [Theory]
+    [InlineData("CIRS", "ICRF")]
+    [InlineData("cirs", "ITRF93")]
+    [InlineData("TIRS", "ICRF")]
+    [InlineData("Tirs", "cirs")]
+    public void ConvertFromCirsOrTirs_IsTheManagedFrame(string from, string to)
+    {
+        // #656: a frame built from the name CIRS or TIRS, in any case, is Frame.CIRS or Frame.TIRS (before, the CLI handed
+        // the name to SPICE, which does not know it, and threw): the conversion of the static frame, labelled with the frame
+        // given (the library's ManagedFrameByNameTests check the static frames against SOFA)
+        using (Configuration.Lock())
+        {
+            var command = new FrameConverterCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+            command.Convert("Data", from, to, new EpochParameters { Epoch = "2000-01-01T12:00:00Z" });
+
+            Frames.Frame StaticFrame(string name) => name.ToUpperInvariant() switch
+            {
+                "CIRS" => Frames.Frame.CIRS,
+                "TIRS" => Frames.Frame.TIRS,
+                "ICRF" => Frames.Frame.ICRF,
+                _ => new Frames.Frame(name)
+            };
+
+            var expected = StaticFrame(from).ToFrame(StaticFrame(to), new TimeSystem.Time("2000-01-01T12:00:00Z"));
+            Assert.Equal(
+                expected.ToString().Replace($"Frame : {StaticFrame(from).Name}", $"Frame : {from}") + Environment.NewLine,
+                sb.ToString());
+        }
+    }
 }

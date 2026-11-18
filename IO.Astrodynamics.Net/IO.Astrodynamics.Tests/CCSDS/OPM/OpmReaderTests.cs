@@ -785,13 +785,44 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [InlineData("X", "-0")]
         [InlineData("X", "1.0e-300")]
         [InlineData("X", "4.9e-324")] // the least subnormal, finite
-        [InlineData("X_DOT", "-1.7976931348623157e308")] // -double.MaxValue, finite
+        [InlineData("X_DOT", "-1.7976931348623156e305")] // the largest magnitude finite in m/s (#729)
         public void ReadFromString_FiniteExtremeValue_ReadsTheValueOfTheText(string keyword, string value)
         {
             var opm = _reader.ReadFromString(OpmWithKeyword(keyword, value));
             double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
             double actual = keyword == "X" ? opm.Data.StateVector.X : opm.Data.StateVector.XDot;
             Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual));
+        }
+
+        [Theory]
+        [InlineData("X", "1e306")]
+        [InlineData("Z", "-1.797693134862316e305")] // the next double after the largest magnitude finite in m
+        [InlineData("X_DOT", "-1.7976931348623157e308")] // -double.MaxValue km/s
+        [InlineData("Z_DOT", "1e306")]
+        [InlineData("CX_X", "1e303")]
+        [InlineData("CY_X", "-1.797693134862316e302")] // the next double after the largest magnitude finite in m²
+        [InlineData("CZ_DOT_Z_DOT", "1.7976931348623157e308")]
+        public void ReadFromString_FiniteValueOverflowingInSiUnits_ThrowsOpmParseException(string keyword, string value)
+        {
+            // #729: a finite km, km/s, km², km²/s or km²/s² text whose product by 1000 or 1e6 is beyond the range of a double
+            // loaded, and Opm.ToStateVector gave ±Infinity in its state or covariance; refused as the CDM reader refuses it
+            // (#708), naming the keyword and its text
+            var xml = OpmWithKeyword(keyword, value);
+            double factor = keyword.StartsWith("C", StringComparison.Ordinal) ? 1e6 : 1000.0;
+            Assert.False(double.IsFinite(double.Parse(value, System.Globalization.CultureInfo.InvariantCulture) * factor));
+
+            void AssertNamesKeyword(OpmParseException ex)
+            {
+                Assert.Contains(keyword, ex.Message);
+                Assert.Contains($"'{value}'", ex.Message);
+                Assert.Contains("SI units", ex.Message);
+                Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
+            }
+
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)));
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromStream(stream)));
+            NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromFile(file))));
         }
 
         #endregion

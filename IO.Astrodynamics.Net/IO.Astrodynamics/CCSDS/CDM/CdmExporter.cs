@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -45,6 +46,17 @@ internal static class CdmExporter
         {
             throw new InvalidOperationException(
                 "Secondary object covariance is required to export a standards-compliant CDM.");
+        }
+
+        // The maximum Pc of a single covariance (Frisbee) has no value in the SANA registry cdm_cpm, and a CDM carries both
+        // covariances: refused, as an encounter with one covariance is above (#618 with #342, decided by S. Guillet,
+        // 2026-11-17; before, a case built with the flag and both covariances was written FOSTER-2D-MAX-PC)
+        if (encounterCase.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.SingleCovarianceMaximumPcUsed))
+        {
+            throw new InvalidOperationException(
+                "The collision probability of the encounter is the maximum probability of a single covariance " +
+                "(EncounterQualityFlags.SingleCovarianceMaximumPcUsed), which a CDM cannot carry: it holds both covariances, and the " +
+                "SANA registry of COLLISION_PROBABILITY_METHOD holds no value for that method.");
         }
 
         if (encounterCase.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed) && !options.AllowStaleCovariance)
@@ -98,7 +110,7 @@ internal static class CdmExporter
 
         var header = new CdmHeader
         {
-            CreationDateUtc = EnsureUtc(options.CreationDateUtc ?? DateTime.UtcNow),
+            CreationDateUtc = CcsdsDates.ToUtc(options.CreationDateUtc ?? DateTime.UtcNow),
             Originator = options.Originator,
             MessageFor = options.MessageFor ?? protectedMetadata.ObjectName,
             MessageId = string.IsNullOrWhiteSpace(options.MessageId)
@@ -123,7 +135,7 @@ internal static class CdmExporter
         return new CdmRelativeMetadataData
         {
             Comments = comments,
-            TcaUtc = EnsureUtc(encounterCase.EncounterState.Epoch.ToUTC().DateTime),
+            TcaUtc = CcsdsDates.ToUtc(encounterCase.EncounterState.Epoch.ToUTC().DateTime),
             MissDistanceMeters = encounterCase.EncounterState.MissDistanceMeters,
             RelativeSpeedMetersPerSecond = encounterCase.EncounterState.RelativeState.RelativeVelocityInertial.Magnitude(),
             RelativeStateVector = options.IncludeRelativeStateVector
@@ -134,13 +146,13 @@ internal static class CdmExporter
                 }
                 : null,
             StartScreenPeriodUtc = options.IncludeScreeningWindow
-                ? EnsureUtc(encounterCase.ScreeningWindow.StartDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.StartDate.ToUTC().DateTime)
                 : null,
             StopScreenPeriodUtc = options.IncludeScreeningWindow
-                ? EnsureUtc(encounterCase.ScreeningWindow.EndDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.EndDate.ToUTC().DateTime)
                 : null,
             CollisionProbability = encounterCase.CollisionRisk.ProbabilityOfCollision,
-            CollisionProbabilityMethod = options.CollisionProbabilityMethod ?? InferCollisionProbabilityMethod(encounterCase)
+            CollisionProbabilityMethod = options.CollisionProbabilityMethod ?? FosterCollisionProbabilityMethod
         };
     }
 
@@ -440,12 +452,10 @@ internal static class CdmExporter
         };
     }
 
-    private static string InferCollisionProbabilityMethod(EncounterCase encounterCase)
-    {
-        return encounterCase.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.SingleCovarianceMaximumPcUsed)
-            ? "FOSTER-2D-MAX-PC"
-            : "FOSTER-2D";
-    }
+    // Foster and Estes (1992), the 2D Gaussian integrated over the hard-body disc, the Pc the analysis computes: FOSTER-1992
+    // in the SANA registry cdm_cpm (CCSDS 508.0-B-1 Cor. 2, annex E, E1). Before #618, FOSTER-2D, which the registry does
+    // not hold (decided by S. Guillet, 2026-11-17)
+    private const string FosterCollisionProbabilityMethod = "FOSTER-1992";
 
     private static string CreateMessageId(EncounterCase encounterCase)
     {
@@ -477,16 +487,6 @@ internal static class CdmExporter
             "ITRF93" => CdmReferenceFrame.Itrf,
             _ => throw new InvalidOperationException(
                 $"CDM export only supports J2000/ICRF/GCRF/EME2000/ITRF participant states. Encounter state frame '{frameName}' is not supported.")
-        };
-    }
-
-    private static DateTime EnsureUtc(DateTime value)
-    {
-        return value.Kind switch
-        {
-            DateTimeKind.Utc => value,
-            DateTimeKind.Local => value.ToUniversalTime(),
-            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
         };
     }
 

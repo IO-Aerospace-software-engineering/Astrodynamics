@@ -124,13 +124,65 @@ public class CcsdsEpochParserTests
         Assert.False(CcsdsEpochParser.TryParse(text, out _));
     }
 
-    [Fact]
-    public void OtherText_KeepsTheFormerFallback()
+    /// <summary>
+    /// Texts outside the two forms of CCSDS 508.0-B-1 §6.3.2.6 and 502.0-B-3 (<c>yyyy-mm-ddThh:mm:ss[.d→d][Z]</c>,
+    /// <c>yyyy-dddThh:mm:ss[.d→d][Z]</c>, "All fields require leading zeros"), which the readers' fallback,
+    /// <see cref="DateTime.TryParse(string, IFormatProvider, DateTimeStyles, out DateTime)"/>, read before #619 (the
+    /// instant it gave in the comment, on 2026-11-17). lxml 6.1.3 with the repository's <c>ndmxml-4.0.0-common-4.0.xsd</c>
+    /// rejects each of them as an <c>epochType</c> (facet 'pattern'), but <c>1.5</c>, its bare-number branch, which the
+    /// standards do not allow in a date field.
+    /// </summary>
+    [Theory]
+    [InlineData("13 March 2010 22:37:52.618")] // 2010-03-13T22:37:52.618
+    [InlineData("03/13/2010 22:37:52.618")] // 2010-03-13T22:37:52.618
+    [InlineData("2010-03-13 22:37:52.618")] // 2010-03-13T22:37:52.618, a space for the T
+    [InlineData("2010-3-13T22:37:52.618")] // 2010-03-13T22:37:52.618, no leading zero
+    [InlineData("Sat, 13 Mar 2010 22:37:52 GMT")] // 2010-03-13T22:37:52 (RFC 1123)
+    [InlineData("2010-03-13")] // 2010-03-13T00:00:00, a date alone
+    [InlineData("22:37:52.618")] // the day of the run, 22:37:52.618
+    [InlineData("1,5")] // 5 January of the year of the run
+    [InlineData("1.5")] // 5 January of the year of the run
+    [InlineData("2010-03-13t22:37:52.618")] // 2010-03-13T22:37:52.618, a lowercase t
+    [InlineData("2010-03-13T22:37:52.618z")] // 2010-03-13T22:37:52.618, a lowercase z
+    [InlineData(" 2010-03-13T22:37:52.618")] // 2010-03-13T22:37:52.618 (epochType is an xsd:string: no blank collapsed)
+    [InlineData("2010-03-13T22:37:52.618 ")] // 2010-03-13T22:37:52.618
+    [InlineData("2010-03-13T22:37:52.618\n")] // 2010-03-13T22:37:52.618 (and the pattern's $ matched before the line feed)
+    [InlineData("2010-03-13T22:37:52,618")] // 2010-03-13T22:37:52.618, a decimal comma
+    [InlineData("2010-03-13T22:37")] // 2010-03-13T22:37:00, no seconds
+    [InlineData("2010-03-13T22:37:52.618+0100")] // 2010-03-13T21:37:52.618
+    [InlineData("2010-03-13T22:37:52.618+01")] // 2010-03-13T21:37:52.618
+    public void TextOutsideTheTwoForms_IsRejected(string text)
     {
-        // Outside the epochType form, DateTime.TryParse as before (#619 keeps its leniency)
-        const string text = "2021-03-20 12:00:00";
-        Assert.True(CcsdsEpochParser.TryParse(text, out var utc));
-        Assert.Equal(new DateTime(2021, 3, 20, 12, 0, 0, DateTimeKind.Utc), utc);
+        // #619: before, the fallback gave a date, today's for a time alone or a bare number
+        Assert.False(CcsdsEpochParser.TryParse(text, out _), text);
+    }
+
+    [Theory]
+    [InlineData("22:37:52.618")]
+    [InlineData("1.5")]
+    [InlineData("1,5")]
+    [InlineData("2010-03-13")]
+    [InlineData("03/13/2010 22:37:52.618")]
+    public void Readers_RejectTextOutsideTheTwoForms(string text)
+    {
+        // #619: the OPM EPOCH and CREATION_DATE, the OPM MAN_EPOCH_IGNITION and the OMM EPOCH throw the reader's parse
+        // exception naming the field and the text (CDM: CdmTests.ReadFromString_DateOutsideTheTwoForms_ThrowsCdmParseException)
+        var ex = Assert.Throws<OpmParseException>(() => new OpmReader().ReadFromString(OpmXml("2024-01-15T12:00:00", text)));
+        Assert.Contains($"'{text}'", ex.Message);
+        Assert.Contains("EPOCH", ex.Message);
+        ex = Assert.Throws<OpmParseException>(() => new OpmReader().ReadFromString(OpmXml(text, "2024-01-15T12:00:00")));
+        Assert.Contains("CREATION_DATE", ex.Message);
+        ex = Assert.Throws<OpmParseException>(() => new OpmReader().ReadFromString(OpmXml("2024-01-15T12:00:00", "2024-01-15T12:00:00", text)));
+        Assert.Contains("MAN_EPOCH_IGNITION", ex.Message);
+
+        var ommXml = File.ReadAllText(Path.Combine("CCSDS", "iss.omm"))
+            .Replace("<EPOCH>2026-01-13T05:00:55.752768</EPOCH>", $"<EPOCH>{text}</EPOCH>");
+        var ommEx = Assert.Throws<OmmParseException>(() => new OmmReader().ReadFromString(ommXml));
+        Assert.Contains($"'{text}'", ommEx.Message);
+        Assert.Contains("EPOCH", ommEx.Message);
+
+        // The same documents with the dates as written read
+        Assert.NotNull(new OpmReader().ReadFromString(OpmXml("2024-01-15T12:00:00", "2024-01-15T12:00:00", "2024-01-15T13:00:00")));
     }
 
     [Fact]
@@ -181,8 +233,20 @@ public class CcsdsEpochParserTests
         // CDM: CdmTests.ReadFromString_YearZeroOrNonAsciiDigits
     }
 
-    private static string OpmXml(string creationDate, string epoch)
+    private static string OpmXml(string creationDate, string epoch, string maneuverEpoch = null)
     {
+        var maneuver = maneuverEpoch == null
+            ? string.Empty
+            : $@"
+                <maneuverParameters>
+                    <MAN_EPOCH_IGNITION>{maneuverEpoch}</MAN_EPOCH_IGNITION>
+                    <MAN_DURATION>0</MAN_DURATION>
+                    <MAN_DELTA_MASS>0</MAN_DELTA_MASS>
+                    <MAN_REF_FRAME>RTN</MAN_REF_FRAME>
+                    <MAN_DV_1>0.001</MAN_DV_1>
+                    <MAN_DV_2>0</MAN_DV_2>
+                    <MAN_DV_3>0</MAN_DV_3>
+                </maneuverParameters>";
         return $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <opm id=""CCSDS_OPM_VERS"" version=""3.0"">
     <header>
@@ -207,7 +271,7 @@ public class CcsdsEpochParserTests
                     <X_DOT>0</X_DOT>
                     <Y_DOT>7.5</Y_DOT>
                     <Z_DOT>0</Z_DOT>
-                </stateVector>
+                </stateVector>{maneuver}
             </data>
         </segment>
     </body>

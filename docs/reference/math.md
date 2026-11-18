@@ -120,6 +120,15 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `operator *(Matrix, Matrix)` | Matrix multiplication |
 | `Equals(Matrix)`, `==`, `!=` | Same dimensions and every element equal by `double.Equals`: NaN equals NaN only, +0 equals −0 (#680) |
 
+A `Matrix` is a struct over an array that `Set` writes, which every copy of the struct shares. The public types that
+hold a matrix copy it when they receive it and when they return it, so that a term set afterwards on the matrix given or
+returned does not reach them (#722, decided by S. Guillet, 2026-11-17: copies in the holders, `Matrix` kept mutable):
+`StateVector.Covariance`, `EncounterState.CombinedCovarianceRtn`, `CollisionRisk.ProjectedCovariance`,
+`EpochStatistics.SampleCovariance`, `CdmCovarianceMatrix.StateCovarianceRtn` (#717) and `Iau2006Model.FrameBias()`. One
+matrix can so build the covariances of several states in a loop. Each read of these members returns a new copy; the
+results of `PropagationSolution` (`GetStateTransitionMatrix`, `GetCovariance`, ...) and of the conversions are new
+matrices too.
+
 ### Static Methods
 
 | Method | Description |

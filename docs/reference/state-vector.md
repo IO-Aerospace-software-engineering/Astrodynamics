@@ -57,13 +57,17 @@ conjunction analysis; see
 | `Observer` | Central body |
 | `Epoch` | Time of state |
 | `Frame` | Reference frame |
-| `Covariance` | `Matrix?`: the 6×6 covariance, null when the state carries none |
+| `Covariance` | `Matrix?`: the 6×6 covariance, null when the state carries none; a copy of the one the state holds, which its constructor copied too (#722) |
+
+Two states are equal (`==`, `Equals`, through `OrbitalParameters` or not) when their position, velocity, observer (by
+NAIF id), epoch (an instant, whatever its time frame, #512) and frame are; the covariance does not take part. A state is
+never equal to a set of elements, its own included ([Keplerian Elements](keplerian-elements.md#equality)).
 
 ## Orbital Element Methods
 
 | Method | Description |
 |--------|-------------|
-| `SemiMajorAxis()` | Semi-major axis (m) |
+| `SemiMajorAxis()` | Semi-major axis (m), −μ/(2ξ): the conic's within 1e-6 of e = 1 too, +Infinity for e = 1 exactly or a zero energy (#459; [the near-parabolic band](keplerian-elements.md#the-near-parabolic-band)) |
 | `Eccentricity()` | Eccentricity |
 | `Inclination()` | Inclination (rad) |
 | `AscendingNode()` | RAAN (rad) |
@@ -71,8 +75,8 @@ conjunction analysis; see
 | `TrueAnomaly()` | True anomaly (rad) |
 | `MeanAnomaly()` | Mean anomaly (rad) |
 | `EccentricAnomaly()` | Eccentric anomaly (rad) |
-| `Period()` | Orbital period |
-| `MeanMotion()` | Mean motion (rad/s) |
+| `Period()` | Orbital period of an ellipse; an open orbit throws `InvalidOperationException` (#663) |
+| `MeanMotion()` | Mean motion (rad/s), √(μ/\|a\|³); Barker's √(μ/(2q³)) for a parabola (#459) |
 | `SpecificOrbitalEnergy()` | Vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Angular momentum vector |
 | `EccentricityVector()` | Eccentricity vector |
@@ -109,9 +113,9 @@ small angular momentum.
 | `ToEquinoctial()` | Convert to equinoctial elements |
 | `ToEquatorial()` | Right ascension and declination in ICRF, whatever the frame of the state (rotated at its epoch, #680), and the distance |
 | `ToFrame(Frame)` | Transform to different reference frame |
-| `RelativeTo(ILocalizable, Aberration)` | Transform to different center |
+| `RelativeTo(ILocalizable, Aberration)` | Transform to a different center: the state minus the new center as the current center sees it, corrected by the aberration; the state itself is not moved in time, so the result is not the object seen from the new center with light time (for a site, `Site.GetEphemeris`, [#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)) |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(TLE.Configuration)` | Convert to TLE format |
+| `ToTLE(TLE.Configuration)` | Convert to TLE format (a fit of SGP4 mean elements in TEME); an orbit about the Earth only, `InvalidOperationException` naming the centre otherwise (#607) |
 
 ## See Also
 

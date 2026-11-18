@@ -29,7 +29,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(site, launch.LaunchSite);
             Assert.Equal(recoverySite, launch.RecoverySite);
             Assert.True(launch.LaunchByDay);
-            Assert.Equal(TestHelpers.Moon.InitialOrbitalParameters, launch.TargetOrbit);
+            LabelAssert.Equal(TestHelpers.Moon.InitialOrbitalParameters, launch.TargetOrbit);
         }
 
         [Fact]

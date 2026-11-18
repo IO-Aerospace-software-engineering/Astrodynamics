@@ -785,6 +785,47 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
                 OmmData.CreateForTle(meanElements, tleParameters));
         }
 
+        // The mean motion field of a TLE, columns 53-63 of line 2, is NN.NNNNNNNN: 11 characters, at most 99.99999999
+        // rev/day. A MEAN_MOTION beyond it cannot be represented and is refused naming the keyword, as the NORAD catalog
+        // number and the revolution number are (#729: above about 2.86e307 rev/day the conversion to rad/s and back
+        // overflowed, and the TLE was written with the text Infinity; between 100 and there, the TLE constructor threw
+        // its line-length ArgumentException)
+        [Theory]
+        [InlineData(100.0)]
+        [InlineData(1.0e10)]
+        [InlineData(2.8e307)]
+        [InlineData(3.0e307)]
+        [InlineData(double.MaxValue)]
+        public void ToTle_MeanMotionBeyondTheTleField_ThrowsNamingMeanMotion(double meanMotion)
+        {
+            var omm = CreateTleOmm(meanMotion);
+
+            var ex = Assert.Throws<InvalidOperationException>(() => omm.ToTle());
+
+            Assert.Contains("MEAN_MOTION", ex.Message);
+            Assert.Contains(meanMotion.ToString("R", System.Globalization.CultureInfo.InvariantCulture), ex.Message);
+        }
+
+        // The largest value the field holds is written as the 11 characters of the format
+        [Fact]
+        public void ToTle_MeanMotionAtTheTopOfTheTleField_IsWritten()
+        {
+            var tle = CreateTleOmm(99.99999999).ToTle();
+
+            Assert.Equal("99.99999999", tle.Line2.Substring(52, 11));
+        }
+
+        private static Omm CreateTleOmm(double meanMotion)
+        {
+            var meanElements = MeanElements.CreateWithMeanMotion(
+                new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), meanMotion, 0.001, 51.6, 10.0, 20.0, 30.0);
+            var tleParameters = TleParameters.CreateWithBStarAndDDot(1e-4, 0.0, 0.0, noradCatalogId: 12345,
+                elementSetNumber: 1, revolutionNumberAtEpoch: 10);
+            return new Omm(CcsdsHeader.Create("TEST"),
+                new OmmMetadata("SAT", "2020-001A", "EARTH", "TEME", "UTC", "SGP4"),
+                OmmData.CreateForTle(meanElements, tleParameters));
+        }
+
         // A TLE holds SGP4 mean elements of an Earth orbit in TEME: the library's SGP4 (CSPICE evsgp4_c, WGS-72) takes
         // nothing else
         [Theory]

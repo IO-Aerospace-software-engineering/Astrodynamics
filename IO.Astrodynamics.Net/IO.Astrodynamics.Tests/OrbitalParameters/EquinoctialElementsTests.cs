@@ -121,7 +121,7 @@ public class EquinoctialElementsTests
         Assert.Equal(5.0, equ.K);
         Assert.Equal(6.0, equ.L0);
         Assert.Equal(earth, equ.Observer);
-        Assert.Equal(epoch, equ.Epoch);
+        LabelAssert.Equal(epoch, equ.Epoch);
         Assert.Equal(Frames.Frame.ICRF, equ.Frame);
     }
 
@@ -150,7 +150,7 @@ public class EquinoctialElementsTests
             Frames.Frame.ICRF);
         EquinoctialElements equ = ke.ToEquinoctial();
         EquinoctialElements equ2 = equ.ToEquinoctial();
-        Assert.Equal(equ, equ2);
+        LabelAssert.Equal(equ, equ2);
         Assert.True(equ == equ2);
         Assert.False(equ != equ2);
         Assert.False(equ == null);

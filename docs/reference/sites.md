@@ -25,7 +25,7 @@ Ground-based observation or tracking site.
 | Method | Description |
 |--------|-------------|
 | `GetHorizontalCoordinates(Time, ILocalizable, Aberration)` | Get azimuth, elevation, range |
-| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer |
+| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer: a site of the kernels seen from a body, a barycenter or a kernel spacecraft by `spkezr_c`; a site given by its coordinates corrected as `spkcpt_c` corrects it, the site itself at t ∓ lt ([Light time of a site](#light-time-of-a-site)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnCoordinateConstraint(...)` | Find coordinate constraint windows of this site seen from an observer; for the visibility of a spacecraft, search the spacecraft from the site: `spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, mask, 0.0, aberration, step)` (the declination in the site's frame is the elevation) |
@@ -59,6 +59,16 @@ to `GeometryFinder.FindWindowsWithCondition` has nothing to search between its s
 every window and every gap. Before 11.0.0 the library decided each transition from the samples alone, and lost the
 windows, gaps and crossings between two samples
 ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)).
+
+A CSPICE search returns every window it finds, up to the 10000 its result cell holds; beyond, it throws
+`InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has size, 20000, cardinality
+20000. Cannot insert an additional interval into the window." (the size counts the endpoints; the short code is not in
+the message), never a partial list: split such a search window. The managed search
+has no such bound. Before 11.0.0 a CSPICE search returned its first 1000 windows and dropped the rest without an error
+(`NotEqual` then ending with one window across every dropped crossing), and an illumination search of more than 1000
+windows threw ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)): the Moon's X in
+`IAU_EARTH` crosses 0 2126 times in 1100 days, which `FindWindowsOnCoordinateConstraint` with `Equal` now returns, as
+`gfposc_c` does.
 
 Both searches take a distance in m. CSPICE searches the distance of a site from the kernels to a spacecraft from the
 kernels, and its illumination (`FindWindowsOnIlluminationConstraint`, `FindDayWindows`) whatever the source: its surface
@@ -169,6 +179,31 @@ frame not fixed in the frame of the body (read at J2000 TDB and 6 h later) canno
 and throws `InvalidOperationException`. Before 11.0.0 the writer wrote the frame of `Planetodetic` under the kernel's
 id, 7.76e-8 rad from `DSS-13_TOPO`, and for a site named otherwise renamed the frame of that id. To keep the frame of
 the coordinates at J2000, build the site from them: `new Site(id, name, body, kernelSite.Planetodetic)`.
+
+### Light time of a site
+
+A site of the kernels seen from a body, a barycenter or a spacecraft of the kernels is read by CSPICE (`spkezr_c`),
+which corrects it. A site given by its coordinates is corrected by the library as CSPICE's `spkcpt_c` corrects it, for
+every observer, its own body included: the site itself is taken at t − lt (t + lt for the transmission corrections), its
+position fixed in the body-fixed frame of its body turned to ICRF at that epoch, lt the light time of `spkltc` (one
+iteration for `LT` and `XLT`, converged for `CN` and `XCN`), the velocity scaled by the rate of the light time, and for
+the `+S` corrections the stellar aberration of `stelab` (`stlabx` for transmission) from the observer's velocity
+([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489); the reference-body path of
+[Celestial bodies](celestial-bodies.md)). It agrees with `spkcpt_c` to 2.4e-5 m and 3.7e-9 m/s from the Moon, the Earth
+and LRO, the sites at the poles and on the equator included, and to 6.8e-5 m from the Sun and the Mars barycenter.
+Without correction the state is unchanged, bit for bit. The window searches, `SubObserverPoint` and `IsInFOV` of such a
+site read it this way: the 400000 km window of the example below, with `LT`, is within 1e-7 s of the window of
+`spkcpt_c`, and so are its coordinate windows seen from the Moon with `LT` (its range and declination in J2000, its
+declination in the frame of another site given by its coordinates). A copy of a site of the kernels built from its
+coordinates (DSS-13's position at J2000 TDB) agrees with `spkcpt_c` at those coordinates as G does; the kernel site itself
+moves 0.47 m from them by 2024, the plate motion of its SPK.
+
+Before 11.0.0 the correction of a site given by its coordinates, seen from an observer of the kernels, was that of the
+observer seen from the site's body (`OrbitalParameters.RelativeTo`), the site never moved back in time: 82.7 km from
+`spkcpt_c` seen from the Moon with `LT`, about 15 000 km from the Sun, the geometric state seen from its own body (640 m
+with `LT`), and the window of the example about 340 s wider at each end. `OrbitalParameters.RelativeTo(ILocalizable,
+Aberration)` keeps its behaviour: it holds one state, not the trajectory of the object, so its correction applies to the
+new origin as seen from the current one (decided by S. Guillet, 2026-11-17).
 
 ### Example
 

@@ -66,9 +66,9 @@ public class TLETests
         var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 18, 50, 13, 663, DateTimeKind.Utc), TimeFrame.UTCFrame);
         var stateVector = tle.AtEpoch(epoch).ToStateVector().ToFrame(Frames.Frame.ICRF) as StateVector;
 
-        Assert.Equal(stateVector, tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF) as StateVector);
+        LabelAssert.Equal(stateVector, tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF) as StateVector);
         var reference = Frame.TemeFrameTests.Reference("ISS 2021 +6 h");
-        Assert.Equal(epoch, Frame.TemeFrameTests.Instant(reference.Instant));
+        LabelAssert.Equal(epoch, Frame.TemeFrameTests.Instant(reference.Instant));
         var position = Frame.TemeFrameTests.Position(reference.Gmat);
         var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat);
         // Twice the 0.0660 m and 7.57e-5 m/s measured on Linux x64, Windows x64 and macOS arm64 (CI run 42490199772,
@@ -80,7 +80,7 @@ public class TLETests
         Assert.InRange((stateVector.Velocity - velocity).Magnitude(), 0.0, 1.6e-4);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
-        Assert.Equal(epoch, stateVector.Epoch);
+        LabelAssert.Equal(epoch, stateVector.Epoch);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class TLETests
             "2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848    13");
         var earth = tle.Observer.InitialOrbitalParameters;
         Assert.Equal(Frames.Frame.ECLIPTIC_J2000, earth.Frame);
-        Assert.Equal(tle.Epoch, earth.Epoch);
+        LabelAssert.Equal(tle.Epoch, earth.Epoch);
         Assert.Equal(3, earth.Observer.NaifId);
         Assert.InRange(earth.ToStateVector().Position.Magnitude(), 4.2e6, 5.0e6);
         Assert.Same(Frames.Frame.TEME, tle.Frame);
@@ -244,7 +244,7 @@ public class TLETests
     [Fact]
     public void Create_InvalidElementSetNumber_ThrowsArgumentOutOfRangeException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF,
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.TEME,
             elementsType: OrbitalElementsType.Mean);
         string name = "TestSatellite";
         ushort noradId = 12345;
@@ -268,7 +268,7 @@ public class TLETests
     [Fact]
     public void Create_InvalidName_ThrowsNullArgumentException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF,
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.TEME,
             elementsType: OrbitalElementsType.Mean);
         string name = "";
         ushort noradId = 12345;
@@ -577,7 +577,7 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        Assert.Equal(tle1, tle2);
+        LabelAssert.Equal(tle1, tle2);
     }
 
     [Fact]
@@ -593,7 +593,7 @@ public class TLETests
             0.0, // Mean anomaly
             TestHelpers.EarthAtJ2000,
             epoch,
-            Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
+            Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
 
         var tle = TLE.Create(kep, "TEST_SAT", 65535, "21001A", 1000,
             Classification.Unclassified, 0.0001, 0.000001, 0.0, 100);
@@ -666,7 +666,7 @@ public class TLETests
             0.0, // Mean anomaly
             TestHelpers.EarthAtJ2000,
             epoch,
-            Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
+            Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
 
         // Act: Create TLE with specific BSTAR value
         var tle = TLE.Create(kep, "TEST", 12345, "24001A", 100,
@@ -952,6 +952,28 @@ public class TLETests
             TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
 
         Assert.Equal(OrbitalElementsType.Osculating, kep.ElementsType);
+    }
+
+    /// <summary>
+    /// #729: FromOMM converts rev/day to rad/s as (n × 2π) / 86400, two roundings of double arithmetic; the product
+    /// n × 2π overflows to +Infinity above about 2.86e307 rev/day, where the quotient is finite (about 2.08e303 rad/s).
+    /// The reference is the same two roundings with an unbounded exponent (round to 53 bits, ties to even, of
+    /// round(n × 2π) / 86400, 2π the double of Constants._2PI), computed in exact rational arithmetic (Python fractions,
+    /// 2026-11-17); below the overflow it is the former result, bit for bit.
+    /// </summary>
+    [Theory]
+    [InlineData(15.5, 0x3f5277c8fd1119eeL)] // the former product, unchanged
+    [InlineData(2.8e307, 0x7ee7c10c6e82d137L)] // below the overflow of n × 2π, unchanged
+    [InlineData(2.9e307, 0x7ee89a3a97077d42L)] // above: +Infinity before
+    [InlineData(3e307, 0x7ee97368bf8c294cL)]
+    [InlineData(double.MaxValue, 0x7f13104b57cf96a2L)]
+    public void FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient(double meanMotion, long expectedBits)
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var meanKep = KeplerianElements.FromOMM(meanMotion, 0.001, 51.6, 10.0, 20.0, 30.0, TestHelpers.EarthAtJ2000, epoch,
+            Frames.Frame.TEME);
+
+        Assert.Equal(expectedBits, BitConverter.DoubleToInt64Bits(meanKep.MeanMotion()));
     }
 
     [Fact]

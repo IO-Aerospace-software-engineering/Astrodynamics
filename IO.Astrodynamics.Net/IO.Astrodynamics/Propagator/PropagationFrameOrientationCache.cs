@@ -12,6 +12,13 @@ namespace IO.Astrodynamics.Propagator;
 /// </summary>
 /// <remarks>
 /// <para>
+/// The rotation between two grid points is the exact spherical linear interpolation, by the axis and the angle of their
+/// relative rotation (that of a type-3 CK, as <see cref="StateOrientation"/> and the attitude record of a spacecraft
+/// interpolate), the angular velocity linear. Before 11.0.0 it was <c>Quaternion.SLERP</c>, whose normalised-Lerp fallback
+/// below 0.028 rad took every cell of the 60 s grid of the Earth (4.4e-3 rad): up to 3.4e-10 rad from the exact
+/// interpolation of the same points, 140 times its departure from SPICE (#561).
+/// </para>
+/// <para>
 /// A grid point SPICE cannot give (outside the coverage of the frame's orientation data, where
 /// <see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/> throws since #454) is kept as unavailable: a propagation
 /// whose forces need no orientation of the central body (a point mass, no drag) still runs there, as it did when the
@@ -24,6 +31,13 @@ namespace IO.Astrodynamics.Propagator;
 /// give, up to the next grid point), or which lies past the window end so replaced, reads the frame's orientation at its
 /// epoch from the data provider, never through this cache: it throws, with SPICE's message, only when SPICE has no
 /// orientation at that epoch. A grid SPICE gives entirely reads nothing and allocates nothing.
+/// </para>
+/// <para>
+/// A read before the first grid point or after the last reads the frame's orientation at its epoch the same way. Before
+/// 11.0.0 it was held at the nearest end of the grid: a propagation whose output step does not divide its window runs up
+/// to half a step past it, and the propagator built its cache over the window, so past window end + 120 s the central
+/// body stopped turning (4.4e-3 rad 60 s past the grid, 4.4e-2 rad 600 s past; #626). The propagator now builds it over the
+/// span it integrates, so that no propagation reads past the grid.
 /// </para>
 /// </remarks>
 public sealed class PropagationFrameOrientationCache
@@ -132,7 +146,7 @@ public sealed class PropagationFrameOrientationCache
     }
 
     /// <summary>
-    /// Get interpolated orientation at the given epoch using SLERP for rotation
+    /// Get interpolated orientation at the given epoch using the exact SLERP for rotation (#561)
     /// and linear interpolation for angular velocity.
     /// </summary>
     public StateOrientation GetOrientation(in Time epoch)
@@ -143,7 +157,7 @@ public sealed class PropagationFrameOrientationCache
             return new StateOrientation(read.Rotation, read.AngularVelocity, epoch, Frame.ICRF);
         }
 
-        var rotation = p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
+        var rotation = Quaternion.SlerpByAxisAngle(p0.Rotation, p1.Rotation, ratio).Rotation;
         var angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
 
         return new StateOrientation(rotation, angularVelocity, epoch, Frame.ICRF);
@@ -159,7 +173,7 @@ public sealed class PropagationFrameOrientationCache
             return ReadAt(epoch).Rotation;
         }
 
-        return p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
+        return Quaternion.SlerpByAxisAngle(p0.Rotation, p1.Rotation, ratio).Rotation;
     }
 
     /// <summary>
@@ -175,17 +189,26 @@ public sealed class PropagationFrameOrientationCache
             return;
         }
 
-        rotation = p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
+        rotation = Quaternion.SlerpByAxisAngle(p0.Rotation, p1.Rotation, ratio).Rotation;
         angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
     }
 
     /// <summary>
     /// The grid points around <paramref name="epoch"/> and its position between them, in [0, 1]; false when the grid
-    /// cannot give it (an unavailable point, or past the boundary point read at the window end).
+    /// cannot give it (outside the grid, an unavailable point, or past the boundary point read at the window end).
     /// </summary>
     private bool Locate(in Time epoch, out OrientationPoint p0, out OrientationPoint p1, out double ratio)
     {
         double t = epoch.TimeSpanFromJ2000().TotalSeconds;
+
+        // Outside the grid the frame is read at the epoch, never held at its first or last point (#626)
+        if (t < _points[0].EpochSeconds || t > _points[_gridSize - 1].EpochSeconds)
+        {
+            p0 = default;
+            p1 = default;
+            ratio = 0.0;
+            return false;
+        }
 
         int idx = (int)((t - _startEpochSeconds) / _gridStepSeconds);
         idx = System.Math.Clamp(idx, 0, _gridSize - 2);

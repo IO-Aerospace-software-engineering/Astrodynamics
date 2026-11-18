@@ -50,12 +50,15 @@ public class MinimumEpochGateEdgeTests
     internal const double AvoidanceAgainstClosedForm = 1.8e-5;
 
     /// <summary>SSB mode: the burn of one propagation gated at the minimum epoch against the burn of the propagation from
-    /// the state at the minimum epoch, gated at its base (GMAT's two <c>Propagate</c> commands), s: the integration noise of
-    /// RK7(8) at 1e-9 over two step sequences, which #576 (the third body's acceleration near the Earth in SSB mode) makes
-    /// differ between platforms. Worst 6.30e-6 / 2.19e-4 / 1.31e-4 s on the perigee raise (Linux / Windows / macOS arm64;
-    /// the apogee raise 4.79e-5 / −1.38e-5 / −1.35e-5 s; CI run 41852583362), against the Keplerian residual of 0.64 s that
-    /// the Sun makes; to be measured again with #576's fix.</summary>
-    internal const double TwoPropagateSsb = 4.4e-4;
+    /// the state at the minimum epoch, gated at its base (GMAT's two <c>Propagate</c> commands), s: the integration error of
+    /// RK7(8) at 1e-9 over two step sequences. With the noise of #576 (the third body's acceleration near the Earth in SSB
+    /// mode) they differed between platforms: worst 6.30e-6 / 2.19e-4 / 1.31e-4 s on the perigee raise (Linux / Windows /
+    /// macOS arm64; the apogee raise 4.79e-5 / −1.38e-5 / −1.35e-5 s; CI run 41852583362), against the Keplerian residual of
+    /// 0.64 s that the Sun makes. With the direct difference near the Earth: 1.510e-5 s on the perigee raise, 0 on the
+    /// apogee raise, on Linux x64, Windows x64 and macOS arm64 alike (CI run 44225490669). Twice that worst, rounded up; 22
+    /// draws of the start moved by −5 to +5 ulps along x, each at the tolerance and one ulp above it, reach 2.17e-5 s on the
+    /// perigee raise and 3.3e-6 s on the apogee raise (Linux x64, 2026-11-17), under it.</summary>
+    internal const double TwoPropagateSsb = 3.1e-5;
 
     private static readonly Time S = MinimumEpochGateTests.S;
     private readonly ITestOutputHelper _output;
@@ -150,7 +153,7 @@ public class MinimumEpochGateEdgeTests
     /// <summary>
     /// A UTC gate whose TDB label compares before it (none in TT or TAI): the root of g = TT(epoch) − TT(gate), at the
     /// gate's instant, is labelled at the first TDB tick that does not compare before the gate in RK7(8), adaptive and
-    /// fixed-step; Velocity-Verlet fires at the step end after it. Both time arguments: TT, the one of every propagation
+    /// fixed-step; Velocity-Verlet fires at the step end after it, carried onto the tick of its label (#572). Both time arguments: TT, the one of every propagation
     /// about the Earth, and TDB. Before the review of #569, fixed-step RK7(8) at 10 s labelled it one tick before the gate
     /// (choice 1). Since the conversions round TDB − TT to the nearest tick (#625), such a gate is 1 UTC instant in
     /// 3 000 000 over 2024 (an exact replica of the conversions), none on 2024-03-01 where the gate of the truncation was
@@ -190,9 +193,15 @@ public class MinimumEpochGateEdgeTests
         _output.WriteLine($"MEASURE #569 gate UTC {integratorName} {timeArgument}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
         Assert.False(epoch < gate);
         if (integratorName.StartsWith("RK"))
-            Assert.Equal(firstTickNotBefore, epoch);
+            LabelAssert.Equal(firstTickNotBefore, epoch);
         else
-            Assert.Equal(System.Math.Floor(gateSeconds / (integratorName == "VV1" ? 1.0 : 10.0) + 1.0) * (integratorName == "VV1" ? 1.0 : 10.0), t);
+        {
+            // The step end after the gate, carried onto the tick of its label (#572)
+            double stepEnd = System.Math.Floor(gateSeconds / (integratorName == "VV1" ? 1.0 : 10.0) + 1.0) * (integratorName == "VV1" ? 1.0 : 10.0);
+            var label = integrator.TimeArgument.EpochAt(from, stepEnd);
+            LabelAssert.Equal(label, epoch);
+            Assert.Equal(integrator.TimeArgument.SecondsBetween(from, label), t);
+        }
     }
 
     /// <summary>
@@ -419,7 +428,7 @@ public class MinimumEpochGateEdgeTests
 
         Assert.Equal(1.0, detector.Evaluate(state));
         var gated = (IGatedEventDetector)detector;
-        Assert.Equal(gate, gated.Gate);
+        LabelAssert.Equal(gate, gated.Gate);
         Assert.Equal(rv, gated.EvaluateOpen(state));
         var atGate = new StateVector(state.Position, state.Velocity, earth, gate, Frame.ICRF);
         Assert.Equal(rv, detector.Evaluate(atGate));
@@ -532,7 +541,7 @@ public class MinimumEpochGateEdgeTests
         double difference = (one.Segments[1].BaseEpoch - two.Segments[1].BaseEpoch).TotalSeconds;
         double expected = perigeeRaise ? k.NextApsis(1000.0, true) : k.T / 2.0;
         _output.WriteLine($"MEASURE #569 gate SSB two Propagate {(perigeeRaise ? "perigee raise, gate S+1000" : "apogee raise, gate 3 s before the perigee")}: " +
-                          $"one - two {difference:E2} s, one - Keplerian {MinimumEpochGateTests.Tt(one.Segments[1].BaseEpoch) - expected:E2} s");
+                          $"one - two {difference:E3} s, one - Keplerian {MinimumEpochGateTests.Tt(one.Segments[1].BaseEpoch) - expected:E2} s");
         Assert.True(System.Math.Abs(difference) <= TwoPropagateSsb, $"{difference:E3} s");
     }
 }

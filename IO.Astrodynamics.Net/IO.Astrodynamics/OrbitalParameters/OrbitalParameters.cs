@@ -265,7 +265,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the true anomaly is computed from the mean anomaly and the mean anomaly or the eccentricity is not
-    /// finite (#453).
+    /// finite (#453), and when the eccentricity is not finite, which no conic has (#476).
     /// </exception>
     public virtual double TrueAnomaly()
     {
@@ -285,6 +285,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         else if (IsHyperbolic())
         {
             _trueAnomaly = HyperbolicTrueAnomaly() % Constants._2PI;
+        }
+        else
+        {
+            // Only a non-finite eccentricity takes no branch: no conic has it (#476; the message of an empty Nullable before)
+            throw new InvalidOperationException(
+                $"No conic has the eccentricity e = {Eccentricity():R}: the true anomaly is undefined.");
         }
 
         if (_trueAnomaly < 0)
@@ -483,11 +489,25 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Compute mean anomaly from true anomaly
     /// </summary>
-    /// <param name="trueAnomaly"></param>
-    /// <returns></returns>
+    /// <param name="trueAnomaly">The true anomaly, rad.</param>
+    /// <returns>The mean anomaly, rad: Kepler's elliptic or hyperbolic equation of the anomaly of
+    /// <see cref="EccentricAnomaly(double)"/>, and Barker's D + D³/3, D = tan(ν/2), in the near-parabolic band
+    /// |e − 1| &lt; 1e-6 (<see cref="IsParabolic"/>), whatever the side of e = 1.</returns>
+    /// <remarks>Before 11.0.0 the band put Barker's D into Kepler's elliptic or hyperbolic equation, chosen by e alone, so
+    /// that only e = 1 exactly gave Barker's mean anomaly: <see cref="ToStateVector(double)"/>, <see cref="TimeToRadius"/>
+    /// and the paths of <see cref="EquinoctialElements"/> were up to the size of the orbit off (#478).</remarks>
     public double MeanAnomaly(double trueAnomaly)
     {
-        return TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), this.EccentricAnomaly(trueAnomaly));
+        double anomaly = EccentricAnomaly(trueAnomaly);
+
+        // EccentricAnomaly gives Barker's D in the band, so the mean anomaly there is Barker's (#478); at e = 1 exactly the
+        // static form below gives the same, bit for bit
+        if (IsParabolic())
+        {
+            return anomaly + System.Math.Pow(anomaly, 3) / 3.0;
+        }
+
+        return TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), anomaly);
     }
 
     /// <summary>
@@ -495,7 +515,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="trueAnomaly">The true anomaly in radians.</param>
     /// <param name="eccentricity">The eccentricity of the orbit.</param>
-    /// <param name="eccentricAnomaly">The eccentric anomaly in radians.</param>
+    /// <param name="eccentricAnomaly">The eccentric anomaly in radians: elliptic for e &lt; 1, hyperbolic for e &gt; 1, Barker's
+    /// D = tan(ν/2) for e = 1. It must match <paramref name="eccentricity"/>, whose value alone chooses the equation; within
+    /// 1e-6 of e = 1, where <see cref="EccentricAnomaly(double)"/> gives Barker's D on either side, use
+    /// <see cref="MeanAnomaly(double)"/> (#478).</param>
     /// <returns>The mean anomaly in radians.</returns>
     public static double TrueAnomalyToMeanAnomaly(double trueAnomaly, double eccentricity, double eccentricAnomaly)
     {
@@ -530,23 +553,41 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Get orbital period
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The period of an ellipse, 2π √(a³/μ), to the nearest tick, ties to even (#637; truncated to the tick below
+    /// before 11.0.0), or the period given to the elements.</returns>
+    /// <exception cref="InvalidOperationException">The semi-major axis is not finite and above 0: a parabola (+Infinity) or
+    /// a hyperbola (a &lt; 0) has no period (#663; before 11.0.0, the NaN <see cref="ArgumentException"/> or the
+    /// <see cref="OverflowException"/> of <see cref="TimeSpan"/>).</exception>
+    /// <exception cref="OverflowException">The period of an ellipse is 922 337 203 685 s or more, about
+    /// <see cref="TimeSpan.MaxValue"/> (29 227 years; from 11.0.0 also the last 0.48 s below it, #637): a within 1e-6 of e = 1,
+    /// for instance (#455).</exception>
     public TimeSpan Period()
     {
-        if (!_period.HasValue)
+        double a = SemiMajorAxis();
+
+        // Only an ellipse has a period: tested on a, not on e, so that the conic's finite a of the band keeps it (#663);
+        // before the cache, so that a period given to the elements of an open orbit (KeplerianElements' period) is not
+        // returned either
+        if (!(double.IsFinite(a) && a > 0.0))
         {
-            double a = SemiMajorAxis();
-            double T = Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM);
-            _period = TimeSpan.FromSeconds(T);
+            throw new InvalidOperationException(
+                $"An open orbit has no period: e = {Eccentricity():R}, a = {a:R} m (a period needs a finite semi-major axis above 0, an ellipse).");
         }
 
+        _period ??= Time.SecondsToSpan(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
         return _period.Value;
     }
 
     /// <summary>
     /// Get orbital mean motion
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The mean motion of the conic, √(μ/|a|³), rad/s; for a parabola, whose semi-major axis is +Infinity,
+    /// Barker's √(μ/(2q³)), q the perigee radius (#368).</returns>
+    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the conic of a finite semi-major axis has its own mean
+    /// motion, √(μ/|a|³), which this returns since 11.0.0 (#459, option 1, decided by S. Guillet, 2026-11-17; before,
+    /// Barker's, 2e9 times larger at |e − 1| = 5e-7). The two-body motion of the band (<see cref="AtEpoch"/>,
+    /// <see cref="EpochAtMeanAnomaly"/>, <see cref="TimeToRadius"/>) still advances Barker's anomaly at Barker's
+    /// rate.</remarks>
     public double MeanMotion(double orbitingBodyMass = 0.0)
     {
         if (_meanMotion.HasValue)
@@ -560,8 +601,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
         else if (IsParabolic())
         {
-            // So that Barker's D + D³/3 = n (t - T): t - T = √(2q³/μ) (D + D³/3), with q the periapsis radius (#368)
-            _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
+            double a = SemiMajorAxis();
+
+            // A parabola: so that Barker's D + D³/3 = n (t - T), t - T = √(2q³/μ) (D + D³/3), q the periapsis radius
+            // (#368). The conic of a finite a in the band, either side of e = 1: √(μ/|a|³) (#459)
+            _meanMotion = double.IsPositiveInfinity(a)
+                ? BarkerMeanMotion(orbitingBodyMass)
+                : System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(System.Math.Abs(a), 3));
         }
         else
         {
@@ -570,6 +616,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         return _meanMotion.Value;
     }
+
+    /// <summary>
+    /// Barker's mean motion √(μ/(2q³)), q the perigee radius: the rate of Barker's mean anomaly D + D³/3 (#368).
+    /// </summary>
+    private double BarkerMeanMotion(double orbitingBodyMass = 0.0) =>
+        System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
+
+    /// <summary>
+    /// The rate of <see cref="MeanAnomaly()"/> in the two-body motion: Barker's √(μ/(2q³)) within 1e-6 of e = 1, where the
+    /// mean anomaly is Barker's on both sides of e = 1 (#459, option 1: Barker's anomaly kept for the motion, well
+    /// conditioned there), <see cref="MeanMotion"/> elsewhere, cached mean motion of mean elements included.
+    /// </summary>
+    private double MeanAnomalyRate() => IsParabolic() ? BarkerMeanMotion() : MeanMotion();
 
 
     /// <summary>
@@ -590,11 +649,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         if (_stateVector is null)
         {
             var e = Eccentricity();
-            var p = SemiMajorAxis() * (1 - e * e);
-            if (IsParabolic())
-            {
-                p = 2 * PerigeeRadius();
-            }
+
+            // In the band |e − 1| < 1e-6 the conic's p = q (1 + e), 2q at e = 1 (#459; before, 2q on both sides, which put
+            // the periapsis up to 5e-7 of q away and moved a round trip by |r| |e − 1| / (1 + e), metres to 4.2e7 m)
+            var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
 
             var v = TrueAnomaly();
             var r0 = p / (1 + e * System.Math.Cos(v));
@@ -674,7 +732,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// vector is zero, or a non-finite one has no orbit plane to count from (#687).</exception>
     public StateVector ToStateVector(double trueAnomaly)
     {
-        return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly(trueAnomaly))));
+        return ToStateVector(EpochAtMeanAnomaly(MeanAnomaly(trueAnomaly)));
     }
 
     /// <summary>
@@ -704,13 +762,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             res = SpecialFunctions.NormalizeAngle(res);
         }
 
-        return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch, res / MeanMotion());
+        return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch, res / MeanAnomalyRate());
     }
 
     /// <summary>
     /// Convert to equinoctial
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The equinoctial elements, of semi-latus rectum P = a(1 − e²); in the near-parabolic band |e − 1| &lt; 1e-6
+    /// (<see cref="IsParabolic"/>), P = q (1 + e) with q the <see cref="PerigeeRadius"/>, 2q for a parabola and h²/μ for a
+    /// <see cref="StateVector"/> (#462; before 11.0.0, NaN at e = 1 and ±∞ elsewhere in the band, its sign set by
+    /// rounding).</returns>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane and no elements (#687).</exception>
     public virtual EquinoctialElements ToEquinoctial()
@@ -723,7 +784,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double i = Inclination();
             double v = TrueAnomaly();
 
-            double p = SemiMajorAxis() * (1 - e * e);
+            // In the band |e − 1| < 1e-6 (IsParabolic) a(1 − e²) is ∞ × 0 or ±∞ (#462): the conic's p = q (1 + e), 2q at
+            // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, a(1 − e²) bit for bit
+            double p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : SemiMajorAxis() * (1 - e * e);
             double f = e * System.Math.Cos(o + w);
             double g = e * System.Math.Sin(o + w);
             double h = System.Math.Tan(i * 0.5) * System.Math.Cos(o);
@@ -832,6 +895,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// (1.2e-6 s of motion over an hour at most); from a TT epoch it returns there, and from a UTC epoch away from a leap
     /// second: <see cref="Time"/> + <see cref="TimeSpan"/> adds calendar seconds to a UTC time, so across a leap second
     /// <c>Epoch + Period()</c> is a period and one second of TT later.
+    /// <para>
+    /// The elements keep their <see cref="ElementsType"/> (#463; before 11.0.0 mean elements came back labelled
+    /// osculating, which let <see cref="ToStateVector()"/> take mean numbers for a state). Of mean elements, the mean
+    /// anomaly advances at the two-body mean motion only, without the secular rates of the node and of the periapsis of
+    /// the theory they belong to (SGP4 for a TLE set): a <see cref="TLE.TLE"/> overrides this method with SGP4.
+    /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane (#687).</exception>
@@ -839,11 +908,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         var ke = this.ToKeplerianElements();
         double elapsed = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanMotion();
+        var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanAnomalyRate();
 
-        // An angle on an ellipse only (#368); KeplerianElements reduces it
+        // An angle on an ellipse only (#368); KeplerianElements reduces it. Mean elements stay mean, so that the guard of
+        // ToStateVector holds (#463)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
-            perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius);
+            perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
     }
 
     /// <summary>
@@ -937,17 +1007,18 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="epoch">The epoch time at which to compute the Keplerian elements.</param>
     /// <returns>The Keplerian elements at the given epoch.</returns>
     /// <remarks>The elapsed time is that of <see cref="AtEpoch"/>: the dynamical time of the observer, TT seconds about
-    /// the Earth, TDB seconds about any other body (#501, #508).</remarks>
+    /// the Earth, TDB seconds about any other body (#501, #508). The elements keep their <see cref="ElementsType"/> (#463);
+    /// a <see cref="TLE.TLE"/> moves its osculating set, which stays osculating.</remarks>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane and no elements (#687).</exception>
-    public KeplerianElements ToKeplerianElements(Time epoch)
+    public virtual KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        double m = MeanAnomaly() + MeanMotion() * ellapsedTime;
+        double m = MeanAnomaly() + MeanAnomalyRate() * ellapsedTime;
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,
-            perigeeRadius: PerigeeRadius());
+            perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
     }
 
     /// <summary>
@@ -1052,10 +1123,20 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Converts the orbital parameters to be relative to another localizable object.
+    /// Converts the orbital parameters to be relative to another localizable object: the state minus that object's state
+    /// as the current observer sees it.
     /// </summary>
+    /// <remarks>
+    /// The aberration corrects the new origin, read as a target seen from the current observer
+    /// (<c>localizable.GetEphemeris(Epoch, Observer, Frame, aberration)</c>); the state itself, one state and not the
+    /// trajectory of its object, is not moved in time. The result is therefore not the object seen from the new origin with
+    /// light time: for that, read the object as a target from the new origin (its <c>GetEphemeris</c>; a
+    /// <see cref="Surface.Site"/> given by its coordinates is corrected as CSPICE's <c>spkcpt_c</c> corrects it, #489).
+    /// When the new origin is the current observer, the state is returned unchanged, whatever the aberration. Kept as it was
+    /// before 11.0.0 (#489, decided by S. Guillet, 2026-11-17).
+    /// </remarks>
     /// <param name="localizable">The localizable object to which to convert the orbital parameters.</param>
-    /// <param name="aberration">The aberration to consider in the conversion.</param>
+    /// <param name="aberration">The correction of the new origin, seen from the current observer.</param>
     /// <returns>The orbital parameters relative to the specified localizable object.</returns>
     public OrbitalParameters RelativeTo(ILocalizable localizable, Aberration aberration)
     {
@@ -1101,10 +1182,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// open orbit its one outbound crossing, an epoch before <see cref="Epoch"/> when the orbit is already past the
     /// radius; on a circular orbit (e = 0), at its radius at every instant, <see cref="Epoch"/> itself.
     /// </summary>
-    /// <remarks>An ellipse with 1 − 1e-6 &lt; e &lt; 1, whose anomalies are taken as parabolic
-    /// (<see cref="IsParabolic"/>), gives an epoch about 8 times off the closed form, which can be before
-    /// <see cref="Epoch"/> even for a radius not yet reached: a defect of the near-parabolic anomalies, not of this
-    /// method.</remarks>
+    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the time is Barker's, the motion of the band; before 11.0.0
+    /// Kepler's equation took Barker's anomaly there, and the epoch was up to 8 times off, before <see cref="Epoch"/> even for
+    /// a radius not yet reached (#478).</remarks>
     /// <param name="radius">The distance from the center of motion, in meters.</param>
     /// <returns>The epoch at the radius, in the frame of <see cref="Epoch"/>.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="radius"/> is not finite, is below the periapsis, or
@@ -1134,7 +1214,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // The true anomaly at the radius; the clamp only absorbs the rounding at an apsis
         double cosNuRad = System.Math.Clamp((p / radius - 1) / e, -1.0, 1.0);
         double nuRad = System.Math.Acos(cosNuRad);
-        double meanAnomaly = TrueAnomalyToMeanAnomaly(nuRad, e, EccentricAnomaly(nuRad));
+        double meanAnomaly = MeanAnomaly(nuRad);
 
         // Far out on an open orbit the mean anomaly overflows (H = +∞, then e sinh H − H = NaN), a crossing after the last
         // epoch of Time; or the epoch passes one end of Time, the first on an open orbit far past the radius
@@ -1202,9 +1282,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="ArgumentNullException">
     /// Thrown if the <paramref name="config"/> parameter is null.
     /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown before the fit when these parameters are not about the Earth (NAIF id 399): a TLE describes an Earth orbit
+    /// (#607; before 11.0.0, the fit took them for an Earth orbit and failed, or wrote a TLE of another orbit).
+    /// </exception>
     public TLE.TLE ToTLE(TLE.Configuration config)
     {
         ArgumentNullException.ThrowIfNull(config);
+        if (Observer.NaifId != TLE.TLE.EarthNaifId)
+        {
+            throw new InvalidOperationException(
+                $"The orbit is about {Observer.Name} ({Observer.NaifId}): a TLE describes an Earth orbit, so it cannot be converted to a TLE.");
+        }
+
         var meanElements = _sharedMeanElementsConverter.Convert(this, config.NoradId,
             config.Name, config.CosparId, config.RevolutionsAtEpoch,
             config.BstarDragTerm, config.MaxIterations);
@@ -1217,20 +1307,57 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     #region Operators
 
+    /// <summary>
+    /// Value equality within one concrete type (#475, decided by S. Guillet, 2026-11-17): each type of the library
+    /// overrides this method to compare, for an object of its own type, its values, its observer's NAIF id, its
+    /// <see cref="Epoch"/> (an instant, whatever its time frame, #512), its <see cref="Frame"/> and its
+    /// <see cref="ElementsType"/>, without computing a state; a type that does not override it has reference equality.
+    /// </summary>
+    /// <remarks>
+    /// Two sets of different types are different, an element set and its own <see cref="ToStateVector()"/> included; to
+    /// compare two orbits, compare their states, <c>x.ToStateVector() == y.ToStateVector()</c>, which throws for mean
+    /// elements. Before 11.0.0 equality through <see cref="OrbitalParameters"/> compared the states of both operands: it
+    /// threw for mean elements (even against null) and for e = NaN, ran SGP4 for a TLE, and found equal two sets whose
+    /// states were both NaN.
+    /// </remarks>
     public override bool Equals(object obj)
     {
-        return Equals(obj as OrbitalParameters);
+        return ReferenceEquals(this, obj);
     }
 
+    /// <summary>
+    /// Whether <paramref name="other"/> is equal to this set: <see cref="Equals(object)"/>, the value equality of the
+    /// concrete type (#475). Never throws, and is false for null.
+    /// </summary>
     public virtual bool Equals(OrbitalParameters other)
     {
-        return other is not null &&
-            base.Equals(other) || ToStateVector() == other?.ToStateVector();
+        return Equals((object)other);
     }
 
+    /// <summary>
+    /// The hash code of the observer's NAIF id, the epoch (its instant, #512), the frame and the element type, which every
+    /// type combines with its own values: equal sets share it (#475; before 11.0.0 it held the identity of the instance).
+    /// </summary>
+    /// <remarks>
+    /// The sets are immutable, but for the work states of an integration, which the integrator updates in place at each
+    /// evaluation: the state it hands to <see cref="Propagator.Events.IEventDetector.Evaluate"/>, and the states it hands to
+    /// <see cref="Propagator.Forces.ForceBase.Apply(StateVector)"/> of a force added by
+    /// <see cref="Propagator.Integrators.Integrator.AddForce"/> (its evaluation state, the stage states of RK7(8)). A
+    /// detector or a force that keeps such a state as a key keeps a copy of it, not the instance, whose hash code would
+    /// change.
+    /// </remarks>
     public override int GetHashCode()
     {
-        return HashCode.Combine(base.GetHashCode(), Observer, Epoch, Frame);
+        return HashCode.Combine(Observer.NaifId, Epoch, Frame, ElementsType);
+    }
+
+    /// <summary>
+    /// Whether this set and <paramref name="other"/> have the same observer (by NAIF id), epoch (an instant, #512), frame
+    /// and element type: the part of the equality of every type held by <see cref="OrbitalParameters"/> (#475).
+    /// </summary>
+    private protected bool HasSameReference(OrbitalParameters other)
+    {
+        return Observer.NaifId == other.Observer.NaifId && Epoch == other.Epoch && Frame == other.Frame && ElementsType == other.ElementsType;
     }
 
     public static bool operator ==(OrbitalParameters left, OrbitalParameters right)

@@ -66,6 +66,26 @@ these values: .NET's schema validator accepts NaN against the bound facets of ND
 overflow as an `xsd:double`. `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error,
 both naming the keyword. The lexical `INF` and `-INF` of `xsd:double` throw the parse exception, as before.
 
+A date (`EPOCH`, `CREATION_DATE`) is read in the two forms of CCSDS 502.0-B-3: calendar
+(`2026-01-13T05:00:55.752768`) or day of year (`2026-013T05:00:55.752768`), each field with its leading zeros, any
+fraction, an optional `Z` or `±hh:mm` offset of the NDM/XML `epochType`, as UTC. Any other text throws `OmmParseException`
+naming the field and the text ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), decided by S. Guillet, 2026-11-17): a time alone, a date alone, a bare
+number, a space or a lowercase `t` for the `T`, a decimal comma, a missing second, a short offset, a blank around the
+date. Before 11.0.0 the reader passed such a text to `DateTime.TryParse`, which gave a time alone the day of the read
+and `1.5` or `1,5` 5 January of the current year.
+
+A term of the covariance (`CX_X` ... `CZ_DOT_Z_DOT`, km², km²/s, km²/s²) whose value in m², m²/s or m²/s², its product by
+1e6, is beyond the range of a `double` (above about 1.8e302) throws `OmmParseException` naming the keyword and the text,
+and `new CovarianceMatrix(...)` and its factories `ArgumentOutOfRangeException` naming the term
+([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)): `ToMatrixWithUnitConversion` gave ±Infinity before 11.0.0. `ToTle` throws `InvalidOperationException`
+naming `MEAN_MOTION` and its value for a mean motion above the 99.99999999 rev/day its 11-character TLE field holds, as
+for a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent; before 11.0.0 it threw the TLE's line-length
+`ArgumentException`, and above about 2.86e307 rev/day, where the conversion to rad/s and back overflowed, it returned a
+TLE whose mean motion was the text `Infinity` ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). `KeplerianElements.FromOMM` gives a finite mean motion in rad/s above about 2.86e307
+rev/day, where (n × 2π) / 86400 gave +Infinity; such elements carry no orbit a TLE can hold. A negative `REV_AT_EPOCH` names `revolutionNumberAtEpoch` in the `ArgumentOutOfRangeException` of
+`TleParameters` (its constructor and the four `CreateWith*` factories), the parameter they take, where it named
+`revNumber` ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734)).
+
 ### Schema validation
 
 `validateSchema` and `OmmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
@@ -107,6 +127,20 @@ valid, as for the other spacecraft parameters (#708: an error before 11.0.0).
 | `SaveToStream(stream, validateBeforeSave?)` | Save to stream |
 | `ToXml()` | Serialize to XML string |
 
+Each real value is written in its shortest round-trip form (`"R"`, invariant culture), which reads back bit for bit
+([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). Before 11.0.0 a value written
+in fixed-point form kept 14 decimals and 15 significant digits at most: an eccentricity of 0.00012345678901234567 was
+written 0.00012345678901, up to 4.9e-11 of a value below 1e-3 lost.
+
+The dates of the document follow the kind of their `DateTime`
+([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617), decided by S. Guillet,
+2026-11-17). `EPOCH` and `REF_FRAME_EPOCH` are in `TIME_SYSTEM` (CCSDS 502.0-B-3): a date of kind `Utc` or `Unspecified` is written as
+the clock reading given, under any time system; a date of kind `Local` is written as its UTC under `TIME_SYSTEM = UTC`,
+and under any other time system the writer throws `ArgumentException` (`omm`) naming the keyword, a local time having
+no reading in TDB, TT, TAI or GPS that the writer could give without a conversion of time scales. `CREATION_DATE` is UTC
+(Table 3-1): `Utc` and `Unspecified` as given, `Local` converted, whatever `TIME_SYSTEM`. Before 11.0.0 a local time was
+written as its clock reading under every time system. The library's own conversions (`TLE.ToOmm`) give dates of kind `Utc`.
+
 ### Factory Methods
 
 | Method | Description |
@@ -126,7 +160,7 @@ valid, as for the other spacecraft parameters (#708: an error before 11.0.0).
 
 | Method | Description |
 |--------|-------------|
-| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485) |
+| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485); a `NORAD_CAT_ID`, `REV_AT_EPOCH` or `MEAN_MOTION` its TLE field cannot hold throws `InvalidOperationException` naming it (#729 for `MEAN_MOTION`, above 99.99999999 rev/day) |
 | `Validate()` | Validate and return `OmmValidationResult` |
 | `IsValid()` | Quick validity check (returns `bool`) |
 

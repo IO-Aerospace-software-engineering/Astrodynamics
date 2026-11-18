@@ -8,9 +8,19 @@ public class GPSTimeFrame : TimeFrame
     {
     }
 
+    /// <summary>
+    /// TAI − GPS, 19 s, in ticks.
+    /// </summary>
+    private static readonly long TaiMinusGpsTicks = TimeSpan.FromSeconds(19.0).Ticks;
+
     public override Time ConvertToTAI(Time time)
     {
-        return new TimeSystem.Time(time.Add(TimeSpan.FromSeconds(19.0)).DateTime, TAIFrame);
+        return FromTaiTicks(TaiTicks(time));
+    }
+
+    internal override long TaiTicks(in Time time)
+    {
+        return time.DateTime.Ticks + TaiMinusGpsTicks;
     }
 
     public override Time ConvertFromTAI(Time time)

@@ -299,7 +299,7 @@ public class MinimumEpochGateTests
         foreach (var run in runs)
         {
             Assert.Equal(2, run.Burns.Count);
-            Assert.Equal(first.Burns[1].Epoch, run.Burns[1].Epoch);
+            LabelAssert.Equal(first.Burns[1].Epoch, run.Burns[1].Epoch);
             Assert.Equal(first.Burns[1].DeltaV, run.Burns[1].DeltaV);
             Assert.Equal(first.Spacecraft.PropagatedStates[^1].Position, run.Spacecraft.PropagatedStates[^1].Position);
         }
@@ -369,7 +369,7 @@ public class MinimumEpochGateTests
                 double g = G(epoch, step.EndPosition, step.EndVelocity);
                 if (Crossing(previous, g) || (zero && TargetSign(g)))
                 {
-                    Assert.Equal(epoch, burn);
+                    LabelAssert.Equal(epoch, burn);
                     return $"g at the gate {gGate:E3}, first crossing at the step end {end:F3}";
                 }
 

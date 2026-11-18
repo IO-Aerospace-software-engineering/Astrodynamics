@@ -184,7 +184,7 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
         {
             var e = expected.Segments[s];
             var a = actual.Segments[s];
-            Assert.Equal(e.BaseEpoch, a.BaseEpoch);
+            LabelAssert.Equal(e.BaseEpoch, a.BaseEpoch);
             Assert.Equal(e.Steps.Count, a.Steps.Count);
             Assert.Equal(e.Variational.EntryY, a.Variational.EntryY);
             Assert.Equal(e.Variational.EntryQ, a.Variational.EntryQ);

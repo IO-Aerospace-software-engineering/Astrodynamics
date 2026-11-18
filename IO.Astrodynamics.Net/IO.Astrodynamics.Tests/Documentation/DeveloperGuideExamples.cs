@@ -524,10 +524,10 @@ internal static class DeveloperGuideExamples
         // After propagation with executed maneuvers...
         var opm = spacecraft.ToOpm(
             originator: "Mission Control",
-            epoch: null,                      // Use current epoch (or specify)
+            epoch: null,                      // The initial epoch (or one within the propagation, #658)
             includeKeplerianElements: true,   // Include optional Keplerian elements
             includeSpacecraftParameters: true, // Include mass, drag, SRP
-            includeManeuvers: true);          // Include executed maneuvers
+            includeManeuvers: true);          // Include the maneuvers ignited by the epoch
 
         // Save for archival/sharing
         opm.SaveToFile("iss_state.opm");
@@ -696,6 +696,7 @@ internal static class DeveloperGuideExamples
         var windows = mySite.FindWindowsOnDistanceConstraint(
             new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
             moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+        // One window, 2024-01-01 09:42:24.997 to 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
         #endregion
     }
 
@@ -1670,7 +1671,8 @@ internal static class DeveloperGuideExamples
             spacecraft.Instruments.First(), // Instrument to point
             groundStation,                  // Target
             engine                          // Engine for attitude control
-        );
+        );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
+                                            // pass Aberration.None as a sixth argument for the geometric direction
 
         spacecraft.SetStandbyManeuver(pointingManeuver);
 

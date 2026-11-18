@@ -16,7 +16,8 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// <param name="BstarDragTerm">BSTAR drag term, in 1/earth radii.</param>
 /// <param name="Tolerance">Fitting tolerance.</param>
 /// <param name="MaxIterations">Maximum number of fitting iterations.</param>
-/// <param name="ElementSetNumber">Element set number, between 0 and 9999.</param>
+/// <param name="ElementSetNumber">Element set number, between 0 and 9999 (default: <see cref="TLE.DefaultElementSetNumber"/>,
+/// 999, as <see cref="TLE.Create"/> and <c>Omm.ToTle</c>; 9999 before 11.0.0, #606).</param>
 public record Configuration(
     int NoradId,
     string Name,
@@ -28,5 +29,5 @@ public record Configuration(
     double BstarDragTerm = 0.0001,
     double Tolerance = 1.0,
     ushort MaxIterations = 15,
-    int ElementSetNumber = 9999
+    int ElementSetNumber = TLE.DefaultElementSetNumber
 );

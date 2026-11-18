@@ -18,8 +18,11 @@ public sealed class EpochStatistics
     /// <summary>Mean velocity across all successful runs (m/s, ICRF).</summary>
     public Vector3 MeanVelocity { get; }
 
-    /// <summary>6×6 Bessel-corrected sample covariance matrix [X, Y, Z, VX, VY, VZ] (m, m/s).</summary>
-    public Matrix SampleCovariance { get; }
+    /// <summary>6×6 Bessel-corrected sample covariance matrix [X, Y, Z, VX, VY, VZ] (m, m/s): a copy of the one the
+    /// statistics hold, so that a term set on it does not reach them (#722).</summary>
+    public Matrix SampleCovariance => _sampleCovariance.Copy();
+
+    private readonly Matrix _sampleCovariance;
 
     /// <summary>Per-component standard deviation for position (m) and velocity (m/s).</summary>
     public StateComponents StandardDeviation { get; }
@@ -44,7 +47,7 @@ public sealed class EpochStatistics
         Epoch = epoch;
         MeanPosition = meanPosition;
         MeanVelocity = meanVelocity;
-        SampleCovariance = sampleCovariance;
+        _sampleCovariance = sampleCovariance.Copy();
         StandardDeviation = standardDeviation;
         Min = min;
         Max = max;

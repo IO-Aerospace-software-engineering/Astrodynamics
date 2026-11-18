@@ -19,10 +19,16 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// output, the ends of the window, are always kept. An arc bounded by an impulse and holding fewer than
 /// <see cref="MinimumArcStates"/> states takes <see cref="FilledArcStates"/> states of the solution, evenly spaced over it,
 /// its two ends kept, when they can be <see cref="MinimumFillSpacing"/> apart. An arc of zero length (two impulses at one
-/// event), or between two impulses and not longer than <see cref="SameEpochTolerance"/>, is not stored; an impulse that no
-/// segment of the solution carries (located at the end of the propagation) closes the last arc. At an impulse's
+/// event), or between two impulses and not longer than <see cref="SameEpochTolerance"/>, is not stored; an impulse at the
+/// end of the propagation, which the last segment of the solution carries, a segment of zero length (#575), opens a last
+/// arc of one state, the state after it; an impulse that no segment of the solution carries (a
+/// solution built otherwise) closes the last arc. At an impulse's
 /// epoch the reads take the later arc: the state after the impulse, as <see cref="PropagationSolution.InterpolateAt"/>,
-/// SPICE (the later segment of an SPK) and GMAT give it.
+/// SPICE (the later segment of an SPK) and GMAT give it. Impulses each within <see cref="SameEpochTolerance"/> of the one
+/// before are one epoch (#579, decided by S. Guillet, 2026-11-17): the arc after them opens at the first with the state
+/// after them all (the position of the first, its velocity after it plus the jump of each later one), so that the reads
+/// and the SPK from the first impulse on give the state after them all, as for impulses at one event; before 11.0.0 the
+/// arc after them opened at the last, and a read in between took the arc before them all.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -37,7 +43,8 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// </remarks>
 internal sealed class PropagatedEphemeris
 {
-    /// <summary>Two impulses within 2 µs are one epoch (the same-epoch rule of the attitude record): no arc between them.</summary>
+    /// <summary>Two impulses within 2 µs are one epoch (the same-epoch rule of the attitude record): no arc between them, the
+    /// arc after them opening at the first (#579).</summary>
     internal const double SameEpochTolerance = 2.0e-6;
 
     /// <summary>
@@ -147,7 +154,8 @@ internal sealed class PropagatedEphemeris
     /// </summary>
     /// <param name="outputs">The output states, in ICRF, in epoch order.</param>
     /// <param name="impulses">The impulses, their states in ICRF, in epoch order; the state after the last one null when no
-    /// segment of the solution carries it (at the end of the propagation): the states end with the state before it.</param>
+    /// segment of the solution carries it: the states end with the state before it. An impulse at the end of the
+    /// propagation is carried by a last segment of zero length (#575).</param>
     /// <param name="fill">The state of the solution at an epoch inside an arc, in ICRF, with its covariance in covariance
     /// mode, for the short arcs; null for no fill.</param>
     internal void Set(IReadOnlyList<StateVector> outputs, IReadOnlyList<ImpulseBoundary> impulses, Func<Time, StateVector> fill)
@@ -156,6 +164,8 @@ internal sealed class PropagatedEphemeris
         ArgumentNullException.ThrowIfNull(impulses);
         var arcs = new List<StateVector[]>(impulses.Count + 1);
         int o = 0;
+        // The first impulse of a group within the same-epoch tolerance whose arcs between were not stored (#579)
+        int groupStart = -1;
         for (int k = 0; k <= impulses.Count; k++)
         {
             // An impulse that the solution does not carry ends it: no arc after it
@@ -179,13 +189,35 @@ internal sealed class PropagatedEphemeris
             // same-epoch tolerance is one epoch; at the ends of the window the first and the last output keep their arc
             bool bounded = opened || closed;
             double span = (arc[^1].Epoch - arc[0].Epoch).TotalSeconds;
-            if (bounded && (span <= 0.0 || opened && closed && span <= SameEpochTolerance)) continue;
+            if (opened && !closed && span <= 0.0)
+            {
+                // An impulse at the end of the propagation (#575): the last arc is its state after alone (the last output,
+                // at the same epoch, is the same state), so that the reads at the end give the state the solution ends with;
+                // after a group of impulses within the same-epoch tolerance, the state after them all at the first (#579)
+                arcs.Add([groupStart >= 0 ? AfterGroup(impulses, groupStart, k - 1) : arc[0]]);
+                groupStart = -1;
+                continue;
+            }
+
+            if (bounded && (span <= 0.0 || opened && closed && span <= SameEpochTolerance))
+            {
+                // Impulses at one event keep the state after the last, at their epoch, as before
+                if (opened && closed && span > 0.0 && groupStart < 0) groupStart = k - 1;
+                continue;
+            }
 
             if (bounded && arc.Count < MinimumArcStates && fill != null && span >= (FilledArcStates - 1) * MinimumFillSpacing)
             {
                 arc = Fill(arc[0], arc[^1], fill);
             }
 
+            // The arc after a group of impulses opens at the first of them with the state after them all (#579)
+            if (opened && groupStart >= 0)
+            {
+                arc[0] = AfterGroup(impulses, groupStart, k - 1);
+            }
+
+            groupStart = -1;
             arcs.Add(arc.ToArray());
         }
 
@@ -193,6 +225,22 @@ internal sealed class PropagatedEphemeris
         {
             _snapshot = new Snapshot(arcs.ToArray());
         }
+    }
+
+    // The state after the impulses first..last, one epoch, at the epoch of the first: its position, and its velocity after
+    // it plus the jump of each later one (the state after the last, at a velocity that differs by that jump over at most the
+    // tolerance of each, a few 1e-5 m/s in LEO); the covariance of the state after the last
+    private static StateVector AfterGroup(IReadOnlyList<ImpulseBoundary> impulses, int first, int last)
+    {
+        var opening = impulses[first].After;
+        var velocity = opening.Velocity;
+        for (int j = first + 1; j <= last; j++)
+        {
+            velocity += impulses[j].After.Velocity - impulses[j].Before.Velocity;
+        }
+
+        var after = impulses[last].After;
+        return new StateVector(opening.Position, velocity, opening.Observer, opening.Epoch, opening.Frame, after.Covariance);
     }
 
     // An output closer to the impulse than DropFraction of its distance to the next output away from it; the first and the

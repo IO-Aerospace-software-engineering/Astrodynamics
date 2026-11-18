@@ -84,6 +84,7 @@ public abstract class Integrator : IIntegrator
     /// </summary>
     public virtual void Initialize(StateVector initialState)
     {
+        SkipRoot = false;
         Observer = initialState.Observer;
         ReferenceFrame = initialState.Frame;
         EvalState = new StateVector(Vector3.Zero, Vector3.Zero, Observer, initialState.Epoch, ReferenceFrame);
@@ -182,9 +183,17 @@ public abstract class Integrator : IIntegrator
     }
 
     /// <summary>
-    /// Check event detectors for sign changes.
-    /// Returns the detector index and g-values if an event is detected, or -1 if none.
+    /// Check event detectors for sign changes: every active detector is evaluated at <paramref name="state"/>, the end of
+    /// the step, into <paramref name="currG"/>.
+    /// Returns the index of the first detector, in list order, whose g-function crossed zero in its direction since
+    /// <paramref name="prevG"/>, or -1 if none. A g-value exactly zero at the step end after a non-zero one is a crossing
+    /// (#580), its direction read from the sign before it.
     /// </summary>
+    /// <remarks>
+    /// The detector returned is the first in list order, which is not always the earliest crossing of the step: an
+    /// integrator that takes several detectors reports the earliest one (#578), as <see cref="VVIntegrator"/> and
+    /// <see cref="RK78Integrator"/> do.
+    /// </remarks>
     protected static int CheckEventDetectors(
         IReadOnlyList<IEventDetector> detectors,
         StateVector state,
@@ -192,30 +201,136 @@ public abstract class Integrator : IIntegrator
     {
         if (detectors == null) return -1;
 
+        int first = -1;
         for (int i = 0; i < detectors.Count; i++)
         {
             var detector = detectors[i];
             if (!detector.IsActive) continue;
 
             currG[i] = detector.Evaluate(state);
-            double gPrev = prevG[i];
-            double gCurr = currG[i];
-
-            // Check for sign change in the correct direction
-            if (gPrev * gCurr < 0.0)
+            if (first < 0 && Crosses(detector.Direction, prevG[i], currG[i]))
             {
-                bool match = detector.Direction switch
-                {
-                    CrossingDirection.NegativeToPositive => gPrev < 0.0 && gCurr > 0.0,
-                    CrossingDirection.PositiveToNegative => gPrev > 0.0 && gCurr < 0.0,
-                    CrossingDirection.Any => true,
-                    _ => false
-                };
-
-                if (match) return i;
+                first = i;
             }
         }
 
-        return -1;
+        return first;
+    }
+
+    /// <summary>
+    /// Whether g crossed zero in <paramref name="direction"/> from <paramref name="gPrev"/> to <paramref name="gCurr"/>:
+    /// a change of sign, or a zero after a non-zero value (#580), the direction read from the sign of
+    /// <paramref name="gPrev"/>. A zero followed by a non-zero value is not a crossing: the zero was one, or, at the base
+    /// of a segment, is skipped (Hipparchus's convention; a gated detector's zero at the base follows
+    /// <see cref="EventGates"/>).
+    /// </summary>
+    internal static bool Crosses(CrossingDirection direction, double gPrev, double gCurr)
+    {
+        if (!(gPrev * gCurr < 0.0 || (gCurr == 0.0 && gPrev != 0.0))) return false;
+
+        return direction switch
+        {
+            CrossingDirection.NegativeToPositive => gPrev < 0.0,
+            CrossingDirection.PositiveToNegative => gPrev > 0.0,
+            CrossingDirection.Any => true,
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// The detectors whose g-function crossed zero in their direction over the accepted step, in list order: every active
+    /// detector is evaluated at <paramref name="state"/>, the end of the step, into <paramref name="currG"/>. A zero at a
+    /// gate on the step end that the next step end judges (<see cref="EventGates"/>) is not a crossing here.
+    /// </summary>
+    /// <returns>The number of crossings, their indices first in <paramref name="crossed"/>.</returns>
+    internal static int CrossingsInStep(IReadOnlyList<IEventDetector> detectors, StateVector state, double[] prevG,
+        double[] currG, EventGates gates, int[] crossed)
+    {
+        int count = 0;
+        for (int i = 0; i < detectors.Count; i++)
+        {
+            var detector = detectors[i];
+            if (!detector.IsActive) continue;
+
+            currG[i] = detector.Evaluate(state);
+            if (gates != null && currG[i] == 0.0 && gates.JudgedAtNextStep(i)) continue;
+            if (Crosses(detector.Direction, prevG[i], currG[i]))
+            {
+                crossed[count++] = i;
+            }
+        }
+
+        return count;
+    }
+
+    // The detector of the last event and its g-value at the end of the step that contained the root, on the side past
+    // the root; the next segment starts from that value when the propagation continues after the event (#355)
+    private protected IEventDetector LastEventDetector;
+    private protected double LastEventGPastRoot;
+    private protected bool SkipRoot;
+
+    /// <summary>
+    /// Records the event just located: its detector and its g-value at the end of the step that holds its root, past the
+    /// root, from which the next segment starts it when the propagation continues past the event
+    /// (<see cref="SkipRootOfLastEvent"/>).
+    /// </summary>
+    private protected void RecordEvent(IEventDetector detector, double gPastRoot)
+    {
+        LastEventDetector = detector;
+        LastEventGPastRoot = gPastRoot;
+    }
+
+    /// <summary>
+    /// The next segment starts at the root of the last event, which the propagation continues past (an
+    /// <see cref="EventAction.Continue"/>): its detector starts from its g-value past that root, so the root is not
+    /// found again, and its gate, which that event decided, is not judged again. Call it after <see cref="Initialize"/>.
+    /// </summary>
+    /// <remarks>
+    /// The event time is moved to the 100 ns grid of the epochs (in RK7(8) the midpoint of the last bisection bracket,
+    /// in Velocity-Verlet the end of the step, #572), so the state the segment starts from can be just before the root,
+    /// on the side the g-function crossed from. Its g-value would then make the first step cross the same root again.
+    /// Starting from the sign past the root is the rule Hipparchus applies to a zero of a g-function at the start of a
+    /// step (its <c>EventState</c>; confirmed by S. Guillet, 2026-10-13). A later crossing in the same direction needs a
+    /// crossing in the other direction first, which a step of the integrator does not hold without being detected, so no
+    /// event is lost.
+    /// </remarks>
+    internal void SkipRootOfLastEvent()
+    {
+        SkipRoot = LastEventDetector != null;
+    }
+
+    /// <summary>
+    /// The g-values of the detectors at the base of a segment, at <paramref name="state"/>: 0 for an inactive detector;
+    /// for a gated detector open at the base, its g-function from the start of a search
+    /// (<see cref="IGatedEventDetector.EvaluateOpen"/>: a <see cref="Maneuver.PlaneAlignmentManeuver"/> takes the node
+    /// it moves toward, #581), but for the detector of the event just handled, which starts from its g-value past that
+    /// event's root (<see cref="SkipRootOfLastEvent"/>); <see cref="IEventDetector.Evaluate"/> otherwise.
+    /// </summary>
+    /// <returns>The g-values, and the detector of the event just handled, or null; the skip is consumed.</returns>
+    internal (double[] Values, IEventDetector JustHandled) EventValuesAtBase(IReadOnlyList<IEventDetector> detectors,
+        StateVector state)
+    {
+        var justHandled = SkipRoot ? LastEventDetector : null;
+        SkipRoot = false;
+        var values = new double[detectors.Count];
+        for (int i = 0; i < detectors.Count; i++)
+        {
+            var detector = detectors[i];
+            if (!detector.IsActive) continue;
+            if (ReferenceEquals(detector, justHandled))
+            {
+                values[i] = LastEventGPastRoot;
+            }
+            else if (detector is IGatedEventDetector gated && !(state.Epoch < gated.Gate))
+            {
+                values[i] = gated.EvaluateOpen(state);
+            }
+            else
+            {
+                values[i] = detector.Evaluate(state);
+            }
+        }
+
+        return (values, justHandled);
     }
 }

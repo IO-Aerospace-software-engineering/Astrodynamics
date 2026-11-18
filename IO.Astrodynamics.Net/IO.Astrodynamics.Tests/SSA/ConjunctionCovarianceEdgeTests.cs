@@ -135,7 +135,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
 
         // Assert: one implementation, the same covariance at TCA bit for bit; the flag raised by the analysis only, the
         // covariance it was given being valid in the second case
-        Assert.Equal(remediatedInside.EncounterState.Epoch, remediatedBeforehand.EncounterState.Epoch);
+        LabelAssert.Equal(remediatedInside.EncounterState.Epoch, remediatedBeforehand.EncounterState.Epoch);
         Assert.Equal(remediatedInside.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
             remediatedBeforehand.ProtectedCovariance.CovarianceInertial.Value.ToArray());
         Assert.True(remediatedInside.ProtectedCovariance.InitialCovarianceRemediated);
@@ -171,6 +171,41 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         // Assert: no exception, the covariance held in RTN as without the propagation
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, encounter.EncounterState.ProtectedCovariance.Source);
         Assert.False(encounter.ProtectedCovariance.InitialCovarianceRemediated);
+    }
+
+    [Theory]
+    [InlineData(-1.0059, true)] // −9.83e-4 of the trace in RTN: within the bound, remediated
+    [InlineData(-1.0061, false)] // −1.02e-3: beyond it
+    [InlineData(-10.0, false)] // #443: remediated before 11.0.0
+    public void Analyze_InitialCovarianceBeyondTheDepthBound_IsHeldInRtn(double rho, bool within)
+    {
+        // Arrange: the protected object with a T–Ṙ correlation ρ in RTN; the bound of #443 (decided by S. Guillet,
+        // 2026-11-17) on the smallest eigenvalue of the correlation matrix, 1 − |ρ| here, over its trace 6
+        var given = WithTrCorrelation(_case.ProtectedStart, rho, 1.0);
+        var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(within ? -44301 : rho < -2.0 ? -44302 : -44303, given);
+        var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(within ? -44304 : rho < -2.0 ? -44305 : -44306,
+            _case.SecondaryStart);
+        _case.Propagate(protectedCraft);
+        _case.Propagate(secondaryCraft);
+
+        // Act
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            ConjunctionCovarianceCase.AnalysisWindow);
+
+        // Assert: within the bound, remediated and propagated, flagged; beyond it, held in RTN as the other covariances
+        // that rounding does not explain, not flagged; the same rule as StateVector.WithRemediatedCovariance
+        Assert.Equal(within ? CovarianceSource.Propagated : CovarianceSource.InitialStateHeldInRtn,
+            encounter.EncounterState.ProtectedCovariance.Source);
+        Assert.Equal(within, encounter.ProtectedCovariance.InitialCovarianceRemediated);
+        Assert.Equal(within, encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceRemediated));
+        if (within)
+        {
+            Assert.True(given.WithRemediatedCovariance().Remediated);
+        }
+        else
+        {
+            Assert.Throws<InvalidOperationException>(() => given.WithRemediatedCovariance());
+        }
     }
 
     [Fact]
@@ -354,7 +389,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         {
             var (actual, expected) = (encounters[k], encounters[k + 1]);
             Assert.Equal(CovarianceSource.Propagated, actual.EncounterState.ProtectedCovariance.Source);
-            Assert.Equal(expected.EncounterState.Epoch, actual.EncounterState.Epoch);
+            LabelAssert.Equal(expected.EncounterState.Epoch, actual.EncounterState.Epoch);
             Assert.Equal(expected.ProtectedCovariance.CovarianceInertial.Value.ToArray(), actual.ProtectedCovariance.CovarianceInertial.Value.ToArray());
             Assert.Equal(expected.CollisionRisk.ProbabilityOfCollision, actual.CollisionRisk.ProbabilityOfCollision);
             Assert.NotNull(actual.EncounterState.ProtectedCovariance.NonlinearityIndex);
@@ -374,7 +409,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(temeVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
         var twinHeld = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twinVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, held.EncounterState.ProtectedCovariance.Source);
-        Assert.Equal(twinHeld.EncounterState.Epoch, held.EncounterState.Epoch);
+        LabelAssert.Equal(twinHeld.EncounterState.Epoch, held.EncounterState.Epoch);
         var a = held.ProtectedCovariance.CovarianceInertial.Value;
         var b = twinHeld.ProtectedCovariance.CovarianceInertial.Value;
         double difference = 0.0, norm = 0.0;
@@ -425,7 +460,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.ProtectedCovariance.Source);
         Assert.True(encounter.ProtectedCovariance.InitialCovarianceRemediated);
         Assert.True(twinEncounter.ProtectedCovariance.InitialCovarianceRemediated);
-        Assert.Equal(twinEncounter.EncounterState.Epoch, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(twinEncounter.EncounterState.Epoch, encounter.EncounterState.Epoch);
         Assert.Equal(twinEncounter.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
             encounter.ProtectedCovariance.CovarianceInertial.Value.ToArray());
         var expected = referenceSolution.GetCovariance(encounter.EncounterState.Epoch);

@@ -32,8 +32,10 @@ public class DeveloperGuideExamplesSmokeTests
     /// <summary>
     /// The Moon from the custom site at 2024-01-01T12:00 TDB, LT: 399039.486050 km by CSPICE spkcpo (the site's
     /// ITRF93 position, the kernels of IO.Astrodynamics.Tests/Data/SolarSystem; #483). Linux x64, 2026-11-11: 3.1e-5 m
-    /// off; the bound is the resolution of the reference, printed to 1e-6 km. Its window is not checked: the custom-site
-    /// search is off by about 340 s (#489).
+    /// off; the bound is the resolution of the reference, printed to 1e-6 km. Its window, the site within 400000 km of
+    /// the Moon with LT: 757374144.9969522 to 757390843.0285655 s TDB from J2000 by CSPICE spkcpt_c, 60 s samples and a
+    /// bisection to adjacent doubles (tools/light_time_reference, "guide_window_lt"; #489: before 11.0.0 about 340 s
+    /// wider at each end). Linux x64, 2026-11-17, the library's tests of the same window: 0 s and 1.0e-7 s off.
     /// </summary>
     [Fact]
     public void TheSiteExampleRuns()
@@ -60,7 +62,12 @@ public class DeveloperGuideExamplesSmokeTests
 
         _output.WriteLine($"Range {horizontal.Range:R} m, {horizontal.Range - 399039486.050:E3} m from spkcpo; {string.Join(", ", windows)}");
         Assert.Equal(399039486.050, horizontal.Range, RangeBound);
-        Assert.NotEmpty(windows);
+        var window = Assert.Single(windows);
+        double start = (window.StartDate - Time.CreateTDB(757374144.9969522)).TotalSeconds;
+        double end = (window.EndDate - Time.CreateTDB(757390843.0285655)).TotalSeconds;
+        _output.WriteLine($"MEASURE window start {start:E3} s, end {end:E3} s from spkcpt_c");
+        Assert.InRange(start, -WindowBound, WindowBound);
+        Assert.InRange(end, -WindowBound, WindowBound);
     }
 
     /// <summary>
@@ -101,4 +108,9 @@ public class DeveloperGuideExamplesSmokeTests
     }
 
     private const double RangeBound = 1e-3;
+
+    // Twice the worst of the library's test of the window (LightTimeCorrectionTests.GuideWindowBound): 1.0e-7 s, one tick,
+    // on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); the smoke tests run in cd.yml alone, so this test's
+    // own line is in no CI log of the test job
+    private const double WindowBound = 2.0e-7;
 }

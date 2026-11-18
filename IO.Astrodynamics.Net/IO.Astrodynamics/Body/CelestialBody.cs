@@ -375,9 +375,24 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         return referenceFrame.ToFrame(Frame, epoch);
     }
 
+    /// <summary>
+    /// The sidereal rotation period of the body at <paramref name="epoch"/>: 2π / |ω|, ω the angular velocity of its frame
+    /// relative to ICRF, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet, 2026-11-17; truncated to
+    /// the tick below before 11.0.0).
+    /// </summary>
     public TimeSpan SideralRotationPeriod(Time epoch)
     {
-        return TimeSpan.FromSeconds(Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
+        return Time.SecondsToSpan(SideralRotationSeconds(epoch));
+    }
+
+    /// <summary>
+    /// The sidereal rotation period of the body at <paramref name="epoch"/> in seconds, 2π / |ω|, before its rounding to a
+    /// tick: the value <see cref="SideralRotationPeriod"/> rounds, and whose half (exact in binary) the launch windows add
+    /// before they round their offset (#637).
+    /// </summary>
+    internal double SideralRotationSeconds(Time epoch)
+    {
+        return Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude();
     }
 
     public double AngularVelocity(Time epoch)
@@ -515,7 +530,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// It calculates the sideral rotation period and uses it to determine the angle of rotation between two points in the celestial body
     /// 's ephemeris.
     /// Finally, it returns the sideral rotation period plus the time it takes to rotate toward the sun using the angular velocity of
-    /// the celestial body at the given epoch.
+    /// the celestial body at the given epoch, each to the nearest tick (#637; truncated to the tick below before 11.0.0).
     /// </remarks>
     public TimeSpan TrueSolarDay(Time epoch)
     {
@@ -529,7 +544,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
         var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
         var angle = eph0.Angle(eph1);
-        return sideralRotation + TimeSpan.FromSeconds(angle / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
+        return sideralRotation + Time.SecondsToSpan(angle / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
 
     /// <summary>

@@ -34,9 +34,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(50.0, ke.ArgumentOfPeriapsis() * IO.Astrodynamics.Constants.Rad2Deg);
             Assert.Equal(10.0, ke.MeanAnomaly() * IO.Astrodynamics.Constants.Rad2Deg);
             Assert.Equal(earth, ke.Observer);
-            Assert.Equal(epoch, ke.Epoch);
+            LabelAssert.Equal(epoch, ke.Epoch);
             Assert.Equal(Frames.Frame.ICRF, ke.Frame);
-            Assert.Throws<ArgumentException>(() => new KeplerianElements(20000, -0.5, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
+            // #476: ArgumentOutOfRangeException naming the eccentricity, as the CCSDS types (an ArgumentException before)
+            Assert.Throws<ArgumentOutOfRangeException>(() => new KeplerianElements(20000, -0.5, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, earth, epoch,
                 Frames.Frame.ICRF));
@@ -64,7 +65,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, earth, epoch,
                 Frames.Frame.ICRF);
             var ke2 = ke.ToKeplerianElements();
-            Assert.Equal(ke, ke2);
+            LabelAssert.Equal(ke, ke2);
         }
 
         [Fact]
@@ -79,7 +80,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 4.541224977546975E+01 * IO.Astrodynamics.Constants.Deg2Rad, earth,
                 TimeSystem.Time.CreateTDB(663724800.00001490), Frames.Frame.ICRF);
             StateVector sv = ke.ToStateVector();
-            Assert.Equal(TimeSystem.Time.CreateTDB(663724800.00001490), sv.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.CreateTDB(663724800.00001490), sv.Epoch);
             Assert.Equal(-6116559.4695568951, sv.Position.X, 3);
             Assert.Equal(-1546174.6986767196, sv.Position.Y, 3);
             Assert.Equal(2521950.1574303135, sv.Position.Z, 3);
@@ -436,7 +437,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(ke.RAAN, ke2.RAAN, 6);
             Assert.Equal(ke.AOP, ke2.AOP, 6);
             Assert.Equal(ke.M, ke2.M, 6);
-            Assert.Equal(ke.Epoch, ke2.Epoch);
+            LabelAssert.Equal(ke.Epoch, ke2.Epoch);
             Assert.Equal(ke.Observer, ke2.Observer);
         }
 
@@ -462,7 +463,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(ke.RAAN, ke2.RAAN, 6);
             Assert.Equal(ke.AOP, ke2.AOP, 6);
             Assert.Equal(ke.M, ke2.M, 6);
-            Assert.Equal(ke.Epoch, ke2.Epoch);
+            LabelAssert.Equal(ke.Epoch, ke2.Epoch);
             Assert.Equal(ke.Observer, ke2.Observer);
         }
 

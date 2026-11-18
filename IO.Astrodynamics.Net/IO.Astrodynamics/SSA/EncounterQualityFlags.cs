@@ -62,5 +62,19 @@ public enum EncounterQualityFlags
     /// is then beyond the domain where the Foster probability was validated against a Monte Carlo; the probability is
     /// not necessarily wrong: confirm one that matters by a Monte Carlo.
     /// </summary>
-    NonlinearCovariancePropagation = 1 << 7
+    NonlinearCovariancePropagation = 1 << 7,
+
+    /// <summary>
+    /// The window holds no close approach (no zero of the range rate from negative to positive that the search finds), and
+    /// <c>Analyze</c> and <c>Screen</c> return the closest window end, the
+    /// absolute minimum of the distance over the window (CSPICE's <c>ABSMIN</c>), where the range rate is in general not
+    /// zero: the objects are still closing at the end or receding from the start, and their closest approach lies outside
+    /// the window. Widen the window to find it. <c>AnalyzeAll</c> lists no such encounter. Before 11.0.0 the sampled path
+    /// returned the window midpoint unflagged, and the search on two propagations the end where the distance grows into the
+    /// window (#621, decided by S. Guillet, 2026-11-17). Not raised for a close approach the search finds on an end: the
+    /// sampled path returns the tick nearer the range-rate zero (#624), a window end for a zero in the half-tick next to it
+    /// or exactly on it, an encounter the window holds, unflagged and listed by <c>AnalyzeAll</c> (a TCA equal to a window
+    /// end was flagged in the previews of 11.0.0, adversarial review of #621).
+    /// </summary>
+    TcaAtWindowEnd = 1 << 8
 }

@@ -12,7 +12,7 @@ The Lambert solver computes transfer orbits between two positions and a time of 
 public LambertResult Solve(
     bool isRetrograde,
     OrbitalParameters initialOrbitalParameters,
-    OrbitalParameters targetOjectOrbitalParameters,
+    OrbitalParameters targetObjectOrbitalParameters,
     CelestialItem centerOfMotion,
     ushort maxRevolution)
 ```
@@ -21,7 +21,7 @@ public LambertResult Solve(
 |-----------|------|-------------|
 | `isRetrograde` | `bool` | Whether the transfer is retrograde |
 | `initialOrbitalParameters` | `OrbitalParameters` | Spacecraft state at departure |
-| `targetOjectOrbitalParameters` | `OrbitalParameters` | Target state at arrival |
+| `targetObjectOrbitalParameters` | `OrbitalParameters` | Target state at arrival |
 | `centerOfMotion` | `CelestialItem` | Central body for the transfer |
 | `maxRevolution` | `ushort` | Maximum number of full revolutions |
 

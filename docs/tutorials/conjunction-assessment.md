@@ -289,10 +289,12 @@ The exported CDM includes:
 - **Object 1 / Object 2**: state vectors, covariance (RTN frame), physical
   properties (mass, area, drag/SRP coefficients)
 - **Collision probability**: the Pc of the encounter, with
-  `COLLISION_PROBABILITY_METHOD` set to `FOSTER-2D`. Export requires a
-  covariance for both participants, so the single-covariance maximum Pc is
-  never exported; `CdmExportOptions.CollisionProbabilityMethod` overrides the
-  method name
+  `COLLISION_PROBABILITY_METHOD` set to `FOSTER-1992`, the name the SANA
+  registry gives Foster's method. Export requires a covariance for both
+  participants, so the single-covariance maximum Pc, which no registered
+  method names, is never exported (an encounter flagged
+  `SingleCovarianceMaximumPcUsed` is refused);
+  `CdmExportOptions.CollisionProbabilityMethod` overrides the method name
 - **Propagated covariance**: for a participant whose covariance was
   propagated to TCA, `COVARIANCE_METHOD` `CALCULATED`, the force model of its
   propagation (`GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS`,

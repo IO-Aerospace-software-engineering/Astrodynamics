@@ -84,6 +84,21 @@ these values: .NET's schema validator accepts NaN against the bound facets of ND
 overflow as an `xsd:double`. `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error,
 both naming the keyword. The lexical `INF` and `-INF` of `xsd:double` throw the parse exception, as before.
 
+A date (`EPOCH`, `CREATION_DATE`, `MAN_EPOCH_IGNITION`) is read in the two forms of CCSDS 502.0-B-3: calendar
+(`2026-01-13T05:00:55.752768`) or day of year (`2026-013T05:00:55.752768`), each field with its leading zeros, any
+fraction, an optional `Z` or `±hh:mm` offset of the NDM/XML `epochType`, as UTC. Any other text throws `OpmParseException`
+naming the field and the text ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), decided by S. Guillet, 2026-11-17): a time alone, a date alone, a bare
+number, a space or a lowercase `t` for the `T`, a decimal comma, a missing second, a short offset, a blank around the
+date. Before 11.0.0 the reader passed such a text to `DateTime.TryParse`, which gave a time alone the day of the read
+and `1.5` or `1,5` 5 January of the current year.
+
+A state vector component (`X` ... `Z_DOT`, km, km/s) whose value in m or m/s, its product by 1000, is beyond the range of
+a `double` (above about 1.8e305), and a covariance term (`CX_X` ... `CZ_DOT_Z_DOT`) whose product by 1e6 is, throw
+`OpmParseException` naming the keyword and the text, as the CDM reader refuses such a value
+([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)); `new OpmStateVector(...)`, `new CovarianceMatrix(...)` and their factories throw
+`ArgumentOutOfRangeException` naming the parameter. Before 11.0.0 the document loaded and `ToStateVector` gave ±Infinity
+in the state or its covariance.
+
 ### Schema validation
 
 `validateSchema` and `OpmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
@@ -119,6 +134,20 @@ information levels (an unusual drag coefficient, a large eccentricity) are uncha
 | `SaveToFile(path, validateBeforeSave?, wrapInNdm?, indent?)` | Save to file |
 | `SaveToStream(stream, validateBeforeSave?, wrapInNdm?, indent?)` | Save to stream |
 | `ToXmlString(wrapInNdm?, indent?)` | Serialize to XML string |
+
+Each real value is written in its shortest round-trip form (`"R"`, invariant culture), which reads back bit for bit
+([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). Before 11.0.0 a value written
+in fixed-point form kept 14 decimals and 15 significant digits at most: an eccentricity of 0.00012345678901234567 was
+written 0.00012345678901, up to 4.9e-11 of a value below 1e-3 lost.
+
+The dates of the document follow the kind of their `DateTime`
+([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617), decided by S. Guillet,
+2026-11-17). `EPOCH`, `REF_FRAME_EPOCH` and `MAN_EPOCH_IGNITION` are in `TIME_SYSTEM` (CCSDS 502.0-B-3): a date of kind `Utc` or `Unspecified` is written as
+the clock reading given, under any time system; a date of kind `Local` is written as its UTC under `TIME_SYSTEM = UTC`,
+and under any other time system the writer throws `ArgumentException` (`opm`) naming the keyword, a local time having
+no reading in TDB, TT, TAI or GPS that the writer could give without a conversion of time scales. `CREATION_DATE` is UTC
+(Table 3-1): `Utc` and `Unspecified` as given, `Local` converted, whatever `TIME_SYSTEM`. Before 11.0.0 a local time was
+written as its clock reading under every time system. The library's own conversions (`Opm.CreateFromStateVector`, `Spacecraft.ToOpm`) give dates of kind `Utc`.
 
 ### Factory Methods
 
@@ -168,9 +197,27 @@ Before 11.0.0 the observer was the Earth whatever `CENTER_NAME` said.
 ## Spacecraft Export
 
 `Spacecraft.ToOpm(originator, epoch, includeKeplerianElements, includeSpacecraftParameters, includeManeuvers)` exports to OPM
-format the state of the spacecraft's initial orbital parameters at `epoch`, their epoch by default:
-`InitialOrbitalParameters.ToStateVector(epoch)`, the two-body motion of osculating elements (SGP4 for a TLE), not the
-states of a propagation. Every argument is optional, so name the ones you pass (`epoch: epoch`). The state is written in
+format the spacecraft at `epoch`, the epoch of its initial orbital parameters by default (kept, decided by S. Guillet, 2026-11-18): its state, its mass and its
+maneuvers at that instant ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided
+by S. Guillet, 2026-11-17).
+
+- A spacecraft that holds propagated states (after `Propagate`, `Scenario.SimulateAsync`, the builder, a
+  `CentralBodyPropagator` built directly, or `AddPropagatedStates`) writes the state read from them,
+  `GetEphemeris(epoch, observer, frame, Aberration.None)` with the observer and the frame of its initial orbital
+  parameters (TEME for a TLE), with the mass and the impulses ignited by then: its mass after the propagation plus the
+  fuel of the impulses ignited after the epoch, and the impulses ignited by the epoch. An impulse counts from its
+  ignition, the start of its thrust window, the `MAN_EPOCH_IGNITION` written. The propagated state receives its ΔV at
+  its event, about two thirds of the burn later (`ImpulseManeuver`): at an epoch between the two (3.4 s for a 5.2 s
+  burn) the state written is the state before the impulse, with the burn listed and its fuel spent; from the event on,
+  the state after it. An epoch outside the propagated states throws `InvalidOperationException`, as every read there
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)); so does the default epoch
+  when the propagation started later.
+- A spacecraft without propagated states (never propagated, or a TLE spacecraft only sampled by `TLEPropagator`) writes
+  `InitialOrbitalParameters.ToStateVector(epoch)`, the two-body motion of osculating elements (SGP4 for a TLE), with its
+  mass now and the maneuvers its chain executed, none when it never ran, as before 11.0.0.
+
+Before 11.0.0 a propagated spacecraft wrote the motion of its initial orbit with the mass and every maneuver after the
+propagation: 1 212 km and 1 137 m/s off the propagated state one burn later. Every argument is optional, so name the ones you pass (`epoch: epoch`). The state is written in
 the frame of the spacecraft's initial orbital parameters, which the export does not change: there is no frame argument. The spacecraft needs a `CosparId` (`InvalidOperationException` otherwise).
 The Keplerian elements are those of `OpmKeplerianElements.FromKeplerianElements` with the true anomaly, each angle
 written as its value in [0, 360), inside the schema's [-360, 360). `FromKeplerianElements` writes 0 for an angle of

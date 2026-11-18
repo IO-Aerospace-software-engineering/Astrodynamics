@@ -283,16 +283,50 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(parameter, ex.ParamName);
         }
 
+        // The largest double whose product by 1000 is finite (IEEE 754 binary64, round to nearest: 1.7976931348623156e305,
+        // computed with Python's math.nextafter on 2026-11-17); the next double, 1.797693134862316e305, gives +Infinity in m
+        private static readonly double LargestKm = BitConverter.Int64BitsToDouble(0x7f50624dd2f1a9fbL);
+
         [Fact]
-        public void Constructor_LargestFiniteComponents_AreStoredAsGiven()
+        public void Constructor_LargestComponentsFiniteInSiUnits_AreStoredAsGiven()
         {
-            // The bounds of the finite doubles, the largest magnitude and the smallest subnormal, are real numbers
-            var sv = new OpmStateVector(_testEpoch, double.MaxValue, -double.MaxValue, double.Epsilon, -double.Epsilon, 0.0, -0.0);
-            Assert.Equal(double.MaxValue, sv.X);
-            Assert.Equal(-double.MaxValue, sv.Y);
+            // The largest magnitude whose value in m or m/s is a real number, and the smallest subnormal, are stored as given
+            // (#729: double.MaxValue km built, and ToStateVector gave +Infinity m)
+            var sv = new OpmStateVector(_testEpoch, LargestKm, -LargestKm, double.Epsilon, -double.Epsilon, LargestKm, -0.0);
+            Assert.Equal(LargestKm, sv.X);
+            Assert.Equal(-LargestKm, sv.Y);
             Assert.Equal(double.Epsilon, sv.Z);
             Assert.Equal(-double.Epsilon, sv.XDot);
             Assert.Equal(BitConverter.DoubleToInt64Bits(-0.0), BitConverter.DoubleToInt64Bits(sv.ZDot));
+
+            var state = sv.ToStateVector(_earth, AstroFrame.ICRF);
+            Assert.Equal(LargestKm * 1000.0, state.Position.X);
+            Assert.Equal(-LargestKm * 1000.0, state.Position.Y);
+            Assert.Equal(LargestKm * 1000.0, state.Velocity.Y);
+            Assert.True(double.IsFinite(state.Position.X) && double.IsFinite(state.Velocity.Y));
+        }
+
+        public static TheoryData<string, double> ComponentsOverflowingInSiUnits()
+        {
+            var data = new TheoryData<string, double>();
+            var next = System.Math.BitIncrement(LargestKm);
+            foreach (var parameter in new[] { "x", "y", "z", "xDot", "yDot", "zDot" })
+            foreach (var value in new[] { next, -next, double.MaxValue, 1e306 })
+                data.Add(parameter, value);
+            return data;
+        }
+
+        [Theory]
+        [MemberData(nameof(ComponentsOverflowingInSiUnits))]
+        public void Constructor_ComponentOverflowingInSiUnits_ThrowsArgumentOutOfRangeException(string parameter, double value)
+        {
+            // #729: a finite km or km/s value whose product by 1000 is beyond the range of a double built, and ToStateVector
+            // gave ±Infinity; refused as the CDM reader refuses it (#708)
+            Assert.False(double.IsFinite(value * 1000.0));
+            var c = Components(parameter, value);
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new OpmStateVector(_testEpoch, c[0], c[1], c[2], c[3], c[4], c[5]));
+            Assert.Equal(parameter, ex.ParamName);
+            Assert.Contains("SI units", ex.Message);
         }
 
         #endregion

@@ -34,7 +34,9 @@ public static class Iau2006Model
     /// Returns the constant frame bias matrix B (GCRS → mean equator/equinox J2000).
     /// This represents the ~23 mas rotation between ICRS and the dynamical mean frame.
     /// </summary>
-    public static Matrix FrameBias() => _frameBias;
+    /// <returns>A copy of the cached matrix, so that a term set on it does not reach the frames that read the bias (#722;
+    /// before 11.0.0 it returned the cached matrix itself).</returns>
+    public static Matrix FrameBias() => _frameBias.Copy();
 
     private static Matrix ComputeFrameBias()
     {

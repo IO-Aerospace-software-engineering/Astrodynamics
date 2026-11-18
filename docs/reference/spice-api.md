@@ -4,6 +4,13 @@
 
 `SpiceAPI` is the singleton entry point for SPICE-backed operations.
 
+SPICE reports its errors to the library only: the native layer sets SPICE to return from an error (`erract` RETURN) and
+to print nothing (`errprt` NONE), and each method throws with SPICE's message. Before 11.0.0 SPICE also printed the
+banner of every error on the standard output of the process, those the library handles included (a read past the
+coverage of a kernel; 2888 banners in one conjunction analysis past its SPKs), which corrupted the output of a host
+application such as a command-line tool ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727),
+decided by S. Guillet, 2026-11-17).
+
 | Method | Description |
 |--------|-------------|
 | `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |
@@ -11,8 +18,8 @@
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
-| `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
-| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714) |
+| `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454); over a window, at start + i·step in the time frame of the window start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid, each state the read of its epoch alone and labelled with it in that frame (#563) |
+| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714); at start + i·step in the time frame of the window start, i from 0 while within the window, in a buffer of the epochs read, each record labelled with the TDB epoch of the CK's record (#563) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, or that SPICE does not name, #714, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
@@ -32,6 +39,14 @@ observer of `ReadEphemeris` by identifiers built as a celestial body. A Lagrange
 information, whether the kernels name it or not (`Data/SolarSystem` names none of them; the `LagrangePoint` constructor
 reads its state at J2000 TDB, so its SPK must cover that epoch), while `GetCelestialBodyInfo` and `new CelestialBody` of
 an unnamed one throw.
+
+The record of a site identifier, its body's identifier times 1000 plus its own (399013 for DSS-13, the body a planet or a
+moon SPICE names), has its body as centre of motion and its body's barycentre as barycentre, 399 and 3 for DSS-13 as its
+SPK segment ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651): before 11.0.0 the Sun
+and 0, the native layer classing every identifier above 1000 as an asteroid); `CelestialItem.IsAsteroid` is false for it.
+An identifier of that form whose body SPICE does not name keeps 10 and 0 and stays an asteroid: SPICE's built-in names
+include two ESA stations, NOTO (398989) and NEW NORCIA (398990), whose identifiers do not follow the rule, 398 being no
+body.
 
 A body the kernel pool gives no `BODYnnn_RADII` has radii 0, one it gives no `BODYnnn_GM` a GM of 0, and its frame is
 still read (`cnmfrm_c`); a barycentre has no frame (an empty `FrameName`, `FrameId` 0). Before #672 a missing variable
@@ -115,7 +130,9 @@ from the kernels whose frame id no loaded kernel defines, the frame only the lib
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, its name went to SPICE,
 which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrameAsync` writes for
 the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define and the frame of a spacecraft are
-SPICE's by name; CIRS and TIRS throw ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+SPICE's by name. A CIRS or TIRS end, `Frame.CIRS`, `Frame.TIRS`, any `CirsFrame` or `TirsFrame` or a frame of those names
+in any case, is composed through ICRF by its managed orientation, as TEME's
+([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656); before, it threw).
 A transformation SPICE cannot give throws `InvalidOperationException` "SPICE gives no transformation from {from} to {to} at
 {epoch}: " followed by SPICE's message, `SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known
 reference frame." for a frame SPICE does not know, `SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the
@@ -157,8 +174,11 @@ and the launch windows of a kernel site, and the CLI commands `find-windows-from
 error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never
 holds. The checks made before the native call keep their `ArgumentException`: a frame of the library SPICE does not
 know in `FindWindowsOnCoordinateConstraint`, an occultation body without a frame, an illumination method other than
-ELLIPSOID. A search SPICE runs is unchanged, and returns at most 1000 windows
-([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+ELLIPSOID. A search SPICE runs returns every window it finds, up to the 10000 of its result cell; more throw
+`InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has size, 20000,
+cardinality 20000. Cannot insert an additional interval into the window." (the size counts the endpoints; the short code
+is not in the message): before 11.0.0 the native layer copied the first 1000 and dropped the rest without an error, and
+the cell of `gfilum_c` held 1000 ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
 
 ### Orientation kernels
 
@@ -195,10 +215,30 @@ a zero velocity, a position parallel to the velocity or an out-of-range time for
 Before 11.0.0 the native proxies activated no error management: as the first native call of a process, SPICE's default
 action (ABORT) ended it with exit code 1; otherwise the values SPICE never wrote, the stack's contents (about 1e-310), came
 back with no error. The results on ordinary inputs are those of `prop2b_c` and `oscltx_c`, bit for bit.
+`ConvertStateVectorToConicOrbitalElement` keeps `oscltx_c`'s semi-major axis within 1e-6 of e = 1, the conic's −μ/(2ξ)
+(+Infinity where `oscltx_c` gives 0: e = 1 or a zero energy), with its perifocal distance (#459; before 11.0.0, +Infinity
+in the whole band, so Barker's mean motion), and passes its period only when it is above 0 and fits a `TimeSpan`: the
+elements of an open orbit throw `InvalidOperationException` from `Period()` (#663; before, 00:00:00), and those of an
+ellipse whose period exceeds `TimeSpan.MaxValue` (e within about 5e-6 of 1) are built (before, `OverflowException` from
+the conversion).
 
 The element conversions (`ConvertConicElementsToStateVector`, three overloads, and
 `ConvertEquinoctialElementsToStateVector`) throw `ArgumentException` for an element that is not finite (#714): CONICS checks
 its domain with comparisons NaN passes, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state.
+
+`ConvertEquinoctialElementsToStateVector` gives `eqncpv_c` the mean longitude of the elements, `MeanLongitude()`, its
+fourth element ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450): before 11.0.0 the
+true longitude L0, the state of another point of the orbit, 1029 km off for an ordinary LEO); its state is that of
+`EquinoctialElements.ToStateVector()` within 1.0e-15 relative.
+
+The result of each two-body call and element conversion is about the observer and in the frame of its input, the same
+instances ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)): a body with a geopotential
+or an atmospheric model, a barycentre or a body built from custom parameters comes back as given, so a propagation started
+from the result runs with the caller's models. Before 11.0.0 the result carried a new `CelestialBody` built from the
+identifier of the centre and a frame rebuilt from its name: the caller's models were lost, a barycentre threw, and a body
+SPICE does not name made the overloads with an explicit GM throw. The result is built after the SPICE lock, which holds
+only the native call ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)): before, the
+new body read the data provider 9 times under the lock, about 80 µs for a native call of 1.8 µs.
 
 Each proxy that reports through `GetLastErrorProxy()` clears it when it starts (#714), so the message read after a call is
 that call's: before, it held the message of the last failure, about another call, until another failure replaced it.
@@ -241,7 +281,8 @@ entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange
 states. Missing data throw `InvalidOperationException`, which the library's handlers of missing data catch (#680): a
 state read for a target without entries or outside them and an orientation read outside a frame's entries, the type
 SPICE throws for the same reads. A bad argument throws `ArgumentException` (#680, decided by S. Guillet, 2026-11-14): a
-frame never added, and the information of an identifier never added, whose `ParamName` is `naifId`, the type and the
+frame neither added nor known (below), from `GetEphemeris` too since #559, and the information of an identifier never
+added, whose `ParamName` is `naifId`, the type and the
 parameter `SpiceDataProvider.GetCelestialBodyInfo` throws for an identifier SPICE does not name or that is not a
 celestial body's (#672); `new CelestialBody(id)` and `CelestialItem.Create(id)` of that identifier throw it too, on both
 providers, except `CelestialItem.Create` of a Lagrange point (391 to 395), which reads the point's state and not its
@@ -251,6 +292,16 @@ information (above): a provider without that state throws `InvalidOperationExcep
 barycentre (SPICE names every barycentre), and the orientation cache of a propagation keeps the points the entries do not
 reach unavailable. Before 11.0.0 the state and orientation reads threw `ArgumentException` and the information of an
 identifier never added `KeyNotFoundException`.
+
+`GetEphemeris` takes the stored states about the solar system barycentre in ICRF (a state stored in another frame is
+rotated by the provider's orientation of it), subtracts them and rotates the difference into the frame asked by the
+provider's orientation of that frame, r' = R r and v' = R v + ω × r' as `ToFrame`; a read in ICRF or GCRF is the
+stored difference, unrotated. Besides the frames whose orientations were added, the provider knows ICRF and GCRF (the
+identity), ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, 84381.448″ about x; the default frame of the bodies)
+and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. It holds geometric states
+only: an aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet,
+2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was
+geometric.
 
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data (see [Predefined Objects](predefined-objects.md)), so a

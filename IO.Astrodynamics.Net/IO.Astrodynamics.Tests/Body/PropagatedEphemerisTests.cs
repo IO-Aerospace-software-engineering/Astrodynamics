@@ -70,8 +70,8 @@ public class PropagatedEphemerisTests
         var ephemeris = new PropagatedEphemeris();
         ephemeris.Set(outputs, Array.Empty<ImpulseBoundary>(), _ => throw new InvalidOperationException("filled"));
         Assert.Single(ephemeris.Arcs);
-        Assert.Equal(outputs, ephemeris.Arcs[0]);
-        Assert.Equal(new Window(T0, T0.AddSeconds(20.0)), ephemeris.Span);
+        LabelAssert.Equal(outputs, ephemeris.Arcs[0]);
+        LabelAssert.Equal(new Window(T0, T0.AddSeconds(20.0)), ephemeris.Span);
         Assert.Same(outputs[0], ephemeris.First);
         ephemeris.Clear();
         Assert.Equal(0, ephemeris.Count);
@@ -96,7 +96,7 @@ public class PropagatedEphemerisTests
         });
 
         var arcs = ephemeris.Arcs;
-        Assert.Equal(3, arcs.Count);
+        Assert.Equal(4, arcs.Count);
         // [0, 50): 5 outputs and the state before the first impulse
         Assert.Equal(new[] { 0.0, 10.0, 20.0, 30.0, 40.0, 50.0 }, arcs[0].Select(x => (x.Epoch - T0).TotalSeconds));
         Assert.Same(impulses[0].Before, arcs[0][^1]);
@@ -105,10 +105,11 @@ public class PropagatedEphemerisTests
         Assert.Equal(new[] { 60.0, 70.0, 80.0, 90.0, 100.0, 110.0 }, arcs[1].Skip(1).Take(6).Select(x => System.Math.Round((x.Epoch - T0).TotalSeconds, 6)));
         Assert.Same(impulses[1].Before, arcs[1][^1]);
         // (120.0000015, 200]: the state after, the outputs 130 to 190, the state before the last impulse at the end; the arc
-        // after it, of zero length, is not stored
+        // after it, of zero length, is the state after that impulse alone (#575: it was not stored)
         Assert.Same(impulses[1].After, arcs[2][0]);
         Assert.Same(impulses[2].Before, arcs[2][^1]);
         Assert.Equal(9, arcs[2].Length);
+        Assert.Same(impulses[2].After, Assert.Single(arcs[3]));
         Assert.Empty(filled);
         Assert.Equal(arcs.Sum(a => a.Length), ephemeris.Count);
         Assert.Equal(ephemeris.Count, ephemeris.All.Length);
@@ -118,9 +119,10 @@ public class PropagatedEphemerisTests
         Assert.Equal(0.0, ephemeris.Interpolate(T0.AddSeconds(50.0 - 1e-3)).Velocity.Y);
         Assert.Equal(1.0, ephemeris.Interpolate(T0.AddSeconds(50.0 + 1e-3)).Velocity.Y, 12);
         Assert.Equal(3.0, ephemeris.Interpolate(T0.AddSeconds(120.0000015 + 1e-3)).Velocity.Y, 12);
-        // Before every arc, the first; after every arc (past the impulse at the end), the last
+        // Before every arc, the first; at the impulse at the end and after it, the state after it (#575)
         Assert.Equal(0.0, ephemeris.Interpolate(T0.AddSeconds(-5.0)).Velocity.Y);
-        Assert.Equal(3.0, ephemeris.Interpolate(T0.AddSeconds(205.0)).Velocity.Y, 9);
+        Assert.Same(impulses[2].After, ephemeris.Interpolate(T0.AddSeconds(200.0)));
+        Assert.Equal(6.0, ephemeris.Interpolate(T0.AddSeconds(205.0)).Velocity.Y, 9);
     }
 
     [Fact]
@@ -145,12 +147,64 @@ public class PropagatedEphemerisTests
         ephemeris.Set(outputs, impulses, null);
         Assert.Equal(3, ephemeris.Arcs[0].Length);
 
-        // Two impulses 1.5 µs apart are one epoch: no arc between them
+        // Two impulses 1.5 µs apart are one epoch: no arc between them, the arc after them opening at the first (#579)
         var close = new[] { Impulse(400.0, 0.0, 1.0), Impulse(400.0000015, 1.0, 2.0) };
         ephemeris.Set(outputs, close, t => State((t - T0).TotalSeconds));
         Assert.Equal(2, ephemeris.Arcs.Count);
         Assert.Same(close[0].Before, ephemeris.Arcs[0][^1]);
-        Assert.Same(close[1].After, ephemeris.Arcs[1][0]);
+        LabelAssert.Equal(close[0].Epoch, ephemeris.Arcs[1][0].Epoch);
+    }
+
+    /// <summary>
+    /// Two impulses within 2 µs (<see cref="PropagatedEphemeris.SameEpochTolerance"/>) are one epoch (#579, decided by S.
+    /// Guillet, 2026-11-17): the arc after them opens at the first impulse with the state after both, the position of the
+    /// first impulse and its velocity plus the jump of the second, so that a read at the first impulse, between them and at
+    /// the second gives the state after both, as for two impulses at one event. Before, the arc after them opened at the
+    /// second impulse and the reads in [t1, t2) took the arc before both (vy 0). Impulses at 400 s (vy 0 to 1) and 400 s + d
+    /// (vy 1 to 2); the control, d = 2.1 and 3 µs, keeps the arc between them, the read at t1 the state after the first.
+    /// </summary>
+    [Theory]
+    [InlineData(1.0e-7)]
+    [InlineData(1.0e-6)]
+    [InlineData(1.5e-6)]
+    [InlineData(2.0e-6)]
+    [InlineData(2.1e-6)]
+    [InlineData(3.0e-6)]
+    public void ImpulsesWithin2Microseconds_AreOneEpoch(double d)
+    {
+        var outputs = Enumerable.Range(0, 101).Select(i => State(10.0 * i)).ToArray();
+        var impulses = new[] { Impulse(400.0, 0.0, 1.0), Impulse(400.0 + d, 1.0, 2.0) };
+        var ephemeris = new PropagatedEphemeris();
+        ephemeris.Set(outputs, impulses, t => State((t - T0).TotalSeconds));
+        var t1 = impulses[0].Epoch;
+        var t2 = impulses[1].Epoch;
+        bool oneEpoch = (t2 - t1).TotalSeconds <= PropagatedEphemeris.SameEpochTolerance;
+        var atT1 = ephemeris.Interpolate(t1);
+        var between = ephemeris.Interpolate(t1.AddSeconds(0.5 * (t2 - t1).TotalSeconds));
+        var atT2 = ephemeris.Interpolate(t2);
+        _output.WriteLine($"MEASURE #579 d = {d:R} s: one epoch {oneEpoch}, arcs {ephemeris.Arcs.Count}, vy at t1 {atT1.Velocity.Y:R}, between {between.Velocity.Y:R}, " +
+                          $"at t2 {atT2.Velocity.Y:R}");
+        if (oneEpoch)
+        {
+            Assert.Equal(2, ephemeris.Arcs.Count);
+            Assert.Same(impulses[0].Before, ephemeris.Arcs[0][^1]);
+            // The state after both at t1: the position of the first impulse, its velocity after it plus the jump of the second
+            var opening = ephemeris.Arcs[1][0];
+            LabelAssert.Equal(t1, opening.Epoch);
+            Assert.Equal(impulses[0].After.Position, opening.Position);
+            Assert.Equal(impulses[0].After.Velocity + (impulses[1].After.Velocity - impulses[1].Before.Velocity), opening.Velocity);
+            Assert.Same(opening, atT1);
+            Assert.Equal(2.0, between.Velocity.Y, 4);
+            Assert.Equal(2.0, atT2.Velocity.Y, 4);
+            LabelAssert.Equal(new Window(T0, T0.AddSeconds(1000.0)), ephemeris.Span);
+        }
+        else
+        {
+            Assert.Equal(3, ephemeris.Arcs.Count);
+            Assert.Same(impulses[0].After, atT1);
+            Assert.Equal(1.0, between.Velocity.Y, 4);
+            Assert.Same(impulses[1].After, atT2);
+        }
     }
 
     [Fact]
@@ -222,9 +276,9 @@ public class PropagatedEphemerisTests
         ephemeris.Set(outputs, ends, Fill);
         arcs = ephemeris.Arcs;
         Assert.Equal(3, arcs.Count);
-        Assert.Equal(new[] { outputs[0], ends[0].Before }, arcs[0]);
-        Assert.Equal(new[] { ends[1].After, outputs[^1] }, arcs[2]);
-        Assert.Equal(new Window(T0, T0.AddSeconds(200.0)), ephemeris.Span);
+        LabelAssert.Equal(new[] { outputs[0], ends[0].Before }, arcs[0]);
+        LabelAssert.Equal(new[] { ends[1].After, outputs[^1] }, arcs[2]);
+        LabelAssert.Equal(new Window(T0, T0.AddSeconds(200.0)), ephemeris.Span);
         Assert.Empty(filled);
         Assert.Same(outputs[0], ephemeris.Interpolate(T0));
         Assert.Same(outputs[^1], ephemeris.Interpolate(T0.AddSeconds(200.0)));
@@ -235,7 +289,7 @@ public class PropagatedEphemerisTests
         ephemeris.Set(outputs, new[] { uncarried }, Fill);
         Assert.Single(ephemeris.Arcs);
         Assert.Same(uncarried.Before, ephemeris.Arcs[0][^1]);
-        Assert.Equal(new Window(T0, T0.AddSeconds(195.0)), ephemeris.Span);
+        LabelAssert.Equal(new Window(T0, T0.AddSeconds(195.0)), ephemeris.Span);
 
         // 20 µs from the end: filled, the states 1.3 µs apart
         ephemeris.Set(outputs, new[] { Impulse(200.0 - 2e-5, 0.0, 1.0) }, Fill);
@@ -405,7 +459,7 @@ public class PropagatedEphemerisTests
                 var read = Lagrange.InterpolateSorted(sorted, epoch, k);
                 Assert.Equal(former.Position, read.Position);
                 Assert.Equal(former.Velocity, read.Velocity);
-                Assert.Equal(former.Epoch, read.Epoch);
+                LabelAssert.Equal(former.Epoch, read.Epoch);
             }
         }
 

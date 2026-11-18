@@ -26,7 +26,8 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// <para>
 /// <b>The reference</b>, <c>tools/occultation_reference/star_occultation_reference.py</c> (spiceypy, CSPICE N0067): the
 /// star at its catalog position moved by its proper motion to t along its straight line (SOFA's <c>iauStarpm</c>, rv = 0,
-/// the proper motion in right ascension a true angle; regenerated for #718), minus DSS-13 from the barycenter at t (a catalog
+/// the proper motion in right ascension a true angle; regenerated for #718, and for the parsec of 648000/π au of #733,
+/// which moves the last digit of the parallaxes and directions and no edge), minus DSS-13 from the barycenter at t (a catalog
 /// position is the direction of the light that reaches the barycenter at its epoch, as SOFA's <c>iauPmsafe</c> reads
 /// it, confirmed by S. Guillet, 2026-11-11; the field-of-view search reads a star so since #517, as <c>gfrfov</c> reads
 /// a ray); the Moon from <c>spkpos</c> with the correction, a sphere of 1737.4 km; the entry and the exit the zeros of
@@ -75,8 +76,8 @@ public class StarOccultationTests
     private static Star NewStar(double distancePc, double properMotionArcsecPerYear)
     {
         (double ra, double dec, double parallax) = distancePc == 20.0
-            ? (2.407051209225294, 0.3073668772899178, 0.04999998918876296)
-            : (2.407051126402387, 0.3073669059104148, 0.009999999567550454);
+            ? (2.407051209225294, 0.30736687728991774, 0.049999989188762965)
+            : (2.407051126402387, 0.30736690591041477, 0.00999999956755045);
         return new Star(533000 + (int)distancePc, $"STAR533_{distancePc}", 1.989e30, "G2V", 5.0, parallax, new Equatorial(dec, ra, S),
             0.0, properMotionArcsecPerYear * Arcsec, 0.0, 0.0, 0.0, 0.0, S);
     }
@@ -159,14 +160,14 @@ public class StarOccultationTests
     private static Vector3 ReferenceDirection(double distancePc, double properMotion, bool stellar) =>
         (distancePc, properMotion, stellar) switch
         {
-            (20.0, 0.0, false) => new Vector3(-0.7073567018437554, 0.6388348698644372, 0.302550004795922),
-            (20.0, 0.0, true) => new Vector3(-0.7074207548950949, 0.638775468405415, 0.3025256625595529),
-            (20.0, 0.1, false) => new Vector3(-0.707356701880824, 0.6388348698233922, 0.3025500047959219),
-            (20.0, 0.1, true) => new Vector3(-0.7074207549321618, 0.6387754683643654, 0.30252566255955143),
-            (100.0, 0.0, false) => new Vector3(-0.7073567019335424, 0.6388348697811483, 0.3025500047618656),
-            (100.0, 0.0, true) => new Vector3(-0.7074207549848778, 0.6387754683221154, 0.30252566252549157),
-            (100.0, 0.1, false) => new Vector3(-0.7073567019706111, 0.6388348697401035, 0.3025500047618656),
-            (100.0, 0.1, true) => new Vector3(-0.7074207550219447, 0.6387754682810658, 0.3025256625254901),
+            (20.0, 0.0, false) => new Vector3(-0.7073567018437553, 0.638834869864437, 0.30255000479592187),
+            (20.0, 0.0, true) => new Vector3(-0.707420754895095, 0.6387754684054151, 0.30252566255955277),
+            (20.0, 0.1, false) => new Vector3(-0.7073567018808242, 0.6388348698233924, 0.3025500047959219),
+            (20.0, 0.1, true) => new Vector3(-0.7074207549321619, 0.6387754683643655, 0.3025256625595513),
+            (100.0, 0.0, false) => new Vector3(-0.7073567019335424, 0.6388348697811485, 0.30255000476186555),
+            (100.0, 0.0, true) => new Vector3(-0.7074207549848778, 0.6387754683221154, 0.30252566252549146),
+            (100.0, 0.1, false) => new Vector3(-0.7073567019706111, 0.6388348697401036, 0.30255000476186555),
+            (100.0, 0.1, true) => new Vector3(-0.7074207550219447, 0.6387754682810659, 0.30252566252549007),
             _ => throw new ArgumentOutOfRangeException()
         };
 

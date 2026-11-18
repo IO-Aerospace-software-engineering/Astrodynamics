@@ -58,10 +58,12 @@ IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnOccultationConstrai
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
 
-    std::string computedFontShape{"ELLIPSOID"};
+    // The shape of the front body as given, ELLIPSOID when none is: a POINT front body (its frame blank) reaches gfoclt_c
+    // as a point (#496; before, "ELLIPSOID" was passed for every front body, and SPICE failed on the blank frame of a point)
+    std::string computedFrontShape{"ELLIPSOID"};
     if (!frontShape.empty())
     {
-        computedFontShape = frontShape;
+        computedFrontShape = frontShape;
     }
 
     const SpiceInt MAXWIN{20000};
@@ -74,7 +76,7 @@ IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnOccultationConstrai
 
     wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-    gfoclt_c(occultationType.ToCharArray(), std::to_string(frontBodyId).c_str(), "ELLIPSOID", frontFrame.c_str(), std::to_string(targetBodyId).c_str(), targetShape.c_str(),
+    gfoclt_c(occultationType.ToCharArray(), std::to_string(frontBodyId).c_str(), computedFrontShape.c_str(), frontFrame.c_str(), std::to_string(targetBodyId).c_str(), targetShape.c_str(),
              targetFrame.c_str(), IO::Astrodynamics::Aberrations::ToString(aberration).c_str(), std::to_string(observerId).c_str(), stepSize.GetSeconds().count(), &cnfine,
              &results);
 
@@ -142,8 +144,10 @@ IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnIlluminationConstra
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
 
-    const SpiceInt MAXIVL{1000};
-    const SpiceInt MAXWIN{2000};
+    // The cell of the other searches, 10000 windows (#653: 1000 before, so that a search of more failed with
+    // SPICE(WINDOWEXCESS))
+    const SpiceInt MAXIVL{10000};
+    const SpiceInt MAXWIN{20000};
 
     SpiceDouble SPICE_CELL_A[SPICE_CELL_CTRLSZ + MAXWIN];
     SpiceCell cnfine = IO::Astrodynamics::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_A);

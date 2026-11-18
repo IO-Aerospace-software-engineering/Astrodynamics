@@ -21,6 +21,10 @@ public sealed class PropagationEphemerisCache : IDisposable
     public readonly record struct EphemerisPoint(Vector3 Position, Vector3 Velocity, double EpochSeconds);
 
     private readonly Dictionary<(int naifId, Aberration aberration), EphemerisPoint[]> _cache;
+
+    // The bodies of the cache, for a read outside its grid (#626)
+    private readonly Dictionary<(int naifId, Aberration aberration), CelestialItem> _bodies;
+    private readonly ILocalizable _observer;
     private readonly double _gridStepSeconds;
     private readonly double _startEpochSeconds;
     private readonly int _gridSize;
@@ -84,6 +88,8 @@ public sealed class PropagationEphemerisCache : IDisposable
         _gridSize = (int)System.Math.Ceiling((endEpochSeconds - _startEpochSeconds) / _gridStepSeconds) + 1;
 
         _cache = new Dictionary<(int, Aberration), EphemerisPoint[]>();
+        _bodies = new Dictionary<(int, Aberration), CelestialItem>();
+        _observer = observer;
 
         // De-duplicate entries
         var seen = new HashSet<(int, Aberration)>();
@@ -103,16 +109,27 @@ public sealed class PropagationEphemerisCache : IDisposable
             }
 
             _cache[key] = points;
+            _bodies[key] = body;
         }
     }
 
     /// <summary>
     /// Get interpolated position of a cached body at the given epoch.
     /// </summary>
+    /// <remarks>
+    /// Outside the grid (before its first point or after its last) the body's ephemeris is read at the epoch from the
+    /// data provider. Before 11.0.0 the 8-point polynomial of the last points was extrapolated there: a propagation whose
+    /// output step does not divide its window runs up to half a step past it, past the grid the propagator built over the
+    /// window (25 m off for the Moon 1 680 s past the grid, #626); the propagator now builds it over the span it integrates.
+    /// </remarks>
     public Vector3 GetPosition(int bodyNaifId, Aberration aberration, in Time epoch)
     {
         var points = _cache[(bodyNaifId, aberration)];
         double t = epoch.TimeSpanFromJ2000().TotalSeconds;
+        if (OutsideTheGrid(points, t))
+        {
+            return ReadAt(bodyNaifId, aberration, epoch).Position;
+        }
 
         // Compute stencil start index for 8-point Lagrange
         int centerIdx = (int)((t - _startEpochSeconds) / _gridStepSeconds);
@@ -145,10 +162,17 @@ public sealed class PropagationEphemerisCache : IDisposable
     /// <summary>
     /// Get interpolated position and velocity of a cached body at the given epoch.
     /// </summary>
+    /// <remarks>Outside the grid, the body's state read at the epoch from the data provider (#626), as
+    /// <see cref="GetPosition"/>.</remarks>
     public (Vector3 position, Vector3 velocity) GetState(int bodyNaifId, Aberration aberration, in Time epoch)
     {
         var points = _cache[(bodyNaifId, aberration)];
         double t = epoch.TimeSpanFromJ2000().TotalSeconds;
+        if (OutsideTheGrid(points, t))
+        {
+            var read = ReadAt(bodyNaifId, aberration, epoch);
+            return (read.Position, read.Velocity);
+        }
 
         int centerIdx = (int)((t - _startEpochSeconds) / _gridStepSeconds);
         int startIdx = System.Math.Clamp(centerIdx - (InterpolationOrder / 2 - 1), 0, _gridSize - InterpolationOrder);
@@ -180,10 +204,21 @@ public sealed class PropagationEphemerisCache : IDisposable
         return (new Vector3(px, py, pz), new Vector3(vx, vy, vz));
     }
 
+    private static bool OutsideTheGrid(EphemerisPoint[] points, double t) =>
+        t < points[0].EpochSeconds || t > points[^1].EpochSeconds;
+
+    // The state of the body at the epoch, from the data provider, in the frame of the cache
+    private StateVector ReadAt(int bodyNaifId, Aberration aberration, in Time epoch) =>
+        _bodies[(bodyNaifId, aberration)].GetEphemeris(epoch, _observer, Frame, aberration).ToStateVector();
+
     /// <summary>
     /// Check whether this cache contains data for the given body and aberration mode.
     /// </summary>
     public bool Contains(int bodyNaifId, Aberration aberration) => _cache.ContainsKey((bodyNaifId, aberration));
 
-    public void Dispose() => _cache.Clear();
+    public void Dispose()
+    {
+        _cache.Clear();
+        _bodies.Clear();
+    }
 }

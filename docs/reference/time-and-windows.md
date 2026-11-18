@@ -28,7 +28,7 @@
 | `Create(int year, int doy, double sec)` | Create a UTC time from year (1 to 9999), day of year (1 to 365, or 366 in a Gregorian leap year) and seconds of day (finite, in [0, 86400)), to the nearest tick; `ArgumentOutOfRangeException` names an argument out of its range (#680) |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds, to the nearest tick |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds, to the nearest tick |
-| `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date; a non-finite date throws `ArgumentOutOfRangeException` (#680) |
+| `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date, J2000 plus the nearest tick of the days `julianDate` − 2451545.0 (#637); a non-finite date throws `ArgumentOutOfRangeException` (#680) |
 
 A span of seconds becomes the nearest tick (100 ns) of the exact value of its double, ties to even, in `Create`,
 `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
@@ -56,11 +56,22 @@ What a double can hold limits both directions:
   first tick inside: one tick later at a start, one tick earlier at an end. The coverage of ITRF93 in the test kernels starts at
   −43135.816087188054 s, whose nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it).
 
-Still truncating: `CreateFromJD`, `AddDays`, `AddHours`, `AddMinutes` (which throw for a non-finite argument, #680: NaN
-returned the epoch, or J2000 for `CreateFromJD`), and every `TimeSpan.FromSeconds` of the library
-outside `Time`, for example `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`,
-`Launch`, the thrust windows of an impulse (`Tsiolkovski`), the hold of `PhasingManeuver`, the candidate, secant and
-subdivision epochs of the conjunction search and the period of the element conversions of `SpiceAPI`.
+The same rule holds for `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, with the ticks per day, hour and
+minute (the days of `CreateFromJD` from J2000, `julianDate − 2451545.0`, are exact from JD 1225772.5 to 4903090 by
+Sterbenz's lemma), which throw for a non-finite argument (#680: NaN returned the epoch, or J2000 for `CreateFromJD`),
+and for the spans the library computes outside `Time` (internal `Time.SecondsToSpan`, which keeps the exception types
+of `TimeSpan.FromSeconds`, `ArgumentException` for NaN and `OverflowException` for an infinity or from 922 337 203 685 s,
+the bound of `SecondsToTicks`, 0.48 s below the 922 337 203 685.477 s `TimeSpan.FromSeconds` accepted):
+`OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the
+offsets of the launch windows after the first (`Launch`: half the sidereal period in seconds plus ±2 δL/ω, rounded
+once), the thrust window of an impulse (`Tsiolkovski.DeltaT`), the
+hold of `PhasingManeuver`, the step, candidate, seed, secant and subdivision epochs of the conjunction search and the
+period of the element conversions of `SpiceAPI`
+([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637), decided by S. Guillet,
+2026-11-17). Before 11.0.0 they truncated toward zero, a tick early for about half of the values (8 733 of 20 000
+random spans, 16 of 23 orbital periods, 43 of 80 sidereal periods of the Earth and the Moon, 40 of 65 launch window
+offsets). `TimeSpan.FromSeconds`
+of a constant that a tick holds exactly (60 s, 32.184 s, 19 s, whole leap seconds) is not concerned.
 
 ### Time Scales
 
@@ -102,9 +113,9 @@ not enter the managed conversions.
 | `Add(TimeSpan)` | Add a duration |
 | `AddYears(int)` | Add calendar years |
 | `AddMonths(int)` | Add calendar months |
-| `AddDays(double)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
-| `AddHours(double)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
-| `AddMinutes(double)` | Add minutes; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddDays(double)` | Add days, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddHours(double)` | Add hours, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddMinutes(double)` | Add minutes, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double)` | Add seconds, to the nearest tick |
 | `AddMilliseconds(double)` | Add milliseconds, to the nearest tick |
 | `AddMicroseconds(double)` | Add microseconds, to the nearest tick |
@@ -124,7 +135,31 @@ not enter the managed conversions.
 | `Time + TimeSpan` | Add duration to time: calendar arithmetic in the frame of the time, so across a leap second a UTC (or local) time and the time a span after it are the span plus the leap second apart, `(t + d) - t` is `d + 1 s` |
 | `Time - TimeSpan` | Subtract duration from time, calendar arithmetic as `+` |
 | `Time - Time` | Duration between two instants: the difference of the calendars in TDB, TT, TAI and GPS, through TAI for UTC and local times, so that leap seconds count ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)) |
-| `<`, `>`, `<=`, `>=` | Comparison operators |
+| `<`, `>`, `<=`, `>=` | Comparison of the instants, by their TAI ticks, within a frame and across frames (`CompareTo`) |
+| `==`, `!=`, `Equals` | The same instant, whatever the frames: `CompareTo` returns 0 ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)) |
+
+### Equality and Order
+
+Two times are equal when they are the same instant, whatever their frames (decided by S. Guillet, 2026-11-17):
+`==`, `!=`, `Equals` and `GetHashCode` follow `CompareTo`, the one order of times, which compares their ticks converted
+to TAI. So `utc == utc.ToTDB()`, both hash alike, and a `Dictionary`, a `HashSet`, `Distinct` or `IndexOf` keyed by times
+finds the same instant in another frame, as `SortedSet` did. Within UTC, TAI, TT and GPS the order is that of the
+calendars; within TDB too for times two ticks or more apart, but two consecutive TDB ticks can convert to one TAI tick
+(TDB − TT, rounded to the tick, gains one there, about every 300 s near its steepest), and then they are one instant,
+equal to each other and to that TAI time, so that equality stays transitive. A UTC time is never equal to a TAI time in
+an inserted leap second (UTC 23:59:60 has no `Time`). The default time (`default(Time)`, no frame) comes before every
+time with a frame and equals only itself, so comparing or sorting it does not throw. A local time
+(`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the zone of the machine, and two
+local times compare as instants too (before 11.0.0, by their calendars): in a zone with daylight saving time a label of
+the skipped hour is read with the standard offset, so it is the instant of a label an hour later (in America/New_York,
+local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, after local 03:00), and a label of the repeated hour is read with
+the standard offset too, so the `ToLocal()` of an instant in the first of the two hours is not that instant.
+To tell two labels of one instant apart, compare `DateTime` and `Frame`. Within TDB, `-` still counts the ticks of the
+calendars, so two equal consecutive TDB ticks differ by one tick. The library's caches whose values carry their key as a
+label (the orientation a frame keeps from its last read, #541, the range rates of the conjunction search) stay keyed by
+label, an epoch in another frame read again, bit for bit as before. Before 11.0.0 equality was the record's, on the
+calendar and the frame, while `CompareTo` compared through TAI across frames: the same instant in two frames compared to
+0 and was not equal.
 
 ### Example
 
@@ -154,6 +189,7 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
 | Member | Description |
 |--------|-------------|
 | `StartDate` / `EndDate` | Interval boundaries |
+| `==`, `!=`, `Equals` | The same two ends, instants compared whatever their frames (#512): a window and the window of the same instants in TDB are equal; `Length` does not take part |
 | `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31; the length given to `Window(Time, TimeSpan)`, whose `EndDate` is `start + length` in calendar arithmetic, so a UTC window built from a length across a leap second keeps that length while `EndDate - StartDate`, and a propagation over it, count the leap second |
 | `Merge(Window)` | Merge two overlapping windows |
 | `Intersects(Window)` / `Intersects(Time)` | Check overlap |

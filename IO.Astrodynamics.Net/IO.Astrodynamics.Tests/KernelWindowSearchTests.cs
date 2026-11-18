@@ -255,7 +255,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             .Select(w => w.Window).ToArray();
         _output.WriteLine($"MEASURE launch by day {byDay}: {actual.Length} of {all.Length} windows");
         Assert.NotEmpty(actual);
-        Assert.Equal(expected, actual);
+        LabelAssert.Equal(expected, actual);
     }
 
     [Theory]
@@ -422,7 +422,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             {
                 var actual = site.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
                     Aberration.LTS, Step, TestHelpers.Sun, method).ToArray();
-                Assert.Equal(expected, actual);
+                LabelAssert.Equal(expected, actual);
             }
         }
 
@@ -587,7 +587,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     /// <summary>
     /// #682: the frame of a site built from coordinates, read from LRO, a kernel spacecraft (this class loads its SPK): it
     /// reached <c>spkezr_c</c> by name (SPICE(UNKNOWNFRAME)) and is read in J2000 and rotated by the managed frame, with and
-    /// without light time, as from the Moon and the Sun in <see cref="Surface.SiteTests"/>.
+    /// without light time (with LT at the epoch of the site, the target and the frame's centre, #593), as from the Moon and
+    /// the Sun in <see cref="Surface.SiteTests"/>.
     /// </summary>
     [Fact]
     public void CustomSite_FromLro_InItsOwnFrame_EqualsTheIcrfReadRotated()
@@ -601,7 +602,9 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             {
                 var t = start.AddSeconds(7.0 * 3600.0 * k);
                 var read = site.GetEphemeris(t, lro, site.Frame, aberration).ToStateVector();
-                var expected = site.GetEphemeris(t, lro, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector();
+                var expected = aberration == Aberration.None
+                    ? site.GetEphemeris(t, lro, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector()
+                    : Surface.SiteTests.RotatedAtTheTargetEpoch(e => site.GetEphemeris(e, lro, Frames.Frame.ICRF, aberration).ToStateVector(), t, site.Frame);
                 Assert.Same(site.Frame, read.Frame);
                 Assert.InRange((read.Position - expected.Position).Magnitude(), 0.0, 1e-6);
                 Assert.InRange((read.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);
@@ -758,7 +761,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
                 var actual = site.FindWindowsOnCoordinateConstraint(LeoWindow, leo, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
                     RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
                 Assert.NotEmpty(expected);
-                Assert.Equal(expected, actual);
+                LabelAssert.Equal(expected, actual);
             }
             finally
             {

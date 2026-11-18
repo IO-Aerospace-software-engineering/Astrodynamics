@@ -112,7 +112,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddFuelTank(FuelTank)` | Add fuel tank; a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
-| `SetStandbyManeuver(Maneuver, Time?)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
+| `SetStandbyManeuver(Maneuver, Time?)` | Set the head of the maneuver chain, the maneuver the next propagation starts from: a second call replaces the first, null clears the chain, and nothing is added to `ExecutedManeuvers` (#584; before 11.0.0 a second call before a propagation was ignored); a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
@@ -122,10 +122,15 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
-Each `Propagate` (and `PropagateAsync`, `Scenario.SimulateAsync` and `BatchPropagator`, which go through it) starts the
-maneuver chain again from its head: it refuels the tanks, clears `ExecutedManeuvers`, the windows of the maneuvers and the
-gates of the previous propagation (#573). The inputs of a propagation are checked when its propagator is built, before
-anything is reset: a propagation rejected there leaves the previous one as it was. A spacecraft propagated again fires
+Each propagation, by every path (`Propagate`, `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
+`CentralBodyPropagatorBuilder` and a `CentralBodyPropagator` built directly), starts the maneuver chain again from its
+head, the maneuver `SetStandbyManeuver` set: it refuels the tanks, clears `ExecutedManeuvers`, the stored states, the
+attitude record, the windows of the maneuvers and the gates of the previous propagation (#573), and the spacecraft is
+then `IsPropagated`. The reset belongs to `PropagatorBase.Propagate`, once its checks pass (#583, decided by S. Guillet,
+2026-11-17: before 11.0.0 only `Spacecraft.Propagate` reset the spacecraft, so a second run through the builder or a
+propagator built directly fired no burn and started with the fuel left by the first). The inputs of a propagation are
+checked when its propagator is built, and its chain again when it runs, before anything is reset: a propagation
+rejected there, or a propagator built and never run, leaves the previous one as it was. A spacecraft propagated again fires
 its chain as a spacecraft never propagated. Among those inputs, each maneuver of the chain draws on a tank of the
 spacecraft: its engine's fuel tank is one of the spacecraft's tank instances, held by it; otherwise the propagation
 throws `InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft (#676, #586; before, an
@@ -169,13 +174,28 @@ across the jump:
   or more (the states then 1 µs apart, distinct epochs of the SPK; shorter, its interpolation is linear within 3e-10 m).
   Without an impulse the states make one arc, never filled, as before 11.0.0.
 - **An arc of zero length** is not stored: two impulses at one event; nor an arc between impulses within 2 µs, one
-  epoch. An impulse that no segment of the solution carries (Velocity-Verlet can locate the crossing at the end of its
-  last step) closes the last arc: the reads and the SPK end with the state before it, as the solution does.
+  epoch: the arc after them opens at the first with the state after them all, the position of the first and its
+  velocity after it plus the jump of each later one, so that the reads and the SPK from the first impulse on give the
+  state after them all, as at one event (#579, decided by S. Guillet, 2026-11-17; before 11.0.0 the arc after them
+  opened at the last, a read at the first returned the state before them all, 50 m/s off for a 50 m/s burn 1 µs after
+  a trim, and an SPK read between them threw SPKINSUFFDATA).
+  An impulse at the end of the propagation (Velocity-Verlet locates a crossing of its last step at its end, RK7(8)
+  a root at the end of the window) is carried by a last segment of zero length (#575): it opens a last arc of one state,
+  the state after it, so the reads at the end give the state after it, as the solution does. An SPK segment needs two
+  epochs: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the impulse at that last epoch.
 - **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
   so that at an impulse it gives the state after it, as `PropagationSolution.InterpolateAt`, SPICE (the later segment of
   an SPK) and GMAT's ephemeris give it. It interpolates the 8 states of that arc nearest to its epoch (Lagrange), in the
-  order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. The arcs
+  order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. A read
+  stays within the stored states: an epoch before the first or after the last throws `InvalidOperationException`, as a
+  read past the coverage of SPICE, where the 8-point polynomial was extrapolated without an error before 11.0.0 (567 km
+  off 6 min before the first state, 8 282 km 6 min after the last in LEO;
+  [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+  2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light time, may lie up to
+  that light time outside them, the observation epoch itself within them; so the managed geometry searches over a window
+  that leaves the states throw too. A TLE spacecraft sampled by `TLEPropagator` reads SGP4 outside its samples, from the
+  Earth as from any other body (its short-circuit extrapolated them before). The arcs
   are immutable arrays read by a binary search: a read takes no lock and sorts nothing, 0.001 to 0.003 ms at 7 000 to
   9 000 states, where the sort of every state at each call took 1.6 to 2.2 ms
   ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522); 2 000 reads in one process,
@@ -188,12 +208,12 @@ across the jump:
   `Spacecraft.Propagate` or `Scenario.SimulateAsync` replaces every stored state, those added before it included: before
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
 - **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, the builder and
-  a `CentralBodyPropagator` built directly included (which leave `IsPropagated` false), and SGP4 otherwise: unpropagated,
+  a `CentralBodyPropagator` built directly included (which make it `IsPropagated` since #583, false before), and SGP4 otherwise: unpropagated,
   or sampled by `TLEPropagator`, whose `AddPropagatedStates` does not change the rule (#675; before 11.0.0 it read SGP4
   whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
   `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
   without aberration reads them directly, whatever the initial orbit, so after `TLEPropagator` it interpolates its
-  samples (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s), as before 11.0.0.
+  samples (SGP4 at the samples, 9.1e-4 m from it between them for the ISS at 60 s over one UTC hour, 7.6e-4 m before #598 moved the last sample to the window end), as before 11.0.0.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
 41651463194, 2026-11-03, and run 41689602272 for the velocities in SSB mode against the anchored reference; the
@@ -211,11 +231,12 @@ from an output, on either side):
 | The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 4.9e-12 m/s in SSB mode, against the anchored reference below), 8.4e-7 m/s (Velocity-Verlet), 8.5e-7 m/s by `spkezr` (6.3e-7 m/s in SSB mode, anchored), since #569, where the combined maneuvers fire at their apogee (8.0e-7 m/s before) |
 | Velocity-Verlet | 18.5 m to 16 km | its own error far from the impulses (0.16 m at 10 s, 33 m at 60 s outputs, the Lagrange of its outputs against its cubic Hermite); 5.9e-4 m at 1 s steps, the label of its event (up to 1e-7 s from the event) |
 
-In SSB mode the solution's dense output carries the noise of the third-body acceleration of the Earth, which loses about
-eight digits there (#576), and the RK7(8) step sequence, so the noise, differs per platform: the reads against the
-solution, 2.1e-4 to 3.4e-4 m within ±150 s of the impulse and 3.3e-8 to 2.0e-6 m/s at tc − 1 µs over Linux, Windows and
-macOS arm64 (CI run 41651463194), are measured, not asserted, until the PR of #576. The velocity 1 µs before the impulse
-is measured instead against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
+In SSB mode the solution's dense output carried, before 11.0.0, the noise of the third-body acceleration of the Earth,
+which lost about eight digits there (#576), and the RK7(8) step sequence, so the noise, differed per platform: the reads
+against the solution, 2.1e-4 to 3.4e-4 m within ±150 s of the impulse and 3.3e-8 to 2.0e-6 m/s at tc − 1 µs over Linux,
+Windows and macOS arm64 (CI run 41651463194), were measured, not asserted. With the direct difference near the Earth they
+are asserted again: 1.6e-4 m and 5.4e-7 m/s on Linux x64, Windows x64 and macOS arm64 alike, the error of RK7(8) at the
+SSB tolerance of 1e-9 (limits twice the worst, CI run 44225490669). The velocity 1 µs before the impulse is also measured against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
 acceleration of the Sun and the Earth (point masses, kernel GMs, the Earth from the Sun of `spkezr` at the impulse),
 whose floor is a few 1e-12 m/s (the roundings of its 1 µs, an ulp of 4.55e-13 s near 2 963 s, and of the heliocentric
 velocity, an ulp of 3.64e-12 m/s), the size of the managed figure: 2.6e-12 to 9.1e-12 m/s over 26 step sequences on
@@ -316,7 +337,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
-  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (CI run 41651463194, the worst on Linux, in the Validation category; in SSB mode measured, not asserted, the noise of the third body near the Earth, #576) |
+  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (CI run 41651463194, the worst on Linux, in the Validation category); in SSB mode across an impulse 4.1e-4 m, asserted since the direct difference near the Earth (#576; measured, not asserted, before 11.0.0) |
   | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.35e-3 m, 5.9e-6 m/s in SSB mode, 2.6e-3 m across an impulse (CI run 41651463194; across an impulse the worst on Linux, in the Validation category; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
   | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
 
@@ -510,13 +531,13 @@ reference plane), and where the squares of its semi-axes underflow at the target
 6e-171 rad at the Moon's distance) it throws `InvalidOperationException`, the field cannot be searched
 ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated
 `ArgumentException`, "The semi-axes of an ellipsoid must have positive lengths"). A point target at the observer,
-distance 0 (two spacecraft of the same state), has no direction: `IsInFOV` and the search of a circle or an ellipse
-throw `InvalidOperationException` naming the target at the observer, not the field (before, the same unrelated
-`ArgumentException`); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an observer
-inside the target. The rectangle's point margin takes the angles of the zero vector as 0 and reports such a target in
-view; it is to throw as the circle and the ellipse do
-([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), decided by S. Guillet,
-2026-11-17).
+distance 0 (two spacecraft of the same state), has no direction: `IsInFOV` and the search of every shape throw
+`InvalidOperationException` naming the target at the observer, not the field (before 11.0.0, for a circle or an
+ellipse the same unrelated `ArgumentException`, and for a rectangle, whose point margin took the angles of the zero
+vector as 0, the target in view; the rectangle throws as the circle and the ellipse do since
+[#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), decision 9 of #719, decided by
+S. Guillet, 2026-11-17); an ellipsoid target centred on the observer throws the `InvalidOperationException` of an
+observer inside the target.
 
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
 gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the
@@ -546,7 +567,9 @@ search for a `+S` correction.
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
-milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when the instrument's spacecraft
+milliseconds about the Earth, which its propagated states allow, as for `GetEphemeris`:
+[#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+2026-11-17), and `InvalidOperationException` when the instrument's spacecraft
 has no attitude, when the observer is inside the ellipsoid of the target, or when the half-angles of a circle or an
 ellipse are too small for its cone at the target's distance ([Tiny half-angles](#field-of-view-search)). A managed spacecraft has no attitude while
 its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by

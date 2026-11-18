@@ -75,10 +75,24 @@ namespace IO.Astrodynamics.Tests
             return System.Math.Abs(System.Math.IEEERemainder(a1 - a2, IO.Astrodynamics.Constants._2PI));
         }
 
+        // The size of two orbits: their semi-major axes, or within 1e-6 of e = 1 their perigee radii, relative: there the
+        // semi-major axis is the conic's since #459, ±1e20 m for the state of an exact parabola, whose e rounding moves off 1,
+        // and +Infinity for the parabola itself
+        private static bool SameShape(IO.Astrodynamics.OrbitalParameters.OrbitalParameters o1,
+            IO.Astrodynamics.OrbitalParameters.OrbitalParameters o2, double a1, double a2, double tolerance)
+        {
+            if (o1.IsParabolic() && o2.IsParabolic())
+            {
+                return System.Math.Abs(o1.PerigeeRadius() - o2.PerigeeRadius()) <= 1e-12 * o1.PerigeeRadius();
+            }
+
+            return double.IsPositiveInfinity(a1) && double.IsPositiveInfinity(a2) || System.Math.Abs(a1 - a2) < tolerance;
+        }
+
         internal static bool KeplerComparer(KeplerianElements k1, KeplerianElements k2)
         {
             var tolerance = 1E-06;
-            return (double.IsPositiveInfinity(k1.A) && double.IsPositiveInfinity(k2.A) || System.Math.Abs(k1.A - k2.A) < tolerance) &&
+            return SameShape(k1, k2, k1.A, k2.A, tolerance) &&
                    System.Math.Abs(k1.E - k2.E) < tolerance && System.Math.Abs(k1.I - k2.I) < tolerance &&
                    AngleDifference(k1.RAAN, k2.RAAN) < tolerance && AngleDifference(k1.AOP, k2.AOP) < tolerance && AngleDifference(k1.M, k2.M) < tolerance &&
                    k1.Epoch == k2.Epoch && k1.Frame == k2.Frame && Equals(k1.Observer, k2.Observer);
@@ -91,8 +105,10 @@ namespace IO.Astrodynamics.Tests
         internal static bool EquinoctialComparer(EquinoctialElements e1, EquinoctialElements e2)
         {
             var tolerance = 1E-06;
-            return (double.IsPositiveInfinity(e1.SemiMajorAxis()) && double.IsPositiveInfinity(e2.SemiMajorAxis()) ||
-                    System.Math.Abs(e1.SemiMajorAxis() - e2.SemiMajorAxis()) < tolerance) && System.Math.Abs(e1.Eccentricity() - e2.Eccentricity()) < tolerance &&
+            // P too, relative (#462: it was NaN or ±∞ for every parabola, unseen)
+            return System.Math.Abs(e1.P - e2.P) <= tolerance * System.Math.Max(1.0, System.Math.Abs(e1.P)) &&
+                   SameShape(e1, e2, e1.SemiMajorAxis(), e2.SemiMajorAxis(), tolerance) &&
+                   System.Math.Abs(e1.Eccentricity() - e2.Eccentricity()) < tolerance &&
                    System.Math.Abs(e1.Inclination() - e2.Inclination()) < tolerance && AngleDifference(e1.AscendingNode(), e2.AscendingNode()) < tolerance &&
                    AngleDifference(e1.ArgumentOfPeriapsis(), e2.ArgumentOfPeriapsis()) < tolerance && AngleDifference(e1.MeanAnomaly(), e2.MeanAnomaly()) < tolerance &&
                    e1.Epoch == e2.Epoch && e1.Frame == e2.Frame && Equals(e1.Observer, e2.Observer);

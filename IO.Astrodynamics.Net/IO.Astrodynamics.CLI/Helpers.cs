@@ -101,7 +101,7 @@ public class Helpers
 
         return epoch =>
         {
-            // The window of the one epoch; the step only bounds the native loop, which runs once
+            // The window of the one epoch: one record, read in a buffer of one (#563); the step is that of an empty grid
             var read = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), objectId, TimeSpan.Zero, referenceFrame, TimeSpan.FromSeconds(1.0)).Single();
             return new StateOrientation(read.Rotation, read.AngularVelocity, epoch, referenceFrame);
         };
@@ -158,15 +158,30 @@ public class Helpers
         return input;
     }
 
+    /// <summary>
+    /// The frame a command argument names, the one rule of every command (#657): ICRF or J2000, in any case, is
+    /// <see cref="Frame.ICRF"/>, whose name is J2000, so that every path labels it J2000; any other name is
+    /// <c>new Frame(name)</c>, which the library routes by its name (TEME, GCRF, CIRS, TIRS: the managed frames, #656).
+    /// Before 11.0.0 <c>ephemeris</c>, <c>orientation</c> and <c>geometry-finder</c> rewrote ICRF as <c>j2000</c>, which
+    /// the SPICE path printed as given and a site observer as J2000.
+    /// </summary>
+    /// <exception cref="ArgumentException">The name is null, empty or blank.</exception>
+    internal static Frame ResolveFrame(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("A frame name is required.", nameof(name));
+        }
+
+        return name.Equals("ICRF", StringComparison.OrdinalIgnoreCase) || name.Equals(Frame.ICRF.Name, StringComparison.OrdinalIgnoreCase)
+            ? Frame.ICRF
+            : new Frame(name);
+    }
+
     internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(string orbitalParametersInput, int centerofMotion, string epoch, string originalFrame,
         bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = EarthGeopotentialDefaultDegree)
     {
-        if (originalFrame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
-        {
-            originalFrame = "J2000";
-        }
-
-        var inputFrame = new Frame(originalFrame);
+        var inputFrame = ResolveFrame(originalFrame);
         var inputEpoch = Helpers.ConvertDateTimeInput(epoch);
 
         var inputCenterOfMotion = CreateCenterOfMotion(centerofMotion, geopotentialDegrees);

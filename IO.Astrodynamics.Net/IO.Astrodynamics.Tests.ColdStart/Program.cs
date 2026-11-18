@@ -45,8 +45,16 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// see <see cref="StaticBodiesChild"/>.
 /// The modes <c>two-body-first-propagate</c> and <c>two-body-first-conic</c> take no schedule and load no kernel: the two-body
 /// call is the first native call of the process, see <see cref="CheckTwoBodyAsFirstNativeCall"/> (#714).
+/// The mode <c>frame-memory</c> takes the kernel directory alone: the memory a frame retains after its reads, see
+/// <see cref="FrameMemoryChild"/> (#541).
+/// The mode <c>conversions-lock</c> (#664) takes the kernel directory alone: the element conversions and the two-body
+/// propagation of <see cref="SpiceAPI"/> on a probe provider, see <see cref="ConversionsLockChild"/>.
+/// The mode <c>ccsds-local-time</c> takes the path of a CDM and loads no kernel: the CCSDS writers in the time zone the
+/// parent gives through <c>TZ</c>, see <see cref="CcsdsLocalTimeChild"/> (#617).
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
+/// The mode <c>local-dst</c> takes no schedule and loads no kernel: the local times of a zone with daylight saving time,
+/// see <see cref="LocalTimeChild"/> (#512).
 /// </para>
 /// <para>
 /// The schedules: <c>race</c> starts the two threads behind a <see cref="Barrier"/>, the reproduction of #623;
@@ -81,6 +89,12 @@ internal static class Program
             return MemoryProviderChild.Run(args[0]);
         }
 
+        // #664: the element conversions and the two-body propagation read nothing from the provider under the SpiceAPI lock
+        if (args.Length == 2 && args[1] == "conversions-lock")
+        {
+            return ConversionsLockChild.Run(args[0]);
+        }
+
         // The static objects of Barycenters, PlanetsAndMoons and Stars resolve their data at first read, retried on failure
         if (args.Length == 2 && args[1] == "static-bodies-memory")
         {
@@ -102,6 +116,19 @@ internal static class Program
             return StaticBodiesChild.RunBeforeKernels(args[0]);
         }
 
+        // The memory a frame retains after its reads, alone in the process (#541)
+        if (args.Length == 2 && args[1] == "frame-memory")
+        {
+            return FrameMemoryChild.Run(args[0]);
+        }
+
+
+        // #617: the CCSDS writers in the local time zone the parent sets through TZ
+        if (args.Length == 3 && args[1] == "ccsds-local-time")
+        {
+            return CcsdsLocalTimeChild.Run(args[2]);
+        }
+
         // Before the schedule check and before any kernel is loaded: the text of a TLE is checked before any SPICE read
         if (args.Length == 2 && args[1] == "tle-text")
         {
@@ -112,6 +139,18 @@ internal static class Program
         if (args.Length == 2 && args[1] is "two-body-first-propagate" or "two-body-first-conic")
         {
             return CheckTwoBodyAsFirstNativeCall(args[1] == "two-body-first-propagate");
+        }
+
+        // SPICE's errors reach the caller through the exceptions only: nothing on the standard output (#727)
+        if (args.Length == 2 && args[1] == "spice-errors-silent")
+        {
+            return CheckSpiceErrorsSilent(args[0]);
+        }
+
+        // No kernel loaded: the local times of a zone with daylight saving time, set before the first read of the zone (#512)
+        if (args.Length == 2 && args[1] == "local-dst")
+        {
+            return LocalTimeChild.Run();
         }
 
         // Before any kernel is loaded: a TLE read before its kernels throws SPICE's error, and works once they are loaded
@@ -234,7 +273,7 @@ internal static class Program
     private static int Usage()
     {
         Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
-                                "or <kernel directory> memory-provider|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic");
+                                "or <kernel directory> memory-provider|conversions-lock|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic|local-dst");
         return 2;
     }
 
@@ -337,6 +376,29 @@ internal static class Program
 
     // A body from custom parameters, which reads nothing from SPICE
     private sealed class CustomEarth() : CelestialBody(399, "IOA_714_EARTH", 5.972e24);
+
+    /// <summary>
+    /// The mode <c>spice-errors-silent</c> (#727): with the kernels loaded, three calls that SPICE fails, each throwing
+    /// <see cref="InvalidOperationException"/> with SPICE's message (checked here): a read past de440s, a CSPICE window search
+    /// past it, and an orientation read without a CK. The test checks that the standard output is empty: before, the native
+    /// layer left SPICE's error output on (<c>errprt_c</c> not set), so that SPICE printed the banner of each error there,
+    /// besides the message the exception carries.
+    /// </summary>
+    private static int CheckSpiceErrorsSilent(string kernels)
+    {
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+        var past = new Time(2160, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        int failures = 0;
+        failures += Expect<InvalidOperationException>("ReadEphemeris", () => SpiceAPI.Instance.ReadEphemeris(past, 399, 301, Frame.ICRF, Aberration.None),
+            e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
+        failures += Expect<InvalidOperationException>("FindWindowsOnDistanceConstraint", () => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+                new Window(past, past.AddDays(9.0)), 399, 301, RelationnalOperator.Greater, 4.0e8, Aberration.None, TimeSpan.FromDays(1.0)),
+            e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
+        failures += Expect<InvalidOperationException>("ReadOrientation", () => SpiceAPI.Instance.ReadOrientation(
+                new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(10.0)), -727, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)),
+            e => e.Message.Length > 0);
+        return failures == 0 ? 0 : 1;
+    }
 
     private static int Expect<TException>(string label, Func<object> create, Func<TException, bool> matches)
         where TException : Exception

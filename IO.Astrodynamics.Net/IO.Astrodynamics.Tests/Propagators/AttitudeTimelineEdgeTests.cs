@@ -111,7 +111,7 @@ public class AttitudeTimelineEdgeTests
         var impulse = run.Chain.OfType<ImpulseManeuver>().Single();
         Assert.True(impulse.ThrustWindow!.Value.StartDate < S, "the thrust window opens after S");
         var discrete = m.Expected.Activations.Single(a => a.Kind == "discrete");
-        Assert.Equal(S, discrete.Epoch);
+        LabelAssert.Equal(S, discrete.Epoch);
         AssertMonotone(run, m);
         AttitudeTimelineTests.AssertMeasures(run, m);
         AssertCk(run, m);
@@ -241,7 +241,7 @@ public class AttitudeTimelineEdgeTests
         var run = AttitudeTimelineTests.TimelineRun.Run(NextId(), key);
         var m = Verified(key, run);
         var first = run.Spacecraft.Frame.GetStateOrientationsToICRF().First();
-        Assert.Equal(S, first.Epoch);
+        LabelAssert.Equal(S, first.Epoch);
         Assert.True(AttitudeRecordTests.RotationAngle(v => v, v => v.Rotate(first.Rotation)) < 1e-15);
         AttitudeTimelineTests.AssertMeasures(run, m);
         var reads = AssertCk(run, m, Enumerable.Range(0, 60).Select(i => S.AddSeconds(i)).ToArray());
@@ -291,7 +291,7 @@ public class AttitudeTimelineEdgeTests
                 break;
         }
 
-        Assert.Equal(run.Window.EndDate, run.Spacecraft.Frame.GetStateOrientationsToICRF().Last().Epoch);
+        LabelAssert.Equal(run.Window.EndDate, run.Spacecraft.Frame.GetStateOrientationsToICRF().Last().Epoch);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -327,7 +327,8 @@ public class AttitudeTimelineEdgeTests
         Assert.Contains(run.Chain[0], executed);
 
         // ToOpm: the impulses
-        var opm = run.Spacecraft.ToOpm(includeKeplerianElements: false, includeManeuvers: true).Data.Maneuvers.ToArray();
+        // At the last stored state, by which every impulse executed: an OPM carries the maneuvers executed by its epoch (#658)
+        var opm = run.Spacecraft.ToOpm(epoch: run.Spacecraft.PropagatedStates[^1].Epoch, includeKeplerianElements: false, includeManeuvers: true).Data.Maneuvers.ToArray();
         var impulses = executed.OfType<ImpulseManeuver>().ToArray();
         Assert.Equal(impulses.Length, opm.Length);
         double mass = 2000.0;
@@ -405,8 +406,8 @@ public class AttitudeTimelineEdgeTests
     /// R5: a leading nadir held 0 s puts the gate of the impulse after it at S (choice 4), where the orbit given by Keplerian
     /// elements at its apogee has g = r·v exactly 0; by #577's rule of a zero at a gate equal to the base (choice 6) the
     /// perigee raise fires there in RK7(8), at the end of the first step in Velocity-Verlet. Without the leading attitude the
-    /// impulse has no gate (its minimum epoch is before the base) and the crossing at S is not taken: it fires one orbit
-    /// later (#580, out of scope). An intended move of the trajectory, stated in the notes.
+    /// impulse's minimum epoch is before the base, and the zero at S is a crossing there too (#580, GMAT's convention,
+    /// decided by S. Guillet, 2026-11-17): the same burn; before 11.0.0 it fired one orbit later.
     /// </summary>
     [Theory]
     [InlineData("RK")]
@@ -420,18 +421,18 @@ public class AttitudeTimelineEdgeTests
         double burn = withLead.Seconds(withLead.Burns[0]);
         double later = alone.Seconds(alone.Burns[0]);
         var orbit = new KeplerClosedForm(withLead.Center.GM, sv.Position, sv.Velocity, 0.0);
-        Assert.Equal(S, withLead.Chain[1].MinimumEpoch);
+        LabelAssert.Equal(S, withLead.Chain[1].MinimumEpoch);
         _output.WriteLine($"MEASURE #539 R5 {integrator}: the burn after a leading nadir held 0 s at S + {burn:R} s, without it at S + {later:R} s (period {orbit.T:F3} s)");
         if (integrator == "RK")
         {
-            Assert.Equal(S, withLead.Burns[0]);
+            LabelAssert.Equal(S, withLead.Burns[0]);
         }
         else
         {
             Assert.InRange(burn, 0.0, 1.0 + 1e-6);
         }
 
-        Assert.True(later > orbit.T / 2.0, "without the leading attitude the crossing at S is taken (#580 fixed?)");
+        Assert.Equal(burn, later);
         var m = AttitudeTimelineTests.Verify(withLead);
         if (TimelineRules.Checked) Assert.True(m.Windows <= TimelineRules.RuleBound);
         Assert.True(m.Discrete <= AttitudeRecordTests.DiscreteLaw);
@@ -481,12 +482,12 @@ public class AttitudeTimelineEdgeTests
             spacecraft.Propagate(new Window(S, S.AddSeconds(600.0)), [earth], propagator, false, false, TimeSpan.FromSeconds(10.0));
             // The epoch of its TT seconds from S, the nearest tick: the minimum epoch itself (#625)
             if (PropagationTimeArgument.Tt.EpochAt(S, PropagationTimeArgument.Tt.SecondsBetween(S, minimum)) != minimum) off++;
-            Assert.Equal(minimum, prograde.ThrustWindow!.Value.StartDate);
-            Assert.Equal(minimum, prograde.ManeuverWindow!.Value.StartDate);
-            Assert.Equal(minimum, prograde.ManeuverWindow.Value.EndDate);
-            Assert.Equal(minimum, nadir.ThrustWindow!.Value.StartDate);
-            Assert.Equal(minimum, nadir.ManeuverWindow!.Value.StartDate);
-            Assert.Equal(minimum, nadir.MinimumEpoch);
+            LabelAssert.Equal(minimum, prograde.ThrustWindow!.Value.StartDate);
+            LabelAssert.Equal(minimum, prograde.ManeuverWindow!.Value.StartDate);
+            LabelAssert.Equal(minimum, prograde.ManeuverWindow.Value.EndDate);
+            LabelAssert.Equal(minimum, nadir.ThrustWindow!.Value.StartDate);
+            LabelAssert.Equal(minimum, nadir.ManeuverWindow!.Value.StartDate);
+            LabelAssert.Equal(minimum, nadir.MinimumEpoch);
             Assert.Equal(new Maneuver.Maneuver[] { prograde, nadir }, spacecraft.ExecutedManeuvers.ToArray());
         }
 
@@ -525,15 +526,15 @@ public class AttitudeTimelineEdgeTests
         _output.WriteLine($"MEASURE #539 attitude at a UTC minimum epoch, {centre} {integrator}: activation {activation.Frame.GetType().Name} - minimum " +
                           $"{(activation - minimum).TotalSeconds:E2} s, hold {hold - 60.0:E2} s from 60 s, nadir - end {(nadir.ThrustWindow!.Value.StartDate - end).TotalSeconds:E2} s");
         Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(activation.Frame);
-        Assert.Equal(minimum.ToTDB(), activation);
-        Assert.Equal(activation, prograde.ManeuverWindow.Value.StartDate);
+        LabelAssert.Equal(minimum.ToTDB(), activation);
+        LabelAssert.Equal(activation, prograde.ManeuverWindow.Value.StartDate);
         Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(prograde.ManeuverWindow.Value.StartDate.Frame);
         Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(end.Frame);
-        Assert.Equal(end, nadir.ThrustWindow.Value.StartDate);
+        LabelAssert.Equal(end, nadir.ThrustWindow.Value.StartDate);
         Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(nadir.ThrustWindow.Value.StartDate.Frame);
         Assert.True(System.Math.Abs(hold - 60.0) <= TimelineRules.RuleBound, $"hold {hold:R} s");
         var summary = spacecraft.GetSummary();
-        Assert.Equal(activation, summary.ManeuverWindow!.Value.StartDate);
+        LabelAssert.Equal(activation, summary.ManeuverWindow!.Value.StartDate);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

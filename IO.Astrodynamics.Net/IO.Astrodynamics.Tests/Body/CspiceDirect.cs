@@ -16,7 +16,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// reference of the fields of view an instrument may hold (#707), and <c>reclat_c</c>, that of a star's crossing of a pole
 /// (#709); <c>prop2b_c</c>, <c>oscltx_c</c>, <c>sxform_c</c> and <c>conics_c</c>, the references of the errors of the two-body
 /// proxies, of a frame transformation and of the elements a conversion checks, and the CK writer <c>ckw03_c</c> with
-/// <c>sce2c_c</c> and <c>ckgp_c</c>, the reference of a CK without angular velocity (#714); the list of the
+/// <c>sce2c_c</c> and <c>ckgp_c</c>, the reference of a CK without angular velocity (#714); <c>ckgpav_c</c> with
+/// <c>sct2e_c</c>, and <c>str2et_c</c>, the references of the window reads (#563); the list of the
 /// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
 /// reference of the kernel registry and of the type of a text kernel (#673), with their handles and the files of open DAF
 /// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
@@ -26,7 +27,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// that use this class are in the Validation category, which the CI runs on Linux. The f2c integers of CSPICE on 64-bit
 /// Linux are 32-bit (<c>SpiceZfc.h</c>).
 /// </remarks>
-internal static class CspiceDirect
+internal static partial class CspiceDirect
 {
     private const string Library = "IO.Astrodynamics";
 
@@ -128,6 +129,16 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void ckgp_c(int inst, double sclkdp, double tol, string reff, [Out] double[] cmat, out double clkout, out int found);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void ckgpav_c(int inst, double sclkdp, double tol, string reff, [Out] double[] cmat, [Out] double[] av, out double clkout,
+        out int found);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void sct2e_c(int sc, double sclkdp, out double et);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void str2et_c(string str, out double et);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void conics_c([In] double[] elts, double et, [Out] double[] state);
@@ -395,6 +406,36 @@ internal static class CspiceDirect
             ckgp_c(instrument, sclk, tolerance, frame, cmat, out _, out int found);
             Check("ckgp");
             return found != 0 ? cmat : null;
+        }
+    }
+
+    /// <summary>The C-matrix (row-major), the angular velocity and the ephemeris time of the record a CK gives at an encoded
+    /// clock (<c>ckgpav_c</c>, the time through <c>sct2e_c</c>), or null when it finds none: the reference of the window read
+    /// of orientations (#563).</summary>
+    internal static (double[] Cmat, double[] AngularVelocity, double Et)? Ckgpav(int spacecraftId, double sclk, double tolerance, string frame)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var cmat = new double[9];
+            var av = new double[3];
+            ckgpav_c(spacecraftId * 1000, sclk, tolerance, frame, cmat, av, out double clkout, out int found);
+            Check("ckgpav");
+            if (found == 0) return null;
+            sct2e_c(spacecraftId, clkout, out double et);
+            Check("sct2e");
+            return (cmat, av, et);
+        }
+    }
+
+    /// <summary>The ephemeris time of a time string (<c>str2et_c</c>, the leapseconds kernel loaded): the reference of the
+    /// epochs of a UTC window read (#563).</summary>
+    internal static double Str2et(string time)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            str2et_c(time, out double et);
+            Check("str2et");
+            return et;
         }
     }
 

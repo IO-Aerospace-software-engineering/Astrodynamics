@@ -50,7 +50,7 @@ public class GcrfPropagationTests
 
     private static void AssertSameState(StateVector expected, StateVector actual)
     {
-        Assert.Equal(expected.Epoch, actual.Epoch);
+        LabelAssert.Equal(expected.Epoch, actual.Epoch);
         Assert.Equal(expected.Position, actual.Position);
         Assert.Equal(expected.Velocity, actual.Velocity);
     }

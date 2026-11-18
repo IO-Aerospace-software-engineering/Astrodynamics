@@ -32,7 +32,8 @@ public sealed record AvoidanceSearchOptions
 
     /// <summary>
     /// Gets the coarse analysis cadence used when reassessing each post-maneuver trajectory; null (the default) for the
-    /// <see cref="ConjunctionAnalysisOptions.SampleStep"/> the encounter was analyzed with (#683).
+    /// <see cref="ConjunctionAnalysisOptions.SampleStep"/> the encounter was analyzed with (#683). A value of zero or less
+    /// makes <see cref="ConjunctionAssessment.EvaluateAvoidance"/> throw <see cref="ArgumentOutOfRangeException"/> (#640).
     /// </summary>
     public TimeSpan? AnalysisSampleStep { get; init; }
 
@@ -41,7 +42,9 @@ public sealed record AvoidanceSearchOptions
     /// the largest interval between the search epochs of the sampled search, which the reassessment of each option uses
     /// (it reads the participants as <see cref="IO.Astrodynamics.Body.ILocalizable"/>, never by the polynomial search of
     /// two propagations); null (the default) for the <see cref="ConjunctionAnalysisOptions.MaximumEventSearchStep"/> the
-    /// encounter was analyzed with (#683).
+    /// encounter was analyzed with (#683). A value of zero or less makes <see cref="ConjunctionAssessment.EvaluateAvoidance"/>
+    /// throw <see cref="ArgumentOutOfRangeException"/>, the rule of the analysis (#640: 0 s ended in an
+    /// <see cref="OutOfMemoryException"/> after about 15 s, and a negative step was accepted, before 11.0.0).
     /// </summary>
     public TimeSpan? MaximumEventSearchStep { get; init; }
 

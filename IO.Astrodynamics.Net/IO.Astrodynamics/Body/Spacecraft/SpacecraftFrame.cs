@@ -376,7 +376,7 @@ public class SpacecraftFrame : Frame
     /// its source, as <see cref="Frame.GetStateOrientationToICRF"/> returns it. Its angular velocity is not kept: the reads
     /// give the record's (<see cref="GetStateOrientationToICRF"/>), zero at a discrete entry.</param>
     /// <exception cref="ArgumentException">The orientation is labelled with another frame.</exception>
-    public override bool AddStateOrientationToICRF(StateOrientation stateOrientation)
+    public bool AddStateOrientationToICRF(StateOrientation stateOrientation)
     {
         if (stateOrientation == null) throw new ArgumentNullException(nameof(stateOrientation));
         if (stateOrientation.ReferenceFrame != this)
@@ -408,7 +408,7 @@ public class SpacecraftFrame : Frame
 
     /// <summary>The last entry of the attitude record of a managed spacecraft, null before any propagation: as
     /// <see cref="GetStateOrientationToICRF"/> returns it at its epoch, the angular velocity included.</summary>
-    public override StateOrientation GetLatestStateOrientationToICRF()
+    public StateOrientation GetLatestStateOrientationToICRF()
     {
         lock (_recordLock)
         {
@@ -419,7 +419,7 @@ public class SpacecraftFrame : Frame
     /// <summary>The attitude record of a managed spacecraft, in epoch order: rotations to ICRF labelled with the spacecraft
     /// frame, their source, each as <see cref="GetStateOrientationToICRF"/> returns it at its epoch, with the angular
     /// velocity of the CK at its record in the convention of the frames (zero at a discrete entry).</summary>
-    public override IEnumerable<StateOrientation> GetStateOrientationsToICRF()
+    public IEnumerable<StateOrientation> GetStateOrientationsToICRF()
     {
         lock (_recordLock)
         {
@@ -433,7 +433,9 @@ public class SpacecraftFrame : Frame
         }
     }
 
-    public override void ClearStateOrientations()
+    /// <summary>Empties the attitude record of a managed spacecraft: its reads give the identity of ICRF again. A
+    /// propagation clears it before it records its attitude timeline.</summary>
+    public void ClearStateOrientations()
     {
         lock (_recordLock)
         {

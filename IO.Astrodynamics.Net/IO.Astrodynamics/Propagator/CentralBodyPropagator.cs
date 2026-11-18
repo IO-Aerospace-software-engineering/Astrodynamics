@@ -18,7 +18,8 @@ namespace IO.Astrodynamics.Propagator;
 /// <summary>
 /// Central-body-centered propagator for missions around any celestial body (LEO, GEO, lunar, interplanetary, etc.).
 /// The central body is inferred from the spacecraft's initial orbital parameters observer.
-/// When the observer is a Star or Barycenter, the Sun is used as the central body.
+/// When the observer is a Star or Barycenter, the Sun is used as the central body; an initial state about a star is
+/// converted to the Sun with the star's space velocity (before 11.0.0 a zero velocity, #731).
 /// </summary>
 public class CentralBodyPropagator : PropagatorBase
 {
@@ -63,8 +64,10 @@ public class CentralBodyPropagator : PropagatorBase
         : this(window, spacecraft, integrator, deltaT,
             PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
-        InjectEphemerisCache(Window, plan.Forces, plan.Bodies, _centralBody, InitialState.Frame);
-        _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
+        // The caches cover the span the propagation integrates, up to half an output step past the window (#626)
+        var cacheWindow = Span.CacheWindow(Window);
+        InjectEphemerisCache(cacheWindow, plan.Forces, plan.Bodies, _centralBody, InitialState.Frame);
+        _orientationCache = CreateFrameOrientationCache(cacheWindow, _centralBody);
         foreach (var force in plan.Forces)
         {
             integrator.AddForce(force);
@@ -86,6 +89,10 @@ public class CentralBodyPropagator : PropagatorBase
     {
         RequirePositiveStep(deltaT, nameof(deltaT));
         ArgumentNullException.ThrowIfNull(spacecraft);
+
+        // The checks of the initial orbit of PropagatorBase, before the initial state is computed here (#463)
+        ValidateInertialFrame(spacecraft);
+        ValidateOsculatingInitialOrbit(spacecraft);
         var centralBody = ResolveCentralBody(spacecraft);
         var bodies = ForceModelBodies(centralBody, celestialBodies);
         var forces = BuildCentralBodyForces(centralBody, bodies, spacecraft, includeAtmosphericDrag,
@@ -281,8 +288,8 @@ public class CentralBodyPropagator : PropagatorBase
             deltaT, PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
         // The Velocity-Verlet integrator is initialized by its constructor with the initial state, and the step checked
-        // by CreateDefaultIntegrator (PlanForces)
-        _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
+        // by CreateDefaultIntegrator (PlanForces); the cache covers the span the propagation integrates (#626)
+        _orientationCache = CreateFrameOrientationCache(Span.CacheWindow(Window), _centralBody);
     }
 
     /// <summary>
@@ -316,7 +323,9 @@ public class CentralBodyPropagator : PropagatorBase
         var initialState = StartState(InertialInitialOrbit(spacecraft.InitialOrbitalParameters, tdbStartDate), tdbStartDate)
             .RelativeTo(centralBody, Aberration.None).ToStateVector();
         var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
-        InjectEphemerisCache(tdbWindow, plan.Forces, plan.Bodies, centralBody, initialState.Frame);
+        // The span of the propagator these inputs build, before it exists (#626)
+        var span = SpanOf(PropagationTimeArgument.For(spacecraft.InitialOrbitalParameters.Observer), window, deltaT);
+        InjectEphemerisCache(span.CacheWindow(tdbWindow), plan.Forces, plan.Bodies, centralBody, initialState.Frame);
         return new VVIntegrator(plan.Forces, deltaT, initialState);
     }
 
@@ -343,7 +352,8 @@ public class CentralBodyPropagator : PropagatorBase
         // Central body gravity (two-body + geopotential if configured)
         forces.Add(new GravitationalAcceleration(centralBody));
 
-        // Third-body perturbations via Battin's formula for all other bodies
+        // Third-body perturbations for all other bodies: Battin's form far from the perturbing body, the direct
+        // difference where |r - d| < |d|/2 (ThirdBodyPerturbation, #576)
         foreach (var body in items)
         {
             if (!body.Equals(centralBody))
@@ -414,8 +424,9 @@ public class CentralBodyPropagator : PropagatorBase
         }
     }
 
-    // The orientation cache of the central body frame over the window, kept by the propagator: it is active only on the
-    // thread that propagates (PropagatorBase.Propagate) or evaluates the solution, never set on the shared Frame
+    // The orientation cache of the central body frame over the span of the propagation (#626), kept by the propagator: it
+    // is active only on the thread that propagates (PropagatorBase.Propagate) or evaluates the solution, never set on the
+    // shared Frame
     private static PropagationFrameOrientationCache CreateFrameOrientationCache(Window tdbWindow,
         CelestialItem centralBody)
     {
@@ -457,8 +468,8 @@ public class CentralBodyPropagator : PropagatorBase
         // the frame of the propagation. Conversion to SSB happens on demand. The states replace those stored before, split
         // into arcs at each impulse with the states on either side at its epoch, the short arcs filled from the solution
         // with the covariance in covariance mode (#540)
-        // An impulse that no segment of the solution carries (located at the end of the propagation, §9 item 7 of #554)
-        // opens no arc: the solution ends with the state before it, and so do the stored states
+        // An impulse at the end of the propagation is carried by a last segment of zero length (#575), which opens a last
+        // arc of one state, the state after it; an impulse that no segment carries opens no arc
         var solution = CurrentSolution;
         var impulses = Impulses.Select(i => new ImpulseBoundary(i.Epoch, ToIcrf(i.Before),
             solution.Segments.Any(s => s.BaseEpoch == i.Epoch) ? ToIcrf(i.After) : null)).ToArray();

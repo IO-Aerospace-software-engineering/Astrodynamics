@@ -42,10 +42,24 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </summary>
         public double M { get; }
 
+        // Within 1e-6 of e = 1 the perigee radius given or derived at construction: the state of the band comes from it
+        // (#459), and a = +Infinity does not fix it, so it is a value of the set for its equality and hash code (#475)
+        private readonly double? _bandPerigeeRadius;
+
+        /// <summary>
+        /// The rounding allowed between a semi-major axis and a perigee radius of one conic within 1e-6 of e = 1:
+        /// |q/a − (1 − e)| ≤ 6 ε (1 + e). The elements the library builds there, from a state (−μ/(2ξ) and h²/(μ(1 + e))),
+        /// through equinoctial elements, along the two-body motion and from SPICE's oscltx, measured at most 2.983 ε (1 + e)
+        /// over 6400 states of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU, |M| up to 2e6 rad) on Linux x64,
+        /// Windows x64 and macOS arm64 alike (CI run 44225490669); twice that, rounded up (the review of #459).
+        /// </summary>
+        private const double OneConicTolerance = 6.0 * 2.220446049250313e-16;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="semiMajorAxis"></param>
+        /// <param name="semiMajorAxis">The semi-major axis, m: within 1e-6 of e = 1 that of the conic of the perigee radius,
+        /// q / (1 − e) to rounding (|q/a − (1 − e)| ≤ 6 ε (1 + e)), +Infinity at e = 1 exactly (#459).</param>
         /// <param name="eccentricity"></param>
         /// <param name="inclination"></param>
         /// <param name="rigthAscendingNode"></param>
@@ -55,27 +69,66 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="epoch"></param>
         /// <param name="frame"></param>
         /// <param name="trueAnomaly"></param>
-        /// <param name="period"></param>
-        /// <param name="perigeeRadius"></param>
+        /// <param name="period">The period of an ellipse, when known; <see cref="OrbitalParameters.Period"/> throws for an open
+        /// orbit whatever is given (#663).</param>
+        /// <param name="perigeeRadius">The perigee radius, m: required within 1e-6 of e = 1 (a parabola, whose
+        /// <paramref name="semiMajorAxis"/> is +Infinity), finite and above 0 when given.</param>
         /// <param name="elementsType">Type of orbital elements (osculating or mean). Defaults to osculating.</param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="eccentricity"/> is not finite or is negative (#476),
+        /// or <paramref name="perigeeRadius"/> is given and not finite and above 0 (#726).</exception>
+        /// <exception cref="ArgumentException">An element is not finite (#726): <paramref name="semiMajorAxis"/> may be
+        /// +Infinity only within 1e-6 of e = 1 given the perigee radius; or an orbit within 1e-6 of e = 1 has no perigee
+        /// radius (<paramref name="perigeeRadius"/>), or a semi-major axis that is not the conic's of its perigee radius,
+        /// finite at e = 1 exactly or +Infinity beyond a few ulps of it (<paramref name="semiMajorAxis"/>, #459);
+        /// or <paramref name="inclination"/> is outside [−π, π]. The exception names the parameter.</exception>
         public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
             ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null,
             OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer, epoch, frame, elementsType)
         {
-            if (eccentricity < 0.0)
+            RequireEccentricity(eccentricity);
+            bool parabolic = System.Math.Abs(eccentricity - 1.0) < 1E-06;
+
+            // No conic has a non-finite element but the semi-major axis of a parabola (#726)
+            if (double.IsNaN(semiMajorAxis) || double.IsNegativeInfinity(semiMajorAxis) ||
+                (double.IsPositiveInfinity(semiMajorAxis) && !parabolic))
             {
-                throw new ArgumentException("Eccentricity must be a positive number");
+                throw new ArgumentException(
+                    $"The semi-major axis must be finite, +Infinity only for a parabola (|e − 1| < 1e-6): a = {semiMajorAxis:R} m, e = {eccentricity:R}.",
+                    nameof(semiMajorAxis));
             }
 
-            if (System.Math.Abs(eccentricity - 1.0) < 1E-06 && (perigeeRadius is null || !double.IsPositiveInfinity(semiMajorAxis)))
+            RequireInclination(inclination, nameof(inclination));
+            RequireFinite(rigthAscendingNode, nameof(rigthAscendingNode));
+            RequireFinite(argumentOfPeriapsis, nameof(argumentOfPeriapsis));
+            RequireFinite(meanAnomaly, nameof(meanAnomaly));
+            if (trueAnomaly.HasValue)
             {
-                throw new ArgumentException("To build a parabolic orbit you must set perigee radius and define semi major axis as positive infinity");
+                RequireFinite(trueAnomaly.Value, nameof(trueAnomaly));
             }
 
-            if (inclination is < -Constants.PI or > Constants.PI)
+            if (perigeeRadius is { } q && !(double.IsFinite(q) && q > 0.0))
             {
-                throw new ArgumentException("Inclination must be in range [-PI,PI] ");
+                throw new ArgumentOutOfRangeException(nameof(perigeeRadius), q, "The perigee radius must be finite and above 0.");
+            }
+
+            // Within 1e-6 of e = 1 the anomalies are Barker's, read from the perigee radius: it is required (#368)
+            if (parabolic && perigeeRadius is null)
+            {
+                throw new ArgumentException("Within 1e-6 of e = 1 the perigee radius is required.", nameof(perigeeRadius));
+            }
+
+            // ... with the semi-major axis of the same conic, a (1 − e) = q, either side of e = 1 (#459; before, +Infinity
+            // only): +Infinity at e = 1 exactly, and otherwise q/a = 1 − e to rounding, which a = +Infinity meets only within a
+            // few ulps of e = 1 (the state of an exact parabola, whose e rounds off 1 where ξ rounds to 0). The semi-major
+            // axis, the mean motion, the period and the apoapsis come from a, the state and P from q (the review of #459)
+            if (parabolic && (eccentricity == 1.0
+                    ? !double.IsPositiveInfinity(semiMajorAxis)
+                    : !(System.Math.Abs(perigeeRadius!.Value / semiMajorAxis - (1.0 - eccentricity)) <= OneConicTolerance * (1.0 + eccentricity))))
+            {
+                throw new ArgumentException(
+                    $"Within 1e-6 of e = 1 the semi-major axis must be that of the conic of the perigee radius, q / (1 − e), " +
+                    $"+Infinity at e = 1: a = {semiMajorAxis:R} m, e = {eccentricity:R}, q = {perigeeRadius!.Value:R} m.",
+                    nameof(semiMajorAxis));
             }
 
             A = semiMajorAxis;
@@ -89,6 +142,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             _period = period;
             _trueAnomaly = trueAnomaly;
             _perigeeRadius = perigeeRadius;
+            _bandPerigeeRadius = parabolic ? perigeeRadius : null;
         }
 
         /// <summary>
@@ -105,20 +159,27 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="epoch">Epoch time</param>
         /// <param name="frame">Reference frame</param>
         /// <param name="elementsType">Type of orbital elements</param>
+        /// <param name="inclinationName">The name of the inclination as the caller took it, for its exception.</param>
+        /// <param name="rightAscendingNodeName">The name of the node as the caller took it.</param>
+        /// <param name="argumentOfPeriapsisName">The name of the argument of periapsis as the caller took it.</param>
+        /// <param name="meanAnomalyName">The name of the mean anomaly as the caller took it.</param>
         private KeplerianElements(double meanMotion, double eccentricity, double inclination, double rightAscendingNode,
             double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame,
-            OrbitalElementsType elementsType)
+            OrbitalElementsType elementsType, string inclinationName, string rightAscendingNodeName,
+            string argumentOfPeriapsisName, string meanAnomalyName)
             : base(observer, epoch, frame, elementsType)
         {
-            if (eccentricity < 0.0)
+            // A mean motion is finite and above 0: 0 gave a = +Infinity, a negative one the a of its opposite (#726)
+            if (!(double.IsFinite(meanMotion) && meanMotion > 0.0))
             {
-                throw new ArgumentException("Eccentricity must be a positive number");
+                throw new ArgumentOutOfRangeException(nameof(meanMotion), meanMotion, "The mean motion must be finite and above 0.");
             }
 
-            if (inclination is < -Constants.PI or > Constants.PI)
-            {
-                throw new ArgumentException("Inclination must be in range [-PI,PI] ");
-            }
+            RequireEccentricity(eccentricity);
+            RequireInclination(inclination, inclinationName);
+            RequireFinite(rightAscendingNode, rightAscendingNodeName);
+            RequireFinite(argumentOfPeriapsis, argumentOfPeriapsisName);
+            RequireFinite(meanAnomaly, meanAnomalyName);
 
             // Compute semi-major axis from mean motion using Kepler's third law: n = sqrt(GM/a^3)
             A = System.Math.Cbrt(Constants.G * observer.Mass / (meanMotion * meanMotion));
@@ -147,7 +208,16 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="epoch">Epoch time</param>
         /// <param name="frame">Reference frame (typically TEME for TLE-compatible OMM)</param>
         /// <returns>Mean Keplerian elements with preserved mean motion precision</returns>
-        /// <exception cref="ArgumentException">Thrown when eccentricity is negative or inclination is out of range</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The mean motion is not finite and above 0 (#726), or the
+        /// eccentricity is not finite or is negative (#476).</exception>
+        /// <exception cref="ArgumentException">An angle is not finite (#726), or the inclination is out of range; the
+        /// exception names the parameter.</exception>
+        /// <remarks>
+        /// The mean motion in rad/s is (n × 2π) / 86400 in double arithmetic. Above about 2.86e307 rev/day, where the
+        /// product n × 2π overflows, the same two roundings are taken on n × 2⁻¹⁰ and 86400 × 2⁻¹⁰ (exact power-of-two
+        /// scalings), so the result is the one an unbounded exponent would give, finite, not +Infinity (#729); below, the
+        /// result is unchanged, bit for bit.
+        /// </remarks>
         public static KeplerianElements FromOMM(
             double meanMotion,
             double eccentricity,
@@ -161,7 +231,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             // Convert OMM units to internal units
             // Mean motion: rev/day -> rad/s
-            double meanMotionRadPerSec = meanMotion * Constants._2PI / 86400.0;
+            double meanMotionRadPerSec = RevolutionsPerDayToRadiansPerSecond(meanMotion);
 
             // Angles: degrees -> radians
             return new KeplerianElements(
@@ -174,7 +244,57 @@ namespace IO.Astrodynamics.OrbitalParameters
                 observer,
                 epoch,
                 frame,
-                OrbitalElementsType.Mean);
+                OrbitalElementsType.Mean,
+                nameof(inclination), nameof(raan), nameof(argumentOfPeriapsis), nameof(meanAnomaly));
+        }
+
+        /// <summary>
+        /// An eccentricity is finite and non-negative (#476): NaN took no conic branch, +Infinity gave a state of NaN.
+        /// −0.0 is accepted, as 0.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The eccentricity is not finite or is negative.</exception>
+        private static void RequireEccentricity(double eccentricity)
+        {
+            if (!double.IsFinite(eccentricity) || eccentricity < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(eccentricity), eccentricity,
+                    "The eccentricity must be finite and non-negative.");
+            }
+        }
+
+        /// <exception cref="ArgumentException">The inclination is not finite or is outside [−π, π].</exception>
+        private static void RequireInclination(double inclination, string name)
+        {
+            RequireFinite(inclination, name);
+            if (inclination is < -Constants.PI or > Constants.PI)
+            {
+                throw new ArgumentException("Inclination must be in range [-PI,PI] ", name);
+            }
+        }
+
+        /// <exception cref="ArgumentException">The value is not finite (#726).</exception>
+        private static void RequireFinite(double value, string name)
+        {
+            if (!double.IsFinite(value))
+            {
+                throw new ArgumentException($"The element {name} must be finite: {value:R}.", name);
+            }
+        }
+
+        // (n × 2π) / 86400, the two roundings of the former conversion. Where n × 2π overflows (|n| above about 2.86e307
+        // rev/day), the product and the quotient are scaled by 2^-10, which is exact for these magnitudes (no subnormal), so
+        // round(round(n × 2^-10 × 2π) / 84.375) = round(round(n × 2π) / 86400) with an unbounded exponent, a finite value
+        // (#729: +Infinity before)
+        private static double RevolutionsPerDayToRadiansPerSecond(double meanMotion)
+        {
+            double product = meanMotion * Constants._2PI;
+            if (double.IsFinite(product) || !double.IsFinite(meanMotion))
+            {
+                return product / 86400.0;
+            }
+
+            const double scale = 1.0 / 1024.0;
+            return meanMotion * scale * Constants._2PI / (86400.0 * scale);
         }
 
         /// <summary>
@@ -248,8 +368,9 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return A.Equals(other.A) && E.Equals(other.E) && I.Equals(other.I) && RAAN.Equals(other.RAAN) && AOP.Equals(other.AOP) && M.Equals(other.M) &&
-                   Observer.NaifId == other.Observer.NaifId && Epoch == other.Epoch && Frame == other.Frame;
+            return GetType() == other.GetType() && A.Equals(other.A) && E.Equals(other.E) && I.Equals(other.I) && RAAN.Equals(other.RAAN) &&
+                   AOP.Equals(other.AOP) && M.Equals(other.M) && Nullable.Equals(_bandPerigeeRadius, other._bandPerigeeRadius) &&
+                   HasSameReference(other);
         }
 
         public override bool Equals(object obj)
@@ -262,7 +383,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), A, E, I, RAAN, AOP, M);
+            return HashCode.Combine(base.GetHashCode(), A, E, I, RAAN, AOP, M, _bandPerigeeRadius);
         }
 
         public static bool operator ==(KeplerianElements left, KeplerianElements right)

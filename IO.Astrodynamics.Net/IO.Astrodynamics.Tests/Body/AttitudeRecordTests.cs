@@ -50,8 +50,8 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
 /// <c>Spacecraft.Propagate</c> with the scenario's bodies, whose stored states equal the scenario's to the bit. The
 /// directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric, as the attitudes read them
-/// (<c>Aberration.None</c>; for the instrument pointing, whose light time is not applied to a celestial target, a pin of a
-/// defect outside #537 with its own issue, #549, <see cref="PropagatedCase.LawAt"/>). The angular velocity of a law: the
+/// (<c>Aberration.None</c>, which the instrument pointing is given here: its light-time direction, its default since #549,
+/// is checked against <c>spkcvo_c</c> in <see cref="Maneuvers.InstrumentPointingAttitudeTests"/>). The angular velocity of a law: the
 /// rotation of its closed form over 0.1 s.
 /// </para>
 /// <para>
@@ -168,8 +168,9 @@ public class AttitudeRecordTests
     internal const double PositionAgainstSolution = 2.6e-8;
 
     /// <summary>The same in SSB mode, m: the stored states relative to the Sun. Worst 7.07e-4 m, the same on the three
-    /// platforms (InstrumentTriad and Nadir, RK7(8), GALACTIC; CI run 41651463194). The rows without an impulse, which #568
-    /// did not change, keep the assertion; those with an impulse are a MEASURE line (#576, below).</summary>
+    /// platforms (InstrumentTriad and Nadir, RK7(8), GALACTIC; CI run 41651463194). The rows with an impulse were a MEASURE
+    /// line until the direct difference near the Earth (#576; Linux 8.59e-4 m before, CI run 41651463194): with it 4.09e-4 m
+    /// (ImpulseTriad, RK7(8), ICRF) and 4.82e-4 m without an impulse (Linux x64, 2026-11-17), under the same limit.</summary>
     internal const double PositionAgainstSolutionSsb = 1.5e-3;
 
     /// <summary>The state of the spacecraft relative to the Earth in its own frame (<c>GetEphemeris</c>) against <c>spkezr</c>
@@ -220,8 +221,10 @@ public class AttitudeRecordTests
     /// <summary>The same at 60 s outputs. Worst 2.06e-3 rad (InstrumentTriad; Nadir 1.41e-3 rad).</summary>
     internal const double SlerpResidualAtSixtySeconds = 4.2e-3;
 
-    /// <summary>The tolerance of RK7(8) in SSB mode: about the Sun, 1e-12 does not finish in minutes (item 7 of §8 of the
-    /// design, #544); 1e-9 takes seconds.</summary>
+    /// <summary>The tolerance of RK7(8) in SSB mode: about the Sun, 1e-12 did not finish in minutes (item 7 of §8 of the
+    /// design, #544); 1e-9 takes seconds. Since the direct difference near the Earth (#576, #544) 1e-12 takes 5 210 steps
+    /// for an hour of LEO (2 093 091 before; <c>SsbModeThirdBodyTests</c>); the SSB thresholds of these tests were set on
+    /// the three platforms at 1e-9, which stays until they are measured again at 1e-12.</summary>
     internal const double SsbRk78Tolerance = 1e-9;
 
     private const double Length = 3600.0;
@@ -486,14 +489,9 @@ public class AttitudeRecordTests
         bool impulse = run.Law.Contains("Impulse");
         Assert.True(m.PositionsAgainstSpk <= (ssb ? impulse ? PositionAgainstSpkSsbAcrossImpulses : PositionAgainstSpkSsb : impulse ? PositionAgainstSpkAcrossImpulses : PositionAgainstSpk),
             $"positions - SPK {m.PositionsAgainstSpk:E3} m");
-        // In SSB mode across an impulse (measured since #540), the dense output carries the noise of ThirdBodyPerturbation near
-        // the Earth (#576) over a step sequence that differs per platform: a MEASURE line with no assertion (Linux worst
-        // 8.59e-4 m, ImpulseTriad, RK7(8), GALACTIC; CI run 41651463194, these rows in the Validation category), restored by
-        // the PR of #576
-        if (!(ssb && impulse))
-        {
-            Assert.True(m.PositionsAgainstSolution <= (ssb ? PositionAgainstSolutionSsb : PositionAgainstSolution), $"positions - solution {m.PositionsAgainstSolution:E3} m");
-        }
+        // In SSB mode across an impulse, asserted again since the direct difference near the Earth (#576), whose noise made the
+        // step sequence differ per platform
+        Assert.True(m.PositionsAgainstSolution <= (ssb ? PositionAgainstSolutionSsb : PositionAgainstSolution), $"positions - solution {m.PositionsAgainstSolution:E3} m");
         // At the outputs the stored states are the solution's rotated by pxform(F, J2000), the rotation of the same doubles
         // as the reference's: measured 0 in every case
         Assert.Equal(0.0, m.StatesAtOutputs);
@@ -678,7 +676,8 @@ public class AttitudeRecordTests
     /// <summary>
     /// Reads before the propagation (an instrument's field of view before the start, which throws without an attitude since
     /// #682, an orientation 100 s in), during it (on
-    /// another thread) and after it (every output and 3.3 s after it, past the end, a managed field-of-view search) leave the
+    /// another thread) and after it (every output and 3.3 s after it, a managed field-of-view search, and the reads 10 s
+    /// before the start and 3.3 s past the end, which throw since #527) leave the
     /// attitude record and the CK of a twin without reads (#523): on the base, the CK could not be written (ICRF,
     /// SPICE(TIMESOUTOFORDER)) or aborted the process (ECLIPJ2000).
     /// </summary>
@@ -720,11 +719,14 @@ public class AttitudeRecordTests
             {
                 var start = sc.InitialOrbitalParameters.Epoch;
                 var instrument = sc.Instruments.First();
-                instrument.IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None);
+                // Outside the propagated states the reads throw (#527: they extrapolated the states before 11.0.0), and
+                // leave the record as the others do
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(Length + 3.3), earth, Aberration.None));
                 for (int k = 0; k <= 360; k++)
                 {
                     instrument.IsInFOV(start.AddSeconds(k * 10.0), earth, Aberration.None);
-                    instrument.IsInFOV(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
+                    if (k < 360) instrument.IsInFOV(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
                 }
 
                 instrument.GetBoresightInICRFFrame(start.AddSeconds(Length + 100.0));
@@ -741,7 +743,7 @@ public class AttitudeRecordTests
         Assert.Equal(b.Length, a.Length);
         for (int i = 0; i < a.Length; i++)
         {
-            Assert.Equal(b[i].Epoch, a[i].Epoch);
+            LabelAssert.Equal(b[i].Epoch, a[i].Epoch);
             Assert.Equal(b[i].Rotation, a[i].Rotation);
             Assert.Equal(b[i].AngularVelocity, a[i].AngularVelocity);
         }
@@ -875,7 +877,7 @@ public class AttitudeRecordTests
         // The lead (1 µs) and the entries at least 2 µs apart
         Assert.True(gaps.All(x => x >= SpacecraftFrame.SameEpochTolerance || System.Math.Abs(x - SpacecraftFrame.DiscreteChangeLead) < 1e-9), $"smallest gap {smallest:E3} s");
         Assert.True(nearest < 1e-6, $"the activation is {nearest:E3} s from the nearest entry");
-        Assert.Equal(activation, prograde.ManeuverWindow!.Value.StartDate);
+        LabelAssert.Equal(activation, prograde.ManeuverWindow!.Value.StartDate);
         Assert.InRange(outputGap, 1e-8, SpacecraftFrame.SameEpochTolerance);
         Assert.DoesNotContain(record, x => x.Epoch == output);
         if (TimelineRules.Checked)
@@ -934,13 +936,13 @@ public class AttitudeRecordTests
                 Triad(Spacecraft.Front, Spacecraft.Up, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
             ("InstrumentTriad", new TriadAttitude(Min, TimeSpan.Zero, instrument, earth, sun, engine),
                 Triad(boresight, reference, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
-            ("InstrumentPointing", new InstrumentPointingToAttitude(Min, TimeSpan.Zero, instrument, moon, engine), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
+            ("InstrumentPointing", new InstrumentPointingToAttitude(Min, TimeSpan.Zero, instrument, moon, engine, Aberration.None), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
         };
         foreach (var (name, attitude, law) in cases)
         {
             var (_, orientation) = attitude.TryExecute(inF);
             Assert.Equal(Frame.ICRF, orientation.ReferenceFrame);
-            Assert.Equal(start, orientation.Epoch);
+            LabelAssert.Equal(start, orientation.Epoch);
             double angle = RotationAngle(law, v => v.Rotate(orientation.Rotation));
             _output.WriteLine($"MEASURE #535 TryExecute {name} from {frame}: {angle:E2} rad");
             Assert.True(angle <= TryExecuteLaw, $"{name}: {angle:E3} rad");
@@ -1386,7 +1388,7 @@ public class AttitudeRecordTests
                         spacecraft.SetStandbyManeuver(new TriadAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), earth, sun, engine));
                         break;
                     case "InstrumentPointing":
-                        spacecraft.SetStandbyManeuver(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine));
+                        spacecraft.SetStandbyManeuver(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine, Aberration.None));
                         break;
                     case "ImpulseAlone":
                         spacecraft.SetStandbyManeuver(Apogee());
@@ -1660,10 +1662,9 @@ public class AttitudeRecordTests
         /// the next one, the impulse's attitude from the opening of its thrust window to the end of its maneuver window, the
         /// epochs of the rules (<see cref="Change"/>, <see cref="TriadStart"/>); null within
         /// <see cref="TimelineRules.RuleBound"/> of one of them, where the rules do not resolve the side.</summary>
-        /// <remarks>One expectation pins the behaviour of the library where it departs from its documentation, a defect
-        /// outside #537 with its own issue: the instrument pointing at the Moon takes its geometric direction, although
-        /// the maneuver asks for <c>Aberration.LT</c> (its light time is not applied to a celestial target, 4.4e-5 rad from
-        /// this LEO, #549).</remarks>
+        /// <remarks>The instrument pointing at the Moon is given <c>Aberration.None</c>, its geometric direction (its default
+        /// light-time direction, #549, is checked against <c>spkcvo_c</c> in
+        /// <see cref="Maneuvers.InstrumentPointingAttitudeTests"/>).</remarks>
         internal (Func<Vector3, Vector3> Law, bool Continuous) LawAt(Time t)
         {
             switch (Law)
@@ -1749,7 +1750,7 @@ public class AttitudeRecordTests
                 }
                 case "InstrumentPointing":
                 {
-                    // Pin: the geometric direction of the Moon, the light time not applied (#549, above)
+                    // The geometric direction of the Moon, the correction the maneuver is given (above)
                     var (b1, _) = InstrumentAxesInSpacecraft();
                     return MinimalRotation(b1, FromEarth(Moon, t) - StateAt(t).Position);
                 }

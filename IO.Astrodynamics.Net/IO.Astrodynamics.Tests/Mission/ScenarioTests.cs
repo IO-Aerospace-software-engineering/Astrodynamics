@@ -96,7 +96,7 @@ namespace IO.Astrodynamics.Tests.Mission
             // before #411 the site was 1.15 m away
             Assert.Equal(new Vector3(349.96683087822703, 295.68160057531139, 0.01769212216143207), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                 TestHelpers.VectorComparer);
-            Assert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 
@@ -209,7 +209,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(new Vector3(140.54731590683664, -86.30917047986902, -196.31882242781452), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
             Assert.Equal(464.73488954797193, maneuver1.FuelBurned, 2);
 
-            Assert.Equal(scenario.Window, summary.Window);
+            LabelAssert.Equal(scenario.Window, summary.Window);
             Assert.Single(summary.SpacecraftSummaries);
             var maneuverWindow1 = summary.SpacecraftSummaries.First().ManeuverWindow;
             if (maneuverWindow1 != null)
@@ -265,7 +265,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(0.0, progradeAttitude.FuelBurned, 0);
 
 
-            Assert.Equal(scenario.Window, summary.Window);
+            LabelAssert.Equal(scenario.Window, summary.Window);
             Assert.Single(summary.SpacecraftSummaries);
             var maneuverWindow = summary.SpacecraftSummaries.First().ManeuverWindow;
             if (maneuverWindow != null)
@@ -307,7 +307,7 @@ namespace IO.Astrodynamics.Tests.Mission
             foreach (var (name, state) in new[] { ("ISS 2024 start", initialSV.ToStateVector()), ("ISS 2024 end", endSV.ToStateVector()) })
             {
                 var reference = Frame.TemeFrameTests.Reference(name);
-                Assert.Equal(Frame.TemeFrameTests.Instant(reference.Instant), state.Epoch);
+                LabelAssert.Equal(Frame.TemeFrameTests.Instant(reference.Instant), state.Epoch);
                 var position = Frame.TemeFrameTests.Position(reference.Gmat) - Frame.TemeFrameTests.Position(reference.Dss63J2000);
                 var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat) - Frame.TemeFrameTests.Velocity(reference.Dss63J2000);
                 double dr = (state.Position - position).Magnitude(), dv = (state.Velocity - velocity).Magnitude();
@@ -321,8 +321,8 @@ namespace IO.Astrodynamics.Tests.Mission
             // Verify reference frame and epoch
             Assert.Equal(Frames.Frame.ICRF, initialSV.ToStateVector().Frame);
             Assert.Equal(Frames.Frame.ICRF, endSV.ToStateVector().Frame);
-            Assert.Equal(start, initialSV.ToStateVector().Epoch);
-            Assert.Equal(end, endSV.ToStateVector().Epoch);
+            LabelAssert.Equal(start, initialSV.ToStateVector().Epoch);
+            LabelAssert.Equal(end, endSV.ToStateVector().Epoch);
         }
 
         [Fact]
@@ -421,7 +421,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 Assert.Equal(new Vector3(140.54731590683664, -86.30917047986902, -196.31882242781452), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
                 Assert.Equal(464.73488954797193, maneuver1.FuelBurned, 2);
 
-                Assert.Equal(scenario.Window, summary1.Window);
+                LabelAssert.Equal(scenario.Window, summary1.Window);
                 Assert.Single(summary1.SpacecraftSummaries);
                 var maneuverWindow1 = summary1.SpacecraftSummaries.First().ManeuverWindow;
                 if (maneuverWindow1 != null)
@@ -476,7 +476,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(new Vector3(140.54731590683664, -86.30917047986902, -196.31882242781452), ((ImpulseManeuver)maneuver2).DeltaV, TestHelpers.VectorComparer);
             Assert.Equal(464.73488954797193, maneuver2.FuelBurned, 2);
 
-            Assert.Equal(scenario.Window, summary2.Window);
+            LabelAssert.Equal(scenario.Window, summary2.Window);
             Assert.Single(summary2.SpacecraftSummaries);
             var maneuverWindow2 = summary2.SpacecraftSummaries.First().ManeuverWindow;
             if (maneuverWindow2 != null)
@@ -522,7 +522,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddSpacecraft(spacecraft);
             var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
-            Assert.Equal(scenario.Window, summary.Window);
+            LabelAssert.Equal(scenario.Window, summary.Window);
             Assert.Single(summary.SpacecraftSummaries);
             var maneuverWindow = summary.SpacecraftSummaries.First().ManeuverWindow;
             if (maneuverWindow != null)
@@ -549,7 +549,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
             var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromDays(365.0));
 
-            Assert.Equal(scenario.Window, summary.Window);
+            LabelAssert.Equal(scenario.Window, summary.Window);
 
             // The straight line of the star (#718) at 0, 365 and 730 days, written in StarTests: before, the angles 1, 1.1 and 1.2
             // rad (to 3 decimals) at the catalog distance

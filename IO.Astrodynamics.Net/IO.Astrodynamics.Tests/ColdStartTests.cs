@@ -110,6 +110,35 @@ public class ColdStartTests
         }
     }
 
+    [Fact]
+    public void SpiceErrors_ReachTheCallerOnly_NothingOnTheStandardOutput()
+    {
+        // A child whose calls SPICE fails (#727): a read past de440s, a CSPICE window search past it and an orientation read
+        // without a CK, each throwing SPICE's message, checked by the child. Before, ActivateErrorManagement set erract_c to
+        // RETURN only, and SPICE printed the banner of each error on the standard output, which corrupts the output of a host
+        // application (a CLI's); its error output is now NONE (errprt_c, decided by S. Guillet, 2026-11-17)
+        string output = RunChild("spice-errors-silent");
+
+        Assert.DoesNotContain("SPICE(", output);
+        Assert.DoesNotContain("Toolkit", output);
+        Assert.Equal(string.Empty, output.Trim());
+    }
+
+    [Fact]
+    public void FrameReads_RetainNoOrientationPerEpoch()
+    {
+        // A frame keeps at most the orientation of its last epoch (#541): in a fresh process, 100 000 reads of ITRF93 by name
+        // and 5 000 of each managed frame retain nothing that grows with them, checked by the child against its bound.
+        // Before the fix, ITRF93 retained 16.5 MB (the issue's probe) and each frame one orientation per epoch read
+        string output = RunChild("frame-memory");
+        foreach (var line in output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
+        {
+            _output.WriteLine(line.TrimEnd('\r'));
+        }
+
+        Assert.Equal(6, output.Split('\n').Count(x => x.StartsWith("MEASURE #541", StringComparison.Ordinal)));
+    }
+
     [Theory]
     [InlineData("two-body-first-propagate")]
     [InlineData("two-body-first-conic")]
@@ -119,6 +148,29 @@ public class ColdStartTests
         // parameters, of a zero velocity: the call throws SPICE's error, checked by the child. Before the fix, SPICE's default
         // action (ABORT) ended the child with exit code 1
         RunChild(mode);
+    }
+
+    [NotOnWindowsFact("The local zone of a .NET process on Windows comes from the system, not from TZ: the child cannot set it")]
+    public void LocalTimes_AreTheInstantsOfTheirZone()
+    {
+        // A child that sets its local zone to America/New_York (#512): local times compare, are equal and hash as the
+        // instants DateTime.ToUniversalTime gives their calendars, across the skipped and the repeated hours of 2025, each
+        // checked by the child against the rules of the zone. Before 11.0.0 the local times of one frame compared by their
+        // calendars: local 02:30 of 2025-03-09 came before local 03:00, which is the earlier instant
+        RunChild("local-dst");
+    }
+
+    [Fact]
+    public void ElementConversions_ReadNoProviderUnderTheSpiceLock()
+    {
+        // A child with a probe provider set as the global provider (#664): each element conversion and two-body propagation
+        // of SpiceAPI, every overload, makes no provider call under the SpiceAPI lock, checked by the child. Before the fix
+        // each built the observer of its result under the lock: 9 provider calls about the Earth, all under the lock
+        string output = RunChild("conversions-lock");
+        foreach (var line in output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
+        {
+            _output.WriteLine(line.TrimEnd('\r'));
+        }
     }
 
     // Runs the child with the mode, and the schedule and hold when given; returns its standard output
@@ -133,6 +185,16 @@ public class ColdStartTests
     /// <see cref="ChildTimeout"/> and exit 0, and returns its standard output.
     /// </summary>
     internal static string RunChild(string description, params string[] arguments)
+    {
+        return RunChildWithEnvironment(description, null, arguments);
+    }
+
+    /// <summary>
+    /// <see cref="RunChild(string, string[])"/> with the variables of <paramref name="environment"/> set in the child's
+    /// environment (<c>TZ</c> for <c>CcsdsLocalTimeTests</c>, #617).
+    /// </summary>
+    internal static string RunChildWithEnvironment(string description, System.Collections.Generic.IReadOnlyDictionary<string, string> environment,
+        params string[] arguments)
     {
         // ColdStart/, or beside the tests when the build was given an output directory (-o), which the child is built into
         string child = Path.Combine(AppContext.BaseDirectory, "ColdStart", "IO.Astrodynamics.Tests.ColdStart.dll");
@@ -150,6 +212,11 @@ public class ColdStartTests
             RedirectStandardError = true,
             WorkingDirectory = AppContext.BaseDirectory
         };
+        foreach (var variable in environment ?? new System.Collections.Generic.Dictionary<string, string>())
+        {
+            start.Environment[variable.Key] = variable.Value;
+        }
+
         start.ArgumentList.Add(child);
         start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"));
         foreach (var argument in arguments)

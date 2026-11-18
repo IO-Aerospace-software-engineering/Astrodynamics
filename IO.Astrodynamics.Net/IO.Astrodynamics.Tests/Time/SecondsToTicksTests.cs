@@ -16,9 +16,9 @@ namespace IO.Astrodynamics.Tests.Time;
 /// The conversions of seconds to ticks of <see cref="TimeSystem.Time"/> give the nearest tick, ties to even (#625):
 /// <see cref="TimeSystem.Time.Create(double, ITimeFrame)"/>, <see cref="TimeSystem.Time.Create(int, int, double)"/>,
 /// <see cref="TimeSystem.Time.AddSeconds"/>, <see cref="TimeSystem.Time.AddMilliseconds"/>,
-/// <see cref="TimeSystem.Time.AddMicroseconds"/> and the TDB − TT offset of <see cref="TDBTimeFrame"/> (not
-/// <c>AddDays</c>, <c>AddHours</c>, <c>AddMinutes</c>, <c>CreateFromJD</c> nor the <c>TimeSpan.FromSeconds</c> of the
-/// library outside <see cref="TimeSystem.Time"/>, which still truncate); a tick made seconds and back, which is not
+/// <see cref="TimeSystem.Time.AddMicroseconds"/> and the TDB − TT offset of <see cref="TDBTimeFrame"/> (<c>AddDays</c>,
+/// <c>AddHours</c>, <c>AddMinutes</c>, <c>CreateFromJD</c> and the spans the library computes outside
+/// <see cref="TimeSystem.Time"/> since #637: <see cref="NearestTickSpanTests"/>); a tick made seconds and back, which is not
 /// always that tick from 2017 to 2028 (and 1971 to 1983); and the labels and window ends of the CSPICE reads, which keep the ticks asked.
 /// The references
 /// are exact: Python's Fraction (<c>tools/seconds_to_ticks/seconds_to_ticks_reference.py</c>,
@@ -90,8 +90,8 @@ public class SecondsToTicksTests
         {
             double seconds = double.Parse($"{k}.5e-7", CultureInfo.InvariantCulture);
             Assert.Equal(-TimeSystem.Time.SecondsToTicks(seconds), TimeSystem.Time.SecondsToTicks(-seconds));
-            Assert.Equal(start, start.AddSeconds(seconds).AddSeconds(-seconds));
-            Assert.Equal(start, start.AddSeconds(-seconds).AddSeconds(seconds));
+            LabelAssert.Equal(start, start.AddSeconds(seconds).AddSeconds(-seconds));
+            LabelAssert.Equal(start, start.AddSeconds(-seconds).AddSeconds(seconds));
             double any = (random.NextDouble() - 0.5) * System.Math.Pow(10.0, random.Next(-9, 6));
             Assert.Equal(-TimeSystem.Time.SecondsToTicks(any), TimeSystem.Time.SecondsToTicks(-any));
             Assert.Equal(ExactTicks.Nearest(any), TimeSystem.Time.SecondsToTicks(any));

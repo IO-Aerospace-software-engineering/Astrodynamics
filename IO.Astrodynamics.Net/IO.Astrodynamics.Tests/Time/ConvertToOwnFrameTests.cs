@@ -50,7 +50,7 @@ public class ConvertToOwnFrameTests
 
         // Assert
         Assert.Equal(ticks, converted.DateTime.Ticks);
-        Assert.Equal(tdb, converted);
+        LabelAssert.Equal(tdb, converted);
     }
 
     [Theory]
@@ -64,7 +64,7 @@ public class ConvertToOwnFrameTests
                  })
         {
             var time = new TimeSystem.Time(new DateTime(ticks), frame);
-            Assert.Equal(time, time.ConvertTo(frame));
+            LabelAssert.Equal(time, time.ConvertTo(frame));
         }
     }
 
@@ -102,8 +102,8 @@ public class ConvertToOwnFrameTests
         var solution = propagator.Propagate();
 
         // Assert: the propagation starts at the epoch of the state, from the state itself, with its covariance
-        Assert.Equal(epoch, propagator.Window.StartDate);
-        Assert.Equal(epoch, solution.Segments[0].BaseEpoch);
+        LabelAssert.Equal(epoch, propagator.Window.StartDate);
+        LabelAssert.Equal(epoch, solution.Segments[0].BaseEpoch);
         Assert.Equal(state.Position, solution.StateVectors[0].Position);
         Assert.Equal(state.Velocity, solution.StateVectors[0].Velocity);
         Assert.Equal(100.0, solution.GetCovariance(epoch).Get(0, 0));

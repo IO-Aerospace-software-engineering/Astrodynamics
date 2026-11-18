@@ -19,10 +19,14 @@ namespace IO.Astrodynamics.CCSDS.Common;
 /// rounds it, so a calendar date gives the <see cref="DateTime"/> the readers gave before.
 /// </para>
 /// <para>
-/// A text outside this form goes to <see cref="DateTime.TryParse(string, IFormatProvider, DateTimeStyles, out DateTime)"/>,
-/// the readers' former fallback, unchanged (its leniency is #619). A day of year out of range is rejected, as CSPICE's
-/// <c>str2et</c> rejects it. The digits are ASCII; a year 0000, or a text with other decimal digits, is rejected (false),
-/// so the readers throw their own parse exception, as before.
+/// A text outside this form is rejected (false), so the readers throw their own parse exception (#619, decided by
+/// S. Guillet, 2026-11-17): the two forms of CCSDS 508.0-B-1 §6.3.2.6 and 502.0-B-3 (<c>yyyy-mm-ddThh:mm:ss[.d→d][Z]</c>,
+/// <c>yyyy-dddThh:mm:ss[.d→d][Z]</c>, "All fields require leading zeros"), with the <c>±hh:mm</c> offset of
+/// <c>epochType</c>. Before, <see cref="DateTime.TryParse(string, IFormatProvider, DateTimeStyles, out DateTime)"/> read
+/// any text it could: a time alone on the day of the read, a bare number (<c>1.5</c>, <c>1,5</c>) as 5 January of the
+/// current year, a date alone, a space for the <c>T</c>, RFC 1123. A day of year out of range is rejected, as CSPICE's
+/// <c>str2et</c> rejects it, and so is a field out of range (month, day, hour 24, minute or second 60, an offset above
+/// 14:00). The digits are ASCII; a year 0000, or a text with other decimal digits, is rejected.
 /// </para>
 /// </remarks>
 internal static class CcsdsEpochParser
@@ -30,9 +34,10 @@ internal static class CcsdsEpochParser
     private const DateTimeStyles Styles = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal;
 
     // ASCII digits only: .NET's \d matches every Unicode decimal digit, which int.Parse does not read; a text with other
-    // digits goes to the fallback, which rejects it (RegexOptions.ECMAScript cannot be combined with CultureInvariant)
+    // digits is rejected (RegexOptions.ECMAScript cannot be combined with CultureInvariant). \z, not $, which also matches
+    // before a final line feed (#619: a text with a trailing line feed was read)
     private static readonly Regex EpochPattern = new(
-        @"^(?<year>[0-9]{4})-(?:(?<month>[0-9]{2})-(?<day>[0-9]{2})|(?<doy>[0-9]{3}))T(?<hour>[0-9]{2}):(?<minute>[0-9]{2}):(?<second>[0-9]{2})(?:\.(?<fraction>[0-9]+))?(?<zone>Z|[+-][0-9]{2}:[0-9]{2})?$",
+        @"^(?<year>[0-9]{4})-(?:(?<month>[0-9]{2})-(?<day>[0-9]{2})|(?<doy>[0-9]{3}))T(?<hour>[0-9]{2}):(?<minute>[0-9]{2}):(?<second>[0-9]{2})(?:\.(?<fraction>[0-9]+))?(?<zone>Z|[+-][0-9]{2}:[0-9]{2})?\z",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     // The base of the rounding of a fraction longer than 7 digits
@@ -52,16 +57,17 @@ internal static class CcsdsEpochParser
             return false;
         }
 
+        // Outside the two forms: rejected (#619; DateTime.TryParse read it before)
         var match = EpochPattern.Match(value);
         if (!match.Success)
         {
-            return DateTime.TryParse(value, CultureInfo.InvariantCulture, Styles, out utc);
+            return false;
         }
 
         int year = Int(match, "year");
         if (year < 1)
         {
-            // Year 0000 matches the pattern but no DateTime holds it; the fallback rejects it too
+            // Year 0000 matches the pattern but no DateTime holds it
             return false;
         }
 
@@ -77,9 +83,8 @@ internal static class CcsdsEpochParser
             return TryCompose(match, date.Month, date.Day, out utc);
         }
 
-        // A calendar text the composition rejects (a day or an hour out of range) keeps the former fallback
-        return TryCompose(match, Int(match, "month"), Int(match, "day"), out utc) ||
-               DateTime.TryParse(value, CultureInfo.InvariantCulture, Styles, out utc);
+        // A calendar text the composition rejects (a field out of range) is rejected (#619: it went to DateTime.TryParse)
+        return TryCompose(match, Int(match, "month"), Int(match, "day"), out utc);
     }
 
     private static bool TryCompose(Match match, int month, int day, out DateTime utc)

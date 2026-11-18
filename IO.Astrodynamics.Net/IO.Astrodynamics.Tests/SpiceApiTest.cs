@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests;
 /// searches in spiceypy, the window ends and the results each the nearest tick of its ET (#625):
 /// <c>tools/seconds_to_ticks/spice_windows_reference.py</c>, whose truncated mode gives the strings held before #625.
 /// </remarks>
-public class SpiceApiTest
+public partial class SpiceApiTest
 {
     private readonly ITestOutputHelper _output;
 
@@ -368,7 +368,7 @@ public class SpiceApiTest
         _output.WriteLine($"MEASURE site observer {label} |dr| m: {dr:E3}, |dv| m/s: {dv:E3}");
         Assert.True(dr <= SiteObserverNegationTolerance, $"{label}: |dr| {dr:E3} m");
         Assert.True(dv <= SiteObserverNegationTolerance, $"{label}: |dv| {dv:E3} m/s");
-        Assert.Equal(expectedReversed.Epoch, actual.Epoch);
+        LabelAssert.Equal(expectedReversed.Epoch, actual.Epoch);
     }
 
     private static void AssertSiteObserver(StateVector state, string frameName)
@@ -561,7 +561,7 @@ public class SpiceApiTest
         {
             var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, gcrf, aberration).ToStateVector();
             Assert.Equal(gcrf.Name, read.Frame.Name);
-            Assert.Equal(j2000.Epoch, read.Epoch);
+            LabelAssert.Equal(j2000.Epoch, read.Epoch);
             Assert.Equal(j2000.Position, read.Position);
             Assert.Equal(j2000.Velocity, read.Velocity);
 
@@ -571,7 +571,7 @@ public class SpiceApiTest
             for (int i = 0; i < j2000Window.Length; i++)
             {
                 Assert.Equal(gcrf.Name, readWindow[i].Frame.Name);
-                Assert.Equal(j2000Window[i].Epoch, readWindow[i].Epoch);
+                LabelAssert.Equal(j2000Window[i].Epoch, readWindow[i].Epoch);
                 Assert.Equal(j2000Window[i].Position, readWindow[i].Position);
                 Assert.Equal(j2000Window[i].Velocity, readWindow[i].Velocity);
             }
@@ -625,7 +625,7 @@ public class SpiceApiTest
         Assert.True(j2000.Length >= 2, string.Join("; ", j2000.Select(x => $"{x.StartDate} {x.EndDate}")));
         foreach (var gcrf in GcrfFrames())
         {
-            Assert.Equal(j2000, Search(gcrf));
+            LabelAssert.Equal(j2000, Search(gcrf));
         }
     }
 
@@ -819,7 +819,7 @@ public class SpiceApiTest
                 for (int i = 0; i < j2000.Length; i++)
                 {
                     Assert.Equal(gcrf.Name, read[i].ReferenceFrame.Name);
-                    Assert.Equal(j2000[i].Epoch, read[i].Epoch);
+                    LabelAssert.Equal(j2000[i].Epoch, read[i].Epoch);
                     Assert.Equal(j2000[i].Rotation, read[i].Rotation);
                     Assert.Equal(j2000[i].AngularVelocity, read[i].AngularVelocity);
                 }
@@ -1322,7 +1322,7 @@ public class SpiceApiTest
         Assert.Equal(ke.RAAN, ke2.RAAN, 6);
         Assert.Equal(ke.AOP, ke2.AOP, 6);
         Assert.Equal(ke.M, ke2.M, 6);
-        Assert.Equal(ke.Epoch, ke2.Epoch);
+        LabelAssert.Equal(ke.Epoch, ke2.Epoch);
         Assert.Equal(ke.Frame, ke2.Frame);
         Assert.Equal(ke.Observer, ke2.Observer);
     }
@@ -1420,6 +1420,15 @@ public class SpiceApiTest
     [InlineData(7.0e6, 0.95)]
     void ConvertEquinoctialElementsToStateVector_OutsideTheDomainOfEqncpv_ThrowsArgumentException(double p, double f)
     {
+        // Since #481 the elements refuse P ≤ 0 when they are built: a semi-major axis ≤ 0 then needs e > 1, beyond 0.9
+        if (p <= 0.0)
+        {
+            var refused = Assert.Throws<ArgumentOutOfRangeException>(() => new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(p,
+                f, 0.0, 0.1, 0.0, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+            Assert.Equal("p", refused.ParamName);
+            return;
+        }
+
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(p, f, 0.0, 0.1, 0.0, 0.5, TestHelpers.EarthAtJ2000,
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         Assert.True(eq.SemiMajorAxis() < 0.0 || f > 0.9);
@@ -1449,7 +1458,7 @@ public class SpiceApiTest
         Assert.Equal(ke.RAAN, ke2.RAAN, 6);
         Assert.Equal(ke.AOP, ke2.AOP, 6);
         Assert.Equal(ke.M, ke2.M, 6);
-        Assert.Equal(ke.Epoch, ke2.Epoch);
+        LabelAssert.Equal(ke.Epoch, ke2.Epoch);
         Assert.Equal(ke.Frame, ke2.Frame);
         Assert.Equal(ke.Observer, ke2.Observer);
     }
@@ -1926,10 +1935,11 @@ public class SpiceApiTest
         AssertNothingPending();
     }
 
-    // #714: KeplerianElements and EquinoctialElements accept elements that are not finite, which CONICS and the native ellipse
-    // let through (conics.c checks its domain with comparisons NaN passes): a NaN mean anomaly gave a finite state, silently,
-    // and a NaN inclination a NaN state that threw "Native proxy call failed", or the message of an earlier call about another
-    // body (measured on a80f6a5). They are a bad argument, checked before the native call
+    // #714: KeplerianElements and EquinoctialElements accepted elements that are not finite, which CONICS and the native
+    // ellipse let through (conics.c checks its domain with comparisons NaN passes): a NaN mean anomaly gave a finite state,
+    // silently, and a NaN inclination a NaN state that threw "Native proxy call failed", or the message of an earlier call
+    // about another body (measured on a80f6a5). They are a bad argument: since #726 the constructors refuse them, naming the
+    // element, so the check of SpiceAPI before the native call is no longer reached through these types
     [Theory]
     [InlineData(double.NaN, 0.5, 0.3, 0.4)]
     [InlineData(0.2, double.NaN, 0.3, 0.4)]
@@ -1937,19 +1947,10 @@ public class SpiceApiTest
     [InlineData(0.2, 0.5, 0.3, double.PositiveInfinity)]
     void ConvertConicElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double i, double m, double raan, double aop)
     {
-        var ke = new KeplerianElements(7.0e6, 0.1, i, raan, aop, m, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var gm = TestHelpers.EarthAtJ2000.GM;
-        foreach (var conversion in new Func<StateVector>[]
-                 {
-                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke),
-                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB),
-                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm)
-                 })
-        {
-            var error = Assert.Throws<ArgumentException>(conversion);
-            Assert.Equal("keplerianElements", error.ParamName);
-        }
-
+        var error = Assert.Throws<ArgumentException>(() => new KeplerianElements(7.0e6, 0.1, i, raan, aop, m, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Assert.Equal(!double.IsFinite(i) ? "inclination" : !double.IsFinite(raan) ? "rigthAscendingNode" :
+            !double.IsFinite(aop) ? "argumentOfPeriapsis" : "meanAnomaly", error.ParamName);
         AssertNothingPending();
     }
 
@@ -1960,10 +1961,9 @@ public class SpiceApiTest
     [InlineData(0.1, 0.0, double.PositiveInfinity)]
     void ConvertEquinoctialElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double h, double k, double l)
     {
-        var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, h, k, l, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
-        Assert.Equal("equinoctialElements", error.ParamName);
+        var error = Assert.Throws<ArgumentException>(() => new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0,
+            h, k, l, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Assert.Equal(!double.IsFinite(h) ? "h" : !double.IsFinite(k) ? "k" : "l0", error.ParamName);
         AssertNothingPending();
     }
 

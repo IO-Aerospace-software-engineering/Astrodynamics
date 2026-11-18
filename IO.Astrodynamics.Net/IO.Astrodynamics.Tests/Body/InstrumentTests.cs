@@ -122,8 +122,8 @@ namespace IO.Astrodynamics.Tests.Body
             // (gftfov: [S, 676556946.944] [676559033.610, E])
             Assert.Equal(2, expected.Length);
             Assert.Equal(expected.Length, res.Length);
-            Assert.Equal(searchWindow.StartDate, expected[0].StartDate);
-            Assert.Equal(searchWindow.StartDate, res[0].StartDate);
+            LabelAssert.Equal(searchWindow.StartDate, expected[0].StartDate);
+            LabelAssert.Equal(searchWindow.StartDate, res[0].StartDate);
             for (int i = 0; i < res.Length; i++)
             {
                 double startError = (res[i].StartDate - expected[i].StartDate).TotalSeconds;
@@ -136,7 +136,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             if (shape == ShapeType.Ellipsoid)
             {
-                Assert.Equal(searchWindow.EndDate, res[1].EndDate);
+                LabelAssert.Equal(searchWindow.EndDate, res[1].EndDate);
             }
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
@@ -1044,7 +1044,7 @@ namespace IO.Astrodynamics.Tests.Body
             if (error == null)
             {
                 Assert.Null(exception);
-                Assert.Equal(window, Assert.Single(windows));
+                LabelAssert.Equal(window, Assert.Single(windows));
             }
             else
             {
@@ -1105,7 +1105,7 @@ namespace IO.Astrodynamics.Tests.Body
                 Assert.Null(point);
                 Assert.True(inView);
                 Assert.Null(ellipsoid);
-                Assert.Equal(window, Assert.Single(windows));
+                LabelAssert.Equal(window, Assert.Single(windows));
             }
             else
             {
@@ -1121,24 +1121,19 @@ namespace IO.Astrodynamics.Tests.Body
         /// occultation search threw an unrelated <see cref="ArgumentException"/>, "The semi-axes of an ellipsoid must have
         /// positive lengths", and after the underflow guard of #715 an <see cref="InvalidOperationException"/> that blamed
         /// the half-angles of a normal field (0.1 rad). <see cref="Instrument.IsInFOV"/> throws
-        /// <see cref="InvalidOperationException"/> naming the target at the observer, not the field.
+        /// <see cref="InvalidOperationException"/> naming the target at the observer, not the field. #721: the rectangle
+        /// does too (decision 9 of #719, decided by S. Guillet, 2026-11-17); on a85098d its margin took atan2(0, 0) = 0 for
+        /// both angles and reported the target in view.
         /// </summary>
         [Theory]
         [InlineData("Circular")]
         [InlineData("Elliptical")]
+        [InlineData("Rectangular")]
         public void PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance(string shape)
         {
             // Arrange: two managed spacecraft of the same state, the observer with an attitude and a field of 0.1 rad
             var epoch = new TimeSystem.Time(2024, 1, 1);
-            var spc = Host(-7157, "T715A");
-            var twin = Host(-7158, "T715B");
-            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
-            if (shape == "Circular")
-                spc.AddCircularInstrument(-7157001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
-            else
-                spc.AddEllipticalInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
-            var instrument = spc.Instruments.Single();
-            Assert.Equal(0.0, twin.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude());
+            var (instrument, twin) = TwinAtTheObserver(shape, epoch);
 
             // Act
             var exception = Record.Exception(() => instrument.IsInFOV(epoch, twin, Aberration.None));
@@ -1147,6 +1142,50 @@ namespace IO.Astrodynamics.Tests.Body
             var failed = Assert.IsType<InvalidOperationException>(exception);
             Assert.Contains("at the observer", failed.Message);
             Assert.DoesNotContain("half-angles", failed.Message);
+        }
+
+        /// <summary>
+        /// #721: the managed window search of the three shapes throws the <see cref="InvalidOperationException"/> of
+        /// <see cref="PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance"/> for a point target at the observer
+        /// over the whole window (two spacecraft of the same state); on a85098d the rectangle returned the search window as
+        /// one window of visibility.
+        /// </summary>
+        [Theory]
+        [InlineData("Circular")]
+        [InlineData("Elliptical")]
+        [InlineData("Rectangular")]
+        public void PointTargetAtTheObserver_ManagedSearchThrowsInvalidOperationNamingTheDistance(string shape)
+        {
+            // Arrange
+            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var (instrument, twin) = TwinAtTheObserver(shape, epoch);
+            var window = new Window(epoch, epoch.AddSeconds(120.0));
+
+            // Act
+            var exception = Record.Exception(() => instrument.FindWindowsInFieldOfViewConstraint(window, instrument.Spacecraft, twin, twin.Frame, ShapeType.Point,
+                Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
+
+            // Assert
+            var failed = Assert.IsType<InvalidOperationException>(exception);
+            Assert.Contains("at the observer", failed.Message);
+            Assert.DoesNotContain("half-angles", failed.Message);
+        }
+
+        // An instrument of the given shape, half-angles 0.1 and 0.2 rad, on a managed spacecraft with an attitude, and a
+        // second spacecraft of the same state: a point target at the observer, distance exactly 0
+        private static (Instrument Instrument, Spacecraft Twin) TwinAtTheObserver(string shape, TimeSystem.Time epoch)
+        {
+            var spc = Host(-7157, "T715A");
+            var twin = Host(-7158, "T715B");
+            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
+            if (shape == "Circular")
+                spc.AddCircularInstrument(-7157001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            else if (shape == "Elliptical")
+                spc.AddEllipticalInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            else
+                spc.AddRectangularInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            Assert.Equal(0.0, twin.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude());
+            return (spc.Instruments.Single(), twin);
         }
 
         // The instrument kernel the library's circular writer would write for these vectors, written here

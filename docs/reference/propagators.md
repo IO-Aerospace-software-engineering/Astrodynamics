@@ -38,7 +38,9 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
 1. Build event detectors from the spacecraft maneuver chain.
 2. Integrate a segment until the next event or end of window.
 3. Execute the maneuver via `IEventDetector.HandleEvent()`, update state; lay the attitudes chained after an impulse on
-   the attitude timeline, from the end of its maneuver window, and build the detector of the next impulse.
+   the attitude timeline, from the end of its maneuver window, and build the detector of the next impulse. An impulse
+   executed at the end of the window opens a last segment of zero length, so the solution ends with the state after it
+   (#575).
 4. Compute output states on the requested `DeltaT` cadence with `PropagationSolution.InterpolateAt`, then the attitude
    record from the timeline on the solution ([Attitudes](attitudes.md#the-attitude-timeline)).
 
@@ -74,6 +76,12 @@ given and initialize it with the initial state of the propagation: about the cen
 inertial frame of the propagation, at the TDB start of the window; a later `Initialize` by the caller replaces it. Before
 11.0.0 they used it as given, and one its caller had not initialized threw `NullReferenceException` at the first step. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
 constructor (#674).
+
+A constructor changes nothing on the spacecraft. `Propagate` re-arms it once its checks pass, on every path, as
+`Spacecraft.Propagate` does: the tanks refuelled, `ExecutedManeuvers`, the stored states and the attitude record of the
+previous propagation cleared, the maneuver chain started again from its head, and the spacecraft `IsPropagated` after
+the run (#583, decided by S. Guillet, 2026-11-17; before 11.0.0 a second run through a propagator built directly fired no
+burn and started with the fuel the first left).
 
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
 initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
@@ -112,6 +120,14 @@ var solution = propagator.Propagate();
 | `Window` | Propagation time window |
 | `Spacecraft` | The spacecraft being propagated |
 | `DeltaT` | Output time step |
+
+The samples are the window start plus i·`DeltaT`, counted in ticks, then the window end: ceil(L/ΔT) + 1 samples for a
+window of length L, the last step shorter when ΔT does not divide L (#598); a grid point closer to the end than ΔT/10
+is dropped, the last step then up to 1.1 ΔT (a window given in UTC is a few ticks longer or shorter in TDB, its
+samples counted on its TDB start and end). A step of zero or less throws
+`ArgumentOutOfRangeException` (`deltaT`). Before 11.0.0 the samples were counted in whole seconds: a step below 1 s
+threw `DivideByZeroException`, a fractional step ran past the window end (1.5 s over 10 s: to +15 s), and a window
+that the step does not divide lost its end (90 s at 60 s: the last sample at +60 s).
 
 The solution holds the SGP4 states at the samples, and between them the cubic Hermite of `PropagationSegment` on the
 positions, the velocities and the accelerations of SGP4 at the samples (the central difference of its velocity at

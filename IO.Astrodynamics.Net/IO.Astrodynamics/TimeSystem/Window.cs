@@ -94,6 +94,28 @@ public readonly record struct Window
         return new Window(min, max);
     }
 
+    /// <summary>
+    /// Whether two windows have the same ends, instants compared whatever their frames (<see cref="Time.Equals(Time)"/>,
+    /// #512, decided by S. Guillet, 2026-11-17): the same instants in UTC and in TDB are one window. <see cref="Length"/>
+    /// does not take part: it follows from the ends, but for a UTC window built from a length across a leap second,
+    /// whose length is the one given.
+    /// </summary>
+    /// <remarks>
+    /// Before 11.0.0 the record's default equality compared the ends with their frames, and the length.
+    /// </remarks>
+    public bool Equals(Window other)
+    {
+        return StartDate.Equals(other.StartDate) && EndDate.Equals(other.EndDate);
+    }
+
+    /// <summary>
+    /// The hash code of the two instants, consistent with <see cref="Equals(Window)"/>.
+    /// </summary>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(StartDate, EndDate);
+    }
+
     public override string ToString()
     {
         return $"From {StartDate.ToString()} to {EndDate.ToString()} - Length {Length.ToString()}";

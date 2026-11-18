@@ -142,6 +142,32 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
                     revolutionNumberAtEpoch: -1));
         }
 
+        [Theory]
+        [InlineData("Constructor")]
+        [InlineData("CreateWithBStarAndDDot")]
+        [InlineData("CreateWithBStarAndAGom")]
+        [InlineData("CreateWithBTermAndDDot")]
+        [InlineData("CreateWithBTermAndAGom")]
+        public void Entry_NegativeRevolutionNumber_NamesRevolutionNumberAtEpoch(string entry)
+        {
+            // #734: the exception named revNumber, the private validator's parameter, which no public entry has; every entry
+            // takes the revolution number as revolutionNumberAtEpoch
+            Func<TleParameters> create = entry switch
+            {
+                "Constructor" => () => new TleParameters(1e-4, 1e-5, 0.0, revolutionNumberAtEpoch: -1),
+                "CreateWithBStarAndDDot" => () => TleParameters.CreateWithBStarAndDDot(1e-4, 1e-5, 0.0, revolutionNumberAtEpoch: -1),
+                "CreateWithBStarAndAGom" => () => TleParameters.CreateWithBStarAndAGom(1e-4, 1e-5, 0.01, revolutionNumberAtEpoch: -1),
+                "CreateWithBTermAndDDot" => () => TleParameters.CreateWithBTermAndDDot(0.02, 1e-5, 0.0, revolutionNumberAtEpoch: -1),
+                _ => () => TleParameters.CreateWithBTermAndAGom(0.02, 1e-5, 0.01, revolutionNumberAtEpoch: -1)
+            };
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => create());
+            Assert.Equal("revolutionNumberAtEpoch", ex.ParamName);
+
+            // The element set number keeps its name
+            ex = Assert.Throws<ArgumentOutOfRangeException>(() => new TleParameters(1e-4, 1e-5, 0.0, elementSetNumber: -1));
+            Assert.Equal("elementSetNumber", ex.ParamName);
+        }
+
         [Fact]
         public void Constructor_ZeroRevolutionNumber_Succeeds()
         {

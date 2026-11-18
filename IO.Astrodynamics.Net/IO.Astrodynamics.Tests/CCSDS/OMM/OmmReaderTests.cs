@@ -649,6 +649,49 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.IsAssignableFrom<ArgumentException>(ex.InnerException);
         }
 
+        [Theory]
+        [InlineData("CX_X", "1e303")]
+        [InlineData("CY_X", "-1.797693134862316e302")] // the next double after the largest magnitude finite in m²
+        [InlineData("CZ_DOT_Z_DOT", "1.7976931348623157e308")]
+        public void ReadFromString_CovarianceTermOverflowingInSiUnits_ThrowsOmmParseException(string keyword, string value)
+        {
+            // #729: the covariance of an OMM is the CovarianceMatrix of the OPM (km², km²/s, km²/s²), whose
+            // ToMatrixWithUnitConversion gave ±Infinity for a term whose product by 1e6 is beyond the range of a double
+            var document = XDocument.Parse(KeywordBaseOmm());
+            var names = new[]
+            {
+                "CX_X", "CY_X", "CY_Y", "CZ_X", "CZ_Y", "CZ_Z", "CX_DOT_X", "CX_DOT_Y", "CX_DOT_Z", "CX_DOT_X_DOT",
+                "CY_DOT_X", "CY_DOT_Y", "CY_DOT_Z", "CY_DOT_X_DOT", "CY_DOT_Y_DOT",
+                "CZ_DOT_X", "CZ_DOT_Y", "CZ_DOT_Z", "CZ_DOT_X_DOT", "CZ_DOT_Y_DOT", "CZ_DOT_Z_DOT"
+            };
+            var covariance = new XElement("covarianceMatrix", new XElement("COV_REF_FRAME", "TEME"),
+                names.Select(name => new XElement(name, name == keyword ? value : (name.Length == 4 || name.EndsWith("_DOT_X_DOT") ? "1.0e-3" : "0"))));
+            document.Descendants().Single(e => e.Name.LocalName == "tleParameters").AddAfterSelf(covariance);
+            var xml = document.ToString();
+            Assert.False(double.IsFinite(double.Parse(value, System.Globalization.CultureInfo.InvariantCulture) * 1e6));
+
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            Assert.Contains("SI units", ex.Message);
+            Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
+
+            // The same document with a finite term reads
+            covariance.Elements().Single(e => e.Name.LocalName == keyword).Value = "1.0e-3";
+            Assert.NotNull(_reader.ReadFromString(document.ToString()).Data.CovarianceMatrix);
+        }
+
+        [Fact]
+        public void ReadFromString_NegativeRevAtEpoch_NamesTheKeywordAndTheParameter()
+        {
+            // #734: the reader maps REV_AT_EPOCH to the parameter the data model names, revolutionNumberAtEpoch, the
+            // parameter of every TleParameters entry (revNumber before, the private validator's)
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(OmmWithKeyword("REV_AT_EPOCH", "-1")));
+            Assert.StartsWith("REV_AT_EPOCH '-1' in tleParameters is invalid", ex.Message);
+            var inner = Assert.IsType<ArgumentOutOfRangeException>(ex.InnerException);
+            Assert.Equal("revolutionNumberAtEpoch", inner.ParamName);
+        }
+
         [Fact]
         public void KeywordBaseDocument_IsSchemaValidAndReads()
         {

@@ -140,7 +140,7 @@ public class ClaudeMdExamplesTests
         {
             case "net:1": Assert.NotNull(ClaudeMdExamples.Net01(Earth, Epoch)); break;
             case "net:2": Assert.NotNull(ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21))); break;
-            case "net:8": Assert.Single(ClaudeMdExamples.Net08(PropagatedWithImpulse(-6701, out _)).Data.Maneuvers); break;
+            case "net:8": Assert.Single(ClaudeMdExamples.Net08(PropagatedWithImpulse(-6701, out _), Epoch.AddHours(2.0)).Data.Maneuvers); break;
             case "net:9": Assert.NotNull(ClaudeMdExamples.Net09(Orbit().ToStateVector())); break;
             case "net:10": Assert.NotNull(ClaudeMdExamples.Net10(Orbit().ToStateVector())); break;
             case "net:11": ClaudeMdExamples.Net11(); break;
@@ -184,7 +184,7 @@ public class ClaudeMdExamplesTests
             case "net:27":
                 var (frame, epoch, deg2Rad) = ClaudeMdTestProcessExamples.Net27();
                 Assert.Same(IO.Astrodynamics.Frames.Frame.ICRF, frame);
-                Assert.Equal(TimeSystem.Time.J2000TDB, epoch);
+                LabelAssert.Equal(TimeSystem.Time.J2000TDB, epoch);
                 Assert.Equal(System.Math.PI / 180.0, deg2Rad);
                 break;
             case "root:2": ClaudeMdTestProcessExamples.Root02(); break;
@@ -258,7 +258,7 @@ public class ClaudeMdExamplesTests
         Assert.Contains(spacecraft.ExecutedManeuvers, m => m is ImpulseManeuver i && i.ThrustWindow.HasValue);
         Assert.Same(impulse, Assert.Single(spacecraft.ExecutedManeuvers.OfType<ImpulseManeuver>()));
 
-        var opm = ClaudeMdExamples.Net08(spacecraft);
+        var opm = ClaudeMdExamples.Net08(spacecraft, Epoch.AddHours(2.0));
         var exported = Assert.Single(opm.Data.Maneuvers);
         Assert.Equal(impulse.DeltaV.X / 1000.0, exported.ManDv1);
         Assert.Equal(impulse.DeltaV.Y / 1000.0, exported.ManDv2);
@@ -271,7 +271,7 @@ public class ClaudeMdExamplesTests
         // The input of 608bcf6: unpropagated, no executed maneuver, nothing exported
         var unpropagated = SpacecraftWithEngine(-6734, out _, "2024-001A");
         Assert.Empty(unpropagated.ExecutedManeuvers);
-        Assert.Empty(ClaudeMdExamples.Net08(unpropagated).Data.Maneuvers ?? []);
+        Assert.Empty(ClaudeMdExamples.Net08(unpropagated, Epoch.AddHours(2.0)).Data.Maneuvers ?? []);
     }
 
     // A spacecraft of the given id with a COSPAR id, propagated over two hours about a point-mass Earth with an apogee raise

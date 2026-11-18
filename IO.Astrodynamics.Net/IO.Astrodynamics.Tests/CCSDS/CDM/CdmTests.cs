@@ -55,7 +55,12 @@ public class CdmTests
             cdm.RelativeMetadataData.RelativeSpeedMetersPerSecond!.Value, 9);
         Assert.NotNull(cdm.RelativeMetadataData.CollisionProbability);
         Assert.Equal(encounter.CollisionRisk.ProbabilityOfCollision!.Value, cdm.RelativeMetadataData.CollisionProbability!.Value, 12);
-        Assert.Equal("FOSTER-2D", cdm.RelativeMetadataData.CollisionProbabilityMethod);
+        // Foster and Estes (1992), the 2D Gaussian integrated over the hard-body disc: FOSTER-1992 in the SANA registry
+        // cdm_cpm (CCSDS 508.0-B-1 Cor. 2, annex E, E1, which gives it as an example) and in the standard's examples
+        // (3.6.3, 4.4); FOSTER-2D, written before #618, is not registered
+        Assert.Equal("FOSTER-1992", cdm.RelativeMetadataData.CollisionProbabilityMethod);
+        Assert.Equal("FOSTER-1992", XDocument.Parse(cdm.WriteToString()).Descendants()
+            .Single(e => e.Name.LocalName == "COLLISION_PROBABILITY_METHOD").Value);
         Assert.NotNull(cdm.RelativeMetadataData.RelativeStateVector);
         AssertVectorApproximatelyEqual(
             encounter.EncounterState.RelativeState.RelativePositionRtn,
@@ -142,6 +147,38 @@ public class CdmTests
             secondarySegment.Data.CovarianceMatrix!.StateCovarianceRtn, 1.0e-9);
     }
 
+    // The maximum Pc of a single covariance (Frisbee) has no value in the SANA registry cdm_cpm (ALFANO-MAX-PROBABILITY is
+    // Alfano's 2005 maximum, another method), and a CDM carries both covariances: an encounter whose Pc is that maximum is
+    // not exported (#618 with #342, decided by S. Guillet, 2026-11-17; before, a case built with the flag and both
+    // covariances was written with the unregistered FOSTER-2D-MAX-PC), whatever method the options name
+    [Theory]
+    [InlineData(null)]
+    [InlineData("ALFANO-MAX-PROBABILITY")]
+    public void ToCdm_SingleCovarianceMaximumPc_IsRefused(string? method)
+    {
+        var encounter = CreateManualEncounterCase(qualityFlags: EncounterQualityFlags.SingleCovarianceMaximumPcUsed);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => encounter.ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 0, 0, DateTimeKind.Utc),
+            CollisionProbabilityMethod = method
+        }));
+        Assert.Contains("SingleCovarianceMaximumPcUsed", exception.Message);
+    }
+
+    // A method the options name is written as given
+    [Fact]
+    public void ToCdm_CollisionProbabilityMethodOption_IsWrittenAsGiven()
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 0, 0, DateTimeKind.Utc),
+            CollisionProbabilityMethod = "ALFANO-2005"
+        });
+
+        Assert.Equal("ALFANO-2005", Cdm.ReadFromString(cdm.WriteToString()).RelativeMetadataData.CollisionProbabilityMethod);
+    }
+
     [Fact]
     public void WriteToString_QualifiedWrappedAndStandaloneOutput_ValidateAgainstSchema()
     {
@@ -160,6 +197,194 @@ public class CdmTests
 
         Assert.True(wrappedValidation.IsValid, FormatValidationIssues(wrappedValidation.Issues));
         Assert.True(standaloneValidation.IsValid, FormatValidationIssues(standaloneValidation.Issues));
+    }
+
+    // The qualified form of CCSDS 508.0-B-1 Cor. 2, 4.3.3 (note 2): the root, <cdm> or the <ndm> that wraps it, in no
+    // namespace, with xmlns:ndm="urn:ccsds:schema:ndmxml" declared on it, every element below it in that namespace under
+    // the prefix ndm. The reference is the SANA NDM/XML 4.0.0 qualified master as embedded (ndmxml-4.0.0-master-4.0.xsd,
+    // no targetNamespace: its global ndm and cdm in no namespace; the cdm of an ndm qualified, ndmxml-4.0.0-ndm-4.0.xsd),
+    // compiled here from the embedded files with no synthetic root and run by .NET's validator on the written text alone.
+    // Before #615 the writer put the root in the namespace, which that master rejects at the root ("No matching global
+    // declaration available for the validation root", lxml 6.1.3 and .NET alike, measured 2026-11-17 on a85098d)
+    [Theory]
+    [InlineData("string, ndm")]
+    [InlineData("string, cdm")]
+    [InlineData("stream, ndm")]
+    [InlineData("file, cdm")]
+    public void WriteTo_RootOutsideTheNamespace_ValidatesAgainstTheSanaQualifiedMaster(string output)
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 5, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-615"
+        });
+        bool wrapped = output.EndsWith("ndm", StringComparison.Ordinal);
+        string xml;
+        if (output.StartsWith("string", StringComparison.Ordinal))
+        {
+            xml = cdm.WriteToString(wrapped);
+        }
+        else if (output.StartsWith("stream", StringComparison.Ordinal))
+        {
+            using var stream = new MemoryStream();
+            new CdmWriter().WriteToStream(cdm, stream, wrapped);
+            stream.Position = 0;
+            xml = new StreamReader(stream, System.Text.Encoding.UTF8).ReadToEnd();
+        }
+        else
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"cdm_615_{Guid.NewGuid():N}.xml");
+            try
+            {
+                cdm.WriteToFile(path, wrapped);
+                xml = File.ReadAllText(path);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        var document = XDocument.Parse(xml);
+        XNamespace ndm = "urn:ccsds:schema:ndmxml";
+        var root = document.Root!;
+        Assert.Equal(XName.Get(wrapped ? "ndm" : "cdm"), root.Name);
+        Assert.Equal(ndm.NamespaceName, root.Attribute(XNamespace.Xmlns + "ndm")?.Value);
+        Assert.Equal("https://sanaregistry.org/r/ndmxml_qualified/ndmxml-4.0.0-master-4.0.xsd",
+            root.Attribute(XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance") + "noNamespaceSchemaLocation")?.Value);
+        Assert.All(root.Descendants(), e => Assert.Equal(ndm, e.Name.Namespace));
+        Assert.All(root.Descendants(), e => Assert.Equal("ndm", e.GetPrefixOfNamespace(ndm)));
+        if (wrapped)
+        {
+            Assert.Equal(ndm + "cdm", Assert.Single(root.Elements()).Name);
+        }
+
+        Assert.Empty(SanaQualifiedMasterIssues(xml));
+        AssertCdmEquivalent(cdm, Cdm.ReadFromString(xml));
+        var validation = Cdm.ValidateSchemaFromXml(xml);
+        Assert.True(validation.IsValid, FormatValidationIssues(validation.Issues));
+        Assert.Empty(validation.Issues);
+    }
+
+    // Every date of a CDM is UTC (CCSDS 508.0-B-1 Cor. 2, 6.3.2.6): a DateTime of kind Utc or Unspecified is written as the
+    // clock reading given, one of kind Local as its UTC, .NET's meaning of Local (#617; CcsdsLocalTimeTests checks the same
+    // in time zones other than UTC, where an Unspecified date was written shifted by the zone's offset)
+    [Theory]
+    [InlineData(DateTimeKind.Utc)]
+    [InlineData(DateTimeKind.Unspecified)]
+    [InlineData(DateTimeKind.Local)]
+    public void WriteToString_DateOfEachKind_WrittenAsItsUtc(DateTimeKind kind)
+    {
+        var exported = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 5, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-617"
+        });
+        var given = new DateTime(2010, 3, 13, 22, 37, 52, 618, kind);
+        var expected = (kind == DateTimeKind.Local ? given.ToUniversalTime() : given)
+            .ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture) + "Z";
+        var cdm = new Cdm(exported.Header with { CreationDateUtc = given },
+            exported.RelativeMetadataData with
+            {
+                TcaUtc = given, StartScreenPeriodUtc = given, StopScreenPeriodUtc = given, ScreenEntryTimeUtc = given,
+                ScreenExitTimeUtc = given
+            },
+            exported.Segments.Select(segment => segment with
+            {
+                Data = segment.Data! with
+                {
+                    OdParameters = new CdmOdParameters { TimeLastObservationStartUtc = given, TimeLastObservationEndUtc = given }
+                }
+            }).ToList());
+
+        var document = XDocument.Parse(cdm.WriteToString());
+
+        var dates = new[]
+        {
+            "CREATION_DATE", "TCA", "START_SCREEN_PERIOD", "STOP_SCREEN_PERIOD", "SCREEN_ENTRY_TIME", "SCREEN_EXIT_TIME",
+            "TIME_LASTOB_START", "TIME_LASTOB_END"
+        };
+        foreach (var keyword in dates)
+        {
+            Assert.All(document.Descendants().Where(e => e.Name.LocalName == keyword), e => Assert.Equal(expected, e.Value));
+        }
+
+        Assert.Equal(dates.Length + 2, document.Descendants().Count(e => dates.Contains(e.Name.LocalName)));
+    }
+
+    // The form written before #615, the root in the namespace: still read, and still checked by Cdm.ValidateSchema
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ReadFromString_RootInTheNamespace_FormWrittenBefore615_IsStillReadAndValidated(bool wrapped)
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 5, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-615-OLD"
+        });
+        XNamespace ndm = "urn:ccsds:schema:ndmxml";
+        var document = XDocument.Parse(cdm.WriteToString(wrapped));
+        var root = document.Root!;
+        foreach (var element in root.DescendantsAndSelf())
+        {
+            element.Attributes().Where(a => a.IsNamespaceDeclaration).Remove();
+            element.Name = ndm + element.Name.LocalName;
+        }
+
+        root.SetAttributeValue("xmlns", ndm.NamespaceName);
+        var old = document.ToString();
+        Assert.StartsWith($"<{root.Name.LocalName} ", old);
+        Assert.Equal(ndm, XDocument.Parse(old).Root!.Name.Namespace);
+        Assert.NotEmpty(SanaQualifiedMasterIssues(old));
+
+        AssertCdmEquivalent(cdm, Cdm.ReadFromString(old));
+        var validation = Cdm.ValidateSchemaFromXml(old);
+        Assert.True(validation.IsValid, FormatValidationIssues(validation.Issues));
+    }
+
+    // The errors and warnings of .NET's validator on the document against the embedded SANA NDM/XML 4.0.0 qualified master,
+    // compiled from the embedded schema files, every include resolved to them
+    private static List<string> SanaQualifiedMasterIssues(string xml)
+    {
+        var resolver = new EmbeddedNdmSchemaResolver();
+        var schemas = new System.Xml.Schema.XmlSchemaSet { XmlResolver = resolver };
+        using (var master = IO.Astrodynamics.CCSDS.CcsdsSchemaLoader.GetSchemaStream("ndmxml-4.0.0-master-4.0.xsd"))
+        using (var reader = System.Xml.XmlReader.Create(master,
+                   new System.Xml.XmlReaderSettings { XmlResolver = resolver, DtdProcessing = System.Xml.DtdProcessing.Prohibit },
+                   "file:///ndmxml/ndmxml-4.0.0-master-4.0.xsd"))
+        {
+            schemas.Add(null, reader);
+        }
+
+        schemas.Compile();
+        var issues = new List<string>();
+        var settings = new System.Xml.XmlReaderSettings
+        {
+            ValidationType = System.Xml.ValidationType.Schema,
+            Schemas = schemas,
+            ValidationFlags = System.Xml.Schema.XmlSchemaValidationFlags.ReportValidationWarnings
+        };
+        settings.ValidationEventHandler += (_, args) => issues.Add($"{args.Severity}: {args.Message}");
+        using (var reader = System.Xml.XmlReader.Create(new StringReader(xml), settings))
+        {
+            while (reader.Read())
+            {
+            }
+        }
+
+        return issues;
+    }
+
+    private sealed class EmbeddedNdmSchemaResolver : System.Xml.XmlResolver
+    {
+        public override object GetEntity(Uri absoluteUri, string? role, Type? ofObjectToReturn)
+        {
+            return IO.Astrodynamics.CCSDS.CcsdsSchemaLoader.GetSchemaStream(Path.GetFileName(absoluteUri.LocalPath));
+        }
     }
 
     public static TheoryData<string, string, string> CdmFormsAndMutations()
@@ -459,14 +684,13 @@ public class CdmTests
     // A finite text in km or km/s whose value in m or m/s, the text times 1000, is beyond the range of a double
     // (double.MaxValue = 1.797...e308, so 1e306 km = 1e309 m): IEEE 754 rounds the product to +Infinity (-Infinity for
     // -1e306), which is no real number, so the reader refuses it as it refuses a non-finite text (#708). The rows are the
-    // three conversions of the reader: a position (positionTypeUR, km), a velocity (km/s) and a length or a relative
-    // velocity given in km or km/s (lengthTypeUO, dvType: m and m/s in the writer's documents)
+    // conversions of the reader: a position (positionTypeUR, km), a velocity (km/s) and a relative velocity given in km/s
+    // (dvType: m/s in the writer's documents); a lengthTypeUO field in km throws for its units since #619
+    // (ReadFromString_OptionalUnitLengthNotInMeters_ThrowsCdmParseException)
     [Theory]
     [InlineData("X", "km", "1e306")]
     [InlineData("Z", "km", "-1e306")]
     [InlineData("X_DOT", "km/s", "1e306")]
-    [InlineData("MISS_DISTANCE", "km", "1e306")]
-    [InlineData("RELATIVE_POSITION_R", "km", "-1e306")]
     [InlineData("RELATIVE_VELOCITY_T", "km/s", "1e306")]
     public void ReadFromString_FiniteValueOverflowingInSiUnits_ThrowsCdmParseException(string keyword, string units, string value)
     {
@@ -690,6 +914,49 @@ public class CdmTests
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
         ex = Assert.Throws<ArgumentOutOfRangeException>(() => CdmCovarianceMatrix.FromRtnCovariance(matrix));
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+    }
+
+    public static TheoryData<int, int> NotSixBySixSizes() => new()
+    {
+        { 3, 3 }, { 6, 5 }, { 5, 6 }, { 7, 7 }, { 6, 1 }, { 1, 6 }, { 0, 0 }
+    };
+
+    [Theory]
+    [MemberData(nameof(NotSixBySixSizes))]
+    public void Init_CovarianceNotSixBySix_ThrowsArgumentExceptionNamingTheProperty(int rows, int columns)
+    {
+        // #730: the 21 terms CR_R ... CNDOT_NDOT of CCSDS 508.0-B-1 table 3-5 are the lower triangle of a 6×6 matrix; the
+        // init accessor accepted any size, and CdmWriter then threw IndexOutOfRangeException (Cdm.Validate reported it only
+        // when it ran)
+        var matrix = new Matrix(rows, columns);
+        var ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+        Assert.Contains("6x6", ex.Message);
+
+        // A with expression on a covariance read from a document, the same refusal
+        var read = Cdm.ReadFromString(ManualCdmXml()).Segments[0].Data!.CovarianceMatrix!;
+        ex = Assert.Throws<ArgumentException>(() => read with { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+    }
+
+    [Fact]
+    public void Init_DefaultCovarianceMatrix_ThrowsArgumentExceptionNamingTheProperty()
+    {
+        // #730: default(Matrix), 0×0 over a null array, was accepted, and CdmWriter then threw NullReferenceException
+        var ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = default });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+
+        // A size error before a term error: a 3×3 matrix with a NaN throws ArgumentException for its size, not the
+        // ArgumentOutOfRangeException of a term (Assert.Throws checks the exact type)
+        var matrix = new Matrix(3, 3);
+        matrix.Set(0, 0, double.NaN);
+        ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+
+        // The record without an init holds a 6×6 zero matrix, written and read back
+        var covariance = new CdmCovarianceMatrix();
+        Assert.Equal(6, covariance.StateCovarianceRtn.Rows);
+        Assert.Equal(6, covariance.StateCovarianceRtn.Columns);
     }
 
     [Fact]
@@ -1208,7 +1475,8 @@ public class CdmTests
         Assert.Contains("covariance", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static EncounterCase CreateManualEncounterCase(bool withEngines = false)
+    internal static EncounterCase CreateManualEncounterCase(bool withEngines = false,
+        EncounterQualityFlags qualityFlags = EncounterQualityFlags.None)
     {
         var earth = CreateEarth();
         var epoch = TimeSystem.Time.J2000TDB.AddMinutes(5.0);
@@ -1289,7 +1557,7 @@ public class CdmTests
             relativeState,
             relativePosition.Magnitude(),
             combinedCovarianceRtn,
-            EncounterQualityFlags.None);
+            qualityFlags);
 
         var collisionRisk = new CollisionRisk(
             combinedHardBodyRadiusMeters: 11.0,
@@ -1519,8 +1787,61 @@ public class CdmTests
     [Theory]
     [InlineData(null, 1.0)]
     [InlineData("m", 1.0)]
-    [InlineData("km", 1000.0)]
     public void ReadFromString_OptionalUnitLengths_AreMetersByDefault(string? units, double scale)
+    {
+        var cdm = Cdm.ReadFromString(OptionalUnitLengthsDocument(units).ToString());
+
+        var data = cdm.RelativeMetadataData;
+        var read = new[]
+        {
+            data.MissDistanceMeters, data.RelativeStateVector!.RelativePositionRtnMeters.X,
+            data.RelativeStateVector.RelativePositionRtnMeters.Y, data.RelativeStateVector.RelativePositionRtnMeters.Z,
+            data.ScreenVolumeXMeters!.Value, data.ScreenVolumeYMeters!.Value, data.ScreenVolumeZMeters!.Value
+        };
+        for (int i = 0; i < OptionalUnitLengths.Length; i++)
+        {
+            // The double of the text, times 1000 for km, exactly: before #613 a length without units was read in km
+            Assert.Equal(OptionalUnitLengths[i].Value * scale, read[i]);
+        }
+    }
+
+    [Theory]
+    [InlineData("MISS_DISTANCE", "km")]
+    [InlineData("RELATIVE_POSITION_R", "km")]
+    [InlineData("RELATIVE_POSITION_T", "km")]
+    [InlineData("RELATIVE_POSITION_N", "km")]
+    [InlineData("SCREEN_VOLUME_X", "km")]
+    [InlineData("SCREEN_VOLUME_Y", "km")]
+    [InlineData("SCREEN_VOLUME_Z", "km")]
+    [InlineData("MISS_DISTANCE", "M")]
+    [InlineData("MISS_DISTANCE", " m")]
+    [InlineData("MISS_DISTANCE", "")]
+    public void ReadFromString_OptionalUnitLengthNotInMeters_ThrowsCdmParseException(string keyword, string units)
+    {
+        // #619, decided by S. Guillet, 2026-11-17: lengthUnits of ndmxml-4.0.0-common-4.0.xsd enumerates m alone (an
+        // xsd:string, so neither M nor a blank), as CCSDS 508.0-B-1 table 3-2; km was read and converted before, the one
+        // value outside the standard that the reader accepted on these seven fields
+        var document = OptionalUnitLengthsDocument("m");
+        var schema = new CdmValidator().ValidateSchemaFromXml(document.ToString());
+        Assert.True(schema.IsValid, FormatValidationIssues(schema.Errors));
+        document.Descendants(keyword).Single().SetAttributeValue("units", units);
+        var xml = document.ToString();
+        Assert.False(new CdmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+        void AssertNamesKeyword(CdmParseException ex)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{units}'", ex.Message);
+        }
+
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => new CdmReader().ReadFromString(xml)));
+
+        // The other fields of the document read in m, as written
+        Assert.Equal(715.0, Cdm.ReadFromString(OptionalUnitLengthsDocument("m").ToString()).RelativeMetadataData.MissDistanceMeters);
+    }
+
+    private static XDocument OptionalUnitLengthsDocument(string? units)
     {
         var document = XDocument.Parse(RemoveNamespaces(CreateManualEncounterCase().ToCdm(new CdmExportOptions
         {
@@ -1534,27 +1855,55 @@ public class CdmTests
             var element = relativeMetadata.Descendants(name).SingleOrDefault();
             if (element == null)
             {
+                // A screening volume the writer did not write, in the order of the schema's sequence
                 element = new XElement(name);
-                relativeMetadata.Add(element);
+                var next = relativeMetadata.Elements().FirstOrDefault(e => e.Name.LocalName is "SCREEN_ENTRY_TIME"
+                    or "SCREEN_EXIT_TIME" or "COLLISION_PROBABILITY" or "COLLISION_PROBABILITY_METHOD");
+                if (next == null)
+                    relativeMetadata.Add(element);
+                else
+                    next.AddBeforeSelf(element);
             }
 
             element.Value = text;
             element.SetAttributeValue("units", units);
         }
 
-        var cdm = Cdm.ReadFromString(document.ToString());
+        return document;
+    }
 
-        var data = cdm.RelativeMetadataData;
-        var read = new[]
+    /// <summary>
+    /// Dates outside the two forms of CCSDS 508.0-B-1 §6.3.2.6 (<c>yyyy-mm-ddThh:mm:ss[.d→d][Z]</c>,
+    /// <c>yyyy-dddThh:mm:ss[.d→d][Z]</c>), the rows of #619's table; lxml 6.1.3 with the repository's NDM/XML 4.0.0
+    /// schema rejects each but <c>1.5</c>, the bare-number branch of <c>epochType</c>, which §6.3.2.6 does not allow.
+    /// </summary>
+    [Theory]
+    [InlineData("13 March 2010 22:37:52.618")]
+    [InlineData("03/13/2010 22:37:52.618")]
+    [InlineData("2010-03-13 22:37:52.618")]
+    [InlineData("2010-3-13T22:37:52.618")]
+    [InlineData("Sat, 13 Mar 2010 22:37:52 GMT")]
+    [InlineData("2010-03-13")]
+    [InlineData("22:37:52.618")]
+    [InlineData("1,5")]
+    [InlineData("1.5")]
+    public void ReadFromString_DateOutsideTheTwoForms_ThrowsCdmParseException(string text)
+    {
+        // Before #619: the TCA read as the date DateTime.TryParse gave, the day of the run for 22:37:52.618, 5 January of
+        // the year of the run for 1,5 and 1.5
+        var original = CreateManualEncounterCase().ToCdm(new CdmExportOptions
         {
-            data.MissDistanceMeters, data.RelativeStateVector!.RelativePositionRtnMeters.X,
-            data.RelativeStateVector.RelativePositionRtnMeters.Y, data.RelativeStateVector.RelativePositionRtnMeters.Z,
-            data.ScreenVolumeXMeters!.Value, data.ScreenVolumeYMeters!.Value, data.ScreenVolumeZMeters!.Value
-        };
-        for (int i = 0; i < OptionalUnitLengths.Length; i++)
+            CreationDateUtc = new DateTime(2014, 1, 21, 17, 42, 47, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-EPOCH-619"
+        });
+        foreach (var field in new[] { "TCA", "CREATION_DATE" })
         {
-            // The double of the text, times 1000 for km, exactly: before #613 a length without units was read in km
-            Assert.Equal(OptionalUnitLengths[i].Value * scale, read[i]);
+            var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+            document.Descendants(field).Single().Value = text;
+            var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+            Assert.Contains(field, ex.Message);
+            Assert.Contains($"'{text}'", ex.Message);
         }
     }
 

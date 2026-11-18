@@ -42,17 +42,6 @@ public class OrbitalParametersConverterCommand
             throw new ArgumentException("You must set the target orbital parameters type. use --help for more information");
         }
 
-        //Clean inputs
-        if (orbitalParameters.Frame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
-        {
-            orbitalParameters.Frame = "J2000";
-        }
-
-        if (targetFrame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
-        {
-            targetFrame = "J2000";
-        }
-
         if (string.IsNullOrEmpty(targetEpoch?.Epoch))
         {
             targetEpoch.Epoch = orbitalParameters.OrbitalParametersEpoch;
@@ -60,7 +49,7 @@ public class OrbitalParametersConverterCommand
 
         //Initialize data
 
-        var outputFrame = new Frame(targetFrame);
+        var outputFrame = Helpers.ResolveFrame(targetFrame);
 
         var outputEpoch = Helpers.ConvertDateTimeInput(targetEpoch.Epoch);
 

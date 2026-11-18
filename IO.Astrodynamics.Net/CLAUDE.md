@@ -49,6 +49,7 @@ dotnet run --project IO.Astrodynamics.CLI -- [command]
 # Install CLI globally
 dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.Astrodynamics.CLI
 ```
+Every command resolves its frame arguments by one rule (internal `Helpers.ResolveFrame`, #657): ICRF or J2000, in any case, is `Frame.ICRF`, printed `J2000` on every path; any other name is `new Frame(name)`.
 
 ## Architecture
 
@@ -58,37 +59,37 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - P/Invoke wrapper around native SPICE toolkit (NASA's CSPICE)
 - Platform-specific libraries: `IO.Astrodynamics.dll` (Windows), `libIO.Astrodynamics.so` (Linux)
 - Thread-safe access through lock synchronization
-- Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` and the five `FindWindows*` proxies of the CSPICE window searches (fourth round of #668; before, they dropped SPICE's error and returned no window) return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
+- Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` and the five `FindWindows*` proxies of the CSPICE window searches (fourth round of #668; before, they dropped SPICE's error and returned no window) return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`; SPICE prints nothing on the standard output (`errprt_c` NONE, #727); a CSPICE window search returns every window of its native cell, 10000, more throwing `InvalidOperationException` with the long message of SPICE's `SPICE(WINDOWEXCESS)`, "Window has size, 20000, cardinality 20000. Cannot insert an additional interval into the window." (#653; before, the first 1000 silently), and the window reads of `ReadEphemeris` and `ReadOrientation` are at start + i·step in the time frame of the window start, exact, in buffers of their size (#563)
 - The element conversions and the TLE proxies (`ConvertConicElementsToStateVectorProxy`, `ConvertEquinoctialElementsToStateVectorProxy`, `ConvertStateVectorToEquatorialCoordinatesProxy`, `ConvertTLEToStateVectorProxy`, `GetTLEElementsProxy`) catch their C++ exceptions and return a NaN result with the message (the exception's, then SPICE's) for `GetLastErrorProxy()` (#711; before, a centre SPICE does not name ended the process and a centre without a GM gave a zero state); `ConvertConicElementsToStateVectorAtEpochProxy` returns the NaN state with SPICE's message on a failed `conics_c`, nothing left pending; `SpiceAPI.ConvertConicElementsToStateVector` (an ellipse) and `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` for a centre that is not a celestial body SPICE names, `InvalidOperationException` with SPICE's message for one without a GM; the conversions throw `ArgumentException` for elements outside the domain of `EQNCPV` (a ≤ 0, e > 0.9) or `CONICS` (a periapsis radius ≤ 0), `ArgumentOutOfRangeException` (`gm`) for a given GM not finite and above 0, and `InvalidOperationException` for an observer whose GM is not; a TLE read before its kernels throws SPICE's message and works once they are loaded. A failed `bool` proxy leaves SPICE reset, `ReadOrientationProxy` reporting SPICE's message (no CK, an unknown frame, no clock) instead of "No orientation found", which stays for a read outside the coverage (#712); a CK segment without angular velocity, which `ckgpav_c` skips, is read by `ckgp_c` with a zero angular velocity (#714)
-- #714: every proxy that reports through `GetLastErrorProxy()` clears it when it starts, and a SPICE error with no long message is reported by its short one; `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` activate the error management and return a NaN result with SPICE's message (before, a first native call aborted the process, otherwise the stack's contents came back), and `TransformFrameProxy` a NaN rotation with SPICE's message (before, the zero quaternion with none); `SpiceAPI.Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` throw `ArgumentException` (`stateVector`) for a state not finite, `ArgumentOutOfRangeException` (`gm`) for a given GM not finite and above 0, `InvalidOperationException` naming `BODYnnn_GM` for an observer's GM that is not, and `InvalidOperationException` with SPICE's message for a state SPICE rejects; `SpiceAPI.TransformFrame` appends SPICE's message to the frames and the epoch; the element conversions throw `ArgumentException` for elements that are not finite; `CelestialBody(int)` throws "CelestialItem id<id> can't be read:" before reading the name of a body without a GM, so the message is the same on every run
+- #714: every proxy that reports through `GetLastErrorProxy()` clears it when it starts, and a SPICE error with no long message is reported by its short one; `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` activate the error management and return a NaN result with SPICE's message (before, a first native call aborted the process, otherwise the stack's contents came back), and `TransformFrameProxy` a NaN rotation with SPICE's message (before, the zero quaternion with none); `SpiceAPI.Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` throw `ArgumentException` (`stateVector`) for a state not finite, `ArgumentOutOfRangeException` (`gm`) for a given GM not finite and above 0, `InvalidOperationException` naming `BODYnnn_GM` for an observer's GM that is not, and `InvalidOperationException` with SPICE's message for a state SPICE rejects; `SpiceAPI.TransformFrame` appends SPICE's message to the frames and the epoch; the element conversions throw `ArgumentException` for elements that are not finite, and return, as `Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement`, the observer and frame instances of their input, built after the SPICE lock (#725, #664: before, a new `CelestialBody` read from the kernels under the lock); `CelestialBody(int)` throws "CelestialItem id<id> can't be read:" before reading the name of a body without a GM, so the message is the same on every run
 - The kernel writers and loaders (`WriteEphemerisProxy`, `WriteOrientationProxy`, `LoadKernelsProxy`, `UnloadKernelsProxy`) catch their C++ exceptions and keep SPICE's message for `GetLastErrorProxy()` (#706; before, an exception ended the process); `SpiceAPI.WriteEphemeris` throws `ArgumentException` (`stateVectors`) for fewer than three states, several frames or a centre that is not a celestial body or that SPICE does not name (#714); every writer first unloads, as `UnloadKernels` does, a target `LoadKernels` loaded, then every other load of the file SPICE holds (a meta-kernel's), under the writer's path or an absolute name whose symbolic links resolve through it, so the replaced file's data are not read again under those names and `GetLoadedKernels` no longer lists them; a hard link and the file a link given to the writer names keep what they name, and a relative name other than the path (a meta-kernel's) is not found (review of #706); the new file is left unloaded
 
 **Data Provider Pattern**
 - `IDataProvider` interface with implementations:
   - `SpiceDataProvider`: Default, uses SPICE kernel files
-  - `MemoryDataProvider`: In-memory for testing
+  - `MemoryDataProvider`: In-memory for testing; a read is the difference of its stored states in ICRF rotated into the frame asked (ICRF, GCRF, ECLIPJ2000, TEME, CIRS and TIRS known without stored orientations), and an aberration other than `None` throws `NotSupportedException` (#559)
 - Configured via `Configuration.Instance.SetDataProvider()`
 - The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read, on the provider set at that time, and so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before `LoadKernels`), with `InvalidOperationException` naming the missing variable (third round of #668); once read, an object keeps the provider it read its data from, for its data and its ephemeris; on SPICE its data are read again at the first read after each `LoadKernels`, `UnloadKernels` or `ClearKernels`, data equal to those held keeping the instances held (third round of #668)
 
 **Key Namespaces**
-- `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
-- `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE, mean/osculating elements
+- `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments; where CSPICE cannot read a pair, the reference-body path (internal `CelestialItem.ApparentStateFromReferenceBody`) corrects as `spkaps` (#491) and rotates to a non-inertial frame at t ∓ lt of the frame's centre, as `spkezr_c` (#593, `SpiceAPI.NonInertialFrameCenter`, the native `GetFrameInfoProxy`; a centre that is a third object, a site from coordinates or a managed spacecraft included, read as that path reads it); a site built from coordinates as a target takes it for every observer with a correction, as `spkcpt_c` (#489)
+- `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE, mean/osculating elements; equality is value equality within one concrete type (values, the perigee radius of the parabolic band included, observer NAIF id, epoch as an instant, frame, `ElementsType`), computing no state, never throwing, with a hash code of the same values (#475): a set and its own state are different, compare `ToStateVector()` to compare two orbits
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
-- `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OmmParseException` naming its keyword (#708); `TleParameters` and `CovarianceMatrix` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717)
-- `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OpmParseException` naming its keyword, and the four angles of `OpmKeplerianElements` are in [-360, 360), the schema's `angleRange` (#708); `OpmStateVector`, `CovarianceMatrix` and the ΔV of `OpmManeuverParameters` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717)
-- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708, and a value with a comma, #717; every real value of the CDM records refuses NaN and ±Infinity at init with `ArgumentOutOfRangeException` naming the property, and `CdmCovarianceMatrix` copies its covariance `Matrix` in and out, #717)
+- `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OmmParseException` naming its keyword (#708); `TleParameters` and `CovarianceMatrix` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717), and `CovarianceMatrix` a term whose value in m², m²/s or m²/s² (times 1e6) is not finite (#729); `Omm.ToTle` throws `InvalidOperationException` naming `MEAN_MOTION` above the 99.99999999 rev/day of its TLE field (#729: a TLE whose mean motion was the text `Infinity` above 2.86e307 rev/day); a negative revolution number names `revolutionNumberAtEpoch` (#734); a date outside the two CCSDS forms (`yyyy-mm-ddThh:mm:ss[.d…][Z|±hh:mm]`, `yyyy-dddThh:mm:ss…`) throws `OmmParseException` (#619)
+- `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OpmParseException` naming its keyword, and the four angles of `OpmKeplerianElements` are in [-360, 360), the schema's `angleRange` (#708); `OpmStateVector`, `CovarianceMatrix` and the ΔV of `OpmManeuverParameters` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717), and `OpmStateVector` and `CovarianceMatrix` a value whose value in SI units (times 1000 or 1e6) is not finite, which the reader reports naming the keyword (#729); a date outside the two CCSDS forms throws `OpmParseException` (#619)
+- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; `CdmWriter` writes the root, `cdm` or the wrapping `ndm`, in no namespace with `xmlns:ndm` on it and every element below it under the prefix `ndm`, the qualified form of CCSDS 508.0-B-1 Cor. 2 §4.3.3 that the SANA master accepts, #615; `ToCdm` writes `COLLISION_PROBABILITY_METHOD = FOSTER-1992` and refuses a single-covariance maximum Pc, #618; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708, a value with a comma, #717, a `lengthTypeUO` length (`MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`) with units other than m, and a date outside the two CCSDS forms, #619; every real value of the CDM records refuses NaN and ±Infinity at init with `ArgumentOutOfRangeException` naming the property, and `CdmCovarianceMatrix` copies its covariance `Matrix` in and out, #717, and refuses one that is not 6×6 with `ArgumentException` naming `StateCovarianceRtn`, #730)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
-- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451)
-- `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
+- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451); a frame named TEME, CIRS or TIRS, in any case, is routed to `Frame.TEME`, `Frame.CIRS` or `Frame.TIRS` by both data providers, the ephemeris reads and `SpiceAPI.TransformFrame`, which composes such an end through ICRF (#656); a frame keeps the orientation of its last epoch only, not one per epoch, and the attitude record API (`AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, ...) is `SpacecraftFrame`'s (#541)
+- `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.); two times are equal when they are the same instant, whatever their frames, `Equals`, `==` and `GetHashCode` following `CompareTo` by the TAI ticks, and so does `Window` equality, by its ends (#512), local times included and the default time first; a test of a label uses the tests' `LabelAssert` (calendar and frame), not `Assert.Equal`
 - `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution, AcceptedStep
 - `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet), RK78Integrator (adaptive Prince-Dormand 7(8))
 - `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure, albedo and thermal radiation pressure)
 - `IO.Astrodynamics.Propagator.Events`: IEventDetector, ManeuverEventDetector, CrossingDirection
-- `IO.Astrodynamics.Propagator.Variational`: state transition matrix Φ, sensitivity Ψ to Cd and Cr, and covariance P propagated with the state by RK7(8) (`CovariancePropagationOptions`; off by default, an initial covariance is then not propagated); Φ, Ψ, P and the extended covariance read from `PropagationSolution` (`GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`); maneuver execution error by `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, in `IO.Astrodynamics.Maneuver`; model of Gates); an initial covariance that rounding made indefinite is rejected by the propagation, remediated beforehand by `StateVector.WithRemediatedCovariance()` (the eigenvalue clipping of the conjunction analysis, `CovarianceRemediation`). See `docs/reference/covariance-propagation.md`
+- `IO.Astrodynamics.Propagator.Variational`: state transition matrix Φ, sensitivity Ψ to Cd and Cr, and covariance P propagated with the state by RK7(8) (`CovariancePropagationOptions`; off by default, an initial covariance is then not propagated); Φ, Ψ, P and the extended covariance read from `PropagationSolution` (`GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`); maneuver execution error by `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, in `IO.Astrodynamics.Maneuver`; model of Gates); an initial covariance that rounding made indefinite is rejected by the propagation, remediated beforehand by `StateVector.WithRemediatedCovariance()` (the eigenvalue clipping of the conjunction analysis, `CovarianceRemediation`), a defect deeper than −1e-3 of the trace of the correlation matrix in the frame of the state and in its RTN frame refused by both (#443), clipped in the frame of the state where its depth passes there, in its RTN frame and rotated back otherwise. See `docs/reference/covariance-propagation.md`
 - `IO.Astrodynamics.Propagator.MonteCarlo`: MonteCarloPropagator, StateSampler, StatisticsAggregator, per-epoch statistics and RSS percentiles
-- `IO.Astrodynamics.SSA`: ConjunctionAssessment (Screen, Analyze, AnalyzeAll, EvaluateAvoidance), Foster 2D collision probability, maximum probability, encounter quality flags; the covariance at TCA propagated for participants propagated in RK7(8) with an initial covariance (replay of the variational equations, `ConjunctionAnalysisOptions.CovariancePropagation`, on by default), its source per participant (`CovarianceSource`, `ParticipantCovariance`) and the non-linearity index; avoidance options propagated numerically from the covariance at their burn, and without it with the force model of the participant's propagation (RK7(8) or Velocity-Verlet), the two-body orbit stated by `AvoidanceOption.Trajectory` without one; CDM export of the consider parameters (`CDRG_*`, `CSRP_*`) and of the force model
+- `IO.Astrodynamics.SSA`: ConjunctionAssessment (Screen, Analyze, AnalyzeAll, EvaluateAvoidance), Foster 2D collision probability, maximum probability, encounter quality flags (a window without a close approach: an empty `AnalyzeAll`, the closest window end from `Analyze` and `Screen`, flagged `TcaAtWindowEnd`, on both paths, #621); the covariance at TCA propagated for participants propagated in RK7(8) with an initial covariance (replay of the variational equations, `ConjunctionAnalysisOptions.CovariancePropagation`, on by default), its source per participant (`CovarianceSource`, `ParticipantCovariance`) and the non-linearity index; avoidance options propagated numerically from the covariance at their burn, and without it with the force model of the participant's propagation (RK7(8) or Velocity-Verlet), the two-body orbit stated by `AvoidanceOption.Trajectory` without one; CDM export of the consider parameters (`CDRG_*`, `CSRP_*`) and of the force model
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
-- `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions; the public methods that normalize (`Normalize()` of `Vector3` and `Quaternion`, `Matrix.FromQuaternion`, `TransformCovariance`, `Lerp`, `SLERP`, the axis-angle constructor, `Vector3.To`, the plane normal of the signed `Angle`, `Plane.GetAngle`) throw for a zero or non-finite input and accept every finite non-zero one, scaled outside the ordinary range of its squares (by the power of two of its largest component, `Vector3.To` by its largest component; the ranges in the root `CLAUDE.md`), bit for bit inside it; the vectors of `Angle(Vector3)` and the signed `Angle` are scaled likewise, 0 when zero, NaN when not finite (third round of #668)
+- `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions; `Matrix` is mutable and its public holders (`StateVector.Covariance`, `EncounterState`, `CollisionRisk`, `EpochStatistics`, `CdmCovarianceMatrix`, `Iau2006Model.FrameBias()`) copy it in and out (#722); the public methods that normalize (`Normalize()` of `Vector3` and `Quaternion`, `Matrix.FromQuaternion`, `TransformCovariance`, `Lerp`, `SLERP`, the axis-angle constructor, `Vector3.To`, the plane normal of the signed `Angle`, `Plane.GetAngle`) throw for a zero or non-finite input and accept every finite non-zero one, scaled outside the ordinary range of its squares (by the power of two of its largest component, `Vector3.To` by its largest component; the ranges in the root `CLAUDE.md`), bit for bit inside it; the vectors of `Angle(Vector3)` and the signed `Angle` are scaled likewise, 0 when zero, NaN when not finite (third round of #668)
 - `IO.Astrodynamics.Physics`: Geopotential model reader, coefficients
 
 **External Dependencies**
@@ -111,7 +112,10 @@ The framework distinguishes between two types of orbital elements using `Orbital
 **Important Conversion Rules**
 1. **Mean elements CANNOT be directly converted to StateVector** - attempting to call `ToStateVector()` on mean KeplerianElements throws `InvalidOperationException`
 2. **TLE overrides this behavior** - `TLE.ToStateVector()` uses SGP4/SDP4 propagation internally
-3. **ElementsType propagates** through conversions (e.g., mean KeplerianElements → mean EquinoctialElements)
+3. **ElementsType propagates** through conversions (e.g., mean KeplerianElements → mean EquinoctialElements), `AtEpoch` and `ToKeplerianElements(Time)` included (#463; a TLE's `ToKeplerianElements(Time)` is its osculating SGP4 set, osculating)
+4. **A numerical propagation refuses mean initial elements** other than a TLE: `ArgumentException` (`spacecraft`) from every `CentralBodyPropagator` constructor, pointing to `TLEPropagator` and `TLE.ToOsculating()` (#463)
+5. **The constructors refuse what no conic has** (#476, #481, #726): non-finite elements (`ArgumentException` naming the parameter; the +Infinity semi-major axis of a parabola excepted), an eccentricity not finite or negative and an equinoctial P or a perigee radius not finite and above 0 (`ArgumentOutOfRangeException`)
+6. **Within 1e-6 of e = 1** the anomalies and the motion are Barker's, the semi-major axis, mean motion, state and equinoctial P the conic's (#459, #462, #477, #478); `KeplerianElements` there take the perigee radius q and the a of the same conic, a (1 − e) = q to 6 ε (1 + e), +Infinity only at e = 1 (to a few ulps); `Period()` of an open orbit throws `InvalidOperationException`, a period given included (#663); see `docs/reference/keplerian-elements.md#the-near-parabolic-band`
 
 **Creating Mean Elements from OMM Data**
 ```csharp
@@ -171,6 +175,8 @@ identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — nev
 - `NoradCatalogNumber.Format` / `.Parse` / `.TryParse` / `.IsValid` handle the encoding
 - `TLE.NoradCatalogId` returns the decoded numeric value
 - Alpha-5 letters count as 0 in the TLE checksum, and SGP4/SDP4 ignores the field entirely
+- The element set number defaults to `TLE.DefaultElementSetNumber`, 999, on every path (`TLE.Create`, `Configuration`,
+  `Omm.ToTle` without `ELEMENT_SET_NO`; #606)
 - Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
   instead of being silently truncated
 - The `TLE` constructor rejects lines whose catalog numbers disagree (`InvalidOperationException`)
@@ -190,7 +196,7 @@ OMM: meanMotion = 15.49309423 rev/day
 - `FirstDerivationMeanMotion` and `SecondDerivativeMeanMotion` hold the TLE fields ṅ/2 and n̈/6 (OMM's
   `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`); `TLE.Create` writes the UTC of the epoch and the nearest value of each field
   (#479, #480, #600 to #602)
-- OPM and OMM epochs are read in their `TIME_SYSTEM` (#485)
+- OPM and OMM epochs are read in their `TIME_SYSTEM` (#485); the writers write a date of kind `Utc` or `Unspecified` as its clock reading in `TIME_SYSTEM`, one of kind `Local` as its UTC under `TIME_SYSTEM = UTC` and throw `ArgumentException` under any other (`CREATION_DATE` always UTC), and the CDM writer takes `Unspecified` as UTC (#617)
 
 **Osculating vs Mean Accessors in TLE**
 | Accessor | Returns | Use Case |
@@ -322,10 +328,10 @@ var newOpm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
 
 **Maneuver Integration**
 ```csharp
-// spacecraft: a propagated spacecraft with a COSPAR id
-// Executed maneuvers are automatically included in ToOpm()
-var opm = spacecraft.ToOpm(includeManeuvers: true);
-// OPM will contain OpmManeuverParameters for each executed ImpulseManeuver
+// spacecraft: a propagated spacecraft with a COSPAR id; end: an epoch of its propagation after its burns
+// The OPM carries the state of its epoch, with the mass and the maneuvers ignited by then (#658)
+var opm = spacecraft.ToOpm(epoch: end, includeManeuvers: true);
+// OPM will contain OpmManeuverParameters for each ImpulseManeuver ignited by then
 
 // Manual maneuver export from ImpulseManeuver
 foreach (var maneuver in spacecraft.ExecutedManeuvers)
@@ -370,6 +376,7 @@ var data = new OpmData(OpmStateVector.FromStateVector(stateVector), covariance: 
 - Framework uses SI units: m, m/s, rad, kg, m²
 - Conversions are automatic in `ToStateVector()`, `ToSpacecraft()`, and `ToOpm()`
 - XML output includes `units` attributes on all numeric elements per CCSDS standard
+- Each real value is written in its shortest round-trip form (`"R"`), read back bit for bit, in the OPM, OMM and CDM alike (#728)
 
 ### Atmospheric Modeling
 
@@ -414,6 +421,7 @@ All models implement `IAtmosphericModel` with these methods:
 
 **Mars Models:**
 - **MarsStandardAtmosphere**: Simplified analytical model using altitude only: the NASA Glenn curve fit below 49.887 km,
+  ρ = p / [0.1921 (T + 273.1)] with the fit's own 273.1 (#438, decided by S. Guillet, 2026-11-17; 273.15 before 11.0.0),
   the isothermal layer of Seiff (1982) at 139 K above (5 km C² transition), the branches of the curve fit joined over
   500 m at 7 km (#433); positive and decreasing at every altitude;
   no thermosphere, so drag in orbit above about 120 km is underestimated (#431)
@@ -518,6 +526,9 @@ Earth and the Sun without a model throws `InvalidOperationException`, and about 
 bodies with an atmosphere; an Earth always has one (NRLMSISE-00 nominal without a model), listed or central. A force-building path rejects an integrator that holds forces or was already used, and every entry
 rejects a step of zero or less.
 
+**Third-Body Perturbation (`ThirdBodyPerturbation`)**
+- Battin's form far from the perturbing body; the direct difference −μ ((r − d)/|r − d|³ + d/|d|³) where |r − d| < |d|/2 (SSB mode near a planet, a spacecraft near the Moon about the Earth), where Battin's 1 + q lost eight digits (#576, #544); Battin's bit for bit elsewhere
+
 **Solar Radiation Pressure (`SolarRadiationPressure`)**
 - Cannonball model: `F = (L_sun / 4*pi*c) * Cr * (A/m) * r_hat / r^2`
 - Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (range 1.0–2.0, default 1.0)
@@ -547,7 +558,7 @@ The propagation system uses a segment-based architecture with event-driven maneu
 **Propagator Hierarchy**
 ```
 PropagatorBase (abstract)
-├── TLEPropagator         — SGP4/SDP4 from Two-Line Elements
+├── TLEPropagator         — SGP4/SDP4 from Two-Line Elements, sampled every ΔT from the start and at the window end (#598)
 └── CentralBodyPropagator — All numerical propagation (LEO, GEO, lunar, interplanetary)
 ```
 
@@ -556,6 +567,7 @@ PropagatorBase (abstract)
 **Key Classes**
 - `PropagatorBase`: Abstract base with segment-based propagation loop, event detection, and dense output
 - `CentralBodyPropagator`: Concrete implementation with auto force-building and ephemeris cache injection
+- Force caches: `PropagationFrameOrientationCache` (the central body's orientation, 60 s grid, exact SLERP, #561) and `PropagationEphemerisCache` (the bodies, 8-point Lagrange) cover the span the propagation integrates, to its last output, up to ΔT/2 past the window (#626); a read outside their grid reads the data provider at its epoch
 - `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet. When the covariance propagation is on, Φ, Ψ and P at any epoch, by the same shortened step with the variational equations (the getters serialize on a lock of the solution and evaluate the forces, like `InterpolateAt`)
 - `PropagationSegment`: List of `AcceptedStep` records with Hermite interpolation
 - `AcceptedStep`: Start/end position, velocity, and acceleration for cubic Hermite dense output
@@ -582,7 +594,7 @@ public interface IIntegrator
 
 Every `CentralBodyPropagator` constructor calls `Initialize` with the initial state of the propagation (about the central body, in the inertial frame of the propagation, at the TDB start of the window), those that take an integrator with its forces included; a later `Initialize` by the caller replaces it.
 
-VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV) or with sub-step bisection refinement (RK78) on states computed by shortened RK7(8) steps; the RK7(8) restart after a maneuver uses the same shortened step, never the cubic Hermite interpolation, which is off by up to ~100 m in LEO (#363).
+VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV, the step integrated again to the tick of the label of its end, #572) or with sub-step bisection refinement (RK78) on states computed by shortened RK7(8) steps; the RK7(8) restart after a maneuver uses the same shortened step, never the cubic Hermite interpolation, which is off by up to ~100 m in LEO (#363).
 
 ### Event Detection System
 
@@ -590,7 +602,7 @@ Industry-standard g-function zero-crossing approach for maneuver triggering and 
 
 **Key Types**
 - `IEventDetector`: `Evaluate(state)` → scalar, `Direction` → `CrossingDirection`, `HandleEvent()` → `EventResult`
-- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`; `HandleEvent` executes the impulse only and returns no next detector, the propagation advancing the chain (#539); its `MinimumEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); the public `Evaluate` keeps its +1 before the gate for external callers; internally, `EvaluateOpen` calls `ImpulseManeuver.ComputeEventValueAtSearchStart` (internal virtual, `ComputeEventValue` by default), which only `PlaneAlignmentManeuver` overrides: from the state at a minimum epoch inside a step it takes the node it moves toward, never one just passed (at a segment base the first `Evaluate` still locks it, #581); the gate of a chained maneuver belongs to one propagation (#573): `Spacecraft.ChainStandbyManeuver` raises `Maneuver.PropagationGate`, cleared by `Maneuver.Reset` at each `Spacecraft.Propagate`; `SetStandbyManeuver(maneuver, minimumEpoch)` raises the given value, which lasts; `MinimumEpoch` is the later of the two
+- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`; `HandleEvent` executes the impulse only and returns no next detector, the propagation advancing the chain (#539); its `MinimumEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); the public `Evaluate` keeps its +1 before the gate for external callers; internally, `EvaluateOpen` calls `ImpulseManeuver.ComputeEventValueAtSearchStart` (internal virtual, `ComputeEventValue` by default), which only `PlaneAlignmentManeuver` overrides: from the state at a minimum epoch inside a step it takes the node it moves toward, never one just passed, and so at a segment base whose gate is open there (#581; the detector of an event just handled starts from its g-value past that root); a g exactly zero at a step end after a non-zero one is a crossing there, a gated g exactly zero at the base with its gate at or before the base a crossing there when the first step end has the target sign (#580), and `IIntegrator.IntegrateSegment` reports the earliest crossing of a step, ties in list order (#578); the gate of a chained maneuver belongs to one propagation (#573): `Spacecraft.ChainStandbyManeuver` raises `Maneuver.PropagationGate`, cleared by `Maneuver.Reset` at each propagation, on every path (`PropagatorBase.Propagate` re-arms the spacecraft once its checks pass, #583); `SetStandbyManeuver(maneuver, minimumEpoch)` sets the head of the chain, nothing added to `ExecutedManeuvers` (#584), and raises the given value, which lasts; `MinimumEpoch` is the later of the two
 - `CrossingDirection` enum: `NegativeToPositive`, `PositiveToNegative`, `Any`
 - `EventResult`: Modified state, orientation, action (`StopAndRestart` or `Continue`), next detector
 
@@ -626,7 +638,7 @@ The framework provides a family of attitude maneuvers for spacecraft orientation
 - `RetrogradeAttitude`: Anti-velocity pointing
 - `NormalAttitude`: Orbital normal pointing (h = r × v)
 - `AntiNormalAttitude`: Anti-normal pointing (−h)
-- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target
+- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target, its direction corrected by `Aberration` (`Aberration.LT` by default, the target as the spacecraft sees it, as `spkcvo_c`; a `Star` without light time, as `Star.GetEphemeris`; `Aberration.None` geometric; #549)
 - `TriadAttitude`: Two-vector fully-constrained attitude (eliminates roll ambiguity)
 
 **TRIAD Attitude Determination**
@@ -826,7 +838,9 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 7. **Mean vs Osculating Elements**: Always check `ElementsType` when working with orbital parameters:
    - Use `ToOsculating()` for TLE position/velocity calculations
    - Never call `ToStateVector()` directly on mean KeplerianElements
-   - Use `TLE.Create()` only with mean elements (validates `ElementsType.Mean`)
+   - Use `TLE.Create()` only with mean elements of an Earth orbit in TEME (it validates `ElementsType.Mean`, `Frame.TEME` and
+     the Earth, NAIF id 399, `ArgumentException` otherwise; `ToTLE` refuses an orbit not about the Earth with
+     `InvalidOperationException`, #607)
    - NORAD catalog numbers are `int`, not `ushort`; values above 99999 use Alpha-5 encoding, and
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:

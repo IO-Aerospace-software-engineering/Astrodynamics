@@ -245,7 +245,7 @@ public class IntegratorInitializationTests
         Assert.Same(earth, state.Observer);
         Assert.Equal(Frames.Frame.ICRF, state.Frame);
         Assert.Equal(TimeFrame.TDBFrame, state.Epoch.Frame);
-        Assert.Equal(window.StartDate.ToTDB(), state.Epoch);
+        LabelAssert.Equal(window.StartDate.ToTDB(), state.Epoch);
         Assert.NotEmpty(spacecraft.PropagatedStates);
     }
 

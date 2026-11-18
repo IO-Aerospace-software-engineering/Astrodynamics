@@ -108,7 +108,7 @@ public class TimeArgumentTests
         else
         {
             WindowEndAssert.ReachesTheEndOf(window, solution);
-            Assert.Equal(window.EndDate.ToTDB(), solution.StateVectors[^1].Epoch);
+            LabelAssert.Equal(window.EndDate.ToTDB(), solution.StateVectors[^1].Epoch);
         }
 
         // Kepler over the reference seconds, so that the dynamics are checked at the reference time too: the bound of the
@@ -265,13 +265,13 @@ public class TimeArgumentTests
             Assert.Equal(expected.Count, actual.Length);
             for (int i = 0; i < actual.Length; i++)
             {
-                Assert.Equal(expected[i].Epoch, actual[i].Epoch);
+                LabelAssert.Equal(expected[i].Epoch, actual[i].Epoch);
                 Assert.Equal(expected[i].Position, actual[i].Position);
             }
 
             if (aboutTheEarth)
             {
-                Assert.Equal(window.EndDate.ToTDB(), actual[^1].Epoch);
+                LabelAssert.Equal(window.EndDate.ToTDB(), actual[^1].Epoch);
             }
         }
     }
@@ -296,8 +296,8 @@ public class TimeArgumentTests
 
         // Assert: the epochs of the statistics are the output labels, uniform in TT, the last the end of the window
         Assert.Equal(2, result.SuccessCount);
-        Assert.Equal(reference.StateVectors.Select(s => s.Epoch), result.EpochStatistics.Select(s => s.Epoch));
-        Assert.Equal(window.EndDate.ToTDB(), result.EpochStatistics[^1].Epoch);
+        LabelAssert.Equal(reference.StateVectors.Select(s => s.Epoch), result.EpochStatistics.Select(s => s.Epoch));
+        LabelAssert.Equal(window.EndDate.ToTDB(), result.EpochStatistics[^1].Epoch);
     }
 
     [Theory]
@@ -383,7 +383,7 @@ public class TimeArgumentTests
         double between = PropagationTimeArgument.Tt.SecondsBetween(before.BaseEpoch, after.BaseEpoch);
         _output.WriteLine($"{(rk78 ? "RK7(8)" : "Velocity-Verlet")}: event at {eventTime:R} s, bases {between:R} s " +
                           $"apart, {between - eventTime:E3} s");
-        Assert.Equal(after.BaseEpoch, PropagationTimeArgument.Tt.EpochAt(before.BaseEpoch, eventTime));
+        LabelAssert.Equal(after.BaseEpoch, PropagationTimeArgument.Tt.EpochAt(before.BaseEpoch, eventTime));
         Assert.InRange(between - eventTime, rk78 ? -1e-12 : -1e-7, rk78 ? 1e-12 : 0.0);
         WindowEndAssert.ReachesTheEndOf(window, solution);
 
@@ -529,8 +529,9 @@ public class TimeArgumentTests
 
         // The step epochs of the conjunction analysis are the same mapping in TT
         var label = rk78.Segments[0].BaseEpoch;
-        Assert.Equal((PropagationTimeArgument.Tt.EpochAt(label, 60.0), PropagationTimeArgument.Tt.EpochAt(label, 180.0)),
-            PropagationTimeArgument.Tt.StepEpochs(label, 60.0, 120.0));
+        var (ttStart, ttEnd) = PropagationTimeArgument.Tt.StepEpochs(label, 60.0, 120.0);
+        LabelAssert.Equal(PropagationTimeArgument.Tt.EpochAt(label, 60.0), ttStart);
+        LabelAssert.Equal(PropagationTimeArgument.Tt.EpochAt(label, 180.0), ttEnd);
     }
 
     [Fact]
@@ -545,21 +546,21 @@ public class TimeArgumentTests
         {
             double cumulative = random.NextDouble() * 86400.0;
             double step = 1.0 + random.NextDouble() * 299.0;
-            Assert.Equal((PropagationTimeArgument.Tdb.EpochAt(label, cumulative),
-                    PropagationTimeArgument.Tdb.EpochAt(label, cumulative + step)),
-                PropagationTimeArgument.Tdb.StepEpochs(label, cumulative, step));
-            Assert.Equal(PropagationTimeArgument.Tdb.EpochAt(label, cumulative),
+            var (start, end) = PropagationTimeArgument.Tdb.StepEpochs(label, cumulative, step);
+            LabelAssert.Equal(PropagationTimeArgument.Tdb.EpochAt(label, cumulative), start);
+            LabelAssert.Equal(PropagationTimeArgument.Tdb.EpochAt(label, cumulative + step), end);
+            LabelAssert.Equal(PropagationTimeArgument.Tdb.EpochAt(label, cumulative),
                 PropagationTimeArgument.EpochAfter(_moon, label, cumulative));
-            Assert.Equal(PropagationTimeArgument.Tt.EpochAt(label, cumulative),
+            LabelAssert.Equal(PropagationTimeArgument.Tt.EpochAt(label, cumulative),
                 PropagationTimeArgument.EpochAfter(_earth, label, cumulative));
 
             // The inverse of the elapsed seconds, to the tick, about the Moon from a TDB label and from a TAI epoch
             var later = label.AddTicks((long)(random.NextDouble() * 864_000_000_000L));
-            Assert.Equal(later, PropagationTimeArgument.EpochAfter(_moon, label,
+            LabelAssert.Equal(later, PropagationTimeArgument.EpochAfter(_moon, label,
                 PropagationTimeArgument.ElapsedSeconds(_moon, label, later)));
             var tai = label.ToTAI();
             var taiLater = later.ToTAI();
-            Assert.Equal(taiLater.ToTDB(), PropagationTimeArgument.EpochAfter(_moon, tai,
+            LabelAssert.Equal(taiLater.ToTDB(), PropagationTimeArgument.EpochAfter(_moon, tai,
                 PropagationTimeArgument.ElapsedSeconds(_moon, tai, taiLater)).ToTDB());
         }
     }
@@ -581,8 +582,8 @@ public class TimeArgumentTests
 
         // Assert: the states of SGP4 at the TDB grid of the window, the first and the last bit for bit
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
-        Assert.Equal(tle.ToStateVector(start), solution.StateVectors.First(x => x.Epoch == start));
-        Assert.Equal(tle.ToStateVector(end), solution.StateVectors.First(x => x.Epoch == end));
+        LabelAssert.Equal(tle.ToStateVector(start), solution.StateVectors.First(x => x.Epoch == start));
+        LabelAssert.Equal(tle.ToStateVector(end), solution.StateVectors.First(x => x.Epoch == end));
     }
 
     // An hour from 2021-03-20 12:00 TDB, by the tags of its ends; the UTC hour across the leap second of 2016-12-31
@@ -644,7 +645,7 @@ public class TimeArgumentTests
         Assert.Equal(expected.StateVectors.Count, actual.StateVectors.Count);
         for (int i = 0; i < expected.StateVectors.Count; i++)
         {
-            Assert.True(expected.StateVectors[i].Epoch == actual.StateVectors[i].Epoch &&
+            Assert.True(expected.StateVectors[i].Epoch.HasSameLabel(actual.StateVectors[i].Epoch) &&
                         expected.StateVectors[i].Position == actual.StateVectors[i].Position &&
                         expected.StateVectors[i].Velocity == actual.StateVectors[i].Velocity,
                 $"{path}: state {i} {actual.StateVectors[i].Position} against {expected.StateVectors[i].Position}");

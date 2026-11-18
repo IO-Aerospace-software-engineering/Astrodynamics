@@ -120,46 +120,37 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// This time plus <paramref name="days"/>, by <see cref="System.DateTime.AddDays"/>, which truncates to the tick (#637).
+    /// This time plus <paramref name="days"/>, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet,
+    /// 2026-11-17; before 11.0.0, <see cref="System.DateTime.AddDays"/>, which truncates toward zero, one tick early for
+    /// about half of the spans).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="days"/> is not finite (#680: NaN returned this time
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddDays(double days)
     {
-        return new Time(DateTime.AddDays(Finite(days, nameof(days))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(days, TimeSpan.TicksPerDay, nameof(days))), Frame);
     }
 
     /// <summary>
-    /// This time plus <paramref name="hours"/>, by <see cref="System.DateTime.AddHours"/>, which truncates to the tick (#637).
+    /// This time plus <paramref name="hours"/>, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet,
+    /// 2026-11-17; before 11.0.0, <see cref="System.DateTime.AddHours"/>, which truncates toward zero).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="hours"/> is not finite (#680: NaN returned this time
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddHours(double hours)
     {
-        return new Time(DateTime.AddHours(Finite(hours, nameof(hours))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(hours, TimeSpan.TicksPerHour, nameof(hours))), Frame);
     }
 
     /// <summary>
-    /// This time plus <paramref name="minutes"/>, by <see cref="System.DateTime.AddMinutes"/>, which truncates to the tick
-    /// (#637).
+    /// This time plus <paramref name="minutes"/>, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet,
+    /// 2026-11-17; before 11.0.0, <see cref="System.DateTime.AddMinutes"/>, which truncates toward zero).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minutes"/> is not finite (#680: NaN returned this time
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMinutes(double minutes)
     {
-        return new Time(DateTime.AddMinutes(Finite(minutes, nameof(minutes))), Frame);
-    }
-
-    // A non-finite span has no instant (#680): DateTime's range check is false for NaN, which it converts to 0 ticks, and
-    // names its own parameter for the infinities
-    private static double Finite(double value, string paramName)
-    {
-        if (!double.IsFinite(value))
-        {
-            throw new ArgumentOutOfRangeException(paramName, value, "The span is not a finite number.");
-        }
-
-        return value;
+        return new Time(DateTime.AddTicks(ToNearestTicks(minutes, TimeSpan.TicksPerMinute, nameof(minutes))), Frame);
     }
 
     /// <summary>
@@ -201,6 +192,38 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="seconds"/> is not finite or its ticks do not fit in
     /// a <see cref="long"/>.</exception>
     internal static long SecondsToTicks(double seconds) => ToNearestTicks(seconds, TimeSpan.TicksPerSecond, nameof(seconds));
+
+    /// <summary>
+    /// The <see cref="TimeSpan"/> of the tick count nearest <paramref name="seconds"/>, ties to even
+    /// (<see cref="SecondsToTicks"/>): the spans the library computes outside <see cref="Time"/> (the period of an orbit,
+    /// the sidereal period and true solar day of a body, the thrust window of an impulse, the hold of a phasing maneuver,
+    /// the offsets of the launch windows, the steps and epochs of the conjunction search; #637, decided by S. Guillet,
+    /// 2026-11-17). Before 11.0.0 they went through <see cref="TimeSpan.FromSeconds(double)"/>, which truncates toward
+    /// zero; its exception types are kept, the bound of the overflow that of <see cref="SecondsToTicks"/>, 0.48 s below the
+    /// 922 337 203 685.477 s <see cref="TimeSpan.FromSeconds(double)"/> accepts.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="seconds"/> is NaN.</exception>
+    /// <exception cref="OverflowException"><paramref name="seconds"/> is infinite, or its ticks do not fit in a
+    /// <see cref="TimeSpan"/> (|seconds| of 922 337 203 685 or more).</exception>
+    internal static TimeSpan SecondsToSpan(double seconds)
+    {
+        if (double.IsNaN(seconds))
+        {
+            throw new ArgumentException("A span cannot be NaN seconds.", nameof(seconds));
+        }
+
+        if (!(System.Math.Abs(seconds) < MaximumSpanSeconds))
+        {
+            throw new OverflowException($"A span of {seconds:R} s is outside the range of a TimeSpan.");
+        }
+
+        return TimeSpan.FromTicks(SecondsToTicks(seconds));
+    }
+
+    /// <summary>
+    /// The seconds below which a span has its ticks in a <see cref="long"/>, the bound <see cref="SecondsToTicks"/> checks.
+    /// </summary>
+    internal const double MaximumSpanSeconds = long.MaxValue / TimeSpan.TicksPerSecond;
 
     // The magnitude of the value, its whole units and its fraction apart, so that the whole part and the fraction are
     // exact (a fraction 1 - |value| of a negative value above -1 would round to the ulp of [0.5, 1)); the fraction times
@@ -439,15 +462,16 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// The time of <paramref name="julianDate"/> in <paramref name="frame"/>, by <see cref="System.DateTime.AddDays"/> from
-    /// J2000, which truncates to the tick (#637).
+    /// The time of <paramref name="julianDate"/> in <paramref name="frame"/>: J2000 plus the nearest tick of the days
+    /// <paramref name="julianDate"/> − 2451545.0, ties to even (#637, decided by S. Guillet, 2026-11-17; before 11.0.0,
+    /// <see cref="System.DateTime.AddDays"/>, which truncates toward zero). The difference is exact for a Julian date from
+    /// 1225772.5 to 4903090 (Sterbenz's lemma), about the years −1356 to 8711.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="julianDate"/> is not finite (#680: NaN gave J2000
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public static Time CreateFromJD(double julianDate, ITimeFrame frame)
     {
-        var sinceEpoch = Finite(julianDate, nameof(julianDate)) - JULIAN_J2000;
-        var date = J2000.AddDays(sinceEpoch);
+        var date = J2000.AddTicks(ToNearestTicks(julianDate - JULIAN_J2000, TimeSpan.TicksPerDay, nameof(julianDate)));
         if (frame is UTCTimeFrame)
         {
             date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
@@ -458,17 +482,109 @@ public readonly record struct Time : IComparable<Time>, IComparable
 
     #region COMPARATOR
 
+    /// <summary>
+    /// The ticks of this time converted to TAI, the key of the order, the equality and the hash code of times (#512).
+    /// </summary>
+    internal long TaiTicks()
+    {
+        return Frame is TimeFrame frame ? frame.TaiTicks(this) : Frame.ConvertToTAI(this).DateTime.Ticks;
+    }
+
+    /// <summary>
+    /// Compares the instants of two times, within a frame and across frames alike, by their ticks converted to TAI: one
+    /// total order, so that two times compare to 0 exactly when they are equal (<see cref="Equals(Time)"/>, #512).
+    /// </summary>
+    /// <remarks>
+    /// Within UTC, TAI, TT or GPS the conversion to TAI keeps the order of the calendars, which are compared directly.
+    /// Within TDB it does too for times two ticks or more apart; two consecutive TDB ticks can convert to one TAI tick
+    /// (TDB − TT, rounded to the tick, gains one there), and then compare to 0. Before 11.0.0, times of one frame were
+    /// compared by their calendars, and so two such TDB ticks were in order while each compared to 0 with their TAI time.
+    /// Within TDB, <c>-</c> still counts the ticks of the calendars: two such equal ticks differ by one tick. A local
+    /// time is the instant <see cref="System.DateTime.ToUniversalTime"/> gives its calendar in the time zone of the
+    /// machine, local times included (#512: before 11.0.0 they were compared by their calendars). The default time (no
+    /// frame) comes before every time with a frame and compares to 0 with itself, so that comparing it never throws.
+    /// </remarks>
     public int CompareTo(Time other)
     {
-        // Convert both times to TAI to ensure correct physical time comparison
-        // when the times are in different frames (e.g., UTC vs TDB)
+        // The default time, the only time without a frame, before every time with one
+        if (Frame is null)
+        {
+            return other.Frame is null ? DateTime.Ticks.CompareTo(other.DateTime.Ticks) : -1;
+        }
+
+        if (other.Frame is null)
+        {
+            return 1;
+        }
+
         if (this.Frame.Equals(other.Frame))
         {
-            return this.DateTime.CompareTo(other.DateTime);
+            switch (Frame)
+            {
+                case UTCTimeFrame or TAITimeFrame or TDTTimeFrame or GPSTimeFrame:
+                    return this.DateTime.CompareTo(other.DateTime);
+                case TDBTimeFrame:
+                    long difference = this.DateTime.Ticks - other.DateTime.Ticks;
+                    if (difference is not (1 or -1))
+                    {
+                        return difference.CompareTo(0L);
+                    }
+
+                    break;
+            }
         }
-        var thisTai = this.ToTAI();
-        var otherTai = other.ToTAI();
-        return thisTai.DateTime.CompareTo(otherTai.DateTime);
+
+        return TaiTicks().CompareTo(other.TaiTicks());
+    }
+
+    /// <summary>
+    /// Whether two times are the same instant, whatever their frames: <see cref="CompareTo(Time)"/> returns 0 (#512,
+    /// decided by S. Guillet, 2026-11-17). <c>==</c>, <c>!=</c>, <see cref="object.Equals(object)"/> and the hash
+    /// collections follow it, and <see cref="GetHashCode"/> hashes the TAI ticks. Two default times (no frame) are equal
+    /// when their calendars are, and a default time equals no time with a frame.
+    /// </summary>
+    /// <remarks>
+    /// Before 11.0.0 the frame took part (the record's default equality on the calendar and the frame), so that the same
+    /// instant in two frames was not equal while it compared to 0, and a <see cref="Dictionary{TKey,TValue}"/> or a
+    /// <see cref="HashSet{T}"/> keyed by times missed it. To tell the labels apart, compare <see cref="DateTime"/> and
+    /// <see cref="Frame"/>.
+    /// </remarks>
+    public bool Equals(Time other)
+    {
+        return CompareTo(other) == 0;
+    }
+
+    /// <summary>
+    /// Whether two times carry the same label: the same calendar in the same frame. Equal times (<see cref="Equals(Time)"/>)
+    /// can carry different labels, the same instant in two frames (#512).
+    /// </summary>
+    internal bool HasSameLabel(Time other)
+    {
+        return DateTime.Ticks == other.DateTime.Ticks && object.Equals(Frame, other.Frame);
+    }
+
+    /// <summary>
+    /// The equality of labels (<see cref="HasSameLabel"/>), for the library's caches whose values carry their key as a
+    /// label (the orientations of a <see cref="IO.Astrodynamics.Frames.Frame"/>, the range rates of the conjunction
+    /// search): a key in another frame, or a TDB tick next to one of the same TAI tick, is read again rather than given
+    /// the value of another label, as before 11.0.0, bit for bit (#512).
+    /// </summary>
+    internal static IEqualityComparer<Time> LabelComparer { get; } = new TimeLabelComparer();
+
+    private sealed class TimeLabelComparer : IEqualityComparer<Time>
+    {
+        public bool Equals(Time x, Time y) => x.HasSameLabel(y);
+
+        public int GetHashCode(Time time) => HashCode.Combine(time.DateTime.Ticks, time.Frame);
+    }
+
+    /// <summary>
+    /// The hash code of the instant: that of its TAI ticks (of its calendar for a default time), so that equal times,
+    /// in any frames, share it (#512).
+    /// </summary>
+    public override int GetHashCode()
+    {
+        return Frame is null ? DateTime.Ticks.GetHashCode() : TaiTicks().GetHashCode();
     }
 
     public int CompareTo(object obj)

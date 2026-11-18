@@ -69,8 +69,17 @@ public class MinimumStepNoiseTests
     /// The central differences resolve Φ to about 1e-7: the same comparison gives the same errors, to three digits, for
     /// the propagation at 1e-14 with the step on the state only, which takes no step at the minimum step size (its
     /// smallest is 7.5e-4 s). That propagation, the reference of Ψ_Cr at the noise floor (A2), resolves what the steps
-    /// accepted on the error of the state can change, so the test also bounds Φ against it: within 4.6e-11
-    /// (2026-10-26: 3.8e-11 on Linux, 4.0e-11 on Windows, 4.5e-11 on macOS arm64).
+    /// accepted on the error of the state can change, so the test also bounds Φ against it: within 2.7e-10 (CI run
+    /// 44225490669: 8.32e-11 on Linux x64, 1.34e-10 on Windows x64, 1.78e-11 on macOS arm64).
+    /// </para>
+    /// <para>
+    /// That measure is noise between two step sequences: steps accepted at the minimum step on the error of the state, the
+    /// error of Φ_vr at the rounding noise of the drag Jacobian. The exact SLERP of the orientation cache (#561), from which
+    /// the drag's co-rotating atmosphere reads the Earth's orientation, redrew it: 4.95e-11 on Linux x64, 3.50e-11 on
+    /// Windows x64 and 1.03e-11 on macOS arm64 on main a85098d (run 44055569759), threshold 9.1e-11. Starts one to 40 ulps
+    /// apart on Linux x64 give 2.9e-12 to 2.30e-10 after #561 (median 3.37e-11) and 4.9e-12 to 6.35e-10 before it (median
+    /// 2.85e-11): the distribution did not grow, its tail is heavy, and a later redraw of the dynamics may cross 2.7e-10
+    /// without a defect. Against the central differences the error stays 1.07e-7 to 1.14e-7 on every platform.
     /// </para>
     /// </remarks>
     [Fact]
@@ -87,10 +96,11 @@ public class MinimumStepNoiseTests
         var expected = WholePropagationDifferences.Phi(state => Propagate(body, state, ReferenceTolerance, null), start,
             3.0, 0.3, epochs);
 
-        // Assert: the thresholds are twice the worst errors over Linux, Windows and macOS arm64 (CI run 40317789704,
-        // 2026-10-26), rounded up at the second significant digit: 1.26e-7 against the central differences
-        // (Φ_vv at 150 s on Linux; 1.16e-7 on Windows, 6.10e-8 on macOS arm64), 4.53e-11 against Φ at 1e-14 on the
-        // steps of the state (at 150 s on macOS arm64; 3.80e-11 on Linux, 4.04e-11 on Windows)
+        // Assert: the thresholds are twice the worst errors over Linux x64, Windows x64 and macOS arm64 (CI run
+        // 44225490669, after #561), rounded up at the second significant digit: 1.14e-7 against the central differences
+        // (on Linux; 1.07e-7 on Windows, 7.67e-8 on macOS arm64; 1.05e-7 on main, 1.26e-7 on Linux in run 40317789704 of
+        // 2026-10-26), 1.34e-10 against Φ at 1e-14 on the steps of the state (on Windows; 8.32e-11 on Linux, 1.78e-11 on
+        // macOS arm64; see the remarks)
         double worst = 0.0;
         double worstOnTheStateSteps = 0.0;
         for (int k = 0; k < epochs.Length; k++)
@@ -109,8 +119,8 @@ public class MinimumStepNoiseTests
 
         _output.WriteLine($"MEASURE #468 Φ of the former failure, worst over the epochs: {worst:E2} against the " +
                           $"central differences, {worstOnTheStateSteps:E2} against Φ at 1e-14 on the steps of the state");
-        Assert.True(worst < 2.6e-7, $"Φ against the central differences: {worst:E2}");
-        Assert.True(worstOnTheStateSteps < 9.1e-11, $"Φ against Φ at 1e-14: {worstOnTheStateSteps:E2}");
+        Assert.True(worst < 2.3e-7, $"Φ against the central differences: {worst:E2}");
+        Assert.True(worstOnTheStateSteps < 2.7e-10, $"Φ against Φ at 1e-14: {worstOnTheStateSteps:E2}");
     }
 
     [Fact]

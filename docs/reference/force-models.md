@@ -14,7 +14,7 @@ new GravitationalAcceleration(centralBody)
 
 ### ThirdBodyPerturbation
 
-Third-body gravitational perturbation using Battin's numerically stable formula to avoid catastrophic cancellation when the perturbing body is distant.
+Third-body gravitational perturbation using Battin's numerically stable formula to avoid catastrophic cancellation when the perturbing body is distant, and the direct difference −μ ((r − d) / |r − d|³ + d / |d|³) where the spacecraft is closer to the perturbing body than half its distance to the central body (|r − d| < |d| / 2), where Battin's 1 + q = |r − d|² / |d|² would cancel: in SSB mode about the Earth (the Sun the central body, the Earth a third body) it put a relative noise of about 1e-7 on the Earth's attraction before 11.0.0 (#576, #544). The acceleration is within a few ε of the exact one at every distance (5.4e-15 relative bound), and Battin's bit for bit where it applies, so a propagation about the Earth with the Moon and the Sun does not move.
 
 ```csharp-signature
 new ThirdBodyPerturbation(perturbingBody, centralBody)
@@ -226,7 +226,7 @@ new ThermalRadiationPressure(spacecraft, emittingBody)
 |-------|-------------|
 | `IAtmosphericModel` | Common interface for density queries |
 | `EarthStandardAtmosphere` | The U.S. Standard Atmosphere 1976 from −5 to 1000 km, of the altitude alone: its layers below 86 km joined by transitions of ±100 m, its thermosphere above (#437); a mean static model, not for orbit determination; the base atmosphere of an Earth built without a model, which answers its altitude-only reads (`GetAtmosphere(double)`, a context without the geodetic position or the epoch), not its drag (decided by S. Guillet, 2026-11-14) |
-| `MarsStandardAtmosphere` | Simple Mars atmospheric model of the altitude: the NASA Glenn curve fit below 49.9 km, its branches joined over 500 m at 7 km (#433), the isothermal layer of Seiff (1982) at 139 K above; positive and decreasing at every altitude, but no thermosphere, so drag in orbit above about 120 km is underestimated (#431) |
+| `MarsStandardAtmosphere` | Simple Mars atmospheric model of the altitude: the NASA Glenn curve fit below 49.9 km, ρ = p / [0.1921 (T + 273.1)] with the fit's own 273.1 (#438; 273.15 before 11.0.0), its branches joined over 500 m at 7 km (#433), the isothermal layer of Seiff (1982) at 139 K above; positive and decreasing at every altitude, but no thermosphere, so drag in orbit above about 120 km is underestimated (#431) |
 | `Nrlmsise00Model` | Time-varying Earth model for drag analysis (thread-safe, its calls serialized on a lock of the instance); at nominal space weather, the atmosphere of an Earth built without a model, one instance per thread |
 
 ## Example

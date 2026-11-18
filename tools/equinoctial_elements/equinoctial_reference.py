@@ -470,6 +470,22 @@ def main():
             perigee_radius=7000000.0, dts=(0.0,)),
     ]
 
+    # #450: elements within the domain of EQNCPV (e below 0.9) whose mean and true longitudes differ, which
+    # SpiceAPI.ConvertEquinoctialElementsToStateVector gave the state of another point of the orbit (1029 km off for a LEO,
+    # 27 900 km at e = 0.89): a LEO, an ellipse of e 0.89 and the equatorial ellipse of the issue (H = K = 0)
+    t10 = math.tan(10.0 * D)
+    eqncpv = [
+        eq('LEO, e 0.1, i 20, node 40, lop 1 rad, L 2 rad', 'eqncpv', 6800.0e3 * (1.0 - 0.01), 0.1 * math.cos(1.0),
+           0.1 * math.sin(1.0), t10 * math.cos(40.0 * D), t10 * math.sin(40.0 * D), 2.0),
+        eq('e 0.89, a 20000 km, i 30, node 40, lop 0.7 rad, L 1.2 rad', 'eqncpv', 20000.0e3 * (1.0 - 0.89 * 0.89),
+           0.89 * math.cos(0.7), 0.89 * math.sin(0.7), h155, k155, 1.2),
+        eq('e 0.89, a 20000 km, i 30, node 40, lop 0.7 rad, L 3.5 rad', 'eqncpv', 20000.0e3 * (1.0 - 0.89 * 0.89),
+           0.89 * math.cos(0.7), 0.89 * math.sin(0.7), h155, k155, 3.5),
+        eq('equatorial, a 7000 km, e 0.1, lop 1 rad, L 2 rad', 'eqncpv', 7000.0e3 * (1.0 - 0.01), 0.1 * math.cos(1.0),
+           0.1 * math.sin(1.0), 0.0, 0.0, 2.0),
+        eq('circular, i 30, node 40, f -0.0, g 0.0, L 115', 'eqncpv', 7000.0e3, -0.0, 0.0, h155, k155, 115.0 * D),
+    ]
+
     tle = [
         tle_create('mean, circular, i 51.6, node 40, L 115', 6778.137e3, 0.0, 0.0, t258 * math.cos(40.0 * D),
                    t258 * math.sin(40.0 * D), 115.0 * D),
@@ -487,7 +503,7 @@ def main():
         'gm': {name: text(value) for name, value in gen.gm.items()},
         'walker_vs_classical_m': mp.nstr(gen.walker_vs_classical, 3),
         'equinoctial': cases, 'cli': cli, 'parabolic': parabolic, 'undefined': undefined, 'keplerian': keplerian,
-        'tle_create': tle}, indent=1, ensure_ascii=False))
+        'tle_create': tle, 'eqncpv': eqncpv}, indent=1, ensure_ascii=False))
 
 
 if __name__ == '__main__':

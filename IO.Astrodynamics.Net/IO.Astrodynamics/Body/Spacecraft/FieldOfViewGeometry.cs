@@ -63,25 +63,33 @@ internal static class FieldOfViewGeometry
     /// <param name="crossAngle">Its half-angle across the reference plane, rad; ignored for a circle.</param>
     /// <param name="axes">Its axes.</param>
     /// <param name="target">The target as the observer sees it.</param>
-    /// <exception cref="InvalidOperationException">For a circle or an ellipse: the target is at the observer (distance 0; a
-    /// point has no direction, an ellipsoid holds the observer), or the cone of the field cannot be built
-    /// (<see cref="Cone"/>). For a rectangle and an ellipsoid target: the observer is inside the target.</exception>
+    /// <exception cref="InvalidOperationException">For any shape, a point target at the observer (distance 0: it has no
+    /// direction; the rectangle took the angles of the zero vector as 0 and reported it in view before 11.0.0, #721). For a
+    /// circle or an ellipse: an ellipsoid target centred on the observer (it holds the observer), or the cone of the field
+    /// cannot be built (<see cref="Cone"/>). For a rectangle and an ellipsoid target: the observer is inside the
+    /// target.</exception>
     internal static double Margin(InstrumentShape shape, double refAngle, double crossAngle, in FieldOfViewAxes axes, in OccultationBody target)
     {
+        double distance = target.Center.Magnitude();
+        if (target.IsPoint && !(distance > 0.0))
+        {
+            // A point at the observer has no direction, whatever the shape of the field; the field itself is not at fault
+            // (review of #715; the rectangle, whose margin took atan2(0, 0) = 0, since #721)
+            throw new InvalidOperationException(
+                $"The target is at the observer (distance {distance} m): it has no direction, so it is neither in nor out of the field of view.");
+        }
+
         if (shape == InstrumentShape.Rectangular)
         {
             return target.IsPoint ? RectanglePointMargin(refAngle, crossAngle, axes, target.Center) : RectangleEllipsoidMargin(refAngle, crossAngle, axes, target);
         }
 
         double cross = shape == InstrumentShape.Circular ? refAngle : crossAngle;
-        double distance = target.Center.Magnitude();
         if (!(distance > 0.0))
         {
-            // The cone at distance 0 has no extent: a point target there has no direction, and the observer is at the
-            // center of an ellipsoid target; the field itself is not at fault (review of #715)
-            throw new InvalidOperationException(target.IsPoint
-                ? $"The target is at the observer (distance {distance} m): it has no direction, so it is neither in nor out of the field of view."
-                : $"The observer is inside the target, or on its surface (at its center, distance {distance} m).");
+            // The cone at distance 0 has no extent: the observer is at the center of an ellipsoid target; the field itself is
+            // not at fault (review of #715)
+            throw new InvalidOperationException($"The observer is inside the target, or on its surface (at its center, distance {distance} m).");
         }
 
         var cone = Cone(refAngle, cross, axes, distance);

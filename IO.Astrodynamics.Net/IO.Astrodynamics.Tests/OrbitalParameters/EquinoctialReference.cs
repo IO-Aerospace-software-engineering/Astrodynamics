@@ -43,6 +43,7 @@ internal sealed class EquinoctialReference
         Undefined = root.GetProperty("undefined").EnumerateArray().Select(EquinoctialCase.Read).ToList();
         Keplerian = root.GetProperty("keplerian").EnumerateArray().Select(KeplerianCase.Read).ToList();
         TleCreate = root.GetProperty("tle_create").EnumerateArray().Select(TleCreateCase.Read).ToList();
+        Eqncpv = root.GetProperty("eqncpv").EnumerateArray().Select(EquinoctialCase.Read).ToList();
     }
 
     /// <summary>The Earth GM of the reference, m³/s², by kernel: gm_de440 for these tests, gm_de431 for the CLI
@@ -58,6 +59,10 @@ internal sealed class EquinoctialReference
     internal IReadOnlyList<EquinoctialCase> Undefined { get; }
     internal IReadOnlyList<KeplerianCase> Keplerian { get; }
     internal IReadOnlyList<TleCreateCase> TleCreate { get; }
+
+    /// <summary>The elements of #450 within the domain of EQNCPV whose mean and true longitudes differ (a LEO, e = 0.89,
+    /// an equatorial ellipse, a circular orbit of f = −0.0).</summary>
+    internal IReadOnlyList<EquinoctialCase> Eqncpv { get; }
 
     internal static EquinoctialReference Load()
     {

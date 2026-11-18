@@ -46,7 +46,7 @@ standard output. A valid TLE still needs the kernels that define the Earth (its 
 | `ToOsculating(Time)` | Convert to osculating StateVector at epoch |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly |
 | `ToOmm(string originator)` | Convert to CCSDS OMM |
-| `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters |
+| `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` |
 
 ## SGP4/SDP4
 
@@ -65,7 +65,17 @@ The epoch is the UTC instant of the field, exact: the day fraction is read in de
 (#603). `Create` and `ToTLE` write the UTC of the elements' epoch, whatever its time frame (#479), each field the
 nearest value its columns hold: the epoch to the 1e-8 day with the carry into the next day and year (#600), B* and n̈/6
 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601), e in [0, 0.9999999] (#602), a zero without
-a sign (#480).
+a sign (#480). Without an element set number, `Create`, the TLE `Configuration` of `ToTLE` and `Omm.ToTle` (an OMM
+without `ELEMENT_SET_NO`) write `TLE.DefaultElementSetNumber`, 999, as CelesTrak and Space-Track publish (#606, decided
+by S. Guillet, 2026-11-17; before 11.0.0, `Create` and `ToTLE` wrote 9999).
+
+A TLE holds SGP4 mean elements of an Earth orbit in TEME, so `Create` throws `ArgumentException` (`meanElements`) for
+elements that are not mean, not in `Frame.TEME` (frames compared by name) or not about the Earth (NAIF id 399), and
+`ToTLE` throws `InvalidOperationException` before its fit for orbital parameters that are not about the Earth, in any
+frame (#607, decided by S. Guillet, 2026-11-17; before 11.0.0, `Create` wrote elements in another frame or about another
+centre as if they were, their angles taken as TEME's and their mean motion from their centre's GM, and `ToTLE` took an
+orbit about another centre for an Earth orbit and failed in its fit). Rotate mean elements to TEME with
+`ToFrame(Frame.TEME)` before `Create`, or give `ToTLE` the osculating state, which it rotates to TEME itself.
 
 The states of SGP4/SDP4 are in `Frame.TEME`, the managed TEME frame ([Frames](frames.md#teme)); `ToFrame(Frame.ICRF)`
 needs no Earth orientation kernel, at any epoch. The Earth a TLE refers to is built in an inertial frame, so that a TLE
@@ -113,9 +123,11 @@ A TLE spacecraft reads its stored states after a numerical propagation by any pa
 the window searches, the conjunction analysis with the check of #527, the avoidance options on its force model), and
 SGP4 otherwise: unpropagated, or sampled by `TLEPropagator`, which adds its states without changing the rule. One read
 of a sampled spacecraft is not SGP4 at the instant: `GetEphemeris` from its Earth without aberration interpolates the
-samples of `TLEPropagator`, as before (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s); its
-geometric state, and the reads from any other body, are SGP4.
-`Spacecraft.ToOpm` writes the SGP4 state (#658). For SGP4 itself, use `TLEPropagator` or `tle.ToStateVector(t)`.
+samples of `TLEPropagator`, as before (SGP4 at the samples, 9.1e-4 m from it between them for the ISS at 60 s over one UTC hour, 7.6e-4 m before #598 moved the last sample to the window end), and
+reads SGP4 outside them (#527; it extrapolated them before, 20.7 m 6 min before the first sample); its geometric state,
+and the reads from any other body, are SGP4.
+`Spacecraft.ToOpm` writes the propagated state, in TEME, after a numerical propagation, and the SGP4 state otherwise,
+also when `TLEPropagator` sampled it (#658, decided by S. Guillet, 2026-11-17; the SGP4 state on every path before 11.0.0). For SGP4 itself, use `TLEPropagator` or `tle.ToStateVector(t)`.
 
 ## See Also
 

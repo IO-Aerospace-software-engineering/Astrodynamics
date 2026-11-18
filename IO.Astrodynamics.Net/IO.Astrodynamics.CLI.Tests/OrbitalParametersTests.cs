@@ -255,6 +255,90 @@ public class OrbitalParametersTests
             new Math.Vector3(Number(4), Number(5), Number(6)), observer, epoch, Frames.Frame.ICRF);
     }
 
+    private static readonly Regex SemiLatusRectumRx = new(@" P : (\S+) F : ");
+
+    [Fact]
+    public void NearParabolicSvToEquinoctial_PrintsAFiniteSemiLatusRectum()
+    {
+        using (Configuration.Lock())
+        {
+            // Arrange: r = (7000 km, 0, 0), v = (0, 10671.729487052813, 0) m/s about the Earth, e − 1 about −5e-7, in the
+            // band |e − 1| < 1e-6 (#462: the converter printed P : Infinity)
+            var command = new OrbitalParametersConverterCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+
+            // Act
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "7000000.0 0.0 0.0 0.0 10671.729487052813 0.0", CenterOfMotionId = 399,
+                OrbitalParametersEpoch = "0.0", Frame = "ICRF", FromStateVector = true, FromKeplerian = false,
+                FromEquinoctial = false, FromTLE = false
+            }, false, false, true, new EpochParameters());
+            var res = sb.ToString();
+
+            // Assert: P = h²/μ of the state, with the GM of the kernels of these tests (gm_de431)
+            var match = SemiLatusRectumRx.Match(res);
+            Assert.True(match.Success, res);
+            double p = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+            double h = 7000000.0 * 10671.729487052813;
+            double expected = h * h / new Body.CelestialBody(399).GM;
+            _output.WriteLine($"MEASURE #462 CLI P relative error: {(p - expected) / expected:E3}");
+            Assert.True(double.IsFinite(p), res);
+            // Measured 0 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669: the printed double is h²/μ to its
+            // last bit); the bound is a stated allowance of two ulps for the round trip through the text, not a record
+            Assert.InRange((p - expected) / expected, -4.5e-16, 4.5e-16);
+        }
+    }
+
+    [Fact]
+    public void ParabolicEquinoctialWithoutPerigeeRadiusToSv_PrintsItsState()
+    {
+        using (Configuration.Lock())
+        {
+            // Arrange: --from-equinoctial passes no perigee radius: case 1 of #477, P = 14 000 km, F = 1, G = 0, H = 0.1,
+            // K = 0.05, L0 = 0.5 rad, a parabola with q = P / 2 (before: ArgumentException from AtEpoch)
+            var command = new OrbitalParametersConverterCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+
+            // Act
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "14000000.0 1.0 0.0 0.1 0.05 0.5", CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
+                Frame = "ICRF", FromStateVector = false, FromKeplerian = false, FromEquinoctial = true, FromTLE = false
+            }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF");
+            var res = sb.ToString();
+
+            // Assert: the position of the elements at their epoch, the 60-digit closed form (its geometry does not read
+            // the GM; tools/near_parabolic/near_parabolic_reference.py)
+            var state = ParseState(res, new Body.CelestialBody(399), TimeSystem.Time.J2000TDB);
+            var expected = new Math.Vector3(6546595.968654342, 3568802.005525925, 59848.915685823675);
+            double error = (state.Position - expected).Magnitude() / expected.Magnitude();
+            _output.WriteLine($"MEASURE #477 CLI --from-equinoctial parabola, |Δr| / |r|: {error:E3}");
+            // Worst 2.9e-16 on Linux x64 and macOS arm64, 1.3e-16 on Windows x64 (CI run 44225490669); twice the worst
+            Assert.InRange(error, 0.0, 5.8e-16);
+        }
+    }
+
+    [Fact]
+    public async Task EquinoctialWithANegativeSemiLatusRectum_IsRefused()
+    {
+        // --from-equinoctial with P = −7000 km: no conic has p ≤ 0 (#481: before, a mirrored position with a NaN velocity
+        // through ToStateVector, NaN states through AtEpoch)
+        var command = new OrbitalParametersConverterCommand();
+        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "-7000000.0 0.1 0.05 0.2 0.1 1.0", CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
+                Frame = "ICRF", FromStateVector = false, FromKeplerian = false, FromEquinoctial = true, FromTLE = false
+            }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF"));
+        Assert.Equal("p", exception.ParamName);
+        Assert.Contains("semi-latus rectum P must be finite and above 0", exception.Message);
+    }
+
     [Fact]
     public async Task Exceptions()
     {

@@ -221,7 +221,7 @@ public class ManeuverEngineBindingTests
         Assert.Contains(spacecraft.Name, rejected.Message);
         Assert.True(spacecraft.IsPropagated);
         Assert.NotNull(states);
-        Assert.Equal(states, spacecraft.InterpolatedStatesWindow);
+        LabelAssert.Equal(states, spacecraft.InterpolatedStatesWindow);
         var midAfter = spacecraft.GetGeometricStateRelativeTo(mid, earth);
         Assert.Equal(midState.Position, midAfter.Position);
         Assert.Equal(midState.Velocity, midAfter.Velocity);
@@ -281,7 +281,7 @@ public class ManeuverEngineBindingTests
         Assert.Contains(foreignEngine.Name, rejected.Message);
         Assert.Contains(spacecraft.Name, rejected.Message);
         Assert.True(spacecraft.IsPropagated);
-        Assert.Equal(states, spacecraft.InterpolatedStatesWindow);
+        LabelAssert.Equal(states, spacecraft.InterpolatedStatesWindow);
         var midAfter = spacecraft.GetGeometricStateRelativeTo(Epoch.AddSeconds(3600.0), earth);
         Assert.Equal(midState.Position, midAfter.Position);
         Assert.Equal(midState.Velocity, midAfter.Velocity);

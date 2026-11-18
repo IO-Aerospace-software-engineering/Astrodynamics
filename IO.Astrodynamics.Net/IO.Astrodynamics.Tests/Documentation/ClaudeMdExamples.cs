@@ -181,13 +181,13 @@ namespace ClaudeMdSamples
         }
 
         // IO.Astrodynamics.Net/CLAUDE.md, "Maneuver Integration"
-        internal static Opm Net08(Spacecraft spacecraft)
+        internal static Opm Net08(Spacecraft spacecraft, Time end)
         {
             #region net:8
-            // spacecraft: a propagated spacecraft with a COSPAR id
-            // Executed maneuvers are automatically included in ToOpm()
-            var opm = spacecraft.ToOpm(includeManeuvers: true);
-            // OPM will contain OpmManeuverParameters for each executed ImpulseManeuver
+            // spacecraft: a propagated spacecraft with a COSPAR id; end: an epoch of its propagation after its burns
+            // The OPM carries the state of its epoch, with the mass and the maneuvers ignited by then (#658)
+            var opm = spacecraft.ToOpm(epoch: end, includeManeuvers: true);
+            // OPM will contain OpmManeuverParameters for each ImpulseManeuver ignited by then
 
             // Manual maneuver export from ImpulseManeuver
             foreach (var maneuver in spacecraft.ExecutedManeuvers)

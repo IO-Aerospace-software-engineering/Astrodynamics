@@ -157,7 +157,8 @@ public class SpacecraftKernelsTests
                 // The epoch the command printed: the instant of the grid, within the rounding of a UTC window to the tick
                 var epoch = new Time(Between(lines[i], "Epoch : ", " Orientation :"));
                 Assert.True(System.Math.Abs((epoch - Start.AddSeconds(3.25 + 6.5 * i)).TotalSeconds) <= 1.0e-7, lines[i]);
-                Assert.EndsWith($"Frame : {(frameArgument == "ICRF" ? "j2000" : frameArgument)}", lines[i]);
+                // ICRF is Frame.ICRF, labelled J2000 on every path (#657; before, the command rewrote it as j2000)
+                Assert.EndsWith($"Frame : {(frameArgument == "ICRF" ? "J2000" : frameArgument)}", lines[i]);
                 var n = Numbers(Between(lines[i], "Orientation :", " Frame :"));
                 Assert.Equal(7, n.Length);
                 var rotation = new Quaternion(n[0], n[1], n[2], n[3]);

@@ -361,26 +361,14 @@ public class KeplerEquationTests
         Func<double> solve = eccentricity < 1.0
             ? () => KeplerEquation.EllipticAnomaly(meanAnomaly, eccentricity)
             : () => KeplerEquation.HyperbolicAnomaly(meanAnomaly, eccentricity);
-        var elements = Elements(eccentricity, meanAnomaly, Earth());
 
-        // Act and assert: InvalidOperationException naming e and M, where NaN was returned before #453
-        // (KeplerianElements normalizes an infinite M of an ellipse to NaN); at the epoch, through AtEpoch, whose M is
-        // NaN at e = ∞ (0 s times an infinite mean motion), and from the start of a propagation by RK7(8) (which failed
-        // after 100 rejected steps) and by Velocity-Verlet (which propagated NaN)
+        // Act and assert: the solver throws InvalidOperationException naming e and M, where NaN was returned before #453.
+        // Elements with a non-finite M or e are refused when they are built (#476, #726), so the conversions of
+        // KeplerianElements, AtEpoch and the start of a propagation, which reached the solver's guard on them before,
+        // never see them; the solver keeps its guard for its other callers
         AssertGuard(() => solve(), eccentricity, meanAnomaly);
-        AssertGuard(() => elements.EccentricAnomaly(), eccentricity, elements.M);
-        if (!double.IsNaN(eccentricity))
-        {
-            double atEpoch = elements.AtEpoch(Epoch).MeanAnomaly();
-            AssertGuard(() => elements.TrueAnomaly(), eccentricity, elements.M);
-            AssertGuard(() => elements.TrueLongitude(), eccentricity, elements.M);
-            AssertGuard(() => elements.ToStateVector(), eccentricity, elements.M);
-            AssertGuard(() => elements.ToStateVector(Epoch), eccentricity, atEpoch);
-            AssertGuard(() => elements.TrueAnomaly(Epoch), eccentricity, atEpoch);
-            AssertGuard(() => elements.TrueLongitude(Epoch), eccentricity, atEpoch);
-            AssertGuard(() => Propagator(elements, true), eccentricity, atEpoch);
-            AssertGuard(() => Propagator(elements, false), eccentricity, atEpoch);
-        }
+        var refused = Assert.ThrowsAny<ArgumentException>(() => Elements(eccentricity, meanAnomaly, Earth()));
+        Assert.Equal(double.IsFinite(eccentricity) ? "meanAnomaly" : "eccentricity", refused.ParamName);
     }
 
     private static void AssertGuard(Func<object> call, double eccentricity, double meanAnomaly)

@@ -21,7 +21,7 @@ public class RetrogradeAttitudeTests
         FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021","sn0", 4000.0,3000.0);
         Engine eng = new Engine("My engine", "model 1","sn1", 350.0, 50.0, fuelTank10);
         RetrogradeAttitude attitude = new RetrogradeAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromHours(1.0), eng);
-        Assert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),attitude.MinimumEpoch);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),attitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0),attitude.ManeuverHoldDuration);
         Assert.NotNull(attitude.Engine);
         Assert.Equal(eng,attitude.Engine);
@@ -37,9 +37,9 @@ public class RetrogradeAttitudeTests
         RetrogradeAttitude maneuver = new RetrogradeAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
         maneuver.TryExecute(orbitalParams.ToStateVector());
 
-        Assert.Equal(new StateOrientation(new Quaternion(0.0, -1.0, 0.0, 0.0), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), maneuver.StateOrientation);
+        LabelAssert.Equal(new StateOrientation(new Quaternion(0.0, -1.0, 0.0, 0.0), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), maneuver.StateOrientation);
         Assert.Equal(0.0, maneuver.FuelBurned);
-        Assert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
-        Assert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);
     }
 }

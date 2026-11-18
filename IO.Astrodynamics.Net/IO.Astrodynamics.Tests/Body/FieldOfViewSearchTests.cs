@@ -588,18 +588,18 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
         var point = instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Point, Aberration.LT, Step).ToArray();
-        Assert.Equal(_case.SearchWindow.StartDate, point[0].StartDate);
+        LabelAssert.Equal(_case.SearchWindow.StartDate, point[0].StartDate);
         var ellipsoid = instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step).ToArray();
         Assert.Equal(2, ellipsoid.Length);
-        Assert.Equal(_case.SearchWindow.StartDate, ellipsoid[0].StartDate);
-        Assert.Equal(_case.SearchWindow.EndDate, ellipsoid[1].EndDate);
+        LabelAssert.Equal(_case.SearchWindow.StartDate, ellipsoid[0].StartDate);
+        LabelAssert.Equal(_case.SearchWindow.EndDate, ellipsoid[1].EndDate);
 
         var inside = new Window(_case.Start.AddSeconds(100.0), _case.Start.AddSeconds(200.0));
         var managed = instrument.FindWindowsInFieldOfViewConstraint(inside, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step).ToArray();
         var spice = _case.KernelInstrument(789).FindWindowsInFieldOfViewConstraint(inside, _case.Kernel, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step).ToArray();
         Assert.Single(managed);
-        Assert.Equal(inside.StartDate, managed[0].StartDate);
-        Assert.Equal(inside.EndDate, managed[0].EndDate);
+        LabelAssert.Equal(inside.StartDate, managed[0].StartDate);
+        LabelAssert.Equal(inside.EndDate, managed[0].EndDate);
         Assert.True(FieldOfViewKernels.WorstEdge(managed, spice) < PublicPathsLimit);
     }
 
@@ -683,7 +683,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(360.0)).ToArray();
         var expected = _case.Gftfov(789, "399", ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(360.0));
         Assert.Equal(2, expected.Length);
-        Assert.Equal(expected[0].StartDate, actual[0].StartDate);
+        LabelAssert.Equal(expected[0].StartDate, actual[0].StartDate);
         Assert.True(FieldOfViewKernels.WorstEdge(actual, expected) < PropagatedLimit);
     }
 

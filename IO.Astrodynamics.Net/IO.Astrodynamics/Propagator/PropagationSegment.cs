@@ -81,6 +81,15 @@ public sealed class PropagationSegment
     }
 
     /// <summary>
+    /// Replace the last accepted step: the step of an event that Velocity-Verlet integrates again to the label of the
+    /// event (#572).
+    /// </summary>
+    internal void ReplaceLastStep(in AcceptedStep step)
+    {
+        _steps[^1] = step;
+    }
+
+    /// <summary>
     /// Interpolate position and velocity at time t (seconds from BaseEpoch)
     /// using cubic Hermite interpolation within the appropriate step.
     /// </summary>

@@ -598,6 +598,7 @@ public class Opm
     /// <param name="indent">If true, indents the XML output for readability.</param>
     /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails and validateBeforeSave is true.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617).</exception>
     public void SaveToFile(string filePath, bool validateBeforeSave = true, bool wrapInNdm = true, bool indent = true)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -630,6 +631,7 @@ public class Opm
     /// <param name="indent">If true, indents the XML output for readability.</param>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails and validateBeforeSave is true.</exception>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617).</exception>
     public void SaveToStream(Stream stream, bool validateBeforeSave = true, bool wrapInNdm = true, bool indent = true)
     {
         if (stream == null)
@@ -659,6 +661,7 @@ public class Opm
     /// <param name="wrapInNdm">If true, wraps the OPM in an NDM container element.</param>
     /// <param name="indent">If true, indents the XML output for readability.</param>
     /// <returns>The OPM as an XML string.</returns>
+    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617).</exception>
     public string ToXmlString(bool wrapInNdm = true, bool indent = true)
     {
         var writer = new OpmWriter

@@ -34,7 +34,17 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 {
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
+
+    /// <summary>
+    /// The element set number written when none is given, by <see cref="Create"/>, <see cref="Configuration"/> (so
+    /// <see cref="OrbitalParameters.ToTLE"/>) and <c>Omm.ToTle</c> for an OMM without <c>ELEMENT_SET_NO</c>: 999, the
+    /// value CelesTrak and Space-Track publish (#606, decided by S. Guillet, 2026-11-17; before 11.0.0,
+    /// <see cref="Create"/> and <see cref="Configuration"/> wrote 9999). The field holds 0 to 9999.
+    /// </summary>
+    public const int DefaultElementSetNumber = 999;
     private const int MAX_REVOLUTIONS_AT_EPOCH = 99999;
+    // The centre of every TLE: SGP4 propagates Earth orbits only (#607)
+    internal const int EarthNaifId = 399;
     private KeplerianElements _meanKeplerianElements;
 
     // The TLE epoch as CSPICE's getelm_c reads it (ET, TDB seconds from J2000), read once from the native layer: SGP4
@@ -328,7 +338,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// revolutions/day² (default: 0.0), as OMM's <c>MEAN_MOTION_DOT</c> (#605).</param>
     /// <param name="nDDot">The value of the second-derivative field, n̈/6 (a sixth of the second derivative of the mean
     /// motion), in revolutions/day³ (default: 0.0), as OMM's <c>MEAN_MOTION_DDOT</c> (#605).</param>
-    /// <param name="elementSetNumber">The element set number (default: 9999).</param>
+    /// <param name="elementSetNumber">The element set number, 0 to 9999 (default: <see cref="DefaultElementSetNumber"/>, 999,
+    /// #606).</param>
     /// <returns>A new TLE instance constructed from the provided parameters.</returns>
     /// <remarks>
     /// Each field is the nearest value its columns represent: the epoch the UTC of the elements' epoch, whatever its
@@ -336,17 +347,31 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// (#602); B* and n̈/6 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601); a value that rounds
     /// to zero, −0.0 included, without a sign (#480).
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Thrown when orbitalParams or name is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when cosparId is null, whitespace, or not between 6-8 characters.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when meanElements or name is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when meanElements are not mean elements, are not in <see cref="Frame.TEME"/>
+    /// or are not about the Earth (NAIF id 399): a TLE holds SGP4 mean elements of an Earth orbit in TEME (#607; before
+    /// 11.0.0, elements in another frame or about another centre were written as if they were, their angles taken as
+    /// TEME's and their mean motion from their centre's GM); or when cosparId is null, whitespace, or not between 6-8
+    /// characters.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
     /// </exception>
     public static TLE Create(OrbitalParameters meanElements, string name, int noradId, string cosparId, int revolutionsAtEpoch,
-        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = MAX_ELEMENT_SET_NUMBER)
+        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
     {
         if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
         if (meanElements.ElementsType != OrbitalElementsType.Mean)
             throw new ArgumentException("Orbital parameters must be mean elements. Use KeplerianElements.FromOMM() or ensure ElementsType is Mean.", nameof(meanElements));
+
+        // A TLE holds SGP4 mean elements of an Earth orbit in TEME (#607)
+        if (meanElements.Frame != Frame.TEME)
+            throw new ArgumentException(
+                $"The mean elements are in {meanElements.Frame.Name}: a TLE holds SGP4 mean elements of an Earth orbit in TEME.",
+                nameof(meanElements));
+        if (meanElements.Observer.NaifId != EarthNaifId)
+            throw new ArgumentException(
+                $"The mean elements are about {meanElements.Observer.Name} ({meanElements.Observer.NaifId}): a TLE holds SGP4 mean " +
+                "elements of an Earth orbit in TEME.", nameof(meanElements));
 
         return CreateInternal(meanElements, name, noradId, cosparId, revolutionsAtEpoch, classification, bstar, nDot, nDDot, elementSetNumber);
     }
@@ -356,7 +381,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// This method does not validate ElementsType, allowing iterative convergence from osculating to mean elements.
     /// </summary>
     internal static TLE CreateInternal(OrbitalParameters orbitalParams, string name, int noradId, string cosparId, int revolutionsAtEpoch,
-        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = MAX_ELEMENT_SET_NUMBER)
+        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
     {
         if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
         if (name == null) throw new ArgumentNullException(nameof(name));
@@ -786,6 +811,18 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
+    /// The osculating Keplerian elements of <see cref="ToKeplerianElements()"/>, SGP4's state at the epoch of the TLE,
+    /// moved by the two-body motion to <paramref name="epoch"/>: osculating, though the TLE is mean (#463).
+    /// </summary>
+    /// <param name="epoch">The epoch of the elements.</param>
+    /// <returns>Osculating <see cref="KeplerianElements"/> at <paramref name="epoch"/>. For SGP4's state at that epoch, use
+    /// <see cref="ToOsculating(Time)"/>.</returns>
+    public override KeplerianElements ToKeplerianElements(Time epoch)
+    {
+        return ToKeplerianElements().ToKeplerianElements(epoch);
+    }
+
+    /// <summary>
     /// Converts the TLE to osculating Equinoctial elements.
     /// </summary>
     /// <returns>
@@ -902,7 +939,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return base.Equals(other) && Line1 == other.Line1 && Line2 == other.Line2 && Name == other.Name;
+        // The lines hold the elements and the epoch, the constructor sets the observer (the Earth) and the frame (TEME):
+        // no state is computed (#475; before 11.0.0 the base comparison ran SGP4 on both)
+        return GetType() == other.GetType() && Line1 == other.Line1 && Line2 == other.Line2 && Name == other.Name;
     }
 
     /// <summary>

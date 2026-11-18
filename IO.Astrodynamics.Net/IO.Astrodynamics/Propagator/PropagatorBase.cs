@@ -76,6 +76,54 @@ public abstract class PropagatorBase : IPropagator
     private readonly double _windowLength;
 
     /// <summary>
+    /// The span a propagation integrates (#626): its output count, its length in seconds of the time argument and the TDB
+    /// label of its end, which lies up to half an output step past the end of the window when the step does not divide
+    /// it, and whether its last output is labelled with the end of the window (TT, within the drift of the labels).
+    /// </summary>
+    internal readonly record struct PropagationSpan(uint OutputCount, double Duration, Time End, bool EndsAtWindowEnd)
+    {
+        /// <summary>
+        /// The window of the caches of the forces: from the start of <paramref name="tdbWindow"/> to the later of its end
+        /// and the end of the span, so that they hold every epoch the propagation reads (#626: they ended with the window,
+        /// and past it the orientation of the central body was held at its last grid point and the bodies
+        /// extrapolated).
+        /// </summary>
+        internal Window CacheWindow(in Window tdbWindow) =>
+            new(tdbWindow.StartDate, End > tdbWindow.EndDate ? End : tdbWindow.EndDate);
+    }
+
+    /// <summary>
+    /// The span of a propagation over <paramref name="tdbWindow"/>, of <paramref name="windowLength"/> seconds of
+    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/>: it runs to the last output,
+    /// round(L/ΔT)·ΔT, the window's length when that is shorter; in TT, a grid that misses the end of the window by the
+    /// drift between TT and the labels ends at the window, its last output labelled with the end of the window.
+    /// </summary>
+    internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, double windowLength,
+        in Window tdbWindow, TimeSpan deltaT)
+    {
+        uint outputCount = (uint)System.Math.Round(windowLength / deltaT.TotalSeconds,
+            MidpointRounding.AwayFromZero) + 1;
+        double outputDuration = (outputCount - 1) * deltaT.TotalSeconds;
+        bool endsAtWindowEnd = timeArgument.EndsAtWindowEnd(windowLength, outputDuration);
+        double duration = endsAtWindowEnd ? windowLength : System.Math.Max(windowLength, outputDuration);
+        var end = endsAtWindowEnd ? tdbWindow.EndDate : timeArgument.EpochAt(tdbWindow.StartDate, duration);
+        return new PropagationSpan(outputCount, duration, end, endsAtWindowEnd);
+    }
+
+    /// <summary>
+    /// The span of a propagation over <paramref name="window"/> as the caller tagged it, before a propagator exists: the
+    /// span <see cref="Span"/> of the propagator built from the same inputs.
+    /// </summary>
+    internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, in Window window, TimeSpan deltaT)
+    {
+        var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        return SpanOf(timeArgument, timeArgument.Length(window, tdbWindow), tdbWindow, deltaT);
+    }
+
+    /// <summary>The span this propagation integrates (#626).</summary>
+    private protected PropagationSpan Span => SpanOf(TimeArgument, _windowLength, Window, DeltaT);
+
+    /// <summary>
     /// A propagator over TDB seconds, with output states every <paramref name="deltaT"/>.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
@@ -111,6 +159,7 @@ public abstract class PropagatorBase : IPropagator
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
         ValidateInertialFrame(spacecraft);
+        ValidateOsculatingInitialOrbit(spacecraft);
         // A cycle in the maneuver chain would never end the walks of the chain: rejected before anything runs (#585)
         var initialChain = Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
         var standbyChain = Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
@@ -339,14 +388,28 @@ public abstract class PropagatorBase : IPropagator
     /// of the conjunction analysis and of <see cref="StateVector.WithRemediatedCovariance"/> (#405); the propagation
     /// itself never calls it.
     /// </summary>
+    /// <remarks>
+    /// The depth of the defect is bounded (#443, decided by S. Guillet, 2026-11-17): the smallest eigenvalue of the
+    /// correlation matrix at least −<see cref="CovarianceChecks.RemediationDepthBound"/> of its trace in the frame of the
+    /// state, or in the RTN frame of <paramref name="state"/> (the frame of the covariances of a CDM): the bound covers the
+    /// rounding of every element to 4 significant digits in the frame it was rounded in, and a rotation to another frame
+    /// can deepen that defect without bound in the correlation matrix (a covariance of LEO rounded in RTN and rotated to
+    /// ICRF: up to 2.4e-2 of the trace measured for a full-rank covariance, near −1 for a degenerate one). The clipping
+    /// is made in a frame where the depth passes: the frame of the state when it passes there, as before; otherwise the
+    /// RTN frame, the result rotated back, so that the change stays of the size of the rounding (clipped in the frame of
+    /// the state, a covariance rounded in RTN changed by up to 2.9 √(M_ii M_jj), adversarial review of #443).
+    /// </remarks>
     /// <param name="p0">The initial covariance.</param>
+    /// <param name="state">The state the covariance belongs to, whose RTN frame is the second frame of the bound; null,
+    /// or a rectilinear state (no RTN frame), for the frame of the covariance only.</param>
     /// <param name="remediated">The remediated covariance; null when <paramref name="p0"/> is accepted as it is, or
     /// refused.</param>
     /// <param name="smallestEigenvalue">The smallest eigenvalue of the correlation matrix of <paramref name="p0"/>, its
     /// positive variances (zero when none is); NaN when it is refused.</param>
     /// <returns>Null when <paramref name="p0"/> is accepted or remediated; otherwise why it is not one that rounding
-    /// explains: not 6×6, not finite, a negative variance, an asymmetry beyond the tolerance.</returns>
-    internal static string RemediateInitialCovariance(Math.Matrix p0, out Math.Matrix? remediated,
+    /// explains: not 6×6, not finite, a negative variance, an asymmetry beyond the tolerance, a defect deeper than the
+    /// bound in both frames (its depth in the message).</returns>
+    internal static string RemediateInitialCovariance(Math.Matrix p0, StateVector state, out Math.Matrix? remediated,
         out double smallestEigenvalue)
     {
         remediated = null;
@@ -370,6 +433,32 @@ public abstract class PropagatorBase : IPropagator
         if (clipped == null)
             return refusal;
 
+        // The depth of the defect, in the frame of the covariance, then in the RTN frame of its state (#443). The clipping
+        // is made in a frame where the depth passes the bound: the frame of the state when it passes there (as before
+        // 11.0.0), the RTN frame otherwise, so that the change stays of the size of the rounding the bound explains (a
+        // covariance rounded in RTN and rotated can be deep in the frame of the state, where its clipping changed it by up
+        // to 2.9 √(M_ii M_jj), adversarial review of #443)
+        int positive = Enumerable.Range(0, 6).Count(i => values[6 * i + i] > 0.0);
+        double depth = smallestEigenvalue / positive;
+        if (depth < -CovarianceChecks.RemediationDepthBound)
+        {
+            var rtn = RtnCovariance(p0, state, out var r6);
+            double rtnDepth = rtn == null ? double.NaN : CovarianceChecks.RelativeDepth(rtn, 6);
+            var clippedRtn = rtnDepth >= -CovarianceChecks.RemediationDepthBound
+                ? CovarianceChecks.RemediateByEigenvalueClipping(rtn, 6)
+                : null;
+            clipped = clippedRtn == null ? null : FromRtn(clippedRtn, r6);
+            if (clipped == null)
+            {
+                smallestEigenvalue = double.NaN;
+                return "The covariance is not positive semi-definite beyond what rounding explains: the smallest " +
+                       $"eigenvalue of its correlation matrix is {depth:E3} of its trace" +
+                       (double.IsNaN(rtnDepth) ? "" : $" ({rtnDepth:E3} in the RTN frame of its state)") +
+                       $", deeper than the bound of {CovarianceChecks.RemediationDepthBound:E1} that the rounding of its " +
+                       "elements to 4 significant digits explains (#443).";
+            }
+        }
+
         var matrix = new Math.Matrix(6, 6);
         for (int i = 0; i < 6; i++)
         {
@@ -381,6 +470,54 @@ public abstract class PropagatorBase : IPropagator
 
         remediated = matrix;
         return null;
+    }
+
+    // p0 in the RTN frame of its state, P_RTN = R P Rᵀ, R the block-diagonal rotation of the RTN axes (r6), symmetrized;
+    // null without a state or for a rectilinear one (no RTN frame)
+    private static double[] RtnCovariance(Math.Matrix p0, StateVector state, out Math.Matrix r6)
+    {
+        r6 = default;
+        double h = state?.Position.Cross(state.Velocity).Magnitude() ?? double.NaN;
+        if (!(h > 0.0) || !(state.Position.Magnitude() > 0.0))
+            return null;
+
+        var rotation = state.CreateRtnRotation();
+        r6 = Math.Matrix.CreateBlockDiagonal(rotation, rotation);
+        return Symmetrized(r6 * p0 * r6.Transpose());
+    }
+
+    // A covariance clipped in RTN back in the frame of the state, Rᵀ P_RTN R, symmetrized; the rotation of a positive
+    // semi-definite matrix is one, but its rounding may leave a zero eigenvalue of the correlation matrix below the
+    // tolerance of the check, which a clipping in the frame of the state then repairs at that size
+    private static double[] FromRtn(double[] clippedRtn, Math.Matrix r6)
+    {
+        var rtn = new Math.Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                rtn.Set(i, j, clippedRtn[6 * i + j]);
+            }
+        }
+
+        var values = Symmetrized(r6.Transpose() * rtn * r6);
+        return CovarianceChecks.Validate(values, 6, "The remediated covariance", out _) == null
+            ? values
+            : CovarianceChecks.RemediateByEigenvalueClipping(values, 6);
+    }
+
+    private static double[] Symmetrized(Math.Matrix m)
+    {
+        var values = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                values[6 * i + j] = 0.5 * (m.Get(i, j) + m.Get(j, i));
+            }
+        }
+
+        return values;
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one
@@ -395,8 +532,20 @@ public abstract class PropagatorBase : IPropagator
     private protected virtual (Frame Frame, PropagationFrameOrientationCache Cache) OrientationCache => (null, null);
 
     /// <summary>
-    /// Propagates the spacecraft over the window, with its maneuver chain from its maneuver in standby.
+    /// Propagates the spacecraft over the window, with its maneuver chain from its head
+    /// (<see cref="Spacecraft.InitialManeuver"/>, set by <see cref="Spacecraft.SetStandbyManeuver"/>).
     /// </summary>
+    /// <remarks>
+    /// Once its checks pass, the propagation re-arms the spacecraft, on every path (#583, decided by S. Guillet,
+    /// 2026-11-17): the solution, the stored states and the attitude record of the previous propagation are dropped,
+    /// <see cref="Spacecraft.ExecutedManeuvers"/> is cleared, the tanks are refuelled and the chain is reset and put back
+    /// in standby, so that a spacecraft propagated again, through <see cref="CentralBodyPropagatorBuilder"/>, a
+    /// <see cref="CentralBodyPropagator"/> built directly or <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
+    /// never propagated; a propagator built and never run, or rejected by its constructor, changes nothing. Before
+    /// 11.0.0 only <c>Spacecraft.Propagate</c> re-armed it: a second run through the builder or a propagator built
+    /// directly fired no burn and started with the fuel left by the first. The spacecraft is then
+    /// <see cref="Spacecraft.IsPropagated"/>, whatever the path.
+    /// </remarks>
     /// <returns>The solution.</returns>
     /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
     /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
@@ -419,13 +568,13 @@ public abstract class PropagatorBase : IPropagator
     {
         // 1. The length of the propagation (may exceed the window for non-fitting step sizes), in seconds of the time
         // argument. In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the
-        // window, its last output labelled with the end of the window as the caller gave it
-        uint outputCount = (uint)System.Math.Round(_windowLength / DeltaT.TotalSeconds,
-            MidpointRounding.AwayFromZero) + 1;
-        double outputDuration = (outputCount - 1) * DeltaT.TotalSeconds;
-        bool endsAtWindowEnd = TimeArgument.EndsAtWindowEnd(_windowLength, outputDuration);
-        double propagationDuration = endsAtWindowEnd ? _windowLength : System.Math.Max(_windowLength, outputDuration);
-        var propagationEnd = endsAtWindowEnd ? Window.EndDate : TimeArgument.EpochAt(Window.StartDate, propagationDuration);
+        // window, its last output labelled with the end of the window as the caller gave it. The caches of the forces
+        // cover the same span (#626)
+        var span = Span;
+        uint outputCount = span.OutputCount;
+        double propagationDuration = span.Duration;
+        var propagationEnd = span.End;
+        bool endsAtWindowEnd = span.EndsAtWindowEnd;
         _propagationDuration = propagationDuration;
 
         // 2. The leading attitudes of the chain on the attitude timeline, and the detector of its first impulse (#539),
@@ -433,13 +582,17 @@ public abstract class PropagatorBase : IPropagator
         // tanks of the spacecraft (#676, #586)
         // and whose target orbits are in the frame of the integration: a maneuver attached after the propagator was built
         // escaped the check of the constructor (#685)
-        var chain = Maneuver.Maneuver.Chain(Spacecraft.StandbyManeuver);
+        // The chain run is the one from the head, which the reset puts back in standby (#583)
+        var chain = Maneuver.Maneuver.Chain(Spacecraft.InitialManeuver);
         if (TargetOrbitFrameError(Spacecraft, chain, InitialState.Frame) is { } frameError)
         {
             throw new InvalidOperationException(frameError);
         }
 
         Spacecraft.CheckManeuverEngines();
+
+        // Every check passed: the spacecraft is re-armed, on every path (#583)
+        Spacecraft.ResetPropagation();
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
         var eventDetectors = BuildEventDetectors();
@@ -480,11 +633,15 @@ public abstract class PropagatorBase : IPropagator
         // event times: the time argument of each event, from which the windows of the chain count their seconds (#547)
         double segmentBaseTau = 0.0;
 
-        // 4. Segment loop
+        // 4. Segment loop. An impulse executed with no time left after it (located at the end of the propagation, which
+        // Velocity-Verlet does when the crossing falls in its last step) opens a last segment of zero length, which holds
+        // the state after it, so that the solution, its outputs and the stored states end with it (#575)
+        bool afterImpulse = false;
         while (true)
         {
             double remaining = TimeArgument.Remaining(Window.StartDate, propagationDuration, propagationEnd, currentEpoch);
-            if (remaining <= 0.0) break;
+            bool lastAfterImpulse = remaining <= 0.0;
+            if (lastAfterImpulse && !afterImpulse) break;
 
             // a. Integrate segment, with the mass and coefficients of the segment, recorded for the force model of the
             // propagation (#402) and, in RK7(8), for the evaluations of its solution
@@ -494,8 +651,16 @@ public abstract class PropagatorBase : IPropagator
                 rk78.BeginVariationalSegment(context, entryY, entryQ, entryManeuver);
             }
 
-            var result = Integrator.IntegrateSegment(
-                currentPos, currentVel, currentEpoch, remaining, eventDetectors);
+            var result = lastAfterImpulse
+                ? Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, 0.0)
+                : Integrator.IntegrateSegment(currentPos, currentVel, currentEpoch, remaining, eventDetectors);
+            if (lastAfterImpulse && result.Segment.Steps.Count == 0)
+            {
+                // An integrator implemented outside the library that takes no step for a duration of zero: the step of zero
+                // length that holds the state after the impulse, added here (#575)
+                result.Segment.AddStep(ZeroLengthStep(solution, currentPos, currentVel, currentEpoch));
+            }
+
             result.Segment.Context = context;
             if (rk78 != null)
             {
@@ -506,7 +671,7 @@ public abstract class PropagatorBase : IPropagator
             solution.AddSegment(result.Segment);
 
             // c. Handle event
-            if (result.Event.HasValue)
+            if (result.Event.HasValue && !lastAfterImpulse)
             {
                 var evt = result.Event.Value;
                 var eventEpoch = TimeArgument.EpochAt(currentEpoch, evt.EventTime);
@@ -540,6 +705,7 @@ public abstract class PropagatorBase : IPropagator
                 // state at the event, unchanged, on Continue (#355: the same segment used to be integrated again, without
                 // end)
                 bool restart = eventResult.Action == EventAction.StopAndRestart;
+                afterImpulse = restart;
 
                 // An executed impulse: its windows in seconds of the time argument, its attitude and the rest of the chain
                 // on the timeline, and the detector of the next impulse (#539, #547); the detector executes the impulse
@@ -599,11 +765,11 @@ public abstract class PropagatorBase : IPropagator
                 Integrator.Initialize(new StateVector(currentPos, currentVel, InitialState.Observer, currentEpoch,
                     InitialState.Frame));
 
-                // On Continue, the segment starts at the root just handled, which the detector must not find again;
-                // Velocity-Verlet locates the event at the end of a step, already past the root
+                // On Continue, the segment starts at the root just handled, which the detector must not find again: the
+                // event time is on the tick grid, possibly just before the root (#572)
                 if (!restart)
                 {
-                    rk78?.SkipRootOfLastEvent();
+                    (Integrator as Integrators.Integrator)?.SkipRootOfLastEvent();
                 }
             }
             else
@@ -654,8 +820,34 @@ public abstract class PropagatorBase : IPropagator
         // With any integrator whose settings can be copied, the spacecraft keeps the force model of the propagation, without
         // its steps, for the avoidance options of the conjunction assessment (#402)
         Spacecraft.LastForceModel = solution.ForceModel;
+        Spacecraft.MarkPropagated();
 
         return solution;
+    }
+
+    /// <summary>
+    /// The step of zero length that holds the state after an impulse at the end of the propagation, for an integrator that
+    /// returns no step for a duration of zero (#575): the integrators of the library return it themselves. Its
+    /// accelerations are those of the forces of an <see cref="Integrators.Integrator"/> at that state, and for a bare
+    /// <see cref="IIntegrator"/>, whose forces the propagator cannot reach, the end acceleration of the segment before the
+    /// impulse; a step of zero length is never interpolated, so they are not read by the solution.
+    /// </summary>
+    private AcceptedStep ZeroLengthStep(PropagationSolution solution, in Vector3 position, in Vector3 velocity,
+        in Time epoch)
+    {
+        Vector3 acceleration;
+        if (Integrator is Integrators.Integrator integrator)
+        {
+            acceleration = integrator.ComputeAcceleration(new StateVector(position, velocity, InitialState.Observer, epoch,
+                InitialState.Frame));
+        }
+        else
+        {
+            var previous = solution.Segments[^1];
+            acceleration = previous.Steps.Count > 0 ? previous.Steps[^1].EndAcceleration : Vector3.Zero;
+        }
+
+        return new AcceptedStep(0.0, 0.0, position, velocity, position, velocity, acceleration, acceleration);
     }
 
     // The covariance of the state from the cumulative Y and the carried Q, as the outputs of a propagation of the covariance
@@ -988,7 +1180,25 @@ public abstract class PropagatorBase : IPropagator
         return new StateVector(state.Position.Rotate(q), state.Velocity.Rotate(q), state.Observer, state.Epoch, Frame.ICRF, covariance);
     }
 
-    private static void ValidateInertialFrame(Spacecraft spacecraft)
+    /// <summary>
+    /// A numerical propagation starts from a state: mean elements have none without the theory they belong to (#463). A
+    /// <see cref="OrbitalParameters.TLE.TLE"/> is mean and starts from its SGP4 state (#675).
+    /// </summary>
+    /// <exception cref="ArgumentException">The initial orbit of the spacecraft is a set of mean elements other than a
+    /// TLE.</exception>
+    internal static void ValidateOsculatingInitialOrbit(Spacecraft spacecraft)
+    {
+        var initial = spacecraft.InitialOrbitalParameters;
+        if (initial is not OrbitalParameters.TLE.TLE && initial.ElementsType == OrbitalElementsType.Mean)
+        {
+            throw new ArgumentException(
+                $"The initial orbit of spacecraft {spacecraft.Name} ({spacecraft.NaifId}) is a set of mean elements, which have no " +
+                "state without the theory they belong to: a numerical propagation cannot start from them. Propagate a TLE with " +
+                "TLEPropagator, or start from its osculating state, TLE.ToOsculating().", nameof(spacecraft));
+        }
+    }
+
+    internal static void ValidateInertialFrame(Spacecraft spacecraft)
     {
         var frame = PropagationFrame(spacecraft.InitialOrbitalParameters);
         if (frame != Frame.ICRF

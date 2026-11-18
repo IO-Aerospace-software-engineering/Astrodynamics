@@ -54,7 +54,7 @@ public sealed class TirsFrame : Frame
         if (OrientationCache != null)
             return OrientationCache.GetOrientation(date);
 
-        return _stateOrientationsToICRF.GetOrAdd(date, ComputeOrientation);
+        return LastOrientation(date, ComputeOrientation);
     }
 
     private StateOrientation ComputeOrientation(Time date)

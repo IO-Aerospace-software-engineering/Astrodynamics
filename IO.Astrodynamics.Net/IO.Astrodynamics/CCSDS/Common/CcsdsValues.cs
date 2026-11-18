@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Globalization;
 using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.CCSDS.Common;
@@ -27,6 +28,20 @@ internal readonly record struct CcsdsKeyword(string Parameter, string Keyword, s
 internal static class CcsdsValues
 {
     /// <summary>
+    /// The text the OPM, OMM and CDM writers write for a real value: its shortest round-trip form (<c>"R"</c>, invariant
+    /// culture), which reads back as <c>xsd:double</c> (the IEEE double nearest the decimal number) bit for bit, in the
+    /// lexical space of <c>xsd:double</c> for every finite value (the data model holds no other).
+    /// </summary>
+    /// <remarks>
+    /// Before #728 the OPM and OMM writers kept <c>G17</c> only in scientific form and otherwise wrote
+    /// <c>0.##############</c>, at most 14 decimals and 15 significant digits: a value below 1e-3 lost up to 4.9e-11 of
+    /// itself (an eccentricity of 0.00012345678901234567 written 0.00012345678901), a written message no longer read back
+    /// as the values written. The CDM writer wrote <c>G17</c>, exact but not the shortest form (0.1 written
+    /// 0.10000000000000001).
+    /// </remarks>
+    internal static string Format(double value) => value.ToString("R", CultureInfo.InvariantCulture);
+
+    /// <summary>
     /// Whether an optional parameter of the data model is absent or a finite value of 0 or more: the nonNegativeDouble of
     /// NDM/XML 4.0.0 (minInclusive 0.0, which excludes NaN but not +INF, XML Schema Part 2, 3.2.5) taken as a real number,
     /// false for NaN and ±Infinity (#708).
@@ -49,6 +64,28 @@ internal static class CcsdsValues
     {
         if (!double.IsFinite(value))
             throw new ArgumentOutOfRangeException(parameter, value, $"{parameter} must be a finite number.");
+        return value;
+    }
+
+    /// <summary>
+    /// A value of the data model in a CCSDS unit (km, km/s, km², km²/s, km²/s²) that the library converts to SI units: a
+    /// real number whose product by <paramref name="factor"/>, its value in SI units, is a real number too (#729), so that
+    /// the conversion does not round to ±Infinity (IEEE 754), as the CDM reader refuses a value in km whose value in m is
+    /// beyond the range of a double (#708).
+    /// </summary>
+    /// <param name="value">The value in its CCSDS unit.</param>
+    /// <param name="factor">The factor of the conversion to SI units (1000 for km and km/s, 1e6 for km², km²/s and km²/s²).</param>
+    /// <param name="units">The CCSDS unit, for the message.</param>
+    /// <param name="parameter">The name of the parameter that receives it.</param>
+    /// <returns><paramref name="value"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is NaN or ±Infinity, or its product by
+    /// <paramref name="factor"/> is not finite (above about 1.8e305 km or 1.8e302 km²).</exception>
+    internal static double RequireFiniteInSiUnits(double value, double factor, string units, string parameter)
+    {
+        RequireFinite(value, parameter);
+        if (!double.IsFinite(value * factor))
+            throw new ArgumentOutOfRangeException(parameter, value,
+                $"{parameter} must be finite in SI units: {value.ToString("R", System.Globalization.CultureInfo.InvariantCulture)} {units} times {factor.ToString("R", System.Globalization.CultureInfo.InvariantCulture)} is beyond the range of a double.");
         return value;
     }
 
@@ -103,8 +140,7 @@ internal static class CcsdsValues
     /// </summary>
     /// <param name="value">The matrix.</param>
     /// <returns>A matrix of the same size and terms over a new array.</returns>
-    internal static Matrix Copy(Matrix value) =>
-        value.Rows == 0 || value.Columns == 0 ? value : new Matrix(value.ToArray());
+    internal static Matrix Copy(Matrix value) => value.Copy();
 
     /// <summary>
     /// Runs <paramref name="construct"/>; an <see cref="ArgumentException"/> it throws (an

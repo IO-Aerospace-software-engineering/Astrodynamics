@@ -77,7 +77,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// the initial orbital parameters, the propagated states carry none, and no partial derivative is evaluated.
         /// </para>
         /// </remarks>
-        public Matrix? Covariance { get; }
+        /// <value>A copy of the covariance the state holds, which the constructor copied too: a term set on the matrix given
+        /// or on the one returned does not reach the state (#722; before 11.0.0 the state shared the caller's array).</value>
+        public Matrix? Covariance => Matrix.Copy(_covariance);
+
+        private readonly Matrix? _covariance;
 
         /// <summary>
         /// Constructor
@@ -93,7 +97,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             Position = position;
             Velocity = velocity;
-            Covariance = covariance;
+            _covariance = Matrix.Copy(covariance);
         }
 
         public override StateVector ToStateVector()
@@ -131,13 +135,18 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return base.ToStateVector(epoch);
             }
 
-            return epoch == Epoch ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
+            return epoch.HasSameLabel(Epoch) ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
         }
 
         /// <summary>
-        /// Calculates the specific orbital energy.
+        /// The semi-major axis of the conic, −μ/(2ξ) with ξ the specific orbital energy; +Infinity for e = 1 exactly and
+        /// for ξ = 0.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The semi-major axis, m: negative for a hyperbola.</returns>
+        /// <remarks>Within 1e-6 of e = 1 (<see cref="OrbitalParameters.IsParabolic"/>) it is the conic's since 11.0.0, about
+        /// 1.4e10 km at |e − 1| = 5e-7 (#459, option 1, decided by S. Guillet, 2026-11-17; +Infinity before): ξ cancels
+        /// there, so it carries about ε v²/(2|ξ|) of relative rounding, 2e-10 at |e − 1| = 5e-7. The anomalies of the band
+        /// stay Barker's.</remarks>
         public override double SemiMajorAxis()
         {
             if (_semiMajorAxis.HasValue)
@@ -145,12 +154,10 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _semiMajorAxis.Value;
             }
 
-            if (IsParabolic())
-            {
-                _semiMajorAxis = double.PositiveInfinity;
-            }
-
-            _semiMajorAxis ??= -(Observer.GM / (2.0 * SpecificOrbitalEnergy()));
+            // A parabola has no finite semi-major axis, nor a state of zero energy, whose −μ/(2ξ) is ±∞ by the sign of its
+            // zero (e can round off 1 while ξ rounds to 0); every other conic has −μ/(2ξ) (#459)
+            double energy = SpecificOrbitalEnergy();
+            _semiMajorAxis = Eccentricity() == 1.0 || energy == 0.0 ? double.PositiveInfinity : -(Observer.GM / (2.0 * energy));
 
             return _semiMajorAxis.Value;
         }
@@ -302,6 +309,8 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (!_meanAnomaly.HasValue)
             {
                 ThrowIfRectilinear(NoOrbitPlane);
+                throw new InvalidOperationException(
+                    $"No conic has the eccentricity e = {Eccentricity():R} of this state: its mean anomaly is undefined (#476).");
             }
 
             return _meanAnomaly!.Value;
@@ -573,20 +582,30 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <para>
         /// A covariance that the propagation accepts (each asymmetry within 1e-12 of √(P_ii P_jj), the smallest eigenvalue
         /// of C at least −1e-12 of its trace) is returned as it is: the state itself, not remediated. The clipping is made
-        /// in the frame of this state, as the analysis and the propagator take the covariance, and depends on the axes:
-        /// clipped in RTN, the same covariance comes out different (by 4.2e-5 of √(P_ii P_jj) for a correlation of −1.0001).
-        /// The depth of the defect is not bounded (#443): <see cref="CovarianceRemediation.SmallestCorrelationEigenvalue"/>
-        /// says how far from positive semi-definite the covariance was.
+        /// in the frame of this state, as the analysis and the propagator take the covariance, when the depth of its defect
+        /// passes the bound below there, and in the RTN frame of this state, rotated back, when it passes there only; it
+        /// depends on the axes: clipped in RTN, the same covariance comes out different (by 4.2e-5 of √(P_ii P_jj) for a
+        /// correlation of −1.0001).
+        /// <see cref="CovarianceRemediation.SmallestCorrelationEigenvalue"/> says how far from positive semi-definite the
+        /// covariance was.
+        /// </para>
+        /// <para>
+        /// The depth of the defect is bounded (#443, decided by S. Guillet, 2026-11-17): the smallest eigenvalue of C must be
+        /// at least −1e-3 of its trace in the frame of this state, or in its RTN frame (the frame of the covariances of a
+        /// CDM). Rounding every element of a positive semi-definite covariance to 4 significant digits, in the frame it was
+        /// rounded in, stays within it (8.34e-4 of the trace at worst, by Weyl's inequality); a correlation of −1.01 in RTN
+        /// does not (1.67e-3), nor −10, which was remediated before 11.0.0 by a change of 5.5 times the values.
         /// </para>
         /// </remarks>
         /// <exception cref="InvalidOperationException">The state carries no covariance, or one that rounding does not
-        /// explain: not 6×6, a value that is not finite, a negative variance, or an asymmetry beyond the tolerance.</exception>
+        /// explain: not 6×6, a value that is not finite, a negative variance, an asymmetry beyond the tolerance, or a defect
+        /// deeper than the bound in both frames, its depth in the message (#443).</exception>
         public CovarianceRemediation WithRemediatedCovariance()
         {
             if (!Covariance.HasValue)
                 throw new InvalidOperationException("The state vector carries no covariance to remediate.");
 
-            var refusal = Propagator.PropagatorBase.RemediateInitialCovariance(Covariance.Value, out var remediated,
+            var refusal = Propagator.PropagatorBase.RemediateInitialCovariance(Covariance.Value, this, out var remediated,
                 out double smallestEigenvalue);
             if (refusal != null)
                 throw new InvalidOperationException(
@@ -617,7 +636,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Position.Equals(other.Position) && Velocity.Equals(other.Velocity) && Observer.NaifId == other.Observer.NaifId && Epoch == other.Epoch && Frame == other.Frame;
+            return GetType() == other.GetType() && Position.Equals(other.Position) && Velocity.Equals(other.Velocity) && HasSameReference(other);
         }
 
         public override bool Equals(object obj)

@@ -159,8 +159,9 @@ public class DocumentationPagesExamplesTests
     /// a public member of the library: a type with a public constructor of that many parameters (of those names, in order,
     /// where the listing declares them), or a public method of that name, those parameter names in order and that return
     /// type. Red on the listing of reference/lambert.md as 46e6975 wrote it (then fenced csharp, so read by no check),
-    /// whose third parameter of <c>LambertSolver.Solve</c> was <c>targetObjectOrbitalParameters</c>, which the library
-    /// spells <c>targetOjectOrbitalParameters</c>.
+    /// whose third parameter of <c>LambertSolver.Solve</c> was <c>targetObjectOrbitalParameters</c>, which the library then
+    /// spelled <c>targetOjectOrbitalParameters</c>; red again on the listing renamed by #662 against a85098d, before the
+    /// library's parameter was renamed to <c>targetObjectOrbitalParameters</c>.
     /// </summary>
     [Theory]
     [MemberData(nameof(SignaturePages))]

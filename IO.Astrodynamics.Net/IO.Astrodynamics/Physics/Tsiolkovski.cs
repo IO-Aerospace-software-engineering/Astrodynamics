@@ -23,10 +23,11 @@ public class Tsiolkovski
     /// <param name="initialMass"></param>
     /// <param name="fuelFlow"></param>
     /// <param name="deltaV"></param>
-    /// <returns></returns>
+    /// <returns>The burn duration m0 / q (1 − exp(−Δv / (Isp g0))), to the nearest tick (100 ns), ties to even (#637,
+    /// decided by S. Guillet, 2026-11-17; truncated to the tick below before 11.0.0).</returns>
     public static TimeSpan DeltaT(double isp, double initialMass, double fuelFlow, double deltaV)
     {
-        return TimeSpan.FromSeconds(initialMass / fuelFlow * (1 - System.Math.Exp(-deltaV / (isp * Constants.g0))));
+        return TimeSystem.Time.SecondsToSpan(initialMass / fuelFlow * (1 - System.Math.Exp(-deltaV / (isp * Constants.g0))));
     }
 
     /// <summary>

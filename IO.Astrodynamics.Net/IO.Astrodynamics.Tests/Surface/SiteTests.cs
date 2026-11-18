@@ -285,8 +285,8 @@ namespace IO.Astrodynamics.Tests.Surface
             // station (#690): the Moon is up at the start and at the end of the search window, whose bounds close the windows
             var windows = res as Window[] ?? res.ToArray();
             GeometryReference.AssertWindows(null, "dss13_moon_z > 0", windows, GeometryReference.ThresholdCrossing);
-            Assert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
-            Assert.Equal(new TimeSystem.Time("2000-01-02 12:00:00").ToTDB(), windows[1].EndDate);
+            LabelAssert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
+            LabelAssert.Equal(new TimeSystem.Time("2000-01-02 12:00:00").ToTDB(), windows[1].EndDate);
         }
 
         [Theory]
@@ -365,7 +365,7 @@ namespace IO.Astrodynamics.Tests.Surface
                     TestHelpers.VectorComparer);
                 Assert.Equal(new Vector3(349.96683087822703, 295.68160057531139, 0.01769212216143207), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                     TestHelpers.VectorComparer);
-                Assert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
+                LabelAssert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
                 Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
                 Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 
@@ -578,7 +578,7 @@ namespace IO.Astrodynamics.Tests.Surface
                     {
                         var state = read.ToStateVector();
                         Assert.Equal(site.Frame, state.Frame);
-                        Assert.Equal(expected.Epoch, state.Epoch);
+                        LabelAssert.Equal(expected.Epoch, state.Epoch);
                         double angle = AngleBetween(expected.Position, state.Position);
                         double relative = System.Math.Abs(state.Position.Magnitude() - expected.Position.Magnitude()) / expected.Position.Magnitude();
                         double velocity = (state.Velocity - expected.Velocity).Magnitude();
@@ -866,8 +866,8 @@ namespace IO.Astrodynamics.Tests.Surface
         /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/> with the frame of a site from the
         /// kernels whose frame id no loaded kernel defines is the frame of its J2000 coordinates
         /// (<see cref="SiteFrame.GetStateOrientationToICRF"/>), bit for bit, where it threw (#668, fourth round); with the frame
-        /// of a site whose frame the kernels define (DSS-13), SPICE's frame, as before. The frames of CIRS and TIRS keep their
-        /// path, which #656 owns.
+        /// of a site whose frame the kernels define (DSS-13), SPICE's frame, as before. CIRS is composed through ICRF by its
+        /// managed orientation since #656, where it threw (<c>ManagedFrameByNameTests</c> checks it against SOFA).
         /// </summary>
         [Fact]
         public void TransformFrame_KernelSites_TheFrameTheSiteUses()
@@ -896,7 +896,8 @@ namespace IO.Astrodynamics.Tests.Surface
             var at = new TimeSystem.Time("2024-03-01T12:00:00 TDB");
             Assert.Equal(SpiceAPI.Instance.TransformFrame(at, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF).Rotation,
                 SpiceAPI.Instance.TransformFrame(at, dss13.Frame, Frames.Frame.ICRF).Rotation);
-            Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.TransformFrame(at, Frames.Frame.CIRS, Frames.Frame.ICRF));
+            Assert.Equal(Frames.Frame.CIRS.GetStateOrientationToICRF(at).Rotation,
+                SpiceAPI.Instance.TransformFrame(at, Frames.Frame.CIRS, Frames.Frame.ICRF).Rotation);
         }
 
         // Third review of #690, against SPICE in the test's NAIF topocentric frame, the worst on Linux x64, Windows x64 and
@@ -1142,10 +1143,37 @@ namespace IO.Astrodynamics.Tests.Surface
         }
 
         /// <summary>
+        /// The ICRF read of a site from an observer with LT, <paramref name="icrfRead"/>, in a frame centred on the site, the
+        /// target, as <c>spkezr_c</c> rotates it (#593): at t − lt, lt = |r|/c of the read (the light time of <c>spkltc</c>,
+        /// whose LT position is that of the target at t − lt₀, its distance the lt it returns), the derivative of the
+        /// rotation scaled by 1 − dlt/dt, dlt/dt = r̂·ṙ/c, the rate of that distance along the corrected state (spkltc's
+        /// dlt: with ṙ = (1 − dlt)·v_target − v_observer and dlt = r̂·(v_target − v_observer)/(c + r̂·v_target), r̂·ṙ = c·dlt;
+        /// a central difference of the distance is noisier, 1e-12 at ±1 s); the rotation read at the 100 ns of a
+        /// <see cref="TimeSystem.Time"/> and carried to the exact epoch by the frame's angular velocity.
+        /// </summary>
+        internal static StateVector RotatedAtTheTargetEpoch(Func<TimeSystem.Time, StateVector> icrfRead, TimeSystem.Time t, Frames.Frame frame)
+        {
+            const double c = IO.Astrodynamics.Constants.C;
+            var state = icrfRead(t);
+            double lightTime = state.Position.Magnitude() / c;
+            double rate = state.Position.Normalize() * state.Velocity / c;
+            var centerEpoch = t.AddSeconds(-lightTime);
+            double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds - lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            var orientation = Frames.Frame.ICRF.ToFrame(frame, centerEpoch);
+            var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
+            var position = state.Position.Rotate(orientation.Rotation);
+            position -= angularVelocity.Cross(position) * residual;
+            var velocity = state.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(position) * (1.0 - rate);
+            return new StateVector(position, velocity, state.Observer, t, frame);
+        }
+
+        /// <summary>
         /// #682: a frame only the library holds, the frame of a site built from coordinates, reached <c>spkezr_c</c> by name
         /// (SPICE(UNKNOWNFRAME)) when the site was read from an observer other than its body; it is read in J2000 and rotated
         /// by the managed frame, as #558 reads TEME, CIRS and TIRS. Seen from the Moon and the Sun, with and without light
-        /// time, the read in the site's frame is the ICRF read rotated to it, and so are a body read in it and the reads of
+        /// time, the read in the site's frame is the ICRF read rotated to it (with LT, at the epoch of the site, its centre,
+        /// as <c>spkezr_c</c> rotates a frame centred on the target, #593: before 11.0.0 at the epoch of the observation,
+        /// 38 km off from the Moon), and so are a body read in it and the reads of
         /// <see cref="SpiceAPI"/>; a coordinate search in it runs. A kernel spacecraft as the observer is in
         /// <see cref="KernelWindowSearchTests"/>, whose class loads LRO; the rotation against CSPICE in
         /// <see cref="CustomSite_FromTheMoon_InItsFrame_MatchesSpkezr"/>.
@@ -1165,7 +1193,9 @@ namespace IO.Astrodynamics.Tests.Surface
                     {
                         var t = start.AddSeconds(7.0 * 3600.0 * k);
                         var read = site.GetEphemeris(t, observer, site.Frame, aberration).ToStateVector();
-                        var expected = site.GetEphemeris(t, observer, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector();
+                        var expected = aberration == Aberration.None
+                            ? site.GetEphemeris(t, observer, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector()
+                            : RotatedAtTheTargetEpoch(e => site.GetEphemeris(e, observer, Frames.Frame.ICRF, aberration).ToStateVector(), t, site.Frame);
                         AssertSameState(expected, read, site.Frame, $"site from {observer.Name} {aberration} at {t}");
                     }
                 }

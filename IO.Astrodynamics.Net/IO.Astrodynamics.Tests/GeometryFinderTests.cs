@@ -68,7 +68,7 @@ public class GeometryFinderTests
         // #461: the last edge stopped at 599.443 s
         var windows = Find(t => t - 30.3, RelationnalOperator.Greater, 0.0);
         AssertWindows([(30.3, 600.0)], windows, RootTolerance);
-        Assert.Equal(SearchWindow.EndDate, windows[0].EndDate);
+        LabelAssert.Equal(SearchWindow.EndDate, windows[0].EndDate);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class GeometryFinderTests
             read.Add(t);
             return 1.0;
         }, RelationnalOperator.Greater, 0.0, Step).ToArray();
-        Assert.Equal([SearchWindow], windows);
+        LabelAssert.Equal([SearchWindow], windows);
         Assert.All(read, t => Assert.InRange(t, SearchWindow.StartDate, SearchWindow.EndDate));
     }
 
@@ -106,7 +106,7 @@ public class GeometryFinderTests
     {
         var windows = Find(t => t - 30.3, RelationnalOperator.Lower, 0.0);
         AssertWindows([(0.0, 30.3)], windows, RootTolerance);
-        Assert.Equal(SearchWindow.StartDate, windows[0].StartDate);
+        LabelAssert.Equal(SearchWindow.StartDate, windows[0].StartDate);
     }
 
     [Fact]
@@ -197,9 +197,9 @@ public class GeometryFinderTests
         Assert.Empty(Find(f, RelationnalOperator.LocalMin, 0.0));
         Assert.Empty(Find(f, RelationnalOperator.LocalMax, 0.0));
         var minimum = Find(f, RelationnalOperator.AbsoluteMin, 0.0);
-        Assert.Equal([new Window(SearchWindow.EndDate, SearchWindow.EndDate)], minimum);
+        LabelAssert.Equal([new Window(SearchWindow.EndDate, SearchWindow.EndDate)], minimum);
         var maximum = Find(f, RelationnalOperator.AbsoluteMax, 0.0);
-        Assert.Equal([new Window(SearchWindow.StartDate, SearchWindow.StartDate)], maximum);
+        LabelAssert.Equal([new Window(SearchWindow.StartDate, SearchWindow.StartDate)], maximum);
 
         // With an adjustment, the windows within it of the extreme
         AssertWindows([(550.0, 600.0)], Find(f, RelationnalOperator.AbsoluteMin, 0.0, 50.0), RootTolerance);
@@ -238,7 +238,7 @@ public class GeometryFinderTests
         Assert.Single(windows);
         Assert.Equal(TimeFrame.UTCFrame, windows[0].StartDate.Frame);
         Assert.InRange((windows[0].StartDate - start).TotalSeconds - 30.3, -RootTolerance, RootTolerance);
-        Assert.Equal(window.EndDate, windows[0].EndDate);
+        LabelAssert.Equal(window.EndDate, windows[0].EndDate);
     }
 
     [Fact]
@@ -246,9 +246,9 @@ public class GeometryFinderTests
     {
         var window = new Window(Start, Start);
         var finder = new GeometryFinder();
-        Assert.Equal([window], finder.FindWindowsWithCondition(window, t => 1.0, RelationnalOperator.Greater, 0.0, Step));
+        LabelAssert.Equal([window], finder.FindWindowsWithCondition(window, t => 1.0, RelationnalOperator.Greater, 0.0, Step));
         Assert.Empty(finder.FindWindowsWithCondition(window, t => 1.0, RelationnalOperator.LocalMax, 0.0, Step));
-        Assert.Equal([window], finder.FindWindowsWithCondition(window, t => 1.0, RelationnalOperator.AbsoluteMax, 0.0, Step));
+        LabelAssert.Equal([window], finder.FindWindowsWithCondition(window, t => 1.0, RelationnalOperator.AbsoluteMax, 0.0, Step));
     }
 
     [Fact]

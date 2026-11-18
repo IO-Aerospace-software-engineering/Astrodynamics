@@ -22,7 +22,7 @@ public class AntiNormalAttitudeTests
         FuelTank fuelTank = new FuelTank("My fuel tank", "ft2021", "sn0", 4000.0, 3000.0);
         Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
         AntiNormalAttitude attitude = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromHours(1.0), eng);
-        Assert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), attitude.MinimumEpoch);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), attitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), attitude.ManeuverHoldDuration);
         Assert.NotNull(attitude.Engine);
         Assert.Equal(eng, attitude.Engine);

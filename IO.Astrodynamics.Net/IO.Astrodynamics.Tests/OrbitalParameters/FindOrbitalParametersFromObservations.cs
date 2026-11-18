@@ -44,9 +44,11 @@ public class InitialOrbitDeterminationTests
                 frame: Frames.Frame.ICRF,
                 epoch: e2
             );
-            var obs1 = referenceOrbit.AtEpoch(e1).RelativeTo(site, Aberration.LT);
-            var obs2 = referenceOrbit.AtEpoch(e2).RelativeTo(site, Aberration.LT);
-            var obs3 = referenceOrbit.AtEpoch(e3).RelativeTo(site, Aberration.LT);
+            // The geometric direction from the site to the object at each epoch: RelativeTo with light time would take
+            // the site at t - lt seen from the Earth's centre (#489), where the method reads the observer at t
+            var obs1 = referenceOrbit.AtEpoch(e1).RelativeTo(site, Aberration.None);
+            var obs2 = referenceOrbit.AtEpoch(e2).RelativeTo(site, Aberration.None);
+            var obs3 = referenceOrbit.AtEpoch(e3).RelativeTo(site, Aberration.None);
             var orbitalParams =
                 InitialOrbitDetermination.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
                     PlanetsAndMoons.EARTH_BODY, 42000000.0);
@@ -54,6 +56,7 @@ public class InitialOrbitDeterminationTests
                              referenceOrbit.ToStateVector().Position.Magnitude();
             var deltaVelocity = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
                                 referenceOrbit.ToStateVector().Velocity.Magnitude();
+            _output.WriteLine($"MEASURE GeosynchronousObject {i * 2} min: position {deltaRange:E3} %, velocity {deltaVelocity:E3} %");
             Assert.True(deltaRange < 0.02);
             Assert.True(deltaVelocity < 0.02);
         }
@@ -62,28 +65,49 @@ public class InitialOrbitDeterminationTests
     [Fact]
     public void PlanetObject()
     {
-            var timespan = TimeSpan.FromDays(10);
-            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-
-            var e2 = new TimeSystem.Time(2023, 3, 1);
-            var e1 = e2 - timespan;
-            var e3 = e2 + timespan;
-            var target = new Barycenter(4);
+        // Arrange: Mars's barycentre seen from DSS-13 with light time (CSPICE's spkezr), the outer observations 2.5, 5 and
+        // 10 days from the middle one. The reference is the geometric state from the Sun at the instant whose light the
+        // middle observation carries, e2 - lt (SPICE): the position the method determines, R + rho rho-hat, is the
+        // target's there.
+        Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+        var e2 = new TimeSystem.Time(2023, 3, 1);
+        var target = new Barycenter(4);
+        var departures = new[] { 10.0, 5.0, 2.5 }.Select(days =>
+        {
+            var e1 = e2 - TimeSpan.FromDays(days);
+            var e3 = e2 + TimeSpan.FromDays(days);
             var obs1 = target.GetEphemeris(e1, site, Frames.Frame.ICRF, Aberration.LT);
             var obs2 = target.GetEphemeris(e2, site, Frames.Frame.ICRF, Aberration.LT);
             var obs3 = target.GetEphemeris(e3, site, Frames.Frame.ICRF, Aberration.LT);
-            var referenceOrbit = target.GetEphemeris(e2, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.LT);
-            var orbitalParams =
-                InitialOrbitDetermination.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
-                    Stars.SUN_BODY, 350000000000.58063);
-            
-            var deltaRange = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
-                             referenceOrbit.ToStateVector().Position.Magnitude();
-            var deltaVelocity = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
-                                referenceOrbit.ToStateVector().Velocity.Magnitude();
-            
-            Assert.True(deltaRange < 0.06);
-            Assert.True(deltaVelocity < 0.15);
+            double lightTime = obs2.ToStateVector().Position.Magnitude() / IO.Astrodynamics.Constants.C;
+            var reference = target.GetEphemeris(e2 - TimeSpan.FromSeconds(lightTime), TestHelpers.Sun, Frames.Frame.ICRF,
+                Aberration.None).ToStateVector();
+
+            // Act
+            var determined = InitialOrbitDetermination.CreateFromObservation_Gauss(obs1.ToEquatorial(),
+                obs2.ToEquatorial(), obs3.ToEquatorial(), site, Stars.SUN_BODY, 350000000000.58063)
+                .OrbitalParameters.ToStateVector();
+            double deltaRange = 100.0 * (determined.Position - reference.Position).Magnitude() /
+                                reference.Position.Magnitude();
+            double deltaVelocity = 100.0 * (determined.Velocity - reference.Velocity).Magnitude() /
+                                   reference.Velocity.Magnitude();
+            _output.WriteLine($"MEASURE PlanetObject {days} d: position {deltaRange:E3} %, velocity {deltaVelocity:E3} %");
+            return (Position: deltaRange, Velocity: deltaVelocity);
+        }).ToArray();
+
+        // Assert: the error of the method falls with the spacing. Measured on Linux x64, Windows x64 and macOS arm64 alike
+        // (CI run 44225490669): 7.057e-2, 1.071e-2 and 1.559e-3 % in position, 1.469e-1, 3.164e-2 and 7.957e-3 % in
+        // velocity at 10, 5 and 2.5 days. The observer read with light time from the Sun (before 11.0.0), about 500 s of the
+        // Earth's orbit, gave 5.8e-2 % at 10 days by a cancellation and 3.7 % at 2.5 days. Bounds twice the figures at 2.5
+        // days, rounded up
+        for (int k = 1; k < departures.Length; k++)
+        {
+            Assert.True(departures[k - 1].Position / departures[k].Position > 3.5, $"position at step {k}");
+            Assert.True(departures[k - 1].Velocity / departures[k].Velocity > 3.5, $"velocity at step {k}");
+        }
+
+        Assert.True(departures[^1].Position < 3.2e-3, $"position {departures[^1].Position:E3} %");
+        Assert.True(departures[^1].Velocity < 1.6e-2, $"velocity {departures[^1].Velocity:E3} %");
     }
 
     // The site of the COBE observations (University of Maryland) and the reference orbit of the observations that

@@ -247,9 +247,10 @@ Represents a precise instant in time with time frame awareness.
 | `ToJulianDate()` | Get Julian Date |
 | `TimeSpanFromJ2000()` | Get TimeSpan from J2000 epoch |
 | `Add(TimeSpan span)` | Add duration |
-| `AddDays(double days)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
-| `AddHours(double hours)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
-| `AddSeconds(double seconds)` | Add seconds |
+| `AddDays(double days)` | Add days, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddHours(double hours)` | Add hours, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddSeconds(double seconds)` | Add seconds, to the nearest tick (#625) |
+| `==`, `Equals`, `CompareTo` | The same instant, whatever the frames: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; local times compare as the instants of their zone, the default time before every other; compare `DateTime` and `Frame` to tell two labels apart (a test of a label: `LabelAssert`, not `Assert.Equal`) |
 
 ```csharp
 // Create times
@@ -281,6 +282,7 @@ Represents a time interval.
 | `Intersects(Window other)` | Check if windows overlap |
 | `Intersects(Time time)` | Check if time is within window |
 | `GetIntersection(Window other)` | Get overlapping portion |
+| `==`, `Equals` | The same two ends as instants, whatever their frames, `Length` excluded (#512) |
 
 ```csharp
 var window = new Window(
@@ -378,6 +380,11 @@ Discriminant for orbital element types.
 | `Osculating` | Instantaneous (true) orbital elements |
 | `Mean` | Time-averaged elements (e.g., TLE mean elements) |
 
+Equality of orbital parameters (`==`, `Equals`, `GetHashCode`, typed as `OrbitalParameters` or as their type) is value
+equality within one concrete type, computing no state (#475): the type's values (the perigee radius of the parabolic
+band |e − 1| < 1e-6 among them, #459), the observer's NAIF id, the epoch (an instant), the frame and `ElementsType`. A set and its own `ToStateVector()`, a mean and an osculating set of the same
+numbers, and a TLE and its mean elements are different; to compare two orbits, compare their states.
+
 All orbital parameter classes (`StateVector`, `KeplerianElements`, `EquinoctialElements`, `TLE`) have an `ElementsType` property indicating whether elements are osculating or mean. Most conversions preserve the elements type. **Important:** Mean elements cannot be directly converted to `StateVector` as they require a propagation model (e.g., SGP4 for TLE).
 
 #### StateVector
@@ -398,7 +405,7 @@ Cartesian position and velocity state.
 
 | Method | Description |
 |--------|-------------|
-| `SemiMajorAxis()` | Compute semi-major axis (m) |
+| `SemiMajorAxis()` | Compute semi-major axis (m): the conic's −μ/(2ξ), within 1e-6 of e = 1 too; +Infinity for e = 1 exactly (#459) |
 | `Eccentricity()` | Compute eccentricity |
 | `Inclination()` | Compute inclination (rad) |
 | `AscendingNode()` | Compute RAAN (rad) |
@@ -406,8 +413,8 @@ Cartesian position and velocity state.
 | `TrueAnomaly()` | Compute true anomaly (rad) |
 | `MeanAnomaly()` | Compute mean anomaly (rad) |
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
-| `Period()` | Compute orbital period |
-| `MeanMotion()` | Compute mean motion (rad/s) |
+| `Period()` | Compute orbital period of an ellipse; an open orbit throws `InvalidOperationException` (#663) |
+| `MeanMotion()` | Compute mean motion (rad/s), √(μ/\|a\|³); Barker's for a parabola (#459) |
 | `SpecificOrbitalEnergy()` | Compute vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Compute specific angular momentum vector |
 | `EccentricityVector()` | Compute eccentricity vector |
@@ -422,7 +429,7 @@ Cartesian position and velocity state.
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`) |
+| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607) |
 
 A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
 no RTN frame: the members that read the plane (inclination, node, argument of periapsis, node vectors, longitudes, the
@@ -460,7 +467,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | Constructor | Description |
 |------------|-------------|
 | `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements (the parameter of the RAAN is spelled `rigthAscendingNode`) |
-| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius |
+| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius: required within 1e-6 of e = 1, with the a of the same conic, q / (1 − e) to rounding, +Infinity at e = 1 (#459) |
 | `KeplerianElements(..., OrbitalElementsType elementsType)` | Create with explicit element type |
 
 | Factory Method | Description |
@@ -486,7 +493,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | `TrueAnomaly()` | Compute true anomaly (rad) |
 | `TrueAnomaly(Time epoch)` | Compute true anomaly at epoch |
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
-| `Period()` | Get orbital period |
+| `Period()` | Get orbital period of an ellipse; an open orbit throws `InvalidOperationException`, a period given to the constructor included (#663) |
 | `PerigeeRadius()` | Get perigee radius (m) |
 | `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
 | `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ (its `Magnitude()` is the apogee radius, m, a(1 + e)); mean elements throw |
@@ -496,8 +503,8 @@ Classical Keplerian orbital elements (osculating or mean).
 | `IsElliptical()` | Check if orbit is elliptical |
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |
 | `IsHyperbolic()` | Check if orbit is hyperbolic (e > 1) |
-| `AtEpoch(Time epoch)` | Get elements at different epoch |
-| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. For 1 − 1e-6 < e < 1 the epoch is wrong (about 8 times off) and can be before `Epoch` |
+| `AtEpoch(Time epoch)` | Get elements at different epoch, of the same `ElementsType` (#463) |
+| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. Within 1e-6 of e = 1 the time is Barker's, the motion of the band (#478; before 11.0.0 about 8 times off, and possibly before `Epoch`) |
 | `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the center of motion (`TimeToRadius`); throws when it is infinite |
 
 ```csharp
@@ -619,7 +626,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `ToKeplerianElements()` | Get osculating Keplerian elements (via SGP4) |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly from TLE data |
 | `AtEpoch(Time epoch)` | Get propagated orbital parameters |
-| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from orbital parameters |
+| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607) |
 
 ```csharp
 // Parse TLE
@@ -679,7 +686,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708) |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a covariance term whose value in m² overflows (above about 1.8e302 km², #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
 | `CreateForTle(string objectName, string objectId, DateTime epoch, double meanMotion, ...)` | Create OMM for SGP4 propagation (mean elements and TLE parameters) |
@@ -703,7 +710,9 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `Validate()` | Validate OMM content and return validation result |
 
 > `ToTle()` throws `InvalidOperationException` when a field cannot be represented in TLE form
-> rather than truncating it: `NORAD_CAT_ID` above 339999, or `REV_AT_EPOCH` above 99999.
+> rather than truncating it: `NORAD_CAT_ID` above 339999, `REV_AT_EPOCH` above 99999, or `MEAN_MOTION` above the
+> 99.99999999 rev/day of its 11-character field (#729: an `ArgumentException` of the line length before 11.0.0, and above
+> about 2.86e307 rev/day a TLE whose mean motion was the text `Infinity`).
 > Such objects can only be carried in OMM form.
 
 ```csharp
@@ -870,7 +879,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708) |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a state or covariance value whose value in SI units overflows (above about 1.8e305 km or 1.8e302 km²; ±Infinity from `ToStateVector` before 11.0.0, #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
 | `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector |
@@ -932,10 +941,10 @@ var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock,
 // After propagation with executed maneuvers...
 var opm = spacecraft.ToOpm(
     originator: "Mission Control",
-    epoch: null,                      // Use current epoch (or specify)
+    epoch: null,                      // The initial epoch (or one within the propagation, #658)
     includeKeplerianElements: true,   // Include optional Keplerian elements
     includeSpacecraftParameters: true, // Include mass, drag, SRP
-    includeManeuvers: true);          // Include executed maneuvers
+    includeManeuvers: true);          // Include the maneuvers ignited by the epoch
 
 // Save for archival/sharing
 opm.SaveToFile("iss_state.opm");
@@ -1014,7 +1023,11 @@ opm.SaveToFile("complete_opm.xml");
 
 Every real value of the data model is a real number, as the readers read it: the components of `OpmStateVector`, the
 terms of `CovarianceMatrix` and the ΔV components of `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming
-the parameter for NaN or ±Infinity (#717), which the writer would write as `NaN` or `Infinity` and the reader refuse.
+the parameter for NaN or ±Infinity (#717), which the writer would write as `NaN` or `Infinity` and the reader refuse. The
+components of `OpmStateVector` and the terms of `CovarianceMatrix` throw it too for a finite value whose value in SI units,
+its product by 1000 (m, m/s) or 1e6 (m², m²/s, m²/s²), is not finite: above about 1.8e305 km or km/s and 1.8e302 km²
+(#729), in the constructors and the factories `FromFullMatrix`, `FromMatrix` and `FromMatrixWithUnitConversion` alike;
+`ToStateVector` and `ToMatrixWithUnitConversion` gave ±Infinity before 11.0.0.
 
 #### ImpulseManeuver.ToOpmManeuverParameters()
 
@@ -1181,6 +1194,7 @@ Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
 var windows = mySite.FindWindowsOnDistanceConstraint(
     new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
     moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+// One window, 2024-01-01 09:42:24.997 to 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
 ```
 
 #### LaunchSite
@@ -1330,7 +1344,7 @@ Represents a spacecraft with components.
 | `GetTotalFuel()` | Get total fuel mass |
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
-| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
+| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set the head of the maneuver chain, which the next propagation starts from (a second call replaces the first, null clears it, #584); a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
 | `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit, returns `PropagationSolution` |
 | `PropagateAsync(...)` | Propagate orbit asynchronously, returns `PropagationSolution` |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
@@ -1558,7 +1572,7 @@ Solve Lambert's problem for transfer orbits.
 
 | Method | Description |
 |--------|-------------|
-| `Solve(bool isRetrograde, OrbitalParameters initialOrbitalParameters, OrbitalParameters targetOjectOrbitalParameters, CelestialItem centerOfMotion, ushort maxRevolution)` | Solve Lambert problem; the `LambertResult` holds the solutions (`GetZeroRevolutionSolution()`, `GetMultiRevolutionSolutions(n)`), each with `V1`, `V2`, `DeltaV1`, `DeltaV2` and `DeltaV` |
+| `Solve(bool isRetrograde, OrbitalParameters initialOrbitalParameters, OrbitalParameters targetObjectOrbitalParameters, CelestialItem centerOfMotion, ushort maxRevolution)` | Solve Lambert problem; the `LambertResult` holds the solutions (`GetZeroRevolutionSolution()`, `GetMultiRevolutionSolutions(n)`), each with `V1`, `V2`, `DeltaV1`, `DeltaV2` and `DeltaV` |
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
@@ -1607,7 +1621,8 @@ or `Scenario.SimulateAsync`, an `RK78Integrator` propagates Φ, Ψ and P with th
 at any epoch: `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`,
 `GetStateVector`. `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, namespace `IO.Astrodynamics.Maneuver`)
 adds the execution error of a burn, `StateVector.WithRemediatedCovariance()` remediates an initial covariance that
-rounding made indefinite, and `ConjunctionAssessment.Analyze` propagates the covariance of a participant propagated in
+rounding made indefinite (a defect deeper than −1e-3 of the trace of its correlation matrix in the frame of the state and
+in its RTN frame refused, #443; clipped in RTN when its depth passes there only), and `ConjunctionAssessment.Analyze` propagates the covariance of a participant propagated in
 RK7(8) to the time of closest approach. See `docs/reference/covariance-propagation.md`,
 `docs/tutorials/covariance-propagation.md` and `docs/reference/conjunction-assessment.md`.
 
@@ -1625,8 +1640,8 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 
 **Integrator Interface (`IIntegrator`):**
 - `Initialize(StateVector initialState)` — set observer, frame, workspace; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), and after each event
-- `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`
-- Default: `VVIntegrator` (Velocity-Verlet, fixed-step, event detection at step boundaries)
+- `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`: one event per call, the earliest crossing of the step, ties in list order (#578); a g exactly zero at a step end after a non-zero one is a crossing there (#580)
+- Default: `VVIntegrator` (Velocity-Verlet, fixed-step, second order with drag too (#439), event detection at step boundaries, the step of an event integrated again to the tick of its label, #572)
 - `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)
 
 **Event Detection (`IEventDetector`):**
@@ -1637,13 +1652,13 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 
 **Force Models:**
 - **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
-- **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body.
+- **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body, the direct difference within half the distance of the perturbing body to the central body (SSB mode near the Earth, #576).
 - **Atmospheric drag** (when `drag` is true): uses the central body's atmosphere with atmosphere-relative velocity (accounts for body co-rotation): its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth built without one; another central body without a model throws `InvalidOperationException`; the other listed bodies with an atmosphere add their drag, and about the Sun (a star or barycentre observer) they give it, an Earth always having one (#674). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
 - **The central body** takes part whether or not it is listed, with the observer's models; listed bodies of one NAIF identifier, the observer's included, must have the same models (`ArgumentException` otherwise). The integrator of a force-building path must be a new instance, and the step positive (#674).
 - **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
 - **Albedo radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeAlbedo()`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
 - **Thermal radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeThermalRadiation()`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
-- **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration.
+- **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration; with the orientation cache of the central body (exact SLERP, #561) it covers the span the propagation integrates, up to half an output step past the window when the step does not divide it, and a read outside its grid reads the data provider (#626).
 
 **Geopotential usage:**
 
@@ -1683,7 +1698,7 @@ SGP4/SDP4 propagator for TLE elements.
 
 | Constructor | Description |
 |------------|-------------|
-| `TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan step)` | Create propagator for a spacecraft whose initial orbital parameters are a TLE |
+| `TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan step)` | Create propagator for a spacecraft whose initial orbital parameters are a TLE, sampled every step from the start and at the window end (#598); a step of zero or less throws `ArgumentOutOfRangeException` |
 
 | Method | Description |
 |--------|-------------|
@@ -2054,7 +2069,7 @@ Matrix operations.
 | Method | Description |
 |--------|-------------|
 | `Get(int row, int col)` | Get element |
-| `Set(int row, int col, double value)` | Set element |
+| `Set(int row, int col, double value)` | Set element: it writes the array every copy of the struct shares; the public holders of a matrix (`StateVector.Covariance`, `EncounterState`, `CollisionRisk`, `EpochStatistics`, `CdmCovarianceMatrix`, `Iau2006Model.FrameBias()`) copy it in and out, so a term set afterwards does not reach them (#722) |
 | `Multiply(Matrix other)` | Matrix multiplication |
 | `Multiply(double[] vector)` | Matrix-vector multiplication |
 | `Inverse()` | Get inverse matrix |
@@ -2131,12 +2146,18 @@ the entries only, not on the reads before it (#548): an orientation is the exact
 two entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
 states. Missing data throw `InvalidOperationException`, as on SPICE (#680): a state read for a target without entries or
 outside them, an orientation read outside a frame's entries. A bad argument throws `ArgumentException` (#680, decided by
-S. Guillet, 2026-11-14): a frame never added, and the information of an identifier never added, whose `ParamName` is
+S. Guillet, 2026-11-14): a frame neither added nor known (below), from `GetEphemeris` too since #559, and the
+information of an identifier never added, whose `ParamName` is
 `naifId`, as `SpiceDataProvider` for an identifier SPICE does not name, through `GetCelestialBodyInfo`,
 `new CelestialBody(id)` and `CelestialItem.Create(id)` alike. A Lagrange point (391 to 395) is the exception of
 `CelestialItem.Create`, which builds it from its state without reading its information: its missing state throws
 `InvalidOperationException`, as on SPICE. A body whose barycentre's data, information included, the provider lacks builds
 with `InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
+
+A read is the difference of the stored states, taken in ICRF, rotated into the frame asked by the provider's orientation
+of it; ICRF and GCRF are not rotated, and ICRF, GCRF, ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, the default
+frame of the bodies), TEME, CIRS and TIRS need no stored orientation. The provider holds geometric states only: an
+aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet, 2026-11-17).
 
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data, not in their type initializer: a provider set before their
@@ -2893,7 +2914,8 @@ var pointingManeuver = new InstrumentPointingToAttitude(
     spacecraft.Instruments.First(), // Instrument to point
     groundStation,                  // Target
     engine                          // Engine for attitude control
-);
+);                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
+                                    // pass Aberration.None as a sixth argument for the geometric direction
 
 spacecraft.SetStandbyManeuver(pointingManeuver);
 

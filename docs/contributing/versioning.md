@@ -53,8 +53,9 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, the equality of frames, the axes the TRIAD factories point, and the straight-line motion of a star and
-its proper motion in right ascension as a true angle. **Deprecated** lists
+public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
+proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked and the
+parsec of 648000/π au. **Deprecated** lists
 `Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
 `Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -105,11 +106,222 @@ release are listed under **Known limitations**.
 - **`centerOfMotion`**, an optional parameter of the kernel-backed `Spacecraft(int, string, Time?, ...)` constructor:
   the centre about which it reads its initial orbital parameters, the Earth by default
   ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), under Fixed and Changed).
-- **`Frame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
-  `ClearStateOrientations` are virtual** ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), under Changed: `SpacecraftFrame`).
+- **`SpacecraftFrame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
+  `ClearStateOrientations`**, the attitude record of a spacecraft ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), [#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541); under Changed: `SpacecraftFrame`, and `Frame` keeps no orientations).
 
 **Fixed**
 
+- **A g-function exactly zero at the end of a step was never a crossing** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580)). The product of the two g-values
+  of a step was 0, no crossing, and the zero, the previous g-value of the next step, hid every later crossing: a
+  time-like user `ImpulseManeuver` or `IEventDetector` whose root fell on a Velocity-Verlet or fixed-step RK7(8) step
+  end never fired (TT 1 100 s from the start through `Spacecraft.Propagate`, VV1, VV10 and fixed-step RK7(8) at 10 s:
+  no burn in 3 000 s), and an apsis exactly at the base with the minimum epoch before it fired one orbit late
+  (S + 5 926.379 s in RK7(8)). Both now fire at the root (Changed, Breaking, below).
+- **`IIntegrator.IntegrateSegment` reported the first detector in list order, not the earliest crossing**
+  ([#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578)). Two crossings in one step (a perigee at T/2 and a time detector at T/2 + 2 s, RK7(8) at 1e-12): with the
+  time detector listed first, the time event, then the perigee one orbit late; the earliest is now reported, the
+  perigee within 4.2e-8 s of the closed form in either order, and two time detectors at 10 and 30 s in the first step
+  give the one at 10 s (Changed, Breaking, below).
+- **A plane alignment that started just past a node fired one orbit after it** ([#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581)). The first evaluation at the
+  base locked the node by dg/dt within 1e-6 |r| of the plane, the node just passed: 1 to 10 ms past a node of the
+  400 × 1 000 km orbit, the burn came at the passed node plus one period with that node's ΔV, 2 817.8 s after the node
+  ahead. The base now takes the search-start rule of a gate inside a step: the node ahead, within 7.8e-9 s and 4.4e-11
+  m/s of the closed form in RK7(8), at the end of the step that holds it in Velocity-Verlet.
+- **A Velocity-Verlet event started the next segment up to half a tick from the instant of its state** ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572)).
+  The event at the end of its step was labelled with the label of that time, rounded to the tick, while the next
+  segment started from the state of the step end: 4.9e-8 s apart, which moved the trajectory along the track at each
+  event (1.3e-3 to 2.0e-3 m after 7 events in 12 h without ΔV about the Earth). The step is now integrated again to the
+  time of its label (Changed, Breaking, below).
+- **An impulse Velocity-Verlet located at the end of the propagation was executed while no state carried it**
+  ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)). With the crossing in the last step, the ΔV, the fuel, `ExecutedManeuvers` and `ToOpm` held the burn while
+  the solution, its outputs and the stored states ended with the state before it (7 829.380 m/s where the state after
+  is 8 063 m/s); RK7(8) with a root at the end of the window did the same. The solution now ends with the state after
+  it (Changed, Breaking, below).
+- **Velocity-Verlet was of first order with drag** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439)). The acceleration at the end of a step took the
+  half-step velocity, so a force that depends on the velocity erred by O(h) there: on a dense perigee pass (20 × 400 km,
+  45°, 1e-4 m², 1 000 kg, the U.S. Standard Atmosphere 1976) 272.6 m, 27.8 m and 2.78 m against RK7(8) at 1e-13 at steps
+  of 1, 0.1 and 0.01 s. It now takes the predicted end velocity (Changed, Breaking, below).
+- **A propagation past its window read a frozen central body and extrapolated third bodies** ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626), Changed below).
+  A propagation whose output step does not divide its window runs to its last output, round(L/ΔT)·ΔT, up to ΔT/2 past
+  the window, but `CentralBodyPropagator` built its orientation cache and its ephemeris cache over the window: past
+  window end + 120 s the orientation was held at the last grid point (the Earth stopped turning: 4.4e-3 rad 60 s past
+  the grid, 4.4e-2 rad 600 s past), past window end + 240 s the 8-point polynomial of the bodies was extrapolated (the
+  Moon 25 m off 1 680 s past). With EGM2008 10×10, the Moon and the Sun, a LEO propagated over 3 900 s at 600 s outputs
+  ended 7.0 mm and 1.7e-4 m/s from the same propagation over 4 200 s, over 88 200 s at 3 600 s outputs 4.76 m and
+  1.2e-2 m/s; the wrong states were stored and read back. The caches now cover the span the propagation integrates
+  (internal `PropagatorBase.PropagationSpan`, the step 1 of the propagation shared with the three cache sites, the
+  default Velocity-Verlet path included, which needs it before the propagator exists), and a read outside their grid
+  reads the data provider at its epoch instead of holding or extrapolating. Both propagations now take the same accepted
+  steps bit for bit, RK7(8) and the default Velocity-Verlet (`PropagationPastTheWindowTests`, red on a85098d), and the
+  reads outside the grid are `sxform`'s and `spkezr`'s own values. A propagation whose step divides its window builds
+  the same grids as before and is unchanged bit for bit.
+- **The orientation cache of a propagation interpolated by a normalised Lerp** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Changed below).
+  `PropagationFrameOrientationCache`, which gives the geopotential and drag the orientation of the central body during a
+  propagation and the RK7(8) evaluations after it, interpolated its 60 s points with `Quaternion.SLERP`, whose
+  normalised-Lerp fallback below 0.028 rad took every cell of the Earth's grid (4.4e-3 rad between two points): 3.37e-10
+  rad from `sxform` at worst, where its comments said SLERP. It now takes the exact SLERP by the axis and the angle of the
+  relative rotation (internal `Quaternion.SlerpByAxisAngle`, that of a type-3 CK and of the attitude record): 2.38e-12 rad
+  over the 6 840 epochs of 6 h (`PropagationFrameOrientationCacheTests.Interpolation_IsTheExactSlerp_AgainstSxform`, red
+  on a85098d; the bound of the KR-1 tests of lot 6, 6.9e-10 rad from the Lerp, measured again at 1.0e-13 rad and set to
+  2.1e-13; both bounds twice the worst over Linux x64, Windows x64 and macOS arm64, CI run 44225490669).
+- **The third body's attraction lost eight digits near the perturbing body** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Changed below).
+  `ThirdBodyPerturbation` computed |r − d|³ as |d|³ (1 + q)^1.5 with Battin's q = r·(r − 2d)/|d|², whose 1 + q = |r − d|²/|d|²
+  a cancellation of terms of order 1 gives to about ε |d|²/|r − d|²: in SSB mode about the Earth (the Sun the central body,
+  the Earth a third body, |r − d|/|d| = 4.6e-5) the Earth's attraction had a relative error of 2.7e-7 (6.3e-4 at 1e-6),
+  a noise of about 1e-6 m/s² that drove RK7(8)'s step control: 21 363 steps for an hour of LEO at 1e-10 (21 317 one ulp
+  of tolerance looser, the final positions 8.8 cm apart), 2 093 091 at 1e-12, step sequences that differ per platform,
+  and a start from ECLIPJ2000 or GALACTIC 3.3 to 6.0 cm (RK7(8)) and 0.87 to 1.14 m (Velocity-Verlet at 10 s) from its
+  ICRF twin after 1 h. Where |r − d| < |d|/2 the acceleration is now the direct difference −μ ((r − d)/|r − d|³ + d/|d|³),
+  ρ = r − d formed once: within 4.1e-16 of the exact acceleration there, 2.7e-15 at most around the switch, Battin's side
+  (`ThirdBodyNearThePerturberTests`, an integer reference of 2 200 bits, |r − d|/|d| from 1e-6 to 1.5, about the Sun with
+  the Earth and about the Earth with the Moon; red on a85098d); the same LEO takes 49 steps at 1e-10 (47 one ulp looser,
+  5.6 mm apart; 46 and 41, 2.6 mm apart, on macOS arm64), 5 210 at 1e-12 (5 216 on Windows x64, 5 172 on macOS arm64),
+  its twins end 1.1 cm (2.0 cm on macOS arm64; RK7(8), the integration error of two step sequences at 1e-10) and 0.62 mm
+  (Velocity-Verlet) from it (`SsbModeThirdBodyTests`; thresholds twice the worst over Linux x64, Windows x64 and macOS
+  arm64, CI run 44225490669). Below 1e-10 in SSB mode the step control still meets a floor of about 1e-8 m/s² on the
+  Earth's attraction, the quantization of the epoch at which the third bodies are read (draws one ulp apart take 38 to
+  62 steps at 1e-10 on Linux x64), a hundred times below Battin's noise. The SSB rows of `AttitudeRecordTests`,
+  `PropagatedArcsTests` and `MinimumEpochGateEdgeTests` that the noise had turned into MEASURE lines are asserted again
+  (positions against the solution across an impulse 4.1e-4 m, the velocity 1 µs before it 5.4e-7 m/s, the
+  two-`Propagate` burn 1.5e-5 s, on Linux x64, Windows x64 and macOS arm64 alike, CI run 44225490669; 2.2e-5 s over 22
+  starts and tolerances one ulp apart, Linux x64). Elsewhere the acceleration is Battin's bit for
+  bit (`Acceleration_FarFromThePerturber_IsBattinsBitForBit`), so propagations about the Earth with the Moon and the Sun,
+  the goldens and the GMAT conformance runs do not move.
+- **The Mars curve fit took 273.15 where it publishes 273.1** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Changed below).
+  `MarsStandardAtmosphere` computed the density of the NASA Glenn curve fit as p / [0.1921 (T + 273.15)], where the fit
+  ("Mars Atmosphere Model – Metric Units") takes 273.1: below the layer its density was 2.07e-4 (surface) to 3.59e-4
+  (49.8 km) under the published fit. It now takes the fit's own offset (internal `CurveFitKelvin`) in the density and in
+  its closed-form derivative; the published density to 1e-15 at 0 to 49.8 km outside the transitions
+  (`MarsStandardAtmosphereDomainTests.CurveFit_TakesItsPublishedOffset`, red on a85098d at 2.07e-4 to 3.59e-4;
+  `CelestialBodyTests.MarsAirDensity` against the published formula, where it held the code's former values).
+- **A site given by its coordinates, seen with a light-time correction, was not corrected as CSPICE corrects it**
+  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)). `Site.GetEphemeris` of such a site, as the target of a body, a barycenter, the Sun or a kernel
+  spacecraft, subtracted the observer seen from the site's body with the correction
+  (`OrbitalParameters.RelativeTo`): the observer was moved in time, never the site. Seen from the Moon with `LT` the site
+  of `DEVELOPER_GUIDE.md` was 82.7 km from `spkcpt_c` (its range 68.2 km short), from the Sun about 15 000 km, and
+  from its own body the correction was dropped (640 m with `LT`); every flag but `None` was wrong. The site now takes
+  the reference-body path for every observer when the correction is not `None` (the internal
+  `CelestialItem.ApparentStateFromReferenceBody`, the helper of #491's corrections for any target whose geometric state
+  relative to its reference body is known at any epoch): the site itself at t ∓ lt, the light time of `spkltc`, its rate
+  in the velocity, the stellar aberration of `stelab` and `stlabx` for `+S`, as `spkcpt_c` corrects it. Measured on
+  Linux x64 (2026-11-17) against `spkcpt_c` (`tools/light_time_reference`, the nine flags at three epochs): 2.4e-5 m and
+  3.7e-9 m/s from the Moon, the Earth and LRO, the sites at both poles and on the equator included, 6.8e-5 m from the
+  Sun and the Mars barycenter; the 400000 km window of the guide's example with `LT` within 1e-7 s of `spkcpt_c`'s
+  (09:42:24.997 to 14:20:43.029 TDB; 340 s wider at each end before). Without correction the state is unchanged, bit for
+  bit; a site of the kernels is unchanged. `OrbitalParameters.RelativeTo(ILocalizable, Aberration)` keeps its behaviour,
+  documented: its correction applies to the new origin seen from the current one, the state itself is not moved in time
+  (decided by S. Guillet, 2026-11-17). Changes published results: through `GetEphemeris`, the distance and coordinate
+  window searches, `SubObserverPoint` and `IsInFOV` of such a site, by up to 83 km from the Moon and 15 000 km from the
+  Sun; the conformance runner (its sites read with `None`) and the CLI (kernel sites only) do not move.
+- **A light-time corrected state in a non-inertial frame took the frame at the epoch of the observation**
+  ([#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593)). On the reference-body path (an observer that is a site or a spacecraft not from a kernel, a target
+  that is such a spacecraft or a site given by its coordinates), the corrected state was rotated to the output frame at
+  t; `spkezr_c` rotates a non-inertial frame at t ∓ lt_c of its centre, lt_c the light time from the observer to the
+  centre by the method of the correction (that of the target when the centre is the target, none when it is the
+  observer), and scales the derivative of the rotation by 1 ∓ dlt_c/dt (`zzcorsxf`). The Moon from DSS-13 with `LT` was
+  620 m off in ITRF93 and 1.48 km in MOON_ME, the Moon from a spacecraft 675 m in ITRF93, the Sun from it 228 km, a site
+  given by its coordinates 38 km in its own topocentric frame seen from the Moon. The library now does as `spkezr_c`:
+  the centre of a SPICE frame is SPICE's (`frinfo_c`, through the new native `GetFrameInfoProxy`, `namfrm_c` and
+  `frinfo_c`, a native change for a technical reason, decided by S. Guillet, 2026-11-18, and the internal `SpiceAPI.NonInertialFrameCenter`), that of the library's frames the site of a site frame,
+  the spacecraft of a spacecraft frame, the Earth for TEME, CIRS and TIRS; the rotation is read at the 100 ns of a `Time`
+  and carried to the exact epoch by the frame's angular velocity. The centre may be a third object, neither the observer
+  nor the target, read as the reference-body path reads it: the site of a site frame (a site given by its coordinates
+  included), the spacecraft of a spacecraft frame (a managed spacecraft with an attitude record or a spacecraft from a
+  kernel), a site of the kernels, a body, or any other object read from SPICE by its identifier (a frame given by name
+  centred on a spacecraft), which throws `InvalidOperationException` where SPICE has no state of it, as `spkezr_c` does.
+  Measured on Linux x64 (2026-11-17) against `spkezr_c`,
+  `spkcpo_c` and `spkcpt_c` with the locus `CENTER` (which reproduces `spkezr_c` from DSS-13 to 8e-6 m): 1.7e-5 m and
+  1.1e-8 m/s in ITRF93, MOON_ME centred on the observer and the topocentric frame of DSS-13, and in the frame of a site
+  given by its coordinates centred on a third object (the Moon from a spacecraft, from DSS-13 and from another such
+  site); 2.4e-4 m in MOON_ME centred
+  on the target, the resolution of SPICE's own MOON_ME rotation, which moves by steps of 3.7e-4 m at 384 000 km within a
+  few ulps of its epoch; the spacecraft rows as in ICRF; 1.7e-3 m in the frame of a spacecraft held as an attitude record
+  of ITRF93 (the Moon from a site), the record read at the 100 ns of the epoch of its centre where CSPICE reads the double
+  of that epoch, 6e-8 s apart at most in 2024. The coordinate windows of a site given by its coordinates seen from the
+  Moon with `LT` (its range and declination in J2000, its declination in the frame of another such site) are 1.0e-7 s
+  from those found on `spkcpt_c`. An inertial frame, a frame centred on the observer (the
+  topocentric frame of the observing site, so the visibility searches of a spacecraft from a site) and `None` are
+  unchanged, bit for bit.
+- **`InstrumentPointingToAttitude` ignored the light time for a celestial target** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549)). The law asked for
+  `Aberration.LT`, but a celestial target is the centre of the maneuver, so `Attitude.TryExecute` made the state
+  relative to it and the law read the target relative to itself, the zero vector: the pointing was geometric, the Moon
+  9.2e-5 rad from its LT direction from a LEO (4.4e-5 rad in the issue's LEO); a site of the kernels took the light time
+  from its body's centre, and a site given by its coordinates, read from the Earth with `LT`, met the correction #489
+  dropped, so its direction was geometric, 4.6e-5 rad off `spkcpt_c` from a LEO with `LT`. The direction
+  is now the target as the spacecraft's position sees it (the internal `CelestialItem.ApparentPositionFromState`): the
+  target at t ∓ lt from the point at t, the light time of `spkltc`, and for `+S` the stellar aberration from the
+  spacecraft's velocity relative to the solar system barycenter, as `spkcvo_c` corrects it; a `Star` target takes no
+  light time, its `+S` corrections the stellar aberration alone, as `Star.GetEphemeris` reads it (its catalog position
+  is the direction of the light at the barycenter, confirmed by S. Guillet, 2026-11-11). Measured on Linux x64
+  (2026-11-17), the nine corrections: the boresight 1.0e-13 rad from `spkcvo_c`'s Moon from a LEO (8 states), 1.1e-12
+  rad from `spkcpt_c`'s site from a LEO (3 states), 1.6e-16 rad from the closed form of a star at 20 and 2000 pc. See
+  Changed for the new parameter.
+- **`InitialOrbitDetermination.CreateFromObservation_Gauss` read its observer with light time from the centre of motion**
+  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), found when the fixes of this
+  release were merged). The method takes the observer's position R at the epoch of each observation (H. D. Curtis,
+  *Orbital Mechanics for Engineering Students*, algorithm 5.5), the light time belonging to the target whose direction
+  the observations carry, but it read the observer with `Aberration.LT` from the centre: the observer at t − lt. About the
+  Sun that is about 500 s of the Earth's orbit, which did not shrink with the spacing of the observations: Mars from
+  DSS-13 at 2.5, 5 and 10 days, 3.7 %, 1.8e-3 % and 5.8e-2 % of the position at e2 − lt (SPICE). Since a site given by its
+  coordinates is corrected as `spkcpt_c` (#489, above), the same read took such a site about 21 ms back seen from the
+  Earth's centre, and the determination from the exact site of the COBE observations lost its second order in the spacing
+  (`FromTheExactSite_TheErrorIsOfSecondOrderInTheSpacing`: a ratio of 3.32 instead of 4.00 when the spacing is halved).
+  The observer is now read at its geometric position: the COBE determination is that of SPICE's site again (ratios 4.002
+  and 4.001), and Mars's error falls with the spacing, 7.06e-2, 1.07e-2 and 1.56e-3 % (Linux x64, Windows x64 and macOS
+  arm64 alike, `PlanetObject`, bounds at 2.5 days twice those figures). That convergence test against SPICE replaces
+  the 10-day bound of 0.06 % and 0.15 %, which held on a85098d only because the observer's light-time error cancelled
+  the method's: not a relaxation, the reference changed (decided by S. Guillet, 2026-11-18). See Changed.
+- **The same instant in two time frames was not equal** ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)). `Time` kept the record's equality, on the
+  calendar and the frame, while `CompareTo` compared through TAI across frames: `utc == utc.ToTDB()` was false and their
+  hashes differed while `CompareTo` returned 0 and `utc - tdb` 0 ticks, so `Dictionary`, `HashSet`, `Distinct` and
+  `IndexOf` keyed by times missed what `SortedDictionary` found, and `Window` equality failed for the same instants in
+  UTC and TDB. In the library, `Spacecraft.AddPropagatedStates` given a state at a stored instant labelled in another
+  frame stored a second state at that instant instead of replacing it (201 states for 200,
+  `PropagatedArcsEdgeTests.AddPropagatedStates_ToTheArcOfTheirEpoch_AndReplacedByAPropagation`). Time equality is now by
+  instant (Changed below); `TimeEqualityTests` checks it on the definitions of the scales (TAI − UTC 37 s,
+  TT = TAI + 32.184 s, GPS = TAI − 19 s), the leap second of 2016-12-31 and two TDB ticks of one TAI tick (red on
+  a85098d: 10 of its 15 tests, the 5 that expect inequality or the default time passing).
+- **Equality of orbital parameters threw, and equal copies hashed differently** ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). Typed
+  `OrbitalParameters`, `==`, `!=` and `Equals` compared `ToStateVector()` of both operands (`&&` bound before `||`, and
+  `base.Equals` was reference equality, so every two instances reached the states): they threw
+  `InvalidOperationException` for mean elements (`FromOMM`, `ToMeanKeplerianElements()`, a mean `EquinoctialElements`),
+  against any operand and even against null, and for e = NaN, found two different sets with M = NaN or a = NaN equal
+  (NaN states), ran SGP4 twice for a TLE (`TLE.Equals(TLE)` called the base, and threw for a TLE whose SGP4 fails), and
+  every `GetHashCode` combined the identity of the instance, so equal copies hashed differently and a
+  `HashSet<OrbitalParameters>` of identical mean copies threw at the first identity-hash collision. Equality is now
+  value equality within one concrete type, computing no state, with a hash code of the same values (Changed below);
+  `OrbitalParametersEqualityTests` checks the contract (CA1065, `Object.GetHashCode`) over the four types, osculating and
+  mean, typed and as `OrbitalParameters`, in hash sets, dictionaries, `Distinct`, `List.Contains` and tuples (red on
+  a85098d: its 17 tests, 10 of them on an `InvalidOperationException` of the comparison).
+- **The holders of a `Matrix` shared the caller's array** ([#722](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/722)). `Matrix.Set` writes the array a matrix
+  wraps, which a copy of the struct shares: `StateVector`, `EncounterState`, `CollisionRisk` and `EpochStatistics` kept
+  the matrix given and returned it, so a term set afterwards on either reached them (a loop that reuses one matrix to
+  build the covariances of several states gave every state the last one, and the conjunction analysis and its Pc ran on
+  it), and `Iau2006Model.FrameBias()` returned its cached static, which any caller could corrupt for the next. They now
+  copy in and out (internal `Matrix.Copy`, which `CdmCovarianceMatrix` takes since #717), `Matrix` kept mutable (decided
+  by S. Guillet, 2026-11-17: `Set` is how callers build a covariance); `MatrixHoldersTests` (red on a85098d: 6 of its 7 tests, the default matrix held as it is passing).
+- **`TLEPropagator` counted its samples in whole seconds** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598)). Its
+  sample count was `(uint)L / (uint)ΔT + 1` for a window of L seconds: a step below 1 s divided by zero
+  (`DivideByZeroException`), a fractional step was counted as its whole seconds, so its samples i·ΔT ran past the window
+  end (1.5 s over 10 s: 11 samples to +15 s), and a window that the step does not divide lost its end (90 s at 60 s:
+  2 samples, the last at +60 s, with no state and no solution after it). The samples are now counted in ticks: i·ΔT from
+  the start for i = 0 … ceil(L/ΔT) − 1, then the window end, so ceil(L/ΔT) + 1 samples, each the SGP4 state of its
+  epoch, the steps of the solution the intervals between them, the last shorter. Beyond the issue, a grid point closer
+  to the end than ΔT/10 is dropped, the last step then up to 1.1 ΔT, as the stored states drop an output that close to an
+  impulse (a choice of this release beyond the issue, decided by S. Guillet, 2026-11-18): a window given in UTC is a few
+  ticks longer or shorter in TDB, one UTC hour from the ISS TLE's epoch 3600 s and 11 ticks, and with ceil(L/ΔT) + 1
+  samples its 62nd, 1.1 µs after the 61st, puts the stored-state read of the sampled spacecraft 4.336e3 m off SGP4 at
+  +3570 s (`TlePropagationTests`, Linux x64), the defect of two stored states a few ticks apart listed under **Known
+  limitations**, which the rule keeps `TLEPropagator` from meeting without fixing it; a step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
+  whole-second step divides keeps its samples and its solution, bit for bit (`TLEPropagatorTests`: 121 samples at 0.5 s
+  over 1 min, 3 at 60 s over 90 s, 8 at 1.5 s over 10 s, 61 at 60 s over 3600.5 s and over one UTC hour, the last at the
+  window end, red on a85098d; 61 at 60 s over 3600 s unchanged; between +60 s and +90 s the Hermite of the 30 s step is
+  2.7e-5 m/s and 0.037 m off SGP4 on the three platforms, bounds 5.5e-5 m/s and 0.075 m; 251 m/s and 222 km before,
+  past the end of the solution). A window given in UTC whose TDB length the step does not divide ends at its TDB end
+  instead of the grid point before it: for the ISS at 60 s over one UTC hour the last sample moves by 1.1 µs, and the
+  Lagrange read of the samples between them, 7.593e-4 m from SGP4 before, is 9.062e-4 m (the SGP4 state of an instant off
+  the grid of the other samples carries its own tick rounding, 0.77 mm per tick; `TlePropagationTests`, bound 1.9e-3 m,
+  1.6e-3 m before). No numerical propagation and no conformance case moves.
 - **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
   adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
   narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
@@ -159,7 +371,8 @@ release are listed under **Known limitations**.
   and `SCREEN_VOLUME_X/Y/Z` are `lengthTypeUO` in the NDM/XML schema (units optional, `m` the only unit; m in
   CCSDS 508.0 table 3-2), and the reader took km when the attribute was absent: 715 read as 715 000 m, with no error and
   the schema check passing. The default is now m. A length with `units="m"` is now the double of its text exactly (it was
-  divided by 1000 and multiplied back, one ulp off at most); `units="km"`, outside the schema, is still accepted.
+  divided by 1000 and multiplied back, one ulp off at most); `units="km"`, outside the schema, is refused since #619
+  (Changed below).
 - **The CDM, OPM and OMM readers rejected a day-of-year date** ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)). The `yyyy-DDD` patterns of the
   three readers read the literal text `DDD` (`D` is no .NET specifier): every `YYYY-DDDThh:mm:ss` date, which the
   schema's `epochType` allows and the library's own schema check passed, threw, in every date field and on every load
@@ -169,7 +382,8 @@ release are listed under **Known limitations**.
   applied, UTC. Measured against `tools/ccsds_epoch_reference` (CSPICE `str2et` and `et2utc` on 25 day-of-year dates,
   2000 to 2026, leap days, offsets, 0 to 7 fraction digits): every instant exact to the tick; the calendar dates give
   the `DateTime` of the former readers bit for bit; the literal `DDD`, a day 0 or a day 366 of a common year throw the
-  reader's parse exception. Other text keeps the former fallback (`DateTime.TryParse`, #619).
+  reader's parse exception. Other text, which went to the former fallback (`DateTime.TryParse`), throws the parse
+  exception since #619 (Fixed below).
 - **A kernel-backed protected spacecraft got the RTN axes of its orbit about the Solar System barycentre** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620)).
   `new Spacecraft(naifId, name, epoch, ...)` read its initial state about the SSB, and the conjunction analysis takes the
   protected spacecraft's centre as its observer: `RelativePositionRtn`, `RelativeVelocityRtn`, `CombinedCovarianceRtn`
@@ -245,7 +459,9 @@ release are listed under **Known limitations**.
   propagation up to the last instant of `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute).
   A propagation still reads past its window end when its output step does not divide the window:
   it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end, and a geopotential or drag read there past the coverage throws
-  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies keep #454.
+  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies kept #454
+  then; every path #454 lists reports SPICE's error since (#622, #714, #608, #668, #560, #706, #711), the GM read of the
+  native constructors tracked by #655, and SPICE prints nothing since #727.
 - **The `ILocalizable` conjunction overloads extrapolated past a propagated spacecraft's states** ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), its
   guard). `Analyze`, `AnalyzeAll` and `Screen` read a propagated protected or secondary spacecraft through its stored
   states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw
@@ -319,10 +535,10 @@ release are listed under **Known limitations**.
   only the native call runs under the lock in `ConvertTleToStateVector`, the zero-state check and the Earth after it,
   and `ReadEphemeris` builds its observer before it; the states are the same bit for bit (same native calls, same
   inputs). No other code of the library under the lock reaches `PlanetsAndMoons`, `Stars` or `Barycenters`, the only type
-  initializers of the library that read SPICE. Code a caller supplies can still run under it: a custom `IDataProvider`,
-  through the bodies the element conversions of `SpiceAPI` build and the frames of an ephemeris read in TEME, CIRS or
-  TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`; it must not read the three
-  classes.
+  initializers of the library that read SPICE. Code a caller supplies could still run under it: a custom `IDataProvider`,
+  through the bodies the element conversions of `SpiceAPI` built (no longer since #664 and #725) and the frames of an
+  ephemeris read in TEME, CIRS or TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`
+  (before the lock since #661); it must not read the three classes.
   - **Measured** (Linux x64, 4 cores, Release, 2026-11-11), each run a fresh process, two threads started behind a
     barrier, a run hung when it had not ended 3 s after its start: before the fix, `ConvertTleToStateVector` against the
     first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `TLE.ToStateVector` 35 of 200, `ReadEphemeris` from
@@ -414,6 +630,39 @@ release are listed under **Known limitations**.
     time, and a read there throws: the coverage of ITRF93 in the test kernels starts at −43135.816087188054 s, whose
     nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it), so the test of the orientation
     cache of a window starting inside the coverage starts one tick later; read from the first tick inside a bound.
+- **The spans computed outside `Time`, and `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, were truncated to the tick** ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)).
+  #625 made every conversion of seconds inside `Time` the nearest tick; the spans the library computes elsewhere still
+  went through `TimeSpan.FromSeconds`, and `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD` through
+  `DateTime.AddDays`, `AddHours` and `AddMinutes`, which truncate toward zero: a tick early for about half of the values.
+  They now take the nearest tick of the exact value of their double, ties to even, through the helper of #625
+  (`Time.SecondsToTicks`, with the ticks per day, hour and minute for the four methods of `Time`, and the internal
+  `Time.SecondsToSpan` for a span, which keeps the exception types of `TimeSpan.FromSeconds`, `OverflowException` from
+  922 337 203 685 s, the bound of `SecondsToTicks`, where `TimeSpan.FromSeconds` accepted up to 922 337 203 685.477 s):
+  `OrbitalParameters.Period()` (so the period of the element conversions of `SpiceAPI` and `ProfilesConfiguration`),
+  `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the offsets of the launch windows after the first
+  (`Launch.FindLaunchWindows`: half the sidereal period in seconds plus ±2 δL/ω, rounded once, where half the truncated
+  period by integer division was added to the truncated arc), the thrust window of an impulse (`Tsiolkovski.DeltaT`), the hold of `PhasingManeuver`, and the step of the sampled close-approach search,
+  its candidate, seed, secant and subdivision epochs (decided by S. Guillet, 2026-11-17, with the four methods of `Time`).
+  The days of `CreateFromJD` from J2000, `julianDate − 2451545.0`, are exact from JD 1225772.5 to 4903090 (Sterbenz's
+  lemma). `TimeSpan.FromSeconds` of a constant a tick holds (60 s, 32.184 s, 19 s, whole leap seconds) is not concerned.
+  - **Measured** (Linux x64, 2026-11-18, `NearestTickSpanTests`, red on fe72f8e): against the exact integer nearest tick
+    of the double (`ExactTicks`) or the closed form evaluated in `decimal` from the double inputs (a value within 0.01
+    tick of a half tick not counted), the former truncation was a tick off for 8 733 of 20 000 random spans of magnitude
+    up to 5e9 s, 16 of 23 orbital periods, 10 of 24 periods of the element conversions of `SpiceAPI`, 43 of 80 sidereal periods
+    of the Earth and the Moon from SPICE's angular velocity, 24 of 40 angle spans of the true solar day, 16 of 29 burn
+    durations of the rocket equation, 15 of 36 phasing holds, 40 of 65 launch window offsets (against π/|ω₀| ± δL P/π
+    in `decimal`), 278 of 5 000 steps of the close-approach search, 9 of 27 spans of `AddDays`, `AddHours` and `AddMinutes` and 2 of 6 Julian dates; each now
+    gives the nearest tick. `DateTimeTests` checks 1e5 random spans of the four methods of `Time` against the exact
+    reference, where it checked `DateTime`'s arithmetic.
+  - **What moves:** each of these spans by a tick at most, and what is computed from them. One expected value of the
+    tests is recaptured: the thrust window of `ApsidalAlignmentManeuevrTests.ExecuteAtP`, 107 386 319 ticks where it was
+    107 386 318 (the rocket equation at 40 digits, mpmath, gives 107 386 318.546 ticks for the |Δv| of the execution). The
+    runner on the suite's main (33286d2), on `orbital_elements`, `maneuver` and `conjunction` (68 cases): 11 of the 759
+    delta entries move, all `period_s`, whose largest delta falls from 9.54e-8 s to 4.28e-8 s, within half a tick; the
+    maneuver and conjunction deltas do not move (the runner's engine burns in 1e-12 s, below a tick, and a step of the
+    search moved by a tick changes no refined TCA). The thrust window and the phasing hold gate the next maneuver, so a
+    propagation whose next event lies within a tick of the gate can take it at another step: none of the tests run
+    (`Category!=LongValidation`) moves.
 - **`TimeToRadius` returned an apsis for a radius the orbit never reaches, and failed with NaN or an overflow far out** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627)).
   It clamped cos ν to [−1, 1], so a radius below the periapsis gave the periapsis and a radius above the apoapsis of an
   ellipse the apoapsis, both silently, and an infinite radius on a hyperbola, the asymptote, gave a NaN mean anomaly
@@ -425,10 +674,9 @@ release are listed under **Known limitations**.
   to 7e-16); a radius reached outside the epochs a `Time` holds throws an `ArgumentOutOfRangeException` that says so,
   after the last or before the first. A circular orbit (e = 0), at its radius at every instant, returns its epoch, where
   0 / 0 gave NaN (and a radius an ulp from p an arbitrary epoch). On an open orbit already past the radius the epoch is
-  its outbound crossing, before the epoch of the orbit, as before. An ellipse with 1 − 1e-6 < e < 1, whose anomalies the
-  library takes as parabolic, keeps a time about 8 times off, and its epoch can be before the epoch of the orbit even for
-  a radius not yet reached (EpochAtMeanAnomaly adds a period only for e ≤ 1 − 1e-6); pre-existing, see **Known limitations**
-  ([#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)).
+  its outbound crossing, before the epoch of the orbit, as before. Within 1e-6 of e = 1, whose anomalies the library takes
+  as parabolic, the time was about 8 times off, and its epoch could be before the epoch of the orbit even for a radius
+  not yet reached: fixed by [#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478), below.
   `TimeToSphereOfInfluence` throws `InvalidOperationException` ("<body> has no finite sphere of influence; an orbit
   about it never leaves it") for an infinite sphere of influence. The recommendation of the issue: throw, no `Try`
   method.
@@ -788,10 +1036,10 @@ release are listed under **Known limitations**.
     sets and culminations within 0.50 ms of GMAT's `ContactLocator` (its millisecond print), the azimuth and elevation
     within 1.7e-7°, the range within 1.3 mm and the range rate within 0.014 mm/s of `azlcpo`, `LT+S` included (the
     range rate was 0.728 m/s off with `LT` and `XLT`, `LT+S` 4.1e-3° in azimuth and 211 m in range).
-  - **Not in this fix:** the output frame is still evaluated at the epoch of the observation; `spkezr` evaluates a
+  - **Not in this fix:** the output frame was still evaluated at the epoch of the observation; `spkezr` evaluates a
     non-inertial frame centred on another body at t − lt of its centre (the Moon from DSS-13 with `LT`, 531 to 620 m in
-    `ITRF93`; [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), split from #491).
-    The topocentric frame of the observing site and the inertial frames are not affected.
+    `ITRF93`; [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), split from #491,
+    fixed in this release, above). The topocentric frame of the observing site and the inertial frames are not affected.
   - **Changes published results:** on that path, the `LT` and `XLT` velocities by up to 0.77 m/s (a LEO spacecraft),
     the `CN` and `XCN` states by up to 42 km (the Moon from a site), the `+S` states by up to 14 775 km (the Sun from a
     site, 20.7″) and their velocities by up to 3.5 km/s (the Sun from a LEO spacecraft); the managed searches with a
@@ -1007,7 +1255,7 @@ release are listed under **Known limitations**.
   of Φ and Ψ rejects, the state meeting its tolerance, is now accepted on the error of the state (decided by
   S. Guillet, 2026-10-26), the step that Hipparchus, Orekit and GMAT take, which keep Φ out of the step control. Φ of
   such a start stays within 1.3e-7 of central differences of whole propagations at 1e-14, the resolution of that
-  reference, and within 4.6e-11 of Φ at 1e-14 on the steps of the state. Only a step that its retry would repeat is
+  reference, and within 2.7e-10 of Φ at 1e-14 on the steps of the state (1.34e-10 at worst, Windows x64, CI run 44225490669). Only a step that its retry would repeat is
   accepted so, and only with a minimum step size below 10 ms, where the guard of 10 000 steps within 100 s can stop a Φ
   that stays noisy (its message naming Y). A propagation that completed before takes the same steps, bit for bit, and
   without `IncludeInStepControl` nothing changes. In SSB mode at 1e-11 that guard now stops the propagation, where the
@@ -1028,11 +1276,10 @@ release are listed under **Known limitations**.
   eccentric anomaly is within 0.60 of the rounding floor on ellipses and 2.2 on hyperbolas (1124 before), and the same
   states are within 7.7e-8 m, 1.4e-7 m and 2.5e-8 m. A non-finite mean anomaly or eccentricity of orbital parameters
   given by M now throws `InvalidOperationException`, naming e and M, where NaN was returned: from these paths, from the
-  constructors of `CentralBodyPropagator` (Velocity-Verlet propagated NaN, RK7(8) failed after 100 rejected steps), and
-  from `Equals`, `==` and `!=` of two such parameters typed `OrbitalParameters`, which compare their states (they
-  compared equal). With a NaN eccentricity only `EccentricAnomaly()` changes: `TrueAnomaly()` and `ToStateVector()`
-  already threw `InvalidOperationException`. A hyperbola with e < 2 and |M| above max(3.0e307, 1.8e308 (e − 1)) rad
-  throws too, its start overflowing (a finite H was returned; no orbit reaches such a mean anomaly). M = 0 and e = 0 are
+  constructors of `CentralBodyPropagator` (Velocity-Verlet propagated NaN, RK7(8) failed after 100 rejected steps). The
+  equality of such parameters computes no state and does not throw (#475). With a NaN eccentricity only
+  `EccentricAnomaly()` changes: `TrueAnomaly()` and `ToStateVector()` already threw `InvalidOperationException`. A
+  hyperbola with e < 2 and |M| above max(3.0e307, 1.8e308 (e − 1)) rad throws too, its start overflowing (a finite H was returned; no orbit reaches such a mean anomaly). M = 0 and e = 0 are
   unchanged, bit for bit; other states move by up to the former error, so a propagation started from elements takes
   slightly different steps. The round trip of a near-circular state of #398 now returns it to 1.9e-15 of its radius
   (1.4e-15 in 10.2.0-preview-1).
@@ -1203,7 +1450,7 @@ release are listed under **Known limitations**.
   rotation of the frame kernel's boresight onto the Moon's direction from `spkezr`, for five orientations. The light
   time it requests is not applied to a celestial target, whose direction stays geometric (4.3e-5 to 4.5e-5 rad from the
   light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue,
-  [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
+  [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), fixed in this release (above) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
 - **A state in GCRF propagates.** `PropagatorBase` rejected `Frame.GCRF` as an initial frame ("must be defined in
   inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceAPI` hands a frame named
   GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000` in `ReadEphemeris`, `ReadOrientation`,
@@ -1239,6 +1486,15 @@ release are listed under **Known limitations**.
   check: `NullReferenceException`, the `ArgumentException` unreachable. It throws `ArgumentNullException` (an
   `ArgumentException`) naming `targetOrbit`, before the check of the engine, whether the fuel tank is attached to a
   spacecraft or not ([#552](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/552)).
+- **A null target orbit of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` is an argument error**
+  ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). Their target-orbit
+  constructors chain to the maneuver-centre constructor of `ImpulseManeuver`, not to the one #552 fixed, and read the
+  observer and the apogee or perigee vector of the target in that chain: a null `targetOrbit` threw
+  `NullReferenceException` with no parameter name, whether the fuel tank of the engine was attached to a spacecraft or
+  not (a85098d, the four cases of `ImpulseManeuverTests.ANullTargetOrbit_IsAnArgumentError` and the two of
+  `ANullEngine_IsAnArgumentError` for these maneuvers). They throw the `ArgumentNullException` of the three maneuvers of
+  #552, naming `targetOrbit`, before the check of the engine. Migration: a caller that caught `NullReferenceException`
+  catches `ArgumentNullException`.
 - **The XML documentation of `OpmManeuverParameters`.** A bare `<= 0` in three comments (`ManDeltaMass`, the
   constructor's `manDeltaMass`, `CreateImpulsive`'s `deltaMass`) was badly formed XML (CS1570 with
   `GenerateDocumentationFile`), and the whole documentation of the three members was dropped from the generated file.
@@ -1353,7 +1609,7 @@ release are listed under **Known limitations**.
     the one-term TDB − TT series, within 1.06 µs of the LSK formula SPICE `unitim` evaluates and 37.34 µs of ERFA `dtdb`
     from 1972 to 2100; CSPICE is given the managed TDB as its ephemeris time. See
     [Time Scales](../reference/time-and-windows.md#time-scales).
-    `Period()` for e ≥ 1 (item 3) is [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663); the ephemeris time given to CSPICE is still the managed TDB,
+    `Period()` for e ≥ 1 (item 3) is fixed by [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), under **Changed**; the ephemeris time given to CSPICE is still the managed TDB,
     not the LSK formula (item 4, [#665](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/665)). Both are under **Known limitations**.
 
 - **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
@@ -1972,10 +2228,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`Time.AddDays`, `AddHours` and `AddMinutes` of NaN returned the epoch, `CreateFromJD(NaN)` J2000** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). They
   forwarded to `DateTime`, whose range check is false for NaN, which it converts to 0 ticks; the infinities threw with
   `DateTime`'s parameter name, `value`. A non-finite argument now throws `ArgumentOutOfRangeException` naming `days`,
-  `hours`, `minutes` or `julianDate`, as `AddSeconds` already did; a finite argument gives the result of `DateTime`, bit
-  for bit, still truncated to the tick ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)). The command line's epoch `NaN JD` ran at J2000 and is now
-  rejected. `DateTimeTests` checks the four methods in UTC and TDB, and 1e5 finite arguments against `DateTime`'s
-  arithmetic (Changed, Breaking, below).
+  `hours`, `minutes` or `julianDate`, as `AddSeconds` already did; a finite argument gives the nearest tick since
+  [#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637) (above), where it gave the result of `DateTime`, truncated to the tick. The command line's epoch `NaN JD` ran at J2000 and is now
+  rejected. `DateTimeTests` checks the four methods in UTC and TDB, and 1e5 finite arguments against the exact nearest
+  tick (Changed, Breaking, below).
 - **`Time.Create(year, doy, sec)` checked nothing** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). Year 0 was read as 2000, and a day or seconds outside
   their range rolled into the neighbouring day or year: `Create(2023, 366, 0)` was 2024-01-01, `Create(2024, 1, -1)`
   2023-12-31T23:59:59Z. It now throws `ArgumentOutOfRangeException` naming `year` outside [1, 9999], `doy` outside the
@@ -2752,7 +3008,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GeometryFinderTests` and the C++ `API` tests). A search SPICE runs
   is unchanged, bit for bit: the same native call, copy and labelling (the CSPICE goldens of `SpiceApiTest`,
   `KernelWindowSearchTests`, `OccultationSearchValidationTests` and `FieldOfViewSearchTests`). The 1000-window cap of
-  the copy stays ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+  the copy stayed in that round ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed below).
 - **`SpiceAPI.TransformFrame` threw for the frame of a site only the library holds** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round). The frame of
   a site built from coordinates, and of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel
   defines, is the library's: the reads in it are rotated (#682, third review of #690), and `ToFrame` and
@@ -2762,7 +3018,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's
   `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (the same on Linux
   x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
-  frame kernel and the CK written for them) and CIRS and TIRS ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)) keep their path; TEME's composition is the same code, bit for bit.
+  frame kernel and the CK written for them) keep their path; CIRS and TIRS are composed the same way since [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656) (below); TEME's composition is the same code, bit for bit.
 - **The documentation of a site observer of `SpiceAPI.ReadEphemeris` by identifiers stated no condition** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth
   round). The observer of a site identifier is a `Site` built from its SPICE name and read at J2000 TDB (#672), so a
   site no loaded kernel names throws `ArgumentException` (`naifId`, "has no name in SPICE") and one whose SPK does not
@@ -2830,7 +3086,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`OmmReaderTests`, `OpmReaderTests`, `OmmTests`, `OpmTests` and `CdmTests`
   `*_NonFiniteValue_*`, through every entry point, red on 46e6975). The CDM reader checks the value it holds after its
   conversion to m or m/s as well: a finite text in km or km/s above about 1.8e305 (`1e306` for `X`, `Z`, `X_DOT`,
-  `MISS_DISTANCE`, `RELATIVE_POSITION_R`, `RELATIVE_VELOCITY_T`) became ±Infinity by its product by 1000 (IEEE 754), which
+  `MISS_DISTANCE`, `RELATIVE_POSITION_R`, `RELATIVE_VELOCITY_T`; the two lengths in km are refused for their units since
+  #619) became ±Infinity by its product by 1000 (IEEE 754), which
   `Cdm.Validate` reported valid; it throws `CdmParseException` naming the keyword, its text and its unit
   (`Invalid numeric value for X: '1e306' km is not a finite number in SI units.`), and 1e305 km reads as before, bit for
   bit (`CdmTests.ReadFromString_FiniteValueOverflowingInSiUnits_ThrowsCdmParseException`, red on the first fix of #708;
@@ -3115,8 +3372,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   read `MeanRssPosition` and `StdRssPosition`, which `EpochStatistics` does not have; the numerical propagation tutorial
   gave `Clock` its period instead of its ticks per second, read `Position` on the tuple of `InterpolateAt` and listed
   `PlanetsAndMoons.JUPITER_BODY` (now `Barycenters.JUPITER_BARYCENTER`); the Lambert reference named the third argument
-  of `Solve` `targetObjectOrbitalParameters`, which the library spells `targetOjectOrbitalParameters` (the example passes
-  its arguments by position, the listing shows the library's name); the SPICE API reference listed
+  of `Solve` `targetObjectOrbitalParameters`, which the library then spelled `targetOjectOrbitalParameters` (the example
+  passes its arguments by position, the listing shows the library's name, `targetObjectOrbitalParameters` since the
+  parameter's rename, #662, under Changed); the SPICE API reference listed
   `AddCelestialBodyInfo(params CelestialBody[])`, whose type is `IO.Astrodynamics.DTO.CelestialBody`; the covariance
   tutorial called a helper `WithRtnCovariance` defined nowhere (now in the block). Every csharp block is now the region
   of a method of the page's file under `IO.Astrodynamics.Tests/Documentation/Pages/`, its inputs the method's parameters
@@ -3148,15 +3406,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` naming the target at the observer, which has no direction, and an ellipsoid target the
   `InvalidOperationException` of an observer inside the target, never a message about the half-angles
   (`InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance`, red on c3a4cf8, whose underflow
-  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle still reports such a point in view, its margin taking
-  atan2(0, 0) = 0, [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). Every other
-  field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
+  guard blamed the half-angles 0.1 and 0.1 rad; the rectangle reported such a point in view, its margin taking
+  atan2(0, 0) = 0, until [#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721),
+  below). Every other field and target is searched as before, bit for bit (the same vectors). Migration: a caller that caught
   `ArgumentException` for these cases catches `InvalidOperationException`. As the issue recommends (decided by
   S. Guillet, 2026-11-17), the constructors keep the rule "finite and positive" for both half-angles, and the
   documentation states that half-angles below about 1e-16 rad can be degenerate for `gftfov` (SPICE(DEGENERATECASE),
   measured with `fovtrg_c` up to 1.53e-17 rad with the boresight at the Moon), the two paths then possibly disagreeing,
   and that the managed construction of a circle or an ellipse loses its precision far below (the Moon's ellipsoid at the
   boresight not found for a half-angle of 1e-155 rad in the reference plane, measured).
+- **A rectangular field reported a point target at the observer in view** ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)).
+  `Instrument.IsInFOV` and the managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` reported a
+  point target at the observer, distance 0 (two spacecraft of the same state), in view: its margin took the angles of
+  the zero vector as atan2(0, 0) = 0, so the search returned the whole search window (a85098d: `IsInFOV` true and the
+  window [2024-01-01T00:00:00, 00:02:00] TDB, for a field of 0.1 and 0.2 rad). A point at the observer has no
+  direction, so it is neither in nor out of the field; since #715 the circle and the ellipse throw
+  `InvalidOperationException` naming the target at the observer. The rectangle now throws the same exception, its
+  distance checked before its margin (decision 9 of #719, decided by S. Guillet, 2026-11-17;
+  `InstrumentTests.PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance` and
+  `PointTargetAtTheObserver_ManagedSearchThrowsInvalidOperationNamingTheDistance`, red on a85098d for the rectangle).
+  Every other target of a rectangle is searched as before, bit for bit (the same margin). The result changes from
+  "in view" to an exception: Breaking, under Changed.
 - **Six csharp blocks of three tutorials did not compile with the directives of their page** ([#716](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/716)).
   `DocumentationPagesExamplesTests.PageBlocks_CompileWithTheUsingsOfTheirPage` compiled, as a reader who copies them,
   only the blocks that declare using directives (15 of 174), so a block without a list of its own that used a namespace
@@ -3206,11 +3476,750 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`Invalid numeric value for MISS_DISTANCE: '118,1'.`). Every `xsd:double` numeral (a sign, no integer digit, an
   exponent of either case, surrounding whitespace) reads bit for bit as before (`CdmTests`
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
-  `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
-  half stays open.
+  `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed there (decided by S. Guillet, 2026-11-17); its
+  date half is fixed below.
+- **`ToEquinoctial()` gave P = NaN or ±Infinity within 1e-6 of e = 1** ([#462](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/462)).
+  The semi-latus rectum was a(1 − e²) with the a = +Infinity of the band |e − 1| < 1e-6 (`IsParabolic()`): NaN at e = 1
+  (∞ × 0), +Infinity or −Infinity elsewhere in the band, its sign set by rounding (the same exact parabola gave +∞ in
+  ICRF and −∞ in `ECLIPTIC_J2000`; NaN, −∞ or +∞ for every one of 2724 exact parabolas, measured on a85098d), printed
+  by `ToString()` and the CLI converter, so that the six elements could not rebuild the orbit. In the band P is now the
+  conic's q (1 + e), q the `PerigeeRadius()`: 2q for a parabola, q (1 + e) for `KeplerianElements` of the band, h²/μ for a
+  `StateVector` (decided by S. Guillet, 2026-11-17: the fix of the issue, which reads no semi-major axis and so holds with
+  the conic's a of #459). Outside the band P is a(1 − e²) bit for bit, so no TLE fit moves; the state rebuilt from the
+  elements is unchanged (it took the perigee radius when P was not finite). Against 60-digit closed forms
+  (`tools/near_parabolic/near_parabolic_reference.py`): 4.8e-17 relative for Keplerian elements (exactly 2q at e = 1),
+  4.9e-16 for the states of the issue through `ToEquinoctial()`, `ToKeplerianElements()`, `AtEpoch` and
+  `ToFrame(ECLIPTIC_J2000)`, 2.9e-16 of h²/μ over the 2724 parabolas (`NearParabolicBandTests.Issue462_*`, red on
+  a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS arm64); the CLI prints h²/μ to its last bit
+  (`OrbitalParametersTests.NearParabolicSvToEquinoctial_PrintsAFiniteSemiLatusRectum`). `TestHelpers.EquinoctialComparer`
+  now compares P, and the two #452 tests that encoded the NaN and ±∞ (`EquinoctialElementsSingularityTests`
+  `StateRoundTrip_NearParabolic_ThroughEquinoctial`, `Parabolic_FromKeplerianElements_TakesThePerigeeRadius`) state the
+  finite P.
+- **Within 1e-6 of e = 1, Kepler's equation took Barker's anomaly** ([#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)).
+  In the band 0 < |e − 1| < 1e-6, `EccentricAnomaly(ν)` gives Barker's D = tan(ν/2), but the mean anomaly of a true
+  anomaly put it into Kepler's elliptic (e < 1) or hyperbolic (e > 1) equation, chosen by e alone: only e = 1 exactly
+  gave Barker's D + D³/3. `MeanAnomaly(ν)`, `ToStateVector(ν)`, `TimeToRadius`, `TimeToSphereOfInfluence` and every
+  path of `EquinoctialElements` (`MeanAnomaly()`, `ToKeplerianElements()`, `AtEpoch`, `ToStateVector(Time)`, the start of
+  a propagation) were then up to the size of the orbit off without an error: at q = 7000 km and ν0 = 0.5 rad,
+  `sv.ToStateVector(sv.TrueAnomaly())` 338.6 s in the past and 3565 km away, `TimeToRadius` −307 s for a radius reached
+  446 s later, an exact parabola given as Keplerian elements 5.1e7 m off through its equinoctial elements, whose e
+  rounds one ulp below 1 (measured on a85098d, as in the issue). `MeanAnomaly(ν)` now takes Barker's equation in the
+  band, whatever the side of e = 1, and `ToStateVector(ν)`, `TimeToRadius` and `EquinoctialElements.MeanAnomaly()` go
+  through it (decided by S. Guillet, 2026-11-17, the recommendation of the issue: the band test lives in
+  `MeanAnomaly(ν)`); the public static `TrueAnomalyToMeanAnomaly` keeps its contract, its documentation now saying that
+  the anomaly must match e. Outside the band every result is unchanged, bit for bit. Against 60-digit references
+  (`tools/near_parabolic/near_parabolic_reference.py`): Barker's mean anomaly within 2.8e-17 rad on a state, its
+  Keplerian and its equinoctial elements at e − 1 = ±9e-7, ±5e-7, ±1e-12; the state at its own true anomaly is itself,
+  at its epoch; the times within 7.8e-9 s (ν = 1 rad), 4.6e-8 s (2e7 m) and 4.6e-8 s (the sphere of influence) of
+  Barker's, their epochs ticks of `Time`; the exact parabola within 1.7e-16 rad of its M and 2.3e-9 m of Barker's
+  state; over 2000 random exact parabolas, the equinoctial round trip within 6.9e-15 of |r| (`NearParabolicBandTests.Issue478_*`,
+  red on a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS arm64, where Barker's M at ν = 1.5 is
+  one ulp low on macOS arm64). The time of the band is Barker's, the motion the
+  library takes there (#459): at e − 1 = −5e-7 it differs from the conic's by 1.7e-5 s at ν = 1 rad.
+- **Parabolic `EquinoctialElements` without a perigee radius threw, or depended on the order of the calls** ([#477](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/477)).
+  Elements of the band |e − 1| < 1e-6 with a finite P define a parabola of perigee radius q = P / (1 + e), but nothing
+  derived it: on a fresh instance `ToKeplerianElements()`, `AtEpoch`, `ToStateVector(Time)`, `TrueAnomaly(Time)` and the
+  `CentralBodyPropagator` constructors (so `Spacecraft.Propagate` and the CLI's `--from-equinoctial`) threw the
+  `ArgumentException` of the parabolic `KeplerianElements`, and after `PerigeeRadius()`, `MeanMotion()` or a few other
+  calls they worked with the h²/μ/(1 + e) of the state, 2 ulp above P / 2 (measured on a85098d). The constructor now
+  derives q = P / (1 + e) when no perigee radius is given, the orbit is in the band and P is finite (decided by
+  S. Guillet, 2026-11-17, the recommendation of the issue), exactly P / 2 at e = 1, so every path reads the same q from the
+  first call. Elements given a perigee radius, elements outside the band, a non-finite P without a radius (its state
+  undefined, as #452 left it) and `Equals`/`GetHashCode` are unchanged. Against 60-digit closed forms (the
+  equinoctial-to-Cartesian form of Walker, Ireland and Owens and Barker's equation; the two cases of the issue): q
+  exactly P / 2, Barker's n within 4.1e-17, the Keplerian angles within 1.2e-16 rad, `AtEpoch` and `ToStateVector(Time)` up
+  to 1.5 h within 9.5e-16 of |r|, the first state of a propagation by Velocity-Verlet and RK7(8) within 2.9e-16, every
+  first call of the issue giving bit for bit the results of a fresh instance and of the elements given P / (1 + e)
+  (`NearParabolicBandTests.Issue477_*`, red on a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS
+  arm64), and the CLI
+  converter prints the state (`OrbitalParametersTests.ParabolicEquinoctialWithoutPerigeeRadiusToSv_PrintsItsState`).
+  `EquinoctialElementsSingularityTests.Parabolic_WithAFinitePOrAPerigeeRadius_MatchesTheReference` now finds
+  `PerigeeRadius()` without a radius exactly P / (1 + e). Within the band with e ≠ 1 the Keplerian path runs too, with the
+  mean anomaly of #478.
+- **A non-finite eccentricity gave the message of an empty `Nullable`** ([#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476)).
+  With e = NaN no conic branch of `OrbitalParameters.TrueAnomaly()` held, and `TrueAnomaly()`, `ToStateVector()`,
+  `ToStateVector(Time)`, `TrueAnomaly(Time)`, `TrueLongitude()` and `ToEquinoctial()` threw `InvalidOperationException`
+  "Nullable object must have a value.", which names neither e nor the call. The constructors now refuse such an
+  eccentricity (Changed, Breaking, below), and the branches of `TrueAnomaly()` and `StateVector.MeanAnomaly()` end with an
+  `InvalidOperationException` naming e, for orbital parameters whose eccentricity no constructor checks (a subclass; a
+  non-finite `StateVector`, which the rectilinear check of #687 meets first except where h and r stay finite and e is NaN,
+  r = (1e308, 0, 0) and v = (0, 1e308, 1e308): its `MeanAnomaly()`, `EccentricAnomaly()`, `ToKeplerianElements()` and
+  `ToStateVector(t)` now say "e = NaN") (`ElementsValidationTests.Issue476_ATrueAnomalyWithoutAConicBranch_NamesTheEccentricity`
+  and `Issue476_AStateOfNaNEccentricity_NamesItsEccentricity`, red on a85098d, the latter added by the review, which
+  measured that `Issue476_ANonFiniteState_ThrowsWhereItNeedsAConic` asserts the exception type only and holds there too).
+- **A spacecraft propagated again through `CentralBodyPropagatorBuilder` or a `CentralBodyPropagator` built directly
+  was not re-armed** ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583)). Only
+  `Spacecraft.Propagate` reset the spacecraft (the private `ResetPropagation`), so a second run through the builder or a
+  propagator built directly fired no burn, started with the fuel the first run left, kept its `ExecutedManeuvers` (and
+  so `ToOpm` and the summary) and added to its attitude record: 1.465e7 m and 1.425e4 m/s from a fresh spacecraft at the
+  end of a 6 h run of two apogee raises (RK7(8) and Velocity-Verlet alike, with and without the covariance). The reset is
+  now internal and called by `PropagatorBase.Propagate` once its checks pass, on every path (decided by S. Guillet,
+  2026-11-17): a spacecraft propagated again, by any path or a mix of them, is bit for bit a spacecraft never
+  propagated, burns, state, fuel, `ExecutedManeuvers`, `ToOpm`, summary, attitudes and P alike
+  (`RepropagationTests.PropagatorPaths_IdenticalRun_IsAFreshSpacecrafts`, `PropagatorPaths_MixedRuns_AreAFreshSpacecrafts`,
+  and the builder and direct rows of `AnotherState_FiresAsAFreshSpacecraft` and
+  `Covariance_AnotherState_FiresAsAFreshSpacecraft`, red on a85098d, the fresh spacecraft checked against the Keplerian
+  closed form), and a propagator built and never run, or rejected by `Build` or its constructor, leaves the previous
+  propagation as it was (`PropagatorPaths_NoRun_LeavesTheFirstAsItWas`). The chain `Propagate` checks before the reset
+  is the one from `InitialManeuver`, the head it runs.
+- **A second `Spacecraft.SetStandbyManeuver` before a propagation was ignored**
+  ([#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584)). The public call shared the
+  bookkeeping of the chain's advance inside a propagation: it set `InitialManeuver` only when no maneuver was in standby
+  and added the maneuver in standby to `ExecutedManeuvers`. So `SetStandbyManeuver(m1)` then `SetStandbyManeuver(m2)`,
+  or a new head after a run whose chain did not finish, fired m1 and dropped m2 without an error,
+  `SetStandbyManeuver(null)` could not cancel m1, and `ExecutedManeuvers` listed m1 before anything ran. The call now
+  sets the head of the chain (see **Changed**); `SetStandbyManeuver_ASecondCall_SetsTheHead` (`RepropagationTests`, the
+  second head m2, the head of a chain of two, null, after an unfinished run, both integrators, red on a85098d; after a
+  finished run the control) is bit for bit a fresh spacecraft given the last call alone.
+- **Two impulses less than 2 µs apart: a read at the first returned the state before both**
+  ([#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579)). The stored states drop the
+  arc between two impulses within 2 µs, one epoch, but the arc after them opened at the second: `GetEphemeris` and
+  `GetGeometricStateRelativeTo` at the first impulse returned the state before both, extrapolated it up to the second,
+  and an SPK read between them threw SPKINSUFFDATA (a 1e-5 m/s trim then 50 m/s 1 µs later, RK7(8): 50 m/s off at the
+  first impulse). Impulses each within 2 µs of the one before are now one epoch (decided by S. Guillet, 2026-11-17): the
+  arc after them opens at the first with the state after them all, its position and its velocity after it plus the jump
+  of each later one, so that the reads and the SPK from the first impulse on give the state after them all, as for
+  impulses at one event, whose stored states are unchanged. Against the solution after the first impulse plus the
+  second ΔV, carried by the two-body Taylor of the second order, at the first impulse, between and at the second:
+  1.9e-9 m and 2.0e-12 m/s managed, the SPK within `SpkAgainstManaged` of them
+  (`PropagatedArcsEdgeTests.TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth`, 1 and 1.5 µs apart, red on
+  a85098d; 3 µs apart, two arcs, the control; `PropagatedEphemerisTests.ImpulsesWithin2Microseconds_AreOneEpoch`, 0.1 to
+  2 µs, red on a85098d, 2.1 and 3 µs the control).
+- **A propagated spacecraft was read outside its propagated states without an error**
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)).
+  `Spacecraft.GetGeometricStateRelativeTo` and the short-circuit of `GetEphemeris` extrapolated the 8-point polynomial of
+  the stored states at any epoch (567 km off 6 min before the first state, 8 282 km 6 min after the last on a LEO), and
+  every read through them did the same: `GetEphemeris` from any body, the managed distance and coordinate searches, the
+  attitude targets. They now throw (see **Changed**); the epoch a light-time correction reads may lie up to its light
+  time outside the states, against the same correction written in the test on the two-body motion of the end state
+  3.3e-5 m in RK7(8) and 2.2e-3 m in Velocity-Verlet 1.3 s outside them (`PropagatedStatesSpanTests`; the reads one tick
+  and 6 min outside the states red on a85098d, both integrators, from ICRF and ECLIPJ2000). The light time of the
+  managed field-of-view and occultation searches (their shared reader) reads a spacecraft target as `GetEphemeris`
+  does: 2.8e-5 m from the same correction 0.67 ms outside the states, LT, CN, XLT and XCN, both integrators, and the
+  searches over the whole span of a target's states return as many windows with each correction as the geometric
+  search (`PropagatedStatesSpanTests.ApparentPositionReader_AtTheEnds_IsAllowedWithinTheLightTime`,
+  `ManagedSearches_OverTheWholeSpan_ReadTheTargetWithinTheLightTime`; before, they threw at the first corrected read). A TLE spacecraft sampled by
+  `TLEPropagator` read from the Earth outside its samples extrapolated them (20.7 m 6 min before the first, 6.3 m 6 min
+  after the last on the ISS): it reads SGP4 there, as from any other body (0 m against SGP4, red on a85098d).
+- **`Spacecraft.ToOpm` wrote the motion of the initial orbit with the mass and the maneuvers after the propagation**
+  ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). Its state was
+  `InitialOrbitalParameters.ToStateVector(epoch)`, the two-body (or SGP4) motion, whatever the propagation, while its
+  `MASS` was the mass after every burn and its maneuvers every executed impulse: one burn later 1 212 km and 1 137 m/s off
+  the propagated state on the issue's case, and at the default epoch a state before the burn with the mass after it. The
+  OPM of a spacecraft that holds propagated states now carries the state, the mass and the maneuvers of its epoch (see
+  **Changed**): the state is `GetEphemeris`'s at the epoch, within 3.9e-9 m of the RK7(8) solution, the mass
+  Tsiolkovsky's after the burn from its ignition on and the full mass before, the maneuvers the burn from its ignition
+  on and none before (`SpacecraftToOpmTests`, both integrators, from ICRF and ECLIPJ2000, the default epoch, before the
+  burn, a tick before its ignition, at it, 1 s after it, at the impulse and after; red on b4f5dbb, and at the ignition
+  and 1 s after it while the branch counted the burn from its impulse); a TLE spacecraft propagated numerically writes its propagated state in TEME, 53.7 km from SGP4
+  after 1 h, one only sampled by `TLEPropagator` SGP4 as before.
+
+- **`EvaluateAvoidance` did not check the steps of its re-analysis** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).
+  `Analyze`, `AnalyzeAll` and `Screen` refuse a `SampleStep` or a `MaximumEventSearchStep` of zero or less;
+  `EvaluateAvoidance` passed `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep` to the re-analysis
+  of each option unchecked. Measured on a85098d with the heap limited to 2 GB: on the two-body path each of the four
+  values (either step, 0 s or −5 s) ended in `OutOfMemoryException` (about 15 s without the limit; a
+  `MaximumEventSearchStep` of −5 s gave a search step of four bisection tolerances, an `AnalysisSampleStep` of −5 s
+  stepped backwards); on the paths of a propagated participant (its force model, or its propagated covariance) a
+  `MaximumEventSearchStep` of 0 s ended the same way, −5 s and a sample step of 0 s or −5 s were accepted silently. Both now throw `ArgumentOutOfRangeException` naming the option of the avoidance, before any
+  option is analyzed (`ConjunctionAssessmentTests.EvaluateAvoidance_StepNotPositive_Throws`, the three paths, 0 s and
+  −5 s, 12 rows, red on a85098d).
+
+- **A window without a close approach gave its midpoint on the sampled path** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621)).
+  `Screen` and the `ILocalizable` overloads of `Analyze` and `AnalyzeAll` returned the window midpoint when the range
+  rate had no zero from negative to positive in the window, and the search on two propagations returned the end where
+  the distance grows into the window: the same window, two answers, neither a close approach. On the reproduction of
+  #621 (two LEO crossing at 60°, 250 m at t0 + 1800 s), the sampled `Analyze` returned t0 + 1789.5 s and 79 930.977 m
+  on [1780, 1799] s, where the end is 7 616.710 m away and closing at 7.6 km/s, and `Screen` dropped the object at its
+  default 25 km; on [1200, 1500] s the midpoint, 3 285 799 m, against 2 242 051 m at the end (measured on a85098d).
+  `Analyze` and `Screen` now return the closest window end on every path, the absolute minimum of the distance over the
+  window (CSPICE's `ABSMIN`), flagged by the new `EncounterQualityFlags.TcaAtWindowEnd`, and `AnalyzeAll` an empty
+  list, as on two propagations (decided by S. Guillet, 2026-11-17). Against CSPICE's `gfdist_c` on the SPKs of the two
+  propagations, over windows of a monotonic approach, a recession and a maximum only, through both paths and `Screen`:
+  the end of `ABSMIN` itself, the miss within 2.3e-4 m of CSPICE's distance there
+  (`ConjunctionKernelAndWindowTests.NoCloseApproach_AnalyzeReturnsTheClosestEnd_Flagged_AnalyzeAllNothing`, 10 rows, red
+  on a85098d: the midpoints, `Screen` empty, no flag on the dense path).
+
+- **The search on two propagations read the trajectory without the burn after an impulse** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574)).
+  RK7(8) adds the accepted step that holds an event before it detects the event, and the segment that ends at an
+  impulse keeps that step past it: between the impulse and the end of that step the polynomial search of `Analyze` and
+  `AnalyzeAll` on two `PropagationSolution`s read the cubic Hermite of the trajectory without the burn, so a close
+  approach there had no minimum on it and was missed. On #574's LEO (a 233.8 m/s apogee raise at S + 2963.2 s, the step
+  ending 12.4 s after it about a point-mass Earth), secondaries passing 30 m from the spacecraft 1, 3, 4.5 and 6 s after
+  the burn were listed only by the minimum before the burn, 2k s away (658.5 m off for a crossing), and `Analyze` returned
+  a minimum 4 s off for one passing 2 s before it (measured on a85098d). The step that holds the event of a segment now
+  ends at the event, the epoch the propagation labelled it (`TimeArgument.EpochAt(BaseEpoch, EventTime)`, the base of
+  the next segment), in the steps and the knots of the search, an `EventAction.Continue` included; the position is
+  continuous there. Against a brute force of the states of the two solutions every 10 ms, refined by golden section
+  (`ConjunctionPostBurnTests`, 8 rows red on a85098d, both sides of the burn, a crossing, a `Continue` event and
+  Velocity-Verlet, which locates its events at a step end and is unchanged): every minimum listed within 9e-7 s and
+  1.9e-9 m (macOS arm64; 7e-7 s and 1.7e-9 m on Linux x64 and Windows x64). Bit for bit without an event: the long-validation conjunction tests and the `conjunction` conformance cases,
+  without impulses, do not move.
+
+- **A point front body on the CSPICE path of the occultation search threw** ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)).
+  The native search passed `"ELLIPSOID"` as the shape of every front body to `gfoclt_c`, whatever the shape given (the
+  shape it computed from it was unused), so a point front body, whose frame is blank, failed in SPICE ("The front
+  target shape is represented by an ellipsoid or by DSK data, but the associated body-fixed frame name is blank."):
+  `SpiceAPI.FindWindowsOnOccultationConstraint` and the CSPICE path of `FindWindowsOnOccultationConstraint` (a
+  spacecraft of the kernels with a point front body) threw `InvalidOperationException` since the fourth round of #668,
+  and returned no window before (measured on a85098d). `gfoclt_c` now receives the shape given (a one-token change of
+  the C++ layer, for a technical reason: the proxy could not run the search it was asked). The Moon's centre across the
+  Sun's disc from DSS-65 on 2005-10-03 against `gfoclt` with a POINT front body converged to 1e-9 s
+  (`tools/occultation_reference`): 1.0e-7 s, a tick, through `SpiceAPI` and the CSPICE path (`Annular`, which is `Any`
+  for a point front body) (`OccultationSearchTests.SpicePath_PointFrontBody_MatchesGfocltAny`, red on a85098d); the
+  proxy itself is `gfoclt_c` bit for bit, 6.3e-7 s from that reference on the other Earth orientation kernel of the C++
+  tests (`API.FindWindowsOnOccultationConstraintProxyOfAPointFrontBody`, red on a85098d).
+
+- **SPICE printed every error on the standard output** ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727)).
+  `ActivateErrorManagement`, which every proxy calls, set `erract_c` to RETURN but not `errprt_c`, so SPICE printed the
+  banner of each error it signalled on the standard output ("Toolkit version: N0067 ... SPICE(SPKINSUFFDATA) -- ... A
+  traceback follows"), the errors the proxies report through `GetLastErrorProxy()` and `SpiceAPI` throws included: a
+  read past a kernel's coverage, a search SPICE cannot run, an unknown frame (three banners from three failed calls,
+  measured on a85098d; 2888 in one conjunction analysis past its SPKs, #454), which corrupted the output of a host
+  application, a CLI's or a service's. Its error output is now NONE (`errprt_c`; a native change for a technical
+  reason), the messages reaching the caller through the exceptions only (decided by S. Guillet, 2026-11-17): nothing is
+  printed, in a child process whose three failed calls throw SPICE's messages
+  (`ColdStartTests.SpiceErrors_ReachTheCallerOnly_NothingOnTheStandardOutput`) and at the file descriptor of the C++
+  tests (`API.FailedProxiesPrintNothingOnTheStandardOutput`), both red on a85098d.
+
+- **A CSPICE window search returned at most 1000 windows** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+  Each native proxy of the window searches (`gfdist_c`, `gfposc_c`, `gfilum_c`, `gfoclt_c`, `gftfov_c`) copied the first
+  1000 windows of its result, whose cell holds 10000, and dropped the rest without an error; `SpiceAPI` could not tell a
+  full buffer from a search of exactly 1000 windows; `NotEqual`, built from the `=` crossings, ended with one window
+  across every dropped crossing; and the cell of `gfilum_c` held 1000 windows, so an illumination search of more threw
+  `SPICE(WINDOWEXCESS)`. Measured on a85098d: the Moon's X in `IAU_EARTH` from the Earth crosses 0 2126 times in 1100
+  days from J2000, of which `Equal` returned 1000, `NotEqual` 1001 for 2127, `Greater`, `LocalMax` and `AbsoluteMax`
+  (with an adjustment of 1e5 km) 1000 for 1064 and 1062; LRO's distance from the Moon crosses 1815.148 km 1904 times in
+  its 91-day SPK, of which `Equal` returned 1000, and passes 1121 times behind the Moon, of which the occultation search
+  returned 1000; the night at (0°, 0°) of the Earth, 1100 windows, threw. The proxies now take the capacity of the
+  caller's buffer and return the number of windows written (a native change for a technical reason, the P/Invoke
+  declarations in step), `SpiceAPI` passes a buffer of the native cell's 10000 windows, rented from the shared pool, and
+  `gfilum_c`'s cell holds 10000 windows like the others: every window CSPICE finds is returned, and a search of more
+  than 10000 throws `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has
+  size, 20000, cardinality 20000. Cannot insert an additional interval into the window." (the size counts the endpoints;
+  the short code is not in the message), never a partial list (the whole native cell, rather than a managed
+  continuation with the same ceiling and seams, decided by S. Guillet, 2026-11-18); a buffer smaller
+  than the windows found makes a proxy return false with its message, nothing written. The absolute extremes need no
+  exception of their own: their windows are in the cell like the others'. Against CSPICE's searches with a cell of
+  20000 windows in the test process, every window equal to the tick (`CspiceWindowCapacityTests`, Validation: the ten
+  relations of the coordinate search, three of the distance, the illumination, the occultation and the field of view),
+  and on every platform against the same searches over four parts of the window, each under 1000 windows, joined at the
+  seams, within 4.0e-7 s (Linux x64, Windows x64 and macOS arm64; `CspiceWindowCapacityTests`, 16 rows, red on a85098d, and a 17th, the field of
+  view, added at the review); the search past the cell throws (`PastTheNativeCell_ThrowsSpicesError`: 11594 crossings in
+  6000 days); the C++ proxies write the 2126 crossings of `gfposc_c` bit for bit
+  (`API.FindWindowsProxiesWriteEveryWindowOfTheirCell`). `FindWindowsInFieldOfViewConstraint` takes the same path: an
+  instrument of the Earth written by the test, a rectangle of 40° by 15° along the prime meridian in `IAU_EARTH`, sees the
+  Moon 1062 times in 1100 days, every window returned, equal to `gftfov_c`'s with a cell of 20000 windows to the tick
+  (Validation) and to the four joined parts exactly (`FieldOfView_PastAThousandWindows_*`; not run on a85098d). The
+  searches under 1000 windows are unchanged, bit for bit. The managed searches had no cap.
+
+- **The window reads of `SpiceAPI` drifted, dropped their last epoch, and cost 1.4 ms for one epoch** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
+  `ReadOrientationProxy` and `ReadEphemerisProxy` stepped their epoch by epoch += step in double TDB seconds, so that
+  sample i drifted from start + i·step and the last epoch of the window, pushed past its end, was dropped; and
+  `SpiceAPI.ReadOrientation` passed a buffer of 10000 records, each with a 32-character frame name, whatever the window.
+  Measured on a85098d: `ReadEphemeris` of the Moon from the Earth over 600 s at 0.1 s from 2026-04-01 TDB gave 6000
+  states for 6001, the last at 00:09:59.9001430 for 00:10:00, over 10798.8 s at 1.2 s 8999 for 9000 (the last 4.29e-4 s
+  off), over 1200.05 s at 0.1 s 12000 for 12001; `ReadOrientation` of PHSRM's CK gave 6000 records for 6001, its rates
+  at 1.2 s off those of the read of each epoch alone, and threw for 12001 epochs ("The number of State orientation must
+  be lower than 10000"); a read of one epoch allocated 720 408 bytes and took 1.83 ms; a step of 0 in `ReadEphemeris` ran
+  until the process was out of memory (1 min 40 s) and a negative one read 10000 epochs backwards. The proxies now read
+  at the epochs the caller gives (a native change for a technical reason, the P/Invoke declarations in step), and
+  `SpiceAPI` gives start + i·step in the time frame of the window start, i from 0 while within the window, in exact tick
+  arithmetic, each epoch read at its TDB seconds, in calls of 10000 epochs at most into buffers of their size (no cap on
+  the epochs of a window, decided by S. Guillet, 2026-11-18), each state
+  labelled with its epoch in that frame: each state and record is the read of its epoch alone, bit for bit, the end of
+  the window read when it falls on the grid (`SpiceApiTest.ReadEphemeris_WindowRead_IsTheReadAtEachStartPlusIStep`
+  and `ReadOrientation_WindowRead_IsTheReadAtEachStartPlusIStep`, the three windows above, red on a85098d; against
+  `spkezr_c` bit for bit, `ReadEphemeris_WindowRead_EqualsSpkezrAtEachStartPlusIStep`, Validation; the C++
+  `API.ReadEphemerisProxyReadsAtTheGivenEpochs`). A UTC window is stepped in UTC: TDB − TT makes a UTC window of 600 s
+  from 2 ticks shorter to 2 ticks longer in TDB, so a grid in TDB (a85098d's, and this fix's first form) read 6000 states
+  for 6001 from the first of May to that of October 2026 and labelled the others up to 2 ticks off start + i·step
+  (00:09:59.9999998Z for 00:10:00Z in January); the 12 windows from the first of each month of 2026 now give 6001 states
+  at start + i·step in UTC, the last at the end (`ReadEphemeris_UtcWindowRead_IsTheReadAtEachStartPlusIStepInUtc`, red
+  on the first form for 11 of 12), each `spkezr_c`'s at the TDB seconds of its UTC epoch bit for bit (Validation, July
+  and October; those seconds are the library's one-term TDB − TT, within 1.07e-6 s of `str2et_c`'s, as
+  `docs/reference/time-and-windows.md` states), and PHSRM's CK over UTC windows from the first of January, April, July
+  and October 2012 gives 6001 records, each the read of its epoch alone, its epoch that of start + i·step to the tick
+  (`ReadOrientation_UtcWindowRead_ReadsEachStartPlusIStepInUtc`, red on the first form for January and July). The
+  records against CSPICE (`ReadOrientation_WindowRead_EqualsCkgpavAtEachStartPlusIStep`, Validation: `sce2c_c`,
+  `ckgpav_c` and `sct2e_c` at each epoch): the epoch to the tick, start + i·step exactly, the angular velocity bit for
+  bit, the rotation within 1.6e-16 rad. A read of one epoch allocates 488 bytes and takes 1.28e-2 ms (Linux
+  x64; `ReadOrientation_OneEpoch_AllocatesForOneRecord`, red on a85098d), so the CLI's orientation reads, one epoch at a
+  time, no longer cost 1.4 ms each. A step of zero or less throws `ArgumentOutOfRangeException` (Changed below).
+- **A frame named CIRS or TIRS went to SPICE, and `SpiceAPI.TransformFrame` threw for CIRS and TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+  Since #562 a frame is its name, so `new Frame("CIRS")` equals `Frame.CIRS` and `new Frame("tirs")` equals
+  `Frame.TIRS`, but the routing went by type: a frame built by those names (user code, a CCSDS file, the CLI) was handed
+  to SPICE, which does not know them, and `SpiceAPI.TransformFrame` handed even the instances to SPICE. Measured on
+  a85098d: `new Frame("CIRS").ToFrame(Frame.ICRF, t)`, an ICRF state `ToFrame(new Frame("CIRS"))`, `GetEphemeris` in
+  `new Frame("TIRS")` and `SpiceAPI.Instance.TransformFrame(t, Frame.CIRS, Frame.ICRF)` threw
+  `InvalidOperationException` (SPICE(UNKNOWNFRAME)), `MemoryDataProvider.FrameTransformationToICRF` `ArgumentException`
+  ("Frame not found"). One internal rule, `SpiceAPI.ManagedFrame`, now resolves a `TemeFrame`, `CirsFrame` or
+  `TirsFrame` instance as it is and a frame named TEME, CIRS or TIRS, in any case, to `Frame.TEME`, `Frame.CIRS` or
+  `Frame.TIRS`; both data providers, the ephemeris reads and the CSPICE coordinate search's frame check use it, and
+  `SpiceAPI.TransformFrame` composes a CIRS or TIRS end through ICRF, as TEME's (decided by S. Guillet, 2026-11-17). A
+  frame built by name is now the static frame bit for bit (its orientation, its reads with or without light time and
+  stellar aberration), labelled with the frame given; against SOFA (`Data/SofaReference/iau2006_sweep.json`, IAU
+  2006/2000A: `iauC2ixys` from its X, Y and s for CIRS, its GCRS → TIRS for TIRS) at 2000, 2012, 2020 and 2024 the axes
+  are within 1.1e-9 rad and the Moon's position read from the Earth within 5.9e-10 rad, under the 5e-9 rad bound of
+  the SOFA sweep (IAU 2000B against 2000A); `TransformFrame` toward ITRF93 is `ToFrame`'s composition bit for bit, the
+  same formula on the same orientations (measured 0 rad and 0 rad/s), and a frame to itself by name the identity, 0 rad
+  (`ManagedFrameByNameTests`, 31 cases, all red on a85098d). A coordinate search of `CelestialItem` or
+  `Site` in a frame built by those names is the library's, as in the instances, and
+  `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it, as for the instances.
+
+- **`MemoryDataProvider.GetEphemeris` ignored the frame and the aberration** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
+  It subtracted the stored states and labelled the ICRF difference with the frame asked, and returned the geometric
+  state for an aberrated read: on a85098d an ECLIPJ2000 read of the Moon from the Earth was 1.06e8 m and 294 m/s from
+  `spkezr_c` on the same states, an ITRF93 read 7.6e8 m and 2.6e4 m/s, the Earth-Moon barycentre of the issue 5.76e10 m
+  off in z. The stored states are now taken in ICRF (a state stored in another frame rotated by the provider's
+  orientation of it), subtracted, then rotated into the frame asked by the provider's orientation of that frame, as
+  `ToFrame` does (r' = R r, v' = R v + ω × r'); a frame of ICRF's axes (ICRF, GCRF) is not rotated, so a read in ICRF is
+  bit for bit the stored difference as before. The provider knows ICRF and GCRF (the identity) and ECLIPJ2000, SPICE's
+  fixed rotation of the J2000 obliquity (84381.448″ about x, CSPICE `chgirf.c`), without stored orientations: ECLIPJ2000
+  is the default frame of the bodies, so a body built on the provider reads its orbit in it, which now needs that
+  rotation (B1950, FK4, GALACTIC and ECLIPB1950 are not built in for 11.0.0, on demand, decided by S. Guillet, 2026-11-18). A frame with stored orientations is read from them, TEME, CIRS and TIRS are the managed frames (#656), and any
+  other frame throws `ArgumentException`: `FrameTransformationToICRF` threw it before, but `GetEphemeris`, which never
+  read the frame, returned the ICRF difference labelled with it, a body-fixed frame without stored orientations such as
+  `IAU_EARTH` or the Earth's `ITRF93` included (Changed below). Against `spkezr_c` on the states the test stores (read from SPICE
+  in J2000 every 10 min): 7.8e-5 m and 8.8e-12 m/s in ECLIPJ2000 and from ECLIPJ2000 states, 4.8e-5 m and 3.5e-9 m/s
+  in ITRF93 from SPICE's orientations stored at the epochs, 4.8e-5 m in TEME by name; ECLIPJ2000 within 1.1e-16 rad of
+  `sxform_c` and the barycentre of the issue within 2.2e-16 of the closed form (`MemoryDataProviderFrameTests`, 17 of 19
+  cases red on a85098d; thresholds twice the worst over Linux x64, Windows x64 and macOS arm64). The aberration: Changed
+  below.
+
+- **A frame kept every orientation it read, for its life** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541)).
+  `Frame.GetStateOrientationToICRF` stored each orientation it read in a dictionary keyed by epoch, and so did
+  `CirsFrame`, `TirsFrame`, `TemeFrame`, `GcrfFrame` and the frame of a site from coordinates; nothing removed them but
+  the propagation of a spacecraft for its own frame, and the static frames live for the whole process. Measured on
+  a85098d in a fresh process: 16 479 752 bytes retained after 100 000 reads of ITRF93 0.5 s apart, about 940 kB after
+  5 000 reads of CIRS, TIRS, TEME or GCRF, 2.8 MB for a site frame. A frame now keeps the orientation of its last epoch
+  only, while the kernel pool is unchanged (a `LoadKernels`, `UnloadKernels` or `ClearKernels` makes the next read read
+  again), GCRF none (decided by S. Guillet, 2026-11-17): the same reads retain at most 24 bytes, and the measure varies by up to 9.0 kB of either sign, the noise of a full
+  collection (`ColdStartTests.FrameReads_RetainNoOrientationPerEpoch`, the child `frame-memory`, bound 18 000 bytes,
+  twice the worst magnitude over Linux x64, Windows x64 and macOS arm64; `FrameTests.AFrame_HoldsNoOrientationStore_TheAttitudeRecordIsTheSpacecraftFrames`;
+  both red on a85098d). The orientations are bit for bit those of a fresh frame
+  (`AManagedFrame_ReadAgainAtAnEarlierEpoch_IsTheOrientationOfThatEpoch`). The cost, the best of 7 runs on Linux x64
+  (shared machine): 100 000 reads of ITRF93 at distinct epochs 286 ms (336 before), 100 000 at one epoch 0.9 ms (1.9),
+  the horizontal coordinates of the Moon from a site every minute over a day 13.2 ms (14.7), as many reads of the Moon
+  in TEME 15.1 ms (13.6) and in ITRF93 converted to ICRF 14.2 ms (12.7); before, an epoch read again by a long-lived
+  frame was found in its dictionary.
+
+- **The command line labelled ICRF `j2000` on the SPICE path and `J2000` from a site** ([#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)).
+  `ephemeris`, `orientation` and `geometry-finder` rewrote their frame argument ICRF as `j2000` and built `new
+  Frame("j2000")`: a body or kernel-backed spacecraft observer printed `Frame : j2000` (the frame SPICE was given), a
+  site observer `Frame : J2000` (the state computed in `Frame.ICRF`, which equals the frame asked), and so did the
+  orientation of a kernel-backed spacecraft; `frame-converter`, `orbital-parameters` and the orbital parameters of
+  `propagate` rewrote it as `J2000`. Every command now resolves its frame arguments by one rule (internal
+  `Helpers.ResolveFrame`): ICRF or J2000, in any case, is `Frame.ICRF`, labelled `J2000` on every path; any other name
+  is `new Frame(name)`, which the library routes by its name (TEME, GCRF, CIRS, TIRS, #656). The numbers are unchanged
+  (`EphemerisTests.IcrfIsLabelledJ2000_OnTheSpiceAndTheSitePaths`, ICRF, icrf and j2000 red on a85098d; the expected
+  labels of `EphemerisTests` and `SpacecraftKernelsTests` updated). The output: Changed below.
+- **The element conversions of `SpiceAPI` read the data provider under the SPICE lock** ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
+  `ConvertStateVectorToConicOrbitalElement`, `ConvertEquinoctialElementsToStateVector`, `ConvertConicElementsToStateVector`
+  and `Propagate2Bodies` (every overload) built the observer of their result, `new CelestialBody(id)`, inside
+  `lock (lockObject)`: 9 calls of the data provider under the lock about the Earth (the information of 399, 3, 0, 10 and 0,
+  four states), about 80 µs held for a native call of 1.8 µs (the issue's measure, 016237bd), and a custom `IDataProvider`
+  ran under the lock. Only the native call, its check and the reading of SPICE's message now run under the lock, and the
+  result carries the caller's observer (#725, under Changed), so no call reads the provider at all
+  (`ColdStartTests.ElementConversions_ReadNoProviderUnderTheSpiceLock`, a child process on a probe provider that counts
+  the calls made while the thread holds the lock: 9 of 9 for each of the ten overloads on a85098d, 0 of 0 now).
+- **`SpiceAPI.ConvertEquinoctialElementsToStateVector` gave the state of another point of the orbit** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450)).
+  `ProfilesConfiguration.Convert` passed the true longitude L0 to `eqncpv_c`, whose fourth element is the mean longitude
+  (NAIF's documentation of `eqncpv_c`: "the mean longitude (mean0+argp+node) at the epoch of the elements"): every orbit
+  whose mean and true longitudes differ came back off, 0.18 |r| for a LEO of e = 0.1 and 7.6 |r| at e = 0.89 (measured on
+  a85098d; the issue's 1029 km and 27 900 km on 732bcc3). It now passes `MeanLongitude()`, right on every branch since
+  #469, circular elements of f = −0.0 and equatorial ones included (#450's comment), and the unused reverse converter,
+  which read the mean longitude as a true one and took p = a / (1 − e²), is removed. Against the 60-digit closed form of
+  `tools/equinoctial_elements/equinoctial_reference.py` (the cases of #450 added under `eqncpv`, and every reference case
+  within the domain of EQNCPV and a turn of its true longitude, 79 cases) the worst relative error is 1.0e-15 in position
+  and velocity (`SpiceApiElementConversionTests.EquinoctialToState_MatchesTheReference`; 7.6 and 0.94 on a85098d).
+  The domain checks of #711 are unchanged.
+- **`SpiceAPI.WriteEphemeris` and `WriteOrientation` enumerated the caller's states under the SPICE lock** ([#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661)).
+  Both materialized the caller's `IEnumerable` inside `lock (lockObject)` (`WriteEphemeris` twice on 016237bd, when the
+  issue was filed, once on a85098d), so a lazy sequence ran under the lock, and one that read `PlanetsAndMoons`, `Stars` or
+  `Barycenters` for the first time could wait for a thread waiting for the lock (#623); the release note only warned the
+  caller to pass an array. Each writer now materializes the sequence once, before the lock, with its checks on the array
+  (empty, three states or more, one frame, the category of the centres; the names of the centres are still read from
+  SPICE under the lock) and the conversion to the native records; only the unload of a replaced file and the native
+  call run under the lock (`SpiceApiWriterEnumerationTests`: a sequence that counts its enumerations, records whether
+  the thread holds the lock at each item, and has another thread take the lock during its first item: on a85098d one
+  enumeration, all 10 items under the lock and the other thread blocked for its 60 s, both writers; now one enumeration,
+  none under the lock, the lock taken). An array writes the same file, byte for byte.
+- **The body information of a site identifier gave the Sun as centre** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)).
+  Both layers classed every identifier above 1000 as an asteroid, so `SpiceAPI.GetCelestialBodyInfo` of DSS-13 (399013),
+  DSS-14 and DSS-65 gave the centre 10 and the barycentre 0 (measured on a85098d), where SPICE's SPK of the stations
+  (`earthstns_itrf93_201023.bsp`) has their segments about the Earth (399, spiceypy `spksfs`), and
+  `CelestialItem.IsAsteroid` was true for them. A site identifier (body × 1000 + site, the body a planet or a moon, the
+  rule of `Site.NaifId`, internal `SpiceAPI.IsSiteId`) of a body SPICE names (internal `SpiceAPI.IsSiteOfNamedBody`, the
+  body's name read under the SPICE lock) now has its body as centre and its body's barycentre as barycentre, in the
+  record (`SpiceAPI` corrects the native record, the C++ layer unchanged) and in
+  `CelestialItem.FindCenterOfMotionId`/`FindBarycenterOfMotionId`, and is no asteroid. SPICE's built-in NOTO (398989)
+  and NEW NORCIA (398990), ESA stations whose identifiers have the form of a site of 398, a body SPICE does not name
+  (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
+  stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the rule, and
+  an asteroid, a comet, 391001, 399000, NOTO, NEW NORCIA and 101001, not sites, unchanged).
+- **No CDM the library wrote validated against the SANA schema** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)). `CdmWriter` put the root,
+  `cdm` or the `ndm` that wraps it, in the namespace `urn:ccsds:schema:ndmxml` with every other element, so the SANA
+  NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace (no `targetNamespace`), rejected every
+  CDM written by `CdmWriter`, `Cdm.WriteTo*` and `EncounterCase.ToCdm(...).WriteTo*`, wrapped or not, at the root ("No
+  matching global declaration available for the validation root", lxml 6.1.3 and .NET's validator on the embedded
+  master, measured on a85098d); the library's own check accepted it through a synthetic root in the namespace. The writer
+  now writes the qualified form of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root in no namespace with
+  `xmlns:ndm="urn:ccsds:schema:ndmxml"` and `xsi:noNamespaceSchemaLocation` (SANA's qualified master, identical to the
+  embedded one; optional in the issue, kept, decided by S. Guillet, 2026-11-18) declared on it, every element below it, the `cdm` of an `ndm` included, in the namespace under the
+  prefix `ndm` (`CdmTests.WriteTo_RootOutsideTheNamespace_ValidatesAgainstTheSanaQualifiedMaster`:
+  the written text, through `WriteToString` wrapped and bare, `WriteToStream` and `WriteToFile`, validated against the
+  embedded master compiled in the test with no synthetic root, 4 cases red on a85098d). `Cdm.ValidateSchema` checks it
+  as a standard form; a root in the namespace, the form written before, is still read and checked as before
+  (`ReadFromString_RootInTheNamespace_FormWrittenBefore615_IsStillReadAndValidated`).
+- **The CDM writer read a date without a kind as local time** ([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617)). `CdmWriter` wrote every date
+  through `ToUniversalTime()`, which takes a `DateTime` of kind `Unspecified`, that of `new DateTime(y, M, d, h, m, s)`,
+  as local time: on a machine outside UTC a CDM built by hand was written with its eight dates (`CREATION_DATE`, `TCA`,
+  the screen period, the screen entry and exit, `TIME_LASTOB_START`/`END`) shifted by the zone's offset, a TCA of
+  2010-03-13T22:37:52.618 written `2010-03-13T21:37:52.6180000Z` under Europe/Paris and `2010-03-14T03:37:52.6180000Z`
+  under America/New_York (measured on a85098d), while `EncounterCase.ToCdm` took such a date as UTC. The writer and the
+  exporter now share one rule (internal `CcsdsDates.ToUtc`): `Utc` as given, `Unspecified` taken as UTC, `Local`
+  converted. The OPM and OMM writers wrote a local time as its clock reading whatever `TIME_SYSTEM`; their dates in
+  `TIME_SYSTEM` now convert it under UTC and refuse it under any other, `CREATION_DATE` converting it (Changed, below).
+  `CcsdsLocalTimeTests` runs the three writers in child processes under `TZ=Europe/Paris` and `TZ=America/New_York`,
+  the expected texts from the IANA rules of each zone (2 cases red on a85098d); `CdmTests`,
+  `OpmWriterTests` and `OmmWriterTests` check each kind in the test process (8 refusals red on a85098d).
+- **The CDM named its collision probability method `FOSTER-2D`, which no registry holds** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), with
+  [#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). `EncounterCase.ToCdm` wrote
+  `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, or `FOSTER-2D-MAX-PC` for an encounter flagged
+  `SingleCovarianceMaximumPcUsed` (reached only by a case built by hand with both covariances), neither in the SANA
+  registry `cdm_cpm`, so a receiver that maps the method through the registry could not tell which Pc it was given. The
+  method the analysis computes, Foster and Estes (1992), is `FOSTER-1992` there and in the examples of CCSDS 508.0-B-1
+  Cor. 2 (annex E, 3.6.3, 4.4): it is now written (decided by S. Guillet, 2026-11-17). The single-covariance maximum Pc
+  has no registered value and a CDM carries both covariances: an encounter flagged so is refused, as one with a single
+  covariance already was, and the dead branch is gone (`CdmTests.ToCdm_ManualEncounter_ExportsExpectedValues` and
+  `ToCdm_SingleCovarianceMaximumPc_IsRefused`, red on a85098d). No number moves.
+- **The OPM and OMM writers lost digits** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). Their `FormatDouble` kept `G17` only in scientific
+  form and otherwise wrote `0.##############`: at most 14 decimals and, a .NET custom format, 15 significant digits.
+  A written message no longer read back as the values written: an eccentricity of 0.00012345678901234567 was written
+  0.00012345678901 (1.9e-11 relative), a mean motion of 10.270509831248424 rev/day 10.2705098312484, and over 1e5 values
+  in [1e-4, 1e3) 81.6 % were lost, by up to 4.9e-11 relative (measured on a85098d), every value of the OPM (state
+  vector, Keplerian elements, spacecraft parameters, covariance, maneuvers) and of the OMM (mean elements, spacecraft
+  and TLE parameters, covariance). The OPM, OMM and CDM writers now share one form (internal `CcsdsValues.Format`), the
+  shortest round-trip form `"R"`, which reads back bit for bit as `xsd:double` (`OpmWriterTests` and `OmmWriterTests`
+  `WriteToString_EveryRealValue_ReadsBackBitForBit`: each written text read by `double.Parse` and by the reader, the
+  value given bit for bit, 44 OPM and 35 or 36 OMM values, all but one lost before, red on a85098d).
+- **The CCSDS readers loaded a date outside the standard's forms** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), the date half).
+  `CcsdsEpochParser`, which the CDM, OPM and OMM readers share since #490, passed a text outside the date branch of
+  `epochType`, and a calendar text with a field out of range, to `DateTime.TryParse`: a `TCA` or an `EPOCH` of
+  `22:37:52.618` was read on the day of the read (2026-11-17T22:37:52.618), `1.5` and `1,5` as 5 January of the current
+  year, `2010-03-13` as its midnight, and `13 March 2010 22:37:52.618`, `03/13/2010 …`, RFC 1123, a space or a lowercase
+  `t` for the `T`, a lowercase `z`, a decimal comma, a missing second, a `+0100` or `+01` offset and a blank around the
+  date as the date they spell (measured on a85098d; the pattern's `$` also matched before a final line feed). CCSDS
+  508.0-B-1 §6.3.2.6 and 502.0-B-3 allow two forms, `yyyy-mm-ddThh:mm:ss[.d→d][Z]` and `yyyy-dddThh:mm:ss[.d→d][Z]`,
+  "All fields require leading zeros", and lxml 6.1.3 with the repository's NDM/XML 4.0.0 schema rejects each of these
+  texts as an `epochType` but `1.5`, the type's bare-number branch, which the standards do not allow in a date field.
+  The parser now reads the two forms only (with the `±hh:mm` offset of `epochType`, the pattern anchored with `\z`), and
+  the readers throw their parse exception naming the field and the text (`CcsdsEpochParserTests`
+  `TextOutsideTheTwoForms_IsRejected` and `Readers_RejectTextOutsideTheTwoForms`, `CdmTests`
+  `ReadFromString_DateOutsideTheTwoForms_ThrowsCdmParseException`: 32 rows red on a85098d). Dates in the two forms read
+  bit for bit as before (the `CcsdsEpochParserTests` of #490 against CSPICE's `str2et`); none of the CDMs of the
+  conformance suite moves. The same issue's `units="km"` on a `lengthTypeUO` length is refused (Changed below:
+  `CdmTests.ReadFromString_OptionalUnitLengthNotInMeters_ThrowsCdmParseException`, 10 rows red on a85098d).
+
+- **The OPM and OMM unit conversions overflowed to ±Infinity** ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). `OpmStateVector.ToStateVector`
+  multiplied km and km/s by 1000 and `CovarianceMatrix.ToMatrixWithUnitConversion` km², km²/s and km²/s² by 1e6 without
+  a check: a finite value above about 1.8e305 km (1.8e302 km²) became ±Infinity in the `StateVector` of
+  `Opm.ToStateVector` or in its covariance (measured on a85098d: `X` 1e306 gave +Infinity m, `CX_X` 1e303 +Infinity m²),
+  where the CDM reader refuses such a value since #708. `OpmStateVector` and `CovarianceMatrix` now refuse a value whose
+  product is not finite (Changed below), and the OPM and OMM readers report it as `OpmParseException` or
+  `OmmParseException` naming the keyword and its text. `KeplerianElements.FromOMM` computed (n × 2π) / 86400, whose
+  product overflowed above about 2.86e307 rev/day where the quotient is finite: it now takes the same two roundings on
+  n × 2⁻¹⁰ and 86400 × 2⁻¹⁰ there, the value an unbounded exponent gives, and is bit for bit unchanged below.
+  `Omm.ToTle`, its one caller in the library, converted that value back with `TLE.Create`, whose product overflowed over
+  the same range: an OMM with `MEAN_MOTION` 3e307 gave, without an exception, a TLE whose mean motion field was the text
+  `Infinity` (measured with the `FromOMM` change above). `ToTle` now refuses a `MEAN_MOTION` above the 99.99999999 rev/day of its
+  11-character field (columns 53 to 63 of line 2), naming the keyword (Changed below;
+  `OmmTests.ToTle_MeanMotionBeyondTheTleField_ThrowsNamingMeanMotion`, 5 rows red, two of them with no exception). References:
+  the IEEE 754 bounds (the largest double whose product is finite, 1.7976931348623156e305 for 1000 and
+  1.7976931348623154e302 for 1e6, stored and converted as given) and the two roundings in exact rational arithmetic
+  (`OpmStateVectorTests`, `CovarianceMatrixTests`, `OpmReaderTests`, `OmmReaderTests` `*OverflowingInSiUnits*` and
+  `TLETests.FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient`: 100 rows red on a85098d).
+
+- **`CdmCovarianceMatrix.StateCovarianceRtn` accepted a matrix that is not 6×6** ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730)). Its init
+  accessor checked the terms since #717, whatever the size: a 3×3 matrix or `default(Matrix)` built, and `CdmWriter`
+  then threw `IndexOutOfRangeException` or `NullReferenceException` (`Cdm.Validate` reported the size when it ran). It
+  now throws `ArgumentException` naming `StateCovarianceRtn` before the terms (Changed below; `CdmTests`
+  `Init_CovarianceNotSixBySix_*` and `Init_DefaultCovarianceMatrix_*`, 8 rows red on a85098d). The reader always built a
+  6×6 matrix, so reading is unchanged.
+
+- **`TleParameters` named `revNumber` in its exception** ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734)). A negative revolution number threw
+  `ArgumentOutOfRangeException` with the `ParamName` `revNumber`, the private validator's parameter, which no public entry
+  has; it names `revolutionNumberAtEpoch`, the parameter of the constructor and of the four `CreateWith*` factories
+  (Changed below), and `OmmReader` maps `REV_AT_EPOCH` to it, so its `OmmParseException` still names the keyword
+  (`TleParametersTests.Entry_NegativeRevolutionNumber_NamesRevolutionNumberAtEpoch` and
+  `OmmReaderTests.ReadFromString_NegativeRevAtEpoch_NamesTheKeywordAndTheParameter`, 6 rows red on a85098d).
+
+- **`Constants.Parsec2Meters` was truncated** ([#733](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/733)).
+  It was 3.085677581e16 m, 1.592e-10 relative below the parsec, 648000/π au exactly (IAU 2015 Resolution B2) with the
+  au of 149597870700 m (IAU 2012 Resolution B2), 30856775814913672.789 m. It is now 3.0856775814913673e16, the nearest
+  double, 30856775814913672 m (decided by S. Guillet, 2026-11-17): the quotient at 40 digits (mpmath) and in decimal (28
+  digits), each read back by `double.Parse` (`StarTests.Parsec2Meters_Is648000OverPiAstronomicalUnits`, red on a85098d).
+  It sets a star's distance from its parallax: every `Star.Distance`, and every position of a star from the solar system
+  barycenter, grows by 1.592e-10 relative (a parallax of 0.3792″: 8.13733539293249e16 m before, 8.13733539422829e16 m
+  now, within 3 roundings of the exact quotient, `StarTests.Create`, which held the old snapshot), its direction from
+  the barycenter unchanged bit for bit; from an observer at r_obs the direction moves by at most |r_obs|/r · 1.6e-10
+  (6e-16 rad for a star at 1.3 pc seen from 1 au). The tests of the straight line of #718 measure against the star's own
+  `Distance` and do not move. The reference of `StarOccultationTests`
+  (`tools/occultation_reference/star_occultation_reference.py`, spiceypy 8.4.0, CSPICE N0067) takes the new parsec: its
+  parallaxes, declinations and directions move in their last digit, its edges not at all; the test's literals are
+  regenerated, its worst edge 2.38 µs and direction 1.19e-16 rad on Linux x64, within the thresholds of 4.8e-6 s and
+  4.4e-16 rad.
+
+- **A `Star` accepted a parallax that gives no distance** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732)).
+  The constructor stored any parallax and set `Distance` to 1/parallax parsecs, silently: 0 gave +∞ (−0 −∞) and
+  positions of infinities, a negative parallax a negative distance that put the star in the opposite direction (cosine −1
+  with its catalog direction for −0.5″; Gaia DR3 holds many negative parallaxes), NaN a NaN distance, ±∞ a distance of
+  0, and a positive parallax below about 1.7e-292″ a distance that overflowed to +∞ (measured on a85098d). The
+  constructor now throws `ArgumentOutOfRangeException` naming `parallax`, its value as `ActualValue`, for each of them,
+  0 included (decided by S. Guillet, 2026-11-17: refused, not a star at infinity, which every state, SPK and occultation
+  path would have to handle) (`StarTests.Constructor_AParallaxThatGivesNoDistance_Throws`, 9 values, red on a85098d;
+  `Constructor_APositiveParallax_GivesAFiniteDistance` for 1e-291″, 1e-6″ and 1e300″). Every star of the test suite
+  keeps its parallax.
+
+- **The state of a star carried a zero velocity while its position moved** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731)).
+  Since #718 a star moves along a straight line, but `GetGeometricStateRelativeTo` gave a zero velocity from the
+  barycenter and the opposite of the reference body's velocity from another, `GetEphemeris` the opposite of the
+  observer's, and `Propagate`, `PropagateAsync`, `Scenario.SimulateAsync` and so the SPK of `WriteEphemeris` a zero
+  velocity: Barnard's star seen from the Earth had a velocity 1.12 relative away from the reference (its 89 km/s
+  missing), its range rate 53.4 m/s (its velocity along the line of sight, turned by its proper motion since 2016;
+  measured on a85098d). The state now carries the star's space velocity, the derivative of its straight line,
+  r0 (μα* e_α + μδ e_δ) per Julian year of TDB, constant (decided by S. Guillet, 2026-11-17): against the derivative of
+  the straight line in long double (`tools/sofa_reference/starpm_ref.c --velocity`), every star of the harness at 0 to
+  1000 years, 1.98e-16 relative (`StarVelocityTests.GetGeometricStateRelativeTo_Velocity_IsTheDerivativeOfTheStraightLine`,
+  1 before); against the derivative of `iauStarpm` (rv = 0, central differences over ±1 year) with its two terms the
+  model does not take added in closed form (`iauStarpv`'s inertial radial velocity −c β²/(√(1 − β²) + 1) ≈ −v_t²/(2c)
+  along the catalog direction, 1.5e-4 of Barnard's speed, and its light time from the catalog epoch, a rate scaled by
+  1 − (ṙ(dt) − ṙ(0))/c), 3.62e-10 relative, the resolution of the central difference for Polaris
+  (`IsTheDerivativeOfIauStarpm`); within 6.2e-16 of the position of the central difference of the library's own
+  positions (`IsTheRateOfThePosition`); from the Earth, the space velocity minus the Earth's velocity from SPICE
+  (`GetEphemeris_FromTheEarth_IsTheSpaceVelocityMinusTheEarths`); and read back by `spkezr` from the SPK of
+  `WriteEphemeris`, 1.84e-16 relative (`WriteEphemeris_TheSpkHoldsTheSpaceVelocity`); all red on a85098d. Thresholds
+  twice the worst over Linux x64, Windows x64 and macOS arm64 (the same figures on the three). The positions of the star's own
+  states are unchanged, bit for bit; the rate of the stellar aberration of the `+S` corrections, which takes the
+  relative velocity, follows. A star as observer takes its space velocity too, which moves positions on the paths that
+  integrate it (the Changed entry below). The limit of the [Stars](../reference/stars.md#the-velocity) page is removed.
 
 **Changed**
 
+- **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
+  - **A g-value exactly zero at a step end** after a non-zero one is a crossing there, its direction read from the sign
+    before it (Hipparchus's rule); RK7(8) takes the step end as the root without bisecting. A zero at the base of a
+    segment followed by a non-zero value is not a crossing of a detector without a gate (Hipparchus's convention), so a
+    caller that restarts from an event with the same detector does not find it again.
+  - **A gated detector exactly zero at the base** (an impulse whose g-function is 0.0 at the start, its minimum epoch at
+    or before the start) fires at the base when the first step end has the target sign (GMAT's convention, #577's
+    choice 6; the split of the two conventions at the base, which only direct callers of `IntegrateSegment` meet, decided by S. Guillet, 2026-11-18): a minimum epoch before the start now gives the burn a minimum epoch at the start gives (RK7(8) at the
+    start, Velocity-Verlet at its first step end), not one orbit later.
+  - **Several detectors:** `IIntegrator.IntegrateSegment` reports one event per call, the earliest crossing of the step,
+    ties in list order: `RK78Integrator` locates each root and keeps the earliest, `VVIntegrator` estimates each on the
+    cubic Hermite of the step and reports the earliest at the step end. With Velocity-Verlet another crossing of the same
+    step falls before that step end: a caller that restarts from the event starts that detector from its g-value before
+    the step, or loses it. The protected `Integrator.CheckEventDetectors` evaluates every active detector and applies the
+    rule of a zero at a step end; it still returns the first crossing in list order, which a subclass with several
+    detectors orders by time itself. `Propagate`, `Scenario.SimulateAsync` and the batch pass one detector.
+  - **At the base of a segment** a gated detector whose gate is open there is evaluated from the start of its search
+    (`ComputeEventValueAtSearchStart`), the detector of the event just handled from its g-value past that root, now in
+    Velocity-Verlet too: a `PlaneAlignmentManeuver` whose propagation starts within 1e-6 |r| past a node takes the node
+    ahead.
+  - **Moves:** a burn whose g-function is exactly zero at a step end or at the base (time-like user impulses, apsides
+    given by Keplerian elements) and plane alignments started just past a node; every other event bit for bit in RK7(8),
+    and in Velocity-Verlet but for the label of the event (below).
+  - **Migration:** a caller of `IntegrateSegment` with several detectors takes the reported event as the earliest; a
+    custom `IEventDetector` whose g-function is exactly zero at step ends now fires there.
+- **Breaking: a Velocity-Verlet event is carried onto the tick of its label** ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572)). The step that holds the event
+  is integrated again, from its start, to the time of the label of its end (`PropagationTimeArgument.OnEpochGrid`, up to
+  half a tick of 100 ns from it, one more force evaluation), so the state the next segment starts from, the event time
+  and the base of the next segment are the same instant, as in RK7(8); a step end on the tick grid keeps its step. Every
+  Velocity-Verlet trajectory after an event about the Earth moves by up to v · 5e-8 s per event, the burn epochs by up
+  to half a tick: a chain of 7 events without ΔV in 12 h now ends within 1.2e-6 m (10 s steps) to 1.1e-4 m (0.7 s) of
+  the propagation without events, Velocity-Verlet's own sensitivity to the phase of its grid, where it ended 1.3e-3 to
+  2.0e-3 m away; about the Moon at whole-second steps (ticks) nothing moves. A step end whose label rounds to the tick
+  before it reports its event up to 5e-8 s before a root in that last half tick, the continued root still skipped
+  (accepted, decided by S. Guillet, 2026-11-18). After an event that continues the
+  propagation, Velocity-Verlet starts the detector from its g-value past the root, as RK7(8).
+- **Breaking: an impulse at the end of the propagation leaves the solution with the state after it** ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575);
+  decided by S. Guillet, 2026-11-17). An impulse executed with no time left after it opens a last segment of zero length
+  from the state after it, one step of zero length, as RK7(8) ends after a root before the end: the last output at the
+  end, `InterpolateAt` and `GetEphemeris` there give the state after it, the same doubles as the state before plus the ΔV,
+  and `Segments` holds one more segment. The stored states end with a last arc of one state, the state after the
+  impulse (the last output); the SPK, whose segments need two epochs, ends with the arc before it, so SPICE reads the
+  state before the impulse at that last epoch. A segment shorter than the landing tolerance of RK7(8) is one step of zero
+  length too (it was a segment with no step). The propagator asks the integrator for that segment with
+  `IntegrateSegment(..., duration: 0.0)`, a call the loop never made before: `IIntegrator.IntegrateSegment` now gives,
+  for a duration of zero, a segment of one step of zero length that holds the start state; for an integrator implemented
+  outside the library that returns no step there (a `while (t < duration)` loop), the propagator adds that step itself,
+  so the solution ends with the state after the burn on that path too. **Migration:** code that reads the last segment of
+  a solution finds the segment of zero length after a burn at the end; extend the window past the last maneuver to
+  propagate after it. A custom `IIntegrator` should return, for a duration of zero, one `AcceptedStep` of zero length
+  from the start state with its acceleration (the propagator otherwise gives that step the acceleration of its forces for
+  an `Integrator` subclass, and the end acceleration of the previous segment for a bare `IIntegrator`).
+- **Breaking: Velocity-Verlet is of second order with drag** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439)). The acceleration at the end of a step is
+  evaluated with the predicted end velocity v + h a instead of the half-step velocity, which kept the drag at t + h wrong
+  by O(h): on the dense pass of #439 the error against RK7(8) at 1e-13 is now 6.09 m, 6.09e-2 m and 6.11e-4 m at 1, 0.1
+  and 0.01 s (272.6 m, 27.8 m and 2.78 m before), and on a 300 × 400 km LEO with 0.01 m² 0.947 m at 1 s, unchanged (its
+  drag error was below the truncation). Every Velocity-Verlet result with drag moves, the default integrator's included;
+  without a force that depends on the velocity, bit for bit. No golden of the propagator tests moved.
+- **A propagation whose output step does not divide its window moves** ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626), Fixed above).
+  Its caches cover the span it integrates, up to half an output step past the window: with a geopotential, drag or
+  third bodies, its states past window end + 120 s change (7.0 mm after 3 900 s at 600 s outputs, 4.76 m after 88 200 s
+  at 3 600 s outputs, 2.4 km after 129 600 s at 86 400 s outputs in #626's measurement), and so the stored states read
+  near the end of the window. `PropagationFrameOrientationCache.GetOrientation` and `PropagationEphemerisCache.GetPosition`
+  and `GetState`, public, read the frame or the body at their epoch outside their grid, where they held its first or last
+  point or extrapolated. A propagation whose step divides its window, as with the common 60 s, does not move. No code
+  change is needed.
+- **Breaking: a propagation with a geopotential or drag about its central body moves by the orientation it reads** ([#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561), Fixed above).
+  With the exact SLERP the orientation of the central body read by the geopotential and by drag moves by up to 3.4e-10
+  rad (2.3 mm at a LEO radius): the bit-for-bit goldens of `PropagationGoldenTests` are recaptured, the GEO case moved by
+  2.1e-6 m, the maneuver case by 1.1e-6 m (its maneuver epoch unchanged), the SRP case by 1.66 mm with 100 steps instead
+  of 103 (the integration error at 1e-11 of other steps). A point-mass propagation, which reads no orientation, does not
+  move. The references of the Validation records by central differences of whole propagations take other steps, another
+  draw of their noise: the penumbra record of R4 (`StmValidationTests`) is set again at 9.6e-8 (its Φ 4.8e-8 there, 3.6e-9
+  before, Φ under test moved by 1.3e-9) and the arc record of Ψ_Cr of the eclipsing case (`ManeuverStmValidationTests`)
+  at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), twice the Linux worst, the Validation category
+  running on Linux x64 alone (decided by S. Guillet, 2026-11-18). Eleven draws of each reference, its
+  start moved by −5 to +5 ulps with the quantity under test unchanged, show the noise of the references: R4 in the
+  penumbra 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d), Ψ_Cr over the arc 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
+  a85098d, 9 of 11 above the former record). Two records of the test suite that compare propagations at two tolerances
+  were drawn again on every platform and set again at twice the worst over Linux x64, Windows x64 and macOS arm64 (CI
+  runs 44225490669 and 44237671637), their distributions unchanged over draws one ulp apart: `AvoidanceFallbackTests` in
+  RK7(8), the option at 1e-13 against its reference at 1e-14, state 9.40e-5 m, miss 7.73e-5 m and Pc 7.90e-7 on Windows x64
+  (on main a85098d at worst 6.36e-5 m, 5.21e-5 m and 4.98e-7, macOS arm64), thresholds 1.9e-4 m, 1.6e-4 m and
+  1.6e-6 (8.3e-5 m, 6.8e-5 m and 6.4e-7 before; over 81 draws on Linux x64, 4.9e-7 to 1.02e-4 m after and 7.3e-7 to
+  9.62e-5 m before); `MinimumStepNoiseTests`, Φ at 1e-13 against Φ at 1e-14 on the steps of the state, 1.34e-10 on
+  Windows x64 (4.95e-11 on main a85098d at worst), threshold 2.7e-10 (9.1e-11 before; over 40 draws on Linux x64,
+  2.9e-12 to 2.30e-10 after and 4.9e-12 to 6.35e-10 before), and against central differences 1.14e-7, threshold 2.3e-7
+  (2.6e-7 before). Migration: none in code; a golden of a propagation with a geopotential or drag is to be captured
+  again.
+- **Breaking: a propagation near a third body, SSB mode about the Earth included, moves** ([#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576), [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544), Fixed above).
+  `ThirdBodyPerturbation.Apply` takes the direct difference where the spacecraft is closer to the perturbing body than
+  half its distance to the central body (|r − d| < |d|/2): SSB mode near any planet, and a spacecraft near the Moon
+  propagated about the Earth (within about 190 000 km of it). Those propagations take other steps and end elsewhere, within
+  their integration error (an hour of LEO in SSB mode at 1e-10: 49 steps instead of 21 363); every other propagation is bit
+  for bit unchanged. Migration: none in code; a result in SSB mode or near the Moon about the Earth is to be measured
+  again, and an RK7(8) tolerance loosened for SSB mode (1e-9) can be tightened.
+- **Breaking: the density of Mars air below 54.887 km rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
+  Below the isothermal layer (49.887 km) and through its transition (to 54.887 km), `MarsStandardAtmosphere` takes the
+  curve fit's own 273.1 instead of 273.15 (decided by S. Guillet, 2026-11-17: 273.1 in the curve fit only, the 139 K
+  layer unchanged). The layer is unchanged bit for bit (its base, where the fit's temperature reaches −134.15 °C, kept
+  there, decided by S. Guillet, 2026-11-18, where 49 864.86 m would move every layer density by about 0.1 %, and its pressures do not depend on the offset); through the transition the absolute temperature goes from the fit's
+  T + 273.1 (138.95 K at the base) to 139 K and the temperature in °C from the fit's to −134.15 °C by the existing
+  smootherstep, so the density and its first two derivatives stay continuous. `GetTemperature` and `GetPressure` are
+  unchanged. Every density, drag and propagation through Mars air below 54.887 km moves: the RK7(8) run of
+  `MarsDragTests` across the base takes 36, 49 and 94 steps at 1e-11, 1e-12 and 1e-13 (35, 47 and 79 before); the
+  ratios to Seiff (1982) move by at most 3.6e-4. Migration: none in code; a result that needs the former density
+  multiplies it by (T + 273.1) / (T + 273.15) below the base.
+- **Breaking: a light-time corrected state in a non-inertial frame is rotated at the epoch of the frame's centre**
+  ([#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), Fixed above). On the reference-body path, a state read with a correction other than `None` in a
+  non-inertial frame not centred on the observer moves: by 620 m for the Moon from DSS-13 in
+  ITRF93 with `LT`, 1.48 km in MOON_ME, 38 km for a site given by its coordinates in its own frame from the Moon; the
+  coordinate searches in such frames move with it. Migration: for the former value, read the state in ICRF and rotate
+  it with `ToFrame(frame)`, which rotates at the state's epoch. The native library exports `GetFrameInfoProxy`, which
+  the .NET layer of the same release calls: a native library of an earlier release throws `EntryPointNotFoundException`
+  there.
+- **Breaking: `InstrumentPointingToAttitude` applies its light time, and takes an `Aberration`** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), Fixed
+  above; decided by S. Guillet, 2026-11-17). The constructor takes an optional `aberration`, `Aberration.LT` by default,
+  what the law requested, exposed as `Aberration`; an undefined value throws `ArgumentOutOfRangeException`. Every
+  pointing at a celestial target moves to its light-time direction (the Moon by 4.4e-5 to 9.2e-5 rad from a LEO), and
+  so do the attitude records and the CKs written from them; a site target takes the light time from the spacecraft; a
+  `Star` target takes no light time, so only its `+S` corrections move it, by its stellar aberration.
+  Migration: pass `Aberration.None` for the former geometric direction of a celestial target; recompile, the
+  constructor's signature changed.
+- **Breaking: `InitialOrbitDetermination.CreateFromObservation_Gauss` reads the observer at its geometric position**
+  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), Fixed above). The observer's
+  position relative to the centre of motion at each observation epoch is read without light time (`Aberration.None`),
+  where it took the observer at t − lt: every determination moves, by the Earth's motion over the light time from the
+  Sun about the Sun (Mars from DSS-13 at 10 days: 5.65e-2 to 6.94e-2 % of the position against the state from the Sun
+  with `LT`, the error of the method at that spacing), and about the Earth by the site's rotation over its light time
+  from the Earth's centre for a site read by CSPICE (a kernel site), a site given by its coordinates already read
+  geometric before this release. Migration: none in code; observations are the target's directions from the observer
+  at each epoch, corrected for the target's light time as before.
+- **Breaking: two times are equal when they are the same instant** ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512), Fixed above; decided by S. Guillet,
+  2026-11-17). `Time.Equals`, `==`, `!=` and `GetHashCode` follow `CompareTo`, the one order of times by their ticks
+  converted to TAI, within a frame and across frames: `utc == utc.ToTDB()` is true and both hash alike, so a hash
+  collection keyed by times finds the same instant in another frame. Within UTC, TAI, TT and GPS the order is that of
+  the calendars, as before; within TDB too, but for two consecutive TDB ticks that convert to one TAI tick (TDB − TT,
+  rounded to the tick, gains one there, about every 300 s near its steepest), which are now equal and compare to 0,
+  where they compared by their calendars, so that equality stays transitive. `Window` equality is that of its two ends
+  as instants, `Length` excluded (a UTC window built from a length across a leap second equals the window of its ends),
+  and so the equality of every record that holds a time (`StateOrientation`, `Equatorial`, a tuple) compares it as an
+  instant. A local time (`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the
+  zone of the machine, local times compared with each other included, where they compared by their calendars: in a zone
+  with daylight saving time, two labels of the skipped hour and the hour after it are one instant (in America/New_York,
+  local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, and 02:30 comes after 03:00), and a label of the repeated hour is
+  read with the standard offset (`ColdStartTests.LocalTimes_AreTheInstantsOfTheirZone`, skipped on Windows, where `TZ`
+  does not set the zone; red with a85098d's comparison of local calendars restored). The default time (no frame) comes
+  before every time with a frame and equals only itself, so comparing it no longer throws `NullReferenceException` (`<`,
+  `SortedSet`, `Window` of it). The library's comparisons follow: `AddPropagatedStates` replaces a stored state at the
+  same instant in another frame, and `StateVector.ToStateVector(epoch)` still relabels a state read at its instant in
+  another frame (a label comparison, internal `Time.HasSameLabel`); the library's caches whose values carry their key as
+  a label (the orientations of a `Frame` and of `TLEPropagator`, the range rates read once by the conjunction search)
+  stay keyed by label (internal `Time.LabelComparer`), so an orientation carries the epoch asked and the bisection of a
+  TCA in ticks (#624) reads both of two consecutive TDB ticks, bit for bit as before; the other comparisons of the
+  library (the ends of the dense search, the `Distinct()` of the knots, the epoch checks of the propagators) are on
+  instants (decided by S. Guillet, 2026-11-18). Results move only for two TDB
+  ticks of one TAI tick, by a tick at most. Within TDB, `-` still counts the ticks of the calendars: two equal
+  consecutive TDB ticks differ by one tick.
+  Migration: code that told two labels of one instant apart by `==`, `Equals` or `Assert.Equal` compares `DateTime` and
+  `Frame` (the tests of the library's labels do so through `LabelAssert`: 380 assertions that `Assert.Equal` or `==`
+  made on a time, a window, orbital parameters, a `StateOrientation` or an `Equatorial`).
+- **Breaking: equality of orbital parameters is value equality within one concrete type** ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475), Fixed
+  above; choices 1 and 2 decided by S. Guillet, 2026-11-17). `OrbitalParameters.Equals(OrbitalParameters)` (still
+  virtual) is the type's `Equals(object)`: the same concrete type, its values (A, E, I, RAAN, AOP, M; P, F, G, H, K, L0;
+  within 1e-6 of e = 1 the perigee radius, from which the state of the band comes (#459); position and velocity; a TLE's
+  lines and name), observer by NAIF id, epoch (an instant, #512), frame and
+  `ElementsType`; the base `Equals(object)` is reference equality for a type that defines no values, and
+  `GetHashCode` combines the observer's NAIF id, the epoch, the frame and the element type with the type's values.
+  Choice 1: a set and its own `ToStateVector()` are different (through `OrbitalParameters` they were equal). Choice 2:
+  a mean set and an osculating set of the same numbers are different (through their type they were equal), and so are
+  a TLE and its `ToMeanKeplerianElements()`. Equality never throws. Migration: to compare two orbits, compare their
+  states, `x.ToStateVector() == y.ToStateVector()`, which throws for mean elements.
+- **Breaking: the covariances a holder returns are copies** ([#722](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/722), Fixed above). `StateVector.Covariance`,
+  `EncounterState.CombinedCovarianceRtn`, `CollisionRisk.ProjectedCovariance`, `EpochStatistics.SampleCovariance` and
+  `Iau2006Model.FrameBias()` return a new copy at each read, and the constructors copy the matrix given. Migration: code
+  that changed a held covariance through `Set` on the matrix it gave or read builds a new `StateVector` (or holder) with
+  the matrix it wants.
+- **Breaking: one default element set number, 999** ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)).
+  The element set number written when none is given depended on the path: `Omm.ToTle` wrote 999 for an OMM without
+  `ELEMENT_SET_NO`, `TLE.Create` and the TLE `Configuration` (so `ToTLE`) 9999. The three now write the new
+  `TLE.DefaultElementSetNumber`, 999, the value CelesTrak and Space-Track publish (decided by S. Guillet, 2026-11-17);
+  9999 stays the bound of the field. A TLE created without an element set number changes in columns 65 to 68
+  (` 999`) and in its checksum (column 69); `Omm.ToTle` is unchanged (`TleCreateRulesTests`, red on a85098d for
+  `TLE.Create`, `Configuration` and `ToTLE`: `9999`). Migration: pass `elementSetNumber: 9999` (or
+  `ElementSetNumber = 9999` in the `Configuration`) to keep the former text.
+- **Breaking: `TLE.Create` accepts only SGP4 mean elements of an Earth orbit in TEME, and `ToTLE` only an Earth orbit** ([#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)).
+  `TLE.Create` checked only that its elements were mean: mean elements in ICRF were written as a TLE, their angles
+  taken as TEME's, and mean elements about the Moon with their mean motion from the Moon's GM, a valid text that
+  describes another orbit. It now throws `ArgumentException` (`meanElements`) for elements whose frame is not
+  `Frame.TEME` (frames compared by name) or whose observer is not the Earth (NAIF id 399), naming the frame or the
+  centre (decided by S. Guillet, 2026-11-17). `OrbitalParameters.ToTLE`, whose fit rotates the state to TEME but kept
+  its centre, threw an `InvalidOperationException` of a failed fit for an orbit about the Moon (a state 8000 km from it
+  with the speed of a circular Earth orbit there), after its fit iterations; it now throws
+  `InvalidOperationException` naming the centre before the fit. `Omm.ToTle` (TEME and the Earth through
+  `IsTleCompatible`) and `ToTLE` of an Earth orbit in any frame are unchanged, bit for bit
+  (`TleCreateRulesTests`, red on a85098d: no exception for mean elements in ICRF, about the Moon or about the Earth-Moon
+  barycentre). Migration: rotate mean elements to TEME with `ToFrame(Frame.TEME)` before `Create`, or give `ToTLE` the
+  osculating state, which it rotates itself; a TLE holds no orbit about another centre.
+- **Breaking: a point target at the observer throws for a rectangular field too** ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721), Fixed above).
+  `Instrument.IsInFOV` and the managed `FindWindowsInFieldOfViewConstraint` of a `RectangularInstrument` throw
+  `InvalidOperationException` naming the target at the observer for a point target at distance 0, where they reported
+  it in view (`IsInFOV` true, the whole search window), as the circle and the ellipse have since #715. Migration: a
+  caller that searches or tests a target that can be at the instrument's spacecraft catches
+  `InvalidOperationException`; no change for a target away from the observer.
+- **Breaking: the third parameter of `LambertSolver.Solve` is `targetObjectOrbitalParameters`**
+  ([#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662), item 3). The public parameter
+  was spelled `targetOjectOrbitalParameters`, a misspelling a caller passing it by name had to copy, and the
+  `ArgumentNullException` of a null target named it so. It is renamed (decided by S. Guillet, 2026-11-17;
+  `LambertSolverTests.Solve_ParametersAreSpelledAsTheirWords` and the reflection check of the listing of
+  `docs/reference/lambert.md`, `DocumentationPagesExamplesTests.SignatureBlocks_NameMembersOfTheLibrary`, red on
+  a85098d with the listing renamed). No result moves. Migration: a call that passes it by name writes
+  `targetObjectOrbitalParameters:`; a call by position is unchanged. With the documentation blocks compiled and checked
+  since #668 and #705, this closes #662.
 - **Breaking: a star moves along a straight line in space** ([#718](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/718)).
   `Star.GetEquatorialCoordinates` moved the catalog angles linearly, α0 + μα dt and δ0 + μδ dt, at the catalog distance,
   a model whose departure from the reference its remark cited, SOFA's `iauStarpm`, nothing gave. A star now moves along
@@ -3269,6 +4278,41 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   thresholds of 4.8e-6 s and 4.4e-16 rad. Migration: a caller that passed dα/dt passes `RightAscensionProperMotion` ×
   cos δ0, and multiplies its right ascension sigma and sigma rate by cos δ0; a caller that passed a catalog's `pmra`
   needs no change and now gets the star of the catalog.
+- **Breaking: the state of a star carries its space velocity** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731), Fixed above).
+  `Star.GetGeometricStateRelativeTo`, `GetEphemeris`, the states of `Propagate`, `PropagateAsync` and
+  `Scenario.SimulateAsync` and the SPK of `WriteEphemeris` carry r0 (μα* e_α + μδ e_δ) per Julian year of TDB, where
+  they carried a zero velocity (from an observer, the opposite of its velocity). Migration: code that took the
+  velocity of a star's state as the observer's opposite subtracts the star's (its velocity from the barycenter);
+  the positions of these states are unchanged.
+- **Breaking: a star as observer moves at its space velocity** ([#731](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/731), Fixed above).
+  Every path that converts a state whose observer is a `Star` to another centre takes the star's space velocity where it
+  took a zero velocity: `OrbitalParameters.RelativeTo`, `GetEphemeris` and
+  `GetGeometricStateRelativeTo` of any target seen from a star (its velocity the target's minus the star's), and the
+  initial state of a spacecraft whose initial orbit is about a star, which `CentralBodyPropagator` converts to the Sun,
+  its central body for a star observer. The converted velocity moves by the star's velocity relative to the
+  barycenter, and a propagation from such a state by that velocity times the elapsed time: Barnard's star from Gaia DR3,
+  a state of (1e11, 2e11, 3e10) m and (1000, −2000, 300) m/s about it on 2026-11-17, converted to the Sun, went from
+  (989.8, −2004.7, 298.2) m/s to (−5885.2, 5482.1, 89798.8) m/s, and after 6 hours of propagation about the Sun its
+  position moved by 1.93e9 m (its 89.8 km/s times 6 hours; measured on a85098d and on the fix). The velocity of these
+  conversions is the state's plus the star's space velocity minus the target's from SPICE, its position the star's
+  position from the barycenter plus the state's minus the target's, 0 on Linux x64, Windows x64 and macOS arm64 against
+  bounds of 8.0e-16 relative,
+  the rounding of the two orders of summation (`StarVelocityTests.RelativeTo_AStateAboutAStar_TakesTheStarsSpaceVelocity`,
+  `GetEphemeris_FromAStar_IsTheTargetsVelocityMinusTheStars`, `Propagate_ASpacecraftAboutAStar_StartsWithTheStarsSpaceVelocity`;
+  0.999, 0.84 to 1.12 and 0.999 relative on a85098d). Migration:
+  a state about a star whose velocity was given relative to the barycenter's motion (as the zero velocity of the star
+  made it) subtracts the star's space velocity (`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`)
+  to keep its former heliocentric velocity and trajectory; a state given relative to the star itself needs no change and
+  now moves with it.
+- **Breaking: the `Star` constructor refuses a parallax that is not finite and positive** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732), Fixed above).
+  `ArgumentOutOfRangeException` (`parallax`) for 0, a negative value, NaN, ±∞ and a positive value whose distance
+  overflows a double. Migration: a catalog record with a parallax of 0 or less (a Gaia DR3 star whose parallax is below
+  its error) is not a star with a distance: leave it out, or give it a parallax of its own choosing (the catalog's
+  parallax plus a prior, an upper bound of the distance).
+- **Breaking: `Constants.Parsec2Meters` is 648000/π au** ([#733](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/733), Fixed above).
+  3.0856775814913673e16 m, 1.592e-10 relative above the 3.085677581e16 m of 10.x, and so every `Star.Distance` and star
+  position from the barycenter. A public `const`: an assembly compiled against an earlier version keeps the old value
+  inlined until it is recompiled. Migration: none; a caller that needs the former value writes 3.085677581e16.
 - **Breaking: the element conversions of `SpiceAPI` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   Fixed above). `ConvertConicElementsToStateVector(KeplerianElements)` (an ellipse) and
   `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` (parameter `keplerianElements`, `equinoctialElements`)
@@ -3639,7 +4683,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     radius exceeds π/2 − 1e-6, a non-circular instrument of another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
     states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
     target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the
-    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, extrapolated.
+    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, which its
+    propagated states allow (#527, Fixed above).
 
   A search on a propagated spacecraft takes 0.1 to 1 s (0.1 to 0.7 s before). The occultation searches share the
   light time and the root finder, bit for bit. No other public signature changes; `Instrument.PositionInFOV` is
@@ -3706,7 +4751,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `AddStateOrientationToICRF` takes the rotation from the spacecraft frame to ICRF so labelled, throws
   `ArgumentException` for another label, and replaces the entries within 2 µs, where it was dropped at an existing
   epoch. `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
-  `ClearStateOrientations` are virtual on `Frame`. Migration: keep the CK loaded while the frame of a kernel-backed
+  `ClearStateOrientations` are members of `SpacecraftFrame` since #541 (below). Migration: keep the CK loaded while the frame of a kernel-backed
   spacecraft is read, and label a rotation given to `AddStateOrientationToICRF` with the spacecraft frame.
 - **Breaking: `Instrument.Orientation` is the Euler angles 1-2-3 of the frame kernel.** With the Fixed entry above. A
   zero orientation is unchanged everywhere. About one axis, the managed field-of-view path is unchanged bit for bit,
@@ -3750,10 +4795,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   as seconds can now be a tick outside the coverage, where the truncation kept a start from 1983 to J2000 or an end from 2000
   to 2017 inside, and a read there throws: read from the first tick inside. `SpiceAPI.ReadEphemeris(Time …)` and a
   kernel-backed spacecraft label their state with the epoch asked, and an end of a CSPICE search at an end of its search
-  window is that end. `AddDays`, `AddHours`, `AddMinutes`, `CreateFromJD` and the `TimeSpan.FromSeconds` of the library
-  outside `Time` (`Period()`, `SideralRotationPeriod`, `TrueSolarDay`, `Launch`, the windows of an impulse, the hold of
-  `PhasingManeuver`, the epochs of the conjunction search) still truncate. Migration: pass a finite span, and expect an
-  epoch built from seconds to differ from its former value by a tick.
+  window is that end. `AddDays`, `AddHours`, `AddMinutes`, `CreateFromJD` and the spans the library computes outside
+  `Time` follow the same rule since #637 (next entry). Migration: pass a finite span, and expect an epoch built from
+  seconds to differ from its former value by a tick.
+- **Breaking: the spans computed outside `Time`, and `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, are the nearest tick** ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637), Fixed above;
+  decided by S. Guillet, 2026-11-17): `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and
+  `TrueSolarDay`, `Tsiolkovski.DeltaT` (the thrust window of an impulse), the hold of `PhasingManeuver`, the launch
+  windows after the first, the period of the element conversions and the epochs of the conjunction search give the
+  nearest tick, ties to even, where they truncated, so each can be a tick longer (or a time a tick later); the four
+  methods of `Time` keep their exceptions (#680). The thrust window and the phasing hold are a change of the dynamics at
+  the level of a tick: they gate the next maneuver. These spans throw `OverflowException` from 922 337 203 685 s, the
+  bound of `Time.SecondsToTicks`, where `TimeSpan.FromSeconds` gave a span up to 922 337 203 685.477 s: `Period()` of
+  such an orbit (an ellipse within about 1e-6 of e = 1) now throws over the last 0.48 s below `TimeSpan.MaxValue` too, and
+  `ProfilesConfiguration` gives it no period. Migration: expect these spans and the epochs built from them to
+  differ from their former values by a tick; a comparison to the tick takes the nearest tick of the closed form; a
+  caller of `Period()` on an orbit of about 29 000 years catches `OverflowException` from 922 337 203 685 s.
 - **Breaking: `TimeToRadius` and `TimeToSphereOfInfluence` throw where the orbit never reaches the radius** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627), Fixed above):
   a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
   of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of
@@ -4471,6 +5527,371 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ReadFromStream`, `ReadFromFile` and `CdmReader.ReadFrom*` throw `CdmParseException` for a numeric value with a
   comma, where they dropped the comma and read another number. Migration: correct the producer, which must write a
   period. Documents written to the standard are read bit for bit as before.
+- **Breaking: `KeplerianElements` and `EquinoctialElements` refuse elements that are not finite** ([#726](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/726), [#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476)).
+  The constructors stored a NaN or infinite element, which then reached the period, the anomalies and the conversions
+  done in .NET (only the conversions of `SpiceAPI` refused them, #714). They now throw when the elements are built
+  (decided by S. Guillet, 2026-11-17, the recommendation of the triage: in the constructors, `ArgumentException` naming
+  the parameter, `ArgumentOutOfRangeException` for the eccentricity and the ranges):
+  - `KeplerianElements` (public constructor): `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity that is
+    not finite or is negative, "finite and non-negative", as the CCSDS `MeanElements` and `OpmKeplerianElements` (NaN and
+    +Infinity were accepted, the negative ones refused by an `ArgumentException` without a parameter name; −0.0 is
+    accepted, as 0); `ArgumentException` naming `semiMajorAxis` for NaN, −Infinity, or +Infinity outside the parabolic
+    band (+Infinity with e = 1 and a perigee radius, the parabola, stays the one infinity, #373; within the band
+    +Infinity is accepted only within a few ulps of e = 1, see #459 below), and naming
+    `inclination`, `rigthAscendingNode`, `argumentOfPeriapsis`, `meanAnomaly` or `trueAnomaly` (when given) for a value
+    that is not finite; `ArgumentOutOfRangeException` (`perigeeRadius`) for a perigee radius that is given and not
+    finite and above 0. `period` is a `TimeSpan`, always finite.
+  - `KeplerianElements.FromOMM`: `ArgumentOutOfRangeException` (`meanMotion`) for a mean motion not finite and above 0
+    (0 gave a = +Infinity, a negative one the a of its opposite), (`eccentricity`) as above, and `ArgumentException`
+    naming `inclination`, `raan`, `argumentOfPeriapsis` or `meanAnomaly`.
+  - `EquinoctialElements`: `ArgumentException` naming `f`, `g`, `h`, `k` or `l0` for a value that is not finite, and
+    `f` when √(F² + G²) overflows; P and the perigee radius below (#481).
+  Results of finite elements are unchanged, bit for bit: the checks compute nothing they use. `NonFiniteInput_Throws` of
+  `KeplerEquationTests` keeps the solver's guard and asserts the refusal of the elements, and the `SpiceApiTest`
+  rows of #714 that built non-finite elements now assert the constructor's exception (`SpiceAPI` keeps its own check).
+  Tests: `ElementsValidationTests.Issue726_*` and `Issue476_*` (red on a85098d). Migration: build elements from finite
+  values; catch `ArgumentException` (which `ArgumentOutOfRangeException` derives from) where elements come from
+  unchecked input.
+- **Breaking: `EquinoctialElements` refuses a semi-latus rectum or a perigee radius that no conic has** ([#481](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/481)).
+  The constructor checked only the observer and the frame: a finite P ≤ 0 gave a position mirrored through the centre
+  with a NaN velocity from `ToStateVector()`, a negative semi-major axis from `ToKeplerianElements()` and NaN states from
+  `AtEpoch` and `ToStateVector(Time)` (so from the start of a propagation and the CLI's `--from-equinoctial`), a P of
+  ±Infinity on an ellipse a non-finite state, and a parabola of perigee radius ≤ 0 or NaN the same kind of result
+  (measured on a85098d, as in the issue). It now throws `ArgumentOutOfRangeException` (`p`) for a P that is not finite
+  and above 0 (p = h²/μ > 0 for every conic; −0.0 included), a non-finite P being accepted only in the parabolic band
+  |e − 1| < 1e-6, where #452 documents it with a perigee radius as the way to give a parabola, and
+  (`perigeeRadius`) for a perigee radius given and not finite and above 0, as SPICE CONICS rejects rp ≤ 0
+  (decided by S. Guillet, 2026-11-17, the recommendation of the issue: the check in the constructor, no bound beyond
+  P > 0). The elements the library builds pass (`ToEquinoctial()`, whose P is finite since #462, and the TLE fit, which
+  raises P to keep its perigee). The ellipse row of `WithoutAFinitePOrAPerigeeRadius_TheStateIsUndefined` (P = NaN) now
+  throws from the constructor, and the P < 0 row of `ConvertEquinoctialElementsToStateVector_OutsideTheDomainOfEqncpv`
+  too (a semi-major axis ≤ 0 with P > 0 needs e > 1, outside EQNCPV's e ≤ 0.9). Tests: `ElementsValidationTests.Issue481_*`
+  (red on a85098d), `OrbitalParametersTests.EquinoctialWithANegativeSemiLatusRectum_IsRefused` (CLI). Migration: give P
+  finite and above 0, or a parabola's non-finite P with its perigee radius.
+- **Breaking: within 1e-6 of e = 1 the semi-major axis, the mean motion and the state are the conic's** ([#459](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/459)).
+  `IsParabolic()` holds for |e − 1| < 1e-6, and the whole band was taken as a parabola whatever its energy:
+  `StateVector.SemiMajorAxis()` and `EquinoctialElements.SemiMajorAxis()` returned +Infinity where the conic has
+  −μ/(2ξ) (about 1.4e10 km at |e − 1| = 5e-7), `MeanMotion()` Barker's √(μ/(2q³)), 2e9 times the conic's √(μ/|a|³)
+  at ±5e-7, the state of elements in the band took p = 2q where the conic has q (1 + e), so that
+  `sv.ToKeplerianElements().ToStateVector()` and the equinoctial round trips moved a state by |r| |e − 1| / (1 + e)
+  (1.9 m at ±5e-7, 3.4 m at ±9e-7, 4.2e7 m near the apoapsis of an ellipse given at e = 0.999999, which comes back in
+  the band from its state about one time in four), and `KeplerianElements` refused a finite semi-major axis in the band
+  (measured on a85098d). Option 1 of the issue (decided by S. Guillet, 2026-11-17): `SemiMajorAxis()` is the conic's for
+  every e ≠ 1, +Infinity for e = 1 exactly (`StateVector`: −μ/(2ξ), +Infinity for ξ = 0 too, which rounding gives the state of
+  an exact parabola whose e is one ulp off 1; `EquinoctialElements`: P / (1 − F² − G²), +Infinity where it overflows, or
+  q / (1 − e) for a non-finite P given its perigee radius); `MeanMotion()` is √(μ/|a|³), Barker's only for an infinite semi-major
+  axis; the state of elements in the band takes the conic's p = q (1 + e), 2q at e = 1 bit for bit; and
+  `KeplerianElements` accepts in the band, with the perigee radius q it requires (not derived from a finite a, whose
+  q = a (1 − e) would carry a relative rounding of 1e-16/|1 − e|, decided by S. Guillet, 2026-11-18), the semi-major axis of the same conic,
+  a (1 − e) = q to rounding: |q/a − (1 − e)| ≤ 6 ε (1 + e), twice the 3.0 ε (1 + e) measured on Linux x64, Windows x64
+  and macOS arm64 over 6400 states of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU) through every path
+  that builds elements there (the state, equinoctial elements, `AtEpoch`, SPICE's `oscltx`);
+  +Infinity at e = 1 exactly, and within a few ulps of it only (the state of an exact parabola, whose e rounds off 1
+  where ξ rounds to 0). The a of another conic throws `ArgumentException` (`semiMajorAxis`), as it did on a85098d: the
+  review of #459 measured `new KeplerianElements(7e6, 1 − 5e-7, ..., perigeeRadius: 7e6)` built with the semi-major axis,
+  mean motion, period and apoapsis of a 7000 km circle and the state of the near-parabola, and a = −7e6 or +Infinity at
+  e ≠ 1 built too (+Infinity giving the pre-#459 values). A missing perigee radius throws `ArgumentException`
+  (`perigeeRadius`). `SpiceAPI.ConvertStateVectorToConicOrbitalElement` forced a = +Infinity in the band, so Barker's
+  mean motion, 2e9 times the conic's at ±5e-7 (measured by the review): it keeps `oscltx`'s −μ/(2ξ), +Infinity where
+  `oscltx` gives 0 (e = 1 or a zero energy) (`NearParabolicBandTests.Issue459_InTheBand_*`,
+  `Issue459_SpiceConversionInTheBand_*`, red on the branch before the review; the measurement of the tolerance is
+  `Issue459_InTheBand_TheElementsOfASweepOfStatesAreOneConic`). The
+  motion of the band keeps Barker's anomaly, well conditioned there: `AtEpoch`, `ToKeplerianElements(Time)` and
+  `EpochAtMeanAnomaly` (so `ToStateVector(Time)`, `TimeToRadius`, the start of a propagation) advance it at Barker's
+  rate through a private method, the public `MeanMotion()` being the conic's. Outside the band every result is
+  unchanged, bit for bit; at e = 1 exactly too. Against 60-digit references (`tools/near_parabolic/near_parabolic_reference.py`): a and n
+  within 6.2e-16 and 9.3e-16 relative times |e − 1| (the cancellation of ξ, ε v²/(2|ξ|): 6e-10 at ±5e-7, 6e-4 at
+  ±1e-12), the round trips within 6.0e-16 of |r|, the state 600 s later within 6.1e-16 of the band model and 0.16 m of
+  the exact conic (1.8e-7 m at |e − 1| = 1e-12; 0.54 m from the periapsis at 5e-7), and the double edges of the band as
+  Keplerian elements (0.9999990000000001 and the double nearest 1.000001, both inside it, with their finite a, red on
+  a85098d) within 2.9e-16 (`NearParabolicBandTests.Issue459_*`, red on a85098d; thresholds twice the worst over Linux
+  x64, Windows x64 and macOS arm64). The comment of the issue asked for the solvers of #467 to be measured inside the band before Barker's law is
+  kept for all of it: Kepler's equation for the conic, solved by `KeplerEquation` in doubles from the state's a, e and
+  ν, is 2.3 to 5.8 mm from the exact motion at |e − 1| = 5e-7 to 9e-7, better than Barker's law there (0.09 to 0.16 m),
+  and 2.8 to 5.0 km off at |e − 1| = 1e-12, where Barker's law is within 1.8e-7 m
+  (`NearParabolicBandTests.Issue459_KeplersEquationForTheConic_AgainstBarkersLaw`, on the 60-digit references of
+  `tools/near_parabolic`): neither holds over the whole band, so Barker's law is kept as decided. A motion that holds
+  over it (universal variables, or a band narrowed to where Barker's law is the better one) would change what
+  `IsParabolic()` means across the library: it is not part of 11.0.0 and needs its own issue, #753. The tests of #477 that measured the 2q of the band now measure
+  rounding (3.6e-16 where 2.0e-7), and `TestHelpers.KeplerComparer` and `EquinoctialComparer` compare two orbits of the
+  band by their perigee radii, their semi-major axes being ill-conditioned there (`StateVectorTests.ToParabolicKeplerian`,
+  `KeplerianElementsTests.ParabolicToState`, `EquinoctialElementsTests.ParabolicToStateVector`: the state of an exact
+  parabola has a semi-major axis of about ±1e20 m, or +Infinity at a zero energy). Migration: code that read +Infinity from `SemiMajorAxis()` to recognize the band
+  calls `IsParabolic()`; code that took `MeanMotion()` as the rate of the mean anomaly in the band uses `AtEpoch` or
+  `EpochAtMeanAnomaly`; elements within 1e-6 of e = 1 given +Infinity at e ≠ 1 (the only form 10.x accepted) give
+  instead the conic's a, q / (1 − e), with the perigee radius.
+- **Breaking: `Period()` of an open orbit throws `InvalidOperationException`** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), item 3 of [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)).
+  `Period()` passed 2π √(a³/μ) to `TimeSpan.FromSeconds` without a check: a hyperbola (a < 0) threw TimeSpan's
+  `ArgumentException` "TimeSpan does not accept floating point Not-a-Number values", a parabola (a = +Infinity) its
+  `OverflowException`, with no message saying that an open orbit has no period (measured on a85098d, as in the
+  issue). It now throws `InvalidOperationException` naming e and a when the semi-major axis is not finite and above 0
+  (decided by S. Guillet, 2026-11-17, the fix of the issue: the test is on a, not on e, so the conic's finite a of the
+  near-parabolic band keeps its period, #459), before the cached period, so that a period given to `KeplerianElements`
+  for an open orbit, or the 0 of SPICE's `oscltx` for one (`SpiceAPI.ConvertStateVectorToConicOrbitalElement`), is not
+  returned either (the review of #663 measured 01:00:00 and 00:00:00; `Issue663_AnOpenOrbitGivenAPeriod_HasNoPeriod`).
+  `ConvertStateVectorToConicOrbitalElement` passes SPICE's period only when it is above 0 and fits a `TimeSpan`: an
+  ellipse at e = 1 − 2e-6, whose period is 2.1e12 s, threw `OverflowException` from the conversion and is now built
+  (`Issue663_SpicesElementsOfAnEllipseWithoutATimeSpanPeriod_AreBuilt`). An ellipse whose period exceeds
+  `TimeSpan.MaxValue` (29 227 years: within 1e-6 of e = 1, for instance) still throws `TimeSpan`'s `OverflowException`
+  from `Period()`, now documented. The callers
+  (`PhasingManeuver`, `CosmographiaExporter`) let it through, as before. Tests: `ElementsValidationTests.Issue663_*` on
+  a `StateVector` at escape speed and above, Keplerian and equinoctial hyperbolas and parabolas (red on a85098d), and an
+  ellipse unchanged. Migration: catch `InvalidOperationException` instead of `ArgumentException` or `OverflowException`,
+  or test `IsElliptical()` first.
+- **Breaking: mean elements stay mean through `AtEpoch` and `ToKeplerianElements(Time)`, and a propagation refuses a mean initial orbit** ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463)).
+  `AtEpoch(t)` and `ToKeplerianElements(t)` built their `KeplerianElements` without `elementsType`, so mean elements came
+  back labelled `Osculating`, even at their own epoch, and the guard of `ToStateVector()` let them through: a spacecraft
+  whose initial orbit was a mean set in an inertial frame (`KeplerianElements.FromOMM(..., Frame.ICRF)`, the public
+  constructors with `Mean`) was propagated from the two-body state of the mean numbers, with no error, by every path
+  (11.75 km and 7.7 m/s from SGP4 at the epoch for the ISS, 468 km after a day; measured on a85098d, as in the issue);
+  only a mean TEME set was refused, by the inertial-frame check. The recommendations of the issue (decided by
+  S. Guillet, 2026-11-17): both methods keep `ElementsType`; `ToKeplerianElements(Time)` is virtual and a `TLE`
+  overrides it as `ToKeplerianElements().ToKeplerianElements(epoch)`, its osculating SGP4 set moved in time, which stays
+  `Osculating` (as before); and every `CentralBodyPropagator` constructor (so `Spacecraft.Propagate` and
+  `PropagateAsync`, `CentralBodyPropagatorBuilder`, `Scenario.SimulateAsync`) throws `ArgumentException` (`spacecraft`)
+  naming the spacecraft and pointing to `TLEPropagator` and `TLE.ToOsculating()` for a mean initial orbit other than a
+  TLE, checked with the inertial-frame check before the initial state is computed (a mean TEME set still meets the frame
+  check first, `TlePropagationTests.MeanTemeSet_StaysRejected`). `AtEpoch` of mean elements advances the mean anomaly at
+  the two-body mean motion only, without the secular rates of the theory, as before, now documented; a mean set moved to
+  its own epoch writes the same TLE through `TLE.Create`, which refused it before. Osculating elements and states are
+  unchanged, bit for bit (only labels change), so no golden moves. Tests: `MeanElementsTypeTests` (mean Keplerian and
+  equinoctial sets from `FromOMM`, `TLE.ToMeanKeplerianElements()`, `ToEquinoctial()` and the constructors, in ICRF and
+  `ECLIPTIC_J2000`, at their epoch and an hour later; the seven propagation paths, Velocity-Verlet and RK7(8), windows at
+  and after the epoch; the TLE's osculating set within 8.9e-16 of CSPICE `prop2b` over the TT seconds of the hour on
+  Linux x64 and macOS arm64, 3.8e-15 on Windows x64, whose native library MSVC builds, threshold twice the worst), red
+  on a85098d. Migration: propagate a TLE with `TLEPropagator` or
+  start from `TLE.ToOsculating()` (or the TLE itself, whose SGP4 state starts the propagation); build osculating
+  elements for a numerical propagation.
+- **Breaking: `Spacecraft.SetStandbyManeuver` sets the head of the maneuver chain**
+  ([#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584), decided by S. Guillet,
+  2026-11-17). `InitialManeuver` and `StandbyManeuver` both become the given maneuver, whatever was set before or left by
+  a propagation, null clears the chain, and nothing is added to `ExecutedManeuvers`, which lists the maneuvers of the
+  last propagation. The advance of the chain inside a propagation keeps its bookkeeping in the internal
+  `ChainStandbyManeuver`. Migration: a caller that called `SetStandbyManeuver` several times to build a chain links it
+  with `SetNextManeuver` and sets its head once; one that read `ExecutedManeuvers` between the call and the propagation
+  no longer finds the previous head there.
+- **Breaking: every numerical propagation re-arms the spacecraft and makes it `IsPropagated`**
+  ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583), decided by S. Guillet,
+  2026-11-17). `PropagatorBase.Propagate` resets the spacecraft once its checks pass (the tanks refuelled,
+  `ExecutedManeuvers`, the stored states, the attitude record and the gates cleared, the chain put back in standby from
+  `InitialManeuver`), and `IsPropagated` is true after a run through `CentralBodyPropagatorBuilder` or a
+  `CentralBodyPropagator` built directly, as after `Spacecraft.Propagate` (false before). A propagator built and not run
+  changes nothing. Migration: a caller that propagated one spacecraft several times through the builder to continue a
+  chain (the second run started from the fuel and the standby maneuver the first left) propagates once over the whole
+  window, or sets the next head with `SetStandbyManeuver` and the state with `SetInitialOrbitalParameters`.
+- **Breaking: a propagated spacecraft is read within its propagated states**
+  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
+  2026-11-17). `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and every read through them (the managed
+  geometry and field-of-view searches, `IsInFOV`, the attitude targets) throw `InvalidOperationException`, as a
+  read past the coverage of SPICE, at an epoch before the first stored state or after the last, the epoch a light-time
+  correction reads allowed up to its light time outside them. The window checks of the conjunction overloads and of the
+  field-of-view search (`ArgumentException`, #622) are unchanged. Migration: read a propagated spacecraft within its
+  propagation window, or propagate it over the epochs read. The stored states run from the first output to the last,
+  round(L/ΔT)·ΔT after the start for a window of length L at outputs ΔT: when ΔT does not divide L, up to ΔT/2 before or
+  after the end of the window, so a read at the end of such a window throws when the last output falls before it (a
+  3 610 s window at 60 s outputs stores its states to 3 600 s); read the solution there, or choose an output step that
+  divides the window.
+- **Breaking: `Spacecraft.ToOpm` writes the propagated state, mass and maneuvers of its epoch**
+  ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided by S. Guillet,
+  2026-11-17). A spacecraft that holds propagated states writes `GetEphemeris(epoch, observer, frame, Aberration.None)`
+  with the observer and the frame of its initial orbital parameters, with the mass and the impulses ignited by then
+  (its mass after the propagation plus the fuel of the impulses ignited after the epoch, and only the impulses ignited
+  by the epoch), an impulse counting from the start of its thrust window, the `MAN_EPOCH_IGNITION` written (between the
+  ignition and the event, about two thirds of the burn, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
+  started later, throws `InvalidOperationException` (#527). A spacecraft without propagated states writes the motion of
+  its initial orbit as before. Migration: pass the epoch of the instant to export, the end of the propagation for the
+  state after every maneuver (the default epoch, the initial one, kept, decided by S. Guillet, 2026-11-18, now carries no maneuver of a propagation that starts
+  there); a caller that wanted the initial orbit writes `Opm.CreateFromStateVector` from `InitialOrbitalParameters`.
+
+- **Breaking: `EvaluateAvoidance` refuses a step of zero or less** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640), Fixed above).
+  `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep`, when given, must be positive, the rule of
+  `ConjunctionAnalysisOptions`: `ArgumentOutOfRangeException` (its `ParamName` the option), where a negative step was
+  accepted or the call ran out of memory. Migration: give a positive step, or null for the encounter's.
+
+- **Breaking: a window without a close approach gives its closest end, flagged, and `AnalyzeAll` nothing** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above).
+  `Analyze`, `Screen` and the re-analysis of each avoidance option return the closest window end where the sampled path
+  returned the midpoint (and where the search on two propagations returned the end the distance grows into, the same end
+  but for a minimum its seeds miss), with `EncounterQualityFlags.TcaAtWindowEnd` (new, `1 << 8`) raised; the
+  `ILocalizable` `AnalyzeAll` returns an empty list where it returned one midpoint encounter. Every encounter of a
+  window without a close approach carries the flag, the CDM export's comment of the flags included; a close approach the
+  sampled search finds on a window end (its range-rate zero in the half-tick next to the end, the tick nearer it #624
+  returns) does not, and `AnalyzeAll` lists it
+  (`ConjunctionKernelAndWindowTests.CloseApproachInTheLastHalfTick_IsListedAtTheEnd_NotFlagged`, red on 415442e, where
+  the flag was raised for any TCA on a window end). Migration: test
+  `QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd)` for an encounter whose closest approach lies outside the
+  window, and widen the window to find it; expect an empty list from `AnalyzeAll` where one midpoint encounter came.
+
+- **Breaking: the remediation of an initial covariance is bounded** ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17; the two frames and the bound of 1e-3, a producer of 3 significant digits needing 1e-2, decided by S. Guillet, 2026-11-18).
+  `StateVector.WithRemediatedCovariance()` and the conjunction analysis remediated any indefinite covariance by eigenvalue
+  clipping, however deep its defect: a T–Ṙ correlation of −10 by a change of 5.5 times the values, flagged
+  `CovarianceRemediated` only. Both now refuse a defect deeper than the rounding of the elements to 4 significant digits
+  (the form of the CDM's covariances, CCSDS 508.0-B-1, to be verified by S. Guillet) explains: the smallest eigenvalue
+  of the correlation matrix below −1e-3 of its trace (`CovarianceChecks.RemediationDepthBound`) in the frame of the state
+  and in its RTN frame (the frame a CDM rounds in; a rotation deepens a rounding defect, up to −0.11 of the trace measured
+  for covariances rounded in RTN). The bound is above the rigorous worst of that rounding, 8.34e-4 of the trace by Weyl's
+  inequality (measured: 1.5e-4 over 6000 LEO and GEO covariances of ranks 1 to 6, 2.1e-4 by an adversarial search). A
+  correlation of −1.01 in RTN (1.67e-3 of the trace) is refused; −1.0059 (9.8e-4) is remediated. The clipping is made in
+  the frame of the state when the depth passes there, bit for bit as before; otherwise in the RTN frame of the state,
+  rotated back: clipped in the frame of the state, a covariance rounded in RTN whose depth there reached −0.75 of the
+  trace changed by up to 2.9 √(M_ii M_jj) (adversarial review of #443); clipped in RTN, by the size of its rounding
+  (4.4e-4 at worst over 83 such covariances, `WithRemediatedCovariance_DeepOnlyInTheFrameOfTheState_IsClippedInRtn`, red
+  on b8e2e42).
+  `WithRemediatedCovariance` throws `InvalidOperationException` with the depth in both frames in its message; the
+  analysis holds such a covariance in RTN, as its other refusals, without `CovarianceRemediated`
+  (`CovarianceRemediationBoundTests`, `ConjunctionCovarianceEdgeTests.Analyze_InitialCovarianceBeyondTheDepthBound_IsHeldInRtn`,
+  red on a85098d for every case beyond the bound). Results change only for such a covariance. Migration: a covariance
+  refused by the bound is not one that rounding explains: correct its source, or give it at its full precision (one
+  rounded to 3 digits or fewer may be refused).
+
+- **Breaking: a CSPICE window search returns every window, up to 10000** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed above).
+  `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint`, `FindWindowsOnIlluminationConstraint`,
+  `FindWindowsOnOccultationConstraint` and `FindWindowsInFieldOfViewConstraint`, and the CSPICE paths of the searches of
+  `CelestialItem`, `Site` and `Instrument`, return every window CSPICE finds where they returned the first 1000, and an
+  illumination search of 1001 to 10000 windows returns them where it threw; beyond 10000 each throws
+  `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)` ("Window has size, 20000,
+  cardinality 20000. Cannot insert an additional interval into the window."; the short code is not in the message).
+  Migration: a caller that split its search window to stay under 1000 windows (the workaround of
+  the known limitation of the earlier previews) can search the whole window; one that needs more than 10000 windows
+  splits it under 10000. The native proxies take two more arguments, the capacity of the buffer and the count written:
+  the native library and the .NET library of 11.0.0 go together.
+
+- **Breaking: the window reads of `SpiceAPI` are on the grid start + i·step** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563), Fixed above).
+  `SpiceAPI.ReadEphemeris(Window, ...)` and `ReadOrientation` read at start + i·step in the time frame of the window
+  start (UTC steps for a UTC window, which the native layer stepped in TDB), i from 0 while within the window, the end
+  included when it falls on the grid: one more state or record where the drift of the former stepping dropped the last
+  epoch (6001 for 6000 over 600 s at 0.1 s), and the epochs and labels of `ReadEphemeris` exactly on the grid where they
+  drifted (by up to 4.29e-4 s after 9000 steps), labelled in the frame of the window start as before. `ReadOrientation` reads any number of epochs, where
+  more than 10000 threw `InvalidOperationException`, and a step of zero or less throws `ArgumentOutOfRangeException`
+  (`stepSize`) in both, where `ReadEphemeris` ran out of memory for 0 and read 10000 epochs backwards for a negative step.
+  Migration: a caller that dropped or matched the drifting epochs reads the grid itself; one that relied on the last
+  epoch being absent drops it. The native read proxies take the epochs: the native library and the .NET library of
+  11.0.0 go together.
+- **Breaking: a `MemoryDataProvider` no longer reads orientations stored under the name CIRS or TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656), Fixed above).
+  `FrameTransformationToICRF` of a frame named CIRS or TIRS, in any case, returns the managed `Frame.CIRS` or
+  `Frame.TIRS` (an instance of `CirsFrame` or `TirsFrame` its own), as it did for TEME, where it read the orientations
+  `AddStateOrientationToICRF` stored under that name. Migration: none to read the IAU frames; a caller who stored another
+  frame under one of those names gives it another name.
+
+- **Breaking: `MemoryDataProvider.GetEphemeris` throws `NotSupportedException` for an aberration other than `None`, and `ArgumentException` for a frame it neither stores nor knows** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559), Fixed above).
+  The provider holds geometric states only, and returned them for a read with light time or stellar aberration. It now
+  refuses them (decided by S. Guillet, 2026-11-17: an in-memory test provider; refusing is honest, and smaller than a
+  light-time iteration on the stored states; `NotSupportedException`, not the `ArgumentException` of a bad argument,
+  decided by S. Guillet, 2026-11-18), so a library path that reads with an aberration (an occultation or
+  illumination search with `LT`, `CelestialBody.TrueSolarDay`, a `CelestialAttitudeTarget` with `LT`) throws on it.
+  Its reads in a frame other than ICRF's axes are rotated (Fixed above), so the orbit of a body built on it, in
+  ECLIPJ2000 by default, changes numbers. A read in a frame without stored orientations other than ICRF, GCRF,
+  ECLIPJ2000, TEME, CIRS and TIRS (any body-fixed frame, such as `IAU_EARTH` or the Earth's `ITRF93`) throws
+  `ArgumentException` ("Frame not found"), where it returned the ICRF difference labelled with that frame. Migration:
+  read with `Aberration.None`, or with a `SpiceDataProvider`; for another frame, store its orientations with
+  `AddStateOrientationToICRF(frame, date, orientation)` over the epochs read (from SPICE, for example
+  `SpiceAPI.Instance.TransformFrame(date, frame, Frame.ICRF)`), or read in ICRF, the numbers returned before.
+
+- **Breaking: `Frame` keeps no orientations; the attitude record API is `SpacecraftFrame`'s** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541), Fixed above).
+  The protected `_stateOrientationsToICRF` and `StateOrientationsToICRF` of `Frame` are removed, and
+  `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
+  `ClearStateOrientations`, virtual on `Frame`, are members of `SpacecraftFrame`, the only frame that implemented them
+  as an attitude record (decided by S. Guillet, 2026-11-17); `Spacecraft.Frame` is a `SpacecraftFrame`, so its callers
+  compile unchanged. On another frame they stored the orientations given in the frame's own dictionary, the one its
+  reads filled, so an orientation added at an epoch that instance had not read yet replaced the data provider's at that
+  exact epoch, for that instance only and outside a propagation's orientation cache (measured on a85098d: a 0.3 rad
+  rotation about z added to `new Frame("ITRF93")` at an epoch was read back there, not SPICE's; `CirsFrame` alike); that
+  override is removed, and the frame reads its provider. A frame
+  keeps the orientation of its last epoch only: an orientation added to a `MemoryDataProvider` at the epoch the frame
+  read last is read once the frame has read another epoch (kept, decided by S. Guillet, 2026-11-18). Migration: a subclass of `Frame` that used the dictionary keeps its
+  own store; code that added orientations to another frame to override its provider gives them to a `MemoryDataProvider`
+  (`AddStateOrientationToICRF(frame, date, orientation)`), set as the data provider, whose frames read them (the managed
+  TEME, CIRS and TIRS excepted, #656).
+
+- **Breaking: the command line prints `Frame : J2000` for ICRF on every path** ([#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657), Fixed above).
+  `astro ephemeris` from a body or a kernel-backed spacecraft, and `astro orientation` of a kernel-backed spacecraft, in
+  the default frame ICRF or a frame named `icrf` or `j2000`, printed `Frame : j2000`; they print `Frame : J2000`, as a
+  site observer did. Numbers unchanged. Migration: a script that parses the label reads `J2000`, or compares it ignoring
+  case.
+- **Breaking: the two-body calls of `SpiceAPI` return the caller's observer and frame** ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)).
+  The results of `Propagate2Bodies`, `ConvertStateVectorToConicOrbitalElement`, `ConvertConicElementsToStateVector` and
+  `ConvertEquinoctialElementsToStateVector` (every overload) carried a new `CelestialBody` built from the identifier of
+  the centre (`ProfilesConfiguration.Convert` of the native result) and a frame rebuilt from its name: the caller's
+  geopotential and atmospheric model were lost, so a propagation started from the result ran about a point-mass Earth
+  without the caller's atmosphere (#674 takes the models of the observer), a barycentre threw "Celestial celestialItem
+  frame can't be defined" (measured on a85098d), and a body built from custom parameters of an identifier SPICE does not
+  name threw `ArgumentException` from the overloads with an explicit GM. Each result now carries the observer and the
+  frame instances of its input (`SpiceApiElementConversionTests.TwoBodyCalls_ReturnTheObserverAndTheFrameOfTheirInput`:
+  the Earth with EGM2008 10×10 and the 1976 atmosphere, the Earth-Moon barycentre and a custom body, in
+  ECLIPJ2000, red on a85098d for all three). The positions, velocities, elements and epochs are unchanged, bit for bit.
+  Migration: none for a caller that read the observer's identifier or name; a caller that relied on a body read from the
+  kernels gets its own instance back (build the observer from the kernels to have one).
+- **Breaking: `SpiceAPI.ConvertEquinoctialElementsToStateVector` returns the state of its elements** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450), Fixed above).
+  Its state was that of the elements with L0 read as a mean longitude; it is now the state at the true longitude L0, as
+  `EquinoctialElements.ToStateVector()` gives it (within 1.0e-15 relative of the 60-digit closed form). Circular orbits,
+  whose two longitudes coincide, give the same state. Migration: a caller that passed the mean longitude as L0 to work
+  around the defect passes the true longitude.
+- **Breaking: a site identifier is about its body, not an asteroid** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651), Fixed above).
+  `SpiceAPI.GetCelestialBodyInfo` (so `SpiceDataProvider.GetCelestialBodyInfo` and the command `celestial-body-info`) of a
+  site identifier, 100001 to 999999 with a planet or a moon SPICE names as body (399013 for DSS-13), gives its body as
+  `CenterOfMotionId` and its body's barycentre as `BarycenterOfMotionId` (399 and 3), where it gave 10 and 0;
+  `CelestialItem.IsAsteroid` is false for it, and a `CelestialBody` of that identifier is about its body, its
+  `ToString` naming no type. Every other identifier is classed as before. Migration: a caller that read the Sun as the
+  centre of a station reads its body.
+- **Breaking: the CDM writer puts the root outside the NDM/XML namespace** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615), Fixed above). The text of
+  every written CDM changes: `<ndm xmlns:xsi="..." xmlns:ndm="urn:ccsds:schema:ndmxml" xsi:noNamespaceSchemaLocation="..."><ndm:cdm ...><ndm:header>...`, or
+  `<cdm xmlns:xsi="..." xmlns:ndm="urn:ccsds:schema:ndmxml" xsi:noNamespaceSchemaLocation="..." id="CCSDS_CDM_VERS" version="1.0"><ndm:header>...` with
+  `wrapInNdmContainer: false`, where it was `<ndm xmlns="urn:ccsds:schema:ndmxml"><cdm ...>` and
+  `<cdm ... xmlns="urn:ccsds:schema:ndmxml">`. The values are unchanged and the library reads both forms. Migration: a
+  namespace-aware consumer that looked for the root `{urn:ccsds:schema:ndmxml}ndm` or `{urn:ccsds:schema:ndmxml}cdm`
+  looks for `ndm` or `cdm` in no namespace (the elements below it keep the namespace); one that removed the namespace of
+  the root to validate against the SANA schema no longer needs to.
+- **Breaking: the CCSDS writers follow the kind of each date** ([#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617), Fixed above; decided by S. Guillet,
+  2026-11-17). `CdmWriter` (`Cdm.WriteTo*`) writes a date of kind `Unspecified` as the UTC clock reading given, where it
+  shifted it by the offset of the machine's zone; a CDM written in UTC, read by `Cdm.ReadFrom*` (kind `Utc`) or exported
+  by `ToCdm` is unchanged. `OpmWriter` and `OmmWriter` (`Opm.SaveTo*`, `ToXmlString`, `Omm.SaveTo*`, `ToXml`) write a date
+  of kind `Local` as its UTC under `TIME_SYSTEM = UTC` and throw `ArgumentException` (`opm`, `omm`) naming the keyword
+  for an `EPOCH`, `REF_FRAME_EPOCH` or `MAN_EPOCH_IGNITION` of kind `Local` under any other time system, where they wrote
+  its clock reading; a local `CREATION_DATE` is converted to UTC. Dates of kind `Utc` and `Unspecified` are written as
+  before. Migration: give a CDM's dates in UTC, with any kind but `Local` for a UTC clock reading; give an OPM or OMM
+  epoch outside `TIME_SYSTEM = UTC` as its clock reading in that time system, of kind `Utc` or `Unspecified`.
+- **Breaking: the exported CDM names its method `FOSTER-1992`** ([#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618), Fixed above). `EncounterCase.ToCdm` writes
+  `COLLISION_PROBABILITY_METHOD = FOSTER-1992` where it wrote `FOSTER-2D`, and throws `InvalidOperationException` for an
+  encounter flagged `SingleCovarianceMaximumPcUsed`, where a case built by hand with both covariances was written
+  `FOSTER-2D-MAX-PC`, or with the method `CdmExportOptions.CollisionProbabilityMethod` named. Migration: a consumer that
+  matched `FOSTER-2D` matches `FOSTER-1992`; a caller that sets `CdmExportOptions.CollisionProbabilityMethod` keeps its
+  method, except for an encounter flagged `SingleCovarianceMaximumPcUsed`, which is refused whatever the option says
+  (that maximum is not the Pc of two covariances; decided by S. Guillet, 2026-11-18): such an encounter is no longer exported.
+- **The OPM, OMM and CDM writers write the shortest round-trip form of each value** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728), Fixed above). The text
+  of the written messages changes: the OPM and OMM write the digits they dropped (0.00012345678901234567 where
+  0.00012345678901 was written), the CDM drops the digits `G17` added beyond the shortest exact form
+  (0.1 where 0.10000000000000001 was written). A value read from an OPM or OMM the library writes is the value given,
+  bit for bit; one read from a CDM is unchanged.
+- **Breaking: the CCSDS readers refuse a date outside the two forms of the standard** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), Fixed above;
+  decided by S. Guillet, 2026-11-17). `Cdm`, `Opm` and `Omm` `Load*`/`ReadFrom*` and their readers throw `CdmParseException`,
+  `OpmParseException` or `OmmParseException` for a date field (`TCA`, `CREATION_DATE`, `EPOCH`, `MAN_EPOCH_IGNITION`, the
+  screening and observation dates) that is not `yyyy-mm-ddThh:mm:ss[.d…][Z|±hh:mm]` or `yyyy-dddThh:mm:ss[.d…][Z|±hh:mm]`
+  with every leading zero, where `DateTime.TryParse` read it. Migration: correct the producer; a date written to the
+  standard reads bit for bit as before.
+- **Breaking: the CDM reader refuses a `lengthTypeUO` length in units other than m** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619); decided by
+  S. Guillet, 2026-11-17). `MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N` and `SCREEN_VOLUME_X/Y/Z` with `units="km"` (or any
+  value but `m`, which `lengthUnits` enumerates alone) throw `CdmParseException` naming the keyword and the units, where
+  `km` was converted. Migration: write the length in m, as the schema and CCSDS 508.0-B-1 table 3-2 require; a length
+  without `units` is still read in m (#613).
+- **Breaking: `OpmStateVector` and `CovarianceMatrix` refuse a value that overflows in SI units** ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729), Fixed
+  above). `new OpmStateVector(...)` throws `ArgumentOutOfRangeException` naming `x` ... `zDot` for a component whose
+  product by 1000 is not finite (above about 1.8e305 km or km/s), and `new CovarianceMatrix(...)`, `FromFullMatrix` and
+  `FromMatrix` naming `cxX` ... `czDotZDot` for a term whose product by 1e6 is not (above about 1.8e302), where they built
+  it and the conversions gave ±Infinity; the OPM and OMM readers throw their parse exception naming the keyword. Values of
+  a `StateVector` (`FromStateVector`, `FromMatrixWithUnitConversion`) always convert back. Migration: none for a physical
+  state; such a value carries no orbit.
+- **Breaking: `Omm.ToTle` refuses a `MEAN_MOTION` its TLE field cannot hold** ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729), Fixed above). A mean
+  motion above the 99.99999999 rev/day of the 11-character field throws `InvalidOperationException` naming `MEAN_MOTION`
+  and its value, as a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent, where `TLE`'s constructor threw its
+  line-length `ArgumentException` and, above about 2.86e307 rev/day, a TLE was returned with the text `Infinity`.
+  Migration: catch `InvalidOperationException` instead of `ArgumentException`; such an object has no TLE form.
+- **Breaking: `CdmCovarianceMatrix.StateCovarianceRtn` refuses a matrix that is not 6×6** ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730), Fixed above).
+  An object initializer or a `with` expression with another size or `default(Matrix)` throws `ArgumentException` naming
+  `StateCovarianceRtn`, where it built and the writer failed. `Cdm.Validate` no longer checks the size, which no record
+  can hold. Migration: give the 6×6 RTN covariance (`FromRtnCovariance` already required it).
+- **Breaking: a negative revolution number names `revolutionNumberAtEpoch`** ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734), Fixed above). The
+  `ArgumentOutOfRangeException` of `new TleParameters(...)` and the four `CreateWith*` factories has the `ParamName`
+  `revolutionNumberAtEpoch`, where it was `revNumber`. Migration: a caller that tests `ParamName` compares with
+  `revolutionNumberAtEpoch` (`nameof` of the parameter).
 
 **Deprecated**
 
@@ -4507,17 +5928,6 @@ not listed.
   (#668, decided by S. Guillet, 2026-11-14): it is left to an additive constructor overload after 11.0.0, in
   [#723](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/723) (decided by S. Guillet,
   2026-11-17; [Stars](../reference/stars.md#limits)).
-- **A point target at the observer is in view of a rectangular field**
-  ([#721](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/721)). The managed field-of-view
-  search of a rectangular instrument reports a point target at the observer, distance 0, in view, its margin taking
-  atan2(0, 0) = 0, where a circle and an ellipse throw `InvalidOperationException` since #715 (Fixed above). It is to
-  throw as they do (decision 9 of #719, decided by S. Guillet, 2026-11-17). No workaround is needed for a target away
-  from the observer.
-- **A front body without radii on the CSPICE path of the occultation search**
-  ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
-  `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
-  cannot be searched there: SPICE's error, `InvalidOperationException` since the fourth round of #668 (before, no
-  window). The other SPICE errors of the CSPICE window searches throw since that round (Changed above).
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
@@ -4527,18 +5937,6 @@ not listed.
   exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
   `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short", and the `stepSize`
   of the distance, coordinate and illumination searches of `CelestialItem` and `Site` "every window and gap").
-- **At most 1000 windows from a CSPICE search**
-  ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
-  returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every
-  dropped crossing. Split the search window so that each part holds fewer than 1000 windows.
-- **The element conversions of `SpiceAPI`**
-  ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450),
-  [#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
-  `SpiceAPI.ConvertEquinoctialElementsToStateVector` passes the true longitude where `EQNCPV` takes the mean longitude
-  (1029 km off for an ordinary LEO, 27 900 km at e = 0.89) and throws `ArgumentException` for a ≤ 0 or e > 0.9, the
-  domain of `EQNCPV` (#711);
-  the conversions hold the SPICE lock while they build their result (about 80 µs for a native call of 1.8 µs). Use
-  `EquinoctialElements.ToStateVector()` and `KeplerianElements.ToStateVector()`.
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),
   [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
@@ -4548,24 +5946,19 @@ not listed.
   leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
-  before rewriting the file. Both writers enumerate the caller's
-  states once, under the SPICE lock: pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
+  before rewriting the file. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
-  (`SPICE(FILENAMETOOLONG)`, reported as "more details on standard output"), while `Spacecraft.WriteEphemeris` and the
+  (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard
+  output since #727), while `Spacecraft.WriteEphemeris` and the
   text kernel writers still write it: load it through a meta-kernel that names it by a shorter relative path, or write
   it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
   are two entries.
-- **CIRS and TIRS by name, and searches in a managed frame**
-  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558),
-  [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)). A frame built by name as CIRS
-  or TIRS (`new Frame("CIRS")`, a CCSDS file, the CLI) equals `Frame.CIRS` or `Frame.TIRS` but goes to SPICE, which does
-  not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws, and `SpiceAPI.TransformFrame` in CIRS or TIRS throws
-  even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in a frame built by the
-  name CIRS or TIRS throws SPICE's error (no window before the fourth round of #668), and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances
-  `Frame.CIRS` and `Frame.TIRS`, which the coordinate searches of `CelestialItem` and `Site` search in with the library
-  (third review of #690). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
+- **Orientations read in CIRS or TIRS, and frames of the library built by name**
+  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)). `SpiceAPI.ReadOrientation` in
+  CIRS or TIRS throws: SPICE does not know them (a frame built by those names is routed to `Frame.CIRS` and `Frame.TIRS`
+  everywhere else since #656, Fixed above). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
   record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), and searched in by the library (third review of #690), but a frame built by
   such a name (`new Frame("MYSITE_TOPO")`) still goes to SPICE, as does any frame built by a name SPICE does not know,
   whose CSPICE search throws SPICE's error (no window before the fourth round of #668).
@@ -4575,81 +5968,49 @@ not listed.
   identifiers throws `ArgumentException` for a spacecraft observer: with `Aberration.None`, read with the spacecraft as
   target and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives); so does a site observer
   that no loaded kernel names, and one whose SPK does not cover J2000 TDB, which its `Site` constructor reads, throws
-  `InvalidOperationException`, with the same workaround (documented in the fourth round of #668). `SpiceAPI.GetCelestialBodyInfo` of a site identifier (DSS-13, 399013) gives the Sun as centre and the
-  barycentre 0, every identifier above 1000 being classed as an asteroid, so `new CelestialBody(399013)` and
-  `CelestialItem.Create(399013)` build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Sun (they threw or were
-  built with a garbage frame name before
-  [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)): build a `Site`.
+  `InvalidOperationException`, with the same workaround (documented in the fourth round of #668). `new CelestialBody(399013)` and
+  `CelestialItem.Create(399013)` of a site identifier build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Earth
+  (they threw or were built with a garbage frame name before
+  [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672), and about the Sun before #651,
+  under Changed): build a `Site`.
   `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI follow
   the same rule and build the same site (its SPICE name), under Changed.
   `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as
   `SpiceDataProvider` for an identifier SPICE does not name
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680); `KeyNotFoundException` before).
-- **Reads past the stored states of a propagated spacecraft**
-  ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527),
-  [#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)).
-  `Spacecraft.GetGeometricStateRelativeTo`, `GetEphemeris` and the managed distance and coordinate searches extrapolate
-  the 8-point polynomial past the stored states without an error (567 km off 6 min before the first state, 8 282 km 6
-  min after the last). A propagation whose output step does not divide its window runs up to half a step past its end,
-  where its orientation cache, which ends 120 s after the window, holds the Earth's orientation at its last grid point,
-  and its ephemeris cache, which ends 240 s after it, extrapolates the third bodies; a geopotential or drag read there
-  past the coverage throws. Keep reads
-  inside the propagated window, and choose an output step that divides it, or one of 240 s or less.
+- **Reads past the end of a propagation window**
+  ([#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)). A propagation whose output
+  step does not divide its window runs up to half a step past its end (its caches cover that span since #626), so a
+  geopotential or drag read there past the coverage of the orientation data throws. Choose an output step that divides
+  the window.
 - **Impulses at the edges of the stored states**
-  ([#572](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/572),
-  [#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575),
-  [#579](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/579),
-  [#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). With Velocity-Verlet the
-  segment after an impulse starts at the event's label rounded to the 100 ns tick (up to 5e-8 s per event, accumulating
-  over a chain), and an impulse whose crossing falls in the last step is executed (fuel, `ExecutedManeuvers`, `ToOpm`)
-  while the states end before it: extend the window past the last maneuver. Two impulses less than 2 µs apart store no
-  arc between them: a read at the first returns the state before both, and an SPK read between them throws
-  SPKINSUFFDATA. The state that closes an arc carries its impulse's tick, up to half a tick from its instant (about 0.4
-  mm at 8.6 km/s).
-- **State kept by the maneuver chain**
-  ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583),
-  [#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584)). A spacecraft propagated a
-  second time through `CentralBodyPropagatorBuilder.Build().Propagate()` or a `CentralBodyPropagator` built directly is
-  not reset: the second run fires no burn and starts with the fuel the first left. A second
-  `Spacecraft.SetStandbyManeuver` before a propagation does not replace the first, which fires while the new one is
-  dropped silently. Use `Spacecraft.Propagate` or a fresh spacecraft, and set the standby maneuver once (a maneuver on
-  another spacecraft's tank is rejected since #676).
-- **Event detection** ([#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578),
-  [#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580),
-  [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581)). The public
-  `IIntegrator.IntegrateSegment`, given several detectors, reports the first in list order whose sign changed in a step,
-  not the earliest crossing (`Propagate` and `Scenario.SimulateAsync` pass one). A g-function exactly 0 at a step end
-  past the gate is never a crossing, so a time-like user `ImpulseManeuver` or `IEventDetector` landing on a
-  Velocity-Verlet or fixed-step RK7(8) step end never fires. A `PlaneAlignmentManeuver` whose propagation starts less
-  than 1e-6 |r| past a node fires one orbit late.
-- **A null target orbit** ([#555](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/555)). The
-  target-orbit constructors of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` throw `NullReferenceException` for a
-  null `targetOrbit`, not an `ArgumentNullException` that names it.
-- **Attitudes** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549),
-  [#592](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/592)). Between output epochs the
+  ([#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). An impulse at the end of the propagation opens a last arc of one state, the state after it ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)),
+  which an SPK segment cannot hold: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the
+  impulse at that last epoch where `GetEphemeris` reads the state after it (the documented limitation of 11.0.0,
+  decided by S. Guillet, 2026-11-18). The state that closes an arc carries its
+  impulse's tick, up to half a tick from its instant (about 0.4 mm at 8.6 km/s).
+- **Attitudes** ([#592](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/592)). Between output epochs the
   attitude record is the spherical linear interpolation of its samples, not the law: a `NadirAttitude` 1.47e-3 rad off
   nadir at 60 s outputs in LEO and up to 1.04° near the roll singularity, a TRIAD law up to 3.8e-4 rad on a Molniya;
-  shorten the output step where it matters. `InstrumentPointingToAttitude` points at a celestial target geometrically
-  although it requests LT (the Moon 4.2e-5 to 4.5e-5 rad, about 40 km, from its light-time direction from LEO); a `Site`
-  target is correct. `TriadAttitude` rejects vectors collinear to the rounding of normal components at every separation
+  shorten the output step where it matters. `TriadAttitude` rejects vectors collinear to the rounding of normal components at every separation
   (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)), but a
   subnormal component (below about 2.2e-308) rounds by an absolute 4.9e-324: v = (1, 2, 3)·1e-320 and fl(0.7 v) have a
   sine of 1.1e-4 and pass a separation below that, with a roll set by rounding; give body vectors of a normal magnitude.
-- **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339),
-  [#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). `Spacecraft.ToOpm` writes the
-  two-body (or SGP4) motion of the initial orbit, not the propagated state, with the mass and the maneuvers after the
-  propagation (1 212 km and 1 137 m/s off one burn later): for a propagated state, write `Opm.CreateFromStateVector`
-  from `GetEphemeris` at the epoch. `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
+- **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)).
+  `Opm.CreateFromStateVector` and `ToOpm` write `REF_FRAME = J2000` for `Frame.ICRF`,
   which the library's own `OpmValidator` reports as non-standard: build the OPM with `new Opm(header, metadata, data)`
   and an `OpmMetadata` whose reference frame is `ICRF`, or edit `REF_FRAME` in the written file.
-- **TLEs** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598),
-  [#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604),
-  [#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)). `TLEPropagator` counts its
-  samples in whole seconds: a step below 1 s throws `DivideByZeroException`, and a window that is not a multiple of the
-  step loses its end; use a whole-second step that divides the window. A TLE with a blank international designator can
-  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM. `TLE.Create` checks only that its
-  elements are mean: pass mean elements about the Earth in `Frame.TEME`. `Omm.ToTle` writes element set 999 for an OMM
-  without `ELEMENT_SET_NO`, `TLE.Create` 9999 by default ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)): pass the element set number.
+- **Two stored states a few ticks apart** (found by the review of #598, its issue to be opened). The read of the
+  stored states of a propagated spacecraft (`GetEphemeris` from its centre without aberration, through its 8 nearest
+  states) is ill-conditioned when two of them are a few ticks apart: the ISS's SGP4 states every 60 s over one hour,
+  plus one 11 ticks after the last, given to the public `Spacecraft.AddPropagatedStates`, read up to 4.934e3 m off SGP4
+  over the last 90 s (every 15 s; 4.336e3 m at +3570 s), 9.8 m with the extra state 100 µs after the last, 4.6e-4 m
+  with it 1 s after, 7.6e-4 m without it (Linux x64, 2026-11-17): each SGP4 state carries the tick rounding of its epoch, about 0.77 mm per tick
+  at 7.7 km/s, which the near-coincident pair amplifies. The propagations do not meet it: the stored states drop an
+  output closer to an impulse than a tenth of the output step, and `TLEPropagator` a grid point that close to the window
+  end (#598, Fixed above). Workaround: give `AddPropagatedStates` states at least a tenth of their spacing apart.
+- **TLEs** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604)). A TLE with a blank international designator can
+  be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM.
   A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
   is NRLMSISE-00 at nominal space weather ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)), and an Earth with a geopotential or an atmosphere in the bodies throws
   `ArgumentException` (bodies of one identifier must have the same models, [#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)); give a TEME state on an Earth that
@@ -4657,73 +6018,18 @@ not listed.
   ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
   as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
-- **CDM writing and validation** ([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614),
-  [#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615),
-  [#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618)). `CdmWriter` puts the `cdm` and
-  `ndm` roots in the NDM/XML namespace, so the SANA schema rejects every CDM the library writes, which
-  `Cdm.ValidateSchema` accepts in that form (it checks the standard forms since the third round of
-  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), which closes
-  [#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
-  `CdmExporter` writes `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, which SANA does not register (Foster's method is
-  FOSTER-1992). `CdmExporter` refuses an encounter with one covariance, so its `FOSTER-2D-MAX-PC` is never written
-  ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Remove the namespace of the
-  written CDM before exchanging it (the result validates with `Cdm.ValidateSchemaFromXml`), and set
-  `CdmExportOptions.CollisionProbabilityMethod`.
-- **CDM dates and numbers** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616),
-  [#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617),
-  [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). A date in a leap second throws
-  `CdmParseException`. `CdmWriter` reads a `DateTime` of kind `Unspecified` as local time: build its dates with
-  `DateTimeKind.Utc`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
-  free-text or time-only dates (a time gets today's date) instead of rejecting them.
-- **Orbits within 1e-6 of e = 1**
-  ([#459](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/459),
-  [#462](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/462),
-  [#477](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/477),
-  [#478](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/478)). An orbit with |e − 1| < 1e-6
-  is taken as a parabola whatever its energy: `StateVector.SemiMajorAxis()` returns +Infinity, `MeanMotion()` and
-  `MeanAnomaly()` take Barker's forms, `ToStateVector()` takes p = 2q (metres off on a round trip), and
-  `ToEquinoctial()` gives P = NaN or ±Infinity. In 0 < |e − 1| < 1e-6 Kepler's equation is applied to Barker's anomaly,
-  so `ToStateVector(ν)`, `TimeToRadius` and the equinoctial round trips can be thousands of km or hundreds of seconds
-  off without an error. Parabolic `EquinoctialElements` with a finite P and no perigee radius throw from
-  `ToKeplerianElements()`, `AtEpoch` and a propagation: pass `perigeeRadius: P / (1 + e)`.
+- **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
+  leap second throws `CdmParseException`.
 - **Precision near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472),
   [#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
   `KeplerianElements.ToStateVector()` loses digits through p = a(1 − e²), 1 + e cos ν and e + cos ν: 1.1e-11 relative at
   e = 0.999999 (155 m at the apoapsis of a 7000 km periapsis). Near the periapsis Kepler's equation stops at its
   cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r| off at e = 0.999999, and
   `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
-- **No period for e ≥ 1** ([#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663)).
-  `Period()` throws the NaN `ArgumentException` of `TimeSpan` for a hyperbola and an `OverflowException` for a parabola,
-  and for an ellipse in the parabolic band, with no message that says an open orbit has no period.
-- **Elements accepted without a check**
-  ([#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476),
-  [#481](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/481)). `KeplerianElements` accepts e
-  = NaN or +Infinity: `TrueAnomaly()`, `ToStateVector()` and `ToEquinoctial()` then throw `InvalidOperationException`
-  "Nullable object must have a value", which names neither e nor the call (+Infinity gives NaN states).
-  `EquinoctialElements` accepts P ≤ 0 or a non-finite P. For a finite P ≤ 0, `ToStateVector()` gives a NaN velocity
-  and `ToKeplerianElements()` a negative semi-major axis without an error, while `AtEpoch` and `ToStateVector(Time)`
-  throw the Kepler solver's error on M = NaN, which does not name P; for P = ±∞ on an ellipse they give a non-finite
-  state without an error. Check the elements before building them.
-- **Mean elements and equality of orbital parameters**
-  ([#463](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/463),
-  [#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475)). `AtEpoch(t)` and
-  `ToKeplerianElements(t)` of mean elements (a TLE, `KeplerianElements.FromOMM`) return the same numbers labelled
-  osculating, which bypasses the guard of `ToStateVector()`: use `TLE.ToOsculating()` or an SGP4 state. Typed
-  `OrbitalParameters`, `==`, `!=` and `Equals` compare `ToStateVector()`, so they throw for mean elements (even against
-  null) or e = NaN, and `GetHashCode` includes the reference, so equal copies hash differently and hash sets keep
-  duplicates: compare the element values.
 - **Angles brought into [0, 2π)**
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and
   `SpecialFunctions.NormalizeAngle(-1e-17)` returns 2π (360°, which can appear in an OPM or OMM).
-- **Time equality and truncated spans**
-  ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512),
-  [#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)). The same instant in two time
-  frames has `CompareTo` 0, but `==` and `Equals` are false and the hashes differ, so `Dictionary`, `HashSet`,
-  `Distinct` and `IndexOf` keyed by `Time` miss it: convert keys to one frame (`ToTDB()`). `AddDays`, `AddHours`,
-  `AddMinutes`, `CreateFromJD` and the spans computed through `TimeSpan.FromSeconds` (`Period()`,
-  `SideralRotationPeriod`, `TrueSolarDay`, the windows of an impulse, the hold of `PhasingManeuver`, `Launch`, the
-  epochs of the conjunction search) truncate to the tick below, so each can be a tick early.
 - **The ephemeris time given to CSPICE**
   ([#665](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/665), item 4 of
   [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)). CSPICE is
@@ -4731,47 +6037,27 @@ not listed.
   the tick, [Time Scales](../reference/time-and-windows.md#time-scales)): a UTC epoch at a coverage bound of a kernel,
   as `str2et` computes it, can be read up to about 1.1 µs outside it and throw SPKINSUFFDATA. Read 2 µs inside the
   bound.
-- **Light time on the reference-body path**
-  ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489),
-  [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593)). A `Site` built from its
-  coordinates and read as a target from a kernel-backed observer takes the light time of the observer, not of the site:
-  82.7 km off `spkcpt` from the Moon with LT, about 15 000 km from the Sun. A light-time-corrected state in a
-  non-inertial frame centred on the target (ITRF93, MOON_ME) takes the frame at the observation epoch, not at t − lt as
-  `spkezr` does: the Moon from DSS-13 with LT 531 m to 1.48 km off. `ToEquatorial` of such a state rotates it to ICRF at its epoch
+- **A light-time corrected state in a frame only the library holds, read by CSPICE.** An observer and a target SPICE
+  reads, in TEME, CIRS, TIRS, the frame of a site given by its coordinates or the frame of a managed spacecraft with an
+  attitude record, are read in J2000 and rotated at the epoch of the observation, not at the epoch of the frame's centre as the reference-body path rotates them since #593. **The
+  equatorial coordinates of a light-time corrected state in a non-inertial frame.** `ToEquatorial` of such a state
+  (ITRF93, MOON_ME) rotates it to ICRF at its epoch
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)): 3.05e-6 rad in RA and 1.15e-6 rad in Dec for the Moon from the Earth with LT in MOON_ME; read it in ICRF.
 - **Illumination of a site above the ellipsoid**
   ([#654](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/654)). A site from the kernels,
   searched by `gfilum_c` with the normal of `surfnm_c` at the point, and the same site built from its coordinates,
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
-- **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
-  `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
-  read in ICRF without aberration and convert with `ToFrame`.
-- **Memory and cost of the reads**
-  ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
-  [#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
-  `Frame.GetStateOrientationToICRF` (and `CirsFrame`, `GcrfFrame`, `TirsFrame`, `SiteFrame`) keeps every orientation it
-  reads for the life of the frame, without bound (16.5 MB after 100 000 reads of ITRF93), and the static frames live for
-  the whole process. `SpiceAPI.ReadOrientation` costs about 1.4 ms a call whatever the window, and the window reads of
-  `ReadOrientation` and `ReadEphemeris` step by epoch += step, so their samples drift (4.3e-4 s observed) and the last
-  epoch of the window can be dropped.
-- **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389),
-  [#544](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/544),
-  [#576](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/576)). `ThirdBodyPerturbation`
-  computes the Earth's attraction with Battin's 1 + q, which loses about 8 digits near it: in SSB mode an RK7(8) LEO
-  propagation takes about 5 500 times more steps than relative to the Earth (125 641 against 23 for one hour at 1e-10)
-  and fails at 1e-12, its steps depend on the platform, and a start from ECLIPJ2000 or GALACTIC ends 0.07 to 0.56 m from
-  its ICRF twin after 1 h. Propagate relative to the Earth, or keep the tolerance at 1e-9 or looser.
-- **Integration accuracy** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439),
-  [#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445),
-  [#561](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/561)). Velocity-Verlet is of first
-  order with drag: on a dense perigee pass its error against RK7(8) is 267 m, 27.2 m and 2.72 m at steps of 1, 0.1 and
-  0.01 s; use `RK78Integrator` when drag matters. At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
-  to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation interpolates the
-  Earth's 60 s nodes with the normalised-Lerp fallback of `Quaternion.SLERP`, up to 3.4e-10 rad from the exact
-  interpolation. It is built for every central body, whether or not a force rotates, so each of its 60 s points past the
-  coverage of the orientation kernel goes through the native read, which prints its SPICE message on standard output
-  (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); the native read is unchanged): a point-mass
+- **SSB mode about the Earth** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).
+  With the variational equations in the step control (`IncludeInStepControl`) the columns of Y are scaled by |r0|
+  relative to the barycentre, about 1.5e11 m, and the step control fails, with or without drag; propagate relative to
+  the Earth. (The noise of the Earth's attraction in SSB mode, #544 and #576, is fixed in this release.)
+- **Integration accuracy** ([#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445)).
+  At 1e-11 the 3 h error of RK7(8) in LEO with drag and SRP spans 0.94
+  to 36.2 mm with the placement of the steps around the eclipse. The orientation cache of a propagation is built for
+  every central body, whether or not a force rotates, so each of its 60 s points past the
+  coverage of the orientation kernel goes through the native read, which printed its SPICE message on standard output
+  (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); nothing since #727): a point-mass
   propagation there still runs ([#595](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/595)).
 - **Force model inputs** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). A configured `Nrlmsise00Model` shared by parallel propagations serializes their
   density calls on its lock (4 threads × 200 000 densities: 5.8 s on one instance, 0.9 s on one per thread); the default
@@ -4782,43 +6068,25 @@ not listed.
 - **Mars atmosphere** ([#431](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/431)). Above 100 km
   `MarsStandardAtmosphere` extends an isothermal layer at 139 K: at 400 km its density is 4.6e7 times below Mars-GRAM,
   so drag in Mars orbit above about 120 km is underestimated by orders of magnitude.
-- **Kelvin offset of the standard atmospheres**
-  ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438)). `EarthStandardAtmosphere` and
-  `MarsStandardAtmosphere` take 273.15 where the NASA Glenn curve fits take 273.1: the Earth's density departs from the
-  published fit by up to 0.285 % (at 25 km), the Mars density by about 0.02 %.
-- **Covariance remediation and the non-linearity index**
-  ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403),
-  [#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)). The threshold 1.0 of the
+- **The non-linearity index**
+  ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403)). The threshold 1.0 of the
   non-linearity index is measured on two-body crossing encounters only (11 cases up to ν = 1.42), so the index stays off
-  by default. The eigenvalue clipping of the conjunction analysis and of `StateVector.WithRemediatedCovariance()`
-  remediates any indefinite covariance, however deep its defect (a correlation of −10 is accepted, a largest relative
-  change of 5.5): check an input covariance before relying on it.
-- **Close-approach search** ([#574](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/574),
-  [#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621),
-  [#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
-  [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). On two RK7(8) propagations the
-  dense search of `Analyze` and `AnalyzeAll` reads the trajectory without the burn between an impulse and the end of the
-  step that holds it, so a close approach there can be missed. Without an interior minimum, `Screen` and the
-  `ILocalizable` overloads of `Analyze` and `AnalyzeAll` return the window midpoint, so `Screen` can drop an object
-  closing at the window end. In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
+  by default.
+- **Close-approach search** ([#639](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/639),
+  [#641](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/641)). In cases of measure zero the dense search can list a maximum (a range rate exactly 0.0 at a
   seed), or, with a `BisectionToleranceSeconds` coarser than a tick, a zero at the window end as the middle of its last
   bracket. The sampled search subdivides a step one tick longer than `MaximumEventSearchStep`, one sample more for a read
   100 ns closer ([#642](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/642)); results are unaffected.
   The `ILocalizable` overloads of `Analyze` and `AnalyzeAll` run the sampled search even for two participants propagated
   in RK7(8): the search on the polynomials of their steps is not inferred in 11.0.0 (D4 of the API review of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)); pass their `PropagationSolution` for it.
-- **Cost and input checks of the conjunction analysis**
-  ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447),
-  [#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).
+- **Cost of the conjunction analysis**
+  ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447)).
   `ConjunctionAssessment.Analyze` allocates about 403 MB per pair over a 2 h window (0.83 s with the covariance held in
-  RTN, 1.71 s propagated); results are unaffected. `EvaluateAvoidance` does not check
-  `AvoidanceSearchOptions.MaximumEventSearchStep`: 0 s runs about 15 s and ends in `OutOfMemoryException`, a negative
-  step is accepted; pass a positive step.
-- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652),
-  [#657](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/657)). The help of
+  RTN, 1.71 s propagated); results are unaffected.
+- **Command line** ([#652](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/652)). The help of
   `find-windows-from-coordinate-constraint` lists `LATITUDINAL`, `SPHERICAL`, `CYLINDRICAL` and `COLATITUDE`, which do
   not exist, and its `RA/DEC` and `RIGHT ASCENSION` are rejected: pass the member names (`RaDec`, `RightAscension`).
-  `ephemeris` labels ICRF states `j2000` on the SPICE path and `J2000` from a site observer, the numbers the same.
 
 ### 10.2.0-preview-1
 

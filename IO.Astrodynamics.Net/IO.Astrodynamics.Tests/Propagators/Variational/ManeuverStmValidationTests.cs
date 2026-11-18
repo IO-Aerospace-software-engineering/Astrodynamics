@@ -215,7 +215,7 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
         // The burn of the two propagations compared is the same, to the tick; the burn of the propagation without the step
         // control on Φ and Ψ is placed on the 100 ns grid of the epochs one tick away in 3 of 5 starts moved by −2e-9 to
         // 2e-9 m along x: a record at twice that (decision (b) of S. Guillet, 2026-10-20, #412)
-        Assert.Equal(controlled.Segments[1].BaseEpoch, tighter.Segments[1].BaseEpoch);
+        LabelAssert.Equal(controlled.Segments[1].BaseEpoch, tighter.Segments[1].BaseEpoch);
         Assert.InRange((tighter.Segments[1].BaseEpoch - burnEpoch).TotalSeconds, -2e-7, 2e-7);
         var tighterPsiCr = epochs.Select(t => StmMeasures.Column(StmMeasures.Y(tighter, t), 7)).ToArray();
         var controlledPsiCr = epochs.Select(t => StmMeasures.Column(StmMeasures.Y(controlled, t), 7)).ToArray();
@@ -281,8 +281,15 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
     // Records of Ψ_Cr against the central differences over the arc, relative to its largest value (twice the 5.7e-6 of
     // 2026-11-01, in velocity; 1.9e-4 before, twice the 9.4e-5 of 2026-10-17), and relative to its local value after the
     // burn, outside and in the penumbra (twice 3.9e-5 and 7.9e-6; 7.5e-4 and 1.6e-4 before): the noise of the reference,
-    // which a shift of the start by 2e-9 m moves by a factor of 2 to 30 (#398)
-    private const double PsiCrArcRecord = 1.2e-5;
+    // which a shift of the start by 2e-9 m moves by a factor of 2 to 30 (#398). The exact SLERP of the orientation cache
+    // (#561) moved the arc measure in velocity from 6.2e-6 to 1.94e-5 (Linux x64, 2026-11-17) while Ψ_Cr under test moved
+    // by 4.3e-11 of its largest value: another draw of the reference's noise. Eleven draws of the reference, its start
+    // moved by −5 to +5 ulps along x (9.31e-10 m each), Ψ_Cr under test the same (Linux x64, Release, 2026-11-17), span
+    // 4.1e-6 to 4.6e-5 in velocity, and 6.2e-6 to 5.6e-5 on a85098d, where 9 of the 11 exceed the former record: it held
+    // at the start alone. Set again at twice the measurement at the start (1.94e-5 on Linux x64 in CI run 44225490669): a
+    // record of the Validation category, which CI runs on Linux x64 alone, so twice the Linux worst (decided by
+    // S. Guillet, 2026-11-18)
+    private const double PsiCrArcRecord = 3.9e-5;
 
     private const double PsiCrLocalRecord = 7.8e-5;
 
