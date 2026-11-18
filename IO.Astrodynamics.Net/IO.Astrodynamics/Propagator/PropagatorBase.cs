@@ -77,8 +77,9 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// The span a propagation integrates (#626): its output count, its length in seconds of the time argument and the TDB
-    /// label of its end, which lies up to half an output step past the end of the window when the step does not divide
-    /// it, and whether its last output is labelled with the end of the window (TT, within the drift of the labels).
+    /// label of its end, which lies up to half an output step past the end of the window when the step rounds the window
+    /// up, and whether its last output is labelled with the end of the window (a grid that ends before the window, #741,
+    /// or, in TT, one that misses its end by the drift between TT and the labels).
     /// </summary>
     internal readonly record struct PropagationSpan(uint OutputCount, double Duration, Time End, bool EndsAtWindowEnd)
     {
@@ -94,20 +95,36 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// The span of a propagation over <paramref name="tdbWindow"/>, of <paramref name="windowLength"/> seconds of
-    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/>: it runs to the last output,
-    /// round(L/ΔT)·ΔT, the window's length when that is shorter; in TT, a grid that misses the end of the window by the
-    /// drift between TT and the labels ends at the window, its last output labelled with the end of the window.
+    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/> on the grid of round(L/ΔT) + 1
+    /// outputs. A grid that reaches the window end, or rounds it up, is kept: the propagation runs to its last output,
+    /// round(L/ΔT)·ΔT, up to ΔT/2 past the window. A grid that ends before the window gains the window end as its last
+    /// output, in place of its last point when that lies within ΔT/10 of the end (the rule of #598 and #540, so that no
+    /// two outputs are near-coincident), and the propagation runs to the window end (#741, decided by S. Guillet,
+    /// 2026-11-18: before 11.0.0 its outputs, and so the stored states, ended up to ΔT/2 before the window, where a read
+    /// threw). In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the window,
+    /// its last output labelled with the end of the window.
     /// </summary>
     internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, double windowLength,
         in Window tdbWindow, TimeSpan deltaT)
     {
-        uint outputCount = (uint)System.Math.Round(windowLength / deltaT.TotalSeconds,
-            MidpointRounding.AwayFromZero) + 1;
-        double outputDuration = (outputCount - 1) * deltaT.TotalSeconds;
-        bool endsAtWindowEnd = timeArgument.EndsAtWindowEnd(windowLength, outputDuration);
-        double duration = endsAtWindowEnd ? windowLength : System.Math.Max(windowLength, outputDuration);
-        var end = endsAtWindowEnd ? tdbWindow.EndDate : timeArgument.EpochAt(tdbWindow.StartDate, duration);
-        return new PropagationSpan(outputCount, duration, end, endsAtWindowEnd);
+        double step = deltaT.TotalSeconds;
+        uint gridCount = (uint)System.Math.Round(windowLength / step, MidpointRounding.AwayFromZero) + 1;
+        double gridDuration = (gridCount - 1) * step;
+        if (timeArgument.EndsAtWindowEnd(windowLength, gridDuration))
+        {
+            return new PropagationSpan(gridCount, windowLength, tdbWindow.EndDate, true);
+        }
+
+        if (gridDuration >= windowLength)
+        {
+            return new PropagationSpan(gridCount, gridDuration, timeArgument.EpochAt(tdbWindow.StartDate, gridDuration),
+                false);
+        }
+
+        // The grid ends before the window (#741): the window end replaces its last point within ΔT/10 of it, never the
+        // start, and is added otherwise
+        bool replaceLast = gridCount > 1 && (windowLength - gridDuration) * 10.0 < step;
+        return new PropagationSpan(replaceLast ? gridCount : gridCount + 1, windowLength, tdbWindow.EndDate, true);
     }
 
     /// <summary>
@@ -566,10 +583,11 @@ public abstract class PropagatorBase : IPropagator
 
     private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache)
     {
-        // 1. The length of the propagation (may exceed the window for non-fitting step sizes), in seconds of the time
-        // argument. In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the
-        // window, its last output labelled with the end of the window as the caller gave it. The caches of the forces
-        // cover the same span (#626)
+        // 1. The length of the propagation (may exceed the window by up to half a step when the step rounds it up), in
+        // seconds of the time argument. A grid that ends before the window ends with the window end (#741), and in TT a
+        // grid that misses the end of the window by the drift between TT and the labels ends at the window: the last
+        // output labelled with the end of the window as the caller gave it. The caches of the forces cover the same span
+        // (#626)
         var span = Span;
         uint outputCount = span.OutputCount;
         double propagationDuration = span.Duration;
@@ -1031,7 +1049,8 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// Generate output StateVectors at DeltaT intervals with <see cref="PropagationSolution.InterpolateAt"/>.
-    /// Output may extend slightly past the window end when the step size doesn't evenly divide the window.
+    /// Output may extend up to half a step past the window end when the step rounds the window up; a grid that ends
+    /// before the window ends with the window end (<see cref="SpanOf(PropagationTimeArgument, double, in Window, TimeSpan)"/>, #741).
     /// </summary>
     /// <remarks>
     /// The outputs are uniform in the time argument and labelled TDB (<see cref="PropagationTimeArgument.OutputEpoch"/>);

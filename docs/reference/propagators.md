@@ -42,7 +42,15 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    executed at the end of the window opens a last segment of zero length, so the solution ends with the state after it
    (#575).
 4. Compute output states on the requested `DeltaT` cadence with `PropagationSolution.InterpolateAt`, then the attitude
-   record from the timeline on the solution ([Attitudes](attitudes.md#the-attitude-timeline)).
+   record from the timeline on the solution ([Attitudes](attitudes.md#the-attitude-timeline)). The outputs are the
+   window start plus i·ΔT, round(L/ΔT) + 1 of them over a window of length L. When ΔT rounds the window up, the
+   propagation runs to the last output, up to ΔT/2 past the window end (#626). When it rounds the window down, the
+   window end is the last output, in place of the last grid point when that lies within ΔT/10 of the end, and the
+   propagation runs to the window end, so that the stored states, the reads of the spacecraft and its SPK cover the
+   whole window ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by
+   S. Guillet, 2026-11-18): a window of 3 610 s at 60 s holds 62 outputs, to 3 600 s then 3 610 s, one of 3 603 s 61,
+   the last at 3 603 s. Before 11.0.0 the outputs stopped at the last grid point, up to ΔT/2 before the window end,
+   where a read of the spacecraft throws (#527).
 
 ### Supported Perturbations
 

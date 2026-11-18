@@ -111,6 +111,17 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **The stored states of a propagation ended before its window when the output step rounded it down**
+  ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by S. Guillet,
+  2026-11-18). The outputs were the round(L/ΔT) + 1 points of the grid i·ΔT, while the propagation ran to the window
+  end: a window of 3 610 s at 60 s outputs stored its states, and wrote its SPK, to 3 600 s, and a read of the spacecraft
+  at the window end, or at 3 605 s, threw "lies outside the propagated states" (#527), as did a window shorter than
+  ΔT/2, whose single output was its start. The window end is now the last output, the solution there, in place of the
+  last grid point when that lies within ΔT/10 of the end (the rule of #598 and #540: no two nodes near-coincident): 62
+  outputs for 3 610 s at 60 s (the reads at 3 605 s and at the end within 9.7e-7 m of the two-body closed form in
+  RK7(8) at 1e-12, the SPK within 1.8e-5 m of them), 61 for 3 603 s, the last at 3 603 s, the start and the end for
+  20 s. `PropagationSolution.StateVectors`, the stored states, the attitude samples at the outputs and the SPK gain that
+  epoch; the integration is unchanged, and a window the step divides, or rounds up, keeps its outputs bit for bit.
 - **A g-function exactly zero at the end of a step was never a crossing** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580)). The product of the two g-values
   of a step was 0, no crossing, and the zero, the previous g-value of the next step, hid every later crossing: a
   time-like user `ImpulseManeuver` or `IEventDetector` whose root fell on a Velocity-Verlet or fixed-step RK7(8) step
@@ -457,8 +468,8 @@ release are listed under **Known limitations**.
   throws for that point: the point after the window end is replaced by the orientation read there, and a read the grid
   cannot interpolate reads the frame at its epoch, so only an epoch SPICE does not cover throws, with SPICE's message (a
   propagation up to the last instant of `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute).
-  A propagation still reads past its window end when its output step does not divide the window:
-  it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end, and a geopotential or drag read there past the coverage throws
+  A propagation still reads past its window end when its output step rounds the window up:
+  it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end (a step that rounds it down ends at the window end, #741), and a geopotential or drag read there past the coverage throws
   (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies kept #454
   then; every path #454 lists reports SPICE's error since (#622, #714, #608, #668, #560, #706, #711), the GM read of the
   native constructors tracked by #655, and SPICE prints nothing since #727.
@@ -5687,10 +5698,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   correction reads allowed up to its light time outside them. The window checks of the conjunction overloads and of the
   field-of-view search (`ArgumentException`, #622) are unchanged. Migration: read a propagated spacecraft within its
   propagation window, or propagate it over the epochs read. The stored states run from the first output to the last,
-  round(L/ΔT)·ΔT after the start for a window of length L at outputs ΔT: when ΔT does not divide L, up to ΔT/2 before or
-  after the end of the window, so a read at the end of such a window throws when the last output falls before it (a
-  3 610 s window at 60 s outputs stores its states to 3 600 s); read the solution there, or choose an output step that
-  divides the window.
+  round(L/ΔT)·ΔT after the start for a window of length L at outputs ΔT, up to ΔT/2 after the end of the window when ΔT
+  rounds it up, and to the window end when ΔT rounds it down (#741, under Fixed: they stopped up to ΔT/2 before it, a
+  3 610 s window at 60 s outputs storing its states to 3 600 s), so every epoch of the window can be read.
 - **Breaking: `Spacecraft.ToOpm` writes the propagated state, mass and maneuvers of its epoch**
   ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided by S. Guillet,
   2026-11-17). A spacecraft that holds propagated states writes `GetEphemeris(epoch, observer, frame, Aberration.None)`
