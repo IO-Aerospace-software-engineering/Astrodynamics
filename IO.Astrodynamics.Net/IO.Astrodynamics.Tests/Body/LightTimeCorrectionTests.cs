@@ -466,7 +466,7 @@ public class LightTimeCorrectionTests
     /// the frame at t + sign·lt_c, carried to the exact double epoch by its angular velocity, and the derivative of the
     /// rotation scaled by 1 + sign·dlt_c.
     /// </summary>
-    private static StateVector RotatedAtTheCentreEpoch(StateVector state, StateVector center, Frames.Frame frame, double sign)
+    internal static StateVector RotatedAtTheCentreEpoch(StateVector state, StateVector center, Frames.Frame frame, double sign)
     {
         const double c = global::IO.Astrodynamics.Constants.C;
         double lightTime = center.Position.Magnitude() / c;

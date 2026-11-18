@@ -768,7 +768,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// itself; the site of a <see cref="SiteFrame"/> or the spacecraft of a <see cref="Spacecraft.SpacecraftFrame"/> whose
     /// object is that centre, a site built from coordinates and a managed spacecraft included (review of #593: before, their
     /// identifiers reached <see cref="SpiceAPI.CreateKernelSite"/> and <see cref="Create"/>, which threw); a site of the
-    /// kernels (<see cref="SpiceAPI.IsSiteId"/>); the barycenter, Lagrange point or body of <see cref="Create"/> for a
+    /// kernels of a body SPICE names (<see cref="SpiceAPI.IsSiteOfNamedBody"/>; an identifier of that form whose body SPICE
+    /// does not name, NOTO or NEW NORCIA, read from SPICE by its identifier, #750); the barycenter, Lagrange point or body of
+    /// <see cref="Create"/> for a
     /// positive identifier; any other object, a spacecraft whose frame is given by name, read from SPICE by its identifier,
     /// which throws <see cref="InvalidOperationException"/> where SPICE has no state of it, as <c>spkezr_c</c> does.
     /// </summary>
@@ -780,7 +782,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             {
                 SiteFrame { Site: var site } when site.NaifId == centerId => site,
                 Spacecraft.SpacecraftFrame { Spacecraft: var spacecraft } when spacecraft.NaifId == centerId => spacecraft,
-                _ when SpiceAPI.IsSiteId(centerId) => SpiceAPI.Instance.CreateKernelSite(centerId),
+                _ when SpiceAPI.IsSiteOfNamedBody(centerId) => SpiceAPI.Instance.CreateKernelSite(centerId),
+                // An identifier of the form of a site whose body SPICE does not name, NOTO or NEW NORCIA: read from SPICE
+                // by its identifier below (#750: before, the site of a body 398, which threw)
+                _ when SpiceAPI.IsSiteId(centerId) => null,
                 _ when centerId > 0 => Create(centerId),
                 _ => null
             };

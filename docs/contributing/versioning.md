@@ -3874,6 +3874,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
   stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the rule, and
   an asteroid, a comet, 391001, 399000, NOTO, NEW NORCIA and 101001, not sites, unchanged).
+- **NOTO and NEW NORCIA as observers threw for a body 398** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750)).
+  SPICE's built-in NOTO (398989) and NEW NORCIA (398990) have the form of a site of 398, a body SPICE does not name,
+  which #651 kept out of `IsSiteOfNamedBody`, but four call sites still tested `IsSiteId` and built them as a site of the
+  body 398 (`new CelestialBody(398)`): the observer of `SpiceAPI.ReadEphemeris` by identifiers (both overloads), the
+  centre of a frame on the reference-body path, and the objects of the CLI's `ephemeris` and `sub-point`. Each threw
+  `ArgumentException` "The NAIF identifier 398 has no name in SPICE" (`naifId`), an identifier the caller never gave
+  (measured on f70ee32). They now test `IsSiteOfNamedBody`; an identifier of the form of a site whose body SPICE does not
+  name is an object of the kernels read by its identifier (internal `Body.KernelObject`, a `CelestialItem` named as SPICE
+  names it), so the read is `spkezr_c`'s: the state with its SPK loaded, SPICE's missing-data error
+  (`InvalidOperationException`) otherwise; a frame centre of that form is read from SPICE by its identifier
+  (`KernelObjectObserverTests`, with an SPK of NOTO the test writes: NOTO as observer the negation of NOTO as target,
+  bit for bit, and `spkezr_c`'s read with "NOTO" as observer for the nine corrections in J2000 and ITRF93, bit for bit
+  (Validation); the window read; NEW NORCIA without its SPK SPICE's error; the Moon in a TK frame centred on NOTO from a
+  site built from coordinates against its closed form; the CLI's `ephemeris` from NOTO and its `sub-point`,
+  `EphemerisTests.Ephemeris_FromNoto_AndItsSubPoint_AreTheLibrarysReads`; red on f70ee32). `sub-point` decides whether
+  its object is a site once its kernels are loaded, so that a kernel naming a body counts. `CelestialItem.Create` and
+  `new CelestialBody` of these identifiers still throw: they have no frame.
 - **A spacecraft or a custom body had the solar system barycentre as centre of motion** ([#747](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/747)).
   The constructor of an item built from custom parameters (`Spacecraft`, both constructors, and the custom
   `CelestialBody`) never set `CenterOfMotionId` and `BarycenterOfMotionId`: both stayed 0 whatever the orbit (a
@@ -4156,6 +4173,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star` target takes no light time, so only its `+S` corrections move it, by its stellar aberration.
   Migration: pass `Aberration.None` for the former geometric direction of a celestial target; recompile, the
   constructor's signature changed.
+- **NOTO and NEW NORCIA are read by their identifier** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), Fixed above). `SpiceAPI.ReadEphemeris`
+  by identifiers from 398989 or 398990, a frame centred on them on the reference-body path, and the CLI's `ephemeris` and
+  `sub-point` of them read them from SPICE (`InvalidOperationException` without their SPK) where they threw
+  `ArgumentException` for the body 398; the observer of the state is an object of the kernels named NOTO or NEW NORCIA.
+  Migration: none; a caller that caught `ArgumentException` for them catches SPICE's `InvalidOperationException`.
 - **`CelestialAttitudeTarget` corrects from the spacecraft** ([#740](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/740), Fixed above). An attitude built
   on a `CelestialAttitudeTarget` with a correction other than `None` (`TriadAttitude` and its records and CKs) moves:
   from a LEO by 1.0e-6 rad for the Moon with `LT`, about 2.5e-5 rad with a `+S` correction, 1.0e-4 rad for the central

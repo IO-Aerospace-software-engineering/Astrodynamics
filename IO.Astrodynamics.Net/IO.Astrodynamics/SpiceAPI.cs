@@ -1554,11 +1554,14 @@ public class SpiceAPI
     /// ran until the process was out of memory and a negative step read 10000 epochs backwards).</exception>
     /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454), or the observer is a
     /// site whose SPK does not cover J2000 TDB (see the remarks).</exception>
-    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
-    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
-    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
-    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
-    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
+    /// + site, of a body SPICE names) that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a
+    /// <see cref="Surface.Site"/> built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and
+    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is
+    /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
+    /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
+    /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -1670,11 +1673,14 @@ public class SpiceAPI
     /// <exception cref="InvalidOperationException">SPICE gives no state (#454): the kernels do not cover the epoch or do
     /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined. Or the observer
     /// is a site whose SPK does not cover J2000 TDB (see the remarks).</exception>
-    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
-    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
-    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
-    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
-    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
+    /// + site, of a body SPICE names) that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a
+    /// <see cref="Surface.Site"/> built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and
+    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is
+    /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
+    /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
+    /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -1693,18 +1699,35 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>),
-    /// from the kernels (<see cref="CreateKernelSite"/>), otherwise <see cref="CelestialItem.Create"/> (#672). Built before
+    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier of a body SPICE names
+    /// (<see cref="IsSiteOfNamedBody"/>), from the kernels (<see cref="CreateKernelSite"/>); an object of the kernels read
+    /// by its identifier for one whose body SPICE does not name (<see cref="CreateKernelObject"/>, NOTO and NEW NORCIA,
+    /// #750: before, the site of a body 398, which threw); otherwise <see cref="CelestialItem.Create"/> (#672). Built before
     /// the lock (#623). The CLI builds its objects by identifier the same way (<c>Helpers.CreateLocalizable</c>).
     /// </summary>
     private ILocalizable CreateObserver(int observerId)
     {
-        return IsSiteId(observerId) ? CreateKernelSite(observerId) : CelestialItem.Create(observerId);
+        if (IsSiteOfNamedBody(observerId))
+        {
+            return CreateKernelSite(observerId);
+        }
+
+        return IsSiteId(observerId) ? CreateKernelObject(observerId) : CelestialItem.Create(observerId);
     }
 
     /// <summary>
-    /// The site of a site identifier (<see cref="IsSiteId"/>) from the kernels: <c>new Site(id % 1000, its SPICE name, new
-    /// CelestialBody(id / 1000))</c>, which reads the site's state at J2000 TDB (#672). Not under the lock (#623).
+    /// The object of the kernels of an identifier of the form of a site whose body SPICE does not name (<see cref="IsSiteId"/>
+    /// and not <see cref="IsSiteOfNamedBody"/>): SPICE's NOTO (398989) and NEW NORCIA (398990), read by its identifier
+    /// (<see cref="Body.KernelObject"/>, #750). Not under the lock (#623).
+    /// </summary>
+    /// <exception cref="ArgumentException">SPICE does not name the identifier (<c>naifId</c>).</exception>
+    internal static Body.CelestialItem CreateKernelObject(int naifId) => new Body.KernelObject(naifId);
+
+    /// <summary>
+    /// The site of a site identifier of a body SPICE names (<see cref="IsSiteOfNamedBody"/>) from the kernels: <c>new
+    /// Site(id % 1000, its SPICE name, new CelestialBody(id / 1000))</c>, which reads the site's state at J2000 TDB (#672).
+    /// Not under the lock (#623). Its callers test <see cref="IsSiteOfNamedBody"/> (#750: they tested
+    /// <see cref="IsSiteId"/>, so that NOTO and NEW NORCIA reached it and threw for their body 398).
     /// </summary>
     /// <param name="siteId">The NAIF identifier of the site, its body's times 1000 plus its own.</param>
     /// <exception cref="ArgumentException">The loaded kernels give the identifier no name.</exception>

@@ -52,7 +52,10 @@ built and Elara was built with a garbage frame name. A site identifier (399013, 
 of GM 0 and frame `DSS-13_TOPO`, about its body (`CenterOfMotionId` 399, `BarycenterOfMotionId` 3, `IsAsteroid` false;
 before 11.0.0 an asteroid about the Sun, [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)):
 build a `Site` instead. The rule needs SPICE to name the body (identifier / 1000): SPICE's NOTO (398989) and NEW NORCIA
-(398990), ESA stations of no body 398, are classed as any identifier above 1000.
+(398990), ESA stations of no body 398, are classed as any identifier above 1000; as observers of the reads by
+identifiers they are objects of the kernels read by their identifier
+([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), see the
+[SPICE API](spice-api.md)), while `new CelestialBody` and `CelestialItem.Create` of them still throw: they have no frame.
 
 ### Methods
 
