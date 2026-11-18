@@ -686,7 +686,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708) |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a covariance term whose value in m² overflows (above about 1.8e302 km², #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
 | `CreateForTle(string objectName, string objectId, DateTime epoch, double meanMotion, ...)` | Create OMM for SGP4 propagation (mean elements and TLE parameters) |
@@ -710,7 +710,9 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `Validate()` | Validate OMM content and return validation result |
 
 > `ToTle()` throws `InvalidOperationException` when a field cannot be represented in TLE form
-> rather than truncating it: `NORAD_CAT_ID` above 339999, or `REV_AT_EPOCH` above 99999.
+> rather than truncating it: `NORAD_CAT_ID` above 339999, `REV_AT_EPOCH` above 99999, or `MEAN_MOTION` above the
+> 99.99999999 rev/day of its 11-character field (#729: an `ArgumentException` of the line length before 11.0.0, and above
+> about 2.86e307 rev/day a TLE whose mean motion was the text `Infinity`).
 > Such objects can only be carried in OMM form.
 
 ```csharp
@@ -877,7 +879,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708) |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a state or covariance value whose value in SI units overflows (above about 1.8e305 km or 1.8e302 km²; ±Infinity from `ToStateVector` before 11.0.0, #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
 | `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector |
@@ -1021,7 +1023,11 @@ opm.SaveToFile("complete_opm.xml");
 
 Every real value of the data model is a real number, as the readers read it: the components of `OpmStateVector`, the
 terms of `CovarianceMatrix` and the ΔV components of `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming
-the parameter for NaN or ±Infinity (#717), which the writer would write as `NaN` or `Infinity` and the reader refuse.
+the parameter for NaN or ±Infinity (#717), which the writer would write as `NaN` or `Infinity` and the reader refuse. The
+components of `OpmStateVector` and the terms of `CovarianceMatrix` throw it too for a finite value whose value in SI units,
+its product by 1000 (m, m/s) or 1e6 (m², m²/s, m²/s²), is not finite: above about 1.8e305 km or km/s and 1.8e302 km²
+(#729), in the constructors and the factories `FromFullMatrix`, `FromMatrix` and `FromMatrixWithUnitConversion` alike;
+`ToStateVector` and `ToMatrixWithUnitConversion` gave ±Infinity before 11.0.0.
 
 #### ImpulseManeuver.ToOpmManeuverParameters()
 

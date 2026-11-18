@@ -684,14 +684,13 @@ public class CdmTests
     // A finite text in km or km/s whose value in m or m/s, the text times 1000, is beyond the range of a double
     // (double.MaxValue = 1.797...e308, so 1e306 km = 1e309 m): IEEE 754 rounds the product to +Infinity (-Infinity for
     // -1e306), which is no real number, so the reader refuses it as it refuses a non-finite text (#708). The rows are the
-    // three conversions of the reader: a position (positionTypeUR, km), a velocity (km/s) and a length or a relative
-    // velocity given in km or km/s (lengthTypeUO, dvType: m and m/s in the writer's documents)
+    // conversions of the reader: a position (positionTypeUR, km), a velocity (km/s) and a relative velocity given in km/s
+    // (dvType: m/s in the writer's documents); a lengthTypeUO field in km throws for its units since #619
+    // (ReadFromString_OptionalUnitLengthNotInMeters_ThrowsCdmParseException)
     [Theory]
     [InlineData("X", "km", "1e306")]
     [InlineData("Z", "km", "-1e306")]
     [InlineData("X_DOT", "km/s", "1e306")]
-    [InlineData("MISS_DISTANCE", "km", "1e306")]
-    [InlineData("RELATIVE_POSITION_R", "km", "-1e306")]
     [InlineData("RELATIVE_VELOCITY_T", "km/s", "1e306")]
     public void ReadFromString_FiniteValueOverflowingInSiUnits_ThrowsCdmParseException(string keyword, string units, string value)
     {
@@ -915,6 +914,49 @@ public class CdmTests
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
         ex = Assert.Throws<ArgumentOutOfRangeException>(() => CdmCovarianceMatrix.FromRtnCovariance(matrix));
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+    }
+
+    public static TheoryData<int, int> NotSixBySixSizes() => new()
+    {
+        { 3, 3 }, { 6, 5 }, { 5, 6 }, { 7, 7 }, { 6, 1 }, { 1, 6 }, { 0, 0 }
+    };
+
+    [Theory]
+    [MemberData(nameof(NotSixBySixSizes))]
+    public void Init_CovarianceNotSixBySix_ThrowsArgumentExceptionNamingTheProperty(int rows, int columns)
+    {
+        // #730: the 21 terms CR_R ... CNDOT_NDOT of CCSDS 508.0-B-1 table 3-5 are the lower triangle of a 6×6 matrix; the
+        // init accessor accepted any size, and CdmWriter then threw IndexOutOfRangeException (Cdm.Validate reported it only
+        // when it ran)
+        var matrix = new Matrix(rows, columns);
+        var ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+        Assert.Contains("6x6", ex.Message);
+
+        // A with expression on a covariance read from a document, the same refusal
+        var read = Cdm.ReadFromString(ManualCdmXml()).Segments[0].Data!.CovarianceMatrix!;
+        ex = Assert.Throws<ArgumentException>(() => read with { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+    }
+
+    [Fact]
+    public void Init_DefaultCovarianceMatrix_ThrowsArgumentExceptionNamingTheProperty()
+    {
+        // #730: default(Matrix), 0×0 over a null array, was accepted, and CdmWriter then threw NullReferenceException
+        var ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = default });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+
+        // A size error before a term error: a 3×3 matrix with a NaN throws ArgumentException for its size, not the
+        // ArgumentOutOfRangeException of a term (Assert.Throws checks the exact type)
+        var matrix = new Matrix(3, 3);
+        matrix.Set(0, 0, double.NaN);
+        ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
+        Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
+
+        // The record without an init holds a 6×6 zero matrix, written and read back
+        var covariance = new CdmCovarianceMatrix();
+        Assert.Equal(6, covariance.StateCovarianceRtn.Rows);
+        Assert.Equal(6, covariance.StateCovarianceRtn.Columns);
     }
 
     [Fact]
@@ -1745,8 +1787,61 @@ public class CdmTests
     [Theory]
     [InlineData(null, 1.0)]
     [InlineData("m", 1.0)]
-    [InlineData("km", 1000.0)]
     public void ReadFromString_OptionalUnitLengths_AreMetersByDefault(string? units, double scale)
+    {
+        var cdm = Cdm.ReadFromString(OptionalUnitLengthsDocument(units).ToString());
+
+        var data = cdm.RelativeMetadataData;
+        var read = new[]
+        {
+            data.MissDistanceMeters, data.RelativeStateVector!.RelativePositionRtnMeters.X,
+            data.RelativeStateVector.RelativePositionRtnMeters.Y, data.RelativeStateVector.RelativePositionRtnMeters.Z,
+            data.ScreenVolumeXMeters!.Value, data.ScreenVolumeYMeters!.Value, data.ScreenVolumeZMeters!.Value
+        };
+        for (int i = 0; i < OptionalUnitLengths.Length; i++)
+        {
+            // The double of the text, times 1000 for km, exactly: before #613 a length without units was read in km
+            Assert.Equal(OptionalUnitLengths[i].Value * scale, read[i]);
+        }
+    }
+
+    [Theory]
+    [InlineData("MISS_DISTANCE", "km")]
+    [InlineData("RELATIVE_POSITION_R", "km")]
+    [InlineData("RELATIVE_POSITION_T", "km")]
+    [InlineData("RELATIVE_POSITION_N", "km")]
+    [InlineData("SCREEN_VOLUME_X", "km")]
+    [InlineData("SCREEN_VOLUME_Y", "km")]
+    [InlineData("SCREEN_VOLUME_Z", "km")]
+    [InlineData("MISS_DISTANCE", "M")]
+    [InlineData("MISS_DISTANCE", " m")]
+    [InlineData("MISS_DISTANCE", "")]
+    public void ReadFromString_OptionalUnitLengthNotInMeters_ThrowsCdmParseException(string keyword, string units)
+    {
+        // #619, decided by S. Guillet, 2026-11-17: lengthUnits of ndmxml-4.0.0-common-4.0.xsd enumerates m alone (an
+        // xsd:string, so neither M nor a blank), as CCSDS 508.0-B-1 table 3-2; km was read and converted before, the one
+        // value outside the standard that the reader accepted on these seven fields
+        var document = OptionalUnitLengthsDocument("m");
+        var schema = new CdmValidator().ValidateSchemaFromXml(document.ToString());
+        Assert.True(schema.IsValid, FormatValidationIssues(schema.Errors));
+        document.Descendants(keyword).Single().SetAttributeValue("units", units);
+        var xml = document.ToString();
+        Assert.False(new CdmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+        void AssertNamesKeyword(CdmParseException ex)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{units}'", ex.Message);
+        }
+
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => new CdmReader().ReadFromString(xml)));
+
+        // The other fields of the document read in m, as written
+        Assert.Equal(715.0, Cdm.ReadFromString(OptionalUnitLengthsDocument("m").ToString()).RelativeMetadataData.MissDistanceMeters);
+    }
+
+    private static XDocument OptionalUnitLengthsDocument(string? units)
     {
         var document = XDocument.Parse(RemoveNamespaces(CreateManualEncounterCase().ToCdm(new CdmExportOptions
         {
@@ -1760,27 +1855,55 @@ public class CdmTests
             var element = relativeMetadata.Descendants(name).SingleOrDefault();
             if (element == null)
             {
+                // A screening volume the writer did not write, in the order of the schema's sequence
                 element = new XElement(name);
-                relativeMetadata.Add(element);
+                var next = relativeMetadata.Elements().FirstOrDefault(e => e.Name.LocalName is "SCREEN_ENTRY_TIME"
+                    or "SCREEN_EXIT_TIME" or "COLLISION_PROBABILITY" or "COLLISION_PROBABILITY_METHOD");
+                if (next == null)
+                    relativeMetadata.Add(element);
+                else
+                    next.AddBeforeSelf(element);
             }
 
             element.Value = text;
             element.SetAttributeValue("units", units);
         }
 
-        var cdm = Cdm.ReadFromString(document.ToString());
+        return document;
+    }
 
-        var data = cdm.RelativeMetadataData;
-        var read = new[]
+    /// <summary>
+    /// Dates outside the two forms of CCSDS 508.0-B-1 §6.3.2.6 (<c>yyyy-mm-ddThh:mm:ss[.d→d][Z]</c>,
+    /// <c>yyyy-dddThh:mm:ss[.d→d][Z]</c>), the rows of #619's table; lxml 6.1.3 with the repository's NDM/XML 4.0.0
+    /// schema rejects each but <c>1.5</c>, the bare-number branch of <c>epochType</c>, which §6.3.2.6 does not allow.
+    /// </summary>
+    [Theory]
+    [InlineData("13 March 2010 22:37:52.618")]
+    [InlineData("03/13/2010 22:37:52.618")]
+    [InlineData("2010-03-13 22:37:52.618")]
+    [InlineData("2010-3-13T22:37:52.618")]
+    [InlineData("Sat, 13 Mar 2010 22:37:52 GMT")]
+    [InlineData("2010-03-13")]
+    [InlineData("22:37:52.618")]
+    [InlineData("1,5")]
+    [InlineData("1.5")]
+    public void ReadFromString_DateOutsideTheTwoForms_ThrowsCdmParseException(string text)
+    {
+        // Before #619: the TCA read as the date DateTime.TryParse gave, the day of the run for 22:37:52.618, 5 January of
+        // the year of the run for 1,5 and 1.5
+        var original = CreateManualEncounterCase().ToCdm(new CdmExportOptions
         {
-            data.MissDistanceMeters, data.RelativeStateVector!.RelativePositionRtnMeters.X,
-            data.RelativeStateVector.RelativePositionRtnMeters.Y, data.RelativeStateVector.RelativePositionRtnMeters.Z,
-            data.ScreenVolumeXMeters!.Value, data.ScreenVolumeYMeters!.Value, data.ScreenVolumeZMeters!.Value
-        };
-        for (int i = 0; i < OptionalUnitLengths.Length; i++)
+            CreationDateUtc = new DateTime(2014, 1, 21, 17, 42, 47, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-EPOCH-619"
+        });
+        foreach (var field in new[] { "TCA", "CREATION_DATE" })
         {
-            // The double of the text, times 1000 for km, exactly: before #613 a length without units was read in km
-            Assert.Equal(OptionalUnitLengths[i].Value * scale, read[i]);
+            var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+            document.Descendants(field).Single().Value = text;
+            var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+            Assert.Contains(field, ex.Message);
+            Assert.Contains($"'{text}'", ex.Message);
         }
     }
 

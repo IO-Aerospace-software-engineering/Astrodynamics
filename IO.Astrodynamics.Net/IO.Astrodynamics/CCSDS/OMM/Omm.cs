@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using IO.Astrodynamics.CCSDS.Common;
 
@@ -25,6 +26,10 @@ public class Omm
     /// Largest revolution number at epoch representable in the 5-character TLE field.
     /// </summary>
     private const int MAX_TLE_REVOLUTION_NUMBER = 99999;
+
+    // The mean motion field of a TLE's line 2, columns 53-63: NN.NNNNNNNN rev/day
+    private const string TLE_MEAN_MOTION_FORMAT = "0.00000000";
+    private const int TLE_MEAN_MOTION_FIELD_LENGTH = 11;
     /// <summary>
     /// The CCSDS OMM format version.
     /// </summary>
@@ -228,7 +233,8 @@ public class Omm
     /// Thrown when the OMM does not contain TLE parameters (NORAD catalog ID required), when its
     /// <c>MEAN_ELEMENT_THEORY</c> is not SGP4, its <c>REF_FRAME</c> not TEME or its <c>CENTER_NAME</c> not the Earth (the
     /// message names each keyword at fault with its value; see <see cref="IsTleCompatible"/>), or when required mean motion
-    /// is not available.
+    /// is not available, or when a value cannot be represented in its TLE field (the NORAD catalog ID above 339999, the
+    /// revolution number above 99999, <c>MEAN_MOTION</c> above the 99.99999999 rev/day of its 11 characters, #729).
     /// </exception>
     /// <remarks>
     /// <para>
@@ -273,6 +279,17 @@ public class Omm
 
         if (!meanElements.MeanMotion.HasValue)
             throw new InvalidOperationException("Mean motion is required to create a TLE. OMM uses semi-major axis instead.");
+
+        // The mean motion field of line 2 (columns 53-63, NN.NNNNNNNN) holds at most 99.99999999 rev/day. Beyond it the
+        // value cannot be represented (#729: above about 2.86e307 rev/day its conversion to rad/s and back overflowed and the
+        // TLE was written with the text Infinity)
+        var meanMotionText = meanElements.MeanMotion.Value.ToString(TLE_MEAN_MOTION_FORMAT, CultureInfo.InvariantCulture);
+        if (meanMotionText.Length > TLE_MEAN_MOTION_FIELD_LENGTH)
+        {
+            throw new InvalidOperationException(
+                $"MEAN_MOTION {meanElements.MeanMotion.Value.ToString("R", CultureInfo.InvariantCulture)} rev/day cannot be " +
+                $"represented in a TLE: the {TLE_MEAN_MOTION_FIELD_LENGTH}-character field holds at most 99.99999999 rev/day.");
+        }
 
         // Validate BSTAR is present (required for SGP4)
         if (!tleParams.BStar.HasValue)

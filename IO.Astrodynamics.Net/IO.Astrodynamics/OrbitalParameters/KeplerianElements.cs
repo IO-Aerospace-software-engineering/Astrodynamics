@@ -207,6 +207,12 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// eccentricity is not finite or is negative (#476).</exception>
         /// <exception cref="ArgumentException">An angle is not finite (#726), or the inclination is out of range; the
         /// exception names the parameter.</exception>
+        /// <remarks>
+        /// The mean motion in rad/s is (n × 2π) / 86400 in double arithmetic. Above about 2.86e307 rev/day, where the
+        /// product n × 2π overflows, the same two roundings are taken on n × 2⁻¹⁰ and 86400 × 2⁻¹⁰ (exact power-of-two
+        /// scalings), so the result is the one an unbounded exponent would give, finite, not +Infinity (#729); below, the
+        /// result is unchanged, bit for bit.
+        /// </remarks>
         public static KeplerianElements FromOMM(
             double meanMotion,
             double eccentricity,
@@ -220,7 +226,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             // Convert OMM units to internal units
             // Mean motion: rev/day -> rad/s
-            double meanMotionRadPerSec = meanMotion * Constants._2PI / 86400.0;
+            double meanMotionRadPerSec = RevolutionsPerDayToRadiansPerSecond(meanMotion);
 
             // Angles: degrees -> radians
             return new KeplerianElements(
@@ -268,6 +274,22 @@ namespace IO.Astrodynamics.OrbitalParameters
             {
                 throw new ArgumentException($"The element {name} must be finite: {value:R}.", name);
             }
+        }
+
+        // (n × 2π) / 86400, the two roundings of the former conversion. Where n × 2π overflows (|n| above about 2.86e307
+        // rev/day), the product and the quotient are scaled by 2^-10, which is exact for these magnitudes (no subnormal), so
+        // round(round(n × 2^-10 × 2π) / 84.375) = round(round(n × 2π) / 86400) with an unbounded exponent, a finite value
+        // (#729: +Infinity before)
+        private static double RevolutionsPerDayToRadiansPerSecond(double meanMotion)
+        {
+            double product = meanMotion * Constants._2PI;
+            if (double.IsFinite(product) || !double.IsFinite(meanMotion))
+            {
+                return product / 86400.0;
+            }
+
+            const double scale = 1.0 / 1024.0;
+            return meanMotion * scale * Constants._2PI / (86400.0 * scale);
         }
 
         /// <summary>

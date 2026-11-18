@@ -83,7 +83,8 @@ public class TleParameters
     /// <param name="revolutionNumberAtEpoch">Optional revolution number at epoch.</param>
     /// <param name="comments">Optional comments.</param>
     /// <exception cref="ArgumentOutOfRangeException">BSTAR, the first or the second derivative of the mean motion is NaN or
-    /// ±Infinity, which the OMM reader refuses (#708, #717), or the element set or revolution number is out of its range.</exception>
+    /// ±Infinity, which the OMM reader refuses (#708, #717), or the element set or revolution number is out of its range, the
+    /// exception naming <paramref name="elementSetNumber"/> or <paramref name="revolutionNumberAtEpoch"/> (#734).</exception>
     public TleParameters(
         double bstar,
         double meanMotionDot,
@@ -157,7 +158,8 @@ public class TleParameters
     /// Creates TleParameters with BSTAR and MEAN_MOTION_DDOT (standard SGP4).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
-    /// revolution number is out of its range.</exception>
+    /// revolution number is out of its range, the exception naming <c>elementSetNumber</c> or
+    /// <c>revolutionNumberAtEpoch</c> (#734).</exception>
     public static TleParameters CreateWithBStarAndDDot(
         double bstar,
         double meanMotionDot,
@@ -181,7 +183,8 @@ public class TleParameters
     /// Creates TleParameters with BSTAR and AGOM (SGP4-XP).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
-    /// revolution number is out of its range.</exception>
+    /// revolution number is out of its range, the exception naming <c>elementSetNumber</c> or
+    /// <c>revolutionNumberAtEpoch</c> (#734).</exception>
     public static TleParameters CreateWithBStarAndAGom(
         double bstar,
         double meanMotionDot,
@@ -205,7 +208,8 @@ public class TleParameters
     /// Creates TleParameters with BTerm and MEAN_MOTION_DDOT.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
-    /// revolution number is out of its range.</exception>
+    /// revolution number is out of its range, the exception naming <c>elementSetNumber</c> or
+    /// <c>revolutionNumberAtEpoch</c> (#734).</exception>
     public static TleParameters CreateWithBTermAndDDot(
         double bterm,
         double meanMotionDot,
@@ -229,7 +233,8 @@ public class TleParameters
     /// Creates TleParameters with BTerm and AGOM.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">A real parameter is NaN or ±Infinity (#717), or the element set or
-    /// revolution number is out of its range.</exception>
+    /// revolution number is out of its range, the exception naming <c>elementSetNumber</c> or
+    /// <c>revolutionNumberAtEpoch</c> (#734).</exception>
     public static TleParameters CreateWithBTermAndAGom(
         double bterm,
         double meanMotionDot,
@@ -255,10 +260,12 @@ public class TleParameters
             throw new ArgumentOutOfRangeException(nameof(elementSetNumber), "Element set number must be between 0 and 9999.");
     }
 
-    private static void ValidateRevolutionNumber(int? revNumber)
+    // The exception names the parameter of every public entry, revolutionNumberAtEpoch (#734: it named revNumber, this
+    // method's own parameter, which a caller reading ParamName could not find)
+    private static void ValidateRevolutionNumber(int? revolutionNumberAtEpoch)
     {
-        if (revNumber.HasValue && revNumber.Value < 0)
-            throw new ArgumentOutOfRangeException(nameof(revNumber), "Revolution number must be non-negative.");
+        if (revolutionNumberAtEpoch.HasValue && revolutionNumberAtEpoch.Value < 0)
+            throw new ArgumentOutOfRangeException(nameof(revolutionNumberAtEpoch), "Revolution number must be non-negative.");
     }
 
     /// <inheritdoc />

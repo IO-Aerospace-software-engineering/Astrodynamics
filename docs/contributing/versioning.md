@@ -342,7 +342,8 @@ release are listed under **Known limitations**.
   and `SCREEN_VOLUME_X/Y/Z` are `lengthTypeUO` in the NDM/XML schema (units optional, `m` the only unit; m in
   CCSDS 508.0 table 3-2), and the reader took km when the attribute was absent: 715 read as 715 000 m, with no error and
   the schema check passing. The default is now m. A length with `units="m"` is now the double of its text exactly (it was
-  divided by 1000 and multiplied back, one ulp off at most); `units="km"`, outside the schema, is still accepted.
+  divided by 1000 and multiplied back, one ulp off at most); `units="km"`, outside the schema, is refused since #619
+  (Changed below).
 - **The CDM, OPM and OMM readers rejected a day-of-year date** ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)). The `yyyy-DDD` patterns of the
   three readers read the literal text `DDD` (`D` is no .NET specifier): every `YYYY-DDDThh:mm:ss` date, which the
   schema's `epochType` allows and the library's own schema check passed, threw, in every date field and on every load
@@ -352,7 +353,8 @@ release are listed under **Known limitations**.
   applied, UTC. Measured against `tools/ccsds_epoch_reference` (CSPICE `str2et` and `et2utc` on 25 day-of-year dates,
   2000 to 2026, leap days, offsets, 0 to 7 fraction digits): every instant exact to the tick; the calendar dates give
   the `DateTime` of the former readers bit for bit; the literal `DDD`, a day 0 or a day 366 of a common year throw the
-  reader's parse exception. Other text keeps the former fallback (`DateTime.TryParse`, #619).
+  reader's parse exception. Other text, which went to the former fallback (`DateTime.TryParse`), throws the parse
+  exception since #619 (Fixed below).
 - **A kernel-backed protected spacecraft got the RTN axes of its orbit about the Solar System barycentre** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620)).
   `new Spacecraft(naifId, name, epoch, ...)` read its initial state about the SSB, and the conjunction analysis takes the
   protected spacecraft's centre as its observer: `RelativePositionRtn`, `RelativeVelocityRtn`, `CombinedCovarianceRtn`
@@ -3013,7 +3015,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`OmmReaderTests`, `OpmReaderTests`, `OmmTests`, `OpmTests` and `CdmTests`
   `*_NonFiniteValue_*`, through every entry point, red on 46e6975). The CDM reader checks the value it holds after its
   conversion to m or m/s as well: a finite text in km or km/s above about 1.8e305 (`1e306` for `X`, `Z`, `X_DOT`,
-  `MISS_DISTANCE`, `RELATIVE_POSITION_R`, `RELATIVE_VELOCITY_T`) became ±Infinity by its product by 1000 (IEEE 754), which
+  `MISS_DISTANCE`, `RELATIVE_POSITION_R`, `RELATIVE_VELOCITY_T`; the two lengths in km are refused for their units since
+  #619) became ±Infinity by its product by 1000 (IEEE 754), which
   `Cdm.Validate` reported valid; it throws `CdmParseException` naming the keyword, its text and its unit
   (`Invalid numeric value for X: '1e306' km is not a finite number in SI units.`), and 1e305 km reads as before, bit for
   bit (`CdmTests.ReadFromString_FiniteValueOverflowingInSiUnits_ThrowsCdmParseException`, red on the first fix of #708;
@@ -3389,8 +3392,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`Invalid numeric value for MISS_DISTANCE: '118,1'.`). Every `xsd:double` numeral (a sign, no integer digit, an
   exponent of either case, surrounding whitespace) reads bit for bit as before (`CdmTests`
   `ReadFromString_CommaInValue_ThrowsCdmParseException`, 10 values, red on a80f6a5;
-  `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed (decided by S. Guillet, 2026-11-17): its date
-  half stays open.
+  `ReadFromString_XsdDoubleLexicalForms_AreRead`). #619 is partly fixed there (decided by S. Guillet, 2026-11-17); its
+  date half is fixed below.
 - **`ToEquinoctial()` gave P = NaN or ±Infinity within 1e-6 of e = 1** ([#462](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/462)).
   The semi-latus rectum was a(1 − e²) with the a = +Infinity of the band |e − 1| < 1e-6 (`IsParabolic()`): NaN at e = 1
   (∞ × 0), +Infinity or −Infinity elsewhere in the band, its sign set by rounding (the same exact parabola gave +∞ in
@@ -3812,6 +3815,56 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   shortest round-trip form `"R"`, which reads back bit for bit as `xsd:double` (`OpmWriterTests` and `OmmWriterTests`
   `WriteToString_EveryRealValue_ReadsBackBitForBit`: each written text read by `double.Parse` and by the reader, the
   value given bit for bit, 44 OPM and 35 or 36 OMM values, all but one lost before, red on a85098d).
+- **The CCSDS readers loaded a date outside the standard's forms** ([#619]({L}619), the date half).
+  `CcsdsEpochParser`, which the CDM, OPM and OMM readers share since #490, passed a text outside the date branch of
+  `epochType`, and a calendar text with a field out of range, to `DateTime.TryParse`: a `TCA` or an `EPOCH` of
+  `22:37:52.618` was read on the day of the read (2026-11-17T22:37:52.618), `1.5` and `1,5` as 5 January of the current
+  year, `2010-03-13` as its midnight, and `13 March 2010 22:37:52.618`, `03/13/2010 …`, RFC 1123, a space or a lowercase
+  `t` for the `T`, a lowercase `z`, a decimal comma, a missing second, a `+0100` or `+01` offset and a blank around the
+  date as the date they spell (measured on a85098d; the pattern's `$` also matched before a final line feed). CCSDS
+  508.0-B-1 §6.3.2.6 and 502.0-B-3 allow two forms, `yyyy-mm-ddThh:mm:ss[.d→d][Z]` and `yyyy-dddThh:mm:ss[.d→d][Z]`,
+  "All fields require leading zeros", and lxml 6.1.3 with the repository's NDM/XML 4.0.0 schema rejects each of these
+  texts as an `epochType` but `1.5`, the type's bare-number branch, which the standards do not allow in a date field.
+  The parser now reads the two forms only (with the `±hh:mm` offset of `epochType`, the pattern anchored with `\z`), and
+  the readers throw their parse exception naming the field and the text (`CcsdsEpochParserTests`
+  `TextOutsideTheTwoForms_IsRejected` and `Readers_RejectTextOutsideTheTwoForms`, `CdmTests`
+  `ReadFromString_DateOutsideTheTwoForms_ThrowsCdmParseException`: 32 rows red on a85098d). Dates in the two forms read
+  bit for bit as before (the `CcsdsEpochParserTests` of #490 against CSPICE's `str2et`); none of the CDMs of the
+  conformance suite moves. The same issue's `units="km"` on a `lengthTypeUO` length is refused (Changed below:
+  `CdmTests.ReadFromString_OptionalUnitLengthNotInMeters_ThrowsCdmParseException`, 10 rows red on a85098d).
+
+- **The OPM and OMM unit conversions overflowed to ±Infinity** ([#729]({L}729)). `OpmStateVector.ToStateVector`
+  multiplied km and km/s by 1000 and `CovarianceMatrix.ToMatrixWithUnitConversion` km², km²/s and km²/s² by 1e6 without
+  a check: a finite value above about 1.8e305 km (1.8e302 km²) became ±Infinity in the `StateVector` of
+  `Opm.ToStateVector` or in its covariance (measured on a85098d: `X` 1e306 gave +Infinity m, `CX_X` 1e303 +Infinity m²),
+  where the CDM reader refuses such a value since #708. `OpmStateVector` and `CovarianceMatrix` now refuse a value whose
+  product is not finite (Changed below), and the OPM and OMM readers report it as `OpmParseException` or
+  `OmmParseException` naming the keyword and its text. `KeplerianElements.FromOMM` computed (n × 2π) / 86400, whose
+  product overflowed above about 2.86e307 rev/day where the quotient is finite: it now takes the same two roundings on
+  n × 2⁻¹⁰ and 86400 × 2⁻¹⁰ there, the value an unbounded exponent gives, and is bit for bit unchanged below.
+  `Omm.ToTle`, its one caller in the library, converted that value back with `TLE.Create`, whose product overflowed over
+  the same range: an OMM with `MEAN_MOTION` 3e307 gave, without an exception, a TLE whose mean motion field was the text
+  `Infinity` (measured with the `FromOMM` change above). `ToTle` now refuses a `MEAN_MOTION` above the 99.99999999 rev/day of its
+  11-character field (columns 53 to 63 of line 2), naming the keyword (Changed below;
+  `OmmTests.ToTle_MeanMotionBeyondTheTleField_ThrowsNamingMeanMotion`, 5 rows red, two of them with no exception). References:
+  the IEEE 754 bounds (the largest double whose product is finite, 1.7976931348623156e305 for 1000 and
+  1.7976931348623154e302 for 1e6, stored and converted as given) and the two roundings in exact rational arithmetic
+  (`OpmStateVectorTests`, `CovarianceMatrixTests`, `OpmReaderTests`, `OmmReaderTests` `*OverflowingInSiUnits*` and
+  `TLETests.FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient`: 100 rows red on a85098d).
+
+- **`CdmCovarianceMatrix.StateCovarianceRtn` accepted a matrix that is not 6×6** ([#730]({L}730)). Its init
+  accessor checked the terms since #717, whatever the size: a 3×3 matrix or `default(Matrix)` built, and `CdmWriter`
+  then threw `IndexOutOfRangeException` or `NullReferenceException` (`Cdm.Validate` reported the size when it ran). It
+  now throws `ArgumentException` naming `StateCovarianceRtn` before the terms (Changed below; `CdmTests`
+  `Init_CovarianceNotSixBySix_*` and `Init_DefaultCovarianceMatrix_*`, 8 rows red on a85098d). The reader always built a
+  6×6 matrix, so reading is unchanged.
+
+- **`TleParameters` named `revNumber` in its exception** ([#734]({L}734)). A negative revolution number threw
+  `ArgumentOutOfRangeException` with the `ParamName` `revNumber`, the private validator's parameter, which no public entry
+  has; it names `revolutionNumberAtEpoch`, the parameter of the constructor and of the four `CreateWith*` factories
+  (Changed below), and `OmmReader` maps `REV_AT_EPOCH` to it, so its `OmmParseException` still names the keyword
+  (`TleParametersTests.Entry_NegativeRevolutionNumber_NamesRevolutionNumberAtEpoch` and
+  `OmmReaderTests.ReadFromString_NegativeRevAtEpoch_NamesTheKeywordAndTheParameter`, 6 rows red on a85098d).
 
 **Changed**
 
@@ -5569,6 +5622,37 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   0.00012345678901 was written), the CDM drops the digits `G17` added beyond the shortest exact form
   (0.1 where 0.10000000000000001 was written). A value read from an OPM or OMM the library writes is the value given,
   bit for bit; one read from a CDM is unchanged.
+- **Breaking: the CCSDS readers refuse a date outside the two forms of the standard** ([#619]({L}619), Fixed above;
+  decided by S. Guillet, 2026-11-17). `Cdm`, `Opm` and `Omm` `Load*`/`ReadFrom*` and their readers throw `CdmParseException`,
+  `OpmParseException` or `OmmParseException` for a date field (`TCA`, `CREATION_DATE`, `EPOCH`, `MAN_EPOCH_IGNITION`, the
+  screening and observation dates) that is not `yyyy-mm-ddThh:mm:ss[.d…][Z|±hh:mm]` or `yyyy-dddThh:mm:ss[.d…][Z|±hh:mm]`
+  with every leading zero, where `DateTime.TryParse` read it. Migration: correct the producer; a date written to the
+  standard reads bit for bit as before.
+- **Breaking: the CDM reader refuses a `lengthTypeUO` length in units other than m** ([#619]({L}619); decided by
+  S. Guillet, 2026-11-17). `MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N` and `SCREEN_VOLUME_X/Y/Z` with `units="km"` (or any
+  value but `m`, which `lengthUnits` enumerates alone) throw `CdmParseException` naming the keyword and the units, where
+  `km` was converted. Migration: write the length in m, as the schema and CCSDS 508.0-B-1 table 3-2 require; a length
+  without `units` is still read in m (#613).
+- **Breaking: `OpmStateVector` and `CovarianceMatrix` refuse a value that overflows in SI units** ([#729]({L}729), Fixed
+  above). `new OpmStateVector(...)` throws `ArgumentOutOfRangeException` naming `x` ... `zDot` for a component whose
+  product by 1000 is not finite (above about 1.8e305 km or km/s), and `new CovarianceMatrix(...)`, `FromFullMatrix` and
+  `FromMatrix` naming `cxX` ... `czDotZDot` for a term whose product by 1e6 is not (above about 1.8e302), where they built
+  it and the conversions gave ±Infinity; the OPM and OMM readers throw their parse exception naming the keyword. Values of
+  a `StateVector` (`FromStateVector`, `FromMatrixWithUnitConversion`) always convert back. Migration: none for a physical
+  state; such a value carries no orbit.
+- **Breaking: `Omm.ToTle` refuses a `MEAN_MOTION` its TLE field cannot hold** ([#729]({L}729), Fixed above). A mean
+  motion above the 99.99999999 rev/day of the 11-character field throws `InvalidOperationException` naming `MEAN_MOTION`
+  and its value, as a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent, where `TLE`'s constructor threw its
+  line-length `ArgumentException` and, above about 2.86e307 rev/day, a TLE was returned with the text `Infinity`.
+  Migration: catch `InvalidOperationException` instead of `ArgumentException`; such an object has no TLE form.
+- **Breaking: `CdmCovarianceMatrix.StateCovarianceRtn` refuses a matrix that is not 6×6** ([#730]({L}730), Fixed above).
+  An object initializer or a `with` expression with another size or `default(Matrix)` throws `ArgumentException` naming
+  `StateCovarianceRtn`, where it built and the writer failed. `Cdm.Validate` no longer checks the size, which no record
+  can hold. Migration: give the 6×6 RTN covariance (`FromRtnCovariance` already required it).
+- **Breaking: a negative revolution number names `revolutionNumberAtEpoch`** ([#734]({L}734), Fixed above). The
+  `ArgumentOutOfRangeException` of `new TleParameters(...)` and the four `CreateWith*` factories has the `ParamName`
+  `revolutionNumberAtEpoch`, where it was `revNumber`. Migration: a caller that tests `ParamName` compares with
+  `revolutionNumberAtEpoch` (`nameof` of the parameter).
 
 **Deprecated**
 
@@ -5700,10 +5784,8 @@ not listed.
   ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
   as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
-- **CDM dates and numbers** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616),
-  [#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619)). A date in a leap second throws
-  `CdmParseException`. The reader takes a decimal comma for a thousands separator (`4,835E-05` read as 0.04835) and loads
-  free-text or time-only dates (a time gets today's date) instead of rejecting them.
+- **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
+  leap second throws `CdmParseException`.
 - **Precision near e = 1** ([#472](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/472),
   [#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
   `KeplerianElements.ToStateVector()` loses digits through p = a(1 − e²), 1 + e cos ν and e + cos ν: 1.1e-11 relative at

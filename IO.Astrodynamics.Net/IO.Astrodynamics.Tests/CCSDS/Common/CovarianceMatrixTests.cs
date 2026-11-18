@@ -268,19 +268,71 @@ namespace IO.Astrodynamics.Tests.CCSDS.Common
             Assert.Equal(Terms[term].Name, ex.ParamName);
         }
 
+        // The largest double whose product by 1e6 is finite (IEEE 754 binary64, round to nearest: 1.7976931348623154e302,
+        // computed with Python's math.nextafter on 2026-11-17); the next double gives +Infinity in m², m²/s or m²/s²
+        private static readonly double LargestKm2 = BitConverter.Int64BitsToDouble(0x7eb0c6f7a0b5ed8cL);
+
         [Fact]
-        public void Constructor_LargestFiniteTerms_AreStoredAsGiven()
+        public void Constructor_LargestTermsFiniteInSiUnits_AreStoredAsGiven()
         {
-            // The finite bounds of a double are real numbers, and a negative covariance builds (the validators report a
-            // negative variance, the constructors check finiteness only)
+            // The largest magnitude whose value in SI units is a real number and the smallest subnormal are stored as
+            // given, and a negative covariance builds (the validators report a negative variance) (#729: double.MaxValue
+            // km² built, and ToMatrixWithUnitConversion gave +Infinity m²)
             var covariance = new CovarianceMatrix(
-                double.MaxValue, -double.MaxValue, double.Epsilon, -double.Epsilon, 0, -1.0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-            Assert.Equal(double.MaxValue, covariance.CxX);
-            Assert.Equal(-double.MaxValue, covariance.CyX);
+                LargestKm2, -LargestKm2, double.Epsilon, -double.Epsilon, 0, -1.0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, LargestKm2);
+            Assert.Equal(LargestKm2, covariance.CxX);
+            Assert.Equal(-LargestKm2, covariance.CyX);
             Assert.Equal(double.Epsilon, covariance.CyY);
             Assert.Equal(-double.Epsilon, covariance.CzX);
             Assert.Equal(-1.0, covariance.CzZ);
+
+            var matrix = covariance.ToMatrixWithUnitConversion();
+            Assert.Equal(LargestKm2 * 1e6, matrix.Get(0, 0));
+            Assert.Equal(-LargestKm2 * 1e6, matrix.Get(1, 0));
+            Assert.Equal(LargestKm2 * 1e6, matrix.Get(5, 5));
+            Assert.True(double.IsFinite(matrix.Get(0, 0)));
+        }
+
+        public static TheoryData<int, double> TermsOverflowingInSiUnits()
+        {
+            var data = new TheoryData<int, double>();
+            var next = System.Math.BitIncrement(LargestKm2);
+            for (int i = 0; i < 21; i++)
+            foreach (var value in new[] { next, -next, double.MaxValue })
+                data.Add(i, value);
+            return data;
+        }
+
+        [Theory]
+        [MemberData(nameof(TermsOverflowingInSiUnits))]
+        public void Constructor_TermOverflowingInSiUnits_ThrowsArgumentOutOfRangeException(int term, double value)
+        {
+            // #729: a finite term whose product by 1e6 is beyond the range of a double built, and
+            // ToMatrixWithUnitConversion (Opm.ToStateVector's covariance) gave ±Infinity
+            Assert.False(double.IsFinite(value * 1e6));
+            var t = CreateSampleCovariance().ToLowerTriangularArray();
+            t[term] = value;
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new CovarianceMatrix(
+                t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10],
+                t[11], t[12], t[13], t[14], t[15], t[16], t[17], t[18], t[19], t[20], "RTN"));
+            Assert.Equal(Terms[term].Name, ex.ParamName);
+            Assert.Contains("SI units", ex.Message);
+
+            ex = Assert.Throws<ArgumentOutOfRangeException>(() => CovarianceMatrix.FromFullMatrix(SampleFullMatrix(term, value)));
+            Assert.Equal(Terms[term].Name, ex.ParamName);
+        }
+
+        [Fact]
+        public void FromMatrixWithUnitConversion_LargestDouble_StaysConvertible()
+        {
+            // A StateVector's covariance of double.MaxValue m² is MaxValue × 1e-6 km², whose product by 1e6 is finite: a
+            // state the library holds converts to an OPM covariance and back
+            var matrix = new IO.Astrodynamics.Math.Matrix(6, 6);
+            for (int i = 0; i < 6; i++)
+                matrix.Set(i, i, double.MaxValue);
+            var covariance = CovarianceMatrix.FromMatrixWithUnitConversion(matrix);
+            Assert.True(double.IsFinite(covariance.ToMatrixWithUnitConversion().Get(0, 0)));
         }
 
         private static CovarianceMatrix CreateSampleCovariance()

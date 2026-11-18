@@ -21,6 +21,9 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// </remarks>
 public class OpmStateVector
 {
+    // The factor of the conversion of km and km/s to m and m/s
+    private const double KilometersToMeters = 1000.0;
+
     /// <summary>
     /// Gets the epoch of the state vector.
     /// </summary>
@@ -73,7 +76,8 @@ public class OpmStateVector
     /// <param name="zDot">Z velocity in km/s (finite).</param>
     /// <param name="comments">Optional comments.</param>
     /// <exception cref="ArgumentOutOfRangeException">A component is NaN or ±Infinity, which the OPM reader refuses (#708,
-    /// #717).</exception>
+    /// #717), or its value in m or m/s, the component times 1000, is beyond the range of a double (#729: above about
+    /// 1.8e305 km, which <see cref="ToStateVector(ILocalizable, Frame, Matrix?)"/> converted to ±Infinity).</exception>
     public OpmStateVector(
         DateTime epoch,
         double x, double y, double z,
@@ -81,14 +85,14 @@ public class OpmStateVector
         IReadOnlyList<string> comments = null)
     {
         // Real numbers, as the reader reads them (#717: NaN and ±Infinity built, and the writers wrote NaN, Infinity or
-        // -Infinity, which the reader refuses)
+        // -Infinity, which the reader refuses), finite in m and m/s too (#729: ToStateVector gave ±Infinity)
         Epoch = epoch;
-        X = CcsdsValues.RequireFinite(x, nameof(x));
-        Y = CcsdsValues.RequireFinite(y, nameof(y));
-        Z = CcsdsValues.RequireFinite(z, nameof(z));
-        XDot = CcsdsValues.RequireFinite(xDot, nameof(xDot));
-        YDot = CcsdsValues.RequireFinite(yDot, nameof(yDot));
-        ZDot = CcsdsValues.RequireFinite(zDot, nameof(zDot));
+        X = CcsdsValues.RequireFiniteInSiUnits(x, KilometersToMeters, "km", nameof(x));
+        Y = CcsdsValues.RequireFiniteInSiUnits(y, KilometersToMeters, "km", nameof(y));
+        Z = CcsdsValues.RequireFiniteInSiUnits(z, KilometersToMeters, "km", nameof(z));
+        XDot = CcsdsValues.RequireFiniteInSiUnits(xDot, KilometersToMeters, "km/s", nameof(xDot));
+        YDot = CcsdsValues.RequireFiniteInSiUnits(yDot, KilometersToMeters, "km/s", nameof(yDot));
+        ZDot = CcsdsValues.RequireFiniteInSiUnits(zDot, KilometersToMeters, "km/s", nameof(zDot));
         Comments = comments ?? Array.Empty<string>();
     }
 
@@ -114,9 +118,9 @@ public class OpmStateVector
     /// </summary>
     internal StateVector ToStateVector(ILocalizable observer, Frame frame, Matrix? covariance, ITimeFrame timeFrame)
     {
-        // Convert km to m, km/s to m/s
-        var position = new Vector3(X * 1000.0, Y * 1000.0, Z * 1000.0);
-        var velocity = new Vector3(XDot * 1000.0, YDot * 1000.0, ZDot * 1000.0);
+        // Convert km to m, km/s to m/s: finite, the constructor refusing a component whose product is not (#729)
+        var position = new Vector3(X * KilometersToMeters, Y * KilometersToMeters, Z * KilometersToMeters);
+        var velocity = new Vector3(XDot * KilometersToMeters, YDot * KilometersToMeters, ZDot * KilometersToMeters);
 
         var epoch = new Time(Epoch, timeFrame);
 

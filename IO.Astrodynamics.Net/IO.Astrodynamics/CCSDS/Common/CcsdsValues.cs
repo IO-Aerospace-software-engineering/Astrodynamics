@@ -68,6 +68,28 @@ internal static class CcsdsValues
     }
 
     /// <summary>
+    /// A value of the data model in a CCSDS unit (km, km/s, km², km²/s, km²/s²) that the library converts to SI units: a
+    /// real number whose product by <paramref name="factor"/>, its value in SI units, is a real number too (#729), so that
+    /// the conversion does not round to ±Infinity (IEEE 754), as the CDM reader refuses a value in km whose value in m is
+    /// beyond the range of a double (#708).
+    /// </summary>
+    /// <param name="value">The value in its CCSDS unit.</param>
+    /// <param name="factor">The factor of the conversion to SI units (1000 for km and km/s, 1e6 for km², km²/s and km²/s²).</param>
+    /// <param name="units">The CCSDS unit, for the message.</param>
+    /// <param name="parameter">The name of the parameter that receives it.</param>
+    /// <returns><paramref name="value"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is NaN or ±Infinity, or its product by
+    /// <paramref name="factor"/> is not finite (above about 1.8e305 km or 1.8e302 km²).</exception>
+    internal static double RequireFiniteInSiUnits(double value, double factor, string units, string parameter)
+    {
+        RequireFinite(value, parameter);
+        if (!double.IsFinite(value * factor))
+            throw new ArgumentOutOfRangeException(parameter, value,
+                $"{parameter} must be finite in SI units: {value.ToString("R", System.Globalization.CultureInfo.InvariantCulture)} {units} times {factor.ToString("R", System.Globalization.CultureInfo.InvariantCulture)} is beyond the range of a double.");
+        return value;
+    }
+
+    /// <summary>
     /// An optional value of the data model without a range: null (the keyword absent) or a real number (#717).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is NaN or ±Infinity.</exception>
