@@ -846,8 +846,8 @@ internal static class Program
         CheckMoonAsSpice("the read after the rejected conversion");
     }
 
-    // #712. A spacecraft's clock written and loaded, no CK at all (Data/SolarSystem holds none): ckgpav_c, then ckgp_c, fail
-    // with CKBSS's SPICE(NOLOADEDFILES). Before, the read threw "No orientation found" and left that error pending, so that
+    // #712. A spacecraft's clock written and loaded, no CK at all (Data/SolarSystem holds none): the segment search of the
+    // read (ckgpav_c, then ckgp_c, before #724) fails with CKBSS's SPICE(NOLOADEDFILES). Before, the read threw "No orientation found" and left that error pending, so that
     // the next native call, an unrelated load, threw it (measured on 46e6975). The read now throws SPICE's message and
     // leaves nothing pending: KEEPER's failed_c through CspiceDirect on Linux, and the next load and read on every platform
     private static void ReadOrientationWithNoCk(DirectoryInfo root)

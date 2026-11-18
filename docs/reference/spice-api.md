@@ -200,6 +200,30 @@ which `ckgpav_c` skips with no error ("Segments containing only pointing data wi
 ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the read threw "No
 orientation found"). The CKs the library writes carry their rates.
 
+Where several segments cover an epoch, each record is that of the segment `ckgp_c` reads: the one of highest priority
+(the CK loaded last, and in a file its last segment) that gives a pointing within the tolerance. Its angular velocity is
+the one `ckgpav_c` gives when that segment holds angular velocity (`ckgpav_c` then finds the same segment: its
+candidates are `ckgp_c`'s that hold rates, in the same order), and zero when it holds none; the pointing or the rate of
+a lower-priority segment is never returned (decided by S. Guillet, 2026-11-18). Before
+[#724](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/724), `ckgpav_c` was read first, so
+that a segment without rates loaded over one with rates gave the record of the one with rates: 1.54 rad from `ckgp_c`'s
+pointing on two CKs as those of `tools/ck_priority_reference` (C++ `API.ReadOrientationProxyReadsAHigherPrioritySegmentWithoutAngularVelocity`),
+and, at an epoch within the tolerance of the higher-priority segment, a record 0.5 s from the one `ckgp_c` takes. A CK holding rates
+everywhere reads as before, bit for bit.
+
+The priority is that of a search made in a fresh process, whatever the calls before the read. CSPICE keeps, for each
+instrument, the segment of its last search and the interval over which that segment has the highest priority (the re-use
+interval of `ckbsr.c`), and a search inside that interval takes the segment first. A search with angular velocity
+(`ckgpav_c`, or `sxform_c` through `ckfxfm`, as `TransformFrame` to the spacecraft's CK frame) skips a segment without
+rates that holds the epoch and does not shrink the interval by it, so that `ckgp_c` itself, called after it, can read
+the lower-priority segment with rates. The read first voids that interval (a search at an encoded clock of -dpmax, before
+every segment, lies outside it), then searches from the highest priority. In the first implementation of #724 it did
+not: after a `TransformFrame` or a `ckgpav_c` at 500 s on the kernels of `tools/ck_priority_reference`, or after the
+epochs of the same call in the gap of a CK without rates whose interpolation intervals are [300, 400] s and
+[600, 700] s (`ckprio_gap.bc`), a read took the record of the CK with rates, 1.43 to 1.54 rad from `ckgp_c` in a fresh
+process (C++ `API.ReadOrientationProxyFollowsTheSegmentPriorityAfter*`, `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority_After*`).
+`TransformFrame` and CSPICE's own routines keep CSPICE's re-use interval.
+
 `WriteOrientation` writes its records unchanged, in one interval of one segment tagged with the frame of the first
 record: every record carries the same frame (another frame throws `ArgumentException` before the native call, which
 ended the process before 11.0.0, #560), in increasing order of their encoded SCLK, and the spacecraft clock kernel
