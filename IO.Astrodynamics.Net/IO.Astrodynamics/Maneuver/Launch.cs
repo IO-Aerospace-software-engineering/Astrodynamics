@@ -114,12 +114,11 @@ namespace IO.Astrodynamics.Maneuver
                     // Compute following launch windows
                     TimeSpan remainingTime = searchWindow.EndDate - date;
 
-                    // Sidereal rotation period
-                    TimeSpan siderealRotation = LaunchSite.CelestialBody.SideralRotationPeriod(date);
-                    TimeSpan halfSiderealRotation = TimeSpan.FromTicks(siderealRotation.Ticks / 2);
+                    // Half the sidereal rotation period in seconds (the halving is exact), rounded with the arc of each offset
+                    double halfSiderealRotation = LaunchSite.CelestialBody.SideralRotationSeconds(date) / 2.0;
 
                     // Number of remaining launch windows
-                    int nbLaunchWindows = (int)(remainingTime.TotalSeconds / halfSiderealRotation.TotalSeconds);
+                    int nbLaunchWindows = (int)(remainingTime.TotalSeconds / halfSiderealRotation);
 
                     for (int i = 0; i < nbLaunchWindows; i++)
                     {
@@ -133,8 +132,8 @@ namespace IO.Astrodynamics.Maneuver
                             deltaLDuration *= -1.0;
                         }
 
-                        // Increment next launch date
-                        date = date.Add(halfSiderealRotation).Add(Time.SecondsToSpan(deltaLDuration));
+                        // Increment next launch date by the nearest tick of the whole offset (#637)
+                        date = date.Add(Time.SecondsToSpan(halfSiderealRotation + deltaLDuration));
 
                         // Build next window
                         Window nextWindow = new Window(date, date);

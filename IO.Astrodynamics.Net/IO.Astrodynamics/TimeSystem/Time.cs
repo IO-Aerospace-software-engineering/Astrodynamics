@@ -199,7 +199,8 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// the sidereal period and true solar day of a body, the thrust window of an impulse, the hold of a phasing maneuver,
     /// the offsets of the launch windows, the steps and epochs of the conjunction search; #637, decided by S. Guillet,
     /// 2026-11-17). Before 11.0.0 they went through <see cref="TimeSpan.FromSeconds(double)"/>, which truncates toward
-    /// zero; its exceptions are kept.
+    /// zero; its exception types are kept, the bound of the overflow that of <see cref="SecondsToTicks"/>, 0.48 s below the
+    /// 922 337 203 685.477 s <see cref="TimeSpan.FromSeconds(double)"/> accepts.
     /// </summary>
     /// <exception cref="ArgumentException"><paramref name="seconds"/> is NaN.</exception>
     /// <exception cref="OverflowException"><paramref name="seconds"/> is infinite, or its ticks do not fit in a

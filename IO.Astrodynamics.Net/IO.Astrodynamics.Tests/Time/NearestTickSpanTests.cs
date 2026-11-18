@@ -74,6 +74,9 @@ public class NearestTickSpanTests
         return sum;
     }
 
+    // The magnitude of a vector of doubles, in decimal
+    private static decimal Norm(Vector3 v) => Sqrt(D(v.X) * D(v.X) + D(v.Y) * D(v.Y) + D(v.Z) * D(v.Z));
+
     // The nearest tick of seconds held in decimal, ties to even, or null within the margin of a half tick
     private static long? NearestTick(decimal seconds)
     {
@@ -451,9 +454,14 @@ public class NearestTickSpanTests
     }
 
     /// <summary>
-    /// After the first launch window, each window is half a sidereal rotation plus the nearest tick of ±2 δL/ω after the
-    /// previous one (<c>Launch.FindLaunchWindows</c>), δL = asin(tan φ/tan i), ω the angular velocity of the body at the
-    /// previous window, by the exact integer reference of <see cref="ExactTicks"/>. Red on fe72f8e, which truncates.
+    /// After the first launch window, each window is the nearest tick of π/|ω₀| ± 2 δL/ω after the previous one
+    /// (<c>Launch.FindLaunchWindows</c>): half the sidereal period at the first window, ω₀ SPICE's angular velocity of the
+    /// body there, plus the arc of the site's latitude, δL = asin(tan φ/tan i), at the rate ω = 2π/P of the body at the
+    /// previous window (<see cref="CelestialBody.AngularVelocity"/>, P its sidereal period to the tick), the whole offset
+    /// rounded once. The reference evaluates π/|ω₀| and δL P/π in decimal from SPICE's angular velocities (read through
+    /// <see cref="CelestialBody.GetOrientation"/>, independently of the code's periods).
+    /// Red on ea398b3, which halved the nearest tick of the sidereal period by integer division (a tick short of the
+    /// nearest tick of half the period for about a quarter of the periods) and rounded the two terms apart.
     /// </summary>
     [Fact]
     public void FollowingLaunchWindows_AreTheNearestTick()
@@ -468,33 +476,58 @@ public class NearestTickSpanTests
         var launch = new Launch(site, recoverySite, target, IO.Astrodynamics.Constants.CivilTwilight, null);
         double deltaL = System.Math.Asin(System.Math.Tan(site.Planetodetic.Latitude) / System.Math.Tan(target.Inclination()));
         int moved = 0, count = 0;
-        for (int day = 0; day < 30; day++)
+        for (int day = 0; day < 90; day++)
         {
             // A search of one day, as LaunchTests: its first window by bisection, the next ones by the offsets
-            var windows = launch.FindLaunchWindows(new Window(epoch.AddSeconds(day * 86400.0), TimeSpan.FromDays(1.0))).ToArray();
+            var windows = launch.FindLaunchWindows(new Window(epoch.AddSeconds(day * 86400.0 + day * 1234.567), TimeSpan.FromDays(1.0))).ToArray();
             if (windows.Length < 2)
             {
                 continue;
             }
 
-            long half = earth.SideralRotationPeriod(windows[0].Window.StartDate).Ticks / 2;
+            var omega0 = earth.GetOrientation(Frames.Frame.ICRF, windows[0].Window.StartDate).AngularVelocity;
+            decimal halfRotation = Pi / Norm(omega0);
+            long halfTicks = (long)decimal.Round(halfRotation * TimeSpan.TicksPerSecond, MidpointRounding.ToEven);
             for (int i = 1; i < windows.Length; i++)
             {
                 var previous = windows[i - 1].Window.StartDate;
-                double deltaLDuration = deltaL * 2.0 / earth.AngularVelocity(previous);
-                long expected = ExactTicks.Nearest(deltaLDuration);
-                long actual = System.Math.Abs((windows[i].Window.StartDate - previous).Ticks - half);
-                Assert.True(expected == actual, $"day {day}, window {i}: {actual} ticks from half a rotation, the nearest {expected}");
+                long actual = (windows[i].Window.StartDate - previous).Ticks;
+
+                // The arc at the rate of the body at the previous window, 2π over its sidereal period (a whole number of
+                // ticks, the nearest of 2π/|ω| from SPICE): 2 δL / (2π / P) = δL P / π
+                var omega = earth.GetOrientation(Frames.Frame.ICRF, previous).AngularVelocity;
+                long? periodTicks = NearestTick(2m * Pi / Norm(omega));
+                if (periodTicks is null)
+                {
+                    continue;
+                }
+
+                decimal arc = D(deltaL) * periodTicks.Value / TimeSpan.TicksPerSecond / Pi;
+
+                // The sign alternates with the node of the window; the arc (about 3.3 h here) tells it apart
+                long sign = actual > halfTicks ? 1 : -1;
+                long? expected = NearestTick(halfRotation + sign * arc);
+                if (expected is null)
+                {
+                    continue;
+                }
+
+                Assert.True(expected == actual, $"day {day}, window {i}: an offset of {actual} ticks, the nearest {expected}");
                 count++;
-                if (Truncated(deltaLDuration) != expected)
+
+                // Before 11.0.0: half the truncated period by integer division, plus the truncated arc at the rate of the
+                // truncated period
+                double formerRate = IO.Astrodynamics.Constants._2PI / TimeSpan.FromSeconds(IO.Astrodynamics.Constants._2PI / omega.Magnitude()).TotalSeconds;
+                long former = Truncated(IO.Astrodynamics.Constants._2PI / omega0.Magnitude()) / 2 + sign * Truncated(deltaL * 2.0 / formerRate);
+                if (former != expected)
                 {
                     moved++;
                 }
             }
         }
 
-        _output.WriteLine($"MEASURE Launch: {moved} of {count} offsets one tick off by truncation");
-        Assert.True(count >= 20);
+        _output.WriteLine($"MEASURE Launch: {moved} of {count} offsets one tick off by the former truncations");
+        Assert.True(count >= 40);
         Assert.True(moved > 0);
     }
 

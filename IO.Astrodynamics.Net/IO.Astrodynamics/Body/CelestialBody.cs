@@ -382,7 +382,17 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// </summary>
     public TimeSpan SideralRotationPeriod(Time epoch)
     {
-        return Time.SecondsToSpan(Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
+        return Time.SecondsToSpan(SideralRotationSeconds(epoch));
+    }
+
+    /// <summary>
+    /// The sidereal rotation period of the body at <paramref name="epoch"/> in seconds, 2π / |ω|, before its rounding to a
+    /// tick: the value <see cref="SideralRotationPeriod"/> rounds, and whose half (exact in binary) the launch windows add
+    /// before they round their offset (#637).
+    /// </summary>
+    internal double SideralRotationSeconds(Time epoch)
+    {
+        return Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude();
     }
 
     public double AngularVelocity(Time epoch)

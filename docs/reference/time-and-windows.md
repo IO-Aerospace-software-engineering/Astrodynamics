@@ -59,14 +59,18 @@ What a double can hold limits both directions:
 The same rule holds for `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, with the ticks per day, hour and
 minute (the days of `CreateFromJD` from J2000, `julianDate − 2451545.0`, are exact from JD 1225772.5 to 4903090 by
 Sterbenz's lemma), which throw for a non-finite argument (#680: NaN returned the epoch, or J2000 for `CreateFromJD`),
-and for the spans the library computes outside `Time` (internal `Time.SecondsToSpan`, which keeps the exceptions of
-`TimeSpan.FromSeconds`): `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the
-offsets of the launch windows after the first (`Launch`), the thrust window of an impulse (`Tsiolkovski.DeltaT`), the
+and for the spans the library computes outside `Time` (internal `Time.SecondsToSpan`, which keeps the exception types
+of `TimeSpan.FromSeconds`, `ArgumentException` for NaN and `OverflowException` for an infinity or from 922 337 203 685 s,
+the bound of `SecondsToTicks`, 0.48 s below the 922 337 203 685.477 s `TimeSpan.FromSeconds` accepted):
+`OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the
+offsets of the launch windows after the first (`Launch`: half the sidereal period in seconds plus ±2 δL/ω, rounded
+once), the thrust window of an impulse (`Tsiolkovski.DeltaT`), the
 hold of `PhasingManeuver`, the step, candidate, seed, secant and subdivision epochs of the conjunction search and the
 period of the element conversions of `SpiceAPI`
 ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637), decided by S. Guillet,
 2026-11-17). Before 11.0.0 they truncated toward zero, a tick early for about half of the values (8 733 of 20 000
-random spans, 16 of 23 orbital periods, 43 of 80 sidereal periods of the Earth and the Moon). `TimeSpan.FromSeconds`
+random spans, 16 of 23 orbital periods, 43 of 80 sidereal periods of the Earth and the Moon, 40 of 65 launch window
+offsets). `TimeSpan.FromSeconds`
 of a constant that a tick holds exactly (60 s, 32.184 s, 19 s, whole leap seconds) is not concerned.
 
 ### Time Scales
