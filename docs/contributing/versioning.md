@@ -222,7 +222,7 @@ release are listed under **Known limitations**.
   620 m off in ITRF93 and 1.48 km in MOON_ME, the Moon from a spacecraft 675 m in ITRF93, the Sun from it 228 km, a site
   given by its coordinates 38 km in its own topocentric frame seen from the Moon. The library now does as `spkezr_c`:
   the centre of a SPICE frame is SPICE's (`frinfo_c`, through the new native `GetFrameInfoProxy`, `namfrm_c` and
-  `frinfo_c`, and the internal `SpiceAPI.NonInertialFrameCenter`), that of the library's frames the site of a site frame,
+  `frinfo_c`, a native change for a technical reason, decided by S. Guillet, 2026-11-18, and the internal `SpiceAPI.NonInertialFrameCenter`), that of the library's frames the site of a site frame,
   the spacecraft of a spacecraft frame, the Earth for TEME, CIRS and TIRS; the rotation is read at the 100 ns of a `Time`
   and carried to the exact epoch by the frame's angular velocity. The centre may be a third object, neither the observer
   nor the target, read as the reference-body path reads it: the site of a site frame (a site given by its coordinates
@@ -268,7 +268,9 @@ release are listed under **Known limitations**.
   (`FromTheExactSite_TheErrorIsOfSecondOrderInTheSpacing`: a ratio of 3.32 instead of 4.00 when the spacing is halved).
   The observer is now read at its geometric position: the COBE determination is that of SPICE's site again (ratios 4.002
   and 4.001), and Mars's error falls with the spacing, 7.06e-2, 1.07e-2 and 1.56e-3 % (Linux x64, Windows x64 and macOS
-  arm64 alike, `PlanetObject`, bounds at 2.5 days twice those figures). See Changed.
+  arm64 alike, `PlanetObject`, bounds at 2.5 days twice those figures). That convergence test against SPICE replaces
+  the 10-day bound of 0.06 % and 0.15 %, which held on a85098d only because the observer's light-time error cancelled
+  the method's: not a relaxation, the reference changed (decided by S. Guillet, 2026-11-18). See Changed.
 - **The same instant in two time frames was not equal** ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)). `Time` kept the record's equality, on the
   calendar and the frame, while `CompareTo` compared through TAI across frames: `utc == utc.ToTDB()` was false and their
   hashes differed while `CompareTo` returned 0 and `utc - tdb` 0 ticks, so `Dictionary`, `HashSet`, `Distinct` and
@@ -306,7 +308,7 @@ release are listed under **Known limitations**.
   the start for i = 0 … ceil(L/ΔT) − 1, then the window end, so ceil(L/ΔT) + 1 samples, each the SGP4 state of its
   epoch, the steps of the solution the intervals between them, the last shorter. Beyond the issue, a grid point closer
   to the end than ΔT/10 is dropped, the last step then up to 1.1 ΔT, as the stored states drop an output that close to an
-  impulse (an open choice of this release, recommended, to be decided by S. Guillet): a window given in UTC is a few
+  impulse (a choice of this release beyond the issue, decided by S. Guillet, 2026-11-18): a window given in UTC is a few
   ticks longer or shorter in TDB, one UTC hour from the ISS TLE's epoch 3600 s and 11 ticks, and with ceil(L/ΔT) + 1
   samples its 62nd, 1.1 µs after the 61st, puts the stored-state read of the sampled spacecraft 4.336e3 m off SGP4 at
   +3570 s (`TlePropagationTests`, Linux x64), the defect of two stored states a few ticks apart listed under **Known
@@ -3695,7 +3697,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `gfilum_c`'s cell holds 10000 windows like the others: every window CSPICE finds is returned, and a search of more
   than 10000 throws `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has
   size, 20000, cardinality 20000. Cannot insert an additional interval into the window." (the size counts the endpoints;
-  the short code is not in the message), never a partial list; a buffer smaller
+  the short code is not in the message), never a partial list (the whole native cell, rather than a managed
+  continuation with the same ceiling and seams, decided by S. Guillet, 2026-11-18); a buffer smaller
   than the windows found makes a proxy return false with its message, nothing written. The absolute extremes need no
   exception of their own: their windows are in the cell like the others'. Against CSPICE's searches with a cell of
   20000 windows in the test process, every window equal to the tick (`CspiceWindowCapacityTests`, Validation: the ten
@@ -3722,7 +3725,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   until the process was out of memory (1 min 40 s) and a negative one read 10000 epochs backwards. The proxies now read
   at the epochs the caller gives (a native change for a technical reason, the P/Invoke declarations in step), and
   `SpiceAPI` gives start + i·step in the time frame of the window start, i from 0 while within the window, in exact tick
-  arithmetic, each epoch read at its TDB seconds, in calls of 10000 epochs at most into buffers of their size, each state
+  arithmetic, each epoch read at its TDB seconds, in calls of 10000 epochs at most into buffers of their size (no cap on
+  the epochs of a window, decided by S. Guillet, 2026-11-18), each state
   labelled with its epoch in that frame: each state and record is the read of its epoch alone, bit for bit, the end of
   the window read when it falls on the grid (`SpiceApiTest.ReadEphemeris_WindowRead_IsTheReadAtEachStartPlusIStep`
   and `ReadOrientation_WindowRead_IsTheReadAtEachStartPlusIStep`, the three windows above, red on a85098d; against
@@ -3773,7 +3777,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   bit for bit the stored difference as before. The provider knows ICRF and GCRF (the identity) and ECLIPJ2000, SPICE's
   fixed rotation of the J2000 obliquity (84381.448″ about x, CSPICE `chgirf.c`), without stored orientations: ECLIPJ2000
   is the default frame of the bodies, so a body built on the provider reads its orbit in it, which now needs that
-  rotation. A frame with stored orientations is read from them, TEME, CIRS and TIRS are the managed frames (#656), and any
+  rotation (B1950, FK4, GALACTIC and ECLIPB1950 are not built in for 11.0.0, on demand, decided by S. Guillet, 2026-11-18). A frame with stored orientations is read from them, TEME, CIRS and TIRS are the managed frames (#656), and any
   other frame throws `ArgumentException`: `FrameTransformationToICRF` threw it before, but `GetEphemeris`, which never
   read the frame, returned the ICRF difference labelled with it, a body-fixed frame without stored orientations such as
   `IAU_EARTH` or the Earth's `ITRF93` included (Changed below). Against `spkezr_c` on the states the test stores (read from SPICE
@@ -3862,7 +3866,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   master, measured on a85098d); the library's own check accepted it through a synthetic root in the namespace. The writer
   now writes the qualified form of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root in no namespace with
   `xmlns:ndm="urn:ccsds:schema:ndmxml"` and `xsi:noNamespaceSchemaLocation` (SANA's qualified master, identical to the
-  embedded one) declared on it, every element below it, the `cdm` of an `ndm` included, in the namespace under the
+  embedded one; optional in the issue, kept, decided by S. Guillet, 2026-11-18) declared on it, every element below it, the `cdm` of an `ndm` included, in the namespace under the
   prefix `ndm` (`CdmTests.WriteTo_RootOutsideTheNamespace_ValidatesAgainstTheSanaQualifiedMaster`:
   the written text, through `WriteToString` wrapped and bare, `WriteToStream` and `WriteToFile`, validated against the
   embedded master compiled in the test with no synthetic root, 4 cases red on a85098d). `Cdm.ValidateSchema` checks it
@@ -4010,7 +4014,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     caller that restarts from an event with the same detector does not find it again.
   - **A gated detector exactly zero at the base** (an impulse whose g-function is 0.0 at the start, its minimum epoch at
     or before the start) fires at the base when the first step end has the target sign (GMAT's convention, #577's
-    choice 6): a minimum epoch before the start now gives the burn a minimum epoch at the start gives (RK7(8) at the
+    choice 6; the split of the two conventions at the base, which only direct callers of `IntegrateSegment` meet, decided by S. Guillet, 2026-11-18): a minimum epoch before the start now gives the burn a minimum epoch at the start gives (RK7(8) at the
     start, Velocity-Verlet at its first step end), not one orbit later.
   - **Several detectors:** `IIntegrator.IntegrateSegment` reports one event per call, the earliest crossing of the step,
     ties in list order: `RK78Integrator` locates each root and keeps the earliest, `VVIntegrator` estimates each on the
@@ -4035,7 +4039,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Velocity-Verlet trajectory after an event about the Earth moves by up to v · 5e-8 s per event, the burn epochs by up
   to half a tick: a chain of 7 events without ΔV in 12 h now ends within 1.2e-6 m (10 s steps) to 1.1e-4 m (0.7 s) of
   the propagation without events, Velocity-Verlet's own sensitivity to the phase of its grid, where it ended 1.3e-3 to
-  2.0e-3 m away; about the Moon at whole-second steps (ticks) nothing moves. After an event that continues the
+  2.0e-3 m away; about the Moon at whole-second steps (ticks) nothing moves. A step end whose label rounds to the tick
+  before it reports its event up to 5e-8 s before a root in that last half tick, the continued root still skipped
+  (accepted, decided by S. Guillet, 2026-11-18). After an event that continues the
   propagation, Velocity-Verlet starts the detector from its g-value past the root, as RK7(8).
 - **Breaking: an impulse at the end of the propagation leaves the solution with the state after it** ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575);
   decided by S. Guillet, 2026-11-17). An impulse executed with no time left after it opens a last segment of zero length
@@ -4076,7 +4082,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   draw of their noise: the penumbra record of R4 (`StmValidationTests`) is set again at 9.6e-8 (its Φ 4.8e-8 there, 3.6e-9
   before, Φ under test moved by 1.3e-9) and the arc record of Ψ_Cr of the eclipsing case (`ManeuverStmValidationTests`)
   at 3.9e-5 (1.94e-5, 6.2e-6 before, Ψ_Cr under test moved by 4.3e-11), twice the Linux worst, the Validation category
-  running on Linux x64 alone (to be confirmed by S. Guillet). Eleven draws of each reference, its
+  running on Linux x64 alone (decided by S. Guillet, 2026-11-18). Eleven draws of each reference, its
   start moved by −5 to +5 ulps with the quantity under test unchanged, show the noise of the references: R4 in the
   penumbra 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d), Ψ_Cr over the arc 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
   a85098d, 9 of 11 above the former record). Two records of the test suite that compare propagations at two tolerances
@@ -4100,8 +4106,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: the density of Mars air below 54.887 km rises by 2.1e-4 to 3.6e-4** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438), Fixed above).
   Below the isothermal layer (49.887 km) and through its transition (to 54.887 km), `MarsStandardAtmosphere` takes the
   curve fit's own 273.1 instead of 273.15 (decided by S. Guillet, 2026-11-17: 273.1 in the curve fit only, the 139 K
-  layer unchanged). The layer is unchanged bit for bit (its base, where the fit's temperature reaches −134.15 °C, and
-  its pressures do not depend on the offset); through the transition the absolute temperature goes from the fit's
+  layer unchanged). The layer is unchanged bit for bit (its base, where the fit's temperature reaches −134.15 °C, kept
+  there, decided by S. Guillet, 2026-11-18, where 49 864.86 m would move every layer density by about 0.1 %, and its pressures do not depend on the offset); through the transition the absolute temperature goes from the fit's
   T + 273.1 (138.95 K at the base) to 139 K and the temperature in °C from the fit's to −134.15 °C by the existing
   smootherstep, so the density and its first two derivatives stay continuous. `GetTemperature` and `GetPressure` are
   unchanged. Every density, drag and propagation through Mars air below 54.887 km moves: the RK7(8) run of
@@ -4154,7 +4160,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   another frame (a label comparison, internal `Time.HasSameLabel`); the library's caches whose values carry their key as
   a label (the orientations of a `Frame` and of `TLEPropagator`, the range rates read once by the conjunction search)
   stay keyed by label (internal `Time.LabelComparer`), so an orientation carries the epoch asked and the bisection of a
-  TCA in ticks (#624) reads both of two consecutive TDB ticks, bit for bit as before. Results move only for two TDB
+  TCA in ticks (#624) reads both of two consecutive TDB ticks, bit for bit as before; the other comparisons of the
+  library (the ends of the dense search, the `Distinct()` of the knots, the epoch checks of the propagators) are on
+  instants (decided by S. Guillet, 2026-11-18). Results move only for two TDB
   ticks of one TAI tick, by a tick at most. Within TDB, `-` still counts the ticks of the calendars: two equal
   consecutive TDB ticks differ by one tick.
   Migration: code that told two labels of one instant apart by `==`, `Equals` or `Assert.Equal` compares `DateTime` and
@@ -5573,7 +5581,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   an exact parabola whose e is one ulp off 1; `EquinoctialElements`: P / (1 − F² − G²), +Infinity where it overflows, or
   q / (1 − e) for a non-finite P given its perigee radius); `MeanMotion()` is √(μ/|a|³), Barker's only for an infinite semi-major
   axis; the state of elements in the band takes the conic's p = q (1 + e), 2q at e = 1 bit for bit; and
-  `KeplerianElements` accepts in the band, with the perigee radius q it requires, the semi-major axis of the same conic,
+  `KeplerianElements` accepts in the band, with the perigee radius q it requires (not derived from a finite a, whose
+  q = a (1 − e) would carry a relative rounding of 1e-16/|1 − e|, decided by S. Guillet, 2026-11-18), the semi-major axis of the same conic,
   a (1 − e) = q to rounding: |q/a − (1 − e)| ≤ 6 ε (1 + e), twice the 3.0 ε (1 + e) measured on Linux x64, Windows x64
   and macOS arm64 over 6400 states of the band (|e − 1| from 0 to 9.99e-7, q from 6600 km to 1 AU) through every path
   that builds elements there (the state, equinoctial elements, `AtEpoch`, SPICE's `oscltx`);
@@ -5691,7 +5700,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ignition and the event, about two thirds of the burn, the state written is still the state before the impulse); an epoch outside the propagated states, the default one included when the propagation
   started later, throws `InvalidOperationException` (#527). A spacecraft without propagated states writes the motion of
   its initial orbit as before. Migration: pass the epoch of the instant to export, the end of the propagation for the
-  state after every maneuver (the default epoch, the initial one, now carries no maneuver of a propagation that starts
+  state after every maneuver (the default epoch, the initial one, kept, decided by S. Guillet, 2026-11-18, now carries no maneuver of a propagation that starts
   there); a caller that wanted the initial orbit writes `Opm.CreateFromStateVector` from `InitialOrbitalParameters`.
 
 - **Breaking: `EvaluateAvoidance` refuses a step of zero or less** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640), Fixed above).
@@ -5712,7 +5721,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd)` for an encounter whose closest approach lies outside the
   window, and widen the window to find it; expect an empty list from `AnalyzeAll` where one midpoint encounter came.
 
-- **Breaking: the remediation of an initial covariance is bounded** ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17).
+- **Breaking: the remediation of an initial covariance is bounded** ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17; the two frames and the bound of 1e-3, a producer of 3 significant digits needing 1e-2, decided by S. Guillet, 2026-11-18).
   `StateVector.WithRemediatedCovariance()` and the conjunction analysis remediated any indefinite covariance by eigenvalue
   clipping, however deep its defect: a T–Ṙ correlation of −10 by a change of 5.5 times the values, flagged
   `CovarianceRemediated` only. Both now refuse a defect deeper than the rounding of the elements to 4 significant digits
@@ -5766,7 +5775,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: `MemoryDataProvider.GetEphemeris` throws `NotSupportedException` for an aberration other than `None`, and `ArgumentException` for a frame it neither stores nor knows** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559), Fixed above).
   The provider holds geometric states only, and returned them for a read with light time or stellar aberration. It now
   refuses them (decided by S. Guillet, 2026-11-17: an in-memory test provider; refusing is honest, and smaller than a
-  light-time iteration on the stored states), so a library path that reads with an aberration (an occultation or
+  light-time iteration on the stored states; `NotSupportedException`, not the `ArgumentException` of a bad argument,
+  decided by S. Guillet, 2026-11-18), so a library path that reads with an aberration (an occultation or
   illumination search with `LT`, `CelestialBody.TrueSolarDay`, a `CelestialAttitudeTarget` with `LT`) throws on it.
   Its reads in a frame other than ICRF's axes are rotated (Fixed above), so the orbit of a body built on it, in
   ECLIPJ2000 by default, changes numbers. A read in a frame without stored orientations other than ICRF, GCRF,
@@ -5787,7 +5797,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   rotation about z added to `new Frame("ITRF93")` at an epoch was read back there, not SPICE's; `CirsFrame` alike); that
   override is removed, and the frame reads its provider. A frame
   keeps the orientation of its last epoch only: an orientation added to a `MemoryDataProvider` at the epoch the frame
-  read last is read once the frame has read another epoch. Migration: a subclass of `Frame` that used the dictionary keeps its
+  read last is read once the frame has read another epoch (kept, decided by S. Guillet, 2026-11-18). Migration: a subclass of `Frame` that used the dictionary keeps its
   own store; code that added orientations to another frame to override its provider gives them to a `MemoryDataProvider`
   (`AddStateOrientationToICRF(frame, date, orientation)`), set as the data provider, whose frames read them (the managed
   TEME, CIRS and TIRS excepted, #656).
@@ -5845,7 +5855,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `FOSTER-2D-MAX-PC`, or with the method `CdmExportOptions.CollisionProbabilityMethod` named. Migration: a consumer that
   matched `FOSTER-2D` matches `FOSTER-1992`; a caller that sets `CdmExportOptions.CollisionProbabilityMethod` keeps its
   method, except for an encounter flagged `SingleCovarianceMaximumPcUsed`, which is refused whatever the option says
-  (that maximum is not the Pc of two covariances): such an encounter is no longer exported.
+  (that maximum is not the Pc of two covariances; decided by S. Guillet, 2026-11-18): such an encounter is no longer exported.
 - **The OPM, OMM and CDM writers write the shortest round-trip form of each value** ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728), Fixed above). The text
   of the written messages changes: the OPM and OMM write the digits they dropped (0.00012345678901234567 where
   0.00012345678901 was written), the CDM drops the digits `G17` added beyond the shortest exact form
@@ -5976,7 +5986,8 @@ not listed.
 - **Impulses at the edges of the stored states**
   ([#638](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/638)). An impulse at the end of the propagation opens a last arc of one state, the state after it ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)),
   which an SPK segment cannot hold: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the
-  impulse at that last epoch where `GetEphemeris` reads the state after it. The state that closes an arc carries its
+  impulse at that last epoch where `GetEphemeris` reads the state after it (the documented limitation of 11.0.0,
+  decided by S. Guillet, 2026-11-18). The state that closes an arc carries its
   impulse's tick, up to half a tick from its instant (about 0.4 mm at 8.6 km/s).
 - **Attitudes** ([#592](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/592)). Between output epochs the
   attitude record is the spherical linear interpolation of its samples, not the law: a `NadirAttitude` 1.47e-3 rad off

@@ -197,7 +197,7 @@ Before 11.0.0 the observer was the Earth whatever `CENTER_NAME` said.
 ## Spacecraft Export
 
 `Spacecraft.ToOpm(originator, epoch, includeKeplerianElements, includeSpacecraftParameters, includeManeuvers)` exports to OPM
-format the spacecraft at `epoch`, the epoch of its initial orbital parameters by default: its state, its mass and its
+format the spacecraft at `epoch`, the epoch of its initial orbital parameters by default (kept, decided by S. Guillet, 2026-11-18): its state, its mass and its
 maneuvers at that instant ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided
 by S. Guillet, 2026-11-17).
 

@@ -61,7 +61,8 @@ S. Guillet, 2026-11-17). The geometry is that of the conic:
   +Infinity. Before 11.0.0 both were the parabola's in the whole band.
 - The state of elements in the band has p = q (1 + e), the conic's semi-latus rectum (2q at e = 1), and `ToEquinoctial()`
   gives P = q (1 + e) (#462).
-- `KeplerianElements` in the band need the perigee radius q, with the semi-major axis of the same conic: a (1 − e) = q to
+- `KeplerianElements` in the band need the perigee radius q, not derived from a finite semi-major axis, whose
+  q = a (1 − e) would carry a relative rounding of 1e-16/|1 − e| (decided by S. Guillet, 2026-11-18), with the semi-major axis of the same conic: a (1 − e) = q to
   rounding, |q/a − (1 − e)| ≤ 6 ε (1 + e) (twice the 3.0 ε (1 + e) measured over the elements the library builds there,
   from states, equinoctial elements, the two-body motion and SPICE's `oscltx`, on Linux x64, Windows x64 and macOS
   arm64), and +Infinity at e = 1

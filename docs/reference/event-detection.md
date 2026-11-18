@@ -17,7 +17,8 @@ before it (#580: before 11.0.0 it was none, and a time-like g whose root falls o
 RK7(8) step end never fired). A zero at the base of a segment followed by a non-zero value is not a crossing of a
 detector without a gate (Hipparchus's convention: the zero was the event that started the segment); for a gated
 detector whose gate is open at the base, at it or before it, a zero there is a crossing at the base when the first step
-end has the target sign (GMAT's convention, #577's choice 6; decided by S. Guillet, 2026-11-17 for #580), so a minimum
+end has the target sign (GMAT's convention, #577's choice 6; decided by S. Guillet, 2026-11-17 for #580, the split of the two conventions
+decided by S. Guillet, 2026-11-18), so a minimum
 epoch at the start and one before it give the same burn.
 
 `IIntegrator.IntegrateSegment` reports one event per call: the earliest crossing of the step that holds crossings, ties
@@ -74,7 +75,9 @@ The minimum epoch of the maneuver is the gate of the detector (#569): no crossin
 the step that holds the event is integrated again to the time of the label of its end, up to half a tick from it, so the
 state the next segment starts from is the state of its label (#572; before 11.0.0 the next segment started at the
 rounded label with the state of the step end, up to 5e-8 s apart, which moved the trajectory along the track by up to
-4e-4 m per event). A step end on the tick grid keeps its step. `RK78Integrator` refines them within the step by the same bisection, on states computed by shortened RK7(8) steps from the start of the step, so that the event is located on the integrated trajectory. The event time is then moved to the 100 ns grid of the epochs, and the propagation restarts from the state of a shortened step to that time: at the accuracy of the integrator, and the same state from which the state transition matrix at the event comes.
+4e-4 m per event). When the label of the step end rounds to the tick before it, the event is reported up to 5e-8 s
+before a root in that last half tick, and the continued root is still skipped (accepted, decided by S. Guillet, 2026-11-18). A step end on the
+tick grid keeps its step. `RK78Integrator` refines them within the step by the same bisection, on states computed by shortened RK7(8) steps from the start of the step, so that the event is located on the integrated trajectory. The event time is then moved to the 100 ns grid of the epochs, and the propagation restarts from the state of a shortened step to that time: at the accuracy of the integrator, and the same state from which the state transition matrix at the event comes.
 
 In the step that holds the gate of a detector, `RK78Integrator` bisects [gate, step end] on the g-function, from its value at the gate, and never labels an event before the gate. After an event that continues the propagation (`EventAction.Continue`), the detector of that event is not gated again: the next segment starts from its g-value past the root (#355), and the event decided its gate.
 

@@ -424,7 +424,7 @@ var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false,
 
 - `SmallestCorrelationEigenvalue` is that of the correlation matrix of the covariance given, over its positive
   variances: negative when it was remediated.
-- The depth of the defect is bounded ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17), for this method and the
+- The depth of the defect is bounded ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443), decided by S. Guillet, 2026-11-17; the two frames and the bound of 1e-3, decided by S. Guillet, 2026-11-18), for this method and the
   conjunction analysis alike (`CovarianceChecks.RemediationDepthBound`): the smallest eigenvalue of the correlation matrix
   must be at least −1e-3 of its trace (its number of positive variances) in the frame of the state, or in the RTN frame
   of the state, the frame of the covariances of a CDM. Rounding each element of a positive semi-definite covariance to 4

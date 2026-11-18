@@ -115,8 +115,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// from a uniform rotation, over 50 cells of the Earth's grid), so the wider tail of the references is a draw of their steps at 1e-14, not a defect of the cache.
 /// The penumbra record of R4 is set again at twice its measurement at the start, 9.6e-8 (1.2e-8 before; the worst draw,
 /// 6.7e-8, under it; 4.78e-8 on Linux x64 in CI run 44225490669): a record of the Validation category, which CI runs on
-/// Linux x64 alone, so twice the Linux worst (to be confirmed by S. Guillet, as decision 53 of #457 kept the records from
-/// one draw).
+/// Linux x64 alone, so twice the Linux worst (decided by S. Guillet, 2026-11-18, where decision 53 of #457 kept the
+/// records from one draw).
 /// </para>
 /// </remarks>
 [Trait("Category", "Validation")]

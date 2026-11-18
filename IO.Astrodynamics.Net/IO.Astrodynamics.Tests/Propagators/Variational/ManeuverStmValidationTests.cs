@@ -287,8 +287,8 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
     // moved by −5 to +5 ulps along x (9.31e-10 m each), Ψ_Cr under test the same (Linux x64, Release, 2026-11-17), span
     // 4.1e-6 to 4.6e-5 in velocity, and 6.2e-6 to 5.6e-5 on a85098d, where 9 of the 11 exceed the former record: it held
     // at the start alone. Set again at twice the measurement at the start (1.94e-5 on Linux x64 in CI run 44225490669): a
-    // record of the Validation category, which CI runs on Linux x64 alone, so twice the Linux worst (to be confirmed by
-    // S. Guillet)
+    // record of the Validation category, which CI runs on Linux x64 alone, so twice the Linux worst (decided by
+    // S. Guillet, 2026-11-18)
     private const double PsiCrArcRecord = 3.9e-5;
 
     private const double PsiCrLocalRecord = 7.8e-5;
