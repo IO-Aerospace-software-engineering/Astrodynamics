@@ -53,9 +53,15 @@ still read (`cnmfrm_c`); a barycentre has no frame (an empty `FrameName`, `Frame
 left the GM 0 and the frame name undefined (Pallas, Nix, Hydra, Didymos and Dimorphos read GM 0; Elara a garbage frame).
 
 The observer of `ReadEphemeris` by identifiers is a `Site` for a site identifier, its body's identifier times 1000 plus
-its own (1 to 999), the body a planet or a moon (399013 is DSS-13 on the Earth): `new Site(id % 1000, its SPICE name,
-new CelestialBody(id / 1000))`, whose constructor reads the site's state at J2000 TDB, so its SPK must cover that epoch.
-Any other identifier is built by `CelestialItem.Create`, a barycenter, a Lagrange point or a celestial body (#672: a
+its own (1 to 999), the body a planet or a moon that SPICE names (399013 is DSS-13 on the Earth): `new Site(id % 1000,
+its SPICE name, new CelestialBody(id / 1000))`, whose constructor reads the site's state at J2000 TDB, so its SPK must
+cover that epoch. An identifier of that form whose body SPICE does not name, NOTO (398989) and NEW NORCIA (398990), is an
+object of the kernels read by its identifier, named as SPICE names it, so the read is `spkezr_c`'s from that identifier:
+the state when its SPK is loaded, SPICE's missing-data error (`InvalidOperationException`) otherwise
+([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750): before 11.0.0 it was built as a
+site of the body 398 and threw `ArgumentException`, "The NAIF identifier 398 has no name in SPICE"); so is a frame
+centre of that form on the reference-body path, and the commands of the CLI build the same object (`ephemeris`,
+`sub-point`). Any other identifier is built by `CelestialItem.Create`, a barycenter, a Lagrange point or a celestial body (#672: a
 site observer was built as a celestial body, which threw or was built from undefined bytes). The state itself is
 `spkezr_c`'s, which needs only the identifier. The commands of the CLI build their objects by identifier with the same
 rule and the same site (since 11.0.0; before, any identifier from 100001 to 999998 was a site named `site<id>`), so a

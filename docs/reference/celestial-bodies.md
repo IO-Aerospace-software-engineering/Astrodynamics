@@ -52,7 +52,10 @@ built and Elara was built with a garbage frame name. A site identifier (399013, 
 of GM 0 and frame `DSS-13_TOPO`, about its body (`CenterOfMotionId` 399, `BarycenterOfMotionId` 3, `IsAsteroid` false;
 before 11.0.0 an asteroid about the Sun, [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)):
 build a `Site` instead. The rule needs SPICE to name the body (identifier / 1000): SPICE's NOTO (398989) and NEW NORCIA
-(398990), ESA stations of no body 398, are classed as any identifier above 1000.
+(398990), ESA stations of no body 398, are classed as any identifier above 1000; as observers of the reads by
+identifiers they are objects of the kernels read by their identifier
+([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), see the
+[SPICE API](spice-api.md)), while `new CelestialBody` and `CelestialItem.Create` of them still throw: they have no frame.
 
 ### Methods
 
@@ -128,7 +131,17 @@ its centre where CSPICE reads the double of that epoch (6e-8 s apart at most in 
 DSS-13 with `LT` 620 m off in ITRF93 and 1.48 km in MOON_ME, a site given by its coordinates 38 km off in its own
 topocentric frame from the Moon. The CSPICE path (an observer and a target SPICE reads) is `spkezr`'s; in a frame only
 the library holds (TEME, CIRS, TIRS, the frame of a site given by its coordinates, the frame of a managed spacecraft
-with an attitude record), it reads J2000 and rotates at the epoch of the observation.
+with an attitude record), it reads J2000 and rotates by the same rule
+([#739](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/739)): at t ∓ lt_c with the rate of
+lt_c, lt_c the light time of the frame's centre from the observer (both read from the solar system barycenter, the
+centre the frame's site or spacecraft, or the Earth from SPICE for TEME, CIRS and TIRS), at the epoch for a geometric
+read and in a frame centred on the observer. Measured against `spkezr` in the frame of a site given by its coordinates
+(an SPK and a TK frame of the site) and in the frame of a spacecraft held as an attitude record of ITRF93, the Moon from
+the Earth and the Earth from the Moon: 2.7e-7 m and 7.6e-9 m/s, and 1.6e-3 m (the resolution of the record's epoch, as
+above); TEME, CIRS and TIRS 0 from the ICRF read rotated at the epoch of the Earth, the closed form that reproduces
+`spkezr` in ITRF93 to 2.4e-7 m. Before 11.0.0 this path rotated at the epoch of the observation whatever the correction:
+the Earth from the Moon with `LT` 3.9e4 m off in TIRS and in those two frames, the Moon from the Earth 620 m in the frame
+of a site and 670 m in that of a spacecraft, 4.3 mm in TEME and 0.9 mm in CIRS.
 
 ## See Also
 

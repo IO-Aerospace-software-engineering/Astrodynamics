@@ -242,6 +242,27 @@ release are listed under **Known limitations**.
   from those found on `spkcpt_c`. An inertial frame, a frame centred on the observer (the
   topocentric frame of the observing site, so the visibility searches of a spacecraft from a site) and `None` are
   unchanged, bit for bit.
+- **On the CSPICE path, a frame only the library holds took its orientation at the epoch of the observation** ([#739](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/739)).
+  When CSPICE reads the pair (an observer and a target both of the kernels), a frame that only the library holds (TEME,
+  CIRS, TIRS, the frame of a site given by its coordinates, the frame of a managed spacecraft with an attitude record) is
+  read in J2000 and rotated by the library, and that rotation was at t whatever the correction, where `spkezr_c` and the
+  reference-body path since #593 take a non-inertial frame at t ∓ lt_c of its centre (measured on f70ee32: the Earth
+  from the Moon with `LT` 3.93e4 m off in TIRS, in the frame of a site given by its coordinates and in that of a
+  spacecraft; the Moon from the Earth 618 m off in the site's frame and 671 m in the spacecraft's; TEME 4.3 mm, CIRS
+  0.93 mm). `SpiceAPI.ReadEphemeris` (by identifiers, both overloads, and the reads of `SpiceDataProvider`, so
+  `GetEphemeris` of a pair CSPICE reads) now rotates such a read by the rule of the reference-body path (the internal
+  `CelestialItem.ToManagedFrameAtTheCenterEpoch`): lt_c the light time of `spkltc` from the observer to the frame's
+  centre by the light-time method of the correction, both read from the solar system barycenter (the observer and, for
+  TEME, CIRS and TIRS, the Earth from SPICE by identifier; the frame's site or spacecraft as the library holds them), the
+  frame at t ∓ lt_c and the derivative of its rotation scaled by 1 ∓ dlt_c/dt; a geometric read, a frame without a centre
+  and a frame centred on the observer (the Moon from the Earth in TIRS) at t, bit for bit as before. Tests
+  (`LightTimeCorrectionTests`, red on f70ee32): the Moon from the Earth and the Earth from the Moon in the frame of a site
+  given by its coordinates and in the frame of a spacecraft held as an attitude record of ITRF93, against `spkezr_c` in
+  the TK frames of `tools/light_time_reference` (new rows), 2.7e-7 m and 7.6e-9 m/s, and 1.6e-3 m and 1.2e-7 m/s, the
+  resolution of the record's epoch as for #593; the Earth from the Moon in TIRS, CIRS, TEME and a frame named "tirs",
+  through `GetEphemeris`, `SpiceAPI.ReadEphemeris` and its window read, 0 from the ICRF read rotated at t ∓ lt of the
+  Earth with the rate of its light time, a closed form that reproduces `spkezr_c` in ITRF93 to 2.4e-7 m and 7.7e-9 m/s;
+  the Moon from the Earth in TIRS and every geometric read bit for bit (Linux x64, thresholds provisional).
 - **`InstrumentPointingToAttitude` ignored the light time for a celestial target** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549)). The law asked for
   `Aberration.LT`, but a celestial target is the centre of the maneuver, so `Attitude.TryExecute` made the state
   relative to it and the law read the target relative to itself, the zero vector: the pointing was geometric, the Moon
@@ -256,6 +277,22 @@ release are listed under **Known limitations**.
   (2026-11-17), the nine corrections: the boresight 1.0e-13 rad from `spkcvo_c`'s Moon from a LEO (8 states), 1.1e-12
   rad from `spkcpt_c`'s site from a LEO (3 states), 1.6e-16 rad from the closed form of a star at 20 and 2000 pc. See
   Changed for the new parameter.
+- **`CelestialAttitudeTarget` corrected the light time from the central body, not the spacecraft** ([#740](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/740)).
+  `GetDirection` read the target from the observer of the state, the central body, with the correction asked, and
+  subtracted the spacecraft's position: the light time was the central body's, the stellar aberration of `+S` took the
+  central body's velocity, and a target that is the central body itself got no correction (measured on f70ee32 from the
+  LEO of the `pointing` rows of `tools/light_time_reference`, 8 states: the Moon 1.0e-6 rad from `spkcvo_c` with `LT`,
+  the Earth 1.0e-4 rad with `LT`; a TRIAD on the Moon with `LT` and the Sun with `LT+S` 1.0e-6 rad on its primary and
+  1.9e-5 rad on the plane of its secondary). Every correction other than `None` is now the target as the spacecraft
+  sees it, `CelestialItem.ApparentPositionFromState`, as `spkcvo_c` corrects it, the rule of
+  `InstrumentPointingToAttitude` since #549; `None` keeps the geometric difference, bit for bit
+  (`CelestialAttitudeTargetTests`: the Moon, the Sun and the Earth against `spkcvo_c`, nine corrections, 1.1e-13,
+  1.6e-16 and 6.2e-12 rad, the Earth's 4.2e-5 m across the line of sight below the 3.6 mm the Earth covers in the
+  resolution of a double 2024 epoch; through `TriadAttitude`, 5.8e-14 rad on the primary and 7.4e-15 rad on the plane;
+  Linux x64, thresholds provisional; red on f70ee32). The conformance runner keeps the model of `pointing_triad`, the
+  directions LT-corrected from the Earth's centre (`TriadSolver.EarthCentreLightTimeTarget`), at 3.8e-16 rad from its
+  golden as before; with `CelestialAttitudeTarget` it would be 1.022e-6 rad away, the variant `lt_from_spacecraft`
+  (`spkcpo`, 1.0225e-6 rad) of the case's reference check.
 - **`InitialOrbitDetermination.CreateFromObservation_Gauss` read its observer with light time from the centre of motion**
   ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), found when the fixes of this
   release were merged). The method takes the observer's position R at the epoch of each observation (H. D. Curtis,
@@ -3858,6 +3895,35 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
   stations against SPICE, red on a85098d, the Moon and the Earth as controls, sites of the Moon and Mars by the rule, and
   an asteroid, a comet, 391001, 399000, NOTO, NEW NORCIA and 101001, not sites, unchanged).
+- **NOTO and NEW NORCIA as observers threw for a body 398** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750)).
+  SPICE's built-in NOTO (398989) and NEW NORCIA (398990) have the form of a site of 398, a body SPICE does not name,
+  which #651 kept out of `IsSiteOfNamedBody`, but four call sites still tested `IsSiteId` and built them as a site of the
+  body 398 (`new CelestialBody(398)`): the observer of `SpiceAPI.ReadEphemeris` by identifiers (both overloads), the
+  centre of a frame on the reference-body path, and the objects of the CLI's `ephemeris` and `sub-point`. Each threw
+  `ArgumentException` "The NAIF identifier 398 has no name in SPICE" (`naifId`), an identifier the caller never gave
+  (measured on f70ee32). They now test `IsSiteOfNamedBody`; an identifier of the form of a site whose body SPICE does not
+  name is an object of the kernels read by its identifier (internal `Body.KernelObject`, a `CelestialItem` named as SPICE
+  names it), so the read is `spkezr_c`'s: the state with its SPK loaded, SPICE's missing-data error
+  (`InvalidOperationException`) otherwise; a frame centre of that form is read from SPICE by its identifier
+  (`KernelObjectObserverTests`, with an SPK of NOTO the test writes: NOTO as observer the negation of NOTO as target,
+  bit for bit, and `spkezr_c`'s read with "NOTO" as observer for the nine corrections in J2000 and ITRF93, bit for bit
+  (Validation); the window read; NEW NORCIA without its SPK SPICE's error; the Moon in a TK frame centred on NOTO from a
+  site built from coordinates against its closed form; the CLI's `ephemeris` from NOTO and its `sub-point`,
+  `EphemerisTests.Ephemeris_FromNoto_AndItsSubPoint_AreTheLibrarysReads`; red on f70ee32). `sub-point` decides whether
+  its object is a site once its kernels are loaded, so that a kernel naming a body counts. `CelestialItem.Create` and
+  `new CelestialBody` of these identifiers still throw: they have no frame.
+- **A spacecraft or a custom body had the solar system barycentre as centre of motion** ([#747](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/747)).
+  The constructor of an item built from custom parameters (`Spacecraft`, both constructors, and the custom
+  `CelestialBody`) never set `CenterOfMotionId` and `BarycenterOfMotionId`: both stayed 0 whatever the orbit (a
+  spacecraft about the Earth, 0 and 0, measured on f70ee32), while the natural-body constructors give the Moon 399 and
+  3. They now are the observer of the initial orbital parameters and that observer's barycentre (the observer itself
+  when it is a barycentre, that of its body for a site, that of a spacecraft for a spacecraft about it), 0 and 0
+  without an initial orbit, as before, and `Spacecraft.SetInitialOrbitalParameters` sets them again from the new orbit
+  (`CustomItemCenterOfMotionTests`: a spacecraft and a custom body about the Earth, the Moon, the Sun, the Earth-Moon
+  and the Mars barycentres and the solar system barycentre, the static Earth, a spacecraft about a spacecraft, LRO from
+  its kernels about the Earth and the Moon, a spacecraft moved from the Earth to the Moon, Mars, the Earth-Moon
+  barycentre and back, from the Moon to the Sun, and one built without an orbit and given one, the barycentre against
+  the record of `SpiceAPI.GetCelestialBodyInfo`; red on f70ee32). No library code reads the two values of such an item.
 - **No CDM the library wrote validated against the SANA schema** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)). `CdmWriter` put the root,
   `cdm` or the `ndm` that wraps it, in the namespace `urn:ccsds:schema:ndmxml` with every other element, so the SANA
   NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace (no `targetNamespace`), rejected every
@@ -4180,6 +4246,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   it with `ToFrame(frame)`, which rotates at the state's epoch. The native library exports `GetFrameInfoProxy`, which
   the .NET layer of the same release calls: a native library of an earlier release throws `EntryPointNotFoundException`
   there.
+- **A light-time corrected read of two objects of the kernels in a frame only the library holds moves** ([#739](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/739), Fixed above).
+  With a correction other than `None`, a state read by CSPICE in TEME, CIRS, TIRS, the frame of a site given by its
+  coordinates or the frame of a managed spacecraft with an attitude record, not centred on the observer, takes the frame
+  at the epoch of its centre: the Earth from the Moon in TIRS with `LT` by 3.9e4 m, the Moon from the Earth in the frame
+  of a site by 620 m, TEME and CIRS by millimetres; the coordinate searches that read such states move with them.
+  `None`, inertial frames and frames centred on the observer are unchanged, bit for bit. Migration: for the former value,
+  read the state in ICRF and rotate it with `ToFrame(frame)`, which rotates at the state's epoch.
 - **Breaking: `InstrumentPointingToAttitude` applies its light time, and takes an `Aberration`** ([#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), Fixed
   above; decided by S. Guillet, 2026-11-17). The constructor takes an optional `aberration`, `Aberration.LT` by default,
   what the law requested, exposed as `Aberration`; an undefined value throws `ArgumentOutOfRangeException`. Every
@@ -4188,6 +4261,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star` target takes no light time, so only its `+S` corrections move it, by its stellar aberration.
   Migration: pass `Aberration.None` for the former geometric direction of a celestial target; recompile, the
   constructor's signature changed.
+- **A spacecraft or a custom body is about the observer of its initial orbit** ([#747](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/747), Fixed above).
+  `CenterOfMotionId` and `BarycenterOfMotionId` of a `Spacecraft` or a `CelestialBody` built from custom parameters are
+  the observer of its initial orbital parameters and that observer's barycentre (399 and 3 about the Earth), where they
+  were 0 and 0 whatever the orbit; without an initial orbit they stay 0, and `Spacecraft.SetInitialOrbitalParameters`
+  sets them from the new orbit. Migration: none; a caller that read them for such an item gets the centre of its orbit.
+- **NOTO and NEW NORCIA are read by their identifier** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), Fixed above). `SpiceAPI.ReadEphemeris`
+  by identifiers from 398989 or 398990, a frame centred on them on the reference-body path, and the CLI's `ephemeris` and
+  `sub-point` of them read them from SPICE (`InvalidOperationException` without their SPK) where they threw
+  `ArgumentException` for the body 398; the observer of the state is an object of the kernels named NOTO or NEW NORCIA.
+  Migration: none; a caller that caught `ArgumentException` for them catches SPICE's `InvalidOperationException`.
+- **`CelestialAttitudeTarget` corrects from the spacecraft** ([#740](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/740), Fixed above). An attitude built
+  on a `CelestialAttitudeTarget` with a correction other than `None` (`TriadAttitude` and its records and CKs) moves:
+  from a LEO by 1.0e-6 rad for the Moon with `LT`, about 2.5e-5 rad with a `+S` correction, 1.0e-4 rad for the central
+  body with `LT`. `None`, the default, is unchanged, bit for bit. No signature changes.
 - **Breaking: `InitialOrbitDetermination.CreateFromObservation_Gauss` reads the observer at its geometric position**
   ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489), Fixed above). The observer's
   position relative to the centre of motion at each observation epoch is read without light time (`Aberration.None`),
@@ -6136,10 +6223,7 @@ not listed.
   the tick, [Time Scales](../reference/time-and-windows.md#time-scales)): a UTC epoch at a coverage bound of a kernel,
   as `str2et` computes it, can be read up to about 1.1 µs outside it and throw SPKINSUFFDATA. Read 2 µs inside the
   bound.
-- **A light-time corrected state in a frame only the library holds, read by CSPICE.** An observer and a target SPICE
-  reads, in TEME, CIRS, TIRS, the frame of a site given by its coordinates or the frame of a managed spacecraft with an
-  attitude record, are read in J2000 and rotated at the epoch of the observation, not at the epoch of the frame's centre as the reference-body path rotates them since #593. **The
-  equatorial coordinates of a light-time corrected state in a non-inertial frame.** `ToEquatorial` of such a state
+- **The equatorial coordinates of a light-time corrected state in a non-inertial frame.** `ToEquatorial` of such a state
   (ITRF93, MOON_ME) rotates it to ICRF at its epoch
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)): 3.05e-6 rad in RA and 1.15e-6 rad in Dec for the Moon from the Earth with LT in MOON_ME; read it in ICRF.
 - **Illumination of a site above the ellipsoid**

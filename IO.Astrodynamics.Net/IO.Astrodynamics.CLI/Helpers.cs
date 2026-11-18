@@ -42,10 +42,12 @@ public class Helpers
     internal static FileSystemInfo KernelsPath(string path) => File.Exists(path) ? new FileInfo(path) : new DirectoryInfo(path);
 
     /// <summary>
-    /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceAPI.IsSiteId"/>, its body's identifier
-    /// times 1000 plus its own, the body a planet or a moon without the Lagrange points), built from the kernels under its
-    /// SPICE name as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/> builds its observer; a celestial
-    /// item; or a spacecraft (a negative identifier) read from its kernels.
+    /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceAPI.IsSiteOfNamedBody"/>, its body's
+    /// identifier times 1000 plus its own, the body a planet or a moon without the Lagrange points that SPICE names), built
+    /// from the kernels under its SPICE name as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/>
+    /// builds its observer; an object of the kernels read by its identifier for one of that form whose body SPICE does not
+    /// name, NOTO (398989) and NEW NORCIA (398990) (#750: before, the site of a body 398, which threw); a celestial item; or
+    /// a spacecraft (a negative identifier) read from its kernels (<see cref="CreateCelestialItem"/>).
     /// </summary>
     /// <param name="objectId">The NAIF identifier.</param>
     /// <param name="epoch">An epoch the kernels of a spacecraft cover: the kernel-backed spacecraft reads its SPK there.</param>
@@ -59,17 +61,24 @@ public class Helpers
     /// </remarks>
     internal static ILocalizable CreateLocalizable(int objectId, in Time epoch)
     {
-        return SpiceAPI.IsSiteId(objectId) ? SpiceAPI.Instance.CreateKernelSite(objectId) : CreateCelestialItem(objectId, epoch);
+        return SpiceAPI.IsSiteOfNamedBody(objectId) ? SpiceAPI.Instance.CreateKernelSite(objectId) : CreateCelestialItem(objectId, epoch);
     }
 
     /// <summary>
     /// A celestial body, or for a negative identifier the kernel-backed spacecraft, which reads its SPK (#542): a managed
-    /// spacecraft has no state, its ephemeris was a NullReferenceException.
+    /// spacecraft has no state, its ephemeris was a NullReferenceException. An identifier of the form of a site
+    /// (<see cref="SpiceAPI.IsSiteId"/>) that reaches it, one whose body SPICE does not name (NOTO, NEW NORCIA), is the
+    /// object of the kernels read by its identifier (#750: before, a <see cref="CelestialBody"/>, which has no frame for it).
     /// </summary>
     /// <param name="objectId">The NAIF identifier.</param>
     /// <param name="epoch">An epoch the SPK of a spacecraft covers, which its constructor reads.</param>
     internal static CelestialItem CreateCelestialItem(int objectId, in Time epoch)
     {
+        if (SpiceAPI.IsSiteId(objectId))
+        {
+            return SpiceAPI.CreateKernelObject(objectId);
+        }
+
         if (int.IsPositive(objectId))
         {
             return new CelestialBody(objectId);
