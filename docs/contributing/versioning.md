@@ -4201,6 +4201,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star` target takes no light time, so only its `+S` corrections move it, by its stellar aberration.
   Migration: pass `Aberration.None` for the former geometric direction of a celestial target; recompile, the
   constructor's signature changed.
+- **A spacecraft or a custom body is about the observer of its initial orbit** ([#747](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/747), Fixed above).
+  `CenterOfMotionId` and `BarycenterOfMotionId` of a `Spacecraft` or a `CelestialBody` built from custom parameters are
+  the observer of its initial orbital parameters and that observer's barycentre (399 and 3 about the Earth), where they
+  were 0 and 0 whatever the orbit; without an initial orbit they stay 0. Migration: none; a caller that read them for
+  such an item gets the centre of its orbit.
 - **NOTO and NEW NORCIA are read by their identifier** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), Fixed above). `SpiceAPI.ReadEphemeris`
   by identifiers from 398989 or 398990, a frame centred on them on the reference-body path, and the CLI's `ephemeris` and
   `sub-point` of them read them from SPICE (`InvalidOperationException` without their SPK) where they threw
