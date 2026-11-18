@@ -1414,7 +1414,7 @@ release are listed under **Known limitations**.
   tick of its ICRF twin and 4.0e-7 s of `gfoclt` on the SPK; the 20 field-of-view dynamics variants on those kernels
   within the 2.4e-6 s of #515 (971.8 s and 232.6 s before); the partial step before an RK7(8) event 1.2e-4 rad from the
   law (7.1e-2 rad before, where the last output sample held; since #539 the change is the opening of the impulse's
-  thrust window, 9.3e-5 rad over a partial step of 34.3 s); reads before, during and after a propagation leave the record and the CK identical. See
+  thrust window, 1.0e-4 rad over a partial step of 35.6 s since #335); reads before, during and after a propagation leave the record and the CK identical. See
   [Spacecraft](../reference/spacecraft.md#attitude-and-kernels); the changes of behaviour are under **Changed**.
 - **The states of a propagated spacecraft across an impulse** ([#540](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/540)).
   The stored states were one set of output states, read by a Lagrange polynomial of the 8 nearest and written as one
@@ -4019,10 +4019,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 **Changed**
 
 - **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
-  ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), decided by S. Guillet,
-  2026-11-18). The equivalent constant-thrust burn of duration dt is placed on [t − f dt, t + (1 − f) dt], t the impulse
-  epoch, f = 1/x + 1/ln(1 − x) for the mass fraction burned x = Δm/m0 (Tsiolkovsky, the engine's Isp and fuel flow, the
-  mass before the burn): the centroid of the acceleration F/(m0 − q τ), which grows as the mass drops, where an impulse
+  ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), proposed after
+  S. Guillet's remark of 2026-11-18 that the acceleration grows during the burn, to be confirmed by S. Guillet). The
+  equivalent constant-thrust burn of duration dt is placed on [t − f dt, t + (1 − f) dt], t the impulse epoch,
+  f = 1/x + 1/ln(1 − x) for the mass fraction burned x = Δm/m0 (Tsiolkovsky, the engine's Isp and fuel flow, the mass
+  before the burn): the centroid of the acceleration F/(m0 − q τ), which grows as the mass drops, where an impulse
   gives the burn's velocity change and, in a field-free space, its displacement after it. f → 1/2 for a small burn,
   0.509 at x = 0.1, 0.557 at 0.5, 2/3 only at x ≈ 0.89. Before 11.0.0 the window opened a fixed 0.666 dt before t, a
   split of no recorded derivation: 1.6 s earlier for a burn of 10 s at x = 0.1, 5.4 s for one of 50 s at x = 0.5, to the

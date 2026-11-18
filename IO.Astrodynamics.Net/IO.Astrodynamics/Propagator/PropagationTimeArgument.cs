@@ -159,11 +159,14 @@ internal abstract class PropagationTimeArgument
     internal abstract Time OutputEpoch(in Time start, int index, TimeSpan step);
 
     /// <summary>
-    /// Whether a propagation whose outputs span <paramref name="outputDuration"/> seconds ends at the end of its window,
-    /// of <paramref name="length"/> seconds, its last output labelled with the end of the window: TDB, never, the
-    /// propagation then runs to the larger of the two; TT, when they differ by less than the drift between TT and the
-    /// labels (<see cref="DriftBound"/> × <paramref name="length"/>), so that a window of a whole number of output steps
-    /// in its own tags ends where the caller ended it.
+    /// Whether a grid of outputs spanning <paramref name="outputDuration"/> seconds misses the end of its window, of
+    /// <paramref name="length"/> seconds, by the drift alone, so that its last output is labelled with the end of the
+    /// window in place of its own: TDB, never; TT, when they differ by less than the drift between TT and the labels
+    /// (<see cref="DriftBound"/> × <paramref name="length"/>), so that a window of a whole number of output steps in its
+    /// own tags ends where the caller ended it. Whatever the time argument, a grid that ends before the window by more
+    /// than that gains the window end as its last output in <c>PropagatorBase.SpanOf</c>
+    /// (#741), its last output then labelled with the end of the window too, and one that overshoots it runs to its last
+    /// output, up to half an output step past the window.
     /// </summary>
     internal abstract bool EndsAtWindowEnd(double length, double outputDuration);
 

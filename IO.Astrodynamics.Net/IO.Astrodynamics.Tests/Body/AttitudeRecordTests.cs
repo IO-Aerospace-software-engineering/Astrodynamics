@@ -764,7 +764,8 @@ public class AttitudeRecordTests
     // 2026-11-02): 1.23e-4 / 1.23e-4 / 1.23e-4 rad, the managed path and the CK alike, the residual of the SLERP between
     // the last output sample (60 s step) and the law's sample 1 µs before the change; held, it was 4.70e-2 rad (the
     // review's probe on the prototype; 7.11e-2 rad on the base). Since #539 the change is the opening of the impulse's thrust
-    // window: 9.29e-5 rad over a partial step of 34.306 s (Linux, 2026-11-05)
+    // window: 9.29e-5 rad over a partial step of 34.306 s (Linux, 2026-11-05); since #335 the window opens at the centroid
+    // fraction of the burn: 9.998e-5 rad over a partial step of 35.579 s (Linux x64, 2026-11-18)
     internal const double PartialStepLaw = 2.5e-4;
 
     /// <summary>
@@ -804,7 +805,7 @@ public class AttitudeRecordTests
         }
 
         double atLead = RotationAngle(run.LawAt(lead.Epoch).Law, v => v.Rotate(lead.Rotation));
-        _output.WriteLine($"MEASURE #529 partial step before the impulse's thrust window at S + {(change - run.Start).TotalSeconds:F6} s ({span:F3} s, the rule {rule:E2} s from it): managed - nadir {managed:E2} rad, CK - nadir {ck:E2} rad, the lead sample - nadir {atLead:E2} rad");
+        _output.WriteLine($"MEASURE #529 partial step before the impulse's thrust window at S + {(change - run.Start).TotalSeconds:F6} s ({span:F3} s, the rule {rule:E3} s from it): managed - nadir {managed:E3} rad, CK - nadir {ck:E3} rad, the lead sample - nadir {atLead:E3} rad");
         Assert.True(managed <= PartialStepLaw, $"managed {managed:E3} rad");
         Assert.True(ck <= PartialStepLaw, $"CK {ck:E3} rad");
         Assert.True(atLead <= LawAtEntries, $"lead {atLead:E3} rad");

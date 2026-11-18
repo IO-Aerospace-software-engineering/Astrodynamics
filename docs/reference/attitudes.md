@@ -220,7 +220,7 @@ velocity, that of the CK, is the rate of the interpolation: 2.3e-5 rad/s from th
 **At a discrete change.** An activation is a discrete change of the record; the attitude of an impulse (its front
 along ΔV) is discrete and holds until the next activation. Before a discrete change, the law in force is sampled once
 more, 1 µs before it, so that it is interpolated up to the change: over the partial step before the opening of an
-impulse's thrust window between outputs it is within the interpolation residual (9.3e-5 rad at 60 s outputs, a span of 34.3 s),
+impulse's thrust window between outputs it is within the interpolation residual (1.0e-4 rad at 60 s outputs, a span of 35.6 s),
 where it was held (7.1e-2 rad before 11.0.0). At an epoch shared within 2 µs, the activation later in the chain holds:
 an attitude chained after an impulse over the law resumed there, an impulse's attitude over a law of zero length. The
 record never holds two entries closer than 2 µs apart but for the lead: about the Earth an activation at the end of a
