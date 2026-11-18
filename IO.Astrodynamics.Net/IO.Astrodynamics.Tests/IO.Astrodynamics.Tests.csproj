@@ -156,6 +156,9 @@
       <None Update="Data\KeplerEquationReference\kepler_equation_reference.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Data\KeplerEquationReference\kepler_periapsis_reference.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Data\ConicStateReference\conic_state_reference.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

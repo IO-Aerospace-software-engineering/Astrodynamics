@@ -4021,6 +4021,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   form lowers. Below e = 0.5 and above e = 2 p and the state are unchanged, bit for bit. The state floors of
   `KeplerEquationTests`, set by this loss at its NaN regression (1.652 of the floor), tighten from 3.4 to 1.9 and 1.8.
 
+- **Kepler's equation near the periapsis at e → 1** ([#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)). Near the periapsis x − e sin x and e sinh x − x
+  differ by about (1 − e) x + x³/6, so the residual of the solver and the reverse direction kept the rounding of
+  e sin x, about ε x, divided by 1 − e: E up to 9.3e5 ulp off at e = 0.999999 (1.4e5 at e = 1.00001, 902 at 0.999,
+  9 to 10 iterations), M = E − e sin E (`StateVector.MeanAnomaly()`, `TrueAnomalyToMeanAnomaly`) up to 1.9e-10 of M,
+  and the states from a mean anomaly within two periapsis radii up to 6.7e-11 of |r|. Both directions now evaluate
+  (1 − e) x + e (x − sin x) and (e − 1) x + e (sinh x − x), x − sin x and sinh x − x by their series to x¹⁹/19! below 1,
+  for 0.5 ≤ e ≤ 2 (decided by S. Guillet, 2026-11-18; the same rewriting as R. H. Gooding and A. W. Odell's EMKEP,
+  Celestial Mechanics 44, 1988, to be verified by S. Guillet): against the root and M* at 60 digits
+  (`tools/kepler_equation/kepler_periapsis_reference.py`, mpmath), E within 1.9 ulp in 6 iterations at most, M within
+  6.4e-16, the states within 9.7e-16 of |r| and the anomaly of the round trip state → elements within 1 ulp (6.2e5
+  before) (`KeplerPeriapsisTests`, red on f70ee32; provisional thresholds, twice the Linux worst). The derivative, the
+  start, the stop and the cap of the solver are unchanged. Below e = 0.5 and above e = 2, where the former forms lose at
+  most a factor 2, every result is unchanged, bit for bit.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -5919,6 +5933,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   3.6e-16 in velocity, another draw of one rounding of p (its bound 7.2e-16, provisional). No migration: a caller that
   compared such states bit for bit with an earlier version compares them within a few ulps.
 
+- **Breaking: the anomalies with 0.5 ≤ e ≤ 2 move by rounding** ([#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484), Fixed above). E and ν from M
+  (`EccentricAnomaly()`, `TrueAnomaly()`, `AtEpoch`, `ToStateVector(Time)`, the start of a propagation from elements,
+  `Spacecraft.GetGeometricStateRelativeTo` before a propagation), and M from E (`StateVector.MeanAnomaly()`, so
+  `ToKeplerianElements()` of a state, `MeanAnomaly(ν)`, `ToStateVector(ν)`, `EquinoctialElements.MeanAnomaly()`,
+  `TimeToRadius`, `EpochAtMeanAnomaly`) move by an ulp or so for these eccentricities, by up to 9.3e5 ulp near the
+  periapsis at e → 1. Below e = 0.5 and above e = 2 nothing moves. No migration.
+
 **Deprecated**
 
 - **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
@@ -6046,9 +6067,6 @@ not listed.
   a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
 - **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
   leap second throws `CdmParseException`.
-- **Precision near e = 1** ([#484](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/484)).
-  Near the periapsis Kepler's equation stops at its cancellation floor: a state from a mean anomaly up to 1.1e-10 of |r|
-  off at e = 0.999999, and `StateVector.MeanAnomaly()` up to 1.9e-10 of M.
 - **Angles brought into [0, 2π)**
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and

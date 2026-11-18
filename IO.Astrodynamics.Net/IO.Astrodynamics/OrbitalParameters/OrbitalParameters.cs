@@ -519,7 +519,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// D = tan(ν/2) for e = 1. It must match <paramref name="eccentricity"/>, whose value alone chooses the equation; within
     /// 1e-6 of e = 1, where <see cref="EccentricAnomaly(double)"/> gives Barker's D on either side, use
     /// <see cref="MeanAnomaly(double)"/> (#478).</param>
-    /// <returns>The mean anomaly in radians.</returns>
+    /// <returns>The mean anomaly in radians: E − e sin E evaluated as (1 − e) E + e (E − sin E) for 0.5 ≤ e &lt; 1, and
+    /// e sinh H − H as (e − 1) H + e (sinh H − H) for 1 &lt; e ≤ 2, which do not cancel near the periapsis at e → 1 (#484;
+    /// before 11.0.0, up to 1.9e-10 of M off at e = 0.999999); the former forms elsewhere, bit for bit.</returns>
     public static double TrueAnomalyToMeanAnomaly(double trueAnomaly, double eccentricity, double eccentricAnomaly)
     {
         if (trueAnomaly < 0.0)
@@ -536,12 +538,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
                 return Constants.PI;
             }
 
-            var res = (eccentricAnomaly - eccentricity * System.Math.Sin(eccentricAnomaly)) % Constants._2PI;
+            // Kepler's equation in the forms that do not cancel near the periapsis at e → 1 (#484)
+            var res = KeplerEquation.EllipticMeanAnomaly(eccentricAnomaly, eccentricity) % Constants._2PI;
             return res < 0 ? res + Constants._2PI : res;
         }
         else if (eccentricity > 1)
         {
-            return eccentricity * System.Math.Sinh(eccentricAnomaly) - eccentricAnomaly;
+            return KeplerEquation.HyperbolicMeanAnomaly(eccentricAnomaly, eccentricity);
         }
         else
         {

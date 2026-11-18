@@ -284,16 +284,19 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <summary>
         /// Calculates the mean anomaly.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Kepler's equation of the eccentric anomaly, in the forms that do not cancel near the periapsis at
+        /// e → 1 for 0.5 ≤ e ≤ 2 (#484; before 11.0.0, up to 1.9e-10 of M off at e = 0.999999); Barker's within 1e-6 of
+        /// e = 1.</returns>
         /// <exception cref="InvalidOperationException">The state is at the centre (r = 0), where its eccentricity vector is
         /// zero and its anomaly counts from a node it does not have, or not finite (#687).</exception>
         public override double MeanAnomaly()
         {
             double ea = EccentricAnomaly(TrueAnomaly());
 
+            // Kepler's equation in the forms that do not cancel near the periapsis at e → 1 (#484)
             if (IsElliptical())
             {
-                _meanAnomaly ??= ea - Eccentricity() * System.Math.Sin(ea);
+                _meanAnomaly ??= KeplerEquation.EllipticMeanAnomaly(ea, Eccentricity());
             }
             else if (IsParabolic())
             {
@@ -301,7 +304,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
             else if (IsHyperbolic())
             {
-                _meanAnomaly ??= Eccentricity() * System.Math.Sinh(ea) - ea;
+                _meanAnomaly ??= KeplerEquation.HyperbolicMeanAnomaly(ea, Eccentricity());
             }
 
             // No conic has a non-finite eccentricity: the state is not finite and has no elements (#687; the message of an
