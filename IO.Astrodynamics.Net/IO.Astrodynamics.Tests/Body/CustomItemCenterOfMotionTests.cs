@@ -13,8 +13,9 @@ namespace IO.Astrodynamics.Tests.Body;
 /// #747: the centre and the barycentre of motion of an item built from custom parameters (a <see cref="Spacecraft"/>, a
 /// custom <see cref="CelestialBody"/>) are the observer of its initial orbital parameters and that observer's barycentre
 /// (the observer itself when it is a barycentre), as the natural-body constructors give them; 0 and 0 without an initial
-/// orbit. Before the fix the constructor of an item from custom parameters never set them: both were 0, the solar system
-/// barycentre, whatever the orbit (measured on f70ee32: a spacecraft about the Earth, 0 and 0).
+/// orbit, set again when <see cref="Spacecraft.SetInitialOrbitalParameters"/> replaces the orbit. Before the fix the
+/// constructor of an item from custom parameters never set them: both were 0, the solar system barycentre, whatever the
+/// orbit (measured on f70ee32: a spacecraft about the Earth, 0 and 0).
 /// </summary>
 /// <remarks>
 /// The reference is SPICE's: the barycentre of a natural observer is the <c>BarycenterOfMotionId</c> of the record that
@@ -116,6 +117,41 @@ public class CustomItemCenterOfMotionTests
         Assert.Equal(SpiceBarycentre(399), aboutEarth.BarycenterOfMotionId);
         Assert.Equal(301, aboutMoon.CenterOfMotionId);
         Assert.Equal(SpiceBarycentre(301), aboutMoon.BarycenterOfMotionId);
+    }
+
+    [Theory]
+    [InlineData(399, 301)]
+    [InlineData(301, 399)]
+    [InlineData(399, 499)]
+    [InlineData(399, 3)]
+    [InlineData(301, 10)]
+    public void Spacecraft_GivenANewOrbit_IsAboutItsObserver(int firstObserverId, int newObserverId)
+    {
+        // Arrange: a spacecraft about the first observer
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, 1000.0, new Clock("S747", 65536), OrbitAbout(Observer(firstObserverId), 1.0e9));
+
+        // Act: its initial orbit moved to another centre
+        spacecraft.SetInitialOrbitalParameters(OrbitAbout(Observer(newObserverId), 1.0e9));
+
+        // Assert: the centre and the barycentre follow the new observer
+        Assert.Equal(newObserverId, spacecraft.CenterOfMotionId);
+        Assert.Equal(SpiceBarycentre(newObserverId), spacecraft.BarycenterOfMotionId);
+    }
+
+    [Fact]
+    public void Spacecraft_WithoutOrbit_GivenOne_IsAboutItsObserver()
+    {
+        // Arrange: a spacecraft built without an orbit, about nothing
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, 1000.0, new Clock("S747", 65536), null);
+        Assert.Equal(0, spacecraft.CenterOfMotionId);
+        Assert.Equal(0, spacecraft.BarycenterOfMotionId);
+
+        // Act
+        spacecraft.SetInitialOrbitalParameters(OrbitAbout(new CelestialBody(301)));
+
+        // Assert
+        Assert.Equal(301, spacecraft.CenterOfMotionId);
+        Assert.Equal(SpiceBarycentre(301), spacecraft.BarycenterOfMotionId);
     }
 
     [Fact]

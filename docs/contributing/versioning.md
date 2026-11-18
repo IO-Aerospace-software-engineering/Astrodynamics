@@ -3918,10 +3918,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   spacecraft about the Earth, 0 and 0, measured on f70ee32), while the natural-body constructors give the Moon 399 and
   3. They now are the observer of the initial orbital parameters and that observer's barycentre (the observer itself
   when it is a barycentre, that of its body for a site, that of a spacecraft for a spacecraft about it), 0 and 0
-  without an initial orbit, as before (`CustomItemCenterOfMotionTests`: a spacecraft and a custom body about the Earth,
-  the Moon, the Sun, the Earth-Moon and the Mars barycentres and the solar system barycentre, the static Earth, a
-  spacecraft about a spacecraft, LRO from its kernels about the Earth and the Moon, the barycentre against the record of
-  `SpiceAPI.GetCelestialBodyInfo`; red on f70ee32). No library code reads the two values of such an item.
+  without an initial orbit, as before, and `Spacecraft.SetInitialOrbitalParameters` sets them again from the new orbit
+  (`CustomItemCenterOfMotionTests`: a spacecraft and a custom body about the Earth, the Moon, the Sun, the Earth-Moon
+  and the Mars barycentres and the solar system barycentre, the static Earth, a spacecraft about a spacecraft, LRO from
+  its kernels about the Earth and the Moon, a spacecraft moved from the Earth to the Moon, Mars, the Earth-Moon
+  barycentre and back, from the Moon to the Sun, and one built without an orbit and given one, the barycentre against
+  the record of `SpiceAPI.GetCelestialBodyInfo`; red on f70ee32). No library code reads the two values of such an item.
 - **No CDM the library wrote validated against the SANA schema** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)). `CdmWriter` put the root,
   `cdm` or the `ndm` that wraps it, in the namespace `urn:ccsds:schema:ndmxml` with every other element, so the SANA
   NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace (no `targetNamespace`), rejected every
@@ -4204,8 +4206,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **A spacecraft or a custom body is about the observer of its initial orbit** ([#747](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/747), Fixed above).
   `CenterOfMotionId` and `BarycenterOfMotionId` of a `Spacecraft` or a `CelestialBody` built from custom parameters are
   the observer of its initial orbital parameters and that observer's barycentre (399 and 3 about the Earth), where they
-  were 0 and 0 whatever the orbit; without an initial orbit they stay 0. Migration: none; a caller that read them for
-  such an item gets the centre of its orbit.
+  were 0 and 0 whatever the orbit; without an initial orbit they stay 0, and `Spacecraft.SetInitialOrbitalParameters`
+  sets them from the new orbit. Migration: none; a caller that read them for such an item gets the centre of its orbit.
 - **NOTO and NEW NORCIA are read by their identifier** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), Fixed above). `SpiceAPI.ReadEphemeris`
   by identifiers from 398989 or 398990, a frame centred on them on the reference-body path, and the CLI's `ephemeris` and
   `sub-point` of them read them from SPICE (`InvalidOperationException` without their SPK) where they threw

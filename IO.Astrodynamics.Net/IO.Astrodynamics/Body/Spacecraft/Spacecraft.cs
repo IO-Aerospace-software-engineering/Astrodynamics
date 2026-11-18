@@ -614,7 +614,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Set the initial orbital parameter
+        /// Set the initial orbital parameter. The spacecraft is then about its observer: <see cref="CelestialItem.CenterOfMotionId"/>
+        /// and <see cref="CelestialItem.BarycenterOfMotionId"/> become those of the new orbit, as the constructor gives them
+        /// (#747).
         /// </summary>
         /// <param name="orbitalParameters"></param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -624,6 +626,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             (InitialOrbitalParameters?.Observer as CelestialBody)?.RemoveSatellite(this);
 
             InitialOrbitalParameters = orbitalParameters;
+            SetCustomCenterOfMotion(orbitalParameters);
             (InitialOrbitalParameters?.Observer as CelestialBody)?.AddSatellite(this);
         }
 

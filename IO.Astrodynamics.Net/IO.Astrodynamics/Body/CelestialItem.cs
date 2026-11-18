@@ -354,14 +354,16 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// Gets the barycenter of motion identifier: for a natural body the barycentre of its system (0 for the Sun, a
     /// barycentre or an asteroid); for an item built from custom parameters (a <see cref="Spacecraft.Spacecraft"/>, a
     /// custom <see cref="CelestialBody"/>) the barycentre of the observer of its initial orbital parameters, the observer
-    /// itself when it is a barycentre, 0 without an initial orbit (#747: before, 0 whatever the orbit).
+    /// itself when it is a barycentre, 0 without an initial orbit, set again by
+    /// <see cref="Spacecraft.Spacecraft.SetInitialOrbitalParameters"/> (#747: before, 0 whatever the orbit).
     /// </summary>
     public int BarycenterOfMotionId { get; protected set; }
 
     /// <summary>
     /// Gets the center of motion identifier: for a natural body the body it orbits (10 for a planet, its planet for a
     /// moon); for an item built from custom parameters the observer of its initial orbital parameters, 0 without an
-    /// initial orbit (#747: before, 0 whatever the orbit).
+    /// initial orbit, set again by <see cref="Spacecraft.Spacecraft.SetInitialOrbitalParameters"/> (#747: before, 0
+    /// whatever the orbit).
     /// </summary>
     public int CenterOfMotionId { get; protected set; }
 
@@ -477,6 +479,16 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         InitialOrbitalParameters = initialOrbitalParameters;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
         // #747: about the observer of the initial orbit, as the natural-body constructors give it (before, 0 and 0)
+        SetCustomCenterOfMotion(initialOrbitalParameters);
+    }
+
+    /// <summary>
+    /// Sets the centre and the barycentre of motion of an item built from custom parameters from its initial orbital
+    /// parameters (#747): at construction, and again whenever its initial orbit is replaced
+    /// (<see cref="Spacecraft.Spacecraft.SetInitialOrbitalParameters"/>).
+    /// </summary>
+    private protected void SetCustomCenterOfMotion(OrbitalParameters.OrbitalParameters initialOrbitalParameters)
+    {
         CenterOfMotionId = CustomCenterOfMotionId(initialOrbitalParameters);
         BarycenterOfMotionId = CustomBarycenterOfMotionId(initialOrbitalParameters);
     }
