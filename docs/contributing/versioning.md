@@ -4081,10 +4081,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   penumbra 2.3e-9 to 6.7e-8 (2.3e-9 to 1.1e-8 on a85098d), Ψ_Cr over the arc 4.1e-6 to 4.6e-5 (6.2e-6 to 5.6e-5 on
   a85098d, 9 of 11 above the former record). Two records of the test suite that compare propagations at two tolerances
   were drawn again on every platform and set again at twice the worst over Linux x64, Windows x64 and macOS arm64 (CI
-  run 44225490669), their distributions unchanged over draws one ulp apart: `AvoidanceFallbackTests` in RK7(8), the
-  option at 1e-13 against its reference at 1e-14, state 9.26e-5 m, miss 7.56e-5 m and Pc 7.12e-7 on Windows x64
+  runs 44225490669 and 44237671637), their distributions unchanged over draws one ulp apart: `AvoidanceFallbackTests` in
+  RK7(8), the option at 1e-13 against its reference at 1e-14, state 9.40e-5 m, miss 7.73e-5 m and Pc 7.90e-7 on Windows x64
   (on main a85098d at worst 6.36e-5 m, 5.21e-5 m and 4.98e-7, macOS arm64), thresholds 1.9e-4 m, 1.6e-4 m and
-  1.5e-6 (8.3e-5 m, 6.8e-5 m and 6.4e-7 before; over 81 draws on Linux x64, 4.9e-7 to 1.02e-4 m after and 7.3e-7 to
+  1.6e-6 (8.3e-5 m, 6.8e-5 m and 6.4e-7 before; over 81 draws on Linux x64, 4.9e-7 to 1.02e-4 m after and 7.3e-7 to
   9.62e-5 m before); `MinimumStepNoiseTests`, Φ at 1e-13 against Φ at 1e-14 on the steps of the state, 1.34e-10 on
   Windows x64 (4.95e-11 on main a85098d at worst), threshold 2.7e-10 (9.1e-11 before; over 40 draws on Linux x64,
   2.9e-12 to 2.30e-10 after and 4.9e-12 to 6.35e-10 before), and against central differences 1.14e-7, threshold 2.3e-7

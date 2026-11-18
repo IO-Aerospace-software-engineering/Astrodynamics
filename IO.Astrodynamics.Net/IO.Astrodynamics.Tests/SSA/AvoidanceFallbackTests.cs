@@ -700,11 +700,11 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
 
         // Twice the worst departure over Linux x64, Windows x64 and macOS arm64, rounded up at the second significant digit
         // (decision of S. Guillet, 2026-10-21; the integration error of the option at 1e-13 depends on the platform, its
-        // steps parting differently with the floating point of each). Measured by CI run 44225490669 (Linux / Windows /
-        // macOS arm64):
-        // - RK7(8), the option at 1e-13 against its reference at 1e-14: state 4.08e-5 / 9.26e-5 / 2.19e-5 m, miss distance
-        //   3.33e-5 / 7.56e-5 / 1.79e-5 m, Pc 3.13e-7 / 7.12e-7 / 1.75e-7 relative (on Windows the first option of each
-        //   case alone, the 8.3e-5 m before stopping the five RK7(8) cases there). The exact SLERP of the orientation cache
+        // steps parting differently with the floating point of each). Measured by CI runs 44225490669 and 44237671637
+        // (Linux / Windows / macOS arm64):
+        // - RK7(8), the option at 1e-13 against its reference at 1e-14: state 4.08e-5 / 9.40e-5 / 2.19e-5 m, miss distance
+        //   3.33e-5 / 7.73e-5 / 1.79e-5 m, Pc 3.13e-7 / 7.90e-7 / 1.75e-7 relative (the 8.3e-5 m before stopped the five
+        //   RK7(8) cases at their first option on Windows in run 44225490669; every option of run 44237671637). The exact SLERP of the orientation cache
         //   (#561), whose co-rotating frames the force model reads, redrew the step sequences of every platform: on main
         //   a85098d (run 44055569759) state 4.42e-5 / 2.20e-5 / 6.36e-5 m, miss 3.63e-5 / 1.80e-5 / 5.21e-5 m, Pc 3.67e-7 /
         //   1.70e-7 / 4.98e-7, thresholds 8.3e-5 m, 6.8e-5 m and 6.4e-7. A redraw, not a loss of accuracy: over 81 draws one
@@ -719,7 +719,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         // Before: RK7(8) 5e-5 m, 4e-5 m and 3e-7, set on Linux alone (and first 1e-5 m, 1e-5 m and 1e-7 against references at
         // 1e-13, which measured how close the steps of two propagations at one tolerance fall); Velocity-Verlet 4e-4 m,
         // 3e-4 m and 3e-6
-        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (1.9e-4, 1.6e-4, 1.5e-6) : (4.1e-4, 3.8e-4, 4.4e-6);
+        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (1.9e-4, 1.6e-4, 1.6e-6) : (4.1e-4, 3.8e-4, 4.4e-6);
         Assert.True(tcaError < 1e-5, $"{tcaError:E2} s");
         Assert.True(stateError < stateThreshold, $"{stateError:E2} m");
         Assert.True(missError < missThreshold, $"{missError:E2} m");
