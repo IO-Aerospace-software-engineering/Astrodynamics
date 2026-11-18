@@ -3295,6 +3295,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SpiceApiTest.ReadOrientation_OfACkWithOrWithoutAngularVelocity_IsTheCkgpPointing`, within 3.2e-16 rad, the CK with
   rates (0, 0, 1e-3) rad/s, twice the Linux worst, Validation; CI run 43974478027). The CKs the library writes carry
   their rates and read as before, bit for bit.
+- **A CK segment without angular velocity lost to a lower-priority one with it** ([#724](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/724), found during #719).
+  Since #714, `ReadOrientationProxy` read `ckgpav_c` and fell back to `ckgp_c` only when it found nothing; `ckgpav_c`
+  skips a segment without angular velocity (`ckbsr.c`: with angular velocity needed, a segment whose ICD(4) is 0 is no
+  candidate), so that where a higher-priority segment without rates (a CK loaded last) and a lower-priority one with
+  rates covered an epoch, `SpiceAPI.ReadOrientation` returned the lower-priority segment's pointing and rate where
+  `ckgp_c` returns the higher-priority one: on two type-3 CKs, about z at 1e-3 rad/s with rates over [0, 1000] s and
+  about x at 2e-3 rad/s without rates over [300, 700] s loaded last, 1.539 rad from `ckgp_c`, and, at 299.5 s and 700.5
+  s within the 1 s tolerance of the CK without rates, a record 0.5 s from `ckgp_c`'s (C++, measured on f70ee32). The
+  read now follows the segment `ckgp_c` reads, found by `ckgp_c`'s own search (`ckbss_`, `cksns_`, `ckpfs_`, the
+  angular velocity flag of its descriptor): its pointing with `ckgpav_c`'s rate when that segment holds one
+  (`ckgpav_c` then finds it, a CK with rates everywhere read as before, bit for bit), a zero angular velocity when it
+  holds none, never a lower-priority segment's pointing or rate (decided by S. Guillet, 2026-11-18; the P/Invoke
+  signature is unchanged). C++ `API.ReadOrientationProxyReadsAHigherPrioritySegmentWithoutAngularVelocity` and
+  `...WithAngularVelocity` (each record `ckgp_c`'s C-matrix and epoch, 0 rad and 0 s, and within 6.7e-16 rad of the
+  closed form, twice the Linux worst, provisional; Linux and macOS arm64); `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority`
+  on the committed kernels of `tools/ck_priority_reference` and the `ckgp_c` reads it writes (within 1.2e-15 rad of
+  them and of the closed form, twice the Linux worst, provisional, every platform) and
+  `SpiceApiTest.ReadOrientation_InAnotherFrame_FollowsTheCkSegmentPriority` in ECLIPJ2000 (within 5.0e-16 rad of
+  `ckgp_c`, `ckgpav_c`'s rate bit for bit, Validation). The search is a second pass over the segments per epoch; the
+  window reads of `SpiceApiTest` (6001 to 12001 epochs) took 212 to 325 ms, 249 to 348 ms on the base.
 - **The position of a star depended on the time frame of its epoch** ([#709](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/709)). `Star.GetEquatorialCoordinates`,
   `GetRightAscensionSigma` and `GetDeclinationSigma` took dt from the calendars of the catalog epoch and of the epoch,
   each in its own time frame, so that the same instant gave two positions (relative to the epoch in TDB: 2.299e-7 in UTC,
@@ -4386,6 +4406,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   reporting proxy that succeeds. `SpiceAPI.TransformFrame` throws the same `InvalidOperationException` on both, its
   message now SPICE's. Migration (native callers): test the rotation for NaN, or read `GetLastErrorProxy()`, where the
   zero quaternion was tested.
+- **Breaking: `SpiceAPI.ReadOrientation` reads the CK segment of highest priority** ([#724](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/724), Fixed above; decided by S. Guillet, 2026-11-18).
+  Where a segment without angular velocity has the higher priority at an epoch (a CK without rates loaded after one with
+  rates), the record is its pointing with a zero angular velocity, where it was the pointing and the rate of the
+  lower-priority segment with rates; the record of an epoch within the tolerance of that segment is its record (its
+  epoch the record's). The same holds for `ReadOrientationProxy` and for the CLI's orientation of a spacecraft. A CK
+  holding rates everywhere, as the library writes them, reads as before, bit for bit. Migration: a caller that needs the
+  angular velocity loads the CK that carries it last, or one CK with rates over the whole span.
 - **Breaking: an instrument checks its field of view when it is built** ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707)). The constructor of `Instrument`, so
   `AddCircularInstrument`, `AddEllipticalInstrument`, `AddRectangularInstrument` and any subclass, throws
   `ArgumentException` naming the parameter for a boresight or a reference vector with a component that is not finite or
@@ -4768,7 +4795,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   for the former result.
 - **Unchanged: `SpiceAPI.ReadOrientation` and `SpiceAPI.WriteOrientation`.** They stay the C-matrix pair of `ckgpav_c`
   and `ckw03_c`, the rotation from the reference frame to the spacecraft frame with the angular velocity of the
-  spacecraft relative to the reference frame, in it; their documentation now says so. On a CK written by 11.0.0,
+  spacecraft relative to the reference frame, in it; their documentation now says so. (The segment read where several cover an epoch is
+  that of highest priority since #724, the Changed entry above.) On a CK written by 11.0.0,
   `ReadOrientation` returns the C-matrix of the attitude, with a non-zero angular velocity.
 - **A `StateVector` read at its own epoch is the state itself.** `ToStateVector(epoch)` (and `ToStateVector(trueAnomaly)`
   when it lands on the epoch) at the instant of the state's epoch, in any time frame, returns the state, position,

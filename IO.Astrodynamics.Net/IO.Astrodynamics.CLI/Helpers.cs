@@ -84,7 +84,8 @@ public class Helpers
     /// </summary>
     /// <remarks>
     /// A spacecraft is read by its NAIF identifier alone, as the CLI names it: the CK of its structure (the identifier
-    /// times 1000) through its clock kernel, by <c>ckgpav_c</c> with no tolerance (<see cref="SpiceAPI.ReadOrientation"/>),
+    /// times 1000) through its clock kernel, with no tolerance (<see cref="SpiceAPI.ReadOrientation"/>: the CK segment of
+    /// highest priority, <c>ckgp_c</c>'s, with <c>ckgpav_c</c>'s rate when it holds one, #724),
     /// the C-matrix from <paramref name="referenceFrame"/> to the spacecraft with the angular velocity of the spacecraft
     /// relative to <paramref name="referenceFrame"/>, in it: the orientation <see cref="Spacecraft.GetOrientation"/>
     /// gives. A kernel-backed spacecraft would need the name its frame kernel gives it, which the identifier does not

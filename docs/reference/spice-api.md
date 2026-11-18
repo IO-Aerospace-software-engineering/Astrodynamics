@@ -194,6 +194,17 @@ which `ckgpav_c` skips with no error ("Segments containing only pointing data wi
 ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the read threw "No
 orientation found"). The CKs the library writes carry their rates.
 
+Where several segments cover an epoch, each record is that of the segment `ckgp_c` reads: the one of highest priority
+(the CK loaded last, and in a file its last segment) that gives a pointing within the tolerance. Its angular velocity is
+the one `ckgpav_c` gives when that segment holds angular velocity (`ckgpav_c` then finds the same segment: its
+candidates are `ckgp_c`'s that hold rates, in the same order), and zero when it holds none; the pointing or the rate of
+a lower-priority segment is never returned (decided by S. Guillet, 2026-11-18). Before
+[#724](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/724), `ckgpav_c` was read first, so
+that a segment without rates loaded over one with rates gave the record of the one with rates: 1.54 rad from `ckgp_c`'s
+pointing on two CKs as those of `tools/ck_priority_reference` (C++ `API.ReadOrientationProxyReadsAHigherPrioritySegmentWithoutAngularVelocity`),
+and, at an epoch within the tolerance of the higher-priority segment, a record 0.5 s from the one `ckgp_c` takes. A CK holding rates
+everywhere reads as before, bit for bit.
+
 `WriteOrientation` writes its records unchanged, in one interval of one segment tagged with the frame of the first
 record: every record carries the same frame (another frame throws `ArgumentException` before the native call, which
 ended the process before 11.0.0, #560), in increasing order of their encoded SCLK, and the spacecraft clock kernel

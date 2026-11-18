@@ -1831,6 +1831,11 @@ public class SpiceAPI
     ///     <see cref="Body.Spacecraft.Spacecraft.GetOrientation"/>. A record read from a segment without angular velocity
     ///     (a type-1 CK, or a type-2 or type-3 CK written without rates) has a zero angular velocity: <c>ckgpav_c</c> skips
     ///     such a segment, and its pointing is read by <c>ckgp_c</c> (#714: before, the call threw "No orientation found").
+    ///     Each record is that of the segment <c>ckgp_c</c> reads, the one of highest priority (the CK loaded last, the last
+    ///     segment of a file) that gives a pointing within the tolerance, with <c>ckgpav_c</c>'s angular velocity when that
+    ///     segment holds one and a zero angular velocity when it holds none, never the pointing or the rate of a
+    ///     lower-priority segment (#724, decided by S. Guillet, 2026-11-18: before, a segment without rates loaded over one
+    ///     with rates gave the record of the one with rates).
     /// </returns>
     /// <remarks>
     ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,
