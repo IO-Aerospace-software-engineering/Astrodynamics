@@ -414,7 +414,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         // Barker's equation M = D + D³/3, solved in closed form: with D = 2 sinh θ, D + D³/3 = (2/3) sinh 3θ, so
         // θ = asinh(3M/2) / 3 (#368). The cubic has a single real root.
-        return 2.0 * System.Math.Sinh(System.Math.Asinh(1.5 * MeanAnomaly()) / 3.0);
+        return BarkerAnomaly(MeanAnomaly());
     }
 
     /// <summary>
@@ -585,8 +585,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the conic of a finite semi-major axis has its own mean
     /// motion, √(μ/|a|³), which this returns since 11.0.0 (#459, option 1, decided by S. Guillet, 2026-11-17; before,
     /// Barker's, 2e9 times larger at |e − 1| = 5e-7). The two-body motion of the band (<see cref="AtEpoch"/>,
-    /// <see cref="EpochAtMeanAnomaly"/>, <see cref="TimeToRadius"/>) still advances Barker's anomaly at Barker's
-    /// rate.</remarks>
+    /// <see cref="EpochAtMeanAnomaly"/>, <see cref="TimeToRadius"/>) is the conic's in universal variables, which no mean
+    /// motion describes, and at e = 1 Barker's (#753; before 11.0.0, Barker's anomaly at Barker's rate over the whole
+    /// band).</remarks>
     public double MeanMotion(double orbitingBodyMass = 0.0)
     {
         if (_meanMotion.HasValue)
@@ -623,11 +624,61 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
 
     /// <summary>
-    /// The rate of <see cref="MeanAnomaly()"/> in the two-body motion: Barker's √(μ/(2q³)) within 1e-6 of e = 1, where the
-    /// mean anomaly is Barker's on both sides of e = 1 (#459, option 1: Barker's anomaly kept for the motion, well
-    /// conditioned there), <see cref="MeanMotion"/> elsewhere, cached mean motion of mean elements included.
+    /// The rate of <see cref="MeanAnomaly()"/> in the two-body motion: Barker's √(μ/(2q³)) at e = 1 exactly (a parabola,
+    /// whose mean anomaly is Barker's), <see cref="MeanMotion"/> outside the band |e − 1| &lt; 1e-6, cached mean motion of
+    /// mean elements included. Elsewhere in the band the motion is that of the conic in universal variables
+    /// (<see cref="MotionAfter"/>, #753), which no rate describes.
     /// </summary>
     private double MeanAnomalyRate() => IsParabolic() ? BarkerMeanMotion() : MeanMotion();
+
+    /// <summary>
+    /// Whether the two-body motion takes the universal variables of the conic (#753): within 1e-6 of e = 1 but at e = 1
+    /// exactly, where Barker's law is the conic's motion and is kept, bit for bit.
+    /// </summary>
+    private bool MovesInUniversalVariables() => IsParabolic() && Eccentricity() != 1.0;
+
+    /// <summary>
+    /// The two-body motion of the mean anomaly over <paramref name="elapsed"/> seconds of the dynamical time of the
+    /// observer: M + n Δt outside the band |e − 1| &lt; 1e-6 and at e = 1 (Barker's rate), bit for bit as before 11.0.0;
+    /// elsewhere in the band the exact motion of the conic of e and q, in universal variables from the periapsis
+    /// (<see cref="UniversalKepler"/>, #753, decided by S. Guillet, 2026-11-18), its true anomaly at the end with Barker's
+    /// mean anomaly D + D³/3 of it, D = tan(ν/2), the anomalies of the band (#459).
+    /// </summary>
+    /// <remarks>Before 11.0.0 Barker's anomaly moved at Barker's rate √(μ/(2q³)) over the whole band: 0.088 to 0.16 m from
+    /// the exact motion of the conic at its edges after 600 s, 0.54 m from the periapsis.</remarks>
+    private (double MeanAnomaly, double? TrueAnomaly) MotionAfter(double meanAnomaly, double elapsed)
+    {
+        if (!MovesInUniversalVariables() || elapsed == 0.0)
+        {
+            return (meanAnomaly + MeanAnomalyRate() * elapsed, null);
+        }
+
+        double e = Eccentricity();
+        double q = PerigeeRadius();
+        double gm = Observer.GM;
+        double time = TimeFromPeriapsis(EccentricAnomaly()) + elapsed;
+        double universal = UniversalKepler.Solve(time, q, e, gm);
+        var (barker, trueAnomaly) = UniversalKepler.Anomalies(universal, q, e);
+        trueAnomaly %= Constants._2PI;
+        if (trueAnomaly < 0.0)
+        {
+            trueAnomaly += Constants._2PI;
+        }
+
+        return (barker + System.Math.Pow(barker, 3) / 3.0, trueAnomaly);
+    }
+
+    /// <summary>The time of the conic of the band from its periapsis to Barker's anomaly D, s (#753).</summary>
+    private double TimeFromPeriapsis(double barkerAnomaly)
+    {
+        double e = Eccentricity();
+        double q = PerigeeRadius();
+        return UniversalKepler.TimeFromPeriapsis(UniversalKepler.FromBarkerAnomaly(barkerAnomaly, q, e), q, e, Observer.GM);
+    }
+
+    /// <summary>Barker's anomaly D of Barker's mean anomaly D + D³/3, in closed form (#368).</summary>
+    private static double BarkerAnomaly(double meanAnomaly) =>
+        2.0 * System.Math.Sinh(System.Math.Asinh(1.5 * meanAnomaly) / 3.0);
 
 
     /// <summary>
@@ -795,6 +846,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// vector is zero, or a non-finite one has no orbit plane to count from (#687).</exception>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
+        // In the band but at e = 1, the conic's time between Barker's anomalies of the two mean anomalies (#753)
+        if (MovesInUniversalVariables())
+        {
+            return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch,
+                TimeFromPeriapsis(BarkerAnomaly(meanAnomaly)) - TimeFromPeriapsis(EccentricAnomaly()));
+        }
+
         var res = meanAnomaly - MeanAnomaly();
 
         // The next passage on an ellipse, whatever the turn of either anomaly; an open orbit passes once (#474)
@@ -974,6 +1032,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// second: <see cref="Time"/> + <see cref="TimeSpan"/> adds calendar seconds to a UTC time, so across a leap second
     /// <c>Epoch + Period()</c> is a period and one second of TT later.
     /// <para>
+    /// Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) but at e = 1 exactly the motion is the conic's of e and q in
+    /// universal variables from the periapsis (Stumpff functions, the form of CSPICE's <c>prop2b_c</c>; #753, decided by
+    /// S. Guillet, 2026-11-18): the elements at <paramref name="epoch"/> carry the true anomaly of that motion and Barker's
+    /// mean anomaly of it, the anomalies of the band. Against the exact conic at 60 digits, within 4.2e-15 of |r| over
+    /// |e − 1| from 1e-12 to 9.9e-7, a day included; before 11.0.0, Barker's anomaly at Barker's rate, 0.16 m off after 600 s
+    /// at the edges of the band and 3.1 km after a day. At e = 1 Barker's law, and outside the band Kepler's equation, bit
+    /// for bit as before.
+    /// </para>
+    /// <para>
     /// The elements keep their <see cref="ElementsType"/> (#463; before 11.0.0 mean elements came back labelled
     /// osculating, which let <see cref="ToStateVector()"/> take mean numbers for a state). Of mean elements, the mean
     /// anomaly advances at the two-body mean motion only, without the secular rates of the node and of the periapsis of
@@ -986,12 +1053,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         var ke = this.ToKeplerianElements();
         double elapsed = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanAnomalyRate();
+        var (meanAnomaly, trueAnomaly) = MotionAfter(ke.MeanAnomaly(), elapsed);
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it. Mean elements stay mean, so that the guard of
-        // ToStateVector holds (#463)
+        // ToStateVector holds (#463). In the band the true anomaly of the conic's motion is given with Barker's mean
+        // anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
-            perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
+            trueAnomaly: trueAnomaly, perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
     }
 
     /// <summary>
@@ -1092,11 +1160,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     public virtual KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
-        double m = MeanAnomaly() + MeanAnomalyRate() * ellapsedTime;
+        var (m, trueAnomaly) = MotionAfter(MeanAnomaly(), ellapsedTime);
 
-        // An angle on an ellipse only (#368); KeplerianElements reduces it
+        // An angle on an ellipse only (#368); KeplerianElements reduces it. In the band, the true anomaly of the conic's
+        // motion with Barker's mean anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,
-            perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
+            trueAnomaly: trueAnomaly, perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
     }
 
     /// <summary>
@@ -1263,9 +1332,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// open orbit its one outbound crossing, an epoch before <see cref="Epoch"/> when the orbit is already past the
     /// radius; on a circular orbit (e = 0), at its radius at every instant, <see cref="Epoch"/> itself.
     /// </summary>
-    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the time is Barker's, the motion of the band; before 11.0.0
-    /// Kepler's equation took Barker's anomaly there, and the epoch was up to 8 times off, before <see cref="Epoch"/> even for
-    /// a radius not yet reached (#478).</remarks>
+    /// <remarks>Within 1e-6 of e = 1 (<see cref="IsParabolic"/>) the time is the conic's in universal variables, the motion
+    /// of the band (#753; Barker's time at Barker's rate before, up to 1.5e-3 s off at |e − 1| = 9e-7 to 2e7 m); before
+    /// #478 Kepler's equation took Barker's anomaly there, and the epoch was up to 8 times off, before <see cref="Epoch"/>
+    /// even for a radius not yet reached.</remarks>
     /// <param name="radius">The distance from the center of motion, in meters.</param>
     /// <returns>The epoch at the radius, in the frame of <see cref="Epoch"/>.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="radius"/> is not finite, is below the periapsis, or

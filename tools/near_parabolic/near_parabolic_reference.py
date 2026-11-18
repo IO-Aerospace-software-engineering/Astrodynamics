@@ -1,4 +1,4 @@
-"""References of the near-parabolic band, at 60 digits, for the tests of #459, #462, #477 and #478.
+"""References of the near-parabolic band, at 60 digits, for the tests of #459, #462, #477, #478 and #753.
 
 The band is |e - 1| < 1e-6, where the library takes the anomalies of a parabola (Barker's equation, #368). The
 references are closed forms evaluated with mpmath at 60 digits on the doubles the tests give the library, so they
@@ -17,9 +17,11 @@ measure the computation alone:
 - the modified equinoctial elements to Cartesian (Walker, Ireland and Owens, Celestial Mechanics 36, 1985; confirmed by
   S. Guillet, 2026-10-27), as tools/equinoctial_elements writes them.
 
-The band model of the library, which the tests also measure (#459, option 1, decided by S. Guillet, 2026-11-17), is
-Barker's anomaly advanced at Barker's rate sqrt(mu / (2 q^3)), with the conic's semi-latus rectum q (1 + e) for the
-state; its distance to the exact motion of the conic is the model error the tests print.
+The band model of the library before #753 (#459, option 1, decided by S. Guillet, 2026-11-17) was Barker's anomaly
+advanced at Barker's rate sqrt(mu / (2 q^3)), with the conic's semi-latus rectum q (1 + e) for the state; its distance
+to the exact motion of the conic is the model error the tests print. Since #753 (decided by S. Guillet, 2026-11-18) the
+library moves the band as the exact conic, in universal variables, which sections 9 and 10 measure: the conic's times
+to a true anomaly and a radius, and its two-body states over |e - 1| from 1e-12 to 1e-5.
 
 Each value is written as a C# literal, a double or a pair (hi, lo) of doubles whose sum is the 60-digit value, so that
 an error of the order of an ulp is measured without the rounding of the reference. mu is the Earth GM of gm_de440.tpc
@@ -311,3 +313,33 @@ for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
     print(f'        new({de!r}, {vec(state[0])}, {vec(state[1])}, {d(c.e)}, {d(c.q)}, {dd(c.nu)},')
     print(f'            {dd(c.barker_time_to_nu(mp.mpf(1)))}, {r1!r}, {dd(c.barker_time_to_nu(nu_r1))}, {dd(c.barker_time_to_nu(nu2))},')
     print(f'            {dd(c.a)}, {dd(c.n)}, {vec(after[0])}, {vec(after[1])}, {vec(model[0])}),')
+
+# 9. #753: the exact conic's times of the states of 3, the motion of the band since 11.0.0 (universal variables): the
+# conic's time to nu = 1 rad, to the double radius at nu = 1 rad and to 2e7 m (Kepler's equation of the conic at 60
+# digits), as the C# table BandConicTimes of NearParabolicBandTests
+print('\nC# BandConicTimes (#753)')
+for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
+    e = 1 + mp.mpf(de)
+    q = mp.mpf(7e6)
+    state = doubles(perifocal_state(q * (1 + e), e, mp.mpf(30) * mp.pi / 180, mp.mpf(40) * mp.pi / 180, 0, mp.mpf(0.5)))
+    c = Conic(*state)
+    r1 = float(c.p / (1 + c.e * mp.cos(1)))
+    nu_r1 = mp.acos((c.p / r1 - 1) / c.e)
+    nu2 = mp.acos((c.p / 2e7 - 1) / c.e)
+    print(f'        ({de!r}, {pair(c.conic_time_to_nu(mp.mpf(1)))}, {pair(c.conic_time_to_nu(nu_r1))}, '
+          f'{pair(c.conic_time_to_nu(nu2))}),')
+
+# 10. #753: the motion of the band against the exact conic, |e - 1| from 1e-12 to 9.9e-7 on both sides and just outside
+# the band (1.1e-6, 1e-5), q = 7000 km, i = 30 deg, Omega = 40 deg, omega = 0, nu0 in {-1.5, 0.5, 2} rad, the state
+# built at 60 digits with p = q (1 + e) and rounded to doubles, and the exact two-body state of its conic dt later,
+# dt in {600, 86400, -3600} s, as the C# table BandMotions of NearParabolicBandTests
+print('\nC# BandMotions (#753)')
+for de in (-1e-5, -1.1e-6, -9.9e-7, -5e-7, -1e-7, -1e-8, -1e-10, -1e-12, 1e-12, 1e-10, 1e-8, 1e-7, 5e-7, 9.9e-7, 1.1e-6, 1e-5):
+    e = 1 + mp.mpf(de)
+    q = mp.mpf(7e6)
+    for nu0 in (-1.5, 0.5, 2.0):
+        state = doubles(perifocal_state(q * (1 + e), e, mp.mpf(30) * mp.pi / 180, mp.mpf(40) * mp.pi / 180, 0, mp.mpf(nu0)))
+        c = Conic(*state)
+        for dt in (600, 86400, -3600):
+            after = c.conic_after(dt)
+            print(f'        new({de!r}, {nu0!r}, {vec(state[0])}, {vec(state[1])}, {dt!r}.0, {vec(after[0])}, {vec(after[1])}),')

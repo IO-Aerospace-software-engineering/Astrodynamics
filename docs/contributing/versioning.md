@@ -4044,6 +4044,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   returned a NaN velocity without an exception, and `AtEpoch` threw naming the mean anomaly (the mean motion NaN). It
   throws now (Changed below; `ElementsValidationTests.Issue738_*`, red on f70ee32).
 
+- **The two-body motion of the near-parabolic band** ([#753](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/753)). Within 1e-6 of e = 1 the motion advanced
+  Barker's anomaly at Barker's rate √(μ/(2q³)) (#459), exact at e = 1 only: 0.088 m from the exact motion of the conic
+  after 600 s at |e − 1| = 5e-7, 0.16 m at 9e-7, 0.54 m from the periapsis, 3.1 km after a day at 9.9e-7 (1.3e-5 of
+  |r|), and `TimeToRadius` up to 1.5e-3 s off; Kepler's equation of the conic, the other model measured by #459, is
+  kilometres off near e = 1. The motion of the band but at e = 1 exactly (`AtEpoch`, `ToStateVector(Time)`,
+  `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`, `TimeToRadius`, the first state of a propagation from such elements)
+  is now that of the conic of e and q in universal variables from the periapsis, √μ t = q χ + e χ³ S(z) with the
+  Stumpff functions, solved by a safeguarded Newton's method from Barker's root (internal `UniversalKepler`, the form of
+  CSPICE's `prop2b_c`; D. A. Vallado, *Fundamentals of Astrodynamics and Applications*, algorithm 8, to be verified by
+  S. Guillet), the elements at the new epoch carrying its true anomaly and Barker's mean anomaly of it, the anomalies of
+  the band (decided by S. Guillet, 2026-11-18: in the band only, `IsParabolic()` keeping its meaning). Against the exact
+  conic at 60 digits (`tools/near_parabolic`, sections 9 and 10), 108 motions of the band (|e − 1| from 1e-12 to 9.9e-7 on
+  both sides, ν0 from −1.5 to 2 rad, 600 s, a day, −1 h): within 4.2e-15 of |r| and 3.6e-15 of |v| (1.2e-7 m after a
+  day), the states of #459 600 s later within 3 nm, and the times to a radius to the tick
+  (`NearParabolicBandTests.Issue753_*`, red on f70ee32; provisional thresholds, twice the Linux worst). At e = 1 exactly
+  Barker's law and outside the band Kepler's equation are unchanged, bit for bit. Next to the band, at e = 1 − 1.1e-6
+  before the periapsis, the ellipse is still 3.1 m off after 600 s (1.9e-7 of |r|): the constructor keeps its mean
+  anomaly in [0, 2π), where it rounds (#471, not part of 11.0.0); on the hyperbola side 9.4e-10.
+
 **Changed**
 
 - **Breaking: when an event fires** ([#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580), [#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578), [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581); decided by S. Guillet, 2026-11-17).
@@ -5963,6 +5982,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (from states, equinoctial elements, SPICE's `oscltx`, the maneuvers, the TLE fit) have the sign of their conic.
   Migration: give a hyperbola its negative semi-major axis, a = −μ/(2ξ) (`KeplerianElementsTests.IsHyperbolic` gave
   a = 20 000 m with e = 1.1).
+
+- **Breaking: the motion of the near-parabolic band is the conic's** ([#753](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/753), Fixed above). Within 1e-6 of
+  e = 1 but at e = 1 exactly, `AtEpoch`, `ToStateVector(Time)`, `ToKeplerianElements(Time)`, `EpochAtMeanAnomaly`,
+  `TimeToRadius`, `TimeToSphereOfInfluence` and the start of a propagation from such elements move by up to the former
+  model error (0.16 m after 600 s at the band's edges, 3.1 km after a day); the elements at the new epoch carry the true
+  anomaly of the motion (`TrueAnomaly()` returns it). `IsParabolic()`, the anomalies of the band (Barker's), its
+  geometry and `MeanMotion()` are unchanged; the motion is no longer a constant rate of the mean anomaly there. No
+  migration.
 
 **Deprecated**
 
