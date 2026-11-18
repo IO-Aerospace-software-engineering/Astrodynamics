@@ -81,7 +81,7 @@ public class MemoryDataProviderFrameTests
             var reference = Spkezr(epoch, frame);
             Assert.Equal(frame, read.Frame);
             Assert.Same(frame, read.Frame);
-            Assert.Equal(epoch, read.Epoch);
+            LabelAssert.Equal(epoch, read.Epoch);
             worstPosition = System.Math.Max(worstPosition, (read.Position - reference.Position).Magnitude());
             worstVelocity = System.Math.Max(worstVelocity, (read.Velocity - reference.Velocity).Magnitude());
         }

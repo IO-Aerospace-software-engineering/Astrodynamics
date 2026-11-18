@@ -50,13 +50,21 @@ public class OrbitalParametersEqualityTests
 
     private static TLE Iss(string name = "ISS") => new(name, IssLine1, IssLine2);
 
+    // A parabola, e = 1 exactly, given its perigee radius q: a = +Infinity (#459), P = +Infinity
+    private static KeplerianElements Parabola(double q) =>
+        new(double.PositiveInfinity, 1.0, 0.5, 1.0, 2.0, 0.0, Earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+
+    private static EquinoctialElements EquinoctialParabola(double q) =>
+        new(double.PositiveInfinity, 1.0, 0.0, 0.1, 0.2, 1.5, Earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+
     /// <summary>
     /// The pairs of equal copies (x, y) and a different set z, one per type and element type.
     /// </summary>
     public static TheoryData<string> Cases => new()
     {
         "keplerian osculating", "keplerian mean", "keplerian mean set 2", "keplerian from OMM", "equinoctial osculating",
-        "equinoctial mean", "state vector", "TLE", "keplerian e NaN", "keplerian M NaN", "keplerian a NaN", "keplerian M signed zero"
+        "equinoctial mean", "state vector", "TLE", "state vector NaN", "keplerian M signed zero", "keplerian parabola",
+        "equinoctial parabola"
     };
 
     private static (Astrodynamics.OrbitalParameters.OrbitalParameters X, Astrodynamics.OrbitalParameters.OrbitalParameters Y,
@@ -71,14 +79,15 @@ public class OrbitalParametersEqualityTests
         "equinoctial mean" => (Equinoctial(OrbitalElementsType.Mean), Equinoctial(OrbitalElementsType.Mean), Equinoctial(OrbitalElementsType.Mean, 6931e3)),
         "state vector" => (State(), State(), State(6801e3)),
         "TLE" => (Iss(), Iss(), Iss("ISS2")),
-        "keplerian e NaN" => (Set1(e: double.NaN), Set1(e: double.NaN), Set1(e: double.NaN, a: 7001e3)),
-        // Two different sets whose states are both NaN: equal before 11.0.0 through OrbitalParameters
-        "keplerian M NaN" => (Set1(m: double.NaN), Set1(m: double.NaN),
-            new KeplerianElements(26560e3, 0.3, 55.0 * IO.Astrodynamics.Constants.Deg2Rad, 1.2, 0.4, double.NaN, Earth, Epoch, Frames.Frame.ICRF)),
-        "keplerian a NaN" => (Set1(a: double.NaN), Set1(a: double.NaN),
-            new KeplerianElements(double.NaN, 0.2, 0.6, 1.1, 2.1, 3.1, Earth, Epoch, Frames.Frame.ICRF)),
+        // The elements refuse a non-finite value since #476 and #726, a state does not: NaN equals NaN, as for double.Equals,
+        // and two states that differ elsewhere are different
+        "state vector NaN" => (State(double.NaN), State(double.NaN),
+            new StateVector(new Vector3(double.NaN, 1001.0, -2000.0), new Vector3(10.0, 7500.0, 300.0), Earth, Epoch, Frames.Frame.ICRF)),
         // double.Equals and double.GetHashCode take +0 and -0 as one value
         "keplerian M signed zero" => (Set1(m: 0.0), Set1(m: -0.0), Set1(m: double.Epsilon)),
+        // Within 1e-6 of e = 1 the state is that of the perigee radius (#459), which a = +Infinity does not fix
+        "keplerian parabola" => (Parabola(7000e3), Parabola(7000e3), Parabola(7500e3)),
+        "equinoctial parabola" => (EquinoctialParabola(7000e3), EquinoctialParabola(7000e3), EquinoctialParabola(7500e3)),
         _ => throw new ArgumentOutOfRangeException(nameof(name))
     };
 
@@ -181,6 +190,29 @@ public class OrbitalParametersEqualityTests
             Assert.False(a.Equals((object)b));
             Assert.Equal(2, new HashSet<Astrodynamics.OrbitalParameters.OrbitalParameters> { a, b }.Count);
         }
+    }
+
+    /// <summary>
+    /// Within 1e-6 of e = 1 the state is that of the perigee radius q, the semi-major axis that of the conic (#459), so q is
+    /// a value of the set where a = +Infinity does not fix it: two parabolas that differ by q alone are different orbits, a
+    /// state at the periapsis (M = 0, ν = 0) at |r| = q for the Keplerian set (the closed form of the conic), different
+    /// states for the equinoctial set, and so different values (#475); the same q gives equal values, with one hash code
+    /// (<see cref="EqualCopies_AreEqual_OnEveryPath_WithOneHashCode"/>, the rows "keplerian parabola" and "equinoctial
+    /// parabola").
+    /// </summary>
+    [Fact]
+    public void TwoParabolasOfDifferentPerigeeRadii_AreDifferent()
+    {
+        var near = Parabola(7000e3);
+        var far = Parabola(7500e3);
+        Assert.Equal(7000e3, near.ToStateVector().Position.Magnitude(), 1e-6);
+        Assert.Equal(7500e3, far.ToStateVector().Position.Magnitude(), 1e-6);
+        AssertDifferent(near, far);
+
+        var equinoctialNear = EquinoctialParabola(7000e3);
+        var equinoctialFar = EquinoctialParabola(7500e3);
+        Assert.NotEqual(equinoctialNear.ToStateVector().Position, equinoctialFar.ToStateVector().Position);
+        AssertDifferent(equinoctialNear, equinoctialFar);
     }
 
     /// <summary>

@@ -152,7 +152,7 @@ public class PropagatedEphemerisTests
         ephemeris.Set(outputs, close, t => State((t - T0).TotalSeconds));
         Assert.Equal(2, ephemeris.Arcs.Count);
         Assert.Same(close[0].Before, ephemeris.Arcs[0][^1]);
-        Assert.Equal(close[0].Epoch, ephemeris.Arcs[1][0].Epoch);
+        LabelAssert.Equal(close[0].Epoch, ephemeris.Arcs[1][0].Epoch);
     }
 
     /// <summary>
@@ -190,13 +190,13 @@ public class PropagatedEphemerisTests
             Assert.Same(impulses[0].Before, ephemeris.Arcs[0][^1]);
             // The state after both at t1: the position of the first impulse, its velocity after it plus the jump of the second
             var opening = ephemeris.Arcs[1][0];
-            Assert.Equal(t1, opening.Epoch);
+            LabelAssert.Equal(t1, opening.Epoch);
             Assert.Equal(impulses[0].After.Position, opening.Position);
             Assert.Equal(impulses[0].After.Velocity + (impulses[1].After.Velocity - impulses[1].Before.Velocity), opening.Velocity);
             Assert.Same(opening, atT1);
             Assert.Equal(2.0, between.Velocity.Y, 4);
             Assert.Equal(2.0, atT2.Velocity.Y, 4);
-            Assert.Equal(new Window(T0, T0.AddSeconds(1000.0)), ephemeris.Span);
+            LabelAssert.Equal(new Window(T0, T0.AddSeconds(1000.0)), ephemeris.Span);
         }
         else
         {

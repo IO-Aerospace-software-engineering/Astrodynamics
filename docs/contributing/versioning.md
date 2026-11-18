@@ -3815,7 +3815,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   shortest round-trip form `"R"`, which reads back bit for bit as `xsd:double` (`OpmWriterTests` and `OmmWriterTests`
   `WriteToString_EveryRealValue_ReadsBackBitForBit`: each written text read by `double.Parse` and by the reader, the
   value given bit for bit, 44 OPM and 35 or 36 OMM values, all but one lost before, red on a85098d).
-- **The CCSDS readers loaded a date outside the standard's forms** ([#619]({L}619), the date half).
+- **The CCSDS readers loaded a date outside the standard's forms** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), the date half).
   `CcsdsEpochParser`, which the CDM, OPM and OMM readers share since #490, passed a text outside the date branch of
   `epochType`, and a calendar text with a field out of range, to `DateTime.TryParse`: a `TCA` or an `EPOCH` of
   `22:37:52.618` was read on the day of the read (2026-11-17T22:37:52.618), `1.5` and `1,5` as 5 January of the current
@@ -3833,7 +3833,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   conformance suite moves. The same issue's `units="km"` on a `lengthTypeUO` length is refused (Changed below:
   `CdmTests.ReadFromString_OptionalUnitLengthNotInMeters_ThrowsCdmParseException`, 10 rows red on a85098d).
 
-- **The OPM and OMM unit conversions overflowed to ±Infinity** ([#729]({L}729)). `OpmStateVector.ToStateVector`
+- **The OPM and OMM unit conversions overflowed to ±Infinity** ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). `OpmStateVector.ToStateVector`
   multiplied km and km/s by 1000 and `CovarianceMatrix.ToMatrixWithUnitConversion` km², km²/s and km²/s² by 1e6 without
   a check: a finite value above about 1.8e305 km (1.8e302 km²) became ±Infinity in the `StateVector` of
   `Opm.ToStateVector` or in its covariance (measured on a85098d: `X` 1e306 gave +Infinity m, `CX_X` 1e303 +Infinity m²),
@@ -3852,14 +3852,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`OpmStateVectorTests`, `CovarianceMatrixTests`, `OpmReaderTests`, `OmmReaderTests` `*OverflowingInSiUnits*` and
   `TLETests.FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient`: 100 rows red on a85098d).
 
-- **`CdmCovarianceMatrix.StateCovarianceRtn` accepted a matrix that is not 6×6** ([#730]({L}730)). Its init
+- **`CdmCovarianceMatrix.StateCovarianceRtn` accepted a matrix that is not 6×6** ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730)). Its init
   accessor checked the terms since #717, whatever the size: a 3×3 matrix or `default(Matrix)` built, and `CdmWriter`
   then threw `IndexOutOfRangeException` or `NullReferenceException` (`Cdm.Validate` reported the size when it ran). It
   now throws `ArgumentException` naming `StateCovarianceRtn` before the terms (Changed below; `CdmTests`
   `Init_CovarianceNotSixBySix_*` and `Init_DefaultCovarianceMatrix_*`, 8 rows red on a85098d). The reader always built a
   6×6 matrix, so reading is unchanged.
 
-- **`TleParameters` named `revNumber` in its exception** ([#734]({L}734)). A negative revolution number threw
+- **`TleParameters` named `revNumber` in its exception** ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734)). A negative revolution number threw
   `ArgumentOutOfRangeException` with the `ParamName` `revNumber`, the private validator's parameter, which no public entry
   has; it names `revolutionNumberAtEpoch`, the parameter of the constructor and of the four `CreateWith*` factories
   (Changed below), and `OmmReader` maps `REV_AT_EPOCH` to it, so its `OmmParseException` still names the keyword
@@ -4018,7 +4018,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: equality of orbital parameters is value equality within one concrete type** ([#475](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/475), Fixed
   above; choices 1 and 2 decided by S. Guillet, 2026-11-17). `OrbitalParameters.Equals(OrbitalParameters)` (still
   virtual) is the type's `Equals(object)`: the same concrete type, its values (A, E, I, RAAN, AOP, M; P, F, G, H, K, L0;
-  position and velocity; a TLE's lines and name), observer by NAIF id, epoch (an instant, #512), frame and
+  within 1e-6 of e = 1 the perigee radius, from which the state of the band comes (#459); position and velocity; a TLE's
+  lines and name), observer by NAIF id, epoch (an instant, #512), frame and
   `ElementsType`; the base `Equals(object)` is reference equality for a type that defines no values, and
   `GetHashCode` combines the observer's NAIF id, the epoch, the frame and the element type with the type's values.
   Choice 1: a set and its own `ToStateVector()` are different (through `OrbitalParameters` they were equal). Choice 2:
@@ -5622,34 +5623,34 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   0.00012345678901 was written), the CDM drops the digits `G17` added beyond the shortest exact form
   (0.1 where 0.10000000000000001 was written). A value read from an OPM or OMM the library writes is the value given,
   bit for bit; one read from a CDM is unchanged.
-- **Breaking: the CCSDS readers refuse a date outside the two forms of the standard** ([#619]({L}619), Fixed above;
+- **Breaking: the CCSDS readers refuse a date outside the two forms of the standard** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619), Fixed above;
   decided by S. Guillet, 2026-11-17). `Cdm`, `Opm` and `Omm` `Load*`/`ReadFrom*` and their readers throw `CdmParseException`,
   `OpmParseException` or `OmmParseException` for a date field (`TCA`, `CREATION_DATE`, `EPOCH`, `MAN_EPOCH_IGNITION`, the
   screening and observation dates) that is not `yyyy-mm-ddThh:mm:ss[.d…][Z|±hh:mm]` or `yyyy-dddThh:mm:ss[.d…][Z|±hh:mm]`
   with every leading zero, where `DateTime.TryParse` read it. Migration: correct the producer; a date written to the
   standard reads bit for bit as before.
-- **Breaking: the CDM reader refuses a `lengthTypeUO` length in units other than m** ([#619]({L}619); decided by
+- **Breaking: the CDM reader refuses a `lengthTypeUO` length in units other than m** ([#619](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/619); decided by
   S. Guillet, 2026-11-17). `MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N` and `SCREEN_VOLUME_X/Y/Z` with `units="km"` (or any
   value but `m`, which `lengthUnits` enumerates alone) throw `CdmParseException` naming the keyword and the units, where
   `km` was converted. Migration: write the length in m, as the schema and CCSDS 508.0-B-1 table 3-2 require; a length
   without `units` is still read in m (#613).
-- **Breaking: `OpmStateVector` and `CovarianceMatrix` refuse a value that overflows in SI units** ([#729]({L}729), Fixed
+- **Breaking: `OpmStateVector` and `CovarianceMatrix` refuse a value that overflows in SI units** ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729), Fixed
   above). `new OpmStateVector(...)` throws `ArgumentOutOfRangeException` naming `x` ... `zDot` for a component whose
   product by 1000 is not finite (above about 1.8e305 km or km/s), and `new CovarianceMatrix(...)`, `FromFullMatrix` and
   `FromMatrix` naming `cxX` ... `czDotZDot` for a term whose product by 1e6 is not (above about 1.8e302), where they built
   it and the conversions gave ±Infinity; the OPM and OMM readers throw their parse exception naming the keyword. Values of
   a `StateVector` (`FromStateVector`, `FromMatrixWithUnitConversion`) always convert back. Migration: none for a physical
   state; such a value carries no orbit.
-- **Breaking: `Omm.ToTle` refuses a `MEAN_MOTION` its TLE field cannot hold** ([#729]({L}729), Fixed above). A mean
+- **Breaking: `Omm.ToTle` refuses a `MEAN_MOTION` its TLE field cannot hold** ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729), Fixed above). A mean
   motion above the 99.99999999 rev/day of the 11-character field throws `InvalidOperationException` naming `MEAN_MOTION`
   and its value, as a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent, where `TLE`'s constructor threw its
   line-length `ArgumentException` and, above about 2.86e307 rev/day, a TLE was returned with the text `Infinity`.
   Migration: catch `InvalidOperationException` instead of `ArgumentException`; such an object has no TLE form.
-- **Breaking: `CdmCovarianceMatrix.StateCovarianceRtn` refuses a matrix that is not 6×6** ([#730]({L}730), Fixed above).
+- **Breaking: `CdmCovarianceMatrix.StateCovarianceRtn` refuses a matrix that is not 6×6** ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730), Fixed above).
   An object initializer or a `with` expression with another size or `default(Matrix)` throws `ArgumentException` naming
   `StateCovarianceRtn`, where it built and the writer failed. `Cdm.Validate` no longer checks the size, which no record
   can hold. Migration: give the 6×6 RTN covariance (`FromRtnCovariance` already required it).
-- **Breaking: a negative revolution number names `revolutionNumberAtEpoch`** ([#734]({L}734), Fixed above). The
+- **Breaking: a negative revolution number names `revolutionNumberAtEpoch`** ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734), Fixed above). The
   `ArgumentOutOfRangeException` of `new TleParameters(...)` and the four `CreateWith*` factories has the `ParamName`
   `revolutionNumberAtEpoch`, where it was `revNumber`. Migration: a caller that tests `ParamName` compares with
   `revolutionNumberAtEpoch` (`nameof` of the parameter).

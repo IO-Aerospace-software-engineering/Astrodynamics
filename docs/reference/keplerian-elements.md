@@ -91,8 +91,11 @@ e = 0.999999 can come back in the band from their state, whose eccentricity carr
 `==`, `!=`, `Equals` and `GetHashCode` of every orbital parameters type are value equality within one concrete type,
 and compute no state (#475, decided by S. Guillet, 2026-11-17), whether the operands are typed `OrbitalParameters` or
 as their type: two sets are equal when they are of the same type, with the same values (A, E, I, RAAN, AOP and M; P, F,
-G, H, K and L0; position and velocity; the two lines and the name of a TLE), the same observer (by NAIF id), epoch (an
-instant, #512), frame and `ElementsType`. Equality never throws, mean elements and NaN elements included, `x.Equals(null)`
+G, H, K and L0; and, within 1e-6 of e = 1, the perigee radius given or derived at construction, from which the state of
+the band comes (#459), so that two parabolas of a = +Infinity and different perigee radii differ; position and velocity;
+the two lines and the name of a TLE), the same observer (by NAIF id), epoch (an instant, #512), frame and
+`ElementsType`. Equality never throws, mean elements and NaN states included (the elements refuse a non-finite value
+since #476 and #726, a `StateVector` does not), `x.Equals(null)`
 is false, and equal sets share a hash code, so hash sets and dictionaries keep one of equal copies. A mean set and an
 osculating set of the same numbers are different orbits, and so are a set and its own `ToStateVector()`, and a TLE and
 its `ToMeanKeplerianElements()`: to compare two orbits, compare their states, `x.ToStateVector() == y.ToStateVector()`

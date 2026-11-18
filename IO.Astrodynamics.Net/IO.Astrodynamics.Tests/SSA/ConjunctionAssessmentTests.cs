@@ -277,7 +277,7 @@ public partial class ConjunctionAssessmentTests
             .ToStateVector().Position - protected1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None)
             .ToStateVector().Position).Magnitude();
         var expected = Distance(window.EndDate) < Distance(window.StartDate) ? window.EndDate : window.StartDate;
-        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(expected, encounter.EncounterState.Epoch);
         Assert.Equal(Distance(expected), encounter.EncounterState.MissDistanceMeters, 9);
         Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd));
     }
@@ -2268,7 +2268,7 @@ public partial class ConjunctionAssessmentTests
 
         // No close approach: the TCA is the closest window end, the end here (#621: the midpoint before 11.0.0), so that a
         // lead time of 12 min puts the burn before the window
-        Assert.Equal(window.EndDate, encounter.EncounterState.Epoch);
+        LabelAssert.Equal(window.EndDate, encounter.EncounterState.Epoch);
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter,
             new AvoidanceSearchOptions
             {

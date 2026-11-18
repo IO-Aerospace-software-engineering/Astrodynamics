@@ -155,7 +155,7 @@ public partial class IntegratorEventTests
         double stored = (ephemeris.Velocity - expectedVelocity).Magnitude();
         _output.WriteLine($"MEASURE #575 impulse at the end: {solution.Segments.Count} segments, burn {(end - burnEpoch).TotalSeconds:E3} s before the end, ΔV {maneuver.DeltaV.Magnitude():F3} m/s; " +
                           $"velocity less the state after: last output {lastOutput:E3}, InterpolateAt {atEnd:E3}, GetEphemeris {stored:E3} m/s");
-        Assert.Equal(burnEpoch, end);
+        LabelAssert.Equal(burnEpoch, end);
         // The last output is at the end when the output step divides the window, otherwise on its grid before the burn
         if (last.Epoch == end)
         {

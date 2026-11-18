@@ -200,7 +200,7 @@ public class MinimumEpochGateEdgeTests
             // The step end after the gate, carried onto the tick of its label (#572)
             double stepEnd = System.Math.Floor(gateSeconds / (integratorName == "VV1" ? 1.0 : 10.0) + 1.0) * (integratorName == "VV1" ? 1.0 : 10.0);
             var label = integrator.TimeArgument.EpochAt(from, stepEnd);
-            Assert.Equal(label, epoch);
+            LabelAssert.Equal(label, epoch);
             Assert.Equal(integrator.TimeArgument.SecondsBetween(from, label), t);
         }
     }

@@ -595,7 +595,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
                               $"{analyzed.EncounterState.QualityFlags}");
             foreach (var encounter in all)
             {
-                Assert.Equal(tick, encounter.EncounterState.Epoch);
+                LabelAssert.Equal(tick, encounter.EncounterState.Epoch);
                 Assert.False(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.TcaAtWindowEnd),
                     encounter.EncounterState.QualityFlags.ToString());
                 listed++;

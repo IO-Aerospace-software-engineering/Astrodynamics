@@ -204,7 +204,7 @@ public partial class IntegratorEventTests
         _output.WriteLine($"MEASURE #580 time-like impulse {integratorName} {sign:+0;-0}: {solution.Segments.Count} segments" +
                           (solution.Segments.Count > 1 ? $", burn at TT {MinimumEpochGateTests.Tt(solution.Segments[1].BaseEpoch):R} s" : ""));
         Assert.Equal(2, solution.Segments.Count);
-        Assert.Equal(root, solution.Segments[1].BaseEpoch);
+        LabelAssert.Equal(root, solution.Segments[1].BaseEpoch);
         Assert.Equal(10.0, impulse.DeltaV.Magnitude(), 12);
         Assert.Contains(impulse, spacecraft.ExecutedManeuvers);
     }

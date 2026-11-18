@@ -463,6 +463,23 @@ public class FrameTests
     }
 
     [Fact]
+    public void AFrame_ReadAgainAtItsInstantInAnotherTimeFrame_IsLabelledWithTheEpochAsked()
+    {
+        // A frame keeps the orientation of its last epoch (#541), and two labels of one instant are equal times (#512): the
+        // frame compares the labels, so a read in UTC after a read in TDB of the same instant carries the UTC epoch asked,
+        // as each read did when the frame kept one orientation per label
+        var tdb = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var utc = tdb.ToUTC();
+        Assert.True(tdb == utc);
+        foreach (var frame in new[] { new CirsFrame(), new TirsFrame(), new TemeFrame(), new Frames.Frame("ITRF93") })
+        {
+            LabelAssert.Equal(tdb, frame.GetStateOrientationToICRF(tdb).Epoch);
+            LabelAssert.Equal(utc, frame.GetStateOrientationToICRF(utc).Epoch);
+            LabelAssert.Equal(tdb, frame.GetStateOrientationToICRF(tdb).Epoch);
+        }
+    }
+
+    [Fact]
     public void AManagedFrame_ReadAgainAtAnEarlierEpoch_IsTheOrientationOfThatEpoch()
     {
         // The last epoch a frame keeps (#541) is replaced by each read at another epoch: reads at t1, t2 and t1 again are
@@ -482,7 +499,7 @@ public class FrameTests
             Assert.Equal(fresh().GetStateOrientationToICRF(t2).Rotation, second.Rotation);
             Assert.Equal(first.Rotation, again.Rotation);
             Assert.Equal(first.AngularVelocity, again.AngularVelocity);
-            Assert.Equal(t1, again.Epoch);
+            LabelAssert.Equal(t1, again.Epoch);
             Assert.NotEqual(first.Rotation, second.Rotation);
         }
     }

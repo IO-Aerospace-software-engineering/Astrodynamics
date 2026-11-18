@@ -76,6 +76,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             // Keplerian paths threw on a fresh instance, and after PerigeeRadius() read the h²/μ/(1 + e) of the state,
             // 2 ulp away)
             _perigeeRadius = perigeeRadius ?? (parabolic && double.IsFinite(p) ? p / (1.0 + e) : null);
+            _bandPerigeeRadius = parabolic ? _perigeeRadius : null;
         }
 
         /// <summary>
@@ -107,6 +108,10 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// Gets the true longitude.
         /// </summary>
         public double L0 { get; }
+
+        // Within 1e-6 of e = 1 the perigee radius given or derived at construction: the state of the band comes from it
+        // (#459), and a = +Infinity does not fix it, so it is a value of the set for its equality and hash code (#475)
+        private readonly double? _bandPerigeeRadius;
 
         /// <summary>
         /// Gets the equinoctial ex parameter (equivalent to F in some conventions).
@@ -401,7 +406,8 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return GetType() == other.GetType() && P.Equals(other.P) && F.Equals(other.F) && G.Equals(other.G) && H.Equals(other.H) &&
-                   K.Equals(other.K) && L0.Equals(other.L0) && HasSameReference(other);
+                   K.Equals(other.K) && L0.Equals(other.L0) && Nullable.Equals(_bandPerigeeRadius, other._bandPerigeeRadius) &&
+                   HasSameReference(other);
         }
 
         public override bool Equals(object obj)
@@ -414,7 +420,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), P, F, G, H, K, L0);
+            return HashCode.Combine(base.GetHashCode(), P, F, G, H, K, L0, _bandPerigeeRadius);
         }
 
         public static bool operator ==(EquinoctialElements left, EquinoctialElements right)

@@ -263,7 +263,7 @@ public class NearParabolicBandTests
 
             // Act, assert: the state at its own true anomaly, at its epoch; the equinoctial round trip
             var own = sv.ToStateVector(sv.TrueAnomaly());
-            Assert.Equal(Epoch, own.Epoch);
+            LabelAssert.Equal(Epoch, own.Epoch);
             worstOwnNu = System.Math.Max(worstOwnNu, Distance(own.Position, sv.Position) / sv.Position.Magnitude());
             var back = sv.ToEquinoctial().ToKeplerianElements().ToStateVector();
             worstRoundTrip = System.Math.Max(worstRoundTrip, Distance(back.Position, sv.Position) / sv.Position.Magnitude());
@@ -821,8 +821,8 @@ public class NearParabolicBandTests
         }
 
         // And those of the same elements given P / (1 + e)
-        Assert.Equal(expectedElements, withRadius.ToKeplerianElements());
-        Assert.Equal(expectedLater, (KeplerianElements)withRadius.AtEpoch(later));
+        LabelAssert.Equal(expectedElements, withRadius.ToKeplerianElements());
+        LabelAssert.Equal(expectedLater, (KeplerianElements)withRadius.AtEpoch(later));
     }
 
     [Theory]

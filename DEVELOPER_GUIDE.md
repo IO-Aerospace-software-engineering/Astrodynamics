@@ -381,8 +381,8 @@ Discriminant for orbital element types.
 | `Mean` | Time-averaged elements (e.g., TLE mean elements) |
 
 Equality of orbital parameters (`==`, `Equals`, `GetHashCode`, typed as `OrbitalParameters` or as their type) is value
-equality within one concrete type, computing no state (#475): the type's values, the observer's NAIF id, the epoch (an
-instant), the frame and `ElementsType`. A set and its own `ToStateVector()`, a mean and an osculating set of the same
+equality within one concrete type, computing no state (#475): the type's values (the perigee radius of the parabolic
+band |e − 1| < 1e-6 among them, #459), the observer's NAIF id, the epoch (an instant), the frame and `ElementsType`. A set and its own `ToStateVector()`, a mean and an osculating set of the same
 numbers, and a TLE and its mean elements are different; to compare two orbits, compare their states.
 
 All orbital parameter classes (`StateVector`, `KeplerianElements`, `EquinoctialElements`, `TLE`) have an `ElementsType` property indicating whether elements are osculating or mean. Most conversions preserve the elements type. **Important:** Mean elements cannot be directly converted to `StateVector` as they require a propagation model (e.g., SGP4 for TLE).

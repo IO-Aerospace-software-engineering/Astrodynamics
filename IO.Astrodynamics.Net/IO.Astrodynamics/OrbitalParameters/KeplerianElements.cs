@@ -42,6 +42,10 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </summary>
         public double M { get; }
 
+        // Within 1e-6 of e = 1 the perigee radius given or derived at construction: the state of the band comes from it
+        // (#459), and a = +Infinity does not fix it, so it is a value of the set for its equality and hash code (#475)
+        private readonly double? _bandPerigeeRadius;
+
         /// <summary>
         /// The rounding allowed between a semi-major axis and a perigee radius of one conic within 1e-6 of e = 1:
         /// |q/a − (1 − e)| ≤ 6 ε (1 + e). The elements the library builds there, from a state (−μ/(2ξ) and h²/(μ(1 + e))),
@@ -138,6 +142,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             _period = period;
             _trueAnomaly = trueAnomaly;
             _perigeeRadius = perigeeRadius;
+            _bandPerigeeRadius = parabolic ? perigeeRadius : null;
         }
 
         /// <summary>
@@ -364,7 +369,8 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return GetType() == other.GetType() && A.Equals(other.A) && E.Equals(other.E) && I.Equals(other.I) && RAAN.Equals(other.RAAN) &&
-                   AOP.Equals(other.AOP) && M.Equals(other.M) && HasSameReference(other);
+                   AOP.Equals(other.AOP) && M.Equals(other.M) && Nullable.Equals(_bandPerigeeRadius, other._bandPerigeeRadius) &&
+                   HasSameReference(other);
         }
 
         public override bool Equals(object obj)
@@ -377,7 +383,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), A, E, I, RAAN, AOP, M);
+            return HashCode.Combine(base.GetHashCode(), A, E, I, RAAN, AOP, M, _bandPerigeeRadius);
         }
 
         public static bool operator ==(KeplerianElements left, KeplerianElements right)

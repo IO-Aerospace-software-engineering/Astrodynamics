@@ -195,7 +195,7 @@ public class CspiceWindowCapacityTests
             ? Complement(Gfposc("=", 0.0), CoordinateWindow)
             : Gfposc(label is ">=" ? ">" : label is "<=" ? "<" : label, 0.0);
         Assert.Equal(count, reference.Length);
-        Assert.Equal(reference, whole);
+        LabelAssert.Equal(reference, whole);
     }
 
     [Theory]
@@ -207,7 +207,7 @@ public class CspiceWindowCapacityTests
         var whole = Coordinate(CoordinateWindow, relation, 0.0, 1.0e5).ToArray();
         var reference = Gfposc(spiceRelation, 1.0e5);
         Assert.Equal(count, reference.Length);
-        Assert.Equal(reference, whole);
+        LabelAssert.Equal(reference, whole);
     }
 
     [Theory]
@@ -221,7 +221,7 @@ public class CspiceWindowCapacityTests
         var reference = ToWindows(CspiceDirect.Gfdist(Seconds(LroWindow.StartDate), Seconds(LroWindow.EndDate), "-85", "NONE", "301",
             spiceRelation, LroMoonDistance / 1000.0, 0.0, 60.0), LroWindow);
         Assert.Equal(count, reference.Length);
-        Assert.Equal(reference, whole);
+        LabelAssert.Equal(reference, whole);
     }
 
     [Fact]
@@ -234,13 +234,13 @@ public class CspiceWindowCapacityTests
         var illumination = ToWindows(CspiceDirect.Gfilum(Seconds(CoordinateWindow.StartDate), Seconds(CoordinateWindow.EndDate), "INCIDENCE",
             "399", "10", "IAU_EARTH", "NONE", "301", point, ">", System.Math.PI / 2.0, 0.0, 3600.0), CoordinateWindow);
         Assert.Equal(1100, illumination.Length);
-        Assert.Equal(illumination, Illumination(CoordinateWindow, RelationnalOperator.Greater).ToArray());
+        LabelAssert.Equal(illumination, Illumination(CoordinateWindow, RelationnalOperator.Greater).ToArray());
 
         var occultation = ToWindows(CspiceDirect.Gfoclt(Seconds(LroWindow.StartDate), Seconds(LroWindow.EndDate), "ANY", "301", "ELLIPSOID",
             SpiceAPI.Instance.GetCelestialBodyInfo(301).FrameName, "10", "ELLIPSOID", SpiceAPI.Instance.GetCelestialBodyInfo(10).FrameName, "NONE",
             "-85", 300.0), LroWindow);
         Assert.Equal(1121, occultation.Length);
-        Assert.Equal(occultation, Occultation(LroWindow).ToArray());
+        LabelAssert.Equal(occultation, Occultation(LroWindow).ToArray());
     }
 
     [Fact]
@@ -256,7 +256,7 @@ public class CspiceWindowCapacityTests
                 CoordinateWindow);
             _output.WriteLine($"MEASURE #653 gftfov: {reference.Length} windows");
             Assert.Equal(FieldOfViewCount, reference.Length);
-            Assert.Equal(reference, FieldOfView(CoordinateWindow).ToArray());
+            LabelAssert.Equal(reference, FieldOfView(CoordinateWindow).ToArray());
         });
     }
 

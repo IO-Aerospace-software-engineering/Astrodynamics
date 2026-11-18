@@ -87,6 +87,10 @@ public class RepropagationTests
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
     private static readonly TimeSpan Output = TimeSpan.FromSeconds(10.0);
     private static readonly TimeSpan VvStep = TimeSpan.FromSeconds(1.0);
+
+    // The labels of a window's ends (#512: Assert.Equal of two windows compares their instants only)
+    private static (DateTime, ITimeFrame, DateTime, ITimeFrame)? Labels(Window? window) =>
+        window is { } w ? (w.StartDate.DateTime, w.StartDate.Frame, w.EndDate.DateTime, w.EndDate.Frame) : null;
     private const double MoonRadius = MinimumEpochGateTests.MoonRadius;
     private static int _nextId = -573000;
     private readonly ITestOutputHelper _output;
@@ -1108,8 +1112,8 @@ public class RepropagationTests
         var reused = Build(env, env.Apogee(), "apo-apo");
         var r1 = Propagate(reused, Win(S), "RK", "Propagate");
         var solution = reused.Spacecraft.LastPropagation;
-        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)).ToArray();
-        var windows = reused.Chain.Select(m => (m.ManeuverWindow, m.ThrustWindow)).ToArray();
+        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray();
+        var windows = reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray();
 
         // Act
         Exception error = rejection switch
@@ -1124,8 +1128,8 @@ public class RepropagationTests
         // Assert
         _output.WriteLine($"MEASURE #573 {tag}: {error.GetType().Name}: {error.Message}");
         Assert.Same(solution, reused.Spacecraft.LastPropagation);
-        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)).ToArray());
-        Assert.Equal(windows, reused.Chain.Select(m => (m.ManeuverWindow, m.ThrustWindow)).ToArray());
+        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray());
+        Assert.Equal(windows, reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray());
         var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);
         AssertSame(tag + " run 1 after the rejection against run 1", after, r1);
 
@@ -1220,8 +1224,8 @@ public class RepropagationTests
         var reused = Build(env, env.Apogee(), "apo-apo");
         var r1 = Propagate(reused, Win(S), "RK", "Builder");
         var solution = reused.Spacecraft.LastPropagation;
-        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)).ToArray();
-        var windows = reused.Chain.Select(m => (m.ManeuverWindow, m.ThrustWindow)).ToArray();
+        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray();
+        var windows = reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray();
         double fuel = reused.Spacecraft.FuelTanks.Single().Quantity;
         var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
 
@@ -1245,8 +1249,8 @@ public class RepropagationTests
 
         // Assert
         Assert.Same(solution, reused.Spacecraft.LastPropagation);
-        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)).ToArray());
-        Assert.Equal(windows, reused.Chain.Select(m => (m.ManeuverWindow, m.ThrustWindow)).ToArray());
+        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray());
+        Assert.Equal(windows, reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray());
         Assert.Equal(fuel, reused.Spacecraft.FuelTanks.Single().Quantity);
         var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);
         AssertSame(tag + " run 1 after", after, r1);

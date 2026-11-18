@@ -44,7 +44,7 @@ public partial class SpiceApiTest
         for (int i = 0; i < count; i++)
         {
             var epoch = WindowReadStart + stepSize * i;
-            Assert.Equal(epoch, states[i].Epoch);
+            LabelAssert.Equal(epoch, states[i].Epoch);
             var single = (StateVector)SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(single.Position, states[i].Position);
             Assert.Equal(single.Velocity, states[i].Velocity);
@@ -69,11 +69,11 @@ public partial class SpiceApiTest
         var states = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).Cast<StateVector>().ToArray();
         _output.WriteLine($"MEASURE #563 ReadEphemeris UTC 2026-{month:D2}: {states.Length} states, last at {states[^1].Epoch}");
         Assert.Equal(6001, states.Length);
-        Assert.Equal(window.EndDate, states[^1].Epoch);
+        LabelAssert.Equal(window.EndDate, states[^1].Epoch);
         for (int i = 0; i < states.Length; i++)
         {
             var epoch = start + stepSize * i;
-            Assert.Equal(epoch, states[i].Epoch);
+            LabelAssert.Equal(epoch, states[i].Epoch);
             Assert.Equal(TimeSystem.TimeFrame.UTCFrame, states[i].Epoch.Frame);
             var single = (StateVector)SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(single.Position, states[i].Position);
@@ -101,7 +101,7 @@ public partial class SpiceApiTest
         for (int i = 0; i < states.Length; i++)
         {
             var epoch = start + stepSize * i;
-            Assert.Equal(epoch, states[i].Epoch);
+            LabelAssert.Equal(epoch, states[i].Epoch);
             double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
             double spiceEt = CspiceDirect.Str2et(epoch.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture));
             worstEt = System.Math.Max(worstEt, System.Math.Abs(et - spiceEt));
@@ -172,7 +172,7 @@ public partial class SpiceApiTest
             {
                 var epoch = PhsrmStart + stepSize * i;
                 var single = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
-                Assert.Equal(single.Epoch, records[i].Epoch);
+                LabelAssert.Equal(single.Epoch, records[i].Epoch);
                 Assert.Equal(single.Rotation, records[i].Rotation);
                 Assert.Equal(single.AngularVelocity, records[i].AngularVelocity);
             }
@@ -212,7 +212,7 @@ public partial class SpiceApiTest
                 var epoch = start + stepSize * i;
                 worst = System.Math.Max(worst, System.Math.Abs((records[i].Epoch - epoch.ToTDB()).TotalSeconds));
                 var single = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
-                Assert.Equal(single.Epoch, records[i].Epoch);
+                LabelAssert.Equal(single.Epoch, records[i].Epoch);
                 Assert.Equal(single.Rotation, records[i].Rotation);
                 Assert.Equal(single.AngularVelocity, records[i].AngularVelocity);
             }
@@ -254,7 +254,7 @@ public partial class SpiceApiTest
                 var reference = CspiceDirect.Ckgpav(-555, CspiceDirect.Sce2c(-555, et), toleranceTicks, "J2000");
                 Assert.NotNull(reference);
                 var (cmat, av, recordEt) = reference.Value;
-                Assert.Equal(TimeSystem.Time.CreateTDB(recordEt), records[i].Epoch);
+                LabelAssert.Equal(TimeSystem.Time.CreateTDB(recordEt), records[i].Epoch);
                 worstEpoch = System.Math.Max(worstEpoch, System.Math.Abs((records[i].Epoch - epoch).TotalSeconds));
                 Assert.Equal(new IO.Astrodynamics.Math.Vector3(av[0], av[1], av[2]), records[i].AngularVelocity);
                 for (int axis = 0; axis < 3; axis++)

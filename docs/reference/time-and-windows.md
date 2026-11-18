@@ -145,8 +145,8 @@ local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, after local 03:00), and a l
 the standard offset too, so the `ToLocal()` of an instant in the first of the two hours is not that instant.
 To tell two labels of one instant apart, compare `DateTime` and `Frame`. Within TDB, `-` still counts the ticks of the
 calendars, so two equal consecutive TDB ticks differ by one tick. The library's caches whose values carry their key as a
-label (the orientations of a frame, the range rates of the conjunction search) stay keyed by label, an epoch in another
-frame read again, bit for bit as before. Before 11.0.0 equality was the record's, on the
+label (the orientation a frame keeps from its last read, #541, the range rates of the conjunction search) stay keyed by
+label, an epoch in another frame read again, bit for bit as before. Before 11.0.0 equality was the record's, on the
 calendar and the frame, while `CompareTo` compared through TAI across frames: the same instant in two frames compared to
 0 and was not equal.
 
