@@ -223,7 +223,7 @@ public class SpiceAPISmokeTests
     public void TransformFrame_SingleEpoch()
     {
         var result = SpiceAPI.Instance.TransformFrame(Time.J2000TDB, Frame.ICRF,
-            new Frame(PlanetsAndMoons.EARTH.Frame));
+            new Frame("ITRF93"));
 
         Assert.NotEqual(0.0, result.Rotation.W);
         Assert.NotEqual(0.0, result.AngularVelocity.Magnitude());
@@ -234,7 +234,7 @@ public class SpiceAPISmokeTests
     {
         var window = new Window(Time.J2000TDB, Time.J2000TDB.AddDays(1.0));
         var results = SpiceAPI.Instance.TransformFrame(window, Frame.ICRF,
-            new Frame(PlanetsAndMoons.EARTH.Frame), TimeSpan.FromDays(0.5)).ToArray();
+            new Frame("ITRF93"), TimeSpan.FromDays(0.5)).ToArray();
 
         Assert.True(results.Length >= 2);
         Assert.NotEqual(results[0].Rotation.W, results[1].Rotation.W);

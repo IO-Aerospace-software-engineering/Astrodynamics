@@ -292,7 +292,8 @@ foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
 
 ## Configuration
 
-Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed and memory-backed data access.
+Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed and memory-backed data access, and
+`Configuration.Instance.DataProvider` (public and read only since 11.0.0) to read the provider set.
 
 ## Data Providers
 
@@ -300,6 +301,18 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 |----------|-------------|
 | `SpiceDataProvider` | Default provider using SPICE kernels for production use |
 | `MemoryDataProvider` | In-memory provider for testing without kernel files |
+
+### Which provider an object reads
+
+`Configuration.Instance.DataProvider` is the provider of the process, which `SetDataProvider` replaces. The objects
+read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 2026-11-19); there is no scoped provider in
+11.0.0.
+
+| Object | Provider it reads |
+|--------|-------------------|
+| An object the caller builds: `new CelestialBody(...)`, `new Site(...)`, `new Frame(name)`, a spacecraft | The provider set when it is built, for its life |
+| A static body: `PlanetsAndMoons.EARTH_BODY`, `MOON_BODY`, `Stars.SUN_BODY`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
+| A static frame: `Frame.ICRF`, `Frame.ECLIPTIC_J2000` and the other SPICE frames of `Frame` | The provider set when the type `Frame` is first used, for the life of the process |
 
 ### MemoryDataProvider
 

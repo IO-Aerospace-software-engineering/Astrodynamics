@@ -36,7 +36,7 @@ public class StateVectorFrameVelocityTests
     {
         // Arrange
         var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var inIcrf = GeocentricMoon(epoch, Frames.Frame.ICRF);
         var expected = GeocentricMoon(epoch, itrf93);
 
@@ -55,7 +55,7 @@ public class StateVectorFrameVelocityTests
     {
         // Arrange
         var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var inItrf93 = GeocentricMoon(epoch, itrf93);
         var expected = GeocentricMoon(epoch, Frames.Frame.ICRF);
 
@@ -75,7 +75,7 @@ public class StateVectorFrameVelocityTests
         // Arrange: DSS-13 from earthstns_itrf93_201023.bsp, nearly fixed in ITRF93, about 380 m/s in ICRF.
         var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
         var earth = PlanetsAndMoons.EARTH_BODY;
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var station = new Site(13, "DSS-13", earth);
         var inItrf93 = station.GetEphemeris(epoch, earth, itrf93, Aberration.None).ToStateVector();
         var expected = station.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -93,7 +93,7 @@ public class StateVectorFrameVelocityTests
     {
         // Arrange
         var epoch = new TimeSystem.Time(2021, 1, 1, 12, 0, 0);
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var state = GeocentricMoon(epoch, Frames.Frame.ICRF);
 
         // Act

@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Body
         /// barycenter) are read at the first read of a member that needs them, retried on failure (see
         /// <see cref="CelestialItem.Mass"/>).
         /// </summary>
-        internal static Barycenter CreateDeferred(int naifId, string name) => new(new NaifObject(naifId, name, string.Empty), true);
+        internal static Barycenter CreateDeferred(int naifId, string name) => new(new NaifObject(naifId, name), true);
 
         // The constructor of CreateDeferred: the parameter deferred tells it apart from the public constructors
         private Barycenter(NaifObject knownObject, bool deferred) : base(knownObject, Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB)

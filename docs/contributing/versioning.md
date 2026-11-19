@@ -55,10 +55,9 @@ stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentP
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
 public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
 proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked, the
-parsec of 648000/π au, and a repeated kernel load, which no longer reloads, with the order of a folder's kernels.
-**Deprecated** lists
-`Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
-`Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+parsec of 648000/π au, a repeated kernel load, which no longer reloads, with the order of a folder's kernels, and
+`NaifObject` without its frame. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`
+and `Star.PropagationOutput`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -138,6 +137,17 @@ release are listed under **Known limitations**.
   of a first set (`de440s.bsp`, `latest_leapseconds.tls`, `pck00011.tpc`, `gm_de440.tpc`) with their NAIF paths, the
   two that make `ITRF93` the Earth's frame, and a download command for bash and PowerShell. See
   [Kernel Management](../guides/kernel-management.md).
+- **`new Site(GroundStations.DSS_13, earth)`: a site of the kernels from its catalogue entry** (R02 of #668). The
+  constructor `Site(NaifObject station, CelestialBody celestialItem)` takes the site's own identifier from the
+  station's (399013 − 1000 × 399 = 13) and its SPICE name, and reads its position from the kernels as
+  `Site(int, string, CelestialBody)` does, bit for bit; an identifier that is not a site of the body (from 1000 × its
+  identifier + 1 to + 999: NOTO 398989 and NEW NORCIA 398990 for the Earth, a station of another body) throws
+  `ArgumentException` (`station`). See [Sites](../reference/sites.md).
+- **`Configuration.Instance.DataProvider`, public and read only** (structuring choice 1 of #668, decided by
+  S. Guillet, 2026-11-19): the provider `SetDataProvider` set, a `SpiceDataProvider` by default. The rules of which
+  provider an object reads are one table of [Data Providers](../reference/spice-api.md#data-providers): an object the
+  caller builds reads the provider set when it is built, a static body of `PlanetsAndMoons`, `Stars` or `Barycenters`
+  keeps the provider of its first read. There is no scoped provider in 11.0.0.
 
 **Fixed**
 
@@ -2695,8 +2705,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). It read `PropagationOutput`, the
   output directory of an older design, which no code sets, while `Propagate` keeps its states in memory. It now reads
   the stored states, as `Spacecraft.IsPropagated` does: true after `Propagate`, `PropagateAsync` or
-  `Scenario.SimulateAsync`. `PropagationOutput` stays, documented as always null, marked `[Obsolete]` (see
-  **Deprecated**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
+  `Scenario.SimulateAsync`. `PropagationOutput`, always null, is removed (see **Removed**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
   catalog position moved by the proper motion, written in the test (right ascension and declination plus the proper
   motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
   relative over four years (threshold 4.0e-16, twice the worst; Validation category, Linux only, CI run 43773937161).
@@ -4277,6 +4286,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: `NaifObject` is an `INaifObject` of an identifier and a name, without `Frame`** (R02 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A, decided by
+  S. Guillet, 2026-11-19). The record struct is `NaifObject(int NaifId, string Name) : INaifObject`; its `Frame`,
+  which the library read nowhere, is removed: it was wrong for the Moon (`IAU_MOON` against `MOON_ME` with the usual
+  frame kernels) and for NEW NORCIA (`NEW NORCIA_TOPO`), empty for the comets and asteroids and null for the Lagrange
+  points. A catalogue entry is now accepted where an `INaifObject` is asked. Results do not move: the bodies built
+  from an entry read their frame from the kernels, as before. Migration: `new NaifObject(id, name, frame)` becomes
+  `new NaifObject(id, name)`; `PlanetsAndMoons.EARTH.Frame` becomes the frame of the body, `new CelestialBody(PlanetsAndMoons.EARTH).Frame`
+  (`ITRF93` with `earth_assoc_itrf93.tf`, `IAU_EARTH` without), or the literal name (`new Frame("ITRF93")`).
 - **Breaking: a repeated `LoadKernels` hands SPICE only the files it does not hold** (lot L1, R01 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
   by S. Guillet, 2026-11-19). A path already loaded, a path inside a loaded directory, or a directory that holds loaded
@@ -5708,8 +5726,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **Breaking: `Star.IsPropagated` becomes true once the star is propagated** (second round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above), after `Propagate`,
-  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput` stays null, marked `[Obsolete]`
-  (see **Deprecated**). Migration: code that relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
+  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput`, always null, is removed (see
+  **Removed**). Migration: code that relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
 
 - **Breaking: the constructors of `CentralBodyPropagator` that take an integrator with its forces initialize it**
   (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above) with
@@ -6332,15 +6350,6 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   neither its source nor the next result).
   Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
 
-**Deprecated**
-
-- **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
-  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
-  2026-11-15). It is always null: the output directory of an older design that wrote the propagation to files, which no
-  code sets, while a star keeps its propagated states in memory. Nothing moves at run time. It may be removed in a later
-  major version. Migration: read `IsPropagated` to know whether the star holds propagated states, and write them with
-  `WriteEphemeris`, to a file of the caller's choice.
-
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -6353,6 +6362,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ([#334](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/334), [#536](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/536)).
 - **`Quaternion.Zero`**, the identity under another name and an assignable field: use `Quaternion.Identity` (Changed
   above, [#571](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/571)).
+- **`Star.PropagationOutput`**, always null: the output directory of an older design that wrote the propagation to
+  files, which no code set, while a star keeps its propagated states in memory. It was marked `[Obsolete]` in the
+  fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) and is removed
+  outright in lot L1 (R02, the amendment of D1 of 2026-11-19: no forwarder). Migration: read `IsPropagated` to know
+  whether the star holds propagated states, and write them with `WriteEphemeris`, to a file of the caller's choice.
 
 **Known limitations**
 

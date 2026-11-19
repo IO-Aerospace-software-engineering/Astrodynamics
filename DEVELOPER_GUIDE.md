@@ -218,6 +218,7 @@ Configure framework-wide settings.
 | Method | Description |
 |--------|-------------|
 | `SetDataProvider(IDataProvider provider)` | Set the data provider (SPICE or Memory) |
+| `DataProvider` | The data provider set (read only, 11.0.0) |
 
 ```csharp
 // Use memory data provider for testing

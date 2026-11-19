@@ -41,11 +41,20 @@ The module also provides NAIF IDs for the complete catalog of known moons:
 - **Uranus**: `ARIEL`, `UMBRIEL`, `TITANIA`, `OBERON`, `MIRANDA`, and 20+ additional moons
 - **Neptune**: `TRITON`, `NEREID`, and additional moons
 
-All constants are `NaifObject` instances. Create a `CelestialBody` from any of them:
+All constants are `NaifObject` instances, an `INaifObject` of a NAIF identifier and a SPICE name (`NaifId`, `Name`)
+that no kernel read builds; its frame, removed in 11.0.0, is that of the body built from it, which the loaded kernels
+decide. Create a `CelestialBody` from any of them:
 
 ```csharp
 var titan = new CelestialBody(PlanetsAndMoons.TITAN);
 ```
+
+## SolarSystemObjects.GroundStations
+
+The DSN stations and the other sites of `earthstns_itrf93_201023.bsp` (`DSS_13`, `DSS_14`, `CANBERRA`, ...), whose
+NAIF identifier is 1000 times their body's plus their own (399013 for DSS-13). `new Site(GroundStations.DSS_13, earth)`
+builds the site from the kernels (see [Sites](sites.md)); NOTO (398989) and NEW NORCIA (398990) are not sites of the
+Earth in that numbering, and are read as objects of the kernels by their identifiers.
 
 ## SolarSystemObjects.Barycenters
 

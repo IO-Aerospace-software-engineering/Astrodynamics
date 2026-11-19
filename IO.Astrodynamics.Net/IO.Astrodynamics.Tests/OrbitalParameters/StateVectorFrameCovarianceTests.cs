@@ -31,7 +31,7 @@ public class StateVectorFrameCovarianceTests
     public void ToFrame_RotatingFrame_JacobianMatchesFiniteDifferences()
     {
         // Arrange
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var state = CreateLeoState(null);
         var orientation = Frames.Frame.ICRF.ToFrame(itrf93, Epoch);
 
@@ -52,7 +52,7 @@ public class StateVectorFrameCovarianceTests
     public void ToFrame_RotatingFrame_CovarianceIsTransformedWithTheFiniteDifferenceJacobian()
     {
         // Arrange
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var covariance = CreateCovariance();
         var state = CreateLeoState(covariance);
         var jacobian = FiniteDifferenceJacobian(state, itrf93);
@@ -76,7 +76,7 @@ public class StateVectorFrameCovarianceTests
     public void ToFrame_RoundTripThroughRotatingFrame_RestoresStateAndCovariance()
     {
         // Arrange
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var covariance = CreateCovariance();
         var state = CreateLeoState(covariance);
 
@@ -101,7 +101,7 @@ public class StateVectorFrameCovarianceTests
     {
         // Arrange: 100 m isotropic position uncertainty, no velocity uncertainty.
         const double sigmaPosition = 100.0;
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var covariance = new Matrix(6, 6);
         for (int i = 0; i < 3; i++)
         {
@@ -150,7 +150,7 @@ public class StateVectorFrameCovarianceTests
     public void ToFrame_RotatingFrame_CovarianceIsSymmetricPositiveSemiDefinite()
     {
         // Arrange
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var state = CreateLeoState(CreateCovariance());
 
         // Act
@@ -174,7 +174,7 @@ public class StateVectorFrameCovarianceTests
     public void ToFrame_WithoutCovariance_ReturnsStateWithoutCovariance()
     {
         // Arrange
-        var itrf93 = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var itrf93 = new Frames.Frame("ITRF93");
         var state = CreateLeoState(null);
 
         // Act

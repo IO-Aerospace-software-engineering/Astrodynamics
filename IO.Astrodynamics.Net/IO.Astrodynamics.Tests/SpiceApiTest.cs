@@ -1009,7 +1009,7 @@ public partial class SpiceApiTest
     void TransformFrame()
     {
         //Get the quaternion to transform
-        var res = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame));
+        var res = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("ITRF93"));
         Assert.Equal(0.76713121207787449, res.Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.Rotation.VectorPart.Y, 6);
@@ -1024,7 +1024,7 @@ public partial class SpiceApiTest
     {
         //Get the quaternion to transform
         var res = SpiceAPI.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
-            new Frames.Frame(PlanetsAndMoons.EARTH.Frame), TimeSpan.FromDays(1.0));
+            new Frames.Frame("ITRF93"), TimeSpan.FromDays(1.0));
         Assert.Equal(0.76713121207787449, res.First().Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.First().Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.First().Rotation.VectorPart.Y, 6);
@@ -1041,7 +1041,7 @@ public partial class SpiceApiTest
         Assert.Throws<ArgumentNullException>(() =>
             SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
         Assert.Throws<ArgumentNullException>(() =>
-            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame)));
+            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame("ITRF93")));
     }
 
     [Fact]

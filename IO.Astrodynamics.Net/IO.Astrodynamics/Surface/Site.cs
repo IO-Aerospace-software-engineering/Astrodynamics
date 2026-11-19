@@ -58,6 +58,42 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
+        /// Initializes a site from the kernels from its entry of a catalogue, <see cref="GroundStations"/> for instance:
+        /// <c>new Site(GroundStations.DSS_13, earth)</c>, the site 13 of the Earth, named <c>DSS-13</c> (R02 of #668).
+        /// </summary>
+        /// <param name="station">The NAIF identifier of the site, its body's times 1000 plus its own (399013 for DSS-13), and its
+        /// SPICE name.</param>
+        /// <param name="celestialItem">The body of the site, whose NAIF identifier times 1000 the station's holds.</param>
+        /// <remarks>
+        /// The constructor of <paramref name="station"/>'s user identifier (its NAIF identifier minus 1000 times the body's)
+        /// and name, which reads the site's position from the kernels. NOTO (398989) and NEW NORCIA (398990) are not sites of
+        /// a body in this numbering (no body 398): read them as objects of the kernels by their identifiers.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when the identifier of <paramref name="station"/> is not that of a site
+        /// of <paramref name="celestialItem"/> (from its identifier times 1000 plus 1 to plus 999), or its name is null or
+        /// empty.</exception>
+        public Site(NaifObject station, CelestialBody celestialItem) : this(SiteId(station, celestialItem), station.Name, celestialItem)
+        {
+        }
+
+        // The user identifier of a catalogue site on its body, checked before any read
+        private static int SiteId(NaifObject station, CelestialBody celestialItem)
+        {
+            if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
+            long id = station.NaifId - 1000L * celestialItem.NaifId;
+            if (id is < 1 or > 999)
+            {
+                throw new ArgumentException(
+                    $"{station.Name} ({station.NaifId}) is not a site of {celestialItem.Name} ({celestialItem.NaifId}): a site of it has an identifier from " +
+                    $"{1000L * celestialItem.NaifId + 1} to {1000L * celestialItem.NaifId + 999}.", nameof(station));
+            }
+
+            if (string.IsNullOrEmpty(station.Name)) throw new ArgumentException("The name of the station cannot be null or empty.", nameof(station));
+            return (int)id;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Site"/> class.
         /// </summary>
         /// <param name="userId">The unique identifier for the site.</param>

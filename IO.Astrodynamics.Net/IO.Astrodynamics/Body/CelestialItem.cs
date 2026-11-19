@@ -558,7 +558,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         if (LagrangePoints.L1.NaifId <= naifId && naifId <= LagrangePoints.L5.NaifId)
         {
-            return new LagrangePoint(new NaifObject(naifId, $"L{naifId - 390}", null));
+            return new LagrangePoint(new NaifObject(naifId, $"L{naifId - 390}"));
         }
 
         return new CelestialBody(naifId);
