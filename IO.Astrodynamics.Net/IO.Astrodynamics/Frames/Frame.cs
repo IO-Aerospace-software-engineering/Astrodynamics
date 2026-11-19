@@ -183,7 +183,24 @@ public class Frame : IEquatable<Frame>
 
         Name = name;
         Id = id;
-        _readFromProvider = date => Provider.FrameTransformationToICRF(date, this);
+        _readFromProvider = date => ReadFromProvider(Provider, date);
+    }
+
+    /// <summary>
+    /// The orientation of this frame to ICRF read from <paramref name="provider"/>: an unknown name of the frame, which is no
+    /// argument of the public call that reads it, names no parameter (R25 of #668, open choice 1; review of L1: the
+    /// provider's <c>source</c> before).
+    /// </summary>
+    private protected StateOrientation ReadFromProvider(IDataProvider provider, in Time date)
+    {
+        try
+        {
+            return provider.FrameTransformationToICRF(date, this);
+        }
+        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, this, null))
+        {
+            throw SpiceAPI.UnknownFrameError(e, this, null);
+        }
     }
 
     /// <summary>
@@ -210,6 +227,10 @@ public class Frame : IEquatable<Frame>
     /// ITRF93), and the static frames live for the whole process. An orientation added to a <see cref="MemoryDataProvider"/>
     /// at the epoch of the frame's last read is read once the frame has read another epoch.
     /// </remarks>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of this frame: the message names the frame,
+    /// SPICE's error its inner exception, and no parameter is named (R25 of #668, decided by S. Guillet, 2026-11-19; before
+    /// 11.0.0 an <see cref="InvalidOperationException"/>).</exception>
+    /// <exception cref="InvalidOperationException">The data do not give the orientation of the frame at the epoch.</exception>
     public virtual StateOrientation GetStateOrientationToICRF(Time date)
     {
         if (OrientationCache != null)
@@ -224,7 +245,7 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     internal StateOrientation ReadStateOrientationToICRF(in Time date)
     {
-        return Provider.FrameTransformationToICRF(date, this);
+        return ReadFromProvider(Provider, date);
     }
 
     /// <summary>
@@ -261,6 +282,13 @@ public class Frame : IEquatable<Frame>
     /// r' = R r and v' = R v - (R ω) × r', see
     /// <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.ToFrame(Frame)"/>.
     /// </remarks>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="targetFrame"/>
+    /// (<see cref="ArgumentException.ParamName"/> <c>targetFrame</c>) or of this frame (no parameter named, this frame being
+    /// no argument of the call): the message names the frame, SPICE's error its inner exception (R25 of #668, decided by
+    /// S. Guillet, 2026-11-19; before 11.0.0 an <see cref="InvalidOperationException"/>). A
+    /// <see cref="MemoryDataProvider"/> throws its own for a frame it neither holds nor defines.</exception>
+    /// <exception cref="InvalidOperationException">The data do not give the orientation of a known frame at the epoch
+    /// (SPICE's <see cref="Exceptions.SpiceException"/>).</exception>
     public StateOrientation ToFrame(Frame targetFrame, Time epoch)
     {
         if (targetFrame == this)
@@ -268,14 +296,28 @@ public class Frame : IEquatable<Frame>
             return new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, targetFrame);
         }
 
-        var sourceToICRF = GetStateOrientationToICRF(epoch);
-        var targetToICRF = targetFrame.GetStateOrientationToICRF(epoch);
+        // An unknown name names targetFrame for the target, and no parameter for this frame, which is none (R25 of #668)
+        var sourceToICRF = OrientationToIcrfNaming(this, epoch, null);
+        var targetToICRF = OrientationToIcrfNaming(targetFrame, epoch, nameof(targetFrame));
 
         var rotation = targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation;
 
         var angularVelocity = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
 
         return new StateOrientation(rotation, angularVelocity, epoch, this);
+    }
+
+    // The orientation of frame to ICRF, the error of an unknown name of it naming paramName (R25 of #668, open choice 1)
+    private static StateOrientation OrientationToIcrfNaming(Frame frame, in Time epoch, string paramName)
+    {
+        try
+        {
+            return frame.GetStateOrientationToICRF(epoch);
+        }
+        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, frame, paramName))
+        {
+            throw SpiceAPI.UnknownFrameError(e, frame, paramName);
+        }
     }
 
     /// <summary>

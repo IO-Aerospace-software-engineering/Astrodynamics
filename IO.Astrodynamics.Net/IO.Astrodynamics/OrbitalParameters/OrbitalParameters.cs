@@ -1205,6 +1205,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// J reduces to the block-diagonal rotation diag(R, R).
     /// </para>
     /// </remarks>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="frame"/>
+    /// (<see cref="ArgumentException.ParamName"/> <c>frame</c>) or of the frame of these parameters (no parameter named,
+    /// the frame being no argument of the call): the message names the frame, SPICE's error its inner exception (R25 of
+    /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 an <see cref="InvalidOperationException"/>).</exception>
+    /// <exception cref="InvalidOperationException">The data do not give the orientation of a known frame at the epoch
+    /// (SPICE's <see cref="Exceptions.SpiceException"/>).</exception>
     public OrbitalParameters ToFrame(Frame frame)
     {
         if (frame == Frame)
@@ -1213,7 +1219,17 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
 
         StateVector sourceSv = ToStateVector();
-        var orientation = Frame.ToFrame(frame, Epoch);
+        StateOrientation orientation;
+        try
+        {
+            orientation = Frame.ToFrame(frame, Epoch);
+        }
+        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, frame, nameof(frame)))
+        {
+            // An unknown name of the target names this call's frame, not Frame.ToFrame's targetFrame (R25 of #668)
+            throw SpiceAPI.UnknownFrameError(e, frame, nameof(frame));
+        }
+
         // The angular velocity comes in the source frame (SPICE xf2rav_c convention); r' is in the target frame.
         var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
         var newPos = sourceSv.Position.Rotate(orientation.Rotation);
@@ -1237,6 +1253,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <returns>The equatorial coordinates of the position relative to the observer, in ICRF.</returns>
     /// <exception cref="InvalidOperationException">The data do not give the orientation of the frame at the epoch.</exception>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of the frame of these parameters (no parameter
+    /// named): the message names the frame, SPICE's error its inner exception (R25 of #668, decided by S. Guillet,
+    /// 2026-11-19; before 11.0.0 an <see cref="InvalidOperationException"/>).</exception>
     public Equatorial ToEquatorial()
     {
         _equatorial ??= new Equatorial(ToStateVector());

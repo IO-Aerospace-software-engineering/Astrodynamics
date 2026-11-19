@@ -193,13 +193,15 @@ Singleton class providing access to SPICE operations.
 
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory, the path taken as what it is on disk; `ArgumentException` for a path that does not exist |
-| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
+| `LoadKernels(FileSystemInfo path)`, `LoadKernels(string path)` | Load SPICE kernel(s) from file or directory, the path taken as what it is on disk; a file SPICE already holds from a load is not handed to it again, so a repeated load furnishes only the files added since (R01 of #668); `ArgumentException` for a path that does not exist |
+| `ReloadKernels(FileSystemInfo path)`, `ReloadKernels(string path)` | Read the kernels of a path again, on top of the kernels loaded before: for a kernel rewritten on disk, or to give a path precedence (what a repeated `LoadKernels` did before 11.0.0) |
+| `UnloadKernels(FileSystemInfo path)`, `UnloadKernels(string path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
 | `ClearKernels()` | Unload all kernels |
 | `GetLoadedKernels()` | Get list of currently loaded paths; a deleted SPK, CK, binary PCK or EK leaves it at the next native load, unload or write (#668), a file a writer replaces before the write (#706) |
 | `GetSpiceVersion()` | Get SPICE toolkit version |
-| `ReadEphemeris(...)` | Read state vectors (throws `InvalidOperationException` on native error) |
-| `ReadOrientation(...)` | Read spacecraft orientations (throws `InvalidOperationException` on native error) |
+| `ReadEphemeris(...)` | Read state vectors: `SpiceException` (an `InvalidOperationException`) with SPICE's message when SPICE gives no state, `ArgumentException` (`frame`) for a frame SPICE does not know (R25 of #668) |
+| `ReadOrientation(...)` | Read spacecraft orientations: `SpiceException` with SPICE's message when SPICE gives no orientation, `ArgumentException` (`referenceFrame`) for a frame SPICE does not know (R25 of #668) |
+| `TransformFrame(epoch, fromFrame, toFrame)` | The orientation between two frames: `SpiceException` outside the coverage of a known frame, `ArgumentException` (`fromFrame` or `toFrame`) for a frame SPICE does not know (R25 of #668) |
 | `WriteEphemeris(...)`, `WriteOrientation(...)` | Write an SPK (three states or more, one frame, about a celestial body, else `ArgumentException`) or a CK through the native writer; a file they replace that `LoadKernels` loaded, under its path or a symbolic link that resolves through it, is unloaded first, with every other load of it, and the new file is left unloaded (#706) |
 
 ```csharp

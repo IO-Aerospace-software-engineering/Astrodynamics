@@ -169,12 +169,17 @@ the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161
 SPICE's by name. A CIRS or TIRS end, `Frame.CIRS`, `Frame.TIRS`, any `CirsFrame` or `TirsFrame` or a frame of those names
 in any case, is composed through ICRF by its managed orientation, as TEME's
 ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656); before, it threw).
-A transformation SPICE cannot give throws `InvalidOperationException` "SPICE gives no transformation from {from} to {to} at
-{epoch}: " followed by SPICE's message, `SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known
-reference frame." for a frame SPICE does not know, `SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the
-orientation of the body-fixed frame ITRF93 for epoch 2199 AUG 22 04:00:00.000 TDB were not found. ..." past the coverage of
-the frame data ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the native
-layer dropped SPICE's message and the call named the coverage whatever the cause). A native caller of
+A transformation SPICE cannot give between two frames it knows throws `SpiceException` (an `InvalidOperationException`)
+"SPICE gives no transformation from {from} to {to} at {epoch}: " followed by SPICE's message, such as
+`SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for epoch 2199
+AUG 22 04:00:00.000 TDB were not found. ..." past the coverage of the frame data
+([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the native layer dropped
+SPICE's message and the call named the coverage whatever the cause). A frame SPICE does not know throws
+`ArgumentException` naming `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site frame only the
+library holds, that `SpiceException`, with `SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known
+reference frame.", its inner exception (R25 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); see
+[Frames](frames.md#names-spice-does-not-know)). A native caller of
 `TransformFrameProxy` gets a NaN rotation and angular velocity with SPICE's message in `GetLastErrorProxy()` (the zero
 quaternion with no message before).
 

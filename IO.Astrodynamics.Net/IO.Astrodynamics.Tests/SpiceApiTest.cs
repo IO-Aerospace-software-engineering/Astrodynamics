@@ -703,19 +703,23 @@ public partial class SpiceApiTest
     private static readonly Planetodetic ErrorSearchPoint = new(30.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0);
 
     [Fact]
-    public void FindWindowsOnCoordinateConstraint_UnknownFrame_ThrowsSpiceError()
+    public void FindWindowsOnCoordinateConstraint_UnknownFrame_ThrowsArgumentException_WithTheSpiceError()
     {
-        // A frame name SPICE does not know, which the frames of the library (SpiceKnowsFrame) do not cover
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+        // A frame name SPICE does not know, which the frames of the library (SpiceKnowsFrame) do not cover: a bad argument
+        // since R25 of #668 (review of L1), gfposc_c's error its inner exception
+        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
             new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
-        Assert.Contains("NOT_A_FRAME_668", e.Message);
-        Assert.Contains("not recognized", e.Message);
+        Assert.Equal("frame", e.ParamName);
+        var inner = Assert.IsType<SpiceException>(e.InnerException);
+        Assert.Contains("NOT_A_FRAME_668", inner.Message);
+        Assert.Contains("not recognized", inner.Message);
         // and NotEqual, formed from the search of "="
-        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+        e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
             new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.NotEqual, 0.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
-        Assert.Contains("NOT_A_FRAME_668", e.Message);
+        Assert.Equal("frame", e.ParamName);
+        Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(e.InnerException).Message);
     }
 
     [Fact]
@@ -761,13 +765,15 @@ public partial class SpiceApiTest
     }
 
     [Fact]
-    public void FindWindowsOnIlluminationConstraint_UnknownFrameOrWithoutData_ThrowsSpiceError()
+    public void FindWindowsOnIlluminationConstraint_UnknownFrameOrWithoutData_ThrowsArgumentExceptionOrSpiceError()
     {
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399,
+        // An unknown fixed frame is a bad argument since R25 of #668 (review of L1), gfilum_c's error its inner exception
+        var unknown = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399,
             new Frames.Frame("NOT_A_FRAME_668"), ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10));
-        Assert.Contains("NOT_A_FRAME_668", e.Message);
-        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
+        Assert.Equal("fixedFrame", unknown.ParamName);
+        Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknown.InnerException).Message);
+        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
             PlanetsAndMoons.EARTH_BODY.Frame, ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10));
         Assert.Contains("2160", e.Message);

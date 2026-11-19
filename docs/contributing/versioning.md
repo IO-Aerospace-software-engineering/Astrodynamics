@@ -4342,9 +4342,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: a frame name the loaded kernels do not define throws `ArgumentException`** (R25 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A, decided by
   S. Guillet, 2026-11-19), as `MemoryDataProvider` does: on every path that hands the name to SPICE,
-  `SpiceAPI.TransformFrame` (`ParamName` `fromFrame` or `toFrame`), `ToFrame` of a frame or a state either way, the
-  ephemeris reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris` at an epoch or over a window, `frame`) and
-  `SpiceAPI.ReadOrientation` (`referenceFrame`). The library asks SPICE (`namfrm_c`, through `GetFrameInfoProxy`) after
+  `SpiceAPI.TransformFrame` (`ParamName` `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site
+  frame only the library holds), `ToFrame` of a frame or a state either way (`targetFrame` or `frame` for the target, no
+  `ParamName` for the frame of the instance or the state, which is no argument of the call, nor for
+  `GetStateOrientationToICRF` and `ToEquatorial`; `source` for `SpiceDataProvider.FrameTransformationToICRF`), the
+  ephemeris reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris` at an epoch or over a window, `frame`),
+  `SpiceAPI.ReadOrientation` (`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint`
+  (`frame`), `FindWindowsOnIlluminationConstraint` (`fixedFrame`), `FindWindowsOnOccultationConstraint` (`frontFrame`,
+  `targetFrame`) and `FindWindowsInFieldOfViewConstraint` (`targetFrame`), the last two for an ellipsoid (a point target
+  reads no frame), each a `SpiceException` before. The library asks SPICE (`namfrm_c`, through `GetFrameInfoProxy`) after
   the failed call, so a frame kernel loaded after `new Frame(name)` counts; the message names the frame, and the
   error thrown before, with SPICE's message, is the inner exception, now a `SpiceException` (R03, above). The names `ICRF` and
   `EME2000`, which are no SPICE names, stay other names, and their message points to `Frame.ICRF` (on both providers). A
@@ -4352,8 +4358,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException`, a `SpiceException` since R03, which the orientation cache of a propagation still reads as unavailable. Results do not
   move where SPICE gives a transform: the same `sxform_c` and `spkezr_c` calls. The frame of a managed spacecraft without
   an attitude record and of a kernel-backed spacecraft that no frame kernel defines, read by name, throw it too.
-  CSPICE's coordinate search keeps its `InvalidOperationException` (a `SpiceException`). Migration: a `catch (InvalidOperationException)`
-  meant for a mistyped or unloaded frame catches `ArgumentException`.
+  Migration: a `catch (InvalidOperationException)` meant for a mistyped or unloaded frame catches `ArgumentException`.
 - **Breaking: the static SPICE frames of `Frame` read the data provider of the process at each transform**
   (structuring choice 1 of #668, decided by S. Guillet, 2026-11-19). `Frame.ICRF`, `ECLIPTIC_J2000`, `ECLIPTIC_B1950`,
   `GALACTIC_SYSTEM2`, `B1950`, `FK4` and `ITRF93` read `Configuration.Instance.DataProvider` when they transform, their

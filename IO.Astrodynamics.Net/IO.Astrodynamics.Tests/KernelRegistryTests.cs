@@ -734,8 +734,9 @@ public class KernelRegistryTests : IDisposable
         Assert.Equal([clockFile.FullName], Under(_root).Select(k => k.FullName));
         // The CK is no longer loaded: the read throws, with SPICE's message when no other CK of the process is loaded, and
         // leaves nothing pending, so that the load below succeeds (#712; before, a second CK of the spacecraft stayed loaded
-        // so that this load did not throw the CKBSS error the failed read left pending)
-        Assert.Throws<InvalidOperationException>(() => ReadOrientation(spacecraft.NaifId, 1.0));
+        // so that this load did not throw the CKBSS error the failed read left pending). SPICE's error is a SpiceException
+        // (R03 of #668), "No orientation found" the library's InvalidOperationException
+        Assert.ThrowsAny<InvalidOperationException>(() => ReadOrientation(spacecraft.NaifId, 1.0));
         SpiceAPI.Instance.LoadKernels(c);
         var q = ReadOrientation(spacecraft.NaifId, 4.0).Rotation;
         double angle = 2.0 * System.Math.Atan2((q.Conjugate() * turned).VectorPart.Magnitude(), System.Math.Abs((q.Conjugate() * turned).W));

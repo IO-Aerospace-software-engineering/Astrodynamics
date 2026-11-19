@@ -95,7 +95,7 @@ public class SpacecraftFrame : Frame
     {
         // Kernel-backed spacecraft: SPICE at each call (requires FK+CK kernels loaded), nothing stored
         if (Spacecraft.IsSpiceBacked)
-            return _dataProvider.FrameTransformationToICRF(date, this);
+            return ReadFromProvider(_dataProvider, date);
 
         lock (_recordLock)
         {

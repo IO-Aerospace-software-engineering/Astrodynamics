@@ -73,9 +73,15 @@ the process). The rules of every object are one table: [SPICE API](spice-api.md#
 
 A frame is checked by name at each transform, not at `new Frame(name)`, since a frame kernel loaded afterwards defines
 it. A name the loaded kernels do not define throws `ArgumentException` on every path that hands it to SPICE:
-`SpiceAPI.TransformFrame` (naming `fromFrame` or `toFrame`), `ToFrame` of a frame or of a state, either way, the ephemeris
-reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris`, at an epoch or over a window, naming `frame`) and `SpiceAPI.ReadOrientation`
-(`referenceFrame`). The library asks SPICE (`namfrm_c`) after the failed call; the message names the frame, and the
+`SpiceAPI.TransformFrame` (naming `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site frame
+only the library holds), `ToFrame` of a frame or of a state, either way (naming `targetFrame` or `frame` for the target,
+no parameter for the frame of the instance or of the state, which is no argument of the call, nor for
+`GetStateOrientationToICRF` and `ToEquatorial`; `SpiceDataProvider.FrameTransformationToICRF` names `source`), the ephemeris
+reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris`, at an epoch or over a window, naming `frame`), `SpiceAPI.ReadOrientation`
+(`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint` (`frame`),
+`FindWindowsOnIlluminationConstraint` (`fixedFrame`), `FindWindowsOnOccultationConstraint` (`frontFrame`, `targetFrame`,
+for an ellipsoid) and `FindWindowsInFieldOfViewConstraint` (`targetFrame`, for an ellipsoid; a point target reads no
+frame). The library asks SPICE (`namfrm_c`) after the failed call; the message names the frame, and the
 `InvalidOperationException` of the call, with SPICE's message (`SPICE(UNKNOWNFRAME)`'s "was not recognized as a known
 reference frame" for a transform), is its inner exception (R25 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
@@ -83,9 +89,7 @@ reference frame" for a transform), is its inner exception (R25 of
 throws `ArgumentException` for a frame it neither holds nor defines. A known frame SPICE cannot orient at the epoch (the
 Earth's binary PCK does not cover it, `SPICE(FRAMEDATANOTFOUND)`) still throws `InvalidOperationException`, which the
 orientation cache of a propagation reads as an orientation unavailable there. The names `ICRF` and `EME2000` are not
-SPICE's: they stay other names (see [Equality](#equality)), and their message points to `Frame.ICRF`. The coordinate
-search of CSPICE, `SpiceAPI.FindWindowsOnCoordinateConstraint`, keeps its `InvalidOperationException` for a name SPICE
-does not know.
+SPICE's: they stay other names (see [Equality](#equality)), and their message points to `Frame.ICRF`.
 
 ### Constructors
 
@@ -210,8 +214,9 @@ loaded (those the library wrote for an earlier object of the id) and throws SPIC
 search of `CelestialItem` or `Site` in a frame whose reads are the library's is the library's, also when a kernel
 spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
 frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
-loaded kernel defines under its name (third review of #690; before, no window), and `InvalidOperationException` with
-SPICE's message for any other name SPICE does not know (fourth round of #668; before, no window).
+loaded kernel defines under its name (third review of #690; before, no window), and for any other name SPICE does not
+know, with SPICE's error as inner exception (R25 of #668; in the fourth round of #668, before 11.0.0, the
+`InvalidOperationException` of that error; before, no window).
 `SpiceAPI.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
 coordinates, or from the kernels with no frame kernel of its id loaded), decided at each call (fourth round of #668;
 before, a site's frame threw), and so a CIRS or TIRS end, by instance or by name (#656; before, it threw); the frame of a spacecraft is SPICE's by name,

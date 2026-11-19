@@ -43,7 +43,8 @@ public sealed class CaseKernels : IDisposable
             {
                 SpiceAPI.Instance.LoadKernels(file);
 
-                // A path inside a set already loaded (the runner's kernel directory) reloads that set instead
+                // A path inside a set already loaded (the runner's kernel directory) belongs to that set: SPICE already holds
+                // the file, so the load furnishes nothing and the file is not listed on its own (R01 of #668)
                 if (!SpiceAPI.Instance.GetLoadedKernels().Any(k => k.FullName == file.FullName))
                 {
                     throw new InvalidOperationException(

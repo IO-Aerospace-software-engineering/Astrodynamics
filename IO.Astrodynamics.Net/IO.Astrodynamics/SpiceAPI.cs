@@ -545,6 +545,21 @@ public class SpiceAPI
         WithIcrfHint(name, $"'{name}' is not a frame of the loaded kernels: SPICE knows no frame of that name.");
 
     /// <summary>
+    /// Whether <paramref name="e"/> is the <see cref="ArgumentException"/> of the unknown name of <paramref name="frame"/>
+    /// (<see cref="FrameErrorOrInner"/>) naming another parameter than <paramref name="paramName"/>: the error of an inner
+    /// read, which the public call that holds the frame renames (<see cref="UnknownFrameError"/>), so that
+    /// <see cref="ArgumentException.ParamName"/> is the parameter of that call, or null when the frame is none of its
+    /// arguments (the frame of an instance or of a state; R25 of #668, open choice 1).
+    /// </summary>
+    internal static bool IsUnknownFrameErrorOfAnotherParameter(ArgumentException e, Frame frame, string paramName) =>
+        e.ParamName != paramName && e.InnerException is SpiceException &&
+        e.Message.StartsWith(UnknownFrameMessage(frame.Name), StringComparison.Ordinal);
+
+    /// <summary>The error of <see cref="IsUnknownFrameErrorOfAnotherParameter"/> naming <paramref name="paramName"/>.</summary>
+    internal static ArgumentException UnknownFrameError(ArgumentException e, Frame frame, string paramName) =>
+        new(UnknownFrameMessage(frame.Name), paramName, e.InnerException);
+
+    /// <summary>
     /// <paramref name="message"/>, followed for the names ICRF and EME2000 by a pointer to <see cref="Frame.ICRF"/>: the two
     /// names stay other names than J2000 (frames.md), a frame of either converting nowhere (R25 of #668).
     /// </summary>
@@ -1469,14 +1484,24 @@ public class SpiceAPI
     /// returned its first 1000 (#653).
     /// </summary>
     /// <exception cref="InvalidOperationException">The native search failed: SPICE's message.</exception>
-    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search)
+    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search,
+        params (string Name, Frame Frame, string ParamName)[] frames)
     {
         var windows = System.Buffers.ArrayPool<Window>.Shared.Rent(WindowSearchCapacity);
         try
         {
             if (!search(windows, WindowSearchCapacity, out int count))
             {
-                ThrowLastProxyError();
+                // A frame handed by name that SPICE does not know is a bad argument (R25 of #668), the SPICE error its inner
+                // exception (review of L1: SpiceException before); the message is read before any other native call
+                var error = NativeException(null);
+                foreach (var (name, frame, paramName) in frames)
+                {
+                    var unknown = FrameErrorOrInner(error, name, frame, paramName);
+                    if (unknown != error) throw unknown;
+                }
+
+                throw error;
             }
 
             return WithinSearchWindow(windows, count, searchWindow);
@@ -1602,9 +1627,10 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
-    /// the error and the search returned no window).</exception>
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
+    /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
+    /// window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
@@ -1633,11 +1659,16 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">A body modeled as an ellipsoid without a frame given is not a celestial body
     /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
-    /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672).</exception>
+    /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672). Or SPICE knows
+    /// no frame of the name of <paramref name="frontFrame"/> or <paramref name="targetFrame"/> given for an ellipsoid (the
+    /// parameter named, read through <c>namfrm_c</c> after the failed search): the message names the frame, the
+    /// <see cref="SpiceException"/> of the search its inner exception (R25 of #668, decided by S. Guillet, 2026-11-19;
+    /// before 11.0.0 that exception).</exception>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
-    /// the error and the search returned no window).</exception>
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
+    /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
+    /// window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
@@ -1654,10 +1685,14 @@ public class SpiceAPI
             string targetFrameName = targetShape == ShapeType.Ellipsoid
                 ? targetFrame?.Name ?? ReadCelestialBodyInfo(targetId, nameof(targetId)).FrameName
                 : string.Empty;
+            // The frames given that gfoclt reads, those of an ellipsoid: a name SPICE does not know names its parameter
+            var givenFrames = new List<(string, Frame, string)>(2);
+            if (frontShape == ShapeType.Ellipsoid && frontFrame != null) givenFrames.Add((frontFrameName, frontFrame, nameof(frontFrame)));
+            if (targetShape == ShapeType.Ellipsoid && targetFrame != null) givenFrames.Add((targetFrameName, targetFrame, nameof(targetFrame)));
             return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
                 FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
                     frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(),
-                    stepSize.TotalSeconds, windows, capacity, out count));
+                    stepSize.TotalSeconds, windows, capacity, out count), givenFrames.ToArray());
         }
     }
 
@@ -1693,11 +1728,14 @@ public class SpiceAPI
     /// (<see cref="ManagedReadFrame"/>) as the library reads it.
     /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name.</exception>
+    /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name; or SPICE
+    /// knows no frame of the name handed (read through <c>namfrm_c</c> after the failed search): the message names the
+    /// frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception). Both name <c>frame</c>.</exception>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// frame name it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
-    /// error and the search returned no window).</exception>
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
+    /// no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
@@ -1719,7 +1757,7 @@ public class SpiceAPI
                 return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
                     FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId, frameName,
                         coordinateSystem.GetDescription(), coordinate.GetDescription(), relation, value, adjustValue,
-                        aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
+                        aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count), (frameName, frame, nameof(frame)));
             }
         });
     }
@@ -1745,7 +1783,10 @@ public class SpiceAPI
     /// <returns>The windows where the constraint holds.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="fixedFrame"/> or <paramref name="method"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="method"/> is not ELLIPSOID; before 11.0.0 such a method gave no
-    /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682).</exception>
+    /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682). Or SPICE knows no frame of the name of
+    /// <paramref name="fixedFrame"/> (<c>fixedFrame</c>, read through <c>namfrm_c</c> after the failed search): the message
+    /// names the frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of
+    /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>
     /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
     /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
@@ -1755,9 +1796,9 @@ public class SpiceAPI
     /// Before 11.0.0 the altitude was read in km (#488).
     /// </remarks>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// fixed frame it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
-    /// error and the search returned no window).</exception>
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
+    /// no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -1775,7 +1816,8 @@ public class SpiceAPI
                         // The native layer hands the altitude to georec_c beside a radius in km (#488)
                         (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
                         illuminationType.GetDescription(), relation, value, adjustValue,
-                        aberration.GetDescription(), stepSize.TotalSeconds, method, windows, capacity, out count));
+                        aberration.GetDescription(), stepSize.TotalSeconds, method, windows, capacity, out count),
+                    (fixedFrame.Name, fixedFrame, nameof(fixedFrame)));
             }
         });
     }
@@ -1793,6 +1835,10 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="targetFrame"/> for an
+    /// ellipsoid target (<c>targetFrame</c>, read through <c>namfrm_c</c> after the failed search; a point target reads no
+    /// frame): the message names the frame, the <see cref="SpiceException"/> of the search its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), an
     /// instrument whose field of view no loaded instrument kernel defines, with SPICE's message (fourth round of #668;
@@ -1805,7 +1851,9 @@ public class SpiceAPI
         {
             return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
                 FindWindowsInFieldOfViewConstraintProxy(searchWindow.Convert(), observerId, instrumentId, targetId, targetFrame.Name,
-                    targetShape.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
+                    targetShape.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count),
+                // gftfov reads the target frame of an ellipsoid only (Detailed_Input tframe)
+                targetShape == ShapeType.Ellipsoid ? [(targetFrame.Name, targetFrame, nameof(targetFrame))] : []);
         }
     }
 
@@ -1832,7 +1880,10 @@ public class SpiceAPI
     /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
     /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
     /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
-    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>. Or SPICE knows no frame of
+    /// the name of <paramref name="frame"/> (<c>frame</c>, read through <c>namfrm_c</c> after the failed read): the message
+    /// names the frame, the <see cref="SpiceException"/> of the read, with SPICE's message, its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -1951,7 +2002,10 @@ public class SpiceAPI
     /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
     /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
     /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
-    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>. Or SPICE knows no frame of
+    /// the name of <paramref name="frame"/> (<c>frame</c>, read through <c>namfrm_c</c> after the failed read): the message
+    /// names the frame, the <see cref="SpiceException"/> of the read, with SPICE's message, its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -2152,6 +2206,10 @@ public class SpiceAPI
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="referenceFrame"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563).</exception>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="referenceFrame"/>
+    /// (<c>referenceFrame</c>, read through <c>namfrm_c</c> after the failed read): the message names the frame, the
+    /// <see cref="SpiceException"/> of the read, with SPICE's message, its inner exception (R25 of #668, decided by
+    /// S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <exception cref="SpiceException">SPICE gives no orientation at one of the epochs, with its message.</exception>
     public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
         int naifId, TimeSpan tolerance,
@@ -2563,7 +2621,9 @@ public class SpiceAPI
     /// quaternion was returned, except on the TEME path).
     /// </remarks>
     /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="fromFrame"/> or
-    /// <paramref name="toFrame"/> (the parameter named), read through <c>namfrm_c</c> after the failed transformation, so that
+    /// <paramref name="toFrame"/> (the parameter named, also when the other end is a managed frame, TEME, CIRS, TIRS or the
+    /// frame of a site that only the library holds, and SPICE reads the unknown end alone), read through <c>namfrm_c</c>
+    /// after the failed transformation, so that
     /// a frame kernel loaded after <c>new Frame(name)</c> counts: the message names the frame (and <see cref="Frame.ICRF"/> for
     /// the names ICRF and EME2000), the <see cref="InvalidOperationException"/> below its inner exception, with SPICE's
     /// <c>SPICE(UNKNOWNFRAME)</c> message, "The frame NOT_A_FRAME was not recognized as a known reference frame." (R25 of
@@ -2576,6 +2636,18 @@ public class SpiceAPI
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
         if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
+        return TransformFrame(epoch, fromFrame, toFrame, nameof(fromFrame), nameof(toFrame));
+    }
+
+    /// <summary>
+    /// <see cref="TransformFrame(Time, Frame, Frame)"/>, an unknown name of <paramref name="fromFrame"/> or
+    /// <paramref name="toFrame"/> naming <paramref name="fromParamName"/> or <paramref name="toParamName"/>: the parameter of
+    /// the public call that holds the frame, or null when the frame is none of its arguments (R25 of #668, open choice 1;
+    /// review of L1: the inner transform of a managed end named <c>fromFrame</c> whatever the end).
+    /// </summary>
+    internal OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame, string fromParamName,
+        string toParamName)
+    {
         // TEME, CIRS, TIRS and the frame of a site that only the library holds (TransformedThroughIcrf) are composed through
         // ICRF, as the reads in them are rotated (fourth round of #668, #656; before, only TEME was, and the others threw)
         Frame fromManaged, toManaged;
@@ -2587,7 +2659,7 @@ public class SpiceAPI
 
         if (fromManaged != null || toManaged != null)
         {
-            return TransformFrameThroughIcrf(epoch, fromFrame, fromManaged, toFrame, toManaged);
+            return TransformFrameThroughIcrf(epoch, fromFrame, fromManaged, fromParamName, toFrame, toManaged, toParamName);
         }
 
         lock (lockObject)
@@ -2603,8 +2675,8 @@ public class SpiceAPI
             if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
             {
                 var error = NativeException($"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}");
-                var unknownFrom = FrameErrorOrInner(error, fromName, fromFrame, nameof(fromFrame));
-                throw unknownFrom != error ? unknownFrom : FrameErrorOrInner(error, toName, toFrame, nameof(toFrame));
+                var unknownFrom = FrameErrorOrInner(error, fromName, fromFrame, fromParamName);
+                throw unknownFrom != error ? unknownFrom : FrameErrorOrInner(error, toName, toFrame, toParamName);
             }
 
             return new OrbitalParameters.StateOrientation(
@@ -2618,11 +2690,11 @@ public class SpiceAPI
     /// <see cref="Frame.ToFrame"/>: the managed frame by its own orientation, the other by SPICE; labelled with
     /// <paramref name="fromFrame"/>.
     /// </summary>
-    private OrbitalParameters.StateOrientation TransformFrameThroughIcrf(Time epoch, Frame fromFrame, Frame fromManaged, Frame toFrame,
-        Frame toManaged)
+    private OrbitalParameters.StateOrientation TransformFrameThroughIcrf(Time epoch, Frame fromFrame, Frame fromManaged,
+        string fromParamName, Frame toFrame, Frame toManaged, string toParamName)
     {
-        var fromToIcrf = OrientationToIcrf(epoch, fromFrame, fromManaged);
-        var toToIcrf = OrientationToIcrf(epoch, toFrame, toManaged);
+        var fromToIcrf = OrientationToIcrf(epoch, fromFrame, fromManaged, fromParamName);
+        var toToIcrf = OrientationToIcrf(epoch, toFrame, toManaged, toParamName);
         var rotation = toToIcrf.Rotation.Conjugate() * fromToIcrf.Rotation;
         var angularVelocity = toToIcrf.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + fromToIcrf.AngularVelocity;
         return new OrbitalParameters.StateOrientation(rotation, angularVelocity, epoch, fromFrame);
@@ -2635,10 +2707,11 @@ public class SpiceAPI
     private static Frame TransformedThroughIcrf(Frame frame) =>
         ManagedReadFrame(frame) is { } managed and not Body.Spacecraft.SpacecraftFrame ? managed : null;
 
-    private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed)
+    // The orientation of one end of a transform to ICRF, an unknown name naming paramName, the parameter of that end
+    private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed, string paramName)
     {
         // TransformFrame throws when SPICE gives no rotation (#454)
-        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF);
+        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF, paramName, null);
     }
 
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)

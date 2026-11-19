@@ -200,11 +200,13 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     {
         // The public searches that go to CSPICE throw SPICE's error where SPICE cannot search (#668, fourth round): before,
         // the native proxies dropped it and the searches returned no window. The reference is SPICE's error signal: a frame
-        // name it does not know, a window past LRO's SPK (2023-349 to 2024-075), a window past de440s and the Earth's PCK
-        var unknownFrame = Assert.Throws<SpiceException>(() => Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon,
+        // name it does not know, a window past LRO's SPK (2023-349 to 2024-075), a window past de440s and the Earth's PCK.
+        // The unknown name is a bad argument since R25 of #668 (review of L1), SPICE's error its inner exception
+        var unknownFrame = Assert.Throws<ArgumentException>(() => Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon,
             new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, 0.0, Aberration.None,
             Step).ToArray());
-        Assert.Contains("NOT_A_FRAME_668", unknownFrame.Message);
+        Assert.Equal("frame", unknownFrame.ParamName);
+        Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknownFrame.InnerException).Message);
 
         var pastTheSpk = new Window(new TimeSystem.Time(2024, 6, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2024, 6, 2, frame: TimeFrame.TDBFrame));
         var noState = Assert.Throws<SpiceException>(() => Lro.FindWindowsOnDistanceConstraint(pastTheSpk, Moon, RelationnalOperator.Greater,
