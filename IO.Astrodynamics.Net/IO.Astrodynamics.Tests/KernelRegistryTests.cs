@@ -26,7 +26,8 @@ namespace IO.Astrodynamics.Tests;
 /// <remarks>
 /// Each frame is rotated from J2000 by its angle about z (TKFRAME_ANGLES (angle, 0, 0) about the axes (3, 2, 1), NAIF,
 /// Frames Required Reading, "Defining a TK Frame Using Euler Angles"), read back by SPICE through
-/// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/>, which throws once the frame is out of the pool. A text kernel
+/// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/>, which throws <see cref="ArgumentException"/> once
+/// the frame is out of the pool (R25 of #668). A text kernel
 /// is closed by SPICE after its load, so a loaded text kernel can be deleted on every platform, and SPICE keeps nothing of it
 /// once unloaded. A binary kernel (the copies of the moon PCK of <c>Data/SolarSystem</c>) stays open: the scenarios that
 /// delete a loaded one run in the child process <c>IO.Astrodynamics.Tests.KernelUnload</c> (<see cref="KernelUnloadChildTests"/>), because a failed reopening
@@ -73,9 +74,10 @@ public class KernelRegistryTests : IDisposable
         return 2.0 * System.Math.Acos(System.Math.Min(1.0, System.Math.Abs(q.W))) * Astrodynamics.Constants.Rad2Deg;
     }
 
+    // A frame SPICE no longer knows is a bad argument since R25 of #668 (an InvalidOperationException before 11.0.0)
     private static void AssertUnknown(string frameName)
     {
-        Assert.Throws<InvalidOperationException>(() => RotationAngleDeg(frameName));
+        Assert.Throws<ArgumentException>(() => RotationAngleDeg(frameName));
     }
 
     [Theory]

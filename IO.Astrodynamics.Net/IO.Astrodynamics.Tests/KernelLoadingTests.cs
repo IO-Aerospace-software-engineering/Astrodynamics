@@ -146,7 +146,7 @@ public class KernelLoadingTests : IDisposable
 
         // Assert
         Assert.Equal(20.0, AngleDeg("IOA_L1_HOLD_A"), 12);
-        Assert.Throws<InvalidOperationException>(() => AngleDeg("IOA_L1_HOLD_B"));
+        Assert.Throws<ArgumentException>(() => AngleDeg("IOA_L1_HOLD_B"));
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public class KernelLoadingTests : IDisposable
         SpiceAPI.Instance.UnloadKernels(folder);
 
         // Assert: one unload removes a.tf (a second load of it would have needed a second unload)
-        Assert.Throws<InvalidOperationException>(() => AngleDeg("IOA_L1_FAIL"));
+        Assert.Throws<ArgumentException>(() => AngleDeg("IOA_L1_FAIL"));
         Assert.Empty(Under(_root));
     }
 
@@ -338,7 +338,7 @@ public class KernelLoadingTests : IDisposable
         SpiceAPI.Instance.UnloadKernels(folder);
 
         // Assert
-        Assert.Throws<InvalidOperationException>(() => AngleDeg("IOA_L1_RIN_A"));
+        Assert.Throws<ArgumentException>(() => AngleDeg("IOA_L1_RIN_A"));
         Assert.Equal(30.0, AngleDeg("IOA_L1_RIN_B"), 12);
     }
 
@@ -399,8 +399,8 @@ public class KernelLoadingTests : IDisposable
 
         // Assert
         Assert.Empty(Under(_root));
-        Assert.Throws<InvalidOperationException>(() => AngleDeg("IOA_L1_STR_A"));
-        Assert.Throws<InvalidOperationException>(() => AngleDeg("IOA_L1_STR_B"));
+        Assert.Throws<ArgumentException>(() => AngleDeg("IOA_L1_STR_A"));
+        Assert.Throws<ArgumentException>(() => AngleDeg("IOA_L1_STR_B"));
     }
 
     [Fact]

@@ -45,6 +45,10 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// see <see cref="StaticBodiesChild"/>.
 /// The modes <c>two-body-first-propagate</c> and <c>two-body-first-conic</c> take no schedule and load no kernel: the two-body
 /// call is the first native call of the process, see <see cref="CheckTwoBodyAsFirstNativeCall"/> (#714).
+/// The mode <c>static-frames-provider</c> takes the kernel directory, unused: the providers a frame reads, see
+/// <see cref="FrameProviderChild"/> (R25 of #668).
+/// </para>
+/// <para>
 /// The mode <c>frame-memory</c> takes the kernel directory alone: the memory a frame retains after its reads, see
 /// <see cref="FrameMemoryChild"/> (#541).
 /// The mode <c>conversions-lock</c> (#664) takes the kernel directory alone: the element conversions and the two-body
@@ -115,6 +119,12 @@ internal static class Program
         if (args.Length == 2 && args[1] == "static-bodies-before-kernels")
         {
             return StaticBodiesChild.RunBeforeKernels(args[0]);
+        }
+
+        // The provider a static frame and a frame built by name read, and the unknown frames of a memory provider (R25 of #668)
+        if (args.Length == 2 && args[1] == "static-frames-provider")
+        {
+            return FrameProviderChild.Run();
         }
 
         // The memory a frame retains after its reads, alone in the process (#541)

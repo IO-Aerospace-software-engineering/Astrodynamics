@@ -348,9 +348,10 @@ public class TemeFrameTests
             new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536), orbit);
         var frame = spacecraft.Frame;
 
-        // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it
-        Assert.Contains("F07SC_FRAME", Assert.Throws<InvalidOperationException>(() => moon.GetEphemeris(epoch, earth, frame, Aberration.LT)).Message);
-        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
+        // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it,
+        // a bad argument since R25 of #668 (InvalidOperationException before)
+        Assert.Contains("F07SC_FRAME", Assert.Throws<ArgumentException>(() => moon.GetEphemeris(epoch, earth, frame, Aberration.LT)).Message);
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
 
         // An attitude other than the identity, given by hand
         frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));

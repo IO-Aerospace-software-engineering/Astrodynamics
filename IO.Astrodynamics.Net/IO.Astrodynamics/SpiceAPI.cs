@@ -508,6 +508,43 @@ public class SpiceAPI
     /// </summary>
     private static void ThrowLastProxyError() => throw new InvalidOperationException(LastProxyError());
 
+    /// <summary>
+    /// Throws the error of a failed native call that handed SPICE <paramref name="frameName"/>, the name of
+    /// <paramref name="frame"/>: <see cref="ArgumentException"/> naming <paramref name="paramName"/> when SPICE knows no
+    /// frame of that name (<c>namfrm_c</c> through <c>GetFrameInfoProxy</c>, read after the message), with the error of the
+    /// call as inner exception; that error otherwise (R25 of #668: before 11.0.0 an unknown name threw the
+    /// <see cref="InvalidOperationException"/> of the call, the type of a coverage gap).
+    /// </summary>
+    private static void ThrowLastProxyError(string frameName, Frame frame, string paramName) =>
+        throw FrameErrorOrInner(new InvalidOperationException(LastProxyError()), frameName, frame, paramName);
+
+    // The ArgumentException of an unknown frame name, the error of the call as inner exception, or that error. Under the lock
+    private static Exception FrameErrorOrInner(Exception error, string frameName, Frame frame, string paramName)
+    {
+        if (GetFrameInfoProxy(frameName, out _, out _, out _))
+        {
+            return error;
+        }
+
+        return new ArgumentException(UnknownFrameMessage(frame.Name), paramName, error);
+    }
+
+    /// <summary>
+    /// The message of a frame name the loaded kernels do not define; for ICRF and EME2000, which are no SPICE names (the
+    /// library keeps them as other names, frames.md), it names <see cref="Frame.ICRF"/>.
+    /// </summary>
+    internal static string UnknownFrameMessage(string name) =>
+        WithIcrfHint(name, $"'{name}' is not a frame of the loaded kernels: SPICE knows no frame of that name.");
+
+    /// <summary>
+    /// <paramref name="message"/>, followed for the names ICRF and EME2000 by a pointer to <see cref="Frame.ICRF"/>: the two
+    /// names stay other names than J2000 (frames.md), a frame of either converting nowhere (R25 of #668).
+    /// </summary>
+    internal static string WithIcrfHint(string name, string message) =>
+        string.Equals(name, "ICRF", StringComparison.OrdinalIgnoreCase) || string.Equals(name, "EME2000", StringComparison.OrdinalIgnoreCase)
+            ? message + " Use Frame.ICRF, the ICRF, which SPICE names J2000 (EME2000 data are read in it, its 23 mas frame bias ignored)."
+            : message;
+
     /// <summary>The last error message of the native proxy layer, or a generic message when it holds none.</summary>
     private static string LastProxyError()
     {
@@ -1779,13 +1816,13 @@ public class SpiceAPI
                 double[] epochs = grid.Seconds(first, WindowReadChunk);
                 var stateVectors = new StateVector[epochs.Length];
                 if (!ReadEphemerisProxy(epochs, epochs.Length, observerId, targetId, frameName, aberration.GetDescription(), stateVectors))
-                    ThrowLastProxyError();
+                    ThrowLastProxyError(frameName, frame, nameof(frame));
                 // Every state checked before any is converted: the rotation into a managed frame calls TransformFrameProxy,
                 // which clears the message of the failed epochs (#714, review of the branch: a site frame threw "Native proxy
                 // call failed" where J2000 threw SPICE's message)
                 foreach (var x in stateVectors)
                 {
-                    ThrowOnFailedRead(x);
+                    ThrowOnFailedRead(x, frameName, frame);
                 }
 
                 for (int i = 0; i < stateVectors.Length; i++)
@@ -1995,9 +2032,10 @@ public class SpiceAPI
         Frame frame, Aberration aberration)
     {
         var managed = ManagedReadFrame(frame);
+        string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
         var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
-            observer.NaifId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name, aberration.GetDescription());
-        ThrowOnFailedRead(stateVector);
+            observer.NaifId, targetId, frameName, aberration.GetDescription());
+        ThrowOnFailedRead(stateVector, frameName, frame);
         // Labelled with the epoch asked, the instant SPICE read at, as SpiceDataProvider.GetEphemeris does: where an ulp
         // of the seconds is coarser than a tick (2017 to 2028, 1971 to 1983), the epoch SPICE returns, made a Time again,
         // is the neighbouring tick for about 16 % of ticks (#625)
@@ -2014,15 +2052,16 @@ public class SpiceAPI
     /// <summary>
     /// Throws the SPICE error of a failed read: <c>ReadEphemerisAtGivenEpochProxy</c> writes NaN in the state when
     /// <c>spkezr_c</c> fails and keeps the SPICE message for <c>GetLastErrorProxy</c> (#454); before, the state was the
-    /// unwritten one of the stack. No valid state is non-finite.
+    /// unwritten one of the stack. No valid state is non-finite. A frame name SPICE does not know throws
+    /// <see cref="ArgumentException"/> (<c>frame</c>), the SPICE error as inner exception (R25 of #668).
     /// </summary>
-    private static void ThrowOnFailedRead(in StateVector stateVector)
+    private static void ThrowOnFailedRead(in StateVector stateVector, string frameName, Frame frame)
     {
         if (!double.IsFinite(stateVector.Position.X) || !double.IsFinite(stateVector.Position.Y) ||
             !double.IsFinite(stateVector.Position.Z) || !double.IsFinite(stateVector.Velocity.X) ||
             !double.IsFinite(stateVector.Velocity.Y) || !double.IsFinite(stateVector.Velocity.Z))
         {
-            ThrowLastProxyError();
+            ThrowLastProxyError(frameName, frame, nameof(frame));
         }
     }
 
@@ -2089,7 +2128,7 @@ public class SpiceAPI
                 // A buffer of the epochs read (#563: before, 10000 records whatever the window, 1.4 ms for one epoch)
                 var stateOrientations = new StateOrientation[epochs.Length];
                 if (!ReadOrientationProxy(epochs, epochs.Length, naifId, tolerance.TotalSeconds, frameName, stateOrientations))
-                    ThrowLastProxyError();
+                    ThrowLastProxyError(frameName, referenceFrame, nameof(referenceFrame));
                 records.AddRange(stateOrientations.Select(x => new OrbitalParameters.StateOrientation(x.Rotation.Convert(),
                     x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame)));
             }
@@ -2481,11 +2520,16 @@ public class SpiceAPI
     /// quaternion and a message of the library's that named the coverage whatever the cause, #454; before 11.0.0 the zero
     /// quaternion was returned, except on the TEME path).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE gives no rotation between the frames at this epoch (a quaternion
-    /// whose norm differs from 1 by more than 1e-9, or NaN): the message names the frames and the epoch, then gives SPICE's,
-    /// such as <c>SPICE(UNKNOWNFRAME)</c>'s "The frame NOT_A_FRAME was not recognized as a known reference frame." or
-    /// <c>SPICE(FRAMEDATANOTFOUND)</c>'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for
-    /// epoch ... were not found."</exception>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="fromFrame"/> or
+    /// <paramref name="toFrame"/> (the parameter named), read through <c>namfrm_c</c> after the failed transformation, so that
+    /// a frame kernel loaded after <c>new Frame(name)</c> counts: the message names the frame (and <see cref="Frame.ICRF"/> for
+    /// the names ICRF and EME2000), the <see cref="InvalidOperationException"/> below its inner exception, with SPICE's
+    /// <c>SPICE(UNKNOWNFRAME)</c> message, "The frame NOT_A_FRAME was not recognized as a known reference frame." (R25 of
+    /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0, that <see cref="InvalidOperationException"/>).</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no rotation between two frames it knows at this epoch (a
+    /// quaternion whose norm differs from 1 by more than 1e-9, or NaN): the message names the frames and the epoch, then
+    /// gives SPICE's, such as <c>SPICE(FRAMEDATANOTFOUND)</c>'s "PCK data required to compute the orientation of the
+    /// body-fixed frame ITRF93 for epoch ... were not found."</exception>
     public OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame)
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
@@ -2506,15 +2550,20 @@ public class SpiceAPI
 
         lock (lockObject)
         {
-            var res = TransformFrameProxy(SpiceFrameName(fromFrame), SpiceFrameName(toFrame), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            string fromName = SpiceFrameName(fromFrame);
+            string toName = SpiceFrameName(toFrame);
+            var res = TransformFrameProxy(fromName, toName, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
             // A failed transformation returns a NaN rotation with SPICE's message (#714; the zero quaternion with no message
-            // before, #454): a rotation is a unit quaternion. Read before any other native call
+            // before, #454): a rotation is a unit quaternion. Read before any other native call; then a name SPICE does not
+            // know is a bad argument (R25 of #668), the SPICE error its inner exception
             var rotation = new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z);
             if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
             {
-                throw new InvalidOperationException(
+                var error = new InvalidOperationException(
                     $"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}: {LastProxyError()}");
+                var unknownFrom = FrameErrorOrInner(error, fromName, fromFrame, nameof(fromFrame));
+                throw unknownFrom != error ? unknownFrom : FrameErrorOrInner(error, toName, toFrame, nameof(toFrame));
             }
 
             return new OrbitalParameters.StateOrientation(

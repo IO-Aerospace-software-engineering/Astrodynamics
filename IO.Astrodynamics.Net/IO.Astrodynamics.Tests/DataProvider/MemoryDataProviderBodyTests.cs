@@ -11,8 +11,8 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// <summary>
 /// The library on a <see cref="IO.Astrodynamics.DataProvider.MemoryDataProvider"/> set as the global provider (#680), in
 /// the child process <c>IO.Astrodynamics.Tests.ColdStart</c> (mode <c>memory-provider</c>): the test process never swaps
-/// the global provider (#631), since an object another test class builds during the swap, and a static frame first built
-/// during it, keep the provider for the whole process.
+/// the global provider (#631), since an object another test class builds during the swap keeps that provider for its life,
+/// and a static frame reads the provider set at each of its transforms (11.0.0, structuring choice 1 of #668).
 /// </summary>
 /// <remarks>
 /// The child checks that the provider's missing data throw the type SPICE throws, which the library's handlers of missing
@@ -184,6 +184,28 @@ public class MemoryDataProviderBodyTests
         Assert.Contains("OK EARTH_BODY's frame and orbit after the reload of a kernel are the same instances", output);
         Assert.Contains("OK EARTH_BODY.GM after ClearKernels, read 2: InvalidOperationException", output);
         Assert.Contains("OK EARTH_BODY.J2 and Frame after the kernels are loaded again", output);
+    }
+
+    /// <summary>
+    /// The provider a frame reads (structuring choice 1 and R25 of #668, decided by S. Guillet, 2026-11-19), in a fresh
+    /// process that sets two memory providers holding rotations of closed-form angles: a static SPICE frame of
+    /// <see cref="Frames.Frame"/> reads the provider set at each transform, a frame built by name the provider of its
+    /// construction; a name the memory provider neither holds nor defines throws <see cref="ArgumentException"/>, pointing
+    /// to <c>Frame.ICRF</c> for ICRF and EME2000. Before, a static frame kept the provider set when the type was first used.
+    /// </summary>
+    [Fact]
+    public void StaticFrames_ReadTheProviderOfTheProcess_AndFramesByNameTheirOwn()
+    {
+        string output = ColdStartTests.RunChild("(static-frames-provider)", "static-frames-provider");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK Frame.GALACTIC_SYSTEM2 follows the provider set since, at the same epoch: 30°", output);
+        Assert.Contains("OK Frame.ITRF93 follows it too: 30°", output);
+        Assert.Contains("OK a frame built by name keeps the provider of its construction: 90°", output);
+        Assert.Contains("OK the memory provider's EME2000: ArgumentException", output);
     }
 
     public static IEnumerable<object[]> LagrangeIdPaths() =>

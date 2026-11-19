@@ -148,6 +148,9 @@ release are listed under **Known limitations**.
   provider an object reads are one table of [Data Providers](../reference/spice-api.md#data-providers): an object the
   caller builds reads the provider set when it is built, a static body of `PlanetsAndMoons`, `Stars` or `Barycenters`
   keeps the provider of its first read. There is no scoped provider in 11.0.0.
+- **`Frame.ITRF93`**, the Earth's precise body-fixed frame by its SPICE name (R25 of #668, D2's N2): equal to
+  `new Frame("ITRF93")` and, with `earth_assoc_itrf93.tf`, to the frame of `new CelestialBody(399)`, its orientation that
+  of SPICE bit for bit (`FrameByNameTests`). See [Frames](../reference/frames.md).
 
 **Fixed**
 
@@ -4286,6 +4289,30 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: a frame name the loaded kernels do not define throws `ArgumentException`** (R25 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A, decided by
+  S. Guillet, 2026-11-19), as `MemoryDataProvider` does: on every path that hands the name to SPICE,
+  `SpiceAPI.TransformFrame` (`ParamName` `fromFrame` or `toFrame`), `ToFrame` of a frame or a state either way, the
+  ephemeris reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris` at an epoch or over a window, `frame`) and
+  `SpiceAPI.ReadOrientation` (`referenceFrame`). The library asks SPICE (`namfrm_c`, through `GetFrameInfoProxy`) after
+  the failed call, so a frame kernel loaded after `new Frame(name)` counts; the message names the frame, and the
+  `InvalidOperationException` thrown before, with SPICE's message, is the inner exception. The names `ICRF` and
+  `EME2000`, which are no SPICE names, stay other names, and their message points to `Frame.ICRF` (on both providers). A
+  known frame that SPICE cannot orient at the epoch (outside the Earth's binary PCK) keeps its
+  `InvalidOperationException`, which the orientation cache of a propagation still reads as unavailable. Results do not
+  move where SPICE gives a transform: the same `sxform_c` and `spkezr_c` calls. The frame of a managed spacecraft without
+  an attitude record and of a kernel-backed spacecraft that no frame kernel defines, read by name, throw it too.
+  CSPICE's coordinate search keeps its `InvalidOperationException`. Migration: a `catch (InvalidOperationException)`
+  meant for a mistyped or unloaded frame catches `ArgumentException`.
+- **Breaking: the static SPICE frames of `Frame` read the data provider of the process at each transform**
+  (structuring choice 1 of #668, decided by S. Guillet, 2026-11-19). `Frame.ICRF`, `ECLIPTIC_J2000`, `ECLIPTIC_B1950`,
+  `GALACTIC_SYSTEM2`, `B1950`, `FK4` and `ITRF93` read `Configuration.Instance.DataProvider` when they transform, their
+  last orientation kept for one provider and one generation of the kernel pool; a frame built by name keeps the provider
+  set at its construction, as every object the caller builds. Before, the static frames read the provider set when the
+  type `Frame` was first used, for the life of the process, so that after `SetDataProvider` they read the former
+  provider (a child process with two memory providers measures both rules, `MemoryDataProviderBodyTests`). Nothing moves
+  for a process that keeps one provider. Migration: none for one provider; a program that swaps providers and meant the
+  static frames to stay on the former one builds its frames by name before the swap.
 - **Breaking: `NaifObject` is an `INaifObject` of an identifier and a name, without `Frame`** (R02 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A, decided by
   S. Guillet, 2026-11-19). The record struct is `NaifObject(int NaifId, string Name) : INaifObject`; its `Frame`,

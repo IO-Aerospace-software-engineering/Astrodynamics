@@ -60,6 +60,32 @@ is reserved for changes between inertial frames.
 | `Frame.GALACTIC_SYSTEM2` | Galactic coordinate system |
 | `Frame.B1950` | B1950 equatorial frame |
 | `Frame.FK4` | FK4 frame |
+| `Frame.ITRF93` | The Earth's precise body-fixed frame (SPICE `ITRF93`, oriented by `earth_latest_high_prec.bpc`), the frame of the Earth with `earth_assoc_itrf93.tf`; equal to `new Frame("ITRF93")` (11.0.0) |
+
+The static SPICE frames (`Frame.ICRF`, `Frame.ECLIPTIC_J2000`, `Frame.ECLIPTIC_B1950`, `Frame.GALACTIC_SYSTEM2`,
+`Frame.B1950`, `Frame.FK4`, `Frame.ITRF93`) read the data provider of the process, `Configuration.Instance.DataProvider`,
+at each transform, whereas a frame built by name reads the provider set at its construction (structuring choice 1 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+2026-11-19; before 11.0.0 the static frames read the provider set when the type `Frame` was first used, for the life of
+the process). The rules of every object are one table: [SPICE API](spice-api.md#which-provider-an-object-reads).
+
+### Names SPICE does not know
+
+A frame is checked by name at each transform, not at `new Frame(name)`, since a frame kernel loaded afterwards defines
+it. A name the loaded kernels do not define throws `ArgumentException` on every path that hands it to SPICE:
+`SpiceAPI.TransformFrame` (naming `fromFrame` or `toFrame`), `ToFrame` of a frame or of a state, either way, the ephemeris
+reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris`, at an epoch or over a window, naming `frame`) and `SpiceAPI.ReadOrientation`
+(`referenceFrame`). The library asks SPICE (`namfrm_c`) after the failed call; the message names the frame, and the
+`InvalidOperationException` of the call, with SPICE's message (`SPICE(UNKNOWNFRAME)`'s "was not recognized as a known
+reference frame" for a transform), is its inner exception (R25 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+2026-11-19; before 11.0.0 that `InvalidOperationException` alone, the type of a coverage gap). A `MemoryDataProvider`
+throws `ArgumentException` for a frame it neither holds nor defines. A known frame SPICE cannot orient at the epoch (the
+Earth's binary PCK does not cover it, `SPICE(FRAMEDATANOTFOUND)`) still throws `InvalidOperationException`, which the
+orientation cache of a propagation reads as an orientation unavailable there. The names `ICRF` and `EME2000` are not
+SPICE's: they stay other names (see [Equality](#equality)), and their message points to `Frame.ICRF`. The coordinate
+search of CSPICE, `SpiceAPI.FindWindowsOnCoordinateConstraint`, keeps its `InvalidOperationException` for a name SPICE
+does not know.
 
 ### Constructors
 

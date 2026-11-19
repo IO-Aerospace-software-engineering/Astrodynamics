@@ -10,6 +10,8 @@ namespace IO.Astrodynamics.Frames;
 
 public class Frame : IEquatable<Frame>
 {
+    // The provider of a frame built by name (the provider set at its construction), null for the static SPICE frames of this
+    // class, which read the provider of the process at each transform (structuring choice 1 of #668)
     private readonly IDataProvider _dataProvider;
     public string Name { get; }
     public int? Id { get; }
@@ -19,7 +21,7 @@ public class Frame : IEquatable<Frame>
     private LastOrientationEntry _lastOrientation;
     private readonly Func<Time, StateOrientation> _readFromProvider;
 
-    private sealed record LastOrientationEntry(Time Date, long KernelPoolGeneration, StateOrientation Orientation);
+    private sealed record LastOrientationEntry(Time Date, long KernelPoolGeneration, IDataProvider Provider, StateOrientation Orientation);
 
     // The orientation cache active on the current thread, and the frame it belongs to (FrameOrientationCacheScope)
     [ThreadStatic] private static Frame _cachedFrame;
@@ -90,32 +92,32 @@ public class Frame : IEquatable<Frame>
     /// library models EME2000 separately, so data labelled EME2000 is read in this frame, ignoring the
     /// bias (about 0.8 m on a LEO position, 4.7 m on a GEO position).
     /// </remarks>
-    public static readonly Frame ICRF = new Frame("J2000");
+    public static readonly Frame ICRF = ProcessProviderFrame("J2000");
 
     /// <summary>
     /// Ecliptic coordinate system at epoch B1950.
     /// </summary>
-    public static readonly Frame ECLIPTIC_B1950 = new Frame("ECLIPB1950");
+    public static readonly Frame ECLIPTIC_B1950 = ProcessProviderFrame("ECLIPB1950");
 
     /// <summary>
     /// Ecliptic coordinate system at epoch J2000.
     /// </summary>
-    public static readonly Frame ECLIPTIC_J2000 = new Frame("ECLIPJ2000");
+    public static readonly Frame ECLIPTIC_J2000 = ProcessProviderFrame("ECLIPJ2000");
 
     /// <summary>
     /// Galactic coordinate system.
     /// </summary>
-    public static readonly Frame GALACTIC_SYSTEM2 = new Frame("GALACTIC");
+    public static readonly Frame GALACTIC_SYSTEM2 = ProcessProviderFrame("GALACTIC");
 
     /// <summary>
     /// Equatorial coordinate system at epoch B1950.
     /// </summary>
-    public static readonly Frame B1950 = new Frame("B1950");
+    public static readonly Frame B1950 = ProcessProviderFrame("B1950");
 
     /// <summary>
     /// Fourth Fundamental Catalog (FK4) coordinate system.
     /// </summary>
-    public static readonly Frame FK4 = new Frame("FK4");
+    public static readonly Frame FK4 = ProcessProviderFrame("FK4");
 
     /// <summary>
     /// True Equator, Mean Equinox (TEME), the frame of the SGP4/SDP4 states of a TLE: the managed
@@ -145,6 +147,31 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     public static readonly Frame TIRS = new TirsFrame();
 
+    /// <summary>
+    /// The International Terrestrial Reference Frame ITRF93, the SPICE name of the Earth's precise body-fixed frame, which
+    /// <c>earth_latest_high_prec.bpc</c> orients and <c>earth_assoc_itrf93.tf</c> makes the frame of the Earth: equal to
+    /// <c>new Frame("ITRF93")</c> and, with those kernels, to the frame of <c>new CelestialBody(399)</c> (R25 of #668).
+    /// </summary>
+    /// <remarks>Its orientation needs the Earth's binary PCK: outside its coverage a transform throws
+    /// <see cref="InvalidOperationException"/>.</remarks>
+    public static readonly Frame ITRF93 = ProcessProviderFrame("ITRF93");
+
+    /// <summary>
+    /// A static SPICE frame of this class: it reads the data provider of the process (<see cref="Configuration.DataProvider"/>)
+    /// at each transform, where a frame built by name reads the provider set at its construction (structuring choice 1 of
+    /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 the static frames read the provider set when the type was first
+    /// used, for the life of the process).
+    /// </summary>
+    private static Frame ProcessProviderFrame(string name) => new(name, followsProcessProvider: true);
+
+    private Frame(string name, bool followsProcessProvider) : this(name)
+    {
+        if (followsProcessProvider) _dataProvider = null;
+    }
+
+    // The provider this frame reads: its own, or the process's for a static SPICE frame
+    private IDataProvider Provider => _dataProvider ?? Configuration.Instance.DataProvider;
+
     public Frame(string name, int? id = null)
     {
         if (string.IsNullOrEmpty(name))
@@ -156,7 +183,7 @@ public class Frame : IEquatable<Frame>
 
         Name = name;
         Id = id;
-        _readFromProvider = date => _dataProvider.FrameTransformationToICRF(date, this);
+        _readFromProvider = date => Provider.FrameTransformationToICRF(date, this);
     }
 
     /// <summary>
@@ -197,7 +224,7 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     internal StateOrientation ReadStateOrientationToICRF(in Time date)
     {
-        return _dataProvider.FrameTransformationToICRF(date, this);
+        return Provider.FrameTransformationToICRF(date, this);
     }
 
     /// <summary>
@@ -210,14 +237,16 @@ public class Frame : IEquatable<Frame>
     private protected StateOrientation LastOrientation(in Time date, Func<Time, StateOrientation> read)
     {
         long generation = SpiceAPI.KernelPoolGeneration;
+        // The provider read: a static frame's follows the process, so an orientation of another provider is read again
+        var provider = Provider;
         var last = Volatile.Read(ref _lastOrientation);
-        if (last != null && last.KernelPoolGeneration == generation && last.Date.HasSameLabel(date))
+        if (last != null && last.KernelPoolGeneration == generation && ReferenceEquals(last.Provider, provider) && last.Date.HasSameLabel(date))
         {
             return last.Orientation;
         }
 
         var orientation = read(date);
-        Volatile.Write(ref _lastOrientation, new LastOrientationEntry(date, generation, orientation));
+        Volatile.Write(ref _lastOrientation, new LastOrientationEntry(date, generation, provider, orientation));
         return orientation;
     }
 

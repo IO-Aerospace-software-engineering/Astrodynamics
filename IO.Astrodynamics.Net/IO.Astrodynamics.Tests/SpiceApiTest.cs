@@ -1144,7 +1144,7 @@ public partial class SpiceApiTest
             root.Delete(true);
         }
 
-        Assert.Throws<InvalidOperationException>(() => RotationAngleFromIcrfDeg("IOA_G4_FI_DIR"));
+        Assert.Throws<ArgumentException>(() => RotationAngleFromIcrfDeg("IOA_G4_FI_DIR"));
     }
 
     [Fact]
@@ -1167,7 +1167,7 @@ public partial class SpiceApiTest
             root.Delete(true);
         }
 
-        Assert.Throws<InvalidOperationException>(() => RotationAngleFromIcrfDeg("IOA_G4_DI_FILE"));
+        Assert.Throws<ArgumentException>(() => RotationAngleFromIcrfDeg("IOA_G4_DI_FILE"));
     }
 
     [Fact]
@@ -1925,8 +1925,11 @@ public partial class SpiceApiTest
     [Fact]
     void TransformFrame_ThatSpiceCannotGive_ThrowsSpicesMessage()
     {
-        var unknown = Assert.Throws<InvalidOperationException>(() =>
+        // An unknown name is a bad argument since R25 of #668: the error of #714 is the inner exception
+        var argument = Assert.Throws<ArgumentException>(() =>
             SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
+        Assert.Equal("toFrame", argument.ParamName);
+        var unknown = Assert.IsType<InvalidOperationException>(argument.InnerException);
         _output.WriteLine($"MESSAGE #714 {unknown.Message}");
         Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to NOT_A_FRAME at {TimeSystem.Time.J2000TDB}: ", unknown.Message);
         Assert.EndsWith(UnknownFrameMessage, unknown.Message);
@@ -1953,8 +1956,10 @@ public partial class SpiceApiTest
         {
             var expected = Body.CspiceDirect.SxformError("J2000", to, et);
             Assert.False(string.IsNullOrEmpty(expected));
-            var error = Assert.Throws<InvalidOperationException>(() =>
+            var thrown = Record.Exception(() =>
                 SpiceAPI.Instance.TransformFrame(TimeSystem.Time.CreateTDB(et), Frames.Frame.ICRF, new Frames.Frame(to)));
+            // The unknown name an ArgumentException since R25 of #668, SPICE's message on its inner exception
+            var error = Assert.IsType<InvalidOperationException>(to == "NOT_A_FRAME" ? Assert.IsType<ArgumentException>(thrown).InnerException : thrown);
             Assert.EndsWith(": " + expected, error.Message);
         }
 

@@ -539,10 +539,12 @@ public class KernelBackedSpacecraftTests
     }
 
     /// <summary>
-    /// No FK defines the frame of id -1401000: the read throws, naming the frame, as on main (#676).
+    /// No FK defines the frame of id -1401000: the read throws, naming the frame (#676), an <see cref="ArgumentException"/>
+    /// since SPICE knows no frame of its name (R25 of #668; <see cref="InvalidOperationException"/> before 11.0.0), whose
+    /// inner exception is SPICE's error.
     /// </summary>
     [Fact]
-    public void NoFrameForId_ThrowsAsBefore()
+    public void NoFrameForId_Throws()
     {
         using var kernels = new KSatKernels();
         kernels.Load(kernels.Ephemeris);
@@ -553,8 +555,9 @@ public class KernelBackedSpacecraftTests
         var exception = Record.Exception(() => twin.Frame.GetStateOrientationToICRF(KSatRead));
 
         // Assert
-        var rejected = Assert.IsType<InvalidOperationException>(exception);
+        var rejected = Assert.IsType<ArgumentException>(exception);
         Assert.Contains("SatK_FRAME", rejected.Message);
+        Assert.IsType<InvalidOperationException>(rejected.InnerException);
     }
 
     #endregion

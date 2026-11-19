@@ -27,7 +27,7 @@ decided by S. Guillet, 2026-11-17).
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, or that SPICE does not name, #714, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
-| `TransformFrame(Time, Frame, Frame)` | The rotation and angular velocity from one frame to another (throws `InvalidOperationException` naming the frames and the epoch, then SPICE's message, when SPICE gives none: an unknown frame, frame data that do not cover the epoch, #714) |
+| `TransformFrame(Time, Frame, Frame)` | The rotation and angular velocity from one frame to another (throws `ArgumentException` naming `fromFrame` or `toFrame` for a name SPICE does not know, the error below its inner exception, 11.0.0; `InvalidOperationException` naming the frames and the epoch, then SPICE's message, when SPICE gives none for frames it knows: frame data that do not cover the epoch, #714) |
 | `Propagate2Bodies(...)`, `ConvertStateVectorToConicOrbitalElement(...)` | Two-body motion and osculating elements through `prop2b_c` and `oscltx_c` (see [Two-body calls](#two-body-calls)) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
@@ -312,7 +312,7 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 |--------|-------------------|
 | An object the caller builds: `new CelestialBody(...)`, `new Site(...)`, `new Frame(name)`, a spacecraft | The provider set when it is built, for its life |
 | A static body: `PlanetsAndMoons.EARTH_BODY`, `MOON_BODY`, `Stars.SUN_BODY`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
-| A static frame: `Frame.ICRF`, `Frame.ECLIPTIC_J2000` and the other SPICE frames of `Frame` | The provider set when the type `Frame` is first used, for the life of the process |
+| A static frame: `Frame.ICRF`, `Frame.ECLIPTIC_J2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
 
 ### MemoryDataProvider
 
