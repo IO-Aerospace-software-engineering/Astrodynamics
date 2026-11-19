@@ -6,6 +6,8 @@ Base commit 2893404 (main, 11.0.0 untagged). Nothing here is implemented. Paths 
 
 **Decisions.** D1 to D4 approved by S. Guillet, 2026-11-13. The three references of R19 and R22 (the default NAIF id −100000 − NORAD, the RTN axes of an ITRF state, SGP/SGP4 as a MEAN_ELEMENT_THEORY value) confirmed by S. Guillet, 2026-11-13; the recommendations R01 to R29 await his review.
 
+**Re-baseline.** On 2026-11-19 the design was re-baselined on main f2a0376: [668-rebaseline-2026-11-19.md](668-rebaseline-2026-11-19.md) gives what is done and what remains of each recommendation, the proposed amendments of D1 to D4, the open choices, the 10.1.0 baseline of the public API and the plan of lots L0 to L9 (both approved by S. Guillet, 2026-11-19), which replaces section D. It prevails over this file where they differ.
+
 **Precedence.** Section C (resolutions of the completeness review) prevails over the text of the decisions and recommendations where they differ.
 
 ## Contents
@@ -1761,6 +1763,8 @@ A final reviewer read every section against the others. Each contradiction below
 *Resolution.* Keep R06's input-dependent inference (D1 rule 2 allows it), but put the per-entry-point table in the ThirdBodies XML doc and expose the resolved list on PropagationSolution.Options (D1 rule 10). The bit-for-bit test covers the same options on both entry points.
 
 ## D. Plan of short PRs
+
+Replaced by the plan of lots L0 to L9 of the re-baseline (approved by S. Guillet, 2026-11-19); kept for the record.
 
 | PR | Content | Sections | Why here |
 |---|---|---|---|
