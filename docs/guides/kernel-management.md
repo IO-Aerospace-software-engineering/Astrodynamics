@@ -38,7 +38,9 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   entries by its own, listed last. Before 11.0.0 such a load unloaded the entry and loaded it again, on top of every
   kernel loaded after it, at 4 to 7 times the cost (211 to 250 ms a repeat on `Data/SolarSystem`). `ReloadKernels` does
   that now, explicitly: for a kernel rewritten on disk, or to give a path precedence again; a path inside a loaded
-  directory is read again inside that entry, which keeps its place. A sibling whose name extends a loaded one
+  directory is read again inside that entry, which keeps its place, so the directory stays the unit of precedence: a
+  file meant to win over the kernels loaded after its directory is kept outside it and loaded on its own (decided by
+  S. Guillet, 2026-11-19). A sibling whose name extends a loaded one
   (`kernels2` beside `kernels`) is another path.
 - The files of a directory load in ordinal order of their paths relative to it, component by component: the entries of
   each directory sorted by name (`StringComparer.Ordinal`, capitals before lower case), a subdirectory walked at its

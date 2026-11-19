@@ -133,7 +133,7 @@ release are listed under **Known limitations**.
   by S. Guillet, 2026-11-19). `ReloadKernels(FileSystemInfo)` and `ReloadKernels(string)` read a path again, on top of
   the kernels loaded after it: its loaded files are unloaded, then all its files loaded (a kernel rewritten on disk;
   what a repeated `LoadKernels` did before, under **Changed**); a path inside a loaded directory is read again inside
-  that entry, which keeps its place; a path never loaded is loaded. `LoadKernels(string)` and `UnloadKernels(string)`
+  that entry, which keeps its place (decided by S. Guillet, 2026-11-19); a path never loaded is loaded. `LoadKernels(string)` and `UnloadKernels(string)`
   take the path as text, a directory on disk as a `DirectoryInfo`, anything else as a `FileInfo`; null throws
   `ArgumentNullException`, an empty string `ArgumentException` (`path`). The Quick Start lists the four generic kernels
   of a first set (`de440s.bsp`, `latest_leapseconds.tls`, `pck00011.tpc`, `gm_de440.tpc`) with their NAIF paths, the
@@ -4406,7 +4406,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   by one in the order wanted.
 - **Breaking: `UnloadKernels(null)` throws `ArgumentNullException`** (`path`), as `LoadKernels(null)` does (R01 of
   #668); it returned before. With the string overloads, `LoadKernels(null)` and `UnloadKernels(null)` no longer compile
-  (CS0121, an ambiguous call). Migration: drop the call, or cast the null (`(FileSystemInfo)null`) where a null path is
+  (CS0121, an ambiguous call; accepted by S. Guillet, 2026-11-19). Migration: drop the call, or cast the null (`(FileSystemInfo)null`) where a null path is
   meant to throw.
 - **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
   ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), derived from
