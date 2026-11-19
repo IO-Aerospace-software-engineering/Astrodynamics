@@ -242,7 +242,7 @@ public class SpiceAPI
     /// its own name, <c>Name + "_TOPO"</c>, when no loaded kernel defines that id (#690; before, always by its own name, so
     /// that a site named otherwise than its kernel frame threw SPICE(UNKNOWNFRAME)); an ephemeris read in that frame when
     /// no loaded kernel defines it is the library's (<see cref="ManagedReadFrame"/>, third review of #690), so the name
-    /// reaches SPICE only where SPICE reads the frame by name (<see cref="TransformFrame"/>, the CSPICE searches). The
+    /// reaches SPICE only where SPICE reads the frame by name (<see cref="TransformFrame(IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Frames.Frame, IO.Astrodynamics.Frames.Frame)"/>, the CSPICE searches). The
     /// frame of a site built from coordinates is the library's (<see cref="ManagedReadFrame"/>).
     /// </remarks>
     internal static string SpiceFrameName(Frame frame)

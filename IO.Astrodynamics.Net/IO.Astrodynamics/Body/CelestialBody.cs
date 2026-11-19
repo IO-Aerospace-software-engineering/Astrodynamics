@@ -165,6 +165,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="naifObject"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
+    /// <param name="albedo">The bond albedo (<see cref="Albedo"/>), 0 when not configured.</param>
+    /// <param name="thermalEffectiveTemperature">The effective radiative temperature in K (<see cref="ThermalEffectiveTemperature"/>), 0 when not configured.</param>
+    /// <param name="thermalEmissivity">The thermal emissivity, 0 to 1 (<see cref="ThermalEmissivity"/>), 0 when not configured.</param>
     public CelestialBody(NaifObject naifObject, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) : this(naifObject.NaifId,
         geopotentialModelParameters, atmosphericModel, albedo, thermalEffectiveTemperature, thermalEmissivity)
@@ -177,6 +180,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="naifId"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
+    /// <param name="albedo">The bond albedo (<see cref="Albedo"/>), 0 when not configured.</param>
+    /// <param name="thermalEffectiveTemperature">The effective radiative temperature in K (<see cref="ThermalEffectiveTemperature"/>), 0 when not configured.</param>
+    /// <param name="thermalEmissivity">The thermal emissivity, 0 to 1 (<see cref="ThermalEmissivity"/>), 0 when not configured.</param>
     public CelestialBody(int naifId, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) : this(naifId, Frame.ECLIPTIC_J2000,
         TimeSystem.Time.J2000TDB, geopotentialModelParameters, atmosphericModel, albedo, thermalEffectiveTemperature, thermalEmissivity)
@@ -191,6 +197,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
+    /// <param name="albedo">The bond albedo (<see cref="Albedo"/>), 0 when not configured.</param>
+    /// <param name="thermalEffectiveTemperature">The effective radiative temperature in K (<see cref="ThermalEffectiveTemperature"/>), 0 when not configured.</param>
+    /// <param name="thermalEmissivity">The thermal emissivity, 0 to 1 (<see cref="ThermalEmissivity"/>), 0 when not configured.</param>
     public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0)
         : this(naifObject.NaifId, frame, epoch, geopotentialModelParameters, atmosphericModel, albedo, thermalEffectiveTemperature, thermalEmissivity)
@@ -205,6 +214,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
+    /// <param name="albedo">The bond albedo (<see cref="Albedo"/>), 0 when not configured.</param>
+    /// <param name="thermalEffectiveTemperature">The effective radiative temperature in K (<see cref="ThermalEffectiveTemperature"/>), 0 when not configured.</param>
+    /// <param name="thermalEmissivity">The thermal emissivity, 0 to 1 (<see cref="ThermalEmissivity"/>), 0 when not configured.</param>
     public CelestialBody(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) :
         base(naifId, frame, epoch, geopotentialModelParameters)
@@ -236,6 +248,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="polarRadius"></param>
     /// <param name="equatorialRadius"></param>
     /// <param name="initialOrbitalParameters"></param>
+    /// <param name="albedo">The bond albedo (<see cref="Albedo"/>), 0 when not configured.</param>
+    /// <param name="thermalEffectiveTemperature">The effective radiative temperature in K (<see cref="ThermalEffectiveTemperature"/>), 0 when not configured.</param>
+    /// <param name="thermalEmissivity">The thermal emissivity, 0 to 1 (<see cref="ThermalEmissivity"/>), 0 when not configured.</param>
     protected CelestialBody(int naifId, string name, double mass, double polarRadius = 0.0, double equatorialRadius = 0.0,
         OrbitalParameters.OrbitalParameters initialOrbitalParameters = null, double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) : base(naifId, name, mass, initialOrbitalParameters)

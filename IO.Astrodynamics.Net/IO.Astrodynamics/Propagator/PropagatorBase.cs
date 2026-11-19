@@ -210,7 +210,7 @@ public abstract class PropagatorBase : IPropagator
     /// <exception cref="ArgumentNullException"><paramref name="options"/> is null.</exception>
     /// <remarks>
     /// With <see cref="VariationalOptions.PropagateCovariance"/>, P0 is the covariance of
-    /// <see cref="Spacecraft.InitialOrbitalParameters"/>, as a state vector, which must be given at the start of the
+    /// <see cref="ILocalizable.InitialOrbitalParameters"/> of the spacecraft, as a state vector, which must be given at the start of the
     /// window: the propagator does not carry a covariance from another epoch. It is in the frame of the propagation,
     /// which is that of the initial orbital parameters, and relative to their observer; moving the origin to the central
     /// body is a translation by a known ephemeris, of Jacobian I, which leaves P0 unchanged.

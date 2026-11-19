@@ -43,7 +43,7 @@ public sealed record OccultationSearchOptions
     public Frame TargetFrame { get; init; }
 
     /// <summary>
-    /// The tolerance to which the search locates each transition, positive; 1 µs by default. A <see cref="Time"/>
+    /// The tolerance to which the search locates each transition, positive; 1 µs by default. A <see cref="TimeSystem.Time"/>
     /// resolves 100 ns, the floor of a useful tolerance.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The tolerance is not positive.</exception>

@@ -143,7 +143,7 @@ internal sealed class ApparentPositionReader
     /// The geometric state of <paramref name="target"/> relative to <paramref name="reference"/> at the light-time
     /// corrected epoch: a propagated spacecraft is read up to the light time <paramref name="shift"/> outside its
     /// propagated states, the observation epoch being within them (#527, decided by S. Guillet, 2026-11-17); any other
-    /// target as at any epoch. Shared by the corrections of <see cref="CelestialItem.GetEphemeris"/> and of this reader.
+    /// target as at any epoch. Shared by the corrections of <see cref="CelestialItem.GetEphemeris(in IO.Astrodynamics.TimeSystem.Window, IO.Astrodynamics.Body.ILocalizable, IO.Astrodynamics.Frames.Frame, IO.Astrodynamics.Aberration, in System.TimeSpan)"/> and of this reader.
     /// </summary>
     internal static StateVector StateAtCorrectedEpoch(ILocalizable target, in Time corrected, CelestialItem reference, double shift)
     {

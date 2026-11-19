@@ -1,0 +1,4 @@
+# The backticked names of the documentation's tables that DocumentationTableMembersTests cannot resolve (#668, lot L0,
+# main f2a0376), one "page<TAB>name" per line in ordinal order. The file may only shrink.
+# Orekit's SolarRadiationPressure.maskingRatio, cited by the provenance page, bears the name of a type of the library.
+docs/reference/covariance-propagation-provenance.md	SolarRadiationPressure.maskingRatio

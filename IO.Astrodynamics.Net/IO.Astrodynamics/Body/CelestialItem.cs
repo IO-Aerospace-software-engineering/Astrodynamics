@@ -625,7 +625,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// GetEphemeris. For SPICE-backed observer/target pairs, uses SPICE directly.
     /// For non-SPICE observers (Spacecraft, Site), uses reference-body approach, where the nine aberration corrections are
-    /// applied as CSPICE's <c>spkaps</c> applies them (<see cref="CorrectFromAberrationCB"/>, #491), and the state is rotated
+    /// applied as CSPICE's <c>spkaps</c> applies them (<see cref="CorrectFromAberrationCB(IO.Astrodynamics.Body.ILocalizable, IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.ILocalizable, IO.Astrodynamics.Aberration, IO.Astrodynamics.OrbitalParameters.StateVector, IO.Astrodynamics.OrbitalParameters.StateVector, IO.Astrodynamics.Body.CelestialItem)"/>, #491), and the state is rotated
     /// to a non-inertial <paramref name="frame"/> at the epoch of its centre, as <c>spkezr_c</c> rotates it
     /// (<see cref="ApparentStateFromReferenceBody"/>; before 11.0.0 at <paramref name="epoch"/>, 620 m off for the Moon seen
     /// from DSS-13 in ITRF93 with LT and 1.48 km in MOON_ME, #593).
@@ -647,7 +647,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// The state of <paramref name="target"/> relative to <paramref name="observer"/> in <paramref name="frame"/> at
     /// <paramref name="epoch"/>, on the reference-body path: both read relative to <paramref name="referenceBody"/> in ICRF
     /// (<see cref="ILocalizable.GetGeometricStateRelativeTo"/>), corrected as CSPICE corrects them
-    /// (<see cref="CorrectFromAberrationCB"/>, #491), and rotated to the frame as <c>spkezr_c</c> rotates them
+    /// (<see cref="CorrectFromAberrationCB(IO.Astrodynamics.Body.ILocalizable, IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.ILocalizable, IO.Astrodynamics.Aberration, IO.Astrodynamics.OrbitalParameters.StateVector, IO.Astrodynamics.OrbitalParameters.StateVector, IO.Astrodynamics.Body.CelestialItem)"/>, #491), and rotated to the frame as <c>spkezr_c</c> rotates them
     /// (<see cref="ToApparentFrame"/>, #593). The helper of every target whose geometric state relative to the reference
     /// body is known at any epoch: a body or a spacecraft seen by a site or a managed spacecraft, a site given by its
     /// coordinates seen by any observer (#489).

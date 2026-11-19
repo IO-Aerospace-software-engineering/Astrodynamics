@@ -247,7 +247,7 @@ public class CentralBodyPropagator : PropagatorBase
     /// The state of <paramref name="orbitalParameters"/>, the initial orbit in the frame of the propagation
     /// (<see cref="PropagatorBase.InertialInitialOrbit"/>: a TLE or a TEME state rotated to ICRF, #675), at
     /// <paramref name="start"/>: a state vector given at that instant
-    /// as it is, any other orbital parameters through <see cref="OrbitalParameters.AtEpoch"/>.
+    /// as it is, any other orbital parameters through <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.AtEpoch(Time)"/>.
     /// </summary>
     /// <remarks>
     /// A state vector at the start of the window is not taken through the Keplerian elements: that round trip returns

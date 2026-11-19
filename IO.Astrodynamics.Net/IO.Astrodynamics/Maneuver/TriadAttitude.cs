@@ -142,6 +142,13 @@ public class TriadAttitude : Attitude
     /// Creates a TRIAD attitude maneuver using an instrument's boresight and reference vector.
     /// The boresight points at the primary target, while the reference vector constrains roll toward the secondary target.
     /// </summary>
+    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
+    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
+    /// <param name="instrument">The instrument whose boresight points at the primary target and whose reference vector
+    /// constrains the roll toward the secondary target.</param>
+    /// <param name="primaryTarget">The target of the boresight, also the maneuver's centre (a site's body for a site).</param>
+    /// <param name="secondaryTarget">The target of the reference vector, for the roll.</param>
+    /// <param name="engine">Engine used for the maneuver.</param>
     /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
     /// round of #668).</exception>
@@ -172,6 +179,13 @@ public class TriadAttitude : Attitude
     /// <summary>
     /// Creates a TRIAD attitude maneuver using two different instruments pointing at two targets.
     /// </summary>
+    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
+    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
+    /// <param name="primaryInstrument">The instrument whose boresight points at the primary target.</param>
+    /// <param name="primaryTarget">The target of the primary boresight, also the maneuver's centre (a site's body for a site).</param>
+    /// <param name="secondaryInstrument">The instrument whose boresight constrains the roll toward the secondary target.</param>
+    /// <param name="secondaryTarget">The target of the secondary boresight, for the roll.</param>
+    /// <param name="engine">Engine used for the maneuver.</param>
     /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
     /// round of #668).</exception>
@@ -204,6 +218,13 @@ public class TriadAttitude : Attitude
     /// <summary>
     /// Creates a TRIAD attitude maneuver using explicit body frame vectors and ILocalizable targets.
     /// </summary>
+    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
+    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
+    /// <param name="primaryBodyVector">Primary direction in spacecraft body frame.</param>
+    /// <param name="primaryTarget">The target of the primary direction, also the maneuver's centre (a site's body for a site).</param>
+    /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
+    /// <param name="secondaryTarget">The target of the secondary direction, for the roll.</param>
+    /// <param name="engine">Engine used for the maneuver.</param>
     /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
     /// round of #668).</exception>

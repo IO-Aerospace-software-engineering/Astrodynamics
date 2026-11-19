@@ -9,8 +9,8 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// <summary>
 /// The field of view of an instrument at an instant, in the axes of ICRF: its boresight b, the unit vector b1 of the
 /// reference plane (the reference vector made perpendicular to the boresight, CSPICE's <c>vperp</c>), b2 = b × b1, and
-/// its half-angles: <see cref="RefAngle"/> in the plane (b, b1), the IK's <c>FOV_REF_ANGLE</c>, and
-/// <see cref="CrossAngle"/> in the plane (b, b2), the IK's <c>FOV_CROSS_ANGLE</c> (<c>getfov</c>, N0067).
+/// its half-angles: REF in the plane (b, b1), the IK's <c>FOV_REF_ANGLE</c>, and CROSS in the plane (b, b2), the IK's
+/// <c>FOV_CROSS_ANGLE</c> (<c>getfov</c>, N0067).
 /// </summary>
 internal readonly record struct FieldOfViewAxes(Vector3 Boresight, Vector3 Ref, Vector3 Cross);
 
@@ -101,6 +101,9 @@ internal static class FieldOfViewGeometry
     /// An ellipsoid whose limb, seen from the vertex, is the elliptic cone of half-angles <paramref name="refAngle"/>
     /// along b1 and <paramref name="crossAngle"/> along b2, centered at <paramref name="distance"/> along b.
     /// </summary>
+    /// <param name="refAngle">The half-angle REF of the field in the plane (b, b1), rad.</param>
+    /// <param name="crossAngle">The half-angle CROSS of the field in the plane (b, b2), rad.</param>
+    /// <param name="axes">The axes of the field in ICRF.</param>
     /// <param name="distance">The distance D of the target, positive (<see cref="Margin"/> rejects a target at the observer).</param>
     /// <exception cref="InvalidOperationException">The square of a semi-axis, D sin REF or D sin REF · tan CROSS / tan REF,
     /// underflows to 0 (a half-angle below about 6e-171 rad at the Moon's distance): the field cannot be searched. Before

@@ -11,13 +11,13 @@ internal enum OccultationMargin
 {
     None = 0,
 
-    /// <summary>The apparent discs of the two bodies overlap: <see cref="OccultationGeometry.Overlap"/>.</summary>
+    /// <summary>The apparent discs of the two bodies overlap: <see cref="OccultationState.Overlap"/>.</summary>
     Overlap = 1,
 
-    /// <summary>The disc of the back body lies within the disc of the front body: <see cref="OccultationGeometry.BackInside"/>.</summary>
+    /// <summary>The disc of the back body lies within the disc of the front body: <see cref="OccultationState.BackInside"/>.</summary>
     BackInside = 2,
 
-    /// <summary>The disc of the front body lies within the disc of the back body: <see cref="OccultationGeometry.FrontInside"/>.</summary>
+    /// <summary>The disc of the front body lies within the disc of the back body: <see cref="OccultationState.FrontInside"/>.</summary>
     FrontInside = 4
 }
 

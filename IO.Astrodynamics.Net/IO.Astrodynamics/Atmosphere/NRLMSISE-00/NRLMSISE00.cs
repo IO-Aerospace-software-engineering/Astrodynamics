@@ -1417,9 +1417,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </remarks>
         /// <param name="input">Input parameters (altitude is used as initial guess).</param>
         /// <param name="flags">Model flags.</param>
-        /// <param name="output">Output densities and temperatures at the calculated altitude.</param>
         /// <param name="press">Pressure level in millibars.</param>
-        /// <returns>Calculated altitude in meters for the given pressure level.</returns>
+        /// <returns>The calculated altitude in meters for the given pressure level, and the densities and temperatures
+        /// there.</returns>
         public (double altitude, NrlmsiseOutput atmosphere) FindAltitudeAtPressure(NrlmsiseInput input, NrlmsiseFlags flags, double press)
         {
             // Convert input GLat from radians to degrees for initial calculation

@@ -64,7 +64,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </code>
         /// </para>
         /// <para>
-        /// <see cref="ToFrame"/> transforms the covariance with the Jacobian of the state
+        /// <see cref="OrbitalParameters.ToFrame(Frame)"/> transforms the covariance with the Jacobian of the state
         /// transformation, including the angular velocity term of a rotating frame (ITRF93, TIRS, body-fixed frames).
         /// <see cref="Matrix.TransformCovariance"/> is a pure rotation, valid only between inertial frames.
         /// <see cref="RotateCovarianceToRtn"/> is a pure rotation into RTN, the convention of the conjunction
@@ -552,7 +552,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// This is a pure rotation: the rotation rate of the RTN frame is deliberately not applied to the velocity
         /// block. The velocity covariance is the inertial one, expressed along the R, T and N axes. This is the
         /// convention used by the conjunction analysis and by the CDM export, whose covariance is given in RTN at
-        /// TCA. It differs from <see cref="ToFrame"/>, which applies the full Jacobian of a
+        /// TCA. It differs from <see cref="OrbitalParameters.ToFrame(Frame)"/>, which applies the full Jacobian of a
         /// rotating frame.
         /// </remarks>
         /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,

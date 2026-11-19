@@ -26,7 +26,7 @@ public class AtmosphericDrag : ForceBase
     internal const double DensityGradientRelativeStep = 3e-7;
 
     /// <summary>
-    /// Relative step δ_h of the fourth-order derivative of the density in altitude (<see cref="DensityGradient"/>):
+    /// Relative step δ_h of the fourth-order derivative of the density in altitude (<see cref="DensityGradient(in IO.Astrodynamics.Math.Vector3, in System.Nullable{IO.Astrodynamics.Math.Quaternion}, in IO.Astrodynamics.TimeSystem.Time, System.Span{double})"/>):
     /// h = δ_h max(|r|, 1 m), about 20 m in LEO.
     /// </summary>
     /// <remarks>
@@ -38,7 +38,7 @@ public class AtmosphericDrag : ForceBase
 
     /// <summary>
     /// Relative step δ_H of the derivatives of the density along the meridian and the parallel
-    /// (<see cref="DensityGradient"/>): a length of δ_H max(|r|, 1 m), about 200 m in LEO.
+    /// (<see cref="DensityGradient(in IO.Astrodynamics.Math.Vector3, in System.Nullable{IO.Astrodynamics.Math.Quaternion}, in IO.Astrodynamics.TimeSystem.Time, System.Span{double})"/>): a length of δ_H max(|r|, 1 m), about 200 m in LEO.
     /// </summary>
     /// <remarks>
     /// The density varies horizontally over thousands of kilometres, so the step can be ten times that of the
@@ -47,7 +47,7 @@ public class AtmosphericDrag : ForceBase
     internal const double HorizontalRelativeStep = 3e-5;
 
     /// <summary>
-    /// The largest longitude step of the east difference of <see cref="DensityGradient"/>, in rad: the chord between its
+    /// The largest longitude step of the east difference of <see cref="DensityGradient(in IO.Astrodynamics.Math.Vector3, in System.Nullable{IO.Astrodynamics.Math.Quaternion}, in IO.Astrodynamics.TimeSystem.Time, System.Span{double})"/>, in rad: the chord between its
     /// two points on the parallel cuts the curvature of the parallel, which leaves a truncation of s² / (2 p) times the
     /// second derivative of the density, s the length of the step and p the distance from the polar axis. Without it,
     /// 8.1e-9 of |∇ρ| against Ridders at 1 km from the axis, 8.2e-10 at 10 km; with it, 7.6e-11 and 5.5e-12, for a
@@ -113,7 +113,7 @@ public class AtmosphericDrag : ForceBase
     /// <para>
     /// The gradient term multiplies ∇ρ by the acceleration per unit density rather than dividing the acceleration by ρ,
     /// so ρ = 0 is covered. ∇ρ comes from the density chain alone, the one of
-    /// <see cref="Apply(StateVector, in ForceEvaluationContext)"/>, in geodetic coordinates (<see cref="DensityGradient"/>),
+    /// <see cref="Apply(StateVector, in ForceEvaluationContext)"/>, in geodetic coordinates (<see cref="DensityGradient(in IO.Astrodynamics.Math.Vector3, in System.Nullable{IO.Astrodynamics.Math.Quaternion}, in IO.Astrodynamics.TimeSystem.Time, System.Span{double})"/>),
     /// without ephemeris or orientation. No published gradient of NRLMSISE-00 exists. At |v_rel| = 0 the acceleration and
     /// both blocks vanish.
     /// </para>
@@ -263,7 +263,7 @@ public class AtmosphericDrag : ForceBase
     }
 
     /// <summary>
-    /// ∂ρ/∂h at a position relative to the body, in the frame of the state, as <see cref="DensityGradient"/> takes it:
+    /// ∂ρ/∂h at a position relative to the body, in the frame of the state, as <see cref="DensityGradient(in IO.Astrodynamics.Math.Vector3, in System.Nullable{IO.Astrodynamics.Math.Quaternion}, in IO.Astrodynamics.TimeSystem.Time, System.Span{double})"/> takes it:
     /// in closed form when the model gives it, otherwise by differences in altitude.
     /// </summary>
     internal double DensityAltitudeDerivative(in Vector3 position, in Quaternion? rotation, in Time epoch)
@@ -488,7 +488,7 @@ public class AtmosphericDrag : ForceBase
     /// The density at a position relative to the body, in the frame of the state: rotated to the body-fixed frame by
     /// <paramref name="rotation"/> (none when the state is in that frame), then the exact geodetic coordinates on the
     /// ellipsoid of the body (<see cref="GeodeticCoordinates"/>, a closed form, smooth for the central differences of
-    /// <see cref="DensityGradient"/>) and the atmospheric model, at <paramref name="epoch"/>.
+    /// <see cref="DensityGradient(in IO.Astrodynamics.Math.Vector3, in System.Nullable{IO.Astrodynamics.Math.Quaternion}, in IO.Astrodynamics.TimeSystem.Time, System.Span{double})"/>) and the atmospheric model, at <paramref name="epoch"/>.
     /// </summary>
     internal double Density(in Vector3 position, in Quaternion? rotation, in Time epoch)
     {

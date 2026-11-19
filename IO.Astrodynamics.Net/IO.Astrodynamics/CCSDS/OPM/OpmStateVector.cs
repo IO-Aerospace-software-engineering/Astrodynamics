@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// </summary>
 /// <remarks>
 /// This is a data transfer object that stores position and velocity in CCSDS units (km, km/s).
-/// Use <see cref="ToStateVector"/> to convert to the framework's internal StateVector (meters, m/s).
+/// Use <see cref="ToStateVector(IO.Astrodynamics.Body.ILocalizable, IO.Astrodynamics.Frames.Frame, System.Nullable{IO.Astrodynamics.Math.Matrix})"/> to convert to the framework's internal StateVector (meters, m/s).
 /// Use <see cref="FromStateVector"/> to create from a framework StateVector.
 /// </remarks>
 public class OpmStateVector
