@@ -13,8 +13,8 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 
 /// <summary>
 /// The public surface of the library read by reflection, for the convention tests of the ergonomics review (#668, lot
-/// L0): the exported types, and their public members and the protected members of the types a caller can derive from,
-/// as the PublicAPI files of the library list them. The types the xsd tool generated (the PDS schemas, marked
+/// L0): the exported types, and their public members and the protected members of the types a caller can derive from.
+/// The types the xsd tool generated (the PDS schemas, marked
 /// <see cref="GeneratedCodeAttribute"/>) and the members the compiler synthesizes (a record's <c>EqualityContract</c>,
 /// <c>PrintMembers</c>, <c>&lt;Clone&gt;$</c>) are outside the rules, as for the CA rules. Reflection reads metadata only:
 /// no type initializer runs.

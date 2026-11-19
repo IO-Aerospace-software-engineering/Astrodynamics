@@ -11,13 +11,13 @@ using Xunit;
 namespace IO.Astrodynamics.Tests.ApiConventions;
 
 /// <summary>
-/// The members the tables of the documentation cite exist and are public (R05 of #668: "backticked table members checked
-/// against D2's PublicAPI files"). The pages' code blocks are compiled by <c>DocumentationPagesExamplesTests</c>, but a
+/// The members the tables of the documentation cite exist and are public (R05 of #668: backticked table members checked
+/// against the public surface). The pages' code blocks are compiled by <c>DocumentationPagesExamplesTests</c>, but a
 /// table names members in prose, where a renamed or never-written member stays unseen (<c>ApogeeRadius()</c> in
 /// keplerian-elements.md, #662). Each backticked name of a table row of docs/ (the changelog aside, whose rows name the
 /// members of former versions) and README.md that reads as a member is looked up by reflection on the public surface:
 /// the exported types of the library and their public members and the protected members of the types a caller can
-/// derive from (<see cref="PublicSurface.IsVisible"/>, the surface the PublicAPI files declare), and the public test
+/// derive from (<see cref="PublicSurface.IsVisible"/>), and the public test
 /// classes the provenance page names. An internal type or member (not a private one) resolves only where its table cell
 /// says so before it, "the internal <c>EvaluateVariational</c>, <c>EvaluateCovariance</c>", so a member made internal
 /// by a later lot fails where a cell cites it as public; a column headed Implementation, the provenance page's pointers

@@ -1,7 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using IO.Astrodynamics.Physics;
@@ -44,8 +43,6 @@ namespace IO.Astrodynamics.Body
         /// </summary>
         /// <param name="geopotentialModelPath">The file path to the geopotential model.</param>
         /// <param name="geopotentialDegree">The degree of the geopotential model. Default is 60.</param>
-        [SuppressMessage("ApiDesign", "RS0027:API with optional parameter(s) should have the most parameters amongst its public overloads",
-            Justification = "Shipped in 10.1.0 with its default degree; the overload with the model's constants came with #410 in 11.0.0. The constructors are reshaped by the options lots of #668, not by lot L0, which changes no API.")]
         public GeopotentialModelParameters(string geopotentialModelPath, ushort geopotentialDegree = 60) : this(
             new FileStream(geopotentialModelPath, FileMode.Open, FileAccess.Read, FileShare.Read),
             geopotentialDegree)
@@ -57,8 +54,6 @@ namespace IO.Astrodynamics.Body
         /// </summary>
         /// <param name="geopotentialModelStream">The stream of the geopotential model.</param>
         /// <param name="geopotentialDegree">The degree of the geopotential model. Default is 60.</param>
-        [SuppressMessage("ApiDesign", "RS0027:API with optional parameter(s) should have the most parameters amongst its public overloads",
-            Justification = "Shipped in 10.1.0 with its default degree; the overload with the model's constants came with #410 in 11.0.0. The constructors are reshaped by the options lots of #668, not by lot L0, which changes no API.")]
         public GeopotentialModelParameters(Stream geopotentialModelStream, ushort geopotentialDegree = 60)
         {
             GeopotentialModelPath = new StreamReader(geopotentialModelStream);

@@ -893,11 +893,10 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Use `CelestialItem.ShadowFraction()` for eclipse geometry calculations
 13. **CelestialBody Thermal Properties**: `CelestialBody` supports optional `thermalEffectiveTemperature` (K) and `thermalEmissivity` (0-1) constructor parameters for thermal radiation pressure modeling. Typical values: Earth T_eff=254K, emissivity=0.95.
 14. **Public API** (#668, lot L0; `docs/contributing/public-api.md`, the root `CLAUDE.md`, "Public API"):
-   - A public or protected member is declared in `IO.Astrodynamics/PublicAPI.Unshipped.txt` (RS0016 and RS0017 are warnings a pull request leaves none of, errors from the final PR of the renames; the analyzer's code fix writes the line), `PublicAPI.Shipped.txt` holding the last stable release (10.1.0); a public type added, or whose kind changes (sealed, abstract, static, readonly, record), has its line in `IO.Astrodynamics.Tests/ApiConventions/PublicTypeKinds.txt` (`PublicTypeKindsTests`), which the PublicAPI files do not record
-   - Its XML comment compiles: a cref that does not resolve or names several overloads, a stale or missing param tag are build errors (#556)
+   - A public member's XML comment compiles: a cref that does not resolve or names several overloads, a stale or missing param tag are build errors (#556)
    - Its name follows D2's N1 to N3 (`NamingRuleTests`, namespaces and each overload included), an options type and parameter D1 (`OptionsConventionTests`: also no two bool parameters, no double named Step, Duration or Tolerance without Seconds, sibling settings of one type and default), each against a baseline that may only shrink
-   - An obsolete member carries IOA0001 (a replaced entry point, a warning hidden from IntelliSense, forwarding bit for bit) or IOA0002 (a trap, an error naming the fix) through `ObsoleteDiagnostics`, with its row on `docs/reference/obsolete-members.md` (`ObsoleteMembersTests`); IOA0001 is an error in the repository's own code
    - A member a table of `docs/` or `README.md` cites is public (`DocumentationTableMembersTests`), an internal one only after the word "internal" in its cell, any one in a column headed Implementation
+   - A new member is documented in its reference page of `docs/` and listed under Added in `docs/contributing/versioning.md`; a member renamed or replaced is renamed or removed outright, with no `[Obsolete]` forwarder, and listed there as a Breaking entry with its migration (decided by S. Guillet, 2026-11-19)
 
 ## Code Quality Standards
 
