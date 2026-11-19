@@ -1,5 +1,8 @@
 <Project>
     <PropertyGroup>
         <InvariantGlobalization>true</InvariantGlobalization>
+        <!-- A replaced entry point (IOA0001, docs/reference/obsolete-members.md) is an error in the repository's own code, so
+             that no project of the solution keeps calling it; a test of a forwarder disables it around its call (#668, D2). -->
+        <WarningsAsErrors>$(WarningsAsErrors);IOA0001</WarningsAsErrors>
     </PropertyGroup>
 </Project>

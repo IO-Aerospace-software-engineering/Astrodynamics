@@ -93,6 +93,7 @@ nav:
       - Math: reference/math.md
       - Enumerations: reference/enumerations.md
       - Predefined Objects: reference/predefined-objects.md
+      - Obsolete Members: reference/obsolete-members.md
 
   - Guides:
     - guides/index.md
