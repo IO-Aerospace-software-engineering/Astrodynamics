@@ -1387,16 +1387,27 @@ public partial class SpiceApiTest
         AssertNothingPending();
     }
 
-    // CONICS needs a periapsis radius above 0 (conics.c, SPICE(BADPERIAPSEVALUE)): an ellipse of negative semi-major axis, a
-    // hyperbola of positive one, a bad argument on every overload. Before #711 the zero state was returned silently, then
-    // InvalidOperationException with SPICE's message (measured on 46e6975 and a77531f)
-    [Theory]
-    [InlineData(-7.0e6, 0.1)]
-    [InlineData(7.0e6, 1.5)]
-    void ConvertConicElementsToStateVector_OfAPeriapsisNotAboveZero_ThrowsArgumentException(double a, double e)
+    // CONICS needs a periapsis radius above 0 (conics.c, SPICE(BADPERIAPSEVALUE)), a bad argument on every overload. Before
+    // #711 the zero state was returned silently, then InvalidOperationException with SPICE's message (measured on 46e6975 and
+    // a77531f). Since #738 an osculating ellipse of negative semi-major axis and a hyperbola of positive one are refused by
+    // the KeplerianElements constructor itself (ElementsValidationTests.Issue738_*); the elements that still reach the guard
+    // are mean elements of e >= 1, whose semi-major axis comes from the mean motion (FromOMM, a > 0, so a (1 - e) < 0), and a
+    // hyperbola whose a (1 - e) overflows to +Infinity
+    public static TheoryData<string> ElementsOutsideTheConicsDomain => new() { "mean elements of e = 1.5", "a (1 - e) overflowing" };
+
+    private static KeplerianElements ElementsOutsideTheConicsDomainNamed(string name) => name switch
     {
-        var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Assert.True(ke.PerigeeRadius() < 0.0);
+        "mean elements of e = 1.5" => KeplerianElements.FromOMM(15.5, 1.5, 51.6, 10.0, 20.0, 30.0, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+        _ => new KeplerianElements(-1.0e300, 1.0e10, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF)
+    };
+
+    [Theory]
+    [MemberData(nameof(ElementsOutsideTheConicsDomain))]
+    void ConvertConicElementsToStateVector_OfAPeriapsisNotFiniteAndAboveZero_ThrowsArgumentException(string name)
+    {
+        var ke = ElementsOutsideTheConicsDomainNamed(name);
+        Assert.False(ke.PerigeeRadius() > 0.0 && double.IsFinite(ke.PerigeeRadius()));
         var gm = TestHelpers.EarthAtJ2000.GM;
         foreach (var conversion in new Func<IO.Astrodynamics.OrbitalParameters.StateVector>[]
                  {
@@ -1407,8 +1418,22 @@ public partial class SpiceApiTest
         {
             var error = Assert.Throws<ArgumentException>(conversion);
             Assert.Equal("keplerianElements", error.ParamName);
+            Assert.Contains("CONICS", error.Message);
         }
 
+        AssertNothingPending();
+    }
+
+    // The osculating elements of the former theory, an ellipse of negative semi-major axis and a hyperbola of positive one,
+    // are refused at their construction since #738, before any conversion
+    [Theory]
+    [InlineData(-7.0e6, 0.1)]
+    [InlineData(7.0e6, 1.5)]
+    void KeplerianElements_OfASemiMajorAxisOfTheWrongSign_NeverReachTheConversion(double a, double e)
+    {
+        var error = Assert.Throws<ArgumentException>(() =>
+            new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Assert.Equal("semiMajorAxis", error.ParamName);
         AssertNothingPending();
     }
 
@@ -2059,6 +2084,311 @@ public partial class SpiceApiTest
         {
             SpiceAPI.Instance.UnloadKernels(clockFile);
             dir.Delete(true);
+        }
+    }
+
+    // #724: ReadOrientation read ckgpav_c first and ckgp_c only when it found nothing (#714), but ckgpav_c skips a segment
+    // without angular velocity, so that where a higher-priority segment without rates and a lower-priority one with rates
+    // cover the same epoch, the read gave the lower-priority segment's pointing and rate, where ckgp_c gives the
+    // higher-priority one. The read now follows ckgp_c's segment: its pointing, with ckgpav_c's rate when that segment holds
+    // one, a zero angular velocity when it holds none (decided by S. Guillet, 2026-11-18). The kernels of
+    // tools/ck_priority_reference (Data/CkPriorityReference): CKPRIO's clock, a type-3 CK with rates (a rotation about z at
+    // 1e-3 rad/s every 100 s over [0, 1000] s TDB) and one without (about x at 2e-3 rad/s every 50 s over [300, 700] s),
+    // loaded in either order; the references are ckgp_c's C-matrix and epoch at each epoch with a tolerance of 1 s, which the
+    // tool writes (299.5 s and 700.5 s, within the tolerance of the CK without rates, take its records at 300 s and 700 s),
+    // and the closed form of the segment ckgp_c reads, whose angular velocity is (0, 0, 1e-3) rad/s or zero. The kernels are
+    // read, not written, so the test runs on every platform
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 of the angle of a record to ckgp_c and to the closed form
+    // (5.551e-16 rad for both on the three, either order, and for the reads after a search with angular velocity below,
+    // the MEASURE lines, CI run 44395076184, 2026-11-18), rounded up at the second digit
+    private const double CkPriorityAngleLimit = 1.2e-15;
+
+    private static readonly int CkPrioritySpacecraft = -472401;
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    void ReadOrientation_FollowsTheCkSegmentPriority(bool withoutRatesLoadedLast)
+    {
+        var dir = new DirectoryInfo(Path.Combine("Data", "CkPriorityReference"));
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dir.FullName, "ck_priority_reference.json")));
+        var expected = document.RootElement.GetProperty(withoutRatesLoadedLast ? "norates_last" : "rates_last").EnumerateArray().ToArray();
+        var clock = new FileInfo(Path.Combine(dir.FullName, "ckprio.tsc"));
+        var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
+        var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
+        var first = withoutRatesLoadedLast ? rates : noRates;
+        var last = withoutRatesLoadedLast ? noRates : rates;
+        SpiceAPI.Instance.LoadKernels(clock);
+        SpiceAPI.Instance.LoadKernels(first);
+        SpiceAPI.Instance.LoadKernels(last);
+        try
+        {
+            // The grid 0, 50, ..., 1000 s, then 299.5 s and 700.5 s
+            var records = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+                    CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(50.0))
+                .Concat(SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(299.5), TimeSystem.Time.CreateTDB(700.5)),
+                    CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(401.0))).ToArray();
+            Assert.Equal(expected.Length, records.Length);
+            var (worstSpice, worstClosedForm, recordsWithoutRates) =
+                CompareCkPriorityRecords(records, expected, et => withoutRatesLoadedLast && et >= 300.0 && et <= 700.0);
+            Assert.Equal(withoutRatesLoadedLast ? 11 : 0, recordsWithoutRates);
+            _output.WriteLine(
+                $"MEASURE #724 CK priority ({(withoutRatesLoadedLast ? "without" : "with")} rates loaded last): worst angle to ckgp_c {worstSpice:E3} rad, to the closed form {worstClosedForm:E3} rad");
+            Assert.True(worstSpice <= CkPriorityAngleLimit, $"{worstSpice:E3} rad");
+            Assert.True(worstClosedForm <= CkPriorityAngleLimit, $"{worstClosedForm:E3} rad");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(last);
+            SpiceAPI.Instance.UnloadKernels(first);
+            SpiceAPI.Instance.UnloadKernels(clock);
+        }
+    }
+
+    // Each record against its reference entry of ck_priority_reference.json (ckgp_c's C-matrix and epoch) and the closed
+    // form of the segment ckgp_c reads (about x at 2e-3 rad/s where readsNoRates(et), about z at 1e-3 rad/s otherwise),
+    // with its angular velocity (zero, or (0, 0, 1e-3) rad/s exactly); the worst angles and the number of records read
+    // from a CK without rates
+    private static (double WorstSpice, double WorstClosedForm, int RecordsWithoutRates) CompareCkPriorityRecords(
+        StateOrientation[] records, System.Text.Json.JsonElement[] expected, Func<double, bool> readsNoRates)
+    {
+        double worstSpice = 0.0, worstClosedForm = 0.0;
+        int recordsWithoutRates = 0;
+        for (int i = 0; i < records.Length; i++)
+        {
+            double et = expected[i].GetProperty("et").GetDouble();
+            var cmat = expected[i].GetProperty("cmat").EnumerateArray().Select(e => e.GetDouble()).ToArray();
+            // The C-matrix of the record: its column k is the image of the k-th axis of the reference frame
+            var q = records[i].Rotation;
+            var columns = new[] { Vector3.VectorX.Rotate(q), Vector3.VectorY.Rotate(q), Vector3.VectorZ.Rotate(q) };
+            double[] matrix =
+            [
+                columns[0].X, columns[1].X, columns[2].X, columns[0].Y, columns[1].Y, columns[2].Y, columns[0].Z, columns[1].Z,
+                columns[2].Z
+            ];
+            bool noRates = readsNoRates(et);
+            recordsWithoutRates += noRates ? 1 : 0;
+            double angle = noRates ? 2.0e-3 * et : 1.0e-3 * et;
+            double c = System.Math.Cos(angle), s = System.Math.Sin(angle);
+            double[] closedForm = noRates ? [1.0, 0.0, 0.0, 0.0, c, -s, 0.0, s, c] : [c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0];
+            worstSpice = System.Math.Max(worstSpice, RotationAngle(matrix, cmat));
+            worstClosedForm = System.Math.Max(worstClosedForm, RotationAngle(matrix, closedForm));
+            Assert.Equal(TimeSystem.Time.CreateTDB(et), records[i].Epoch);
+            Assert.Equal(noRates ? Vector3.Zero : new Vector3(0.0, 0.0, 1.0e-3), records[i].AngularVelocity);
+            Assert.Equal(Frames.Frame.ICRF, records[i].ReferenceFrame);
+        }
+
+        return (worstSpice, worstClosedForm, recordsWithoutRates);
+    }
+
+    // The record of one epoch, read alone (a window of one epoch)
+    private static StateOrientation ReadCkPriorityRecord(double epoch) =>
+        SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(epoch), TimeSystem.Time.CreateTDB(epoch)),
+            CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).Single();
+
+    private static System.Text.Json.JsonElement CkPriorityEntry(System.Text.Json.JsonElement[] entries, double epoch) =>
+        entries.Single(e => e.GetProperty("epoch").GetDouble() == epoch);
+
+    // Review of #724: CSPICE keeps, per instrument, the segment of its last search and the interval over which that segment
+    // has the highest priority (ckbsr.c, the re-use interval), and a search with angular velocity (ckgpav_c, or sxform_c
+    // through ckfxfm) that skips a higher-priority segment without rates does not shrink that interval by it, so that the
+    // next search without angular velocity, the one that finds the segment ckgp_c reads, returned the lower-priority segment
+    // with rates there. The read now voids that interval before its search, so that every read follows the priority of a
+    // search made in a fresh process (decided by S. Guillet, 2026-11-18). The CK with rates and, loaded last, a CK without
+    // rates of two interpolation intervals, [300, 400] s and [600, 700] s (ckprio_gap.bc, about x at 2e-3 rad/s): the epochs
+    // 450 to 550 s, in its gap, are read from the CK with rates by ckgpav_c, and the epochs read after them from the CK
+    // without rates, in one call (the grid 0, 50, ..., 1000 s) and one epoch a call (500 s, then 650 s and 600 s). Before,
+    // 600, 650 and 700 s of the grid and 650 s and 600 s read alone took the CK with rates' pointing and rate. References:
+    // ckgp_c of tools/ck_priority_reference, each read with the CKs loaded again ("gap_last"), and the closed form
+    [Fact]
+    void ReadOrientation_FollowsTheCkSegmentPriority_AfterAReadOfALowerPrioritySegment()
+    {
+        var dir = new DirectoryInfo(Path.Combine("Data", "CkPriorityReference"));
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dir.FullName, "ck_priority_reference.json")));
+        var expected = document.RootElement.GetProperty("gap_last").EnumerateArray().ToArray();
+        var clock = new FileInfo(Path.Combine(dir.FullName, "ckprio.tsc"));
+        var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
+        var gap = new FileInfo(Path.Combine(dir.FullName, "ckprio_gap.bc"));
+        SpiceAPI.Instance.LoadKernels(clock);
+        SpiceAPI.Instance.LoadKernels(rates);
+        SpiceAPI.Instance.LoadKernels(gap);
+        try
+        {
+            static bool ReadsGap(double et) => et is >= 300.0 and <= 400.0 or >= 600.0 and <= 700.0;
+            var grid = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+                CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(50.0)).ToArray();
+            Assert.Equal(21, grid.Length);
+            var (gridSpice, gridClosedForm, gridWithoutRates) = CompareCkPriorityRecords(grid, expected.Take(21).ToArray(), ReadsGap);
+            Assert.Equal(6, gridWithoutRates);
+
+            double[] alone = [500.0, 650.0, 600.0];
+            var records = alone.Select(ReadCkPriorityRecord).ToArray();
+            var (aloneSpice, aloneClosedForm, aloneWithoutRates) =
+                CompareCkPriorityRecords(records, alone.Select(e => CkPriorityEntry(expected, e)).ToArray(), ReadsGap);
+            Assert.Equal(2, aloneWithoutRates);
+
+            double worstSpice = System.Math.Max(gridSpice, aloneSpice), worstClosedForm = System.Math.Max(gridClosedForm, aloneClosedForm);
+            _output.WriteLine(
+                $"MEASURE #724 CK priority after a read of a lower-priority segment: worst angle to ckgp_c {worstSpice:E3} rad, to the closed form {worstClosedForm:E3} rad");
+            Assert.True(worstSpice <= CkPriorityAngleLimit, $"{worstSpice:E3} rad");
+            Assert.True(worstClosedForm <= CkPriorityAngleLimit, $"{worstClosedForm:E3} rad");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(gap);
+            SpiceAPI.Instance.UnloadKernels(rates);
+            SpiceAPI.Instance.UnloadKernels(clock);
+        }
+    }
+
+    // Review of #724, the same re-use interval left by a transformation to the spacecraft's CK frame (TransformFrame,
+    // sxform_c, which needs the angular velocity and skips the CK without rates): the CK with rates and, loaded last, the one
+    // without rates over [300, 700] s, the frame CKPRIO_SC of ckprio.tf; a TransformFrame from ICRF to CKPRIO_SC at 500 s,
+    // read from the CK with rates, then the reads at 500 s and 650 s alone, from the CK without rates (before, both took
+    // the CK with rates' pointing and rate). References: ckgp_c of tools/ck_priority_reference ("norates_last") and the
+    // closed form
+    [Fact]
+    void ReadOrientation_FollowsTheCkSegmentPriority_AfterATransformFrame()
+    {
+        var dir = new DirectoryInfo(Path.Combine("Data", "CkPriorityReference"));
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dir.FullName, "ck_priority_reference.json")));
+        var expected = document.RootElement.GetProperty("norates_last").EnumerateArray().ToArray();
+        var clock = new FileInfo(Path.Combine(dir.FullName, "ckprio.tsc"));
+        var frame = new FileInfo(Path.Combine(dir.FullName, "ckprio.tf"));
+        var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
+        var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
+        SpiceAPI.Instance.LoadKernels(clock);
+        SpiceAPI.Instance.LoadKernels(frame);
+        SpiceAPI.Instance.LoadKernels(rates);
+        SpiceAPI.Instance.LoadKernels(noRates);
+        try
+        {
+            var transformation = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.CreateTDB(500.0), Frames.Frame.ICRF, new Frames.Frame("CKPRIO_SC"));
+            // sxform_c reads the CK with rates: its angular velocity, (0, 0, 1e-3) rad/s
+            Assert.Equal(1.0e-3, transformation.AngularVelocity.Magnitude(), 15);
+
+            double[] alone = [500.0, 650.0];
+            var records = alone.Select(ReadCkPriorityRecord).ToArray();
+            var (worstSpice, worstClosedForm, recordsWithoutRates) =
+                CompareCkPriorityRecords(records, alone.Select(e => CkPriorityEntry(expected, e)).ToArray(), et => et is >= 300.0 and <= 700.0);
+            Assert.Equal(2, recordsWithoutRates);
+            _output.WriteLine(
+                $"MEASURE #724 CK priority after a TransformFrame: worst angle to ckgp_c {worstSpice:E3} rad, to the closed form {worstClosedForm:E3} rad");
+            Assert.True(worstSpice <= CkPriorityAngleLimit, $"{worstSpice:E3} rad");
+            Assert.True(worstClosedForm <= CkPriorityAngleLimit, $"{worstClosedForm:E3} rad");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(noRates);
+            SpiceAPI.Instance.UnloadKernels(rates);
+            SpiceAPI.Instance.UnloadKernels(frame);
+            SpiceAPI.Instance.UnloadKernels(clock);
+        }
+    }
+
+    // Review of #724, the re-use interval left by a direct ckgpav_c (CspiceDirect, the CSPICE of the native library; not
+    // exported by the Windows DLL): the CK without rates loaded last, ckgpav_c at 500 s (the CK with rates), then the read
+    // at 500 s, from the CK without rates (before, the CK with rates' 0.5 rad about z and its rate). References: ckgp_c of
+    // tools/ck_priority_reference ("norates_last") and the closed form
+    [Fact]
+    [Trait("Category", "Validation")]
+    void ReadOrientation_FollowsTheCkSegmentPriority_AfterACkgpav()
+    {
+        var dir = new DirectoryInfo(Path.Combine("Data", "CkPriorityReference"));
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dir.FullName, "ck_priority_reference.json")));
+        var expected = document.RootElement.GetProperty("norates_last").EnumerateArray().ToArray();
+        var clock = new FileInfo(Path.Combine(dir.FullName, "ckprio.tsc"));
+        var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
+        var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
+        SpiceAPI.Instance.LoadKernels(clock);
+        SpiceAPI.Instance.LoadKernels(rates);
+        SpiceAPI.Instance.LoadKernels(noRates);
+        try
+        {
+            var lowerPriority = Body.CspiceDirect.Ckgpav(CkPrioritySpacecraft, Body.CspiceDirect.Sce2c(CkPrioritySpacecraft, 500.0), 65536.0, "J2000");
+            Assert.NotNull(lowerPriority);
+            Assert.Equal(1.0e-3, lowerPriority.Value.AngularVelocity[2]);
+
+            var records = new[] { ReadCkPriorityRecord(500.0) };
+            var (worstSpice, worstClosedForm, recordsWithoutRates) =
+                CompareCkPriorityRecords(records, [CkPriorityEntry(expected, 500.0)], _ => true);
+            Assert.Equal(1, recordsWithoutRates);
+            _output.WriteLine(
+                $"MEASURE #724 CK priority after a ckgpav_c: worst angle to ckgp_c {worstSpice:E3} rad, to the closed form {worstClosedForm:E3} rad");
+            Assert.True(worstSpice <= CkPriorityAngleLimit, $"{worstSpice:E3} rad");
+            Assert.True(worstClosedForm <= CkPriorityAngleLimit, $"{worstClosedForm:E3} rad");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(noRates);
+            SpiceAPI.Instance.UnloadKernels(rates);
+            SpiceAPI.Instance.UnloadKernels(clock);
+        }
+    }
+
+    // #724 in a frame other than the segments' (ECLIPJ2000), where ckgp_c rotates the C-matrix by refchg and ckgpav_c the
+    // state by frmchg: the same kernels, each record ckgp_c's C-matrix (CspiceDirect, the CSPICE of the native library) and,
+    // read from the CK with rates, ckgpav_c's angular velocity. CspiceDirect is not exported by the Windows DLL
+    // Twice the worst on Linux x64 of the angle of a record to ckgp_c (2.483e-16 rad, the MEASURE lines, CI run 44395076184,
+    // 2026-11-18), rounded up at the second digit (the Validation category runs on Linux alone). The angular velocity read
+    // from the CK with rates is ckgpav_c's own, bit for bit (0 rad/s measured)
+    private const double CkPriorityEclipticAngleLimit = 5.0e-16;
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [Trait("Category", "Validation")]
+    void ReadOrientation_InAnotherFrame_FollowsTheCkSegmentPriority(bool withoutRatesLoadedLast)
+    {
+        var dir = new DirectoryInfo(Path.Combine("Data", "CkPriorityReference"));
+        var clock = new FileInfo(Path.Combine(dir.FullName, "ckprio.tsc"));
+        var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
+        var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
+        var first = withoutRatesLoadedLast ? rates : noRates;
+        var last = withoutRatesLoadedLast ? noRates : rates;
+        SpiceAPI.Instance.LoadKernels(clock);
+        SpiceAPI.Instance.LoadKernels(first);
+        SpiceAPI.Instance.LoadKernels(last);
+        try
+        {
+            var records = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+                CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ECLIPTIC_J2000, TimeSpan.FromSeconds(50.0)).ToArray();
+            Assert.Equal(21, records.Length);
+            double worstAngle = 0.0, worstRate = 0.0;
+            for (int i = 0; i < records.Length; i++)
+            {
+                double sclk = Body.CspiceDirect.Sce2c(CkPrioritySpacecraft, 50.0 * i);
+                var cmat = Body.CspiceDirect.Ckgp(CkPrioritySpacecraft * 1000, sclk, 65536.0, "ECLIPJ2000");
+                Assert.NotNull(cmat);
+                var q = records[i].Rotation;
+                var matrix = Body.CspiceDirect.Q2m(q.W, q.VectorPart.X, q.VectorPart.Y, q.VectorPart.Z);
+                worstAngle = System.Math.Max(worstAngle, RotationAngle(matrix, cmat));
+                bool readsNoRates = withoutRatesLoadedLast && 50.0 * i >= 300.0 && 50.0 * i <= 700.0;
+                if (readsNoRates)
+                {
+                    Assert.Equal(Vector3.Zero, records[i].AngularVelocity);
+                }
+                else
+                {
+                    var reference = Body.CspiceDirect.Ckgpav(CkPrioritySpacecraft, sclk, 65536.0, "ECLIPJ2000");
+                    Assert.NotNull(reference);
+                    var av = reference.Value.AngularVelocity;
+                    worstRate = System.Math.Max(worstRate, (records[i].AngularVelocity - new Vector3(av[0], av[1], av[2])).Magnitude());
+                }
+
+                Assert.Equal(Frames.Frame.ECLIPTIC_J2000, records[i].ReferenceFrame);
+            }
+
+            _output.WriteLine(
+                $"MEASURE #724 CK priority in ECLIPJ2000 ({(withoutRatesLoadedLast ? "without" : "with")} rates loaded last): worst angle to ckgp_c {worstAngle:E3} rad, worst angular velocity to ckgpav_c {worstRate:E3} rad/s");
+            Assert.True(worstAngle <= CkPriorityEclipticAngleLimit, $"{worstAngle:E3} rad");
+            Assert.Equal(0.0, worstRate);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(last);
+            SpiceAPI.Instance.UnloadKernels(first);
+            SpiceAPI.Instance.UnloadKernels(clock);
         }
     }
 

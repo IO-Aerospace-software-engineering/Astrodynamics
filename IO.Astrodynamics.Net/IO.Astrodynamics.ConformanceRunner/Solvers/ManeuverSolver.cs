@@ -48,8 +48,8 @@ public class ManeuverSolver : ICategorySolver
     /// </summary>
     internal const double FuelFlow = 1e12;
 
-    // The thrust window of a burn starts 0.666 dt before it (ImpulseManeuver.TryExecute); the base of the segment the
-    // impulse opens is its epoch within the tick of Time
+    // The thrust window of a burn starts f dt before it, f the lead of the centroid of the burn's acceleration (#335,
+    // ImpulseManeuver.TryExecute); the base of the segment the impulse opens is its epoch within the tick of Time
     private const double SameEpochSeconds = 1e-6;
 
     private readonly string _conformanceTestsPath;

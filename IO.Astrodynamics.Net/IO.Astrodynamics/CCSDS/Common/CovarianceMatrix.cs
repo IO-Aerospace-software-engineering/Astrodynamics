@@ -235,7 +235,7 @@ public class CovarianceMatrix
     /// <returns>A 6x6 Matrix representing the covariance.</returns>
     public Matrix ToMatrix()
     {
-        return new Matrix(ToFullMatrix());
+        return Matrix.Wrap(ToFullMatrix());
     }
 
     /// <summary>
@@ -312,7 +312,7 @@ public class CovarianceMatrix
             }
         }
 
-        return new Matrix(scaled);
+        return Matrix.Wrap(scaled);
     }
 
     /// <summary>

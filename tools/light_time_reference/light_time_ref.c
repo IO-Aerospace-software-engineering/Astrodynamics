@@ -36,6 +36,9 @@
  * from S and from DSS-13 in G's frame; the Moon and S from G, and G from the Moon, in H's frame; the Moon from G and from
  * DSS-13 in S_TK; spkezr_c, or spkcpo_c and spkcpt_c with the locus CENTER.
  *
+ * Rows of #739: the Moon from the Earth and the Earth from the Moon in G's frame and in S_TK (spkezr_c), two objects of
+ * the kernels that the library reads by spkezr_c in J2000 and rotates to those frames, which only it holds.
+ *
  * Rows of the review of #489 (items 2 and 4 of its tests): C, the copy of DSS-13 from its coordinates (its position in
  * ITRF93 at J2000 TDB, recgeo_c on the Earth ellipsoid of pck00011), seen from the Moon and from the Earth (spkcpt_c at
  * those coordinates); the windows of G seen from the Moon with LT, 2024-01-01 TDB to 2024-01-02 TDB, from 60 s samples of
@@ -46,6 +49,8 @@
  * state relative to the Earth in J2000 at the epoch): the LEO of the issue (a = 6778.137 km, e = 0, i = 51.6 deg, node,
  * argument of perigee and mean anomaly 0 at 2024-03-01 12:00:00 TDB, conics_c with BODY399_GM) every 600 s over 1 h, and
  * the state of InstrumentPointingAttitudeTests.Execute (6678 km on +x, 7.727 km/s on +y at 2021-01-01 13:00:00 TDB).
+ * Rows of #740: the Sun and the Earth, the centre of those states, seen from the same points (spkcvo_c), as a
+ * CelestialAttitudeTarget reads them.
  *
  * Build and run from the repository root with the vendored CSPICE (N0067):
  *   gcc -O2 -I external-lib/includeLinux tools/light_time_reference/light_time_ref.c external-lib/cspice.a -lm -o light_time_ref
@@ -269,14 +274,20 @@ static void pointing_state(double et, const double obssta[6]) {
     printf("%s    {\"epoch_tdb\": %.17g, \"state\": [", first_row ? "" : ",\n", et);
     first_row = 0;
     for (int k = 0; k < 6; k++) printf("%s%.17g", k == 0 ? "" : ", ", obssta[k] * 1000.0);
-    printf("], \"moon\": {");
-    for (int f = 0; f < NFLAGS; f++) {
-        double state[6], lt;
-        spkcvo_c("MOON", et, "J2000", "OBSERVER", FLAGS[f], obssta, et, "EARTH", "J2000", state, &lt);
-        printf("%s\"%s\": [%.17g, %.17g, %.17g]", f == 0 ? "" : ", ", FLAGS[f], state[0] * 1000.0, state[1] * 1000.0,
-               state[2] * 1000.0);
+    printf("]");
+    /* #549: the Moon; #740: the Sun and the Earth, the centre of the state, as a CelestialAttitudeTarget reads them */
+    static const char *TARGETS[3][2] = {{"moon", "MOON"}, {"sun", "SUN"}, {"earth", "EARTH"}};
+    for (int t = 0; t < 3; t++) {
+        printf(", \"%s\": {", TARGETS[t][0]);
+        for (int f = 0; f < NFLAGS; f++) {
+            double state[6], lt;
+            spkcvo_c(TARGETS[t][1], et, "J2000", "OBSERVER", FLAGS[f], obssta, et, "EARTH", "J2000", state, &lt);
+            printf("%s\"%s\": [%.17g, %.17g, %.17g]", f == 0 ? "" : ", ", FLAGS[f], state[0] * 1000.0, state[1] * 1000.0,
+                   state[2] * 1000.0);
+        }
+        printf("}");
     }
-    printf("}}");
+    printf("}");
 }
 
 static void pointing(double gm) {
@@ -431,6 +442,13 @@ int main(int argc, char **argv) {
     frame = "S_TK";
     row("moon_from_site_in_spacecraft_frame", "MOON", NULL, by_spkcpo);
     row("moon_from_dss13_in_spacecraft_frame", "MOON", "DSS-13", by_spkezr);
+    /* #739: the same frames between two objects of the kernels, which the library reads by spkezr_c in J2000 and rotates */
+    frame = "G491_TOPO";
+    row("moon_from_earth_in_site_frame", "MOON", "EARTH", by_spkezr);
+    row("earth_from_moon_in_site_frame", "EARTH", "MOON", by_spkezr);
+    frame = "S_TK";
+    row("moon_from_earth_in_spacecraft_frame", "MOON", "EARTH", by_spkezr);
+    row("earth_from_moon_in_spacecraft_frame", "EARTH", "MOON", by_spkezr);
     frame = "J2000";
     refloc = "OBSERVER";
     /* The review of #489: C, the copy of DSS-13 */

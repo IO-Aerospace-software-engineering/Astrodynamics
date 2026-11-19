@@ -1,4 +1,4 @@
-"""References of the near-parabolic band, at 60 digits, for the tests of #459, #462, #477 and #478.
+"""References of the near-parabolic band, at 60 digits, for the tests of #459, #462, #477, #478 and #753.
 
 The band is |e - 1| < 1e-6, where the library takes the anomalies of a parabola (Barker's equation, #368). The
 references are closed forms evaluated with mpmath at 60 digits on the doubles the tests give the library, so they
@@ -6,8 +6,8 @@ measure the computation alone:
 
 - the conic of a state: h = r x v, e = |v x h / mu - r / |r||, p = h^2 / mu, q = p / (1 + e), the specific energy
   xi = v^2 / 2 - mu / |r|, the semi-major axis a = -mu / (2 xi) and the mean motion n = sqrt(mu / |a|^3) of every
-  e != 1 (Vallado, Fundamentals of Astrodynamics and Applications, 4th ed., 2013, algorithm 9 RV2COE; to be verified by
-  S. Guillet);
+  e != 1 (Vallado, Fundamentals of Astrodynamics and Applications, 4th ed., 2013, algorithm 9 RV2COE; confirmed by
+  S. Guillet, 2026-11-18);
 - Barker's equation: D = tan(nu / 2), M = D + D^3 / 3, t - T = sqrt(2 q^3 / mu) M (Vallado, section 2.2), and its
   inverse in closed form;
 - the exact two-body motion of the conic: Kepler's elliptic (M = E - e sin E) or hyperbolic (M = e sinh H - H) equation
@@ -17,9 +17,12 @@ measure the computation alone:
 - the modified equinoctial elements to Cartesian (Walker, Ireland and Owens, Celestial Mechanics 36, 1985; confirmed by
   S. Guillet, 2026-10-27), as tools/equinoctial_elements writes them.
 
-The band model of the library, which the tests also measure (#459, option 1, decided by S. Guillet, 2026-11-17), is
-Barker's anomaly advanced at Barker's rate sqrt(mu / (2 q^3)), with the conic's semi-latus rectum q (1 + e) for the
-state; its distance to the exact motion of the conic is the model error the tests print.
+The band model of the library before #753 (#459, option 1, decided by S. Guillet, 2026-11-17) was Barker's anomaly
+advanced at Barker's rate sqrt(mu / (2 q^3)), with the conic's semi-latus rectum q (1 + e) for the state; its distance
+to the exact motion of the conic is the model error the tests print. Since #753 (decided by S. Guillet, 2026-11-18) the
+library moves the band as the exact conic, in universal variables, which sections 9 and 10 measure: the conic's times
+to a true anomaly and a radius, and its two-body states over |e - 1| from 1e-12 to 1e-5; section 11 gives the functions
+of the universal variables themselves (UniversalKeplerTests).
 
 Each value is written as a C# literal, a double or a pair (hi, lo) of doubles whose sum is the 60-digit value, so that
 an error of the order of an ulp is measured without the rounding of the reference. mu is the Earth GM of gm_de440.tpc
@@ -311,3 +314,86 @@ for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
     print(f'        new({de!r}, {vec(state[0])}, {vec(state[1])}, {d(c.e)}, {d(c.q)}, {dd(c.nu)},')
     print(f'            {dd(c.barker_time_to_nu(mp.mpf(1)))}, {r1!r}, {dd(c.barker_time_to_nu(nu_r1))}, {dd(c.barker_time_to_nu(nu2))},')
     print(f'            {dd(c.a)}, {dd(c.n)}, {vec(after[0])}, {vec(after[1])}, {vec(model[0])}),')
+
+# 9. #753: the exact conic's times of the states of 3, the motion of the band since 11.0.0 (universal variables): the
+# conic's time to nu = 1 rad, to the double radius at nu = 1 rad and to 2e7 m (Kepler's equation of the conic at 60
+# digits), as the C# table BandConicTimes of NearParabolicBandTests
+print('\nC# BandConicTimes (#753)')
+for de in (-9e-7, -5e-7, -1e-12, 1e-12, 5e-7, 9e-7):
+    e = 1 + mp.mpf(de)
+    q = mp.mpf(7e6)
+    state = doubles(perifocal_state(q * (1 + e), e, mp.mpf(30) * mp.pi / 180, mp.mpf(40) * mp.pi / 180, 0, mp.mpf(0.5)))
+    c = Conic(*state)
+    r1 = float(c.p / (1 + c.e * mp.cos(1)))
+    nu_r1 = mp.acos((c.p / r1 - 1) / c.e)
+    nu2 = mp.acos((c.p / 2e7 - 1) / c.e)
+    print(f'        ({de!r}, {pair(c.conic_time_to_nu(mp.mpf(1)))}, {pair(c.conic_time_to_nu(nu_r1))}, '
+          f'{pair(c.conic_time_to_nu(nu2))}),')
+
+# 10. #753: the motion of the band against the exact conic, |e - 1| from 1e-12 to 9.9e-7 on both sides and just outside
+# the band (1.1e-6, 1e-5), q = 7000 km, i = 30 deg, Omega = 40 deg, omega = 0, nu0 in {-1.5, 0.5, 2} rad, the state
+# built at 60 digits with p = q (1 + e) and rounded to doubles, and the exact two-body state of its conic dt later,
+# dt in {600, 86400, -3600} s, as the C# table BandMotions of NearParabolicBandTests
+print('\nC# BandMotions (#753)')
+for de in (-1e-5, -1.1e-6, -9.9e-7, -5e-7, -1e-7, -1e-8, -1e-10, -1e-12, 1e-12, 1e-10, 1e-8, 1e-7, 5e-7, 9.9e-7, 1.1e-6, 1e-5):
+    e = 1 + mp.mpf(de)
+    q = mp.mpf(7e6)
+    for nu0 in (-1.5, 0.5, 2.0):
+        state = doubles(perifocal_state(q * (1 + e), e, mp.mpf(30) * mp.pi / 180, mp.mpf(40) * mp.pi / 180, 0, mp.mpf(nu0)))
+        c = Conic(*state)
+        for dt in (600, 86400, -3600):
+            after = c.conic_after(dt)
+            print(f'        new({de!r}, {nu0!r}, {vec(state[0])}, {vec(state[1])}, {dt!r}.0, {vec(after[0])}, {vec(after[1])}),')
+
+# 11. #753: the functions of the universal variables at 60 digits, as the C# tables of UniversalKeplerTests: the Stumpff
+# functions C(z) = (1 - cos sqrt z) / z, S(z) = (sqrt z - sin sqrt z) / z^(3/2) (cosh and sinh for z < 0), 1 - z S and
+# 2 - z C of a double z; and, for doubles e, q and Barker's D = tan(nu / 2), the universal anomaly chi of D (sqrt(a) E,
+# sqrt(-a) H), its time from the periapsis (q chi + e chi^3 S(z)) / sqrt(mu) and the root chi of the universal Kepler
+# equation for that time rounded to a double, on ellipses and hyperbolas of the band and beyond it (z up to 30)
+
+
+def stumpff(z):
+    z = mp.mpf(z)
+    if z == 0:
+        return mp.mpf(1) / 2, mp.mpf(1) / 6
+    if z > 0:
+        y = mp.sqrt(z)
+        return (1 - mp.cos(y)) / z, (y - mp.sin(y)) / y ** 3
+    y = mp.sqrt(-z)
+    return (mp.cosh(y) - 1) / -z, (mp.sinh(y) - y) / y ** 3
+
+
+def universal_of_barker(d, q, e):
+    d, q, e = mp.mpf(d), mp.mpf(q), mp.mpf(e)
+    if e == 1:
+        return mp.sqrt(2 * q) * d
+    a = q / (1 - e)
+    if e < 1:
+        return mp.sqrt(a) * 2 * mp.atan(mp.sqrt((1 - e) / (1 + e)) * d)
+    return mp.sqrt(-a) * 2 * mp.atanh(mp.sqrt((e - 1) / (e + 1)) * d)
+
+
+def time_of_universal(chi, q, e):
+    q, e = mp.mpf(q), mp.mpf(e)
+    c, s = stumpff((1 - e) / q * chi * chi)
+    return (q * chi + e * chi ** 3 * s) / mp.sqrt(MU)
+
+
+print('\nC# Stumpff (#753)')
+for z in (-50.0, -4.0, -1.0, -0.999, -0.5, -1e-6, 0.0, 1e-6, 0.5, 0.999, 1.0, 4.0, 30.0, 100.0):
+    c, s = stumpff(z)
+    zm = mp.mpf(z)
+    print(f'        ({z!r}, {pair(c)}, {pair(s)}, {pair(1 - zm * s)}, {pair(2 - zm * c)}),')
+
+print('\nC# Universal (#753)')
+for e in (1 - 5e-7, 1 + 5e-7, 1 - 1e-12, 0.5, 0.9, 1.5, 3.0):
+    for d in (0.3, -2.0, 30.0, 300.0):
+        if e > 1 and abs(d) * math.sqrt((e - 1) / (e + 1)) >= 1:
+            continue
+        q = 7e6
+        chi = universal_of_barker(d, q, e)
+        t = time_of_universal(chi, q, e)
+        td = float(t)
+        root = mp.findroot(lambda x: time_of_universal(x, q, e) - mp.mpf(td), chi)
+        nu = 2 * mp.atan(mp.mpf(d))
+        print(f'        ({e!r}, {d!r}, {pair(chi)}, {pair(t)}, {pair(root)}, {pair(mp.mpf((1 - e) / q) * chi * chi)}),')

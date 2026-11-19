@@ -394,7 +394,9 @@ public class SpiceAPI
     /// The rotation (<see cref="ToManagedFrame"/>) runs under the lock of the SPICE calls: a <see cref="Surface.SiteFrame"/> reads
     /// the frame of its body through SPICE, under the same lock, which is re-entrant, and no static class whose type
     /// initializer takes it (#623); a <see cref="Body.Spacecraft.SpacecraftFrame"/> takes the lock of its attitude record inside it, which is
-    /// safe because no region of that lock calls SPICE.
+    /// safe because no region of that lock calls SPICE. With a light-time correction it also reads, under the same lock, the
+    /// observer and the frame's centre from the solar system barycenter (#739): SPICE by identifier, or the frame's site or
+    /// managed spacecraft, whose reads take the same re-entrant lock.
     /// </remarks>
     internal static Frame ManagedReadFrame(Frame frame) => frame switch
     {
@@ -475,15 +477,25 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558, #682): rotated by
-    /// <see cref="OrbitalParameters.OrbitalParameters.ToFrame"/> at the epoch of the read, as a state in ICRF converted
-    /// by the caller would be, then labelled with the frame the caller gave.
+    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558, #682), as <c>spkezr_c</c>
+    /// rotates a non-inertial frame (#739): with a light-time correction, at the epoch of the frame's centre seen from the
+    /// observer (<see cref="Body.CelestialItem.ToManagedFrameAtTheCenterEpoch"/>, the rule of the reference-body path,
+    /// #593); geometric, in a frame without a centre or in a frame centred on the observer, rotated by
+    /// <see cref="OrbitalParameters.OrbitalParameters.ToFrame"/> at the epoch of the read, as a state in ICRF converted by
+    /// the caller would be; then labelled with the frame the caller gave. Before 11.0.0 every correction was rotated at
+    /// the epoch of the read: 3.6e4 m for the Earth from the Moon in TIRS with LT.
     /// </summary>
     private static OrbitalParameters.StateVector ToManagedFrame(Vector3 position, Vector3 velocity, ILocalizable observer,
-        Time epoch, Frame managed, Frame frame)
+        Time epoch, Frame managed, Frame frame, Aberration aberration)
     {
-        var rotated = new OrbitalParameters.StateVector(position, velocity, observer, epoch, Frame.ICRF).ToFrame(managed)
-            .ToStateVector();
+        var icrf = new OrbitalParameters.StateVector(position, velocity, observer, epoch, Frame.ICRF);
+        var atTheCenterEpoch = Body.CelestialItem.ToManagedFrameAtTheCenterEpoch(icrf, managed, frame, observer, aberration);
+        if (atTheCenterEpoch != null)
+        {
+            return atTheCenterEpoch;
+        }
+
+        var rotated = icrf.ToFrame(managed).ToStateVector();
         return new OrbitalParameters.StateVector(rotated.Position, rotated.Velocity, observer, epoch, frame);
     }
 
@@ -1554,11 +1566,14 @@ public class SpiceAPI
     /// ran until the process was out of memory and a negative step read 10000 epochs backwards).</exception>
     /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454), or the observer is a
     /// site whose SPK does not cover J2000 TDB (see the remarks).</exception>
-    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
-    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
-    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
-    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
-    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
+    /// + site, of a body SPICE names) that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a
+    /// <see cref="Surface.Site"/> built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and
+    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is
+    /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
+    /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
+    /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -1599,7 +1614,7 @@ public class SpiceAPI
                     var x = stateVectors[i];
                     orbitalParameters.Add(managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
-                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame));
+                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame, aberration));
                 }
             }
 
@@ -1670,11 +1685,14 @@ public class SpiceAPI
     /// <exception cref="InvalidOperationException">SPICE gives no state (#454): the kernels do not cover the epoch or do
     /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined. Or the observer
     /// is a site whose SPK does not cover J2000 TDB (see the remarks).</exception>
-    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
-    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
-    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
-    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
-    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
+    /// + site, of a body SPICE names) that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a
+    /// <see cref="Surface.Site"/> built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and
+    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is
+    /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
+    /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
+    /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -1693,18 +1711,35 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>),
-    /// from the kernels (<see cref="CreateKernelSite"/>), otherwise <see cref="CelestialItem.Create"/> (#672). Built before
+    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier of a body SPICE names
+    /// (<see cref="IsSiteOfNamedBody"/>), from the kernels (<see cref="CreateKernelSite"/>); an object of the kernels read
+    /// by its identifier for one whose body SPICE does not name (<see cref="CreateKernelObject"/>, NOTO and NEW NORCIA,
+    /// #750: before, the site of a body 398, which threw); otherwise <see cref="CelestialItem.Create"/> (#672). Built before
     /// the lock (#623). The CLI builds its objects by identifier the same way (<c>Helpers.CreateLocalizable</c>).
     /// </summary>
     private ILocalizable CreateObserver(int observerId)
     {
-        return IsSiteId(observerId) ? CreateKernelSite(observerId) : CelestialItem.Create(observerId);
+        if (IsSiteOfNamedBody(observerId))
+        {
+            return CreateKernelSite(observerId);
+        }
+
+        return IsSiteId(observerId) ? CreateKernelObject(observerId) : CelestialItem.Create(observerId);
     }
 
     /// <summary>
-    /// The site of a site identifier (<see cref="IsSiteId"/>) from the kernels: <c>new Site(id % 1000, its SPICE name, new
-    /// CelestialBody(id / 1000))</c>, which reads the site's state at J2000 TDB (#672). Not under the lock (#623).
+    /// The object of the kernels of an identifier of the form of a site whose body SPICE does not name (<see cref="IsSiteId"/>
+    /// and not <see cref="IsSiteOfNamedBody"/>): SPICE's NOTO (398989) and NEW NORCIA (398990), read by its identifier
+    /// (<see cref="Body.KernelObject"/>, #750). Not under the lock (#623).
+    /// </summary>
+    /// <exception cref="ArgumentException">SPICE does not name the identifier (<c>naifId</c>).</exception>
+    internal static Body.CelestialItem CreateKernelObject(int naifId) => new Body.KernelObject(naifId);
+
+    /// <summary>
+    /// The site of a site identifier of a body SPICE names (<see cref="IsSiteOfNamedBody"/>) from the kernels: <c>new
+    /// Site(id % 1000, its SPICE name, new CelestialBody(id / 1000))</c>, which reads the site's state at J2000 TDB (#672).
+    /// Not under the lock (#623). Its callers test <see cref="IsSiteOfNamedBody"/> (#750: they tested
+    /// <see cref="IsSiteId"/>, so that NOTO and NEW NORCIA reached it and threw for their body 398).
     /// </summary>
     /// <param name="siteId">The NAIF identifier of the site, its body's times 1000 plus its own.</param>
     /// <exception cref="ArgumentException">The loaded kernels give the identifier no name.</exception>
@@ -1771,7 +1806,9 @@ public class SpiceAPI
 
     /// <summary>
     /// The state of <paramref name="targetId"/> from <paramref name="observer"/> at <paramref name="epoch"/> (TDB label):
-    /// in a frame SPICE knows, as <c>spkezr_c</c> returns it; in a managed frame, read in J2000 and rotated (#558).
+    /// in a frame SPICE knows, as <c>spkezr_c</c> returns it; in a managed frame, read in J2000 and rotated (#558), a
+    /// light-time corrected read at the epoch of the frame's centre seen from the observer (<see cref="ToManagedFrame"/>,
+    /// #739).
     /// </summary>
     private static OrbitalParameters.StateVector ReadEphemerisAtGivenEpoch(Time epoch, ILocalizable observer, int targetId,
         Frame frame, Aberration aberration)
@@ -1786,7 +1823,7 @@ public class SpiceAPI
         var tdb = epoch.ToTDB();
         return managed == null
             ? new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, frame)
-            : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame);
+            : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame, aberration);
     }
 
     // The bound of | |q| − 1 | of a rotation from the native layer, a unit quaternion to rounding; the NaN rotation of a
@@ -1831,6 +1868,16 @@ public class SpiceAPI
     ///     <see cref="Body.Spacecraft.Spacecraft.GetOrientation"/>. A record read from a segment without angular velocity
     ///     (a type-1 CK, or a type-2 or type-3 CK written without rates) has a zero angular velocity: <c>ckgpav_c</c> skips
     ///     such a segment, and its pointing is read by <c>ckgp_c</c> (#714: before, the call threw "No orientation found").
+    ///     Each record is that of the segment <c>ckgp_c</c> reads, the one of highest priority (the CK loaded last, the last
+    ///     segment of a file) that gives a pointing within the tolerance, with <c>ckgpav_c</c>'s angular velocity when that
+    ///     segment holds one and a zero angular velocity when it holds none, never the pointing or the rate of a
+    ///     lower-priority segment (#724, decided by S. Guillet, 2026-11-18: before, a segment without rates loaded over one
+    ///     with rates gave the record of the one with rates). The priority is that of a search in a fresh process, whatever
+    ///     the calls before: the read first voids the segment CSPICE keeps from its last search of the spacecraft (its
+    ///     re-use interval), which a search with angular velocity (<c>ckgpav_c</c>, or <see cref="TransformFrame(Time, Frame, Frame)"/>
+    ///     to the spacecraft's CK frame through <c>sxform_c</c>) leaves over a segment without rates it skips (review of #724:
+    ///     before, a read after such a search, or after an epoch of the same call in a gap of the higher-priority segment's
+    ///     interpolation intervals, could take the lower-priority segment's record).
     /// </returns>
     /// <remarks>
     ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,
@@ -2496,9 +2543,11 @@ public class SpiceAPI
         }
     }
 
-    // The domain of CONICS (conics.c: SPICE(BADPERIAPSEVALUE) for a periapsis radius not above 0, an ellipse of negative
-    // semi-major axis or a hyperbola of positive one; the eccentricity, never negative, is checked by KeplerianElements),
-    // checked before the native call: elements outside it are a bad argument (#711: before, a zero state was returned)
+    // The domain of CONICS (conics.c: SPICE(BADPERIAPSEVALUE) for a periapsis radius not above 0; the eccentricity, never
+    // negative, is checked by KeplerianElements), checked before the native call: elements outside it are a bad argument (#711:
+    // before, a zero state was returned). Since #738 the constructor of osculating elements refuses a semi-major axis of the
+    // wrong sign, so the elements that reach this check are mean elements of e >= 1 (FromOMM, whose a > 0 comes from the mean
+    // motion) and a hyperbola whose a (1 - e) overflows to +Infinity
     private static void ThrowIfOutsideConicsDomain(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
     {
         var rp = keplerianElements.PerigeeRadius();
@@ -2661,9 +2710,10 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">For an ellipse, the centre of the elements is not a celestial body SPICE names: a
     /// spacecraft, a site, or an identifier no loaded kernel names (#711: before, the native layer ended the process for a
     /// centre with a GM, and the conversion of the result threw for the others).</exception>
-    /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
-    /// <c>CONICS</c>: an ellipse of negative semi-major axis, a hyperbola of positive one (#711: before, a zero state was
-    /// returned).</exception>
+    /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
+    /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
+    /// cref="OrbitalParameters.KeplerianElements.FromOMM"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
@@ -2697,8 +2747,10 @@ public class SpiceAPI
     /// <summary>
     /// The state of Keplerian elements at an epoch, through CSPICE's <c>conics_c</c> with the GM of their observer.
     /// </summary>
-    /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
-    /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
+    /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
+    /// cref="OrbitalParameters.KeplerianElements.FromOMM"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
@@ -2720,8 +2772,10 @@ public class SpiceAPI
     /// <param name="epoch"></param>
     /// <param name="gm">Gravitational parameter (m^3/s^2)</param>
     /// <returns></returns>
-    /// <exception cref="ArgumentException">The periapsis radius of the elements is not above 0, outside the domain of
-    /// <c>CONICS</c> (#711: before, a zero state was returned).</exception>
+    /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
+    /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
+    /// cref="OrbitalParameters.KeplerianElements.FromOMM"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#711: before,

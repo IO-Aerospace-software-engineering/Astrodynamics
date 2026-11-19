@@ -250,7 +250,7 @@ Represents a precise instant in time with time frame awareness.
 | `AddDays(double days)` | Add days, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddHours(double hours)` | Add hours, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds, to the nearest tick (#625) |
-| `==`, `Equals`, `CompareTo` | The same instant, whatever the frames: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; local times compare as the instants of their zone, the default time before every other; compare `DateTime` and `Frame` to tell two labels apart (a test of a label: `LabelAssert`, not `Assert.Equal`) |
+| `==`, `Equals`, `CompareTo` | The same instant, whatever the frames: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; local times compare as the instants of their zone, and `ToLocal()` keeps the instant in the repeated hour of a DST zone too (#751), the default time before every other; compare `DateTime` and `Frame` to tell two labels apart (a test of a label: `LabelAssert`, not `Assert.Equal`) |
 
 ```csharp
 // Create times
@@ -420,7 +420,7 @@ Cartesian position and velocity state.
 | `EccentricityVector()` | Compute eccentricity vector |
 | `AscendingNodeVector()` | Compute ascending node vector |
 | `PerigeeVector()` | Compute perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); a state at the centre has none and throws (#687) |
-| `ApogeeVector()` | Compute apogee position vector, −a(1 + e) P̂ |
+| `ApogeeVector()` | Compute apogee position vector, −a(1 + e) P̂; an open orbit has none and throws `InvalidOperationException` (#737) |
 | `PerigeeVelocity()` | Compute velocity at perigee (m/s) |
 | `ApogeeVelocity()` | Compute velocity at apogee (m/s) |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
@@ -429,7 +429,7 @@ Cartesian position and velocity state.
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607) |
+| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607); a null or blank `CosparId` writes blank columns 10-17 (#604) |
 
 A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
 no RTN frame: the members that read the plane (inclination, node, argument of periapsis, node vectors, longitudes, the
@@ -495,8 +495,8 @@ Classical Keplerian orbital elements (osculating or mean).
 | `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
 | `Period()` | Get orbital period of an ellipse; an open orbit throws `InvalidOperationException`, a period given to the constructor included (#663) |
 | `PerigeeRadius()` | Get perigee radius (m) |
-| `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
-| `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ (its `Magnitude()` is the apogee radius, m, a(1 + e)); mean elements throw |
+| `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂ (q P̂ within 1e-6 of e = 1, #737), P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
+| `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ (its `Magnitude()` is the apogee radius, m, a(1 + e)); an open orbit has none and throws `InvalidOperationException` (#737); mean elements throw |
 | `PerigeeVelocity()` | Get the speed at perigee (m/s); mean elements throw |
 | `ApogeeVelocity()` | Get the speed at apogee (m/s); mean elements throw |
 | `IsCircular()` | Check if orbit is circular (e ≈ 0) |
@@ -504,7 +504,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |
 | `IsHyperbolic()` | Check if orbit is hyperbolic (e > 1) |
 | `AtEpoch(Time epoch)` | Get elements at different epoch, of the same `ElementsType` (#463) |
-| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. Within 1e-6 of e = 1 the time is Barker's, the motion of the band (#478; before 11.0.0 about 8 times off, and possibly before `Epoch`) |
+| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or Time cannot hold the epoch. Within 1e-6 of e = 1 the time is the conic's in universal variables, the motion of the band (#753; Barker's time before, up to 1.5e-3 s off; before #478 about 8 times off, and possibly before `Epoch`) |
 | `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the center of motion (`TimeToRadius`); throws when it is infinite |
 
 ```csharp
@@ -626,7 +626,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `ToKeplerianElements()` | Get osculating Keplerian elements (via SGP4) |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly from TLE data |
 | `AtEpoch(Time epoch)` | Get propagated orbital parameters |
-| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607) |
+| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` (`ArgumentException` otherwise, #607); a null or blank `cosparId` writes blank columns 10-17 (#604) |
 
 ```csharp
 // Parse TLE
@@ -857,6 +857,8 @@ OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format (
 |--------|---------|---------|
 | Full COSPAR ID | 1998-067A | OMM ObjectId |
 | TLE COSPAR ID | 98067A | TLE Line 1 |
+| No designator | `UNKNOWN` | OMM ObjectId of a TLE whose columns 10-17 are blank (#604) |
+| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`, `ToTLE` with a null or blank `Configuration.CosparId`) |
 
 ```csharp
 // OMM automatically converts COSPAR ID format during ToTle()
@@ -882,7 +884,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a state or covariance value whose value in SI units overflows (above about 1.8e305 km or 1.8e302 km²; ±Infinity from `ToStateVector` before 11.0.0, #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
-| `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector |
+| `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector; writes `REF_FRAME` as the CCSDS name of the state's frame: `ICRF` for `Frame.ICRF` (SPICE `J2000`), the frame's own name otherwise (`GCRF`, `TEME`, `ECLIPJ2000`, ...); `J2000` before 11.0.0 ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)) |
 
 | Property | Description |
 |----------|-------------|
@@ -949,6 +951,9 @@ var opm = spacecraft.ToOpm(
 // Save for archival/sharing
 opm.SaveToFile("iss_state.opm");
 ```
+
+`REF_FRAME` and each `MAN_REF_FRAME` carry the CCSDS name of the frame of the initial orbital parameters: `ICRF` for
+`Frame.ICRF` (SPICE `J2000`, written before 11.0.0), the frame's own name otherwise (#339).
 
 The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported in km², km²/s and km²/s²
 when the OPM is written at the initial epoch (the default, or the same instant in any time frame). At another epoch the
@@ -1537,7 +1542,7 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 
 **IAttitudeTarget system**: The `IAttitudeTarget` interface enables orbital directions and celestial bodies to be used interchangeably as TRIAD targets:
 - `OrbitalDirectionTarget` — predefined static instances: `.Prograde`, `.Retrograde`, `.Nadir`, `.Zenith`, `.Normal`, `.AntiNormal`
-- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris (default: `Aberration.None`; configurable, e.g. `new CelestialAttitudeTarget(moon, Aberration.LT)` for photon-based scenarios)
+- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris (default: `Aberration.None`; configurable, e.g. `new CelestialAttitudeTarget(moon, Aberration.LT)` for photon-based scenarios, the target as the spacecraft sees it, as `spkcvo_c` corrects it from the spacecraft's state, #740)
 - `OrbitalDirection` enum: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
 
 Key features:
@@ -1629,7 +1634,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Propagation Architecture:**
 1. **Build event detectors** from the spacecraft's maneuver chain: the leading attitudes on the attitude timeline, each at the later of its minimum epoch and the end of the previous hold, the last hold gating the first impulse (#539)
 2. **Segment loop**: Integrator advances with event detection; on event → the detector executes the impulse only, the propagation counts its windows in TT seconds about the Earth (#547), lays its attitude and the attitudes chained after it on the timeline and builds the next detector, reinitialize
-3. **Output**: Evaluate `PropagationSolution.InterpolateAt` at fixed `DeltaT` epochs: a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
+3. **Output**: Evaluate `PropagationSolution.InterpolateAt` at fixed `DeltaT` epochs, round(L/ΔT) + 1 of them, the window end last when the grid ends before it (in place of a grid point within ΔT/10 of it; #741, decided by S. Guillet, 2026-11-18): a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
 4. **Attitude record**: from the timeline, on the solution: each law at its activation, at each output epoch of its interval and 1 µs before the change that ends it; the impulse's attitude over its window (`docs/reference/attitudes.md#the-attitude-timeline`)
 
 **Key Supporting Types:**
@@ -2064,7 +2069,7 @@ Matrix operations.
 
 | Constructor | Description |
 |------------|-------------|
-| `Matrix(double[,] data)` | Create from 2D array |
+| `Matrix(double[,] data)` | Create from 2D array, copied: a later write to the array does not change the matrix (#745) |
 
 | Method | Description |
 |--------|-------------|
@@ -2129,7 +2134,7 @@ In-memory data provider for testing.
 |--------|-------------|
 | `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add the information of bodies (NAIF id, radii, GM, frame) |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
+| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines and never reads from stored entries (#744) |
 
 ```csharp
 // customEarth: the information of a body (IO.Astrodynamics.DTO.CelestialBody); epoch: Time; earthState: a StateVector of the Earth

@@ -53,9 +53,15 @@ still read (`cnmfrm_c`); a barycentre has no frame (an empty `FrameName`, `Frame
 left the GM 0 and the frame name undefined (Pallas, Nix, Hydra, Didymos and Dimorphos read GM 0; Elara a garbage frame).
 
 The observer of `ReadEphemeris` by identifiers is a `Site` for a site identifier, its body's identifier times 1000 plus
-its own (1 to 999), the body a planet or a moon (399013 is DSS-13 on the Earth): `new Site(id % 1000, its SPICE name,
-new CelestialBody(id / 1000))`, whose constructor reads the site's state at J2000 TDB, so its SPK must cover that epoch.
-Any other identifier is built by `CelestialItem.Create`, a barycenter, a Lagrange point or a celestial body (#672: a
+its own (1 to 999), the body a planet or a moon that SPICE names (399013 is DSS-13 on the Earth): `new Site(id % 1000,
+its SPICE name, new CelestialBody(id / 1000))`, whose constructor reads the site's state at J2000 TDB, so its SPK must
+cover that epoch. An identifier of that form whose body SPICE does not name, NOTO (398989) and NEW NORCIA (398990), is an
+object of the kernels read by its identifier, named as SPICE names it, so the read is `spkezr_c`'s from that identifier:
+the state when its SPK is loaded, SPICE's missing-data error (`InvalidOperationException`) otherwise
+([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750): before 11.0.0 it was built as a
+site of the body 398 and threw `ArgumentException`, "The NAIF identifier 398 has no name in SPICE"); so is a frame
+centre of that form on the reference-body path, and the commands of the CLI build the same object (`ephemeris`,
+`sub-point`). Any other identifier is built by `CelestialItem.Create`, a barycenter, a Lagrange point or a celestial body (#672: a
 site observer was built as a celestial body, which threw or was built from undefined bytes). The state itself is
 `spkezr_c`'s, which needs only the identifier. The commands of the CLI build their objects by identifier with the same
 rule and the same site (since 11.0.0; before, any identifier from 100001 to 999998 was a site named `site<id>`), so a
@@ -194,6 +200,30 @@ which `ckgpav_c` skips with no error ("Segments containing only pointing data wi
 ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the read threw "No
 orientation found"). The CKs the library writes carry their rates.
 
+Where several segments cover an epoch, each record is that of the segment `ckgp_c` reads: the one of highest priority
+(the CK loaded last, and in a file its last segment) that gives a pointing within the tolerance. Its angular velocity is
+the one `ckgpav_c` gives when that segment holds angular velocity (`ckgpav_c` then finds the same segment: its
+candidates are `ckgp_c`'s that hold rates, in the same order), and zero when it holds none; the pointing or the rate of
+a lower-priority segment is never returned (decided by S. Guillet, 2026-11-18). Before
+[#724](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/724), `ckgpav_c` was read first, so
+that a segment without rates loaded over one with rates gave the record of the one with rates: 1.54 rad from `ckgp_c`'s
+pointing on two CKs as those of `tools/ck_priority_reference` (C++ `API.ReadOrientationProxyReadsAHigherPrioritySegmentWithoutAngularVelocity`),
+and, at an epoch within the tolerance of the higher-priority segment, a record 0.5 s from the one `ckgp_c` takes. A CK holding rates
+everywhere reads as before, bit for bit.
+
+The priority is that of a search made in a fresh process, whatever the calls before the read. CSPICE keeps, for each
+instrument, the segment of its last search and the interval over which that segment has the highest priority (the re-use
+interval of `ckbsr.c`), and a search inside that interval takes the segment first. A search with angular velocity
+(`ckgpav_c`, or `sxform_c` through `ckfxfm`, as `TransformFrame` to the spacecraft's CK frame) skips a segment without
+rates that holds the epoch and does not shrink the interval by it, so that `ckgp_c` itself, called after it, can read
+the lower-priority segment with rates. The read first voids that interval (a search at an encoded clock of -dpmax, before
+every segment, lies outside it), then searches from the highest priority. In the first implementation of #724 it did
+not: after a `TransformFrame` or a `ckgpav_c` at 500 s on the kernels of `tools/ck_priority_reference`, or after the
+epochs of the same call in the gap of a CK without rates whose interpolation intervals are [300, 400] s and
+[600, 700] s (`ckprio_gap.bc`), a read took the record of the CK with rates, 1.43 to 1.54 rad from `ckgp_c` in a fresh
+process (C++ `API.ReadOrientationProxyFollowsTheSegmentPriorityAfter*`, `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority_After*`).
+`TransformFrame` and CSPICE's own routines keep CSPICE's re-use interval.
+
 `WriteOrientation` writes its records unchanged, in one interval of one segment tagged with the frame of the first
 record: every record carries the same frame (another frame throws `ArgumentException` before the native call, which
 ended the process before 11.0.0, #560), in increasing order of their encoded SCLK, and the spacecraft clock kernel
@@ -273,7 +303,7 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 |--------|-------------|
 | `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add celestial body data: the records of `IO.Astrodynamics.DTO`, not `IO.Astrodynamics.Body.CelestialBody` |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
+| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
 
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
@@ -298,7 +328,11 @@ rotated by the provider's orientation of it), subtracts them and rotates the dif
 provider's orientation of that frame, r' = R r and v' = R v + ω × r' as `ToFrame`; a read in ICRF or GCRF is the
 stored difference, unrotated. Besides the frames whose orientations were added, the provider knows ICRF and GCRF (the
 identity), ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, 84381.448″ about x; the default frame of the bodies)
-and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. It holds geometric states
+and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. No orientation can be added
+under ICRF, GCRF, TEME, CIRS or TIRS, the frames it defines and never reads from stored entries: `AddStateOrientationToICRF`
+throws `ArgumentException` naming `frame` for them, by name in any case, and stores nothing (#744, decided by S. Guillet,
+2026-11-18; before, an orientation stored under ICRF or GCRF was returned by `FrameTransformationToICRF` while
+`GetEphemeris` took the identity, and one stored under TEME, CIRS or TIRS was never read). It holds geometric states
 only: an aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet,
 2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was
 geometric.

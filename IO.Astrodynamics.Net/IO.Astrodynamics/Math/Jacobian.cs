@@ -28,7 +28,7 @@ public class Jacobian : NumericalJacobian
     /// <returns></returns>
     public new Matrix Evaluate(Func<double[], double>[] f, double[] x)
     {
-        return new Matrix(base.Evaluate(f, x));
+        return Matrix.Wrap(base.Evaluate(f, x));
     }
 
     /// <summary>
@@ -43,6 +43,6 @@ public class Jacobian : NumericalJacobian
         if (f == null) throw new ArgumentNullException(nameof(f));
         if (x == null) throw new ArgumentNullException(nameof(x));
         if (currentValues == null) throw new ArgumentNullException(nameof(currentValues));
-        return new Matrix(base.Evaluate(f, x, currentValues));
+        return Matrix.Wrap(base.Evaluate(f, x, currentValues));
     }
 }

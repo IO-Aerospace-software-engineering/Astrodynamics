@@ -211,8 +211,15 @@ public class EquinoctialElementsSingularityTests
             // median of 3.43e-15 and 1.99e-15 and reaches 9.42e-15 and 5.40e-15, h = −6.73e-320 at −3000 s 1.09e-15 and
             // 9.93e-16 and 2.59e-15 and 2.55e-15 (Linux, Release; a probe of the review of #505, not a committed test).
             // The bounds of e <= 0.05 rise from 3.2e-15 to 4.6e-15 and of e 0.9 from 6.3e-15 and 3.6e-15 to 1.2e-14 and
-            // 6.9e-15, by that draw; those of the hyperbola and large L fall
-            ["e <= 0.05"] = (4.6e-15, 4.6e-15), ["e 0.9"] = (1.2e-14, 6.9e-15), ["hyperbola"] = (8.7e-16, 1.9e-16),
+            // 6.9e-15, by that draw; those of the hyperbola and large L fall. With #472 the hyperbola takes p = (a (1 − e))(1 + e)
+            // for a (1 − e·e): its e, sqrt(f² + g²) of the reference's f and g, is 1.5000000000000002, not 1.5, so the two
+            // forms round differently, and p of the elements' state is now the reference's p exactly where a (1 − e·e) was
+            // 2.13e-16 off (2.98e-16 for suite 153), a closed-form evaluation of both forms in exact rationals. The velocity
+            // at 600 s goes from 9.38e-17 to 3.59e-16 on Linux (2026-11-18): measured at 092230b (#472 alone) and at
+            // c7da8c5 (#484 added) alike, so the move is #472's p, and the former 9.38e-17 was that error of p compensating
+            // the other roundings of the path. The new worst, 3.59e-16 at 600 s on Linux x64, Windows x64 and macOS arm64
+            // alike (CI run 44395076184, 2026-11-18), twice that rounded up: 7.2e-16
+            ["e <= 0.05"] = (4.6e-15, 4.6e-15), ["e 0.9"] = (1.2e-14, 6.9e-15), ["hyperbola"] = (8.7e-16, 7.2e-16),
             ["large L"] = (1.6e-15, 1.6e-15)
         };
 
@@ -289,10 +296,18 @@ public class EquinoctialElementsSingularityTests
         // the figures were those of the Kepler solver of #453 (CI run 40413920226, 2026-10-26), where at e = 0.9 the
         // velocity had risen by rounding (1.30e-14 and 6.79e-15 before #453): at ν = 0.5 rad (M = 0.0119 rad) the solver
         // put E 6.9 ulp below the 50-digit root, within the rounding floor of Kepler's equation there
-        // (1 − e cos E = 0.106); for the hyperbola, 3.51e-16 on Linux and 8.43e-17 on Windows and macOS arm64 before #453
+        // (1 − e cos E = 0.106); for the hyperbola, 3.51e-16 on Linux and 8.43e-17 on Windows and macOS arm64 before #453.
+        // With #472 the hyperbola takes p = (a (1 − e))(1 + e), as in AtAnotherEpoch_MatchesTheTwoBodyReference above,
+        // another draw of one rounding of p: 1.81e-16 and 3.93e-17 on Linux x64 and Windows x64, 3.18e-16 and 1.17e-16 on
+        // macOS arm64 (CI run 44395076184, 2026-11-18), against 1.20e-16 and 1.69e-16 on the three before (macOS arm64 of
+        // CI run 44327047861 of f70ee32 included). The position failed its bound of 2.5e-16 on macOS arm64 there, a
+        // re-measurement of an intended change of results, not a relaxation: twice the worst, rounded up, 6.4e-16 for the
+        // position and 2.4e-16 for the velocity. That failure stopped the test before the group large L on macOS arm64,
+        // whose bounds are unchanged (5.39e-16 and 4.50e-16 on Linux x64 and Windows x64 in that run, and on macOS arm64 in
+        // CI run 44327047861), to be confirmed on macOS arm64 by the next CI run
         var bounds = new Dictionary<string, (double Position, double Velocity)>
         {
-            ["e <= 0.05"] = (3.3e-15, 3.1e-15), ["e 0.9"] = (7.3e-15, 3.8e-15), ["hyperbola"] = (2.5e-16, 3.4e-16),
+            ["e <= 0.05"] = (3.3e-15, 3.1e-15), ["e 0.9"] = (7.3e-15, 3.8e-15), ["hyperbola"] = (6.4e-16, 2.4e-16),
             ["large L"] = (1.1e-15, 9.8e-16)
         };
         Assert.Equal(58, cases.Count);

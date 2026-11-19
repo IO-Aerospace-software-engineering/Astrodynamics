@@ -10,6 +10,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Tests.Body;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -1173,7 +1174,8 @@ namespace IO.Astrodynamics.Tests.Surface
         /// by the managed frame, as #558 reads TEME, CIRS and TIRS. Seen from the Moon and the Sun, with and without light
         /// time, the read in the site's frame is the ICRF read rotated to it (with LT, at the epoch of the site, its centre,
         /// as <c>spkezr_c</c> rotates a frame centred on the target, #593: before 11.0.0 at the epoch of the observation,
-        /// 38 km off from the Moon), and so are a body read in it and the reads of
+        /// 38 km off from the Moon), and so are a body read in it (with LT at the epoch of the site seen from the observer,
+        /// #739) and the reads of
         /// <see cref="SpiceAPI"/>; a coordinate search in it runs. A kernel spacecraft as the observer is in
         /// <see cref="KernelWindowSearchTests"/>, whose class loads LRO; the rotation against CSPICE in
         /// <see cref="CustomSite_FromTheMoon_InItsFrame_MatchesSpkezr"/>.
@@ -1202,7 +1204,10 @@ namespace IO.Astrodynamics.Tests.Surface
             }
 
             var epoch = start.AddSeconds(3600.0);
-            AssertSameState(moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToFrame(site.Frame).ToStateVector(),
+            // The Moon from the Earth, both of the kernels, with LT: at the epoch of the site, the centre of the frame, seen
+            // from the Earth (#739: before, at the epoch of the observation, 590 m off)
+            AssertSameState(LightTimeCorrectionTests.RotatedAtTheCentreEpoch(moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToStateVector(),
+                    site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToStateVector(), site.Frame, -1.0),
                 moon.GetEphemeris(epoch, earth, site.Frame, Aberration.LT).ToStateVector(), site.Frame, "the Moon from the Earth");
             AssertSameState(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(site.Frame).ToStateVector(),
                 SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, site.Frame, Aberration.None).ToStateVector(), site.Frame, "SpiceAPI at an epoch");

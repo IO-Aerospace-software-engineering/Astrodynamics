@@ -179,9 +179,9 @@ each in force from its epoch to the next one.
    with a hold therefore delays the first impulse, and an attitude chained after an impulse starts at the end of the
    impulse's `ManeuverWindow`, not at its event.
 2. **An impulse** puts its attitude, the front along ΔV, in force from the opening of its thrust window,
-   `tc − 0.666 dt`, no earlier than the start of the propagation or the previous activation, to the end of its
-   `ManeuverWindow`. Its windows themselves stay `[tc − 0.666 dt, …]` ([Thrust Window
-   Convention](impulse-maneuvers.md#thrust-window-convention)).
+   `tc − f dt` (tc the centroid of the acceleration of the burn, #335), no earlier than the start of the propagation or
+   the previous activation, to the end of its `ManeuverWindow`. Its windows themselves stay `[tc − f dt, …]` ([Thrust
+   Window Convention](impulse-maneuvers.md#thrust-window-convention)).
 3. **After an impulse**, the attitude law in force before it resumes at the end of its `ManeuverWindow`, unless an
    attitude chained after the impulse activates there (it is later in the chain, so it holds). With no law before, the
    impulse's attitude holds to the next activation.
@@ -220,7 +220,7 @@ velocity, that of the CK, is the rate of the interpolation: 2.3e-5 rad/s from th
 **At a discrete change.** An activation is a discrete change of the record; the attitude of an impulse (its front
 along ΔV) is discrete and holds until the next activation. Before a discrete change, the law in force is sampled once
 more, 1 µs before it, so that it is interpolated up to the change: over the partial step before the opening of an
-impulse's thrust window between outputs it is within the interpolation residual (9.3e-5 rad at 60 s outputs, a span of 34.3 s),
+impulse's thrust window between outputs it is within the interpolation residual (1.0e-4 rad at 60 s outputs, a span of 35.6 s),
 where it was held (7.1e-2 rad before 11.0.0). At an epoch shared within 2 µs, the activation later in the chain holds:
 an attitude chained after an impulse over the law resumed there, an impulse's attitude over a law of zero length. The
 record never holds two entries closer than 2 µs apart but for the lead: about the Earth an activation at the end of a
@@ -264,6 +264,15 @@ Wraps an `ILocalizable` (celestial body, site) for use as an attitude target.
 
 - **`Aberration.None`** (default) — geometric instantaneous direction, consistent with the attitude pipeline and industry practice.
 - **`Aberration.LT`** — light-time corrected apparent direction, for photon-based scenarios (e.g., optical sensors observing distant targets).
+
+Every correction other than `None` is the target as the spacecraft sees it, as CSPICE's `spkcvo_c` corrects it from
+the spacecraft's state: the light time of `spkltc` from the spacecraft's position, and for the `+S` corrections the
+stellar aberration of `stelab` from its velocity relative to the solar system barycenter, the rule of
+`InstrumentPointingToAttitude` (a `Star` without light time). Before 11.0.0 the correction was the central body's: its
+light time, the stellar aberration of its velocity, and none at all for a target that is the central body itself
+([#740](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/740): from a LEO, 1.0e-6 rad for the
+Moon with `LT`, 2.5e-5 rad with `LT+S`, 1.0e-4 rad for the Earth with `LT`). `None` is the geometric direction, bit for
+bit as before.
 
 ```csharp
 // Inputs: sun and moon (CelestialBody)

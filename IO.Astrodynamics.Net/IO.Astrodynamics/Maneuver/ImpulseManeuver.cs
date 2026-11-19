@@ -155,16 +155,17 @@ namespace IO.Astrodynamics.Maneuver
                 stateVector.Frame, stateVector.Covariance);
 
             //Compute thrust windows and maneuver windows.
-            //The impulse is applied at the event epoch t. The equivalent finite burn of duration dt is placed on
-            //[t - 0.666 dt, t + 0.334 dt]: two thirds of the burn before the impulse, one third after.
-            //This value dates back to the initial import of the .NET project and no derivation of it is on record.
-            //The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
+            //The impulse is applied at the event epoch t, the centroid of the acceleration of the equivalent constant-thrust
+            //burn of duration dt (#335, derived from S. Guillet's remark of 2026-11-18, decided by S. Guillet, 2026-11-18): the burn is placed on [t - f dt, t + (1 - f) dt],
+            //f = 1/x + 1/ln(1 - x) for the mass fraction burned x (ThrustLeadFraction), 1/2 for a small burn and more as the
+            //acceleration grows while the mass drops. Before 11.0.0, f was a fixed 0.666 of no recorded derivation.
             //The propagated state receives the full delta-V at t. The windows are reported, and the end of the
             //maneuver window sets the earliest epoch of the next maneuver in the chain.
             //They count TDB seconds from the epoch of the state; a propagation about the Earth counts them again in TT
             //seconds from the time argument of its event, and replaces the gate of the next maneuver with that end (#547).
             var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
-            ThrustWindow = new Window(stateVector.Epoch - thrustDuration * 0.666, thrustDuration);
+            ThrustLead = ThrustLeadFraction(DeltaV.Magnitude(), Engine.ISP);
+            ThrustWindow = new Window(stateVector.Epoch - thrustDuration * ThrustLead, thrustDuration);
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);
 
             //Set next maneuver
@@ -180,9 +181,43 @@ namespace IO.Astrodynamics.Maneuver
             return (after, new StateOrientation(GetBodyFront().ToOrIdentity(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
         }
 
+        /// <summary>
+        /// The fraction f of the burn duration dt by which the thrust window of the last execution opens before the impulse
+        /// epoch t: <see cref="Maneuver.ThrustWindow"/> is [t - f dt, t + (1 - f) dt] (<see cref="ThrustLeadFraction"/>).
+        /// </summary>
+        internal double ThrustLead { get; private set; } = 0.5;
+
+        /// <summary>
+        /// The fraction f of the burn of a constant thrust and fuel flow that precedes the centroid of its acceleration
+        /// (#335, derived from S. Guillet's remark of 2026-11-18, decided by S. Guillet, 2026-11-18): with the mass fraction burned x = Δm/m0 = 1 − exp(−u),
+        /// u = Δv / (Isp g0) (Tsiolkovsky, m0 the mass before the burn), the acceleration F / (m0 − q τ) over the burn
+        /// [0, dt] has its centroid at f dt, f = 1/x + 1/ln(1 − x) = 1/(1 − exp(−u)) − 1/u. The impulse at the centroid
+        /// gives the burn's velocity change and, in a field-free space, its displacement after the burn
+        /// (∫ (T − s) a(s) ds = Δv (T − f dt)). f → 1/2 as x → 0 (1/2 + u/12 − u³/720 + u⁵/30240 − u⁷/1209600 +
+        /// u⁹/47900160, the series of u/(1 − exp(−u)) by the Bernoulli numbers, used below u = 0.1, where its next term
+        /// is below 1e-20; the closed form above, where the cancellation of its two terms leaves about 1e-14), 0.509 at
+        /// x = 0.1, 0.557 at 0.5, 2/3 only at x ≈ 0.89, and f → 1 as x → 1.
+        /// </summary>
+        /// <param name="deltaV">The magnitude of the delta-V, m/s.</param>
+        /// <param name="isp">The specific impulse of the engine, s.</param>
+        /// <returns>The fraction f, in [1/2, 1).</returns>
+        internal static double ThrustLeadFraction(double deltaV, double isp)
+        {
+            double u = deltaV / (isp * Constants.g0);
+            if (u < 0.1)
+            {
+                double u2 = u * u;
+                return 0.5 + u * (1.0 / 12.0 + u2 * (-1.0 / 720.0 + u2 * (1.0 / 30240.0 + u2 * (-1.0 / 1209600.0 +
+                    u2 / 47900160.0))));
+            }
+
+            return 1.0 / (1.0 - System.Math.Exp(-u)) - 1.0 / u;
+        }
+
         internal override void Reset()
         {
             DeltaV = Vector3.Zero;
+            ThrustLead = 0.5;
             base.Reset();
         }
 

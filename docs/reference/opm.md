@@ -153,7 +153,7 @@ written as its clock reading under every time system. The library's own conversi
 
 | Method | Description |
 |--------|-------------|
-| `Opm.CreateFromStateVector(objectName, objectId, stateVector, originator?)` | Create from a state vector |
+| `Opm.CreateFromStateVector(objectName, objectId, stateVector, originator?)` | Create from a state vector; writes `REF_FRAME` as the CCSDS name of the state's frame: `ICRF` for `Frame.ICRF` (SPICE `J2000`), the frame's own name otherwise (`GCRF`, `TEME`, `ECLIPJ2000`, ...); `J2000` before 11.0.0 ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)) |
 | `Opm.CreateMinimal(...)` | Create a minimal OPM with required fields only |
 
 ### Conversion
@@ -207,8 +207,8 @@ by S. Guillet, 2026-11-17).
   parameters (TEME for a TLE), with the mass and the impulses ignited by then: its mass after the propagation plus the
   fuel of the impulses ignited after the epoch, and the impulses ignited by the epoch. An impulse counts from its
   ignition, the start of its thrust window, the `MAN_EPOCH_IGNITION` written. The propagated state receives its ΔV at
-  its event, about two thirds of the burn later (`ImpulseManeuver`): at an epoch between the two (3.4 s for a 5.2 s
-  burn) the state written is the state before the impulse, with the burn listed and its fuel spent; from the event on,
+  its event, the centroid of the acceleration of the burn, about half of the burn later (`ImpulseManeuver`, #335): at
+  an epoch between the two (2.6 s for a 5.2 s burn) the state written is the state before the impulse, with the burn listed and its fuel spent; from the event on,
   the state after it. An epoch outside the propagated states throws `InvalidOperationException`, as every read there
   ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)); so does the default epoch
   when the propagation started later.
@@ -218,7 +218,7 @@ by S. Guillet, 2026-11-17).
 
 Before 11.0.0 a propagated spacecraft wrote the motion of its initial orbit with the mass and every maneuver after the
 propagation: 1 212 km and 1 137 m/s off the propagated state one burn later. Every argument is optional, so name the ones you pass (`epoch: epoch`). The state is written in
-the frame of the spacecraft's initial orbital parameters, which the export does not change: there is no frame argument. The spacecraft needs a `CosparId` (`InvalidOperationException` otherwise).
+the frame of the spacecraft's initial orbital parameters, which the export does not change: there is no frame argument. `REF_FRAME` and each `MAN_REF_FRAME` carry the CCSDS name of that frame, `ICRF` for `Frame.ICRF` (SPICE `J2000`, written before 11.0.0) and the frame's own name otherwise (`ECLIPJ2000`, `TEME`, ...; [#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339), decided by S. Guillet, 2026-11-18). The spacecraft needs a `CosparId` (`InvalidOperationException` otherwise).
 The Keplerian elements are those of `OpmKeplerianElements.FromKeplerianElements` with the true anomaly, each angle
 written as its value in [0, 360), inside the schema's [-360, 360). `FromKeplerianElements` writes 0 for an angle of
 2π, which the [0, 2π) normalization of `KeplerianElements` gives for a negative angle below half the ulp of 2π, where it

@@ -109,9 +109,14 @@ public class PropagatorTests
         var solution = propagator.Propagate();
 
         var stateVectors = solution.StateVectors.ToArray();
-        var expectedCount = (uint)System.Math.Round(windowSeconds / stepSeconds, MidpointRounding.AwayFromZero) + 1;
+        // The grid of round(L/ΔT) + 1 outputs; one that ends before the window gains the window end (#741: 10 s at 3 s,
+        // a grid to 9 s, then 10 s; 100 s at 7 s, to 98 s, then 100 s), one that rounds it up ends past it (5 s at 2 s,
+        // to 6 s)
+        var gridCount = (int)System.Math.Round(windowSeconds / stepSeconds, MidpointRounding.AwayFromZero) + 1;
+        bool endsBefore = (gridCount - 1) * stepSeconds < windowSeconds;
+        var expectedCount = endsBefore ? gridCount + 1 : gridCount;
 
-        Assert.Equal((int)expectedCount, stateVectors.Length);
+        Assert.Equal(expectedCount, stateVectors.Length);
 
         var firstEpoch = stateVectors.First().Epoch;
         var lastEpoch = stateVectors.Last().Epoch;
@@ -119,13 +124,13 @@ public class PropagatorTests
         Assert.Equal(window.StartDate.TimeSpanFromJ2000().TotalSeconds, firstEpoch.TimeSpanFromJ2000().TotalSeconds, 6);
 
         var actualSpan = (lastEpoch - firstEpoch).TotalSeconds;
-        var expectedSpan = (expectedCount - 1) * stepSeconds;
+        var expectedSpan = endsBefore ? windowSeconds : (gridCount - 1) * stepSeconds;
         Assert.Equal(expectedSpan, actualSpan, 6);
 
         Assert.True(lastEpoch <= window.EndDate.AddSeconds(stepSeconds),
             $"Last epoch {lastEpoch} exceeds window end {window.EndDate} + one step");
 
-        for (int i = 1; i < stateVectors.Length; i++)
+        for (int i = 1; i < gridCount; i++)
         {
             var dt = (stateVectors[i].Epoch - stateVectors[i - 1].Epoch).TotalSeconds;
             Assert.Equal(stepSeconds, dt, 6);

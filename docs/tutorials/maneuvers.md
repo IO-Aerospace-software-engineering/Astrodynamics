@@ -65,7 +65,8 @@ var triad = new TriadAttitude(epoch, TimeSpan.FromHours(1.5),
 
 When using `CelestialAttitudeTarget`, the default aberration is `Aberration.None`
 (geometric direction), consistent with the attitude pipeline and other industry tools.
-Use `Aberration.LT` for photon-based pointing scenarios (e.g., optical sensors):
+Use `Aberration.LT` for photon-based pointing scenarios (e.g., optical sensors); the corrected direction is the
+target as the spacecraft sees it, as CSPICE's `spkcvo_c` corrects it from the spacecraft's state (#740):
 
 ```csharp
 // Inputs: engine (Engine), sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)

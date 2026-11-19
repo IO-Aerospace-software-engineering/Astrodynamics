@@ -91,7 +91,7 @@ public class TimeArgumentTests
         // Assert: the TT seconds between the instants, exact in ticks without a TDB tag, within the change of the
         // departure of the two series between two TDB tags (1.8e-9 s over the hour), within the departure itself from a
         // TDB tag to a UTC tag (2.49e-6 s); the propagation of the leap second runs to its 3 601 s past its grid of
-        // 3 600 s
+        // 3 600 s, the window end replacing the last grid point, 1 s before it (#741: the outputs stopped at 3 600 s)
         double reference = DynamicalTimeReference.TtSecondsBetween(window.StartDate, window.EndDate);
         double integrated = WindowEndAssert.IntegratedSeconds(solution);
         double bound = tags == "TDB" ? DynamicalTimeReference.SeriesChangeBound(reference)
@@ -103,13 +103,11 @@ public class TimeArgumentTests
         if (tags == "UTC leap second")
         {
             Assert.Equal(3601.0, reference);
-            Assert.Null(solution.WindowEnd);
+            Assert.Equal(7, solution.StateVectors.Count);
         }
-        else
-        {
-            WindowEndAssert.ReachesTheEndOf(window, solution);
-            LabelAssert.Equal(window.EndDate.ToTDB(), solution.StateVectors[^1].Epoch);
-        }
+
+        WindowEndAssert.ReachesTheEndOf(window, solution);
+        LabelAssert.Equal(window.EndDate.ToTDB(), solution.StateVectors[^1].Epoch);
 
         // Kepler over the reference seconds, so that the dynamics are checked at the reference time too: the bound of the
         // length moves the end by up to |v| times it
@@ -141,7 +139,18 @@ public class TimeArgumentTests
         double integrated = WindowEndAssert.IntegratedSeconds(solution);
         double reference = DynamicalTimeReference.TdbSecondsBetween(window.StartDate, window.EndDate);
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
-        Assert.Null(solution.WindowEnd);
+        // A grid that ends before the window (the leap second's 3 601 s) ends at the window end (#741), the others on
+        // their grid
+        if (labels.Length.TotalSeconds > 6.0 * Step.TotalSeconds)
+        {
+            LabelAssert.Equal(labels.EndDate, solution.WindowEnd);
+            LabelAssert.Equal(labels.EndDate, solution.StateVectors[^1].Epoch);
+        }
+        else
+        {
+            Assert.Null(solution.WindowEnd);
+        }
+
         Assert.Equal(expected, integrated, 9);
         Assert.InRange(labels.Length.TotalSeconds - reference, -DynamicalTimeReference.SeriesBound - 2e-7,
             DynamicalTimeReference.SeriesBound + 2e-7);

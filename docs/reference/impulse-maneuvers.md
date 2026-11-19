@@ -52,11 +52,21 @@ changed no number). Any other pair of frames is rejected, whatever their rotatio
 ## Thrust Window Convention
 
 The burn is impulsive: the propagated state receives the whole delta-V at the event epoch `t`.
-The library also reports the finite burn the impulse stands for. Its duration `dt` follows from
-the rocket equation (engine ISP, fuel flow and total mass), and the window is placed on
-`[t - 0.666 dt, t + 0.334 dt]`: two thirds of the burn before the impulse, one third after.
-`ManeuverWindow` runs from the start of the thrust window to the later of the end of the hold and the end of the
-thrust window: `[t - 0.666 dt, t - 0.666 dt + max(hold, dt)]`.
+The library also reports the finite burn the impulse stands for, a burn of constant thrust F = Isp g0 q and fuel flow q.
+Its duration `dt` follows from the rocket equation (engine ISP, fuel flow and total mass), and the impulse epoch is the
+centroid of its acceleration, F / (m0 − q τ), which grows as the mass drops: the window is placed on
+`[t - f dt, t + (1 - f) dt]` with
+
+f = 1/x + 1/ln(1 − x) = 1/(1 − e^(−u)) − 1/u, x = Δm / m0 = 1 − e^(−u), u = Δv / (Isp g0),
+
+x the mass fraction burned, m0 the mass before the burn
+([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), derived from
+S. Guillet's remark of 2026-11-18 that the acceleration is stronger at the end of the burn than at its start, decided by
+S. Guillet, 2026-11-18). f → 1/2 as x → 0 (1/2 + u/12 − u³/720 + …), 0.509 at x = 0.1, 0.557 at 0.5, 2/3 only at x ≈ 0.89, and f → 1 as x → 1. The impulse
+at the centroid gives the burn's velocity change and, in a field-free space, its displacement after the burn: the
+position after a burn of acceleration a(τ) gains ∫ (T − τ) a(τ) dτ = Δv (T − f dt) at T after its start, as from Δv at
+f dt. `ManeuverWindow` runs from the start of the thrust window to the later of the end of the hold and the end of the
+thrust window: `[t - f dt, t - f dt + max(hold, dt)]`.
 
 The end of `ManeuverWindow` is the earliest epoch at which the next maneuver of the chain may fire, an attitude
 included: an attitude chained after an impulse activates there (#539).
@@ -65,13 +75,14 @@ In a propagation about the Earth both windows, and the holds of the attitudes, c
 of the event (#547), as the integration does (#501); about any other body, SSB mode included, TDB seconds, bit for bit
 as before 11.0.0. `ImpulseManeuver.TryExecute` called outside a propagation sets them in TDB seconds from the epoch of
 its state. It returns the state after the impulse as a new state, its velocity plus ΔV, and leaves the state it is
-given unchanged (before 11.0.0 it added ΔV to that state's velocity, #588). The attitude of the impulse, its front along ΔV, is in force over `[t - 0.666 dt, end of ManeuverWindow]`,
+given unchanged (before 11.0.0 it added ΔV to that state's velocity, #588). The attitude of the impulse, its front along ΔV, is in force over `[t - f dt, end of ManeuverWindow]`,
 its start no earlier than the start of the propagation or the previous activation of the chain
 ([Attitudes](attitudes.md#the-attitude-timeline)).
 
-The two-thirds split dates back to the initial .NET implementation and no derivation of it is on
-record. The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
-The value is kept unchanged for now; it will be revisited together with finite-thrust modelling.
+Before 11.0.0 the window was `[t - 0.666 dt, t + 0.334 dt]`, two thirds of the burn before the impulse, a split
+of no recorded derivation from the initial .NET implementation: the thrust window, `MAN_EPOCH_IGNITION` and the gate of
+the next maneuver opened (0.666 − f) dt earlier, 1.6 s for a burn of 10 s at x = 0.1, 5.4 s for one of 50 s at x = 0.5.
+The propagated state is unchanged, but where the gate binds a chained maneuver fires later.
 
 ## Minimum Epoch
 

@@ -1,3 +1,4 @@
+using IO.Astrodynamics.Tests.Propagators;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -78,10 +79,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.InRange(System.Math.Abs(maneuver.DeltaV.X), 0.0,
                 ApogeeTurn(maneuverPoint) * maneuverPoint.Velocity.Magnitude());
             Assert.Equal((-2425.783652387101, 0.0), (maneuver.DeltaV.Y, maneuver.DeltaV.Z));
-            // The window at the apogee, half a period in TT seconds: 9e-7 s after that at the half period in TDB seconds
-            // (12:45:06.0273038), the change of TDB − TT over the 45 min (#501, #508)
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 304).AddTicks(7), TimeSpan.FromSeconds(16.0691385)), maneuver.ThrustWindow);
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 304).AddTicks(7), TimeSpan.FromSeconds(16.0691385)), maneuver.ManeuverWindow);
+            // The window at the apogee, half a period in TT seconds (#501, #508), the burn's acceleration centred on the
+            // impulse (#335): 12:45:07.9623733 (12:45:06.0273047 at 0.666 of the burn before 11.0.0)
+            TimelineRules.AssertThrustWindow(maneuverPoint.Epoch, maneuver.DeltaV.Magnitude(), 450.0, TimeSpan.FromSeconds(16.0691385), maneuver.ThrustWindow);
+            LabelAssert.Equal(maneuver.ThrustWindow, maneuver.ManeuverWindow);
             Assert.Equal(803.45692655552136, maneuver.FuelBurned,3);
         }
 
@@ -109,11 +110,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.InRange(System.Math.Abs(maneuver.DeltaV.X), 0.0,
                 ApogeeTurn(maneuverPoint) * maneuverPoint.Velocity.Magnitude());
             Assert.Equal((1466.487832468652, 0.0), (maneuver.DeltaV.Y, maneuver.DeltaV.Z));
-            // The window at the apogee, half a period in TT seconds: 1.44e-5 s after that at the half period in TDB seconds
-            // (23:58:08.6636582), the change of TDB − TT over the 12 h (#501, #508); the label of the apogee is the nearest
-            // tick of 43095.81915755211 s from J2000 TDB, 0.52 tick past a tick, so a tick later than its truncation (#625)
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ThrustWindow);
-            LabelAssert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ManeuverWindow);
+            // The window at the apogee, half a period in TT seconds (#501, #508), the burn's acceleration centred on the
+            // impulse (#335): 23:58:10.1501894 (23:58:08.6636727 at 0.666 of the burn before 11.0.0)
+            TimelineRules.AssertThrustWindow(maneuverPoint.Epoch, maneuver.DeltaV.Magnitude(), 450.0, TimeSpan.FromSeconds(10.7439713), maneuver.ThrustWindow);
+            LabelAssert.Equal(maneuver.ThrustWindow, maneuver.ManeuverWindow);
             Assert.Equal(537.19856491695327, maneuver.FuelBurned,3);
         }
 

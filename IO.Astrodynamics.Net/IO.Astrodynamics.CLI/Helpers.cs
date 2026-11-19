@@ -42,10 +42,12 @@ public class Helpers
     internal static FileSystemInfo KernelsPath(string path) => File.Exists(path) ? new FileInfo(path) : new DirectoryInfo(path);
 
     /// <summary>
-    /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceAPI.IsSiteId"/>, its body's identifier
-    /// times 1000 plus its own, the body a planet or a moon without the Lagrange points), built from the kernels under its
-    /// SPICE name as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/> builds its observer; a celestial
-    /// item; or a spacecraft (a negative identifier) read from its kernels.
+    /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceAPI.IsSiteOfNamedBody"/>, its body's
+    /// identifier times 1000 plus its own, the body a planet or a moon without the Lagrange points that SPICE names), built
+    /// from the kernels under its SPICE name as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/>
+    /// builds its observer; an object of the kernels read by its identifier for one of that form whose body SPICE does not
+    /// name, NOTO (398989) and NEW NORCIA (398990) (#750: before, the site of a body 398, which threw); a celestial item; or
+    /// a spacecraft (a negative identifier) read from its kernels (<see cref="CreateCelestialItem"/>).
     /// </summary>
     /// <param name="objectId">The NAIF identifier.</param>
     /// <param name="epoch">An epoch the kernels of a spacecraft cover: the kernel-backed spacecraft reads its SPK there.</param>
@@ -59,17 +61,24 @@ public class Helpers
     /// </remarks>
     internal static ILocalizable CreateLocalizable(int objectId, in Time epoch)
     {
-        return SpiceAPI.IsSiteId(objectId) ? SpiceAPI.Instance.CreateKernelSite(objectId) : CreateCelestialItem(objectId, epoch);
+        return SpiceAPI.IsSiteOfNamedBody(objectId) ? SpiceAPI.Instance.CreateKernelSite(objectId) : CreateCelestialItem(objectId, epoch);
     }
 
     /// <summary>
     /// A celestial body, or for a negative identifier the kernel-backed spacecraft, which reads its SPK (#542): a managed
-    /// spacecraft has no state, its ephemeris was a NullReferenceException.
+    /// spacecraft has no state, its ephemeris was a NullReferenceException. An identifier of the form of a site
+    /// (<see cref="SpiceAPI.IsSiteId"/>) that reaches it, one whose body SPICE does not name (NOTO, NEW NORCIA), is the
+    /// object of the kernels read by its identifier (#750: before, a <see cref="CelestialBody"/>, which has no frame for it).
     /// </summary>
     /// <param name="objectId">The NAIF identifier.</param>
     /// <param name="epoch">An epoch the SPK of a spacecraft covers, which its constructor reads.</param>
     internal static CelestialItem CreateCelestialItem(int objectId, in Time epoch)
     {
+        if (SpiceAPI.IsSiteId(objectId))
+        {
+            return SpiceAPI.CreateKernelObject(objectId);
+        }
+
         if (int.IsPositive(objectId))
         {
             return new CelestialBody(objectId);
@@ -84,7 +93,8 @@ public class Helpers
     /// </summary>
     /// <remarks>
     /// A spacecraft is read by its NAIF identifier alone, as the CLI names it: the CK of its structure (the identifier
-    /// times 1000) through its clock kernel, by <c>ckgpav_c</c> with no tolerance (<see cref="SpiceAPI.ReadOrientation"/>),
+    /// times 1000) through its clock kernel, with no tolerance (<see cref="SpiceAPI.ReadOrientation"/>: the CK segment of
+    /// highest priority, <c>ckgp_c</c>'s, with <c>ckgpav_c</c>'s rate when it holds one, #724),
     /// the C-matrix from <paramref name="referenceFrame"/> to the spacecraft with the angular velocity of the spacecraft
     /// relative to <paramref name="referenceFrame"/>, in it: the orientation <see cref="Spacecraft.GetOrientation"/>
     /// gives. A kernel-backed spacecraft would need the name its frame kernel gives it, which the identifier does not
@@ -156,6 +166,29 @@ public class Helpers
         }
 
         return input;
+    }
+
+    /// <summary>
+    /// The member of <typeparamref name="T"/> a command argument names, by its description (the value its help lists, e.g.
+    /// <c>RA/DEC</c>, <c>RIGHT ASCENSION</c>) or by its member name (<c>RaDec</c>, <c>RightAscension</c>), in any case (#652:
+    /// the coordinate system and the coordinate were read by member name only, so the values the help showed were rejected).
+    /// </summary>
+    /// <exception cref="ArgumentException">The value names no member: the message lists the values the command reads, and
+    /// <see cref="ArgumentException.ParamName"/> is <paramref name="parameterName"/>.</exception>
+    internal static T ParseEnumeration<T>(string value, string parameterName) where T : struct, Enum
+    {
+        foreach (var member in Enum.GetValues<T>())
+        {
+            if (member.GetDescription().Equals(value, StringComparison.InvariantCultureIgnoreCase) ||
+                member.ToString().Equals(value, StringComparison.OrdinalIgnoreCase))
+            {
+                return member;
+            }
+        }
+
+        throw new ArgumentException(
+            $"Unknown {parameterName} '{value}': the command reads {string.Join(", ", Enum.GetValues<T>().Select(x => x.GetDescription()))}, in any case, or the member names {string.Join(", ", Enum.GetValues<T>())}.",
+            parameterName);
     }
 
     /// <summary>

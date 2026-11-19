@@ -104,20 +104,27 @@ internal static class KeplerianStm
         return (values, phi);
     }
 
-    // Newton's method in double precision, from the elliptic first guess χ = √μ Δt α, to the last change of a few ulps
+    // Newton's method in double precision, from the elliptic first guess χ = √μ Δt α, to the last change of a few ulps,
+    // or to the rounding floor of the residual: a step below 1e-12 |χ| that does not decrease, which only rounding makes
+    // (the initial states of #472 moved by rounding, and a perturbed state of R5 then oscillated at 1.2e-15 |χ| forever)
     private static double SolveUniversalAnomaly(double sqrtMu, double dt, double r0, double sigma, double alpha)
     {
         double chi = sqrtMu * dt * alpha;
+        double previous = double.PositiveInfinity;
         for (int iteration = 0; iteration < MaximumIterations; iteration++)
         {
             var (residual, slope) = KeplerEquation(Dual.Constant(chi), sqrtMu, dt, Dual.Constant(r0),
                 Dual.Constant(sigma), Dual.Constant(alpha));
             double step = residual.Value / slope.Value;
             chi -= step;
-            if (System.Math.Abs(step) <= 4.0 * double.Epsilon + 1e-15 * System.Math.Abs(chi))
+            double size = System.Math.Abs(step);
+            if (size <= 4.0 * double.Epsilon + 1e-15 * System.Math.Abs(chi) ||
+                (size <= 1e-12 * System.Math.Abs(chi) && size >= previous))
             {
                 return chi;
             }
+
+            previous = size;
         }
 
         throw new InvalidOperationException("The universal Kepler equation did not converge.");

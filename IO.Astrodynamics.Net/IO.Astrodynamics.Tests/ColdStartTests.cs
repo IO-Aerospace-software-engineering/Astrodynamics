@@ -160,6 +160,16 @@ public class ColdStartTests
         RunChild("local-dst");
     }
 
+    [NotOnWindowsFact("The local zone of a .NET process on Windows comes from the system, not from TZ: the child cannot set it")]
+    public void ToLocal_KeepsTheInstant_AcrossTheTransitionsOfDaylightSavingTime()
+    {
+        // A child in America/New_York (#751): every minute from 4 h before to 4 h after each transition of 2025, ToLocal of a
+        // UTC instant is the calendar of the zone's rule, equals the instant and converts back to it to the tick, checked by
+        // the child. Before the fix the local label of an instant in the first of the two repeated hours lost the daylight
+        // time mark and was read back with the standard offset: 2025-11-02T05:30Z gave local 01:30, which is 06:30Z
+        RunChild("local-tolocal");
+    }
+
     [Fact]
     public void ElementConversions_ReadNoProviderUnderTheSpiceLock()
     {

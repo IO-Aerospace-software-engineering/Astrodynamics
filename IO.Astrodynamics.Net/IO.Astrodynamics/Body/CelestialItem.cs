@@ -351,12 +351,19 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public virtual bool IsSpiceBacked => !IsSpacecraft && !IsStar;
 
     /// <summary>
-    /// Gets the barycenter of motion identifier.
+    /// Gets the barycenter of motion identifier: for a natural body the barycentre of its system (0 for the Sun, a
+    /// barycentre or an asteroid); for an item built from custom parameters (a <see cref="Spacecraft.Spacecraft"/>, a
+    /// custom <see cref="CelestialBody"/>) the barycentre of the observer of its initial orbital parameters, the observer
+    /// itself when it is a barycentre, 0 without an initial orbit, set again by
+    /// <see cref="Spacecraft.Spacecraft.SetInitialOrbitalParameters"/> (#747: before, 0 whatever the orbit).
     /// </summary>
     public int BarycenterOfMotionId { get; protected set; }
 
     /// <summary>
-    /// Gets the center of motion identifier.
+    /// Gets the center of motion identifier: for a natural body the body it orbits (10 for a planet, its planet for a
+    /// moon); for an item built from custom parameters the observer of its initial orbital parameters, 0 without an
+    /// initial orbit, set again by <see cref="Spacecraft.Spacecraft.SetInitialOrbitalParameters"/> (#747: before, 0
+    /// whatever the orbit).
     /// </summary>
     public int CenterOfMotionId { get; protected set; }
 
@@ -471,7 +478,41 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         _gm = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
+        // #747: about the observer of the initial orbit, as the natural-body constructors give it (before, 0 and 0)
+        SetCustomCenterOfMotion(initialOrbitalParameters);
     }
+
+    /// <summary>
+    /// Sets the centre and the barycentre of motion of an item built from custom parameters from its initial orbital
+    /// parameters (#747): at construction, and again whenever its initial orbit is replaced
+    /// (<see cref="Spacecraft.Spacecraft.SetInitialOrbitalParameters"/>).
+    /// </summary>
+    private protected void SetCustomCenterOfMotion(OrbitalParameters.OrbitalParameters initialOrbitalParameters)
+    {
+        CenterOfMotionId = CustomCenterOfMotionId(initialOrbitalParameters);
+        BarycenterOfMotionId = CustomBarycenterOfMotionId(initialOrbitalParameters);
+    }
+
+    /// <summary>
+    /// The centre of motion of an item built from custom parameters: the observer of its initial orbital parameters, 0
+    /// without them (#747).
+    /// </summary>
+    private static int CustomCenterOfMotionId(OrbitalParameters.OrbitalParameters initialOrbitalParameters) =>
+        initialOrbitalParameters?.Observer?.NaifId ?? 0;
+
+    /// <summary>
+    /// The barycentre of motion of an item built from custom parameters: the barycentre of the observer of its initial
+    /// orbital parameters, the observer itself when it is a barycentre, that of the body of a site, 0 without them (#747).
+    /// </summary>
+    private static int CustomBarycenterOfMotionId(OrbitalParameters.OrbitalParameters initialOrbitalParameters) =>
+        initialOrbitalParameters?.Observer switch
+        {
+            null => 0,
+            CelestialItem { IsBarycenter: true } barycenter => barycenter.NaifId,
+            CelestialItem item => item.BarycenterOfMotionId,
+            Surface.Site site => site.CelestialBody.BarycenterOfMotionId,
+            _ => 0
+        };
 
     // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants, and
     // whose atmosphere without a model is NRLMSISE-00 at nominal space weather
@@ -668,17 +709,85 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 referenceBody, out centerLightTime, out centerLightTimeRate);
         }
 
+        return RotatedAtTheCenterEpoch(corrected, frame, frame, observer, sign, centerLightTime, centerLightTimeRate);
+    }
+
+    /// <summary>
+    /// A light-time corrected state, in ICRF at the epoch of the observation, rotated to <paramref name="orientationFrame"/>
+    /// at t + <paramref name="sign"/>·lt_c, the epoch of the frame's centre, read at the 100 ns of a <see cref="Time"/> and
+    /// carried to the exact epoch by the frame's angular velocity, the derivative of the rotation scaled by
+    /// 1 + <paramref name="sign"/>·dlt_c, as CSPICE's <c>zzcorsxf</c> scales it (#593), labelled with
+    /// <paramref name="label"/>.
+    /// </summary>
+    private static StateVector RotatedAtTheCenterEpoch(StateVector corrected, Frame orientationFrame, Frame label, ILocalizable observer, double sign,
+        double centerLightTime, double centerLightTimeRate)
+    {
         var epoch = corrected.Epoch;
         double shift = sign * centerLightTime;
         var centerEpoch = ApparentPositionReader.Shift(epoch, shift);
         double residual = (epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds + shift) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
-        var orientation = Frame.ICRF.ToFrame(frame, centerEpoch);
+        var orientation = Frame.ICRF.ToFrame(orientationFrame, centerEpoch);
         // The angular velocity of the frame relative to ICRF, in the frame, as OrbitalParameters.ToFrame forms it
         var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
         var position = corrected.Position.Rotate(orientation.Rotation);
         position -= angularVelocity.Cross(position) * residual;
         var velocity = corrected.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(position) * (1.0 + sign * centerLightTimeRate);
-        return new StateVector(position, velocity, observer, epoch, frame);
+        return new StateVector(position, velocity, observer, epoch, label);
+    }
+
+    /// <summary>
+    /// A state that CSPICE read in J2000 with a light-time correction (<paramref name="corrected"/>, relative to
+    /// <paramref name="observer"/>, labelled ICRF at the epoch of the observation), in a frame that only the library holds
+    /// (<see cref="SpiceAPI.ManagedReadFrame"/>: TEME, CIRS, TIRS, the frame of a site built from coordinates or of a
+    /// managed spacecraft with an attitude record) as <c>spkezr_c</c> rotates a non-inertial frame (#739): at t ∓ lt_c,
+    /// lt_c the light time from the observer to the frame's centre (<see cref="SpiceAPI.NonInertialFrameCenter"/>) by the
+    /// light-time method of <paramref name="aberration"/>, the derivative of the rotation scaled by 1 ∓ dlt_c/dt, the rule
+    /// of the reference-body path (<see cref="ToApparentFrame"/>, #593). The centre's light time is that of <c>spkltc</c>,
+    /// both read from the solar system barycenter as CSPICE reads them: the observer from SPICE by its identifier, the
+    /// centre as the object of the frame when it is the frame's site or spacecraft, from SPICE by its identifier
+    /// otherwise (the Earth of TEME, CIRS and TIRS). Null for <see cref="Aberration.None"/>, a frame without a centre and a
+    /// frame centred on the observer, which the caller rotates at the epoch.
+    /// </summary>
+    /// <remarks>Called under the lock of the SPICE calls, which is re-entrant; it reads no static class whose type
+    /// initializer reads SPICE (the static objects read their data at their first use, #668).</remarks>
+    /// <param name="corrected">The state of the target relative to <paramref name="observer"/>, in ICRF.</param>
+    /// <param name="managed">The frame that gives the orientation (<see cref="SpiceAPI.ManagedReadFrame"/>).</param>
+    /// <param name="frame">The frame the caller gave, the label of the state.</param>
+    /// <param name="observer">The observer, read by SPICE by its identifier.</param>
+    /// <param name="aberration">The correction of the read.</param>
+    internal static StateVector ToManagedFrameAtTheCenterEpoch(StateVector corrected, Frame managed, Frame frame, ILocalizable observer,
+        Aberration aberration)
+    {
+        if (aberration == Aberration.None)
+        {
+            return null;
+        }
+
+        int? center = SpiceAPI.NonInertialFrameCenter(frame);
+        if (center == null || center == observer.NaifId)
+        {
+            return null;
+        }
+
+        var epoch = corrected.Epoch;
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var observerSsb = SpiceAPI.Instance.ReadEphemerisRaw(epoch, ssb, observer.NaifId, Frame.ICRF, Aberration.None);
+        ILocalizable centerObject = frame switch
+        {
+            SiteFrame { Site: var site } when site.NaifId == center => site,
+            Spacecraft.SpacecraftFrame { Spacecraft: var spacecraft } when spacecraft.NaifId == center => spacecraft,
+            _ => null
+        };
+        int centerId = center.Value;
+        Func<Time, double, StateVector> centerRead = centerObject != null
+            ? (t, shift) => ApparentPositionReader.StateAtCorrectedEpoch(centerObject, t, ssb, shift)
+            : (t, _) => SpiceAPI.Instance.ReadEphemerisRaw(t, ssb, centerId, Frame.ICRF, Aberration.None);
+        var centerSsb = centerRead(epoch, 0.0);
+        var centerRelative = new StateVector(centerSsb.Position - observerSsb.Position, centerSsb.Velocity - observerSsb.Velocity, observer, epoch,
+            Frame.ICRF);
+        CorrectFromAberrationCB(centerRead, epoch, observer, LightTimeOnly(aberration), centerRelative, observerSsb, ssb, out double centerLightTime,
+            out double centerLightTimeRate);
+        return RotatedAtTheCenterEpoch(corrected, managed, frame, observer, LightTimeIterations(aberration).Sign, centerLightTime, centerLightTimeRate);
     }
 
     /// <summary>
@@ -739,7 +848,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// itself; the site of a <see cref="SiteFrame"/> or the spacecraft of a <see cref="Spacecraft.SpacecraftFrame"/> whose
     /// object is that centre, a site built from coordinates and a managed spacecraft included (review of #593: before, their
     /// identifiers reached <see cref="SpiceAPI.CreateKernelSite"/> and <see cref="Create"/>, which threw); a site of the
-    /// kernels (<see cref="SpiceAPI.IsSiteId"/>); the barycenter, Lagrange point or body of <see cref="Create"/> for a
+    /// kernels of a body SPICE names (<see cref="SpiceAPI.IsSiteOfNamedBody"/>; an identifier of that form whose body SPICE
+    /// does not name, NOTO or NEW NORCIA, read from SPICE by its identifier, #750); the barycenter, Lagrange point or body of
+    /// <see cref="Create"/> for a
     /// positive identifier; any other object, a spacecraft whose frame is given by name, read from SPICE by its identifier,
     /// which throws <see cref="InvalidOperationException"/> where SPICE has no state of it, as <c>spkezr_c</c> does.
     /// </summary>
@@ -751,7 +862,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             {
                 SiteFrame { Site: var site } when site.NaifId == centerId => site,
                 Spacecraft.SpacecraftFrame { Spacecraft: var spacecraft } when spacecraft.NaifId == centerId => spacecraft,
-                _ when SpiceAPI.IsSiteId(centerId) => SpiceAPI.Instance.CreateKernelSite(centerId),
+                _ when SpiceAPI.IsSiteOfNamedBody(centerId) => SpiceAPI.Instance.CreateKernelSite(centerId),
+                // An identifier of the form of a site whose body SPICE does not name, NOTO or NEW NORCIA: read from SPICE
+                // by its identifier below (#750: before, the site of a body 398, which threw)
+                _ when SpiceAPI.IsSiteId(centerId) => null,
                 _ when centerId > 0 => Create(centerId),
                 _ => null
             };

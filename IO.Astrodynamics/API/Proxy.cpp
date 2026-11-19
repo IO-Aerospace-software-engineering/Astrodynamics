@@ -24,6 +24,8 @@
 #include "SpacecraftClockKernel.h"
 #include "LaunchSite.h"
 #include "Launch.h"
+// ckbss_, cksns_ and ckpfs_, the segment search of ckgp_c (#724)
+#include <SpiceZfc.h>
 
 #pragma region Proxy
 
@@ -285,6 +287,69 @@ bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics
     return ReportNativeErrors(std::move(writing));
 }
 
+namespace
+{
+    // Whether a CK gives a pointing of the instrument at sclk within the tolerance, and whether the segment that gives it,
+    // the one ckgp_c reads, holds angular velocity (#724). ckgp_c's own search (ckgp.c): ckbss_ without angular velocity,
+    // then cksns_ by decreasing priority (the files loaded last first, the segments of a file from its last) and ckpfs_ on
+    // each segment until one gives a pointing; the flag is ICD(4) of that segment's descriptor, which ckbsr.c reads to keep
+    // a segment for ckgpav_c (needav: ICD(4) not 0). ckgpav_c's candidates are those of ckgp_c that hold angular velocity,
+    // in the same order, and whether a segment gives a pointing does not depend on needav (ckr01, ckr03, ckr04 and ckr06
+    // read it only to reject a segment without angular velocity, ckr02 and ckr05 not at all).
+    //
+    // CSPICE keeps, per instrument, the segment of its last search and the interval over which that segment has the highest
+    // priority (ckbsr.c, the re-use interval), and returns that segment first to a search inside the interval. A search with
+    // angular velocity (ckgpav_c, or sxform_c through ckfxfm) skips a segment without rates that holds the epoch and does
+    // not shrink the interval by it (the CHECK LIST block trims it only by the segments that do not hold the epoch), so that
+    // a later search without angular velocity inside it returned the lower-priority segment with rates first (review of
+    // #724: a ckgpav_c or a TransformFrame to the spacecraft's CK frame at 500 s, or a read of the same call in the gap of
+    // the higher-priority segment's interpolation intervals, then 0.5 to 1.5 rad from ckgp_c in a fresh process). The search
+    // first voids that interval: a search at an epoch before every encoded clock (-dpmax_c, tolerance 0) lies outside it, so
+    // that cksns_ invalidates it (its '?' block) before it checks the list, and finds no segment. The search that follows
+    // then checks every segment from the highest priority, as in a fresh process (decided by S. Guillet, 2026-11-18). Its
+    // own re-use interval holds the epoch's priority, which ckgpav_c or ckgp_c then follow: the interval of a search without
+    // angular velocity is trimmed by every segment checked before the one it keeps, and ckgpav_c reuses it only when that
+    // segment holds rates. SPICE's error (no CK loaded) is left pending
+    bool FindPrioritySegment(SpiceInt instrument, SpiceDouble sclk, SpiceDouble tolerance, bool &withAngularVelocity)
+    {
+        withAngularVelocity = false;
+        integer inst = instrument;
+        doublereal sclkdp = sclk;
+        doublereal tol = tolerance;
+        logical needav = 0;
+        integer handle{};
+        doublereal descr[5]{};
+        char segid[41]{};
+        logical segmentFound{};
+        doublereal beforeEveryClock = -dpmax_c();
+        doublereal noTolerance = 0.0;
+        ckbss_(&inst, &beforeEveryClock, &noTolerance, &needav);
+        cksns_(&handle, descr, segid, &segmentFound, 40);
+        if (failed_c())
+        {
+            return false;
+        }
+        ckbss_(&inst, &sclkdp, &tol, &needav);
+        cksns_(&handle, descr, segid, &segmentFound, 40);
+        while (segmentFound && !failed_c())
+        {
+            doublereal cmat[9]{}, av[3]{}, clkout{};
+            logical pointingFound{};
+            ckpfs_(&handle, descr, &sclkdp, &tol, &needav, cmat, av, &clkout, &pointingFound);
+            if (pointingFound)
+            {
+                SpiceDouble dc[2]{};
+                SpiceInt ic[6]{};
+                dafus_c(descr, 2, 6, dc, ic);
+                withAngularVelocity = ic[3] != 0;
+                return !failed_c();
+            }
+            cksns_(&handle, descr, segid, &segmentFound, 40);
+        }
+        return false;
+    }
+}
+
 // The records at the caller's epochs, TDB seconds past J2000, one per epoch (#563: before, the proxy stepped its epoch by
 // epoch += stepSize over a window, so that sample i drifted from start + i·step and the last epoch could be dropped, into a
 // buffer of 10000 records whatever the window; SpiceAPI now gives the epochs start + i·step, exact, and a buffer of their
@@ -340,28 +405,30 @@ bool ReadOrientationProxy(const double *epochs, int count, int spacecraftId, dou
             SpiceDouble clkout{};
             SpiceBoolean found{SPICEFALSE};
 
-            //Get orientation and angular velocity
-            ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
-            if (failed_c() || !found)
+            // The segment ckgp_c reads, the highest-priority one that gives a pointing (#724): its pointing, with ckgpav_c's
+            // angular velocity when it holds one (ckgpav_c then finds that segment, its records bit for bit as before), with a
+            // zero angular velocity read by ckgp_c when it holds none (#714; decided by S. Guillet, 2026-11-18). Before,
+            // ckgpav_c was read first and ckgp_c only when it found nothing, so that where a higher-priority segment without
+            // angular velocity and a lower-priority one with it covered the epoch, ckgpav_c, which skips the former
+            // (ckgpav_c.c, Restrictions 1), gave the pointing and the rate of the lower-priority segment. A failed search or
+            // read (no CK loaded, an unknown frame) gives SPICE's message, SPICE reset (#712)
+            bool withAngularVelocity{false};
+            found = FindPrioritySegment(id, sclk, toleranceInTicks, withAngularVelocity) ? SPICETRUE : SPICEFALSE;
+            if (!failed_c() && found)
             {
-                // ckgpav_c skips a segment without angular velocity (a type-1 CK, a type-2 or type-3 CK written without
-                // rates) and returns found = false with no error (ckgpav_c.c, Restrictions 1), so the pointing is read by
-                // ckgp_c, with a zero angular velocity (#714: before, only a failed ckgpav_c fell back, and such a CK gave "No
-                // orientation found"). A failed ckgpav_c (no CK loaded, an unknown frame) falls back too, and ckgp_c's error
-                // is then reported
-                if (failed_c())
-                {
-                    reset_c();
-                }
-                av[0] = av[1] = av[2] = 0.0;
                 found = SPICEFALSE;
-                ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
-                // The fallback fails too (no CK loaded, an unknown frame): SPICE's message, SPICE reset (#712: before, "No
-                // orientation found" with the error left pending for the next call)
-                if (failed_c())
+                if (withAngularVelocity)
                 {
-                    return ReportNativeErrors("");
+                    ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
                 }
+                else
+                {
+                    ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
+                }
+            }
+            if (failed_c())
+            {
+                return ReportNativeErrors("");
             }
 
             if (!found)

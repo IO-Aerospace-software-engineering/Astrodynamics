@@ -82,15 +82,16 @@ public class EphemerisCommand
         [Option(shortName: 'c', Description = "Display result as planetocentric cartesian coordinates")]
         bool cartesian = false)
     {
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
+
         // A site has no sub-observer point: before #681 it was cast to a celestial item, null, then dereferenced. A site by
-        // the library's rule (SpiceAPI.IsSiteId), which the CLI follows since 11.0.0
-        if (SpiceAPI.IsSiteId(objectId))
+        // the library's rule (SpiceAPI.IsSiteOfNamedBody, decided once the kernels are loaded), which the CLI follows since
+        // 11.0.0; NOTO and NEW NORCIA, of no body SPICE names, are objects of the kernels and projected (#750)
+        if (SpiceAPI.IsSiteOfNamedBody(objectId))
         {
             throw new ArgumentException(
                 $"sub-point projects a celestial body or a spacecraft given by its NAIF identifier; {objectId} is a site", nameof(objectId));
         }
-
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
         var celestialItem = Helpers.CreateCelestialItem(objectId, epoch);

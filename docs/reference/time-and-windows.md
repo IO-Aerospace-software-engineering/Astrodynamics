@@ -152,8 +152,17 @@ time with a frame and equals only itself, so comparing or sorting it does not th
 (`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the zone of the machine, and two
 local times compare as instants too (before 11.0.0, by their calendars): in a zone with daylight saving time a label of
 the skipped hour is read with the standard offset, so it is the instant of a label an hour later (in America/New_York,
-local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, after local 03:00), and a label of the repeated hour is read with
-the standard offset too, so the `ToLocal()` of an instant in the first of the two hours is not that instant.
+local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, after local 03:00), and a label of the repeated hour built from
+its calendar (`new Time(new DateTime(2025, 11, 2, 1, 30, 0), TimeFrame.LocalFrame)`) is read with the standard offset
+too, the second of the two hours (06:30 UTC). The `ToLocal()` of an instant changes the label, not the instant, in the
+repeated hour too: `t.ToLocal() == t` and `t.ToLocal().ToUTC()` is `t` to the tick, 2025-11-02T05:30Z giving local 01:30
+of the first hour, which is 05:30Z (#751, decided by S. Guillet, 2026-11-18: the `DateTime` that `ToLocalTime` marks as
+daylight time is kept; before, the constructor's `SpecifyKind` dropped the mark, and that local 01:30 was 06:30Z).
+The mark is kept only while the label is in the repeated hour: the arithmetic of a local time is that of its calendar
+(`AddHours`, `AddMinutes`, `+ TimeSpan`, ...), so 10 min after local 01:30 of the first hour is 01:40 of the first hour
+(05:40Z), but 1 h after it is local 02:30 (07:30Z, 2 h later), and 1 h before that is local 01:30 read with the standard
+offset (06:30Z), as from any other label of that calendar. Two local times of one instant and one calendar so give the
+same result after the same arithmetic.
 To tell two labels of one instant apart, compare `DateTime` and `Frame`. Within TDB, `-` still counts the ticks of the
 calendars, so two equal consecutive TDB ticks differ by one tick. The library's caches whose values carry their key as a
 label (the orientation a frame keeps from its last read, #541, the range rates of the conjunction search) stay keyed by

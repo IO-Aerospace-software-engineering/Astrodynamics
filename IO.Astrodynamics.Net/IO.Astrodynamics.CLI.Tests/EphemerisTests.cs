@@ -303,6 +303,64 @@ public class EphemerisTests
     }
 
     /// <summary>
+    /// #750: NOTO (398989), SPICE's built-in ESA station whose identifier has the form of a site of 398, a body SPICE does
+    /// not name, as observer of <c>ephemeris</c> and as object of <c>sub-point</c>, with an SPK of NOTO the test writes (a
+    /// point fixed on the Earth, the states of a site built from its coordinates): the states of
+    /// <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/> from NOTO, and the sub-point of the
+    /// library's read of NOTO from the Earth in its body-fixed frame. Before the fix both built NOTO as a site of the body
+    /// 398 and threw <see cref="ArgumentException"/> "The NAIF identifier 398 has no name in SPICE" (sub-point after its
+    /// check of a site, "398989 is a site"), measured on f70ee32.
+    /// </summary>
+    [Fact]
+    public async Task Ephemeris_FromNoto_AndItsSubPoint_AreTheLibrarysReads()
+    {
+        using (Configuration.Lock())
+        {
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+            var directory = Directory.CreateTempSubdirectory("clinoto-");
+            var spk = new FileInfo(Path.Combine(directory.FullName, "noto750.bsp"));
+            var earth = new Body.CelestialBody(399);
+            var site = new Surface.Site(989, "N750", earth, new Coordinates.Planetodetic(0.2616, 0.6436, 100.0));
+            var states = site.GetEphemeris(new Window(begin.AddHours(-1.0), begin.AddHours(1.0)), earth, Frames.Frame.ICRF, Aberration.None,
+                TimeSpan.FromSeconds(60.0)).Select(x => x.ToStateVector()).ToArray();
+            SpiceAPI.Instance.WriteEphemeris(spk, 398989, states);
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                var command = new EphemerisCommand();
+                var sb = new StringBuilder();
+                Console.SetOut(new StringWriter(sb));
+                await command.Ephemeris("Data", 301, 398989, new WindowParameters { Begin = begin.ToString(), End = begin.AddSeconds(60.0).ToString() },
+                    TimeSpan.FromMinutes(1));
+                var expected = SpiceAPI.Instance.ReadEphemeris(begin, 398989, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                Assert.Equal("NOTO", expected.Observer.Name);
+                var line = sb.ToString().Split(Environment.NewLine)[0];
+                Assert.StartsWith($"Epoch : {begin} Position : ", line);
+                var xyz = System.Text.RegularExpressions.Regex.Matches(line, @"(?<=X : |Y : |Z: )-?[0-9.E+-]+").Take(3)
+                    .Select(m => double.Parse(m.Value, CultureInfo.InvariantCulture)).ToArray();
+                var printed = new Math.Vector3(xyz[0], xyz[1], xyz[2]);
+                _output.WriteLine($"MEASURE #750 CLI NOTO ephemeris against SpiceAPI.ReadEphemeris: {(printed - expected.Position).Magnitude():E3} m");
+                // The printed digits of the state, its shortest round trip (the same read)
+                Assert.Equal(expected.Position, printed);
+
+                var subPoint = new StringBuilder();
+                Console.SetOut(new StringWriter(subPoint));
+                await command.SubPoint("Data", 398989, 399, new EpochParameters { Epoch = begin.ToString() });
+                var fixedPosition = SpiceAPI.Instance.ReadEphemeris(begin, 399, 398989, earth.Frame, Aberration.None).ToStateVector().Position;
+                var planetocentric = new Coordinates.Planetocentric(System.Math.Atan2(fixedPosition.Y, fixedPosition.X),
+                    System.Math.Asin(fixedPosition.Z / fixedPosition.Magnitude()), fixedPosition.Magnitude());
+                Assert.Equal($"{planetocentric}{Environment.NewLine}", subPoint.ToString());
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                directory.Delete(true);
+            }
+        }
+    }
+
+    /// <summary>
     /// sub-point takes an identifier that is not a site by the library's rule for a celestial item, as
     /// <see cref="CelestialItem.Create"/> does: it no longer calls 391013, 399000 or 100500 a site.
     /// </summary>

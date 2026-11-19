@@ -156,6 +156,12 @@
       <None Update="Data\KeplerEquationReference\kepler_equation_reference.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Data\KeplerEquationReference\kepler_periapsis_reference.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\ConicStateReference\conic_state_reference.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Data\EquinoctialElementsReference\equinoctial_reference.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
@@ -258,6 +264,11 @@
       <!-- Kernels and CSPICE windows of tools/fov_reference, for the field-of-view searches (#515). -->
       <None Remove="Data\FieldOfViewReference\*" />
       <Content Include="Data\FieldOfViewReference\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <!-- Kernels and ckgp_c reads of tools/ck_priority_reference, for the CK segment priority of ReadOrientation (#724). -->
+      <None Remove="Data\CkPriorityReference\*" />
+      <Content Include="Data\CkPriorityReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <!-- The developer guide and its compiled examples, compared by DeveloperGuideExamplesTests (#668). -->

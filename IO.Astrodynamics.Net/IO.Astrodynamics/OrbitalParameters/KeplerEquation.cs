@@ -13,7 +13,10 @@ namespace IO.Astrodynamics.OrbitalParameters;
 /// <remarks>
 /// The ellipse is solved for m = |M − 2πk| (at most π up to about 1e13 rad, at most 4 beyond, where M carries more
 /// than the reduction rounds) and the hyperbola for m = |M|; the sign and the turns are restored, so that E is the root
-/// for any finite M, |E − M| ≤ e. The loop stops on a step of at most 4ε|E|, or on a step below
+/// for any finite M, |E − M| ≤ e. For 0.5 ≤ e ≤ 2 the residual is that of
+/// <see cref="EllipticMeanAnomaly"/> and <see cref="HyperbolicMeanAnomaly"/>, (1 − e) E + e (E − sin E) − M and
+/// (e − 1) H + e (sinh H − H) − M, which do not cancel near the periapsis at e → 1, so that E is within about 2 ulp of the
+/// root there (#484; before 11.0.0 the floor of x − e sin x − m, up to 9.3e5 ulp at e = 0.999999). The loop stops on a step of at most 4ε|E|, or on a step below
 /// 1e-6 max(1, |E|) that is no smaller than the previous one, which only rounding makes; it throws on a non-finite
 /// input or iterate and after <see cref="MaximumIterations"/> iterations, and never returns NaN. Pure and without
 /// state, so thread-safe.
@@ -142,9 +145,11 @@ internal static class KeplerEquation
         double previous = double.PositiveInfinity;
         for (int n = 0; n < maximumIterations; n++)
         {
+            // The residual of the mean anomaly of x, rewritten near e = 1 where it cancels (#484): Newton cannot go below
+            // the floor of its residual, which was up to ε x / (1 − e) in E, 9.9e5 ulp at e = 0.999999
             double step = hyperbolic
-                ? (e * System.Math.Sinh(x) - x - m) / (e * System.Math.Cosh(x) - 1.0)
-                : (x - e * System.Math.Sin(x) - m) / (1.0 - e * System.Math.Cos(x));
+                ? (HyperbolicMeanAnomaly(x, e) - m) / (e * System.Math.Cosh(x) - 1.0)
+                : (EllipticMeanAnomaly(x, e) - m) / (1.0 - e * System.Math.Cos(x));
             x -= step;
             if (!double.IsFinite(x))
             {
@@ -163,6 +168,85 @@ internal static class KeplerEquation
 
         string what = FormattableString.Invariant($"does not converge in {maximumIterations} iterations");
         throw new InvalidOperationException(Message(what, meanAnomaly, e));
+    }
+
+    // The band of the rewritten forms of Kepler's equation, where 1 − e and e − 1 are exact (Sterbenz's lemma) and
+    // x − e sin x or e sinh x − x can cancel; outside it they lose at most a factor 2 (x − e sin x ≥ (1 − e) x ≥ x / 2,
+    // e sinh x − x ≥ (1 − 1/e) e sinh x ≥ e sinh x / 2), and the former forms are kept, bit for bit (#484)
+    private const double RewrittenLowestEccentricity = 0.5;
+    private const double RewrittenHighestEccentricity = 2.0;
+
+    // Below |x| = 1, x − sin x and sinh x − x by their series to x¹⁹/19!: the next term is below 1.3e-19 of the sum
+    private const double SeriesBound = 1.0;
+
+    /// <summary>
+    /// The mean anomaly of an elliptic eccentric anomaly, E − e sin E, evaluated as (1 − e) E + e (E − sin E) for
+    /// 0.5 ≤ e &lt; 1 (#484, decided by S. Guillet, 2026-11-18): near the periapsis at e → 1, E and e sin E differ by about
+    /// (1 − e) E + E³/6, so their difference kept the rounding of e sin E, about ε E, divided by 1 − e (1.9e-10 of M at
+    /// e = 0.999999 before 11.0.0; within 4.2e-16 rewritten). Below e = 0.5, E − e sin E as before, bit for bit.
+    /// </summary>
+    /// <remarks>The same rewriting as R. H. Gooding and A. W. Odell's EMKEP, "The hyperbolic Kepler equation (and the
+    /// elliptic equation revisited)", Celestial Mechanics 44, 1988 (confirmed by S. Guillet, 2026-11-18).</remarks>
+    internal static double EllipticMeanAnomaly(double anomaly, double e) =>
+        e >= RewrittenLowestEccentricity
+            ? (1.0 - e) * anomaly + e * AnomalyMinusSine(anomaly)
+            : anomaly - e * System.Math.Sin(anomaly);
+
+    /// <summary>
+    /// The mean anomaly of a hyperbolic anomaly, e sinh H − H, evaluated as (e − 1) H + e (sinh H − H) for 1 &lt; e ≤ 2
+    /// (#484, decided by S. Guillet, 2026-11-18), where e sinh H − H cancels near the periapsis as the elliptic form does;
+    /// above e = 2, e sinh H − H as before, bit for bit.
+    /// </summary>
+    internal static double HyperbolicMeanAnomaly(double anomaly, double e) =>
+        e <= RewrittenHighestEccentricity
+            ? (e - 1.0) * anomaly + e * HyperbolicSineMinusAnomaly(anomaly)
+            : e * System.Math.Sinh(anomaly) - anomaly;
+
+    /// <summary>
+    /// x − sin x without cancellation: its series x³/3! − x⁵/5! + … − x¹⁹/19! below |x| = 1 (Horner in x²), the direct
+    /// difference above, where it loses at most a factor 6.3.
+    /// </summary>
+    internal static double AnomalyMinusSine(double x)
+    {
+        if (System.Math.Abs(x) >= SeriesBound)
+        {
+            return x - System.Math.Sin(x);
+        }
+
+        double u = x * x;
+        double sum = 1.0 / 121645100408832000.0;
+        sum = 1.0 / 355687428096000.0 - u * sum;
+        sum = 1.0 / 1307674368000.0 - u * sum;
+        sum = 1.0 / 6227020800.0 - u * sum;
+        sum = 1.0 / 39916800.0 - u * sum;
+        sum = 1.0 / 362880.0 - u * sum;
+        sum = 1.0 / 5040.0 - u * sum;
+        sum = 1.0 / 120.0 - u * sum;
+        sum = 1.0 / 6.0 - u * sum;
+        return x * u * sum;
+    }
+
+    /// <summary>
+    /// sinh x − x without cancellation: its series x³/3! + x⁵/5! + … + x¹⁹/19! below |x| = 1, the direct difference above.
+    /// </summary>
+    internal static double HyperbolicSineMinusAnomaly(double x)
+    {
+        if (System.Math.Abs(x) >= SeriesBound)
+        {
+            return System.Math.Sinh(x) - x;
+        }
+
+        double u = x * x;
+        double sum = 1.0 / 121645100408832000.0;
+        sum = 1.0 / 355687428096000.0 + u * sum;
+        sum = 1.0 / 1307674368000.0 + u * sum;
+        sum = 1.0 / 6227020800.0 + u * sum;
+        sum = 1.0 / 39916800.0 + u * sum;
+        sum = 1.0 / 362880.0 + u * sum;
+        sum = 1.0 / 5040.0 + u * sum;
+        sum = 1.0 / 120.0 + u * sum;
+        sum = 1.0 / 6.0 + u * sum;
+        return x * u * sum;
     }
 
     private static void CheckFinite(double meanAnomaly, double e)

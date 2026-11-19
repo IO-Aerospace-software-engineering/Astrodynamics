@@ -48,11 +48,11 @@ public class MemoryDataProvider : IDataProvider
     /// A frame named TEME, CIRS or TIRS, in any case, is <see cref="Frame.TEME"/>, <see cref="Frame.CIRS"/> or
     /// <see cref="Frame.TIRS"/>, the managed frames, which need no stored orientation (#451, the routing of #562, #656); its
     /// orientation is labelled with <paramref name="source"/>. An orientation added under one of those names is not read
-    /// (#656; before 11.0.0 the stored orientations of a frame named CIRS or TIRS were read). Any other frame is read from
+    /// (#656; before 11.0.0 the stored orientations of a frame named CIRS or TIRS were read), and none can be since #744. Any other frame is read from
     /// the orientations added under its name; a frame without any is known by its definition when the library has it (#559):
-    /// <see cref="Frame.ICRF"/> and <see cref="Frame.GCRF"/>, the identity, and <see cref="Frame.ECLIPTIC_J2000"/>, SPICE's
-    /// fixed rotation of the J2000 obliquity (84381.448″ about x, the default frame of the bodies), so that a body built on
-    /// this provider reads its orbit in it without stored orientations.
+    /// <see cref="Frame.ICRF"/> and <see cref="Frame.GCRF"/>, the identity, which no orientation can be added under (#744),
+    /// and <see cref="Frame.ECLIPTIC_J2000"/>, SPICE's fixed rotation of the J2000 obliquity (84381.448″ about x, the default
+    /// frame of the bodies), so that a body built on this provider reads its orbit in it without stored orientations.
     /// </remarks>
     public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
     {
@@ -110,8 +110,8 @@ public class MemoryDataProvider : IDataProvider
     // ICRF and GCRF share their axes (#543): a frame of either name, in any case, needs no rotation
     private static bool HasIcrfAxes(Frame frame) => frame == Frame.ICRF || frame == Frame.GCRF;
 
-    // The orientation of a frame to ICRF for a state of this provider: the identity for the ICRF axes whatever was stored
-    // under their names (the stored states are ICRF), the provider's own orientation otherwise
+    // The orientation of a frame to ICRF for a state of this provider: the identity for the ICRF axes (the stored states are
+    // ICRF; nothing can be stored under their names, #744), the provider's own orientation otherwise
     private StateOrientation OrientationToIcrfForStates(in Time date, Frame frame) =>
         HasIcrfAxes(frame) ? null : FrameTransformationToICRF(date, frame);
 
@@ -224,8 +224,25 @@ public class MemoryDataProvider : IDataProvider
         }
     }
 
+    /// <summary>
+    /// Store the orientation of <paramref name="frame"/> to ICRF at <paramref name="date"/>, read by
+    /// <see cref="FrameTransformationToICRF"/> and by the ephemeris reads in that frame.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="frame"/> is a frame the provider defines and never reads from
+    /// stored entries, by name in any case: ICRF (J2000) and GCRF, the identity (the stored states are ICRF, #559; GCRF
+    /// shares its axes, #543), and the managed TEME, CIRS and TIRS (#656) (#744, decided by S. Guillet, 2026-11-18; before
+    /// 11.0.0 an orientation stored under ICRF or GCRF was returned by <see cref="FrameTransformationToICRF"/> while the
+    /// ephemeris reads took the identity, and one stored under TEME, CIRS or TIRS was never read). Nothing is stored.</exception>
     public void AddStateOrientationToICRF(Frame frame, Time date, StateOrientation stateOrientation)
     {
+        ArgumentNullException.ThrowIfNull(frame);
+        if (HasIcrfAxes(frame) || SpiceAPI.ManagedFrame(frame) != null)
+        {
+            throw new ArgumentException(
+                $"The provider defines the frame {frame.Name} and never reads its stored orientations: ICRF and GCRF are the identity, TEME, CIRS and TIRS the managed frames.",
+                nameof(frame));
+        }
+
         if (!_stateOrientationsToICRF.ContainsKey(frame.Name))
         {
             _stateOrientationsToICRF[frame.Name] = new SortedDictionary<Time, StateOrientation>();

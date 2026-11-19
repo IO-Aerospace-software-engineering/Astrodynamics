@@ -28,9 +28,25 @@ namespace IO.Astrodynamics.Maneuver
         /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null, checked before the engine; or
         /// <paramref name="engine"/> is null (before 11.0.0 a null target orbit threw <see cref="NullReferenceException"/>,
         /// #555).</exception>
+        /// <exception cref="ArgumentException"><paramref name="targetOrbit"/> is not an ellipse: a parabola or a hyperbola
+        /// has no apoapsis (#737; before 11.0.0, the radius of a point of the other branch of a hyperbola, or
+        /// +Infinity).</exception>
         public ApogeeHeightManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
-            RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, targetOrbit.ApogeeVector().Magnitude(), engine)
+            RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, ApogeeRadiusOf(targetOrbit), engine)
         {
+        }
+
+        // The apogee radius of the target orbit, which only an ellipse has: a bad argument otherwise (#737)
+        private static double ApogeeRadiusOf(OrbitalParameters.OrbitalParameters targetOrbit)
+        {
+            try
+            {
+                return targetOrbit.ApogeeVector().Magnitude();
+            }
+            catch (InvalidOperationException ex) when (!(double.IsFinite(targetOrbit.SemiMajorAxis()) && targetOrbit.SemiMajorAxis() > 0.0))
+            {
+                throw new ArgumentException($"The target orbit has no apoapsis: {ex.Message}", nameof(targetOrbit), ex);
+            }
         }
 
         /// <summary>

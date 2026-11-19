@@ -289,21 +289,35 @@ public class KernelRegistryTests : IDisposable
         var after = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "After")), "e.tf", 1999923, "IOA_F02_BATCH_E", 60.0);
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Batch"));
         folder.Create();
-        var binary = Path.Combine(folder.FullName, "y.bsp");
-        File.Copy("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk", binary);
-        // A folder is loaded in the order of its listing, the file system's: names are tried until the binary kernel is last
+        // A folder is loaded in the order of its listing, the file system's: alphabetical on NTFS, by creation (either way) on
+        // tmpfs, by a hash of the name under the file system's seed on ext4, where one fixed name can sort before every other.
+        // Pairs of names are tried, each pair its own text and binary name and created in turn in either order, until the
+        // binary kernel is listed last
         FileInfo text = null;
         for (int i = 0; text == null; i++)
         {
-            Assert.True(i < 64, "no name lists the text kernel before the binary one");
+            Assert.True(i < 64, "no pair of names lists the text kernel before the binary one");
+            var binary = Path.Combine(folder.FullName, $"y{i}.bsp");
+            bool binaryFirst = i % 2 == 1;
+            if (binaryFirst)
+            {
+                File.Copy("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk", binary);
+            }
+
             var candidate = WriteFrameKernel(folder, $"x{i}.tf", 1999924, "IOA_F02_BATCH_X", 90.0);
-            if (Directory.EnumerateFileSystemEntries(folder.FullName).Last() == binary)
+            if (!binaryFirst)
+            {
+                File.Copy("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk", binary);
+            }
+
+            if (Directory.EnumerateFileSystemEntries(folder.FullName).SequenceEqual([candidate.FullName, binary]))
             {
                 text = candidate;
             }
             else
             {
                 candidate.Delete();
+                File.Delete(binary);
             }
         }
 

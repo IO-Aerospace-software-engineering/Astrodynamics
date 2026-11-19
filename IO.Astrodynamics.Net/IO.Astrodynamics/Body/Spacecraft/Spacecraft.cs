@@ -614,7 +614,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Set the initial orbital parameter
+        /// Set the initial orbital parameter. The spacecraft is then about its observer: <see cref="CelestialItem.CenterOfMotionId"/>
+        /// and <see cref="CelestialItem.BarycenterOfMotionId"/> become those of the new orbit, as the constructor gives them
+        /// (#747).
         /// </summary>
         /// <param name="orbitalParameters"></param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -624,6 +626,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             (InitialOrbitalParameters?.Observer as CelestialBody)?.RemoveSatellite(this);
 
             InitialOrbitalParameters = orbitalParameters;
+            SetCustomCenterOfMotion(orbitalParameters);
             (InitialOrbitalParameters?.Observer as CelestialBody)?.AddSatellite(this);
         }
 
@@ -1097,15 +1100,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// The mass of a propagated spacecraft at the epoch is its mass after the propagation plus the fuel of the impulses
         /// ignited after the epoch; an impulse counts from its ignition, the start of its thrust window, the
         /// <c>MAN_EPOCH_IGNITION</c> written (#658, decided by S. Guillet, 2026-11-17: "the mass and the maneuvers ignited by
-        /// then"). The propagated state receives the delta-V of an impulse at its event, about two thirds of the burn after
-        /// the ignition (<see cref="Maneuver.ImpulseManeuver"/>): at an epoch between the two (3.4 s for a 5.2 s burn) the
-        /// state written is the state before the impulse, with the burn listed and its fuel spent. Before 11.0.0 the state
+        /// then"). The propagated state receives the delta-V of an impulse at its event, the centroid of the acceleration of
+        /// the burn, about half of the burn after the ignition (<see cref="Maneuver.Maneuver.ThrustWindow"/>, #335): at an
+        /// epoch between the two (2.6 s for a 5.2 s burn) the state written is the state before the impulse, with the burn
+        /// listed and its fuel spent. Before 11.0.0 the state
         /// was the motion of the initial orbit whatever the propagation, with the mass and every maneuver after the
         /// propagation: 1 212 km and 1 137 m/s off the propagated state one burn later.
         /// </para>
         /// <para>
         /// Maneuver delta-V components are exported in the same inertial reference frame as the state vector
-        /// (typically ICRF or EME2000). This is the frame in which the framework stores maneuver data.
+        /// (typically ICRF or EME2000). This is the frame in which the framework stores maneuver data. <c>REF_FRAME</c> and
+        /// each <c>MAN_REF_FRAME</c> carry the CCSDS name of that frame (#339): <c>ICRF</c> for <see cref="Frame.ICRF"/>
+        /// (the SPICE frame <c>J2000</c>, written before 11.0.0), the frame's own name otherwise.
         /// </para>
         /// <para>
         /// If you need maneuvers in an orbital frame (RSW, RTN, TNW), you must perform the frame transformation
@@ -1158,7 +1164,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 objectName: Name,
                 objectId: CosparId,
                 centerName: stateVector.Observer.Name,
-                referenceFrame: stateVector.Frame.Name,
+                referenceFrame: CcsdsFrameNames.ToCcsdsName(stateVector.Frame),
                 timeSystem: "UTC");
 
             // Create state vector DTO (converts m to km, m/s to km/s)
@@ -1188,7 +1194,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 {
                     if (maneuver is Maneuver.ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
                     {
-                        maneuverList.Add(impulseManeuver.ToOpmManeuverParameters(stateVector.Frame.Name));
+                        maneuverList.Add(impulseManeuver.ToOpmManeuverParameters(CcsdsFrameNames.ToCcsdsName(stateVector.Frame)));
                     }
                 }
 

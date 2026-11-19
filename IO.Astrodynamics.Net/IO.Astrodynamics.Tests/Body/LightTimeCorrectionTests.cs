@@ -460,13 +460,154 @@ public class LightTimeCorrectionTests
         }
     }
 
+    // #739: the frames that only the library holds between two objects of the kernels, which CSPICE reads in J2000 and the
+    // library rotates (SpiceAPI.ToManagedFrame): the frame of a site built from coordinates and the frame of S as a record
+    // of ITRF93, against spkezr_c in the same frames (tools/light_time_reference); TEME, CIRS and TIRS against the ICRF read
+    // rotated at t ∓ lt of their centre, the Earth (RotatedAtTheCentreEpoch), the closed form that ITRF93 checks against
+    // spkezr_c. Before the fix every correction was rotated at t (measured on f70ee32: the Earth from the Moon in TIRS
+    // with LT 3.619e4 m from the rotation at t − lt).
+
+    [Fact]
+    public void MoonFromEarthInTheFrameOfACoordinateSite() =>
+        AssertRow("moon_from_earth_in_site_frame", (t, a) => InFrame(_moon.GetEphemeris(t, _earth, _site.Frame, a), _site.Frame), Frame739Geometric,
+            Frame739Corrected);
+
+    [Fact]
+    public void EarthFromMoonInTheFrameOfACoordinateSite() =>
+        AssertRow("earth_from_moon_in_site_frame", (t, a) => InFrame(_earth.GetEphemeris(t, _moon, _site.Frame, a), _site.Frame), Frame739Geometric,
+            Frame739Corrected);
+
+    [Fact]
+    public void MoonFromEarthInTheFrameOfASpacecraft()
+    {
+        var frame = SpacecraftFrameAsItrf93();
+        AssertRow("moon_from_earth_in_spacecraft_frame", (t, a) => InFrame(_moon.GetEphemeris(t, _earth, frame, a), frame), Frame739SpacecraftGeometric,
+            Frame739SpacecraftCorrected);
+    }
+
+    [Fact]
+    public void EarthFromMoonInTheFrameOfASpacecraft()
+    {
+        var frame = SpacecraftFrameAsItrf93();
+        AssertRow("earth_from_moon_in_spacecraft_frame", (t, a) => InFrame(_earth.GetEphemeris(t, _moon, frame, a), frame), Frame739SpacecraftGeometric,
+            Frame739SpacecraftCorrected);
+    }
+
+    /// <summary>The light-time part of a correction, its sign (− reception, + transmission).</summary>
+    private static (Aberration LightTimeOnly, double Sign) LightTimeOf(Aberration flag) => flag switch
+    {
+        Aberration.LTS => (Aberration.LT, -1.0),
+        Aberration.CNS => (Aberration.CN, -1.0),
+        Aberration.XLTS => (Aberration.XLT, 1.0),
+        Aberration.XCNS => (Aberration.XCN, 1.0),
+        Aberration.LT or Aberration.CN => (flag, -1.0),
+        _ => (flag, 1.0)
+    };
+
+    /// <summary>
+    /// The worst distance of <paramref name="read"/> from the closed form of the frame-centre rule: the ICRF read of the
+    /// Earth from the Moon with the correction, rotated to <paramref name="frame"/> at t ∓ lt of the Earth, lt and its rate
+    /// those of the Earth's light-time corrected read from the Moon (RotatedAtTheCentreEpoch), over the epochs and the eight
+    /// corrections.
+    /// </summary>
+    private (double Position, double Velocity) EarthFromMoonAgainstTheCentreRule(Frames.Frame frame, System.Func<TimeSystem.Time, Aberration, StateVector> read)
+    {
+        double worstPosition = 0.0, worstVelocity = 0.0;
+        foreach (var flag in Flags.Where(f => f != Aberration.None))
+        {
+            var (lightTimeOnly, sign) = LightTimeOf(flag);
+            foreach (var t in _epochs)
+            {
+                var icrf = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, flag).ToStateVector();
+                var center = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, lightTimeOnly).ToStateVector();
+                var expected = RotatedAtTheCentreEpoch(icrf, center, frame, sign);
+                var state = read(t, flag);
+                Assert.Equal(frame, state.Frame);
+                worstPosition = System.Math.Max(worstPosition, (state.Position - expected.Position).Magnitude());
+                worstVelocity = System.Math.Max(worstVelocity, (state.Velocity - expected.Velocity).Magnitude());
+            }
+        }
+
+        return (worstPosition, worstVelocity);
+    }
+
+    /// <summary>
+    /// #739, the check of the closed form: in ITRF93, which <c>spkezr_c</c> reads itself, the Earth from the Moon is the
+    /// ICRF read rotated at t − lt of the Earth with the rate of its light time, for the eight corrections.
+    /// </summary>
+    [Fact]
+    public void EarthFromMoonInItrf93_IsTheClosedFormOfTheCentreRule()
+    {
+        var worst = EarthFromMoonAgainstTheCentreRule(Itrf93, (t, a) => _earth.GetEphemeris(t, _moon, Itrf93, a).ToStateVector());
+        _output.WriteLine($"MEASURE #739 the Earth from the Moon in ITRF93 (spkezr_c) against the closed form: position {worst.Position:E3} m, velocity {worst.Velocity:E3} m/s");
+        Assert.True(worst.Position <= Frame739ClosedForm.Position, $"{worst.Position:E3} m");
+        Assert.True(worst.Velocity <= Frame739ClosedForm.Velocity, $"{worst.Velocity:E3} m/s");
+    }
+
+    public static TheoryData<string> LibraryFrames => ["TIRS", "CIRS", "TEME", "tirs"];
+
+    private static Frames.Frame LibraryFrame(string name) => name switch
+    {
+        "TIRS" => Frames.Frame.TIRS,
+        "CIRS" => Frames.Frame.CIRS,
+        "TEME" => Frames.Frame.TEME,
+        _ => new Frames.Frame(name)
+    };
+
+    /// <summary>
+    /// #739: the Earth from the Moon in TIRS, CIRS and TEME, and in a frame built by the name "tirs" (#656), centred on the
+    /// target, is the ICRF read rotated at t ∓ lt of the Earth, on every read: <see cref="CelestialItem.GetEphemeris(in TimeSystem.Time, ILocalizable, Frames.Frame, Aberration)"/>,
+    /// <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/> by identifiers and its window read.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(LibraryFrames))]
+    public void EarthFromMoonInAFrameOfTheLibrary_IsRotatedAtTheEpochOfTheEarth(string name)
+    {
+        var frame = LibraryFrame(name);
+        var byItem = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => _earth.GetEphemeris(t, _moon, frame, a).ToStateVector());
+        var byIdentifiers = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => SpiceAPI.Instance.ReadEphemeris(t, 301, 399, frame, a).ToStateVector());
+        var byWindow = EarthFromMoonAgainstTheCentreRule(frame, (t, a) =>
+            SpiceAPI.Instance.ReadEphemeris(new Window(t, t.AddSeconds(60.0)), 301, 399, frame, a, System.TimeSpan.FromSeconds(60.0)).First().ToStateVector());
+        _output.WriteLine($"MEASURE #739 the Earth from the Moon in {name} against the closed form: item {byItem.Position:E3} m {byItem.Velocity:E3} m/s, " +
+                          $"identifiers {byIdentifiers.Position:E3} m {byIdentifiers.Velocity:E3} m/s, window {byWindow.Position:E3} m {byWindow.Velocity:E3} m/s");
+        foreach (var worst in new[] { byItem, byIdentifiers, byWindow })
+        {
+            Assert.True(worst.Position <= Frame739ClosedForm.Position, $"{name}: {worst.Position:E3} m");
+            Assert.True(worst.Velocity <= Frame739ClosedForm.Velocity, $"{name}: {worst.Velocity:E3} m/s");
+        }
+    }
+
+    /// <summary>
+    /// #739: a frame centred on the observer, the Moon from the Earth in TIRS, and every geometric read stay the ICRF read
+    /// rotated at t, bit for bit as before.
+    /// </summary>
+    [Fact]
+    public void MoonFromEarthInTirs_AndGeometricReads_AreRotatedAtTheEpoch()
+    {
+        foreach (var t in _epochs)
+        {
+            foreach (var flag in Flags)
+            {
+                var read = _moon.GetEphemeris(t, _earth, Frames.Frame.TIRS, flag).ToStateVector();
+                var expected = _moon.GetEphemeris(t, _earth, Frames.Frame.ICRF, flag).ToFrame(Frames.Frame.TIRS).ToStateVector();
+                Assert.Equal(expected.Position, read.Position);
+                Assert.Equal(expected.Velocity, read.Velocity);
+            }
+
+            var geometric = _earth.GetEphemeris(t, _moon, Frames.Frame.TIRS, Aberration.None).ToStateVector();
+            var rotated = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.TIRS).ToStateVector();
+            Assert.Equal(rotated.Position, geometric.Position);
+            Assert.Equal(rotated.Velocity, geometric.Velocity);
+        }
+    }
+
     /// <summary>
     /// <paramref name="state"/>, light-time corrected in ICRF, in <paramref name="frame"/> at the epoch of its centre as
     /// <c>spkezr_c</c> takes it: lt_c = |p|/c and dlt_c = p̂·ṗ/c of the light-time corrected <paramref name="center"/>,
     /// the frame at t + sign·lt_c, carried to the exact double epoch by its angular velocity, and the derivative of the
     /// rotation scaled by 1 + sign·dlt_c.
     /// </summary>
-    private static StateVector RotatedAtTheCentreEpoch(StateVector state, StateVector center, Frames.Frame frame, double sign)
+    internal static StateVector RotatedAtTheCentreEpoch(StateVector state, StateVector center, Frames.Frame frame, double sign)
     {
         const double c = global::IO.Astrodynamics.Constants.C;
         double lightTime = center.Position.Magnitude() / c;
@@ -581,6 +722,21 @@ public class LightTimeCorrectionTests
     // the three, as the guide window.
     private static readonly (double Position, double Velocity) Frame593ThirdSpacecraftGeometric = (5.6e-7, 3.6e-8);
     private static readonly (double Position, double Velocity) Frame593ThirdSpacecraftCorrected = (3.4e-3, 2.4e-7);
+    // #739, twice the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184,
+    // 2026-11-18), rounded up at two digits. The frame of the site G between the Earth and the Moon: geometric 3.292e-7 m
+    // on Windows x64 and macOS arm64 (3.210e-7 m on Linux x64) and 6.395e-11 m/s on Linux x64 (4.747e-11 m/s on the two
+    // others), corrected 3.116e-7 m on Windows x64 and macOS arm64 (2.731e-7 m on Linux x64; the Earth from the Moon,
+    // XCN+S) and 7.648e-9 m/s on Linux x64 (7.646e-9 m/s on the two others), as the other frames of a site above. The
+    // frame of S as a record of ITRF93, the same on the three: geometric 2.347e-7 m and 1.753e-8 m/s, the rate of the
+    // record; corrected 1.600e-3 m and 1.208e-7 m/s (the Earth from the Moon, XLT), the epoch of the centre read on the
+    // record at its 100 ns tick, as the rows of the review of #593 above. The closed form of the centre rule against
+    // spkezr_c in ITRF93: 2.403e-7 m and 7.670e-9 m/s on the three, its resolution; TEME, CIRS and TIRS are 0 from it on
+    // the three and take that bound
+    private static readonly (double Position, double Velocity) Frame739Geometric = (6.6e-7, 1.3e-10);
+    private static readonly (double Position, double Velocity) Frame739Corrected = (6.3e-7, 1.6e-8);
+    private static readonly (double Position, double Velocity) Frame739SpacecraftGeometric = (4.7e-7, 3.6e-8);
+    private static readonly (double Position, double Velocity) Frame739SpacecraftCorrected = (3.2e-3, 2.5e-7);
+    private static readonly (double Position, double Velocity) Frame739ClosedForm = (4.9e-7, 1.6e-8);
     private const double FrameByNamePosition = 0.0;
     private const double FrameByNameVelocity = 0.0;
     private const double CoordinateWindowBound = 2.0e-7;

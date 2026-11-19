@@ -761,10 +761,14 @@ namespace IO.Astrodynamics.Tests.Body
 
             var opm = spc.ToOpm();
             var maneuver = Assert.Single(opm.Data.Maneuvers);
-            var expected = impulse.ToOpmManeuverParameters(Frames.Frame.ICRF.Name);
+            var expected = impulse.ToOpmManeuverParameters("ICRF");
             Assert.Equal(expected.ManEpochIgnition, maneuver.ManEpochIgnition);
             Assert.Equal(expected.ManDv2, maneuver.ManDv2);
-            Assert.Equal(Frames.Frame.ICRF.Name, maneuver.ManRefFrame);
+            // The CCSDS names of Frame.ICRF (SPICE J2000), in REF_FRAME and MAN_REF_FRAME alike (#339); J2000 before 11.0.0
+            Assert.Equal("ICRF", maneuver.ManRefFrame);
+            Assert.Equal("ICRF", opm.Metadata.ReferenceFrame);
+            Assert.Contains("<MAN_REF_FRAME>ICRF</MAN_REF_FRAME>", opm.ToXmlString());
+            Assert.DoesNotContain(opm.Validate().Issues, i => i.Path.Contains("ReferenceFrame") || i.Path.Contains("ManRefFrame"));
             Assert.Null(spc.ToOpm(includeManeuvers: false).Data.Maneuvers.FirstOrDefault());
         }
 
@@ -820,7 +824,8 @@ namespace IO.Astrodynamics.Tests.Body
             AssertKm2(0.0, c.CzDotXDot);
             AssertKm2(2.0e-11, c.CzDotYDot);
             AssertKm2(9.0e-10, c.CzDotZDot);
-            Assert.Equal(frame.Name, opm.Metadata.ReferenceFrame);
+            // The CCSDS name of the frame (#339): ICRF for Frame.ICRF (SPICE J2000), ECLIPJ2000 kept
+            Assert.Equal(frameName == "ICRF" ? "ICRF" : "ECLIPJ2000", opm.Metadata.ReferenceFrame);
             Assert.Equal(6778.137, opm.Data.StateVector.X);
             Assert.Equal(0.0, opm.Data.StateVector.Y);
             Assert.Equal(0.0, opm.Data.StateVector.Z);

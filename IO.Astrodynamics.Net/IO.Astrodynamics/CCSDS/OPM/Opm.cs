@@ -109,8 +109,11 @@ public class Opm
     /// <param name="originator">The message originator.</param>
     /// <returns>A new OPM instance.</returns>
     /// <remarks>
-    /// REF_FRAME is written as the SPICE name of the state vector frame: <c>J2000</c> for <see cref="Frame.ICRF"/>,
-    /// <c>GCRF</c> for <see cref="Frame.GCRF"/>. Both denote the ICRF axes; no frame bias is applied.
+    /// REF_FRAME is written as the CCSDS name of the state vector frame (#339): <c>ICRF</c> for <see cref="Frame.ICRF"/>
+    /// (the SPICE frame <c>J2000</c>), <c>GCRF</c> for <see cref="Frame.GCRF"/>, the frame's own name otherwise (<c>TEME</c>,
+    /// <c>ECLIPJ2000</c>, ...). <c>ICRF</c> and <c>GCRF</c> denote the ICRF axes and are both read back as
+    /// <see cref="Frame.ICRF"/>; no frame bias is applied. Before 11.0.0 <c>J2000</c> was written for
+    /// <see cref="Frame.ICRF"/>, which is not a CCSDS frame name.
     /// The epoch is written in UTC under <c>TIME_SYSTEM = UTC</c>, whatever the time frame of the state's epoch (#479).
     /// </remarks>
     public static Opm CreateFromStateVector(
@@ -130,7 +133,7 @@ public class Opm
             objectName,
             objectId,
             stateVector.Observer.Name,
-            stateVector.Frame.Name,
+            CcsdsFrameNames.ToCcsdsName(stateVector.Frame),
             "UTC");
 
         var opmStateVector = OpmStateVector.FromStateVector(stateVector);

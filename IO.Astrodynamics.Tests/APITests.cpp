@@ -11,6 +11,7 @@
 #include <TLE.h>
 #include <Constants.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -2943,6 +2944,334 @@ TEST(API, ReadOrientationProxyOfACkWithoutAngularVelocityReadsThePointing)
         EXPECT_LE(worstClosedForm, CkWithoutRatesAngleLimit);
         EXPECT_FALSE(TakePendingSpiceError());
         EXPECT_TRUE(UnloadKernelsProxy(ck.string().c_str())) << GetLastErrorProxy();
+    }
+    std::filesystem::remove_all(folder);
+}
+#endif
+
+// #724: since #714, ReadOrientationProxy read ckgpav_c and fell back to ckgp_c when ckgpav_c found nothing. ckgpav_c skips
+// a segment without angular velocity (ckbsr.c: with needav, a segment whose descriptor's ICD(4) is 0 is not a candidate),
+// so that where a higher-priority segment without rates and a lower-priority one with rates cover the same epoch, the
+// proxy returned the lower-priority segment's pointing and rates, where ckgp_c returns the higher-priority one. The read
+// now follows ckgp_c's segment: its pointing with ckgpav_c's rate when that segment has angular velocity (ckgpav_c then
+// finds the same segment), with a zero angular velocity when it has none (decided by S. Guillet, 2026-11-18). Two type-3
+// CKs written by ckw03_c: with rates, a rotation about z at 1e-3 rad/s every 100 s over [0, 1000] s TDB; without rates, a
+// rotation about x at 2e-3 rad/s every 50 s over [300, 700] s (the SPICE quaternions (cos(wt/2), sin(wt/2) a)). Loaded
+// in either order, each record is ckgp_c's C-matrix and epoch (the epochs 299.5 s and 700.5 s, within the 1 s tolerance
+// of the segment without rates, take its records at 300 s and 700 s, as ckgp_c does), the closed form of the segment
+// ckgp_c reads, and the angular velocity of that segment, zero without rates. The CSPICE writers are not exported by the
+// Windows DLL
+#if !defined(_WIN32)
+// Twice the worst over Linux x64 and macOS arm64 of the angles between a record and ckgp_c (0 rad) and the closed form
+// (3.331e-16 rad on both, the reads after a search with angular velocity below included; the MEASURE lines of the
+// build-native jobs of CI run 44395076184, 2026-11-18), rounded up at the second digit (the test does not run on Windows:
+// ckw03_c is not exported by the DLL)
+constexpr double CkPriorityAngleLimit = 6.7e-16;
+
+namespace
+{
+    // A type-3 CK of records at the epochs 'times' (TDB seconds), its interpolation intervals starting at 'starts', a
+    // rotation about 'axis' at 'rate' rad/s, with or without its angular velocity
+    void WriteRotationCk(const std::filesystem::path &ck, int spacecraftId, const std::vector<double> &times,
+                         const std::vector<double> &starts, const std::array<double, 3> &axis, double rate, bool withRates)
+    {
+        const int records = static_cast<int>(times.size());
+        std::vector<SpiceDouble> sclk(records), quats(4 * records), avvs(3 * records), intervals(starts.size());
+        for (int i = 0; i < records; ++i)
+        {
+            const double t = times[i];
+            sce2c_c(spacecraftId, t, &sclk[i]);
+            const double angle = rate * t;
+            quats[4 * i] = std::cos(angle / 2.0);
+            for (int k = 0; k < 3; ++k)
+            {
+                quats[4 * i + 1 + k] = std::sin(angle / 2.0) * axis[k];
+                avvs[3 * i + k] = rate * axis[k];
+            }
+        }
+        for (size_t i = 0; i < starts.size(); ++i)
+        {
+            sce2c_c(spacecraftId, starts[i], &intervals[i]);
+        }
+        SpiceInt handle{};
+        ckopn_c(ck.string().c_str(), "IOA724", 0, &handle);
+        ckw03_c(handle, sclk.front(), sclk.back(), spacecraftId * 1000, "J2000", withRates ? SPICETRUE : SPICEFALSE,
+                withRates ? "RATES" : "NO RATES", records, sclk.data(), reinterpret_cast<SpiceDouble (*)[4]>(quats.data()),
+                reinterpret_cast<SpiceDouble (*)[3]>(avvs.data()), static_cast<SpiceInt>(intervals.size()), intervals.data());
+        ckcls_c(handle);
+    }
+
+    // A type-3 CK of 'records' records 'step' seconds apart from 'start', one interpolation interval
+    void WriteRotationCk(const std::filesystem::path &ck, int spacecraftId, double start, double step, int records,
+                         const std::array<double, 3> &axis, double rate, bool withRates)
+    {
+        std::vector<double> times(records);
+        for (int i = 0; i < records; ++i)
+        {
+            times[i] = start + step * i;
+        }
+        WriteRotationCk(ck, spacecraftId, times, {start}, axis, rate, withRates);
+    }
+
+    // The rotation matrix of the angle 'angle' about the axis z (axis 3) or x (axis 1), the closed form of a record
+    IO::Astrodynamics::Math::Quaternion ClosedFormRotation(int axis, double angle)
+    {
+        const double c = std::cos(angle), s = std::sin(angle);
+        SpiceDouble m[3][3]{};
+        if (axis == 3)
+        {
+            SpiceDouble z[3][3]{{c, -s, 0.0}, {s, c, 0.0}, {0.0, 0.0, 1.0}};
+            std::memcpy(m, z, sizeof m);
+        }
+        else
+        {
+            SpiceDouble x[3][3]{{1.0, 0.0, 0.0}, {0.0, c, -s}, {0.0, s, c}};
+            std::memcpy(m, x, sizeof m);
+        }
+        return QuaternionOf(m);
+    }
+
+    void ExpectCkPriorityFollowsCkgp(int spacecraftId, bool withoutRatesLoadedLast)
+    {
+        constexpr double zRate = 1.0e-3;
+        constexpr double xRate = 2.0e-3;
+        auto folder = FreshFolder("ioa_724_cpp_ck_priority_" + std::to_string(-spacecraftId));
+        {
+            const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+            std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbit = std::make_unique<
+                IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                                   IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                                   IO::Astrodynamics::Time::TDB(0.0s),
+                                                                   IO::Astrodynamics::Frames::InertialFrames::ICRF());
+            IO::Astrodynamics::Body::Spacecraft::Spacecraft spacecraft(spacecraftId, "IOA724CK" + std::to_string(-spacecraftId), 1000.0,
+                                                                       3000.0, folder.string(), std::move(orbit));
+            const auto rates = folder / "rates.bc";
+            const auto noRates = folder / "norates.bc";
+            WriteRotationCk(rates, spacecraftId, 0.0, 100.0, 11, {0.0, 0.0, 1.0}, zRate, true);
+            WriteRotationCk(noRates, spacecraftId, 300.0, 50.0, 9, {1.0, 0.0, 0.0}, xRate, false);
+            ASSERT_FALSE(TakePendingSpiceError());
+            const auto &first = withoutRatesLoadedLast ? rates : noRates;
+            const auto &last = withoutRatesLoadedLast ? noRates : rates;
+            ASSERT_TRUE(LoadKernelsProxy(first.string().c_str())) << GetLastErrorProxy();
+            ASSERT_TRUE(LoadKernelsProxy(last.string().c_str())) << GetLastErrorProxy();
+
+            std::vector<double> epochs;
+            for (int i = 0; i <= 20; ++i)
+            {
+                epochs.push_back(50.0 * i);
+            }
+            epochs.push_back(299.5);
+            epochs.push_back(700.5);
+            std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> so(epochs.size());
+            bool res{false};
+            EXPECT_NO_THROW(res = ReadOrientationProxy(epochs.data(), static_cast<int>(epochs.size()), spacecraftId, 1.0, "J2000", so.data()));
+            EXPECT_TRUE(res) << GetLastErrorProxy();
+            double worstSpice{}, worstClosedForm{}, worstEpoch{};
+            int recordsWithoutRates{};
+            for (size_t i = 0; i < epochs.size() && res; ++i)
+            {
+                const IO::Astrodynamics::Math::Quaternion record(so[i].orientation.w, so[i].orientation.x, so[i].orientation.y,
+                                                                 so[i].orientation.z);
+                SpiceDouble sclk{}, sclkTolerance{}, cmat[3][3]{}, clkout{}, et{};
+                SpiceBoolean found{SPICEFALSE};
+                sce2c_c(spacecraftId, epochs[i], &sclk);
+                sce2c_c(spacecraftId, epochs[i] + 1.0, &sclkTolerance);
+                ckgp_c(spacecraftId * 1000, sclk, sclkTolerance - sclk, "J2000", cmat, &clkout, &found);
+                ASSERT_TRUE(found);
+                sct2e_c(spacecraftId, clkout, &et);
+                // The segment ckgp_c reads: the one without rates, loaded last, over [300, 700] s within the tolerance
+                const bool readsNoRates = withoutRatesLoadedLast && epochs[i] >= 299.0 && epochs[i] <= 701.0;
+                recordsWithoutRates += readsNoRates ? 1 : 0;
+                worstSpice = std::max(worstSpice, AngleBetween(record, QuaternionOf(cmat)));
+                worstClosedForm = std::max(worstClosedForm, AngleBetween(record, readsNoRates ? ClosedFormRotation(1, xRate * et)
+                                                                                              : ClosedFormRotation(3, zRate * et)));
+                worstEpoch = std::max(worstEpoch, std::abs(so[i].epoch - et));
+                EXPECT_EQ(0.0, so[i].angularVelocity.x) << epochs[i];
+                EXPECT_EQ(0.0, so[i].angularVelocity.y) << epochs[i];
+                EXPECT_NEAR(readsNoRates ? 0.0 : zRate, so[i].angularVelocity.z, 1.0e-18) << epochs[i];
+                EXPECT_STREQ("J2000", so[i].frame);
+            }
+            EXPECT_EQ(withoutRatesLoadedLast ? 11 : 0, recordsWithoutRates);
+            std::printf("MEASURE #724 CK priority (%s loaded last): worst angle to ckgp_c %.3E rad, to the closed form %.3E rad, "
+                        "worst epoch to ckgp_c %.3E s\n", withoutRatesLoadedLast ? "without rates" : "with rates", worstSpice,
+                        worstClosedForm, worstEpoch);
+            EXPECT_LE(worstSpice, CkPriorityAngleLimit);
+            EXPECT_LE(worstClosedForm, CkPriorityAngleLimit);
+            EXPECT_EQ(0.0, worstEpoch);
+            EXPECT_FALSE(TakePendingSpiceError());
+            EXPECT_TRUE(UnloadKernelsProxy(last.string().c_str())) << GetLastErrorProxy();
+            EXPECT_TRUE(UnloadKernelsProxy(first.string().c_str())) << GetLastErrorProxy();
+        }
+        std::filesystem::remove_all(folder);
+    }
+}
+
+TEST(API, ReadOrientationProxyReadsAHigherPrioritySegmentWithoutAngularVelocity)
+{
+    ExpectCkPriorityFollowsCkgp(-1999741, true);
+}
+
+TEST(API, ReadOrientationProxyReadsAHigherPrioritySegmentWithAngularVelocity)
+{
+    ExpectCkPriorityFollowsCkgp(-1999742, false);
+}
+
+// Review of #724: CSPICE keeps, per instrument, the segment of its last search and the interval over which that segment has
+// the highest priority (ckbsr.c, the re-use interval), and a search with angular velocity (ckgpav_c, or sxform_c through
+// ckfxfm) that skips a higher-priority segment without rates does not shrink that interval by it, so that the next search
+// without angular velocity, the proxy's search of the segment ckgp_c reads, returned the lower-priority segment with rates
+// there. The proxy now voids that interval before its search, so that each read follows the priority of a search made in
+// a fresh process (decided by S. Guillet, 2026-11-18). Three cases, the CK with rates of the tests above loaded first:
+//   - in one call: a CK without rates of two interpolation intervals, [300, 400] s and [600, 700] s, loaded last; the
+//     epochs of its gap, 450 to 550 s, are read from the CK with rates by ckgpav_c, then 600 to 700 s from the CK without
+//     rates (before: the CK with rates);
+//   - after a ckgpav_c at 500 s, the CK without rates over [300, 700] s loaded last: the read at 500 s;
+//   - after a TransformFrameProxy from J2000 to the spacecraft's CK frame at 500 s (sxform_c): the read at 650 s.
+// References: ckgp_c at each epoch with the CKs loaded again before the read (a search state of its own, as in a fresh
+// process), and the closed form of the segment it reads
+namespace
+{
+    struct CkPriorityRead
+    {
+        double worstSpice{}, worstClosedForm{};
+        int recordsWithoutRates{};
+    };
+
+    // The records of ReadOrientationProxy at 'epochs' against ckgp_c, read with 'first' and 'last' loaded again, and the
+    // closed form: about x at 2e-3 rad/s where readsNoRates(et), about z at 1e-3 rad/s otherwise
+    void CompareCkPriorityReads(int spacecraftId, const std::vector<double> &epochs,
+                                const std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> &so,
+                                const std::filesystem::path &first, const std::filesystem::path &last,
+                                const std::function<bool(double)> &readsNoRates, CkPriorityRead &read)
+    {
+        for (size_t i = 0; i < epochs.size(); ++i)
+        {
+            ASSERT_TRUE(UnloadKernelsProxy(last.string().c_str())) << GetLastErrorProxy();
+            ASSERT_TRUE(UnloadKernelsProxy(first.string().c_str())) << GetLastErrorProxy();
+            ASSERT_TRUE(LoadKernelsProxy(first.string().c_str())) << GetLastErrorProxy();
+            ASSERT_TRUE(LoadKernelsProxy(last.string().c_str())) << GetLastErrorProxy();
+            SpiceDouble sclk{}, sclkTolerance{}, cmat[3][3]{}, clkout{}, et{};
+            SpiceBoolean found{SPICEFALSE};
+            sce2c_c(spacecraftId, epochs[i], &sclk);
+            sce2c_c(spacecraftId, epochs[i] + 1.0, &sclkTolerance);
+            ckgp_c(spacecraftId * 1000, sclk, sclkTolerance - sclk, "J2000", cmat, &clkout, &found);
+            ASSERT_TRUE(found);
+            sct2e_c(spacecraftId, clkout, &et);
+            const IO::Astrodynamics::Math::Quaternion record(so[i].orientation.w, so[i].orientation.x, so[i].orientation.y,
+                                                             so[i].orientation.z);
+            const bool noRates = readsNoRates(et);
+            read.recordsWithoutRates += noRates ? 1 : 0;
+            read.worstSpice = std::max(read.worstSpice, AngleBetween(record, QuaternionOf(cmat)));
+            read.worstClosedForm = std::max(read.worstClosedForm, AngleBetween(record, noRates ? ClosedFormRotation(1, 2.0e-3 * et)
+                                                                                            : ClosedFormRotation(3, 1.0e-3 * et)));
+            EXPECT_EQ(et, so[i].epoch) << epochs[i];
+            EXPECT_EQ(0.0, so[i].angularVelocity.x) << epochs[i];
+            EXPECT_EQ(0.0, so[i].angularVelocity.y) << epochs[i];
+            EXPECT_NEAR(noRates ? 0.0 : 1.0e-3, so[i].angularVelocity.z, 1.0e-18) << epochs[i];
+        }
+    }
+
+    bool ReadOrientations(const std::vector<double> &epochs, int spacecraftId,
+                          std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> &so)
+    {
+        so.assign(epochs.size(), {});
+        return ReadOrientationProxy(epochs.data(), static_cast<int>(epochs.size()), spacecraftId, 1.0, "J2000", so.data());
+    }
+
+    std::unique_ptr<IO::Astrodynamics::Body::Spacecraft::Spacecraft> CkPrioritySpacecraft(int spacecraftId, const std::filesystem::path &folder)
+    {
+        const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+        std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbit = std::make_unique<
+            IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                               IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                               IO::Astrodynamics::Time::TDB(0.0s),
+                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+        return std::make_unique<IO::Astrodynamics::Body::Spacecraft::Spacecraft>(spacecraftId, "IOA724CK" + std::to_string(-spacecraftId),
+                                                                                 1000.0, 3000.0, folder.string(), std::move(orbit));
+    }
+}
+
+TEST(API, ReadOrientationProxyFollowsTheSegmentPriorityAfterAReadOfALowerPrioritySegment)
+{
+    constexpr int spacecraftId = -1999743;
+    auto folder = FreshFolder("ioa_724_cpp_ck_priority_gap");
+    {
+        const auto spacecraft = CkPrioritySpacecraft(spacecraftId, folder);
+        const auto rates = folder / "rates.bc";
+        const auto gap = folder / "gap.bc";
+        WriteRotationCk(rates, spacecraftId, 0.0, 100.0, 11, {0.0, 0.0, 1.0}, 1.0e-3, true);
+        WriteRotationCk(gap, spacecraftId, {300.0, 350.0, 400.0, 600.0, 650.0, 700.0}, {300.0, 600.0}, {1.0, 0.0, 0.0}, 2.0e-3, false);
+        ASSERT_FALSE(TakePendingSpiceError());
+        ASSERT_TRUE(LoadKernelsProxy(rates.string().c_str())) << GetLastErrorProxy();
+        ASSERT_TRUE(LoadKernelsProxy(gap.string().c_str())) << GetLastErrorProxy();
+        std::vector<double> epochs;
+        for (int i = 0; i <= 20; ++i)
+        {
+            epochs.push_back(50.0 * i);
+        }
+        std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> so;
+        ASSERT_TRUE(ReadOrientations(epochs, spacecraftId, so)) << GetLastErrorProxy();
+        const auto readsGap = [](double et) { return (et >= 300.0 && et <= 400.0) || (et >= 600.0 && et <= 700.0); };
+        CkPriorityRead read;
+        CompareCkPriorityReads(spacecraftId, epochs, so, rates, gap, readsGap, read);
+        EXPECT_EQ(6, read.recordsWithoutRates);
+        std::printf("MEASURE #724 CK priority after a read of a lower-priority segment: worst angle to ckgp_c %.3E rad, to the "
+                    "closed form %.3E rad\n", read.worstSpice, read.worstClosedForm);
+        EXPECT_LE(read.worstSpice, CkPriorityAngleLimit);
+        EXPECT_LE(read.worstClosedForm, CkPriorityAngleLimit);
+        EXPECT_FALSE(TakePendingSpiceError());
+        EXPECT_TRUE(UnloadKernelsProxy(gap.string().c_str())) << GetLastErrorProxy();
+        EXPECT_TRUE(UnloadKernelsProxy(rates.string().c_str())) << GetLastErrorProxy();
+    }
+    std::filesystem::remove_all(folder);
+}
+
+TEST(API, ReadOrientationProxyFollowsTheSegmentPriorityAfterASearchWithAngularVelocity)
+{
+    constexpr int spacecraftId = -1999744;
+    auto folder = FreshFolder("ioa_724_cpp_ck_priority_prior");
+    {
+        const auto spacecraft = CkPrioritySpacecraft(spacecraftId, folder);
+        const auto rates = folder / "rates.bc";
+        const auto noRates = folder / "norates.bc";
+        WriteRotationCk(rates, spacecraftId, 0.0, 100.0, 11, {0.0, 0.0, 1.0}, 1.0e-3, true);
+        WriteRotationCk(noRates, spacecraftId, 300.0, 50.0, 9, {1.0, 0.0, 0.0}, 2.0e-3, false);
+        ASSERT_FALSE(TakePendingSpiceError());
+        ASSERT_TRUE(LoadKernelsProxy(rates.string().c_str())) << GetLastErrorProxy();
+        ASSERT_TRUE(LoadKernelsProxy(noRates.string().c_str())) << GetLastErrorProxy();
+        const auto readsNoRates = [](double et) { return et >= 300.0 && et <= 700.0; };
+        CkPriorityRead read;
+
+        // ckgpav_c at 500 s reads the CK with rates
+        SpiceDouble sclk{}, cmat[3][3]{}, av[3]{}, clkout{};
+        SpiceBoolean found{SPICEFALSE};
+        sce2c_c(spacecraftId, 500.0, &sclk);
+        ckgpav_c(spacecraftId * 1000, sclk, 65536.0, "J2000", cmat, av, &clkout, &found);
+        ASSERT_TRUE(found);
+        ASSERT_EQ(1.0e-3, av[2]);
+        std::vector<IO::Astrodynamics::API::DTO::StateOrientationDTO> so;
+        ASSERT_TRUE(ReadOrientations({500.0}, spacecraftId, so)) << GetLastErrorProxy();
+        CompareCkPriorityReads(spacecraftId, {500.0}, so, rates, noRates, readsNoRates, read);
+
+        // sxform_c from J2000 to the spacecraft's CK frame at 500 s reads the CK with rates
+        SpiceChar frame[33]{};
+        frmnam_c(spacecraftId * 1000, sizeof frame, frame);
+        ASSERT_STRNE("", frame);
+        const auto transformation = TransformFrameProxy("J2000", frame, 500.0);
+        ASSERT_FALSE(std::isnan(transformation.Rotation.w)) << GetLastErrorProxy();
+        ASSERT_NEAR(1.0e-3, std::hypot(transformation.AngularVelocity.x, transformation.AngularVelocity.y,
+                                       transformation.AngularVelocity.z), 1.0e-15);
+        ASSERT_TRUE(ReadOrientations({650.0}, spacecraftId, so)) << GetLastErrorProxy();
+        CompareCkPriorityReads(spacecraftId, {650.0}, so, rates, noRates, readsNoRates, read);
+
+        EXPECT_EQ(2, read.recordsWithoutRates);
+        std::printf("MEASURE #724 CK priority after a search with angular velocity: worst angle to ckgp_c %.3E rad, to the "
+                    "closed form %.3E rad\n", read.worstSpice, read.worstClosedForm);
+        EXPECT_LE(read.worstSpice, CkPriorityAngleLimit);
+        EXPECT_LE(read.worstClosedForm, CkPriorityAngleLimit);
+        EXPECT_FALSE(TakePendingSpiceError());
+        EXPECT_TRUE(UnloadKernelsProxy(noRates.string().c_str())) << GetLastErrorProxy();
+        EXPECT_TRUE(UnloadKernelsProxy(rates.string().c_str())) << GetLastErrorProxy();
     }
     std::filesystem::remove_all(folder);
 }

@@ -59,7 +59,8 @@ public sealed class PropagationSolution
 
     /// <summary>
     /// The label of the end of the window, set by the propagator when the propagation ends there rather than on its
-    /// output grid (<see cref="PropagationTimeArgument.EndsAtWindowEnd"/>); null otherwise.
+    /// output grid: a grid that ends before the window (#741), or in TT one that misses its end by the drift
+    /// (<see cref="PropagationTimeArgument.EndsAtWindowEnd"/>); null otherwise.
     /// </summary>
     internal Time? WindowEnd { get; set; }
 

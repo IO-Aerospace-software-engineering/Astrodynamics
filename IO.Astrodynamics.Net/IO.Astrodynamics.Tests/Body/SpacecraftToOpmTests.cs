@@ -73,8 +73,8 @@ public class SpacecraftToOpmTests
     }
 
     /// <summary>
-    /// Before the burn (S + 1 000 s), one tick before its ignition, at its ignition, 1 s after it (before the impulse, 3.4 s
-    /// after the ignition), at the impulse, after it (S + 5 000 s), at the end and at the default epoch (the initial one): the
+    /// Before the burn (S + 1 000 s), one tick before its ignition, at its ignition, 1 s after it (before the impulse, 2.6 s
+    /// after the ignition, the centroid of the burn's acceleration, #335; 3.4 s before 11.0.0), at the impulse, after it (S + 5 000 s), at the end and at the default epoch (the initial one): the
     /// state is <c>GetEphemeris</c>'s at the epoch, in the frame of the initial orbit, the mass Tsiolkovsky's after the burn
     /// when the burn is ignited by then and the full mass before, and the maneuvers the burn when it is ignited by then, none
     /// before (#658, decided by S. Guillet, 2026-11-17: "the mass and the maneuvers ignited by then"; the branch counted the
@@ -123,7 +123,9 @@ public class SpacecraftToOpmTests
             Assert.Equal(read.Velocity.X / 1000.0, sv.XDot);
             Assert.Equal(read.Velocity.Y / 1000.0, sv.YDot);
             Assert.Equal(read.Velocity.Z / 1000.0, sv.ZDot);
-            Assert.Equal(initialFrame.Name, opm.Metadata.ReferenceFrame);
+            // The CCSDS name of the frame (#339): ICRF for Frame.ICRF (SPICE J2000), ECLIPJ2000 kept
+            Assert.Equal(frame, opm.Metadata.ReferenceFrame);
+            Assert.All(opm.Data.Maneuvers ?? [], m => Assert.Equal(frame, m.ManRefFrame));
 
             // Against the solution, in the frame of the initial orbit, which the integration keeps (#529)
             var (r, _) = solution.InterpolateAt(t);
@@ -174,7 +176,7 @@ public class SpacecraftToOpmTests
         var written = new Vector3(opm.Data.StateVector.X, opm.Data.StateVector.Y, opm.Data.StateVector.Z) * 1000.0;
         double fromSgp4 = (written - sgp4.Position).Magnitude();
         _output.WriteLine($"MEASURE #658 TLE propagated: the OPM state {fromSgp4:E3} m from SGP4 at the end of 1 h");
-        Assert.Equal(Frame.TEME.Name, opm.Metadata.ReferenceFrame);
+        Assert.Equal("TEME", opm.Metadata.ReferenceFrame);
         Assert.Equal(read.Position.X / 1000.0, opm.Data.StateVector.X);
         Assert.Equal(read.Velocity.Z / 1000.0, opm.Data.StateVector.ZDot);
         Assert.True(fromSgp4 > 1000.0, $"{fromSgp4:E3} m");

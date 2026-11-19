@@ -17,8 +17,10 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// The <c>pointing_triad</c> category (spec.md section 12.4): the TRIAD attitude that points the instrument's boresight
 /// (the primary body vector) at the primary target and keeps its reference vector (the secondary body vector) towards the
 /// secondary target, with the directions of the targets LT-corrected from the Earth's centre minus the spacecraft's
-/// geometric position (<see cref="CelestialAttitudeTarget"/> with <see cref="Aberration.LT"/>, whose observer is the
-/// centre of the state); and whether the primary direction lies within the instrument's field of view.
+/// geometric position (<see cref="EarthCentreLightTimeTarget"/>: the model of the case, which
+/// <see cref="CelestialAttitudeTarget"/> no longer follows since #740, its light time the spacecraft's, 1.0e-6 rad from
+/// the case's model for 001, the variant <c>lt_from_spacecraft</c> of its reference check); and whether the primary
+/// direction lies within the instrument's field of view.
 /// </summary>
 public class TriadSolver : ICategorySolver
 {
@@ -33,8 +35,8 @@ public class TriadSolver : ICategorySolver
         var earth = BodyResolver.Resolve("Earth");
         var sv = BuildStateVector(inputs.Orbit, earth, epoch, frame);
 
-        var primaryTarget = new CelestialAttitudeTarget(BodyResolver.Resolve(inputs.PrimaryTarget), Aberration.LT);
-        var secondaryTarget = new CelestialAttitudeTarget(BodyResolver.Resolve(inputs.SecondaryTarget), Aberration.LT);
+        var primaryTarget = new EarthCentreLightTimeTarget(BodyResolver.Resolve(inputs.PrimaryTarget));
+        var secondaryTarget = new EarthCentreLightTimeTarget(BodyResolver.Resolve(inputs.SecondaryTarget));
 
         // Parse body vectors (instrument boresight and clock/refVector)
         var boresight = new Vector3(inputs.PrimaryBodyVector[0], inputs.PrimaryBodyVector[1], inputs.PrimaryBodyVector[2]);
@@ -107,5 +109,22 @@ public class TriadSolver : ICategorySolver
         }
 
         throw new ArgumentException("Unknown orbit type");
+    }
+
+    /// <summary>
+    /// The direction of a target in the model of spec.md section 12.4: its position LT-corrected from the centre of the
+    /// state (the Earth; SPICE <c>spkpos</c>, abcorr <c>LT</c>) minus the spacecraft's geometric position, normalized,
+    /// as <see cref="CelestialAttitudeTarget"/> gave it before #740.
+    /// </summary>
+    internal sealed class EarthCentreLightTimeTarget(ILocalizable target) : IAttitudeTarget
+    {
+        public string Name => (target as INaifObject)?.Name ?? "CelestialTarget";
+
+        public Vector3 GetDirection(StateVector observerState)
+        {
+            ArgumentNullException.ThrowIfNull(observerState);
+            var ephemeris = target.GetEphemeris(observerState.Epoch, observerState.Observer, observerState.Frame, Aberration.LT);
+            return (ephemeris.ToStateVector().Position - observerState.Position).Normalize();
+        }
     }
 }
