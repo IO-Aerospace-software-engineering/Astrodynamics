@@ -39,7 +39,7 @@
     <!-- The XML documentation file, packed with the library (R05 of #668, #556). A comment the compiler cannot read is an
          error: a malformed comment (CS1570), a cref it cannot resolve (CS1574) or that names several overloads (CS0419), a
          param tag of no parameter (CS1572) or a parameter without a tag beside others with one (CS1573). A public member
-         without a comment (CS1591, about 3300 today) stays a warning. -->
+         without a comment (CS1591, 1670 today) stays a warning. -->
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1570;CS1572;CS1573;CS1574;CS0419</WarningsAsErrors>

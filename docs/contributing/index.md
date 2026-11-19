@@ -44,6 +44,12 @@ error a proxy drops, performance), with its P/Invoke declarations in the same pu
   run `PropagationGoldenTests`.
 - XML documentation comments on every public member, and a documentation update when the public
   API changes.
+- A public member declared, named and documented as [Public API](public-api.md) says: the build fails on a member
+  missing from `PublicAPI.Unshipped.txt` and on a comment the compiler cannot read, and the tests of
+  `IO.Astrodynamics.Tests/ApiConventions/` on a new name that breaks the naming rules, an options type or parameter
+  that breaks the options rule, an obsolete member without its id (IOA0001 or IOA0002, listed on
+  [Obsolete Members](../reference/obsolete-members.md)), and a member a table of the documentation cites that does not
+  exist (#668).
 - Each C# block of `DEVELOPER_GUIDE.md` is compiled: it is the region `guide:<n>` of a method of
   `IO.Astrodynamics.Tests/Documentation/DeveloperGuideExamples.cs` (n its rank among the guide's csharp blocks, the
   excerpt of `Constants` excepted), and `DeveloperGuideExamplesTests` fails when a block and its region differ. Change

@@ -21,7 +21,10 @@ Current version information and release notes since 8.0. Breaking changes are ca
 1. **The release PR**, `chore(release): prepare <version>`, sets the version in `IO.Astrodynamics.csproj`,
    `IO.Astrodynamics.CLI.csproj`, the table above and the "Version Information" of `DEVELOPER_GUIDE.md`. The CI docs
    job runs `tools/ci/check-versions.sh`, which fails when they disagree. The PR also finalizes the release notes,
-   with the issues still open under **Known limitations**.
+   with the issues still open under **Known limitations**. For a stable version it moves the lines of
+   `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` (a `*REMOVED*` line deletes its twin) and leaves the first
+   empty, the build staying free of RS0016 and RS0017 ([Public API](public-api.md#at-a-release)); a prerelease moves
+   nothing.
 2. **Before it merges**:
    - `long-validation.yml` green on the tree being released, or on a tree that differs from it only in comments
      and documentation;
@@ -108,6 +111,26 @@ release are listed under **Known limitations**.
   ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), under Fixed and Changed).
 - **`SpacecraftFrame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
   `ClearStateOrientations`**, the attitude record of a spacecraft ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), [#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541); under Changed: `SpacecraftFrame`, and `Frame` keeps no orientations).
+
+- **Guards of the public API** (lot L0 of the ergonomics review,
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), design PR
+  [#671](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/671)). Not breaking: no member,
+  behaviour or result changes for a caller, and the package gains its XML documentation file.
+  - **The XML documentation is packed with the library** (`IO.Astrodynamics.Net.xml`), so an IDE shows the comments of
+    the package. Its 89 warnings of #556 and later are fixed: 13 references the compiler could not resolve, which the
+    file held as broken links, 17 that named several overloads, 4 tags of no parameter (the orphaned comment above
+    `Matrix.Cholesky`) and 55 parameters without a tag, among them the albedo and thermal parameters of the
+    `CelestialBody` constructors ([#556](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/556)).
+  - **The surface is declared** in `PublicAPI.Shipped.txt`, seeded from the tag 10.1.0, and `PublicAPI.Unshipped.txt`,
+    what 11.0.0 adds (570 lines so far) and removes or changes (441 `*REMOVED*` lines), checked by the build
+    (Microsoft.CodeAnalysis.PublicApiAnalyzers 3.3.4, a development dependency the package does not carry).
+  - **Two diagnostic ids for obsolete members**: IOA0001, a replaced entry point (a warning, hidden from IntelliSense,
+    forwarding to its replacement bit for bit, removed in 12.0.0), and IOA0002, a trap (an error whose message names
+    the fix); the compiler links each to its section of the new page
+    [Obsolete Members](../reference/obsolete-members.md). No member carries them in this lot.
+  - **Checks of the naming rules (D2, N1 to N3), of the options rule (D1) and of the members the documentation's tables
+    cite**, each a test with a baseline that may only shrink; the CA naming rules run as warnings. See
+    [Public API](public-api.md).
 
 **Fixed**
 

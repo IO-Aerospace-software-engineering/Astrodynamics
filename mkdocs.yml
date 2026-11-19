@@ -106,6 +106,7 @@ nav:
   - Contributing:
     - contributing/index.md
     - Versioning: contributing/versioning.md
+    - Public API: contributing/public-api.md
     - Services: contributing/services.md
 
 markdown_extensions:
