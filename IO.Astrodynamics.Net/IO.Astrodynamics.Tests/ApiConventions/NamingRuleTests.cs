@@ -24,6 +24,10 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// <item>N3.deny: no word of a name is one of the misspellings and second terms of N3 (<see cref="DenyList"/>), the
 /// words split at the casing and the digits (<see cref="Words"/>).</item>
 /// </list>
+/// Each segment of a namespace that holds an exported type (the namespaces of the generated PDS types included: N4 renames
+/// PDS to Pds) is a name of N1 and N3, reported as "namespace Namespace" by the namespace it ends. A method is keyed by its
+/// signature and a parameter by its method's signature and its name (<see cref="PublicSurface.Signature"/>), so that a new
+/// overload of a name in the baseline is a new violation.
 /// A parameter of a record's primary constructor or of its <c>Deconstruct</c> that bears the name of a property of the
 /// record of the same type is the property's name, PascalCase (D1 sub-choice 1, <c>PropagationTask(..., Options)</c>).
 /// </summary>
@@ -63,7 +67,7 @@ public class NamingRuleTests
     [Fact]
     public void PublicSurface_FollowsN1ToN3_OrIsInTheBaseline()
     {
-        var violations = Violations().ToList();
+        var violations = Violations(PublicSurface.Types, NamespacesOf(PublicSurface.Library.GetExportedTypes())).ToList();
         Assert.NotEmpty(PublicSurface.Types);
         PublicSurface.AssertMatchesBaseline(BaselineFile, violations);
     }
@@ -200,11 +204,24 @@ public class NamingRuleTests
         return property != null && property.PropertyType == parameterType;
     }
 
-    /// <summary>Every violation of N1 to N3 on the public surface, as "rule&lt;TAB&gt;symbol".</summary>
-    internal static IEnumerable<string> Violations()
+    /// <summary>The namespaces of the given types and their parents, IO.Astrodynamics and below.</summary>
+    internal static IReadOnlyList<string> NamespacesOf(IEnumerable<Type> types) =>
+        types.Select(t => t.Namespace).Where(n => n != null)
+            .SelectMany(n => Enumerable.Range(1, n!.Split('.').Length).Select(k => string.Join(".", n.Split('.').Take(k))))
+            .Distinct().OrderBy(n => n, StringComparer.Ordinal).ToList();
+
+    /// <summary>
+    /// Every violation of N1 to N3 by the given types and namespaces, as "rule&lt;TAB&gt;symbol".
+    /// </summary>
+    internal static IEnumerable<string> Violations(IEnumerable<Type> types, IEnumerable<string> namespaces)
     {
         var found = new SortedSet<string>(StringComparer.Ordinal);
-        foreach (var type in PublicSurface.Types)
+        foreach (var ns in namespaces)
+        {
+            found.UnionWith(Check(ns[(ns.LastIndexOf('.') + 1)..], $"namespace {ns}", false, false));
+        }
+
+        foreach (var type in types)
         {
             var typeName = PublicSurface.Name(type);
             found.UnionWith(Check(PublicSurface.SimpleName(type), typeName, false, false));
@@ -216,7 +233,8 @@ public class NamingRuleTests
                     continue;
                 }
 
-                found.UnionWith(Check(member.Name, PublicSurface.Key(member), false, IsStandardSymbol(member)));
+                var symbol = member is MethodBase method ? PublicSurface.Signature(method) : PublicSurface.Key(member);
+                found.UnionWith(Check(member.Name, symbol, false, IsStandardSymbol(member)));
             }
 
             var methods = PublicSurface.MethodsAndConstructors(type).ToList();
@@ -234,12 +252,27 @@ public class NamingRuleTests
                         continue;
                     }
 
-                    var owner = method is ConstructorInfo ? typeName + ".ctor" : PublicSurface.Key(method);
-                    found.UnionWith(Check(parameter.Name, $"{owner}({parameter.Name})", true, false));
+                    found.UnionWith(Check(parameter.Name, PublicSurface.ParameterKey(method, parameter), true, false));
                 }
             }
         }
 
         return found;
+    }
+
+    // The review's probes of lot L0: a namespace with an underscore and an acronym, and a new overload of a name the
+    // baseline already holds
+    [Fact]
+    public void Violations_ReportANamespaceAndANewOverload()
+    {
+        var violations = Violations([typeof(Probes.TDM_Probe.TdmReader)],
+            NamespacesOf([typeof(Probes.TDM_Probe.TdmReader)])).ToHashSet();
+        Assert.Contains("N1.underscore\tnamespace IO.Astrodynamics.Tests.ApiConventions.Probes.TDM_Probe", violations);
+        Assert.Contains("N1.acronym\tnamespace IO.Astrodynamics.Tests.ApiConventions.Probes.TDM_Probe", violations);
+        Assert.DoesNotContain(violations, v => v.EndsWith("namespace IO.Astrodynamics.Tests.ApiConventions.Probes", StringComparison.Ordinal));
+        const string reader = "IO.Astrodynamics.Tests.ApiConventions.Probes.TDM_Probe.TdmReader";
+        Assert.Contains($"N1.acronym\t{reader}.GetTotalISP()", violations);
+        Assert.Contains($"N1.acronym\t{reader}.GetTotalISP(int)", violations);
+        Assert.Contains($"N1.acronym\t{reader}.GetTotalISP(int):probeUTCValue", violations);
     }
 }

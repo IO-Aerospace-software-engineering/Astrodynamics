@@ -55,7 +55,13 @@ internal static class PublicSurface
             name = name[..tick];
         }
 
-        return type.DeclaringType == null ? $"{type.Namespace}.{name}" : $"{Name(type.DeclaringType)}.{name}";
+        if (type.DeclaringType != null)
+        {
+            return $"{Name(type.DeclaringType)}.{name}";
+        }
+
+        // A type of the global namespace by its name alone
+        return type.Namespace == null ? name : $"{type.Namespace}.{name}";
     }
 
     /// <summary>A type's simple name, without its generic arity.</summary>
@@ -101,8 +107,73 @@ internal static class PublicSurface
             .Where(m => !m.Name.Contains('<') && !m.IsDefined(typeof(CompilerGeneratedAttribute), false) &&
                         (m.IsPublic || IsVisible(m)));
 
-    /// <summary>A member's key, "Namespace.Type.Member", the same for its overloads.</summary>
+    /// <summary>A member's key, "Namespace.Type.Member", the same for its overloads (a property, field or event).</summary>
     internal static string Key(MemberInfo member) => $"{Name(member.DeclaringType!)}.{member.Name}";
+
+    /// <summary>
+    /// A method's or constructor's key, its signature: "Namespace.Type.Member(T1, T2)", a constructor as
+    /// "Namespace.Type.ctor(...)", the parameter types as C# writes them without their namespace, so that each overload
+    /// has its own key and a new overload is a new symbol of the baselines.
+    /// </summary>
+    internal static string Signature(MethodBase method)
+    {
+        var name = method is ConstructorInfo ? "ctor" : method.Name;
+        if (method is MethodInfo { IsGenericMethodDefinition: true } generic)
+        {
+            name += "<" + string.Join(", ", generic.GetGenericArguments().Select(a => a.Name)) + ">";
+        }
+
+        var parameters = method.GetParameters().Select(p =>
+        {
+            var type = p.ParameterType.IsByRef ? p.ParameterType.GetElementType()! : p.ParameterType;
+            var modifier = p.IsOut ? "out " : p.ParameterType.IsByRef ? (p.IsIn ? "in " : "ref ") : "";
+            return modifier + TypeName(type);
+        });
+        return $"{Name(method.DeclaringType!)}.{name}({string.Join(", ", parameters)})";
+    }
+
+    /// <summary>A parameter's key: its method's signature, a colon and its name.</summary>
+    internal static string ParameterKey(MethodBase method, ParameterInfo parameter) => $"{Signature(method)}:{parameter.Name}";
+
+    private static readonly Dictionary<Type, string> Keywords = new()
+    {
+        [typeof(bool)] = "bool", [typeof(byte)] = "byte", [typeof(sbyte)] = "sbyte", [typeof(char)] = "char",
+        [typeof(short)] = "short", [typeof(ushort)] = "ushort", [typeof(int)] = "int", [typeof(uint)] = "uint",
+        [typeof(long)] = "long", [typeof(ulong)] = "ulong", [typeof(float)] = "float", [typeof(double)] = "double",
+        [typeof(decimal)] = "decimal", [typeof(string)] = "string", [typeof(object)] = "object", [typeof(void)] = "void"
+    };
+
+    /// <summary>A type as C# writes it, without namespace: keywords, T?, T[], Generic&lt;T1, T2&gt;, Outer.Nested.</summary>
+    internal static string TypeName(Type type)
+    {
+        if (Keywords.TryGetValue(type, out var keyword))
+        {
+            return keyword;
+        }
+
+        if (type.IsGenericParameter)
+        {
+            return type.Name;
+        }
+
+        if (type.IsArray)
+        {
+            return TypeName(type.GetElementType()!) + "[" + new string(',', type.GetArrayRank() - 1) + "]";
+        }
+
+        if (Nullable.GetUnderlyingType(type) is { } underlying)
+        {
+            return TypeName(underlying) + "?";
+        }
+
+        var name = SimpleName(type);
+        if (type.IsGenericType)
+        {
+            name += "<" + string.Join(", ", type.GetGenericArguments().Select(TypeName)) + ">";
+        }
+
+        return type.IsNested && !type.IsGenericParameter ? $"{TypeName(type.DeclaringType!)}.{name}" : name;
+    }
 
     /// <summary>
     /// The entries of a baseline file copied next to the tests: one "rule&lt;TAB&gt;symbol" per line, '#' comments and blank
