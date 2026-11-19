@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -214,6 +215,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// NaifId × 1000, whatever its name; <see cref="Frame.Name"/> stays <c>Name + "_FRAME"</c>, and is handed to SPICE
         /// when no loaded kernel defines that id (#676).
         /// </remarks>
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters",
+            Justification = "Both constructors take optional parameters since 10.1.0; 11.0.0 adds centerOfMotion (#620) to this one. The constructors are reshaped by the spacecraft lot of #668, not by lot L0, which changes no API.")]
         public Spacecraft(int naifId, string name,
             Time? epoch = null, double mass = 0.0, double maximumOperatingMass = double.MaxValue,
             Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,

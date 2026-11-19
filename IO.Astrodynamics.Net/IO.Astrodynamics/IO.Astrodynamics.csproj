@@ -27,11 +27,11 @@
     <!-- API guards of the ergonomics review (#668, lot L0; docs/contributing/public-api.md).
          PublicAPI.Shipped.txt holds the surface of the last stable release (10.1.0), PublicAPI.Unshipped.txt
          what 11.0.0 adds, changes or removes; a public member missing from them (RS0016) or listed and gone
-         (RS0017) fails the build. The files carry no '#nullable enable' header: Nullable is disabled, and the
-         header would require annotations (RS0041), so RS0037 (header missing) is off.
+         (RS0017) is a warning, as D2's landing order has it: the analyzers become errors in its final PR, with
+         the CA naming rules (design PR #671, D2 N8). The files carry no '#nullable enable' header: Nullable is
+         disabled, and the header would require annotations (RS0041), so RS0037 (header missing) is off.
          The CA naming rules run as warnings until the renaming lot (L9) makes them errors (D2, N8). -->
     <PropertyGroup>
-        <WarningsAsErrors>$(WarningsAsErrors);RS0016;RS0017</WarningsAsErrors>
         <NoWarn>$(NoWarn);RS0037</NoWarn>
         <AnalysisModeNaming>All</AnalysisModeNaming>
     </PropertyGroup>
