@@ -18,7 +18,9 @@ public class NewtonRaphson
     /// <param name="tolerance"></param>
     /// <param name="maxIterations"></param>
     /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    /// <exception cref="InvalidOperationException">The derivative is below 1e-12 in magnitude, an estimate is not finite, or
+    /// the method does not converge within <paramref name="maxIterations"/> (R03 of #668: before 11.0.0, a
+    /// <see cref="Exception"/>).</exception>
     public static double Solve(
         Func<double, double> function,
         Func<double, double> derivative,
@@ -34,7 +36,7 @@ public class NewtonRaphson
             double fDerivative = derivative(x);
 
             if (System.Math.Abs(fDerivative) < 1e-12) // Avoid division by zero or near-zero derivatives
-                throw new Exception($"Derivative too small (f'(x) = {fDerivative}) at iteration {i}. Adjust initial guess or problem scaling.");
+                throw new InvalidOperationException($"Derivative too small (f'(x) = {fDerivative}) at iteration {i}. Adjust initial guess or problem scaling.");
 
             // Update the root estimate using Newton-Raphson formula
             double xNew = x - fValue / fDerivative;
@@ -44,15 +46,20 @@ public class NewtonRaphson
                 return xNew;
 
             if (double.IsNaN(xNew) || double.IsInfinity(xNew))
-                throw new Exception("Newton-Raphson method diverged.");
+                throw new InvalidOperationException("Newton-Raphson method diverged.");
 
             x = xNew;
         }
 
 
-        throw new Exception("Newton-Raphson method did not converge within the maximum number of iterations.");
+        throw new InvalidOperationException("Newton-Raphson method did not converge within the maximum number of iterations.");
     }
     
+    /// <summary>
+    /// Solve the system f(x) = 0 by the Newton-Raphson method, the step from the Jacobian by a singular value decomposition.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The method does not converge within <paramref name="maxIterations"/> (R03
+    /// of #668: before 11.0.0, a <see cref="Exception"/>).</exception>
     public static double[] SolveVector(
         Func<double[], double[]> costFunc,
         Func<double[], double[,]> jacobianFunc,
@@ -77,9 +84,14 @@ public class NewtonRaphson
             for (int k = 0; k < x.Length; k++)
                 x[k] += dx[k];
         }
-        throw new Exception("Vector Newton-Raphson did not converge.");
+        throw new InvalidOperationException("Vector Newton-Raphson did not converge.");
     }
     
+    /// <summary>
+    /// Solve f(x) = 0 by the Newton-Raphson method, each estimate held within [<paramref name="min"/>, <paramref name="max"/>].
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The derivative is below 1e-10 in magnitude, or the method does not
+    /// converge within <paramref name="maxIterations"/> (R03 of #668: before 11.0.0, a <see cref="Exception"/>).</exception>
     public static double BoundedNewtonRaphson(Func<double, double> f, Func<double, double> df, 
         double x0, double min, double max, double tolerance, int maxIterations)
     {
@@ -109,7 +121,7 @@ public class NewtonRaphson
             x = newX;
         }
     
-        throw new Exception("Failed to converge within maximum iterations");
+        throw new InvalidOperationException("Failed to converge within maximum iterations");
     }
     
     /// <summary>

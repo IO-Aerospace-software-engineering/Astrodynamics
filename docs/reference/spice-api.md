@@ -11,6 +11,32 @@ coverage of a kernel; 2888 banners in one conjunction analysis past its SPKs), w
 application such as a command-line tool ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727),
 decided by S. Guillet, 2026-11-17).
 
+### SPICE errors
+
+An error SPICE signals throws `SpiceException` (`IO.Astrodynamics.Exceptions`), an `InvalidOperationException`:
+`ShortMessage` is SPICE's code, such as `SPICE(SPKINSUFFDATA)` for a state past the coverage of the SPKs,
+`SPICE(FRAMEDATANOTFOUND)` for a frame past that of its data or `SPICE(KERNELVARNOTFOUND)` for a missing kernel variable;
+`LongMessage` is SPICE's long message, empty for the errors that carry none (`prop2b_c`'s); `Message` names the call that
+failed, then gives SPICE's message. The native layer reports both beside its message (`GetLastErrorShortProxy`,
+`GetLastErrorLongProxy`), equal to what CSPICE gives for the same call. Every method below that the table says throws
+`InvalidOperationException` with SPICE's message throws it, and so do the paths built on them (`GetEphemeris`, `ToFrame`,
+the CSPICE searches of `CelestialItem`, `Site` and `Instrument`); a failure of the native layer that is not SPICE's (a
+C++ exception with no SPICE error pending) stays an `InvalidOperationException`, and a frame name SPICE does
+not know an `ArgumentException` whose inner exception is the `SpiceException`. Before 11.0.0 every one of them was an
+`InvalidOperationException` (R03 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+structuring choice 10, decided by S. Guillet, 2026-11-19); a `catch (InvalidOperationException)` still catches them.
+
+```csharp
+try
+{
+    var moon = SpiceAPI.Instance.ReadEphemeris(new Time(3000, 1, 1), 399, 301, Frame.ICRF, Aberration.None);
+}
+catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
+{
+    // past the coverage of the loaded SPKs: load one that covers the epoch
+}
+```
+
 | Method | Description |
 |--------|-------------|
 | `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components (#673); the files of a directory in ordinal order, component by component, the later file winning; only the files SPICE does not hold from a load of `SpiceAPI` (11.0.0: before, a repeated load reloaded) |

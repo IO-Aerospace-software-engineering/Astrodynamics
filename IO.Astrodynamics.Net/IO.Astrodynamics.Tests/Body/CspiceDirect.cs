@@ -356,6 +356,28 @@ internal static partial class CspiceDirect
         }
     }
 
+    /// <summary>The short and long messages of the error <c>sxform_c</c> signals for a transformation between two frames, or
+    /// nulls when it gives one; SPICE is reset (R03 of #668).</summary>
+    internal static (string Short, string Long) SxformMessages(string from, string to, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            sxform_c(from, to, et, new double[36]);
+            return TakeError();
+        }
+    }
+
+    /// <summary>The short and long messages of the error <c>spkezr_c</c> signals for a state, or nulls when it gives one;
+    /// SPICE is reset (R03 of #668).</summary>
+    internal static (string Short, string Long) SpkezrMessages(string target, double et, string frame, string abcorr, string observer)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            spkezr_c(target, et, frame, abcorr, observer, new double[6], out _);
+            return TakeError();
+        }
+    }
+
     /// <summary>The state <c>conics_c</c> gives for its eight elements (rp, e, i, node, argp, M0, t0, GM) at an epoch, with
     /// the short message of the error it signals, null when none; SPICE is reset (#714).</summary>
     internal static (double[] State, string Error) Conics(double[] elements, double et)

@@ -11,6 +11,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using static IO.Astrodynamics.Tests.TestKernelWriter;
@@ -265,7 +266,7 @@ public class KernelRegistryTests : IDisposable
             File.Delete(gone.FullName);
 
             // Act
-            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(kept));
+            var exception = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.UnloadKernels(kept));
 
             // Assert: the failure names the file, which SPICE no longer holds, nor the listing
             Assert.Contains(Path.Combine(kept.FullName, "a.tf"), exception.Message);
@@ -334,7 +335,7 @@ public class KernelRegistryTests : IDisposable
             File.Delete(gone.FullName);
 
             // Act: the text kernel's unload fails, the binary one's succeeds; before, its success hid the failure
-            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(folder));
+            var exception = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.UnloadKernels(folder));
 
             // Assert: the failure names the text kernel; SPICE no longer knows E, which it still lists, nor X
             Assert.Contains(text.FullName, exception.Message);
@@ -372,7 +373,7 @@ public class KernelRegistryTests : IDisposable
             File.Delete(gone.FullName);
 
             // Act and assert: the unload reads the pool again and stops at D, so E leaves the pool
-            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(metaKernel));
+            var exception = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.UnloadKernels(metaKernel));
             Assert.Contains(metaKernel.FullName, exception.Message);
             AssertUnknown("IOA_F02_MKB_E");
             SpiceAPI.Instance.UnloadKernels(gone);
@@ -562,7 +563,7 @@ public class KernelRegistryTests : IDisposable
             File.Delete(gone.FullName);
 
             // Act and assert
-            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(new FileInfo(kernel.FullName)));
+            var exception = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.UnloadKernels(new FileInfo(kernel.FullName)));
             Assert.Contains(kernel.FullName, exception.Message);
             SpiceAPI.Instance.UnloadKernels(gone);
         }
@@ -693,7 +694,7 @@ public class KernelRegistryTests : IDisposable
         SpiceAPI.Instance.WriteEphemeris(c, -1999722, written);
 
         Assert.Equal(inAFolder ? [other.FullName] : Array.Empty<string>(), Under(_root).Select(k => k.FullName));
-        Assert.Throws<InvalidOperationException>(() => ReadObject(-1999722, 60.0));
+        Assert.Throws<SpiceException>(() => ReadObject(-1999722, 60.0));
         SpiceAPI.Instance.LoadKernels(c);
         var read = ReadObject(-1999722, 180.0);
         Assert.Equal(written[3].Position, read.Position);
@@ -764,7 +765,7 @@ public class KernelRegistryTests : IDisposable
         spacecraft.WriteEphemeris(c);
 
         Assert.Empty(Under(_root));
-        Assert.Throws<InvalidOperationException>(() => ReadObject(-1999725, 60.0));
+        Assert.Throws<SpiceException>(() => ReadObject(-1999725, 60.0));
         SpiceAPI.Instance.LoadKernels(c);
         Assert.Equal(6800000.0, ReadObject(-1999725, 60.0).Position.X);
     }
@@ -810,7 +811,7 @@ public class KernelRegistryTests : IDisposable
         WriteStates(c, id, written, managed);
 
         Assert.Equal([mk1.FullName, mk2.FullName], Under(_root).Select(k => k.FullName));
-        Assert.Throws<InvalidOperationException>(() => ReadObject(id, 60.0));
+        Assert.Throws<SpiceException>(() => ReadObject(id, 60.0));
         SpiceAPI.Instance.LoadKernels(c);
         Assert.Equal(written[3].Position, ReadObject(id, 180.0).Position);
     }
@@ -846,7 +847,7 @@ public class KernelRegistryTests : IDisposable
 
         Assert.Equal(linkedFolder ? [Path.Combine(loaded.FullName, "other.bsp")] : Array.Empty<string>(),
             Under(_root).Select(k => k.FullName));
-        Assert.Throws<InvalidOperationException>(() => ReadObject(id, 60.0));
+        Assert.Throws<SpiceException>(() => ReadObject(id, 60.0));
         SpiceAPI.Instance.LoadKernels(c);
         Assert.Equal(written[3].Position, ReadObject(id, 180.0).Position);
     }

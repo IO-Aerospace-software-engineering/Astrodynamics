@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// <summary>
 /// Exception thrown when OMM validation fails.
 /// </summary>
-public class OmmValidationException : Exception
+public class OmmValidationException : CcsdsFormatException
 {
     /// <summary>
     /// Gets the validation result containing the errors and warnings.

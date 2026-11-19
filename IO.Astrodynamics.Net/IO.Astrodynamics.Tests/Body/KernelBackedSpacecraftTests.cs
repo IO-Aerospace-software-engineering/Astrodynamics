@@ -10,6 +10,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Body;
@@ -557,7 +558,7 @@ public class KernelBackedSpacecraftTests
         // Assert
         var rejected = Assert.IsType<ArgumentException>(exception);
         Assert.Contains("SatK_FRAME", rejected.Message);
-        Assert.IsType<InvalidOperationException>(rejected.InnerException);
+        Assert.IsType<SpiceException>(rejected.InnerException);
     }
 
     #endregion

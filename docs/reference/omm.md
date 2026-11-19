@@ -15,6 +15,12 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 | `Omm.LoadFromStream(stream, validateSchema?, validateContent?)` | Load from stream |
 | `Omm.TryLoadFromFile(path, out omm, out result, ...)` | Non-throwing load with validation result |
 
+The exceptions of the OMM reader, `OmmParseException` and `OmmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
+`IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
+document that cannot be read, at parsing or at validation (11.0.0, R03 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
+`Exception` alone).
+
 Each load reads one OMM: a standalone `<omm>`, or the one `<omm>` of an `<ndm>` or of another root (messages of
 another type beside it are ignored). A document that holds several OMMs, such as a catalog NDM, or a second OMM at any depth below the root, throws
 `OmmParseException` naming their number, `TryLoadFromFile` returns false with a `PARSE_ERROR` and

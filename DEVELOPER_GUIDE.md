@@ -2326,12 +2326,16 @@ try
 {
     var state = body.GetEphemeris(epoch, observer, frame, Aberration.None);
 }
+catch (SpiceException ex)
+{
+    // An error SPICE signals (an InvalidOperationException): a kernel not loaded,
+    // an epoch out of coverage; ShortMessage is SPICE's code, such as
+    // SPICE(SPKINSUFFDATA), LongMessage its long message.
+    Console.WriteLine($"Ephemeris error {ex.ShortMessage}: {ex.Message}");
+}
 catch (InvalidOperationException ex)
 {
-    // Likely kernel not loaded, epoch out of coverage, or native proxy error
-    // Native C++ errors (from ReadEphemeris, ReadOrientation, Launch) are
-    // caught at the P/Invoke boundary and re-thrown as InvalidOperationException
-    // with the original error message from the SPICE toolkit.
+    // Another failure of the native layer or of the library
     Console.WriteLine($"Ephemeris error: {ex.Message}");
 }
 catch (ArgumentException ex)
@@ -3059,7 +3063,7 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 The breaking changes of 11.0.0, each with its migration, are the **Breaking** entries under **Changed** and the entries under **Removed** of the 11.0.0 release notes (`docs/contributing/versioning.md#1100`).
 
-The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` return a NaN result and `TransformFrameProxy` a NaN rotation and angular velocity, with SPICE's message (#714: before, they dropped it, the two-body proxies aborted a process whose first native call they were and otherwise returned the stack's contents, and the transformation returned the zero quaternion). Each proxy that reports through `GetLastErrorProxy()` clears it when it starts, so the message read after a call is that call's, and a SPICE error with no long message is reported by its short one (#714); a native caller checks the result before using it.
+The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` return a NaN result and `TransformFrameProxy` a NaN rotation and angular velocity, with SPICE's message (#714: before, they dropped it, the two-body proxies aborted a process whose first native call they were and otherwise returned the stack's contents, and the transformation returned the zero quaternion). Each proxy that reports through `GetLastErrorProxy()` clears it when it starts, so the message read after a call is that call's, and a SPICE error with no long message is reported by its short one (#714); `GetLastErrorShortProxy()` and `GetLastErrorLongProxy()` give SPICE's short and long messages of that error, empty when the failure is not SPICE's, which `SpiceAPI` throws as `SpiceException` (R03 of #668); a native caller checks the result before using it. The six exports .NET never called (`LaunchProxy`, `TDBToStringProxy`, `UTCToStringProxy`, `ConvertTDBToUTCProxy`, `ConvertUTCToTDBProxy`, `ConvertStateVectorToEquatorialCoordinatesProxy`) are removed in 11.0.0; a native caller uses the C++ classes they called.
 
 ### Breaking Changes in 8.5.0
 

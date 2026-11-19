@@ -10,6 +10,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -360,7 +361,7 @@ public class StarTests
             output.WriteLine($"MEASURE {label}: worst relative position {worst:E3}");
             foreach (var epoch in replaced)
             {
-                Assert.Throws<InvalidOperationException>(() =>
+                Assert.Throws<SpiceException>(() =>
                     SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None));
             }
 

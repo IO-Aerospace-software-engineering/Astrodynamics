@@ -6,6 +6,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Frame;
@@ -35,7 +36,7 @@ public class FrameByNameTests
         // SPICE's message, which names the frame: sxform_c's SPICE(UNKNOWNFRAME) "was not recognized as a known reference
         // frame", spkezr_c's "The requested output frame ... is not recognized" or "The string supplied to specify the
         // reference frame ... "
-        var inner = Assert.IsType<InvalidOperationException>(e.InnerException);
+        var inner = Assert.IsType<SpiceException>(e.InnerException);
         Assert.Contains(name, inner.Message);
     }
 
@@ -62,8 +63,8 @@ public class FrameByNameTests
         var unknown = new StateVector(state.Position, state.Velocity, earth, Epoch, new Frames.Frame("ITRF"));
 
         // Act and assert
-        Assert.IsType<InvalidOperationException>(Assert.Throws<ArgumentException>(() => state.ToFrame(new Frames.Frame("ITRF"))).InnerException);
-        Assert.IsType<InvalidOperationException>(Assert.Throws<ArgumentException>(() => unknown.ToFrame(Frames.Frame.ICRF)).InnerException);
+        Assert.IsType<SpiceException>(Assert.Throws<ArgumentException>(() => state.ToFrame(new Frames.Frame("ITRF"))).InnerException);
+        Assert.IsType<SpiceException>(Assert.Throws<ArgumentException>(() => unknown.ToFrame(Frames.Frame.ICRF)).InnerException);
     }
 
     [Theory]
@@ -77,7 +78,7 @@ public class FrameByNameTests
         var unknown = new Frames.Frame("ITRF");
 
         // Act and assert: the reads by object and by identifier, at an epoch and over a window
-        Assert.IsType<InvalidOperationException>(Assert.Throws<ArgumentException>(() => moon.GetEphemeris(Epoch, earth, unknown, aberration)).InnerException);
+        Assert.IsType<SpiceException>(Assert.Throws<ArgumentException>(() => moon.GetEphemeris(Epoch, earth, unknown, aberration)).InnerException);
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, unknown, aberration)), "frame", "ITRF");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
             SpiceAPI.Instance.ReadEphemeris(new TimeSystem.Window(Epoch, TimeSpan.FromHours(1.0)), 399, 301, unknown, aberration, TimeSpan.FromMinutes(10.0)).ToArray()),
@@ -101,7 +102,7 @@ public class FrameByNameTests
     {
         // ITRF93 before the Earth's binary PCK (earth_latest_high_prec.bpc starts in 2000): SPICE(FRAMEDATANOTFOUND)
         var before = new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
-        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.TransformFrame(before, Frames.Frame.ITRF93, Frames.Frame.ICRF));
+        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.TransformFrame(before, Frames.Frame.ITRF93, Frames.Frame.ICRF));
         Assert.Contains("ITRF93", e.Message);
     }
 

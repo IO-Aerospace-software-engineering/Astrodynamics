@@ -8,6 +8,7 @@ using System.Text.Json;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -150,7 +151,7 @@ public class Sgp4ReferenceTests
             Assert.StartsWith("SPICE(", item.GetProperty("cspice_error").GetString());
             var tle = new TLE("ERR", item.GetProperty("line1").GetString(), item.GetProperty("line2").GetString());
             var epoch = tle.Epoch.ToTDT() + Minutes(item.GetProperty("tsince_min").GetDouble());
-            Assert.Throws<InvalidOperationException>(() => tle.ToOsculating(epoch));
+            Assert.Throws<SpiceException>(() => tle.ToOsculating(epoch));
         }
     }
 

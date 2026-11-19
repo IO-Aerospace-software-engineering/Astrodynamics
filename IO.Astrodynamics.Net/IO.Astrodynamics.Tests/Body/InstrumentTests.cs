@@ -8,6 +8,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
@@ -1048,7 +1049,7 @@ namespace IO.Astrodynamics.Tests.Body
             }
             else
             {
-                var failed = Assert.IsType<InvalidOperationException>(exception);
+                var failed = Assert.IsType<SpiceException>(exception);
                 Assert.Contains(error, failed.Message);
             }
         }

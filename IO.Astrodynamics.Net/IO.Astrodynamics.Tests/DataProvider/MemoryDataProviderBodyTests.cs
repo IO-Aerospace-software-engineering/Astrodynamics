@@ -74,8 +74,9 @@ public class MemoryDataProviderBodyTests
     /// The Lagrange points L1 to L5, which SPICE does not name: <c>GetCelestialBodyInfo</c> and <c>new CelestialBody(id)</c>
     /// throw the <see cref="ArgumentException"/> naming <c>naifId</c> of the SPICE provider, while
     /// <see cref="CelestialItem.Create"/> reads no information of a Lagrange point and builds it from its state: SPICE builds
-    /// the points its kernels hold and throws <see cref="InvalidOperationException"/> for L3, which they do not hold, and the
-    /// memory provider without their states throws that type for all five, missing data, not a bad argument (#680 review,
+    /// the points its kernels hold and throws <see cref="InvalidOperationException"/> for L3, which they do not hold (a
+    /// <see cref="IO.Astrodynamics.Exceptions.SpiceException"/> since R03 of #668), and the memory provider without their
+    /// states throws <see cref="InvalidOperationException"/> for all five, missing data, not a bad argument (#680 review,
     /// 2026-11-14).
     /// </summary>
     [Theory]
@@ -84,7 +85,7 @@ public class MemoryDataProviderBodyTests
     {
         if (path == "CelestialItem.Create")
         {
-            Assert.Contains($"OK Lagrange id {id}, {path}: SPICE {(id == 393 ? "InvalidOperationException" : "no exception")}",
+            Assert.Contains($"OK Lagrange id {id}, {path}: SPICE {(id == 393 ? "SpiceException" : "no exception")}",
                 ChildOutput.Value);
             Assert.Contains($"OK Lagrange id {id}, {path}: memory without its state InvalidOperationException", ChildOutput.Value);
             return;

@@ -22,18 +22,31 @@
 #include "OrientationKernel.h"
 #include "EphemerisKernel.h"
 #include "SpacecraftClockKernel.h"
-#include "LaunchSite.h"
-#include "Launch.h"
 // ckbss_, cksns_ and ckpfs_, the segment search of ckgp_c (#724)
 #include <SpiceZfc.h>
 
 #pragma region Proxy
 
 static thread_local char lastError[2048] = "";
+// SPICE's short and long messages of the error lastError reports (R03 of #668), empty when the failure is not SPICE's (a C++
+// exception, a rule of the proxy): beside lastError, written with it and cleared with it, so that the .NET layer throws
+// SpiceException with SPICE's short message (SPICE(KERNELVARNOTFOUND)) and its long one
+static thread_local char lastErrorShort[SPICE_ERROR_SMSGLN] = "";
+static thread_local char lastErrorLong[SPICE_ERROR_LMSGLN] = "";
 
 const char *GetLastErrorProxy()
 {
     return lastError;
+}
+
+const char *GetLastErrorShortProxy()
+{
+    return lastErrorShort;
+}
+
+const char *GetLastErrorLongProxy()
+{
+    return lastErrorLong;
 }
 
 const char *GetSpiceVersionProxy()
@@ -50,6 +63,17 @@ const char *GetSpiceVersionProxy()
 
 namespace
 {
+    // SPICE's pending error taken: its short and long messages kept for GetLastErrorShortProxy and GetLastErrorLongProxy,
+    // SPICE reset. Returns the long message, or the short one when SPICE set none (#714), the text lastError reports. Called
+    // where a proxy reports SPICE's error; HandleError, which keeps nothing, where it drops one (R03 of #668)
+    const char *TakeSpiceMessages()
+    {
+        getmsg_c("SHORT", SPICE_ERROR_SMSGLN, lastErrorShort);
+        getmsg_c("LONG", SPICE_ERROR_LMSGLN, lastErrorLong);
+        reset_c();
+        return lastErrorLong[0] != '\0' ? lastErrorLong : lastErrorShort;
+    }
+
     // The failure of a native writer: the message of its writing, taken (and SPICE reset) before its kernel object is
     // destroyed, then that of the destruction, whose unload of the written file opens the other loaded kernels of its kind
     // again (fourth round of #668). Copied into lastError; true when there is none. The kernel loaders report the same way,
@@ -64,10 +88,7 @@ namespace
         std::string message = std::move(writing);
         if (failed_c())
         {
-            SpiceChar shortMessage[SPICE_ERROR_SMSGLN]{};
-            getmsg_c("SHORT", SPICE_ERROR_SMSGLN, shortMessage);
-            std::string spice = HandleError();
-            if (spice.empty()) spice = shortMessage;
+            std::string spice = TakeSpiceMessages();
             if (!message.empty()) message += " ";
             message += spice;
         }
@@ -86,6 +107,8 @@ namespace
     void ClearLastError()
     {
         lastError[0] = '\0';
+        lastErrorShort[0] = '\0';
+        lastErrorLong[0] = '\0';
     }
 
     // A proxy that failed with a C++ exception: its message, then SPICE's, SPICE reset (#711, #712). Always false
@@ -137,60 +160,8 @@ namespace
         if (failed_c())
         {
             if (!writing.empty()) writing += " ";
-            writing += HandleError();
+            writing += TakeSpiceMessages();
         }
-    }
-}
-
-bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
-{
-    try
-    {
-        ActivateErrorManagement();
-        ClearLastError();
-        auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(launchDto.recoverySite.bodyId);
-        IO::Astrodynamics::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
-                                                ToPlanetodetic(launchDto.launchSite.coordinates),
-                                                std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-                                                        launchDto.launchSite.bodyId),
-                                                launchDto.launchSite.directoryPath);
-        IO::Astrodynamics::Sites::LaunchSite rs(launchDto.recoverySite.id, launchDto.recoverySite.name,
-                                                ToPlanetodetic(launchDto.recoverySite.coordinates),
-                                                std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-                                                        launchDto.recoverySite.bodyId),
-                                                launchDto.launchSite.directoryPath);
-        IO::Astrodynamics::OrbitalParameters::StateVector sv(celestialBody, ToVector3D(launchDto.targetOrbit.position),
-                                                             ToVector3D(launchDto.targetOrbit.velocity),
-                                                             IO::Astrodynamics::Time::TDB(
-                                                                     std::chrono::duration<double>(
-                                                                             launchDto.targetOrbit.epoch)),
-                                                             IO::Astrodynamics::Frames::Frames(
-                                                                     launchDto.targetOrbit.inertialFrame));
-        IO::Astrodynamics::Maneuvers::Launch launch(ls, rs, launchDto.launchByDay, sv);
-        auto tdbWindow = ToTDBWindow(launchDto.window);
-        auto res = launch.GetLaunchWindows(
-                IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(tdbWindow.GetStartDate().ToUTC(),
-                                                                              tdbWindow.GetEndDate().ToUTC()));
-        for (size_t i = 0; i < res.size(); ++i)
-        {
-            launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
-            launchDto.inertialAzimuth[i] = res[i].GetInertialAzimuth();
-            launchDto.nonInertialAzimuth[i] = res[i].GetNonInertialAzimuth();
-            launchDto.inertialInsertionVelocity[i] = res[i].GetInertialInsertionVelocity();
-            launchDto.nonInertialInsertionVelocity[i] = res[i].GetNonInertialInsertionVelocity();
-        }
-        if (failed_c())
-        {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
-            lastError[sizeof(lastError) - 1] = '\0';
-            return false;
-        }
-        return true;
-    }
-    catch (const std::exception &e)
-    {
-        // The exception's message, then SPICE's pending one, SPICE reset (#712: before, SPICE stayed failed)
-        return ReportException(e);
     }
 }
 
@@ -457,7 +428,7 @@ bool ReadOrientationProxy(const double *epochs, int count, int spacecraftId, dou
         }
         if (failed_c())
         {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
@@ -541,7 +512,7 @@ bool GetFrameNameProxy(int frameId, char name[33])
     frmnam_c(frameId, lenout, name);
     if (failed_c())
     {
-        std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+        std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
         lastError[sizeof(lastError) - 1] = '\0';
         name[0] = '\0';
         return false;
@@ -573,7 +544,7 @@ bool GetFrameInfoProxy(const char *frameName, int *frameId, int *centerId, int *
 
     if (failed_c())
     {
-        std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+        std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
         lastError[sizeof(lastError) - 1] = '\0';
         return false;
     }
@@ -588,30 +559,6 @@ bool GetFrameInfoProxy(const char *frameName, int *frameId, int *centerId, int *
     *centerId = static_cast<int>(center);
     *frameClass = static_cast<int>(frclss);
     return true;
-}
-
-const char *TDBToStringProxy(double secondsFromJ2000)
-{
-    ActivateErrorManagement();
-    IO::Astrodynamics::Time::TDB tdb((std::chrono::duration<double>(secondsFromJ2000)));
-    std::string str = tdb.ToString();
-    if (failed_c())
-    {
-        return strdup(HandleError());
-    }
-    return strdup(str.c_str());
-}
-
-const char *UTCToStringProxy(double secondsFromJ2000)
-{
-    ActivateErrorManagement();
-    IO::Astrodynamics::Time::UTC utc((std::chrono::duration<double>(secondsFromJ2000)));
-    std::string str = utc.ToString();
-    if (failed_c())
-    {
-        return strdup(HandleError());
-    }
-    return strdup(str.c_str());
 }
 
 static IO::Astrodynamics::API::DTO::StateVectorDTO ReadStateAt(double epoch, int observerId, int targetId, const char *frame,
@@ -639,7 +586,7 @@ bool ReadEphemerisProxy(const double *epochs, int count, int observerId, int tar
         }
         if (failed_c())
         {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
@@ -674,7 +621,7 @@ bool FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO
                 IO::Astrodynamics::Time::TimeSpan(stepSize));
         if (failed_c())
         {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
@@ -720,7 +667,7 @@ FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                         stepSize));
         if (failed_c())
         {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
@@ -768,7 +715,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
                         stepSize));
         if (failed_c())
         {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
@@ -823,7 +770,7 @@ bool FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
                         stepSize), method);
         if (failed_c())
         {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
@@ -866,7 +813,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                         stepSize));
         if (failed_c())
         {
-            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
             return false;
         }
@@ -883,32 +830,6 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
         lastError[sizeof(lastError) - 1] = '\0';
         return false;
     }
-}
-
-double ConvertTDBToUTCProxy(double tdb)
-{
-    ActivateErrorManagement();
-    double delta{};
-    deltet_c(tdb, "et", &delta);
-    if (failed_c())
-    {
-        HandleError();
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    return tdb - delta;
-}
-
-double ConvertUTCToTDBProxy(double utc)
-{
-    ActivateErrorManagement();
-    double delta{};
-    deltet_c(utc, "UTC", &delta);
-    if (failed_c())
-    {
-        HandleError();
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    return utc + delta;
 }
 
 // The GM of a body as the kernel pool gives it, m^3/s^2, or 0 when the pool has no BODYnnn_GM; for the solar system
@@ -1208,36 +1129,6 @@ ConvertEquinoctialElementsToStateVectorProxy(
     return svDTO;
 }
 
-IO::Astrodynamics::API::DTO::RaDecDTO
-ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto)
-{
-    ActivateErrorManagement();
-    ClearLastError();
-    std::string message;
-    IO::Astrodynamics::API::DTO::RaDecDTO raDecDTO;
-    try
-    {
-        auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(stateVectorDto.centerOfMotionId);
-        IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(stateVectorDto.epoch)};
-        IO::Astrodynamics::Frames::Frames frame{stateVectorDto.inertialFrame};
-        IO::Astrodynamics::OrbitalParameters::StateVector sv{
-                centerOfMotion, ToVector3D(stateVectorDto.position),
-                ToVector3D(stateVectorDto.velocity), tdb, frame
-        };
-        auto raDec = sv.ToEquatorialCoordinates();
-        raDecDTO = ToEquatorialDTO(raDec);
-    }
-    catch (const std::exception &e)
-    {
-        message = e.what();
-    }
-    if (!ReportNativeErrors(std::move(message)))
-    {
-        raDecDTO.rightAscension = raDecDTO.declination = raDecDTO.range = std::nan("");
-    }
-    return raDecDTO;
-}
-
 // The state of one epoch (spkezr_c), the body of ReadEphemerisAtGivenEpochProxy and of each epoch of ReadEphemerisProxy: a failed
 // read is a NaN state, its SPICE message kept in lastError, SPICE reset (#454). It neither clears lastError nor
 // replaces a message already there, so that ReadEphemerisProxy, which clears it once before its loop, keeps the message
@@ -1265,11 +1156,14 @@ static IO::Astrodynamics::API::DTO::StateVectorDTO ReadStateAt(double epoch, int
     if (failed_c())
     {
         // #454: a failed read is a NaN state, its SPICE message kept for GetLastErrorProxy, the first of a call (#714)
-        const char *message = HandleError();
         if (lastError[0] == '\0')
         {
-            std::strncpy(lastError, message, sizeof(lastError) - 1);
+            std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
             lastError[sizeof(lastError) - 1] = '\0';
+        }
+        else
+        {
+            HandleError();
         }
         stateVectorDto.position = stateVectorDto.velocity = {std::nan(""), std::nan(""), std::nan("")};
     }

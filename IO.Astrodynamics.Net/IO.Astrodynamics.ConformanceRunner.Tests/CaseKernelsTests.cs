@@ -7,6 +7,7 @@ using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 
 namespace IO.Astrodynamics.ConformanceRunner.Tests;
@@ -143,7 +144,7 @@ public sealed class CaseKernelsTests : IDisposable
         var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
 
         // Act
-        var exception = Assert.IsType<InvalidOperationException>(Construct(new[] { Kernel, "cut.bpc" }));
+        var exception = Assert.IsType<SpiceException>(Construct(new[] { Kernel, "cut.bpc" }));
 
         // Assert: the suite's bpc, loaded first, is unloaded, and the runner's orientation restored bit for bit
         Assert.Contains("cut.bpc", exception.Message);

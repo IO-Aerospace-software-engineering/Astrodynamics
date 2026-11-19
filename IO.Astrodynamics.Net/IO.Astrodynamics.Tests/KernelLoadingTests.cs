@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using static IO.Astrodynamics.Tests.TestKernelWriter;
 
@@ -225,7 +226,7 @@ public class KernelLoadingTests : IDisposable
         File.WriteAllText(b.FullName, "KPL/FK\n\\begindata\nIOA_L1_FAIL_A_NAME_LONGER_THAN_32_CHARACTERS = 1\n\\begintext\n");
 
         // Act
-        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.LoadKernels(folder));
+        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.LoadKernels(folder));
 
         // Assert: SPICE holds a.tf, so the folder is listed, to be unloaded (before 11.0.0 a failed load listed nothing, and
         // a later load furnished a.tf a second time)

@@ -518,7 +518,7 @@ public class OmmReader
 /// <summary>
 /// Exception thrown when OMM parsing fails.
 /// </summary>
-public class OmmParseException : Exception
+public class OmmParseException : CcsdsFormatException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="OmmParseException"/> class.

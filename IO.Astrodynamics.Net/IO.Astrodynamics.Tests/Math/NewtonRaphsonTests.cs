@@ -29,7 +29,7 @@ public class NewtonRaphsonTests
     {
         Func<double, double> f = x => x * x - 4;
         Func<double, double> df = x => 0;
-        Assert.Throws<Exception>(() => NewtonRaphson.BoundedNewtonRaphson(f, df, 3, 0, 5, 1e-6, 100));
+        Assert.Throws<InvalidOperationException>(() => NewtonRaphson.BoundedNewtonRaphson(f, df, 3, 0, 5, 1e-6, 100));
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class NewtonRaphsonTests
     {
         Func<double, double> f = x => System.Math.Exp(x) - 1;
         Func<double, double> df = x => System.Math.Exp(x);
-        Assert.Throws<Exception>(() => NewtonRaphson.BoundedNewtonRaphson(f, df, 10, 0, 5, 1e-6, 10));
+        Assert.Throws<InvalidOperationException>(() => NewtonRaphson.BoundedNewtonRaphson(f, df, 10, 0, 5, 1e-6, 10));
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class NewtonRaphsonTests
         Func<double[], double[]> costFunc = x => new double[] { System.Math.Exp(x[0]) - 1, x[1] - 2 };
         Func<double[], double[,]> jacobianFunc = x => new double[,] { { System.Math.Exp(x[0]), 0 }, { 0, 1 } };
         double[] initialGuess = new double[] { 10, 0 };
-        Assert.Throws<Exception>(() => NewtonRaphson.SolveVector(costFunc, jacobianFunc, initialGuess, 1e-6, 10));
+        Assert.Throws<InvalidOperationException>(() => NewtonRaphson.SolveVector(costFunc, jacobianFunc, initialGuess, 1e-6, 10));
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class NewtonRaphsonTests
         Func<double[], double[]> costFunc = x => new double[] { x[0] * x[0] - 4, x[1] - 2 };
         Func<double[], double[,]> jacobianFunc = x => new double[,] { { 0, 0 }, { 0, 0 } };
         double[] initialGuess = new double[] { 3, 0 };
-        Assert.Throws<Exception>(() => NewtonRaphson.SolveVector(costFunc, jacobianFunc, initialGuess, 1e-6, 100));
+        Assert.Throws<InvalidOperationException>(() => NewtonRaphson.SolveVector(costFunc, jacobianFunc, initialGuess, 1e-6, 100));
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public class NewtonRaphsonTests
     {
         Func<double, double> function = x => System.Math.Exp(x) - 1;
         Func<double, double> derivative = x => System.Math.Exp(x);
-        Assert.Throws<Exception>(() => NewtonRaphson.Solve(function, derivative, 10, 1e-6, 10));
+        Assert.Throws<InvalidOperationException>(() => NewtonRaphson.Solve(function, derivative, 10, 1e-6, 10));
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public class NewtonRaphsonTests
     {
         Func<double, double> function = x => x * x - 4;
         Func<double, double> derivative = x => 0;
-        Assert.Throws<Exception>(() => NewtonRaphson.Solve(function, derivative, 3, 1e-6, 100));
+        Assert.Throws<InvalidOperationException>(() => NewtonRaphson.Solve(function, derivative, 3, 1e-6, 100));
     }
 
     [Fact]
@@ -149,5 +149,29 @@ public class NewtonRaphsonTests
         Func<double, double> derivative = x => 2 * x;
         double root = NewtonRaphson.Solve(function, derivative, 2, 1e-6, 100);
         Assert.Equal(2, root);
+    }
+
+    // R03 of #668: the solver throws InvalidOperationException, not System.Exception, for each of its three failures
+    [Fact]
+    public void Solve_DerivativeTooSmall_ThrowsInvalidOperationException()
+    {
+        var error = Assert.Throws<InvalidOperationException>(() => NewtonRaphson.Solve(x => x * x - 4, _ => 0.0, 3.0));
+        Assert.Contains("Derivative too small", error.Message);
+    }
+
+    [Fact]
+    public void Solve_Diverges_ThrowsInvalidOperationException()
+    {
+        // A step of -1.8e308 / 1e-11 from 0: an infinite estimate
+        var error = Assert.Throws<InvalidOperationException>(() => NewtonRaphson.Solve(_ => double.MaxValue, _ => 1e-11, 0.0));
+        Assert.Contains("diverged", error.Message);
+    }
+
+    [Fact]
+    public void Solve_DoesNotConverge_ThrowsInvalidOperationException()
+    {
+        // x^2 + 1 has no real root: the estimates wander without converging
+        var error = Assert.Throws<InvalidOperationException>(() => NewtonRaphson.Solve(x => x * x + 1.0, x => 2.0 * x, 0.5, 1e-12, 20));
+        Assert.Contains("did not converge", error.Message);
     }
 }

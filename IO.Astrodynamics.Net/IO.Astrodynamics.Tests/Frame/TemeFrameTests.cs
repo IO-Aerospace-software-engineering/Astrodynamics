@@ -12,6 +12,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using TimeSystem_Time = IO.Astrodynamics.TimeSystem.Time;
@@ -265,7 +266,7 @@ public class TemeFrameTests
     {
         // #454 on the TEME path: ITRF93 before the Earth's binary PCK (2000-01-01) gives no rotation
         var epoch = Utc("1990-01-01T00:00:00.000");
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("ITRF93")));
         Assert.Contains("ITRF93", ex.Message);
         // TEME itself reads no kernel: TEME <-> ICRF works there

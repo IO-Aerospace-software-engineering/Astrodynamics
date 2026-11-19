@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.DataProvider;
+using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
@@ -320,7 +321,7 @@ internal static class Program
             System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal), TimeFrame.UTCFrame);
         var tle = new TLE(Name, line1, line2);
 
-        int failures = Expect<InvalidOperationException>("state before the kernels", () =>
+        int failures = Expect<SpiceException>("state before the kernels", () =>
             {
                 tle.ToStateVector(epoch);
                 return tle;
@@ -384,9 +385,9 @@ internal static class Program
             Time.J2000TDB, Frame.ICRF);
         const double gm = 3.986004418e14;
         return propagate
-            ? Expect<InvalidOperationException>("Propagate2Bodies", () => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)),
+            ? Expect<SpiceException>("Propagate2Bodies", () => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)),
                 e => e.Message.EndsWith(": SPICE(ZEROVELOCITY)", StringComparison.Ordinal))
-            : Expect<InvalidOperationException>("ConvertStateVectorToConicOrbitalElement",
+            : Expect<SpiceException>("ConvertStateVectorToConicOrbitalElement",
                 () => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm),
                 e => e.Message.EndsWith(": Zero vector for input velocity vector.", StringComparison.Ordinal));
     }
@@ -406,12 +407,12 @@ internal static class Program
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
         var past = new Time(2160, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
         int failures = 0;
-        failures += Expect<InvalidOperationException>("ReadEphemeris", () => SpiceAPI.Instance.ReadEphemeris(past, 399, 301, Frame.ICRF, Aberration.None),
+        failures += Expect<SpiceException>("ReadEphemeris", () => SpiceAPI.Instance.ReadEphemeris(past, 399, 301, Frame.ICRF, Aberration.None),
             e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
-        failures += Expect<InvalidOperationException>("FindWindowsOnDistanceConstraint", () => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+        failures += Expect<SpiceException>("FindWindowsOnDistanceConstraint", () => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
                 new Window(past, past.AddDays(9.0)), 399, 301, RelationnalOperator.Greater, 4.0e8, Aberration.None, TimeSpan.FromDays(1.0)),
             e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
-        failures += Expect<InvalidOperationException>("ReadOrientation", () => SpiceAPI.Instance.ReadOrientation(
+        failures += Expect<SpiceException>("ReadOrientation", () => SpiceAPI.Instance.ReadOrientation(
                 new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(10.0)), -727, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)),
             e => e.Message.Length > 0);
         return failures == 0 ? 0 : 1;
