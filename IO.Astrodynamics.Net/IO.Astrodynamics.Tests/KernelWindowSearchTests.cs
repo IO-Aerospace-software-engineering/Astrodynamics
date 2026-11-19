@@ -13,6 +13,7 @@ using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -199,14 +200,16 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     {
         // The public searches that go to CSPICE throw SPICE's error where SPICE cannot search (#668, fourth round): before,
         // the native proxies dropped it and the searches returned no window. The reference is SPICE's error signal: a frame
-        // name it does not know, a window past LRO's SPK (2023-349 to 2024-075), a window past de440s and the Earth's PCK
-        var unknownFrame = Assert.Throws<InvalidOperationException>(() => Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon,
+        // name it does not know, a window past LRO's SPK (2023-349 to 2024-075), a window past de440s and the Earth's PCK.
+        // The unknown name is a bad argument since R25 of #668 (review of L1), SPICE's error its inner exception
+        var unknownFrame = Assert.Throws<ArgumentException>(() => Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon,
             new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, 0.0, Aberration.None,
             Step).ToArray());
-        Assert.Contains("NOT_A_FRAME_668", unknownFrame.Message);
+        Assert.Equal("frame", unknownFrame.ParamName);
+        Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknownFrame.InnerException).Message);
 
         var pastTheSpk = new Window(new TimeSystem.Time(2024, 6, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2024, 6, 2, frame: TimeFrame.TDBFrame));
-        var noState = Assert.Throws<InvalidOperationException>(() => Lro.FindWindowsOnDistanceConstraint(pastTheSpk, Moon, RelationnalOperator.Greater,
+        var noState = Assert.Throws<SpiceException>(() => Lro.FindWindowsOnDistanceConstraint(pastTheSpk, Moon, RelationnalOperator.Greater,
             LroMoonDistance, Aberration.None, Step).ToArray());
         Assert.Contains("Insufficient ephemeris data", noState.Message);
         Assert.Contains("-85", noState.Message);
@@ -215,17 +218,17 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         // (Site.FindWindowsOnOccultationConstraint), and so does its complement (OccultationType.None)
         foreach (var occultation in new[] { OccultationType.Any, OccultationType.None })
         {
-            var noTarget = Assert.Throws<InvalidOperationException>(() => Dss13.FindWindowsOnOccultationConstraint(pastTheSpk, Lro, ShapeType.Point, Moon,
+            var noTarget = Assert.Throws<SpiceException>(() => Dss13.FindWindowsOnOccultationConstraint(pastTheSpk, Lro, ShapeType.Point, Moon,
                 ShapeType.Ellipsoid, occultation, Aberration.None, Step).ToArray());
             Assert.Contains("Insufficient ephemeris data", noTarget.Message);
             Assert.Contains("-85", noTarget.Message);
         }
 
         var past = new Window(new TimeSystem.Time(2160, 3, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2160, 3, 2, frame: TimeFrame.TDBFrame));
-        var noPck = Assert.Throws<InvalidOperationException>(() => Dss13.FindWindowsOnIlluminationConstraint(past, IlluminationAngle.Incidence,
+        var noPck = Assert.Throws<SpiceException>(() => Dss13.FindWindowsOnIlluminationConstraint(past, IlluminationAngle.Incidence,
             RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, Step, TestHelpers.Sun).ToArray());
         Assert.Contains("2160", noPck.Message);
-        Assert.Throws<InvalidOperationException>(() => Dss13.FindDayWindows(past, 0.8 * IO.Astrodynamics.Constants.Deg2Rad).ToArray());
+        Assert.Throws<SpiceException>(() => Dss13.FindDayWindows(past, 0.8 * IO.Astrodynamics.Constants.Deg2Rad).ToArray());
     }
 
     [Theory]

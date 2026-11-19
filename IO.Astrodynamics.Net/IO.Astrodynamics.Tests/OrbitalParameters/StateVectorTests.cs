@@ -284,7 +284,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
 
             var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
-            var earthFrame = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+            var earthFrame = new Frames.Frame("ITRF93");
 
             //J2000->IAU_EARTH
             //Earth from sun at 0 TDB

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.DataProvider;
+using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -227,11 +228,12 @@ internal static class MemoryProviderChild
             var thrown = memory[key];
             if (key.Path == "CelestialItem.Create")
             {
-                var spiceExpected = key.Id == L3 ? typeof(InvalidOperationException) : null;
+                // SPICE's missing state is a SpiceException, an InvalidOperationException (R03 of #668)
+                var spiceExpected = key.Id == L3 ? typeof(SpiceException) : null;
                 Check($"Lagrange id {key.Id}, {key.Path}: SPICE {Describe(reference)}", reference?.GetType() == spiceExpected);
                 Check($"Lagrange id {key.Id}, {key.Path}: memory without its state {Describe(thrown)}, SPICE without L3's state " +
                       $"{Describe(spice[(L3, key.Path)])}",
-                    thrown?.GetType() == typeof(InvalidOperationException) && thrown.GetType() == spice[(L3, key.Path)]?.GetType());
+                    thrown?.GetType() == typeof(InvalidOperationException) && spice[(L3, key.Path)] is InvalidOperationException);
                 continue;
             }
 

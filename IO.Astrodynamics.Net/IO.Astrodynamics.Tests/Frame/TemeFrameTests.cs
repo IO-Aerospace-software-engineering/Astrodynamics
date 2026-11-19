@@ -12,6 +12,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using TimeSystem_Time = IO.Astrodynamics.TimeSystem.Time;
@@ -265,7 +266,7 @@ public class TemeFrameTests
     {
         // #454 on the TEME path: ITRF93 before the Earth's binary PCK (2000-01-01) gives no rotation
         var epoch = Utc("1990-01-01T00:00:00.000");
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("ITRF93")));
         Assert.Contains("ITRF93", ex.Message);
         // TEME itself reads no kernel: TEME <-> ICRF works there
@@ -348,9 +349,10 @@ public class TemeFrameTests
             new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536), orbit);
         var frame = spacecraft.Frame;
 
-        // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it
-        Assert.Contains("F07SC_FRAME", Assert.Throws<InvalidOperationException>(() => moon.GetEphemeris(epoch, earth, frame, Aberration.LT)).Message);
-        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
+        // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it,
+        // a bad argument since R25 of #668 (InvalidOperationException before)
+        Assert.Contains("F07SC_FRAME", Assert.Throws<ArgumentException>(() => moon.GetEphemeris(epoch, earth, frame, Aberration.LT)).Message);
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
 
         // An attitude other than the identity, given by hand
         frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));

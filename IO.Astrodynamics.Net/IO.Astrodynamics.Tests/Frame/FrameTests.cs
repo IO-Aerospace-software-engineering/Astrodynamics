@@ -172,8 +172,8 @@ public class FrameTests
     public void ToNonInertialFrame()
     {
         var epoch = TimeSystem.Time.J2000TDB;
-        var moonFrame = new Frames.Frame(PlanetsAndMoons.MOON.Frame);
-        var earthFrame = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
+        var moonFrame = new Frames.Frame("IAU_MOON");
+        var earthFrame = new Frames.Frame("ITRF93");
         var q = moonFrame.ToFrame(earthFrame, epoch);
 
         LabelAssert.Equal(epoch, q.Epoch);

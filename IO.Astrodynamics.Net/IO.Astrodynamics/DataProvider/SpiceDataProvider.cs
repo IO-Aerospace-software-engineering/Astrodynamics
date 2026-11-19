@@ -21,6 +21,10 @@ public class SpiceDataProvider : IDataProvider
     /// keeps its own Earth orientation parameters. Its orientation is labelled with <paramref name="source"/>. Every other
     /// frame is SPICE's.
     /// </remarks>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="source"/>
+    /// (<see cref="ArgumentException.ParamName"/> <c>source</c>): the message names the frame, SPICE's error its inner
+    /// exception (R25 of #668, decided by S. Guillet, 2026-11-19).</exception>
+    /// <exception cref="InvalidOperationException">SPICE cannot orient the frame at <paramref name="date"/>.</exception>
     public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
     {
         if (SpiceAPI.ManagedOrientationToIcrf(date, source) is { } managed)
@@ -28,7 +32,8 @@ public class SpiceDataProvider : IDataProvider
             return managed;
         }
 
-        return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF);
+        // An unknown name names the parameter of this call, source (R25 of #668)
+        return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF, nameof(source), null);
     }
 
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)

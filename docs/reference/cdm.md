@@ -19,6 +19,12 @@ The CDM module supports constructing, reading, writing, and validating CCSDS Con
 | `Cdm.ValidateSchema(path)` | Validate a CDM file against the CCSDS schema |
 | `Cdm.ValidateSchemaFromXml(xml)` | Validate a CDM XML string against the schema |
 
+The exceptions of the CDM reader, `CdmParseException`, derive from `CcsdsFormatException`, a `FormatException` of
+`IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
+document that cannot be read, at parsing or at validation (11.0.0, R03 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
+`Exception` alone).
+
 The readers read one CDM: a standalone `<cdm>`, or the one `<cdm>` of an `<ndm>` or of another root. A document that holds
 several CDMs, at any depth below the root, throws `CdmParseException` naming their number (#679); before 11.0.0 the first one was returned. Split such
 a document into one CDM per document.

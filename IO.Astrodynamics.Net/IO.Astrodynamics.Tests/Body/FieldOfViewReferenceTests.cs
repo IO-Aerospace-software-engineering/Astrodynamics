@@ -10,6 +10,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
@@ -481,7 +482,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         var instrument = InstrumentOf(-470101001);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var outside = new Window(SearchWindow.EndDate.AddSeconds(3600.0), SearchWindow.EndDate.AddSeconds(7200.0));
-        var exception = Assert.Throws<InvalidOperationException>(() => instrument.FindWindowsInFieldOfViewConstraint(outside, instrument.Spacecraft, earth,
+        var exception = Assert.Throws<SpiceException>(() => instrument.FindWindowsInFieldOfViewConstraint(outside, instrument.Spacecraft, earth,
             Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(60.0)).ToArray());
         Assert.Contains("Insufficient ephemeris data", exception.Message);
         Assert.Contains("-470101", exception.Message);

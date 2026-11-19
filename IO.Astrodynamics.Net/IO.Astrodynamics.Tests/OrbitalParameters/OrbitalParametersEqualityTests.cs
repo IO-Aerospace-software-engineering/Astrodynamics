@@ -8,6 +8,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
@@ -243,7 +244,7 @@ public class OrbitalParametersEqualityTests
         Assert.True(x == y);
         Assert.True(x.Equals((Astrodynamics.OrbitalParameters.OrbitalParameters)y));
         Assert.Equal(x.GetHashCode(), y.GetHashCode());
-        Assert.Throws<InvalidOperationException>(() => x.ToStateVector());
+        Assert.Throws<SpiceException>(() => x.ToStateVector());
     }
 
     /// <summary>

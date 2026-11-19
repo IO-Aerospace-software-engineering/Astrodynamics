@@ -11,10 +11,40 @@ coverage of a kernel; 2888 banners in one conjunction analysis past its SPKs), w
 application such as a command-line tool ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727),
 decided by S. Guillet, 2026-11-17).
 
+### SPICE errors
+
+An error SPICE signals throws `SpiceException` (`IO.Astrodynamics.Exceptions`), an `InvalidOperationException`:
+`ShortMessage` is SPICE's code, such as `SPICE(SPKINSUFFDATA)` for a state past the coverage of the SPKs,
+`SPICE(FRAMEDATANOTFOUND)` for a frame past that of its data or `SPICE(KERNELVARNOTFOUND)` for a missing kernel variable;
+`LongMessage` is SPICE's long message, empty for the errors that carry none (`prop2b_c`'s); `Message` names the call that
+failed, then gives SPICE's message. The native layer reports both beside its message (`GetLastErrorShortProxy`,
+`GetLastErrorLongProxy`), equal to what CSPICE gives for the same call. Every method below that the table says throws
+`InvalidOperationException` with SPICE's message throws it, and so do the paths built on them (`GetEphemeris`, `ToFrame`,
+the CSPICE searches of `CelestialItem`, `Site` and `Instrument`); a failure of the native layer that is not SPICE's (a
+C++ exception with no SPICE error pending) stays an `InvalidOperationException`, and a frame name SPICE does
+not know an `ArgumentException` whose inner exception is the `SpiceException`. Before 11.0.0 every one of them was an
+`InvalidOperationException` (R03 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+structuring choice 10, decided by S. Guillet, 2026-11-19); a `catch (InvalidOperationException)` still catches them.
+
+```csharp
+try
+{
+    var moon = SpiceAPI.Instance.ReadEphemeris(new Time(3000, 1, 1), 399, 301, Frame.ICRF, Aberration.None);
+}
+catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
+{
+    // past the coverage of the loaded SPKs: load one that covers the epoch
+}
+```
+
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |
-| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673); a deleted SPK, CK, binary PCK or EK already dropped by an earlier native call is no longer listed, and its unload does nothing (#668) |
+| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components (#673); the files of a directory in ordinal order, component by component, the later file winning; only the files SPICE does not hold from a load of `SpiceAPI` (11.0.0: before, a repeated load reloaded) |
+| `LoadKernels(string path)` | The same, the path given as text |
+| `ReloadKernels(FileSystemInfo path)` | Unload the loaded files of the path and load all its files again, on top (11.0.0: what a repeated `LoadKernels` did) |
+| `ReloadKernels(string path)` | The same, the path given as text |
+| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673); a deleted SPK, CK, binary PCK or EK already dropped by an earlier native call is no longer listed, and its unload does nothing (#668); null throws `ArgumentNullException` (11.0.0: before, it returned) |
+| `UnloadKernels(string path)` | The same, the path given as text |
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
@@ -23,7 +53,7 @@ decided by S. Guillet, 2026-11-17).
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, or that SPICE does not name, #714, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
-| `TransformFrame(Time, Frame, Frame)` | The rotation and angular velocity from one frame to another (throws `InvalidOperationException` naming the frames and the epoch, then SPICE's message, when SPICE gives none: an unknown frame, frame data that do not cover the epoch, #714) |
+| `TransformFrame(Time, Frame, Frame)` | The rotation and angular velocity from one frame to another (throws `ArgumentException` naming `fromFrame` or `toFrame` for a name SPICE does not know, the error below its inner exception, 11.0.0; `InvalidOperationException` naming the frames and the epoch, then SPICE's message, when SPICE gives none for frames it knows: frame data that do not cover the epoch, #714) |
 | `Propagate2Bodies(...)`, `ConvertStateVectorToConicOrbitalElement(...)` | Two-body motion and osculating elements through `prop2b_c` and `oscltx_c` (see [Two-body calls](#two-body-calls)) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
@@ -139,12 +169,17 @@ the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161
 SPICE's by name. A CIRS or TIRS end, `Frame.CIRS`, `Frame.TIRS`, any `CirsFrame` or `TirsFrame` or a frame of those names
 in any case, is composed through ICRF by its managed orientation, as TEME's
 ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656); before, it threw).
-A transformation SPICE cannot give throws `InvalidOperationException` "SPICE gives no transformation from {from} to {to} at
-{epoch}: " followed by SPICE's message, `SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known
-reference frame." for a frame SPICE does not know, `SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the
-orientation of the body-fixed frame ITRF93 for epoch 2199 AUG 22 04:00:00.000 TDB were not found. ..." past the coverage of
-the frame data ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the native
-layer dropped SPICE's message and the call named the coverage whatever the cause). A native caller of
+A transformation SPICE cannot give between two frames it knows throws `SpiceException` (an `InvalidOperationException`)
+"SPICE gives no transformation from {from} to {to} at {epoch}: " followed by SPICE's message, such as
+`SPICE(FRAMEDATANOTFOUND)`'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for epoch 2199
+AUG 22 04:00:00.000 TDB were not found. ..." past the coverage of the frame data
+([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714); before, the native layer dropped
+SPICE's message and the call named the coverage whatever the cause). A frame SPICE does not know throws
+`ArgumentException` naming `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site frame only the
+library holds, that `SpiceException`, with `SPICE(UNKNOWNFRAME)`'s "The frame NOT_A_FRAME was not recognized as a known
+reference frame.", its inner exception (R25 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); see
+[Frames](frames.md#names-spice-does-not-know)). A native caller of
 `TransformFrameProxy` gets a NaN rotation and angular velocity with SPICE's message in `GetLastErrorProxy()` (the zero
 quaternion with no message before).
 
@@ -288,7 +323,8 @@ foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
 
 ## Configuration
 
-Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed and memory-backed data access.
+Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed and memory-backed data access, and
+`Configuration.Instance.DataProvider` (public and read only since 11.0.0) to read the provider set.
 
 ## Data Providers
 
@@ -296,6 +332,18 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 |----------|-------------|
 | `SpiceDataProvider` | Default provider using SPICE kernels for production use |
 | `MemoryDataProvider` | In-memory provider for testing without kernel files |
+
+### Which provider an object reads
+
+`Configuration.Instance.DataProvider` is the provider of the process, which `SetDataProvider` replaces. The objects
+read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 2026-11-19); there is no scoped provider in
+11.0.0.
+
+| Object | Provider it reads |
+|--------|-------------------|
+| An object the caller builds: `new CelestialBody(...)`, `new Site(...)`, `new Frame(name)`, a spacecraft | The provider set when it is built, for its life |
+| A static body: `PlanetsAndMoons.EARTH_BODY`, `MOON_BODY`, `Stars.SUN_BODY`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
+| A static frame: `Frame.ICRF`, `Frame.ECLIPTIC_J2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
 
 ### MemoryDataProvider
 
@@ -346,7 +394,7 @@ its place (a `SpiceDataProvider` and `LoadKernels`, for instance). Once read, an
 data from, for its data and its ephemeris. A provider that gives one of them a GM or, for a body, radii of 0 (SPICE
 before `LoadKernels`) makes the read throw `InvalidOperationException` naming the missing variable, and nothing is kept
 (third round of #668). On the `SpiceDataProvider` their data hold for the kernel pool they were read from: the first read
-after each `LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again (data equal to those held keep the
+after each `LoadKernels` or `ReloadKernels` that hands SPICE a file (a repeated load hands it nothing, 11.0.0), and after each `UnloadKernels` or `ClearKernels`, reads them again (data equal to those held keep the
 instances held), so that a kernel loaded later, or unloaded, reaches them (third round of #668). Before
 11.0.0 their type initializers read the provider, and one missing datum threw a `TypeInitializationException` that the
 runtime keeps for the life of the process.

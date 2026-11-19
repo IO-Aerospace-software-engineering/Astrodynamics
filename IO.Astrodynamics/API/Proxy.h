@@ -13,7 +13,6 @@
 #include "StateOrientationDTO.h"
 #include "WindowDTO.h"
 #include "SiteDTO.h"
-#include "LaunchDTO.h"
 
 #pragma region Proxy
 #ifdef __cplusplus
@@ -35,6 +34,20 @@ extern "C" {
  * (#714), so the message is that of the last such call
  */
 MODULE_API const char *GetLastErrorProxy();
+
+/**
+ * Get SPICE's short message of the error GetLastErrorProxy reports (R03 of #668), such as SPICE(KERNELVARNOTFOUND)
+ * @return The short message, or an empty string when the last failure is not SPICE's (a C++ exception, a rule of the proxy)
+ * or when there is none; cleared with GetLastErrorProxy's message
+ */
+MODULE_API const char *GetLastErrorShortProxy();
+
+/**
+ * Get SPICE's long message of the error GetLastErrorProxy reports (R03 of #668), without the context the proxy adds
+ * @return The long message, empty when the last failure is not SPICE's, when SPICE set none (prop2b_c's errors, #714) or
+ * when there is none; cleared with GetLastErrorProxy's message
+ */
+MODULE_API const char *GetLastErrorLongProxy();
 
 /**
  * Get the spice version
@@ -115,13 +128,6 @@ ReadOrientationProxy(const double *epochs, int count, int spacecraftId, double t
                      IO::Astrodynamics::API::DTO::StateOrientationDTO *so);
 
 /**
- * Evaluate launch windows
- * @param launchDto Launch data transfer object
- * @return true if successful, false otherwise (call GetLastErrorProxy for details)
- */
-MODULE_API bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
-
-/**
  * Load kernels
  * @param path Directory path to the kernels
  * @return true if successful, false otherwise, with SPICE's message or that of a path the file system rejects in
@@ -176,20 +182,6 @@ MODULE_API bool GetFrameNameProxy(int frameId, char name[33]);
  * @return true when SPICE knows a frame of that name, false otherwise (call GetLastErrorProxy for details)
  */
 MODULE_API bool GetFrameInfoProxy(const char *frameName, int *frameId, int *centerId, int *frameClass);
-
-/**
- * Convert seconds from J2000 to formatted string (TDB)
- * @param secondsFromJ2000 Seconds from J2000
- * @return Formatted string
- */
-MODULE_API const char *TDBToStringProxy(double secondsFromJ2000);
-
-/**
- * Convert seconds from J2000 to formatted string (UTC)
- * @param secondsFromJ2000 Seconds from J2000
- * @return Formatted string
- */
-MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
 
 /**
  * Find time windows which satisfy distance constraint
@@ -322,20 +314,6 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         IO::Astrodynamics::API::DTO::WindowDTO *windows, int capacity, int *count);
 
 /**
- * Convert elapsed seconds from J2000 to UTC
- * @param tdb Time in TDB
- * @return Time in UTC
- */
-MODULE_API double ConvertTDBToUTCProxy(double tdb);
-
-/**
- * Convert elapsed seconds from J2000 to TDB
- * @param utc Time in UTC
- * @return Time in TDB
- */
-MODULE_API double ConvertUTCToTDBProxy(double utc);
-
-/**
  * Get celestial body information from its ID
  * @param bodyId ID of the celestial body
  * @return Celestial body information
@@ -399,14 +377,6 @@ MODULE_API IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVect
 MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(
         IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
 
-
-/**
- * Convert state vector to right ascension and declination
- * @param stateVectorDto State vector
- * @return Right ascension and declination
- */
-MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(
-        IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 
 /**
  * Propagate the state vector of a two-body system.

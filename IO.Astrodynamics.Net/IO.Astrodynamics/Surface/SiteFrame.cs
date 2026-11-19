@@ -126,7 +126,7 @@ public class SiteFrame : Frame
         if (Site.IsSpiceBacked)
         {
             return SpiceAPI.KernelDefinesFrame(Id!.Value)
-                ? SpiceAPI.Instance.TransformFrame(epoch, this, ICRF)
+                ? SpiceAPI.Instance.TransformFrame(epoch, this, ICRF, null, null)
                 : FromPlanetodetic(epoch);
         }
 

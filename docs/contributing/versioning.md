@@ -54,10 +54,12 @@ caller can meet, with its migration: among them the maneuver chain on the attitu
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
 public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
-proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked and the
-parsec of 648000/π au. **Deprecated** lists
-`Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
-`Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked, the
+parsec of 648000/π au, a repeated kernel load, which no longer reloads, with the order of a folder's kernels, and
+`NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, and a
+central body without GM refused by a propagation. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`,
+`Quaternion.Zero`, `Star.PropagationOutput`, `ExceptionBase` and six exports of the native library that .NET never
+called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -126,6 +128,45 @@ release are listed under **Known limitations**.
   - The later lots of #668 rename or remove a member outright, with no `[Obsolete]` forwarder (decided by S. Guillet,
     2026-11-19): each change is listed in these notes, under **Changed** as **Breaking** with its migration, or under
     **Removed**, and documented in the reference pages.
+- **Kernel loading: `SpiceAPI.ReloadKernels` and the string overloads** (lot L1 of the ergonomics review, R01 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
+  by S. Guillet, 2026-11-19). `ReloadKernels(FileSystemInfo)` and `ReloadKernels(string)` read a path again, on top of
+  the kernels loaded after it: its loaded files are unloaded, then all its files loaded (a kernel rewritten on disk;
+  what a repeated `LoadKernels` did before, under **Changed**); a path inside a loaded directory is read again inside
+  that entry, which keeps its place (decided by S. Guillet, 2026-11-19); a path never loaded is loaded. `LoadKernels(string)` and `UnloadKernels(string)`
+  take the path as text, a directory on disk as a `DirectoryInfo`, anything else as a `FileInfo`; null throws
+  `ArgumentNullException`, an empty string `ArgumentException` (`path`). The Quick Start lists the four generic kernels
+  of a first set (`de440s.bsp`, `latest_leapseconds.tls`, `pck00011.tpc`, `gm_de440.tpc`) with their NAIF paths, the
+  two that make `ITRF93` the Earth's frame, and a download command for bash and PowerShell. See
+  [Kernel Management](../guides/kernel-management.md).
+- **`new Site(GroundStations.DSS_13, earth)`: a site of the kernels from its catalogue entry** (R02 of #668). The
+  constructor `Site(NaifObject station, CelestialBody celestialItem)` takes the site's own identifier from the
+  station's (399013 − 1000 × 399 = 13) and its SPICE name, and reads its position from the kernels as
+  `Site(int, string, CelestialBody)` does, bit for bit; an identifier that is not a site of the body (from 1000 × its
+  identifier + 1 to + 999: NOTO 398989 and NEW NORCIA 398990 for the Earth, a station of another body) throws
+  `ArgumentException` (`station`). See [Sites](../reference/sites.md).
+- **`Configuration.Instance.DataProvider`, public and read only** (structuring choice 1 of #668, decided by
+  S. Guillet, 2026-11-19): the provider `SetDataProvider` set, a `SpiceDataProvider` by default. The rules of which
+  provider an object reads are one table of [Data Providers](../reference/spice-api.md#data-providers): an object the
+  caller builds reads the provider set when it is built, a static body of `PlanetsAndMoons`, `Stars` or `Barycenters`
+  keeps the provider of its first read. There is no scoped provider in 11.0.0.
+- **`Frame.ITRF93`**, the Earth's precise body-fixed frame by its SPICE name (R25 of #668, D2's N2): equal to
+  `new Frame("ITRF93")` and, with `earth_assoc_itrf93.tf`, to the frame of `new CelestialBody(399)`, its orientation that
+  of SPICE bit for bit (`FrameByNameTests`). See [Frames](../reference/frames.md).
+- **`SpiceException`, the error SPICE signals, with its short and long messages** (lot L1, R03 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 10, decided
+  by S. Guillet, 2026-11-19), in `IO.Astrodynamics.Exceptions`: an `InvalidOperationException` whose `ShortMessage` is
+  SPICE's code (`SPICE(SPKINSUFFDATA)`, `SPICE(KERNELVARNOTFOUND)`, `SPICE(FRAMEDATANOTFOUND)`) and `LongMessage` SPICE's
+  long message, its `Message` the call that failed followed by SPICE's message as before. The native layer reports the
+  short and long messages beside its message (`GetLastErrorShortProxy`, `GetLastErrorLongProxy`, the P/Invoke
+  declarations of `SpiceAPI` in step), equal to those CSPICE gives for the same call (`SpiceExceptionTests`, the C++
+  tests `AFailed*`). Under **Changed**, the calls that throw it.
+- **`CcsdsFormatException`**, a `FormatException` in `IO.Astrodynamics.CCSDS`, the common base of the five exceptions of
+  the CCSDS readers (R03 of #668, section A): one `catch (CcsdsFormatException)` covers a document an OMM, OPM or CDM
+  reader cannot read, at parsing or at validation. Under **Changed**.
+- **`InsufficientFuelException.RequiredMass` and `AvailableMass`** (kg) and the constructor that takes them (R03 of
+  #668, section A): the fuel a burn needs and the fuel its tank holds, which `FuelTank` gives when a burn needs more
+  than it holds, the tank named in the message; NaN from the three constructors without masses. Under **Changed**.
 
 **Fixed**
 
@@ -2683,8 +2724,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). It read `PropagationOutput`, the
   output directory of an older design, which no code sets, while `Propagate` keeps its states in memory. It now reads
   the stored states, as `Spacecraft.IsPropagated` does: true after `Propagate`, `PropagateAsync` or
-  `Scenario.SimulateAsync`. `PropagationOutput` stays, documented as always null, marked `[Obsolete]` (see
-  **Deprecated**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
+  `Scenario.SimulateAsync`. `PropagationOutput`, always null, is removed (see **Removed**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
   catalog position moved by the proper motion, written in the test (right ascension and declination plus the proper
   motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
   relative over four years (threshold 4.0e-16, twice the worst; Validation category, Linux only, CI run 43773937161).
@@ -4265,6 +4305,109 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: an error SPICE signals throws `SpiceException`** (lot L1, R03 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 10, decided
+  by S. Guillet, 2026-11-19), an `InvalidOperationException` with SPICE's `ShortMessage` and `LongMessage` (under
+  **Added**), on every path that threw SPICE's message in an `InvalidOperationException`: the kernel loads, unloads and
+  reloads, the ephemeris and orientation reads, `TransformFrame`, the CSPICE window searches, the SPK and CK writers,
+  the TLE reads, the element conversions and `Propagate2Bodies`, and the paths built on them (`GetEphemeris`, `ToFrame`,
+  the searches of `CelestialItem`, `Site` and `Instrument`), the inner exception of R25's `ArgumentException` included.
+  A centre without GM of a conversion or of an SPK ("CelestialItem id507 can't be read: The variable BODY507_GM could not
+  be found in the kernel pool.") is SPICE's `SPICE(KERNELVARNOTFOUND)`; a failure of the native layer that is not SPICE's
+  (a C++ exception with no SPICE error pending) stays an `InvalidOperationException`, and so does every check of the
+  library. The messages and the results do not move. Migration: none for a
+  `catch (InvalidOperationException)`, which still catches it; a check of the exact type
+  (`e.GetType() == typeof(InvalidOperationException)`, xUnit's `Assert.Throws<InvalidOperationException>`) reads
+  `SpiceException`, and a caller that parsed SPICE's code out of the message reads `ShortMessage`.
+- **Breaking: the library's own exceptions derive from the standard types** (R03 of #668, section A, decided by
+  S. Guillet, 2026-11-19). `InsufficientFuelException` derives from `InvalidOperationException` (`ExceptionBase`, an
+  `Exception`, before; under **Removed**), so a `catch (InvalidOperationException)` around a propagation now catches a
+  burn the fuel does not allow; it gives the masses (under **Added**). `NewtonRaphson.Solve`, `SolveVector` and
+  `BoundedNewtonRaphson` throw `InvalidOperationException` for a derivative too small, an estimate that is not finite or
+  no convergence, with the same messages (`System.Exception` before), and so does the initial orbit determination that
+  calls `Solve`. `OmmParseException`, `OmmValidationException`, `OpmParseException`, `OpmValidationException` and
+  `CdmParseException` derive from `CcsdsFormatException`, a `FormatException` (`Exception` before), their names, members
+  and messages unchanged, so a `catch (FormatException)` around a CCSDS read now catches them. Migration: none for a
+  `catch (Exception)` or a catch of the type itself; a `catch (InvalidOperationException)` or `catch (FormatException)`
+  that must not take them catches them first, and `Assert.Throws<Exception>` of the solver reads
+  `InvalidOperationException`.
+- **Breaking: a propagation about a central body without GM throws `ArgumentException`** (R03 of #668, structuring
+  choice 10, decided by S. Guillet, 2026-11-19), `spacecraft`, before anything runs or is claimed: the message names the
+  body, its `BODYnnn_GM` and NAIF's `gm_de440.tpc`. A body read from the kernels has a GM of 0 when the kernel pool holds
+  no `BODYnnn_GM` (ELARA, 507, with `gm_de440.tpc`; any body when no GM kernel is loaded), which `new CelestialBody(id)`
+  still accepts; before, a propagation about it ran without central gravity, silently, on a straight line. Every path
+  checks it (the propagator constructors, the builder, `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`
+  and the batch, both integrators; `ForceModelDefectTests`), and the Sun of the SSB mode the same way. Migration: load a GM
+  kernel before building the body, or give a custom body its GM.
+- **Breaking: a frame name the loaded kernels do not define throws `ArgumentException`** (R25 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A, decided by
+  S. Guillet, 2026-11-19), as `MemoryDataProvider` does: on every path that hands the name to SPICE,
+  `SpiceAPI.TransformFrame` (`ParamName` `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site
+  frame only the library holds), `ToFrame` of a frame or a state either way (`targetFrame` or `frame` for the target, no
+  `ParamName` for the frame of the instance or the state, which is no argument of the call, nor for
+  `GetStateOrientationToICRF` and `ToEquatorial`; `source` for `SpiceDataProvider.FrameTransformationToICRF`), the
+  ephemeris reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris` at an epoch or over a window, `frame`),
+  `SpiceAPI.ReadOrientation` (`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint`
+  (`frame`), `FindWindowsOnIlluminationConstraint` (`fixedFrame`), `FindWindowsOnOccultationConstraint` (`frontFrame`,
+  `targetFrame`) and `FindWindowsInFieldOfViewConstraint` (`targetFrame`), the last two for an ellipsoid (a point target
+  reads no frame), each a `SpiceException` before. The library asks SPICE (`namfrm_c`, through `GetFrameInfoProxy`) after
+  the failed call, so a frame kernel loaded after `new Frame(name)` counts; the message names the frame, and the
+  error thrown before, with SPICE's message, is the inner exception, now a `SpiceException` (R03, above). The names `ICRF` and
+  `EME2000`, which are no SPICE names, stay other names, and their message points to `Frame.ICRF` (on both providers). A
+  known frame that SPICE cannot orient at the epoch (outside the Earth's binary PCK) keeps its
+  `InvalidOperationException`, a `SpiceException` since R03, which the orientation cache of a propagation still reads as unavailable. Results do not
+  move where SPICE gives a transform: the same `sxform_c` and `spkezr_c` calls. The frame of a managed spacecraft without
+  an attitude record and of a kernel-backed spacecraft that no frame kernel defines, read by name, throw it too.
+  Migration: a `catch (InvalidOperationException)` meant for a mistyped or unloaded frame catches `ArgumentException`.
+- **Breaking: the static SPICE frames of `Frame` read the data provider of the process at each transform**
+  (structuring choice 1 of #668, decided by S. Guillet, 2026-11-19). `Frame.ICRF`, `ECLIPTIC_J2000`, `ECLIPTIC_B1950`,
+  `GALACTIC_SYSTEM2`, `B1950`, `FK4` and `ITRF93` read `Configuration.Instance.DataProvider` when they transform, their
+  last orientation kept for one provider and one generation of the kernel pool; a frame built by name keeps the provider
+  set at its construction, as every object the caller builds. Before, the static frames read the provider set when the
+  type `Frame` was first used, for the life of the process, so that after `SetDataProvider` they read the former
+  provider (a child process with two memory providers measures both rules, `MemoryDataProviderBodyTests`). Nothing moves
+  for a process that keeps one provider. Migration: none for one provider; a program that swaps providers and meant the
+  static frames to stay on the former one builds its frames by name before the swap.
+- **Breaking: `NaifObject` is an `INaifObject` of an identifier and a name, without `Frame`** (R02 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A, decided by
+  S. Guillet, 2026-11-19). The record struct is `NaifObject(int NaifId, string Name) : INaifObject`; its `Frame`,
+  which the library read nowhere, is removed: it was wrong for the Moon (`IAU_MOON` against `MOON_ME` with the usual
+  frame kernels) and for NEW NORCIA (`NEW NORCIA_TOPO`), empty for the comets and asteroids and null for the Lagrange
+  points. A catalogue entry is now accepted where an `INaifObject` is asked. Results do not move: the bodies built
+  from an entry read their frame from the kernels, as before. Migration: `new NaifObject(id, name, frame)` becomes
+  `new NaifObject(id, name)`; `PlanetsAndMoons.EARTH.Frame` becomes the frame of the body, `new CelestialBody(PlanetsAndMoons.EARTH).Frame`
+  (`ITRF93` with `earth_assoc_itrf93.tf`, `IAU_EARTH` without), or the literal name (`new Frame("ITRF93")`).
+- **Breaking: a repeated `LoadKernels` hands SPICE only the files it does not hold** (lot L1, R01 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
+  by S. Guillet, 2026-11-19). A path already loaded, a path inside a loaded directory, or a directory that holds loaded
+  entries, furnishes only the kernel files that no load of `SpiceAPI` handed SPICE (those written since), and the
+  others keep their precedence; a directory that holds loaded entries replaces them by its own entry, listed last.
+  Before, such a load unloaded the entry and loaded it again, on top of every kernel loaded after it, at 4 to 7 times
+  the cost (211 to 250 ms a repeat on `Data/SolarSystem`, against 34 to 49 ms for the first load; first annex of #671):
+  loading `f`, `z` and `f` again, two kernels that assign one variable, gave `f`'s value, and gives `z`'s now
+  (`KernelLoadingTests`, TK frames of closed-form rotation, and KEEPER's list on Linux). The generation of the kernel
+  pool, after which the predefined bodies read their data again, is raised only by a load that hands SPICE a file, a
+  failed one included; a repeated load and a path that does not exist leave it (before, every call raised it). When
+  SPICE fails to load a file of a directory, the files loaded before it stay loaded and are listed under the path, so
+  that its unload removes them (before, they were loaded and not listed, and a later load handed them to SPICE a second
+  time). Migration: a caller that loaded a path again to read a kernel rewritten on disk, or to give it precedence
+  again, calls `ReloadKernels` (under **Added**).
+- **Breaking: the files of a directory load in ordinal order, component by component** (R01 of #668, structuring choice
+  9, decided by S. Guillet, 2026-11-19). `LoadKernels` of a directory sorts the entries of each level by name,
+  `StringComparer.Ordinal` (capitals before lower case), a subdirectory walked at its place, so the order is the one of
+  the paths relative to the directory compared component by component, the same on every platform (`x/y.tf` before
+  `x0.tf`, which a sort of the whole paths swaps between `/` and `\`); where two files assign the same variable or
+  cover the same object, the later one wins. Before, the order of the directory listing, which depends on the file
+  system (the hash of the names on ext4, the reverse creation order on tmpfs): twenty kernels `k00` to `k19` of one
+  variable gave `k19`'s value only by chance. No file of `Data/SolarSystem` overlaps another (its SPKs cover distinct
+  objects, and the one variable defined twice, `TKFRAME_EARTH_FIXED_*`, has the same value in `earth_fixed.tf` and
+  `earth_topo_201023.tf`; first annex of #671), so no result of the suite or of the conformance runner moves.
+  Migration: rename the files of a folder of conflicting kernels so that the one to win sorts last, or load them one
+  by one in the order wanted.
+- **Breaking: `UnloadKernels(null)` throws `ArgumentNullException`** (`path`), as `LoadKernels(null)` does (R01 of
+  #668); it returned before. With the string overloads, `LoadKernels(null)` and `UnloadKernels(null)` no longer compile
+  (CS0121, an ambiguous call; accepted by S. Guillet, 2026-11-19). Migration: drop the call, or cast the null (`(FileSystemInfo)null`) where a null path is
+  meant to throw.
 - **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
   ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), derived from
   S. Guillet's remark of 2026-11-18 that the acceleration grows during the burn, decided by S. Guillet, 2026-11-18). The
@@ -5665,8 +5808,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **Breaking: `Star.IsPropagated` becomes true once the star is propagated** (second round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above), after `Propagate`,
-  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput` stays null, marked `[Obsolete]`
-  (see **Deprecated**). Migration: code that relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
+  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput`, always null, is removed (see
+  **Removed**). Migration: code that relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
 
 - **Breaking: the constructors of `CentralBodyPropagator` that take an integrator with its forces initialize it**
   (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above) with
@@ -6289,15 +6432,6 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   neither its source nor the next result).
   Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
 
-**Deprecated**
-
-- **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
-  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
-  2026-11-15). It is always null: the output directory of an older design that wrote the propagation to files, which no
-  code sets, while a star keeps its propagated states in memory. Nothing moves at run time. It may be removed in a later
-  major version. Migration: read `IsPropagated` to know whether the star holds propagated states, and write them with
-  `WriteEphemeris`, to a file of the caller's choice.
-
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -6310,6 +6444,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ([#334](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/334), [#536](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/536)).
 - **`Quaternion.Zero`**, the identity under another name and an assignable field: use `Quaternion.Identity` (Changed
   above, [#571](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/571)).
+- **`Star.PropagationOutput`**, always null: the output directory of an older design that wrote the propagation to
+  files, which no code set, while a star keeps its propagated states in memory. It was marked `[Obsolete]` in the
+  fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) and is removed
+  outright in lot L1 (R02, the amendment of D1 of 2026-11-19: no forwarder). Migration: read `IsPropagated` to know
+  whether the star holds propagated states, and write them with `WriteEphemeris`, to a file of the caller's choice.
+- **`ExceptionBase`** (R03 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  section A), an `Exception` with the three standard constructors, the base of `InsufficientFuelException` alone, which
+  derives from `InvalidOperationException` now (Changed above). Migration: catch `InsufficientFuelException`, or derive
+  a caller's own exception from the standard type that fits it.
+- **Six exports of the native library that .NET never called** (R03 of #668, section A): `LaunchProxy`,
+  `TDBToStringProxy`, `UTCToStringProxy`, `ConvertTDBToUTCProxy`, `ConvertUTCToTDBProxy` and
+  `ConvertStateVectorToEquatorialCoordinatesProxy`. No P/Invoke declaration of `SpiceAPI` named them, and two returned
+  SPICE's message as their date string; the C++ classes they called stay, with their tests. Only a C++ or other native
+  consumer of `IO.Astrodynamics.so`, `.dll` or `.dylib` meets it. Migration: `Launch.FindLaunchWindows`, `Time.ToString`,
+  `Time.ToUTC`, `Time.ToTDB` and `StateVector.ToEquatorial` in .NET; the C++ classes `Launch`, `TDB`, `UTC` and
+  `StateVector` in C++.
 
 **Known limitations**
 

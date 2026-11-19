@@ -63,7 +63,8 @@ public class MemoryDataProvider : IDataProvider
 
         if (!_stateOrientationsToICRF.TryGetValue(source.Name, out var stateOrientations))
         {
-            return DefinedOrientationToIcrf(date, source) ?? throw new ArgumentException($"Frame not found ({source})");
+            return DefinedOrientationToIcrf(date, source) ?? throw new ArgumentException(SpiceAPI.WithIcrfHint(source.Name,
+                $"Frame not found ({source}): no orientation was added to this MemoryDataProvider under the name '{source.Name}', and it does not define it."));
         }
 
         if (stateOrientations.TryGetValue(date, out var stateOrientation))

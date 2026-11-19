@@ -10,6 +10,8 @@ namespace IO.Astrodynamics.Frames;
 
 public class Frame : IEquatable<Frame>
 {
+    // The provider of a frame built by name (the provider set at its construction), null for the static SPICE frames of this
+    // class, which read the provider of the process at each transform (structuring choice 1 of #668)
     private readonly IDataProvider _dataProvider;
     public string Name { get; }
     public int? Id { get; }
@@ -19,7 +21,7 @@ public class Frame : IEquatable<Frame>
     private LastOrientationEntry _lastOrientation;
     private readonly Func<Time, StateOrientation> _readFromProvider;
 
-    private sealed record LastOrientationEntry(Time Date, long KernelPoolGeneration, StateOrientation Orientation);
+    private sealed record LastOrientationEntry(Time Date, long KernelPoolGeneration, IDataProvider Provider, StateOrientation Orientation);
 
     // The orientation cache active on the current thread, and the frame it belongs to (FrameOrientationCacheScope)
     [ThreadStatic] private static Frame _cachedFrame;
@@ -90,32 +92,32 @@ public class Frame : IEquatable<Frame>
     /// library models EME2000 separately, so data labelled EME2000 is read in this frame, ignoring the
     /// bias (about 0.8 m on a LEO position, 4.7 m on a GEO position).
     /// </remarks>
-    public static readonly Frame ICRF = new Frame("J2000");
+    public static readonly Frame ICRF = ProcessProviderFrame("J2000");
 
     /// <summary>
     /// Ecliptic coordinate system at epoch B1950.
     /// </summary>
-    public static readonly Frame ECLIPTIC_B1950 = new Frame("ECLIPB1950");
+    public static readonly Frame ECLIPTIC_B1950 = ProcessProviderFrame("ECLIPB1950");
 
     /// <summary>
     /// Ecliptic coordinate system at epoch J2000.
     /// </summary>
-    public static readonly Frame ECLIPTIC_J2000 = new Frame("ECLIPJ2000");
+    public static readonly Frame ECLIPTIC_J2000 = ProcessProviderFrame("ECLIPJ2000");
 
     /// <summary>
     /// Galactic coordinate system.
     /// </summary>
-    public static readonly Frame GALACTIC_SYSTEM2 = new Frame("GALACTIC");
+    public static readonly Frame GALACTIC_SYSTEM2 = ProcessProviderFrame("GALACTIC");
 
     /// <summary>
     /// Equatorial coordinate system at epoch B1950.
     /// </summary>
-    public static readonly Frame B1950 = new Frame("B1950");
+    public static readonly Frame B1950 = ProcessProviderFrame("B1950");
 
     /// <summary>
     /// Fourth Fundamental Catalog (FK4) coordinate system.
     /// </summary>
-    public static readonly Frame FK4 = new Frame("FK4");
+    public static readonly Frame FK4 = ProcessProviderFrame("FK4");
 
     /// <summary>
     /// True Equator, Mean Equinox (TEME), the frame of the SGP4/SDP4 states of a TLE: the managed
@@ -145,6 +147,31 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     public static readonly Frame TIRS = new TirsFrame();
 
+    /// <summary>
+    /// The International Terrestrial Reference Frame ITRF93, the SPICE name of the Earth's precise body-fixed frame, which
+    /// <c>earth_latest_high_prec.bpc</c> orients and <c>earth_assoc_itrf93.tf</c> makes the frame of the Earth: equal to
+    /// <c>new Frame("ITRF93")</c> and, with those kernels, to the frame of <c>new CelestialBody(399)</c> (R25 of #668).
+    /// </summary>
+    /// <remarks>Its orientation needs the Earth's binary PCK: outside its coverage a transform throws
+    /// <see cref="InvalidOperationException"/>.</remarks>
+    public static readonly Frame ITRF93 = ProcessProviderFrame("ITRF93");
+
+    /// <summary>
+    /// A static SPICE frame of this class: it reads the data provider of the process (<see cref="Configuration.DataProvider"/>)
+    /// at each transform, where a frame built by name reads the provider set at its construction (structuring choice 1 of
+    /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 the static frames read the provider set when the type was first
+    /// used, for the life of the process).
+    /// </summary>
+    private static Frame ProcessProviderFrame(string name) => new(name, followsProcessProvider: true);
+
+    private Frame(string name, bool followsProcessProvider) : this(name)
+    {
+        if (followsProcessProvider) _dataProvider = null;
+    }
+
+    // The provider this frame reads: its own, or the process's for a static SPICE frame
+    private IDataProvider Provider => _dataProvider ?? Configuration.Instance.DataProvider;
+
     public Frame(string name, int? id = null)
     {
         if (string.IsNullOrEmpty(name))
@@ -156,7 +183,24 @@ public class Frame : IEquatable<Frame>
 
         Name = name;
         Id = id;
-        _readFromProvider = date => _dataProvider.FrameTransformationToICRF(date, this);
+        _readFromProvider = date => ReadFromProvider(Provider, date);
+    }
+
+    /// <summary>
+    /// The orientation of this frame to ICRF read from <paramref name="provider"/>: an unknown name of the frame, which is no
+    /// argument of the public call that reads it, names no parameter (R25 of #668, open choice 1; review of L1: the
+    /// provider's <c>source</c> before).
+    /// </summary>
+    private protected StateOrientation ReadFromProvider(IDataProvider provider, in Time date)
+    {
+        try
+        {
+            return provider.FrameTransformationToICRF(date, this);
+        }
+        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, this, null))
+        {
+            throw SpiceAPI.UnknownFrameError(e, this, null);
+        }
     }
 
     /// <summary>
@@ -183,6 +227,10 @@ public class Frame : IEquatable<Frame>
     /// ITRF93), and the static frames live for the whole process. An orientation added to a <see cref="MemoryDataProvider"/>
     /// at the epoch of the frame's last read is read once the frame has read another epoch.
     /// </remarks>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of this frame: the message names the frame,
+    /// SPICE's error its inner exception, and no parameter is named (R25 of #668, decided by S. Guillet, 2026-11-19; before
+    /// 11.0.0 an <see cref="InvalidOperationException"/>).</exception>
+    /// <exception cref="InvalidOperationException">The data do not give the orientation of the frame at the epoch.</exception>
     public virtual StateOrientation GetStateOrientationToICRF(Time date)
     {
         if (OrientationCache != null)
@@ -197,7 +245,7 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     internal StateOrientation ReadStateOrientationToICRF(in Time date)
     {
-        return _dataProvider.FrameTransformationToICRF(date, this);
+        return ReadFromProvider(Provider, date);
     }
 
     /// <summary>
@@ -210,14 +258,16 @@ public class Frame : IEquatable<Frame>
     private protected StateOrientation LastOrientation(in Time date, Func<Time, StateOrientation> read)
     {
         long generation = SpiceAPI.KernelPoolGeneration;
+        // The provider read: a static frame's follows the process, so an orientation of another provider is read again
+        var provider = Provider;
         var last = Volatile.Read(ref _lastOrientation);
-        if (last != null && last.KernelPoolGeneration == generation && last.Date.HasSameLabel(date))
+        if (last != null && last.KernelPoolGeneration == generation && ReferenceEquals(last.Provider, provider) && last.Date.HasSameLabel(date))
         {
             return last.Orientation;
         }
 
         var orientation = read(date);
-        Volatile.Write(ref _lastOrientation, new LastOrientationEntry(date, generation, orientation));
+        Volatile.Write(ref _lastOrientation, new LastOrientationEntry(date, generation, provider, orientation));
         return orientation;
     }
 
@@ -232,6 +282,13 @@ public class Frame : IEquatable<Frame>
     /// r' = R r and v' = R v - (R ω) × r', see
     /// <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.ToFrame(Frame)"/>.
     /// </remarks>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="targetFrame"/>
+    /// (<see cref="ArgumentException.ParamName"/> <c>targetFrame</c>) or of this frame (no parameter named, this frame being
+    /// no argument of the call): the message names the frame, SPICE's error its inner exception (R25 of #668, decided by
+    /// S. Guillet, 2026-11-19; before 11.0.0 an <see cref="InvalidOperationException"/>). A
+    /// <see cref="MemoryDataProvider"/> throws its own for a frame it neither holds nor defines.</exception>
+    /// <exception cref="InvalidOperationException">The data do not give the orientation of a known frame at the epoch
+    /// (SPICE's <see cref="Exceptions.SpiceException"/>).</exception>
     public StateOrientation ToFrame(Frame targetFrame, Time epoch)
     {
         if (targetFrame == this)
@@ -239,14 +296,28 @@ public class Frame : IEquatable<Frame>
             return new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, targetFrame);
         }
 
-        var sourceToICRF = GetStateOrientationToICRF(epoch);
-        var targetToICRF = targetFrame.GetStateOrientationToICRF(epoch);
+        // An unknown name names targetFrame for the target, and no parameter for this frame, which is none (R25 of #668)
+        var sourceToICRF = OrientationToIcrfNaming(this, epoch, null);
+        var targetToICRF = OrientationToIcrfNaming(targetFrame, epoch, nameof(targetFrame));
 
         var rotation = targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation;
 
         var angularVelocity = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
 
         return new StateOrientation(rotation, angularVelocity, epoch, this);
+    }
+
+    // The orientation of frame to ICRF, the error of an unknown name of it naming paramName (R25 of #668, open choice 1)
+    private static StateOrientation OrientationToIcrfNaming(Frame frame, in Time epoch, string paramName)
+    {
+        try
+        {
+            return frame.GetStateOrientationToICRF(epoch);
+        }
+        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, frame, paramName))
+        {
+            throw SpiceAPI.UnknownFrameError(e, frame, paramName);
+        }
     }
 
     /// <summary>

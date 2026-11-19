@@ -11,6 +11,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -90,7 +91,7 @@ public class TLETests
         // native layer returned r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307) without an exception
         var tle = new TLE("SUBORBITAL", "1 28872U 05037B   05333.02012661  .25992681  00000-0  24476-3 0  1534",
             "2 28872  96.4736 157.9986 0303955 244.0492 110.6523 16.46015938 10708");
-        var ex = Assert.Throws<InvalidOperationException>(() => tle.ToOsculating());
+        var ex = Assert.Throws<SpiceException>(() => tle.ToOsculating());
         Assert.Contains("SUBORBITAL (1 28872U", ex.Message);
     }
 

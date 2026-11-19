@@ -10,6 +10,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -275,37 +276,23 @@ public class StarTests
         var bySync = NewStar(668003, epoch);
         var byAsync = NewStar(668004, epoch);
 
-        // Act and assert: false before, true after either path; the output directory of an older design stays null
+        // Act and assert: false before, true after either path
         Assert.False(bySync.IsPropagated);
         Assert.False(byAsync.IsPropagated);
         bySync.Propagate(window, TimeSpan.FromMinutes(10.0));
         await byAsync.PropagateAsync(window, TimeSpan.FromMinutes(10.0));
         Assert.True(bySync.IsPropagated);
         Assert.True(byAsync.IsPropagated);
-        // The obsolete member is read on purpose: it stays null
-#pragma warning disable CS0618
-        Assert.Null(bySync.PropagationOutput);
-        Assert.Null(byAsync.PropagationOutput);
-#pragma warning restore CS0618
     }
 
     [Fact]
-    public void PropagationOutput_IsObsoleteAsAWarning()
+    public void PropagationOutput_IsRemoved()
     {
-        // Arrange: the output directory of an older design, always null, which no code sets
-        // (nameof of an obsolete member raises CS0618 too)
-#pragma warning disable CS0618
-        var property = typeof(Star).GetProperty(nameof(Star.PropagationOutput));
-#pragma warning restore CS0618
-
-        // Act
-        var obsolete = property!.GetCustomAttribute<ObsoleteAttribute>();
-
-        // Assert: a warning (CS0618), not an error, whose message points to the members that replace it
-        Assert.NotNull(obsolete);
-        Assert.False(obsolete.IsError);
-        Assert.Contains(nameof(Star.IsPropagated), obsolete.Message);
-        Assert.Contains(nameof(Star.WriteEphemeris), obsolete.Message);
+        // The output directory of an older design, always null, which no code set: obsolete in the fourth round of #668,
+        // removed in 11.0.0 with no forwarder (R02 of #668, the amendment of 2026-11-19); IsPropagated and WriteEphemeris
+        // replace it
+        Assert.Null(typeof(Star).GetProperty("PropagationOutput", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
+        Assert.NotNull(typeof(Star).GetProperty(nameof(Star.IsPropagated)));
     }
 
     /// <summary>The epochs of a propagation of a star: from the start of the window, every step, up to its end.</summary>
@@ -374,7 +361,7 @@ public class StarTests
             output.WriteLine($"MEASURE {label}: worst relative position {worst:E3}");
             foreach (var epoch in replaced)
             {
-                Assert.Throws<InvalidOperationException>(() =>
+                Assert.Throws<SpiceException>(() =>
                     SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None));
             }
 

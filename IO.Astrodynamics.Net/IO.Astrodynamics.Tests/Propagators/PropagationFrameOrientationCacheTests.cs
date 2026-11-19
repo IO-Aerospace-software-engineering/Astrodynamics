@@ -9,6 +9,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -325,11 +326,12 @@ public class PropagationFrameOrientationCacheTests
         var inside = TimeSystem.Time.CreateTDB(CoverageEnd - 1.0);
         Assert.True(RotationAngle(SpiceAPI.Instance.TransformFrame(inside, earth.Frame, Frames.Frame.ICRF).Rotation,
             cache.GetOrientation(inside).Rotation) < AngleBound);
-        var spice = Assert.Throws<InvalidOperationException>(() =>
+        var spice = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.TransformFrame(end, earth.Frame, Frames.Frame.ICRF));
         var exception = Assert.Throws<InvalidOperationException>(() => cache.GetOrientation(end));
         Assert.Contains("ITRF93", exception.Message);
         Assert.Contains(spice.Message, exception.Message);
+        Assert.IsType<SpiceException>(exception.InnerException);
         Assert.Throws<InvalidOperationException>(() => cache.GetOrientation(TimeSystem.Time.CreateTDB(CoverageEnd + 0.001)));
     }
 

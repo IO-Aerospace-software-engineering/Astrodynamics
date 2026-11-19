@@ -23,7 +23,34 @@ automatically at build time.
 
 ## Load SPICE Kernels
 
-Most calculations require kernels before any ephemeris, frame, or geometry work:
+Most calculations require kernels before any ephemeris, frame, or geometry work. Four files of NAIF's generic kernels
+are the first set: without `gm_de440.tpc` the bodies read no GM (`BODYnnn_GM`), and no two-body motion or propagation
+about them can run.
+
+| File | Content | Size | NAIF path (`https://naif.jpl.nasa.gov/pub/naif/generic_kernels/…`) |
+|------|---------|------|------|
+| `de440s.bsp` | Planetary ephemeris DE440, 1849 to 2150 (SPK) | 32.7 MB | `spk/planets/de440s.bsp` |
+| `latest_leapseconds.tls` | Leap seconds, for UTC (LSK) | 5 kB | `lsk/latest_leapseconds.tls` |
+| `pck00011.tpc` | Radii and IAU orientation models of the bodies (text PCK) | 131 kB | `pck/pck00011.tpc` |
+| `gm_de440.tpc` | GM of the bodies (text PCK) | 12 kB | `pck/gm_de440.tpc` |
+
+With these four the Earth's body-fixed frame is `IAU_EARTH`. Add `pck/earth_latest_high_prec.bpc` (the measured Earth
+orientation, binary PCK) and `fk/planets/earth_assoc_itrf93.tf` (which makes `ITRF93` the Earth's frame) for the
+precise Earth frame the ground stations and the drag use; the tutorials list what they need on top (the EGM2008
+geopotential, the station kernels).
+
+```bash
+mkdir -p kernels && for k in spk/planets/de440s.bsp lsk/latest_leapseconds.tls pck/pck00011.tpc pck/gm_de440.tpc; do
+  curl -fsSLo "kernels/${k##*/}" "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/$k"; done
+```
+
+```powershell
+New-Item -ItemType Directory -Force kernels | Out-Null
+"spk/planets/de440s.bsp","lsk/latest_leapseconds.tls","pck/pck00011.tpc","pck/gm_de440.tpc" | ForEach-Object {
+  Invoke-WebRequest "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/$_" -OutFile ("kernels/" + ($_ -split "/")[-1]) }
+```
+
+Then load the folder (a path given as a `string`, a `DirectoryInfo` or a `FileInfo`):
 
 ```csharp
 using IO.Astrodynamics;
@@ -36,6 +63,11 @@ You can also load an individual file:
 ```csharp
 SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
+
+A folder's files load in ordinal order of their names, component by component: where two of them define the same
+variable or cover the same object, the later file wins, on every platform. Loading a path again furnishes only its new
+files and keeps the precedence of the others; `SpiceAPI.Instance.ReloadKernels(path)` reads a path again, on top, for a
+kernel rewritten on disk. See [Kernel Management](guides/kernel-management.md).
 
 ## Compute A Basic Ephemeris
 

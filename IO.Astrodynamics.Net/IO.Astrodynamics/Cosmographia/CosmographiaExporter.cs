@@ -40,7 +40,7 @@ public class CosmographiaExporter
     /// <param name="outputDirectory">The directory of the export.</param>
     /// <exception cref="InvalidOperationException">The scenario has not been simulated.</exception>
     /// <exception cref="ArgumentException">A kernel of the export would have a full path longer than the 255 characters
-    /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceAPI.LoadKernels"/> could not load: under the output
+    /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> could not load: under the output
     /// directory (parameter <c>outputDirectory</c>), or under the new directory of the system temporary directory
     /// (<see cref="Path.GetTempPath"/>) where the export writes its kernels and loads the clock and frame kernels of each
     /// spacecraft before it copies them (no parameter). The longest is usually the CK of a spacecraft,

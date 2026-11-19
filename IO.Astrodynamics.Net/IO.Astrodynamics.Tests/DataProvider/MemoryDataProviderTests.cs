@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
@@ -182,10 +183,11 @@ public class MemoryDataProviderTests
         var ssb = TestHelpers.SsbAtJ2000;
         var early = new TimeSystem.Time(1500, 1, 1, 0, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
 
-        // The reference: the types SPICE gives, the Earth outside de440s and ITRF93 outside the PCK
+        // The reference: the types SPICE gives, the Earth outside de440s and ITRF93 outside the PCK: SpiceException, an
+        // InvalidOperationException, whose base type the memory provider throws (R03 of #668)
         var spice = new SpiceDataProvider();
-        Assert.Throws<InvalidOperationException>(() => spice.GetEphemeris(early, earth, ssb, Frames.Frame.ICRF, Aberration.None));
-        Assert.Throws<InvalidOperationException>(() => spice.FrameTransformationToICRF(early, new Frames.Frame("ITRF93")));
+        Assert.Throws<SpiceException>(() => spice.GetEphemeris(early, earth, ssb, Frames.Frame.ICRF, Aberration.None));
+        Assert.Throws<SpiceException>(() => spice.FrameTransformationToICRF(early, new Frames.Frame("ITRF93")));
 
         // A target without states, and one read before its first or after its last state
         var provider = new MemoryDataProvider();

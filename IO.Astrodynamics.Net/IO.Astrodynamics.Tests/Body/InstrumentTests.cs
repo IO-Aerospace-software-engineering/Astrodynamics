@@ -8,6 +8,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
@@ -1048,9 +1049,50 @@ namespace IO.Astrodynamics.Tests.Body
             }
             else
             {
-                var failed = Assert.IsType<InvalidOperationException>(exception);
+                var failed = Assert.IsType<SpiceException>(exception);
                 Assert.Contains(error, failed.Message);
             }
+        }
+
+        /// <summary>
+        /// R25 of #668 (review of L1): <c>gftfov</c> reads the target frame by name for an ellipsoid target, so a name SPICE
+        /// does not know throws <see cref="ArgumentException"/> naming <c>targetFrame</c>, SPICE's error its inner exception, as
+        /// the transforms, the reads and the other window searches; a point target reads no frame (<c>gftfov_c</c>,
+        /// Detailed_Input <c>tframe</c>), the search runs. The field of <see cref="ZeroHalfAngle_IsDegenerateForGftfov"/>'s
+        /// control, half-angles 0.1 rad about the Moon's direction.
+        /// </summary>
+        [Fact]
+        public async Task Gftfov_OfAnEllipsoidInAnUnknownFrame_ThrowsArgumentException()
+        {
+            // Arrange
+            var epoch = new TimeSystem.Time(2024, 1, 1, frame: TimeFrame.TDBFrame);
+            var earth = new CelestialBody(399);
+            var moon = new CelestialBody(301);
+            var boresight = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize();
+            int id = -7155001;
+            var ik = FrameKernelFiles.NewFile("ik715u", ".ti");
+            await File.WriteAllTextAsync(ik.FullName, AnglesKernel(id, "RECTANGLE", boresight, boresight.Cross(Vector3.VectorZ).Normalize(), 0.1, 0.1));
+            var window = new Window(epoch.AddSeconds(-3600.0), epoch.AddSeconds(3600.0));
+            var unknown = new Frames.Frame("NOT_A_FRAME");
+
+            // Act
+            Exception ellipsoid = null, point = null;
+            System.Collections.Generic.List<Window> pointWindows = null;
+            FrameKernelFiles.Load(ik, () =>
+            {
+                ellipsoid = Record.Exception(() => SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301, unknown,
+                    ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
+                point = Record.Exception(() => pointWindows = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301, unknown,
+                    ShapeType.Point, Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
+            });
+
+            // Assert
+            var argument = Assert.IsType<ArgumentException>(ellipsoid);
+            Assert.Equal("targetFrame", argument.ParamName);
+            Assert.Contains("'NOT_A_FRAME' is not a frame of the loaded kernels", argument.Message);
+            Assert.Contains("NOT_A_FRAME", Assert.IsType<SpiceException>(argument.InnerException).Message);
+            Assert.Null(point);
+            LabelAssert.Equal(window, Assert.Single(pointWindows));
         }
 
         /// <summary>

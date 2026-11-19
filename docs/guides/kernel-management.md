@@ -16,8 +16,12 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
 
 | Method | Description |
 |--------|-------------|
-| `SpiceAPI.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file (a meta-kernel included), or the kernel files of a directory and of its subdirectories (other files, such as a geopotential model, are left out); the path is taken as what it is on disk, and one that does not exist throws `ArgumentException` |
-| `SpiceAPI.Instance.UnloadKernels(FileSystemInfo)` | Unload the files a load handed SPICE, whether the path still exists or not; a file or subdirectory of a loaded directory leaves its other files loaded |
+| `SpiceAPI.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file (a meta-kernel included), or the kernel files of a directory and of its subdirectories in ordinal order, the later file winning (other files, such as a geopotential model, are left out); the path is taken as what it is on disk, and one that does not exist throws `ArgumentException`; a file already loaded is not loaded again |
+| `SpiceAPI.Instance.LoadKernels(string)` | The same, the path given as text |
+| `SpiceAPI.Instance.ReloadKernels(FileSystemInfo)` | Read a path again, on top of the kernels loaded after it: its loaded files unloaded, then all its files loaded (a kernel rewritten on disk); a path never loaded is loaded |
+| `SpiceAPI.Instance.ReloadKernels(string)` | The same, the path given as text |
+| `SpiceAPI.Instance.UnloadKernels(FileSystemInfo)` | Unload the files a load handed SPICE, whether the path still exists or not; a file or subdirectory of a loaded directory leaves its other files loaded; null throws `ArgumentNullException` |
+| `SpiceAPI.Instance.UnloadKernels(string)` | The same, the path given as text |
 | `SpiceAPI.Instance.ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `SpiceAPI.Instance.GetLoadedKernels()` | List the loaded paths |
 
@@ -27,10 +31,29 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   the directory, a `DirectoryInfo` that names a file loads the file. A path that is neither a file nor a directory
   throws `ArgumentException` (parameter `path`) before anything is unloaded or reloaded; before 11.0.0 it loaded nothing
   and the call returned, and the first read that needed the kernel failed.
-- Paths are compared by their components, ordinally ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)):
-  loading a path already loaded, or a path inside a loaded directory, reloads that entry; loading a directory first
-  unloads the entries inside it. A sibling whose name extends a loaded one (`kernels2` beside `kernels`) is another
-  path.
+- Paths are compared by their components, ordinally ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)).
+  A file SPICE holds from a load of `SpiceAPI` is not handed to it again (11.0.0): loading a path already loaded, or a
+  path inside a loaded directory, furnishes only its files written since, which join that entry, and keeps the
+  precedence of the others; loading a directory that holds loaded entries furnishes its other files and replaces those
+  entries by its own, listed last. Before 11.0.0 such a load unloaded the entry and loaded it again, on top of every
+  kernel loaded after it, at 4 to 7 times the cost (211 to 250 ms a repeat on `Data/SolarSystem`). `ReloadKernels` does
+  that now, explicitly: for a kernel rewritten on disk, or to give a path precedence again; a path inside a loaded
+  directory is read again inside that entry, which keeps its place, so the directory stays the unit of precedence: a
+  file meant to win over the kernels loaded after its directory is kept outside it and loaded on its own (decided by
+  S. Guillet, 2026-11-19). A sibling whose name extends a loaded one
+  (`kernels2` beside `kernels`) is another path.
+- The files of a directory load in ordinal order of their paths relative to it, component by component: the entries of
+  each directory sorted by name (`StringComparer.Ordinal`, capitals before lower case), a subdirectory walked at its
+  place, so `x/y.tf` loads before `x0.tf` on every platform, where a sort of the whole paths would swap them between
+  `/` (0x2F) and `\` (0x5C). Where two files assign the same variable or cover the same object, the later file wins
+  (NAIF, Kernel Required Reading, "Kernel Precedence Rule"). Before 11.0.0 they loaded in the order of the directory
+  listing, which depends on the file system (the hash of the names on ext4, the creation order on others), so a folder
+  of conflicting kernels could give a different winner on another machine. No file of `Data/SolarSystem` overlaps
+  another, so no result there moves.
+- A load or a reload that hands SPICE a file raises the generation of the kernel pool, after which the predefined
+  bodies read their data again; one that hands SPICE nothing (a repeated load, a path that does not exist) leaves it.
+  When SPICE fails to load a file, the files of the call loaded before it stay loaded and are listed under the path,
+  so that its unload removes them (before 11.0.0 they were loaded and not listed).
 - Each load records the files it handed SPICE, and `UnloadKernels` hands SPICE those names, so a directory deleted or
   moved since its load is still unloaded. Unloading a file or a subdirectory of a loaded directory replaces the
   directory in `GetLoadedKernels` by its remaining files. A path that was never loaded is handed to SPICE as it is,

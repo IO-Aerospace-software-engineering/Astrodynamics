@@ -17,7 +17,8 @@ namespace IO.Astrodynamics.Tests;
 /// (<see cref="KernelReloadGuardCollection"/>).
 /// </summary>
 /// <remarks>
-/// A reload moves the folder after its anchor (<see cref="SharedKernels.ReloadObserved"/>, kept by every later call of
+/// A reload (<see cref="SpiceAPI.ReloadKernels(FileSystemInfo)"/>; a repeated <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/>
+/// before 11.0.0) moves the folder after its anchor (<see cref="SharedKernels.ReloadObserved"/>, kept by every later call of
 /// <see cref="TestKernels.EnsureSolarSystem"/>); a removal, a <see cref="SpiceAPI.ClearKernels"/> included, leaves the
 /// folder or its anchor out of the loaded kernels at the next call (<see cref="SharedKernels.RemovalObserved"/>); a first
 /// load by another caller leaves the helper's loads at 0; the load of a parent replaces the folder's entry by the
@@ -39,7 +40,7 @@ public class KernelReloadGuardTests
         var solarSystem = TestKernels.SolarSystem;
 
         // Assert
-        Assert.False(solarSystem.ReloadObserved, $"A test loaded {solarSystem.Path.FullName} again: call TestKernels.EnsureSolarSystem(). Loaded:{Environment.NewLine}{list}");
+        Assert.False(solarSystem.ReloadObserved, $"A test reloaded {solarSystem.Path.FullName} (ReloadKernels): call TestKernels.EnsureSolarSystem(). Loaded:{Environment.NewLine}{list}");
         Assert.False(solarSystem.RemovalObserved,
             $"A test unloaded {solarSystem.Path.FullName}, a parent of it or its anchor, or cleared the kernels: run it in a child process. Loaded:{Environment.NewLine}{list}");
         Assert.True(solarSystem.Loads == 1,

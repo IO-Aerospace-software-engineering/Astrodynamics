@@ -41,11 +41,20 @@ The module also provides NAIF IDs for the complete catalog of known moons:
 - **Uranus**: `ARIEL`, `UMBRIEL`, `TITANIA`, `OBERON`, `MIRANDA`, and 20+ additional moons
 - **Neptune**: `TRITON`, `NEREID`, and additional moons
 
-All constants are `NaifObject` instances. Create a `CelestialBody` from any of them:
+All constants are `NaifObject` instances, an `INaifObject` of a NAIF identifier and a SPICE name (`NaifId`, `Name`)
+that no kernel read builds; its frame, removed in 11.0.0, is that of the body built from it, which the loaded kernels
+decide. Create a `CelestialBody` from any of them:
 
 ```csharp
 var titan = new CelestialBody(PlanetsAndMoons.TITAN);
 ```
+
+## SolarSystemObjects.GroundStations
+
+The DSN stations and the other sites of `earthstns_itrf93_201023.bsp` (`DSS_13`, `DSS_14`, `CANBERRA`, ...), whose
+NAIF identifier is 1000 times their body's plus their own (399013 for DSS-13). `new Site(GroundStations.DSS_13, earth)`
+builds the site from the kernels (see [Sites](sites.md)); NOTO (398989) and NEW NORCIA (398990) are not sites of the
+Earth in that numbering, and are read as objects of the kernels by their identifiers.
 
 ## SolarSystemObjects.Barycenters
 
@@ -87,7 +96,8 @@ the kernel values. Before the third round of #668 such a read kept the zeros for
 radii of 0, J2 NaN, the built-in frame `IAU_EARTH` for the Earth, no orbit).
 
 On the `SpiceDataProvider` the data of an object hold for the kernel pool they were read from: the first read after each
-`LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again. A kernel loaded after the first read therefore
+`LoadKernels` or `ReloadKernels` that hands SPICE a file, and after each `UnloadKernels` or `ClearKernels`, reads them
+again (a repeated load, which hands SPICE nothing, keeps them; 11.0.0). A kernel loaded after the first read therefore
 reaches the object: `geophysical.ker` its J2 (`BODY399_J2`), `earth_assoc_itrf93.tf` and `moon_assoc_me.tf` the frames
 `ITRF93` and `MOON_ME` in place of SPICE's built-in `IAU_EARTH` and `IAU_MOON` (`IAU_EARTH` is 8.5e-4 rad from `ITRF93`
 in 2001, 1.5e-3 rad in 2025, several kilometres at the equator), an SPK its orbit and sphere of influence. Data equal to

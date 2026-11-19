@@ -8,6 +8,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
@@ -135,7 +136,7 @@ public class TLEPropagatorTests
 
         // Act: a window whose samples SGP4 gives, the acceleration at its end not
         using var propagator = new TLEPropagator(new Window(end.AddSeconds(-600.0), end), spacecraft, step);
-        Assert.Throws<InvalidOperationException>(() => propagator.Propagate());
+        Assert.Throws<SpiceException>(() => propagator.Propagate());
 
         // Assert: the rejected run adds no state; the spacecraft holds the states of the first run as they were
         var after = spacecraft.PropagatedStates;

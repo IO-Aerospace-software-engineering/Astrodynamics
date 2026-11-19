@@ -79,7 +79,11 @@ model (`ArgumentException` otherwise). Drag is that of the central body's atmosp
 weather for an Earth without a model, and of each other listed body with an atmosphere, an Earth always having one
 ([Force Models](force-models.md#atmosphericdrag)). The integrator of a constructor
 that builds the forces must be a new instance: one that holds forces or was used by such a constructor throws
-`ArgumentException` (`integrator`); the constructors without celestial bodies use the integrator and its forces as
+`ArgumentException` (`integrator`); a central body whose GM is not above 0, a body of the kernels whose
+`BODYnnn_GM` the kernel pool lacks (no GM kernel such as NAIF's `gm_de440.tpc`), throws `ArgumentException`
+(`spacecraft`) naming it, on every constructor and so on every propagation path, before the integrator is claimed (11.0.0,
+R03 of #668: before, the propagation ran without central gravity, on a straight line; `new CelestialBody(id)` still accepts
+the GM of 0); the constructors without celestial bodies use the integrator and its forces as
 given and initialize it with the initial state of the propagation: about the central body (the Sun in SSB mode), in the
 inertial frame of the propagation, at the TDB start of the window; a later `Initialize` by the caller replaces it. Before
 11.0.0 they used it as given, and one its caller had not initialized threw `NullReferenceException` at the first step. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every

@@ -32,9 +32,9 @@ public class KernelFilesTests : IDisposable
         // Act
         var kernels = SpiceAPI.KernelFiles(directory).Select(Path.GetFileName).ToArray();
 
-        // Assert: the listing order, without the geopotential model
+        // Assert: the ordinal order of the names (11.0.0; the listing order before), without the geopotential model
         var expected = Directory.EnumerateFileSystemEntries(directory.FullName).Select(Path.GetFileName)
-            .Where(name => name != "EGM2008_to70_TideFree").ToArray();
+            .Where(name => name != "EGM2008_to70_TideFree").Order(StringComparer.Ordinal).ToArray();
         Assert.Equal(expected, kernels);
         Assert.Contains("earth_fixed.tf", kernels);
         Assert.Contains("earthstns_itrf93_201023.bsp", kernels);

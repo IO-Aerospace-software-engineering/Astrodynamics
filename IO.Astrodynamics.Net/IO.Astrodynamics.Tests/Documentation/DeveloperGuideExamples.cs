@@ -24,6 +24,7 @@ using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
 using IO.Astrodynamics.DataProvider;
+using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Maneuver.Lambert;
@@ -1109,12 +1110,16 @@ internal static class DeveloperGuideExamples
         {
             var state = body.GetEphemeris(epoch, observer, frame, Aberration.None);
         }
+        catch (SpiceException ex)
+        {
+            // An error SPICE signals (an InvalidOperationException): a kernel not loaded,
+            // an epoch out of coverage; ShortMessage is SPICE's code, such as
+            // SPICE(SPKINSUFFDATA), LongMessage its long message.
+            Console.WriteLine($"Ephemeris error {ex.ShortMessage}: {ex.Message}");
+        }
         catch (InvalidOperationException ex)
         {
-            // Likely kernel not loaded, epoch out of coverage, or native proxy error
-            // Native C++ errors (from ReadEphemeris, ReadOrientation, Launch) are
-            // caught at the P/Invoke boundary and re-thrown as InvalidOperationException
-            // with the original error message from the SPICE toolkit.
+            // Another failure of the native layer or of the library
             Console.WriteLine($"Ephemeris error: {ex.Message}");
         }
         catch (ArgumentException ex)

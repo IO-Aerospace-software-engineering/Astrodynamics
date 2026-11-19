@@ -1245,7 +1245,8 @@ internal static class Program
         // The unload of the deleted PCK, which SPICE no longer holds, does nothing
         SpiceAPI.Instance.UnloadKernels(gone);
         Check(Listed(root).Length == 0, "nothing is listed");
-        Check(Throws(() => RotationAngleDeg("IOA_F02_MKP_X")) != null, "the text kernel's frame is unknown");
+        // An unknown frame name is a bad argument since R25 of #668 (InvalidOperationException before 11.0.0)
+        Check(ThrowsArgument(() => RotationAngleDeg("IOA_F02_MKP_X")) != null, "the text kernel's frame is unknown");
     }
 
     // A PCK frame of the class classId, centred on the Moon, and three loads: a PCK P of that class relative to J2000, a

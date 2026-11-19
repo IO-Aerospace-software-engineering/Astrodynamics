@@ -11,6 +11,7 @@ using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -855,21 +856,21 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         var past = _case.T0.AddSeconds(14400.0);
 
         // spkezr_c past the SPK: a NaN state from the native layer, SPICE's message in the exception
-        var single = Assert.Throws<InvalidOperationException>(() =>
+        var single = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.ReadEphemeris(past, PlanetsAndMoons.EARTH.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None));
         Assert.Contains("Insufficient ephemeris data", single.Message);
-        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(_case.T0.AddSeconds(10000.0), past),
+        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(_case.T0.AddSeconds(10000.0), past),
             PlanetsAndMoons.EARTH.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(600.0)).ToArray());
-        Assert.Throws<InvalidOperationException>(() => new Spacecraft(CrossingEncounterCase.Id1, "K1", past));
+        Assert.Throws<SpiceException>(() => new Spacecraft(CrossingEncounterCase.Id1, "K1", past));
 
         // The analysis of kernel-backed spacecraft past their SPKs: before, a TCA with a miss of 0 m
         var k1 = new Spacecraft(CrossingEncounterCase.Id1, "K1", _case.T0.AddSeconds(10.0));
         var k2 = new Spacecraft(CrossingEncounterCase.Id2, "K2", _case.T0.AddSeconds(10.0));
-        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(k1), k2,
+        Assert.Throws<SpiceException>(() => ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(k1), k2,
             _case.Seconds(12600.0, 18000.0), Options));
 
         // A frame past its PCK (earth_latest_high_prec.bpc ends in 2026): before, the zero quaternion
-        var frame = Assert.Throws<InvalidOperationException>(() =>
+        var frame = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2040, 1, 1), new Frames.Frame("ITRF93"), Frames.Frame.ICRF));
         Assert.Contains("ITRF93", frame.Message);
 
@@ -892,7 +893,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // undefined state before), and a read of its position throws
         var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, _case.T0);
         Assert.Null(mars.InitialOrbitalParameters);
-        Assert.Throws<InvalidOperationException>(() => mars.GetEphemeris(_case.T0, new Barycenter(0), Frames.Frame.ICRF, Aberration.None));
+        Assert.Throws<SpiceException>(() => mars.GetEphemeris(_case.T0, new Barycenter(0), Frames.Frame.ICRF, Aberration.None));
 
         // Inside the coverage nothing moves: a unit quaternion
         var inside = SpiceAPI.Instance.TransformFrame(_case.T0, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);

@@ -12,6 +12,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests;
@@ -142,7 +143,7 @@ public class KernelPathLengthTests : IDisposable
             // SPICE's own bound: the same kernel at 256 characters cannot be loaded
             var copy = Target(256, "c.bsp");
             File.Copy(atLimit.FullName, copy.FullName);
-            Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.LoadKernels(new FileInfo(copy.FullName)));
+            Assert.Throws<SpiceException>(() => SpiceAPI.Instance.LoadKernels(new FileInfo(copy.FullName)));
         }
         finally
         {
@@ -201,6 +202,6 @@ public class KernelPathLengthTests : IDisposable
         var kernel = new FileInfo(Path.Combine(_root.FullName, "s673.bsp"));
         site.WriteEphemeris(window, kernel);
         File.Copy(kernel.FullName, target.FullName);
-        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.LoadKernels(new FileInfo(target.FullName)));
+        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.LoadKernels(new FileInfo(target.FullName)));
     }
 }

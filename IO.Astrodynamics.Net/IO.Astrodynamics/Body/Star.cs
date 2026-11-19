@@ -195,19 +195,12 @@ public class Star : CelestialBody
     public double DeclinationSigmaProperMotion { get; }
 
     /// <summary>
-    /// Always null: the directory of an older design that wrote the propagation to files. A star keeps its propagated
-    /// states in memory and writes them only through <see cref="WriteEphemeris"/>, to the file its caller gives.
-    /// Obsolete since 11.0.0: read <see cref="IsPropagated"/>, and write the states with <see cref="WriteEphemeris"/>.
-    /// </summary>
-    [Obsolete("Always null: a star keeps its propagated states in memory. Read IsPropagated to know whether it holds them, and write them with WriteEphemeris.")]
-    public DirectoryInfo PropagationOutput { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating whether the star holds propagated states: true once <see cref="Propagate"/>,
     /// <see cref="PropagateAsync"/> or <c>Scenario.SimulateAsync</c> stored them.
     /// </summary>
     /// <remarks>
-    /// Before 11.0.0 it read <see cref="PropagationOutput"/>, which no code sets, and was always false.
+    /// Before 11.0.0 it read <c>PropagationOutput</c>, which no code set, and was always false; that property, always null,
+    /// is removed in 11.0.0 (R02 of #668).
     /// </remarks>
     public bool IsPropagated => Volatile.Read(ref _propagatedStates).Length > 0;
 
@@ -417,7 +410,7 @@ public class Star : CelestialBody
 
     /// <summary>
     /// Write star ephemeris from propagated states: those of its last propagation, their positions and the star's space
-    /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels"/> loaded is unloaded
+    /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> loaded is unloaded
     /// first, and the new one is left unloaded (#706).
     /// </summary>
     /// <exception cref="ArgumentException">The last propagation stored fewer than three states: the native writer writes three

@@ -156,9 +156,12 @@ public sealed class TestKernelsTests : IDisposable
     [Fact]
     public void Ensure_AfterAReloadByAnotherCaller_ObservesIt()
     {
-        // Arrange: the former pattern, a load of the folder already loaded, which moves it after the anchor
+        // Arrange: a repeated load hands SPICE nothing and moves nothing (11.0.0), a reload moves the folder after the anchor
         _kernels.Ensure();
         SpiceAPI.Instance.LoadKernels(_set);
+        _kernels.Ensure();
+        Assert.False(_kernels.ReloadObserved);
+        SpiceAPI.Instance.ReloadKernels(_set);
 
         // Act
         _kernels.Ensure();

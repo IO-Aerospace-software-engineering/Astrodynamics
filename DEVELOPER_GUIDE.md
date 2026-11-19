@@ -193,13 +193,15 @@ Singleton class providing access to SPICE operations.
 
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory, the path taken as what it is on disk; `ArgumentException` for a path that does not exist |
-| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
+| `LoadKernels(FileSystemInfo path)`, `LoadKernels(string path)` | Load SPICE kernel(s) from file or directory, the path taken as what it is on disk; a file SPICE already holds from a load is not handed to it again, so a repeated load furnishes only the files added since (R01 of #668); `ArgumentException` for a path that does not exist |
+| `ReloadKernels(FileSystemInfo path)`, `ReloadKernels(string path)` | Read the kernels of a path again, on top of the kernels loaded before: for a kernel rewritten on disk, or to give a path precedence (what a repeated `LoadKernels` did before 11.0.0) |
+| `UnloadKernels(FileSystemInfo path)`, `UnloadKernels(string path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
 | `ClearKernels()` | Unload all kernels |
 | `GetLoadedKernels()` | Get list of currently loaded paths; a deleted SPK, CK, binary PCK or EK leaves it at the next native load, unload or write (#668), a file a writer replaces before the write (#706) |
 | `GetSpiceVersion()` | Get SPICE toolkit version |
-| `ReadEphemeris(...)` | Read state vectors (throws `InvalidOperationException` on native error) |
-| `ReadOrientation(...)` | Read spacecraft orientations (throws `InvalidOperationException` on native error) |
+| `ReadEphemeris(...)` | Read state vectors: `SpiceException` (an `InvalidOperationException`) with SPICE's message when SPICE gives no state, `ArgumentException` (`frame`) for a frame SPICE does not know (R25 of #668) |
+| `ReadOrientation(...)` | Read spacecraft orientations: `SpiceException` with SPICE's message when SPICE gives no orientation, `ArgumentException` (`referenceFrame`) for a frame SPICE does not know (R25 of #668) |
+| `TransformFrame(epoch, fromFrame, toFrame)` | The orientation between two frames: `SpiceException` outside the coverage of a known frame, `ArgumentException` (`fromFrame` or `toFrame`) for a frame SPICE does not know (R25 of #668) |
 | `WriteEphemeris(...)`, `WriteOrientation(...)` | Write an SPK (three states or more, one frame, about a celestial body, else `ArgumentException`) or a CK through the native writer; a file they replace that `LoadKernels` loaded, under its path or a symbolic link that resolves through it, is unloaded first, with every other load of it, and the new file is left unloaded (#706) |
 
 ```csharp
@@ -218,6 +220,7 @@ Configure framework-wide settings.
 | Method | Description |
 |--------|-------------|
 | `SetDataProvider(IDataProvider provider)` | Set the data provider (SPICE or Memory) |
+| `DataProvider` | The data provider set (read only, 11.0.0) |
 
 ```csharp
 // Use memory data provider for testing
@@ -2173,7 +2176,7 @@ read, an object keeps the provider it read its data from, for its data and its e
 predicates need no data. A provider that gives one of them a GM or, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii
 of 0 (SPICE before `LoadKernels`, which answers 0 for `BODYnnn_GM` or `BODYnnn_RADII` no loaded kernel defines) makes
 the read throw `InvalidOperationException` naming the variable, and nothing is kept. On SPICE their data follow the
-kernel pool: the first read after each `LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again, so that a
+kernel pool: the first read after each `LoadKernels` or `ReloadKernels` that hands SPICE a file, and after each `UnloadKernels` or `ClearKernels`, reads them again, so that a
 kernel loaded later (`geophysical.ker` for `BODY399_J2`, `earth_assoc_itrf93.tf` and `moon_assoc_me.tf` for the frames
 `ITRF93` and `MOON_ME`, an SPK for the orbit) reaches them; data equal to those held keep the instances held. To keep a
 body's data across changes of the pool, build it (`new CelestialBody(id)`).
@@ -2325,12 +2328,16 @@ try
 {
     var state = body.GetEphemeris(epoch, observer, frame, Aberration.None);
 }
+catch (SpiceException ex)
+{
+    // An error SPICE signals (an InvalidOperationException): a kernel not loaded,
+    // an epoch out of coverage; ShortMessage is SPICE's code, such as
+    // SPICE(SPKINSUFFDATA), LongMessage its long message.
+    Console.WriteLine($"Ephemeris error {ex.ShortMessage}: {ex.Message}");
+}
 catch (InvalidOperationException ex)
 {
-    // Likely kernel not loaded, epoch out of coverage, or native proxy error
-    // Native C++ errors (from ReadEphemeris, ReadOrientation, Launch) are
-    // caught at the P/Invoke boundary and re-thrown as InvalidOperationException
-    // with the original error message from the SPICE toolkit.
+    // Another failure of the native layer or of the library
     Console.WriteLine($"Ephemeris error: {ex.Message}");
 }
 catch (ArgumentException ex)
@@ -3058,7 +3065,7 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 The breaking changes of 11.0.0, each with its migration, are the **Breaking** entries under **Changed** and the entries under **Removed** of the 11.0.0 release notes (`docs/contributing/versioning.md#1100`).
 
-The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` return a NaN result and `TransformFrameProxy` a NaN rotation and angular velocity, with SPICE's message (#714: before, they dropped it, the two-body proxies aborted a process whose first native call they were and otherwise returned the stack's contents, and the transformation returned the zero quaternion). Each proxy that reports through `GetLastErrorProxy()` clears it when it starts, so the message read after a call is that call's, and a SPICE error with no long message is reported by its short one (#714); a native caller checks the result before using it.
+The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` return a NaN result and `TransformFrameProxy` a NaN rotation and angular velocity, with SPICE's message (#714: before, they dropped it, the two-body proxies aborted a process whose first native call they were and otherwise returned the stack's contents, and the transformation returned the zero quaternion). Each proxy that reports through `GetLastErrorProxy()` clears it when it starts, so the message read after a call is that call's, and a SPICE error with no long message is reported by its short one (#714); `GetLastErrorShortProxy()` and `GetLastErrorLongProxy()` give SPICE's short and long messages of that error, empty when the failure is not SPICE's, which `SpiceAPI` throws as `SpiceException` (R03 of #668); a native caller checks the result before using it. The six exports .NET never called (`LaunchProxy`, `TDBToStringProxy`, `UTCToStringProxy`, `ConvertTDBToUTCProxy`, `ConvertUTCToTDBProxy`, `ConvertStateVectorToEquatorialCoordinatesProxy`) are removed in 11.0.0; a native caller uses the C++ classes they called.
 
 ### Breaking Changes in 8.5.0
 

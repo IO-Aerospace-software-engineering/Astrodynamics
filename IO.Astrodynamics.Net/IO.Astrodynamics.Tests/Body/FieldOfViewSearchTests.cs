@@ -14,6 +14,7 @@ using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
@@ -781,7 +782,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             }
             else
             {
-                var exception = Assert.Throws<InvalidOperationException>(() =>
+                var exception = Assert.Throws<SpiceException>(() =>
                     circle.FindWindowsInFieldOfViewConstraint(shortWindow, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None, Step));
                 Assert.Contains($"INS{circle.NaifId}_FOV_FRAME", exception.Message);
             }

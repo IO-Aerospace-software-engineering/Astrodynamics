@@ -10,6 +10,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -158,12 +159,12 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     [Fact]
     public void ReadEphemeris_FromNewNorciaWithoutItsSpk_IsSpicesMissingData()
     {
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.ReadEphemeris(NotoKernel.Epoch, NewNorciaId, 399, Frames.Frame.ICRF, Aberration.None));
         Assert.Contains("398990", exception.Message);
         Assert.DoesNotContain("398 has no name", exception.Message);
         var window = new Window(NotoKernel.Epoch, NotoKernel.Epoch.AddSeconds(60.0));
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.ReadEphemeris(window, NewNorciaId, 399, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(60.0)));
     }
 

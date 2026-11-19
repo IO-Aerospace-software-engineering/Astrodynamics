@@ -978,4 +978,43 @@ public class ForceModelDefectTests
     }
 
     #endregion
+
+    #region A central body without GM (R03 of #668)
+
+    // ELARA (507): named by SPICE, its orientation in pck00011.tpc, no BODY507_GM in gm_de440.tpc (KernelTextValues), so the
+    // kernel GM of the body is 0. Before 11.0.0 a propagation about it ran without central gravity, silently: a straight line.
+    // It is refused at the start of every propagation (structuring choice 10, decided by S. Guillet, 2026-11-19), the
+    // constructor of the body still accepting it
+    [Theory]
+    [MemberData(nameof(EveryPath))]
+    public void ACentralBodyWithoutGm_IsRefusedAtTheStartOfEveryPropagation(string path)
+    {
+        Assert.False(KernelTextValues.HasGravitationalParameter(507));
+        var elara = new CelestialBody(507);
+        Assert.Equal(0.0, elara.GM);
+        var spacecraft = NewSpacecraft(elara);
+
+        var error = Assert.Throws<ArgumentException>(() => Run(path, spacecraft, Array.Empty<CelestialItem>(), false, false));
+
+        Assert.Equal("spacecraft", error.ParamName);
+        Assert.Contains("ELARA (507)", error.Message);
+        Assert.Contains("BODY507_GM", error.Message);
+        Assert.Contains("gm_de440.tpc", error.Message);
+        Assert.Empty(spacecraft.PropagatedStates);
+    }
+
+    // The refusal comes before the integrator is claimed (#674): the integrator propagates about the Earth afterwards
+    [Fact]
+    public void ACentralBodyWithoutGm_LeavesTheIntegratorUnclaimed()
+    {
+        var integrator = NewRk78();
+        Assert.Throws<ArgumentException>(() =>
+            new CentralBodyPropagator(OneHour, NewSpacecraft(new CelestialBody(507)), integrator, Array.Empty<CelestialItem>(), false, false, Step));
+
+        using var propagator = new CentralBodyPropagator(OneHour, NewSpacecraft(PlanetsAndMoons.EARTH_BODY), integrator,
+            Array.Empty<CelestialItem>(), false, false, Step);
+        propagator.Propagate();
+    }
+
+    #endregion
 }

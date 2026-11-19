@@ -27,6 +27,12 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 | `Opm.LoadFromStream(stream, validateSchema?, validateContent?)` | Load from stream |
 | `Opm.TryLoadFromFile(path, out opm, out result, ...)` | Non-throwing load with validation result |
 
+The exceptions of the OPM reader, `OpmParseException` and `OpmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
+`IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
+document that cannot be read, at parsing or at validation (11.0.0, R03 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
+`Exception` alone).
+
 Each load reads one OPM: a standalone `<opm>`, or the one `<opm>` of an `<ndm>` or of another root (messages of
 another type beside it are ignored). A document that holds several OPMs, such as a catalog NDM, or a second OPM at any depth below the root, throws
 `OpmParseException` naming their number, `TryLoadFromFile` returns false with a `PARSE_ERROR` and

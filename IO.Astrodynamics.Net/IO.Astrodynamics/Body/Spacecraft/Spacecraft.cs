@@ -899,8 +899,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// center of the segments, so SPICE chains the ephemerides; they are stored in ICRF whatever the frame of the initial
         /// state, so the SPK is in J2000 (#535). The file is written by the library's managed writer
         /// (<see cref="Kernels.SpkWriter"/>), in SSB mode and about any central body alike: an existing file is unloaded and
-        /// replaced, and the new one is left unloaded, as the native writer did. A file <see cref="SpiceAPI.LoadKernels"/>
-        /// loaded is unloaded as <see cref="SpiceAPI.UnloadKernels"/> does, so that <see cref="SpiceAPI.GetLoadedKernels"/>
+        /// replaced, and the new one is left unloaded, as the native writer did. A file <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/>
+        /// loaded is unloaded as <see cref="SpiceAPI.UnloadKernels(FileSystemInfo)"/> does, so that <see cref="SpiceAPI.GetLoadedKernels"/>
         /// no longer lists it (#706).
         /// </summary>
         /// <remarks>

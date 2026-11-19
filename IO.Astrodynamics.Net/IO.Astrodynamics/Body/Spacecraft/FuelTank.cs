@@ -40,7 +40,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             if (requiredMass > Quantity)
             {
-                throw new InsufficientFuelException();
+                throw new InsufficientFuelException(
+                    $"The tank {Name} holds {Quantity} kg of fuel, the burn needs {requiredMass} kg.", requiredMass, Quantity);
             }
 
             Quantity -= requiredMass;

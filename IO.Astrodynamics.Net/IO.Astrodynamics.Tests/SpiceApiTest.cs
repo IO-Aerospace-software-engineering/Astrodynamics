@@ -8,6 +8,7 @@ using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 using FuelTank = IO.Astrodynamics.Body.Spacecraft.FuelTank;
@@ -463,13 +464,13 @@ public partial class SpiceApiTest
         var window = new Window(start, start.AddDays(5.0));
         var step = TimeSpan.FromHours(12.0);
 
-        var reference = Assert.Throws<InvalidOperationException>(() =>
+        var reference = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.ReadEphemeris(window, 399, 10, Frames.Frame.ICRF, Aberration.None, step));
         Assert.Contains("Insufficient ephemeris data", reference.Message);
         Assert.Contains("2150 JAN 22 12:00:00.000", reference.Message);
         Assert.DoesNotContain("2150 JAN 25", reference.Message);
 
-        var e = Assert.Throws<InvalidOperationException>(() =>
+        var e = Assert.Throws<SpiceException>(() =>
             SpiceAPI.Instance.ReadEphemeris(window, 399, 10, site.Frame, Aberration.None, step));
         Assert.Equal(reference.Message, e.Message);
     }
@@ -509,7 +510,7 @@ public partial class SpiceApiTest
             SpiceAPI.Instance.LoadKernels(fk);
             try
             {
-                var past = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
+                var past = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
                 Assert.Contains("2000 JAN 01 12:00:00", past.Message);
             }
             finally
@@ -702,35 +703,39 @@ public partial class SpiceApiTest
     private static readonly Planetodetic ErrorSearchPoint = new(30.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0);
 
     [Fact]
-    public void FindWindowsOnCoordinateConstraint_UnknownFrame_ThrowsSpiceError()
+    public void FindWindowsOnCoordinateConstraint_UnknownFrame_ThrowsArgumentException_WithTheSpiceError()
     {
-        // A frame name SPICE does not know, which the frames of the library (SpiceKnowsFrame) do not cover
-        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+        // A frame name SPICE does not know, which the frames of the library (SpiceKnowsFrame) do not cover: a bad argument
+        // since R25 of #668 (review of L1), gfposc_c's error its inner exception
+        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
             new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
-        Assert.Contains("NOT_A_FRAME_668", e.Message);
-        Assert.Contains("not recognized", e.Message);
+        Assert.Equal("frame", e.ParamName);
+        var inner = Assert.IsType<SpiceException>(e.InnerException);
+        Assert.Contains("NOT_A_FRAME_668", inner.Message);
+        Assert.Contains("not recognized", inner.Message);
         // and NotEqual, formed from the search of "="
-        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+        e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
             new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.NotEqual, 0.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
-        Assert.Contains("NOT_A_FRAME_668", e.Message);
+        Assert.Equal("frame", e.ParamName);
+        Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(e.InnerException).Message);
     }
 
     [Fact]
     public void FindWindowsOnCoordinateConstraint_WithoutData_ThrowsSpiceError()
     {
-        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 399999,
+        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 399999,
             Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
             TimeSpan.FromHours(1.0)));
         Assert.Contains("399999", e.Message);
-        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(PastTheEphemerisWindow, 399, 301,
+        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(PastTheEphemerisWindow, 399, 301,
             Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
             TimeSpan.FromHours(1.0)));
         Assert.Contains("Insufficient ephemeris data", e.Message);
         Assert.Contains("2160", e.Message);
         // A step SPICE rejects
-        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
             Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
             TimeSpan.Zero));
         Assert.Contains("step size must be positive", e.Message);
@@ -739,10 +744,10 @@ public partial class SpiceApiTest
     [Fact]
     public void FindWindowsOnDistanceConstraint_WithoutData_ThrowsSpiceError()
     {
-        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 399999,
+        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 399999,
             RelationnalOperator.Greater, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
         Assert.Contains("399999", e.Message);
-        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(PastTheEphemerisWindow, 399, 301,
+        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(PastTheEphemerisWindow, 399, 301,
             RelationnalOperator.Greater, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
         Assert.Contains("Insufficient ephemeris data", e.Message);
         Assert.Contains("2160", e.Message);
@@ -751,22 +756,24 @@ public partial class SpiceApiTest
     [Fact]
     public void FindWindowsOnOccultationConstraint_WithoutData_ThrowsSpiceError()
     {
-        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(PastTheEphemerisWindow, 399, 10,
+        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(PastTheEphemerisWindow, 399, 10,
             ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromMinutes(1.0)).ToArray());
         Assert.Contains("2160", e.Message);
-        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(ErrorSearchWindow, 399, 399999,
+        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(ErrorSearchWindow, 399, 399999,
             ShapeType.Point, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromMinutes(1.0)).ToArray());
         Assert.Contains("399999", e.Message);
     }
 
     [Fact]
-    public void FindWindowsOnIlluminationConstraint_UnknownFrameOrWithoutData_ThrowsSpiceError()
+    public void FindWindowsOnIlluminationConstraint_UnknownFrameOrWithoutData_ThrowsArgumentExceptionOrSpiceError()
     {
-        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399,
+        // An unknown fixed frame is a bad argument since R25 of #668 (review of L1), gfilum_c's error its inner exception
+        var unknown = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399,
             new Frames.Frame("NOT_A_FRAME_668"), ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10));
-        Assert.Contains("NOT_A_FRAME_668", e.Message);
-        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
+        Assert.Equal("fixedFrame", unknown.ParamName);
+        Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknown.InnerException).Message);
+        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
             PlanetsAndMoons.EARTH_BODY.Frame, ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10));
         Assert.Contains("2160", e.Message);
@@ -776,7 +783,7 @@ public partial class SpiceApiTest
     public void FindWindowsInFieldOfViewConstraint_InstrumentWithoutKernel_ThrowsSpiceError()
     {
         // gftfov reads the instrument's field of view in the kernel pool: no instrument kernel defines -999123
-        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(ErrorSearchWindow, -999, -999123,
+        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(ErrorSearchWindow, -999, -999123,
             301, PlanetsAndMoons.MOON_BODY.Frame, ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
         Assert.Contains("INS-999123_FOV_FRAME", e.Message);
     }
@@ -1009,7 +1016,7 @@ public partial class SpiceApiTest
     void TransformFrame()
     {
         //Get the quaternion to transform
-        var res = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame));
+        var res = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("ITRF93"));
         Assert.Equal(0.76713121207787449, res.Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.Rotation.VectorPart.Y, 6);
@@ -1024,7 +1031,7 @@ public partial class SpiceApiTest
     {
         //Get the quaternion to transform
         var res = SpiceAPI.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
-            new Frames.Frame(PlanetsAndMoons.EARTH.Frame), TimeSpan.FromDays(1.0));
+            new Frames.Frame("ITRF93"), TimeSpan.FromDays(1.0));
         Assert.Equal(0.76713121207787449, res.First().Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.First().Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.First().Rotation.VectorPart.Y, 6);
@@ -1041,7 +1048,7 @@ public partial class SpiceApiTest
         Assert.Throws<ArgumentNullException>(() =>
             SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
         Assert.Throws<ArgumentNullException>(() =>
-            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame)));
+            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame("ITRF93")));
     }
 
     [Fact]
@@ -1076,7 +1083,8 @@ public partial class SpiceApiTest
     [Fact]
     void LoadKernelException()
     {
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels(null));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels((FileSystemInfo)null));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels((string)null));
     }
 
     // The rotation angle of a frame from ICRF, in degrees, read by SPICE (pxform through TransformFrame; the sign of a
@@ -1143,7 +1151,7 @@ public partial class SpiceApiTest
             root.Delete(true);
         }
 
-        Assert.Throws<InvalidOperationException>(() => RotationAngleFromIcrfDeg("IOA_G4_FI_DIR"));
+        Assert.Throws<ArgumentException>(() => RotationAngleFromIcrfDeg("IOA_G4_FI_DIR"));
     }
 
     [Fact]
@@ -1166,7 +1174,7 @@ public partial class SpiceApiTest
             root.Delete(true);
         }
 
-        Assert.Throws<InvalidOperationException>(() => RotationAngleFromIcrfDeg("IOA_G4_DI_FILE"));
+        Assert.Throws<ArgumentException>(() => RotationAngleFromIcrfDeg("IOA_G4_DI_FILE"));
     }
 
     [Fact]
@@ -1232,7 +1240,7 @@ public partial class SpiceApiTest
         Assert.Equal(expected.Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
         // SPICE's reads: the SPK of DRAGONFLY32 (-1785) is gone, that of MySite (399132) is still there (both cover 668085625 to
         // 668174469 s TDB)
-        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
+        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
         Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 399132, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude() > 6.0e6);
     }
 
@@ -1331,11 +1339,11 @@ public partial class SpiceApiTest
     // conversions returned the zero state silently (the found flag of their centre read undefined after the failed GM read);
     // they now return a NaN state with SPICE's message, which SpiceAPI throws
     [Fact]
-    void ConvertConicElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
+    void ConvertConicElementsToStateVector_AboutABodyWithoutGm_ThrowsSpiceException()
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
+        var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
         // The same message on every run (#714: before, "can't be found" on some runs only, the name read after the failed GM
         // read indeterminate)
         Assert.Equal(ElaraWithoutGmMessage, error.Message);
@@ -1345,12 +1353,12 @@ public partial class SpiceApiTest
         "The elements cannot be converted to a state vector: CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.";
 
     [Fact]
-    void ConvertEquinoctialElementsToStateVector_AboutABodyWithoutGm_ThrowsInvalidOperationException()
+    void ConvertEquinoctialElementsToStateVector_AboutABodyWithoutGm_ThrowsSpiceException()
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, 0.1, 0.0, 0.5, new IO.Astrodynamics.Body.CelestialBody(507),
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
         Assert.Equal(ElaraWithoutGmMessage, error.Message);
     }
 
@@ -1358,7 +1366,7 @@ public partial class SpiceApiTest
     // review of #711, conics_c's SPICE(BADGM) was left pending and the conversion of the result threw "Celestial celestialItem
     // name can't be defined" (measured on a77531f)
     [Fact]
-    void ConvertConicElementsToStateVector_OfAnOpenOrbitAboutABodyWithoutGm_ThrowsInvalidOperationException()
+    void ConvertConicElementsToStateVector_OfAnOpenOrbitAboutABodyWithoutGm_ThrowsSpiceException()
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var elara = new IO.Astrodynamics.Body.CelestialBody(507);
@@ -1857,10 +1865,10 @@ public partial class SpiceApiTest
         var sv = LeoState(Vector3.Zero);
         var gm = TestHelpers.EarthAtJ2000.GM;
         var before = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
+        var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
         _output.WriteLine($"MESSAGE #714 Propagate2Bodies of a zero velocity: {error.Message}");
         Assert.EndsWith(": SPICE(ZEROVELOCITY)", error.Message);
-        error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
+        error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
         _output.WriteLine($"MESSAGE #714 ConvertStateVectorToConicOrbitalElement of a zero velocity: {error.Message}");
         Assert.EndsWith(": Zero vector for input velocity vector.", error.Message);
         var moon = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -1888,10 +1896,10 @@ public partial class SpiceApiTest
             var sv = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             double[] state = [position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z];
             var prop2b = Body.CspiceDirect.Prop2b(mu, state, 60.0);
-            var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, mu, TimeSpan.FromSeconds(60.0)));
+            var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, mu, TimeSpan.FromSeconds(60.0)));
             Assert.EndsWith(": " + (string.IsNullOrEmpty(prop2b.Long) ? prop2b.Short : prop2b.Long), error.Message);
             var oscltx = Body.CspiceDirect.Oscltx(state, 0.0, mu);
-            error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, mu));
+            error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, mu));
             Assert.EndsWith(": " + oscltx.Long, error.Message);
             _output.WriteLine($"MESSAGE #714 {prop2b.Short} / {oscltx.Short} {oscltx.Long}");
         }
@@ -1924,21 +1932,24 @@ public partial class SpiceApiTest
     [Fact]
     void TransformFrame_ThatSpiceCannotGive_ThrowsSpicesMessage()
     {
-        var unknown = Assert.Throws<InvalidOperationException>(() =>
+        // An unknown name is a bad argument since R25 of #668: the error of #714 is the inner exception
+        var argument = Assert.Throws<ArgumentException>(() =>
             SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
+        Assert.Equal("toFrame", argument.ParamName);
+        var unknown = Assert.IsType<SpiceException>(argument.InnerException);
         _output.WriteLine($"MESSAGE #714 {unknown.Message}");
         Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to NOT_A_FRAME at {TimeSystem.Time.J2000TDB}: ", unknown.Message);
         Assert.EndsWith(UnknownFrameMessage, unknown.Message);
 
         var epoch = TimeSystem.Time.CreateTDB(6.3e9);
         var itrf93 = new Frames.Frame("ITRF93");
-        var uncovered = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, itrf93));
+        var uncovered = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, itrf93));
         _output.WriteLine($"MESSAGE #714 {uncovered.Message}");
         Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to ITRF93 at {epoch}: ", uncovered.Message);
         Assert.Contains(Itrf93NotCoveredMessage, uncovered.Message);
 
         // Through the data provider, the frames reversed
-        var provider = Assert.Throws<InvalidOperationException>(() => Frames.Frame.ICRF.ToFrame(itrf93, epoch));
+        var provider = Assert.Throws<SpiceException>(() => Frames.Frame.ICRF.ToFrame(itrf93, epoch));
         Assert.Contains(Itrf93NotCoveredMessage, provider.Message);
         AssertNothingPending();
     }
@@ -1952,8 +1963,10 @@ public partial class SpiceApiTest
         {
             var expected = Body.CspiceDirect.SxformError("J2000", to, et);
             Assert.False(string.IsNullOrEmpty(expected));
-            var error = Assert.Throws<InvalidOperationException>(() =>
+            var thrown = Record.Exception(() =>
                 SpiceAPI.Instance.TransformFrame(TimeSystem.Time.CreateTDB(et), Frames.Frame.ICRF, new Frames.Frame(to)));
+            // The unknown name an ArgumentException since R25 of #668, SPICE's message on its inner exception
+            var error = Assert.IsType<SpiceException>(to == "NOT_A_FRAME" ? Assert.IsType<ArgumentException>(thrown).InnerException : thrown);
             Assert.EndsWith(": " + expected, error.Message);
         }
 
@@ -2463,7 +2476,7 @@ public partial class SpiceApiTest
         var target = new FileInfo(Path.Combine(dir.FullName, "elara.bsp"));
         try
         {
-            var error = Assert.Throws<InvalidOperationException>(() =>
+            var error = Assert.Throws<SpiceException>(() =>
                 SpiceAPI.Instance.WriteEphemeris(target, -1999719, StatesAbout(new IO.Astrodynamics.Body.CelestialBody(507))));
             Assert.Equal(
                 "An error occurred while writing ephemeris: CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.",

@@ -7,7 +7,7 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// <summary>
 /// Exception thrown when parsing an OPM document fails.
 /// </summary>
-public class OpmParseException : Exception
+public class OpmParseException : CcsdsFormatException
 {
     /// <summary>
     /// Gets the line number where the parse error occurred (if available).

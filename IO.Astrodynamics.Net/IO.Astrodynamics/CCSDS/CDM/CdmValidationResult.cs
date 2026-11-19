@@ -54,7 +54,7 @@ public sealed class CdmValidationResult
     }
 }
 
-public sealed class CdmParseException : Exception
+public sealed class CdmParseException : CcsdsFormatException
 {
     public CdmParseException(string message)
         : base(message)

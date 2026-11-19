@@ -61,10 +61,25 @@ namespace DocumentationPageSamples.Reference;
 /// <summary>The C# examples of docs/reference/spice-api.md, one method per block (#705).</summary>
 internal static class SpiceApiPage
 {
-    // docs/reference/spice-api.md, "Example"
+    // docs/reference/spice-api.md, "SPICE errors"
     internal static void Block01()
     {
         #region docs/reference/spice-api.md:1
+        try
+        {
+            var moon = SpiceAPI.Instance.ReadEphemeris(new Time(3000, 1, 1), 399, 301, Frame.ICRF, Aberration.None);
+        }
+        catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
+        {
+            // past the coverage of the loaded SPKs: load one that covers the epoch
+        }
+        #endregion
+    }
+
+    // docs/reference/spice-api.md, "Example"
+    internal static void Block02()
+    {
+        #region docs/reference/spice-api.md:2
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
         foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
@@ -73,9 +88,9 @@ internal static class SpiceApiPage
     }
 
     // docs/reference/spice-api.md, "MemoryDataProvider"
-    internal static void Block02(IO.Astrodynamics.DTO.CelestialBody customEarth)
+    internal static void Block03(IO.Astrodynamics.DTO.CelestialBody customEarth)
     {
-        #region docs/reference/spice-api.md:2
+        #region docs/reference/spice-api.md:3
         // Inputs: customEarth (IO.Astrodynamics.DTO.CelestialBody)
         var memoryProvider = new MemoryDataProvider();
         Configuration.Instance.SetDataProvider(memoryProvider);

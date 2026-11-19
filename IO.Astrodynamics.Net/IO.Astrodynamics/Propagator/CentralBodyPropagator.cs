@@ -49,6 +49,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// models.</exception>
     /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
     /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
+    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
+    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
+    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
         IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
@@ -147,6 +150,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
     /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
     /// semi-definite.</exception>
+    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
+    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
+    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
         IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT, CovariancePropagationOptions covariancePropagation)
@@ -178,6 +184,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
     /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
     /// semi-definite.</exception>
+    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
+    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
+    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
         CovariancePropagationOptions covariancePropagation)
         : this(window, spacecraft, integrator, deltaT)
@@ -224,6 +233,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
+    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
+    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
+    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
         : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)),
             PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
@@ -279,6 +291,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// have different models.</exception>
     /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
     /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
+    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
+    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
+    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft,
         IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
@@ -296,19 +311,41 @@ public class CentralBodyPropagator : PropagatorBase
     /// Resolves the central body from the spacecraft's observer.
     /// For Star or Barycenter observers, returns the Sun.
     /// </summary>
+    /// <exception cref="ArgumentException">The observer is not a <see cref="CelestialItem"/>, or the central body has no GM
+    /// (R03 of #668).</exception>
     internal static CelestialItem ResolveCentralBody(Spacecraft spacecraft)
     {
         var observer = spacecraft.InitialOrbitalParameters.Observer;
 
         if (observer is Star or Barycenter)
         {
-            return Stars.SUN_BODY;
+            return RequireGravitationalParameter(Stars.SUN_BODY, nameof(spacecraft));
         }
 
-        return observer as CelestialItem
+        return RequireGravitationalParameter(observer as CelestialItem
                ?? throw new ArgumentException(
                    "Spacecraft initial orbital parameters observer must be a CelestialItem",
-                   nameof(spacecraft));
+                   nameof(spacecraft)), nameof(spacecraft));
+    }
+
+    /// <summary>
+    /// <paramref name="centralBody"/>, when its GM is finite and above 0: the central body of a propagation (R03 of #668,
+    /// structuring choice 10, decided by S. Guillet, 2026-11-19). A body read from the kernels has a GM of 0 when the kernel
+    /// pool holds no <c>BODYnnn_GM</c>, which its constructor accepts; before 11.0.0 a propagation about it ran without
+    /// central gravity, silently.
+    /// </summary>
+    /// <exception cref="ArgumentException">The GM is 0, negative or not finite, naming <paramref name="paramName"/>.</exception>
+    internal static CelestialItem RequireGravitationalParameter(CelestialItem centralBody, string paramName)
+    {
+        if (double.IsFinite(centralBody.GM) && centralBody.GM > 0.0)
+        {
+            return centralBody;
+        }
+
+        throw new ArgumentException(
+            $"The central body {centralBody.Name} ({centralBody.NaifId}) has a GM of {centralBody.GM} m^3/s^2, where a propagation " +
+            $"needs one above 0: for a body read from the kernels, the kernel pool holds no BODY{centralBody.NaifId}_GM. Load a GM " +
+            "kernel, such as NAIF's gm_de440.tpc, before building the body.", paramName);
     }
 
     private static IIntegrator CreateDefaultIntegrator(Window window, Spacecraft spacecraft,

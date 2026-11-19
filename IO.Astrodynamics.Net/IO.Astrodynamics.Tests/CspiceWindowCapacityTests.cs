@@ -6,6 +6,7 @@ using System.Linq;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -181,7 +182,7 @@ public class CspiceWindowCapacityTests
         // larger cell): SPICE(WINDOWEXCESS), never a partial list. The exception carries SPICE's long message, the size of
         // the cell counted in endpoints, without the short code
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(6000.0));
-        var exception = Assert.Throws<InvalidOperationException>(() => Coordinate(window, RelationnalOperator.Equal, 0.0).ToArray());
+        var exception = Assert.Throws<SpiceException>(() => Coordinate(window, RelationnalOperator.Equal, 0.0).ToArray());
         Assert.Contains("Window has size, 20000, cardinality 20000. Cannot insert an additional interval into the window.", exception.Message);
     }
 

@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.DTO;
+using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Kernels;
@@ -37,7 +38,7 @@ public class SpiceAPI
     private static IntPtr _libHandle = IntPtr.Zero;
     private readonly List<KernelEntry> _kernels = [];
 
-    /// <summary>A path given to <see cref="LoadKernels"/>, and the files its load handed SPICE (#673).</summary>
+    /// <summary>A path given to <see cref="LoadKernels(FileSystemInfo)"/>, and the files its load handed SPICE (#673).</summary>
     private sealed record KernelEntry(FileSystemInfo Path, KernelFile[] Files);
 
     /// <summary>
@@ -136,6 +137,12 @@ public class SpiceAPI
     private static extern IntPtr GetLastErrorProxy();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern IntPtr GetLastErrorShortProxy();
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern IntPtr GetLastErrorLongProxy();
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool
         WriteEphemerisProxy(string filePath, int objectId, StateVector[] stateVectors, uint size);
@@ -207,20 +214,24 @@ public class SpiceAPI
     // enumerate the caller's states before it (#661).
     private static object lockObject = new object();
 
-    // The generation of the kernel pool: raised, under the lock, by each LoadKernels, UnloadKernels and ClearKernels, so
-    // that the static objects of Barycenters, PlanetsAndMoons and Stars read their data again after a change of the pool
-    // (third round of #668)
+    // The generation of the kernel pool: raised, under the lock, by each LoadKernels and ReloadKernels that made a native
+    // call, and by each UnloadKernels and ClearKernels, so that the static objects of Barycenters, PlanetsAndMoons and Stars
+    // read their data again after a change of the pool (third round of #668; a load that hands SPICE nothing leaves it, R01
+    // of #668)
     private static long _kernelPoolGeneration;
 
     // The native loads and unloads of kernels made, under the lock (LoadKernelNative, UnloadKernelNative): each first drops
     // in SPICE the deleted binary kernels (KernelsLoader), which the registry then follows (ForgetDroppedKernels). A call of
-    // LoadKernels or UnloadKernels that made none, a path that does not exist or a directory without kernel files, leaves
+    // LoadKernels, ReloadKernels or UnloadKernels that made none, a path that does not exist, a directory without kernel
+    // files or a repeated load, leaves
     // the registry as it is, since SPICE dropped nothing (review of the fourth round of #668)
     private static long _nativeKernelCalls;
 
     /// <summary>
-    /// The generation of the kernel pool, raised by each call of <see cref="LoadKernels"/>, <see cref="UnloadKernels"/> and
-    /// <see cref="ClearKernels"/>, failed or not: data read from SPICE at a generation hold while it is the current one.
+    /// The generation of the kernel pool, raised by each call of <see cref="LoadKernels(FileSystemInfo)"/> and
+    /// <see cref="ReloadKernels(FileSystemInfo)"/> that hands SPICE a file, failed or not, and by each call of
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> and <see cref="ClearKernels"/>: data read from SPICE at a generation hold
+    /// while it is the current one.
     /// </summary>
     internal static long KernelPoolGeneration => Interlocked.Read(ref _kernelPoolGeneration);
 
@@ -500,9 +511,62 @@ public class SpiceAPI
     }
 
     /// <summary>
-    ///     Retrieve the last error message from the native proxy layer and throw an InvalidOperationException.
+    /// Throws the error of the native call that failed: <see cref="SpiceException"/> when SPICE signalled it,
+    /// <see cref="InvalidOperationException"/> otherwise (<see cref="NativeException(string)"/>).
     /// </summary>
-    private static void ThrowLastProxyError() => throw new InvalidOperationException(LastProxyError());
+    private static void ThrowLastProxyError() => throw NativeException(null);
+
+    /// <summary>
+    /// Throws the error of a failed native call that handed SPICE <paramref name="frameName"/>, the name of
+    /// <paramref name="frame"/>: <see cref="ArgumentException"/> naming <paramref name="paramName"/> when SPICE knows no
+    /// frame of that name (<c>namfrm_c</c> through <c>GetFrameInfoProxy</c>, read after the message), with the error of the
+    /// call as inner exception; that error otherwise (R25 of #668: before 11.0.0 an unknown name threw the
+    /// <see cref="InvalidOperationException"/> of the call, the type of a coverage gap).
+    /// </summary>
+    private static void ThrowLastProxyError(string frameName, Frame frame, string paramName) =>
+        throw FrameErrorOrInner(NativeException(null), frameName, frame, paramName);
+
+    // The ArgumentException of an unknown frame name, the error of the call as inner exception, or that error. Under the lock
+    private static Exception FrameErrorOrInner(Exception error, string frameName, Frame frame, string paramName)
+    {
+        if (GetFrameInfoProxy(frameName, out _, out _, out _))
+        {
+            return error;
+        }
+
+        return new ArgumentException(UnknownFrameMessage(frame.Name), paramName, error);
+    }
+
+    /// <summary>
+    /// The message of a frame name the loaded kernels do not define; for ICRF and EME2000, which are no SPICE names (the
+    /// library keeps them as other names, frames.md), it names <see cref="Frame.ICRF"/>.
+    /// </summary>
+    internal static string UnknownFrameMessage(string name) =>
+        WithIcrfHint(name, $"'{name}' is not a frame of the loaded kernels: SPICE knows no frame of that name.");
+
+    /// <summary>
+    /// Whether <paramref name="e"/> is the <see cref="ArgumentException"/> of the unknown name of <paramref name="frame"/>
+    /// (<see cref="FrameErrorOrInner"/>) naming another parameter than <paramref name="paramName"/>: the error of an inner
+    /// read, which the public call that holds the frame renames (<see cref="UnknownFrameError"/>), so that
+    /// <see cref="ArgumentException.ParamName"/> is the parameter of that call, or null when the frame is none of its
+    /// arguments (the frame of an instance or of a state; R25 of #668, open choice 1).
+    /// </summary>
+    internal static bool IsUnknownFrameErrorOfAnotherParameter(ArgumentException e, Frame frame, string paramName) =>
+        e.ParamName != paramName && e.InnerException is SpiceException &&
+        e.Message.StartsWith(UnknownFrameMessage(frame.Name), StringComparison.Ordinal);
+
+    /// <summary>The error of <see cref="IsUnknownFrameErrorOfAnotherParameter"/> naming <paramref name="paramName"/>.</summary>
+    internal static ArgumentException UnknownFrameError(ArgumentException e, Frame frame, string paramName) =>
+        new(UnknownFrameMessage(frame.Name), paramName, e.InnerException);
+
+    /// <summary>
+    /// <paramref name="message"/>, followed for the names ICRF and EME2000 by a pointer to <see cref="Frame.ICRF"/>: the two
+    /// names stay other names than J2000 (frames.md), a frame of either converting nowhere (R25 of #668).
+    /// </summary>
+    internal static string WithIcrfHint(string name, string message) =>
+        string.Equals(name, "ICRF", StringComparison.OrdinalIgnoreCase) || string.Equals(name, "EME2000", StringComparison.OrdinalIgnoreCase)
+            ? message + " Use Frame.ICRF, the ICRF, which SPICE names J2000 (EME2000 data are read in it, its 23 mas frame bias ignored)."
+            : message;
 
     /// <summary>The last error message of the native proxy layer, or a generic message when it holds none.</summary>
     private static string LastProxyError()
@@ -510,6 +574,37 @@ public class SpiceAPI
         var msg = Marshal.PtrToStringAnsi(GetLastErrorProxy());
         return string.IsNullOrEmpty(msg) ? "Native proxy call failed" : msg;
     }
+
+    /// <summary>
+    /// The error of the native call that just failed, read on the thread of the call before any other native call: its
+    /// message, and SPICE's short and long messages, empty when the failure is not SPICE's (R03 of #668).
+    /// </summary>
+    private static NativeError LastNativeError() =>
+        new(LastProxyError(), Marshal.PtrToStringAnsi(GetLastErrorShortProxy()) ?? string.Empty,
+            Marshal.PtrToStringAnsi(GetLastErrorLongProxy()) ?? string.Empty);
+
+    /// <summary>
+    /// The exception of the native call that just failed, <paramref name="context"/> (the call of the library, or null)
+    /// followed by the message of the native layer (<see cref="NativeException(string, NativeError)"/>).
+    /// </summary>
+    private static InvalidOperationException NativeException(string context) => NativeException(context, LastNativeError());
+
+    /// <summary>
+    /// The exception of a failed native call: <see cref="SpiceException"/> with SPICE's short and long messages when SPICE
+    /// signalled the error, <see cref="InvalidOperationException"/> for a failure of the native layer that is not SPICE's (a
+    /// rule of the proxy, a C++ exception with no SPICE error); the message is <paramref name="context"/>, when given,
+    /// followed by that of the native layer (R03 of #668; before 11.0.0, an <see cref="InvalidOperationException"/> always).
+    /// </summary>
+    private static InvalidOperationException NativeException(string context, NativeError error)
+    {
+        var message = context == null ? error.Message : $"{context}: {error.Message}";
+        return string.IsNullOrEmpty(error.ShortMessage)
+            ? new InvalidOperationException(message)
+            : new SpiceException(message, error.ShortMessage, error.LongMessage);
+    }
+
+    /// <summary>The error of a failed native call: the message of the native layer and SPICE's short and long ones.</summary>
+    private readonly record struct NativeError(string Message, string ShortMessage, string LongMessage);
 
     /// <summary>
     ///     Get spice toolkit version number
@@ -527,26 +622,26 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The kernel paths loaded by <see cref="LoadKernels"/>, as they are at the call: a copy taken under the lock, so that
+    /// The kernel paths loaded by <see cref="LoadKernels(FileSystemInfo)"/>, as they are at the call: a copy taken under the lock, so that
     /// another thread may load or unload kernels while the caller enumerates it.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// After <see cref="UnloadKernels"/> of a file or a subdirectory of a loaded directory, the directory is no longer listed
+    /// After <see cref="UnloadKernels(FileSystemInfo)"/> of a file or a subdirectory of a loaded directory, the directory is no longer listed
     /// but each of its kernel files SPICE still holds, in its place.
     /// </para>
     /// <para>
     /// An SPK, CK, binary PCK or EK whose file, named by its full path, was deleted leaves the listing at the next native load,
-    /// unload or write, which closes and unloads it in SPICE (<see cref="UnloadKernels"/>): a path is listed only while SPICE
+    /// unload or write, which closes and unloads it in SPICE (<see cref="UnloadKernels(FileSystemInfo)"/>): a path is listed only while SPICE
     /// holds a file of it, and a directory whose files were all dropped is no longer listed (fourth round of #668; before, the
-    /// path was listed until it was unloaded). A call that hands SPICE nothing (<see cref="LoadKernels"/> of a path that does
+    /// path was listed until it was unloaded). A call that hands SPICE nothing (<see cref="LoadKernels(FileSystemInfo)"/> of a path that does
     /// not exist or of a directory without kernel files, the unload of such a directory) leaves the listing as it is, since
     /// SPICE still holds the file; a symbolic link counts as deleted once its target is, as the native layer tests it. A text
     /// kernel, a meta-kernel or a DSK stays listed until it is unloaded.
     /// </para>
     /// <para>
     /// A file a writer replaces (<see cref="WriteEphemeris"/>, <see cref="WriteOrientation"/>, <c>Spacecraft.WriteEphemeris</c>
-    /// and the writers that call them) leaves the listing before the write, unloaded as <see cref="UnloadKernels"/> unloads
+    /// and the writers that call them) leaves the listing before the write, unloaded as <see cref="UnloadKernels(FileSystemInfo)"/> unloads
     /// it, a directory being replaced by its remaining files; the new file is not loaded (#706: before, the native writers
     /// left it listed and SPICE read the replaced data, the managed one left it listed while SPICE no longer held it).
     /// </para>
@@ -560,40 +655,57 @@ public class SpiceAPI
     }
 
     /// <summary>
-    ///     Load kernel at given path
+    ///     Loads the kernels of a path, a file or a directory, that SPICE does not hold from a load of this class.
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
     /// <remarks>
     /// <para>
     /// A file path is handed to SPICE as it is. For a directory, the kernel files of the directory and of its
-    /// subdirectories are loaded, in the order of the directory listing; the other files, from which SPICE would load
-    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). The path is taken as what it
-    /// is on disk, whatever its type: a <see cref="FileInfo"/> that names a directory loads the directory, a
-    /// <see cref="DirectoryInfo"/> that names a file loads the file.
+    /// subdirectories are loaded in ordinal order of their paths relative to the directory, component by component
+    /// (<see cref="KernelFiles"/>): where two of them assign the same variable or cover the same object, the later file
+    /// wins, on every platform (11.0.0; before, the order of the directory listing, which depends on the file system). The
+    /// other files, from which SPICE would load nothing (a geopotential model, a readme), are left out
+    /// (<see cref="IsKernelFile"/>). The path is taken as what it is on disk, whatever its type: a <see cref="FileInfo"/>
+    /// that names a directory loads the directory, a <see cref="DirectoryInfo"/> that names a file loads the file.
     /// </para>
     /// <para>
-    /// Paths are compared by their components (#673): a path already loaded, or inside a loaded directory, reloads that
-    /// entry; a directory first unloads the entries inside it; a sibling whose name extends a loaded one is another path.
-    /// SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
+    /// A file SPICE already holds from a load of this class is not handed to it again (11.0.0, R01 of #668, decided by
+    /// S. Guillet, 2026-11-19): a repeated load of a path furnishes only its files loaded since, and keeps the precedence of
+    /// the others; a file rewritten on disk, or one to put back on top, is read again by
+    /// <see cref="ReloadKernels(FileSystemInfo)"/>. Before 11.0.0 a repeated load unloaded the path and loaded it again,
+    /// on top of every kernel loaded after it, at 4 to 7 times the cost. Paths are compared by their components (#673): a
+    /// path inside a loaded directory adds its new files to that entry; a directory that holds loaded entries replaces
+    /// them by its own entry, listed last, their files kept loaded; a sibling whose name extends a loaded one is another
+    /// path. SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
     /// </para>
     /// <para>
     /// Each native load first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted since its load, as
-    /// <see cref="UnloadKernels"/> does (#668, second round); a kernel SPICE holds under a relative name, from a meta-kernel,
-    /// is left to SPICE. <see cref="GetLoadedKernels"/> no longer lists a file so dropped once the call returns (fourth round
-    /// of #668).
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> does (#668, second round); a kernel SPICE holds under a relative name,
+    /// from a meta-kernel, is left to SPICE. <see cref="GetLoadedKernels"/> no longer lists a file so dropped once the call
+    /// returns (fourth round of #668).
     /// </para>
     /// <para>
-    /// Each call, as each <see cref="UnloadKernels"/> and <see cref="ClearKernels"/>, raises the generation of the kernel
-    /// pool: the static objects of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> and <see cref="Stars"/> read on
-    /// SPICE read their data again at their next read (third round of #668).
+    /// A call that hands SPICE a file, a failed one included, raises the generation of the kernel pool, as each
+    /// <see cref="UnloadKernels(FileSystemInfo)"/>, <see cref="ReloadKernels(FileSystemInfo)"/> and
+    /// <see cref="ClearKernels"/> does: the static objects of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> and
+    /// <see cref="Stars"/> read on SPICE read their data again at their next read (third round of #668). A call that hands
+    /// SPICE nothing, a repeated load or a path that does not exist, leaves it as it is (11.0.0; before, every call raised
+    /// it, failed or not).
+    /// </para>
+    /// <para>
+    /// When SPICE fails to load a file, the files of the call loaded before it stay loaded and listed, under the path, so
+    /// that <see cref="UnloadKernels(FileSystemInfo)"/> of the path unloads them and a later load does not hand them to
+    /// SPICE twice (11.0.0; before, they were loaded and not listed).
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
     /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is loaded, unloaded
     /// or reloaded. Before 11.0.0 such a path loaded nothing and the call returned.</exception>
-    /// <exception cref="InvalidOperationException">SPICE failed to load a file, or the native file system calls rejected its
-    /// path (a loop of symbolic links); the message is SPICE's or the file system's (#706: before, the message referred to
-    /// the standard output, and a path the file system rejected ended the process).</exception>
+    /// <exception cref="SpiceException">SPICE failed to load a file: <see cref="SpiceException.ShortMessage"/> is SPICE's
+    /// code, the message names the file then gives SPICE's (#706: before, the message referred to the standard output; R03 of
+    /// #668: before 11.0.0, an <see cref="InvalidOperationException"/>, which it derives from).</exception>
+    /// <exception cref="InvalidOperationException">The native file system calls rejected its path (a loop of symbolic
+    /// links); the message is the file system's (#706: before, the process ended).</exception>
     public void LoadKernels(FileSystemInfo path)
     {
         if (path == null) throw new ArgumentNullException(nameof(path));
@@ -606,54 +718,194 @@ public class SpiceAPI
             }
             finally
             {
-                if (_nativeKernelCalls != nativeCalls) ForgetDroppedKernels();
-                Interlocked.Increment(ref _kernelPoolGeneration);
+                AfterKernelCall(nativeCalls);
             }
         }
     }
 
-    // LoadKernels under the lock
+    /// <summary>
+    ///     Loads the kernels of a path, a file or a directory, as <see cref="LoadKernels(FileSystemInfo)"/> does.
+    /// </summary>
+    /// <param name="path">A file path or a directory path, absolute or relative to the working directory.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, or is neither a file nor a directory on disk.</exception>
+    /// <exception cref="SpiceException">SPICE failed to load a file, as <see cref="LoadKernels(FileSystemInfo)"/>.</exception>
+    public void LoadKernels(string path) => LoadKernels(KernelPath(path));
+
+    /// <summary>
+    ///     Reads the kernels of a path, a file or a directory, again: the files of the path SPICE holds from a load of this
+    ///     class are unloaded, then every kernel file of the path is loaded, on top of the kernels loaded before.
+    /// </summary>
+    /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
+    /// <remarks>
+    /// <para>
+    /// For a kernel rewritten on disk, or to give a path precedence over the kernels loaded after it (11.0.0, R01 of #668,
+    /// decided by S. Guillet, 2026-11-19): what a repeated <see cref="LoadKernels(FileSystemInfo)"/> did before 11.0.0. A
+    /// path never loaded is loaded. A path inside a loaded directory is read again inside that entry, which stays listed at
+    /// its place; a loaded path, or a directory that holds loaded entries, is unloaded as
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> unloads it and loaded again, listed last. The files are loaded in the
+    /// order of <see cref="LoadKernels(FileSystemInfo)"/>, and the generation of the kernel pool is raised when the call
+    /// hands SPICE a file.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is unloaded or
+    /// loaded.</exception>
+    /// <exception cref="SpiceException">SPICE failed to unload a file, as <see cref="UnloadKernels(FileSystemInfo)"/>
+    /// reports it (nothing is loaded then), or to load one, as <see cref="LoadKernels(FileSystemInfo)"/> reports it.</exception>
+    public void ReloadKernels(FileSystemInfo path)
+    {
+        if (path == null) throw new ArgumentNullException(nameof(path));
+        lock (lockObject)
+        {
+            long nativeCalls = _nativeKernelCalls;
+            try
+            {
+                ReloadKernelsLocked(path);
+            }
+            finally
+            {
+                AfterKernelCall(nativeCalls);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Reads the kernels of a path, a file or a directory, again, as <see cref="ReloadKernels(FileSystemInfo)"/> does.
+    /// </summary>
+    /// <param name="path">A file path or a directory path, absolute or relative to the working directory.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, or is neither a file nor a directory on disk.</exception>
+    /// <exception cref="SpiceException">SPICE failed to unload or load a file, as <see cref="ReloadKernels(FileSystemInfo)"/>.</exception>
+    public void ReloadKernels(string path) => ReloadKernels(KernelPath(path));
+
+    // The FileSystemInfo of a path given as text: a DirectoryInfo for a directory on disk, a FileInfo otherwise (a missing
+    // path included, which the call then refuses)
+    private static FileSystemInfo KernelPath(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        return Directory.Exists(path) ? new DirectoryInfo(path) : new FileInfo(path);
+    }
+
+    // After a load, reload or unload, under the lock: the registry follows the files the native layer dropped, and the
+    // generation of the kernel pool is raised, when the call made a native call
+    private void AfterKernelCall(long nativeCallsBefore)
+    {
+        if (_nativeKernelCalls == nativeCallsBefore) return;
+        ForgetDroppedKernels();
+        Interlocked.Increment(ref _kernelPoolGeneration);
+    }
+
+    // LoadKernels under the lock: the kernel files of the path that no entry holds are handed to SPICE, in their order;
+    // those furnished before a failure are registered too
     private void LoadKernelsLocked(FileSystemInfo path)
     {
-        // Before any unload or reload, so that a failed call changes nothing; not the cached Exists of the instance,
-        // which a reload of a stored entry would trust after a deletion
+        // Before any native call, so that a failed call changes nothing; not the cached Exists of the instance, which a
+        // stored entry would trust after a deletion
         if (!Exists(path))
         {
             throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
         }
 
-        var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
-        if (containing.Length > 0)
+        int holder = _kernels.FindIndex(x => IsSameOrInside(path.FullName, x.Path.FullName));
+        var held = new HashSet<string>(_kernels.SelectMany(x => x.Files).Select(x => KernelName(x.Name)), StringComparer.Ordinal);
+        var furnished = new List<KernelFile>();
+        bool completed = false;
+        try
         {
-            foreach (var entry in containing)
+            foreach (var kernel in KernelFiles(path))
             {
-                UnloadKernels(entry.Path);
-                LoadKernels(entry.Path);
+                if (!held.Add(KernelName(kernel)))
+                {
+                    continue;
+                }
+
+                if (!LoadKernelNative(kernel))
+                {
+                    throw NativeException($"Kernel {kernel} can't be loaded");
+                }
+
+                // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
+                var (reads, mayFailOn) = UnloadRereads(kernel);
+                furnished.Add(new KernelFile(kernel, reads, mayFailOn));
             }
 
+            completed = true;
+        }
+        finally
+        {
+            if (completed || furnished.Count > 0)
+            {
+                Register(path, holder, furnished);
+            }
+        }
+    }
+
+    // Records the files a load furnished: in the entry that holds the path, or in a new entry of the path, listed last, that
+    // takes the files of the entries inside it
+    private void Register(FileSystemInfo path, int holder, List<KernelFile> furnished)
+    {
+        if (holder >= 0)
+        {
+            var entry = _kernels[holder];
+            _kernels[holder] = entry with { Files = entry.Files.Concat(furnished).ToArray() };
             return;
         }
 
-        foreach (var inside in _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray())
+        var inside = _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray();
+        _kernels.RemoveAll(x => inside.Contains(x));
+        _kernels.Add(new KernelEntry(path, inside.SelectMany(x => x.Files).Concat(furnished).ToArray()));
+    }
+
+    // ReloadKernels under the lock
+    private void ReloadKernelsLocked(FileSystemInfo path)
+    {
+        if (!Exists(path))
         {
-            UnloadKernels(inside.Path);
+            throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
         }
 
-        var files = new List<KernelFile>();
-        foreach (var kernel in KernelFiles(path))
+        int holder = _kernels.FindIndex(x => IsSameOrInside(path.FullName, x.Path.FullName) && !IsSameOrInside(x.Path.FullName, path.FullName));
+        if (holder < 0)
         {
-            if (!LoadKernelNative(kernel))
+            if (_kernels.Any(x => IsSameOrInside(x.Path.FullName, path.FullName)))
             {
-                throw new InvalidOperationException($"Kernel {kernel} can't be loaded: {LastProxyError()}");
+                UnloadKernelsLocked(path);
             }
 
-            // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
-            var (reads, mayFailOn) = UnloadRereads(kernel);
-            files.Add(new KernelFile(kernel, reads, mayFailOn));
+            LoadKernelsLocked(path);
+            return;
         }
 
-        _kernels.Add(new KernelEntry(path, files.ToArray()));
+        // A path inside a loaded directory: its files leave the entry, which keeps its place, and come back at its end
+        var entry = _kernels[holder];
+        var reloaded = entry.Files.Where(x => IsSameOrInside(x.Name, path.FullName)).ToArray();
+        _kernels[holder] = entry with { Files = entry.Files.Except(reloaded).ToArray() };
+        var unrepaired = new List<(KernelFile File, NativeError Error)>();
+        UnloadFiles(reloaded, unrepaired);
+        if (unrepaired.Count > 0)
+        {
+            throw NativeException($"Kernel {unrepaired[0].File.Name} can't be unloaded", unrepaired[0].Error);
+        }
+
+        try
+        {
+            LoadKernelsLocked(path);
+        }
+        catch
+        {
+            // A directory none of whose files SPICE holds any longer leaves the listing
+            if (_kernels[holder].Files.Length == 0 && entry.Files.Length > 0)
+            {
+                _kernels.RemoveAt(holder);
+            }
+
+            throw;
+        }
     }
+
+    // The name by which the registry compares two kernel files: the full path, without a trailing separator
+    private static string KernelName(string file) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(file));
 
     /// <summary>Whether the path is a file or a directory on disk now, whatever the type of <paramref name="path"/>.</summary>
     private static bool Exists(FileSystemInfo path) => File.Exists(path.FullName) || Directory.Exists(path.FullName);
@@ -779,9 +1031,13 @@ public class SpiceAPI
     private static readonly char[] DataSeparators = [' ', '\t', '\r', '\v', '\f', '=', '+', '(', ')', ','];
 
     /// <summary>
-    /// The files that <see cref="LoadKernels"/> hands to SPICE for <paramref name="path"/>: the file itself, or the
-    /// kernel files of a directory and of its subdirectories, in the order of the directory listing, as the native
-    /// loader walks it. The path is walked as a directory whenever it is one on disk, whatever its type.
+    /// The files that <see cref="LoadKernels(FileSystemInfo)"/> hands to SPICE for <paramref name="path"/>: the file itself,
+    /// or the kernel files of a directory and of its subdirectories, in ordinal order of their paths relative to the
+    /// directory, component by component (the entries of each directory sorted by name, ordinal, a subdirectory walked at
+    /// its place): the same order on every platform, where a sort of the whole paths would put <c>x/y.tf</c> before
+    /// <c>x0.tf</c> under '/' (0x2F) and after it under '\' (0x5C) (11.0.0, R01 of #668; before, the order of the directory
+    /// listing, which depends on the file system). The path is walked as a directory whenever it is one on disk, whatever
+    /// its type.
     /// </summary>
     /// <remarks>
     /// The other files of a directory (a geopotential model, a readme) are left out: SPICE would load nothing from
@@ -796,7 +1052,9 @@ public class SpiceAPI
             yield break;
         }
 
-        foreach (var entry in Directory.EnumerateFileSystemEntries(path.FullName))
+        // Ordinal by name at each level: the order of the paths relative to the directory, component by component, the same
+        // on every platform ('x' and its files before 'x0.tf', whatever the separator)
+        foreach (var entry in Directory.EnumerateFileSystemEntries(path.FullName).OrderBy(Path.GetFileName, StringComparer.Ordinal))
         {
             if (Directory.Exists(entry))
             {
@@ -1042,7 +1300,9 @@ public class SpiceAPI
     /// by absolute paths to have them covered.
     /// </para>
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call, of the same
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null (11.0.0, as <see cref="LoadKernels(FileSystemInfo)"/>;
+    /// before, the call returned).</exception>
+    /// <exception cref="SpiceException">SPICE failed to unload a file and no later unload of the call, of the same
     /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
     /// again, and that of a DSK opens the other loaded DSKs again; each fails on a kernel of those kinds deleted since its
     /// load, until a later unload that reads the same kernels again succeeds (#673). A deleted SPK, CK, binary PCK or EK
@@ -1051,7 +1311,7 @@ public class SpiceAPI
     /// the first failure no later unload repaired (#706: before, it referred to the standard output).</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
-        if (path == null) return;
+        if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
             long nativeCalls = _nativeKernelCalls;
@@ -1067,11 +1327,25 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    ///     Unloads the kernels of a path, a file or a directory, as <see cref="UnloadKernels(FileSystemInfo)"/> does.
+    /// </summary>
+    /// <param name="path">A file path or a directory path, absolute or relative to the working directory.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty.</exception>
+    /// <exception cref="SpiceException">SPICE failed to unload a file, as <see cref="UnloadKernels(FileSystemInfo)"/>.</exception>
+    public void UnloadKernels(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        // A deleted directory is matched by its components, whatever the type of the instance
+        UnloadKernels(Directory.Exists(path) ? new DirectoryInfo(path) : new FileInfo(path));
+    }
+
     // UnloadKernels under the lock
     private void UnloadKernelsLocked(FileSystemInfo path)
     {
         bool matched = false;
-        var unrepaired = new List<(KernelFile File, string Error)>();
+        var unrepaired = new List<(KernelFile File, NativeError Error)>();
         for (int i = 0; i < _kernels.Count; i++)
         {
             var entry = _kernels[i];
@@ -1105,12 +1379,12 @@ public class SpiceAPI
 
         if (!matched && !UnloadKernelNative(path.FullName))
         {
-            throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded: {LastProxyError()}");
+            throw NativeException($"Kernel {path.FullName} can't be unloaded");
         }
 
         if (unrepaired.Count > 0)
         {
-            throw new InvalidOperationException($"Kernel {unrepaired[0].File.Name} can't be unloaded: {unrepaired[0].Error}");
+            throw NativeException($"Kernel {unrepaired[0].File.Name} can't be unloaded", unrepaired[0].Error);
         }
     }
 
@@ -1127,14 +1401,14 @@ public class SpiceAPI
     /// closes and unloads the deleted SPKs, CKs, binary PCKs and EKs, so only text kernels, meta-kernels and DSKs still fail
     /// this way, and the binary kernels SPICE holds under a relative name.
     /// </summary>
-    private static void UnloadFiles(KernelFile[] files, List<(KernelFile File, string Error)> unrepaired)
+    private static void UnloadFiles(KernelFile[] files, List<(KernelFile File, NativeError Error)> unrepaired)
     {
         foreach (var file in files)
         {
             if (!UnloadKernelNative(file.Name))
             {
                 // SPICE's message, kept by the native layer since #706, taken at the failing call
-                unrepaired.Add((file, LastProxyError()));
+                unrepaired.Add((file, LastNativeError()));
             }
             else
             {
@@ -1210,14 +1484,24 @@ public class SpiceAPI
     /// returned its first 1000 (#653).
     /// </summary>
     /// <exception cref="InvalidOperationException">The native search failed: SPICE's message.</exception>
-    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search)
+    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search,
+        params (string Name, Frame Frame, string ParamName)[] frames)
     {
         var windows = System.Buffers.ArrayPool<Window>.Shared.Rent(WindowSearchCapacity);
         try
         {
             if (!search(windows, WindowSearchCapacity, out int count))
             {
-                ThrowLastProxyError();
+                // A frame handed by name that SPICE does not know is a bad argument (R25 of #668), the SPICE error its inner
+                // exception (review of L1: SpiceException before); the message is read before any other native call
+                var error = NativeException(null);
+                foreach (var (name, frame, paramName) in frames)
+                {
+                    var unknown = FrameErrorOrInner(error, name, frame, paramName);
+                    if (unknown != error) throw unknown;
+                }
+
+                throw error;
             }
 
             return WithinSearchWindow(windows, count, searchWindow);
@@ -1306,7 +1590,7 @@ public class SpiceAPI
     /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), with
     /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
@@ -1342,10 +1626,11 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
-    /// the error and the search returned no window).</exception>
+    /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
+    /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
+    /// window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
@@ -1374,11 +1659,16 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">A body modeled as an ellipsoid without a frame given is not a celestial body
     /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
-    /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672).</exception>
-    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
-    /// the error and the search returned no window).</exception>
+    /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672). Or SPICE knows
+    /// no frame of the name of <paramref name="frontFrame"/> or <paramref name="targetFrame"/> given for an ellipsoid (the
+    /// parameter named, read through <c>namfrm_c</c> after the failed search): the message names the frame, the
+    /// <see cref="SpiceException"/> of the search its inner exception (R25 of #668, decided by S. Guillet, 2026-11-19;
+    /// before 11.0.0 that exception).</exception>
+    /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
+    /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
+    /// window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
@@ -1395,10 +1685,14 @@ public class SpiceAPI
             string targetFrameName = targetShape == ShapeType.Ellipsoid
                 ? targetFrame?.Name ?? ReadCelestialBodyInfo(targetId, nameof(targetId)).FrameName
                 : string.Empty;
+            // The frames given that gfoclt reads, those of an ellipsoid: a name SPICE does not know names its parameter
+            var givenFrames = new List<(string, Frame, string)>(2);
+            if (frontShape == ShapeType.Ellipsoid && frontFrame != null) givenFrames.Add((frontFrameName, frontFrame, nameof(frontFrame)));
+            if (targetShape == ShapeType.Ellipsoid && targetFrame != null) givenFrames.Add((targetFrameName, targetFrame, nameof(targetFrame)));
             return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
                 FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
                     frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(),
-                    stepSize.TotalSeconds, windows, capacity, out count));
+                    stepSize.TotalSeconds, windows, capacity, out count), givenFrames.ToArray());
         }
     }
 
@@ -1434,11 +1728,14 @@ public class SpiceAPI
     /// (<see cref="ManagedReadFrame"/>) as the library reads it.
     /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name.</exception>
-    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// frame name it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
-    /// error and the search returned no window).</exception>
+    /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name; or SPICE
+    /// knows no frame of the name handed (read through <c>namfrm_c</c> after the failed search): the message names the
+    /// frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception). Both name <c>frame</c>.</exception>
+    /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
+    /// no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
@@ -1460,7 +1757,7 @@ public class SpiceAPI
                 return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
                     FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId, frameName,
                         coordinateSystem.GetDescription(), coordinate.GetDescription(), relation, value, adjustValue,
-                        aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
+                        aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count), (frameName, frame, nameof(frame)));
             }
         });
     }
@@ -1486,7 +1783,10 @@ public class SpiceAPI
     /// <returns>The windows where the constraint holds.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="fixedFrame"/> or <paramref name="method"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="method"/> is not ELLIPSOID; before 11.0.0 such a method gave no
-    /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682).</exception>
+    /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682). Or SPICE knows no frame of the name of
+    /// <paramref name="fixedFrame"/> (<c>fixedFrame</c>, read through <c>namfrm_c</c> after the failed search): the message
+    /// names the frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of
+    /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>
     /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
     /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
@@ -1495,10 +1795,10 @@ public class SpiceAPI
     /// crossing to the next, as the managed search gives it.
     /// Before 11.0.0 the altitude was read in km (#488).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
-    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), a
-    /// fixed frame it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
-    /// error and the search returned no window).</exception>
+    /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
+    /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
+    /// no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -1516,7 +1816,8 @@ public class SpiceAPI
                         // The native layer hands the altitude to georec_c beside a radius in km (#488)
                         (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
                         illuminationType.GetDescription(), relation, value, adjustValue,
-                        aberration.GetDescription(), stepSize.TotalSeconds, method, windows, capacity, out count));
+                        aberration.GetDescription(), stepSize.TotalSeconds, method, windows, capacity, out count),
+                    (fixedFrame.Name, fixedFrame, nameof(fixedFrame)));
             }
         });
     }
@@ -1534,7 +1835,11 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="targetFrame"/> for an
+    /// ellipsoid target (<c>targetFrame</c>, read through <c>namfrm_c</c> after the failed search; a point target reads no
+    /// frame): the message names the frame, the <see cref="SpiceException"/> of the search its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
+    /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), an
     /// instrument whose field of view no loaded instrument kernel defines, with SPICE's message (fourth round of #668;
     /// before 11.0.0 the native layer dropped the error and the search returned no window).</exception>
@@ -1546,7 +1851,9 @@ public class SpiceAPI
         {
             return RunWindowSearch(searchWindow, (Window[] windows, int capacity, out int count) =>
                 FindWindowsInFieldOfViewConstraintProxy(searchWindow.Convert(), observerId, instrumentId, targetId, targetFrame.Name,
-                    targetShape.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count));
+                    targetShape.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows, capacity, out count),
+                // gftfov reads the target frame of an ellipsoid only (Detailed_Input tframe)
+                targetShape == ShapeType.Ellipsoid ? [(targetFrame.Name, targetFrame, nameof(targetFrame))] : []);
         }
     }
 
@@ -1564,7 +1871,7 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563: before, a step of 0
     /// ran until the process was out of memory and a negative step read 10000 epochs backwards).</exception>
-    /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454), or the observer is a
+    /// <exception cref="SpiceException">SPICE gives no state at one of the epochs (#454), or the observer is a
     /// site whose SPK does not cover J2000 TDB (see the remarks).</exception>
     /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
     /// + site, of a body SPICE names) that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a
@@ -1573,7 +1880,10 @@ public class SpiceAPI
     /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
     /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
     /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
-    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>. Or SPICE knows no frame of
+    /// the name of <paramref name="frame"/> (<c>frame</c>, read through <c>namfrm_c</c> after the failed read): the message
+    /// names the frame, the <see cref="SpiceException"/> of the read, with SPICE's message, its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -1598,13 +1908,13 @@ public class SpiceAPI
                 double[] epochs = grid.Seconds(first, WindowReadChunk);
                 var stateVectors = new StateVector[epochs.Length];
                 if (!ReadEphemerisProxy(epochs, epochs.Length, observerId, targetId, frameName, aberration.GetDescription(), stateVectors))
-                    ThrowLastProxyError();
+                    ThrowLastProxyError(frameName, frame, nameof(frame));
                 // Every state checked before any is converted: the rotation into a managed frame calls TransformFrameProxy,
                 // which clears the message of the failed epochs (#714, review of the branch: a site frame threw "Native proxy
                 // call failed" where J2000 threw SPICE's message)
                 foreach (var x in stateVectors)
                 {
-                    ThrowOnFailedRead(x);
+                    ThrowOnFailedRead(x, frameName, frame);
                 }
 
                 for (int i = 0; i < stateVectors.Length; i++)
@@ -1682,7 +1992,7 @@ public class SpiceAPI
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException">SPICE gives no state (#454): the kernels do not cover the epoch or do
+    /// <exception cref="SpiceException">SPICE gives no state (#454): the kernels do not cover the epoch or do
     /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined. Or the observer
     /// is a site whose SPK does not cover J2000 TDB (see the remarks).</exception>
     /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
@@ -1692,7 +2002,10 @@ public class SpiceAPI
     /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
     /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
     /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
-    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>.</exception>
+    /// <c>spkezr_c</c>'s read, its missing ephemeris an <see cref="InvalidOperationException"/>. Or SPICE knows no frame of
+    /// the name of <paramref name="frame"/> (<c>frame</c>, read through <c>namfrm_c</c> after the failed read): the message
+    /// names the frame, the <see cref="SpiceException"/> of the read, with SPICE's message, its inner exception (R25 of #668,
+    /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
     /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
@@ -1814,9 +2127,10 @@ public class SpiceAPI
         Frame frame, Aberration aberration)
     {
         var managed = ManagedReadFrame(frame);
+        string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
         var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
-            observer.NaifId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name, aberration.GetDescription());
-        ThrowOnFailedRead(stateVector);
+            observer.NaifId, targetId, frameName, aberration.GetDescription());
+        ThrowOnFailedRead(stateVector, frameName, frame);
         // Labelled with the epoch asked, the instant SPICE read at, as SpiceDataProvider.GetEphemeris does: where an ulp
         // of the seconds is coarser than a tick (2017 to 2028, 1971 to 1983), the epoch SPICE returns, made a Time again,
         // is the neighbouring tick for about 16 % of ticks (#625)
@@ -1833,15 +2147,16 @@ public class SpiceAPI
     /// <summary>
     /// Throws the SPICE error of a failed read: <c>ReadEphemerisAtGivenEpochProxy</c> writes NaN in the state when
     /// <c>spkezr_c</c> fails and keeps the SPICE message for <c>GetLastErrorProxy</c> (#454); before, the state was the
-    /// unwritten one of the stack. No valid state is non-finite.
+    /// unwritten one of the stack. No valid state is non-finite. A frame name SPICE does not know throws
+    /// <see cref="ArgumentException"/> (<c>frame</c>), the SPICE error as inner exception (R25 of #668).
     /// </summary>
-    private static void ThrowOnFailedRead(in StateVector stateVector)
+    private static void ThrowOnFailedRead(in StateVector stateVector, string frameName, Frame frame)
     {
         if (!double.IsFinite(stateVector.Position.X) || !double.IsFinite(stateVector.Position.Y) ||
             !double.IsFinite(stateVector.Position.Z) || !double.IsFinite(stateVector.Velocity.X) ||
             !double.IsFinite(stateVector.Velocity.Y) || !double.IsFinite(stateVector.Velocity.Z))
         {
-            ThrowLastProxyError();
+            ThrowLastProxyError(frameName, frame, nameof(frame));
         }
     }
 
@@ -1891,7 +2206,11 @@ public class SpiceAPI
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="referenceFrame"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive (#563).</exception>
-    /// <exception cref="InvalidOperationException">SPICE gives no orientation at one of the epochs, with its message.</exception>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="referenceFrame"/>
+    /// (<c>referenceFrame</c>, read through <c>namfrm_c</c> after the failed read): the message names the frame, the
+    /// <see cref="SpiceException"/> of the read, with SPICE's message, its inner exception (R25 of #668, decided by
+    /// S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
+    /// <exception cref="SpiceException">SPICE gives no orientation at one of the epochs, with its message.</exception>
     public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
         int naifId, TimeSpan tolerance,
         Frame referenceFrame, TimeSpan stepSize)
@@ -1908,7 +2227,7 @@ public class SpiceAPI
                 // A buffer of the epochs read (#563: before, 10000 records whatever the window, 1.4 ms for one epoch)
                 var stateOrientations = new StateOrientation[epochs.Length];
                 if (!ReadOrientationProxy(epochs, epochs.Length, naifId, tolerance.TotalSeconds, frameName, stateOrientations))
-                    ThrowLastProxyError();
+                    ThrowLastProxyError(frameName, referenceFrame, nameof(referenceFrame));
                 records.AddRange(stateOrientations.Select(x => new OrbitalParameters.StateOrientation(x.Rotation.Convert(),
                     x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame)));
             }
@@ -1922,7 +2241,7 @@ public class SpiceAPI
     /// (<see cref="Kernels.SpkWriter"/>, #540), in J2000: the native writer writes one segment per file. As the
     /// native writer, it unloads and replaces an existing file, creates its directory when needed, and leaves the new file
     /// unloaded (the native kernel unloads the file it wrote when it is destroyed, at the end of its proxy). A file
-    /// <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/> does, so that
+    /// <see cref="LoadKernels(FileSystemInfo)"/> loaded is first unloaded as <see cref="UnloadKernels(FileSystemInfo)"/> does, so that
     /// <see cref="GetLoadedKernels"/> no longer lists it (#706: before, it stayed listed while SPICE no longer held it), then
     /// every other load of it SPICE holds, under the names <see cref="WriteEphemeris"/> finds (review of #706: before, a
     /// single unload, which left a second load, a meta-kernel's, holding the replaced data).
@@ -1934,7 +2253,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"><paramref name="filePath"/> or <paramref name="arcs"/> is null.</exception>
     /// <exception cref="ArgumentException">No arc, an arc of fewer than two states, or epochs not strictly increasing; an
     /// existing file is then left as it was.</exception>
-    /// <exception cref="InvalidOperationException">SPICE failed to unload the file it replaces (the reopening of the other
+    /// <exception cref="SpiceException">SPICE failed to unload the file it replaces (the reopening of the other
     /// loaded SPKs, on a deleted one SPICE holds under a relative name); the message is SPICE's, and the file is left on
     /// disk as it was, no longer loaded, nothing written (#706: before, the failure was ignored and the file replaced).</exception>
     internal void WriteEphemerisArcs(FileInfo filePath, int naifId, IReadOnlyList<OrbitalParameters.StateVector[]> arcs)
@@ -1958,8 +2277,7 @@ public class SpiceAPI
                 ForgetDroppedKernels();
                 if (!unloaded)
                 {
-                    throw new InvalidOperationException(
-                        $"An error occurred while writing ephemeris: the file it replaces could not be unloaded: {LastProxyError()}");
+                    throw NativeException("An error occurred while writing ephemeris: the file it replaces could not be unloaded");
                 }
 
                 File.Delete(filePath.FullName);
@@ -1986,7 +2304,7 @@ public class SpiceAPI
     /// The states are enumerated once, before the SPICE lock, so that nothing of the caller's sequence runs under it
     /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// The native writer unloads the file it replaces and, once written, the file itself; like every native load and unload
-    /// (<see cref="UnloadKernels"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
+    /// (<see cref="UnloadKernels(FileSystemInfo)"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
     /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
     /// stayed open in SPICE for good, and left the failure pending for the next kernel call. That reopening can still fail on
     /// an SPK SPICE holds under a relative name (a meta-kernel's), which the native layer leaves to SPICE, once its file was
@@ -1995,8 +2313,8 @@ public class SpiceAPI
     /// written by then. A file the call replaces is unloaded before its removal, and that unload fails the same way: the
     /// file is then left on disk as it was, no longer loaded, and nothing is written (review of the fourth round of #668;
     /// before, it was removed and nothing written in its place).
-    /// A file it replaces that <see cref="LoadKernels"/> loaded, by itself or in a loaded directory, is first unloaded as
-    /// <see cref="UnloadKernels"/> does, and the native writer unloads every other load of the file (a meta-kernel's): SPICE
+    /// A file it replaces that <see cref="LoadKernels(FileSystemInfo)"/> loaded, by itself or in a loaded directory, is first unloaded as
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> does, and the native writer unloads every other load of the file (a meta-kernel's): SPICE
     /// no longer reads the replaced data, <see cref="GetLoadedKernels"/> no longer lists the file, and the new file is left
     /// unloaded (#706: before, the caller's load stayed in SPICE, which held the replaced file open and read its data). A
     /// load is found under the path or under an absolute name whose symbolic links, followed one at a time, resolve through
@@ -2014,11 +2332,12 @@ public class SpiceAPI
     /// its built-in names nor by the loaded kernels ("has no name in SPICE"; a body built from custom parameters of an
     /// identifier no kernel names): load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE); nothing is written, an
     /// existing file kept (#714: before, <see cref="InvalidOperationException"/> from the native writer).</exception>
-    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
-    /// the file once written (the reopening of the other loaded SPKs); the message is SPICE's. Or the native file system calls
-    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended). Or the
+    /// <exception cref="SpiceException">SPICE failed to write the file, or to unload the file it replaces or
+    /// the file once written (the reopening of the other loaded SPKs); the message is SPICE's. Or the
     /// kernel pool has no GM for a centre SPICE names (ELARA, 507, without <c>BODY507_GM</c>): "CelestialItem id507 can't be
     /// read:" followed by SPICE's message (#714); nothing is written.</exception>
+    /// <exception cref="InvalidOperationException">The native file system calls rejected the path (a loop of symbolic
+    /// links), the message the file system's (#706: before, the process ended).</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
@@ -2048,7 +2367,7 @@ public class SpiceAPI
 
             if (res == false)
             {
-                throw new InvalidOperationException($"An error occurred while writing ephemeris: {LastProxyError()}");
+                throw NativeException("An error occurred while writing ephemeris");
             }
 
             return true;
@@ -2074,7 +2393,7 @@ public class SpiceAPI
     /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
     /// convention, the conjugate of the record's rotation, in J2000. The native writer unloads the file it replaces and, once
-    /// written, the file itself; like every native load and unload (<see cref="UnloadKernels"/>), it first closes and
+    /// written, the file itself; like every native load and unload (<see cref="UnloadKernels(FileSystemInfo)"/>), it first closes and
     /// unloads every SPK, CK, binary PCK and EK whose file was deleted since its load (#668, second round). Before, the
     /// unload opened the other CKs again, failed on a deleted one, which stayed open in SPICE for good, and left the failure
     /// pending for the next kernel call. That reopening can still fail on a CK SPICE holds under a relative name (a
@@ -2083,13 +2402,14 @@ public class SpiceAPI
     /// and the next kernel call failed with a wrong error). A new file is written by then. A file the call replaces is
     /// unloaded before its removal, and that unload fails the same way: the file is then left on disk as it was, no longer
     /// loaded, and nothing is written (review of the fourth round of #668; before, it was removed and nothing written in its
-    /// place). A file it replaces that <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/>
+    /// place). A file it replaces that <see cref="LoadKernels(FileSystemInfo)"/> loaded is first unloaded as <see cref="UnloadKernels(FileSystemInfo)"/>
     /// does, and the native writer unloads every other load of the file, under the names <see cref="WriteEphemeris"/>
     /// finds (#706 and its review).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
-    /// the file once written (the reopening of the other loaded CKs); the message is SPICE's. Or the native file system calls
-    /// rejected the path (a loop of symbolic links), the message the file system's (#706: before, the process ended).</exception>
+    /// <exception cref="SpiceException">SPICE failed to write the file, or to unload the file it replaces or
+    /// the file once written (the reopening of the other loaded CKs); the message is SPICE's.</exception>
+    /// <exception cref="InvalidOperationException">The native file system calls rejected the path (a loop of symbolic
+    /// links), the message the file system's (#706: before, the process ended).</exception>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
@@ -2126,7 +2446,7 @@ public class SpiceAPI
 
             if (res == false)
             {
-                throw new InvalidOperationException($"An error occurred while writing orientation: {LastProxyError()}");
+                throw NativeException("An error occurred while writing orientation");
             }
 
             return true;
@@ -2182,8 +2502,8 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// Unloads, as <see cref="UnloadKernels"/> does, a file a writer is about to replace when it was loaded through
-    /// <see cref="LoadKernels"/>, by itself or in a loaded directory, under its own name or a name whose symbolic links
+    /// Unloads, as <see cref="UnloadKernels(FileSystemInfo)"/> does, a file a writer is about to replace when it was loaded through
+    /// <see cref="LoadKernels(FileSystemInfo)"/>, by itself or in a loaded directory, under its own name or a name whose symbolic links
     /// resolve through it (a link to the file, or the file in a directory loaded through a link; #706 and its review):
     /// <see cref="GetLoadedKernels"/> no longer lists it, a directory being replaced by its remaining files, and SPICE no
     /// longer holds it. A hard link names the replaced data, which stay on disk, and is kept, as is the file a symbolic link
@@ -2191,7 +2511,7 @@ public class SpiceAPI
     /// the file once after loading it once more, so the caller's load stayed in SPICE, which held the replaced file open and
     /// read its data, and the managed writer unloaded it in SPICE but left it listed. Nothing is done for a file the
     /// registry does not hold; a failed unload throws the <see cref="InvalidOperationException"/> of
-    /// <see cref="UnloadKernels"/> before anything is written, the file kept on disk as it was. Called under the lock.
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> before anything is written, the file kept on disk as it was. Called under the lock.
     /// </summary>
     private void UnloadReplacedKernel(FileInfo target)
     {
@@ -2300,15 +2620,34 @@ public class SpiceAPI
     /// quaternion and a message of the library's that named the coverage whatever the cause, #454; before 11.0.0 the zero
     /// quaternion was returned, except on the TEME path).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE gives no rotation between the frames at this epoch (a quaternion
-    /// whose norm differs from 1 by more than 1e-9, or NaN): the message names the frames and the epoch, then gives SPICE's,
-    /// such as <c>SPICE(UNKNOWNFRAME)</c>'s "The frame NOT_A_FRAME was not recognized as a known reference frame." or
-    /// <c>SPICE(FRAMEDATANOTFOUND)</c>'s "PCK data required to compute the orientation of the body-fixed frame ITRF93 for
-    /// epoch ... were not found."</exception>
+    /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="fromFrame"/> or
+    /// <paramref name="toFrame"/> (the parameter named, also when the other end is a managed frame, TEME, CIRS, TIRS or the
+    /// frame of a site that only the library holds, and SPICE reads the unknown end alone), read through <c>namfrm_c</c>
+    /// after the failed transformation, so that
+    /// a frame kernel loaded after <c>new Frame(name)</c> counts: the message names the frame (and <see cref="Frame.ICRF"/> for
+    /// the names ICRF and EME2000), the <see cref="InvalidOperationException"/> below its inner exception, with SPICE's
+    /// <c>SPICE(UNKNOWNFRAME)</c> message, "The frame NOT_A_FRAME was not recognized as a known reference frame." (R25 of
+    /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0, that <see cref="InvalidOperationException"/>).</exception>
+    /// <exception cref="SpiceException">SPICE gives no rotation between two frames it knows at this epoch (a
+    /// quaternion whose norm differs from 1 by more than 1e-9, or NaN): the message names the frames and the epoch, then
+    /// gives SPICE's, such as <c>SPICE(FRAMEDATANOTFOUND)</c>'s "PCK data required to compute the orientation of the
+    /// body-fixed frame ITRF93 for epoch ... were not found."</exception>
     public OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame)
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
         if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
+        return TransformFrame(epoch, fromFrame, toFrame, nameof(fromFrame), nameof(toFrame));
+    }
+
+    /// <summary>
+    /// <see cref="TransformFrame(Time, Frame, Frame)"/>, an unknown name of <paramref name="fromFrame"/> or
+    /// <paramref name="toFrame"/> naming <paramref name="fromParamName"/> or <paramref name="toParamName"/>: the parameter of
+    /// the public call that holds the frame, or null when the frame is none of its arguments (R25 of #668, open choice 1;
+    /// review of L1: the inner transform of a managed end named <c>fromFrame</c> whatever the end).
+    /// </summary>
+    internal OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame, string fromParamName,
+        string toParamName)
+    {
         // TEME, CIRS, TIRS and the frame of a site that only the library holds (TransformedThroughIcrf) are composed through
         // ICRF, as the reads in them are rotated (fourth round of #668, #656; before, only TEME was, and the others threw)
         Frame fromManaged, toManaged;
@@ -2320,20 +2659,24 @@ public class SpiceAPI
 
         if (fromManaged != null || toManaged != null)
         {
-            return TransformFrameThroughIcrf(epoch, fromFrame, fromManaged, toFrame, toManaged);
+            return TransformFrameThroughIcrf(epoch, fromFrame, fromManaged, fromParamName, toFrame, toManaged, toParamName);
         }
 
         lock (lockObject)
         {
-            var res = TransformFrameProxy(SpiceFrameName(fromFrame), SpiceFrameName(toFrame), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            string fromName = SpiceFrameName(fromFrame);
+            string toName = SpiceFrameName(toFrame);
+            var res = TransformFrameProxy(fromName, toName, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
             // A failed transformation returns a NaN rotation with SPICE's message (#714; the zero quaternion with no message
-            // before, #454): a rotation is a unit quaternion. Read before any other native call
+            // before, #454): a rotation is a unit quaternion. Read before any other native call; then a name SPICE does not
+            // know is a bad argument (R25 of #668), the SPICE error its inner exception
             var rotation = new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z);
             if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
             {
-                throw new InvalidOperationException(
-                    $"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}: {LastProxyError()}");
+                var error = NativeException($"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}");
+                var unknownFrom = FrameErrorOrInner(error, fromName, fromFrame, fromParamName);
+                throw unknownFrom != error ? unknownFrom : FrameErrorOrInner(error, toName, toFrame, toParamName);
             }
 
             return new OrbitalParameters.StateOrientation(
@@ -2347,11 +2690,11 @@ public class SpiceAPI
     /// <see cref="Frame.ToFrame"/>: the managed frame by its own orientation, the other by SPICE; labelled with
     /// <paramref name="fromFrame"/>.
     /// </summary>
-    private OrbitalParameters.StateOrientation TransformFrameThroughIcrf(Time epoch, Frame fromFrame, Frame fromManaged, Frame toFrame,
-        Frame toManaged)
+    private OrbitalParameters.StateOrientation TransformFrameThroughIcrf(Time epoch, Frame fromFrame, Frame fromManaged,
+        string fromParamName, Frame toFrame, Frame toManaged, string toParamName)
     {
-        var fromToIcrf = OrientationToIcrf(epoch, fromFrame, fromManaged);
-        var toToIcrf = OrientationToIcrf(epoch, toFrame, toManaged);
+        var fromToIcrf = OrientationToIcrf(epoch, fromFrame, fromManaged, fromParamName);
+        var toToIcrf = OrientationToIcrf(epoch, toFrame, toManaged, toParamName);
         var rotation = toToIcrf.Rotation.Conjugate() * fromToIcrf.Rotation;
         var angularVelocity = toToIcrf.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + fromToIcrf.AngularVelocity;
         return new OrbitalParameters.StateOrientation(rotation, angularVelocity, epoch, fromFrame);
@@ -2364,10 +2707,11 @@ public class SpiceAPI
     private static Frame TransformedThroughIcrf(Frame frame) =>
         ManagedReadFrame(frame) is { } managed and not Body.Spacecraft.SpacecraftFrame ? managed : null;
 
-    private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed)
+    // The orientation of one end of a transform to ICRF, an unknown name naming paramName, the parameter of that end
+    private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed, string paramName)
     {
         // TransformFrame throws when SPICE gives no rotation (#454)
-        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF);
+        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF, paramName, null);
     }
 
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)
@@ -2436,7 +2780,7 @@ public class SpiceAPI
         var position = res.Position.Convert();
         if (!IsFinite(res))
         {
-            throw new InvalidOperationException($"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: {LastProxyError()}");
+            throw NativeException($"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}");
         }
 
         if (position.Magnitude() == 0.0)
@@ -2467,7 +2811,7 @@ public class SpiceAPI
             double epoch = GetTLEElementsProxy(name, line1, line2).Epoch;
             if (!double.IsFinite(epoch))
             {
-                throw new InvalidOperationException($"The TLE {name} ({line1}) cannot be read: {LastProxyError()}");
+                throw NativeException($"The TLE {name} ({line1}) cannot be read");
             }
 
             return epoch;
@@ -2607,7 +2951,7 @@ public class SpiceAPI
     {
         if (!IsFinite(state))
         {
-            throw new InvalidOperationException($"The elements cannot be converted to a state vector: {LastProxyError()}");
+            throw NativeException("The elements cannot be converted to a state vector");
         }
 
         return state;
@@ -2640,7 +2984,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#714: before, the
     /// process ended when this was its first native call, otherwise the elements <c>oscltx_c</c> never wrote were
     /// returned).</exception>
-    /// <exception cref="InvalidOperationException"><c>oscltx_c</c> failed: a zero position, a zero velocity, or a position and
+    /// <exception cref="SpiceException"><c>oscltx_c</c> failed: a zero position, a zero velocity, or a position and
     /// a velocity too close to parallel (oscelt.c, <c>SPICE(DEGENERATECASE)</c>); the message is SPICE's (#714: before, the
     /// elements it never wrote were returned).</exception>
     public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector, double gm)
@@ -2659,7 +3003,7 @@ public class SpiceAPI
             elements = ConvertStateVectorToConicOrbitalElementProxy(input, gm);
             if (!IsFinite(elements))
             {
-                throw new InvalidOperationException($"The state cannot be converted to conic elements: {LastProxyError()}");
+                throw NativeException("The state cannot be converted to conic elements");
             }
         }
 
@@ -2780,7 +3124,7 @@ public class SpiceAPI
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#711: before,
     /// <c>conics_c</c>'s error was left pending for the next native call and an unrelated message thrown).</exception>
-    /// <exception cref="InvalidOperationException"><c>conics_c</c> failed; the message is SPICE's.</exception>
+    /// <exception cref="SpiceException"><c>conics_c</c> failed; the message is SPICE's.</exception>
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch, double gm)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
@@ -2831,7 +3175,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#714: before, the
     /// process ended when this was its first native call, otherwise the state <c>prop2b_c</c> never wrote was
     /// returned).</exception>
-    /// <exception cref="InvalidOperationException"><c>prop2b_c</c> failed: a zero position, a zero velocity, a position
+    /// <exception cref="SpiceException"><c>prop2b_c</c> failed: a zero position, a zero velocity, a position
     /// parallel to the velocity (prop2b.c, <c>SPICE(ZEROPOSITION)</c>, <c>SPICE(ZEROVELOCITY)</c>,
     /// <c>SPICE(NONCONICMOTION)</c>, which carry no long message, so the message is the short one), or a
     /// <paramref name="dt"/> out of its range (<c>SPICE(DTOUTOFRANGE)</c>); the message is SPICE's (#714: before, the state
@@ -2852,7 +3196,7 @@ public class SpiceAPI
             state = Propagate2BodiesProxy(input, gm, dt.TotalSeconds);
             if (!IsFinite(state))
             {
-                throw new InvalidOperationException($"The state cannot be propagated by two-body motion: {LastProxyError()}");
+                throw NativeException("The state cannot be propagated by two-body motion");
             }
         }
 

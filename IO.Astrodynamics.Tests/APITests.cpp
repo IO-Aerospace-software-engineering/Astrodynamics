@@ -56,20 +56,6 @@ namespace
     }
 }
 
-TEST(API, TDBToString)
-{
-    auto res = TDBToStringProxy(0.0);
-    ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
-    free((void*)res);
-}
-
-TEST(API, UTCToString)
-{
-    auto res = UTCToStringProxy(0.0);
-    ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
-    free((void*)res);
-}
-
 TEST(API, FindWindowsOnCoordinateConstraintProxy)
 {
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
@@ -438,16 +424,6 @@ TEST(API, ReadSpacecraftOrientationProxyException)
     IO::Astrodynamics::API::DTO::StateOrientationDTO so[10];
     ASSERT_FALSE(ReadOrientationOverWindow(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so));
     ASSERT_STRNE("", GetLastErrorProxy());
-}
-
-TEST(API, ToTDB)
-{
-    ASSERT_DOUBLE_EQ(64.183927284669423, ConvertUTCToTDBProxy(0.0));
-}
-
-TEST(API, ToUTC)
-{
-    ASSERT_DOUBLE_EQ(-64.183927263223808, ConvertTDBToUTCProxy(0.0));
 }
 
 TEST(API, Version)
@@ -995,19 +971,6 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     ASSERT_DOUBLE_EQ(202.52220483204573, sv.velocity.z);
     ASSERT_EQ(399, sv.centerOfMotionId);
     ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray(), sv.inertialFrame);
-}
-
-TEST(API, ConvertToRaDec)
-{
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
-    auto sv = moon->GetOrbitalParametersAtEpoch()->ToStateVector();
-
-    auto svDTO = ToStateVectorDTO(sv);
-    auto ra = ConvertStateVectorToEquatorialCoordinatesProxy(svDTO);
-    ASSERT_DOUBLE_EQ(222.44729949955743, ra.rightAscension * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(-10.900186051699617, ra.declination * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(402448639.88732731, ra.range);
 }
 
 TEST(API, ConvertEllipticStateToConic)
@@ -2320,25 +2283,6 @@ TEST(API, ConvertEquinoctialElementsToStateVectorProxyOfAnUnnamedCentreWithAGmRe
     UnloadTextKernel(kernel);
 }
 
-TEST(API, ConvertStateVectorToEquatorialCoordinatesProxyOfAnUnnamedCentreWithAGmReturnsNaN)
-{
-    ExpectUnnamed(UnnamedCentre);
-    auto kernel = LoadTextKernel("ioa_711_cpp_gm_radec.tpc", "BODY-1999813_GM = ( 1.0E-10 )");
-    IO::Astrodynamics::API::DTO::StateVectorDTO sv;
-    sv.position = {7.0e6, 0.0, 0.0};
-    sv.velocity = {0.0, 7.5e3, 0.0};
-    sv.epoch = 0.0;
-    sv.centerOfMotionId = UnnamedCentre;
-    sv.SetFrame("J2000");
-    IO::Astrodynamics::API::DTO::RaDecDTO raDec;
-    EXPECT_NO_THROW(raDec = ConvertStateVectorToEquatorialCoordinatesProxy(sv));
-    ExpectFailureReported("can't be found");
-    EXPECT_TRUE(std::isnan(raDec.rightAscension));
-    EXPECT_TRUE(std::isnan(raDec.declination));
-    EXPECT_TRUE(std::isnan(raDec.range));
-    UnloadTextKernel(kernel);
-}
-
 // ELARA (507): named by SPICE, BODY507_RADII in pck00011.tpc, no BODY507_GM in gm_de431.tpc. Before, both conversions
 // returned the zero state, silently (measured from .NET on 46e6975), the found flag of the name read undefined
 TEST(API, ConvertConicElementsToStateVectorProxyOfACentreWithoutGmReturnsNaN)
@@ -2438,32 +2382,6 @@ TEST(API, GetCelestialBodyInfoProxyOfANamedSpacecraftReturnsNoRecord)
     EXPECT_EQ(0.0, res.GM);
 }
 
-// A site on ELARA, whose GM the kernel pool lacks: the GM read failed, then CelestialBody's SDKException, whose catch
-// returned without taking SPICE's error (#712's pattern). On 46e6975 the exception depended on the unwritten found flag
-TEST(API, LaunchProxyOfASiteOnABodyWithoutGmLeavesNothingPending)
-{
-    IO::Astrodynamics::API::DTO::LaunchDTO launch{};
-    launch.launchSite.id = 507001;
-    launch.launchSite.name = "ELARA_LAUNCH";
-    launch.launchSite.bodyId = 507;
-    launch.launchSite.directoryPath = SitePath.data();
-    launch.recoverySite.id = 507002;
-    launch.recoverySite.name = "ELARA_RECOVERY";
-    launch.recoverySite.bodyId = 507;
-    launch.recoverySite.directoryPath = SitePath.data();
-    launch.targetOrbit.position = {7.0e6, 0.0, 0.0};
-    launch.targetOrbit.velocity = {0.0, 7.5e3, 0.0};
-    launch.targetOrbit.centerOfMotionId = 507;
-    launch.targetOrbit.SetFrame("J2000");
-    launch.window.start = 0.0;
-    launch.window.end = 86400.0;
-    bool res = true;
-    EXPECT_NO_THROW(res = LaunchProxy(launch));
-    EXPECT_FALSE(res);
-    EXPECT_STREQ("CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.", GetLastErrorProxy());
-    ExpectFailureReported("BODY507_GM");
-}
-
 // #712: a failed ReadOrientationProxy left SPICE failed (ckgp_c's error after the fallback), so that the next native call
 // failed with that stale message, and reported "No orientation found" instead of SPICE's message. A CK of a native
 // spacecraft (its clock written and loaded by its constructor) read in a frame SPICE does not know: false, SPICE's message
@@ -2531,6 +2449,7 @@ namespace
     {
         ConvertConicElementsToStateVectorProxy(ConicsAbout(507));
         ASSERT_STRNE("", GetLastErrorProxy());
+        ASSERT_STREQ("SPICE(KERNELVARNOTFOUND)", GetLastErrorShortProxy());
     }
 
     // The proxy succeeds and leaves lastError empty after a failure
@@ -2539,6 +2458,8 @@ namespace
         FailAConversion();
         EXPECT_TRUE(succeeds()) << proxy;
         EXPECT_STREQ("", GetLastErrorProxy()) << proxy;
+        EXPECT_STREQ("", GetLastErrorShortProxy()) << proxy;
+        EXPECT_STREQ("", GetLastErrorLongProxy()) << proxy;
     }
 
     bool IsFinite(const IO::Astrodynamics::API::DTO::StateVectorDTO &sv)
@@ -2570,8 +2491,6 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
                     [] { return IsFinite(ConvertEquinoctialElementsToStateVectorProxy(EquinoctialAbout(399))); });
     ExpectClearedBy("ConvertConicElementsToStateVectorAtEpochProxy",
                     [earthGm] { return IsFinite(ConvertConicElementsToStateVectorAtEpochProxy(ConicsAbout(399), 100.0, earthGm)); });
-    ExpectClearedBy("ConvertStateVectorToEquatorialCoordinatesProxy",
-                    [] { return std::isfinite(ConvertStateVectorToEquatorialCoordinatesProxy(EarthState()).rightAscension); });
     ExpectClearedBy("ConvertStateVectorToConicOrbitalElementProxy",
                     [earthGm] { return std::isfinite(ConvertStateVectorToConicOrbitalElementProxy(EarthState(), earthGm).eccentricity); });
     ExpectClearedBy("Propagate2BodiesProxy", [earthGm] { return IsFinite(Propagate2BodiesProxy(EarthState(), earthGm, 60.0)); });
@@ -2681,27 +2600,6 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
     EXPECT_TRUE(UnloadKernelsProxy(ik.string().c_str())) << GetLastErrorProxy();
     std::filesystem::remove(ik);
 
-    // A launch from a site on the Earth to an orbit of 51.6 degrees of inclination, over one day
-    ExpectClearedBy("LaunchProxy", []
-    {
-        auto launch = std::make_unique<IO::Astrodynamics::API::DTO::LaunchDTO>();
-        launch->launchSite.id = 399001;
-        launch->launchSite.name = "S1";
-        launch->launchSite.bodyId = 399;
-        launch->launchSite.coordinates.longitude = -81.0 * IO::Astrodynamics::Constants::DEG_RAD;
-        launch->launchSite.coordinates.latitude = 28.5 * IO::Astrodynamics::Constants::DEG_RAD;
-        launch->launchSite.directoryPath = SitePath.data();
-        launch->recoverySite = launch->launchSite;
-        const double inclination = 51.6 * IO::Astrodynamics::Constants::DEG_RAD;
-        launch->targetOrbit.position = {6.8e6, 0.0, 0.0};
-        launch->targetOrbit.velocity = {0.0, 7.6e3 * std::cos(inclination), 7.6e3 * std::sin(inclination)};
-        launch->targetOrbit.epoch = 675777669.0;
-        launch->targetOrbit.centerOfMotionId = 399;
-        launch->targetOrbit.SetFrame("J2000");
-        launch->window.start = 675777669.0;
-        launch->window.end = 675777669.0 + 86400.0;
-        return LaunchProxy(*launch);
-    });
     EXPECT_FALSE(TakePendingSpiceError());
 }
 
@@ -2778,6 +2676,125 @@ TEST(API, Propagate2BodiesProxyOfAStateOutsideTheDomainOfProp2bReturnsNaN)
     ExpectPropagationFails(TwoBodyState(0.0, 0.0, 7.5e3), EarthGm, "SPICE(ZEROPOSITION)");
     ExpectPropagationFails(TwoBodyState(7.0e6, 0.0, 0.0), EarthGm, "SPICE(ZEROVELOCITY)");
     ExpectPropagationFails(TwoBodyState(7.0e6, 7.5e3, 0.0), EarthGm, "SPICE(NONCONICMOTION)");
+}
+
+// R03 of #668: a proxy that reports SPICE's error keeps SPICE's short and long messages beside its message, so that the .NET
+// layer throws SpiceException with both. The references are SPICE's own messages, read from CSPICE after the same call (Linux
+// and macOS; the Windows DLL exports no CSPICE routine)
+namespace
+{
+    struct SpiceMessages
+    {
+        std::string shortMessage;
+        std::string longMessage;
+    };
+
+#if !defined(_WIN32)
+    // SPICE's messages of the call, read from CSPICE, SPICE reset; the error action RETURN is set by the proxy called before
+    template<typename Call>
+    SpiceMessages SpiceMessagesOf(Call call)
+    {
+        call();
+        EXPECT_TRUE(failed_c());
+        SpiceChar shortMessage[SPICE_ERROR_SMSGLN]{};
+        SpiceChar longMessage[SPICE_ERROR_LMSGLN]{};
+        getmsg_c("SHORT", SPICE_ERROR_SMSGLN, shortMessage);
+        getmsg_c("LONG", SPICE_ERROR_LMSGLN, longMessage);
+        reset_c();
+        return {shortMessage, longMessage};
+    }
+#endif
+}
+
+TEST(API, AFailedTransformReportsSpicesShortAndLongMessages)
+{
+    const auto res = TransformFrameProxy("J2000", "IOA_R03_NO_FRAME", 0.0);
+    EXPECT_TRUE(std::isnan(res.Rotation.w));
+    const std::string message = GetLastErrorProxy();
+    const std::string shortMessage = GetLastErrorShortProxy();
+    const std::string longMessage = GetLastErrorLongProxy();
+    EXPECT_EQ("SPICE(UNKNOWNFRAME)", shortMessage);
+    EXPECT_NE(std::string::npos, longMessage.find("IOA_R03_NO_FRAME")) << longMessage;
+    EXPECT_EQ(message, longMessage);
+#if !defined(_WIN32)
+    const auto spice = SpiceMessagesOf([]
+    {
+        SpiceDouble xform[6][6];
+        sxform_c("J2000", "IOA_R03_NO_FRAME", 0.0, xform);
+    });
+    EXPECT_EQ(spice.shortMessage, shortMessage);
+    EXPECT_EQ(spice.longMessage, longMessage);
+#endif
+    EXPECT_FALSE(TakePendingSpiceError());
+}
+
+// prop2b_c signals SPICE(NONPOSITIVEMASS) with no long message (#714): the short message is the message, the long one empty
+TEST(API, AFailedTwoBodyPropagationReportsSpicesShortMessageAndAnEmptyLongOne)
+{
+    Propagate2BodiesProxy(TwoBodyState(7.0e6, 0.0, 7.5e3), 0.0, 60.0);
+    EXPECT_STREQ("SPICE(NONPOSITIVEMASS)", GetLastErrorProxy());
+    EXPECT_STREQ("SPICE(NONPOSITIVEMASS)", GetLastErrorShortProxy());
+    EXPECT_STREQ("", GetLastErrorLongProxy());
+#if !defined(_WIN32)
+    const auto spice = SpiceMessagesOf([]
+    {
+        SpiceDouble state[6] = {7.0e3, 0.0, 0.0, 0.0, 7.5, 0.0};
+        SpiceDouble propagated[6];
+        prop2b_c(0.0, state, 60.0, propagated);
+    });
+    EXPECT_EQ("SPICE(NONPOSITIVEMASS)", spice.shortMessage);
+    EXPECT_EQ("", spice.longMessage);
+#endif
+}
+
+// ReadEphemerisProxy reports the message of its first failed epoch (#714): its short and long messages are those of that epoch
+TEST(API, AFailedEphemerisReadReportsTheMessagesOfItsFirstFailedEpoch)
+{
+    // Outside the coverage of the test kernels: each epoch a NaN state, the call true (the .NET layer throws on the NaN, #454)
+    const double epochs[2] = {1.0e11, 2.0e11};
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[2];
+    EXPECT_TRUE(ReadEphemerisProxy(epochs, 2, 399, 301, "J2000", "NONE", sv));
+    EXPECT_TRUE(std::isnan(sv[0].position.x));
+    EXPECT_TRUE(std::isnan(sv[1].position.x));
+    const std::string message = GetLastErrorProxy();
+    EXPECT_STREQ("SPICE(SPKINSUFFDATA)", GetLastErrorShortProxy());
+    EXPECT_EQ(message, std::string(GetLastErrorLongProxy()));
+#if !defined(_WIN32)
+    const auto first = SpiceMessagesOf([]
+    {
+        SpiceDouble state[6];
+        SpiceDouble lt;
+        spkezr_c("301", 1.0e11, "J2000", "NONE", "399", state, &lt);
+    });
+    const auto second = SpiceMessagesOf([]
+    {
+        SpiceDouble state[6];
+        SpiceDouble lt;
+        spkezr_c("301", 2.0e11, "J2000", "NONE", "399", state, &lt);
+    });
+    EXPECT_NE(first.longMessage, second.longMessage);
+    EXPECT_EQ(first.shortMessage, std::string(GetLastErrorShortProxy()));
+    EXPECT_EQ(first.longMessage, message);
+#endif
+}
+
+// A failure that is not SPICE's (a rule of the proxy, a C++ exception with nothing pending): no short or long message
+TEST(API, AFailureThatIsNotSpicesReportsNoSpiceMessage)
+{
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[1];
+    TransformFrameProxy("J2000", "IOA_R03_NO_FRAME", 0.0);
+    ASSERT_STRNE("", GetLastErrorShortProxy());
+    EXPECT_FALSE(ReadEphemerisProxy(nullptr, -1, 399, 301, "J2000", "NONE", sv));
+    EXPECT_STREQ("The number of epochs must not be negative", GetLastErrorProxy());
+    EXPECT_STREQ("", GetLastErrorShortProxy());
+    EXPECT_STREQ("", GetLastErrorLongProxy());
+
+    TransformFrameProxy("J2000", "IOA_R03_NO_FRAME", 0.0);
+    const auto res = GetCelestialBodyInfoProxy(-77);
+    EXPECT_EQ(-1, res.Id);
+    EXPECT_NE(std::string::npos, std::string(GetLastErrorProxy()).find("Invalid Naif Id")) << GetLastErrorProxy();
+    EXPECT_STREQ("", GetLastErrorShortProxy());
+    EXPECT_STREQ("", GetLastErrorLongProxy());
 }
 
 TEST(API, ConvertStateVectorToConicOrbitalElementProxyOfAStateOutsideTheDomainOfOscltxReturnsNaN)
