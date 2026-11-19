@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
 /// Propagates multiple spacecraft in parallel with fault isolation, cancellation, and progress reporting.
-/// Each task runs an independent <see cref="Body.Spacecraft.Spacecraft.Propagate"/> call.
+/// Each task runs an independent <see cref="Body.Spacecraft.Spacecraft.Propagate(IO.Astrodynamics.TimeSystem.Window, System.Collections.Generic.IEnumerable{IO.Astrodynamics.Body.CelestialItem}, bool, bool, System.TimeSpan)"/> call.
 /// </summary>
 /// <remarks>
 /// <h3>Thread Safety</h3>

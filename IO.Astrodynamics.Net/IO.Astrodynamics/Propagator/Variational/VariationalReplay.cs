@@ -47,6 +47,10 @@ internal static class VariationalReplay
     /// to the step that contains <paramref name="end"/>, P0 being the covariance of the initial orbital parameters of
     /// <paramref name="participant"/>, the object the solution propagates.
     /// </summary>
+    /// <param name="solution">The RK7(8) solution whose steps are replayed.</param>
+    /// <param name="participant">The object the solution propagates.</param>
+    /// <param name="options">The variational equations to integrate along the steps.</param>
+    /// <param name="end">The epoch the replay reaches: it stops at the end of the step that contains it.</param>
     /// <param name="initialCovariance">P0 in place of the covariance of the initial orbital parameters of
     /// <paramref name="participant"/> (a remediated one); null for that covariance.</param>
     /// <returns>A solution over the replayed steps, from which Φ, Ψ and P are read as from a propagation with
@@ -54,7 +58,7 @@ internal static class VariationalReplay
     /// <exception cref="ArgumentException"><paramref name="options"/> put Φ and Ψ in the step control, which would change
     /// the steps; or name a consider parameter whose force the propagation lacks.</exception>
     /// <exception cref="InvalidOperationException">The solution is not an RK7(8) propagation, already propagated the
-    /// covariance, or does not reach <paramref name="end"/>; or P0 is rejected (<see cref="PropagatorBase.CreateCovarianceModel(ILocalizable, in Time, VariationalOptions)"/>).</exception>
+    /// covariance, or does not reach <paramref name="end"/>; or P0 is rejected (<see cref="PropagatorBase.CreateCovarianceModel(ILocalizable, in Time, VariationalOptions, System.Nullable{IO.Astrodynamics.Math.Matrix})"/>).</exception>
     internal static PropagationSolution Replay(PropagationSolution solution, ILocalizable participant,
         CovariancePropagationOptions options, in Time end, Math.Matrix? initialCovariance = null)
     {

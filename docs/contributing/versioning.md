@@ -109,6 +109,24 @@ release are listed under **Known limitations**.
 - **`SpacecraftFrame.AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, `GetLatestStateOrientationToICRF` and
   `ClearStateOrientations`**, the attitude record of a spacecraft ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537), [#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541); under Changed: `SpacecraftFrame`, and `Frame` keeps no orientations).
 
+- **Checks of the public API** (lot L0 of the ergonomics review,
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), design PR
+  [#671](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/671)). Not breaking: no member,
+  behaviour or result changes for a caller, and the package gains its XML documentation file.
+  - **The XML documentation is packed with the library** (`IO.Astrodynamics.Net.xml`), so an IDE shows the comments of
+    the package. Its 89 warnings of #556 and later are fixed: 13 references the compiler could not resolve, which the
+    file held as broken links, 17 that named several overloads, 4 tags of no parameter (the three of the orphaned
+    comment above `Matrix.Cholesky` and a stale `output` tag in `NRLMSISE00`) and 55 parameters without a tag, among them the albedo and thermal parameters of the
+    `CelestialBody` constructors ([#556](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/556)).
+  - **Checks of the naming rules (D2, N1 to N3, namespaces included, each overload on its own), of the options rule
+    (D1: the options types and parameters, the members with two bools or more, the doubles named `Step`, `Duration` or
+    `Tolerance` without `Seconds`, the sibling settings) and of the members the documentation's tables cite (the public
+    surface, an internal member only where the table says so)**, each a test with a baseline that may only shrink; the
+    CA naming rules run as warnings. See [Public API](public-api.md).
+  - The later lots of #668 rename or remove a member outright, with no `[Obsolete]` forwarder (decided by S. Guillet,
+    2026-11-19): each change is listed in these notes, under **Changed** as **Breaking** with its migration, or under
+    **Removed**, and documented in the reference pages.
+
 **Fixed**
 
 - **The stored states of a propagation ended before its window when the output step rounded it down**

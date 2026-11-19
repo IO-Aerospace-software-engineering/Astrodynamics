@@ -299,6 +299,10 @@
       <None Include="..\..\README.md" Link="Docs\README.md">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <!-- The baselines of the API convention tests (#668, lot L0), which may only shrink. -->
+      <None Update="ApiConventions\*.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <!-- Reconstructed LRO trajectory, used by the tracking-data tests. -->
       <None Remove="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp" />
       <Content Include="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">

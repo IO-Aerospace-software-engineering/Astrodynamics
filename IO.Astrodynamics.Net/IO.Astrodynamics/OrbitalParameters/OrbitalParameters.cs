@@ -829,7 +829,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     /// <summary>
     /// Computes the epoch time at a given mean anomaly: on an ellipse the next passage at that mean anomaly modulo 2π,
-    /// at or after <see cref="Epoch"/>, whatever the turn of the given anomaly and of <see cref="MeanAnomaly"/>; on an
+    /// at or after <see cref="Epoch"/>, whatever the turn of the given anomaly and of <see cref="MeanAnomaly()"/>; on an
     /// open orbit the single passage, before <see cref="Epoch"/> when the mean anomaly is behind.
     /// </summary>
     /// <param name="meanAnomaly">The mean anomaly at which to compute the epoch time, rad.</param>

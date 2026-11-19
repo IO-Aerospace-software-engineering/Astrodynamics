@@ -72,6 +72,15 @@ internal sealed class PropagationDynamics
     /// variational equations (<see cref="VariationalReplay"/>), whose evaluations must not run concurrently with its own,
     /// since the force partials reuse buffers.
     /// </summary>
+    /// <param name="forces">The forces of the integrator, in their order.</param>
+    /// <param name="observer">Observer of the integrated state.</param>
+    /// <param name="frame">Frame of the integrated state.</param>
+    /// <param name="epoch">Initial epoch of the propagation.</param>
+    /// <param name="orientationCacheFrame">The frame whose orientation cache the propagation used, or null.</param>
+    /// <param name="orientationCache">That cache, or null.</param>
+    /// <param name="options">The options of the variational equations, or null when they are off.</param>
+    /// <param name="propagationEquations">The equations of the integrator, or null when they are off.</param>
+    /// <param name="covariance">The propagated covariance, or null when it is off.</param>
     /// <param name="syncRoot">The lock of the dynamics whose forces these share.</param>
     internal PropagationDynamics(IReadOnlyList<ForceBase> forces, ILocalizable observer, Frame frame, in Time epoch,
         Frame orientationCacheFrame, PropagationFrameOrientationCache orientationCache, VariationalOptions options,

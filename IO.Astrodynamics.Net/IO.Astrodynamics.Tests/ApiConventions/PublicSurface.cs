@@ -1,0 +1,217 @@
+// Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
+
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using Xunit;
+
+namespace IO.Astrodynamics.Tests.ApiConventions;
+
+/// <summary>
+/// The public surface of the library read by reflection, for the convention tests of the ergonomics review (#668, lot
+/// L0): the exported types, and their public members and the protected members of the types a caller can derive from.
+/// The types the xsd tool generated (the PDS schemas, marked
+/// <see cref="GeneratedCodeAttribute"/>) and the members the compiler synthesizes (a record's <c>EqualityContract</c>,
+/// <c>PrintMembers</c>, <c>&lt;Clone&gt;$</c>) are outside the rules, as for the CA rules. Reflection reads metadata only:
+/// no type initializer runs.
+/// </summary>
+internal static class PublicSurface
+{
+    internal const BindingFlags Declared =
+        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+    internal static Assembly Library => typeof(Configuration).Assembly;
+
+    /// <summary>The exported types of the library, the generated ones aside.</summary>
+    internal static IReadOnlyList<Type> Types { get; } = Library.GetExportedTypes()
+        .Where(t => !IsGenerated(t))
+        .OrderBy(t => t.FullName, StringComparer.Ordinal)
+        .ToArray();
+
+    private static bool IsGenerated(Type type)
+    {
+        for (var t = type; t != null; t = t.DeclaringType)
+        {
+            if (t.IsDefined(typeof(GeneratedCodeAttribute), false))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>A type's name as C# writes it: nested types with a dot, no generic arity.</summary>
+    internal static string Name(Type type)
+    {
+        var name = type.Name;
+        int tick = name.IndexOf('`');
+        if (tick >= 0)
+        {
+            name = name[..tick];
+        }
+
+        if (type.DeclaringType != null)
+        {
+            return $"{Name(type.DeclaringType)}.{name}";
+        }
+
+        // A type of the global namespace by its name alone
+        return type.Namespace == null ? name : $"{type.Namespace}.{name}";
+    }
+
+    /// <summary>A type's simple name, without its generic arity.</summary>
+    internal static string SimpleName(Type type)
+    {
+        int tick = type.Name.IndexOf('`');
+        return tick >= 0 ? type.Name[..tick] : type.Name;
+    }
+
+    /// <summary>Whether a member is part of the surface: public, or protected on a type a caller can derive from.</summary>
+    internal static bool IsVisible(MemberInfo member)
+    {
+        if (member.IsDefined(typeof(CompilerGeneratedAttribute), false) || member.Name.Contains('<'))
+        {
+            return false;
+        }
+
+        var type = member.DeclaringType!;
+        bool derivable = !type.IsSealed && !type.IsInterface && !type.IsValueType &&
+                         type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                             .Any(c => c.IsPublic || c.IsFamily || c.IsFamilyOrAssembly);
+        return member switch
+        {
+            FieldInfo f => f.IsPublic || derivable && (f.IsFamily || f.IsFamilyOrAssembly),
+            MethodBase m => m.IsPublic || derivable && (m.IsFamily || m.IsFamilyOrAssembly),
+            // The accessors of an auto-property are compiler-generated: their visibility alone counts
+            PropertyInfo p => p.GetAccessors(true).Any(a => a.IsPublic || derivable && (a.IsFamily || a.IsFamilyOrAssembly)),
+            EventInfo e => e.AddMethod is { } add && (add.IsPublic || derivable && (add.IsFamily || add.IsFamilyOrAssembly)),
+            _ => false
+        };
+    }
+
+    /// <summary>The members of a type that are part of the surface, its nested types aside.</summary>
+    internal static IEnumerable<MemberInfo> Members(Type type) =>
+        type.GetMembers(Declared).Where(m => m is not Type && IsVisible(m));
+
+    /// <summary>
+    /// The visible methods and constructors of a type, the accessors and operators included, whose parameters the
+    /// rules read.
+    /// </summary>
+    internal static IEnumerable<MethodBase> MethodsAndConstructors(Type type) =>
+        type.GetMethods(Declared).Cast<MethodBase>().Concat(type.GetConstructors(Declared))
+            .Where(m => !m.Name.Contains('<') && !m.IsDefined(typeof(CompilerGeneratedAttribute), false) &&
+                        (m.IsPublic || IsVisible(m)));
+
+    /// <summary>A member's key, "Namespace.Type.Member", the same for its overloads (a property, field or event).</summary>
+    internal static string Key(MemberInfo member) => $"{Name(member.DeclaringType!)}.{member.Name}";
+
+    /// <summary>
+    /// A method's or constructor's key, its signature: "Namespace.Type.Member(T1, T2)", a constructor as
+    /// "Namespace.Type.ctor(...)", the parameter types as C# writes them without their namespace, so that each overload
+    /// has its own key and a new overload is a new symbol of the baselines.
+    /// </summary>
+    internal static string Signature(MethodBase method)
+    {
+        var name = method is ConstructorInfo ? "ctor" : method.Name;
+        if (method is MethodInfo { IsGenericMethodDefinition: true } generic)
+        {
+            name += "<" + string.Join(", ", generic.GetGenericArguments().Select(a => a.Name)) + ">";
+        }
+
+        var parameters = method.GetParameters().Select(p =>
+        {
+            var type = p.ParameterType.IsByRef ? p.ParameterType.GetElementType()! : p.ParameterType;
+            var modifier = p.IsOut ? "out " : p.ParameterType.IsByRef ? (p.IsIn ? "in " : "ref ") : "";
+            return modifier + TypeName(type);
+        });
+        return $"{Name(method.DeclaringType!)}.{name}({string.Join(", ", parameters)})";
+    }
+
+    /// <summary>A parameter's key: its method's signature, a colon and its name.</summary>
+    internal static string ParameterKey(MethodBase method, ParameterInfo parameter) => $"{Signature(method)}:{parameter.Name}";
+
+    private static readonly Dictionary<Type, string> Keywords = new()
+    {
+        [typeof(bool)] = "bool", [typeof(byte)] = "byte", [typeof(sbyte)] = "sbyte", [typeof(char)] = "char",
+        [typeof(short)] = "short", [typeof(ushort)] = "ushort", [typeof(int)] = "int", [typeof(uint)] = "uint",
+        [typeof(long)] = "long", [typeof(ulong)] = "ulong", [typeof(float)] = "float", [typeof(double)] = "double",
+        [typeof(decimal)] = "decimal", [typeof(string)] = "string", [typeof(object)] = "object", [typeof(void)] = "void"
+    };
+
+    /// <summary>A type as C# writes it, without namespace: keywords, T?, T[], Generic&lt;T1, T2&gt;, Outer.Nested.</summary>
+    internal static string TypeName(Type type)
+    {
+        if (Keywords.TryGetValue(type, out var keyword))
+        {
+            return keyword;
+        }
+
+        if (type.IsGenericParameter)
+        {
+            return type.Name;
+        }
+
+        if (type.IsArray)
+        {
+            return TypeName(type.GetElementType()!) + "[" + new string(',', type.GetArrayRank() - 1) + "]";
+        }
+
+        if (Nullable.GetUnderlyingType(type) is { } underlying)
+        {
+            return TypeName(underlying) + "?";
+        }
+
+        var name = SimpleName(type);
+        if (type.IsGenericType)
+        {
+            name += "<" + string.Join(", ", type.GetGenericArguments().Select(TypeName)) + ">";
+        }
+
+        return type.IsNested && !type.IsGenericParameter ? $"{TypeName(type.DeclaringType!)}.{name}" : name;
+    }
+
+    /// <summary>
+    /// The entries of a baseline file copied next to the tests: one "rule&lt;TAB&gt;symbol" per line, '#' comments and blank
+    /// lines aside.
+    /// </summary>
+    internal static SortedSet<string> ReadBaseline(string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "ApiConventions", fileName);
+        Assert.True(File.Exists(path), $"no baseline {path}");
+        return new SortedSet<string>(File.ReadAllLines(path)
+            .Select(l => l.TrimEnd())
+            .Where(l => l.Length > 0 && !l.StartsWith('#')), StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// Compares the violations found with a baseline that may only shrink: a violation that is not in the baseline fails,
+    /// and so does an entry of the baseline that is no longer a violation (remove it), each listed as the line to add or
+    /// remove.
+    /// </summary>
+    internal static void AssertMatchesBaseline(string fileName, IEnumerable<string> violations)
+    {
+        var found = new SortedSet<string>(violations, StringComparer.Ordinal);
+        var baseline = ReadBaseline(fileName);
+        var added = found.Where(v => !baseline.Contains(v)).ToList();
+        var stale = baseline.Where(b => !found.Contains(b)).ToList();
+        var message = "";
+        if (added.Count > 0)
+        {
+            message += $"{added.Count} new violation(s), not in {fileName}; fix the name (the baseline only shrinks):\n  " +
+                       string.Join("\n  ", added) + "\n";
+        }
+
+        if (stale.Count > 0)
+        {
+            message += $"{stale.Count} entr(y/ies) of {fileName} no longer violate the rule; remove them:\n  " +
+                       string.Join("\n  ", stale) + "\n";
+        }
+
+        Assert.True(message.Length == 0, message);
+    }
+}

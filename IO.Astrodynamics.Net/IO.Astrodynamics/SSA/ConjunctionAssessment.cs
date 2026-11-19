@@ -1024,6 +1024,10 @@ public static class ConjunctionAssessment
     /// none. Without a close approach, <c>Analyze</c> returns the closest window end on both paths
     /// (<see cref="SelectBestTcaEpoch"/>, #621).
     /// </summary>
+    /// <param name="protectedSource">The states of the protected object.</param>
+    /// <param name="secondarySource">The states of the secondary object.</param>
+    /// <param name="window">The window searched.</param>
+    /// <param name="toleranceSeconds">The tolerance of the bisection of the range rate, in seconds.</param>
     /// <param name="maximumReadSpacing">The largest spacing of the reads of the range rate over the window, the
     /// <see cref="ConjunctionAnalysisOptions.MaximumEventSearchStep"/> of the sampled search (60 s by default), with
     /// <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/>; null without it: the seeds alone.</param>

@@ -741,7 +741,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="propagatorStepSize">The step of the output states.</param>
         /// <param name="covariancePropagation">The propagation of the state transition matrix and, in
         /// <see cref="CovariancePropagationMode.Covariance"/>, of the covariance of
-        /// <see cref="InitialOrbitalParameters"/>; null for none, as the overload without it.</param>
+        /// <see cref="ILocalizable.InitialOrbitalParameters"/>; null for none, as the overload without it.</param>
         /// <returns>The solution, from which Φ, Ψ and P are read at any epoch of the window; in covariance mode, its
         /// output states, which the spacecraft stores, carry their covariance.</returns>
         /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator
@@ -809,7 +809,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// epoch before the first or after the last throws, where the 8-point polynomial was extrapolated before 11.0.0
         /// without an error, 567 km off 6 min before the first state and 8 282 km 6 min after the last in LEO (#527, decided
         /// by S. Guillet, 2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light
-        /// time, may lie up to that light time outside them (see <see cref="CelestialItem.GetEphemeris"/>), the observation
+        /// time, may lie up to that light time outside them (see <see cref="CelestialItem.GetEphemeris(in IO.Astrodynamics.TimeSystem.Window, IO.Astrodynamics.Body.ILocalizable, IO.Astrodynamics.Frames.Frame, IO.Astrodynamics.Aberration, in System.TimeSpan)"/>), the observation
         /// epoch itself being read within them.
         /// </remarks>
         /// <exception cref="InvalidOperationException">The spacecraft holds propagated states and <paramref name="epoch"/>
@@ -960,7 +960,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo"/> interpolates, from the first
+        /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates, from the first
         /// to the last; null when it reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
         /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or fewer than two states
         /// (the initial orbital parameters are then propagated in two-body motion to the epoch).
@@ -1013,7 +1013,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Throws when a window leaves the propagated states that <see cref="GetGeometricStateRelativeTo"/> interpolates,
+        /// Throws when a window leaves the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates,
         /// which would be extrapolated (#527); nothing to check without such states (<see cref="InterpolatedStatesWindow"/>).
         /// </summary>
         /// <param name="window">The window read.</param>

@@ -134,7 +134,7 @@ internal static class FieldOfViewSearch
     }
 
     /// <summary>
-    /// The search window within the propagated states of a spacecraft that <see cref="Spacecraft.GetGeometricStateRelativeTo"/>
+    /// The search window within the propagated states of a spacecraft that <see cref="Spacecraft.GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/>
     /// would otherwise extrapolate; nothing to check for a kernel-backed spacecraft, a TLE, or a spacecraft whose initial
     /// orbital parameters are propagated in two-body motion (<see cref="Spacecraft.InterpolatedStatesWindow"/>). The light
     /// time of a spacecraft target reads it up to the light time before the start of the search window (reception) or

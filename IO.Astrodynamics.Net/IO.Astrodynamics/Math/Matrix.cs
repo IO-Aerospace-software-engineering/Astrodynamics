@@ -711,13 +711,6 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// Creates a 3x3 matrix from three column vectors.
-    /// </summary>
-    /// <param name="col0">The first column vector.</param>
-    /// <param name="col1">The second column vector.</param>
-    /// <param name="col2">The third column vector.</param>
-    /// <returns>A 3x3 matrix with the specified column vectors.</returns>
-    /// <summary>
     /// Computes the Cholesky decomposition of this symmetric positive-definite matrix.
     /// Returns a lower-triangular matrix L such that L * L^T = this matrix.
     /// </summary>
