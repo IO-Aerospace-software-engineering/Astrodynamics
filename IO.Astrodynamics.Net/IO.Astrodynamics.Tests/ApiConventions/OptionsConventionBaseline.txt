@@ -1,0 +1,15 @@
+# The options types and options parameters of 11.0.0 that do not follow D1 yet (#668, lot L0, main f2a0376), one
+# "rule<TAB>symbol" per line in ordinal order, read by OptionsConventionTests. The file may only shrink: a new options
+# type or parameter follows D1, and the options lots (L4, L6, L7) remove these lines.
+D1.default	IO.Astrodynamics.CCSDS.CDM.CdmExportOptions
+D1.default	IO.Astrodynamics.Propagator.BatchOptions
+D1.default	IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions
+D1.default	IO.Astrodynamics.SSA.AvoidanceSearchOptions
+D1.default	IO.Astrodynamics.SSA.ConjunctionAnalysisOptions
+D1.default	IO.Astrodynamics.SSA.ScreeningOptions
+D1.parameter	IO.Astrodynamics.Body.CelestialItem.FindWindowsOnOccultationConstraint(options)
+D1.parameter	IO.Astrodynamics.Body.Spacecraft.Spacecraft.Propagate(covariancePropagation)
+D1.parameter	IO.Astrodynamics.Mission.Scenario.SimulateAsync(covariancePropagation)
+D1.parameter	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(covariancePropagation)
+D1.parameter	IO.Astrodynamics.Propagator.CentralBodyPropagatorBuilder.WithCovariancePropagation(options)
+D1.parameter	IO.Astrodynamics.Surface.Site.FindWindowsOnOccultationConstraint(options)
