@@ -54,8 +54,9 @@ caller can meet, with its migration: among them the maneuver chain on the attitu
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
 public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
-proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked and the
-parsec of 648000/π au. **Deprecated** lists
+proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked, the
+parsec of 648000/π au, and a repeated kernel load, which no longer reloads, with the order of a folder's kernels.
+**Deprecated** lists
 `Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
 `Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -126,6 +127,17 @@ release are listed under **Known limitations**.
   - The later lots of #668 rename or remove a member outright, with no `[Obsolete]` forwarder (decided by S. Guillet,
     2026-11-19): each change is listed in these notes, under **Changed** as **Breaking** with its migration, or under
     **Removed**, and documented in the reference pages.
+- **Kernel loading: `SpiceAPI.ReloadKernels` and the string overloads** (lot L1 of the ergonomics review, R01 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
+  by S. Guillet, 2026-11-19). `ReloadKernels(FileSystemInfo)` and `ReloadKernels(string)` read a path again, on top of
+  the kernels loaded after it: its loaded files are unloaded, then all its files loaded (a kernel rewritten on disk;
+  what a repeated `LoadKernels` did before, under **Changed**); a path inside a loaded directory is read again inside
+  that entry, which keeps its place; a path never loaded is loaded. `LoadKernels(string)` and `UnloadKernels(string)`
+  take the path as text, a directory on disk as a `DirectoryInfo`, anything else as a `FileInfo`; null throws
+  `ArgumentNullException`, an empty string `ArgumentException` (`path`). The Quick Start lists the four generic kernels
+  of a first set (`de440s.bsp`, `latest_leapseconds.tls`, `pck00011.tpc`, `gm_de440.tpc`) with their NAIF paths, the
+  two that make `ITRF93` the Earth's frame, and a download command for bash and PowerShell. See
+  [Kernel Management](../guides/kernel-management.md).
 
 **Fixed**
 
@@ -4265,6 +4277,37 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: a repeated `LoadKernels` hands SPICE only the files it does not hold** (lot L1, R01 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
+  by S. Guillet, 2026-11-19). A path already loaded, a path inside a loaded directory, or a directory that holds loaded
+  entries, furnishes only the kernel files that no load of `SpiceAPI` handed SPICE (those written since), and the
+  others keep their precedence; a directory that holds loaded entries replaces them by its own entry, listed last.
+  Before, such a load unloaded the entry and loaded it again, on top of every kernel loaded after it, at 4 to 7 times
+  the cost (211 to 250 ms a repeat on `Data/SolarSystem`, against 34 to 49 ms for the first load; first annex of #671):
+  loading `f`, `z` and `f` again, two kernels that assign one variable, gave `f`'s value, and gives `z`'s now
+  (`KernelLoadingTests`, TK frames of closed-form rotation, and KEEPER's list on Linux). The generation of the kernel
+  pool, after which the predefined bodies read their data again, is raised only by a load that hands SPICE a file, a
+  failed one included; a repeated load and a path that does not exist leave it (before, every call raised it). When
+  SPICE fails to load a file of a directory, the files loaded before it stay loaded and are listed under the path, so
+  that its unload removes them (before, they were loaded and not listed, and a later load handed them to SPICE a second
+  time). Migration: a caller that loaded a path again to read a kernel rewritten on disk, or to give it precedence
+  again, calls `ReloadKernels` (under **Added**).
+- **Breaking: the files of a directory load in ordinal order, component by component** (R01 of #668, structuring choice
+  9, decided by S. Guillet, 2026-11-19). `LoadKernels` of a directory sorts the entries of each level by name,
+  `StringComparer.Ordinal` (capitals before lower case), a subdirectory walked at its place, so the order is the one of
+  the paths relative to the directory compared component by component, the same on every platform (`x/y.tf` before
+  `x0.tf`, which a sort of the whole paths swaps between `/` and `\`); where two files assign the same variable or
+  cover the same object, the later one wins. Before, the order of the directory listing, which depends on the file
+  system (the hash of the names on ext4, the reverse creation order on tmpfs): twenty kernels `k00` to `k19` of one
+  variable gave `k19`'s value only by chance. No file of `Data/SolarSystem` overlaps another (its SPKs cover distinct
+  objects, and the one variable defined twice, `TKFRAME_EARTH_FIXED_*`, has the same value in `earth_fixed.tf` and
+  `earth_topo_201023.tf`; first annex of #671), so no result of the suite or of the conformance runner moves.
+  Migration: rename the files of a folder of conflicting kernels so that the one to win sorts last, or load them one
+  by one in the order wanted.
+- **Breaking: `UnloadKernels(null)` throws `ArgumentNullException`** (`path`), as `LoadKernels(null)` does (R01 of
+  #668); it returned before. With the string overloads, `LoadKernels(null)` and `UnloadKernels(null)` no longer compile
+  (CS0121, an ambiguous call). Migration: drop the call, or cast the null (`(FileSystemInfo)null`) where a null path is
+  meant to throw.
 - **Breaking: the thrust window of an impulse is the burn whose acceleration has its centroid at the impulse**
   ([#335](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/335), derived from
   S. Guillet's remark of 2026-11-18 that the acceleration grows during the burn, decided by S. Guillet, 2026-11-18). The

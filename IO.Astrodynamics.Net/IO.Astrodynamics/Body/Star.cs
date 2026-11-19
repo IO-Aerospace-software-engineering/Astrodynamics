@@ -417,7 +417,7 @@ public class Star : CelestialBody
 
     /// <summary>
     /// Write star ephemeris from propagated states: those of its last propagation, their positions and the star's space
-    /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels"/> loaded is unloaded
+    /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> loaded is unloaded
     /// first, and the new one is left unloaded (#706).
     /// </summary>
     /// <exception cref="ArgumentException">The last propagation stored fewer than three states: the native writer writes three

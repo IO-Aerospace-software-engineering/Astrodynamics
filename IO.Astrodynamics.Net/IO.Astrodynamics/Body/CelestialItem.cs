@@ -65,7 +65,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <c>LoadKernels</c>), with <see cref="InvalidOperationException"/> naming the missing variable (third round of #668:
     /// before, those zeros were kept for the life of the process); once read, the object keeps the provider it read its
     /// data from. On the <see cref="SpiceDataProvider"/> the data are read again at the first read after each
-    /// <see cref="SpiceAPI.LoadKernels"/>, <see cref="SpiceAPI.UnloadKernels"/> or <see cref="SpiceAPI.ClearKernels"/>, so
+    /// <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/>, <see cref="SpiceAPI.UnloadKernels(FileSystemInfo)"/> or <see cref="SpiceAPI.ClearKernels"/>, so
     /// that they follow the kernel pool (a J2, a frame association or an SPK loaded after the first read; before the third
     /// round of #668, the data of the first read were kept for the life of the process); data equal to those held keep the
     /// instances held.

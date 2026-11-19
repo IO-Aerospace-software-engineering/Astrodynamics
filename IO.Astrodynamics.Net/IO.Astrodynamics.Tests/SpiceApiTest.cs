@@ -1076,7 +1076,8 @@ public partial class SpiceApiTest
     [Fact]
     void LoadKernelException()
     {
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels(null));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels((FileSystemInfo)null));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels((string)null));
     }
 
     // The rotation angle of a frame from ICRF, in degrees, read by SPICE (pxform through TransformFrame; the sign of a

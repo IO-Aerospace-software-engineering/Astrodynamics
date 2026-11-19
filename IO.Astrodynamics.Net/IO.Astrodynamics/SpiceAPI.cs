@@ -37,7 +37,7 @@ public class SpiceAPI
     private static IntPtr _libHandle = IntPtr.Zero;
     private readonly List<KernelEntry> _kernels = [];
 
-    /// <summary>A path given to <see cref="LoadKernels"/>, and the files its load handed SPICE (#673).</summary>
+    /// <summary>A path given to <see cref="LoadKernels(FileSystemInfo)"/>, and the files its load handed SPICE (#673).</summary>
     private sealed record KernelEntry(FileSystemInfo Path, KernelFile[] Files);
 
     /// <summary>
@@ -207,20 +207,24 @@ public class SpiceAPI
     // enumerate the caller's states before it (#661).
     private static object lockObject = new object();
 
-    // The generation of the kernel pool: raised, under the lock, by each LoadKernels, UnloadKernels and ClearKernels, so
-    // that the static objects of Barycenters, PlanetsAndMoons and Stars read their data again after a change of the pool
-    // (third round of #668)
+    // The generation of the kernel pool: raised, under the lock, by each LoadKernels and ReloadKernels that made a native
+    // call, and by each UnloadKernels and ClearKernels, so that the static objects of Barycenters, PlanetsAndMoons and Stars
+    // read their data again after a change of the pool (third round of #668; a load that hands SPICE nothing leaves it, R01
+    // of #668)
     private static long _kernelPoolGeneration;
 
     // The native loads and unloads of kernels made, under the lock (LoadKernelNative, UnloadKernelNative): each first drops
     // in SPICE the deleted binary kernels (KernelsLoader), which the registry then follows (ForgetDroppedKernels). A call of
-    // LoadKernels or UnloadKernels that made none, a path that does not exist or a directory without kernel files, leaves
+    // LoadKernels, ReloadKernels or UnloadKernels that made none, a path that does not exist, a directory without kernel
+    // files or a repeated load, leaves
     // the registry as it is, since SPICE dropped nothing (review of the fourth round of #668)
     private static long _nativeKernelCalls;
 
     /// <summary>
-    /// The generation of the kernel pool, raised by each call of <see cref="LoadKernels"/>, <see cref="UnloadKernels"/> and
-    /// <see cref="ClearKernels"/>, failed or not: data read from SPICE at a generation hold while it is the current one.
+    /// The generation of the kernel pool, raised by each call of <see cref="LoadKernels(FileSystemInfo)"/> and
+    /// <see cref="ReloadKernels(FileSystemInfo)"/> that hands SPICE a file, failed or not, and by each call of
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> and <see cref="ClearKernels"/>: data read from SPICE at a generation hold
+    /// while it is the current one.
     /// </summary>
     internal static long KernelPoolGeneration => Interlocked.Read(ref _kernelPoolGeneration);
 
@@ -527,26 +531,26 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The kernel paths loaded by <see cref="LoadKernels"/>, as they are at the call: a copy taken under the lock, so that
+    /// The kernel paths loaded by <see cref="LoadKernels(FileSystemInfo)"/>, as they are at the call: a copy taken under the lock, so that
     /// another thread may load or unload kernels while the caller enumerates it.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// After <see cref="UnloadKernels"/> of a file or a subdirectory of a loaded directory, the directory is no longer listed
+    /// After <see cref="UnloadKernels(FileSystemInfo)"/> of a file or a subdirectory of a loaded directory, the directory is no longer listed
     /// but each of its kernel files SPICE still holds, in its place.
     /// </para>
     /// <para>
     /// An SPK, CK, binary PCK or EK whose file, named by its full path, was deleted leaves the listing at the next native load,
-    /// unload or write, which closes and unloads it in SPICE (<see cref="UnloadKernels"/>): a path is listed only while SPICE
+    /// unload or write, which closes and unloads it in SPICE (<see cref="UnloadKernels(FileSystemInfo)"/>): a path is listed only while SPICE
     /// holds a file of it, and a directory whose files were all dropped is no longer listed (fourth round of #668; before, the
-    /// path was listed until it was unloaded). A call that hands SPICE nothing (<see cref="LoadKernels"/> of a path that does
+    /// path was listed until it was unloaded). A call that hands SPICE nothing (<see cref="LoadKernels(FileSystemInfo)"/> of a path that does
     /// not exist or of a directory without kernel files, the unload of such a directory) leaves the listing as it is, since
     /// SPICE still holds the file; a symbolic link counts as deleted once its target is, as the native layer tests it. A text
     /// kernel, a meta-kernel or a DSK stays listed until it is unloaded.
     /// </para>
     /// <para>
     /// A file a writer replaces (<see cref="WriteEphemeris"/>, <see cref="WriteOrientation"/>, <c>Spacecraft.WriteEphemeris</c>
-    /// and the writers that call them) leaves the listing before the write, unloaded as <see cref="UnloadKernels"/> unloads
+    /// and the writers that call them) leaves the listing before the write, unloaded as <see cref="UnloadKernels(FileSystemInfo)"/> unloads
     /// it, a directory being replaced by its remaining files; the new file is not loaded (#706: before, the native writers
     /// left it listed and SPICE read the replaced data, the managed one left it listed while SPICE no longer held it).
     /// </para>
@@ -560,32 +564,47 @@ public class SpiceAPI
     }
 
     /// <summary>
-    ///     Load kernel at given path
+    ///     Loads the kernels of a path, a file or a directory, that SPICE does not hold from a load of this class.
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
     /// <remarks>
     /// <para>
     /// A file path is handed to SPICE as it is. For a directory, the kernel files of the directory and of its
-    /// subdirectories are loaded, in the order of the directory listing; the other files, from which SPICE would load
-    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). The path is taken as what it
-    /// is on disk, whatever its type: a <see cref="FileInfo"/> that names a directory loads the directory, a
-    /// <see cref="DirectoryInfo"/> that names a file loads the file.
+    /// subdirectories are loaded in ordinal order of their paths relative to the directory, component by component
+    /// (<see cref="KernelFiles"/>): where two of them assign the same variable or cover the same object, the later file
+    /// wins, on every platform (11.0.0; before, the order of the directory listing, which depends on the file system). The
+    /// other files, from which SPICE would load nothing (a geopotential model, a readme), are left out
+    /// (<see cref="IsKernelFile"/>). The path is taken as what it is on disk, whatever its type: a <see cref="FileInfo"/>
+    /// that names a directory loads the directory, a <see cref="DirectoryInfo"/> that names a file loads the file.
     /// </para>
     /// <para>
-    /// Paths are compared by their components (#673): a path already loaded, or inside a loaded directory, reloads that
-    /// entry; a directory first unloads the entries inside it; a sibling whose name extends a loaded one is another path.
-    /// SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
+    /// A file SPICE already holds from a load of this class is not handed to it again (11.0.0, R01 of #668, decided by
+    /// S. Guillet, 2026-11-19): a repeated load of a path furnishes only its files loaded since, and keeps the precedence of
+    /// the others; a file rewritten on disk, or one to put back on top, is read again by
+    /// <see cref="ReloadKernels(FileSystemInfo)"/>. Before 11.0.0 a repeated load unloaded the path and loaded it again,
+    /// on top of every kernel loaded after it, at 4 to 7 times the cost. Paths are compared by their components (#673): a
+    /// path inside a loaded directory adds its new files to that entry; a directory that holds loaded entries replaces
+    /// them by its own entry, listed last, their files kept loaded; a sibling whose name extends a loaded one is another
+    /// path. SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
     /// </para>
     /// <para>
     /// Each native load first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted since its load, as
-    /// <see cref="UnloadKernels"/> does (#668, second round); a kernel SPICE holds under a relative name, from a meta-kernel,
-    /// is left to SPICE. <see cref="GetLoadedKernels"/> no longer lists a file so dropped once the call returns (fourth round
-    /// of #668).
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> does (#668, second round); a kernel SPICE holds under a relative name,
+    /// from a meta-kernel, is left to SPICE. <see cref="GetLoadedKernels"/> no longer lists a file so dropped once the call
+    /// returns (fourth round of #668).
     /// </para>
     /// <para>
-    /// Each call, as each <see cref="UnloadKernels"/> and <see cref="ClearKernels"/>, raises the generation of the kernel
-    /// pool: the static objects of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> and <see cref="Stars"/> read on
-    /// SPICE read their data again at their next read (third round of #668).
+    /// A call that hands SPICE a file, a failed one included, raises the generation of the kernel pool, as each
+    /// <see cref="UnloadKernels(FileSystemInfo)"/>, <see cref="ReloadKernels(FileSystemInfo)"/> and
+    /// <see cref="ClearKernels"/> does: the static objects of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> and
+    /// <see cref="Stars"/> read on SPICE read their data again at their next read (third round of #668). A call that hands
+    /// SPICE nothing, a repeated load or a path that does not exist, leaves it as it is (11.0.0; before, every call raised
+    /// it, failed or not).
+    /// </para>
+    /// <para>
+    /// When SPICE fails to load a file, the files of the call loaded before it stay loaded and listed, under the path, so
+    /// that <see cref="UnloadKernels(FileSystemInfo)"/> of the path unloads them and a later load does not hand them to
+    /// SPICE twice (11.0.0; before, they were loaded and not listed).
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
@@ -606,54 +625,194 @@ public class SpiceAPI
             }
             finally
             {
-                if (_nativeKernelCalls != nativeCalls) ForgetDroppedKernels();
-                Interlocked.Increment(ref _kernelPoolGeneration);
+                AfterKernelCall(nativeCalls);
             }
         }
     }
 
-    // LoadKernels under the lock
+    /// <summary>
+    ///     Loads the kernels of a path, a file or a directory, as <see cref="LoadKernels(FileSystemInfo)"/> does.
+    /// </summary>
+    /// <param name="path">A file path or a directory path, absolute or relative to the working directory.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, or is neither a file nor a directory on disk.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to load a file, as <see cref="LoadKernels(FileSystemInfo)"/>.</exception>
+    public void LoadKernels(string path) => LoadKernels(KernelPath(path));
+
+    /// <summary>
+    ///     Reads the kernels of a path, a file or a directory, again: the files of the path SPICE holds from a load of this
+    ///     class are unloaded, then every kernel file of the path is loaded, on top of the kernels loaded before.
+    /// </summary>
+    /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
+    /// <remarks>
+    /// <para>
+    /// For a kernel rewritten on disk, or to give a path precedence over the kernels loaded after it (11.0.0, R01 of #668,
+    /// decided by S. Guillet, 2026-11-19): what a repeated <see cref="LoadKernels(FileSystemInfo)"/> did before 11.0.0. A
+    /// path never loaded is loaded. A path inside a loaded directory is read again inside that entry, which stays listed at
+    /// its place; a loaded path, or a directory that holds loaded entries, is unloaded as
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> unloads it and loaded again, listed last. The files are loaded in the
+    /// order of <see cref="LoadKernels(FileSystemInfo)"/>, and the generation of the kernel pool is raised when the call
+    /// hands SPICE a file.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is unloaded or
+    /// loaded.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to unload a file, as <see cref="UnloadKernels(FileSystemInfo)"/>
+    /// reports it (nothing is loaded then), or to load one, as <see cref="LoadKernels(FileSystemInfo)"/> reports it.</exception>
+    public void ReloadKernels(FileSystemInfo path)
+    {
+        if (path == null) throw new ArgumentNullException(nameof(path));
+        lock (lockObject)
+        {
+            long nativeCalls = _nativeKernelCalls;
+            try
+            {
+                ReloadKernelsLocked(path);
+            }
+            finally
+            {
+                AfterKernelCall(nativeCalls);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Reads the kernels of a path, a file or a directory, again, as <see cref="ReloadKernels(FileSystemInfo)"/> does.
+    /// </summary>
+    /// <param name="path">A file path or a directory path, absolute or relative to the working directory.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, or is neither a file nor a directory on disk.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to unload or load a file, as <see cref="ReloadKernels(FileSystemInfo)"/>.</exception>
+    public void ReloadKernels(string path) => ReloadKernels(KernelPath(path));
+
+    // The FileSystemInfo of a path given as text: a DirectoryInfo for a directory on disk, a FileInfo otherwise (a missing
+    // path included, which the call then refuses)
+    private static FileSystemInfo KernelPath(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        return Directory.Exists(path) ? new DirectoryInfo(path) : new FileInfo(path);
+    }
+
+    // After a load, reload or unload, under the lock: the registry follows the files the native layer dropped, and the
+    // generation of the kernel pool is raised, when the call made a native call
+    private void AfterKernelCall(long nativeCallsBefore)
+    {
+        if (_nativeKernelCalls == nativeCallsBefore) return;
+        ForgetDroppedKernels();
+        Interlocked.Increment(ref _kernelPoolGeneration);
+    }
+
+    // LoadKernels under the lock: the kernel files of the path that no entry holds are handed to SPICE, in their order;
+    // those furnished before a failure are registered too
     private void LoadKernelsLocked(FileSystemInfo path)
     {
-        // Before any unload or reload, so that a failed call changes nothing; not the cached Exists of the instance,
-        // which a reload of a stored entry would trust after a deletion
+        // Before any native call, so that a failed call changes nothing; not the cached Exists of the instance, which a
+        // stored entry would trust after a deletion
         if (!Exists(path))
         {
             throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
         }
 
-        var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
-        if (containing.Length > 0)
+        int holder = _kernels.FindIndex(x => IsSameOrInside(path.FullName, x.Path.FullName));
+        var held = new HashSet<string>(_kernels.SelectMany(x => x.Files).Select(x => KernelName(x.Name)), StringComparer.Ordinal);
+        var furnished = new List<KernelFile>();
+        bool completed = false;
+        try
         {
-            foreach (var entry in containing)
+            foreach (var kernel in KernelFiles(path))
             {
-                UnloadKernels(entry.Path);
-                LoadKernels(entry.Path);
+                if (!held.Add(KernelName(kernel)))
+                {
+                    continue;
+                }
+
+                if (!LoadKernelNative(kernel))
+                {
+                    throw new InvalidOperationException($"Kernel {kernel} can't be loaded: {LastProxyError()}");
+                }
+
+                // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
+                var (reads, mayFailOn) = UnloadRereads(kernel);
+                furnished.Add(new KernelFile(kernel, reads, mayFailOn));
             }
 
+            completed = true;
+        }
+        finally
+        {
+            if (completed || furnished.Count > 0)
+            {
+                Register(path, holder, furnished);
+            }
+        }
+    }
+
+    // Records the files a load furnished: in the entry that holds the path, or in a new entry of the path, listed last, that
+    // takes the files of the entries inside it
+    private void Register(FileSystemInfo path, int holder, List<KernelFile> furnished)
+    {
+        if (holder >= 0)
+        {
+            var entry = _kernels[holder];
+            _kernels[holder] = entry with { Files = entry.Files.Concat(furnished).ToArray() };
             return;
         }
 
-        foreach (var inside in _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray())
+        var inside = _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray();
+        _kernels.RemoveAll(x => inside.Contains(x));
+        _kernels.Add(new KernelEntry(path, inside.SelectMany(x => x.Files).Concat(furnished).ToArray()));
+    }
+
+    // ReloadKernels under the lock
+    private void ReloadKernelsLocked(FileSystemInfo path)
+    {
+        if (!Exists(path))
         {
-            UnloadKernels(inside.Path);
+            throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
         }
 
-        var files = new List<KernelFile>();
-        foreach (var kernel in KernelFiles(path))
+        int holder = _kernels.FindIndex(x => IsSameOrInside(path.FullName, x.Path.FullName) && !IsSameOrInside(x.Path.FullName, path.FullName));
+        if (holder < 0)
         {
-            if (!LoadKernelNative(kernel))
+            if (_kernels.Any(x => IsSameOrInside(x.Path.FullName, path.FullName)))
             {
-                throw new InvalidOperationException($"Kernel {kernel} can't be loaded: {LastProxyError()}");
+                UnloadKernelsLocked(path);
             }
 
-            // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
-            var (reads, mayFailOn) = UnloadRereads(kernel);
-            files.Add(new KernelFile(kernel, reads, mayFailOn));
+            LoadKernelsLocked(path);
+            return;
         }
 
-        _kernels.Add(new KernelEntry(path, files.ToArray()));
+        // A path inside a loaded directory: its files leave the entry, which keeps its place, and come back at its end
+        var entry = _kernels[holder];
+        var reloaded = entry.Files.Where(x => IsSameOrInside(x.Name, path.FullName)).ToArray();
+        _kernels[holder] = entry with { Files = entry.Files.Except(reloaded).ToArray() };
+        var unrepaired = new List<(KernelFile File, string Error)>();
+        UnloadFiles(reloaded, unrepaired);
+        if (unrepaired.Count > 0)
+        {
+            throw new InvalidOperationException($"Kernel {unrepaired[0].File.Name} can't be unloaded: {unrepaired[0].Error}");
+        }
+
+        try
+        {
+            LoadKernelsLocked(path);
+        }
+        catch
+        {
+            // A directory none of whose files SPICE holds any longer leaves the listing
+            if (_kernels[holder].Files.Length == 0 && entry.Files.Length > 0)
+            {
+                _kernels.RemoveAt(holder);
+            }
+
+            throw;
+        }
     }
+
+    // The name by which the registry compares two kernel files: the full path, without a trailing separator
+    private static string KernelName(string file) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(file));
 
     /// <summary>Whether the path is a file or a directory on disk now, whatever the type of <paramref name="path"/>.</summary>
     private static bool Exists(FileSystemInfo path) => File.Exists(path.FullName) || Directory.Exists(path.FullName);
@@ -779,9 +938,13 @@ public class SpiceAPI
     private static readonly char[] DataSeparators = [' ', '\t', '\r', '\v', '\f', '=', '+', '(', ')', ','];
 
     /// <summary>
-    /// The files that <see cref="LoadKernels"/> hands to SPICE for <paramref name="path"/>: the file itself, or the
-    /// kernel files of a directory and of its subdirectories, in the order of the directory listing, as the native
-    /// loader walks it. The path is walked as a directory whenever it is one on disk, whatever its type.
+    /// The files that <see cref="LoadKernels(FileSystemInfo)"/> hands to SPICE for <paramref name="path"/>: the file itself,
+    /// or the kernel files of a directory and of its subdirectories, in ordinal order of their paths relative to the
+    /// directory, component by component (the entries of each directory sorted by name, ordinal, a subdirectory walked at
+    /// its place): the same order on every platform, where a sort of the whole paths would put <c>x/y.tf</c> before
+    /// <c>x0.tf</c> under '/' (0x2F) and after it under '\' (0x5C) (11.0.0, R01 of #668; before, the order of the directory
+    /// listing, which depends on the file system). The path is walked as a directory whenever it is one on disk, whatever
+    /// its type.
     /// </summary>
     /// <remarks>
     /// The other files of a directory (a geopotential model, a readme) are left out: SPICE would load nothing from
@@ -796,7 +959,9 @@ public class SpiceAPI
             yield break;
         }
 
-        foreach (var entry in Directory.EnumerateFileSystemEntries(path.FullName))
+        // Ordinal by name at each level: the order of the paths relative to the directory, component by component, the same
+        // on every platform ('x' and its files before 'x0.tf', whatever the separator)
+        foreach (var entry in Directory.EnumerateFileSystemEntries(path.FullName).OrderBy(Path.GetFileName, StringComparer.Ordinal))
         {
             if (Directory.Exists(entry))
             {
@@ -1042,6 +1207,8 @@ public class SpiceAPI
     /// by absolute paths to have them covered.
     /// </para>
     /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null (11.0.0, as <see cref="LoadKernels(FileSystemInfo)"/>;
+    /// before, the call returned).</exception>
     /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call, of the same
     /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
     /// again, and that of a DSK opens the other loaded DSKs again; each fails on a kernel of those kinds deleted since its
@@ -1051,7 +1218,7 @@ public class SpiceAPI
     /// the first failure no later unload repaired (#706: before, it referred to the standard output).</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
-        if (path == null) return;
+        if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
             long nativeCalls = _nativeKernelCalls;
@@ -1065,6 +1232,20 @@ public class SpiceAPI
                 Interlocked.Increment(ref _kernelPoolGeneration);
             }
         }
+    }
+
+    /// <summary>
+    ///     Unloads the kernels of a path, a file or a directory, as <see cref="UnloadKernels(FileSystemInfo)"/> does.
+    /// </summary>
+    /// <param name="path">A file path or a directory path, absolute or relative to the working directory.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to unload a file, as <see cref="UnloadKernels(FileSystemInfo)"/>.</exception>
+    public void UnloadKernels(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        // A deleted directory is matched by its components, whatever the type of the instance
+        UnloadKernels(Directory.Exists(path) ? new DirectoryInfo(path) : new FileInfo(path));
     }
 
     // UnloadKernels under the lock
@@ -1922,7 +2103,7 @@ public class SpiceAPI
     /// (<see cref="Kernels.SpkWriter"/>, #540), in J2000: the native writer writes one segment per file. As the
     /// native writer, it unloads and replaces an existing file, creates its directory when needed, and leaves the new file
     /// unloaded (the native kernel unloads the file it wrote when it is destroyed, at the end of its proxy). A file
-    /// <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/> does, so that
+    /// <see cref="LoadKernels(FileSystemInfo)"/> loaded is first unloaded as <see cref="UnloadKernels(FileSystemInfo)"/> does, so that
     /// <see cref="GetLoadedKernels"/> no longer lists it (#706: before, it stayed listed while SPICE no longer held it), then
     /// every other load of it SPICE holds, under the names <see cref="WriteEphemeris"/> finds (review of #706: before, a
     /// single unload, which left a second load, a meta-kernel's, holding the replaced data).
@@ -1986,7 +2167,7 @@ public class SpiceAPI
     /// The states are enumerated once, before the SPICE lock, so that nothing of the caller's sequence runs under it
     /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// The native writer unloads the file it replaces and, once written, the file itself; like every native load and unload
-    /// (<see cref="UnloadKernels"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
+    /// (<see cref="UnloadKernels(FileSystemInfo)"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
     /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
     /// stayed open in SPICE for good, and left the failure pending for the next kernel call. That reopening can still fail on
     /// an SPK SPICE holds under a relative name (a meta-kernel's), which the native layer leaves to SPICE, once its file was
@@ -1995,8 +2176,8 @@ public class SpiceAPI
     /// written by then. A file the call replaces is unloaded before its removal, and that unload fails the same way: the
     /// file is then left on disk as it was, no longer loaded, and nothing is written (review of the fourth round of #668;
     /// before, it was removed and nothing written in its place).
-    /// A file it replaces that <see cref="LoadKernels"/> loaded, by itself or in a loaded directory, is first unloaded as
-    /// <see cref="UnloadKernels"/> does, and the native writer unloads every other load of the file (a meta-kernel's): SPICE
+    /// A file it replaces that <see cref="LoadKernels(FileSystemInfo)"/> loaded, by itself or in a loaded directory, is first unloaded as
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> does, and the native writer unloads every other load of the file (a meta-kernel's): SPICE
     /// no longer reads the replaced data, <see cref="GetLoadedKernels"/> no longer lists the file, and the new file is left
     /// unloaded (#706: before, the caller's load stayed in SPICE, which held the replaced file open and read its data). A
     /// load is found under the path or under an absolute name whose symbolic links, followed one at a time, resolve through
@@ -2074,7 +2255,7 @@ public class SpiceAPI
     /// (#661: before, under the lock, which a sequence that first read a static body class could deadlock, #623).
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
     /// convention, the conjugate of the record's rotation, in J2000. The native writer unloads the file it replaces and, once
-    /// written, the file itself; like every native load and unload (<see cref="UnloadKernels"/>), it first closes and
+    /// written, the file itself; like every native load and unload (<see cref="UnloadKernels(FileSystemInfo)"/>), it first closes and
     /// unloads every SPK, CK, binary PCK and EK whose file was deleted since its load (#668, second round). Before, the
     /// unload opened the other CKs again, failed on a deleted one, which stayed open in SPICE for good, and left the failure
     /// pending for the next kernel call. That reopening can still fail on a CK SPICE holds under a relative name (a
@@ -2083,7 +2264,7 @@ public class SpiceAPI
     /// and the next kernel call failed with a wrong error). A new file is written by then. A file the call replaces is
     /// unloaded before its removal, and that unload fails the same way: the file is then left on disk as it was, no longer
     /// loaded, and nothing is written (review of the fourth round of #668; before, it was removed and nothing written in its
-    /// place). A file it replaces that <see cref="LoadKernels"/> loaded is first unloaded as <see cref="UnloadKernels"/>
+    /// place). A file it replaces that <see cref="LoadKernels(FileSystemInfo)"/> loaded is first unloaded as <see cref="UnloadKernels(FileSystemInfo)"/>
     /// does, and the native writer unloads every other load of the file, under the names <see cref="WriteEphemeris"/>
     /// finds (#706 and its review).
     /// </remarks>
@@ -2182,8 +2363,8 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// Unloads, as <see cref="UnloadKernels"/> does, a file a writer is about to replace when it was loaded through
-    /// <see cref="LoadKernels"/>, by itself or in a loaded directory, under its own name or a name whose symbolic links
+    /// Unloads, as <see cref="UnloadKernels(FileSystemInfo)"/> does, a file a writer is about to replace when it was loaded through
+    /// <see cref="LoadKernels(FileSystemInfo)"/>, by itself or in a loaded directory, under its own name or a name whose symbolic links
     /// resolve through it (a link to the file, or the file in a directory loaded through a link; #706 and its review):
     /// <see cref="GetLoadedKernels"/> no longer lists it, a directory being replaced by its remaining files, and SPICE no
     /// longer holds it. A hard link names the replaced data, which stay on disk, and is kept, as is the file a symbolic link
@@ -2191,7 +2372,7 @@ public class SpiceAPI
     /// the file once after loading it once more, so the caller's load stayed in SPICE, which held the replaced file open and
     /// read its data, and the managed writer unloaded it in SPICE but left it listed. Nothing is done for a file the
     /// registry does not hold; a failed unload throws the <see cref="InvalidOperationException"/> of
-    /// <see cref="UnloadKernels"/> before anything is written, the file kept on disk as it was. Called under the lock.
+    /// <see cref="UnloadKernels(FileSystemInfo)"/> before anything is written, the file kept on disk as it was. Called under the lock.
     /// </summary>
     private void UnloadReplacedKernel(FileInfo target)
     {

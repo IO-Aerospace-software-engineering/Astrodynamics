@@ -87,7 +87,8 @@ the kernel values. Before the third round of #668 such a read kept the zeros for
 radii of 0, J2 NaN, the built-in frame `IAU_EARTH` for the Earth, no orbit).
 
 On the `SpiceDataProvider` the data of an object hold for the kernel pool they were read from: the first read after each
-`LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again. A kernel loaded after the first read therefore
+`LoadKernels` or `ReloadKernels` that hands SPICE a file, and after each `UnloadKernels` or `ClearKernels`, reads them
+again (a repeated load, which hands SPICE nothing, keeps them; 11.0.0). A kernel loaded after the first read therefore
 reaches the object: `geophysical.ker` its J2 (`BODY399_J2`), `earth_assoc_itrf93.tf` and `moon_assoc_me.tf` the frames
 `ITRF93` and `MOON_ME` in place of SPICE's built-in `IAU_EARTH` and `IAU_MOON` (`IAU_EARTH` is 8.5e-4 rad from `ITRF93`
 in 2001, 1.5e-3 rad in 2025, several kilometres at the equator), an SPK its orbit and sphere of influence. Data equal to

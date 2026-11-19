@@ -2173,7 +2173,7 @@ read, an object keeps the provider it read its data from, for its data and its e
 predicates need no data. A provider that gives one of them a GM or, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii
 of 0 (SPICE before `LoadKernels`, which answers 0 for `BODYnnn_GM` or `BODYnnn_RADII` no loaded kernel defines) makes
 the read throw `InvalidOperationException` naming the variable, and nothing is kept. On SPICE their data follow the
-kernel pool: the first read after each `LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again, so that a
+kernel pool: the first read after each `LoadKernels` or `ReloadKernels` that hands SPICE a file, and after each `UnloadKernels` or `ClearKernels`, reads them again, so that a
 kernel loaded later (`geophysical.ker` for `BODY399_J2`, `earth_assoc_itrf93.tf` and `moon_assoc_me.tf` for the frames
 `ITRF93` and `MOON_ME`, an SPK for the orbit) reaches them; data equal to those held keep the instances held. To keep a
 body's data across changes of the pool, build it (`new CelestialBody(id)`).

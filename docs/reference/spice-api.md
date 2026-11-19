@@ -13,8 +13,12 @@ decided by S. Guillet, 2026-11-17).
 
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |
-| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673); a deleted SPK, CK, binary PCK or EK already dropped by an earlier native call is no longer listed, and its unload does nothing (#668) |
+| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components (#673); the files of a directory in ordinal order, component by component, the later file winning; only the files SPICE does not hold from a load of `SpiceAPI` (11.0.0: before, a repeated load reloaded) |
+| `LoadKernels(string path)` | The same, the path given as text |
+| `ReloadKernels(FileSystemInfo path)` | Unload the loaded files of the path and load all its files again, on top (11.0.0: what a repeated `LoadKernels` did) |
+| `ReloadKernels(string path)` | The same, the path given as text |
+| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673); a deleted SPK, CK, binary PCK or EK already dropped by an earlier native call is no longer listed, and its unload does nothing (#668); null throws `ArgumentNullException` (11.0.0: before, it returned) |
+| `UnloadKernels(string path)` | The same, the path given as text |
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
@@ -346,7 +350,7 @@ its place (a `SpiceDataProvider` and `LoadKernels`, for instance). Once read, an
 data from, for its data and its ephemeris. A provider that gives one of them a GM or, for a body, radii of 0 (SPICE
 before `LoadKernels`) makes the read throw `InvalidOperationException` naming the missing variable, and nothing is kept
 (third round of #668). On the `SpiceDataProvider` their data hold for the kernel pool they were read from: the first read
-after each `LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again (data equal to those held keep the
+after each `LoadKernels` or `ReloadKernels` that hands SPICE a file (a repeated load hands it nothing, 11.0.0), and after each `UnloadKernels` or `ClearKernels`, reads them again (data equal to those held keep the
 instances held), so that a kernel loaded later, or unloaded, reaches them (third round of #668). Before
 11.0.0 their type initializers read the provider, and one missing datum threw a `TypeInitializationException` that the
 runtime keeps for the life of the process.

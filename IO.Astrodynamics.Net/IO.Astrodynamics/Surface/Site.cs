@@ -602,7 +602,7 @@ namespace IO.Astrodynamics.Surface
         /// through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>).
         /// </summary>
         /// <param name="window">The window, sampled every minute from its start.</param>
-        /// <param name="outputFile">The SPK to write; a file it replaces that <see cref="SpiceAPI.LoadKernels"/> loaded is
+        /// <param name="outputFile">The SPK to write; a file it replaces that <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> loaded is
         /// unloaded first, and the new one is left unloaded (#706).</param>
         /// <exception cref="ArgumentException">The window gives fewer than three states (shorter than two minutes): the
         /// native writer writes three or more. The exception names <c>stateVectors</c>, the parameter of
