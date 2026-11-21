@@ -1987,7 +1987,7 @@ public partial class SpiceApiTest
     {
         var error = Assert.Throws<ArgumentException>(() => new KeplerianElements(7.0e6, 0.1, i, raan, aop, m, TestHelpers.EarthAtJ2000,
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
-        Assert.Equal(!double.IsFinite(i) ? "inclination" : !double.IsFinite(raan) ? "rigthAscendingNode" :
+        Assert.Equal(!double.IsFinite(i) ? "inclination" : !double.IsFinite(raan) ? "ascendingNode" :
             !double.IsFinite(aop) ? "argumentOfPeriapsis" : "meanAnomaly", error.ParamName);
         AssertNothingPending();
     }
