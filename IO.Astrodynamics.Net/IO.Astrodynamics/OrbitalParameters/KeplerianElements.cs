@@ -46,6 +46,20 @@ namespace IO.Astrodynamics.OrbitalParameters
         // (#459), and a = +Infinity does not fix it, so it is a value of the set for its equality and hash code (#475)
         private readonly double? _bandPerigeeRadius;
 
+        // The true anomaly given to FromTrueAnomaly, as given: the state and the equinoctial elements are computed from it,
+        // bit for bit the former constructor's trueAnomaly, while TrueAnomaly() returns it reduced to [0, 2π) (#668, R23).
+        // Dropped with the caches when the epoch moves, as the true anomaly itself
+        private double? _givenTrueAnomaly;
+
+        private protected override double ConicTrueAnomaly() => _givenTrueAnomaly ?? TrueAnomaly();
+
+        /// <inheritdoc />
+        protected override void ResetCache()
+        {
+            base.ResetCache();
+            _givenTrueAnomaly = null;
+        }
+
         /// <summary>
         /// The rounding allowed between a semi-major axis and a perigee radius of one conic within 1e-6 of e = 1:
         /// |q/a − (1 − e)| ≤ 6 ε (1 + e). The elements the library builds there, from a state (−μ/(2ξ) and h²/(μ(1 + e))),
@@ -291,8 +305,9 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// The Keplerian elements whose true anomaly is <paramref name="trueAnomaly"/> (#668, R23): the mean anomaly is
         /// M(ν) of the closed-form eccentric anomaly (<see cref="OrbitalParameters.TrueAnomalyToMeanAnomaly"/>), and
         /// <see cref="OrbitalParameters.TrueAnomaly()"/> returns ν reduced to [0, 2π), the range of the true anomaly
-        /// computed from M (ν as given when already in it). The conic is one of the constructor, outside the near-parabolic
-        /// band.
+        /// computed from M (ν as given when already in it), while the state and the equinoctial elements are computed from ν
+        /// as given (its reduction would lose up to half an ulp of 2π). The conic is one of the constructor, outside the
+        /// near-parabolic band.
         /// </summary>
         /// <param name="semiMajorAxis">The semi-major axis, m: above 0 for an ellipse, below 0 for a hyperbola.</param>
         /// <param name="eccentricity">The eccentricity, finite and non-negative, |e − 1| ≥ 1e-6.</param>
@@ -322,10 +337,16 @@ namespace IO.Astrodynamics.OrbitalParameters
                     $"The true anomaly is on or beyond the asymptotes of the hyperbola: its reduction to (−π, π] has |ν| ≥ arccos(−1/e) (e = {eccentricity:R}).");
             }
 
-            // ν is an angle: the true anomaly kept is in [0, 2π), as the one TrueAnomaly() computes from M, so equal elements
-            // give the same angle (#668, R23); M is that of ν as given, tan(ν/2) periodic in 2π
+            // ν is an angle: the true anomaly reported is in [0, 2π), as the one TrueAnomaly() computes from M, so equal elements
+            // give the same angle (#668, R23); M is that of ν as given, tan(ν/2) periodic in 2π, and so are the state and the
+            // equinoctial elements (the reduction would cost up to half an ulp of 2π, which the state near an apsis or an
+            // asymptote amplifies: 1.6e-15 of the position at e = 1.001, ν = −2.79, and 8.4e-13 near the asymptote, against
+            // 4.5e-16 and 3.7e-15 from ν as given, ConicStateTests)
             return new KeplerianElements(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer,
-                epoch, frame, SpecialFunctions.NormalizeAngle(trueAnomaly), null, null, OrbitalElementsType.Osculating);
+                epoch, frame, SpecialFunctions.NormalizeAngle(trueAnomaly), null, null, OrbitalElementsType.Osculating)
+            {
+                _givenTrueAnomaly = trueAnomaly
+            };
         }
 
         /// <summary>

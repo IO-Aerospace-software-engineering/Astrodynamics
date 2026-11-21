@@ -260,6 +260,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
+    /// The true anomaly the conic's state and equinoctial elements are computed from: <see cref="TrueAnomaly()"/>, unless a
+    /// derived type keeps the angle it was given (<see cref="KeplerianElements.FromTrueAnomaly"/>: ν as given, whose
+    /// reduction to [0, 2π) loses up to half an ulp of 2π, about 4.4e-16 rad, which the state near an apsis or an asymptote
+    /// amplifies; #668, R23).
+    /// </summary>
+    private protected virtual double ConicTrueAnomaly() => TrueAnomaly();
+
+    /// <summary>
     /// Get the true anomaly
     /// </summary>
     /// <returns></returns>
@@ -711,7 +719,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             // outside it a (1 − e)(1 + e) near e = 1 (#472)
             var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : ConicSemiLatusRectum(SemiMajorAxis(), e);
 
-            var v = TrueAnomaly();
+            var v = ConicTrueAnomaly();
             double cosNu = System.Math.Cos(v);
             double denominator, velocityFactor;
             if (e is >= HalfAngleLowestEccentricity and <= HalfAngleHighestEccentricity)
@@ -882,7 +890,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double o = AscendingNode();
             double w = ArgumentOfPeriapsis();
             double i = Inclination();
-            double v = TrueAnomaly();
+            double v = ConicTrueAnomaly();
 
             // In the band |e − 1| < 1e-6 (IsParabolic) a(1 − e²) is ∞ × 0 or ±∞ (#462): the conic's p = q (1 + e), 2q at
             // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, the p of ToStateVector

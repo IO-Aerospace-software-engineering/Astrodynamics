@@ -203,7 +203,8 @@ release are listed under **Known limitations**.
   2026-11-19). `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis,
   trueAnomaly, observer, epoch, frame)`: the elements whose true anomaly is ν, M(ν) of the closed-form eccentric anomaly,
   `TrueAnomaly()` ν reduced to [0, 2π), the range of the true anomaly computed from M, so that equal elements give the
-  same angle (ν as given when in it: the conformance runner's former code, now its call); `ArgumentOutOfRangeException`
+  same angle (ν as given when in it: the conformance runner's former code, now its call), the state and the equinoctial
+  elements computed from ν as given, bit for bit the former `trueAnomaly:`; `ArgumentOutOfRangeException`
   (`trueAnomaly`) for a ν of a hyperbola whose reduction to (−π, π] is on or beyond its asymptotes. `Parabolic(perigeeRadius, inclination,
   ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, eccentricity = 1.0)`: a parabola, or an orbit
   within 1e-6 of e = 1, from its perigee radius, a = q / (1 − e), +Infinity at e = 1;
