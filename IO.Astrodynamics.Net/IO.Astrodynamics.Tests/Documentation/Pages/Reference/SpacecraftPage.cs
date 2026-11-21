@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Reference;
@@ -81,7 +80,7 @@ internal static class SpacecraftPage
     {
         #region docs/reference/spacecraft.md:2
         var lro = new Spacecraft(naifId: -85, name: "LRO",
-            epoch: new Time(2024, 6, 1, 12, 0, 0), mass: 1018.0, sectionalArea: 12.0);
+            epoch: new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB), mass: 1018.0, sectionalArea: 12.0);
         #endregion
     }
 

@@ -414,7 +414,7 @@ public class DocumentationPagesExamplesTests
 
     #region The blocks that run with their inputs
 
-    private static readonly TimeSystem.Time Epoch = new TimeSystem.Time(2024, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new TimeSystem.Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     private static StateVector Leo(double radius, double inclination, TimeSystem.Time epoch)
     {
@@ -585,7 +585,7 @@ public class DocumentationPagesExamplesTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var sun = new CelestialBody(Stars.Sun);
-        var searchWindow = new Window(new TimeSystem.Time(2024, 3, 24, 0, 0, 0), new TimeSystem.Time(2024, 3, 27, 0, 0, 0));
+        var searchWindow = new Window(new TimeSystem.Time(2024, 3, 24, 0, 0, 0, TimeScale.TDB), new TimeSystem.Time(2024, 3, 27, 0, 0, 0, TimeScale.TDB));
         var windows = ((IEnumerable<Window>)Block("docs/tutorials/geometry-and-visibility.md", 1)
             .Invoke(null, new object[] { moon, searchWindow, sun, earth })!).ToList();
 

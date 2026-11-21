@@ -32,7 +32,7 @@ Creates a spacecraft whose ephemeris comes from loaded SPK/CK kernels. Use for a
 
 ```csharp
 var lro = new Spacecraft(naifId: -85, name: "LRO",
-    epoch: new Time(2024, 6, 1, 12, 0, 0), mass: 1018.0, sectionalArea: 12.0);
+    epoch: new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB), mass: 1018.0, sectionalArea: 12.0);
 ```
 
 | Parameter | Default | Description |

@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Reference;

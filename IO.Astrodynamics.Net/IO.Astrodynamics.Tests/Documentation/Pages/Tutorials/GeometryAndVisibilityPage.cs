@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -142,7 +141,7 @@ internal static class GeometryAndVisibilityPage
             fieldOfView: 5.0 * Constants.Deg2Rad,       // half-angle
             boresight: Vector3.VectorZ,                 // +Z of the instrument frame
             refVector: Vector3.VectorX,
-            orientation: new Vector3(0.0, Constants.PI2, 0.0));
+            orientation: new Vector3(0.0, Constants.HalfPi, 0.0));
         #endregion
     }
 

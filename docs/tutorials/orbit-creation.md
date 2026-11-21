@@ -16,7 +16,7 @@ using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 6, 21, 12, 0, 0);
+var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),

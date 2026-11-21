@@ -41,7 +41,7 @@ var sv = tle.ToOsculating();
 var meanKep = tle.ToMeanKeplerianElements();
 
 // Correct: SGP4-propagated state vector at a specific time
-var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0));
+var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0, TimeScale.TDB));
 ```
 
 - `ToOsculating()` returns the osculating state at the TLE epoch.
@@ -60,7 +60,7 @@ Propagate the TLE to a future epoch using the built-in SGP4/SDP4 propagator:
 
 ```csharp
 // Inputs: tle (TLE)
-var futureEpoch = new Time(2021, 1, 25, 0, 0, 0);
+var futureEpoch = new Time(2021, 1, 25, 0, 0, 0, TimeScale.TDB);
 var futureSv = tle.ToStateVector(futureEpoch);
 
 Console.WriteLine($"Position at {futureEpoch}: {futureSv.Position}");

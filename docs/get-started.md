@@ -82,7 +82,7 @@ SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
-var epoch = new Time(2024, 6, 21, 12, 0, 0);
+var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
 var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
     .ToStateVector();
@@ -97,7 +97,7 @@ Console.WriteLine($"Velocity: {stateVector.Velocity}");
 using IO.Astrodynamics.OrbitalParameters;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 1, 1, 0, 0, 0);
+var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
 var orbit = new KeplerianElements(
     7000000.0,                 // semi-major axis, m
@@ -123,7 +123,7 @@ var tle = new TLE("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-var epoch = new Time(2021, 1, 21, 12, 0, 0);
+var epoch = new Time(2021, 1, 21, 12, 0, 0, TimeScale.TDB);
 var sv = tle.ToOsculating(epoch);
 ```
 

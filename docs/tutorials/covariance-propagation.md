@@ -35,7 +35,7 @@ A LEO at 400 km, with the EGM2008 geopotential to degree 10, NRLMSISE-00 drag, S
 ```csharp
 SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-var epoch = new Time(2021, 3, 20, 12, 0, 0);
+var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
     new Nrlmsise00Model(SpaceWeather.Nominal));
@@ -212,7 +212,7 @@ secondary passing 200 m from the protected one 24 h after the start (the case of
 
 ```csharp
 // Inputs: protectedOrbit and secondaryOrbit (StateVector)
-var start = new Time(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+var start = new Time(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
 var tca = start.AddHours(24.0);
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
 // protectedOrbit, a LEO at 700 km about earth; secondaryOrbit, 120 m radial and 160 m normal from it at tca, its

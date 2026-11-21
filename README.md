@@ -52,7 +52,7 @@ SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 // Moon state relative to Earth at 2000-01-01T12:00Z, expressed in ICRF
 var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
-var epoch = new Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeFrame.UTCFrame);
+var epoch = new Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.UTC);
 
 var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
 
@@ -76,7 +76,7 @@ More worked examples: [docs.io-aerospace.org/tutorials](https://docs.io-aerospac
 - **Launch and mission analysis** — launch windows from a launch site to a target orbit, scenario definition and simulation, fuel budgets.
 - **Atmospheric modeling** — unified `IAtmosphericModel` interface returning an `Atmosphere` record. Earth: U.S. Standard Atmosphere 1976 and NRLMSISE-00 with space weather. Mars: standard analytical model. Earth picks NRLMSISE-00 automatically when the full context is available.
 - **Frames and coordinates** — ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation: GCRF, CIRS, TIRS) with pluggable Earth orientation parameters, plus Equatorial, Horizontal, Planetodetic and Planetographic coordinates.
-- **Time systems** — Calendar, Julian, TDB, TAI, TDT, UTC, GPS and local time, with conversions.
+- **Time scales** — TDB, TT, TAI, UTC and GPS (`TimeScale`), calendars, days of year and Julian dates, with conversions.
 - **Event finding** — distance, occultation, coordinate and illumination constraints; instrument field-of-view windows.
 - **CCSDS messages** — OMM (Orbit Mean-elements Message), OPM (Orbit Parameter Message) and CDM (Conjunction Data Message) reading, writing and schema validation, with bidirectional OMM↔TLE and OPM↔Spacecraft conversion and `EncounterCase.ToCdm()` export, a propagated covariance with its consider parameters (`CDRG_*`, `CSRP_*`) and the force model of the propagation.
 - **Spacecraft configuration** — clocks, fuel tanks, engines, instruments, configurable body axes.

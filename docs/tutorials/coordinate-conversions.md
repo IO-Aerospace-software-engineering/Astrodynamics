@@ -20,7 +20,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
-var epoch = new Time(2024, 6, 21, 12, 0, 0);
+var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 var earth = PlanetsAndMoons.EARTH_BODY;
 
 var svICRF = new StateVector(

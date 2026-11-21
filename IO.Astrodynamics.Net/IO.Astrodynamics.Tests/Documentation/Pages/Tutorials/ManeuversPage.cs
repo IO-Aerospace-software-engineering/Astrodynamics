@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -190,17 +189,17 @@ internal static class ManeuversPage
         // Inputs: targetOrbit (OrbitalParameters), engine (Engine), revolutions (uint), earth (CelestialBody),
         //   targetApogeeRadius (double), spacecraft (Spacecraft)
         var maneuver1 = new PlaneAlignmentManeuver(
-            new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+            new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             targetOrbit, engine);
 
         // Each next maneuver takes its own arguments, as in the sections above
         maneuver1
             .SetNextManeuver(new ApsidalAlignmentManeuver(
-                new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbit, engine))
+                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine))
             .SetNextManeuver(new PhasingManeuver(
-                new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbit, revolutions, engine))
+                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, revolutions, engine))
             .SetNextManeuver(new ApogeeHeightManeuver(
-                earth, new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetApogeeRadius, engine));
+                earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetApogeeRadius, engine));
 
         spacecraft.SetStandbyManeuver(maneuver1);
         #endregion

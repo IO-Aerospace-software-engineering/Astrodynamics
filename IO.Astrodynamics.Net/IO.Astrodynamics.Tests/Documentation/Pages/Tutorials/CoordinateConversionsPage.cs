@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -65,7 +64,7 @@ internal static class CoordinateConversionsPage
     internal static (StateVector SvIcrf, StateVector SvEcliptic) Block01()
     {
         #region docs/tutorials/coordinate-conversions.md:1
-        var epoch = new Time(2024, 6, 21, 12, 0, 0);
+        var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
         var earth = PlanetsAndMoons.EARTH_BODY;
 
         var svICRF = new StateVector(

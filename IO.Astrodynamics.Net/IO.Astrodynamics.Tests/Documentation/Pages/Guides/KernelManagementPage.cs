@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Guides;
@@ -85,7 +84,7 @@ internal static class KernelManagementPage
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/lro"));
 
         var lro = new Spacecraft(naifId: -85, name: "LRO",
-            epoch: new Time(2024, 6, 1, 12, 0, 0));
+            epoch: new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB));
         #endregion
     }
 }

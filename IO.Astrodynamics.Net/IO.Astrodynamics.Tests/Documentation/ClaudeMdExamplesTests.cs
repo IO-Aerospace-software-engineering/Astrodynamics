@@ -93,7 +93,7 @@ public class ClaudeMdExamplesTests
 
     #region The inputs of the blocks
 
-    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
 
@@ -139,7 +139,7 @@ public class ClaudeMdExamplesTests
         switch (block)
         {
             case "net:1": Assert.NotNull(ClaudeMdExamples.Net01(Earth, Epoch)); break;
-            case "net:2": Assert.NotNull(ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21))); break;
+            case "net:2": Assert.NotNull(ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21, TimeScale.TDB))); break;
             case "net:8": Assert.Single(ClaudeMdExamples.Net08(PropagatedWithImpulse(-6701, out _), Epoch.AddHours(2.0)).Data.Maneuvers); break;
             case "net:9": Assert.NotNull(ClaudeMdExamples.Net09(Orbit().ToStateVector())); break;
             case "net:10": Assert.NotNull(ClaudeMdExamples.Net10(Orbit().ToStateVector())); break;
@@ -203,7 +203,7 @@ public class ClaudeMdExamplesTests
     [Fact]
     public void TleBlock_GivesTheCatalogNumberOfTheText()
     {
-        var tle = ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21));
+        var tle = ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21, TimeScale.TDB));
         Assert.Equal(int.Parse(tle.Line1.Substring(2, 5), System.Globalization.CultureInfo.InvariantCulture), tle.NoradCatalogId);
         Assert.Equal(25544, tle.NoradCatalogId);
     }

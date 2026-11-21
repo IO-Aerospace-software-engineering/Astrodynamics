@@ -126,7 +126,7 @@ are measured at the point towards an observer (`gfilum_c` Particulars), which th
 ```csharp
 // Inputs: window (Window), step (TimeSpan), site (Site), moon (CelestialBody)
 var windows = new GeometryFinder().FindWindowsWithCondition(window,
-    t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.PI2, step);
+    t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, step);
 ```
 
 which is within 4.4 ms of `gfilum_c` from the Moon at DSS-13 (the normal above the ellipsoid, as for the incidence).

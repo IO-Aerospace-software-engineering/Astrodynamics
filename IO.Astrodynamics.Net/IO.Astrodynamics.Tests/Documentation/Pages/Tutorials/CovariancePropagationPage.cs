@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -67,7 +66,7 @@ internal static class CovariancePropagationPage
         #region docs/tutorials/covariance-propagation.md:1
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-        var epoch = new Time(2021, 3, 20, 12, 0, 0);
+        var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
@@ -201,7 +200,7 @@ internal static class CovariancePropagationPage
     {
         #region docs/tutorials/covariance-propagation.md:7
         // Inputs: protectedOrbit and secondaryOrbit (StateVector)
-        var start = new Time(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        var start = new Time(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
         var tca = start.AddHours(24.0);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
         // protectedOrbit, a LEO at 700 km about earth; secondaryOrbit, 120 m radial and 160 m normal from it at tca, its

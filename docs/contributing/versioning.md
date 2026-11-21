@@ -56,8 +56,9 @@ throw outside the coverage, the TT seconds of a propagation about the Earth, `Qu
 public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
 proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked, the
 parsec of 648000/π au, a repeated kernel load, which no longer reloads, with the order of a folder's kernels, and
-`NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, and a
-central body without GM refused by a propagation. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`,
+`NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, a
+central body without GM refused by a propagation, and the scale of a `Time` a required argument, with `Time.Parse` in
+place of `Time(string)`. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`,
 `Quaternion.Zero`, `Star.PropagationOutput`, `ExceptionBase` and six exports of the native library that .NET never
 called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -167,6 +168,24 @@ release are listed under **Known limitations**.
 - **`InsufficientFuelException.RequiredMass` and `AvailableMass`** (kg) and the constructor that takes them (R03 of
   #668, section A): the fuel a burn needs and the fuel its tank holds, which `FuelTank` gives when a burn needs more
   than it holds, the tank named in the message; NaN from the three constructors without masses. Under **Changed**.
+- **`TimeScale`, a required scale, and one grammar for time strings** (lot L2 of the ergonomics review, R24 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D3 as amended, decided by
+  S. Guillet, 2026-11-19). `enum TimeScale { TDB = 0, TT, TAI, UTC, GPS }` and `Time.Scale`; the constructors
+  `Time(int, int, int, TimeScale)`, `Time(int, int, int, int, int, int, TimeScale)` and the millisecond and microsecond
+  ones, in `DateTime`'s shape; `Time.UtcNow`; `Time.FromDayOfYear(year, dayOfYear, seconds, scale)`; `Time.ToTT()`.
+  `Time.Parse(string)`, `Parse(string, TimeScale)`, `TryParse` and `ISpanParsable<Time>` read one grammar: an ISO 8601
+  date or a CCSDS day of year (`2024-173`), an optional `T` (or a space) and `hh:mm[:ss[.f…]]`, then `Z` or `±hh:mm` (the
+  UTC instant) or a scale tag (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`, any case), or a Julian date `JD n TAG` or
+  `n JD TAG` whose digits are read exactly to the nearest tick; an untagged string needs `Parse(s, scale)`. `Time` is
+  `IFormattable` and `ISpanFormattable`: `G`, `O` and null give `ToString()`, another format is a `DateTime` format
+  followed by the tag (`$"{t:yyyy-MM-dd}"` is `2024-06-21 TDB`). `EqualsExact(Time)` and `Time.ExactComparer` compare
+  the labels (the calendar and the scale; internal `HasSameLabel` and `LabelComparer` before), beside the equality of
+  instants of #512 (choice 4 of the re-baseline: the TAI tick kept). `Constants.TwoPi` and `Constants.HalfPi` (under
+  **Changed**). The CCSDS readers read the strict branch of the grammar, bit for bit (#619). See
+  [Time & Windows](../reference/time-and-windows.md).
+- **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
+  `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
+  could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only.
 
 **Fixed**
 
@@ -4305,6 +4324,54 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D3, decided by S. Guillet,
+  2026-11-13 and amended 2026-11-19: no forwarder). `ITimeFrame`, `TimeFrame`, `TimeSystem.Frames` (`TDBTimeFrame`,
+  `TDTTimeFrame`, `TAITimeFrame`, `UTCTimeFrame`, `GPSTimeFrame`, `LocalTimeFrame`) and `TimeFrame.LeapSecondsFrom` are
+  replaced by `TimeScale` (under **Removed**); `Time.Frame` becomes `Time.Scale`, and every `ITimeFrame` parameter a
+  `TimeScale` (`Time(DateTime, TimeScale scale)`, `Create`, `CreateFromJD`, `ConvertTo`); `ToTDT()` becomes `ToTT()`.
+  The calendar constructor `Time(year, month, day, hour = 0, …, ITimeFrame frame = null)`, which read a calendar without
+  a frame as TDB, 69.18 s from UTC in 2024, is replaced by four constructors whose scale is the last argument. The
+  conversions are those of the frame classes tick for tick (`TdbSeriesTests`, `ConvertToOwnFrameTests`), so no result
+  moves. Migration: `TimeFrame.TDBFrame` → `TimeScale.TDB`, `UTCFrame` → `UTC`, `TAIFrame` → `TAI`, `TDTFrame` → `TT`,
+  `GPSFrame` → `GPS`; `t.Frame` → `t.Scale`, `t.Frame is UTCTimeFrame` → `t.Scale == TimeScale.UTC`; `t.ToTDT()` →
+  `t.ToTT()`; `new Time(2024, 1, 1)` → `new Time(2024, 1, 1, TimeScale.TDB)` (the old default; most callers meant
+  `TimeScale.UTC`), `new Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame)` → `new Time(2024, 1, 1, 12, 0, 0,
+  TimeScale.UTC)`, a call that gave an hour without minutes and seconds writes them as 0; a named `frame:` argument
+  becomes `scale:`.
+- **Breaking: `new Time(DateTime, TimeScale)` refuses a `DateTime` of kind `Local`, and one of kind `Utc` in another
+  scale than UTC** (D3.2 of #668), `ArgumentException` (`dateTime`); before, the frame replaced the kind silently, so a
+  `DateTime.UtcNow` given with `TDBFrame` was read as a TDB calendar, and a local `DateTime.Now` as a calendar of the
+  frame. A UTC time's `DateTime` is of kind `Utc`, so relabelling it in another scale throws too. The CCSDS readers give
+  their epochs, read in `TIME_SYSTEM`, as clock readings, bit for bit (internal `CcsdsTimeSystemMapping.ToTime`).
+  Migration: `new Time(DateTime.Now, …)` → `Time.UtcNow` (or `new Time(dt.ToUniversalTime(), TimeScale.UTC)`); a UTC
+  calendar meant in another scale: `DateTime.SpecifyKind(dt, DateTimeKind.Unspecified)`; an instant: `ConvertTo`.
+- **Breaking: `Time(string)` is replaced by `Time.Parse`** (D3.4 of #668), on one grammar: `new Time("2024-06-21T12:00:00
+  UTC")` → `Time.Parse("2024-06-21T12:00:00 UTC")`, an untagged string (TDB before) → `Time.Parse(s, TimeScale.TDB)`.
+  `Parse` throws `FormatException` only (`ArgumentException` for a second 60, an unknown tag or a tag after `Z` before).
+  Its changes of meaning: an offset (`+02:00`) is the UTC instant, where it gave a local time of the machine; a day of
+  year (`2024-173T12:00:00 UTC`) and a Julian date (`JD 2460483.0 UTC`) are read; the forms `DateTime.TryParse` read
+  beyond ISO 8601 are refused (`06/21/2024 12:00`, RFC 1123, a `GMT` suffix). Migration: `Time.Parse`, or
+  `Time.TryParse` for a string that may be refused.
+- **Breaking: `Time.ToString` writes TT as `TT`** (D3.5 of #668; `TDT` before), and `Parse` still reads `TDT`.
+  Migration: a consumer that matched ` TDT` matches ` TT`.
+- **Breaking: `default(Time)` is 0001-01-01T00:00:00 TDB** (D3.1 of #668, `TimeScale.TDB` is 0): a time with no frame
+  before, which came before every time with a frame and was equal to none; it is now that TDB calendar, equal to
+  `new Time(DateTime.MinValue, TimeScale.TDB)` and before every later instant. Migration: none for a sort or a
+  comparison with a later time.
+- **Breaking: `Time.Create(year, doy, sec)` becomes `Time.FromDayOfYear(year, dayOfYear, seconds, scale)`** (D3.2 of
+  #668), the scale explicit (the old factory was UTC), its checks those of #680, its parameters named `dayOfYear` and
+  `seconds` in the exceptions (`doy` and `sec` before). Migration: `Time.Create(2024, 173, 43200.0)` →
+  `Time.FromDayOfYear(2024, 173, 43200.0, TimeScale.UTC)`.
+- **Breaking: `Constants._2PI` and `Constants.PI2` become `Constants.TwoPi` and `Constants.HalfPi`** (R24 of #668, D2's
+  N3, section A), the same doubles (`TwoPi` is `Math.Tau`, `HalfPi` π/2: `PI2` was π/2 under a name that read 2π).
+  Migration: rename.
+- **Breaking: the CLI's epochs** (D3 of #668, choice 4 of R24): seconds from J2000 take any scale tag (`757339200 TT`
+  threw before; untagged stays TDB), and every other epoch is read by `Time.TryParse(s, TimeScale.TDB)`, so a day of
+  year is read, an offset is the UTC instant, a Julian date is its digits to the nearest tick (through a double before,
+  at most one tick away), `NaN JD` throws `FormatException` (`ArgumentOutOfRangeException` before), and a string holding
+  a `z` or the letters `utc` anywhere is no longer UTC for that reason. `time-converter` without a target or a format
+  writes TDB in ISO (it threw before; under **Added**). Migration: none for the documented forms.
 - **Breaking: an error SPICE signals throws `SpiceException`** (lot L1, R03 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 10, decided
   by S. Guillet, 2026-11-19), an `InvalidOperationException` with SPICE's `ShortMessage` and `LongMessage` (under
@@ -6460,6 +6527,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   consumer of `IO.Astrodynamics.so`, `.dll` or `.dylib` meets it. Migration: `Launch.FindLaunchWindows`, `Time.ToString`,
   `Time.ToUTC`, `Time.ToTDB` and `StateVector.ToEquatorial` in .NET; the C++ classes `Launch`, `TDB`, `UTC` and
   `StateVector` in C++.
+- **`ITimeFrame`, `TimeFrame` and the namespace `TimeSystem.Frames`** (`TDBTimeFrame`, `TDTTimeFrame`, `TAITimeFrame`,
+  `UTCTimeFrame`, `GPSTimeFrame`, `LocalTimeFrame`), with `Time.Frame`, `TimeFrame.LeapSecondsFrom` and a caller's own
+  `ITimeFrame` (lot L2, R24 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
+  Migration: `TimeScale` and `Time.Scale` (Changed above); TAI − UTC at an instant `t` is
+  `t.ToTAI().DateTime - t.ToUTC().DateTime`; a scale of the caller's own has no replacement.
+- **Local time: `Time.ToLocal()`, `TimeFrame.LocalFrame` and the offset form of `Time(string)` as a local time** (D3.1
+  of #668: a local time is not a scale, its instant depends on the zone and the daylight saving time of the machine, so
+  #751's handling of the repeated hour goes with it). Migration: `t.ToUTC().DateTime.ToLocalTime()` for the calendar of
+  the machine's zone; `new Time(localDateTime.ToUniversalTime(), TimeScale.UTC)` for the instant of a local calendar.
+- **`Time(string)`**: use `Time.Parse` (Changed above).
+- **`Time.J2000`**, a `DateTime` (2000-01-01T12:00:00, kind `Unspecified`) among `Time`'s members (section A of R24: not
+  retyped, so that `Time.J2000.AddDays(1)` cannot change meaning silently). Migration: `Time.J2000TDB`, or
+  `Time.J2000TDB.DateTime` for the calendar.
+- **`Time.Create(int, int, double)`**: use `Time.FromDayOfYear` (Changed above).
 
 **Known limitations**
 
