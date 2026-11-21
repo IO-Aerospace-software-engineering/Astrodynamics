@@ -224,8 +224,10 @@ release are listed under **Known limitations**.
   row of M, but the result was allocated with the length of v, the number of columns: a 2 × 3 matrix returned three
   components, the last one 0, and a 3 × 2 matrix threw `IndexOutOfRangeException`. The product now has `Rows`
   components, each the sum, from 0 and in column order, of m[i, j] · v[j], as before; a vector of another length than
-  `Columns` throws `ArgumentException` as before (`vector` for `Multiply`, `rhs` for the operator). A square matrix,
-  every one the library multiplies a vector by, gives the same doubles, bit for bit.
+  `Columns` throws `ArgumentException` as before, which now names its parameter (`vector` for `Multiply`, `rhs` for
+  the operator) and the lengths in its message (before 11.0.0, no parameter name and the message "Matrixes with
+  incompatible size"). A square matrix, every one the library multiplies a vector by, gives the same doubles, bit for
+  bit.
 - **The stored states of a propagation ended before its window when the output step rounded it down**
   ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by S. Guillet,
   2026-11-18). The outputs were the round(L/ΔT) + 1 points of the grid i·ΔT, while the propagation ran to the window
@@ -4423,7 +4425,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   S. Guillet, 2026-11-21). The operator returned `rhs.Multiply(lhs)`, the column product M v, which equals vᵀ M only for
   a symmetric matrix: for a rotation it applied the rotation where vᵀ M applies its inverse. It now returns vᵀ M,
   `Columns` components, each the sum, from 0 and in row order, of v[i] · m[i, j] (the components of Mᵀ v), and throws
-  `ArgumentException` (`lhs`) for a vector of another length than `Rows` (the length of `Columns` before). The
+  `ArgumentException` (`lhs`) for a vector of another length than `Rows` (before, for a length other than `Columns`,
+  with no parameter name and the message "Matrixes with incompatible size"). The
   library's one use, the perifocal-to-inertial rotation of `OrbitalParameters.ToStateVector`, meant M v and is written
   `r * pos`, the same arithmetic: its states do not move, bit for bit. Migration: code that meant M v writes `M * v`;
   code that meant vᵀ M has its product now, where it had M v before.
