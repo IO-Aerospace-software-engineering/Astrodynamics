@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.Propagator;
 /// Result of a segment integration, containing the propagation segment
 /// and optionally an event that terminated the segment early.
 /// </summary>
-public record struct IntegrationResult(
+public readonly record struct IntegrationResult(
     PropagationSegment Segment,
     EventInfo? Event);
 
@@ -17,7 +17,7 @@ public record struct IntegrationResult(
 /// of the propagation from the base epoch of the segment: TT seconds about the Earth, TDB seconds about any other central
 /// body (#501).
 /// </summary>
-public record struct EventInfo(
+public readonly record struct EventInfo(
     int DetectorIndex,
     double EventTime,
     Vector3 EventPosition,

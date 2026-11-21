@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public struct StateVector
+internal struct StateVector
 {
     public double Epoch { get; }
     public Vector3D Position { get; }

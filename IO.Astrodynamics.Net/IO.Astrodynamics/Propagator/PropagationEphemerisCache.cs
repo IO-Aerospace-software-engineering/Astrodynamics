@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Propagator;
 /// Stores positions at a regular time grid and uses 8-point Lagrange interpolation
 /// for sub-grid queries. This avoids repeated SPICE calls during integration sub-steps.
 /// </summary>
-public sealed class PropagationEphemerisCache : IDisposable
+internal sealed class PropagationEphemerisCache : IDisposable
 {
     /// <summary>
     /// Lightweight value type for cached ephemeris data (48 bytes vs 350+ for StateVector).

@@ -8,10 +8,12 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using CelestialBody = IO.Astrodynamics.DTO.CelestialBody;
 
 namespace IO.Astrodynamics.DataProvider;
 
+/// <summary>
+/// The data provider of the loaded SPICE kernels, the provider of the process by default.
+/// </summary>
 public class SpiceDataProvider : IDataProvider
 {
     /// <remarks>
@@ -36,7 +38,8 @@ public class SpiceDataProvider : IDataProvider
         return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF, nameof(source), null);
     }
 
-    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
+    /// <inheritdoc />
+    public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
     {
         // Use ReadEphemerisRaw to avoid CelestialItem.Create() which can't handle
         // spacecraft/site NAIF IDs. The actual observer object is passed through directly.
@@ -49,7 +52,12 @@ public class SpiceDataProvider : IDataProvider
         return new StateVector(result.Position, result.Velocity, observer, date, result.Frame);
     }
 
-    CelestialBody IDataProvider.GetCelestialBodyInfo(int naifId)
+    /// <summary>The information of the celestial body of <paramref name="naifId"/> in the loaded kernels
+    /// (<see cref="SpiceAPI.GetCelestialBodyInfo"/>).</summary>
+    /// <param name="naifId">The NAIF identifier of the body.</param>
+    /// <exception cref="ArgumentException">The identifier is not a celestial body's, or SPICE does not name it
+    /// (<c>naifId</c>).</exception>
+    CelestialBodyInfo IDataProvider.GetCelestialBodyInfo(int naifId)
     {
         return SpiceAPI.Instance.GetCelestialBodyInfo(naifId);
     }

@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace IO.Astrodynamics;
 
-public static class Enumeration
+internal static class Enumeration
 {
     public static string GetDescription(this Enum value)
     {

@@ -118,7 +118,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     private protected class ProviderData
     {
         internal IDataProvider Provider { get; init; }
-        internal DTO.CelestialBody Information { get; set; }
+        internal CelestialBodyInfo Information { get; set; }
         internal double Mass { get; set; }
         internal double GM { get; set; }
         internal GravitationalField GravitationalField { get; set; }
@@ -145,14 +145,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         /// and the orbit; a <see cref="CelestialBody"/> adds its members.
         /// </summary>
         internal virtual bool HasSameValues(ProviderData other) =>
-            SameInformation(Information, other.Information) && Mass.Equals(other.Mass) && GM.Equals(other.GM)
+            Equals(Information, other.Information) && Mass.Equals(other.Mass) && GM.Equals(other.GM)
             && Equals(InitialOrbitalParameters, other.InitialOrbitalParameters);
-
-        private static bool SameInformation(in DTO.CelestialBody a, in DTO.CelestialBody b) =>
-            a.Id == b.Id && a.CenterOfMotionId == b.CenterOfMotionId && a.BarycenterOfMotionId == b.BarycenterOfMotionId
-            && a.Name == b.Name && a.Radii.X.Equals(b.Radii.X) && a.Radii.Y.Equals(b.Radii.Y) && a.Radii.Z.Equals(b.Radii.Z)
-            && a.GM.Equals(b.GM) && a.FrameName == b.FrameName && a.FrameId == b.FrameId && a.J2.Equals(b.J2)
-            && a.J3.Equals(b.J3) && a.J4.Equals(b.J4);
     }
 
     // The provider data of a deferred item, once read; published once, never under a lock (#623)
@@ -248,7 +242,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// for a variable no loaded kernel defines): the message names the variable. Nothing is kept, so that the next read
     /// tries again (third round of #668: before, a read before <c>LoadKernels</c> kept the zeros SPICE answered for the
     /// life of the process).</exception>
-    private protected virtual void RequireKernelData(DTO.CelestialBody information)
+    private protected virtual void RequireKernelData(CelestialBodyInfo information)
     {
         if (!(information.GM > 0.0))
         {
@@ -288,13 +282,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public IReadOnlyCollection<CelestialItem> Satellites => _satellites;
 
     /// <summary>
-    /// Used for performance improvement and to avoid duplicated calls in the CelestialItem API.
+    /// The information the data provider gave on a natural body (private protected since 11.0.0, R04 of #668: protected,
+    /// of the interop struct <c>IO.Astrodynamics.DTO.CelestialBody</c>, before).
     /// </summary>
     /// <remarks>
     /// Null for a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/> until
     /// its provider data are read, at the first read of a member that needs them.
     /// </remarks>
-    protected DTO.CelestialBody ExtendedInformation;
+    private protected CelestialBodyInfo ExtendedInformation;
 
     private readonly GeometryFinder _geometryFinder = new GeometryFinder();
 

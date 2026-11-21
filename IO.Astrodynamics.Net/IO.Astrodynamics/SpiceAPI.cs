@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using IO.Astrodynamics.Converters;
+using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Body;
@@ -2547,10 +2548,12 @@ public class SpiceAPI
     }
 
     /// <summary>
-    ///     Get celestial celestialItem information like radius, GM, name, associated frame, ...
+    /// The information of a celestial body in the loaded kernels: its name, centre and barycentre of motion, radii, GM,
+    /// body-fixed frame and zonal harmonics, in SI units.
     /// </summary>
-    /// <param name="naifId"></param>
-    /// <returns></returns>
+    /// <param name="naifId">The NAIF identifier of the body.</param>
+    /// <returns>The record of the body: a <see cref="CelestialBodyInfo"/> since 11.0.0 (R04 of #668), the interop struct
+    /// <c>IO.Astrodynamics.DTO.CelestialBody</c> before, with the same values.</returns>
     /// <remarks>
     /// A body the kernel pool gives no <c>BODYnnn_RADII</c> has radii 0, one it gives no <c>BODYnnn_GM</c> a GM of 0, and a
     /// barycentre has no frame (an empty <c>FrameName</c>, <c>FrameId</c> 0); before #672 a missing variable left the GM 0
@@ -2565,7 +2568,14 @@ public class SpiceAPI
     /// The native layer reads the centre of motion of any named identifier and ended the process for one of them (#560).
     /// Or SPICE does not name it, neither by its built-in names nor by the loaded kernels (#672: the record held the name of
     /// a previous call or undefined bytes).</exception>
-    public CelestialBody GetCelestialBodyInfo(int naifId)
+    public CelestialBodyInfo GetCelestialBodyInfo(int naifId) => CelestialBodyInfo.FromNative(ReadNativeCelestialBodyInfo(naifId));
+
+    /// <summary>
+    /// The native record of <see cref="GetCelestialBodyInfo"/>, under the lock: the interop struct
+    /// <see cref="GetCelestialBodyInfo"/> converts field for field (internal since 11.0.0, R04 of #668).
+    /// </summary>
+    /// <exception cref="ArgumentException">As <see cref="GetCelestialBodyInfo"/>.</exception>
+    internal CelestialBody ReadNativeCelestialBodyInfo(int naifId)
     {
         ThrowIfNotCelestialBody(naifId, nameof(naifId));
         lock (lockObject)
@@ -2746,7 +2756,7 @@ public class SpiceAPI
     /// </remarks>
     /// <exception cref="InvalidOperationException">SGP4 failed at this epoch, or at the epoch of the TLE, or the kernels the
     /// native layer reads (the Earth's GM, the leapseconds) are not loaded; the message is SPICE's.</exception>
-    public OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
+    internal OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
         Time epoch)
     {
         return ConvertTleToStateVector(line1, line2, line3, ReadTleEpoch(line1, line2, line3),
@@ -2965,7 +2975,7 @@ public class SpiceAPI
     /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
     /// kernel pool lacks (#714: before, the elements <c>oscltx_c</c> never wrote were returned). Or <c>oscltx_c</c> failed
     /// (see <see cref="ConvertStateVectorToConicOrbitalElement(OrbitalParameters.StateVector, double)"/>).</exception>
-    public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
+    internal IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
     {
         ArgumentNullException.ThrowIfNull(stateVector);
         ThrowIfNotFinite(stateVector, nameof(stateVector));
@@ -2987,7 +2997,7 @@ public class SpiceAPI
     /// <exception cref="SpiceException"><c>oscltx_c</c> failed: a zero position, a zero velocity, or a position and
     /// a velocity too close to parallel (oscelt.c, <c>SPICE(DEGENERATECASE)</c>); the message is SPICE's (#714: before, the
     /// elements it never wrote were returned).</exception>
-    public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector, double gm)
+    internal IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector, double gm)
     {
         ArgumentNullException.ThrowIfNull(stateVector);
         ThrowIfNotFinite(stateVector, nameof(stateVector));
@@ -3029,7 +3039,7 @@ public class SpiceAPI
     /// threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
     /// returned); the message is SPICE's.</exception>
-    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
+    internal IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
     {
         if (equinoctialElements == null) throw new ArgumentNullException(nameof(equinoctialElements));
         ThrowIfNotFinite(equinoctialElements, nameof(equinoctialElements));
@@ -3062,7 +3072,7 @@ public class SpiceAPI
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The kernel pool has no GM for the centre (#711: before, a zero state was
     /// returned for an ellipse, and an open orbit threw an unrelated message); for an ellipse the message is SPICE's.</exception>
-    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
+    internal IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
         ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
@@ -3099,7 +3109,7 @@ public class SpiceAPI
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
     /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
     /// kernel pool lacks (#711: before, <c>conics_c</c>'s error was left pending and an unrelated message thrown).</exception>
-    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
+    internal IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
         ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
@@ -3125,7 +3135,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="gm"/> is not finite and above 0 (#711: before,
     /// <c>conics_c</c>'s error was left pending for the next native call and an unrelated message thrown).</exception>
     /// <exception cref="SpiceException"><c>conics_c</c> failed; the message is SPICE's.</exception>
-    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch, double gm)
+    internal IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch, double gm)
     {
         if (keplerianElements == null) throw new ArgumentNullException(nameof(keplerianElements));
         ThrowIfNotFinite(keplerianElements, nameof(keplerianElements));
@@ -3155,7 +3165,7 @@ public class SpiceAPI
     /// <exception cref="InvalidOperationException">The GM of the observer is not finite and above 0: a body whose GM the
     /// kernel pool lacks (#714: before, the state <c>prop2b_c</c> never wrote was returned). Or <c>prop2b_c</c> failed (see
     /// <see cref="Propagate2Bodies(OrbitalParameters.StateVector, double, TimeSpan)"/>).</exception>
-    public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
+    internal OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
     {
         ArgumentNullException.ThrowIfNull(stateVector);
         ThrowIfNotFinite(stateVector, nameof(stateVector));
@@ -3180,7 +3190,7 @@ public class SpiceAPI
     /// <c>SPICE(NONCONICMOTION)</c>, which carry no long message, so the message is the short one), or a
     /// <paramref name="dt"/> out of its range (<c>SPICE(DTOUTOFRANGE)</c>); the message is SPICE's (#714: before, the state
     /// it never wrote was returned).</exception>
-    public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, double gm, TimeSpan dt)
+    internal OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, double gm, TimeSpan dt)
     {
         ArgumentNullException.ThrowIfNull(stateVector);
         ThrowIfNotFinite(stateVector, nameof(stateVector));
@@ -3209,7 +3219,7 @@ public class SpiceAPI
     /// (<see cref="Propagate2Bodies(OrbitalParameters.StateVector, TimeSpan)"/>).
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
-    public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
+    internal OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
     {
         ArgumentNullException.ThrowIfNull(stateVector);
         return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);

@@ -40,7 +40,7 @@ namespace IO.Astrodynamics.Propagator;
 /// span it integrates, so that no propagation reads past the grid.
 /// </para>
 /// </remarks>
-public sealed class PropagationFrameOrientationCache
+internal sealed class PropagationFrameOrientationCache
 {
     private readonly record struct OrientationPoint(
         Quaternion Rotation, Vector3 AngularVelocity, double EpochSeconds);

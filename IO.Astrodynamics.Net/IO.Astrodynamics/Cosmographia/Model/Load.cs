@@ -2,7 +2,7 @@
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class LoadRootObject
+internal class LoadRootObject
 {
     public string version { get; set; }
     public string name { get; set; }

@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public readonly struct Vector3D : IEquatable<Vector3D>
+internal readonly struct Vector3D : IEquatable<Vector3D>
 {
     public bool Equals(Vector3D other)
     {

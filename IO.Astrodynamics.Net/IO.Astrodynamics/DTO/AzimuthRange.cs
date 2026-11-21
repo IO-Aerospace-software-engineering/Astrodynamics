@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public struct AzimuthRange
+internal struct AzimuthRange
 {
     public double Start { get; }
     public double End { get; }

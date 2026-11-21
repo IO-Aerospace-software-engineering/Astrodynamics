@@ -4,14 +4,14 @@ using System.Text.Json.Serialization;
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class ObservationRootObject
+internal class ObservationRootObject
 {
     public string version { get; set; }
     public string name { get; set; }
     public ObservationItems[] items { get; set; }
 }
 
-public class ObservationItems
+internal class ObservationItems
 {
     [JsonPropertyName("class")]
     public string obsClass { get; set; }
@@ -24,19 +24,19 @@ public class ObservationItems
     public ObservationGeometry geometry { get; set; }
 }
 
-public class ObservationTrajectoryFrame
+internal class ObservationTrajectoryFrame
 {
     public string type { get; set; }
     public string body { get; set; }
 }
 
-public class ObservationBodyFrame
+internal class ObservationBodyFrame
 {
     public string type { get; set; }
     public string body { get; set; }
 }
 
-public class ObservationGeometry
+internal class ObservationGeometry
 {
     public string type { get; set; }
     public string sensor { get; set; }
@@ -50,7 +50,7 @@ public class ObservationGeometry
     public bool fillInObservations { get; set; }
 }
 
-public class ObservationGroup
+internal class ObservationGroup
 {
     public string startTime { get; set; }
     public string endTime { get; set; }

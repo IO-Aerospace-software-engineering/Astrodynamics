@@ -19,7 +19,7 @@ using OrbitalElementsType = IO.Astrodynamics.OrbitalParameters.OrbitalElementsTy
 
 namespace IO.Astrodynamics.Converters;
 
-public static class ProfilesConfiguration
+internal static class ProfilesConfiguration
 {
     internal static Vector3 Convert(this in Vector3D vector3D)
     {
