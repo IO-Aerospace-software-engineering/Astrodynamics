@@ -70,4 +70,17 @@ internal static class CelestialBodiesPage
         var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
         #endregion
     }
+
+    // docs/reference/celestial-bodies.md, "Atmospheric Context"
+    internal static double Block02(Time epoch)
+    {
+        #region docs/reference/celestial-bodies.md:2
+        // Inputs: epoch (Time)
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        var context = AtmosphericContext.FromPlanetodetic(
+            new Planetodetic(longitude: 2.35 * Constants.Deg2Rad, latitude: 48.85 * Constants.Deg2Rad, altitude: 400e3), epoch);
+        double density = earth.GetAirDensity(context); // kg/m³, NRLMSISE-00 at nominal space weather
+        #endregion
+        return density;
+    }
 }

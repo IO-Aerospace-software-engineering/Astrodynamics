@@ -7,11 +7,42 @@ namespace IO.Astrodynamics.Coordinates
     /// Planetodetic (geodetic) coordinates on the ellipsoid of revolution of a body: the longitude (rad, positive east),
     /// the latitude of the normal to the ellipsoid through the point (rad) and the height along it (m).
     /// </summary>
-    /// <param name="Longitude">The longitude, rad.</param>
-    /// <param name="Latitude">The geodetic latitude, rad.</param>
-    /// <param name="Altitude">The height above the ellipsoid, m.</param>
-    public readonly record struct Planetodetic(double Longitude, double Latitude, double Altitude)
+    public readonly record struct Planetodetic
     {
+        /// <summary>The longitude, rad, positive east.</summary>
+        public double Longitude { get; init; }
+
+        /// <summary>The geodetic latitude, rad.</summary>
+        public double Latitude { get; init; }
+
+        /// <summary>The height above the ellipsoid, m.</summary>
+        public double Altitude { get; init; }
+
+        /// <summary>
+        /// The coordinates of a longitude, a geodetic latitude and an altitude (R20 of #668: camelCase parameters, before
+        /// 11.0.0 the PascalCase parameters of a positional record).
+        /// </summary>
+        /// <param name="longitude">The longitude, rad, positive east.</param>
+        /// <param name="latitude">The geodetic latitude, rad.</param>
+        /// <param name="altitude">The height above the ellipsoid, m.</param>
+        public Planetodetic(double longitude, double latitude, double altitude)
+        {
+            Longitude = longitude;
+            Latitude = latitude;
+            Altitude = altitude;
+        }
+
+        /// <summary>Deconstruct into the longitude, the geodetic latitude and the altitude.</summary>
+        /// <param name="longitude">The longitude, rad.</param>
+        /// <param name="latitude">The geodetic latitude, rad.</param>
+        /// <param name="altitude">The height above the ellipsoid, m.</param>
+        public void Deconstruct(out double longitude, out double latitude, out double altitude)
+        {
+            longitude = Longitude;
+            latitude = Latitude;
+            altitude = Altitude;
+        }
+
         /// <summary>
         /// Convert to planetocentric coordinates on the ellipsoid of <paramref name="body"/>, its equatorial radius and
         /// flattening: the longitude, the planetocentric latitude and the distance to the centre of the body of the point

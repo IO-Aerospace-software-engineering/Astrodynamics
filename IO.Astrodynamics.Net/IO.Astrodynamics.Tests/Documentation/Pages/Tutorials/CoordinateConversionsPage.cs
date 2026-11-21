@@ -120,6 +120,11 @@ internal static class CoordinateConversionsPage
         Console.WriteLine($"RA:  {eq.RightAscension * Constants.Rad2Deg:F4} deg");
         Console.WriteLine($"Dec: {eq.Declination * Constants.Rad2Deg:F4} deg");
         Console.WriteLine($"Distance: {eq.Distance:F0} m");
+
+        // Coordinates given as angles, right ascension first as the factory's name says (Vega, J2000)
+        var vega = Equatorial.FromRightAscensionDeclination(279.23473479 * Constants.Deg2Rad, 38.78368896 * Constants.Deg2Rad,
+            svICRF.Epoch);
+        Vector3 towardVega = vega.ToDirection(); // unit vector in ICRF
         #endregion
     }
 
@@ -128,9 +133,9 @@ internal static class CoordinateConversionsPage
     {
         #region docs/tutorials/coordinate-conversions.md:5
         var coords = new Planetodetic(
-            Longitude: -122.0 * Constants.Deg2Rad,
-            Latitude: 37.0 * Constants.Deg2Rad,
-            Altitude: 100.0);
+            longitude: -122.0 * Constants.Deg2Rad,
+            latitude: 37.0 * Constants.Deg2Rad,
+            altitude: 100.0);
 
         Console.WriteLine($"Longitude: {coords.Longitude * Constants.Rad2Deg:F2} deg");
         Console.WriteLine($"Latitude:  {coords.Latitude * Constants.Rad2Deg:F2} deg");
@@ -155,7 +160,7 @@ internal static class CoordinateConversionsPage
         #region docs/tutorials/coordinate-conversions.md:7
         // Inputs: svICRF (StateVector), coords (Planetodetic)
         var earth = PlanetsAndMoons.EARTH_BODY;
-        Planetodetic below = svICRF.ToPlanetodetic();            // in IAU_EARTH at the state's epoch, as CSPICE recgeo_c
+        Planetodetic below = svICRF.ToPlanetodetic();            // in ITRF93, the Earth's body frame, at the state's epoch
         Vector3 position = coords.ToCartesianCoordinates(earth); // body-fixed position, m, as CSPICE georec_c
         #endregion
         return (below, position);

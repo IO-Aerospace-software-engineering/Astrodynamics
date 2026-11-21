@@ -26,8 +26,10 @@ namespace IO.Astrodynamics.Tests.Coordinates;
 /// <see cref="Equatorial.FromRightAscensionDeclination(double, double, TimeSystem.Time)"/> in the order of its name, and
 /// <see cref="AtmosphericContext.FromPlanetodetic(Planetodetic, TimeSystem.Time)"/>. Expected values: CSPICE <c>recgeo_c</c> and
 /// <c>georec_c</c> on the pck00011 Earth (<c>Data/GeodeticReference/geodetic_reference.json</c>, written by
-/// <c>tools/geodetic_reference/geodetic_ref.c</c>), the poles, the polar axis and the equator among its points, and the
-/// closed forms; the one-call paths equal, bit for bit, the two calls they replace.
+/// <c>tools/geodetic_reference/geodetic_ref.c</c>: its points at latitude ±π/2 lie 3.9e-10 m off the polar axis, those
+/// of <c>georec_c</c>), and the closed forms, on the exact polar axis and the equator among them; the one-call paths
+/// equal, bit for bit, the two calls they replace. The centre of the body and the axis with a negative-zero coordinate,
+/// where the two calls differ from <c>reclat_c</c> and <c>recgeo_c</c> (NaN, ±π), are a known limitation of 11.0.0.
 /// </summary>
 public class GeodeticOneCallTests
 {
@@ -129,6 +131,48 @@ public class GeodeticOneCallTests
         Assert.True(latitude < 2e-11, $"latitude {latitude:E2}");
         Assert.True(latitudeOffPoles < 2e-15, $"latitude below 1.5 rad {latitudeOffPoles:E2}");
         Assert.True(altitude < 2e-15, $"altitude {altitude:E2}");
+    }
+
+    [Fact]
+    public void ToPlanetodetic_OnTheExactPolarAxisAndTheEquator_IsTheClosedForm()
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        double a = earth.EquatorialRadius, b = a * (1.0 - earth.Flattening);
+        double worst = 0.0;
+        foreach (double h in new[] { -5e3, 0.0, 400e3, 35786e3 })
+        {
+            foreach (double sign in new[] { 1.0, -1.0 })
+            {
+                // On the axis, +0 in x and y: longitude 0 and latitude ±π/2 exactly (reclat_c, recgeo_c), altitude |z| − b
+                double z = sign * (b + h);
+                var onAxis = new StateVector(new Vector3(0.0, 0.0, z), Vector3.Zero, earth, Epoch, earth.Frame);
+                var geodetic = onAxis.ToPlanetodetic();
+                var planetocentric = onAxis.ToPlanetocentric();
+                AssertSameBits(0.0, geodetic.Longitude);
+                AssertSameBits(sign * System.Math.PI / 2.0, geodetic.Latitude);
+                AssertSameBits(0.0, planetocentric.Longitude);
+                AssertSameBits(sign * System.Math.PI / 2.0, planetocentric.Latitude);
+                AssertSameBits(System.Math.Abs(z), planetocentric.Radius);
+                worst = System.Math.Max(worst, System.Math.Abs(geodetic.Altitude - (System.Math.Abs(z) - b)));
+            }
+
+            foreach (double longitude in new[] { 0.0, 1.0, -2.5 })
+            {
+                // On the equator: latitude 0 exactly, the longitude atan2(y, x), altitude r − a
+                double r = a + h;
+                var position = new Vector3(r * System.Math.Cos(longitude), r * System.Math.Sin(longitude), 0.0);
+                var onEquator = new StateVector(position, Vector3.Zero, earth, Epoch, earth.Frame);
+                var geodetic = onEquator.ToPlanetodetic();
+                AssertSameBits(System.Math.Atan2(position.Y, position.X), geodetic.Longitude);
+                AssertSameBits(0.0, geodetic.Latitude);
+                worst = System.Math.Max(worst, System.Math.Abs(geodetic.Altitude - (position.Magnitude() - a)));
+            }
+        }
+
+        _output.WriteLine($"ToPlanetodetic() on the exact polar axis and the equator: altitude {worst:E2} m from the closed form");
+        // Measured 2026-11-21 (Linux): 7.45e-9 m, one ulp of |z| = 4.2e7 m at 35786 km (the rounding of b + h itself);
+        // twice that, to be confirmed on Windows and macOS arm64 by CI
+        Assert.True(worst < 1.5e-8, $"{worst:E2} m");
     }
 
     [Fact]

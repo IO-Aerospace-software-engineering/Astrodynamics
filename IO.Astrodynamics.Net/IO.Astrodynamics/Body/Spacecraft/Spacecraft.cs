@@ -1141,7 +1141,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             var stateVector = initialState;
             if (propagated)
             {
-                var read = GetEphemeris(targetEpoch, InitialOrbitalParameters.Observer, InitialOrbitalParameters.Frame, Aberration.None).ToStateVector();
+                var read = GetEphemeris(targetEpoch, InitialOrbitalParameters.Observer, InitialOrbitalParameters.Frame, Aberration.None);
                 stateVector = new StateVector(read.Position, read.Velocity, InitialOrbitalParameters.Observer, targetEpoch, InitialOrbitalParameters.Frame,
                     initialState.Covariance);
             }

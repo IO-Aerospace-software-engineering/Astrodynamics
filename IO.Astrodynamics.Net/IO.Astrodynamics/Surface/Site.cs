@@ -342,7 +342,7 @@ namespace IO.Astrodynamics.Surface
                 return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
                     searchWindow, observer.NaifId, NaifId, relationalOperator, value, aberration, stepSize);
 
-            Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
+            Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).Position.Magnitude(); };
 
             return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
         }
@@ -455,7 +455,7 @@ namespace IO.Astrodynamics.Surface
                 case CoordinateSystem.Rectangular:
                     evaluateCoordinates = date =>
                     {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var stateVector = GetEphemeris(date, observer, frame, aberration);
                         return coordinate switch
                         {
                             Coordinate.X => stateVector.Position.X,
@@ -468,7 +468,7 @@ namespace IO.Astrodynamics.Surface
                 case CoordinateSystem.RaDec:
                     evaluateCoordinates = date =>
                     {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var stateVector = GetEphemeris(date, observer, frame, aberration);
                         // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
                         var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
                         return coordinate switch
@@ -483,7 +483,7 @@ namespace IO.Astrodynamics.Surface
                 case CoordinateSystem.Geodetic:
                     evaluateCoordinates = date =>
                     {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var stateVector = GetEphemeris(date, observer, frame, aberration);
                         var geodetic = stateVector.ToPlanetodetic();
                         return coordinate switch
                         {
@@ -499,7 +499,7 @@ namespace IO.Astrodynamics.Surface
                     bool positiveWest = observer is CelestialBody observerBody &&
                                         GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
                     evaluateCoordinates = date =>
-                        GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration).ToStateVector(), coordinate, positiveWest);
+                        GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration), coordinate, positiveWest);
                     break;
             }
 
@@ -639,7 +639,7 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public Planetocentric SubObserverPoint(CelestialBody target, in Time epoch, Aberration aberration)
         {
-            var position = GetEphemeris(epoch, target, target.Frame, aberration).ToStateVector().Position;
+            var position = GetEphemeris(epoch, target, target.Frame, aberration).Position;
 
             var lon = System.Math.Atan2(position.Y, position.X);
 

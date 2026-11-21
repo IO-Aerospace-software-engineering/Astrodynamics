@@ -84,6 +84,27 @@ var moon = new CelestialBody(PlanetsAndMoons.MOON);
 var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 ```
 
+### Atmospheric Context
+
+`GetAtmosphere(AtmosphericContext)` reads the atmosphere at a point given as an `AtmosphericContext`
+(`IO.Astrodynamics.Atmosphere`), a record of SI values:
+
+| Member | Description |
+|--------|-------------|
+| `AtmosphericContext.FromAltitude(double)` | A context of the altitude alone (m): the U.S. Standard Atmosphere 1976 of a model-less Earth |
+| `AtmosphericContext.FromPlanetodetic(Planetodetic, Time)` | A full context: the altitude, geodetic latitude and longitude of the `Planetodetic` and the epoch, which NRLMSISE-00 needs (11.0.0, R20 of #668: it replaces `FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`, whose three doubles ran in the order opposite to that of `Planetodetic`) |
+| `AtmosphericContext.Altitude` | Altitude above the reference ellipsoid, m |
+| `AtmosphericContext.GeodeticLatitude` / `AtmosphericContext.GeodeticLongitude` | Geodetic latitude and longitude, rad, null when not given |
+| `AtmosphericContext.Epoch` | The epoch, null when not given |
+
+```csharp
+// Inputs: epoch (Time)
+var earth = PlanetsAndMoons.EARTH_BODY;
+var context = AtmosphericContext.FromPlanetodetic(
+    new Planetodetic(longitude: 2.35 * Constants.Deg2Rad, latitude: 48.85 * Constants.Deg2Rad, altitude: 400e3), epoch);
+double density = earth.GetAirDensity(context); // kg/m³, NRLMSISE-00 at nominal space weather
+```
+
 ## CelestialItem
 
 `CelestialItem` is the shared base abstraction for natural bodies, spacecraft, and other localizable objects.

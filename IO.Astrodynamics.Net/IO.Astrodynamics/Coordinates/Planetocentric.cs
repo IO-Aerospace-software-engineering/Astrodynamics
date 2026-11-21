@@ -8,11 +8,42 @@ namespace IO.Astrodynamics.Coordinates
     /// Planetocentric coordinates: the longitude (rad, positive east), the planetocentric latitude (rad) and the distance to
     /// the centre of the body (m).
     /// </summary>
-    /// <param name="Longitude">The longitude, rad.</param>
-    /// <param name="Latitude">The planetocentric latitude, rad.</param>
-    /// <param name="Radius">The distance to the centre of the body, m.</param>
-    public readonly record struct Planetocentric(double Longitude, double Latitude, double Radius)
+    public readonly record struct Planetocentric
     {
+        /// <summary>The longitude, rad, positive east.</summary>
+        public double Longitude { get; init; }
+
+        /// <summary>The planetocentric latitude, rad.</summary>
+        public double Latitude { get; init; }
+
+        /// <summary>The distance to the centre of the body, m.</summary>
+        public double Radius { get; init; }
+
+        /// <summary>
+        /// The coordinates of a longitude, a planetocentric latitude and a radius (R20 of #668: camelCase parameters, before
+        /// 11.0.0 the PascalCase parameters of a positional record).
+        /// </summary>
+        /// <param name="longitude">The longitude, rad, positive east.</param>
+        /// <param name="latitude">The planetocentric latitude, rad.</param>
+        /// <param name="radius">The distance to the centre of the body, m.</param>
+        public Planetocentric(double longitude, double latitude, double radius)
+        {
+            Longitude = longitude;
+            Latitude = latitude;
+            Radius = radius;
+        }
+
+        /// <summary>Deconstruct into the longitude, the planetocentric latitude and the radius.</summary>
+        /// <param name="longitude">The longitude, rad.</param>
+        /// <param name="latitude">The planetocentric latitude, rad.</param>
+        /// <param name="radius">The distance to the centre of the body, m.</param>
+        public void Deconstruct(out double longitude, out double latitude, out double radius)
+        {
+            longitude = Longitude;
+            latitude = Latitude;
+            radius = Radius;
+        }
+
         /// <summary>
         /// Convert to planetodetic (geodetic) coordinates on the ellipsoid of <paramref name="body"/>, its equatorial radius
         /// and flattening, exactly at any altitude (CSPICE <c>recgeo_c</c>; R20 of #668: before 11.0.0 the ellipsoid was

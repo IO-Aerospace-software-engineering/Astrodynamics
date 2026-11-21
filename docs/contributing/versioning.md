@@ -242,8 +242,9 @@ release are listed under **Known limitations**.
   bit the forms of a flattening and a radius they replace (under **Removed**). `Equatorial.FromRightAscensionDeclination(rightAscension,
   declination, epoch)` and `(rightAscension, declination, distance, epoch)`, in the order of the name, and
   `AtmosphericContext.FromPlanetodetic(planetodetic, epoch)`. `GeodeticOneCallTests`. See
-  [Celestial Bodies](../reference/celestial-bodies.md), [State Vector](../reference/state-vector.md) and
-  [Coordinate Conversions](../tutorials/coordinate-conversions.md#planetodetic-coordinates).
+  [Celestial Bodies](../reference/celestial-bodies.md#atmospheric-context) (`AtmosphericContext`),
+  [State Vector](../reference/state-vector.md), [Sites](../reference/sites.md#coordinates) (the coordinate records and
+  `Equatorial`) and [Coordinate Conversions](../tutorials/coordinate-conversions.md#equatorial-coordinates).
 - **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
   `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
@@ -4525,6 +4526,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ToPlanetodetic()`, whose observer must be a `CelestialBody`; before, the cast threw `InvalidCastException`. The
   windows of every other search are unchanged, bit for bit (the same two calls). Migration: a
   `catch (InvalidCastException)` catches `InvalidOperationException`.
+- **Breaking: the coordinate records take camelCase constructor parameters** (lot L3, R20 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), PR R20-b of the first annex,
+  D2 N1): `Planetodetic(longitude, latitude, altitude)`, `Planetocentric(longitude, latitude, radius)` and
+  `Horizontal(azimuth, elevation, range, epoch)`, each with its `Deconstruct` of the same names; before, positional
+  records whose parameters were named as their properties, so the design's `new Planetodetic(longitude: lon, latitude:
+  lat, altitude: 1e3)` did not compile. The properties keep their names and their `init` accessors (`with`), equality,
+  `ToString` and the order of the components are unchanged (`CoordinateConstructorTests`). Migration: a named argument
+  takes the lower-case name, `new Planetodetic(Longitude: lon, Latitude: lat, Altitude: h)` →
+  `new Planetodetic(longitude: lon, latitude: lat, altitude: h)`; positional calls, `with` and deconstruction are
+  unchanged.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -6759,7 +6770,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   rightAscension, epoch)` and `(declination, rightAscension, distance, epoch)`, whose order was the reverse of the name
   of the type's members, so that a swap compiled and gave another direction ((0.853, 0.492, 0.174) for (0.853, 0.150,
   0.500)). `Equatorial(StateVector)` stays. Migration: `new Equatorial(dec, ra, epoch)` →
-  `Equatorial.FromRightAscensionDeclination(ra, dec, epoch)`, and with a distance `(ra, dec, distance, epoch)`.
+  `Equatorial.FromRightAscensionDeclination(ra, dec, epoch)`, and with a distance `(ra, dec, distance, epoch)`. See
+  [Sites](../reference/sites.md#equatorial).
 - **The coordinate conversions taking a flattening and a radius** (R20 of #668, choice 2 of the first annex, the
   design's recommendation as amended by section 7 of the re-baseline): `Planetodetic.ToPlanetocentric(flattening,
   equatorialRadius)`, `Planetocentric.ToPlanetodetic(flattening, equatorialRadius)`,
@@ -6774,6 +6786,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`** (R20 of #668), whose
   three doubles ran in the order opposite to that of `Planetodetic`. Migration:
   `AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude), epoch)`.
+
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is
@@ -6793,6 +6806,10 @@ not listed.
   `ToPlanetodetic()` and the geodetic coordinate searches go through it: 7.6e-12 rad from CSPICE `recgeo_c` 1.75e-5 rad
   from the poles of the Earth, 112 m from the axis, and 5.6e-16 rad below 1.5 rad (`GeodeticOneCallTests`).
   Workaround: atan2(z, √(x² + y²)) of the body-fixed position (`ToFrame(body.Frame).Position`) gives the full precision.
+  The same path differs from `reclat_c` and `recgeo_c` on two degenerate positions: at the centre of the body the
+  latitude is NaN (asin(0/0)), and the altitude too, where `reclat_c` gives (0, 0, 0) and `recgeo_c` (0, π/2, −b); on
+  the polar axis with a negative-zero x (and y), the longitude is ±π (atan2 of signed zeros), where both give 0 (with
+  +0, latitude ±π/2 exactly, longitude 0).
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter

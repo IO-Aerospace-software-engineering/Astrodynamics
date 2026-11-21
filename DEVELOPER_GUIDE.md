@@ -1190,9 +1190,9 @@ var goldstone = new Site(13, "DSS-13", earth);
 // Create site with explicit coordinates
 var mySite = new Site(100, "MySite", earth,
     new Planetodetic(
-        Longitude: -117.0 * Constants.Deg2Rad,
-        Latitude: 34.0 * Constants.Deg2Rad,
-        Altitude: 1000.0  // meters
+        longitude: -117.0 * Constants.Deg2Rad,
+        latitude: 34.0 * Constants.Deg2Rad,
+        altitude: 1000.0  // meters
     ));
 
 // Get horizontal coordinates to Moon
@@ -1243,7 +1243,7 @@ Geodetic coordinates (longitude, latitude, altitude).
 
 | Constructor | Description |
 |------------|-------------|
-| `Planetodetic(double Longitude, double Latitude, double Altitude)` | Create coordinates (a record struct: its parameters are its properties) |
+| `Planetodetic(double longitude, double latitude, double altitude)` | Create coordinates (11.0.0: camelCase parameters, `longitude:`; `init` properties and `Deconstruct` kept) |
 
 | Property | Description |
 |----------|-------------|
@@ -1259,15 +1259,19 @@ Geodetic coordinates (longitude, latitude, altitude).
 ```csharp
 // Create geodetic coordinates
 var coords = new Planetodetic(
-    Longitude: -122.0 * Constants.Deg2Rad,
-    Latitude: 37.0 * Constants.Deg2Rad,
-    Altitude: 100.0
+    longitude: -122.0 * Constants.Deg2Rad,
+    latitude: 37.0 * Constants.Deg2Rad,
+    altitude: 100.0
 );
 ```
 
 #### Planetocentric
 
 Planetocentric coordinates.
+
+| Constructor | Description |
+|------------|-------------|
+| `Planetocentric(double longitude, double latitude, double radius)` | Create coordinates (11.0.0: camelCase parameters) |
 
 | Method | Description |
 |--------|-------------|
@@ -1315,6 +1319,10 @@ Console.WriteLine($"Dec: {eq.Declination * Constants.Rad2Deg:F4}°");
 #### Horizontal
 
 Azimuth, elevation, range (topocentric).
+
+| Constructor | Description |
+|------------|-------------|
+| `Horizontal(double azimuth, double elevation, double range, Time epoch)` | Create coordinates (11.0.0: camelCase parameters) |
 
 | Property | Description |
 |----------|-------------|

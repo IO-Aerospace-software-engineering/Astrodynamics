@@ -1336,10 +1336,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// The planetocentric coordinates of the position in the body-fixed frame of the observer, a
     /// <see cref="CelestialBody"/>: the position rotated to the body's frame at the epoch (<see cref="ToFrame(Frame)"/>),
-    /// then longitude atan2(y, x), latitude asin(z / r) and radius r (CSPICE <c>reclat_c</c>).
+    /// then longitude atan2(y, x), latitude asin(z / r) and radius r, CSPICE <c>reclat_c</c>'s but on the degenerate
+    /// positions of the remarks.
     /// </summary>
     /// <returns>The planetocentric longitude and latitude (rad) and radius (m) of the position.</returns>
-    /// <remarks>Before 11.0.0 <c>ToPlanetocentric(Aberration)</c>, whose correction was not used (R20 of #668).</remarks>
+    /// <remarks>Before 11.0.0 <c>ToPlanetocentric(Aberration)</c>, whose correction was not used (R20 of #668). Where it
+    /// differs from <c>reclat_c</c>: at the centre of the body the latitude is NaN (asin(0/0)), where <c>reclat_c</c>
+    /// gives (0, 0, 0); on the polar axis with a negative-zero x (and y), the longitude is ±π (atan2 of signed zeros),
+    /// where <c>reclat_c</c> gives 0 (on the axis with +0, the longitude is 0 and the latitude ±π/2); within about 1e-5
+    /// rad of the poles asin(z / r) loses digits (7.6e-12 rad of the geodetic latitude derived from it on the Earth). A
+    /// known limitation of 11.0.0, the path of 10.x kept bit for bit.</remarks>
     /// <exception cref="InvalidOperationException">The observer is not a <see cref="CelestialBody"/>, which has no
     /// body-fixed frame (before 11.0.0 an <see cref="InvalidCastException"/>).</exception>
     public Planetocentric ToPlanetocentric()
@@ -1356,7 +1362,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <see cref="Planetocentric.ToPlanetodetic(CelestialBody)"/>, bit for bit, in one call (R20 of #668).
     /// </summary>
     /// <returns>The geodetic longitude and latitude (rad) and altitude (m) of the position, CSPICE <c>recgeo_c</c>'s on the
-    /// body's equatorial radius and flattening.</returns>
+    /// body's equatorial radius and flattening but on the degenerate positions of the remarks.</returns>
+    /// <remarks>The latitude is that of the planetocentric step, so it differs from <c>recgeo_c</c> where
+    /// <see cref="ToPlanetocentric()"/> differs from <c>reclat_c</c>: 7.6e-12 rad 1.75e-5 rad from the poles of the
+    /// Earth, 5.6e-16 rad below 1.5 rad; at the centre of the body the latitude and the altitude are NaN, where
+    /// <c>recgeo_c</c> gives (0, π/2, −b); on the polar axis with a negative-zero x (and y), the longitude is ±π, where
+    /// <c>recgeo_c</c> gives 0.</remarks>
     /// <exception cref="InvalidOperationException">The observer is not a <see cref="CelestialBody"/>, which has no
     /// ellipsoid.</exception>
     public Planetodetic ToPlanetodetic()

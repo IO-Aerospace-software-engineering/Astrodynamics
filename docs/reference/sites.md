@@ -234,6 +234,11 @@ Specialized site for launch operations.
 | `Latitude` | Latitude (rad) |
 | `Altitude` | Altitude above ellipsoid (m) |
 
+The coordinate records `Planetodetic(longitude, latitude, altitude)`, `Planetocentric(longitude, latitude, radius)` and
+`Horizontal(azimuth, elevation, range, epoch)` take camelCase parameters, so a named argument reads
+`new Planetodetic(longitude: lon, latitude: lat, altitude: 1e3)`; each deconstructs in the same order and keeps `init`
+properties for `with` (11.0.0, R20 of #668: before, the parameters were named as the properties, `Longitude:`).
+
 `Planetodetic.ToPlanetocentric(body)` and `Planetocentric.ToPlanetodetic(body)` convert between geodetic and
 planetocentric coordinates on the ellipsoid of revolution of the `CelestialBody` (its equatorial radius and flattening,
 from the PCK), exactly at any altitude, `Planetodetic.ToCartesianCoordinates(body)` gives the body-fixed position
@@ -248,6 +253,13 @@ conversion on the ellipsoid of its body; the topocentric frame of a site built f
 that same ellipsoid, so it can differ slightly from a frame kernel built on another spheroid (DSS-13: 9.5e-7° in
 latitude between the `pck00011` ellipsoid and the WGS84 spheroid of `earth_topo_201023.tf`, 2.1e-9 rad of the axes). A
 site from the kernels has the kernel frame of its id ([Reads in the site's frame](#reads-in-the-sites-frame), #690).
+
+`StateVector.ToPlanetodetic()` is `ToPlanetocentric()` then `ToPlanetodetic(body)`, bit for bit, and so differs from
+`recgeo_c` where the planetocentric step does: within about 1e-5 rad of the poles its latitude is 7.6e-12 rad off (the
+planetocentric latitude asin(z / r)); at the centre of the body the latitude and the altitude are NaN, where `recgeo_c`
+gives (0, π/2, −b), and `ToPlanetocentric()` gives a NaN latitude where `reclat_c` gives (0, 0, 0); on the polar axis
+with a negative-zero x (and y) the longitude is ±π, where both give 0 (on the axis with +0, the latitude is ±π/2 and the
+longitude 0 exactly). See **Known limitations** of 11.0.0 in [Versioning](../contributing/versioning.md).
 
 ### Horizontal
 
@@ -264,6 +276,11 @@ site from the kernels has the kernel frame of its id ([Reads in the site's frame
 | `RightAscension` | RA (rad) |
 | `Declination` | Dec (rad) |
 | `Distance` | Distance from observer (m) |
+
+| Factory | Description |
+|---------|-------------|
+| `FromRightAscensionDeclination(double, double, Time)` | The coordinates of a right ascension and a declination (rad), in the order of the name, without a distance (NaN) (11.0.0, R20 of #668: they replace the constructor `Equatorial(declination, rightAscension, epoch)`, whose order a swap compiled) |
+| `FromRightAscensionDeclination(double, double, double, Time)` | The same with a distance (m), replacing `Equatorial(declination, rightAscension, distance, epoch)` |
 
 `ToEquatorial()` gives the right ascension and declination in ICRF, whatever the frame of the state (#680). The
 coordinate searches of `CoordinateSystem.RaDec` take them in their search frame instead, as CSPICE `gfposc`: the
