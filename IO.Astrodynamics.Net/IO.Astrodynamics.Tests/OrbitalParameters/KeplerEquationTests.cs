@@ -192,19 +192,19 @@ public class KeplerEquationTests
         Assert.Equal(Reference.Value.Gm, earth.GM);
         var states = Reference.Value.States;
 
-        // Act: the state of the elements given by M; with ν given, then at their own epoch (AtEpoch builds the
-        // elements from M alone); at their epoch; and the first state of a propagation from the elements with ν given,
-        // by RK7(8) and by Velocity-Verlet (both go through AtEpoch)
+        // Act: the state of the elements given by M; then at their own epoch (AtEpoch builds the elements from M alone); at
+        // their epoch; and the first state of a propagation from the elements, by RK7(8) and by Velocity-Verlet (both go
+        // through AtEpoch)
         double worstPosition = 0.0, worstVelocity = 0.0;
         foreach (var c in states)
         {
             var state = FromMeanAnomaly(c, earth).ToStateVector();
             var paths = new (string Path, Vector3 Position, Vector3 Velocity)[]
             {
-                Path("AtEpoch", FromMeanAnomaly(c, earth, c.Nu).AtEpoch(Epoch).ToStateVector()),
+                Path("AtEpoch", FromMeanAnomaly(c, earth).AtEpoch(Epoch).ToStateVector()),
                 Path("ToStateVector(epoch)", FromMeanAnomaly(c, earth).ToStateVector(Epoch)),
-                FirstState("RK7(8)", FromMeanAnomaly(c, earth, c.Nu), true),
-                FirstState("Velocity-Verlet", FromMeanAnomaly(c, earth, c.Nu), false)
+                FirstState("RK7(8)", FromMeanAnomaly(c, earth), true),
+                FirstState("Velocity-Verlet", FromMeanAnomaly(c, earth), false)
             };
             var (position, velocity) = RelativeErrors(state, c);
             worstPosition = System.Math.Max(worstPosition, position / c.PositionFloor);
@@ -660,18 +660,21 @@ public class KeplerEquationTests
 
     private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
 
-    // The elements of a periapsis at 7000 km given by M (an ellipse at e = 0 of radius 7000 km)
+    // The elements of a periapsis at 7000 km given by M (an ellipse at e = 0 of radius 7000 km), or by ν when it is given
+    // (FromTrueAnomaly, #668, R23: before, M = 0 beside the ν the state read)
     private static KeplerianElements Elements(double e, double meanAnomaly, CelestialBody earth,
         double? trueAnomaly = null)
     {
-        return new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.7, 0.5, 0.9, meanAnomaly, earth, Epoch,
-            Frames.Frame.ICRF, trueAnomaly: trueAnomaly);
+        return trueAnomaly is { } nu
+            ? KeplerianElements.FromTrueAnomaly(PeriapsisRadius / (1.0 - e), e, 0.7, 0.5, 0.9, nu, earth, Epoch, Frames.Frame.ICRF)
+            : new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.7, 0.5, 0.9, meanAnomaly, earth, Epoch, Frames.Frame.ICRF);
     }
 
-    private static KeplerianElements FromMeanAnomaly(ReferenceState c, CelestialBody earth, double? trueAnomaly = null)
+    // The elements of the case given by its mean anomaly; the propagation paths go through AtEpoch, which builds the elements
+    // from M alone, so the case's ν, given beside M before #668 (R23), changed none of them
+    private static KeplerianElements FromMeanAnomaly(ReferenceState c, CelestialBody earth)
     {
-        return new KeplerianElements(c.A, c.E, c.I, c.Raan, c.Aop, c.M, earth, Epoch, Frames.Frame.ICRF,
-            trueAnomaly: trueAnomaly);
+        return new KeplerianElements(c.A, c.E, c.I, c.Raan, c.Aop, c.M, earth, Epoch, Frames.Frame.ICRF);
     }
 
     private static (string, Vector3, Vector3) Path(string path, StateVector state) =>

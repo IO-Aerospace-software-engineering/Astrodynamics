@@ -53,7 +53,7 @@ public class OrbitalParametersEqualityTests
 
     // A parabola, e = 1 exactly, given its perigee radius q: a = +Infinity (#459), P = +Infinity
     private static KeplerianElements Parabola(double q) =>
-        new(double.PositiveInfinity, 1.0, 0.5, 1.0, 2.0, 0.0, Earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+        KeplerianElements.Parabolic(q, 0.5, 1.0, 2.0, 0.0, Earth, Epoch, Frames.Frame.ICRF);
 
     private static EquinoctialElements EquinoctialParabola(double q) =>
         new(double.PositiveInfinity, 1.0, 0.0, 0.1, 0.2, 1.5, Earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);

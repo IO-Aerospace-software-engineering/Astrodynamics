@@ -473,13 +473,14 @@ Classical Keplerian orbital elements (osculating or mean).
 
 | Constructor | Description |
 |------------|-------------|
-| `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements (the parameter of the RAAN is spelled `rigthAscendingNode`) |
-| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius: required within 1e-6 of e = 1, with the a of the same conic, q / (1 − e) to rounding, +Infinity at e = 1 (#459) |
+| `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements, outside the near-parabolic band (`rigthAscendingNode` before 11.0.0) |
 | `KeplerianElements(..., OrbitalElementsType elementsType)` | Create with explicit element type |
 
 | Factory Method | Description |
 |----------------|-------------|
 | `FromOMM(double meanMotion, double e, double i, double raan, double aop, double m, ILocalizable observer, Time epoch, Frame frame)` | Create mean elements from OMM data (units: rev/day for mean motion, degrees for angles) |
+| `FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double trueAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Elements given with their true anomaly: M(ν), `TrueAnomaly()` ν (#668, R23) |
+| `Parabolic(double perigeeRadius, double inclination, double ascendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, double eccentricity = 1.0)` | Parabola, or orbit within 1e-6 of e = 1, from its perigee radius: a = q / (1 − e), +Infinity at e = 1 (#459; the `perigeeRadius` parameter of the constructor before 11.0.0) |
 
 | Property | Description |
 |----------|-------------|

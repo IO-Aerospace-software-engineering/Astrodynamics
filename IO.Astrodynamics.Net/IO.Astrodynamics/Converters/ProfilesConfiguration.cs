@@ -15,6 +15,7 @@ using Site = IO.Astrodynamics.Surface.Site;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
 using Window = IO.Astrodynamics.TimeSystem.Window;
+using OrbitalElementsType = IO.Astrodynamics.OrbitalParameters.OrbitalElementsType;
 
 namespace IO.Astrodynamics.Converters;
 
@@ -111,8 +112,8 @@ public static class ProfilesConfiguration
             double semiMajorAxis = keplerianElements.SemiMajorAxis == 0.0 ? double.PositiveInfinity : keplerianElements.SemiMajorAxis;
             return new KeplerianElements(semiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination,
                 keplerianElements.AscendingNodeLongitude, keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer,
-                Time.Create(keplerianElements.Epoch, TimeScale.TDB), frame, keplerianElements.TrueAnomaly,
-                perigeeRadius: keplerianElements.PerifocalDistance);
+                Time.Create(keplerianElements.Epoch, TimeScale.TDB), frame, keplerianElements.TrueAnomaly, null,
+                keplerianElements.PerifocalDistance, OrbitalElementsType.Osculating);
         }
 
         // oscltx's period is 0 for an open orbit, which has none (#663), and can exceed TimeSpan.MaxValue on an ellipse
@@ -121,7 +122,7 @@ public static class ProfilesConfiguration
         TimeSpan? period = tau > 0.0 && tau < Time.MaximumSpanSeconds ? Time.SecondsToSpan(tau) : null;
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeScale.TDB),
-            frame, keplerianElements.TrueAnomaly, period);
+            frame, keplerianElements.TrueAnomaly, period, null, OrbitalElementsType.Osculating);
     }
 
     /// <summary>

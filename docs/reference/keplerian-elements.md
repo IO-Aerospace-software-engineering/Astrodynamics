@@ -6,24 +6,37 @@
 
 | Constructor | Description |
 |-------------|-------------|
-| `KeplerianElements(a, e, i, raan, aop, m, observer, epoch, frame)` | Create from elements |
-| `KeplerianElements(..., perigeeRadius)` | Create parabolic orbit: within 1e-6 of e = 1 with the a of the same conic ([the band](#the-near-parabolic-band)) |
+| `KeplerianElements(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame)` | Create from elements, outside [the band](#the-near-parabolic-band) |
 | `KeplerianElements(..., OrbitalElementsType)` | Create with explicit element type |
 
+One meaning per constructor (#668, R23): the constructor takes the six elements with the mean anomaly, a parabola is
+built from its perigee radius by `Parabolic`, and elements given with their true anomaly by `FromTrueAnomaly`. Before
+11.0.0 the constructor took the optional `trueAnomaly`, `period` and `perigeeRadius`, stored unchecked beside the
+elements (a true anomaly 6177.2 km off the mean anomaly's state was accepted), and its RAAN parameter was spelled
+`rigthAscendingNode`.
+
 Every element is finite (#726): the constructor throws `ArgumentException` naming the parameter for a semi-major axis
-NaN, −∞, or +∞ outside the parabolic band, and for an angle (i, Ω, ω, M, the optional true anomaly) that is not
-finite; `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity not finite or negative (#476), and
-(`perigeeRadius`) for a perigee radius given and not finite and above 0. The one infinite element is the semi-major
-axis of a parabola, +∞ with its perigee radius at e = 1 (to rounding, [the band](#the-near-parabolic-band)). Outside
-the band the semi-major axis has the sign of the conic, a (1 − e) > 0: a > 0 for e < 1 and a < 0 for e > 1, a = 0
-refused, or `ArgumentException` (`semiMajorAxis`, its message naming a and e; #738: before 11.0.0, accepted, with a NaN
-velocity and an `AtEpoch` that named the mean anomaly). `FromOMM` checks the same, its mean motion finite and above 0.
+NaN or ±∞, and for an angle (i, Ω, ω, M) that is not finite; `ArgumentOutOfRangeException` (`eccentricity`) for an
+eccentricity not finite or negative (#476), and `ArgumentException` (`eccentricity`) within 1e-6 of e = 1, which
+`Parabolic` builds. Outside the band the semi-major axis has the sign of the conic, a (1 − e) > 0: a > 0 for e < 1 and
+a < 0 for e > 1, a = 0 refused, or `ArgumentException` (`semiMajorAxis`, its message naming a and e; #738: before
+11.0.0, accepted, with a NaN velocity and an `AtEpoch` that named the mean anomaly). `FromOMM` checks the same, its mean
+motion finite and above 0.
 
 ### Factory Methods
 
 | Method | Description |
 |--------|-------------|
+| `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, trueAnomaly, observer, epoch, frame)` | Osculating elements of the constructor's conics whose true anomaly is ν: M(ν) from the closed-form eccentric anomaly (`OrbitalParameters.TrueAnomalyToMeanAnomaly`), `TrueAnomaly()` ν as given; `ArgumentException` (`trueAnomaly`) for a ν not finite, `ArgumentOutOfRangeException` (`trueAnomaly`) for a ν of a hyperbola on or beyond its asymptotes |
+| `Parabolic(perigeeRadius, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, eccentricity = 1.0)` | Osculating elements of a parabola, or of an orbit within 1e-6 of e = 1, from its perigee radius q: a = q / (1 − e), +∞ at e = 1, the mean anomaly Barker's; `ArgumentOutOfRangeException` (`perigeeRadius`) for a q not finite and above 0, (`eccentricity`) for an e outside the band |
 | `FromOMM(meanMotion, e, i, raan, aop, m, observer, epoch, frame)` | Create mean elements from OMM data (units: rev/day, degrees) |
+
+```csharp
+// Inputs: earth (CelestialBody), epoch (Time)
+var transfer = KeplerianElements.FromTrueAnomaly(24396e3, 0.7283, 0.1, 0.2, 0.3, Constants.Deg2Rad * 30.0, earth, epoch, Frame.ICRF);
+var flyby = KeplerianElements.Parabolic(6800e3, 0.5, 0.3, 0.2, 0.0, earth, epoch, Frame.ICRF);   // a = +Infinity
+Console.WriteLine($"{transfer.TrueAnomaly()} rad, {transfer.MeanAnomaly()} rad; q = {flyby.PerigeeRadius()} m");
+```
 
 ## Properties
 
@@ -132,7 +145,9 @@ The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F,
 
 The constructor refuses what no conic has (#481, #726): F, G, H, K and L0 not finite (`ArgumentException` naming the
 parameter), P not finite and above 0 (`ArgumentOutOfRangeException`, `p`; a non-finite P only for a parabola,
-|e − 1| < 1e-6, given its perigee radius), and a perigee radius given and not finite and above 0 (`perigeeRadius`).
+|e − 1| < 1e-6, given its perigee radius), a perigee radius given and not finite and above 0 (`perigeeRadius`), and a
+perigee radius given with a finite P, which fixes q (`ArgumentException`, `perigeeRadius`; #668, R23: before 11.0.0 it
+was stored unchecked, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m).
 
 A parabola (|e − 1| < 1e-6, e = √(F² + G²)) given a finite P and no perigee radius has its perigee radius
 q = P / (1 + e), P / 2 at e = 1, derived when it is built, so that every path (`PerigeeRadius()`,

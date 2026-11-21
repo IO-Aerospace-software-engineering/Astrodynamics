@@ -58,7 +58,8 @@ proper motion in right ascension as a true angle, the space velocity of its stat
 parsec of 648000/π au, a repeated kernel load, which no longer reloads, with the order of a folder's kernels, and
 `NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, a
 central body without GM refused by a propagation, the scale of a `Time` a required argument, with `Time.Parse` in
-place of `Time(string)`, and an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors.
+place of `Time(string)`, an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors, and
+`KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3` and six exports of the native library that .NET never called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -193,6 +194,16 @@ release are listed under **Known limitations**.
   of `Matrix.Multiply(double[])` bit for bit, `ArgumentException` (`m`) for another size. The library's arithmetic is
   unchanged, bit for bit: its own matrices are filled through an internal setter before any caller holds them, and its
   dot products are the same expression. See [Math](../reference/math.md).
+- **`KeplerianElements.FromTrueAnomaly` and `KeplerianElements.Parabolic`** (lot L2 of the ergonomics review, R23 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19). `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis,
+  trueAnomaly, observer, epoch, frame)`: the elements whose true anomaly is ν, M(ν) of the closed-form eccentric anomaly,
+  `TrueAnomaly()` ν as given (the conformance runner's former code, now its call); `ArgumentOutOfRangeException`
+  (`trueAnomaly`) for a ν of a hyperbola on or beyond its asymptotes. `Parabolic(perigeeRadius, inclination,
+  ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, eccentricity = 1.0)`: a parabola, or an orbit
+  within 1e-6 of e = 1, from its perigee radius, a = q / (1 − e), +Infinity at e = 1;
+  `ArgumentOutOfRangeException` (`eccentricity`) outside the band. Both osculating. See
+  [Keplerian Elements](../reference/keplerian-elements.md).
 - **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
   `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only.
@@ -4391,6 +4402,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   25.0); …` → `Matrix.Diagonal(25.0, …)`, `new Matrix(terms)` from a `double[,]` filled first, or
   `Matrix.Create(6, 6, (i, j) => …)`; a change of one term of an existing matrix → `m = m.With(i, j, value)`;
   `catch (IndexOutOfRangeException)` around `Get` → `catch (ArgumentOutOfRangeException)`.
+- **Breaking: one meaning per `KeplerianElements` constructor** (lot L2, R23 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, no forwarder). The public constructor is `KeplerianElements(semiMajorAxis, eccentricity, inclination,
+  ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, elementsType = Osculating)`: its optional
+  `trueAnomaly`, `period` and `perigeeRadius` are removed, which it stored unchecked beside the elements (a true anomaly
+  that put the state 6177.2 km from the mean anomaly's, a perigee radius of 1 m on an ellipse returned by
+  `PerigeeRadius()`, a period of 1 h on any orbit), and `rigthAscendingNode` is renamed `ascendingNode`. Within 1e-6 of
+  e = 1 the constructor throws `ArgumentException` naming `eccentricity`, pointing to `Parabolic` (before: naming
+  `perigeeRadius`). The library's own elements (conversions, the two-body motion, SPICE's elements, the TLE's mean set)
+  keep their computed values through an internal constructor: no state or element moves, bit for bit. Migration:
+  `new KeplerianElements(a, e, i, o, w, m, centre, epoch, frame, trueAnomaly: nu)` →
+  `KeplerianElements.FromTrueAnomaly(a, e, i, o, w, nu, centre, epoch, frame)` (its M is M(ν), not the m given beside
+  it); `new KeplerianElements(double.PositiveInfinity, 1.0, i, o, w, m, centre, epoch, frame, perigeeRadius: q)` →
+  `KeplerianElements.Parabolic(q, i, o, w, m, centre, epoch, frame)`, an e of the band as the last argument and its a
+  computed; `period:` → nothing (`Period()` computes it); a `perigeeRadius:` beside an ellipse or a hyperbola → nothing
+  (`PerigeeRadius()` computes a (1 − e)); `rigthAscendingNode:` → `ascendingNode:`.
+- **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
+  first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
+  (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
+  `ToEquinoctial()` keeps the perigee radius of its parabolas (internal constructor), bit for bit. Migration: drop the
+  argument when P is finite.
 - **Breaking: the CLI's epochs** (D3 of #668, choice 4 of R24): seconds from J2000 take any scale tag (`757339200 TT`
   threw before; untagged stays TDB), and every other epoch is read by `Time.TryParse(s, TimeScale.TDB)`, so a day of
   year is read, an offset is the UTC instant, a Julian date is its digits to the nearest tick (through a double before,

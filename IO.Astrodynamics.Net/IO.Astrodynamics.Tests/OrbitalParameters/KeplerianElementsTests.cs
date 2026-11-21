@@ -395,11 +395,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void IsParabolic()
         {
-            KeplerianElements ke = new KeplerianElements(double.PositiveInfinity, 1.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
+            KeplerianElements ke = KeplerianElements.Parabolic(6800000.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.UtcNow.ToTDB(),
-                Frames.Frame.ICRF, perigeeRadius: 6800000.0);
+                Frames.Frame.ICRF);
             Assert.True(ke.IsParabolic());
         }
 
@@ -445,8 +445,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToState()
         {
-            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-                perigeeRadius: 6800000.0);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
             Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
@@ -480,8 +479,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToEquinoctial()
         {
-            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-                perigeeRadius: 6800000.0);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var eq = ke.ToEquinoctial();
             var ke2 = eq.ToKeplerianElements();
             Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
@@ -510,9 +508,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicPerigeeRadius()
         {
-            KeplerianElements ke = new KeplerianElements(double.PositiveInfinity, 1.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
+            KeplerianElements ke = KeplerianElements.Parabolic(6800000.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad, 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.UtcNow.ToTDB(), Frames.Frame.ICRF, perigeeRadius: 6800000.0);
+                TimeSystem.Time.UtcNow.ToTDB(), Frames.Frame.ICRF);
             Assert.Equal(6800000.0, ke.PerigeeRadius(), 6);
         }
 

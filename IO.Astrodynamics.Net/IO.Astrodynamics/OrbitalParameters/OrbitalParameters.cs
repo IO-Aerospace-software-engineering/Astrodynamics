@@ -894,7 +894,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double k = System.Math.Tan(i * 0.5) * System.Math.Sin(o);
             double l0 = o + w + v;
 
-            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame, PerigeeRadius(), ElementsType);
+            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame, PerigeeRadius(), ElementsType, true);
         }
 
         return _equinoctial;
@@ -1059,7 +1059,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // ToStateVector holds (#463). In the band the true anomaly of the conic's motion is given with Barker's mean
         // anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
-            trueAnomaly: trueAnomaly, perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
+            trueAnomaly, null, IsParabolic() ? PerigeeRadius() : _perigeeRadius, ElementsType);
     }
 
     /// <summary>
@@ -1165,7 +1165,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // An angle on an ellipse only (#368); KeplerianElements reduces it. In the band, the true anomaly of the conic's
         // motion with Barker's mean anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,
-            trueAnomaly: trueAnomaly, perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
+            trueAnomaly, null, PerigeeRadius(), ElementsType);
     }
 
     /// <summary>

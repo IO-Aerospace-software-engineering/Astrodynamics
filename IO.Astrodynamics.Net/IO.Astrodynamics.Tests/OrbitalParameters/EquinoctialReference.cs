@@ -186,7 +186,10 @@ internal sealed class EquinoctialReference
         internal EquinoctialElements Elements(ILocalizable observer, TimeSystem.Time epoch, Frames.Frame frame,
             OrbitalElementsType elementsType = OrbitalElementsType.Osculating)
         {
-            return new EquinoctialElements(P, F, G, H, K, L, observer, epoch, frame, PerigeeRadius, elementsType);
+            // The perigee radius goes with a non-finite P only; a finite P fixes q = P / (1 + e), the value the cases give
+            // (#668, R23)
+            return new EquinoctialElements(P, F, G, H, K, L, observer, epoch, frame, double.IsFinite(P) ? null : PerigeeRadius,
+                elementsType);
         }
 
         internal ReferenceState At(double dt) => States.Single(s => s.Dt == dt);
@@ -211,8 +214,10 @@ internal sealed class EquinoctialReference
 
         internal KeplerianElements Elements(ILocalizable observer, TimeSystem.Time epoch)
         {
-            return new KeplerianElements(A, E, I, Node, Periapsis, M, observer, epoch, Frames.Frame.ICRF,
-                perigeeRadius: PerigeeRadius);
+            // A parabola from its perigee radius (#668, R23); the cases of the band are a = +Infinity, e = 1
+            return PerigeeRadius is { } q
+                ? KeplerianElements.Parabolic(q, I, Node, Periapsis, M, observer, epoch, Frames.Frame.ICRF, E)
+                : new KeplerianElements(A, E, I, Node, Periapsis, M, observer, epoch, Frames.Frame.ICRF);
         }
 
         internal ReferenceState At(double dt) => States.Single(s => s.Dt == dt);

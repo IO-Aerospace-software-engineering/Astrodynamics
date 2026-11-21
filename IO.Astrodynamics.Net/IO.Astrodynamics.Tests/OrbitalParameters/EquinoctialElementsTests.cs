@@ -174,8 +174,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void ParabolicToKeplerian()
     {
-        var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-            perigeeRadius: 6800000.0);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var ke2 = eq.ToKeplerianElements();
         var eq2 = ke2.ToEquinoctial();
@@ -205,8 +204,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void ParabolicToStateVector()
     {
-        var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-            perigeeRadius: 6800000.0);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var sv = eq.ToStateVector();
         var eq2 = sv.ToEquinoctial();

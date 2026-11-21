@@ -56,36 +56,61 @@ namespace IO.Astrodynamics.OrbitalParameters
         private const double OneConicTolerance = 6.0 * 2.220446049250313e-16;
 
         /// <summary>
-        /// Constructor
+        /// The Keplerian elements of a conic outside the near-parabolic band (|e − 1| ≥ 1e-6), its anomaly the mean
+        /// anomaly. A parabola, or an orbit within 1e-6 of e = 1, is built from its perigee radius by
+        /// <see cref="Parabolic"/>, and elements given with their true anomaly by <see cref="FromTrueAnomaly"/> (#668, R23:
+        /// before 11.0.0 the optional parameters <c>trueAnomaly</c>, <c>period</c> and <c>perigeeRadius</c> of this
+        /// constructor were stored unchecked beside the elements).
+        /// </summary>
+        /// <param name="semiMajorAxis">The semi-major axis, m: above 0 for an ellipse, below 0 for a hyperbola.</param>
+        /// <param name="eccentricity">The eccentricity, finite and non-negative, |e − 1| ≥ 1e-6.</param>
+        /// <param name="inclination">The inclination, rad, in [−π, π].</param>
+        /// <param name="ascendingNode">The right ascension of the ascending node, rad (<c>rigthAscendingNode</c> before
+        /// 11.0.0).</param>
+        /// <param name="argumentOfPeriapsis">The argument of periapsis, rad.</param>
+        /// <param name="meanAnomaly">The mean anomaly, rad.</param>
+        /// <param name="observer">The centre of motion.</param>
+        /// <param name="epoch">The epoch.</param>
+        /// <param name="frame">The frame of the elements.</param>
+        /// <param name="elementsType">Type of orbital elements (osculating or mean). Defaults to osculating.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="eccentricity"/> is not finite or is negative
+        /// (#476).</exception>
+        /// <exception cref="ArgumentException">An element is not finite (#726); the orbit is within 1e-6 of e = 1
+        /// (<paramref name="eccentricity"/>: use <see cref="Parabolic"/>); a semi-major axis of the wrong sign, a
+        /// (1 − e) ≤ 0 (a ≤ 0 for e &lt; 1, a ≥ 0 for e &gt; 1, <paramref name="semiMajorAxis"/>, #738; before 11.0.0,
+        /// accepted with a NaN velocity); or <paramref name="inclination"/> is outside [−π, π]. The exception names the
+        /// parameter.</exception>
+        public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis,
+            double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, OrbitalElementsType elementsType = OrbitalElementsType.Osculating)
+            : this(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, null, null,
+                null, elementsType)
+        {
+        }
+
+        /// <summary>
+        /// The elements of a conic with the values the library has already computed for it, held as they are: the true
+        /// anomaly, the period and the perigee radius (the library's own sets, its conversions and its two-body motion,
+        /// bit for bit; #668, R23 made it internal). Within 1e-6 of e = 1 the perigee radius is required.
         /// </summary>
         /// <param name="semiMajorAxis">The semi-major axis, m: within 1e-6 of e = 1 that of the conic of the perigee radius,
         /// q / (1 − e) to rounding (|q/a − (1 − e)| ≤ 6 ε (1 + e)), +Infinity at e = 1 exactly (#459).</param>
-        /// <param name="eccentricity"></param>
-        /// <param name="inclination"></param>
-        /// <param name="rigthAscendingNode"></param>
-        /// <param name="argumentOfPeriapsis"></param>
-        /// <param name="meanAnomaly"></param>
-        /// <param name="observer"></param>
-        /// <param name="epoch"></param>
-        /// <param name="frame"></param>
-        /// <param name="trueAnomaly"></param>
-        /// <param name="period">The period of an ellipse, when known; <see cref="OrbitalParameters.Period"/> throws for an open
-        /// orbit whatever is given (#663).</param>
-        /// <param name="perigeeRadius">The perigee radius, m: required within 1e-6 of e = 1 (a parabola, whose
-        /// <paramref name="semiMajorAxis"/> is +Infinity), finite and above 0 when given.</param>
-        /// <param name="elementsType">Type of orbital elements (osculating or mean). Defaults to osculating.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="eccentricity"/> is not finite or is negative (#476),
-        /// or <paramref name="perigeeRadius"/> is given and not finite and above 0 (#726).</exception>
-        /// <exception cref="ArgumentException">An element is not finite (#726): <paramref name="semiMajorAxis"/> may be
-        /// +Infinity only within 1e-6 of e = 1 given the perigee radius; or an orbit within 1e-6 of e = 1 has no perigee
-        /// radius (<paramref name="perigeeRadius"/>), or a semi-major axis that is not the conic's of its perigee radius,
-        /// finite at e = 1 exactly or +Infinity beyond a few ulps of it (<paramref name="semiMajorAxis"/>, #459);
-        /// or, outside that band, a semi-major axis of the wrong sign, a (1 − e) ≤ 0 (a ≤ 0 for e &lt; 1, a ≥ 0 for e &gt; 1,
-        /// <paramref name="semiMajorAxis"/>, #738; before 11.0.0, accepted with a NaN velocity);
-        /// or <paramref name="inclination"/> is outside [−π, π]. The exception names the parameter.</exception>
-        public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
-            ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null,
-            OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer, epoch, frame, elementsType)
+        /// <param name="eccentricity">The eccentricity.</param>
+        /// <param name="inclination">The inclination, rad.</param>
+        /// <param name="ascendingNode">The right ascension of the ascending node, rad.</param>
+        /// <param name="argumentOfPeriapsis">The argument of periapsis, rad.</param>
+        /// <param name="meanAnomaly">The mean anomaly, rad.</param>
+        /// <param name="observer">The centre of motion.</param>
+        /// <param name="epoch">The epoch.</param>
+        /// <param name="frame">The frame.</param>
+        /// <param name="trueAnomaly">The true anomaly of the mean anomaly, or null.</param>
+        /// <param name="period">The period of an ellipse, or null; <see cref="OrbitalParameters.Period"/> throws for an
+        /// open orbit whatever is given (#663).</param>
+        /// <param name="perigeeRadius">The perigee radius, m, or null: required within 1e-6 of e = 1, finite and above 0
+        /// when given.</param>
+        /// <param name="elementsType">Type of orbital elements.</param>
+        internal KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis,
+            double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly, TimeSpan? period, double? perigeeRadius,
+            OrbitalElementsType elementsType) : base(observer, epoch, frame, elementsType)
         {
             RequireEccentricity(eccentricity);
             bool parabolic = System.Math.Abs(eccentricity - 1.0) < 1E-06;
@@ -109,7 +134,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
 
             RequireInclination(inclination, nameof(inclination));
-            RequireFinite(rigthAscendingNode, nameof(rigthAscendingNode));
+            RequireFinite(ascendingNode, nameof(ascendingNode));
             RequireFinite(argumentOfPeriapsis, nameof(argumentOfPeriapsis));
             RequireFinite(meanAnomaly, nameof(meanAnomaly));
             if (trueAnomaly.HasValue)
@@ -122,10 +147,13 @@ namespace IO.Astrodynamics.OrbitalParameters
                 throw new ArgumentOutOfRangeException(nameof(perigeeRadius), q, "The perigee radius must be finite and above 0.");
             }
 
-            // Within 1e-6 of e = 1 the anomalies are Barker's, read from the perigee radius: it is required (#368)
+            // Within 1e-6 of e = 1 the anomalies are Barker's, read from the perigee radius: it is required (#368), and only
+            // Parabolic and the library give it (#668, R23)
             if (parabolic && perigeeRadius is null)
             {
-                throw new ArgumentException("Within 1e-6 of e = 1 the perigee radius is required.", nameof(perigeeRadius));
+                throw new ArgumentException(
+                    $"Within 1e-6 of e = 1 an orbit is defined by its perigee radius: use KeplerianElements.Parabolic (e = {eccentricity:R}).",
+                    nameof(eccentricity));
             }
 
             // ... with the semi-major axis of the same conic, a (1 − e) = q, either side of e = 1 (#459; before, +Infinity
@@ -145,7 +173,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             A = semiMajorAxis;
             E = eccentricity;
             I = inclination;
-            RAAN = SpecialFunctions.NormalizeAngle(rigthAscendingNode);
+            RAAN = SpecialFunctions.NormalizeAngle(ascendingNode);
             AOP = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
 
             // An angle on an ellipse; on an open orbit it grows without bound, negative before the periapsis (#368)
@@ -257,6 +285,82 @@ namespace IO.Astrodynamics.OrbitalParameters
                 frame,
                 OrbitalElementsType.Mean,
                 nameof(inclination), nameof(raan), nameof(argumentOfPeriapsis), nameof(meanAnomaly));
+        }
+
+        /// <summary>
+        /// The Keplerian elements whose true anomaly is <paramref name="trueAnomaly"/> (#668, R23): the mean anomaly is
+        /// M(ν) of the closed-form eccentric anomaly (<see cref="OrbitalParameters.TrueAnomalyToMeanAnomaly"/>), and
+        /// <see cref="OrbitalParameters.TrueAnomaly()"/> returns ν as given. The conic is one of the constructor, outside
+        /// the near-parabolic band.
+        /// </summary>
+        /// <param name="semiMajorAxis">The semi-major axis, m: above 0 for an ellipse, below 0 for a hyperbola.</param>
+        /// <param name="eccentricity">The eccentricity, finite and non-negative, |e − 1| ≥ 1e-6.</param>
+        /// <param name="inclination">The inclination, rad, in [−π, π].</param>
+        /// <param name="ascendingNode">The right ascension of the ascending node, rad.</param>
+        /// <param name="argumentOfPeriapsis">The argument of periapsis, rad.</param>
+        /// <param name="trueAnomaly">The true anomaly, rad: inside the asymptotes of a hyperbola,
+        /// |ν| &lt; arccos(−1/e).</param>
+        /// <param name="observer">The centre of motion.</param>
+        /// <param name="epoch">The epoch.</param>
+        /// <param name="frame">The frame of the elements.</param>
+        /// <returns>Osculating Keplerian elements.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="eccentricity"/> is not finite or is negative, or
+        /// <paramref name="trueAnomaly"/> of a hyperbola is on or beyond its asymptotes.</exception>
+        /// <exception cref="ArgumentException">An element is not finite, the orbit is within 1e-6 of e = 1, or the conic is
+        /// not one (the constructor's rules); the exception names the parameter.</exception>
+        public static KeplerianElements FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode,
+            double argumentOfPeriapsis, double trueAnomaly, ILocalizable observer, Time epoch, Frame frame)
+        {
+            RequireFinite(trueAnomaly, nameof(trueAnomaly));
+            var shape = new KeplerianElements(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, 0.0, observer, epoch,
+                frame);
+            double meanAnomaly = TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity, shape.EccentricAnomaly(trueAnomaly));
+            if (!double.IsFinite(meanAnomaly))
+            {
+                throw new ArgumentOutOfRangeException(nameof(trueAnomaly), trueAnomaly,
+                    $"The true anomaly is on or beyond the asymptotes of the hyperbola, |ν| ≥ arccos(−1/e) (e = {eccentricity:R}).");
+            }
+
+            return new KeplerianElements(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer,
+                epoch, frame, trueAnomaly, null, null, OrbitalElementsType.Osculating);
+        }
+
+        /// <summary>
+        /// The Keplerian elements of a parabola, or of an orbit within 1e-6 of e = 1, from its perigee radius (#668, R23:
+        /// the <c>perigeeRadius</c> parameter of the constructor before 11.0.0): the semi-major axis is that of the conic,
+        /// q / (1 − e), +Infinity at e = 1, and the anomaly Barker's mean anomaly (#368, #459).
+        /// </summary>
+        /// <param name="perigeeRadius">The perigee radius q, m, finite and above 0.</param>
+        /// <param name="inclination">The inclination, rad, in [−π, π].</param>
+        /// <param name="ascendingNode">The right ascension of the ascending node, rad.</param>
+        /// <param name="argumentOfPeriapsis">The argument of periapsis, rad.</param>
+        /// <param name="meanAnomaly">Barker's mean anomaly, rad.</param>
+        /// <param name="observer">The centre of motion.</param>
+        /// <param name="epoch">The epoch.</param>
+        /// <param name="frame">The frame of the elements.</param>
+        /// <param name="eccentricity">The eccentricity, within 1e-6 of 1 (|e − 1| &lt; 1e-6); 1 by default.</param>
+        /// <returns>Osculating Keplerian elements.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="perigeeRadius"/> is not finite and above 0, or
+        /// <paramref name="eccentricity"/> is not within 1e-6 of 1.</exception>
+        /// <exception cref="ArgumentException">An angle is not finite, or <paramref name="inclination"/> is outside
+        /// [−π, π]; the exception names the parameter.</exception>
+        public static KeplerianElements Parabolic(double perigeeRadius, double inclination, double ascendingNode, double argumentOfPeriapsis,
+            double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, double eccentricity = 1.0)
+        {
+            if (!(System.Math.Abs(eccentricity - 1.0) < 1E-06))
+            {
+                throw new ArgumentOutOfRangeException(nameof(eccentricity), eccentricity,
+                    "A parabola of the band has an eccentricity within 1e-6 of 1; use the constructor outside it.");
+            }
+
+            if (!(double.IsFinite(perigeeRadius) && perigeeRadius > 0.0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(perigeeRadius), perigeeRadius, "The perigee radius must be finite and above 0.");
+            }
+
+            double semiMajorAxis = eccentricity == 1.0 ? double.PositiveInfinity : perigeeRadius / (1.0 - eccentricity);
+            return new KeplerianElements(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer,
+                epoch, frame, null, null, perigeeRadius, OrbitalElementsType.Osculating);
         }
 
         /// <summary>

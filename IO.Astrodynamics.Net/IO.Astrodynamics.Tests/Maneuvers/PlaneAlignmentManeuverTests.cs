@@ -22,8 +22,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
 
-            var targetOrbit = new KeplerianElements(double.PositiveInfinity, 1.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun,
-                new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), Frames.Frame.ECLIPTIC_J2000, perigeeRadius: 6800000.0);
+            var targetOrbit = KeplerianElements.Parabolic(6800000.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun,
+                new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), Frames.Frame.ECLIPTIC_J2000);
 
             PlaneAlignmentManeuver planeAlignmentManeuver =
                 new PlaneAlignmentManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), TimeSpan.FromDays(1.0), targetOrbit, eng);

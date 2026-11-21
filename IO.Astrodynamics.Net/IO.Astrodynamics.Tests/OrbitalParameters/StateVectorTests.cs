@@ -373,10 +373,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ToParabolicKeplerian()
         {
-            KeplerianElements ke = new KeplerianElements(Double.PositiveInfinity, 1.0, 10.0 * IO.Astrodynamics.Constants.Deg2Rad,
+            KeplerianElements ke = KeplerianElements.Parabolic(6800000.0, 10.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 20.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 30.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
-                Frames.Frame.ICRF, perigeeRadius: 6800000.0);
+                Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var svref = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke);
             var res = sv.ToKeplerianElements();
@@ -432,8 +432,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToKeplerian()
         {
-            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-                perigeeRadius: 6800000.0);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
 
@@ -464,8 +463,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToEquinoctial()
         {
-            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-                perigeeRadius: 6800000.0);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var eq = sv.ToEquinoctial();
 
@@ -496,8 +494,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToKeplerianUpdatePV()
         {
-            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-                perigeeRadius: 6800000.0);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
 

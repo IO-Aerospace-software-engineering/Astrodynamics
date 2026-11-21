@@ -892,7 +892,6 @@ N1.underscore	IO.Astrodynamics.TimeSystem.Time.SECONDS_PER_DAY
 N1.underscore	namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 N3.deny	IO.Astrodynamics.Body.CelestialBody.SideralRotationPeriod(Time)
 N3.deny	IO.Astrodynamics.DictionnaryExtension
-N3.deny	IO.Astrodynamics.OrbitalParameters.KeplerianElements.ctor(double, double, double, double, double, double, ILocalizable, Time, Frame, double?, TimeSpan?, double?, OrbitalElementsType):rigthAscendingNode
 N3.deny	IO.Astrodynamics.OrbitalParameters.TLE.TLE.FirstDerivationMeanMotion
 N3.deny	IO.Astrodynamics.Physics.Tsiolkovski
 N3.deny	IO.Astrodynamics.RelationnalOperator

@@ -38,8 +38,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc1.AddPayload(pl1);
             spc1.AddEngine(eng);
 
-            var targetOrbit = new KeplerianElements(double.PositiveInfinity, 1.0, 0.0, 0.0, 0.0, 0.0, sun, new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB),
-                Frames.Frame.ECLIPTIC_J2000, perigeeRadius: 6800000.0);
+            var targetOrbit = KeplerianElements.Parabolic(6800000.0, 0.0, 0.0, 0.0, 0.0, sun, new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB),
+                Frames.Frame.ECLIPTIC_J2000);
 
             ApsidalAlignmentManeuver maneuver = new ApsidalAlignmentManeuver(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), TimeSpan.FromDays(1.0), targetOrbit, spc1.Engines.First());
             Assert.NotNull(maneuver.Engine);

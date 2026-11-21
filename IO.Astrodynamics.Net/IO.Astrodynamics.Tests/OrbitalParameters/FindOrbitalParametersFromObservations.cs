@@ -38,7 +38,7 @@ public class InitialOrbitDeterminationTests
                 semiMajorAxis: 42164000.0, // m
                 eccentricity: 0.0,
                 inclination: 15.0 * Constants.DEG_RAD,
-                rigthAscendingNode: 45.0 * Constants.DEG_RAD,
+                ascendingNode: 45.0 * Constants.DEG_RAD,
                 argumentOfPeriapsis: 0.0,
                 meanAnomaly: 45.0 * Constants.DEG_RAD, // Décalage de 45 degrés
                 observer: TestHelpers.EarthAtJ2000,

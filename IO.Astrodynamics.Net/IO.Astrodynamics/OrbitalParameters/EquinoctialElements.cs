@@ -23,19 +23,44 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="observer">The observer.</param>
         /// <param name="epoch">The epoch.</param>
         /// <param name="frame">The reference frame.</param>
-        /// <param name="perigeeRadius">The perigee radius (optional): for a parabolic orbit (|e − 1| &lt; 1e-6) the state of
-        /// a non-finite P; without it, a finite P gives q = P / (1 + e) (#477).</param>
+        /// <param name="perigeeRadius">The perigee radius, only for a parabola of a non-finite P (|e − 1| &lt; 1e-6), whose
+        /// state needs it; a finite P gives q = P / (1 + e) (#477), and a perigee radius given with it throws (#668,
+        /// R23: before 11.0.0 it was stored unchecked, so that <see cref="OrbitalParameters.PerigeeRadius"/> returned it
+        /// whatever P).</param>
         /// <param name="elementsType">The type of orbital elements (osculating or mean). Defaults to osculating.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="p"/> is not finite and above 0, which no conic
         /// has (p = h²/μ), a non-finite P being accepted only for a parabola (|e − 1| &lt; 1e-6), whose state then needs
         /// <paramref name="perigeeRadius"/> (#481); or <paramref name="perigeeRadius"/> is given and not finite and above 0
         /// (#481).</exception>
         /// <exception cref="ArgumentException"><paramref name="f"/>, <paramref name="g"/>, <paramref name="h"/>,
-        /// <paramref name="k"/> or <paramref name="l0"/> is not finite, or √(F² + G²) overflows (#726). The exception
-        /// names the parameter.</exception>
+        /// <paramref name="k"/> or <paramref name="l0"/> is not finite, or √(F² + G²) overflows (#726); or
+        /// <paramref name="perigeeRadius"/> is given with a finite <paramref name="p"/> (#668, R23). The exception names
+        /// the parameter.</exception>
         public EquinoctialElements(double p, double f, double g, double h, double k, double l0, ILocalizable observer, Time epoch, Frame frame,
-            double? perigeeRadius = null, OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer,
-            epoch, frame, elementsType)
+            double? perigeeRadius = null, OrbitalElementsType elementsType = OrbitalElementsType.Osculating)
+            : this(p, f, g, h, k, l0, observer, epoch, frame, perigeeRadius, elementsType, false)
+        {
+        }
+
+        /// <summary>
+        /// The elements with the perigee radius the library has already computed for them, held as given whatever P (the
+        /// library's own conversions, bit for bit; #668, R23 made it internal).
+        /// </summary>
+        /// <param name="p">The semiparameter.</param>
+        /// <param name="f">The equinoctial parameter f.</param>
+        /// <param name="g">The equinoctial parameter g.</param>
+        /// <param name="h">The equinoctial parameter h.</param>
+        /// <param name="k">The equinoctial parameter k.</param>
+        /// <param name="l0">The true longitude.</param>
+        /// <param name="observer">The observer.</param>
+        /// <param name="epoch">The epoch.</param>
+        /// <param name="frame">The reference frame.</param>
+        /// <param name="perigeeRadius">The perigee radius of the same conic, or null.</param>
+        /// <param name="elementsType">The type of orbital elements.</param>
+        /// <param name="computedPerigeeRadius">True when <paramref name="perigeeRadius"/> is the library's own, accepted
+        /// with a finite P.</param>
+        internal EquinoctialElements(double p, double f, double g, double h, double k, double l0, ILocalizable observer, Time epoch, Frame frame,
+            double? perigeeRadius, OrbitalElementsType elementsType, bool computedPerigeeRadius) : base(observer, epoch, frame, elementsType)
         {
             // No conic has a non-finite element (#726), nor p ≤ 0 or q ≤ 0 (#481); SPICE CONICS rejects rp ≤ 0 and EQNCPV
             // a ≤ 0. The checks compute nothing that valid elements use
@@ -62,6 +87,14 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (perigeeRadius is { } q && !(double.IsFinite(q) && q > 0.0))
             {
                 throw new ArgumentOutOfRangeException(nameof(perigeeRadius), q, "The perigee radius must be finite and above 0.");
+            }
+
+            // A finite P fixes q = P / (1 + e): a perigee radius beside it is one value too many (#668, R23)
+            if (perigeeRadius.HasValue && double.IsFinite(p) && !computedPerigeeRadius)
+            {
+                throw new ArgumentException(
+                    $"A perigee radius is given only for a parabola of a non-finite P; P = {p:R} m fixes q = P / (1 + e).",
+                    nameof(perigeeRadius));
             }
 
             P = p;
@@ -396,7 +429,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         public override KeplerianElements ToKeplerianElements()
         {
             return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), MeanAnomaly(), Observer, Epoch, Frame,
-                perigeeRadius: _perigeeRadius, elementsType: ElementsType);
+                null, null, _perigeeRadius, ElementsType);
         }
 
         #region Operators

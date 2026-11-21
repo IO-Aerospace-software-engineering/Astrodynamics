@@ -62,8 +62,8 @@ public class ConicStateTests
     private void Measure(string what, double value) => _output.WriteLine($"MEASURE #472 {what}: {value:E3}");
 
     private KeplerianElements Elements(ReferenceCase c) =>
-        new(c.A, c.E, Reference.Value.I, Reference.Value.Node, Reference.Value.Argument, 0.0, _earth, Epoch,
-            Frames.Frame.ICRF, trueAnomaly: c.Nu);
+        KeplerianElements.FromTrueAnomaly(c.A, c.E, Reference.Value.I, Reference.Value.Node, Reference.Value.Argument, c.Nu, _earth,
+            Epoch, Frames.Frame.ICRF);
 
     [Fact]
     public void SemiLatusRectum_NearEOne_IsTheConics()
@@ -152,7 +152,7 @@ public class ConicStateTests
                 continue;
             }
 
-            var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF, trueAnomaly: nu);
+            var ke = KeplerianElements.FromTrueAnomaly(a, e, 0.2, 0.3, 0.4, nu, _earth, Epoch, Frames.Frame.ICRF);
 
             // Act
             var state = ke.ToStateVector();
