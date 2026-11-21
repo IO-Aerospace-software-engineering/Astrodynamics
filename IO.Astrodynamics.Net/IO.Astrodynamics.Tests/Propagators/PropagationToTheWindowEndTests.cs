@@ -55,7 +55,7 @@ public class PropagationToTheWindowEndTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
     private static StateVector Orbit(string central, Time start)
     {
@@ -196,7 +196,7 @@ public class PropagationToTheWindowEndTests
     public void UtcWindow_StatesRunToTheWindowEnd()
     {
         // Arrange
-        var start = new Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.UTCFrame);
+        var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.UTC);
         var initial = Orbit("Earth", start);
         var spacecraft = NewSpacecraft(-7431, initial);
         var window = new Window(start, start.AddSeconds(3610.0));

@@ -74,15 +74,15 @@ public class OccultationSearchValidationTests
 
     private static readonly Frames.Frame IauEarth = new("IAU_EARTH");
 
-    private static Window Eclipse001Window => new(new TimeSystem.Time("2026-03-20T00:00:00.0000000 TDB"), new TimeSystem.Time("2026-03-20T12:00:00.0000000 TDB"));
+    private static Window Eclipse001Window => new(TimeSystem.Time.Parse("2026-03-20T00:00:00.0000000 TDB"), TimeSystem.Time.Parse("2026-03-20T12:00:00.0000000 TDB"));
 
-    private static Window GeoSeasonWindow => new(new TimeSystem.Time("2026-02-20T00:00:00.0000000 TDB"), new TimeSystem.Time("2026-03-08T00:00:00.0000000 TDB"));
+    private static Window GeoSeasonWindow => new(TimeSystem.Time.Parse("2026-02-20T00:00:00.0000000 TDB"), TimeSystem.Time.Parse("2026-03-08T00:00:00.0000000 TDB"));
 
-    private static Window LeoGrazingWindow => new(new TimeSystem.Time("2026-06-10T00:00:00.0000000 TDB"), new TimeSystem.Time("2026-06-11T00:00:00.0000000 TDB"));
+    private static Window LeoGrazingWindow => new(TimeSystem.Time.Parse("2026-06-10T00:00:00.0000000 TDB"), TimeSystem.Time.Parse("2026-06-11T00:00:00.0000000 TDB"));
 
-    private static Window LroWindow => new(new TimeSystem.Time(2023, 12, 15, 0, 5, 0, frame: TimeFrame.UTCFrame), new TimeSystem.Time(2023, 12, 15, 12, 0, 0, frame: TimeFrame.UTCFrame));
+    private static Window LroWindow => new(new TimeSystem.Time(2023, 12, 15, 0, 5, 0, TimeScale.UTC), new TimeSystem.Time(2023, 12, 15, 12, 0, 0, TimeScale.UTC));
 
-    private static Window Eclipse2005Window => new(new TimeSystem.Time("2005-10-03 00:00:00"), new TimeSystem.Time("2005-10-04 00:00:00"));
+    private static Window Eclipse2005Window => new(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB));
 
     private static Window Eclipse2001Window => new(TimeSystem.Time.CreateTDB(61473664.183390938), TimeSystem.Time.CreateTDB(61646464.183445148));
 
@@ -269,10 +269,10 @@ public class OccultationSearchValidationTests
     // The decided golden of eclipse 001: GMAT R2026a's EclipseLocator, run "icrf" of the study of conformance-tests (two-body,
     // GMAT's Earth GM 398600.4415 km^3/s^2, pck00011 ellipsoid in IAU_EARTH, geometric), epochs printed to the millisecond in
     // UTC, durations to 1e-7 s
-    private static readonly TimeSystem.Time GmatPenumbraEntry = new("2026-03-20T00:18:37.494Z");
-    private static readonly TimeSystem.Time GmatUmbraEntry = new("2026-03-20T00:18:46.864Z");
-    private static readonly TimeSystem.Time GmatUmbraExit = new("2026-03-20T00:53:10.862Z");
-    private static readonly TimeSystem.Time GmatPenumbraExit = new("2026-03-20T00:53:20.204Z");
+    private static readonly TimeSystem.Time GmatPenumbraEntry = TimeSystem.Time.Parse("2026-03-20T00:18:37.494Z");
+    private static readonly TimeSystem.Time GmatUmbraEntry = TimeSystem.Time.Parse("2026-03-20T00:18:46.864Z");
+    private static readonly TimeSystem.Time GmatUmbraExit = TimeSystem.Time.Parse("2026-03-20T00:53:10.862Z");
+    private static readonly TimeSystem.Time GmatPenumbraExit = TimeSystem.Time.Parse("2026-03-20T00:53:20.204Z");
     private const double GmatPenumbraDuration = 18.7118606991;
     private const double GmatUmbraDuration = 2063.9981917;
 

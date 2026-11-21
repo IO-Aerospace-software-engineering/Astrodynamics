@@ -396,25 +396,27 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         IO.Astrodynamics.OrbitalParameters.StateVector state, double[] rotation)
     {
         var p0 = state.Covariance!.Value;
-        var b = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var bTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                b.Set(i, j, rotation[3 * i + j]);
-                b.Set(3 + i, 3 + j, rotation[3 * i + j]);
+                bTerms[i, j] = rotation[3 * i + j];
+                bTerms[3 + i, 3 + j] = rotation[3 * i + j];
             }
         }
+        var b = new IO.Astrodynamics.Math.Matrix(bTerms);
 
         var rotated = b * p0 * b.Transpose();
-        var symmetric = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var symmetricTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                symmetric.Set(i, j, 0.5 * (rotated.Get(i, j) + rotated.Get(j, i)));
+                symmetricTerms[i, j] = 0.5 * (rotated.Get(i, j) + rotated.Get(j, i));
             }
         }
+        var symmetric = new IO.Astrodynamics.Math.Matrix(symmetricTerms);
 
         return new IO.Astrodynamics.OrbitalParameters.StateVector(state.Position, state.Velocity, state.Observer,
             state.Epoch, state.Frame, symmetric);

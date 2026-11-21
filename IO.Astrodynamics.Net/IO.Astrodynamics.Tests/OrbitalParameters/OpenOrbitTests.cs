@@ -75,8 +75,8 @@ public class OpenOrbitTests
     public void Parabola_FollowsBarkersEquation(double m)
     {
         // Arrange
-        var elements = new KeplerianElements(double.PositiveInfinity, 1.0, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, perigeeRadius: PeriapsisRadius);
+        var elements = KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var laterEpoch = TimeSystem.Time.J2000TDB.AddSeconds(3600.0);
         double dt = Elapsed(laterEpoch);
 
@@ -107,8 +107,8 @@ public class OpenOrbitTests
     public void Parabola_ElementsMatchSpice(double m)
     {
         // Arrange
-        var elements = new KeplerianElements(double.PositiveInfinity, 1.0, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, perigeeRadius: PeriapsisRadius);
+        var elements = KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var state = elements.ToStateVector();
 
         // Act: before #373, the conversion threw, SPICE giving no semi-major axis to a parabola
@@ -154,8 +154,8 @@ public class OpenOrbitTests
     {
         // Arrange
         var elements = e == 1.0
-            ? new KeplerianElements(double.PositiveInfinity, 1.0, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, perigeeRadius: PeriapsisRadius)
+            ? KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF)
             : new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
 

@@ -54,8 +54,8 @@ public class GmatCasesFileTests : IClassFixture<ReferenceCases>
     public void Epoch_OnTheMillisecondGridOfGmat()
     {
         // Arrange
-        var onTheGrid = new TimeSystem.Time(2021, 3, 20, 12, 0, 0, 1, frame: TimeSystem.TimeFrame.TDBFrame);
-        var offTheGrid = new TimeSystem.Time(2021, 3, 20, 12, 0, 0, 1, 500, TimeSystem.TimeFrame.TDBFrame);
+        var onTheGrid = new TimeSystem.Time(2021, 3, 20, 12, 0, 0, 1, TimeSystem.TimeScale.TDB);
+        var offTheGrid = new TimeSystem.Time(2021, 3, 20, 12, 0, 0, 1, 500, TimeSystem.TimeScale.TDB);
 
         // Act and assert
         Assert.Equal("2021-03-20T12:00:00.001", GmatCases.TdbEpoch(onTheGrid));

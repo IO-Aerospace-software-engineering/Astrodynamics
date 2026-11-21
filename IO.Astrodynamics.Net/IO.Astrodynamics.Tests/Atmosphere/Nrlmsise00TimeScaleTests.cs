@@ -1,3 +1,4 @@
+using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using Xunit;
@@ -12,7 +13,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere;
 public class Nrlmsise00TimeScaleTests
 {
     // The epoch of the reference cases of phase 2 (TDB), and a geodetic point at 400 km
-    private static readonly TimeSystem.Time TdbEpoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time TdbEpoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private const double Altitude = 400e3;
     private const double Latitude = 0.7;
     private const double Longitude = -1.2;
@@ -71,7 +72,7 @@ public class Nrlmsise00TimeScaleTests
     {
         // Arrange: what the model gave before #409, the TDB calendar taken as UT, 69.2 s later than the instant
         var model = new Nrlmsise00Model(SpaceWeather.Nominal);
-        var tdbCalendarAsUtc = new TimeSystem.Time(TdbEpoch.DateTime, TimeSystem.TimeFrame.UTCFrame);
+        var tdbCalendarAsUtc = new TimeSystem.Time(TdbEpoch.DateTime, TimeSystem.TimeScale.UTC);
         double worst = 0.0;
 
         // Act: over the latitudes and local times of a LEO orbit

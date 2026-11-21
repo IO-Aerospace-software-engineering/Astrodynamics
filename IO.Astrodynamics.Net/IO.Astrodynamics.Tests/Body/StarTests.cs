@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -132,7 +132,7 @@ public class StarTests
     public void GetEquatorialCoordinates()
     {
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
-        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeFrame.TDBFrame);
+        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
         var res = star.GetEquatorialCoordinates(at);
         // The straight line written here (#718), at dt = 366/365.25 yr: before, the linear angles 1.4418429380022246 and
         // 6.160711018912988 rad (the declination 10 + 4 dt reduced across the poles) at the catalog distance
@@ -165,9 +165,9 @@ public class StarTests
     public void GetEquatorialCoordinates2()
     {
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792,
-            new Equatorial(10 - (Astrodynamics.Constants.PI2 * 10), 20 - (Astrodynamics.Constants._2PI * 10), TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8,
+            new Equatorial(10 - (Astrodynamics.Constants.HalfPi * 10), 20 - (Astrodynamics.Constants.TwoPi * 10), TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8,
             9, TimeSystem.Time.J2000TDB);
-        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeFrame.TDBFrame);
+        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
         var res = star.GetEquatorialCoordinates(at);
         // The straight line (#718) from catalog angles outside [−π/2, π/2] and [0, 2π): u0, e_α and e_δ of their sines and
         // cosines; before, the linear angles, the declination 10 - 5π + 4 dt = -1.69974 rad crossing the south pole
@@ -180,7 +180,7 @@ public class StarTests
     public void GetDeclinationSigma()
     {
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
-        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeFrame.TDBFrame);
+        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
         var res = star.GetDeclinationSigma(at);
         // The closed form √(6² + (8 dt)²), 10.0131 rad, not reduced (#709; before, modulo π/2: 0.58837 rad)
         double expected = ClosedFormSigma(6, 8, star, at);
@@ -194,7 +194,7 @@ public class StarTests
     public void GetRightAscensionSigma()
     {
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
-        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeFrame.TDBFrame);
+        var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
         var res = star.GetRightAscensionSigma(at);
         // The closed form √(7² + (9 dt)²), 11.4163 rad, not reduced (#709; before, modulo 2π: 5.13316 rad)
         double expected = ClosedFormSigma(7, 9, star, at);
@@ -206,7 +206,7 @@ public class StarTests
     [Fact]
     public async Task Propagate()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeScale.TDB);
         var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
         await star.PropagateAsync(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
@@ -234,7 +234,7 @@ public class StarTests
     {
         // Arrange: before, the loop epoch += step never passed the end of the window (a negative step also stored a state
         // at each turn, without bound)
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var star = NewStar(668001, epoch);
         var window = new Window(epoch, epoch.AddHours(1.0));
 
@@ -252,7 +252,7 @@ public class StarTests
     public void PropagateAsync_AStepOfZeroOrLess_ThrowsOnTheCall(long stepTicks)
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var star = NewStar(668002, epoch);
         var window = new Window(epoch, epoch.AddHours(1.0));
 
@@ -271,7 +271,7 @@ public class StarTests
     public async Task IsPropagated_IsTrueOnceTheStatesAreStored()
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var window = new Window(epoch, epoch.AddHours(1.0));
         var bySync = NewStar(668003, epoch);
         var byAsync = NewStar(668004, epoch);
@@ -406,17 +406,17 @@ public class StarTests
     {
         // Arrange: two propagations over different windows and steps; before, the second added its states to the first's
         // (TryAdd), so that the SPK of the star covered both windows and the gap between them
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var star = NewStar(668011, epoch);
         var first = new Window(epoch, epoch.AddDays(4.0));
-        var second = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 3));
+        var second = new Window(new TimeSystem.Time(2001, 3, 1, TimeScale.TDB), new TimeSystem.Time(2001, 3, 3, TimeScale.TDB));
 
         // Act
         star.Propagate(first, TimeSpan.FromDays(1.0));
         star.Propagate(second, TimeSpan.FromHours(12.0));
 
         // Assert: the second propagation's states alone, as Spacecraft.Propagate replaces its states
-        var replaced = Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1)).ToList();
+        var replaced = Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1, TimeScale.TDB)).ToList();
         var kept = Grid(second, TimeSpan.FromHours(12.0));
         double worst = CheckSpkHoldsOnly(star, kept, replaced, "StarTests.Propagate_Twice", _output);
         double bound = CatalogMotionInOneMicrosecond(star, kept);
@@ -428,9 +428,9 @@ public class StarTests
     public async Task PropagateAsync_AfterPropagate_ReplacesTheStates()
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var star = NewStar(668012, epoch);
-        var first = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 1, 6, 0, 0));
+        var first = new Window(new TimeSystem.Time(2001, 3, 1, TimeScale.TDB), new TimeSystem.Time(2001, 3, 1, 6, 0, 0, TimeScale.TDB));
         var second = new Window(epoch, epoch.AddDays(2.0));
 
         // Act: the later window first, then an earlier one at another step, through the asynchronous path
@@ -439,7 +439,7 @@ public class StarTests
 
         // Assert
         var kept = Grid(second, TimeSpan.FromHours(12.0));
-        double worst = CheckSpkHoldsOnly(star, kept, Grid(first, TimeSpan.FromHours(1.0)).Append(new TimeSystem.Time(2001, 2, 1)),
+        double worst = CheckSpkHoldsOnly(star, kept, Grid(first, TimeSpan.FromHours(1.0)).Append(new TimeSystem.Time(2001, 2, 1, TimeScale.TDB)),
             "StarTests.PropagateAsync_AfterPropagate", _output);
         double bound = CatalogMotionInOneMicrosecond(star, kept);
         Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
@@ -480,12 +480,12 @@ public class StarTests
     /// </summary>
     private static IEnumerable<(string Label, Star Star, double ProperMotion, List<TimeSystem.Time> Epochs)> OffHalfDayCases(Star fast, Star slow)
     {
-        var march = new TimeSystem.Time(2001, 3, 1);
+        var march = new TimeSystem.Time(2001, 3, 1, TimeScale.TDB);
         yield return ("hourly", fast, 0.1, Enumerable.Range(0, 744).Select(i => march + TimeSpan.FromHours(i)).ToList());
         yield return ("ticks", fast, 0.1, Enumerable.Range(1, 199).Select(i => march + TimeSpan.FromTicks(i * 1234567L)).ToList());
-        var june = new TimeSystem.Time(2000, 6, 1);
+        var june = new TimeSystem.Time(2000, 6, 1, TimeScale.TDB);
         yield return ("before", fast, 0.1, Enumerable.Range(1, 99).Select(i => june + TimeSpan.FromTicks(i * 7654321L)).ToList());
-        var later = new TimeSystem.Time(2041, 1, 1);
+        var later = new TimeSystem.Time(2041, 1, 1, TimeScale.TDB);
         yield return ("40 years", slow, 0.01, Enumerable.Range(1, 99).Select(i => later + TimeSpan.FromTicks(i * 1234567L)).ToList());
     }
 
@@ -503,7 +503,7 @@ public class StarTests
     public void GetEquatorialCoordinates_OffHalfDays_IsTheClosedForm()
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var fast = NewStar(668021, epoch);
         var slow = SlowStar(668022, epoch);
         double worstPosition = 0.0;
@@ -549,7 +549,7 @@ public class StarTests
     public void GetRightAscensionSigma_And_GetDeclinationSigma_OffHalfDays_AreTheClosedForm()
     {
         // Arrange: stars whose sigmas grow with their sigma proper motion, which dominates past a few hours
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var fast = new Star(668023, "star668023", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 1e-7, 2e-7, 1e-3, 2e-3, epoch);
         var slow = new Star(668024, "star668024", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.01, 0.01, 1e-7, 2e-7, 1e-3, 2e-3, epoch);
         double worstRightAscension = 0.0;
@@ -613,7 +613,7 @@ public class StarTests
     public void GetEquatorialCoordinates_OffHalfDays_IsLatrecOfTheClosedForm()
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var fast = NewStar(668025, epoch);
         var slow = SlowStar(668026, epoch);
         double worst = 0.0;
@@ -647,14 +647,14 @@ public class StarTests
     public void Propagate_Twice_TheSpkHoldsTheSecondGridAlone()
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var star = NewStar(668013, epoch);
         var first = new Window(epoch, epoch.AddDays(4.0));
-        var second = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 3));
+        var second = new Window(new TimeSystem.Time(2001, 3, 1, TimeScale.TDB), new TimeSystem.Time(2001, 3, 3, TimeScale.TDB));
         star.Propagate(first, TimeSpan.FromDays(1.0));
         star.Propagate(second, TimeSpan.FromHours(12.0));
         double worst = CheckSpkHoldsOnly(star, Grid(second, TimeSpan.FromHours(12.0)),
-            Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1)), "StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone",
+            Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1, TimeScale.TDB)), "StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone",
             _output);
         Assert.True(worst <= CatalogPositionTolerance, $"{worst:E3}");
         var directory = Directory.CreateTempSubdirectory("star668");
@@ -718,9 +718,9 @@ public class StarTests
     public void GetEquatorialCoordinates_TheSameInstantInEveryFrame_IsOnePosition()
     {
         // Arrange
-        var tdb = new TimeSystem.Time(2001, 3, 1, 6, 0, 0);
-        var catalogs = new[] { new TimeSystem.Time(2001, 1, 1), new TimeSystem.Time(new DateTime(2001, 1, 1, 0, 0, 0), TimeFrame.UTCFrame) };
-        var frames = new ITimeFrame[] { TimeFrame.TDBFrame, TimeFrame.TDTFrame, TimeFrame.TAIFrame, TimeFrame.GPSFrame, TimeFrame.UTCFrame };
+        var tdb = new TimeSystem.Time(2001, 3, 1, 6, 0, 0, TimeScale.TDB);
+        var catalogs = new[] { new TimeSystem.Time(2001, 1, 1, TimeScale.TDB), new TimeSystem.Time(new DateTime(2001, 1, 1, 0, 0, 0), TimeScale.UTC) };
+        var frames = new TimeScale[] { TimeScale.TDB, TimeScale.TT, TimeScale.TAI, TimeScale.GPS, TimeScale.UTC };
         double worst = 0.0;
         double bound = double.PositiveInfinity;
         int n = 0;
@@ -741,7 +741,7 @@ public class StarTests
                 Assert.Equal(ofTdb.Declination, coordinates.Declination);
                 Assert.Equal(ofTdb.RightAscension, coordinates.RightAscension);
                 double delta = (coordinates.ToCartesian() - reference.ToCartesian()).Magnitude() / reference.Distance;
-                _output.WriteLine($"MEASURE StarTests.TheSameInstantInEveryFrame (catalog {catalog.Frame.GetType().Name}, epoch {frame.GetType().Name}): relative position {delta:E3}");
+                _output.WriteLine($"MEASURE StarTests.TheSameInstantInEveryFrame (catalog {catalog.Scale.GetType().Name}, epoch {frame.GetType().Name}): relative position {delta:E3}");
                 worst = System.Math.Max(worst, delta);
                 bound = System.Math.Min(bound, CatalogMotionInOneMicrosecond(star, new[] { tdb }));
             }
@@ -761,12 +761,12 @@ public class StarTests
         // Arrange
         var catalogUtc = new DateTime(2016, 12, 31, 12, 0, 0);
         var epochUtc = new DateTime(2017, 1, 1, 12, 0, 0);
-        var star = NewStar(709011, new TimeSystem.Time(catalogUtc, TimeFrame.UTCFrame));
+        var star = NewStar(709011, new TimeSystem.Time(catalogUtc, TimeScale.UTC));
         double ttCatalog = (double)TtSecondsOfUtc(catalogUtc);
         double ttEpoch = (double)TtSecondsOfUtc(epochUtc);
         double seconds = (double)(TtSecondsOfUtc(epochUtc) - TtSecondsOfUtc(catalogUtc)) + (TdbMinusTt(ttEpoch) - TdbMinusTt(ttCatalog));
         Assert.Equal(86401.0, seconds, 3);
-        var at = new TimeSystem.Time(epochUtc, TimeFrame.UTCFrame);
+        var at = new TimeSystem.Time(epochUtc, TimeScale.UTC);
         var expected = StraightLinePosition(star, seconds / 86400.0 / 365.25);
 
         // Act
@@ -800,13 +800,13 @@ public class StarTests
         int n = 0;
         foreach (var (catalogUtc, start, end) in cases)
         {
-            var star = NewStar(709021 + n++, new TimeSystem.Time(catalogUtc, TimeFrame.UTCFrame));
+            var star = NewStar(709021 + n++, new TimeSystem.Time(catalogUtc, TimeScale.UTC));
             double etCatalog = CspiceDirect.TtToTdb((double)TtSecondsOfUtc(catalogUtc));
             double worstOfCase = 0.0;
             for (var utc = start; utc < end; utc = utc.AddMinutes(433.0))
             {
                 // Act
-                var coordinates = star.GetEquatorialCoordinates(new TimeSystem.Time(utc, TimeFrame.UTCFrame));
+                var coordinates = star.GetEquatorialCoordinates(new TimeSystem.Time(utc, TimeScale.UTC));
 
                 // Assert
                 double et = CspiceDirect.TtToTdb((double)TtSecondsOfUtc(utc));
@@ -878,7 +878,7 @@ public class StarTests
     public void GetEquatorialCoordinates_AcrossAPole_CrossesIt()
     {
         // Arrange
-        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var catalog = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         double worstPosition = 0.0;
         double worstStep = 0.0;
         foreach (var (label, star, years) in PoleCases(catalog))
@@ -932,15 +932,15 @@ public class StarTests
     public void GetEquatorialCoordinates_AtAPole_StaysThere(double sign)
     {
         // Arrange
-        var catalog = new TimeSystem.Time(2001, 1, 1);
-        var star = new Star(709041, "star709041", 1E+30, "spec", 2, 0.3792, new Equatorial(sign * Astrodynamics.Constants.PI2, 1.0, catalog), 0, 0, 0, 0, 0, 0,
+        var catalog = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
+        var star = new Star(709041, "star709041", 1E+30, "spec", 2, 0.3792, new Equatorial(sign * Astrodynamics.Constants.HalfPi, 1.0, catalog), 0, 0, 0, 0, 0, 0,
             catalog);
 
         // Act
         var coordinates = star.GetEquatorialCoordinates(catalog.AddDays(100.0));
 
         // Assert
-        Assert.Equal(sign * Astrodynamics.Constants.PI2, coordinates.Declination);
+        Assert.Equal(sign * Astrodynamics.Constants.HalfPi, coordinates.Declination);
         Assert.Equal(1.0, coordinates.RightAscension);
     }
 
@@ -955,7 +955,7 @@ public class StarTests
     public void GetEquatorialCoordinates_AcrossAPole_IsReclatOfLatrec()
     {
         // Arrange
-        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var catalog = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         double worst = 0.0;
         foreach (var (label, star, years) in PoleCases(catalog))
         {
@@ -997,7 +997,7 @@ public class StarTests
     public void Sigmas_AboveAnAngleRange_AreNotReduced()
     {
         // Arrange
-        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var catalog = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var star = new Star(709051, "star709051", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, catalog), 0, 0, 2.0, 7.0, 1e-3, 1e-3, catalog);
         var later = catalog + TimeSpan.FromDays(2000 * 365.25);
 
@@ -1045,7 +1045,7 @@ public class StarTests
     public void GetEquatorialCoordinates_RightAscensionJustBelowZero_IsInZeroTwoPi(double rightAscensionMotion)
     {
         // Arrange
-        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var catalog = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var star = new Star(709061, "star709061", 1E+30, "spec", 2, 0.3792, new Equatorial(0.5, 0.0, catalog), 0, rightAscensionMotion, 0, 0, 0, 0, catalog);
         var at = catalog + TimeSpan.FromDays(365.25);
         Assert.Equal(1m, JulianYearsFromCatalogEpoch(star, at));
@@ -1218,7 +1218,7 @@ public class StarTests
     /// The angle between two directions, atan2(|a × b|, a · b), which resolves an angle near zero to the rounding of its
     /// components; <see cref="Vector3.Angle"/>, the acos of the dot product, cannot (1.49e-8 rad at least).
     /// </summary>
-    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     // The records against iauStarpm, per horizon: twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at
     // the second digit: the direction 1.780e-17, 1.777e-17, 2.419e-14 and 2.412e-10 rad after 1, 10, 100 and 1000 years,
@@ -1384,7 +1384,7 @@ public class StarTests
     public void GetEquatorialCoordinates_WithoutProperMotion_IsTheCatalog_BitForBit()
     {
         // Arrange
-        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var catalog = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var still = new Star(718100, "star718100", 1E+30, "spec", 2, 0.3792, new Equatorial(1.2, 4.5, catalog), 0, 0, 0, 0, 0, 0, catalog);
         foreach (var at in new[] { catalog, catalog.AddDays(-1000.0), catalog.AddDays(0.5), catalog + TimeSpan.FromDays(365250.0) })
         {
@@ -1467,7 +1467,7 @@ public class StarTests
     public void RightAscensionProperMotion_IsTheTrueAngleRate(double declination)
     {
         // Arrange
-        var catalog = new TimeSystem.Time(2001, 1, 1);
+        var catalog = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         const double rightAscension = 2.0;
         const double motion = 1.0e-3;
         var star = new Star(718300, "star718300", 1E+30, "spec", 2, 0.3792, new Equatorial(declination, rightAscension, catalog), 0, motion, 0, 0, 0, 0,

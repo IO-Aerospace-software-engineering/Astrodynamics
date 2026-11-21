@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.Performance;
 [MediumRunJob]
 public class VVBenchmarks
 {
-    private static readonly Time LeoEpoch = new(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
+    private static readonly Time LeoEpoch = new(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
 
     private CelestialBody _earthLeo = null!;
     private CentralBodyPropagator _leoPropagator = null!;

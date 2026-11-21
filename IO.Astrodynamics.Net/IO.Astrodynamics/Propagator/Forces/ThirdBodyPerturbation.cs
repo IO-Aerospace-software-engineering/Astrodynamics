@@ -53,7 +53,7 @@ public class ThirdBodyPerturbation : ForceBase
         // Near the perturbing body, |r - d_j| < |d_j| / 2: the direct difference, whose 1/|r - d_j|^3 Battin's 1 + q would
         // give to about eps |d_j|^2 / |r - d_j|^2 only (#576, #544)
         var rho = r - dj;
-        double rhoMag2 = rho * rho;
+        double rhoMag2 = rho.Dot(rho);
         if (4.0 * rhoMag2 < djMag2)
         {
             double rhoMag = System.Math.Sqrt(rhoMag2);
@@ -63,7 +63,7 @@ public class ThirdBodyPerturbation : ForceBase
         // Battin's q parameter: q = r . (r - 2*d_j) / |d_j|^2
         // Note: |r - d_j|^2 = |d_j|^2 * (1 + q), so q encodes the geometry stably.
         var rMinus2Dj = r - dj * 2.0;
-        double q = (r * rMinus2Dj) / djMag2;
+        double q = r.Dot(rMinus2Dj) / djMag2;
 
         // Battin's f(q) stably computes (1+q)^(3/2) - 1
         double fq = BattinF(q);

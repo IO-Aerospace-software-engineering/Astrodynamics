@@ -114,7 +114,7 @@ public class Opm
     /// <c>ECLIPJ2000</c>, ...). <c>ICRF</c> and <c>GCRF</c> denote the ICRF axes and are both read back as
     /// <see cref="Frame.ICRF"/>; no frame bias is applied. Before 11.0.0 <c>J2000</c> was written for
     /// <see cref="Frame.ICRF"/>, which is not a CCSDS frame name.
-    /// The epoch is written in UTC under <c>TIME_SYSTEM = UTC</c>, whatever the time frame of the state's epoch (#479).
+    /// The epoch is written in UTC under <c>TIME_SYSTEM = UTC</c>, whatever the time scale of the state's epoch (#479).
     /// </remarks>
     public static Opm CreateFromStateVector(
         string objectName,
@@ -237,7 +237,7 @@ public class Opm
     public StateVector ToStateVector(ILocalizable observer = null)
     {
         // The epoch in the TIME_SYSTEM of the metadata (#485); a time system the framework does not convert throws
-        var timeFrame = CcsdsTimeSystemMapping.ToTimeFrame(Metadata.TimeSystemEnum, Metadata.TimeSystem);
+        var timeScale = CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem);
 
         // The centre CENTER_NAME names (#679): built when no observer is given, checked against the one given
         bool knownCenter = CcsdsCenterNames.TryGetNaifId(Metadata.CenterName, out var centerId);
@@ -250,7 +250,7 @@ public class Opm
                     "pass the observer.", nameof(observer));
             }
 
-            var epoch = new Time(Data.StateVector.Epoch, timeFrame);
+            var epoch = CcsdsTimeSystemMapping.ToTime(Data.StateVector.Epoch, timeScale);
             observer = centerId <= 9
                 ? new Barycenter(centerId, epoch)
                 : new CelestialBody(centerId, Frame.ICRF, epoch);
@@ -270,7 +270,7 @@ public class Opm
         // must handle frame transformation. Check CovarianceReferenceFrameConsistent property.
         Matrix? covariance = Data.Covariance?.ToMatrixWithUnitConversion();
 
-        return Data.StateVector.ToStateVector(observer, frame, covariance, timeFrame);
+        return Data.StateVector.ToStateVector(observer, frame, covariance, timeScale);
     }
 
     /// <summary>

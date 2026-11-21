@@ -1,3 +1,4 @@
+using IO.Astrodynamics.TimeSystem;
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
@@ -60,7 +61,7 @@ namespace IO.Astrodynamics.Tests.Math
             //Interpolate square function
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             StateVector[] data = new StateVector[10];
-            var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
+            var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0, TimeScale.TDB);
             for (int i = 0; i < 10; i++)
             {
                 data[i] = new StateVector(new Vector3(i * i, 0.0, 0.0), new Vector3(i * i, 0.0, 0.0), earth, start.AddSeconds(i), Frames.Frame.ICRF);
@@ -88,7 +89,7 @@ namespace IO.Astrodynamics.Tests.Math
             //Interpolate square function
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             StateVector[] data = new StateVector[10];
-            var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
+            var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0, TimeScale.TDB);
             for (int i = 0; i < 10; i++)
             {
                 data[i] = new StateVector(new Vector3(i * i * i, 0.0, 0.0), new Vector3(i * i * i, 0.0, 0.0), earth, start.AddSeconds(i), Frames.Frame.ICRF);
@@ -114,7 +115,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void InterpolateStateOrientation()
         {
             StateOrientation[] data = new StateOrientation[10];
-            var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
+            var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0, TimeScale.TDB);
             for (int i = 0; i < 10; i++)
             {
                 data[i] = new StateOrientation(new Quaternion(i * i, 1000.0 + i * i, 10000.0 + i * i, 100000 + i * i), new Vector3(i * i, 0.0, 0.0), start.AddSeconds(i),

@@ -97,7 +97,7 @@ public class KeplerEquationTests
     // as it is (it normalizes M below)
     private const double LargestEllipticEccentricity = 0.999999;
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     private static readonly Lazy<KeplerReference> Reference = new(Load);
 
@@ -124,7 +124,7 @@ public class KeplerEquationTests
         // Assert: E bit for bit through both paths, and ν from the published TrueAnomaly()
         Assert.Equal(4631, points.Count);
         Assert.All(solved, s => Assert.True(s.ThroughTheElements, $"e = {s.Point.Eccentricity}, M = {s.Point.M:R}"));
-        Assert.Equal(11, solved.Count(s => s.Point.M == IO.Astrodynamics.Constants._2PI));
+        Assert.Equal(11, solved.Count(s => s.Point.M == IO.Astrodynamics.Constants.TwoPi));
         AssertWithin("ellipse", solved, EllipseFloor, EllipseReducedFloor, EllipseTrueAnomalyFloor);
     }
 
@@ -192,19 +192,19 @@ public class KeplerEquationTests
         Assert.Equal(Reference.Value.Gm, earth.GM);
         var states = Reference.Value.States;
 
-        // Act: the state of the elements given by M; with ν given, then at their own epoch (AtEpoch builds the
-        // elements from M alone); at their epoch; and the first state of a propagation from the elements with ν given,
-        // by RK7(8) and by Velocity-Verlet (both go through AtEpoch)
+        // Act: the state of the elements given by M; then at their own epoch (AtEpoch builds the elements from M alone); at
+        // their epoch; and the first state of a propagation from the elements, by RK7(8) and by Velocity-Verlet (both go
+        // through AtEpoch)
         double worstPosition = 0.0, worstVelocity = 0.0;
         foreach (var c in states)
         {
             var state = FromMeanAnomaly(c, earth).ToStateVector();
             var paths = new (string Path, Vector3 Position, Vector3 Velocity)[]
             {
-                Path("AtEpoch", FromMeanAnomaly(c, earth, c.Nu).AtEpoch(Epoch).ToStateVector()),
+                Path("AtEpoch", FromMeanAnomaly(c, earth).AtEpoch(Epoch).ToStateVector()),
                 Path("ToStateVector(epoch)", FromMeanAnomaly(c, earth).ToStateVector(Epoch)),
-                FirstState("RK7(8)", FromMeanAnomaly(c, earth, c.Nu), true),
-                FirstState("Velocity-Verlet", FromMeanAnomaly(c, earth, c.Nu), false)
+                FirstState("RK7(8)", FromMeanAnomaly(c, earth), true),
+                FirstState("Velocity-Verlet", FromMeanAnomaly(c, earth), false)
             };
             var (position, velocity) = RelativeErrors(state, c);
             worstPosition = System.Math.Max(worstPosition, position / c.PositionFloor);
@@ -314,7 +314,7 @@ public class KeplerEquationTests
         foreach (double sign in new[] { 1.0, -1.0 })
         {
             double nu = sign * d * IO.Astrodynamics.Constants.Deg2Rad;
-            var s = Elements(e, 0.0, earth, nu < 0.0 ? nu + IO.Astrodynamics.Constants._2PI : nu).ToStateVector();
+            var s = Elements(e, 0.0, earth, nu < 0.0 ? nu + IO.Astrodynamics.Constants.TwoPi : nu).ToStateVector();
             states.Add(new StateVector(s.Position, s.Velocity, earth, Epoch, Frames.Frame.ICRF));
         }
 
@@ -472,7 +472,7 @@ public class KeplerEquationTests
         // Arrange
         var earth = Earth();
         double[] eccentricities = [0.0, 1e-12, 1e-3, 0.1, 0.5, 0.9, 0.99, 0.999, 0.9999, 0.99999, 0.999999];
-        double belowTwoPi = System.Math.BitDecrement(IO.Astrodynamics.Constants._2PI);
+        double belowTwoPi = System.Math.BitDecrement(IO.Astrodynamics.Constants.TwoPi);
 
         // Act and assert: M = ±π gives ±π for every e: it is not reduced, its start is fl(π) and the first step is
         // below ½ ulp(π)
@@ -487,7 +487,7 @@ public class KeplerEquationTests
         foreach (double m in new[] { 0.3, 3.0, 4.0, belowTwoPi, 7.0, 100.0, 1e4, -1e4 })
         {
             Assert.Equal(m, KeplerEquation.EllipticAnomaly(m, 0.0));
-            if (m is >= 0.0 and < IO.Astrodynamics.Constants._2PI)
+            if (m is >= 0.0 and < IO.Astrodynamics.Constants.TwoPi)
             {
                 Assert.Equal(m, Elements(0.0, m, earth).EccentricAnomaly());
             }
@@ -544,7 +544,7 @@ public class KeplerEquationTests
     // 1e-17 (SpecialFunctions.NormalizeAngle, #453)
     private static KeplerianElements ElementsOf(ReferencePoint p, CelestialBody earth)
     {
-        double[] given = p.M == IO.Astrodynamics.Constants._2PI ? [p.M, -1e-17] : [p.M];
+        double[] given = p.M == IO.Astrodynamics.Constants.TwoPi ? [p.M, -1e-17] : [p.M];
         return given.Select(m => Elements(p.Eccentricity, m, earth)).FirstOrDefault(elements => elements.M == p.M);
     }
 
@@ -632,8 +632,8 @@ public class KeplerEquationTests
     private static double TrueAnomalyOf(double anomaly, double e)
     {
         double nu = 2 * System.Math.Atan(System.Math.Sqrt((1 + e) / (1 - e)) * System.Math.Tan(anomaly / 2)) %
-                    IO.Astrodynamics.Constants._2PI;
-        return nu < 0 ? nu + IO.Astrodynamics.Constants._2PI : nu;
+                    IO.Astrodynamics.Constants.TwoPi;
+        return nu < 0 ? nu + IO.Astrodynamics.Constants.TwoPi : nu;
     }
 
     // The error of an angle in [0, 2π) against an exact one, across 0 = 2π: x − fl(2π) is exact for x ≥ π
@@ -647,12 +647,12 @@ public class KeplerEquationTests
 
         if (angle - exact.High > System.Math.PI)
         {
-            return ((angle - IO.Astrodynamics.Constants._2PI) - exact.High) - (TwoPiRest + exact.Low);
+            return ((angle - IO.Astrodynamics.Constants.TwoPi) - exact.High) - (TwoPiRest + exact.Low);
         }
 
         if (exact.High - angle > System.Math.PI)
         {
-            return (angle - (exact.High - IO.Astrodynamics.Constants._2PI)) - (exact.Low - TwoPiRest);
+            return (angle - (exact.High - IO.Astrodynamics.Constants.TwoPi)) - (exact.Low - TwoPiRest);
         }
 
         return exact.ErrorOf(angle);
@@ -660,18 +660,21 @@ public class KeplerEquationTests
 
     private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
 
-    // The elements of a periapsis at 7000 km given by M (an ellipse at e = 0 of radius 7000 km)
+    // The elements of a periapsis at 7000 km given by M (an ellipse at e = 0 of radius 7000 km), or by ν when it is given
+    // (FromTrueAnomaly, #668, R23: before, M = 0 beside the ν the state read)
     private static KeplerianElements Elements(double e, double meanAnomaly, CelestialBody earth,
         double? trueAnomaly = null)
     {
-        return new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.7, 0.5, 0.9, meanAnomaly, earth, Epoch,
-            Frames.Frame.ICRF, trueAnomaly: trueAnomaly);
+        return trueAnomaly is { } nu
+            ? KeplerianElements.FromTrueAnomaly(PeriapsisRadius / (1.0 - e), e, 0.7, 0.5, 0.9, nu, earth, Epoch, Frames.Frame.ICRF)
+            : new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.7, 0.5, 0.9, meanAnomaly, earth, Epoch, Frames.Frame.ICRF);
     }
 
-    private static KeplerianElements FromMeanAnomaly(ReferenceState c, CelestialBody earth, double? trueAnomaly = null)
+    // The elements of the case given by its mean anomaly; the propagation paths go through AtEpoch, which builds the elements
+    // from M alone, so the case's ν, given beside M before #668 (R23), changed none of them
+    private static KeplerianElements FromMeanAnomaly(ReferenceState c, CelestialBody earth)
     {
-        return new KeplerianElements(c.A, c.E, c.I, c.Raan, c.Aop, c.M, earth, Epoch, Frames.Frame.ICRF,
-            trueAnomaly: trueAnomaly);
+        return new KeplerianElements(c.A, c.E, c.I, c.Raan, c.Aop, c.M, earth, Epoch, Frames.Frame.ICRF);
     }
 
     private static (string, Vector3, Vector3) Path(string path, StateVector state) =>

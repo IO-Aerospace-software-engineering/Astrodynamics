@@ -244,7 +244,7 @@ public static class ConjunctionAssessment
     /// says so, the cubic Hermite of the stored steps only seeding the search (#363): a minimum whose range-rate zero lies
     /// outside the window is never returned, however near an end, and a range rate negative at the start and positive at
     /// the end returns the minimum between them, however flat the distance over the window; a minimum of the Hermite that
-    /// the range rate does not bracket, a maximum of the distance on a slow pass, is never returned in place of the end. The epoch of the encounter is labelled in the time frame of the window
+    /// the range rate does not bracket, a maximum of the distance on a slow pass, is never returned in place of the end. The epoch of the encounter is labelled in the time scale of the window
     /// start, as on the sampled path (#683).
     /// </returns>
     /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft; a
@@ -336,7 +336,7 @@ public static class ConjunctionAssessment
     /// positive at the end lists the minimum between them, however flat the distance over the window. Every encounter listed
     /// on that path is a zero of the range rate going from negative to positive, each minimum listed once: a minimum of the
     /// Hermite that the range rate does not bracket, a maximum of the distance on a slow pass, is not listed. The epochs of
-    /// the encounters are labelled in the time frame of the window start, as on the sampled path (#683).
+    /// the encounters are labelled in the time scale of the window start, as on the sampled path (#683).
     /// </returns>
     /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft; a
     /// trajectory was propagated for another spacecraft than its participant (compared by reference: the instance that was
@@ -693,7 +693,7 @@ public static class ConjunctionAssessment
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        covariance.Set(i + 3, j + 3, covariance.Get(i + 3, j + 3) + execution[3 * i + j]);
+                        covariance.SetTerm(i + 3, j + 3, covariance.Get(i + 3, j + 3) + execution[3 * i + j]);
                     }
                 }
             }
@@ -943,7 +943,7 @@ public static class ConjunctionAssessment
     }
 
     /// <summary>
-    /// A close approach of the dense search labelled in the time frame of the window start, as on the sampled path (#683:
+    /// A close approach of the dense search labelled in the time scale of the window start, as on the sampled path (#683:
     /// its frame was that of the left end of its bracket, the TDB of a step epoch most of the time). An epoch in that frame
     /// is returned as it is (a TDB window bit for bit), a window end as that end. Another is converted, and of that tick and
     /// its neighbour toward the zero of the range rate, the one where |g| is smaller is kept, the lower one on a tie
@@ -954,8 +954,8 @@ public static class ConjunctionAssessment
     /// </summary>
     internal static Time InWindowScale(Time epoch, Window window, Func<Time, double> rangeRate)
     {
-        var frame = window.StartDate.Frame;
-        if (epoch.Frame.Equals(frame))
+        var frame = window.StartDate.Scale;
+        if (epoch.Scale == frame)
         {
             return epoch;
         }
@@ -1557,7 +1557,7 @@ public static class ConjunctionAssessment
     // consecutive TDB ticks of one TAI tick, which are equal times, are two reads of the bisection in ticks (#624)
     private static Func<Time, double> ReadOnce(Func<Time, double> rangeRate)
     {
-        var values = new Dictionary<Time, double>(Time.LabelComparer);
+        var values = new Dictionary<Time, double>(Time.ExactComparer);
         return epoch =>
         {
             if (!values.TryGetValue(epoch, out double value))
@@ -1906,7 +1906,7 @@ public static class ConjunctionAssessment
         var sState = secondarySource.GetState(epoch);
         var relPos = sState.Position - pState.Position;
         var relVel = sState.Velocity - pState.Velocity;
-        return relPos * relVel;
+        return relPos.Dot(relVel);
     }
 
     private static Time BisectForZero(
@@ -2644,7 +2644,7 @@ public static class ConjunctionAssessment
         {
             for (int j = 0; j < 3; j++)
             {
-                pos.Set(i, j, covariance.Get(i, j));
+                pos.SetTerm(i, j, covariance.Get(i, j));
             }
         }
 
@@ -2667,14 +2667,14 @@ public static class ConjunctionAssessment
         else
         {
             var vHat = relVelInertial * (1.0 / relVelMag);
-            double missAlongV = relPosInertial * vHat;
+            double missAlongV = relPosInertial.Dot(vHat);
             var missInPlane = relPosInertial - vHat * missAlongV;
             double missInPlaneMag = missInPlane.Magnitude();
 
             if (missInPlaneMag < 1e-10)
             {
                 var seed = System.Math.Abs(vHat.X) < 0.9 ? Vector3.VectorX : Vector3.VectorY;
-                e1 = (seed - vHat * (seed * vHat)).NormalizeOrZero();
+                e1 = (seed - vHat * seed.Dot(vHat)).NormalizeOrZero();
                 e2 = vHat.Cross(e1).NormalizeOrZero();
             }
             else
@@ -2684,13 +2684,13 @@ public static class ConjunctionAssessment
             }
         }
 
-        double m1 = relPosInertial * e1;
-        double m2 = relPosInertial * e2;
+        double m1 = relPosInertial.Dot(e1);
+        double m2 = relPosInertial.Dot(e2);
 
         // C2D = P * C3x3 * P^T where P is 2x3 [e1; e2]
         var proj = new Matrix(2, 3);
-        proj.Set(0, 0, e1.X); proj.Set(0, 1, e1.Y); proj.Set(0, 2, e1.Z);
-        proj.Set(1, 0, e2.X); proj.Set(1, 1, e2.Y); proj.Set(1, 2, e2.Z);
+        proj.SetTerm(0, 0, e1.X); proj.SetTerm(0, 1, e1.Y); proj.SetTerm(0, 2, e1.Z);
+        proj.SetTerm(1, 0, e2.X); proj.SetTerm(1, 1, e2.Y); proj.SetTerm(1, 2, e2.Z);
 
         var cov2D = proj * posCov * proj.Transpose();
         return (new[] { m1, m2 }, cov2D);

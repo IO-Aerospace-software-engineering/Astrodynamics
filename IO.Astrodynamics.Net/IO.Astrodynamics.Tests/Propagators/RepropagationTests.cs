@@ -89,8 +89,8 @@ public class RepropagationTests
     private static readonly TimeSpan VvStep = TimeSpan.FromSeconds(1.0);
 
     // The labels of a window's ends (#512: Assert.Equal of two windows compares their instants only)
-    private static (DateTime, ITimeFrame, DateTime, ITimeFrame)? Labels(Window? window) =>
-        window is { } w ? (w.StartDate.DateTime, w.StartDate.Frame, w.EndDate.DateTime, w.EndDate.Frame) : null;
+    private static (DateTime, TimeScale, DateTime, TimeScale)? Labels(Window? window) =>
+        window is { } w ? (w.StartDate.DateTime, w.StartDate.Scale, w.EndDate.DateTime, w.EndDate.Scale) : null;
     private const double MoonRadius = MinimumEpochGateTests.MoonRadius;
     private static int _nextId = -573000;
     private readonly ITestOutputHelper _output;
@@ -157,8 +157,9 @@ public class RepropagationTests
 
             if (!withP0) return orbit;
             var state = orbit.ToStateVector();
-            var p0 = new Matrix(6, 6);
-            for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+            var p0Terms = new double[6, 6];
+            for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 100.0 : 1.0e-4;
+            var p0 = new Matrix(p0Terms);
             return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame, p0);
         }
 
@@ -803,8 +804,9 @@ public class RepropagationTests
     {
         var orbit = env.PerigeeAfter(epoch, lead).ToStateVector();
         if (!withP0) return orbit;
-        var p0 = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+        var p0Terms = new double[6, 6];
+        for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 100.0 : 1.0e-4;
+        var p0 = new Matrix(p0Terms);
         return new StateVector(orbit.Position, orbit.Velocity, orbit.Observer, orbit.Epoch, orbit.Frame, p0);
     }
 
@@ -1112,7 +1114,7 @@ public class RepropagationTests
         var reused = Build(env, env.Apogee(), "apo-apo");
         var r1 = Propagate(reused, Win(S), "RK", "Propagate");
         var solution = reused.Spacecraft.LastPropagation;
-        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray();
+        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)).ToArray();
         var windows = reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray();
 
         // Act
@@ -1128,7 +1130,7 @@ public class RepropagationTests
         // Assert
         _output.WriteLine($"MEASURE #573 {tag}: {error.GetType().Name}: {error.Message}");
         Assert.Same(solution, reused.Spacecraft.LastPropagation);
-        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray());
+        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)).ToArray());
         Assert.Equal(windows, reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray());
         var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);
         AssertSame(tag + " run 1 after the rejection against run 1", after, r1);
@@ -1224,7 +1226,7 @@ public class RepropagationTests
         var reused = Build(env, env.Apogee(), "apo-apo");
         var r1 = Propagate(reused, Win(S), "RK", "Builder");
         var solution = reused.Spacecraft.LastPropagation;
-        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray();
+        var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)).ToArray();
         var windows = reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray();
         double fuel = reused.Spacecraft.FuelTanks.Single().Quantity;
         var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
@@ -1249,7 +1251,7 @@ public class RepropagationTests
 
         // Assert
         Assert.Same(solution, reused.Spacecraft.LastPropagation);
-        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Frame, s.Position, s.Velocity)).ToArray());
+        Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)).ToArray());
         Assert.Equal(windows, reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray());
         Assert.Equal(fuel, reused.Spacecraft.FuelTanks.Single().Quantity);
         var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);

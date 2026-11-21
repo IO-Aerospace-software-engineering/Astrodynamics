@@ -288,11 +288,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
             const double tolerance = 1e-10;
 
             // Check orthogonality
-            if (System.Math.Abs(BodyFront * BodyRight) > tolerance)
+            if (System.Math.Abs(BodyFront.Dot(BodyRight)) > tolerance)
                 throw new ArgumentException("Body axes must be orthogonal: BodyFront and BodyRight are not perpendicular.");
-            if (System.Math.Abs(BodyFront * BodyUp) > tolerance)
+            if (System.Math.Abs(BodyFront.Dot(BodyUp)) > tolerance)
                 throw new ArgumentException("Body axes must be orthogonal: BodyFront and BodyUp are not perpendicular.");
-            if (System.Math.Abs(BodyRight * BodyUp) > tolerance)
+            if (System.Math.Abs(BodyRight.Dot(BodyUp)) > tolerance)
                 throw new ArgumentException("Body axes must be orthogonal: BodyRight and BodyUp are not perpendicular.");
 
             // Check right-handedness: Right x Front should equal Up

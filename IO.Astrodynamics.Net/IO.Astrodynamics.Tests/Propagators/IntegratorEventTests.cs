@@ -228,7 +228,7 @@ public partial class IntegratorEventTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var orbit = MinimumEpochGateTests.Orbit(earth, System.Math.PI);
         var sv = orbit.ToStateVector();
-        Assert.Equal(0.0, sv.Position * sv.Velocity);
+        Assert.Equal(0.0, sv.Position.Dot(sv.Velocity));
         var (spacecraft, engine) = NewSpacecraft(-7903, orbit);
         var gate = S.Add(TimeSpan.FromSeconds(-gateBefore));
         var maneuver = new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine);

@@ -78,7 +78,7 @@ public class FrameTests
                 _ => new Frames.Frame(name)
             };
 
-            var expected = StaticFrame(from).ToFrame(StaticFrame(to), new TimeSystem.Time("2000-01-01T12:00:00Z"));
+            var expected = StaticFrame(from).ToFrame(StaticFrame(to), TimeSystem.Time.Parse("2000-01-01T12:00:00Z"));
             Assert.Equal(
                 expected.ToString().Replace($"Frame : {StaticFrame(from).Name}", $"Frame : {from}") + Environment.NewLine,
                 sb.ToString());

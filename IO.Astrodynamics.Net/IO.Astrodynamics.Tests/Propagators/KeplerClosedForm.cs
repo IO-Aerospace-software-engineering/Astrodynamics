@@ -52,13 +52,13 @@ internal sealed class KeplerClosedForm
         double rm = r.Magnitude();
         var ev = v.Cross(h) * (1.0 / mu) - r * (1.0 / rm);
         E = ev.Magnitude();
-        A = 1.0 / (2.0 / rm - v * v / mu);
-        P = h * h / mu;
+        A = 1.0 / (2.0 / rm - v.Dot(v) / mu);
+        P = h.Dot(h) / mu;
         Ph = ev.Normalize();
         Qh = Hh.Cross(Ph);
         N = System.Math.Sqrt(mu / (A * A * A));
         T = 2.0 * System.Math.PI / N;
-        M0 = MeanOfTrue(System.Math.Atan2(r * Qh, r * Ph));
+        M0 = MeanOfTrue(System.Math.Atan2(r.Dot(Qh), r.Dot(Ph)));
     }
 
     /// <summary>The perigee radius, m.</summary>
@@ -116,7 +116,7 @@ internal sealed class KeplerClosedForm
     }
 
     /// <summary>The true anomaly of the direction <paramref name="direction"/> in the plane of the orbit.</summary>
-    public double TrueAnomalyOf(Vector3 direction) => System.Math.Atan2(direction * Qh, direction * Ph);
+    public double TrueAnomalyOf(Vector3 direction) => System.Math.Atan2(direction.Dot(Qh), direction.Dot(Ph));
 
     /// <summary>The speed at the radius <paramref name="r"/> (vis-viva).</summary>
     public double SpeedAt(double r) => System.Math.Sqrt(Mu * (2.0 / r - 1.0 / A));
@@ -135,7 +135,7 @@ internal sealed class KeplerClosedForm
     /// </summary>
     public (double First, double Second, double DeltaOmega) IntersectionsWith(KeplerClosedForm other)
     {
-        double dw = System.Math.Atan2(other.Ph * Qh, other.Ph * Ph);
+        double dw = System.Math.Atan2(other.Ph.Dot(Qh), other.Ph.Dot(Ph));
         double a = P * other.E * System.Math.Cos(dw) - other.P * E;
         double b = P * other.E * System.Math.Sin(dw);
         double c = other.P - P;

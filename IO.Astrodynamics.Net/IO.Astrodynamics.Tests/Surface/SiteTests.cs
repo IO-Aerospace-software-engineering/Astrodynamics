@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void StateVector()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB);
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             Site site = new Site(13, "DSS-13", earth);
 
@@ -55,7 +55,7 @@ namespace IO.Astrodynamics.Tests.Surface
             double cosElevation = System.Math.Cos(horizontal.Elevation);
             var actual = new Vector3(cosElevation * System.Math.Cos(horizontal.Azimuth), -cosElevation * System.Math.Sin(horizontal.Azimuth),
                 System.Math.Sin(horizontal.Elevation));
-            double angle = System.Math.Atan2(actual.Cross(expected).Magnitude(), actual * expected);
+            double angle = System.Math.Atan2(actual.Cross(expected).Magnitude(), actual.Dot(expected));
             _output.WriteLine($"MEASURE #690 horizontal coordinates at {epoch} against spkezr in DSS-13_TOPO: {angle:E3} rad");
             Assert.True(angle <= KernelTopocentricThreshold, $"{angle:E3} rad");
         }
@@ -63,7 +63,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -79,7 +79,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates2()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 5, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 5, 12, 0, 0, TimeScale.TDB);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -95,7 +95,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates3()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 10, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 10, 12, 0, 0, TimeScale.TDB);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -111,7 +111,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates4()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0, TimeScale.TDB);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -127,7 +127,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates5()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0, TimeScale.TDB);
             // A custom site at the geodetic coordinates of DSS-13 on the ellipsoid of pck00011 (SPICE recgeo_c of the
             // kernel station at J2000 TDB, tools/geodetic_reference/dss13_topo.c): the position of the kernel station, in
             // the topocentric frame of those J2000 coordinates. The kernel station saw the same before #690; it now takes
@@ -145,7 +145,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void Create()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0, TimeScale.TDB);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             Assert.Equal(13, site.Id);
@@ -165,7 +165,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetEphemeris()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB);
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             Site site = new Site(13, "DSS-13", earth);
 
@@ -209,7 +209,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetVelocity()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB);
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             Site site = new Site(13, "DSS-13", earth);
 
@@ -221,7 +221,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetAngularSepartion()
         {
-            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
+            var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB);
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
@@ -248,7 +248,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnOccultationConstraint(new Window(new TimeSystem.Time("2005-10-03 00:00:00"), new TimeSystem.Time("2005-10-04 00:00:00")),
+            var res = site.FindWindowsOnOccultationConstraint(new Window(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB)),
                 TestHelpers.Sun, ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Partial, Aberration.None, TimeSpan.FromSeconds(360.0));
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
@@ -262,7 +262,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnCoordinateConstraint(new Window(new TimeSystem.Time("2000-01-01 12:00:00").ToTDB(), new TimeSystem.Time("2000-02-01 12:00:00").ToTDB()),
+            var res = site.FindWindowsOnCoordinateConstraint(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-02-01 12:00:00", TimeScale.TDB).ToTDB()),
                 TestHelpers.MoonAtJ2000,
                 TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
                 TimeSpan.FromSeconds(60.0));
@@ -277,7 +277,7 @@ namespace IO.Astrodynamics.Tests.Surface
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
             var res = TestHelpers.MoonAtJ2000.FindWindowsOnCoordinateConstraint(
-                new Window(new TimeSystem.Time("2000-01-01 12:00:00").ToTDB(), new TimeSystem.Time("2000-01-02 12:00:00").ToTDB()),
+                new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTDB()),
                 site,
                 site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
                 TimeSpan.FromSeconds(60.0));
@@ -287,7 +287,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var windows = res as Window[] ?? res.ToArray();
             GeometryReference.AssertWindows(null, "dss13_moon_z > 0", windows, GeometryReference.ThresholdCrossing);
             LabelAssert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
-            LabelAssert.Equal(new TimeSystem.Time("2000-01-02 12:00:00").ToTDB(), windows[1].EndDate);
+            LabelAssert.Equal(TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTDB(), windows[1].EndDate);
         }
 
         [Theory]
@@ -351,7 +351,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void WriteEphemeris()
         {
-            Window window = new Window(new TimeSystem.Time(2000, 1, 1, 12, 0, 0), new TimeSystem.Time(2000, 1, 2, 12, 0, 0));
+            Window window = new Window(new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB), new TimeSystem.Time(2000, 1, 2, 12, 0, 0, TimeScale.TDB));
 
             Site site = new Site(339, "S339", TestHelpers.EarthAtJ2000, new Planetodetic(30 * Astrodynamics.Constants.Deg2Rad, 10 * Astrodynamics.Constants.Deg2Rad, 1000.0));
             var spk = new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName, "sitetest339.spk"));
@@ -442,7 +442,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 {
                     foreach (var date in new[] { "2000-01-02T00:00:00", "2024-03-01T00:00:00" })
                     {
-                        var epoch = new TimeSystem.Time(date + " TDB");
+                        var epoch = TimeSystem.Time.Parse(date + " TDB");
                         var rotation = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("T690_TOPO"), new Frames.Frame("DSS-13_TOPO")).Rotation;
                         double angle = 2.0 * System.Math.Atan2(rotation.VectorPart.Magnitude(), System.Math.Abs(rotation.W));
                         _output.WriteLine($"MEASURE #690 written frame of {name} against DSS-13_TOPO {date}: {angle:E3} rad");
@@ -526,7 +526,7 @@ namespace IO.Astrodynamics.Tests.Surface
         private static double RotationAngle(Quaternion q) => 2.0 * System.Math.Atan2(q.VectorPart.Magnitude(), System.Math.Abs(q.W));
 
         // The angle between two vectors
-        private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+        private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
         // An SPK of the site written by the library over [J2000 - 1 d, J2000 + 3 d], for a site from the kernels
         private static FileInfo KernelSiteSpk(int id, string name)
@@ -811,7 +811,7 @@ namespace IO.Astrodynamics.Tests.Surface
                     var reference = new Frames.Frame("TF874_TOPO");
                     foreach (var date in new[] { "2000-01-02T00:00:00", "2024-03-01T12:00:00" })
                     {
-                        var epoch = new TimeSystem.Time(date + " TDB");
+                        var epoch = TimeSystem.Time.Parse(date + " TDB");
                         foreach (var other in new[] { Frames.Frame.ICRF, PlanetsAndMoons.EARTH_BODY.Frame })
                         {
                             foreach (bool fromSite in new[] { true, false })
@@ -854,7 +854,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public void TransformFrame_SiteFromCoordinates_IsTheFrameOfTheLibrary()
         {
             var site = new Site(775, "TF775", PlanetsAndMoons.EARTH_BODY, new Planetodetic(-1.2, -0.4, 250.0));
-            foreach (var epoch in new[] { new TimeSystem.Time("2000-01-02T00:00:00 TDB"), new TimeSystem.Time("2024-03-01T12:00:00 TDB") })
+            foreach (var epoch in new[] { TimeSystem.Time.Parse("2000-01-02T00:00:00 TDB"), TimeSystem.Time.Parse("2024-03-01T12:00:00 TDB") })
             {
                 var toIcrf = SpiceAPI.Instance.TransformFrame(epoch, site.Frame, Frames.Frame.ICRF).Rotation;
                 var expected = site.Frame.ToFrame(Frames.Frame.ICRF, epoch).Rotation;
@@ -894,7 +894,7 @@ namespace IO.Astrodynamics.Tests.Surface
             }
 
             var dss13 = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
-            var at = new TimeSystem.Time("2024-03-01T12:00:00 TDB");
+            var at = TimeSystem.Time.Parse("2024-03-01T12:00:00 TDB");
             Assert.Equal(SpiceAPI.Instance.TransformFrame(at, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF).Rotation,
                 SpiceAPI.Instance.TransformFrame(at, dss13.Frame, Frames.Frame.ICRF).Rotation);
             Assert.Equal(Frames.Frame.CIRS.GetStateOrientationToICRF(at).Rotation,
@@ -1011,7 +1011,7 @@ namespace IO.Astrodynamics.Tests.Surface
             // Assert: loaded, and the frame known to SPICE by its name
             IO.Astrodynamics.Tests.Body.FrameKernelFiles.Load(fk, () =>
             {
-                var orientation = SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1), Frames.Frame.ICRF, new Frames.Frame("ABCDEFGHIJKLMNOPQRSTU_TOPO"));
+                var orientation = SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF, new Frames.Frame("ABCDEFGHIJKLMNOPQRSTU_TOPO"));
                 Assert.Equal(1.0, orientation.Rotation.Magnitude(), 12);
             });
         }
@@ -1031,16 +1031,16 @@ namespace IO.Astrodynamics.Tests.Surface
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
             var dss13 = new Site(13, "DSS-13", earth);
             var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
-            var window = new Window(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 3));
+            var window = new Window(new TimeSystem.Time(2024, 3, 1, TimeScale.TDB), new TimeSystem.Time(2024, 3, 3, TimeScale.TDB));
             var step = TimeSpan.FromMinutes(10.0);
             var searches = new (string Path, Func<string, Window[]> Search)[]
             {
                 ("kernel site, CSPICE", m => dss13.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence, RelationnalOperator.Lower,
-                    IO.Astrodynamics.Constants.PI2, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
+                    IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
                 ("site from coordinates, managed", m => fromCoordinates.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence,
-                    RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
+                    RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
                 ("SpiceAPI", m => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 399013, 399, earth.Frame, dss13.Planetodetic,
-                    IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.LTS, step, 10, m).ToArray())
+                    IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LTS, step, 10, m).ToArray())
             };
             foreach (var (path, search) in searches)
             {
@@ -1068,7 +1068,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
             var dss13 = new Site(13, "DSS-13", earth);
             var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
-            var window = new Window(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 2));
+            var window = new Window(new TimeSystem.Time(2024, 3, 1, TimeScale.TDB), new TimeSystem.Time(2024, 3, 2, TimeScale.TDB));
             foreach (var site in new[] { dss13, fromCoordinates })
             {
                 foreach (var angle in new[] { IlluminationAngle.Emission, IlluminationAngle.Phase })
@@ -1076,7 +1076,7 @@ namespace IO.Astrodynamics.Tests.Surface
                     foreach (var relation in new[] { RelationnalOperator.Lower, RelationnalOperator.Greater, RelationnalOperator.LocalMin })
                     {
                         var exception = Assert.Throws<ArgumentException>(() => site.FindWindowsOnIlluminationConstraint(window, angle, relation,
-                            IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
+                            IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
                         Assert.Equal("illuminationType", exception.ParamName);
                         Assert.Contains("observer", exception.Message);
                     }
@@ -1086,12 +1086,12 @@ namespace IO.Astrodynamics.Tests.Surface
                 if (site == fromCoordinates)
                 {
                     Assert.Throws<ArgumentOutOfRangeException>(() => site.FindWindowsOnIlluminationConstraint(window, (IlluminationAngle)99,
-                        RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
+                        RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
                 }
 
                 // The angle is checked before the method
                 Assert.Equal("illuminationType", Assert.Throws<ArgumentException>(() => site.FindWindowsOnIlluminationConstraint(window,
-                    IlluminationAngle.Emission, RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0),
+                    IlluminationAngle.Emission, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0),
                     TestHelpers.Sun, "DSK").ToArray()).ParamName);
             }
         }
@@ -1113,12 +1113,12 @@ namespace IO.Astrodynamics.Tests.Surface
             var moon = new CelestialBody(PlanetsAndMoons.MOON);
             var dss13 = new Site(13, "DSS-13", earth);
             var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
-            var window = new Window(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 2));
+            var window = new Window(new TimeSystem.Time(2024, 3, 1, TimeScale.TDB), new TimeSystem.Time(2024, 3, 2, TimeScale.TDB));
             var step = TimeSpan.FromMinutes(10.0);
             var managed = new GeometryFinder().FindWindowsWithCondition(window, t => fromCoordinates.IlluminationEmission(t, moon, Aberration.None),
-                RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, step).ToArray();
+                RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, step).ToArray();
             var gfilum = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 301, 399, earth.Frame, dss13.Planetodetic, IlluminationAngle.Emission,
-                RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, step, 10).ToArray();
+                RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, step, 10).ToArray();
             Assert.Single(gfilum);
             Assert.Equal(gfilum.Length, managed.Length);
             double worst = 0.0;
@@ -1157,7 +1157,7 @@ namespace IO.Astrodynamics.Tests.Surface
             const double c = IO.Astrodynamics.Constants.C;
             var state = icrfRead(t);
             double lightTime = state.Position.Magnitude() / c;
-            double rate = state.Position.Normalize() * state.Velocity / c;
+            double rate = state.Position.Normalize().Dot(state.Velocity) / c;
             var centerEpoch = t.AddSeconds(-lightTime);
             double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds - lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
             var orientation = Frames.Frame.ICRF.ToFrame(frame, centerEpoch);
@@ -1186,7 +1186,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
             var moon = new CelestialBody(PlanetsAndMoons.MOON);
             var site = new Site(682, "F07CUSTOM", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
-            var start = new TimeSystem.Time(2024, 3, 1);
+            var start = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
             foreach (var observer in new ILocalizable[] { moon, TestHelpers.Sun })
             {
                 foreach (var aberration in new[] { Aberration.None, Aberration.LT })
@@ -1247,7 +1247,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
             var moon = new CelestialBody(PlanetsAndMoons.MOON);
             var site = new Site(917, "F07SITE", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
-            var epochs = Enumerable.Range(0, 5).Select(k => new TimeSystem.Time(2024, 3, 1).AddSeconds(7.0 * 3600.0 * k)).ToArray();
+            var epochs = Enumerable.Range(0, 5).Select(k => new TimeSystem.Time(2024, 3, 1, TimeScale.TDB).AddSeconds(7.0 * 3600.0 * k)).ToArray();
             var library = epochs.Select(t => site.GetEphemeris(t, moon, site.Frame, Aberration.None).ToStateVector()).ToArray();
 
             var directory = Directory.CreateTempSubdirectory("f07site-");

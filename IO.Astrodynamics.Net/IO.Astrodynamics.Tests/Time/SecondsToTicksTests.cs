@@ -6,7 +6,6 @@ using System.Text.Json;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,9 +13,9 @@ namespace IO.Astrodynamics.Tests.Time;
 
 /// <summary>
 /// The conversions of seconds to ticks of <see cref="TimeSystem.Time"/> give the nearest tick, ties to even (#625):
-/// <see cref="TimeSystem.Time.Create(double, ITimeFrame)"/>, <see cref="TimeSystem.Time.Create(int, int, double)"/>,
+/// <see cref="TimeSystem.Time.Create(double, TimeScale)"/>, <see cref="TimeSystem.Time.FromDayOfYear(int, int, double, TimeScale.UTC)"/>,
 /// <see cref="TimeSystem.Time.AddSeconds"/>, <see cref="TimeSystem.Time.AddMilliseconds"/>,
-/// <see cref="TimeSystem.Time.AddMicroseconds"/> and the TDB − TT offset of <see cref="TDBTimeFrame"/> (<c>AddDays</c>,
+/// <see cref="TimeSystem.Time.AddMicroseconds"/> and the TDB − TT offset of <see cref="TimeScaleConversions.TdbMinusTt"/> (<c>AddDays</c>,
 /// <c>AddHours</c>, <c>AddMinutes</c>, <c>CreateFromJD</c> and the spans the library computes outside
 /// <see cref="TimeSystem.Time"/> since #637: <see cref="NearestTickSpanTests"/>); a tick made seconds and back, which is not
 /// always that tick from 2017 to 2028 (and 1971 to 1983); and the labels and window ends of the CSPICE reads, which keep the ticks asked.
@@ -41,7 +40,7 @@ public class SecondsToTicksTests
 
     private static double Parse(JsonElement element) => double.Parse(element.GetString(), CultureInfo.InvariantCulture);
 
-    private static long FromJ2000(TimeSystem.Time time) => time.DateTime.Ticks - TimeSystem.Time.J2000.Ticks;
+    private static long FromJ2000(TimeSystem.Time time) => time.DateTime.Ticks - TimeSystem.Time.J2000Calendar.Ticks;
 
     [Fact]
     public void EveryConversion_IsTheExactNearestTick()
@@ -56,7 +55,7 @@ public class SecondsToTicksTests
             Assert.True(ticks == ExactTicks.Nearest(seconds), label);
             Assert.True(ticks == FromJ2000(TimeSystem.Time.CreateTDB(seconds)), label);
             Assert.True(ticks == FromJ2000(TimeSystem.Time.CreateUTC(seconds)), label);
-            Assert.True(ticks == FromJ2000(TimeSystem.Time.Create(seconds, TimeFrame.TAIFrame)), label);
+            Assert.True(ticks == FromJ2000(TimeSystem.Time.Create(seconds, TimeScale.TAI)), label);
             Assert.True(ticks == FromJ2000(TimeSystem.Time.J2000TDB.AddSeconds(seconds)), label);
             Assert.True(row.GetProperty("ms_ticks").GetInt64() == FromJ2000(TimeSystem.Time.J2000TDB.AddMilliseconds(seconds)), label);
             Assert.True(row.GetProperty("us_ticks").GetInt64() == FromJ2000(TimeSystem.Time.J2000TDB.AddMicroseconds(seconds)), label);
@@ -111,8 +110,8 @@ public class SecondsToTicksTests
         Assert.Equal(-117188L, TimeSystem.Time.SecondsToTicks(-0.01171875));
 
         // 2023 day 349 at 69.1834258 s: 691834257.99999995 ticks into the day (Fraction)
-        var time = TimeSystem.Time.Create(2023, 349, 69.1834258);
-        Assert.Equal(TimeFrame.UTCFrame, time.Frame);
+        var time = TimeSystem.Time.FromDayOfYear(2023, 349, 69.1834258, TimeScale.UTC);
+        Assert.Equal(TimeScale.UTC, time.Scale);
         Assert.Equal(new DateTime(2023, 12, 15).Ticks + 691834258L, time.DateTime.Ticks);
     }
 
@@ -129,7 +128,7 @@ public class SecondsToTicksTests
         Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000TDB.AddSeconds(seconds));
         Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000TDB.AddMilliseconds(seconds * 1e4));
         Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000TDB.AddMicroseconds(seconds * 1e7));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.Create(2000, 1, seconds));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.FromDayOfYear(2000, 1, seconds, TimeScale.UTC));
     }
 
     [Fact]
@@ -203,22 +202,22 @@ public class SecondsToTicksTests
         // neighbouring tick for about 16 % of the ticks of 2024 (the review of #625; Fraction: 2024-12-18T09:36:47.8294540
         // came back .8294539). It is labelled with the epoch asked, the instant SPICE read at, as the data provider does
         var epochs = new System.Collections.Generic.List<TimeSystem.Time>
-            { new(new DateTime(2024, 12, 18, 9, 36, 47).AddTicks(8294540), TimeFrame.TDBFrame) };
+            { new(new DateTime(2024, 12, 18, 9, 36, 47).AddTicks(8294540), TimeScale.TDB) };
         var random = new Random(6253);
         long start = new DateTime(2024, 1, 1).Ticks;
         long span = new DateTime(2025, 1, 1).Ticks - start;
         for (int i = 0; i < 2000; i++)
-            epochs.Add(new TimeSystem.Time(new DateTime(start + (long)(random.NextDouble() * span)), TimeFrame.TDBFrame));
+            epochs.Add(new TimeSystem.Time(new DateTime(start + (long)(random.NextDouble() * span)), TimeScale.TDB));
 
         foreach (var epoch in epochs)
         {
             var state = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(epoch.DateTime.Ticks, state.Epoch.DateTime.Ticks);
-            Assert.Equal(TimeFrame.TDBFrame, state.Epoch.Frame);
+            Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
         }
 
         // An epoch tagged UTC is labelled with its TDB instant, as before
-        var utc = new TimeSystem.Time(new DateTime(2024, 6, 1, 12, 0, 0), TimeFrame.UTCFrame);
+        var utc = new TimeSystem.Time(new DateTime(2024, 6, 1, 12, 0, 0), TimeScale.UTC);
         Assert.Equal(utc.ToTDB().DateTime.Ticks,
             SpiceAPI.Instance.ReadEphemeris(utc, 399, 301, Frames.Frame.ICRF, Aberration.None).Epoch.DateTime.Ticks);
     }
@@ -229,18 +228,18 @@ public class SecondsToTicksTests
         // Its initial state was labelled with the epoch CSPICE returned (Fraction: 2024-01-11T00:35:02.8486908 came back
         // .8486907, the effect the issue names): it is the epoch asked, as SpiceDataProvider.GetEphemeris labels it
         var epochs = new System.Collections.Generic.List<TimeSystem.Time>
-            { new(new DateTime(2024, 1, 11, 0, 35, 2).AddTicks(8486908), TimeFrame.TDBFrame) };
+            { new(new DateTime(2024, 1, 11, 0, 35, 2).AddTicks(8486908), TimeScale.TDB) };
         var random = new Random(6254);
         long start = new DateTime(2023, 12, 16).Ticks;
         long span = new DateTime(2024, 3, 14).Ticks - start;
         for (int i = 0; i < 300; i++)
-            epochs.Add(new TimeSystem.Time(new DateTime(start + (long)(random.NextDouble() * span)), TimeFrame.TDBFrame));
+            epochs.Add(new TimeSystem.Time(new DateTime(start + (long)(random.NextDouble() * span)), TimeScale.TDB));
 
         foreach (var epoch in epochs)
         {
             var lro = new Spacecraft(-85, "LRO", epoch);
             Assert.Equal(epoch.DateTime.Ticks, lro.InitialOrbitalParameters.Epoch.DateTime.Ticks);
-            Assert.Equal(TimeFrame.TDBFrame, lro.InitialOrbitalParameters.Epoch.Frame);
+            Assert.Equal(TimeScale.TDB, lro.InitialOrbitalParameters.Epoch.Scale);
         }
     }
 
@@ -253,8 +252,8 @@ public class SecondsToTicksTests
         // .2052701). The ends are clamped to the search window: the window is the search window, tick for tick
         var searches = new System.Collections.Generic.List<Window>
         {
-            new(new TimeSystem.Time(new DateTime(2024, 2, 28, 3, 34, 37).AddTicks(2052700), TimeFrame.TDBFrame),
-                new TimeSystem.Time(new DateTime(2024, 2, 29, 3, 34, 37).AddTicks(2052700), TimeFrame.TDBFrame))
+            new(new TimeSystem.Time(new DateTime(2024, 2, 28, 3, 34, 37).AddTicks(2052700), TimeScale.TDB),
+                new TimeSystem.Time(new DateTime(2024, 2, 29, 3, 34, 37).AddTicks(2052700), TimeScale.TDB))
         };
         var random = new Random(6255);
         long start = new DateTime(2024, 1, 1).Ticks;
@@ -263,8 +262,8 @@ public class SecondsToTicksTests
         {
             long from = start + (long)(random.NextDouble() * span);
             long length = TimeSpan.TicksPerHour + (long)(random.NextDouble() * 10 * TimeSpan.TicksPerDay);
-            searches.Add(new Window(new TimeSystem.Time(new DateTime(from), TimeFrame.TDBFrame),
-                new TimeSystem.Time(new DateTime(from + length), TimeFrame.TDBFrame)));
+            searches.Add(new Window(new TimeSystem.Time(new DateTime(from), TimeScale.TDB),
+                new TimeSystem.Time(new DateTime(from + length), TimeScale.TDB)));
         }
 
         foreach (var search in searches)
@@ -277,8 +276,8 @@ public class SecondsToTicksTests
         }
 
         // A search window tagged UTC: the window is its TDB instants
-        var utc = new Window(new TimeSystem.Time(new DateTime(2024, 6, 1), TimeFrame.UTCFrame),
-            new TimeSystem.Time(new DateTime(2024, 6, 2), TimeFrame.UTCFrame));
+        var utc = new Window(new TimeSystem.Time(new DateTime(2024, 6, 1), TimeScale.UTC),
+            new TimeSystem.Time(new DateTime(2024, 6, 2), TimeScale.UTC));
         var inTdb = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(utc, 399, 301, RelationnalOperator.Greater, 1000.0,
             Aberration.None, TimeSpan.FromHours(6.0)).Single();
         Assert.Equal(utc.StartDate.ToTDB().DateTime.Ticks, inTdb.StartDate.DateTime.Ticks);
@@ -297,11 +296,11 @@ public class SecondsToTicksTests
         for (int i = 0; i < 100_000; i++)
         {
             long ticks = start + (long)(random.NextDouble() * span);
-            var tdb = new TimeSystem.Time(new DateTime(ticks), TimeFrame.TDBFrame);
-            var tai = new TimeSystem.Time(new DateTime(ticks), TimeFrame.TAIFrame);
-            long toTai = ticks - 321840000L - ExactTicks.Nearest(TDBTimeFrame.TdbMinusTt(tdb.Centuries()));
-            var tt = tai.ToTDT();
-            long fromTai = tt.DateTime.Ticks + ExactTicks.Nearest(TDBTimeFrame.TdbMinusTt(tt.Centuries()));
+            var tdb = new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB);
+            var tai = new TimeSystem.Time(new DateTime(ticks), TimeScale.TAI);
+            long toTai = ticks - 321840000L - ExactTicks.Nearest(TimeScaleConversions.TdbMinusTt(tdb.Centuries()));
+            var tt = tai.ToTT();
+            long fromTai = tt.DateTime.Ticks + ExactTicks.Nearest(TimeScaleConversions.TdbMinusTt(tt.Centuries()));
             Assert.Equal(toTai, tdb.ToTAI().DateTime.Ticks);
             Assert.Equal(fromTai, tai.ToTDB().DateTime.Ticks);
         }

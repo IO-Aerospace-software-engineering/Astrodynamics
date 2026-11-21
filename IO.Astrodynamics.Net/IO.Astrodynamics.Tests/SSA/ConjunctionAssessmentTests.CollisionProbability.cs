@@ -176,11 +176,12 @@ public partial class ConjunctionAssessmentTests
         {
             var miss = row.GetProperty("miss").EnumerateArray().Select(x => x.GetDouble()).ToArray();
             var cov = row.GetProperty("cov").EnumerateArray().Select(x => x.GetDouble()).ToArray();
-            var cov2D = new Matrix(2, 2);
-            cov2D.Set(0, 0, cov[0]);
-            cov2D.Set(0, 1, cov[1]);
-            cov2D.Set(1, 0, cov[1]);
-            cov2D.Set(1, 1, cov[2]);
+            var cov2DTerms = new double[2, 2];
+            cov2DTerms[0, 0] = cov[0];
+            cov2DTerms[0, 1] = cov[1];
+            cov2DTerms[1, 0] = cov[1];
+            cov2DTerms[1, 1] = cov[2];
+            var cov2D = new Matrix(cov2DTerms);
 
             var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss, cov2D, row.GetProperty("hbr").GetDouble());
 
@@ -205,11 +206,12 @@ public partial class ConjunctionAssessmentTests
         {
             var miss = row.GetProperty("miss").EnumerateArray().Select(x => x.GetDouble()).ToArray();
             var cov = row.GetProperty("cov").EnumerateArray().Select(x => x.GetDouble()).ToArray();
-            var cov2D = new Matrix(2, 2);
-            cov2D.Set(0, 0, cov[0]);
-            cov2D.Set(0, 1, cov[1]);
-            cov2D.Set(1, 0, cov[1]);
-            cov2D.Set(1, 1, cov[2]);
+            var cov2DTerms = new double[2, 2];
+            cov2DTerms[0, 0] = cov[0];
+            cov2DTerms[0, 1] = cov[1];
+            cov2DTerms[1, 0] = cov[1];
+            cov2DTerms[1, 1] = cov[2];
+            var cov2D = new Matrix(cov2DTerms);
 
             var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss, cov2D, row.GetProperty("hbr").GetDouble());
             double direct = EncounterPlaneProbability.Integrate(miss[0], miss[1], cov[0], cov[2], row.GetProperty("hbr").GetDouble());
@@ -245,16 +247,18 @@ public partial class ConjunctionAssessmentTests
     [Fact]
     public void CollisionProbability_DegenerateInputs_GiveZeroOrNull()
     {
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, 100.0);
-        cov2D.Set(1, 1, 25.0);
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = 100.0;
+        cov2DTerms[1, 1] = 25.0;
+        var cov2D = new Matrix(cov2DTerms);
 
         Assert.Equal(0.0, ConjunctionAssessment.ComputeFosterCollisionProbability(new[] { 1.0, 0.0 }, cov2D, 0.0));
         Assert.Null(ConjunctionAssessment.ComputeFosterCollisionProbability(new[] { 1.0, 0.0 }, cov2D, double.NaN));
         Assert.Null(ConjunctionAssessment.ComputeFosterCollisionProbability(new[] { 1.0, 0.0 }, new Matrix(3, 3), 5.0));
-        var notFinite = new Matrix(2, 2);
-        notFinite.Set(0, 0, double.PositiveInfinity);
-        notFinite.Set(1, 1, 1.0);
+        var notFiniteTerms = new double[2, 2];
+        notFiniteTerms[0, 0] = double.PositiveInfinity;
+        notFiniteTerms[1, 1] = 1.0;
+        var notFinite = new Matrix(notFiniteTerms);
         Assert.Null(ConjunctionAssessment.ComputeFosterCollisionProbability(new[] { 1.0, 0.0 }, notFinite, 5.0));
         Assert.Equal(0.0, EncounterPlaneProbability.Integrate(double.NaN, 0.0, 1.0, 1.0, 1.0));
         // A disc beyond the double range of the Gaussian: every sample underflows

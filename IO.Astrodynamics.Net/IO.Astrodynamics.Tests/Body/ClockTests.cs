@@ -32,7 +32,7 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clock = new Clock("clk", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clock,
                 new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    new TimeSystem.Time(DateTime.MinValue,TimeFrame.TDBFrame), Frames.Frame.ICRF));
+                    new TimeSystem.Time(DateTime.MinValue,TimeScale.TDB), Frames.Frame.ICRF));
             await clock.WriteAsync(new FileInfo("clock.tsc"));
             TextReader tr = new StreamReader("clock.tsc");
             var res = await tr.ReadToEndAsync();
@@ -75,7 +75,7 @@ namespace IO.Astrodynamics.Tests.Body
         {
             // Arrange
             var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
-            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var clock = new Clock("SHARED", 65536);
             var first = new Spacecraft(-1431, "FIRST", 100.0, 1000.0, clock, LeoAbout(earth, epoch));
 
@@ -109,12 +109,12 @@ namespace IO.Astrodynamics.Tests.Body
             var clock = new Clock("RETRY", 65536);
 
             // Act: non-orthogonal body axes
-            Assert.Throws<ArgumentException>(() => new Spacecraft(-1433, "FAILED", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)),
+            Assert.Throws<ArgumentException>(() => new Spacecraft(-1433, "FAILED", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)),
                 bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorX, bodyUp: Vector3.VectorZ));
 
             // Assert
             Assert.Null(clock.Spacecraft);
-            var valid = new Spacecraft(-1433, "VALID", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+            var valid = new Spacecraft(-1433, "VALID", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
             Assert.Same(valid, clock.Spacecraft);
         }
 
@@ -141,7 +141,7 @@ namespace IO.Astrodynamics.Tests.Body
                     barrier.SignalAndWait();
                     try
                     {
-                        built[k] = new Spacecraft(-1440 - k, "RACE" + k, 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+                        built[k] = new Spacecraft(-1440 - k, "RACE" + k, 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
                     }
                     catch (Exception e)
                     {
@@ -171,8 +171,8 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
             var clock = new Clock("SAME", 65536);
-            var first = new Spacecraft(-1434, "FIRST", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
-            var second = new Spacecraft(-1434, "SECOND", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+            var first = new Spacecraft(-1434, "FIRST", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
+            var second = new Spacecraft(-1434, "SECOND", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
             Assert.Same(clock, second.Clock);
             Assert.Same(first, clock.Spacecraft);
         }
@@ -187,7 +187,7 @@ namespace IO.Astrodynamics.Tests.Body
         {
             // Arrange
             var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
-            var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+            var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
             var spacecraft = new Spacecraft(-1435, "OWNCLK", 100.0, 1000.0, new Clock("OWNCLK", 256),
                 new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF));
             var tank = new FuelTank("t", "m", "s", 100.0, 100.0);

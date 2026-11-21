@@ -7,7 +7,7 @@ using Xunit;
 // Use aliases to avoid namespace conflicts with IO.Astrodynamics.Tests.* namespaces
 using AstroFrame = IO.Astrodynamics.Frames.Frame;
 using AstroTime = IO.Astrodynamics.TimeSystem.Time;
-using AstroTimeFrame = IO.Astrodynamics.TimeSystem.TimeFrame;
+using AstroTimeScale = IO.Astrodynamics.TimeSystem.TimeScale;
 using AstroCelestialBody = IO.Astrodynamics.Body.CelestialBody;
 using AstroVector3 = IO.Astrodynamics.Math.Vector3;
 using AstroStateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public OpmStateVectorTests()
         {
             TestKernels.EnsureSolarSystem();
-            _earth = new AstroCelestialBody(399, AstroFrame.ICRF, new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame));
+            _earth = new AstroCelestialBody(399, AstroFrame.ICRF, new AstroTime(_testEpoch, AstroTimeScale.UTC));
         }
 
         #region Constructor Tests
@@ -122,7 +122,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // Framework uses meters
             var position = new AstroVector3(6778137.0, 100000.0, 50000.0);
             var velocity = new AstroVector3(1000.0, 7500.0, 500.0);
-            var epoch = new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame);
+            var epoch = new AstroTime(_testEpoch, AstroTimeScale.UTC);
             var stateVector = new AstroStateVector(position, velocity, _earth, epoch, AstroFrame.ICRF);
 
             var opmSv = OpmStateVector.FromStateVector(stateVector);
@@ -141,7 +141,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var position = new AstroVector3(6778137.0, 0.0, 0.0);
             var velocity = new AstroVector3(0.0, 7500.0, 0.0);
-            var epoch = new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame);
+            var epoch = new AstroTime(_testEpoch, AstroTimeScale.UTC);
             var stateVector = new AstroStateVector(position, velocity, _earth, epoch, AstroFrame.ICRF);
 
             var opmSv = OpmStateVector.FromStateVector(stateVector);
@@ -160,7 +160,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var position = new AstroVector3(6778137.0, 0.0, 0.0);
             var velocity = new AstroVector3(0.0, 7500.0, 0.0);
-            var epoch = new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame);
+            var epoch = new AstroTime(_testEpoch, AstroTimeScale.UTC);
             var stateVector = new AstroStateVector(position, velocity, _earth, epoch, AstroFrame.ICRF);
             var comments = new[] { "Test comment" };
 
@@ -179,7 +179,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var position = new AstroVector3(6778137.0, 100000.0, 50000.0);
             var velocity = new AstroVector3(1000.0, 7500.0, 500.0);
-            var epoch = new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame);
+            var epoch = new AstroTime(_testEpoch, AstroTimeScale.UTC);
             var original = new AstroStateVector(position, velocity, _earth, epoch, AstroFrame.ICRF);
 
             var opmSv = OpmStateVector.FromStateVector(original);
@@ -278,7 +278,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var c = Components(parameter, value);
             var stateVector = new AstroStateVector(new AstroVector3(c[0] * 1000.0, c[1] * 1000.0, c[2] * 1000.0),
                 new AstroVector3(c[3] * 1000.0, c[4] * 1000.0, c[5] * 1000.0), _earth,
-                new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame), AstroFrame.ICRF);
+                new AstroTime(_testEpoch, AstroTimeScale.UTC), AstroFrame.ICRF);
             var ex = Assert.Throws<ArgumentOutOfRangeException>(() => OpmStateVector.FromStateVector(stateVector));
             Assert.Equal(parameter, ex.ParamName);
         }

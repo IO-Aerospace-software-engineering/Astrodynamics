@@ -25,8 +25,8 @@ public class SpiceExceptionTests : IDisposable
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("spice-exception-");
 
     // Past the coverage of de440s.bsp (1849 to 2150) and of earth_latest_high_prec.bpc (from 2000)
-    private static readonly TimeSystem.Time FarFuture = new(3000, 1, 1);
-    private static readonly TimeSystem.Time BeforeTheEarthPck = new(1900, 1, 1);
+    private static readonly TimeSystem.Time FarFuture = new(3000, 1, 1, TimeScale.TDB);
+    private static readonly TimeSystem.Time BeforeTheEarthPck = new(1900, 1, 1, TimeScale.TDB);
 
     public SpiceExceptionTests()
     {
@@ -67,7 +67,7 @@ public class SpiceExceptionTests : IDisposable
     public void AFrameNameSpiceDoesNotKnow_ThrowsArgumentException_WithTheSpiceExceptionInside()
     {
         var error = Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2021, 1, 1), IO.Astrodynamics.Frames.Frame.ICRF, new IO.Astrodynamics.Frames.Frame("IOA_R03_NO_FRAME")));
+            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), IO.Astrodynamics.Frames.Frame.ICRF, new IO.Astrodynamics.Frames.Frame("IOA_R03_NO_FRAME")));
         Assert.Equal("toFrame", error.ParamName);
         var spice = Assert.IsType<SpiceException>(error.InnerException);
         Assert.Equal("SPICE(UNKNOWNFRAME)", spice.ShortMessage);
@@ -92,7 +92,7 @@ public class SpiceExceptionTests : IDisposable
     public void ATwoBodyPropagationSpiceRejects_ThrowsSpiceException_WithAnEmptyLongMessage()
     {
         var state = new IO.Astrodynamics.OrbitalParameters.StateVector(IO.Astrodynamics.Math.Vector3.Zero, new IO.Astrodynamics.Math.Vector3(0.0, 7500.0, 0.0),
-            IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH_BODY, new TimeSystem.Time(2021, 1, 1), IO.Astrodynamics.Frames.Frame.ICRF);
+            IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH_BODY, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), IO.Astrodynamics.Frames.Frame.ICRF);
         var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.Propagate2Bodies(state, 3.986004418e14, TimeSpan.FromSeconds(60.0)));
         Assert.Equal("SPICE(ZEROPOSITION)", error.ShortMessage);
         Assert.Equal("", error.LongMessage);
@@ -133,8 +133,8 @@ public class SpiceExceptionTests : IDisposable
         Assert.Equal((sxform.Short, sxform.Long), (transform.ShortMessage, transform.LongMessage));
 
         var unknown = Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2021, 1, 1), IO.Astrodynamics.Frames.Frame.ICRF, new IO.Astrodynamics.Frames.Frame("IOA_R03_NO_FRAME")));
-        var unknownSxform = CspiceDirect.SxformMessages("J2000", "IOA_R03_NO_FRAME", new TimeSystem.Time(2021, 1, 1).ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), IO.Astrodynamics.Frames.Frame.ICRF, new IO.Astrodynamics.Frames.Frame("IOA_R03_NO_FRAME")));
+        var unknownSxform = CspiceDirect.SxformMessages("J2000", "IOA_R03_NO_FRAME", new TimeSystem.Time(2021, 1, 1, TimeScale.TDB).ToTDB().TimeSpanFromJ2000().TotalSeconds);
         var inner = Assert.IsType<SpiceException>(unknown.InnerException);
         Assert.Equal((unknownSxform.Short, unknownSxform.Long), (inner.ShortMessage, inner.LongMessage));
         Assert.False(CspiceDirect.ErrorPending());

@@ -16,6 +16,19 @@ Controls light-time and stellar-aberration correction in ephemeris queries.
 | `XLT` | Transmission light-time |
 | `XCN` | Transmission converged Newtonian |
 
+## TimeScale
+
+The scale of a `Time` (`Time.Scale`), a required argument of its constructors and factories since 11.0.0 (R24 of #668);
+see [Time & Windows](time-and-windows.md#time-scales).
+
+| Value | Description |
+|-------|-------------|
+| `TDB` | Barycentric Dynamical Time, SPICE's ET; 0, the scale of `default(Time)` |
+| `TT` | Terrestrial Time, TAI + 32.184 s |
+| `TAI` | International Atomic Time |
+| `UTC` | Coordinated Universal Time |
+| `GPS` | GPS time, TAI − 19 s |
+
 ## RelationnalOperator
 
 Used in geometry-finder constraint searches.

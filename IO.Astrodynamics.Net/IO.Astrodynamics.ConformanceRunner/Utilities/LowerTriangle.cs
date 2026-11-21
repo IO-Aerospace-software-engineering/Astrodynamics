@@ -23,19 +23,19 @@ public static class LowerTriangle
     public static Matrix ToMatrix(double[] lower, double scale = 1.0)
     {
         int n = Order(lower.Length);
-        var matrix = new Matrix(n, n);
+        var terms = new double[n, n];
         int k = 0;
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j <= i; j++)
             {
-                matrix.Set(i, j, lower[k] * scale);
-                matrix.Set(j, i, lower[k] * scale);
+                terms[i, j] = lower[k] * scale;
+                terms[j, i] = lower[k] * scale;
                 k++;
             }
         }
 
-        return matrix;
+        return new Matrix(terms);
     }
 
     /// <summary>The lower triangle of a square matrix, each number times <paramref name="scale"/>.</summary>

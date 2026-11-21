@@ -69,7 +69,7 @@ internal readonly struct OccultationBody
     /// </summary>
     internal Vector3 ToUnitSphere(in Vector3 y)
     {
-        return new Vector3((_axis1 * y) / _squaredLength1, (_axis2 * y) / _squaredLength2, (_axis3 * y) / _squaredLength3);
+        return new Vector3(_axis1.Dot(y) / _squaredLength1, _axis2.Dot(y) / _squaredLength2, _axis3.Dot(y) / _squaredLength3);
     }
 
     /// <summary>A x: the vector of ICRF whose coordinates in the space of the unit sphere are <paramref name="x"/>.</summary>
@@ -111,9 +111,9 @@ internal readonly struct OccultationBody
     {
         var d = ToUnitSphere(direction);
         var c = ToUnitSphere(Center);
-        double a = d * d;
-        double b = d * c;
-        double excess = c * c - 1.0;
+        double a = d.Dot(d);
+        double b = d.Dot(c);
+        double excess = c.Dot(c) - 1.0;
         double discriminant = b * b - a * excess;
         if (discriminant < 0.0 || b <= 0.0)
         {
@@ -131,7 +131,7 @@ internal readonly struct OccultationBody
     internal double RayClosestApproach(in Vector3 direction)
     {
         var d = ToUnitSphere(direction);
-        return (d * ToUnitSphere(Center)) / (d * d);
+        return d.Dot(ToUnitSphere(Center)) / d.Dot(d);
     }
 
     /// <summary>Two unit vectors orthogonal to the unit vector <paramref name="n"/> and to each other.</summary>

@@ -44,14 +44,14 @@ namespace IO.Astrodynamics.Maneuver
         /// <summary>
         /// Fires at apogee: r·v = 0, transitioning from positive to negative.
         /// </summary>
-        public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+        public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
         public override CrossingDirection EventCrossingDirection => CrossingDirection.PositiveToNegative;
 
         /// <summary>
         /// Apogee must be nearly aligned with ascending node (dot product > 0.9).
         /// </summary>
         public override bool CheckPreconditions(StateVector state) =>
-            System.Math.Abs(state.ApogeeVector().NormalizeOrZero() * state.AscendingNodeVector().NormalizeOrZero()) > 0.9;
+            System.Math.Abs(state.ApogeeVector().NormalizeOrZero().Dot(state.AscendingNodeVector().NormalizeOrZero())) > 0.9;
 
         protected override Vector3 Execute(StateVector stateVector)
         {
@@ -77,7 +77,7 @@ namespace IO.Astrodynamics.Maneuver
                 e = 1.0 - (2.0 / ((TargetPerigeeHeight / apogee) + 1.0));
 
                 //Periapse argument will turn by 180°
-                meanAnomaly = (meanAnomaly + Constants.PI) % Constants._2PI;
+                meanAnomaly = (meanAnomaly + Constants.PI) % Constants.TwoPi;
                 periapsisArgument += Constants.PI;
             }
             else

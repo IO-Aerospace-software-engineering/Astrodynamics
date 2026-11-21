@@ -28,8 +28,8 @@ public class EphemerisTests
             command.Ephemeris("Data", 399, 10,
                 new WindowParameters
                 {
-                    Begin =  new Time( new DateTime(2023, 01, 01, 1, 0, 0),TimeFrame.TDBFrame).ToString() ,
-                    End = new Time( new DateTime(2023, 01, 01, 1, 1, 0),TimeFrame.TDBFrame).ToString()
+                    Begin =  new Time( new DateTime(2023, 01, 01, 1, 0, 0),TimeScale.TDB).ToString() ,
+                    End = new Time( new DateTime(2023, 01, 01, 1, 1, 0),TimeScale.TDB).ToString()
                 }, TimeSpan.FromMinutes(1), "ICRF", "LT", toKeplerian: true);
             var res = sb.ToString();
 
@@ -50,8 +50,8 @@ public class EphemerisTests
             Console.SetOut(sw);
             command.Ephemeris("Data", 399, 10, new WindowParameters
             {
-                Begin =  new TimeSystem.Time( new DateTime(2023, 01, 01, 1, 0, 0),TimeFrame.TDBFrame).ToString() ,
-                End = new TimeSystem.Time( new DateTime(2023, 01, 01, 1, 1, 0),TimeFrame.TDBFrame).ToString()
+                Begin =  new TimeSystem.Time( new DateTime(2023, 01, 01, 1, 0, 0),TimeScale.TDB).ToString() ,
+                End = new TimeSystem.Time( new DateTime(2023, 01, 01, 1, 1, 0),TimeScale.TDB).ToString()
             }, TimeSpan.FromMinutes(1));
             var res = sb.ToString();
             Assert.Equal(
@@ -81,8 +81,8 @@ public class EphemerisTests
                 Console.SetOut(sw);
                 command.Ephemeris("Data", 399, 10, new WindowParameters
                 {
-                    Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame).ToString(),
-                    End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeFrame.TDBFrame).ToString()
+                    Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB).ToString(),
+                    End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeScale.TDB).ToString()
                 }, TimeSpan.FromMinutes(1), name);
                 return sb.ToString();
             }
@@ -113,8 +113,8 @@ public class EphemerisTests
                 Console.SetOut(sw);
                 command.Ephemeris("Data", observer == 10 ? 399 : 301, observer, new WindowParameters
                 {
-                    Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame).ToString(),
-                    End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeFrame.TDBFrame).ToString()
+                    Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB).ToString(),
+                    End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeScale.TDB).ToString()
                 }, TimeSpan.FromMinutes(1), frame);
                 var lines = sb.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
                 Assert.Equal(2, lines.Length);
@@ -126,8 +126,8 @@ public class EphemerisTests
             Console.SetOut(new StringWriter(osb));
             orientation.Orientation("Data", 399, new WindowParameters
             {
-                Begin = new Time(2023, 01, 01, 1, 0, 0).ToString(),
-                End = new Time(2023, 01, 01, 1, 1, 0).ToString()
+                Begin = new Time(2023, 01, 01, 1, 0, 0, TimeScale.TDB).ToString(),
+                End = new Time(2023, 01, 01, 1, 1, 0, TimeScale.TDB).ToString()
             }, TimeSpan.FromMinutes(1), frame);
             Assert.All(osb.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries),
                 line => Assert.EndsWith("Frame : J2000", line));
@@ -149,8 +149,8 @@ public class EphemerisTests
             Console.SetOut(sw);
             command.Ephemeris("Data", 301, 399013, new WindowParameters
             {
-                Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame).ToString(),
-                End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeFrame.TDBFrame).ToString()
+                Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB).ToString(),
+                End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeScale.TDB).ToString()
             }, TimeSpan.FromMinutes(1));
             var res = sb.ToString();
 
@@ -182,7 +182,7 @@ public class EphemerisTests
     {
         using (Configuration.Lock())
         {
-            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB);
             var command = new EphemerisCommand();
             Console.SetOut(new StringWriter(new StringBuilder()));
             var fromCli = Record.Exception(() =>
@@ -216,7 +216,7 @@ public class EphemerisTests
         using (Configuration.Lock())
         {
             SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB);
 
             // The observer the ephemeris command builds (Helpers.CreateLocalizable, internal to the CLI)
             var createLocalizable = typeof(EphemerisCommand).Assembly.GetType("IO.Astrodynamics.CLI.Helpers")!
@@ -317,7 +317,7 @@ public class EphemerisTests
         using (Configuration.Lock())
         {
             SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB);
             var directory = Directory.CreateTempSubdirectory("clinoto-");
             var spk = new FileInfo(Path.Combine(directory.FullName, "noto750.bsp"));
             var earth = new Body.CelestialBody(399);

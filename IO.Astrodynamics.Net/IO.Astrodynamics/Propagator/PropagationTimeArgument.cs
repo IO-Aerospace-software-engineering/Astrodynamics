@@ -3,8 +3,6 @@
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
-
 namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
@@ -24,7 +22,7 @@ namespace IO.Astrodynamics.Propagator;
 /// </para>
 /// <para>
 /// The TT mapping is computed in double seconds, the tick-exact label plus IO's TDB − TT series
-/// (<see cref="TDBTimeFrame.TdbMinusTt"/>), never through chained <see cref="Time"/> conversions, which round the
+/// (<see cref="TimeScaleConversions.TdbMinusTt"/>), never through chained <see cref="Time"/> conversions, which round the
 /// offset to the 100 ns tick at each step. A label is still rounded to the tick when it becomes a <see cref="Time"/>
 /// (<see cref="Time.AddSeconds"/>): the nearest tick of its double since #625, within half a tick of its instant and the
 /// rounding of the double (it was at or before its instant, by less than 1.0012e-7 s, when AddSeconds truncated). The
@@ -50,7 +48,7 @@ internal abstract class PropagationTimeArgument
     private const double TicksPerSecond = TimeSpan.TicksPerSecond;
     private const double TicksPerCentury = TimeSpan.TicksPerDay * 36525.0;
     private const double SecondsPerCentury = 86400.0 * 36525.0;
-    private static readonly long J2000Ticks = Time.J2000.Ticks;
+    private static readonly long J2000Ticks = Time.J2000Calendar.Ticks;
 
     /// <summary>
     /// The relative drift between the time argument and the TDB labels below which the end of a window is taken as the
@@ -98,12 +96,12 @@ internal abstract class PropagationTimeArgument
     internal static Time EpochAfter(ILocalizable centralBody, in Time from, double seconds)
     {
         var argument = For(centralBody);
-        if (from.Frame is TDBTimeFrame)
+        if (from.Scale == TimeScale.TDB)
             return argument.EpochAt(from, seconds);
 
         return argument == Tt
-            ? from.ToTDT().AddSeconds(seconds).ConvertTo(from.Frame)
-            : from.ToTDB().AddSeconds(seconds).ConvertTo(from.Frame);
+            ? from.ToTT().AddSeconds(seconds).ConvertTo(from.Scale)
+            : from.ToTDB().AddSeconds(seconds).ConvertTo(from.Scale);
     }
 
     /// <summary>
@@ -197,13 +195,13 @@ internal abstract class PropagationTimeArgument
     // the series in double, any other frame exactly in ticks (TT, TAI, GPS, UTC and local time differ by whole ticks)
     private static (long Ticks, double Correction) TerrestrialTimeParts(in Time time)
     {
-        if (time.Frame is TDBTimeFrame)
+        if (time.Scale == TimeScale.TDB)
             return (time.DateTime.Ticks, -TdbMinusTtAtTdbLabel(time.DateTime.Ticks));
 
-        if (time.Frame is TDTTimeFrame)
+        if (time.Scale == TimeScale.TT)
             return (time.DateTime.Ticks, 0.0);
 
-        return (time.ToTDT().DateTime.Ticks, 0.0);
+        return (time.ToTT().DateTime.Ticks, 0.0);
     }
 
     // The last TDB label read, with its TDB − TT: the 13 stages of a step share their base
@@ -222,8 +220,8 @@ internal abstract class PropagationTimeArgument
             return _lastLabelOffset;
 
         double centuries = (tdbTicks - J2000Ticks) / TicksPerCentury;
-        double offset = TDBTimeFrame.TdbMinusTt(centuries);
-        offset = TDBTimeFrame.TdbMinusTt(centuries - offset / SecondsPerCentury);
+        double offset = TimeScaleConversions.TdbMinusTt(centuries);
+        offset = TimeScaleConversions.TdbMinusTt(centuries - offset / SecondsPerCentury);
         _lastLabelTicks = tdbTicks;
         _lastLabelOffset = offset;
         _hasLastLabel = true;
@@ -266,8 +264,8 @@ internal abstract class PropagationTimeArgument
         {
             var (ticks, correction) = TerrestrialTimeParts(baseEpoch);
             double ttSeconds = (ticks - J2000Ticks) / TicksPerSecond + correction + t;
-            double offset = TDBTimeFrame.TdbMinusTt(ttSeconds / SecondsPerCentury);
-            var label = baseEpoch.Frame is TDBTimeFrame ? baseEpoch : new Time(new DateTime(ticks), TimeFrame.TDBFrame);
+            double offset = TimeScaleConversions.TdbMinusTt(ttSeconds / SecondsPerCentury);
+            var label = baseEpoch.Scale == TimeScale.TDB ? baseEpoch : new Time(new DateTime(ticks), TimeScale.TDB);
             return label.AddSeconds(t + (offset + correction));
         }
 

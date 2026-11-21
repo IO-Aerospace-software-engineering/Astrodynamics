@@ -228,7 +228,7 @@ public class LightTimeCorrectionTests
     public void CoordinateSiteGuideWindow()
     {
         var expected = _reference.GetProperty("guide_window_lt").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
-        var windows = _site.FindWindowsOnDistanceConstraint(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1), new TimeSystem.Time(2024, 1, 2)), _moon,
+        var windows = _site.FindWindowsOnDistanceConstraint(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _moon,
             RelationnalOperator.Lower, 400000000, Aberration.LT, System.TimeSpan.FromMinutes(10)).ToArray();
         Assert.Single(windows);
         double start = (windows[0].StartDate - expected[0]).TotalSeconds;
@@ -611,7 +611,7 @@ public class LightTimeCorrectionTests
     {
         const double c = global::IO.Astrodynamics.Constants.C;
         double lightTime = center.Position.Magnitude() / c;
-        double rate = center.Position.Normalize() * center.Velocity / c;
+        double rate = center.Position.Normalize().Dot(center.Velocity) / c;
         var t = state.Epoch;
         var centerEpoch = t.AddSeconds(sign * lightTime);
         double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds + sign * lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
@@ -754,7 +754,7 @@ public class LightTimeCorrectionTests
         {
             var horizontal = _site.GetHorizontalCoordinates(_epochs[e], target, flag);
             var state = target.GetEphemeris(_epochs[e], _site, Frames.Frame.ICRF, flag).ToStateVector();
-            return [horizontal.Range, horizontal.Azimuth, horizontal.Elevation, state.Position.Normalize() * state.Velocity];
+            return [horizontal.Range, horizontal.Azimuth, horizontal.Elevation, state.Position.Normalize().Dot(state.Velocity)];
         }
 
         double[] Expected(Aberration flag, int e) =>
@@ -768,13 +768,13 @@ public class LightTimeCorrectionTests
                 var actual = Values(flag, e);
                 var expected = Expected(flag, e);
                 var delta = actual.Zip(expected, (a, x) => a - x).ToArray();
-                delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants._2PI);
+                delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants.TwoPi);
                 if (flag != Aberration.None)
                 {
                     var none = Values(Aberration.None, e);
                     var noneExpected = Expected(Aberration.None, e);
                     for (int k = 0; k < 4; k++) delta[k] -= none[k] - noneExpected[k];
-                    delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants._2PI);
+                    delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants.TwoPi);
                 }
 
                 worstAngle = System.Math.Max(worstAngle, System.Math.Max(System.Math.Abs(delta[1] * System.Math.Cos(expected[2])), System.Math.Abs(delta[2])));

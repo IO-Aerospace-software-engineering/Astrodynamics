@@ -106,7 +106,7 @@ public class NearestTickSpanTests
     public void AddDaysHoursMinutes_AreTheNearestTick()
     {
         var values = new[] { 1.0 / 3.0, -1.0 / 3.0, 0.1, 2.0 / 3.0, 1.0 / 7.0, -1.0 / 7.0, 1e-9, 12345.678901234, 0.5e-7 / 3600.0 };
-        var start = new TimeSystem.Time(2021, 6, 2, 3, 4, 5, frame: TimeFrame.TDBFrame);
+        var start = new TimeSystem.Time(2021, 6, 2, 3, 4, 5, TimeScale.TDB);
         int moved = 0;
         foreach (double value in values)
         {
@@ -120,7 +120,7 @@ public class NearestTickSpanTests
                 long expected = ExactTicks.Nearest(value, ticksPerUnit);
                 long actual = add(value).DateTime.Ticks - start.DateTime.Ticks;
                 Assert.True(expected == actual, $"{name} {value:R}: {actual} ticks, the nearest {expected}");
-                Assert.Equal(start.Frame, add(value).Frame);
+                Assert.Equal(start.Scale, add(value).Scale);
                 if (truncate(value).Ticks - start.DateTime.Ticks != expected)
                 {
                     moved++;
@@ -147,14 +147,14 @@ public class NearestTickSpanTests
             double days = jd - 2451545.0;
             Assert.Equal(jd, days + 2451545.0);
             long expected = ExactTicks.Nearest(days, TimeSpan.TicksPerDay);
-            foreach (ITimeFrame frame in new ITimeFrame[] { TimeFrame.UTCFrame, TimeFrame.TDBFrame })
+            foreach (TimeScale frame in new TimeScale[] { TimeScale.UTC, TimeScale.TDB })
             {
                 var time = TimeSystem.Time.CreateFromJD(jd, frame);
-                Assert.True(expected == time.DateTime.Ticks - TimeSystem.Time.J2000.Ticks, $"JD {jd:R}");
-                Assert.Equal(frame, time.Frame);
+                Assert.True(expected == time.DateTime.Ticks - TimeSystem.Time.J2000Calendar.Ticks, $"JD {jd:R}");
+                Assert.Equal(frame, time.Scale);
             }
 
-            if (TimeSystem.Time.J2000.AddDays(days).Ticks - TimeSystem.Time.J2000.Ticks != expected)
+            if (TimeSystem.Time.J2000Calendar.AddDays(days).Ticks - TimeSystem.Time.J2000Calendar.Ticks != expected)
             {
                 moved++;
             }
@@ -255,7 +255,7 @@ public class NearestTickSpanTests
 
             counted++;
             Assert.True(expected == orbit.Period().Ticks, $"a = {a:R} m: {orbit.Period().Ticks} ticks, the nearest {expected}");
-            if (Truncated(IO.Astrodynamics.Constants._2PI * System.Math.Sqrt(a * a * a / earth.GM)) != expected)
+            if (Truncated(IO.Astrodynamics.Constants.TwoPi * System.Math.Sqrt(a * a * a / earth.GM)) != expected)
             {
                 moved++;
             }
@@ -279,7 +279,7 @@ public class NearestTickSpanTests
         int counted = 0, moved = 0, solarCounted = 0, solarMoved = 0;
         for (int day = 0; day < 40; day++)
         {
-            var epoch = new TimeSystem.Time(2021, 1, 1, frame: TimeFrame.TDBFrame).AddSeconds(day * 9.1e5 + 1234.5);
+            var epoch = new TimeSystem.Time(2021, 1, 1, TimeScale.TDB).AddSeconds(day * 9.1e5 + 1234.5);
             foreach (var body in new[] { earth, moon })
             {
                 var omega = body.GetOrientation(Frames.Frame.ICRF, epoch).AngularVelocity;
@@ -290,7 +290,7 @@ public class NearestTickSpanTests
                 {
                     counted++;
                     Assert.True(expected == sidereal.Ticks, $"{body.Name} at {epoch}: {sidereal.Ticks} ticks, the nearest {expected}");
-                    if (Truncated(IO.Astrodynamics.Constants._2PI / omega.Magnitude()) != expected)
+                    if (Truncated(IO.Astrodynamics.Constants.TwoPi / omega.Magnitude()) != expected)
                     {
                         moved++;
                     }
@@ -417,7 +417,7 @@ public class NearestTickSpanTests
                 spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
                 spacecraft.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spacecraft.FuelTanks.First()));
                 var target = new KeplerianElements(7000000.0 + 1111.0 * k, 0.01, 0.1, 0.0, 0.0, 0.3 + 0.05 * k, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-                var maneuver = new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, target, revolutions,
+                var maneuver = new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, target, revolutions,
                     spacecraft.Engines.First());
                 var state = orbit.ToStateVector();
                 maneuver.TryExecute(state);
@@ -428,13 +428,13 @@ public class NearestTickSpanTests
                 double deltaTrueAnomaly = targetTrueLongitude - local.TrueLongitude();
                 if (deltaTrueAnomaly < 0.0)
                 {
-                    deltaTrueAnomaly += IO.Astrodynamics.Constants._2PI;
+                    deltaTrueAnomaly += IO.Astrodynamics.Constants.TwoPi;
                 }
 
                 double e = local.Eccentricity();
                 double eccentricAnomaly = IO.Astrodynamics.OrbitalParameters.OrbitalParameters.EllipticAnomaly(deltaTrueAnomaly, e);
                 double t1 = local.Period().TotalSeconds;
-                double t = t1 / IO.Astrodynamics.Constants._2PI * (eccentricAnomaly - e * System.Math.Sin(eccentricAnomaly));
+                double t = t1 / IO.Astrodynamics.Constants.TwoPi * (eccentricAnomaly - e * System.Math.Sin(eccentricAnomaly));
                 double t2 = t1 - t / revolutions;
                 double hold = t2 * revolutions * 0.9;
 
@@ -466,7 +466,7 @@ public class NearestTickSpanTests
     [Fact]
     public void FollowingLaunchWindows_AreTheNearestTick()
     {
-        var epoch = new TimeSystem.Time(2021, 6, 2);
+        var epoch = new TimeSystem.Time(2021, 6, 2, TimeScale.TDB);
         var earth = TestHelpers.Earth;
         var planetodetic = new Planetodetic(-81.0 * IO.Astrodynamics.Constants.Deg2Rad, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 0.0);
         var site = new LaunchSite(33, "l1", earth, planetodetic, default, new AzimuthRange(0.0, 6.0));
@@ -517,8 +517,8 @@ public class NearestTickSpanTests
 
                 // Before 11.0.0: half the truncated period by integer division, plus the truncated arc at the rate of the
                 // truncated period
-                double formerRate = IO.Astrodynamics.Constants._2PI / TimeSpan.FromSeconds(IO.Astrodynamics.Constants._2PI / omega.Magnitude()).TotalSeconds;
-                long former = Truncated(IO.Astrodynamics.Constants._2PI / omega0.Magnitude()) / 2 + sign * Truncated(deltaL * 2.0 / formerRate);
+                double formerRate = IO.Astrodynamics.Constants.TwoPi / TimeSpan.FromSeconds(IO.Astrodynamics.Constants.TwoPi / omega.Magnitude()).TotalSeconds;
+                long former = Truncated(IO.Astrodynamics.Constants.TwoPi / omega0.Magnitude()) / 2 + sign * Truncated(deltaL * 2.0 / formerRate);
                 if (former != expected)
                 {
                     moved++;

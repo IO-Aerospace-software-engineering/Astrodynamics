@@ -42,7 +42,7 @@ public class IntegratorInitializationTests
         _output = output;
     }
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
     private static Window OneHour => new(Epoch, Epoch.AddHours(1.0));
 
@@ -244,7 +244,7 @@ public class IntegratorInitializationTests
         Assert.Single(recorder.Initializations);
         Assert.Same(earth, state.Observer);
         Assert.Equal(Frames.Frame.ICRF, state.Frame);
-        Assert.Equal(TimeFrame.TDBFrame, state.Epoch.Frame);
+        Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
         LabelAssert.Equal(window.StartDate.ToTDB(), state.Epoch);
         Assert.NotEmpty(spacecraft.PropagatedStates);
     }

@@ -122,7 +122,7 @@ public abstract class ConjunctionDensePassTestBase
     protected static double CspiceRangeRate(TimeSystem.Time epoch, CrossingEncounterCase crossing)
     {
         var (position, velocity) = CspiceRelative(epoch, crossing);
-        return position * velocity;
+        return position.Dot(velocity);
     }
 
     protected static StateVector CspiceState(TimeSystem.Time epoch, int id, int observer = 399)
@@ -539,8 +539,8 @@ public abstract class ConjunctionDensePassTestBase
             else if (locmin.Length > 0 && locmin.All(m => NearAnEnd(m.Epoch)))
             {
                 // Only minima within the band of an end, none listed: an end, as AssertSlowPassLists
-                Assert.True(encounter.EncounterState.Epoch.HasSameLabel(window.StartDate) ||
-                            encounter.EncounterState.Epoch.HasSameLabel(window.EndDate));
+                Assert.True(encounter.EncounterState.Epoch.EqualsExact(window.StartDate) ||
+                            encounter.EncounterState.Epoch.EqualsExact(window.EndDate));
             }
             else
             {
@@ -649,7 +649,7 @@ public abstract class ConjunctionDensePassTestBase
         if (locmin.Length > 0)
         {
             // Only minima within the band of an end, none listed: an end
-            Assert.True(encounter.EncounterState.Epoch.HasSameLabel(window.StartDate) || encounter.EncounterState.Epoch.HasSameLabel(window.EndDate));
+            Assert.True(encounter.EncounterState.Epoch.EqualsExact(window.StartDate) || encounter.EncounterState.Epoch.EqualsExact(window.EndDate));
             return;
         }
 
@@ -727,7 +727,7 @@ public abstract class ConjunctionDensePassTestBase
     {
         double h = epoch.AddSeconds(1.0e-3) > crossing.Window.EndDate ? -1.0e-3 : 1.0e-3;
         var (position, velocity) = CspiceRelative(epoch, crossing);
-        double g = position * velocity;
+        double g = position.Dot(velocity);
         double slope = (CspiceRangeRate(epoch.AddSeconds(h), crossing) - g) / h;
         double squared = position.MagnitudeSquared();
         if (slope <= 0.0)

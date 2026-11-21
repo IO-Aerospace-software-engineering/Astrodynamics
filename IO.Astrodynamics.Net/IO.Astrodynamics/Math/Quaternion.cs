@@ -253,7 +253,7 @@ namespace IO.Astrodynamics.Math
 
         public static Quaternion operator *(Quaternion lhs, Quaternion rhs)
         {
-            return new Quaternion(lhs.W * rhs.W - lhs.VectorPart * rhs.VectorPart, rhs.VectorPart * lhs.W + lhs.VectorPart * rhs.W + lhs.VectorPart.Cross(rhs.VectorPart));
+            return new Quaternion(lhs.W * rhs.W - lhs.VectorPart.Dot(rhs.VectorPart), rhs.VectorPart * lhs.W + lhs.VectorPart * rhs.W + lhs.VectorPart.Cross(rhs.VectorPart));
         }
 
         public static Quaternion operator /(Quaternion lhs, double rhs)

@@ -45,7 +45,7 @@ public class Sgp4Solver : ICategorySolver
         var instants = new List<Time>();
         if (inputs.TsinceMin != null)
         {
-            var epoch = tle.Epoch.ToTDT();
+            var epoch = tle.Epoch.ToTT();
             instants.AddRange(inputs.TsinceMin.ConvertAll(tsince => epoch.AddSeconds(60.0 * tsince)));
         }
         else

@@ -47,7 +47,7 @@ public class ConjunctionPostBurnTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _start = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, frame: TimeFrame.UTCFrame).ToTDB();
+        _start = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTDB();
         _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, _start);
     }
 

@@ -207,7 +207,7 @@ public sealed class Lot4CaseTests : IDisposable
     [Fact]
     public void TheSamplesOfAnAttitude_EndAtTheEndOfTheWindow_WhoseLengthIsAWholeNumberOfSteps()
     {
-        var start = new Time(2026, 3, 1, 0, 0, 0, frame: TimeFrame.UTCFrame);
+        var start = new Time(2026, 3, 1, 0, 0, 0, TimeScale.UTC);
         Assert.Equal(121, AttitudeSolver.SampleCount(new Window(start, start.AddSeconds(7200.0)), 60.0));
         Assert.Throws<ArgumentException>(() => AttitudeSolver.SampleCount(new Window(start, start.AddSeconds(7230.0)), 60.0));
         Assert.Throws<ArgumentException>(() => AttitudeSolver.SampleCount(new Window(start, start.AddSeconds(7200.0)), 0.0));
@@ -216,7 +216,7 @@ public sealed class Lot4CaseTests : IDisposable
     [Fact]
     public void TheCrossingsOfWindows_LeaveOutTheBoundsOfTheSearch()
     {
-        var s = new Time(2026, 1, 20, 6, 0, 0, frame: TimeFrame.TDBFrame);
+        var s = new Time(2026, 1, 20, 6, 0, 0, TimeScale.TDB);
         var search = new Window(s, s.AddSeconds(1000.0));
         var windows = new[] { new Window(s, s.AddSeconds(100.0)), new Window(s.AddSeconds(300.0), s.AddSeconds(400.0)), new Window(s.AddSeconds(900.0), s.AddSeconds(1000.0)) };
 
@@ -227,7 +227,7 @@ public sealed class Lot4CaseTests : IDisposable
     [Fact]
     public void AnOccultation_CutsThePassesItOverlaps()
     {
-        var s = new Time(2023, 12, 15, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        var s = new Time(2023, 12, 15, 0, 0, 0, TimeScale.TDB);
         Window W(double a, double b) => new(s.AddSeconds(a), s.AddSeconds(b));
         var passes = new[] { W(0.0, 100.0), W(200.0, 300.0), W(400.0, 500.0) };
         var hidden = new[] { W(50.0, 60.0), W(250.0, 350.0), W(390.0, 510.0) };

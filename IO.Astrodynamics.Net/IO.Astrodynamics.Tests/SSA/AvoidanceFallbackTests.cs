@@ -28,7 +28,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// </summary>
 public sealed class AvoidanceFallbackCase
 {
-    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
     internal static readonly TimeSystem.Time Tca = Start.AddHours(2.0);
     internal static readonly ManeuverExecutionError Gates = new()
         { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
@@ -91,7 +91,7 @@ public sealed class AvoidanceFallbackCase
         double angle = 70.0 * IO.Astrodynamics.Constants.Deg2Rad;
         var v = protectedAtTca.Velocity;
         var velocity = v * System.Math.Cos(angle) + radial.Cross(v) * System.Math.Sin(angle) +
-                       radial * (radial * v) * (1.0 - System.Math.Cos(angle));
+                       radial * radial.Dot(v) * (1.0 - System.Math.Cos(angle));
         return ConjunctionCovarianceCase.WithRtnCovariance(
             new StateVector(protectedAtTca.Position + radial * 120.0 + normal * 160.0, velocity, protectedAtTca.Observer,
                 protectedAtTca.Epoch, protectedAtTca.Frame), new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 });

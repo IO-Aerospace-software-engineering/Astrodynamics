@@ -613,12 +613,12 @@ public class GeopotentialGravitationalField : GravitationalField
         var h0 = new Vector3(harmonics[0], harmonics[3], harmonics[4]);
         var h1 = new Vector3(harmonics[3], harmonics[1], harmonics[5]);
         var h2 = new Vector3(harmonics[4], harmonics[5], harmonics[2]);
-        var hc0 = new Vector3(h0 * c0, h1 * c0, h2 * c0);
-        var hc1 = new Vector3(h0 * c1, h1 * c1, h2 * c1);
-        var hc2 = new Vector3(h0 * c2, h1 * c2, h2 * c2);
+        var hc0 = new Vector3(h0.Dot(c0), h1.Dot(c0), h2.Dot(c0));
+        var hc1 = new Vector3(h0.Dot(c1), h1.Dot(c1), h2.Dot(c1));
+        var hc2 = new Vector3(h0.Dot(c2), h1.Dot(c2), h2.Dot(c2));
 
-        double e00 = c0 * hc0, e01 = c0 * hc1, e02 = c0 * hc2;
-        double e11 = c1 * hc1, e12 = c1 * hc2, e22 = c2 * hc2;
+        double e00 = c0.Dot(hc0), e01 = c0.Dot(hc1), e02 = c0.Dot(hc2);
+        double e11 = c1.Dot(hc1), e12 = c1.Dot(hc2), e22 = c2.Dot(hc2);
         dadr[0] += e00;
         dadr[1] += e01;
         dadr[2] += e02;

@@ -93,7 +93,7 @@ public class ClaudeMdExamplesTests
 
     #region The inputs of the blocks
 
-    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
 
@@ -139,7 +139,7 @@ public class ClaudeMdExamplesTests
         switch (block)
         {
             case "net:1": Assert.NotNull(ClaudeMdExamples.Net01(Earth, Epoch)); break;
-            case "net:2": Assert.NotNull(ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21))); break;
+            case "net:2": Assert.NotNull(ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21, TimeScale.TDB))); break;
             case "net:8": Assert.Single(ClaudeMdExamples.Net08(PropagatedWithImpulse(-6701, out _), Epoch.AddHours(2.0)).Data.Maneuvers); break;
             case "net:9": Assert.NotNull(ClaudeMdExamples.Net09(Orbit().ToStateVector())); break;
             case "net:10": Assert.NotNull(ClaudeMdExamples.Net10(Orbit().ToStateVector())); break;
@@ -203,7 +203,7 @@ public class ClaudeMdExamplesTests
     [Fact]
     public void TleBlock_GivesTheCatalogNumberOfTheText()
     {
-        var tle = ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21));
+        var tle = ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21, TimeScale.TDB));
         Assert.Equal(int.Parse(tle.Line1.Substring(2, 5), System.Globalization.CultureInfo.InvariantCulture), tle.NoradCatalogId);
         Assert.Equal(25544, tle.NoradCatalogId);
     }
@@ -334,7 +334,7 @@ public class ClaudeMdExamplesTests
 
     // The angle between two vectors, by atan2(|a × b|, a · b), which resolves angles near 0 to the rounding of the
     // components (Vector3.Angle's acos resolves only about 1.5e-8 rad there)
-    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI run 43745883709, 2026-11-15;
     // MEASURE line below), rounded up at the second significant digit: the angles of the Earth observation TRIAD's Down to
@@ -365,7 +365,7 @@ public class ClaudeMdExamplesTests
             var sunFromEarth = SpiceAPI.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
                 Aberration.None).ToStateVector().Position;
             var sunDirection = sunFromEarth - state.Position;
-            var perpendicular = sunDirection - nadir * (sunDirection * nadir);
+            var perpendicular = sunDirection - nadir * sunDirection.Dot(nadir);
             worstDown = System.Math.Max(worstDown, AngleBetween(Spacecraft.Down.Rotate(q), nadir));
             worstRight = System.Math.Max(worstRight, AngleBetween(Spacecraft.Right.Rotate(q), perpendicular));
         }

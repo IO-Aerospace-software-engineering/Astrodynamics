@@ -39,7 +39,7 @@ namespace IO.Astrodynamics.Tests;
 /// </remarks>
 public class KernelRegistryTests : IDisposable
 {
-    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1);
+    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, TimeScale.TDB);
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("kernel-registry-");
     private readonly ITestOutputHelper _output;
 

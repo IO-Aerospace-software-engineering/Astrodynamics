@@ -142,7 +142,7 @@ public class PropagatorTests
     {
         Clock clk = new Clock("My clock", 256);
 
-        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
+        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
         var orbit = new StateVector(
             new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
             new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
@@ -257,7 +257,7 @@ public class PropagatorTests
         // Conformance case propagator_24h_leo_grav10_001, Velocity-Verlet with a fixed 1 s step.
         Clock clk = new Clock("My clock", 256);
 
-        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
+        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
@@ -306,7 +306,7 @@ public class PropagatorTests
         // Conformance case propagator_24h_geo_grav70_002, Velocity-Verlet with a fixed 1 s step.
         Clock clk = new Clock("My clock", 256);
 
-        var utcEpoch = new Astrodynamics.TimeSystem.Time(2026, 2, 9, 10, 22, 58, millisecond: 958, frame: TimeFrame.UTCFrame);
+        var utcEpoch = new Astrodynamics.TimeSystem.Time(2026, 2, 9, 10, 22, 58, 958, TimeScale.UTC);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70)
@@ -370,7 +370,7 @@ public class PropagatorTests
         // Conformance case propagator_24h_sso_grav10_003, Velocity-Verlet with a fixed 1 s step.
         Clock clk = new Clock("My clock", 256);
 
-        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
+        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 6, 1, 10, 30, 0, TimeScale.UTC);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)

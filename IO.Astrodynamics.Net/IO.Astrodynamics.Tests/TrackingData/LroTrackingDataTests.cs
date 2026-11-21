@@ -43,8 +43,8 @@ public class LroTrackingDataTests
         // 2023-12-15T00:00:00 UTC, which IO's 100 ns ticks put a fraction of a tick before it, and since #454 a read outside
         // the coverage throws (it returned an undefined state before). The arcs start at 00:25 and the samples keep the
         // whole-minute grid
-        _windowStart = new TimeSystem.Time(2023, 12, 15, 0, 5, 0, frame: TimeFrame.UTCFrame);
-        _windowEnd = new TimeSystem.Time(2023, 12, 15, 12, 0, 0, frame: TimeFrame.UTCFrame);
+        _windowStart = new TimeSystem.Time(2023, 12, 15, 0, 5, 0, TimeScale.UTC);
+        _windowEnd = new TimeSystem.Time(2023, 12, 15, 12, 0, 0, TimeScale.UTC);
         _searchWindow = new Window(_windowStart, _windowEnd);
         _lro = new Spacecraft(-85, "LRO", epoch: _windowStart);
         _step = TimeSpan.FromSeconds(60);
@@ -150,7 +150,7 @@ public class LroTrackingDataTests
             rangeKm.Add(horizontal.Range / 1000.0);
 
             var sv = _lro.GetEphemeris(epoch, _site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            double rangeRate = (sv.Position * sv.Velocity) / sv.Position.Magnitude();
+            double rangeRate = sv.Position.Dot(sv.Velocity) / sv.Position.Magnitude();
             rangeRateKmS.Add(rangeRate / 1000.0);
         }
 
@@ -209,7 +209,7 @@ public class LroTrackingDataTests
         foreach (var epoch in sampleEpochs)
         {
             var sv = _lro.GetEphemeris(epoch, _site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            double analyticalRangeRate = (sv.Position * sv.Velocity) / sv.Position.Magnitude();
+            double analyticalRangeRate = sv.Position.Dot(sv.Velocity) / sv.Position.Magnitude();
 
             double rangePlus = _lro.GetEphemeris(epoch.Add(dt), _site, Frames.Frame.ICRF, Aberration.None)
                 .ToStateVector().Position.Magnitude();
@@ -258,12 +258,12 @@ public class LroTrackingDataTests
 
         var expectedArcs = new (TimeSystem.Time Rise, TimeSystem.Time Fall)[]
         {
-            (new TimeSystem.Time(2023, 12, 15, 0, 25, 0, frame: TimeFrame.UTCFrame), new TimeSystem.Time(2023, 12, 15, 1, 36, 0, frame: TimeFrame.UTCFrame)),
-            (new TimeSystem.Time(2023, 12, 15, 2, 22, 0, frame: TimeFrame.UTCFrame), new TimeSystem.Time(2023, 12, 15, 3, 33, 0, frame: TimeFrame.UTCFrame)),
-            (new TimeSystem.Time(2023, 12, 15, 4, 19, 0, frame: TimeFrame.UTCFrame), new TimeSystem.Time(2023, 12, 15, 5, 30, 0, frame: TimeFrame.UTCFrame)),
-            (new TimeSystem.Time(2023, 12, 15, 6, 16, 0, frame: TimeFrame.UTCFrame), new TimeSystem.Time(2023, 12, 15, 7, 27, 0, frame: TimeFrame.UTCFrame)),
-            (new TimeSystem.Time(2023, 12, 15, 8, 13, 0, frame: TimeFrame.UTCFrame), new TimeSystem.Time(2023, 12, 15, 9, 24, 0, frame: TimeFrame.UTCFrame)),
-            (new TimeSystem.Time(2023, 12, 15, 10, 10, 0, frame: TimeFrame.UTCFrame), new TimeSystem.Time(2023, 12, 15, 11, 21, 0, frame: TimeFrame.UTCFrame)),
+            (new TimeSystem.Time(2023, 12, 15, 0, 25, 0, TimeScale.UTC), new TimeSystem.Time(2023, 12, 15, 1, 36, 0, TimeScale.UTC)),
+            (new TimeSystem.Time(2023, 12, 15, 2, 22, 0, TimeScale.UTC), new TimeSystem.Time(2023, 12, 15, 3, 33, 0, TimeScale.UTC)),
+            (new TimeSystem.Time(2023, 12, 15, 4, 19, 0, TimeScale.UTC), new TimeSystem.Time(2023, 12, 15, 5, 30, 0, TimeScale.UTC)),
+            (new TimeSystem.Time(2023, 12, 15, 6, 16, 0, TimeScale.UTC), new TimeSystem.Time(2023, 12, 15, 7, 27, 0, TimeScale.UTC)),
+            (new TimeSystem.Time(2023, 12, 15, 8, 13, 0, TimeScale.UTC), new TimeSystem.Time(2023, 12, 15, 9, 24, 0, TimeScale.UTC)),
+            (new TimeSystem.Time(2023, 12, 15, 10, 10, 0, TimeScale.UTC), new TimeSystem.Time(2023, 12, 15, 11, 21, 0, TimeScale.UTC)),
         };
 
         const double toleranceSeconds = 1.0;
@@ -350,7 +350,7 @@ public class LroTrackingDataTests
             for (var epoch = arc.StartDate; epoch <= arc.EndDate; epoch = epoch.Add(_step))
             {
                 var sv = _lro.GetEphemeris(epoch, _site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                double rangeRate = (sv.Position * sv.Velocity) / sv.Position.Magnitude();
+                double rangeRate = sv.Position.Dot(sv.Velocity) / sv.Position.Magnitude();
 
                 if (rangeRate > 0) hasPositive = true;
                 if (rangeRate < 0) hasNegative = true;

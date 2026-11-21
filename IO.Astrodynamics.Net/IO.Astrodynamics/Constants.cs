@@ -10,8 +10,14 @@ public static class Constants
     public const double AU = 149597870700.0;
     public const double Deg2Rad = System.Math.PI / 180.0;
     public const double Rad2Deg = 180.0 / System.Math.PI;
-    public const double _2PI = 2.0 * System.Math.PI;
-    public const double PI2 = 0.5 * System.Math.PI;
+    /// <summary>
+    /// 2π (<c>_2PI</c> before 11.0.0, R24 of #668).
+    /// </summary>
+    public const double TwoPi = 2.0 * System.Math.PI;
+    /// <summary>
+    /// π/2 (<c>PI2</c> before 11.0.0, R24 of #668).
+    /// </summary>
+    public const double HalfPi = 0.5 * System.Math.PI;
     public const double PI = System.Math.PI;
     public const double g0 = 9.80665;
     public const double AngularTolerance = 0.00174533;

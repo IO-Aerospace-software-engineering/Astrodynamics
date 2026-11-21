@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 public class ConicStateTests
 {
     private const string ReferenceFile = "Data/ConicStateReference/conic_state_reference.json";
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.TT);
     private static readonly Lazy<ConicReference> Reference = new(Load);
 
     // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184, 2026-11-18),
@@ -62,8 +62,8 @@ public class ConicStateTests
     private void Measure(string what, double value) => _output.WriteLine($"MEASURE #472 {what}: {value:E3}");
 
     private KeplerianElements Elements(ReferenceCase c) =>
-        new(c.A, c.E, Reference.Value.I, Reference.Value.Node, Reference.Value.Argument, 0.0, _earth, Epoch,
-            Frames.Frame.ICRF, trueAnomaly: c.Nu);
+        KeplerianElements.FromTrueAnomaly(c.A, c.E, Reference.Value.I, Reference.Value.Node, Reference.Value.Argument, c.Nu, _earth,
+            Epoch, Frames.Frame.ICRF);
 
     [Fact]
     public void SemiLatusRectum_NearEOne_IsTheConics()
@@ -152,7 +152,7 @@ public class ConicStateTests
                 continue;
             }
 
-            var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF, trueAnomaly: nu);
+            var ke = KeplerianElements.FromTrueAnomaly(a, e, 0.2, 0.3, 0.4, nu, _earth, Epoch, Frames.Frame.ICRF);
 
             // Act
             var state = ke.ToStateVector();
@@ -176,8 +176,8 @@ public class ConicStateTests
         double[] vel = [-System.Math.Sqrt(_earth.GM / p) * System.Math.Sin(nu), System.Math.Sqrt(_earth.GM / p) * velocityFactor, 0.0];
         var r = IO.Astrodynamics.Math.Matrix.CreateRotationMatrixZ(0.3) * IO.Astrodynamics.Math.Matrix.CreateRotationMatrixX(0.2) *
                 IO.Astrodynamics.Math.Matrix.CreateRotationMatrixZ(0.4);
-        double[] position = pos * r;
-        double[] velocity = vel * r;
+        double[] position = r * pos;
+        double[] velocity = r * vel;
         return (new Vector3(position[0], position[1], position[2]), new Vector3(velocity[0], velocity[1], velocity[2]));
     }
 

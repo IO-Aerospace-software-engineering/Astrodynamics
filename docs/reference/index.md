@@ -11,7 +11,7 @@ Systematic documentation of all types organized by domain.
 Foundation services for kernel loading, time, frames, celestial bodies, and spacecraft.
 
 - [SpiceAPI & Data Providers](spice-api.md) — kernel loading, SPICE operations, data provider pattern
-- [Time & Windows](time-and-windows.md) — `Time`, `Window`, time frame conversions
+- [Time & Windows](time-and-windows.md) — `Time`, `Window`, time scales, parsing and conversions
 - [Frames & Orientation](frames.md) — reference frames, `StateOrientation`, Earth orientation
 - [Celestial Bodies](celestial-bodies.md) — `CelestialBody`, `CelestialItem`, physical properties
 - [Spacecraft](spacecraft.md) — spacecraft modeling, components, body axes, the field-of-view search and its accuracy

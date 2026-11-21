@@ -181,7 +181,7 @@ public class MemoryDataProviderTests
     {
         var earth = TestHelpers.EarthAtJ2000;
         var ssb = TestHelpers.SsbAtJ2000;
-        var early = new TimeSystem.Time(1500, 1, 1, 0, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
+        var early = new TimeSystem.Time(1500, 1, 1, 0, 0, 0, TimeSystem.TimeScale.TDB);
 
         // The reference: the types SPICE gives, the Earth outside de440s and ITRF93 outside the PCK: SpiceException, an
         // InvalidOperationException, whose base type the memory provider throws (R03 of #668)

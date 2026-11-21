@@ -50,7 +50,7 @@ public class ForceModelDefectTests
 
     #region Helpers
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
     private static Window OneHour => new(Epoch, Epoch.AddHours(1.0));
     private static readonly CovariancePropagationOptions Stm = new() { Mode = CovariancePropagationMode.StateTransitionOnly };
@@ -225,7 +225,7 @@ public class ForceModelDefectTests
 
     private static void AssertSameState(StateVector expected, StateVector actual, string label)
     {
-        Assert.True(expected.Epoch.HasSameLabel(actual.Epoch), $"{label}: epoch {expected.Epoch} != {actual.Epoch}");
+        Assert.True(expected.Epoch.EqualsExact(actual.Epoch), $"{label}: epoch {expected.Epoch} != {actual.Epoch}");
         Assert.True(expected.Position.X == actual.Position.X && expected.Position.Y == actual.Position.Y &&
                     expected.Position.Z == actual.Position.Z,
             $"{label}: position {expected.Position} != {actual.Position}, {(expected.Position - actual.Position).Magnitude():E3} m");
@@ -806,12 +806,13 @@ public class ForceModelDefectTests
         }
 
         // Monte Carlo: a factory returning one instance gives one run and RunCount − 1 failures
-        var cov = new Matrix(6, 6);
+        var covTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            cov.Set(i, i, 100.0);
-            cov.Set(i + 3, i + 3, 0.01);
+            covTerms[i, i] = 100.0;
+            covTerms[i + 3, i + 3] = 0.01;
         }
+        var cov = new Matrix(covTerms);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         int id = NextId();
@@ -933,8 +934,9 @@ public class ForceModelDefectTests
                 }
                 case "Monte Carlo":
                 {
-                    var cov = new Matrix(6, 6);
-                    for (int i = 0; i < 6; i++) cov.Set(i, i, i < 3 ? 100.0 : 0.01);
+                    var covTerms = new double[6, 6];
+                    for (int i = 0; i < 6; i++) covTerms[i, i] = i < 3 ? 100.0 : 0.01;
+                    var cov = new Matrix(covTerms);
                     var template = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
                     var state = (StateVector)template.InitialOrbitalParameters;
                     int id = NextId();

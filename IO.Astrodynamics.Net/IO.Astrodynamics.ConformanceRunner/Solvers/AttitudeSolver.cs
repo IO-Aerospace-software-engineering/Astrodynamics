@@ -91,7 +91,7 @@ public class AttitudeSolver : ICategorySolver
         var outputs = new Dictionary<string, object> { [array] = samples };
         for (int k = 0; k < samples; k++)
         {
-            var rotation = record.GetStateOrientationToICRF(window.StartDate.ToTDT().AddSeconds(k * inputs.SampleStepS)).Rotation;
+            var rotation = record.GetStateOrientationToICRF(window.StartDate.ToTT().AddSeconds(k * inputs.SampleStepS)).Rotation;
             outputs[OutputComparer.IndexedOutput(array, k)] = front.HasValue
                 ? Components(front.Value.Rotate(rotation).Normalize())
                 : new[] { rotation.W, rotation.VectorPart.X, rotation.VectorPart.Y, rotation.VectorPart.Z };
@@ -107,7 +107,7 @@ public class AttitudeSolver : ICategorySolver
     /// multiple of it.</exception>
     internal static int SampleCount(Window window, double step)
     {
-        double length = (window.EndDate.ToTDT() - window.StartDate.ToTDT()).TotalSeconds;
+        double length = (window.EndDate.ToTT() - window.StartDate.ToTT()).TotalSeconds;
         double steps = step > 0.0 ? length / step : double.NaN;
         if (!(System.Math.Abs(steps - System.Math.Round(steps)) <= WholeStepsTolerance * System.Math.Max(1.0, steps)))
         {

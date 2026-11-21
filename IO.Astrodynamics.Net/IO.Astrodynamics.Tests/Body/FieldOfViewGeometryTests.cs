@@ -26,7 +26,7 @@ public class FieldOfViewGeometryTests
     public void Axes_ReferenceVectorMadePerpendicular()
     {
         Assert.Equal(1.0, Axes.Boresight.Magnitude(), 15);
-        Assert.Equal(0.0, Axes.Ref * Axes.Boresight, 15);
+        Assert.Equal(0.0, Axes.Ref.Dot(Axes.Boresight), 15);
         Assert.Equal(1.0, Axes.Ref.Magnitude(), 15);
         Assert.Equal(new Vector3(1.0, 0.0, 0.0), Axes.Ref);
         Assert.Equal(new Vector3(0.0, 1.0, 0.0), Axes.Cross);
@@ -104,7 +104,7 @@ public class FieldOfViewGeometryTests
         // Oblate and turned: semi-axes a, a, 0.9 a about axes that are not the field's
         var e1 = new Vector3(1.0, 1.0, 0.0).Normalize();
         var e2 = new Vector3(-1.0, 1.0, 0.5).Normalize();
-        e2 = (e2 - e1 * (e2 * e1)).Normalize();
+        e2 = (e2 - e1 * e2.Dot(e1)).Normalize();
         var e3 = e1.Cross(e2);
         var target = OccultationBody.Ellipsoid(center, e1 * a, e2 * a, e3 * (0.9 * a));
         double margin = FieldOfViewGeometry.Margin(InstrumentShape.Rectangular, refAngle, crossAngle, Axes, target);
@@ -127,8 +127,8 @@ public class FieldOfViewGeometryTests
     // quadratic in t is not negative and a root is positive
     private static bool Meets(Vector3 v, Vector3 center, Vector3 e1, Vector3 e2, Vector3 e3, double a, double b, double c)
     {
-        double[] vs = [v * e1 / a, v * e2 / b, v * e3 / c];
-        double[] cs = [center * e1 / a, center * e2 / b, center * e3 / c];
+        double[] vs = [v.Dot(e1) / a, v.Dot(e2) / b, v.Dot(e3) / c];
+        double[] cs = [center.Dot(e1) / a, center.Dot(e2) / b, center.Dot(e3) / c];
         double qa = 0.0, qb = 0.0, qc = -1.0;
         for (int i = 0; i < 3; i++)
         {

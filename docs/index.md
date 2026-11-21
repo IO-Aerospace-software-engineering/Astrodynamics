@@ -16,7 +16,7 @@ It is free and open source under LGPL-3.0-or-later, published as a single packag
 - Orbital mechanics with Keplerian, equinoctial, Cartesian, and TLE-based workflows
 - SPICE kernel loading, ephemeris access, and frame transforms
 - Lambert transfers, launch windows, and geometry searches
-- Time systems including UTC, TDB, TAI, TDT, GPS, and local time handling
+- Time scales UTC, TDB, TAI, TT and GPS (`TimeScale`), one string grammar (`Time.Parse`)
 - Spacecraft, instruments, maneuvers, and event-driven propagation
 - Attitude control: single-vector attitudes, TRIAD fully-constrained pointing, instrument-based pointing
 - Geometry searches such as occultations, eclipses, visibility windows, and distance constraints

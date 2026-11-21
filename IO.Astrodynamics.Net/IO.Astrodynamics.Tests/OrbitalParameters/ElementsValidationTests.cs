@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// </summary>
 public class ElementsValidationTests
 {
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.TT);
     private readonly CelestialBody _earth;
 
     public ElementsValidationTests()
@@ -30,8 +30,13 @@ public class ElementsValidationTests
     }
 
     private KeplerianElements Keplerian(double a = 7000000.0, double e = 0.1, double i = 0.5, double raan = 1.0,
-        double aop = 2.0, double m = 3.0, double? trueAnomaly = null, double? perigeeRadius = null) =>
-        new(a, e, i, raan, aop, m, _earth, Epoch, Frames.Frame.ICRF, trueAnomaly: trueAnomaly, perigeeRadius: perigeeRadius);
+        double aop = 2.0, double m = 3.0) =>
+        new(a, e, i, raan, aop, m, _earth, Epoch, Frames.Frame.ICRF);
+
+    // A parabola of the band from its perigee radius, a = q / (1 − e), +Infinity at e = 1 (#668, R23)
+    private KeplerianElements Parabola(double q, double e = 1.0, double i = 0.5, double raan = 1.0, double aop = 2.0,
+        double m = 3.0) =>
+        KeplerianElements.Parabolic(q, i, raan, aop, m, _earth, Epoch, Frames.Frame.ICRF, e);
 
     private EquinoctialElements Equinoctial(double p, double f, double g, double h, double k, double l0,
         double? perigeeRadius = null) =>
@@ -150,10 +155,11 @@ public class ElementsValidationTests
         foreach (double x in NonFinite)
         {
             AssertRefused(() => Keplerian(i: x), "inclination");
-            AssertRefused(() => Keplerian(raan: x), "rigthAscendingNode");
+            AssertRefused(() => Keplerian(raan: x), "ascendingNode");
             AssertRefused(() => Keplerian(aop: x), "argumentOfPeriapsis");
             AssertRefused(() => Keplerian(m: x), "meanAnomaly");
-            AssertRefused(() => Keplerian(trueAnomaly: x), "trueAnomaly");
+            AssertRefused(() => KeplerianElements.FromTrueAnomaly(7000000.0, 0.1, 0.5, 1.0, 2.0, x, _earth, Epoch,
+                Frames.Frame.ICRF), "trueAnomaly");
         }
 
         // A semi-major axis not finite: NaN, −∞, and +∞ outside the parabolic band
@@ -167,7 +173,7 @@ public class ElementsValidationTests
     public void Issue726_TheParabola_KeepsItsInfiniteSemiMajorAxis()
     {
         // The one legitimate infinity: a = +∞ with e = 1 and a finite perigee radius (#373)
-        var parabola = Keplerian(a: double.PositiveInfinity, e: 1.0, perigeeRadius: 6800000.0);
+        var parabola = Parabola(6800000.0);
         Assert.True(double.IsPositiveInfinity(parabola.A));
         Assert.Equal(6800000.0, parabola.PerigeeRadius());
     }
@@ -181,7 +187,7 @@ public class ElementsValidationTests
     public void Issue726_APerigeeRadiusNotFiniteAndPositive_IsRefused(double q)
     {
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            Keplerian(a: double.PositiveInfinity, e: 1.0, perigeeRadius: q));
+            Parabola(q));
         Assert.Equal("perigeeRadius", exception.ParamName);
     }
 
@@ -293,7 +299,7 @@ public class ElementsValidationTests
     public void Issue481_TheElementsTheLibraryBuilds_AreAccepted()
     {
         // ToEquinoctial of a parabola (P finite since #462) and of a state of the band
-        var parabola = Keplerian(a: double.PositiveInfinity, e: 1.0, perigeeRadius: 6800000.0).ToEquinoctial();
+        var parabola = Parabola(6800000.0).ToEquinoctial();
         Assert.Equal(13600000.0, parabola.P);
         var state = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 10671.729487052813, 0.0), _earth,
             Epoch, Frames.Frame.ICRF);
@@ -319,7 +325,7 @@ public class ElementsValidationTests
             ("state at escape speed", new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, escape, 0.0), _earth, Epoch, Frames.Frame.ICRF)),
             ("hyperbolic state", new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, 1.2 * escape, 0.0), _earth, Epoch, Frames.Frame.ICRF)),
             ("Keplerian hyperbola", Keplerian(a: -1e7, e: 1.7)),
-            ("Keplerian parabola", Keplerian(a: double.PositiveInfinity, e: 1.0, perigeeRadius: 6800000.0)),
+            ("Keplerian parabola", Parabola(6800000.0)),
             ("equinoctial hyperbola", Equinoctial(7000000.0, 1.5, 0.0, 0.2, 0.1, 0.5)),
             ("equinoctial parabola", Equinoctial(14000000.0, 1.0, 0.0, 0.2, 0.1, 0.5)),
         };
@@ -339,7 +345,8 @@ public class ElementsValidationTests
     [Fact]
     public void Issue663_AnOpenOrbitGivenAPeriod_HasNoPeriod()
     {
-        // Arrange: a period given to the constructor, or SPICE's (oscltx writes 0 for an open orbit), was returned without
+        // Arrange: SPICE's period (oscltx writes 0 for an open orbit; a period given to the constructor, removed by #668's
+        // R23, was the other source) was returned without
         // the check of #663 (the review of #663: 01:00:00 and 00:00:00)
         double r = 7000000.0;
         double escape = System.Math.Sqrt(2.0 * _earth.GM / r);
@@ -347,8 +354,6 @@ public class ElementsValidationTests
             Frames.Frame.ICRF);
         var orbits = new (string Name, IO.Astrodynamics.OrbitalParameters.OrbitalParameters Orbit)[]
         {
-            ("Keplerian hyperbola given 1 h", new KeplerianElements(-1e7, 1.7, 0.1, 0.2, 0.3, 0.4, _earth, Epoch,
-                Frames.Frame.ICRF, period: TimeSpan.FromHours(1.0))),
             ("SPICE's elements of a hyperbola", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(hyperbola)),
         };
 
@@ -385,7 +390,7 @@ public class ElementsValidationTests
     {
         // 2π √(a³/μ), the closed form, to the nearest tick (#637; ExactTicks, the exact integer reference)
         var ke = Keplerian(a: 7000000.0, e: 0.1);
-        Assert.Equal(IO.Astrodynamics.Tests.Time.ExactTicks.Nearest(IO.Astrodynamics.Constants._2PI * System.Math.Sqrt(7e6 * 7e6 * 7e6 / _earth.GM)),
+        Assert.Equal(IO.Astrodynamics.Tests.Time.ExactTicks.Nearest(IO.Astrodynamics.Constants.TwoPi * System.Math.Sqrt(7e6 * 7e6 * 7e6 / _earth.GM)),
             ke.Period().Ticks);
     }
 
@@ -397,7 +402,7 @@ public class ElementsValidationTests
     public void Issue737_TheParabola_HasItsPeriapsis()
     {
         // Arrange: an exact parabola, a = +Infinity, q = 7000 km (the issue's), at its periapsis
-        var ke = Keplerian(a: double.PositiveInfinity, e: 1.0, i: 0.5, raan: 0.3, aop: 0.2, m: 0.0, perigeeRadius: 7.0e6);
+        var ke = Parabola(7.0e6, i: 0.5, raan: 0.3, aop: 0.2, m: 0.0);
 
         // Act
         var periapsis = ke.PerigeeVector();
@@ -420,7 +425,7 @@ public class ElementsValidationTests
     {
         // Arrange: the conic's a of the band, q / (1 − e)
         const double q = 7.0e6;
-        var ke = Keplerian(a: q / (1.0 - e), e: e, perigeeRadius: q);
+        var ke = Parabola(q, e);
 
         // Act, assert: q P̂, the radius of the state at ν = 0, and vis-viva there
         Assert.Equal(ke.PeriapsisDirection() * q, ke.PerigeeVector());
@@ -448,8 +453,8 @@ public class ElementsValidationTests
         var orbits = new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[]
         {
             Keplerian(a: -1e7, e: 1.7),
-            Keplerian(a: double.PositiveInfinity, e: 1.0, perigeeRadius: 7.0e6),
-            Keplerian(a: -7.0e6 / 5e-7, e: 1.0000005, perigeeRadius: 7.0e6),
+            Parabola(7.0e6),
+            Parabola(7.0e6, 1.0000005),
             new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, escape, 0.0), _earth, Epoch, Frames.Frame.ICRF),
             new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, 1.2 * escape, 0.0), _earth, Epoch, Frames.Frame.ICRF),
             Equinoctial(7000000.0, 1.5, 0.0, 0.2, 0.1, 0.5),
@@ -473,7 +478,7 @@ public class ElementsValidationTests
         // The conic of a finite a above 0, e = 1 − 5e-7: its apoapsis −a (1 + e) P̂ and vis-viva there
         const double q = 7.0e6;
         const double e = 0.9999995;
-        var ke = Keplerian(a: q / (1.0 - e), e: e, perigeeRadius: q);
+        var ke = Parabola(q, e);
         double a = ke.SemiMajorAxis();
         Assert.Equal(ke.PeriapsisDirection().Inverse() * a * (1.0 + e), ke.ApogeeVector());
         Assert.Equal(System.Math.Sqrt(_earth.GM * (2 / ke.ApogeeVector().Magnitude() - 1.0 / a)), ke.ApogeeVelocity());

@@ -275,15 +275,16 @@ public class TlePropagationTests
 
         if (variant == "Covariance")
         {
-            var p0 = new Matrix(6, 6);
+            var p0Terms = new double[6, 6];
             double[] sigma = { 30.0, 80.0, 20.0, 0.05, 0.02, 0.01 };
             for (int i = 0; i < 6; i++)
             {
-                p0.Set(i, i, sigma[i] * sigma[i]);
+                p0Terms[i, i] = sigma[i] * sigma[i];
             }
 
-            p0.Set(0, 4, -0.5 * sigma[0] * sigma[4]);
-            p0.Set(4, 0, -0.5 * sigma[0] * sigma[4]);
+            p0Terms[0, 4] = -0.5 * sigma[0] * sigma[4];
+            p0Terms[4, 0] = -0.5 * sigma[0] * sigma[4];
+            var p0 = new Matrix(p0Terms);
             teme = new StateVector(teme.Position, teme.Velocity, teme.Observer, teme.Epoch, Frames.Frame.TEME, p0);
         }
 

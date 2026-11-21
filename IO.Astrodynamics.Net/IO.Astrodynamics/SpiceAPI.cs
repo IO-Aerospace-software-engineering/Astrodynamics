@@ -1464,7 +1464,7 @@ public class SpiceAPI
         return result;
 
         Time Label(double seconds) =>
-            seconds <= startSeconds ? start : seconds >= endSeconds ? end : Time.Create(seconds, TimeFrame.TDBFrame);
+            seconds <= startSeconds ? start : seconds >= endSeconds ? end : Time.Create(seconds, TimeScale.TDB);
     }
 
     /// <summary>
@@ -1865,7 +1865,7 @@ public class SpiceAPI
     /// <param name="targetId"></param>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
-    /// <param name="stepSize">The step of the epochs read, positive: start + i·step in the time frame of the window start (UTC
+    /// <param name="stepSize">The step of the epochs read, positive: start + i·step in the time scale of the window start (UTC
     /// steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid; each state is the
     /// read of its epoch alone, labelled with it in that frame (#563).</param>
     /// <returns></returns>
@@ -1936,7 +1936,7 @@ public class SpiceAPI
     private const int WindowReadChunk = 10000;
 
     /// <summary>
-    /// The epochs of a window read (#563): start + i·step in the time frame of the window start, i from 0 while within the
+    /// The epochs of a window read (#563): start + i·step in the time scale of the window start, i from 0 while within the
     /// window, in exact tick arithmetic, the end of the window included when it falls on the grid; each epoch read at its TDB
     /// seconds, as the read of that epoch alone takes them. Before 11.0.0 the native proxies stepped their epoch by
     /// epoch += step in double TDB seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of
@@ -1963,10 +1963,10 @@ public class SpiceAPI
 
             _start = searchWindow.StartDate;
             _stepTicks = stepSize.Ticks;
-            Count = (searchWindow.EndDate.ConvertTo(_start.Frame) - _start).Ticks / _stepTicks + 1;
+            Count = (searchWindow.EndDate.ConvertTo(_start.Scale) - _start).Ticks / _stepTicks + 1;
         }
 
-        /// <summary>Epoch <paramref name="index"/>, in the time frame of the window start.</summary>
+        /// <summary>Epoch <paramref name="index"/>, in the time scale of the window start.</summary>
         internal Time Epoch(long index) => _start + TimeSpan.FromTicks(_stepTicks * index);
 
         /// <summary>The TDB seconds past J2000 of at most <paramref name="length"/> epochs from <paramref name="first"/>, as the
@@ -2171,7 +2171,7 @@ public class SpiceAPI
     /// <param name="naifId">NAIF ID of the spacecraft (the CK bus frame ID is derived as naifId * 1000)</param>
     /// <param name="tolerance">Search tolerance — data within this duration of each step epoch will be returned</param>
     /// <param name="referenceFrame">Reference frame for the returned orientations</param>
-    /// <param name="stepSize">Time step between successive query epochs, positive: start + i·step in the time frame of the window
+    /// <param name="stepSize">Time step between successive query epochs, positive: start + i·step in the time scale of the window
     /// start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid (#563);
     /// each record is labelled with the epoch of the CK's record, TDB</param>
     /// <returns>
@@ -2229,7 +2229,7 @@ public class SpiceAPI
                 if (!ReadOrientationProxy(epochs, epochs.Length, naifId, tolerance.TotalSeconds, frameName, stateOrientations))
                     ThrowLastProxyError(frameName, referenceFrame, nameof(referenceFrame));
                 records.AddRange(stateOrientations.Select(x => new OrbitalParameters.StateOrientation(x.Rotation.Convert(),
-                    x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame)));
+                    x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeScale.TDB), referenceFrame)));
             }
 
             return records;
@@ -2728,7 +2728,7 @@ public class SpiceAPI
     /// <param name="line1">The name of the object (the title line).</param>
     /// <param name="line2">Line 1 of the TLE.</param>
     /// <param name="line3">Line 2 of the TLE.</param>
-    /// <param name="epoch">The instant of the state, in any time frame.</param>
+    /// <param name="epoch">The instant of the state, in any time scale.</param>
     /// <returns>The SGP4 state in <see cref="Frame.TEME"/>, labelled <paramref name="epoch"/>.</returns>
     /// <remarks>
     /// <para>

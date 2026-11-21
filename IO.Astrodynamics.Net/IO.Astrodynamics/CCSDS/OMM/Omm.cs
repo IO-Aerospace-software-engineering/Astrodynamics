@@ -299,8 +299,8 @@ public class Omm
 
         // Create mean Keplerian elements from OMM data, at the epoch read in TIME_SYSTEM (#485), as UTC, the time scale of a
         // TLE epoch
-        var timeFrame = Common.Enums.CcsdsTimeSystemMapping.ToTimeFrame(Metadata.TimeSystemEnum, Metadata.TimeSystem);
-        var epoch = new TimeSystem.Time(meanElements.Epoch, timeFrame).ToUTC();
+        var timeScale = Common.Enums.CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem);
+        var epoch = Common.Enums.CcsdsTimeSystemMapping.ToTime(meanElements.Epoch, timeScale).ToUTC();
         // The Earth in an inertial frame, as the TLE builds it (#597): ITRF93 would read the Earth's binary PCK at the epoch
         var earth = new Body.CelestialBody(399, Frames.Frame.ECLIPTIC_J2000, epoch);
 

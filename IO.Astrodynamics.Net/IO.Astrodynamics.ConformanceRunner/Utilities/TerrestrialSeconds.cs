@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Utilities;
 /// library's TDB − TT series in double.
 /// </summary>
 /// <remarks>
-/// Never <c>(to.ToTDT() - from.ToTDT()).TotalSeconds</c>: a TDB label goes to TT with its offset TDB − TT rounded to
+/// Never <c>(to.ToTT() - from.ToTT()).TotalSeconds</c>: a TDB label goes to TT with its offset TDB − TT rounded to
 /// the 100 ns tick, so that its TT is off by up to half a tick (#625; up to a tick when the offset was truncated toward
 /// zero, #630). Between two epochs tagged UTC, TAI or TT both expressions are exact in ticks.
 /// </remarks>

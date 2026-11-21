@@ -68,13 +68,13 @@ public sealed class TemeFrame : Frame
     private StateOrientation ComputeOrientation(Time date)
     {
         // Q(t), ICRF -> CIRS, at TDB centuries, as CirsFrame and TirsFrame
-        double t = date.ConvertTo(TimeFrame.TDBFrame).Centuries();
+        double t = date.ConvertTo(TimeScale.TDB).Centuries();
         var (x, y) = Iau2006Model.CipXY(t);
         double s = Iau2006Model.CioLocator(t, x, y);
         var qt = Iau2006Model.PrecessionNutationMatrix(x, y, s);
 
         // UT1 as a two-part Julian date (J2000 + days), so that both angles keep the 0.1 µs resolution of the epoch
-        var utc = date.ConvertTo(TimeFrame.UTCFrame);
+        var utc = date.ConvertTo(TimeScale.UTC);
         double jdUt1Low = utc.DaysFromJ2000() + _eop.GetDeltaUT1(utc) / 86400.0;
         double era = Iau2006Model.EarthRotationAngle(Time.JULIAN_J2000, jdUt1Low);
         double gmst = Gmst82(Time.JULIAN_J2000, jdUt1Low);
@@ -104,9 +104,9 @@ public sealed class TemeFrame : Frame
         double t = (d1 + (d2 - Time.JULIAN_J2000)) / 36525.0;
         double f = 86400.0 * (d1 % 1.0 + d2 % 1.0);
 
-        double gmst = Constants._2PI / 86400.0 * (a + (b + (c + d * t) * t) * t + f);
-        gmst %= Constants._2PI;
-        if (gmst < 0.0) gmst += Constants._2PI;
+        double gmst = Constants.TwoPi / 86400.0 * (a + (b + (c + d * t) * t) * t + f);
+        gmst %= Constants.TwoPi;
+        if (gmst < 0.0) gmst += Constants.TwoPi;
         return gmst;
     }
 }

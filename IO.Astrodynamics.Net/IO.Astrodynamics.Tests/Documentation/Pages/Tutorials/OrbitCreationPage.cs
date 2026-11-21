@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -66,7 +65,7 @@ internal static class OrbitCreationPage
     {
         #region docs/tutorials/orbit-creation.md:1
         var earth = PlanetsAndMoons.EARTH_BODY;
-        var epoch = new Time(2024, 6, 21, 12, 0, 0);
+        var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
         var sv = new StateVector(
             new Vector3(6800000.0, 0.0, 0.0),

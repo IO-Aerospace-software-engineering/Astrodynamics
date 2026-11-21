@@ -97,14 +97,15 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             var phi = encounterWith.ProtectedCovariance.Solution.GetStateTransitionMatrix(tca);
             var le = new double[9];
             Gates.Covariance(option.DeltaVInertial, le);
-            var jump = new Matrix(6, 6);
+            var jumpTerms = new double[6, 6];
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    jump.Set(i + 3, j + 3, le[3 * i + j]);
+                    jumpTerms[i + 3, j + 3] = le[3 * i + j];
                 }
             }
+            var jump = new Matrix(jumpTerms);
 
             var expected = phi * jump * phi.Transpose();
             var actual = Difference(encounterWith.ProtectedState.Covariance.Value, encounterWithout.ProtectedState.Covariance.Value);
@@ -434,14 +435,15 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
 
     private static Matrix Difference(Matrix a, Matrix b)
     {
-        var d = new Matrix(6, 6);
+        var dTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                d.Set(i, j, a.Get(i, j) - b.Get(i, j));
+                dTerms[i, j] = a.Get(i, j) - b.Get(i, j);
             }
         }
+        var d = new Matrix(dTerms);
 
         return d;
     }

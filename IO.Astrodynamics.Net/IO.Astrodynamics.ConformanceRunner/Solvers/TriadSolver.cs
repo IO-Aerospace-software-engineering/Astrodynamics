@@ -57,7 +57,7 @@ public class TriadSolver : ICategorySolver
         // The TRIAD of the IAttitudeTarget constructor: the instrument's boresight towards the primary target, its
         // reference vector towards the secondary one
         var triadAttitude = new TriadAttitude(earth,
-            new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             instrument.GetBoresightInSpacecraftFrame(),
             primaryTarget,

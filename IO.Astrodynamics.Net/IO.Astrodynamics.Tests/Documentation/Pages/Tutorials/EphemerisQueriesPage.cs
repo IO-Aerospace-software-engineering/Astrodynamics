@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -76,7 +75,7 @@ internal static class EphemerisQueriesPage
         var earth = PlanetsAndMoons.EARTH_BODY;
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var sun = new CelestialBody(Stars.Sun);
-        var epoch = new Time(2024, 6, 21, 12, 0, 0);
+        var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
         #endregion
     }
 

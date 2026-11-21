@@ -25,7 +25,7 @@ public class NearParabolicBandTests
 {
     // An epoch tagged TT: about the Earth the two-body motion counts TT seconds (#501, #508), so +600 s here is 600 s of
     // the motion, the time of the references
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.TT);
     private const double Mu = 398600435507022.6;
 
     // The motion of the band against the exact conic (#753): twice the worst over Linux x64, Windows x64 and macOS arm64
@@ -407,8 +407,8 @@ public class NearParabolicBandTests
     public void Issue478_AnExactParabolaThroughEquinoctialElements_KeepsItsMeanAnomaly(double m, double[] r, double[] v)
     {
         // Arrange: an exact parabola, whose equinoctial e = √(F² + G²) rounds one ulp off 1
-        var ke = new KeplerianElements(double.PositiveInfinity, 1.0, 0.5235987755982988, 0.6981317007977318, 0.0, m, _earth,
-            Epoch, Frames.Frame.ICRF, perigeeRadius: 7000000.0);
+        var ke = KeplerianElements.Parabolic(7000000.0, 0.5235987755982988, 0.6981317007977318, 0.0, m, _earth,
+            Epoch, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
 
         // Act
@@ -451,8 +451,7 @@ public class NearParabolicBandTests
 
             // An exact parabola given as Keplerian elements, through its equinoctial elements
             double m = -3.0 + 6.0 * random.NextDouble();
-            var ke = new KeplerianElements(double.PositiveInfinity, 1.0, i, node, w, m, _earth, Epoch, Frames.Frame.ICRF,
-                perigeeRadius: q);
+            var ke = KeplerianElements.Parabolic(q, i, node, w, m, _earth, Epoch, Frames.Frame.ICRF);
             var keBack = ke.ToEquinoctial().ToKeplerianElements();
             var expected = ke.ToStateVector();
             worstKeplerian = System.Math.Max(worstKeplerian,
@@ -703,8 +702,7 @@ public class NearParabolicBandTests
     public void Issue753_AtEOne_BarkersLawIsKept()
     {
         // Arrange: an exact parabola, e = 1, q = 7000 km, Barker's mean anomaly 0.3
-        var ke = new KeplerianElements(double.PositiveInfinity, 1.0, 0.5, 0.4, 0.3, 0.3, _earth, Epoch, Frames.Frame.ICRF,
-            perigeeRadius: 7.0e6);
+        var ke = KeplerianElements.Parabolic(7.0e6, 0.5, 0.4, 0.3, 0.3, _earth, Epoch, Frames.Frame.ICRF);
 
         // Act
         var later = (KeplerianElements)ke.AtEpoch(Epoch.AddSeconds(600.0));
@@ -720,7 +718,7 @@ public class NearParabolicBandTests
         // Arrange: elements of the band, e = 1 − 5e-7, q = 7000 km, Barker's mean anomaly 0.2
         const double q = 7.0e6;
         const double e = 0.9999995;
-        var ke = new KeplerianElements(q / (1.0 - e), e, 0.5, 0.4, 0.3, 0.2, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+        var ke = KeplerianElements.Parabolic(q, 0.5, 0.4, 0.3, 0.2, _earth, Epoch, Frames.Frame.ICRF, eccentricity: e);
 
         foreach (double m in new[] { -3.0, 0.2, 0.9, 40.0 })
         {
@@ -751,7 +749,9 @@ public class NearParabolicBandTests
         Assert.Equal(System.Math.Abs(e - 1.0) < 1e-6, inBand);
 
         // Act: a finite a with the perigee radius in the band (before: ArgumentException, a = +Infinity required)
-        var ke = new KeplerianElements(a, e, 0.7, 0.5, 0.9, 0.3, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+        var ke = inBand
+            ? KeplerianElements.Parabolic(q!.Value, 0.7, 0.5, 0.9, 0.3, _earth, Epoch, Frames.Frame.ICRF, e)
+            : new KeplerianElements(a, e, 0.7, 0.5, 0.9, 0.3, _earth, Epoch, Frames.Frame.ICRF);
         var state = ke.ToStateVector();
 
         // Assert: the state of the elements at 60 digits: Kepler's elliptic equation outside the band, Barker's anomaly and
@@ -776,14 +776,14 @@ public class NearParabolicBandTests
     public void Issue459_AParabola_KeepsItsInfiniteSemiMajorAxisAndBarkersMeanMotion()
     {
         // e = 1 exactly: a = +Infinity, n = √(μ/(2q³)), as before, bit for bit
-        var ke = new KeplerianElements(double.PositiveInfinity, 1.0, 0.2, 0.3, 0.4, 0.5, _earth, Epoch, Frames.Frame.ICRF,
-            perigeeRadius: 6800000.0);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.5, _earth, Epoch, Frames.Frame.ICRF);
         Assert.True(double.IsPositiveInfinity(ke.SemiMajorAxis()));
         Assert.Equal(System.Math.Sqrt(IO.Astrodynamics.Constants.G * _earth.Mass / (2.0 * System.Math.Pow(6800000.0, 3))), ke.MeanMotion());
 
-        // A finite a at e = 1 exactly has no meaning: refused
+        // A finite a at e = 1 exactly has no meaning: refused by the elements the library builds (internal since #668, R23;
+        // Parabolic computes a)
         Assert.Throws<ArgumentException>(() => new KeplerianElements(7e12, 1.0, 0.2, 0.3, 0.4, 0.5, _earth, Epoch,
-            Frames.Frame.ICRF, perigeeRadius: 6800000.0));
+            Frames.Frame.ICRF, null, null, 6800000.0, OrbitalElementsType.Osculating));
     }
 
     // The distance of a and q to one conic, |q/a − (1 − e)| in units of ε (1 + e): a conic has a (1 − e) = q exactly
@@ -808,7 +808,7 @@ public class NearParabolicBandTests
 
         // Act, assert: a and q of two conics, refused, naming the semi-major axis
         var exception = Assert.Throws<ArgumentException>(() => new KeplerianElements(semiMajorAxis, e, 0.5, 0.3, 0.2, 0.3,
-            _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q));
+            _earth, Epoch, Frames.Frame.ICRF, null, null, q, OrbitalElementsType.Osculating));
         Assert.Equal("semiMajorAxis", exception.ParamName);
     }
 
@@ -829,8 +829,8 @@ public class NearParabolicBandTests
 
         foreach (double m in new[] { -2.0, 0.0, 0.3, 5.0 })
         {
-            states.Add(($"parabola M = {m:R}", new KeplerianElements(double.PositiveInfinity, 1.0, 0.5, 0.7, 0.9, m, _earth, Epoch,
-                Frames.Frame.ICRF, perigeeRadius: 6800000.0).ToStateVector()));
+            states.Add(($"parabola M = {m:R}", KeplerianElements.Parabolic(6800000.0, 0.5, 0.7, 0.9, m, _earth, Epoch,
+                Frames.Frame.ICRF).ToStateVector()));
         }
 
         foreach (var (name, sv) in states)
@@ -873,8 +873,8 @@ public class NearParabolicBandTests
             {
                 double e = 1.0 + sign * distance;
                 double m = (random.NextDouble() - 0.5) * 2.0 * System.Math.Pow(10.0, random.Next(-2, 7));
-                var elements = new KeplerianElements(e == 1.0 ? double.PositiveInfinity : q / (1.0 - e), e, random.NextDouble() * 3.0,
-                    random.NextDouble() * 6.0, random.NextDouble() * 6.0, m, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: q);
+                var elements = KeplerianElements.Parabolic(q, random.NextDouble() * 3.0, random.NextDouble() * 6.0,
+                    random.NextDouble() * 6.0, m, _earth, Epoch, Frames.Frame.ICRF, e);
                 var sv = elements.ToStateVector();
                 sv = new StateVector(sv.Position, sv.Velocity, _earth, Epoch, Frames.Frame.ICRF);
                 if (!sv.IsParabolic())
@@ -1091,7 +1091,6 @@ public class NearParabolicBandTests
             ("ToStateVector(ν)", e => e.ToStateVector(1.0)), ("EpochAtMeanAnomaly", e => e.EpochAtMeanAnomaly(0.4)),
         };
         var fresh = Case1();
-        var withRadius = Case1(14e6 / 2.0);
         var expectedElements = fresh.ToKeplerianElements();
         var expectedLater = (KeplerianElements)Case1().AtEpoch(later);
 
@@ -1109,9 +1108,8 @@ public class NearParabolicBandTests
             Assert.True(expectedLater.Equals(atLater) && atLater.PerigeeRadius() == expectedLater.PerigeeRadius(), name);
         }
 
-        // And those of the same elements given P / (1 + e)
-        LabelAssert.Equal(expectedElements, withRadius.ToKeplerianElements());
-        LabelAssert.Equal(expectedLater, (KeplerianElements)withRadius.AtEpoch(later));
+        // The same elements given P / (1 + e) beside P are refused since #668 (R23): a finite P fixes q
+        Assert.Equal("perigeeRadius", Assert.Throws<ArgumentException>(() => Case1(14e6 / 2.0)).ParamName);
     }
 
     [Theory]
@@ -1152,8 +1150,7 @@ public class NearParabolicBandTests
     {
         // Arrange: the inputs of KeplerianElementsTests.ParabolicToEquinoctial, q = 6800 km, with the semi-major axis of the
         // conic, q / (1 − e) in doubles (+Infinity only at e = 1 since the review of #459)
-        double a = e == 1.0 ? double.PositiveInfinity : 6800000.0 / (1.0 - e);
-        var ke = new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF, perigeeRadius: 6800000.0);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF, e);
 
         // Act
         var eq = ke.ToEquinoctial();
@@ -1213,8 +1210,7 @@ public class NearParabolicBandTests
     public void Issue462_TheStateOfAnExactParabola_HasItsSemiLatusRectumInAnyFrame()
     {
         // Arrange: the input of StateVectorTests.ParabolicToEquinoctial, whose e is off 1 by its rounding
-        var ke = new KeplerianElements(double.PositiveInfinity, 1.0, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF,
-            perigeeRadius: 6800000.0);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF);
         var sv = ke.ToStateVector();
         var ecliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector();
 

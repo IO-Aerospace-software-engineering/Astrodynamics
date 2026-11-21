@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 public class GcrfPropagationTests
 {
     // The state of the issue: 2024-03-01 12:00 TDB, (6 778 137 m, 0, 0), (0, 7 668.6 m/s, 0) about the Earth, 600 s
-    private static readonly TimeSystem.Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Start = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
     private static readonly Window Window = new(Start, Start.AddSeconds(600.0));
 
@@ -59,7 +59,7 @@ public class GcrfPropagationTests
     public void GcrfToIcrf_IsTheIdentity()
     {
         // The rotation the library uses between GCRF and ICRF, both ways: the identity, no angular velocity
-        foreach (var epoch in new[] { TimeSystem.Time.J2000TDB, Start, new TimeSystem.Time(2050, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame) })
+        foreach (var epoch in new[] { TimeSystem.Time.J2000TDB, Start, new TimeSystem.Time(2050, 1, 1, 0, 0, 0, TimeScale.TDB) })
         {
             var toIcrf = Frames.Frame.GCRF.ToFrame(Frames.Frame.ICRF, epoch);
             var fromIcrf = Frames.Frame.ICRF.ToFrame(Frames.Frame.GCRF, epoch);

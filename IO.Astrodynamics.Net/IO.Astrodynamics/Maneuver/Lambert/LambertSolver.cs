@@ -148,7 +148,7 @@ public class LambertSolver
         for (int i = 1; i <= nmax; ++i)
         {
             // Left branch
-            double tmp = System.Math.Pow((i * Constants._2PI) / (8.0 * T), 2.0 / 3.0);
+            double tmp = System.Math.Pow((i * Constants.TwoPi) / (8.0 * T), 2.0 / 3.0);
             double xLeft = (tmp - 1) / (tmp + 1);
             var (xL, itL) = HalleySolver(T, xLeft, i, 1e-8, 15, lambda);
 

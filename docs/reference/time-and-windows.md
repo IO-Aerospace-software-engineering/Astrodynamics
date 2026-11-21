@@ -2,33 +2,76 @@
 
 ## Time
 
-`Time` represents an instant with explicit time-frame conversion support.
+`Time` is an instant: a calendar (`DateTime`, to the tick of 100 ns) in a time scale (`Scale`, a `TimeScale`). The scale
+is a required argument of every constructor and factory (D3 of #668, approved by S. Guillet, 2026-11-13, amended 2026-11-19): before 11.0.0 a
+calendar without a frame was TDB, 69.18 s from the UTC most callers meant.
+
+### Time Scales
+
+| Member | Description |
+|--------|-------------|
+| `TimeScale.TDB` | Barycentric Dynamical Time, the ephemeris time of SPICE (ET); 0, so `default(Time)` is 0001-01-01T00:00:00 TDB |
+| `TimeScale.TT` | Terrestrial Time, TAI + 32.184 s (TDT before 11.0.0) |
+| `TimeScale.TAI` | International Atomic Time |
+| `TimeScale.UTC` | Coordinated Universal Time, TAI less the leap seconds |
+| `TimeScale.GPS` | GPS time, TAI − 19 s |
+
+A local time is not a scale: its instant depends on the zone of the machine. The calendar of an instant in the zone of
+the machine is `t.ToUTC().DateTime.ToLocalTime()`.
 
 ### Static Constants
 
 | Constant | Description |
 |----------|-------------|
-| `Time.J2000` | J2000 epoch (January 1, 2000 12:00 TDB) |
-| `Time.J2000TDB` | J2000 in TDB frame |
-| `Time.J2000UTC` | J2000 in UTC frame |
+| `Time.J2000TDB` | J2000, 2000-01-01T12:00:00 TDB |
+| `Time.J2000UTC` | 2000-01-01T12:00:00 UTC |
+| `Time.UtcNow` | The clock of the machine, in UTC |
 
 ### Constructors
 
 | Constructor | Description |
 |-------------|-------------|
-| `Time(int year, int month, int day, ...)` | Create from date components (hour, minute, second, ms, us optional; defaults to TDB) |
-| `Time(DateTime dateTime, ITimeFrame frame)` | Create from DateTime with specified frame |
-| `Time(string timeString)` | Parse a calendar followed by the name of its frame, with or without a space, in any case: `UTC`, `TT` (or `TDT`), `TDB`, `TAI` or `GPS` (e.g., `"2024-06-21T12:00:00.000 UTC"`; `ToString` writes this form for `TDB`, `TDT`, `TAI` and `GPS`, and the `Z` form for UTC); a calendar ending in `Z` is UTC, one with an offset (`+02:00`) local, one with neither TDB. A string that `DateTime` reads on its own is read as `DateTime` reads it (`"… 12:00:00 GMT"` and the RFC 1123 form are UTC); otherwise another name throws `ArgumentException`, and so do a `Z` or an offset before a frame name and second 60: a `Time` holds no leap second, so a UTC leap second is given in TAI |
+| `Time(DateTime dateTime, TimeScale scale)` | The calendar in the scale. A `DateTime` of kind `Local` throws `ArgumentException` (give its universal time with `TimeScale.UTC`), and so does one of kind `Utc` with another scale than UTC; before 11.0.0 the frame replaced the kind silently |
+| `Time(int year, int month, int day, TimeScale scale)` | Midnight of the day in the scale |
+| `Time(int year, int month, int day, int hour, int minute, int second, TimeScale scale)` | The calendar to the second |
+| `Time(int year, int month, int day, int hour, int minute, int second, int millisecond, TimeScale scale)` | The calendar to the millisecond |
+| `Time(int year, int month, int day, int hour, int minute, int second, int millisecond, int microsecond, TimeScale scale)` | The calendar to the microsecond |
+
+A scale outside the enumeration throws `ArgumentOutOfRangeException`.
+
+### Parsing and Formatting
+
+`Time` is `ISpanParsable<Time>` and `ISpanFormattable`, on one grammar (D3.4 of #668):
+
+- an ISO 8601 date `yyyy-MM-dd` or a CCSDS day of year `yyyy-DDD`, then optionally `T` (or a space) and `hh:mm`,
+  `hh:mm:ss` or `hh:mm:ss.f…` (a fraction of up to 7 digits exact, a longer one rounded to the tick as `DateTime`
+  parsing rounds it);
+- then `Z` or an offset `±hh:mm`, which give the UTC instant (never the machine's local time), or the tag of a scale:
+  `UTC`, `TT` (or `TDT`), `TDB`, `TAI` or `GPS`, in any case, the space before it optional;
+- or a Julian date, `JD n TAG` or `n JD TAG`, its digits read exactly to the nearest tick (ties to even).
+
+| Method | Description |
+|--------|-------------|
+| `Parse(string s)` | The time a tagged string writes; a string without a tag, `Z` or offset throws `FormatException` |
+| `Parse(string s, TimeScale scale)` | The same, `scale` the scale of an untagged string; a tag of the same scale is accepted (`TDT` for TT, `Z` or an offset for UTC), and a tag, `Z` or offset of another scale contradicts it and throws `FormatException` (D3.4) |
+| `TryParse(string s, out Time result)`, `TryParse(string s, TimeScale scale, out Time result)` | The same, false instead of an exception; they never throw |
+| `ToString()` | The calendar in the round-trip form of `DateTime` (`O`), then `Z` for UTC or ` TDB`, ` TT`, ` TAI`, ` GPS`; `Parse` reads it back exactly (`EqualsExact`). TT is written `TT` (`TDT` before 11.0.0) |
+| `ToString(string format, IFormatProvider provider)` | `null`, `G`, `O` or `o` give `ToString()`; any other format is a custom `DateTime` format of the calendar followed by the tag (`Z` for UTC, ` TDB`, ` TT`, ` TAI`, ` GPS` otherwise): `$"{t:yyyy-MM-dd}"` is `2024-06-21 TDB`. A standard format (one letter: `u` and `R` write their own UTC designator) and a zone specifier (`z`, `zz`, `zzz`, `K`: the machine's offset for a calendar of another scale than UTC) throw `FormatException`, the scale being the tag; a quoted or escaped letter is a literal (D3.5) |
+
+`Parse` throws `FormatException` only (a Julian date beyond every `Time` included, however many digits), and refuses a second 60 (a `Time` holds no leap second: give a UTC leap second in
+TAI), a field out of range, a tag after `Z` or an offset, and the forms `Time(string)` read through `DateTime.TryParse`
+before 11.0.0 (`06/21/2024 12:00`, RFC 1123, a `GMT` suffix). The CCSDS readers (OPM, OMM, CDM) use the strict branch of
+the same grammar: `T` and the seconds required, no tag (#619).
 
 ### Static Factories
 
 | Method | Description |
 |--------|-------------|
-| `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from J2000 seconds in a given frame, to the nearest tick |
-| `Create(int year, int doy, double sec)` | Create a UTC time from year (1 to 9999), day of year (1 to 365, or 366 in a Gregorian leap year) and seconds of day (finite, in [0, 86400)), to the nearest tick; `ArgumentOutOfRangeException` names an argument out of its range (#680) |
+| `Create(double secondsFromJ2000, TimeScale scale)` | The calendar of 2000-01-01T12:00:00 of the scale plus the seconds, to the nearest tick |
+| `FromDayOfYear(int year, int dayOfYear, double seconds, TimeScale scale)` | A day of year (1 to 365, or 366 in a Gregorian leap year) of a year (1 to 9999) and the seconds of that day (finite, in [0, 86400)), to the nearest tick, in the scale; `ArgumentOutOfRangeException` names an argument out of its range (#680). It replaces Create(year, doy, sec), which was UTC |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds, to the nearest tick |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds, to the nearest tick |
-| `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date, J2000 plus the nearest tick of the days `julianDate` − 2451545.0 (#637); a non-finite date throws `ArgumentOutOfRangeException` (#680) |
+| `CreateFromJD(double julianDate, TimeScale scale)` | Create from Julian Date, J2000 plus the nearest tick of the days `julianDate` − 2451545.0 (#637); a non-finite date throws `ArgumentOutOfRangeException` (#680) |
 
 A span of seconds becomes the nearest tick (100 ns) of the exact value of its double, ties to even, in `Create`,
 `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
@@ -75,13 +118,13 @@ of a constant that a tick holds exactly (60 s, 32.184 s, 19 s, whole leap second
 
 ### Time Scales
 
-The conversions of `Time` and `TimeFrame` are managed and read no kernel:
+The conversions between the scales are managed and read no kernel:
 
-- **TAI − UTC** comes from the leap second table of `TimeFrame`: 10 s from 1972-01-01 to 37 s from 2017-01-01, its last
+- **TAI − UTC** comes from the leap second table of the library (internal `TimeScaleConversions`): 10 s from 1972-01-01 to 37 s from 2017-01-01, its last
   entry, each offset counting from 00:00:00 UTC of its date. Before 1972 it is a fixed 9 s, as in the NAIF LSK (the USNO
   table `tai-utc.dat`, which GMAT reads, has offsets that drift from 1961 to 1971 and none before 1961). A leap second
   announced after 2017-01-01 needs a new entry in the table.
-- **TT** (`TDT`, `ToTDT()`) is TAI + 32.184 s, and **GPS** is TAI − 19 s.
+- **TT** (`ToTT()`) is TAI + 32.184 s, and **GPS** is TAI − 19 s.
 - **TDB − TT** is the one-term series 0.001658 sin(g + 0.0167 sin g) s, with g = 357.528° + 35999.05° T and T the Julian
   centuries from J2000 of the TT time converted to TDB, or of the TDB time converted to TT, rounded to the nearest tick.
   It is a short series, like those of the LSK and of GMAT. Measured from 1972 to 2100 (TT instants every 0.05 day, 935 041
@@ -97,13 +140,12 @@ not enter the managed conversions.
 
 | Method | Description |
 |--------|-------------|
-| `ConvertTo(ITimeFrame frame)` | Convert to any time frame; to the frame of the time, the time itself ([#510](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/510)) |
+| `ConvertTo(TimeScale scale)` | Convert to any scale; to the scale of the time, the time itself ([#510](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/510)) |
 | `ToTDB()` | Convert to TDB |
 | `ToUTC()` | Convert to UTC |
 | `ToTAI()` | Convert to TAI |
-| `ToTDT()` | Convert to TDT |
+| `ToTT()` | Convert to TT (ToTDT before 11.0.0) |
 | `ToGPS()` | Convert to GPS time |
-| `ToLocal()` | Convert to local time |
 | `ToJulianDate()` | Get the Julian date |
 
 ### Arithmetic Methods
@@ -132,54 +174,49 @@ not enter the managed conversions.
 
 | Operator | Description |
 |----------|-------------|
-| `Time + TimeSpan` | Add duration to time: calendar arithmetic in the frame of the time, so across a leap second a UTC (or local) time and the time a span after it are the span plus the leap second apart, `(t + d) - t` is `d + 1 s` |
+| `Time + TimeSpan` | Add duration to time: calendar arithmetic in the scale of the time, so across a leap second a UTC time and the time a span after it are the span plus the leap second apart, `(t + d) - t` is `d + 1 s` |
 | `Time - TimeSpan` | Subtract duration from time, calendar arithmetic as `+` |
-| `Time - Time` | Duration between two instants: the difference of the calendars in TDB, TT, TAI and GPS, through TAI for UTC and local times, so that leap seconds count ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)) |
-| `<`, `>`, `<=`, `>=` | Comparison of the instants, by their TAI ticks, within a frame and across frames (`CompareTo`) |
-| `==`, `!=`, `Equals` | The same instant, whatever the frames: `CompareTo` returns 0 ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)) |
+| `Time - Time` | Duration between two instants: the difference of the calendars in TDB, TT, TAI and GPS, through TAI for UTC times and across scales, so that leap seconds count ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)) |
+| `<`, `>`, `<=`, `>=` | Comparison of the instants, by their TAI ticks, within a scale and across scales (`CompareTo`) |
+| `==`, `!=`, `Equals` | The same instant, whatever the scales: `CompareTo` returns 0 ([#512](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/512)) |
+| `EqualsExact(Time other)` | The same label: the same calendar, to the tick, in the same scale |
+| `Time.ExactComparer` | The equality of labels (`EqualsExact`), for a hash collection that keeps the labels apart |
 
 ### Equality and Order
 
-Two times are equal when they are the same instant, whatever their frames (decided by S. Guillet, 2026-11-17):
-`==`, `!=`, `Equals` and `GetHashCode` follow `CompareTo`, the one order of times, which compares their ticks converted
-to TAI. So `utc == utc.ToTDB()`, both hash alike, and a `Dictionary`, a `HashSet`, `Distinct` or `IndexOf` keyed by times
-finds the same instant in another frame, as `SortedSet` did. Within UTC, TAI, TT and GPS the order is that of the
-calendars; within TDB too for times two ticks or more apart, but two consecutive TDB ticks can convert to one TAI tick
-(TDB − TT, rounded to the tick, gains one there, about every 300 s near its steepest), and then they are one instant,
-equal to each other and to that TAI time, so that equality stays transitive. A UTC time is never equal to a TAI time in
-an inserted leap second (UTC 23:59:60 has no `Time`). The default time (`default(Time)`, no frame) comes before every
-time with a frame and equals only itself, so comparing or sorting it does not throw. A local time
-(`TimeFrame.LocalFrame`) is the instant `DateTime.ToUniversalTime` gives its calendar in the zone of the machine, and two
-local times compare as instants too (before 11.0.0, by their calendars): in a zone with daylight saving time a label of
-the skipped hour is read with the standard offset, so it is the instant of a label an hour later (in America/New_York,
-local 2025-03-09T02:30 and 03:30 are both 07:30 UTC, after local 03:00), and a label of the repeated hour built from
-its calendar (`new Time(new DateTime(2025, 11, 2, 1, 30, 0), TimeFrame.LocalFrame)`) is read with the standard offset
-too, the second of the two hours (06:30 UTC). The `ToLocal()` of an instant changes the label, not the instant, in the
-repeated hour too: `t.ToLocal() == t` and `t.ToLocal().ToUTC()` is `t` to the tick, 2025-11-02T05:30Z giving local 01:30
-of the first hour, which is 05:30Z (#751, decided by S. Guillet, 2026-11-18: the `DateTime` that `ToLocalTime` marks as
-daylight time is kept; before, the constructor's `SpecifyKind` dropped the mark, and that local 01:30 was 06:30Z).
-The mark is kept only while the label is in the repeated hour: the arithmetic of a local time is that of its calendar
-(`AddHours`, `AddMinutes`, `+ TimeSpan`, ...), so 10 min after local 01:30 of the first hour is 01:40 of the first hour
-(05:40Z), but 1 h after it is local 02:30 (07:30Z, 2 h later), and 1 h before that is local 01:30 read with the standard
-offset (06:30Z), as from any other label of that calendar. Two local times of one instant and one calendar so give the
-same result after the same arithmetic.
-To tell two labels of one instant apart, compare `DateTime` and `Frame`. Within TDB, `-` still counts the ticks of the
-calendars, so two equal consecutive TDB ticks differ by one tick. The library's caches whose values carry their key as a
-label (the orientation a frame keeps from its last read, #541, the range rates of the conjunction search) stay keyed by
-label, an epoch in another frame read again, bit for bit as before. Before 11.0.0 equality was the record's, on the
-calendar and the frame, while `CompareTo` compared through TAI across frames: the same instant in two frames compared to
-0 and was not equal.
+Two times are equal when they are the same instant, whatever their scales (#512, decided by S. Guillet, 2026-11-17; the
+TAI tick confirmed as the key by S. Guillet, 2026-11-19, D3 as amended): `==`, `!=`, `Equals` and `GetHashCode` follow
+`CompareTo`, the one order of times, which compares their ticks converted to TAI. So `utc == utc.ToTDB()`, both hash
+alike, and a `Dictionary`, a `HashSet`, `Distinct` or `IndexOf` keyed by times finds the same instant in another scale,
+as `SortedSet` did. Within UTC, TAI, TT and GPS the order is that of the calendars; within TDB too for times two ticks or
+more apart, but two consecutive TDB ticks can convert to one TAI tick (TDB − TT, rounded to the tick, gains one there,
+about every 300 s near its steepest), and then they are one instant, equal to each other and to that TAI time, so that
+equality stays transitive. A UTC time is never equal to a TAI time in an inserted leap second (UTC 23:59:60 has no
+`Time`). The default time is 0001-01-01T00:00:00 TDB, the earliest TDB calendar.
+
+To tell two labels of one instant apart, use `EqualsExact` (the calendar and the scale), or `Time.ExactComparer` for a
+`Dictionary` or a `HashSet`. Within TDB, `-` still counts the ticks of the calendars, so two equal consecutive TDB ticks
+differ by one tick. The library's caches whose values carry their key as a label (the orientation a frame keeps from
+its last read, #541, the orientations of `TLEPropagator`, the range rates of the conjunction search) are keyed by label,
+an epoch in another scale read again, bit for bit as before. Before 11.0.0 equality was the record's, on the calendar
+and the frame, while `CompareTo` compared through TAI across frames: the same instant in two frames compared to 0 and
+was not equal.
 
 ### Example
 
 ```csharp
-var t1 = new Time(2024, 6, 21, 12, 0, 0);
-var t2 = new Time("2024-06-21T12:00:00.000 UTC");
+var t1 = new Time(2024, 6, 21, 12, 0, 0, TimeScale.UTC);
+var t2 = Time.Parse("2024-06-21T12:00:00.000 UTC");
+var t3 = Time.Parse("2024-173T12:00:00Z");
+var t4 = Time.Parse("JD 2460483.0 UTC");
+var doy = Time.FromDayOfYear(2024, 173, 43200.0, TimeScale.UTC);
+bool sameLabel = t1.EqualsExact(t2) && t1.EqualsExact(t3) && t1.EqualsExact(t4) && t1.EqualsExact(doy); // true
 var tdb = t1.ToTDB();
-var utc = tdb.ToUTC();
-var t3 = t1.AddDays(1.0);
-var duration = t3 - t1;
-var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
+bool sameInstant = tdb == t1; // true: one instant in two scales
+string text = $"{tdb:yyyy-MM-dd HH:mm:ss}"; // 2024-06-21 12:01:09 TDB
+var later = t1.AddDays(1.0);
+var duration = later - t1;
+var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 ```
 
 ## Window
@@ -198,7 +235,7 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
 | Member | Description |
 |--------|-------------|
 | `StartDate` / `EndDate` | Interval boundaries |
-| `==`, `!=`, `Equals` | The same two ends, instants compared whatever their frames (#512): a window and the window of the same instants in TDB are equal; `Length` does not take part |
+| `==`, `!=`, `Equals` | The same two ends, instants compared whatever their scales (#512): a window and the window of the same instants in TDB are equal; `Length` does not take part |
 | `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31; the length given to `Window(Time, TimeSpan)`, whose `EndDate` is `start + length` in calendar arithmetic, so a UTC window built from a length across a leap second keeps that length while `EndDate - StartDate`, and a propagation over it, count the leap second |
 | `Merge(Window)` | Merge two overlapping windows |
 | `Intersects(Window)` / `Intersects(Time)` | Check overlap |
@@ -207,7 +244,7 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
 ### Example
 
 ```csharp
-var window = new Window(new Time(2024, 1, 1), new Time(2024, 1, 31));
+var window = new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 31, TimeScale.TDB));
 Console.WriteLine($"Duration: {window.Length.TotalDays} days");
 ```
 
@@ -239,8 +276,8 @@ epoch ([Attitudes](attitudes.md#the-attitude-timeline)).
 
 ### The Length of a Window
 
-The window has the TT seconds between its two instants, whatever their tags: exact in ticks between UTC, TAI, TT, GPS
-and local tags, through IO's TDB − TT series for a TDB tag.
+The window has the TT seconds between its two instants, whatever their tags: exact in ticks between UTC, TAI, TT and GPS
+tags, through IO's TDB − TT series for a TDB tag.
 
 | Window about the Earth | TT length |
 |------------------------|-----------|
@@ -271,7 +308,7 @@ chaining propagations, through the labels a user receives therefore keeps a sub-
 relative on the state transition matrix and 0.75 mm in LEO. The references of the library's own validation read at an
 exact elapsed time instead.
 
-A solution is read at an epoch in any frame
+A solution is read at an epoch in any scale
 ([#507](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/507)): a UTC, TAI, TT or GPS epoch
 names the same instant as its TDB label, to the tick, and the bounds of the solution are read in the seconds of the time
 argument, so the UTC start and end of a UTC window are inside it. Before 11.0.0 a non-TDB epoch read on a solution about

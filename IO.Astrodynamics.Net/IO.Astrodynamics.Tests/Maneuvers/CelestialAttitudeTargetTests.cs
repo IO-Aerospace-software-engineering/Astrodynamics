@@ -62,7 +62,7 @@ public class CelestialAttitudeTargetTests
         }).ToArray();
     }
 
-    private static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     /// <summary>
     /// #740: the direction of a <see cref="CelestialAttitudeTarget"/> is the target as the spacecraft sees it, as
@@ -145,7 +145,7 @@ public class CelestialAttitudeTargetTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(0.0, 7727.0, 0.0),
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
+            new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
         var target = new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000);
@@ -167,7 +167,7 @@ public class CelestialAttitudeTargetTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(0.0, 7727.0, 0.0),
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
+            new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
         var target = new CelestialAttitudeTarget(TestHelpers.Sun);
@@ -214,7 +214,7 @@ public class CelestialAttitudeTargetTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(0.0, 7727.0, 0.0),
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
+            new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
         var target = new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.None);
@@ -236,7 +236,7 @@ public class CelestialAttitudeTargetTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(0.0, 7727.0, 0.0),
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
+            new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
         var targetLT = new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.LT);

@@ -113,7 +113,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>The state vector at <paramref name="epoch"/>, tagged as <paramref name="epoch"/> is.</returns>
         /// <remarks>
         /// <para>
-        /// At the instant of <see cref="OrbitalParameters.Epoch"/>, in any time frame (the criterion of
+        /// At the instant of <see cref="OrbitalParameters.Epoch"/>, in any time scale (the criterion of
         /// <see cref="OrbitalParameters.AtEpoch"/>, which counts no time there), the state is this one, position, velocity
         /// and <see cref="Covariance"/> unchanged, its epoch tagged as <paramref name="epoch"/> is (#551). It is no longer
         /// the round trip through the Keplerian elements of <see cref="OrbitalParameters.AtEpoch"/>, which lost the
@@ -135,7 +135,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return base.ToStateVector(epoch);
             }
 
-            return epoch.HasSameLabel(Epoch) ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
+            return epoch.EqualsExact(Epoch) ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
         }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             var omega = System.Math.Atan2(n.Y, n.X);
             if (omega < 0.0)
             {
-                omega += Constants._2PI;
+                omega += Constants.TwoPi;
             }
 
             _ascendingNode = omega;
@@ -269,9 +269,9 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (n == Vector3.Zero)
             {
                 _periapsisArgument = System.Math.Atan2(e.Y, e.X);
-                if (Inclination() > Constants.PI2)
+                if (Inclination() > Constants.HalfPi)
                 {
-                    _periapsisArgument = Constants._2PI - _periapsisArgument;
+                    _periapsisArgument = Constants.TwoPi - _periapsisArgument;
                     return _periapsisArgument!.Value;
                 }
             }
@@ -369,10 +369,10 @@ namespace IO.Astrodynamics.OrbitalParameters
             v -= ArgumentOfPeriapsis();
             if (v < 0.0)
             {
-                v += Constants._2PI;
+                v += Constants.TwoPi;
             }
 
-            return v % Constants._2PI;
+            return v % Constants.TwoPi;
         }
 
         /// <summary>
@@ -385,11 +385,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             var e = EccentricityVector();
             var hHat = SpecificAngularMomentum().NormalizeOrZero();
-            var inPlane = e - hHat * (e * hHat);
+            var inPlane = e - hHat * e.Dot(hHat);
 
             // A second projection removes what the first left out of the plane, about ε |e| absolute, which is not small
             // against the part in the plane when the eccentricity vector is rounding noise (classical Gram-Schmidt twice)
-            inPlane -= hHat * (inPlane * hHat);
+            inPlane -= hHat * inPlane.Dot(hHat);
             double m = inPlane.Magnitude();
             if (m > 0.0)
             {
@@ -410,8 +410,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         private double AngleInOrbitPlane(in Vector3 from, in Vector3 to)
         {
             var hHat = SpecificAngularMomentum().NormalizeOrZero();
-            double angle = System.Math.Atan2(hHat * from.Cross(to), from * to);
-            return angle < 0.0 ? angle + Constants._2PI : angle;
+            double angle = System.Math.Atan2(hHat.Dot(from.Cross(to)), from.Dot(to));
+            return angle < 0.0 ? angle + Constants.TwoPi : angle;
         }
 
         #region Operators

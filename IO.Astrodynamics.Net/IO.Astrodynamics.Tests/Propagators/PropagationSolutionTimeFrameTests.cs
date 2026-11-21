@@ -27,7 +27,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// </summary>
 public class PropagationSolutionTimeFrameTests
 {
-    private static readonly TimeSystem.Time Start = new(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time Start = new(2025, 6, 1, 10, 30, 0, TimeScale.UTC);
 
     // 13 h after the start, in UTC: TDB − TT changes there by 2.0e-5 s from the start
     private static readonly TimeSystem.Time ReadEpoch = Start.AddHours(13.0);
@@ -58,7 +58,7 @@ public class PropagationSolutionTimeFrameTests
         {
             ["UTC"] = solution.InterpolateAt(utc),
             ["TAI"] = solution.InterpolateAt(utc.ToTAI()),
-            ["TT"] = solution.InterpolateAt(utc.ToTDT()),
+            ["TT"] = solution.InterpolateAt(utc.ToTT()),
             ["GPS"] = solution.InterpolateAt(utc.ToGPS()),
             ["TDB"] = solution.InterpolateAt(utc.ToTDB())
         };
@@ -170,10 +170,10 @@ public class PropagationSolutionTimeFrameTests
     // truncated (2021-06-02T14:51:26.1940007, a tick later, and 2021-03-20T00:05:05.0969684, a tick earlier), now come
     // back to their TAI
     private static readonly TimeSystem.Time LabelLaterInTai =
-        new(new DateTime(2021, 5, 13, 10, 31, 43).AddTicks(6810149), TimeFrame.UTCFrame);
+        new(new DateTime(2021, 5, 13, 10, 31, 43).AddTicks(6810149), TimeScale.UTC);
 
     private static readonly TimeSystem.Time LabelOffInTai =
-        new(new DateTime(2021, 9, 7, 5, 33, 59).AddTicks(2598236), TimeFrame.UTCFrame);
+        new(new DateTime(2021, 9, 7, 5, 33, 59).AddTicks(2598236), TimeScale.UTC);
 
     [Theory]
     [InlineData("Earth")]
@@ -306,12 +306,13 @@ public class PropagationSolutionTimeFrameTests
 
     private static IO.Astrodynamics.Math.Matrix Diagonal(double position, double velocity)
     {
-        var matrix = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var matrixTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            matrix.Set(i, i, position);
-            matrix.Set(i + 3, i + 3, velocity);
+            matrixTerms[i, i] = position;
+            matrixTerms[i + 3, i + 3] = velocity;
         }
+        var matrix = new IO.Astrodynamics.Math.Matrix(matrixTerms);
 
         return matrix;
     }

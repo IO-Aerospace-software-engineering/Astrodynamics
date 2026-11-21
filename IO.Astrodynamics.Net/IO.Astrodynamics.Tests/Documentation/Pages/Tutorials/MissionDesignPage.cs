@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -190,18 +189,18 @@ internal static class MissionDesignPage
         //   (Window), earth (CelestialBody)
         // Build the maneuver chain
         var maneuver1 = new PlaneAlignmentManeuver(
-            new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+            new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             targetOrbit, engine);
 
         maneuver1
             .SetNextManeuver(new ApsidalAlignmentManeuver(
-                new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
                 targetOrbit, engine))
             .SetNextManeuver(new PhasingManeuver(
-                new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
                 targetOrbit, 3, engine))
             .SetNextManeuver(new ApogeeHeightManeuver(
-                new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
                 targetOrbit, engine));
 
         // Arm the maneuver chain on the spacecraft
@@ -221,7 +220,7 @@ internal static class MissionDesignPage
         #region docs/tutorials/mission-design.md:8
         // Inputs: earth (CelestialBody), engine (Engine), maneuver1 (Maneuver), spacecraft (Spacecraft)
         var attitude = new ProgradeAttitude(
-            earth, new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            earth, new Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromMinutes(5), engine);
 
         attitude.SetNextManeuver(maneuver1);
@@ -237,7 +236,7 @@ internal static class MissionDesignPage
         var lro = new Spacecraft(
             naifId: -85,
             name: "LRO",
-            epoch: new Time(2024, 6, 1, 12, 0, 0));
+            epoch: new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB));
 
         // Query ephemeris directly from SPICE kernels
         var state = lro.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LT);

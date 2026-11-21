@@ -91,16 +91,7 @@ internal static class StraightLineEncounter
             return given;
         }
 
-        var covariance = new Matrix(6, 6);
-        for (int i = 0; i < given.Rows; i++)
-        {
-            for (int j = 0; j < given.Columns; j++)
-            {
-                covariance.Set(i, j, given.Get(i, j));
-            }
-        }
-
-        return covariance;
+        return Matrix.Create(6, 6, (i, j) => i < given.Rows && j < given.Columns ? given[i, j] : 0.0);
     }
 
     // A straight line at constant velocity from start over the window, one accepted step and its two ends

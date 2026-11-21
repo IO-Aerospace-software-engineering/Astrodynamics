@@ -50,7 +50,7 @@ public class TleTextTests
     }
 
     private static TimeSystem.Time Utc(string iso) => new(DateTime.ParseExact(iso, "yyyy-MM-ddTHH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture,
-        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal), TimeFrame.UTCFrame);
+        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal), TimeScale.UTC);
 
     private static string EpochField(TLE tle) => tle.Line1.Substring(18, 14);
 
@@ -76,11 +76,11 @@ public class TleTextTests
         foreach (var item in EpochFields.Value.Where(e => e.TryGetProperty("scale", out _)))
         {
             var dateTime = DateTime.ParseExact(item.GetProperty("instant").GetString(), "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
-            ITimeFrame frame = item.GetProperty("scale").GetString() switch
+            TimeScale frame = item.GetProperty("scale").GetString() switch
             {
-                "TDB" => TimeFrame.TDBFrame,
-                "TT" => TimeFrame.TDTFrame,
-                _ => TimeFrame.TAIFrame
+                "TDB" => TimeScale.TDB,
+                "TT" => TimeScale.TT,
+                _ => TimeScale.TAI
             };
             Assert.Equal(item.GetProperty("field").GetString(), EpochField(Create(new TimeSystem.Time(dateTime, frame))));
         }
@@ -139,7 +139,7 @@ public class TleTextTests
             "2 00900  90.2232  75.0898 0025865 215.7471 230.6709 13.76755757 91111");
         var expected = new DateTime(2026, 11, 7, 6, 47, 35).AddTicks(8958400);
         Assert.Equal(expected, tle.Epoch.DateTime);
-        Assert.Equal(TimeFrame.UTCFrame, tle.Epoch.Frame);
+        Assert.Equal(TimeScale.UTC, tle.Epoch.Scale);
         Assert.Equal(expected, tle.ToOmm().Data.MeanElements.Epoch);
         Assert.Equal("26311.28305435", EpochField(TLE.Create(tle.ToMeanKeplerianElements(), "CALSPHERE 1", 900, "64063C", 9111)));
     }
@@ -194,7 +194,7 @@ public class TleTextTests
         // TDB instant is within 1.1 us of it
         var earth = new CelestialBody(399, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
         var cspiceUtc = new DateTime(2021, 3, 20, 11, 58, 50).AddTicks(8143932);
-        var tdb = new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), TimeFrame.TDBFrame);
+        var tdb = new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), TimeScale.TDB);
         var state = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), earth, tdb, Frames.Frame.ICRF);
 
         var written = Opm.CreateFromStateVector("SAT", "2021-001A", state);
@@ -203,8 +203,8 @@ public class TleTextTests
         Assert.InRange(System.Math.Abs((written.ToStateVector().Epoch - tdb).TotalSeconds), 0.0, 2e-7);
 
         var opmStateVector = new OpmStateVector(new DateTime(2021, 3, 20, 12, 0, 0), 7000.0, 0.0, 0.0, 0.0, 7.5, 0.0);
-        foreach (var (system, frame) in new (string, ITimeFrame)[]
-                     { ("TDB", TimeFrame.TDBFrame), ("tdb", TimeFrame.TDBFrame), ("TT", TimeFrame.TDTFrame), ("TAI", TimeFrame.TAIFrame), ("GPS", TimeFrame.GPSFrame), ("UTC", TimeFrame.UTCFrame) })
+        foreach (var (system, frame) in new (string, TimeScale)[]
+                     { ("TDB", TimeScale.TDB), ("tdb", TimeScale.TDB), ("TT", TimeScale.TT), ("TAI", TimeScale.TAI), ("GPS", TimeScale.GPS), ("UTC", TimeScale.UTC) })
         {
             var opm = Opm.CreateMinimal("SAT", "2021-001A", "EARTH", "ICRF", system, opmStateVector);
             var read = opm.ToStateVector();
@@ -214,7 +214,7 @@ public class TleTextTests
         }
 
         Assert.Throws<InvalidOperationException>(() => Opm.CreateMinimal("SAT", "2021-001A", "EARTH", "ICRF", "UT1", opmStateVector).ToStateVector());
-        Assert.Equal(TimeFrame.UTCFrame, opmStateVector.ToStateVector(earth, Frames.Frame.ICRF).Epoch.Frame);
+        Assert.Equal(TimeScale.UTC, opmStateVector.ToStateVector(earth, Frames.Frame.ICRF).Epoch.Scale);
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public class TleTextTests
         // #479: MAN_EPOCH_IGNITION took the calendar of the thrust window, TDB in a propagation
         var engine = new Engine("engine", "model", "sn", 350.0, 50.0, new FuelTank("tank", "model", "sn", 4000.0, 3000.0));
         var maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.Zero, 7000000.0, engine);
-        maneuver.ThrustWindow = new Window(new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), TimeFrame.TDBFrame), TimeSpan.FromSeconds(10.0));
+        maneuver.ThrustWindow = new Window(new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), TimeScale.TDB), TimeSpan.FromSeconds(10.0));
         var parameters = maneuver.ToOpmManeuverParameters();
         Assert.InRange(System.Math.Abs((parameters.ManEpochIgnition - new DateTime(2021, 3, 20, 11, 58, 50).AddTicks(8143932)).TotalSeconds), 0.0, 1.1e-6);
     }

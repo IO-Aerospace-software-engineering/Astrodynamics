@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -67,13 +66,9 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:1
         // Inputs: earth (CelestialBody), epoch (Time)
         // Build a 6x6 covariance matrix (diagonal for simplicity)
-        var protectedCov = new Matrix(6, 6);
-        protectedCov.Set(0, 0, 25.0);   // sigma_x^2  (m^2)
-        protectedCov.Set(1, 1, 25.0);   // sigma_y^2
-        protectedCov.Set(2, 2, 25.0);   // sigma_z^2
-        protectedCov.Set(3, 3, 0.01);   // sigma_vx^2 (m^2/s^2)
-        protectedCov.Set(4, 4, 0.01);   // sigma_vy^2
-        protectedCov.Set(5, 5, 0.01);   // sigma_vz^2
+        var protectedCov = Matrix.Diagonal(
+            25.0, 25.0, 25.0,    // sigma_x^2, sigma_y^2, sigma_z^2 (m^2)
+            0.01, 0.01, 0.01);   // sigma_vx^2, sigma_vy^2, sigma_vz^2 (m^2/s^2)
 
         var protectedState = new StateVector(
             new Vector3(6800000.0, 0.0, 0.0),
@@ -92,13 +87,7 @@ internal static class ConjunctionAssessmentPage
     {
         #region docs/tutorials/conjunction-assessment.md:2
         // Inputs: earth (CelestialBody), epoch (Time)
-        var secondaryCov = new Matrix(6, 6);
-        secondaryCov.Set(0, 0, 50.0);
-        secondaryCov.Set(1, 1, 50.0);
-        secondaryCov.Set(2, 2, 50.0);
-        secondaryCov.Set(3, 3, 0.02);
-        secondaryCov.Set(4, 4, 0.02);
-        secondaryCov.Set(5, 5, 0.02);
+        var secondaryCov = Matrix.Diagonal(50.0, 50.0, 50.0, 0.02, 0.02, 0.02);
 
         var secondaryState = new StateVector(
             new Vector3(6800500.0, 100.0, 50.0),

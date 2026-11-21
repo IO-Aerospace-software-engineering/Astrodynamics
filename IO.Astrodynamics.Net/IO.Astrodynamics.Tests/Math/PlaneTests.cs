@@ -56,7 +56,7 @@ public class PlaneTests
         var plane = new Plane(new Vector3(1, 0, 0));
         var vector = new Vector3(1, 0, 0);
         var result = plane.GetAngle(vector);
-        Assert.Equal(Astrodynamics.Constants.PI2, result, 6);
+        Assert.Equal(Astrodynamics.Constants.HalfPi, result, 6);
     }
 
     [Fact]

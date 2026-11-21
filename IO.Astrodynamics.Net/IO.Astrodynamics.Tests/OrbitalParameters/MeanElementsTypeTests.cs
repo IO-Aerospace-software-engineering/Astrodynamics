@@ -34,7 +34,7 @@ public class MeanElementsTypeTests
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-    private static readonly TimeSystem.Time EpochB = new(new DateTime(2024, 1, 15, 12, 0, 0), TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time EpochB = new(new DateTime(2024, 1, 15, 12, 0, 0), TimeScale.UTC);
 
     public MeanElementsTypeTests(ITestOutputHelper output)
     {

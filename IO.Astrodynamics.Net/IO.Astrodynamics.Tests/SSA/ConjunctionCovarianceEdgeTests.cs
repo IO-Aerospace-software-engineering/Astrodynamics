@@ -149,14 +149,15 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         // Arrange: a negative variance, which no remediation of rounding repairs
         var state = _case.ProtectedStart;
         var p0 = state.Covariance.Value;
-        var negative = new Matrix(6, 6);
+        var negativeTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                negative.Set(i, j, i == 4 && j == 4 ? -p0.Get(4, 4) : i == 4 || j == 4 ? 0.0 : p0.Get(i, j));
+                negativeTerms[i, j] = i == 4 && j == 4 ? -p0.Get(4, 4) : i == 4 || j == 4 ? 0.0 : p0.Get(i, j);
             }
         }
+        var negative = new Matrix(negativeTerms);
 
         var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6966, new StateVector(state.Position, state.Velocity,
             state.Observer, state.Epoch, state.Frame, negative));
@@ -256,14 +257,15 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     private static StateVector WithTrCorrelation(StateVector state, double rho, double s)
     {
         var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
-        var rtn = new Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            rtn.Set(i, i, sigma[i] * sigma[i] * s * s);
+            rtnTerms[i, i] = sigma[i] * sigma[i] * s * s;
         }
 
-        rtn.Set(1, 3, rho * sigma[1] * sigma[3] * s * s);
-        rtn.Set(3, 1, rho * sigma[1] * sigma[3] * s * s);
+        rtnTerms[1, 3] = rho * sigma[1] * sigma[3] * s * s;
+        rtnTerms[3, 1] = rho * sigma[1] * sigma[3] * s * s;
+        var rtn = new Matrix(rtnTerms);
         return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
             state.RotateCovarianceFromRtn(rtn));
     }
@@ -283,14 +285,15 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
             clipped += lambda * v.OuterProduct(v);
         }
 
-        var result = new Matrix(6, 6);
+        var resultTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                result.Set(i, j, 0.5 * (clipped[i, j] + clipped[j, i]) * sigma[i] * sigma[j]);
+                resultTerms[i, j] = 0.5 * (clipped[i, j] + clipped[j, i]) * sigma[i] * sigma[j];
             }
         }
+        var result = new Matrix(resultTerms);
 
         return result;
     }

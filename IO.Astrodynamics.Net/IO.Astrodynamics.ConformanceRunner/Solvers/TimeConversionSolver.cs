@@ -13,17 +13,17 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// </summary>
 /// <remarks>
 /// Each output is the difference of the ticks (100 ns) of the converted <see cref="DateTime"/> and of J2000, never a
-/// Julian date, whose double resolves 40 µs. TT is the framework's TDT.
+/// Julian date, whose double resolves 40 µs.
 /// </remarks>
 public class TimeConversionSolver : ICategorySolver
 {
-    private static readonly (string Output, ITimeFrame Frame)[] Scales =
+    private static readonly (string Output, TimeScale Scale)[] Scales =
     {
-        ("tai_s", TimeFrame.TAIFrame),
-        ("utc_s", TimeFrame.UTCFrame),
-        ("tt_s", TimeFrame.TDTFrame),
-        ("tdb_s", TimeFrame.TDBFrame),
-        ("gps_s", TimeFrame.GPSFrame)
+        ("tai_s", TimeScale.TAI),
+        ("utc_s", TimeScale.UTC),
+        ("tt_s", TimeScale.TT),
+        ("tdb_s", TimeScale.TDB),
+        ("gps_s", TimeScale.GPS)
     };
 
     public string Category => "time_conversion";
@@ -34,7 +34,7 @@ public class TimeConversionSolver : ICategorySolver
         var epoch = EpochParser.Parse(inputs.Epoch);
         // A scale whose date the calendar cannot hold (after 9999-12-31) is given as its exception (SolverOutput)
         return Scales.ToDictionary(scale => scale.Output,
-            scale => SolverOutput.Of(() => SecondsFromJ2000(epoch.ConvertTo(scale.Frame))));
+            scale => SolverOutput.Of(() => SecondsFromJ2000(epoch.ConvertTo(scale.Scale))));
     }
 
     /// <summary>
@@ -42,6 +42,6 @@ public class TimeConversionSolver : ICategorySolver
     /// </summary>
     internal static double SecondsFromJ2000(Time time)
     {
-        return (time.DateTime.Ticks - Time.J2000.Ticks) / (double)TimeSpan.TicksPerSecond;
+        return (time.DateTime.Ticks - Time.J2000TDB.DateTime.Ticks) / (double)TimeSpan.TicksPerSecond;
     }
 }

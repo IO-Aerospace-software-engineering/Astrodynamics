@@ -30,7 +30,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </summary>
 public class PropagatedStatesSpanTests
 {
-    private static readonly Time S = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time S = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
     private static readonly TimeSpan Output = TimeSpan.FromSeconds(10.0);
     private const double OneTick = 1.0e-7;
 

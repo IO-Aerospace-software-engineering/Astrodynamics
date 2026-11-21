@@ -43,7 +43,7 @@ public class ConvertToOwnFrameTests
     public void ToTdb_OfATdbTime_IsTheTime(long ticks)
     {
         // Arrange
-        var tdb = new TimeSystem.Time(new DateTime(ticks), TimeFrame.TDBFrame);
+        var tdb = new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB);
 
         // Act
         var converted = tdb.ToTDB();
@@ -57,10 +57,9 @@ public class ConvertToOwnFrameTests
     [MemberData(nameof(TicksThatMovedThroughTai))]
     public void ConvertTo_TheOwnFrame_IsTheTime_InEveryFrame(long ticks)
     {
-        foreach (var frame in new ITimeFrame[]
+        foreach (var frame in new TimeScale[]
                  {
-                     TimeFrame.TDBFrame, TimeFrame.TDTFrame, TimeFrame.TAIFrame, TimeFrame.UTCFrame, TimeFrame.GPSFrame,
-                     TimeFrame.LocalFrame
+                     TimeScale.TDB, TimeScale.TT, TimeScale.TAI, TimeScale.UTC, TimeScale.GPS
                  })
         {
             var time = new TimeSystem.Time(new DateTime(ticks), frame);
@@ -73,24 +72,25 @@ public class ConvertToOwnFrameTests
     {
         // The TDB time of the instant of the rounding, to TT and back to TDB: the series at two arguments rounded on
         // either side of a half tick, a tick away
-        var tdb = new TimeSystem.Time(new DateTime(2032, 12, 20, 20, 24, 0), TimeFrame.TDBFrame);
-        Assert.Equal(1, tdb.ToTDT().ToTDB().DateTime.Ticks - tdb.DateTime.Ticks);
+        var tdb = new TimeSystem.Time(new DateTime(2032, 12, 20, 20, 24, 0), TimeScale.TDB);
+        Assert.Equal(1, tdb.ToTT().ToTDB().DateTime.Ticks - tdb.DateTime.Ticks);
     }
 
     [Fact]
     public void CovariancePropagation_FromATdbEpochThatMovedThroughTai_StartsThere()
     {
         // Arrange: a LEO with its covariance at 2024-05-09T12:00 TDB, the start of the window
-        var epoch = new TimeSystem.Time(new DateTime(2024, 5, 9, 12, 0, 0), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 5, 9, 12, 0, 0), TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var state = new KeplerianElements(6778137.0, 0.0005, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.3, 0.2, 1.0,
             earth, epoch, Frames.Frame.ICRF).ToStateVector();
-        var covariance = new Matrix(6, 6);
+        var covarianceTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            covariance.Set(i, i, 100.0);
-            covariance.Set(i + 3, i + 3, 1e-4);
+            covarianceTerms[i, i] = 100.0;
+            covarianceTerms[i + 3, i + 3] = 1e-4;
         }
+        var covariance = new Matrix(covarianceTerms);
 
         var spacecraft = new Spacecraft(-5100, "CONVERT5100", 100.0, 1000.0, new Clock("convert5100", 65536),
             new StateVector(state.Position, state.Velocity, earth, epoch, Frames.Frame.ICRF, covariance));

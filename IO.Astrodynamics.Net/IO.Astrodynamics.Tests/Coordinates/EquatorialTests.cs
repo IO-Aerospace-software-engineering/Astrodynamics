@@ -35,8 +35,8 @@ namespace IO.Astrodynamics.Tests.Coordinates
         public void CreateFromStateVector()
         {
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission1");
-            new Scenario("scn1", mission, new Window(new TimeSystem.Time(new DateTime(2001, 1, 1), TimeFrame.TDBFrame), new TimeSystem.Time(new DateTime(2001, 2, 1), TimeFrame.TDBFrame)));
-            var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+            new Scenario("scn1", mission, new Window(new TimeSystem.Time(new DateTime(2001, 1, 1), TimeScale.TDB), new TimeSystem.Time(new DateTime(2001, 2, 1), TimeScale.TDB)));
+            var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             Equatorial eq = new Equatorial(new StateVector(
                 new Vector3(-291608.38463344, -266716.83339423, -76102.48709990), new Vector3(), earth, epoch,
@@ -47,7 +47,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         [Fact]
         public void CreateFromStateVector2()
         {
-            var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1), TimeFrame.TDBFrame);
+            var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1), TimeScale.TDB);
 
             var moon = TestHelpers.Moon;
             var earth = moon.InitialOrbitalParameters.Observer;
@@ -81,12 +81,12 @@ namespace IO.Astrodynamics.Tests.Coordinates
         private static (double Ra, double Dec) RaDec(in Vector3 position)
         {
             double ra = System.Math.Atan2(position.Y, position.X);
-            if (ra < 0.0) ra += IO.Astrodynamics.Constants._2PI;
+            if (ra < 0.0) ra += IO.Astrodynamics.Constants.TwoPi;
             return (ra, System.Math.Asin(position.Z / position.Magnitude()));
         }
 
         // The difference of two right ascensions, modulo 2π
-        private static double RaDifference(double a, double b) => System.Math.Abs(System.Math.IEEERemainder(a - b, IO.Astrodynamics.Constants._2PI));
+        private static double RaDifference(double a, double b) => System.Math.Abs(System.Math.IEEERemainder(a - b, IO.Astrodynamics.Constants.TwoPi));
 
         // A difference of angles in units of the spacing of the doubles at the reference angle, that spacing taken at 1 rad at
         // least: an angle in [4, 2π) is held to 8.9e-16 rad, one in [2, 4) to 4.4e-16 rad, so a bound in radians would not
@@ -168,7 +168,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         [Fact]
         public void ToEquatorial_IsInvariantUnderAChangeOfFrame()
         {
-            var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, frame: TimeFrame.TDBFrame);
+            var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
             var icrf = new StateVector(new Vector3(6678137.0, 987654.0, 489312.0), new Vector3(-1032.0, 7154.0, 2531.0), earth, epoch,
                 Frames.Frame.ICRF);
@@ -218,7 +218,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         [Fact]
         public void ToEquatorial_OnThePolarAxisAndTheEquator()
         {
-            var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, frame: TimeFrame.TDBFrame);
+            var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
 
             // The ICRF pole, expressed in ECLIPJ2000: Dec π/2 exactly (RA is undefined there and not asserted). asin(z / |r|) cannot
@@ -236,7 +236,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             double worstDec = 0.0;
             for (int i = 0; i < 12; i++)
             {
-                double ra = i * IO.Astrodynamics.Constants._2PI / 12.0;
+                double ra = i * IO.Astrodynamics.Constants.TwoPi / 12.0;
                 var equatorial = new StateVector(new Vector3(7.0e6 * System.Math.Cos(ra), 7.0e6 * System.Math.Sin(ra), 0.0), Vector3.Zero, earth,
                     epoch, Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000).ToEquatorial();
                 worstRa = System.Math.Max(worstRa, Ulps(RaDifference(equatorial.RightAscension, ra), ra));

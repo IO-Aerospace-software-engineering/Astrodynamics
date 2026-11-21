@@ -13,20 +13,20 @@ namespace IO.Astrodynamics.Tests
     {
         internal static CelestialBody Sun => new(Stars.Sun);
 
-        internal static CelestialBody Earth => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1), atmosphericModel: new EarthStandardAtmosphere());
+        internal static CelestialBody Earth => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), atmosphericModel: new EarthStandardAtmosphere());
 
-        internal static CelestialBody Moon => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1));
+        internal static CelestialBody Moon => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB));
 
-        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
+        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
-        internal static Barycenter SsbAtJ2000 => new(0, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
+        internal static Barycenter SsbAtJ2000 => new(0, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
-        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0),
+        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB),
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new EarthStandardAtmosphere());
 
-        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
+        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
-        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2001, 12, 14, 0, 0, 0));
+        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2001, 12, 14, 0, 0, 0, TimeScale.TDB));
 
         internal static Spacecraft Spacecraft => new Spacecraft(-666, "GenericSpacecraft", 100.0, 1000.0, new Clock("GenericClk", 65536),
             new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
@@ -72,7 +72,7 @@ namespace IO.Astrodynamics.Tests
         /// <summary>The difference between two angles, rad, modulo 2π: 0 and 2π are the same angle.</summary>
         internal static double AngleDifference(double a1, double a2)
         {
-            return System.Math.Abs(System.Math.IEEERemainder(a1 - a2, IO.Astrodynamics.Constants._2PI));
+            return System.Math.Abs(System.Math.IEEERemainder(a1 - a2, IO.Astrodynamics.Constants.TwoPi));
         }
 
         // The size of two orbits: their semi-major axes, or within 1e-6 of e = 1 their perigee radii, relative: there the
@@ -116,7 +116,7 @@ namespace IO.Astrodynamics.Tests
 
         internal static bool TimeComparer(TimeSystem.Time v1, TimeSystem.Time v2)
         {
-            return Equals(v1.Frame, v2.Frame) && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-03;
+            return Equals(v1.Scale, v2.Scale) && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-03;
         }
         
         /// <summary>

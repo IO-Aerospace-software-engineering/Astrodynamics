@@ -90,13 +90,13 @@ internal readonly struct EncounterPlaneGaussian
     internal Matrix ToMatrix()
     {
         var rotation = new Matrix(2, 2);
-        rotation.Set(0, 0, CosAngle);
-        rotation.Set(0, 1, -SinAngle);
-        rotation.Set(1, 0, SinAngle);
-        rotation.Set(1, 1, CosAngle);
+        rotation.SetTerm(0, 0, CosAngle);
+        rotation.SetTerm(0, 1, -SinAngle);
+        rotation.SetTerm(1, 0, SinAngle);
+        rotation.SetTerm(1, 1, CosAngle);
         var diagonal = new Matrix(2, 2);
-        diagonal.Set(0, 0, MajorVariance);
-        diagonal.Set(1, 1, MinorVariance);
+        diagonal.SetTerm(0, 0, MajorVariance);
+        diagonal.SetTerm(1, 1, MinorVariance);
         return rotation * diagonal * rotation.Transpose();
     }
 

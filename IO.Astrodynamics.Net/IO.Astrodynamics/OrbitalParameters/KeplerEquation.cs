@@ -70,7 +70,7 @@ internal static class KeplerEquation
         // r = M − 2πk, |r| ≤ π up to about 1e13 rad: M − k TwoPiHigh is exact for |k| < 2^22 (Sterbenz's lemma:
         // P. H. Sterbenz, Floating-Point Computation, Prentice-Hall, 1974, confirmed by S. Guillet, 2026-10-27), and
         // k TwoPiLow within 4.1e-26 |k| of the rest of 2πk; M is kept as it is in [−π, π]
-        double k = System.Math.Abs(meanAnomaly) <= Constants.PI ? 0.0 : System.Math.Round(meanAnomaly / Constants._2PI);
+        double k = System.Math.Abs(meanAnomaly) <= Constants.PI ? 0.0 : System.Math.Round(meanAnomaly / Constants.TwoPi);
         double r = k == 0.0 ? meanAnomaly : (meanAnomaly - k * TwoPiHigh) - k * TwoPiLow;
 
         // From about 1e13 rad, k (rounded from M / fl(2π)) can miss the nearest turn and k TwoPiHigh rounds by up to
@@ -79,7 +79,7 @@ internal static class KeplerEquation
         // exact), to [−π, π], which never happens below 2^52 rad
         if (System.Math.Abs(r) > ReducedBound)
         {
-            r = System.Math.IEEERemainder(r, Constants._2PI);
+            r = System.Math.IEEERemainder(r, Constants.TwoPi);
         }
 
         double m = System.Math.Abs(r);

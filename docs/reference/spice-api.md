@@ -29,7 +29,7 @@ structuring choice 10, decided by S. Guillet, 2026-11-19); a `catch (InvalidOper
 ```csharp
 try
 {
-    var moon = SpiceAPI.Instance.ReadEphemeris(new Time(3000, 1, 1), 399, 301, Frame.ICRF, Aberration.None);
+    var moon = SpiceAPI.Instance.ReadEphemeris(new Time(3000, 1, 1, TimeScale.TDB), 399, 301, Frame.ICRF, Aberration.None);
 }
 catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
 {

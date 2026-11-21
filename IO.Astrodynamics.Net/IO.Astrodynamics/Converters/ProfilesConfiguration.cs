@@ -6,7 +6,6 @@ using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
 using KeplerianElements = IO.Astrodynamics.OrbitalParameters.KeplerianElements;
 using Launch = IO.Astrodynamics.Maneuver.Launch;
@@ -16,6 +15,7 @@ using Site = IO.Astrodynamics.Surface.Site;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
 using Window = IO.Astrodynamics.TimeSystem.Window;
+using OrbitalElementsType = IO.Astrodynamics.OrbitalParameters.OrbitalElementsType;
 
 namespace IO.Astrodynamics.Converters;
 
@@ -56,7 +56,7 @@ public static class ProfilesConfiguration
     internal static StateVector Convert(this DTO.StateVector stateVector, ILocalizable observer, Frame frame)
     {
         return new StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
-            Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
+            Time.Create(stateVector.Epoch, TimeScale.TDB), frame);
     }
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
@@ -72,7 +72,7 @@ public static class ProfilesConfiguration
 
     internal static Window Convert(this in DTO.Window window)
     {
-        return new Window(Time.Create(window.Start, TimeFrame.TDBFrame), Time.Create(window.End, TimeFrame.TDBFrame));
+        return new Window(Time.Create(window.Start, TimeScale.TDB), Time.Create(window.End, TimeScale.TDB));
     }
 
     internal static DTO.Planetodetic Convert(this Planetodetic planetodetic)
@@ -112,8 +112,8 @@ public static class ProfilesConfiguration
             double semiMajorAxis = keplerianElements.SemiMajorAxis == 0.0 ? double.PositiveInfinity : keplerianElements.SemiMajorAxis;
             return new KeplerianElements(semiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination,
                 keplerianElements.AscendingNodeLongitude, keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer,
-                Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame), frame, keplerianElements.TrueAnomaly,
-                perigeeRadius: keplerianElements.PerifocalDistance);
+                Time.Create(keplerianElements.Epoch, TimeScale.TDB), frame, keplerianElements.TrueAnomaly, null,
+                keplerianElements.PerifocalDistance, OrbitalElementsType.Osculating);
         }
 
         // oscltx's period is 0 for an open orbit, which has none (#663), and can exceed TimeSpan.MaxValue on an ellipse
@@ -121,8 +121,8 @@ public static class ProfilesConfiguration
         double tau = keplerianElements.OrbitalPeriod;
         TimeSpan? period = tau > 0.0 && tau < Time.MaximumSpanSeconds ? Time.SecondsToSpan(tau) : null;
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
-            keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
-            frame, keplerianElements.TrueAnomaly, period);
+            keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeScale.TDB),
+            frame, keplerianElements.TrueAnomaly, period, null, OrbitalElementsType.Osculating);
     }
 
     /// <summary>
@@ -135,6 +135,6 @@ public static class ProfilesConfiguration
     {
         return new EquinoctialElements(equinoctialElements.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
             equinoctialElements.SemiMajorAxis(), equinoctialElements.G, equinoctialElements.F,
-            equinoctialElements.K, equinoctialElements.H, equinoctialElements.MeanLongitude(), 0.0, -Constants.PI2, Constants.PI2, 0.0);
+            equinoctialElements.K, equinoctialElements.H, equinoctialElements.MeanLongitude(), 0.0, -Constants.HalfPi, Constants.HalfPi, 0.0);
     }
 }

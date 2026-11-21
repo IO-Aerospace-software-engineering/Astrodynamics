@@ -38,13 +38,13 @@ namespace IO.Astrodynamics.Tests.Body
         public void Create()
         {
             var spc = TestHelpers.Spacecraft;
-            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0));
+            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
             Assert.Equal("inst", spc.Instruments.First().Name);
             Assert.Equal("model", spc.Instruments.First().Model);
             Assert.Equal(1.57, spc.Instruments.First().FieldOfView);
             Assert.Equal(InstrumentShape.Circular, spc.Instruments.First().Shape);
             Assert.Equal(-1600, spc.Instruments.First().NaifId);
-            Assert.Equal(new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0), spc.Instruments.First().Orientation);
+            Assert.Equal(new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0), spc.Instruments.First().Orientation);
         }
 
         [Fact]
@@ -52,19 +52,19 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var spc = TestHelpers.Spacecraft;
             Assert.Throws<ArgumentException>(() =>
-                spc.AddCircularInstrument(-1600, "", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0)));
+                spc.AddCircularInstrument(-1600, "", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0)));
             Assert.Throws<ArgumentException>(() =>
-                spc.AddCircularInstrument(-1600, "inst", "", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0)));
+                spc.AddCircularInstrument(-1600, "inst", "", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0)));
             Assert.Throws<ArgumentException>(() =>
-                spc.AddCircularInstrument(-1600, "inst", "model", 0.0, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0)));
+                spc.AddCircularInstrument(-1600, "inst", "model", 0.0, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0)));
         }
 
         [Fact]
         public void Equality()
         {
             var spc = TestHelpers.Spacecraft;
-            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0));
-            spc.AddCircularInstrument(-1700, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0));
+            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
+            spc.AddCircularInstrument(-1700, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
             var instrument = spc.Instruments.First();
             var instrument2 = spc.Instruments.ElementAt(1);
             Assert.False(instrument == instrument2);
@@ -141,13 +141,13 @@ namespace IO.Astrodynamics.Tests.Body
             }
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), null,
+                new Window(TimeSystem.Time.Create(676555200.0, TimeScale.TDB), TimeSystem.Time.Create(676561647.0, TimeScale.TDB)), null,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), spacecraft,
+                new Window(TimeSystem.Time.Create(676555200.0, TimeScale.TDB), TimeSystem.Time.Create(676561647.0, TimeScale.TDB)), spacecraft,
                 null, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), spacecraft,
+                new Window(TimeSystem.Time.Create(676555200.0, TimeScale.TDB), TimeSystem.Time.Create(676561647.0, TimeScale.TDB)), spacecraft,
                 TestHelpers.EarthAtJ2000, null, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
         }
 
@@ -260,7 +260,7 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, spacecraft.Frame));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
 
             var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
@@ -293,7 +293,7 @@ namespace IO.Astrodynamics.Tests.Body
                 start, Frames.Frame.ICRF);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, spacecraft.Frame));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
             // The attitude takes the boresight -X to +Y (GetBoresightInICRF2): a rotation of -pi/2 about +Z, which takes +Y to +X
             var instrument = spacecraft.Instruments.First();
@@ -318,7 +318,7 @@ namespace IO.Astrodynamics.Tests.Body
             // Euler angles (0, 0, pi/2) of the frame kernel (#524): pxform(instrument, spacecraft) = eul2m(0, 0, pi/2, 1, 2, 3),
             // the frame rotation [pi/2]_3, takes the reference vector X to -Y
             spc.AddCircularInstrument(-1700, "inst2", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
-                new Vector3(0.0, 0.0, Astrodynamics.Constants.PI2));
+                new Vector3(0.0, 0.0, Astrodynamics.Constants.HalfPi));
             var refVector2 = spc.Instruments.ElementAt(1).GetRefVectorInSpacecraftFrame();
             Assert.Equal(new Vector3(0.0, -1.0, 0.0), refVector2, TestHelpers.VectorComparer);
         }
@@ -331,7 +331,7 @@ namespace IO.Astrodynamics.Tests.Body
             // Euler angles (0, pi/2, 0) of the frame kernel (#524): eul2m(0, pi/2, 0, 1, 2, 3), the frame rotation [pi/2]_2,
             // takes the reference vector X to +Z (and the boresight Z to -X, the managed path's value before #524)
             spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
-                new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0));
+                new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
             var refVector = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
             Assert.Equal(new Vector3(0.0, 0.0, 1.0), refVector, TestHelpers.VectorComparer);
             Assert.Equal(new Vector3(-1.0, 0.0, 0.0), spc.Instruments.First().GetBoresightInSpacecraftFrame(), TestHelpers.VectorComparer);
@@ -341,7 +341,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task WriteFrame()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF));
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteFrameAsync(new FileInfo("instrumentFrame.tf"));
             TextReader tr = new StreamReader("instrumentFrame.tf");
@@ -355,7 +355,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task WriteKernel()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF));
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteKernelAsync(new FileInfo("instrumentKernel.ti"));
             TextReader tr = new StreamReader("instrumentKernel.ti");
@@ -384,10 +384,10 @@ namespace IO.Astrodynamics.Tests.Body
             Vector3[] orientations =
             [
                 Vector3.Zero, new(0.4, 0.0, 0.0), new(-0.4, 0.0, 0.0), new(0.0, 0.4, 0.0), new(0.0, -0.4, 0.0), new(0.0, 0.0, 0.4), new(0.0, 0.0, -0.4),
-                new(0.0, Astrodynamics.Constants.PI2, 0.0), new(0.0, -Astrodynamics.Constants.PI2, 0.0), new(0.3, Astrodynamics.Constants.PI2, 0.2),
-                new(0.3, -Astrodynamics.Constants.PI2, -0.2), new(0.3, 0.5, 0.2), new(-0.7, 1.1, 2.3)
+                new(0.0, Astrodynamics.Constants.HalfPi, 0.0), new(0.0, -Astrodynamics.Constants.HalfPi, 0.0), new(0.3, Astrodynamics.Constants.HalfPi, 0.2),
+                new(0.3, -Astrodynamics.Constants.HalfPi, -0.2), new(0.3, 0.5, 0.2), new(-0.7, 1.1, 2.3)
             ];
-            var start = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+            var start = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
             var spacecraft = new Spacecraft(-8601, "EUL8601", 1000.0, 3000.0, new Clock("EUL8601_CLK", 65536),
                 new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000, start, Frames.Frame.ICRF));
             for (int i = 0; i < orientations.Length; i++)
@@ -432,7 +432,7 @@ namespace IO.Astrodynamics.Tests.Body
 
         private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, 1000.0, new Clock(name + "_CLK", 65536),
             new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH),
-                new TimeSystem.Time(2024, 1, 1), Frames.Frame.ICRF));
+                new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF));
 
         /// <summary>
         /// The id of the spacecraft frame, NaifId × 1000, is not an instrument id (#676): the instrument FK would define the
@@ -1024,7 +1024,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task ZeroHalfAngle_IsDegenerateForGftfov(string shape, bool atMoon, double refAngle, double crossAngle, ShapeType targetShape, string error)
         {
             // Arrange
-            var epoch = new TimeSystem.Time(2024, 1, 1, frame: TimeFrame.TDBFrame);
+            var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var earth = new CelestialBody(399);
             var moon = new CelestialBody(301);
             var boresight = atMoon ? moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize() : Vector3.VectorZ;
@@ -1065,7 +1065,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task Gftfov_OfAnEllipsoidInAnUnknownFrame_ThrowsArgumentException()
         {
             // Arrange
-            var epoch = new TimeSystem.Time(2024, 1, 1, frame: TimeFrame.TDBFrame);
+            var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var earth = new CelestialBody(399);
             var moon = new CelestialBody(301);
             var boresight = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize();
@@ -1121,7 +1121,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void TinyHalfAngle_ManagedSearchThrowsInvalidOperation(string shape, double refAngle, double crossAngle, bool searched)
         {
             // Arrange: a managed spacecraft with an attitude, its instrument's boresight at the Moon
-            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var spc = Host(-7156, "T715");
             spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
             var moon = new CelestialBody(301);
@@ -1174,7 +1174,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void PointTargetAtTheObserver_ThrowsInvalidOperationNamingTheDistance(string shape)
         {
             // Arrange: two managed spacecraft of the same state, the observer with an attitude and a field of 0.1 rad
-            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var (instrument, twin) = TwinAtTheObserver(shape, epoch);
 
             // Act
@@ -1199,7 +1199,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void PointTargetAtTheObserver_ManagedSearchThrowsInvalidOperationNamingTheDistance(string shape)
         {
             // Arrange
-            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var (instrument, twin) = TwinAtTheObserver(shape, epoch);
             var window = new Window(epoch, epoch.AddSeconds(120.0));
 

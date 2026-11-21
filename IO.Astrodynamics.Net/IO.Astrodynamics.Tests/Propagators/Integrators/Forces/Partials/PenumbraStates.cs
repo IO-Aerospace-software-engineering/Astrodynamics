@@ -80,7 +80,7 @@ internal static class PenumbraStates
                 .Position) - position;
         return (System.Math.Asin(cases.Sun.EquatorialRadius / toSun.Magnitude()),
             System.Math.Asin(occultingBody.EquatorialRadius / toBody.Magnitude()),
-            System.Math.Atan2(toSun.Cross(toBody).Magnitude(), toSun * toBody));
+            System.Math.Atan2(toSun.Cross(toBody).Magnitude(), toSun.Dot(toBody)));
     }
 
     /// <summary>

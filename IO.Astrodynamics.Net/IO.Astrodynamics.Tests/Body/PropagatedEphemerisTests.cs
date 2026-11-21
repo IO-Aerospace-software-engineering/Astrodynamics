@@ -34,7 +34,7 @@ public class PropagatedEphemerisTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly Time T0 = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time T0 = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
     private static readonly CelestialBody Earth = new(PlanetsAndMoons.EARTH, Frame.ICRF, T0);
 
     // A motion whose Y velocity is vy
@@ -305,7 +305,7 @@ public class PropagatedEphemerisTests
     [Fact]
     public void ShortArcs_DistinctEpochsOfTheSpk()
     {
-        var t2026 = new Time(2026, 6, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var t2026 = new Time(2026, 6, 1, 12, 0, 0, TimeScale.TDB);
         StateVector At(double t, double vy = 0.0) => new(State(t, vy).Position, State(t, vy).Velocity, Earth, t2026.AddSeconds(t), Frame.ICRF);
         var outputs = Enumerable.Range(0, 11).Select(i => At(10.0 * i)).ToArray();
         var impulses = new[] { new ImpulseBoundary(t2026.AddSeconds(50.0), At(50.0), At(50.0, 1.0)), new ImpulseBoundary(t2026.AddSeconds(50.0000021), At(50.0000021, 1.0), At(50.0000021, 2.0)) };

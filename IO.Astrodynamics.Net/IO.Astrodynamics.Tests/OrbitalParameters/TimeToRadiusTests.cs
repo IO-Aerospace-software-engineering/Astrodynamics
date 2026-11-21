@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// </summary>
 public class TimeToRadiusTests
 {
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.TDB);
     private readonly ITestOutputHelper _output;
 
     public TimeToRadiusTests(ITestOutputHelper output)
@@ -39,7 +39,7 @@ public class TimeToRadiusTests
     private double SecondsTo(KeplerianElements orbit, double radius)
     {
         var epoch = orbit.TimeToRadius(radius);
-        Assert.Equal(TimeFrame.TDBFrame, epoch.Frame);
+        Assert.Equal(TimeScale.TDB, epoch.Scale);
         return (epoch - Epoch).TotalSeconds;
     }
 

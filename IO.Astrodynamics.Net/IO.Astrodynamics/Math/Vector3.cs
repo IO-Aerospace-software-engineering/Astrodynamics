@@ -163,8 +163,8 @@ namespace IO.Astrodynamics.Math
             double s1 = a.MagnitudeSquared();
             double s2 = b.MagnitudeSquared();
             double cosine = IsOrdinaryPair(s1, s2)
-                ? (a * b) / (System.Math.Sqrt(s1) * System.Math.Sqrt(s2))
-                : a.Normalize() * b.Normalize();
+                ? a.Dot(b) / (System.Math.Sqrt(s1) * System.Math.Sqrt(s2))
+                : a.Normalize().Dot(b.Normalize());
             return System.Math.Clamp(cosine, -1.0, 1.0);
         }
 
@@ -242,14 +242,14 @@ namespace IO.Astrodynamics.Math
             double s2 = vector.MagnitudeSquared();
             if (IsOrdinaryPair(s1, s2) || !IsFiniteNonZero(this) || !IsFiniteNonZero(vector))
             {
-                return double.Atan2(Cross(vector) * n, this * vector);
+                return double.Atan2(Cross(vector).Dot(n), Dot(vector));
             }
 
             // Vectors whose products would overflow or lose their digits: both scaled by the powers of two of their largest
             // components (exact), which multiplies (a × b) · n̂ and a · b by the same power of two and leaves the angle
             var a = ScaleB(this, -System.Math.ILogB(LargestComponent(this)));
             var b = ScaleB(vector, -System.Math.ILogB(LargestComponent(vector)));
-            return double.Atan2(a.Cross(b) * n, a * b);
+            return double.Atan2(a.Cross(b).Dot(n), a.Dot(b));
         }
 
         /// <summary>
@@ -258,22 +258,67 @@ namespace IO.Astrodynamics.Math
         /// </summary>
         internal double AngleAboutNormalOrZero(in Vector3 vector, in Vector3 plane)
         {
-            return double.Atan2(Cross(vector) * plane.NormalizeOrZero(), this * vector);
+            return double.Atan2(Cross(vector).Dot(plane.NormalizeOrZero()), Dot(vector));
         }
 
+        /// <summary>
+        /// The opposite vector, −v, the same as the unary minus (kept beside it: <see cref="OrbitalParameters.StateVector.Inverse"/>
+        /// names the same negation).
+        /// </summary>
         public Vector3 Inverse()
         {
             return this * -1.0;
         }
 
+        /// <summary>
+        /// The dot product of this vector and <paramref name="vector"/>, x·x' + y·y' + z·z' in that order (#668, R26: the
+        /// operator <c>*</c> between two vectors, removed in 11.0.0, computed the same expression).
+        /// </summary>
+        /// <param name="vector">The other vector.</param>
+        public double Dot(in Vector3 vector)
+        {
+            return X * vector.X + Y * vector.Y + Z * vector.Z;
+        }
+
+        /// <summary>
+        /// This vector scaled by <paramref name="value"/>, component by component.
+        /// </summary>
         public static Vector3 operator *(in Vector3 v, double value)
         {
             return new Vector3(v.X * value, v.Y * value, v.Z * value);
         }
 
-        public static double operator *(in Vector3 v, in Vector3 value)
+        /// <summary>
+        /// The vector <paramref name="v"/> scaled by <paramref name="value"/>, component by component: the same vector as
+        /// <c>v * value</c> (#668, R26).
+        /// </summary>
+        public static Vector3 operator *(double value, in Vector3 v)
         {
-            return v.X * value.X + v.Y * value.Y + v.Z * value.Z;
+            return new Vector3(v.X * value, v.Y * value, v.Z * value);
+        }
+
+        /// <summary>
+        /// The opposite vector, (−x, −y, −z) (#668, R26).
+        /// </summary>
+        public static Vector3 operator -(in Vector3 v)
+        {
+            return new Vector3(-v.X, -v.Y, -v.Z);
+        }
+
+        /// <summary>
+        /// The product of the 3 × 3 matrix <paramref name="m"/> and the column vector <paramref name="v"/>: each component
+        /// the sum, from 0 and in column order, of m[i, j] · v[j], the arithmetic of <see cref="Matrix.Multiply(double[])"/>
+        /// (#668, R26).
+        /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="m"/> is not 3 × 3.</exception>
+        public static Vector3 operator *(in Matrix m, in Vector3 v)
+        {
+            if (m.Rows != 3 || m.Columns != 3)
+            {
+                throw new ArgumentException($"Only a 3 × 3 matrix multiplies a Vector3: this one is {m.Rows} × {m.Columns}.", nameof(m));
+            }
+
+            return new Vector3(m.RowTimes(0, v), m.RowTimes(1, v), m.RowTimes(2, v));
         }
 
         public static Vector3 operator /(in Vector3 v, double value)
@@ -387,7 +432,7 @@ namespace IO.Astrodynamics.Math
 
         private static Quaternion RotationBetween(in Vector3 from, in Vector3 to)
         {
-            var dot = from * to;
+            var dot = from.Dot(to);
             var angle = System.Math.Abs(from.Angle(to));
             if (angle <= double.Epsilon)
             {

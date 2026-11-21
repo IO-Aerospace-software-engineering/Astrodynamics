@@ -212,7 +212,7 @@ public sealed class PropagationSolution
     /// first state; after it, its last state.
     /// </para>
     /// <para>
-    /// The epoch may be in any time frame: an epoch and its conversion to another frame read the same instant, to the
+    /// The epoch may be in any time scale: an epoch and its conversion to another frame read the same instant, to the
     /// tick of their labels, and so do the other readers of the solution (#507).
     /// </para>
     /// </remarks>
@@ -253,7 +253,7 @@ public sealed class PropagationSolution
         {
             for (int j = 0; j < VariationalEquations.StateDimension; j++)
             {
-                phi.Set(i, j, y[i * columns + j]);
+                phi.SetTerm(i, j, y[i * columns + j]);
             }
         }
 
@@ -289,7 +289,7 @@ public sealed class PropagationSolution
         {
             for (int j = 0; j < p; j++)
             {
-                psi.Set(i, j, y[i * columns + VariationalEquations.StateDimension + j]);
+                psi.SetTerm(i, j, y[i * columns + VariationalEquations.StateDimension + j]);
             }
         }
 

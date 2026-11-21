@@ -388,7 +388,7 @@ public class KernelBackedSpacecraftTests
     // (docs/reference/spacecraft.md, attitude and kernels, 2024 row)
     private const double CkAccuracy2024 = 6.1e-10;
 
-    private static readonly TimeSystem.Time KSatEpoch = new(2024, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time KSatEpoch = new(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
     private static readonly TimeSystem.Time KSatRead = KSatEpoch.AddSeconds(1800.0);
 
     /// <summary>

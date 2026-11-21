@@ -34,8 +34,8 @@ public class InstrumentPointingAttitudeTests
         var spc = TestHelpers.Spacecraft;
         spc.AddCircularInstrument(-172600, "CAM602", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
         InstrumentPointingToAttitude attitude =
-            new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromHours(1.0), spc.Instruments.First(), TestHelpers.EarthAtJ2000, eng);
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), attitude.MinimumEpoch);
+            new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), spc.Instruments.First(), TestHelpers.EarthAtJ2000, eng);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), attitude.ManeuverHoldDuration);
         Assert.NotNull(attitude.Engine);
         Assert.Equal(eng, attitude.Engine);
@@ -51,7 +51,7 @@ public class InstrumentPointingAttitudeTests
     [InlineData(-0.7, 1.1, 2.3)]
     public void Execute(double x, double y, double z)
     {
-        var epoch = new TimeSystem.Time(2021, 01, 01, 13, 0, 0);
+        var epoch = new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB);
         var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, epoch,
             Frames.Frame.ICRF);
         var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
@@ -60,7 +60,7 @@ public class InstrumentPointingAttitudeTests
 
         spc.AddCircularInstrument(-666600, "inst", "instmodel", 1.57, Vector3.VectorZ, Vector3.VectorY, new Vector3(x, y, z));
         InstrumentPointingToAttitude maneuver =
-            new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromSeconds(10.0), spc.Instruments.First(), TestHelpers.MoonAtJ2000, spc.Engines.First());
+            new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromSeconds(10.0), spc.Instruments.First(), TestHelpers.MoonAtJ2000, spc.Engines.First());
         Assert.Equal(Aberration.LT, maneuver.Aberration);
         maneuver.TryExecute(orbitalParams.ToStateVector());
 
@@ -141,7 +141,7 @@ public class InstrumentPointingAttitudeTests
             {
                 var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epoch, Frames.Frame.ICRF);
                 var (spc, instrument) = PointingSpacecraft(-5491, state);
-                var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, instrument, moon,
+                var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, moon,
                     spc.Engines.First(), flag);
                 var (_, orientation) = attitude.TryExecute(state);
                 var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
@@ -179,7 +179,7 @@ public class InstrumentPointingAttitudeTests
                 var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epochs[e], Frames.Frame.ICRF);
                 var expected = ToVector(states.GetProperty("site_from_spacecraft").GetProperty(flag.GetDescription()).EnumerateArray().ElementAt(e));
                 var (spc, instrument) = PointingSpacecraft(-5492, state);
-                var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, instrument, site,
+                var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, site,
                     spc.Engines.First(), flag);
                 var (_, orientation) = attitude.TryExecute(state);
                 var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
@@ -215,7 +215,7 @@ public class InstrumentPointingAttitudeTests
         foreach (var flag in Flags)
         {
             var (spc, instrument) = PointingSpacecraft(-5493, state);
-            var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, instrument, star,
+            var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, star,
                 spc.Engines.First(), flag);
             var (_, orientation) = attitude.TryExecute(state);
             var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
@@ -236,7 +236,7 @@ public class InstrumentPointingAttitudeTests
         spc.AddCircularInstrument(-172601, "CAM603", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         var tank = new FuelTank("ft", "ftA", "123456", 1000.0, 900.0);
         var engine = new Engine("eng", "engmk1", "12345", 450, 50, tank);
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.Zero, spc.Instruments.First(), TestHelpers.MoonAtJ2000, engine, (Aberration)99));
         Assert.Equal("aberration", exception.ParamName);
     }

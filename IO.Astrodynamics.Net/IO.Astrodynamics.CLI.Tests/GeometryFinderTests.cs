@@ -254,7 +254,7 @@ public class GeometryFinderTests
 
             var member = coordinate.Contains("asc", StringComparison.OrdinalIgnoreCase) ? Coordinate.RightAscension : Coordinate.Declination;
             var expected = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
-                    new TimeSystem.Window(new TimeSystem.Time(new DateTime(2024, 3, 1), TimeSystem.TimeFrame.TDBFrame), new TimeSystem.Time(new DateTime(2024, 5, 1), TimeSystem.TimeFrame.TDBFrame)), 10, 399,
+                    new TimeSystem.Window(new TimeSystem.Time(new DateTime(2024, 3, 1), TimeSystem.TimeScale.TDB), new TimeSystem.Time(new DateTime(2024, 5, 1), TimeSystem.TimeScale.TDB)), 10, 399,
                     Frames.Frame.ICRF, CoordinateSystem.RaDec, member, RelationnalOperator.Equal, value, 0.0, Aberration.None, TimeSpan.FromDays(20))
                 .ToArray();
             Assert.Single(expected);

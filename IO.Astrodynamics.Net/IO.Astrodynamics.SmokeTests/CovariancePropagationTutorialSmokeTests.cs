@@ -39,7 +39,7 @@ public class CovariancePropagationTutorialSmokeTests
     // Section "The case": a LEO 400 km with EGM2008 10×10, NRLMSISE-00 drag, SRP, the Moon and the Sun
     private static (CelestialItem[] Bodies, CelestialBody Earth, Time Epoch) Environment()
     {
-        var epoch = new Time(2021, 3, 20, 12, 0, 0);
+        var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
@@ -55,14 +55,15 @@ public class CovariancePropagationTutorialSmokeTests
             15.0 * Constants.Deg2Rad, 0.0, earth, epoch, Frame.ICRF).ToStateVector();
 
         double[] sigma = { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };   // R, T, N (m), then their rates (m/s)
-        var rtn = new Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            rtn.Set(i, i, sigma[i] * sigma[i]);
+            rtnTerms[i, i] = sigma[i] * sigma[i];
         }
 
-        rtn.Set(1, 3, -0.9 * sigma[1] * sigma[3]);   // along-track position and radial velocity
-        rtn.Set(3, 1, -0.9 * sigma[1] * sigma[3]);
+        rtnTerms[1, 3] = -0.9 * sigma[1] * sigma[3];   // along-track position and radial velocity
+        rtnTerms[3, 1] = -0.9 * sigma[1] * sigma[3];
+        var rtn = new Matrix(rtnTerms);
 
         return new StateVector(orbit.Position, orbit.Velocity, earth, epoch, Frame.ICRF,
             orbit.RotateCovarianceFromRtn(rtn));
@@ -146,15 +147,16 @@ public class CovariancePropagationTutorialSmokeTests
         Assert.True(after.Get(3, 3) + after.Get(4, 4) + after.Get(5, 5) > before.Get(3, 3) + before.Get(4, 4) + before.Get(5, 5));
 
         // Section "A covariance indefinite from rounding": a correlation of −1 written as −1.0001
-        var rounded = new Matrix(6, 6);
+        var roundedTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            rounded.Set(i, i, 100.0 * 100.0);
-            rounded.Set(i + 3, i + 3, 0.1 * 0.1);
+            roundedTerms[i, i] = 100.0 * 100.0;
+            roundedTerms[i + 3, i + 3] = 0.1 * 0.1;
         }
 
-        rounded.Set(1, 3, -1.0001 * 100.0 * 0.1);
-        rounded.Set(3, 1, -1.0001 * 100.0 * 0.1);
+        roundedTerms[1, 3] = -1.0001 * 100.0 * 0.1;
+        roundedTerms[3, 1] = -1.0001 * 100.0 * 0.1;
+        var rounded = new Matrix(roundedTerms);
         var indefinite = new StateVector(initialState.Position, initialState.Velocity, earth, epoch, Frame.ICRF, rounded);
 
         var remediation = indefinite.WithRemediatedCovariance();
@@ -179,7 +181,7 @@ public class CovariancePropagationTutorialSmokeTests
     {
         // Section "To a collision probability": two-body, a protected LEO at 700 km and a secondary object that passes
         // 200 m from it 24 h after the start (120 m radial, 160 m normal), its velocity turned by 70° about the radial
-        var start = new Time(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        var start = new Time(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
         var tca = start.AddHours(24.0);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
 
@@ -192,7 +194,7 @@ public class CovariancePropagationTutorialSmokeTests
         var v = protectedAtTca.Velocity;
         var secondaryAtTca = new StateVector(protectedAtTca.Position + radial * 120.0 + normal * 160.0,
             v * System.Math.Cos(angle) + radial.Cross(v) * System.Math.Sin(angle) +
-            radial * (radial * v) * (1.0 - System.Math.Cos(angle)), earth, tca, Frame.ICRF);
+            radial * radial.Dot(v) * (1.0 - System.Math.Cos(angle)), earth, tca, Frame.ICRF);
         var secondaryOrbit = secondaryAtTca.ToStateVector(start);
 
         var protectedCraft = new Spacecraft(-2001, "PROTECTED", 100.0, 1000.0, new Clock("P_CLK", 65536),
@@ -238,14 +240,15 @@ public class CovariancePropagationTutorialSmokeTests
     // radial velocity, rotated to the inertial frame of the state
     private static StateVector WithRtnCovariance(StateVector state, double[] sigma)
     {
-        var rtn = new Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            rtn.Set(i, i, sigma[i] * sigma[i]);
+            rtnTerms[i, i] = sigma[i] * sigma[i];
         }
 
-        rtn.Set(1, 3, -0.9 * sigma[1] * sigma[3]);
-        rtn.Set(3, 1, -0.9 * sigma[1] * sigma[3]);
+        rtnTerms[1, 3] = -0.9 * sigma[1] * sigma[3];
+        rtnTerms[3, 1] = -0.9 * sigma[1] * sigma[3];
+        var rtn = new Matrix(rtnTerms);
         return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
             state.RotateCovarianceFromRtn(rtn));
     }

@@ -260,6 +260,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
+    /// The true anomaly the conic's state and equinoctial elements are computed from: <see cref="TrueAnomaly()"/>, unless a
+    /// derived type keeps the angle it was given (<see cref="KeplerianElements.FromTrueAnomaly"/>: ν as given, whose
+    /// reduction to [0, 2π) loses up to half an ulp of 2π, about 4.4e-16 rad, which the state near an apsis or an asymptote
+    /// amplifies; #668, R23).
+    /// </summary>
+    private protected virtual double ConicTrueAnomaly() => TrueAnomaly();
+
+    /// <summary>
     /// Get the true anomaly
     /// </summary>
     /// <returns></returns>
@@ -276,15 +284,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         if (IsElliptical())
         {
-            _trueAnomaly = EllipticalTrueAnomaly() % Constants._2PI;
+            _trueAnomaly = EllipticalTrueAnomaly() % Constants.TwoPi;
         }
         else if (IsParabolic())
         {
-            _trueAnomaly = ParabolicTrueAnomaly() % Constants._2PI;
+            _trueAnomaly = ParabolicTrueAnomaly() % Constants.TwoPi;
         }
         else if (IsHyperbolic())
         {
-            _trueAnomaly = HyperbolicTrueAnomaly() % Constants._2PI;
+            _trueAnomaly = HyperbolicTrueAnomaly() % Constants.TwoPi;
         }
         else
         {
@@ -295,7 +303,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         if (_trueAnomaly < 0)
         {
-            _trueAnomaly += Constants._2PI;
+            _trueAnomaly += Constants.TwoPi;
         }
 
         return _trueAnomaly.Value;
@@ -526,7 +534,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         if (trueAnomaly < 0.0)
         {
-            trueAnomaly += Constants._2PI;
+            trueAnomaly += Constants.TwoPi;
         }
 
         // On an open orbit the mean anomaly is not an angle: it grows without bound, negative before the periapsis, so it
@@ -539,8 +547,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             }
 
             // Kepler's equation in the forms that do not cancel near the periapsis at e → 1 (#484)
-            var res = KeplerEquation.EllipticMeanAnomaly(eccentricAnomaly, eccentricity) % Constants._2PI;
-            return res < 0 ? res + Constants._2PI : res;
+            var res = KeplerEquation.EllipticMeanAnomaly(eccentricAnomaly, eccentricity) % Constants.TwoPi;
+            return res < 0 ? res + Constants.TwoPi : res;
         }
         else if (eccentricity > 1)
         {
@@ -573,7 +581,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // returned either
         ThrowIfOpen("period");
 
-        _period ??= Time.SecondsToSpan(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
+        _period ??= Time.SecondsToSpan(Constants.TwoPi * System.Math.Sqrt((a * a * a) / Observer.GM));
         return _period.Value;
     }
 
@@ -659,10 +667,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         double time = TimeFromPeriapsis(EccentricAnomaly()) + elapsed;
         double universal = UniversalKepler.Solve(time, q, e, gm);
         var (barker, trueAnomaly) = UniversalKepler.Anomalies(universal, q, e);
-        trueAnomaly %= Constants._2PI;
+        trueAnomaly %= Constants.TwoPi;
         if (trueAnomaly < 0.0)
         {
-            trueAnomaly += Constants._2PI;
+            trueAnomaly += Constants.TwoPi;
         }
 
         return (barker + System.Math.Pow(barker, 3) / 3.0, trueAnomaly);
@@ -711,7 +719,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             // outside it a (1 − e)(1 + e) near e = 1 (#472)
             var p = IsParabolic() ? PerigeeRadius() * (1.0 + e) : ConicSemiLatusRectum(SemiMajorAxis(), e);
 
-            var v = TrueAnomaly();
+            var v = ConicTrueAnomaly();
             double cosNu = System.Math.Cos(v);
             double denominator, velocityFactor;
             if (e is >= HalfAngleLowestEccentricity and <= HalfAngleHighestEccentricity)
@@ -744,8 +752,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             Matrix r = r3 * r1 * r3W;
             double[] pos = [x, y, 0.0];
             double[] vel = [dotX, dotY, 0.0];
-            double[] finalPos = pos * r;
-            double[] finalV = vel * r;
+            double[] finalPos = r * pos;
+            double[] finalV = r * vel;
 
             _stateVector = new StateVector(new Vector3(finalPos[0], finalPos[1], finalPos[2]), new Vector3(finalV[0], finalV[1], finalV[2]), Observer, Epoch, Frame);
         }
@@ -882,7 +890,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double o = AscendingNode();
             double w = ArgumentOfPeriapsis();
             double i = Inclination();
-            double v = TrueAnomaly();
+            double v = ConicTrueAnomaly();
 
             // In the band |e − 1| < 1e-6 (IsParabolic) a(1 − e²) is ∞ × 0 or ±∞ (#462): the conic's p = q (1 + e), 2q at
             // e = 1 and h²/μ for a state vector, read without the semi-major axis. Outside the band, the p of ToStateVector
@@ -894,7 +902,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double k = System.Math.Tan(i * 0.5) * System.Math.Sin(o);
             double l0 = o + w + v;
 
-            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame, PerigeeRadius(), ElementsType);
+            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame, PerigeeRadius(), ElementsType, true);
         }
 
         return _equinoctial;
@@ -1059,7 +1067,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // ToStateVector holds (#463). In the band the true anomaly of the conic's motion is given with Barker's mean
         // anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
-            trueAnomaly: trueAnomaly, perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius, elementsType: ElementsType);
+            trueAnomaly, null, IsParabolic() ? PerigeeRadius() : _perigeeRadius, ElementsType);
     }
 
     /// <summary>
@@ -1074,7 +1082,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// orbit plane (#687).</exception>
     public double TrueLongitude()
     {
-        _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly()) % Constants._2PI;
+        _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly()) % Constants.TwoPi;
         return _trueLongitude.Value;
     }
 
@@ -1090,7 +1098,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// orbit plane (#687).</exception>
     public double TrueLongitude(Time epoch)
     {
-        return (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly(epoch)) % Constants._2PI;
+        return (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly(epoch)) % Constants.TwoPi;
     }
 
     /// <summary>
@@ -1101,7 +1109,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// orbit plane (#687).</exception>
     public double MeanLongitude()
     {
-        _meanLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + MeanAnomaly()) % Constants._2PI;
+        _meanLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + MeanAnomaly()) % Constants.TwoPi;
         return _meanLongitude.Value;
     }
 
@@ -1165,7 +1173,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // An angle on an ellipse only (#368); KeplerianElements reduces it. In the band, the true anomaly of the conic's
         // motion with Barker's mean anomaly of it (#753)
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,
-            trueAnomaly: trueAnomaly, perigeeRadius: PerigeeRadius(), elementsType: ElementsType);
+            trueAnomaly, null, PerigeeRadius(), ElementsType);
     }
 
     /// <summary>
@@ -1481,7 +1489,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Value equality within one concrete type (#475, decided by S. Guillet, 2026-11-17): each type of the library
     /// overrides this method to compare, for an object of its own type, its values, its observer's NAIF id, its
-    /// <see cref="Epoch"/> (an instant, whatever its time frame, #512), its <see cref="Frame"/> and its
+    /// <see cref="Epoch"/> (an instant, whatever its time scale, #512), its <see cref="Frame"/> and its
     /// <see cref="ElementsType"/>, without computing a state; a type that does not override it has reference equality.
     /// </summary>
     /// <remarks>

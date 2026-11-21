@@ -32,7 +32,7 @@ public class EquinoctialElementsTests
     {
         var earth = PlanetsAndMoons.EARTH_BODY;
         Assert.Equal(398600435507022.6, earth.GM);
-        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0),
+        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
         var equinoctial = sv.ToEquinoctial();
@@ -59,7 +59,7 @@ public class EquinoctialElementsTests
     {
         var earth = PlanetsAndMoons.EARTH_BODY;
         var sv = new StateVector(new Vector3(-4000000.0, 5500000.0, 2500000.0), new Vector3(-5500.0, -3000.0, 4000.0), earth,
-            new TimeSystem.Time(2024, 6, 21, 12, 0, 0), Frames.Frame.ICRF);
+            new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB), Frames.Frame.ICRF);
 
         var equinoctial = sv.ToEquinoctial();
 
@@ -91,7 +91,7 @@ public class EquinoctialElementsTests
     public void NearTheRetrogradeEquatorialOrbitHAndKGrowAsTheTangentOfHalfTheInclination(double delta, double expectedH, double expectedK)
     {
         var earth = PlanetsAndMoons.EARTH_BODY;
-        var ke = new KeplerianElements(7500000.0, 0.05, System.Math.PI - delta, 1.0, 0.5, 2.0, earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0),
+        var ke = new KeplerianElements(7500000.0, 0.05, System.Math.PI - delta, 1.0, 0.5, 2.0, earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
         var equinoctial = ke.ToEquinoctial();
@@ -112,7 +112,7 @@ public class EquinoctialElementsTests
     public void Create()
     {
         CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
-        var epoch = new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC);
         EquinoctialElements equ = new EquinoctialElements(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, earth, epoch, Frames.Frame.ICRF);
         Assert.Equal(1.0, equ.P);
         Assert.Equal(2.0, equ.F);
@@ -130,7 +130,7 @@ public class EquinoctialElementsTests
     {
         CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
-            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame),
+            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
             Frames.Frame.ICRF);
         EquinoctialElements equ = ke.ToEquinoctial();
         Assert.Equal(equ.SemiMajorAxis(), ke.A, 6);
@@ -146,7 +146,7 @@ public class EquinoctialElementsTests
     {
         CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
-            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame),
+            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
             Frames.Frame.ICRF);
         EquinoctialElements equ = ke.ToEquinoctial();
         EquinoctialElements equ2 = equ.ToEquinoctial();
@@ -174,8 +174,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void ParabolicToKeplerian()
     {
-        var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-            perigeeRadius: 6800000.0);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var ke2 = eq.ToKeplerianElements();
         var eq2 = ke2.ToEquinoctial();
@@ -205,8 +204,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void ParabolicToStateVector()
     {
-        var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
-            perigeeRadius: 6800000.0);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var sv = eq.ToStateVector();
         var eq2 = sv.ToEquinoctial();

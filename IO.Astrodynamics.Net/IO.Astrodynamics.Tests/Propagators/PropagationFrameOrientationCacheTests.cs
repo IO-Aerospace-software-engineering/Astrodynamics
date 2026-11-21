@@ -226,7 +226,7 @@ public class PropagationFrameOrientationCacheTests
     {
         // Arrange
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = new TimeSystem.Time(new DateTime(2024, 3, 1, 0, 0, 0), TimeFrame.TDBFrame);
+        var start = new TimeSystem.Time(new DateTime(2024, 3, 1, 0, 0, 0), TimeScale.TDB);
         var cache = new PropagationFrameOrientationCache(new Window(start, start.AddHours(6.0)), earth.Frame,
             TimeSpan.FromSeconds(60));
 

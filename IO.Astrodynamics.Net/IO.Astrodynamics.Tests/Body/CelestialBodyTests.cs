@@ -95,13 +95,13 @@ public class CelestialBodyTests
     public void FindWindowsOnDistanceConstraint()
     {
         var res = TestHelpers.EarthAtJ2000.FindWindowsOnDistanceConstraint(
-            new Window(new TimeSystem.Time("2000-01-01 12:00:00.0000 TDB"), new TimeSystem.Time("2000-04-01 12:00:00.0000 TDB")),
+            new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00.0000 TDB"), TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB")),
             TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
         // CSPICE gfdist (tools/geometry_reference, converged to 1e-9 s); the first window holds at the start of the search
         // window (#461: it started 18.5 h before it)
         var windows = res as Window[] ?? res.ToArray();
         GeometryReference.AssertWindows(null, "earth_moon_distance > 400000 km", windows, GeometryReference.ThresholdCrossing);
-        LabelAssert.Equal(new TimeSystem.Time("2000-01-01 12:00:00.0000 TDB"), windows[0].StartDate);
+        LabelAssert.Equal(TimeSystem.Time.Parse("2000-01-01 12:00:00.0000 TDB"), windows[0].StartDate);
     }
 
     [Fact]
@@ -276,8 +276,8 @@ public class CelestialBodyTests
     {
         var earth = TestHelpers.EarthAtJ2000;
         var res1 = earth.RadiusFromPlanetocentricLatitude(0.0);
-        var res2 = earth.RadiusFromPlanetocentricLatitude(Astrodynamics.Constants.PI2);
-        var res3 = earth.RadiusFromPlanetocentricLatitude(-Astrodynamics.Constants.PI2);
+        var res2 = earth.RadiusFromPlanetocentricLatitude(Astrodynamics.Constants.HalfPi);
+        var res3 = earth.RadiusFromPlanetocentricLatitude(-Astrodynamics.Constants.HalfPi);
         Assert.Equal(earth.EquatorialRadius, res1, 6);
         Assert.Equal(earth.PolarRadius, res2, 6);
         Assert.Equal(earth.PolarRadius, res3, 6);
@@ -310,7 +310,7 @@ public class CelestialBodyTests
     [Fact]
     public void GeosynchronousOrbit()
     {
-        var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, 0.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
+        var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, 0.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB));
         Assert.Equal(42164171.960633017, orbit.ToStateVector().Position.Magnitude(),3);
         Assert.Equal(3074.6599900324436, orbit.ToStateVector().Velocity.Magnitude(),3);
         Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
@@ -319,7 +319,7 @@ public class CelestialBodyTests
     [Fact]
     public void GeosynchronousOrbit2()
     {
-        var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(1.0, 1.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
+        var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(1.0, 1.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB));
         Assert.Equal(42164171.960633025, orbit.ToStateVector().Position.Magnitude(), 3);
         Assert.Equal(3074.6599898500763, orbit.ToStateVector().Velocity.Magnitude(), 3);
         Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
@@ -338,7 +338,7 @@ public class CelestialBodyTests
     {
         // Geosynchronous 001 of the conformance suite: (0, 0) at 2021-01-01 00:00:00 TDB, T = 86164.0998101 s.
         var earth = TestHelpers.EarthAtJ2000;
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB);
         var period = TimeSpan.FromTicks(861640998101);
         var orbit = earth.GeosynchronousOrbit(0.0, 0.0, epoch, period);
 
@@ -373,7 +373,7 @@ public class CelestialBodyTests
     public void GeosynchronousOrbitOfDeclaredPeriodEqualsSiderealPeriodOrbit()
     {
         var earth = TestHelpers.EarthAtJ2000;
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB);
         var expected = earth.GeosynchronousOrbit(1.0, 1.0, epoch);
         var orbit = earth.GeosynchronousOrbit(1.0, 1.0, epoch, earth.SideralRotationPeriod(epoch));
         Assert.Equal(expected.SemiMajorAxis(), orbit.SemiMajorAxis());
@@ -386,7 +386,7 @@ public class CelestialBodyTests
     public void GeosynchronousOrbitOfDeclaredPeriodThrowsOnInvalidArguments()
     {
         var earth = TestHelpers.EarthAtJ2000;
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB);
         var period = TimeSpan.FromSeconds(86164.0998101);
         Assert.Throws<ArgumentOutOfRangeException>(() => earth.GeosynchronousOrbit(4.0, 0.0, epoch, period));
         Assert.Throws<ArgumentOutOfRangeException>(() => earth.GeosynchronousOrbit(0.0, -2.0, epoch, period));
@@ -397,7 +397,7 @@ public class CelestialBodyTests
     [Fact]
     public void GeosynchronousOrbitThrowsOnInvalidLongitude()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB);
         Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(4.0, 0.0, epoch));
         Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(-4.0, 0.0, epoch));
     }
@@ -405,7 +405,7 @@ public class CelestialBodyTests
     [Fact]
     public void GeosynchronousOrbitThrowsOnInvalidLatitude()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB);
         Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, 2.0, epoch));
         Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, -2.0, epoch));
     }
@@ -413,35 +413,35 @@ public class CelestialBodyTests
     [Fact]
     public void TrueSolarDayJan()
     {
-        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
+        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB));
         Assert.Equal(86407.306035452566, res1.TotalSeconds, 3);
     }
 
     [Fact]
     public void TrueSolarDayJMar()
     {
-        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 3, 26, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
+        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 3, 26, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB));
         Assert.Equal(86400.359507999994, res1.TotalSeconds, 3);
     }
 
     [Fact]
     public void TrueSolarDayJul()
     {
-        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 7, 25, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
+        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 7, 25, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB));
         Assert.Equal(86392.011764653842, res1.TotalSeconds, 3);
     }
 
     [Fact]
     public void TrueSolarDayDec()
     {
-        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 12, 22, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
+        var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 12, 22, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB));
         Assert.Equal(86407.114275442393, res1.TotalSeconds, 3);
     }
 
     [Fact]
     public void HelioSynchronousOrbit()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB);
         var res = TestHelpers.Earth.HelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
         Assert.Equal(7080636.3, res.A);
         Assert.Equal(0.0001724, res.E, 6);
@@ -456,7 +456,7 @@ public class CelestialBodyTests
     [Fact]
     public void PhaseHelioSynchronousOrbit()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2021, 11, 22, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 11, 22, 0, 0, 0, DateTimeKind.Unspecified), TimeScale.TDB);
         var res = TestHelpers.Earth.HelioSynchronousOrbit(0.0001724, epoch, 14);
         Assert.Equal(7272221.8764740741, res.A, 3);
         Assert.Equal(0.0001724, res.E, 6);
@@ -740,8 +740,8 @@ public class CelestialBodyTests
     [Fact]
     public void GetEphemerisOverWindow_AcrossLeapSecond_StaysInTheWindow()
     {
-        var start = new TimeSystem.Time(new DateTime(2016, 12, 31, 23, 59, 0), TimeFrame.UTCFrame);
-        var end = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 1, 0), TimeFrame.UTCFrame);
+        var start = new TimeSystem.Time(new DateTime(2016, 12, 31, 23, 59, 0), TimeScale.UTC);
+        var end = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 1, 0), TimeScale.UTC);
         var window = new Window(start, end);
         Assert.Equal(TimeSpan.FromSeconds(121.0), window.Length);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -775,8 +775,8 @@ public class CelestialBodyTests
         var windows = new[]
         {
             (new Window(TimeSystem.Time.CreateTDB(762480000.0), TimeSystem.Time.CreateTDB(762483600.0)), TimeSpan.FromMinutes(7.0)),
-            (new Window(new TimeSystem.Time(new DateTime(2017, 12, 31, 23, 59, 0), TimeFrame.UTCFrame),
-                new TimeSystem.Time(new DateTime(2018, 1, 1, 0, 1, 0), TimeFrame.UTCFrame)), TimeSpan.FromSeconds(1.0))
+            (new Window(new TimeSystem.Time(new DateTime(2017, 12, 31, 23, 59, 0), TimeScale.UTC),
+                new TimeSystem.Time(new DateTime(2018, 1, 1, 0, 1, 0), TimeScale.UTC)), TimeSpan.FromSeconds(1.0))
         };
         foreach (var (window, step) in windows)
         {

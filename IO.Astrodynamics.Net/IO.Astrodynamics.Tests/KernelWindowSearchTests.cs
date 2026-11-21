@@ -155,7 +155,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
 
     public static IEnumerable<object[]> KernelSiteIlluminations()
     {
-        double halfPi = IO.Astrodynamics.Constants.PI2;
+        double halfPi = IO.Astrodynamics.Constants.HalfPi;
         double deg = IO.Astrodynamics.Constants.Deg2Rad;
         yield return ["dss13_sun_incidence > 90 deg NONE", RelationnalOperator.Greater, halfPi, Aberration.None];
         yield return ["dss13_sun_incidence < 90.8 deg LT+S", RelationnalOperator.Lower, halfPi + 0.8 * deg, Aberration.LTS];
@@ -192,7 +192,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         var dss13 = Dss13;
         var fromCoordinates = new Site(99, "DSS13GEO", Earth, dss13.Planetodetic);
         AssertWindows("dss13_sun_incidence > 90 deg NONE", fromCoordinates.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence,
-            RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, Step, TestHelpers.Sun), 1.0e-2, "site from coordinates");
+            RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, Step, TestHelpers.Sun), 1.0e-2, "site from coordinates");
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         Assert.Equal("frame", unknownFrame.ParamName);
         Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknownFrame.InnerException).Message);
 
-        var pastTheSpk = new Window(new TimeSystem.Time(2024, 6, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2024, 6, 2, frame: TimeFrame.TDBFrame));
+        var pastTheSpk = new Window(new TimeSystem.Time(2024, 6, 1, TimeScale.TDB), new TimeSystem.Time(2024, 6, 2, TimeScale.TDB));
         var noState = Assert.Throws<SpiceException>(() => Lro.FindWindowsOnDistanceConstraint(pastTheSpk, Moon, RelationnalOperator.Greater,
             LroMoonDistance, Aberration.None, Step).ToArray());
         Assert.Contains("Insufficient ephemeris data", noState.Message);
@@ -224,9 +224,9 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             Assert.Contains("-85", noTarget.Message);
         }
 
-        var past = new Window(new TimeSystem.Time(2160, 3, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2160, 3, 2, frame: TimeFrame.TDBFrame));
+        var past = new Window(new TimeSystem.Time(2160, 3, 1, TimeScale.TDB), new TimeSystem.Time(2160, 3, 2, TimeScale.TDB));
         var noPck = Assert.Throws<SpiceException>(() => Dss13.FindWindowsOnIlluminationConstraint(past, IlluminationAngle.Incidence,
-            RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, Step, TestHelpers.Sun).ToArray());
+            RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, Step, TestHelpers.Sun).ToArray());
         Assert.Contains("2160", noPck.Message);
         Assert.Throws<SpiceException>(() => Dss13.FindDayWindows(past, 0.8 * IO.Astrodynamics.Constants.Deg2Rad).ToArray());
     }
@@ -240,7 +240,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         // gfilum's; each launch window of the day, or of the night, is the one of every window (launchByDay null) that the
         // day windows of both sites hold, or that neither holds; the launch site from the coordinates of DSS-13
         var dss13 = Dss13;
-        var launchSite = new LaunchSite(98, "DSS13LAUNCH", Earth, dss13.Planetodetic, new AzimuthRange(0.0, IO.Astrodynamics.Constants._2PI));
+        var launchSite = new LaunchSite(98, "DSS13LAUNCH", Earth, dss13.Planetodetic, new AzimuthRange(0.0, IO.Astrodynamics.Constants.TwoPi));
         var target = new KeplerianElements(6.8e6, 0.0, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 1.0, 0.0, 0.0, Earth, IlluminationWindow.StartDate,
             Frames.Frame.ICRF);
         var all = new Maneuver.Launch(launchSite, dss13, target, IO.Astrodynamics.Constants.CivilTwilight, null).FindLaunchWindows(IlluminationWindow).ToArray();
@@ -274,7 +274,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         double latitude = double.IsNaN(latitudeDeg) ? dss13.Latitude : latitudeDeg * IO.Astrodynamics.Constants.Deg2Rad;
         var earth = Earth;
         AssertWindows(label, SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(IlluminationWindow, 399013, 399, earth.Frame,
-            new Planetodetic(dss13.Longitude, latitude, altitude), IlluminationAngle.Incidence, RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0,
+            new Planetodetic(dss13.Longitude, latitude, altitude), IlluminationAngle.Incidence, RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, 0.0,
             Aberration.None, Step, 10), NativeThreshold, "SpiceAPI");
     }
 
@@ -401,7 +401,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         var moon = Moon;
         Assert.Equal("MOON_ME", moon.Frame.Name);
         AssertWindows("moon_point_sun_incidence 1071 m > 90 deg NONE", SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(MoonIlluminationWindow, 399, 301,
-            moon.Frame, new Planetodetic(0.5, 0.3, 1071.0), IlluminationAngle.Incidence, RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0,
+            moon.Frame, new Planetodetic(0.5, 0.3, 1071.0), IlluminationAngle.Incidence, RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10), NativeThreshold, "SpiceAPI Moon");
     }
 
@@ -414,7 +414,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     public void Illumination_MethodCaseAndBlanks_SameWindows()
     {
         const string label = "dss13_sun_incidence < 90.8 deg LT+S";
-        double angle = IO.Astrodynamics.Constants.PI2 + 0.8 * IO.Astrodynamics.Constants.Deg2Rad;
+        double angle = IO.Astrodynamics.Constants.HalfPi + 0.8 * IO.Astrodynamics.Constants.Deg2Rad;
         var dss13 = Dss13;
         var fromCoordinates = new Site(99, "DSS13GEO", Earth, dss13.Planetodetic);
         foreach (var site in new[] { dss13, fromCoordinates })
@@ -487,7 +487,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     // Earth above 4 rad)
     private const double CutAngle = 1.4e-10;
 
-    private static readonly Window MoonPlanetographicWindow = new(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 11));
+    private static readonly Window MoonPlanetographicWindow = new(new TimeSystem.Time(2024, 3, 1, TimeScale.TDB), new TimeSystem.Time(2024, 3, 11, TimeScale.TDB));
 
     /// <summary>
     /// #682: the managed <see cref="CoordinateSystem.Planetographic"/> longitude is CSPICE's (<c>gfposc_c</c> Detailed_Input
@@ -530,8 +530,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     {
         var observer = new CelestialBody(observerId);
         CelestialItem target = targetId == 10 ? TestHelpers.Sun : new CelestialBody(targetId);
-        var start = new TimeSystem.Time(year, 1, 1);
-        var window = new Window(start, months == 1 ? new TimeSystem.Time(year, 7, 1) : new TimeSystem.Time(year + 1, 1, 1));
+        var start = new TimeSystem.Time(year, 1, 1, TimeScale.TDB);
+        var window = new Window(start, months == 1 ? new TimeSystem.Time(year, 7, 1, TimeScale.TDB) : new TimeSystem.Time(year + 1, 1, 1, TimeScale.TDB));
         var managed = target.FindWindowsOnCoordinateConstraint(window, observer, observer.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude,
             RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
         var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observerId, targetId, observer.Frame, CoordinateSystem.Planetographic,
@@ -598,7 +598,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     {
         var site = new Site(682, "F07CUSTOM", Earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
         var lro = Lro;
-        var start = new TimeSystem.Time(2024, 3, 1);
+        var start = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
         foreach (var aberration in new[] { Aberration.None, Aberration.LT })
         {
             for (int k = 0; k < 3; k++)

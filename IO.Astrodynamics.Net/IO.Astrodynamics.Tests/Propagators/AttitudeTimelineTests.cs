@@ -302,8 +302,9 @@ public class AttitudeTimelineTests
             if (covariance)
             {
                 var sv = orbit.ToStateVector();
-                var p0 = new Matrix(6, 6);
-                for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+                var p0Terms = new double[6, 6];
+                for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 100.0 : 1.0e-4;
+                var p0 = new Matrix(p0Terms);
                 orbit = new StateVector(sv.Position, sv.Velocity, sv.Observer, sv.Epoch, sv.Frame, p0);
             }
 
@@ -389,7 +390,7 @@ public class AttitudeTimelineTests
                 // states are the scenario's to the bit
                 var (twin, _, _, _) = Build(naifId - 100000, letter, orbit, center);
                 solution = twin.Propagate(window, bodies, NewIntegrator(), false, false, step);
-                Assert.Equal(twin.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Frame, x.Position, x.Velocity)), spacecraft.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Frame, x.Position, x.Velocity)));
+                Assert.Equal(twin.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Scale, x.Position, x.Velocity)), spacecraft.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Scale, x.Position, x.Velocity)));
             }
 
             var burns = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToList();
@@ -444,7 +445,7 @@ public class AttitudeTimelineTests
         return new KeplerianElements((ra + rp) / 2.0, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, moon, S, Frame.ICRF);
     }
 
-    private static readonly Time Min = new(DateTime.MinValue, TimeFrame.TDBFrame);
+    private static readonly Time Min = new(DateTime.MinValue, TimeScale.TDB);
 
     /// <summary>The spacecraft of a case and its chain, head first; the kind of each attitude law.</summary>
     internal static (Spacecraft, Maneuver.Maneuver[], Dictionary<Maneuver.Maneuver, string>, double Hours) Build(int naifId, string letter, OrbitalParams orbit,

@@ -77,21 +77,21 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     public void WithAnInvalidInitialCovariance_Throws()
     {
         // Arrange: an asymmetric P0, a P0 with a negative eigenvalue, and a P0 of the wrong size
-        var asymmetric = InitialCovariance(Leo);
-        asymmetric.Set(0, 1, asymmetric.Get(0, 1) + 1.0);
-        var indefinite = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var initial = InitialCovariance(Leo);
+        var asymmetric = initial.With(0, 1, initial[0, 1] + 1.0);
+        var indefiniteTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            indefinite.Set(i, i, 1.0);
+            indefiniteTerms[i, i] = 1.0;
         }
 
-        indefinite.Set(0, 1, 2.0);
-        indefinite.Set(1, 0, 2.0);
+        indefiniteTerms[0, 1] = 2.0;
+        indefiniteTerms[1, 0] = 2.0;
+        var indefinite = new IO.Astrodynamics.Math.Matrix(indefiniteTerms);
 
         // A negative velocity variance, −1e-9 m²/s², within 1e-12 of the trace (m²) but not a covariance (H3 review of
         // #384)
-        var negativeVelocityVariance = InitialCovariance(Leo);
-        negativeVelocityVariance.Set(5, 5, -1e-9);
+        var negativeVelocityVariance = InitialCovariance(Leo).With(5, 5, -1e-9);
 
         // Act and assert
         Assert.Contains("symmetric", EnableWith(asymmetric).Message);
@@ -757,16 +757,17 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     private static IO.Astrodynamics.Math.Matrix InitialCovariance(StateVector state)
     {
         double[] sigma = { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
-        var rtn = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            rtn.Set(i, i, sigma[i] * sigma[i]);
+            rtnTerms[i, i] = sigma[i] * sigma[i];
         }
 
-        rtn.Set(0, 4, -0.5 * sigma[0] * sigma[4]);
-        rtn.Set(4, 0, -0.5 * sigma[0] * sigma[4]);
-        rtn.Set(1, 3, -0.9 * sigma[1] * sigma[3]);
-        rtn.Set(3, 1, -0.9 * sigma[1] * sigma[3]);
+        rtnTerms[0, 4] = -0.5 * sigma[0] * sigma[4];
+        rtnTerms[4, 0] = -0.5 * sigma[0] * sigma[4];
+        rtnTerms[1, 3] = -0.9 * sigma[1] * sigma[3];
+        rtnTerms[3, 1] = -0.9 * sigma[1] * sigma[3];
+        var rtn = new IO.Astrodynamics.Math.Matrix(rtnTerms);
         return state.RotateCovarianceFromRtn(rtn);
     }
 

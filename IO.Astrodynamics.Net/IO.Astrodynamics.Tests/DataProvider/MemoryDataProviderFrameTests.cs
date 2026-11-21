@@ -28,7 +28,7 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// </remarks>
 public class MemoryDataProviderFrameTests
 {
-    private static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, TimeSystem.TimeScale.TDB);
 
     // Stored states every 10 minutes over 80 minutes; the reads at stored epochs, so that no interpolation enters
     private static readonly TimeSystem.Time[] Epochs = Enumerable.Range(0, 9).Select(k => Start.AddSeconds(600.0 * k)).ToArray();
@@ -276,7 +276,7 @@ public class MemoryDataProviderFrameTests
     {
         var provider = new MemoryDataProvider();
         var frame = new Frames.Frame(name);
-        var rotation = new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.PI2);
+        var rotation = new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi);
 
         var ex = Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToICRF(frame, Start, new StateOrientation(rotation, Vector3.Zero, Start, frame)));
         Assert.Equal("frame", ex.ParamName);
@@ -299,7 +299,7 @@ public class MemoryDataProviderFrameTests
         var provider = new MemoryDataProvider();
         foreach (var frame in new[] { Frames.Frame.ICRF, Frames.Frame.GCRF, Frames.Frame.TEME, Frames.Frame.CIRS, Frames.Frame.TIRS })
         {
-            var orientation = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.PI2), Vector3.Zero, Start, frame);
+            var orientation = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi), Vector3.Zero, Start, frame);
             Assert.Equal("frame", Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToICRF(frame, Start, orientation)).ParamName);
         }
 

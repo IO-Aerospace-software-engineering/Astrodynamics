@@ -116,7 +116,7 @@ public class PropagatedArcsEdgeTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
     private static StateVector Leo(CelestialItem earth) =>
         new(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF);
@@ -461,8 +461,9 @@ public class PropagatedArcsEdgeTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
         var frame = PropagatedArcsTests.FrameOf(frameName);
-        var p0 = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 1.0e4 : 1.0e-2);
+        var p0Terms = new double[6, 6];
+        for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 1.0e4 : 1.0e-2;
+        var p0 = new Matrix(p0Terms);
         var leo = maneuver == "CombinedLate" ? PropagatedArcsTests.LeoBeforeApogee(earth, Start) : Leo(earth);
         var inFrame = frame == Frame.ICRF ? leo : leo.ToFrame(frame).ToStateVector();
         var initial = new StateVector(inFrame.Position, inFrame.Velocity, earth, Start, frame, p0);
@@ -505,7 +506,7 @@ public class PropagatedArcsEdgeTests
         Matrix InIcrf(Matrix p)
         {
             if (frame == Frame.ICRF) return p;
-            var rotated = new Matrix(6, 6);
+            var rotatedTerms = new double[6, 6];
             for (int i = 0; i < 6; i++)
             for (int j = 0; j < 6; j++)
             {
@@ -518,8 +519,9 @@ public class PropagatedArcsEdgeTests
                     value += rik * p.Get(k, l) * rjl;
                 }
 
-                rotated.Set(i, j, value);
+                rotatedTerms[i, j] = value;
             }
+            var rotated = new Matrix(rotatedTerms);
 
             return rotated;
         }
@@ -825,7 +827,7 @@ public class PropagatedArcsEdgeTests
         var (r, v) = secondarySolution.InterpolateAt(tca);
         var axis = r.Normalize();
         double angle = 20.0 * IO.Astrodynamics.Constants.Deg2Rad;
-        var turned = v * System.Math.Cos(angle) + axis.Cross(v) * System.Math.Sin(angle) + axis * (axis * v) * (1.0 - System.Math.Cos(angle));
+        var turned = v * System.Math.Cos(angle) + axis.Cross(v) * System.Math.Sin(angle) + axis * axis.Dot(v) * (1.0 - System.Math.Cos(angle));
         var atTca = new StateVector(r + axis * 200.0, turned, earth, tca, Frame.ICRF);
         double back = -PropagationTimeArgument.Tt.SecondsBetween(Start, tca);
         long ticks = (long)System.Math.Round(back * TimeSpan.TicksPerSecond);

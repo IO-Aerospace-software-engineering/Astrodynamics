@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 using TleConfiguration = IO.Astrodynamics.OrbitalParameters.TLE.Configuration;
 
@@ -91,7 +90,7 @@ internal static class TleAndOmmPage
         var meanKep = tle.ToMeanKeplerianElements();
 
         // Correct: SGP4-propagated state vector at a specific time
-        var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0));
+        var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0, TimeScale.TDB));
         #endregion
     }
 
@@ -100,7 +99,7 @@ internal static class TleAndOmmPage
     {
         #region docs/tutorials/tle-and-omm.md:3
         // Inputs: tle (TLE)
-        var futureEpoch = new Time(2021, 1, 25, 0, 0, 0);
+        var futureEpoch = new Time(2021, 1, 25, 0, 0, 0, TimeScale.TDB);
         var futureSv = tle.ToStateVector(futureEpoch);
 
         Console.WriteLine($"Position at {futureEpoch}: {futureSv.Position}");

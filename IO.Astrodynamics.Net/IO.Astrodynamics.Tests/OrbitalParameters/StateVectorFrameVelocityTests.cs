@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -35,7 +36,7 @@ public class StateVectorFrameVelocityTests
     public void ToFrame_IcrfToItrf93_MatchesSpice(int year)
     {
         // Arrange
-        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var itrf93 = new Frames.Frame("ITRF93");
         var inIcrf = GeocentricMoon(epoch, Frames.Frame.ICRF);
         var expected = GeocentricMoon(epoch, itrf93);
@@ -54,7 +55,7 @@ public class StateVectorFrameVelocityTests
     public void ToFrame_Itrf93ToIcrf_MatchesSpice(int year)
     {
         // Arrange
-        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var itrf93 = new Frames.Frame("ITRF93");
         var inItrf93 = GeocentricMoon(epoch, itrf93);
         var expected = GeocentricMoon(epoch, Frames.Frame.ICRF);
@@ -73,7 +74,7 @@ public class StateVectorFrameVelocityTests
     public void ToFrame_GroundStationFromItrf93ToIcrf_MatchesSpice(int year)
     {
         // Arrange: DSS-13 from earthstns_itrf93_201023.bsp, nearly fixed in ITRF93, about 380 m/s in ICRF.
-        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var earth = PlanetsAndMoons.EARTH_BODY;
         var itrf93 = new Frames.Frame("ITRF93");
         var station = new Site(13, "DSS-13", earth);
@@ -92,7 +93,7 @@ public class StateVectorFrameVelocityTests
     public void ToFrame_RoundTripThroughItrf93_RestoresTheState()
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2021, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
         var itrf93 = new Frames.Frame("ITRF93");
         var state = GeocentricMoon(epoch, Frames.Frame.ICRF);
 

@@ -201,7 +201,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
         var meanMotionRevPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
-        double n = meanMotionRevPerDay * Constants._2PI / 86400.0; // Convert rev/day to rad/s
+        double n = meanMotionRevPerDay * Constants.TwoPi / 86400.0; // Convert rev/day to rad/s
         // The GM of the Earth of the TLE, built once from the kernels at the epoch
         MeanSemiMajorAxis = System.Math.Cbrt(((CelestialBody)Observer).GM / (n * n));
 
@@ -281,7 +281,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         var yearStart = new DateTime(year, 1, 1);
         var epochDateTime = yearStart.AddDays((double)(day - 1m)).AddTicks(fractionTicks);
 
-        return new Time(epochDateTime, TimeFrame.UTCFrame);
+        return new Time(epochDateTime, TimeScale.UTC);
     }
 
     /// <summary>
@@ -344,7 +344,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <returns>A new TLE instance constructed from the provided parameters.</returns>
     /// <remarks>
     /// Each field is the nearest value its columns represent: the epoch the UTC of the elements' epoch, whatever its
-    /// time frame (#479), to the nearest 1e-8 day with the carry into the next day and year (#600); e in [0, 0.9999999]
+    /// time scale (#479), to the nearest 1e-8 day with the carry into the next day and year (#600); e in [0, 0.9999999]
     /// (#602); B* and n̈/6 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601); a value that rounds
     /// to zero, −0.0 included, without a sign (#480).
     /// </remarks>
@@ -428,9 +428,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         // For mean elements, use cached mean motion to preserve precision from OMM
         // MeanMotion() returns cached value (rad/s) if available, otherwise computes from semi-major axis
-        double meanMotion = kep.MeanMotion() * 86400.0 / Constants._2PI;
+        double meanMotion = kep.MeanMotion() * 86400.0 / Constants.TwoPi;
 
-        // Format epoch: YYDDD.DDDDDDDD, in UTC whatever the time frame of the elements' epoch (#479)
+        // Format epoch: YYDDD.DDDDDDDD, in UTC whatever the time scale of the elements' epoch (#479)
         string epochStr = FormatTleEpoch(kep.Epoch.ToUTC().DateTime);
 
         // Format eccentricity: 7 digits, no decimal point; e = 0 is written 0000000 (#602)
@@ -743,7 +743,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <para>
     /// SGP4 is CSPICE's <c>evsgp4_c</c> (Vallado's 2006 code, AFSPC mode, WGS-72 old, KE = 7.43669161e-2; see
     /// <see cref="TLE"/>), at tsince = the TT seconds from <see cref="OrbitalParameters.Epoch"/> to
-    /// <paramref name="epoch"/> over 60, whatever the time frame of <paramref name="epoch"/> (#599): the epoch is taken
+    /// <paramref name="epoch"/> over 60, whatever the time scale of <paramref name="epoch"/> (#599): the epoch is taken
     /// as CSPICE's <c>getelm_c</c> reads it, so that tsince is exact. Before 11.0.0 tsince counted the TDB seconds
     /// between the TDB of <paramref name="epoch"/> and that epoch, up to 0.36 m off a day after the epoch. The state is
     /// in <see cref="Frame.TEME"/>, labelled <paramref name="epoch"/>.
@@ -1029,7 +1029,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         // Create mean elements
         // Convert angles from radians to degrees, mean motion from rad/s to rev/day
-        var meanMotionRevPerDay = MeanMotion() * 86400.0 / Constants._2PI;
+        var meanMotionRevPerDay = MeanMotion() * 86400.0 / Constants.TwoPi;
 
         var meanElements = CCSDS.OMM.MeanElements.CreateWithMeanMotion(
             Epoch.DateTime,

@@ -125,19 +125,14 @@ public class OrbitalElementsSolver : ICategorySolver
     }
 
     /// <summary>
-    /// Keplerian elements whose true anomaly is the given one: the framework takes the mean anomaly, here M(ν) from the
-    /// closed-form eccentric anomaly, and the true anomaly, which it then uses as it is.
+    /// Keplerian elements whose true anomaly is the given one: <see cref="KeplerianElements.FromTrueAnomaly"/>, M(ν) from
+    /// the closed-form eccentric anomaly, the true anomaly then used as it is (#668, R23: the runner's own code before).
     /// </summary>
     private static KeplerianElements FromTrueAnomaly(KeplerianTrueAnomalyOrbit orbit, CelestialBody earth, Time epoch)
     {
-        double a = UnitConversion.KmToM(orbit.AKm);
-        double i = UnitConversion.DegToRad(orbit.IDeg);
-        double raan = UnitConversion.DegToRad(orbit.RaanDeg);
-        double argp = UnitConversion.DegToRad(orbit.ArgpDeg);
-        double nu = UnitConversion.DegToRad(orbit.TaDeg);
-        var shape = new KeplerianElements(a, orbit.E, i, raan, argp, 0.0, earth, epoch, Frame.ICRF);
-        double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(nu, orbit.E, shape.EccentricAnomaly(nu));
-        return new KeplerianElements(a, orbit.E, i, raan, argp, m, earth, epoch, Frame.ICRF, trueAnomaly: nu);
+        return KeplerianElements.FromTrueAnomaly(UnitConversion.KmToM(orbit.AKm), orbit.E, UnitConversion.DegToRad(orbit.IDeg),
+            UnitConversion.DegToRad(orbit.RaanDeg), UnitConversion.DegToRad(orbit.ArgpDeg), UnitConversion.DegToRad(orbit.TaDeg), earth,
+            epoch, Frame.ICRF);
     }
 
     private static Vector3 Meters(double[] km)

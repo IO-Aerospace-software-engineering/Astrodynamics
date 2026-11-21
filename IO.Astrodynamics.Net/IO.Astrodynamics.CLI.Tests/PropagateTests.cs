@@ -251,7 +251,7 @@ public class PropagateTests
     /// The start of the TLE runs below: 2021-01-20 13:00 UTC, 47 min after the epoch of the ISS TLE, rounded to the TDB
     /// second, so that the window the CLI parses from its seconds is the window of the reference to the tick.
     /// </summary>
-    private static Time TleStart => Time.CreateTDB(System.Math.Round(new Time("2021-01-20T13:00:00Z").ToTDB().TimeSpanFromJ2000().TotalSeconds));
+    private static Time TleStart => Time.CreateTDB(System.Math.Round(Time.Parse("2021-01-20T13:00:00Z").ToTDB().TimeSpanFromJ2000().TotalSeconds));
 
     /// <summary>
     /// Since #675, <c>-t</c> starts from the SGP4 state on the Earth of the CLI, so <c>-n</c> reaches the TLE path too:
@@ -445,7 +445,7 @@ public class PropagateTests
         var command = new PropagateCommand();
         var sb = new StringBuilder();
         var sw = new StringWriter(sb);
-        var window = new TimeSystem.Window(new TimeSystem.Time("2021-01-20T13:00:00Z"), new TimeSystem.Time("2021-01-20T13:30:00Z"));
+        var window = new TimeSystem.Window(TimeSystem.Time.Parse("2021-01-20T13:00:00Z"), TimeSystem.Time.Parse("2021-01-20T13:30:00Z"));
         var epochs = Enumerable.Range(0, 31).Select(i => window.StartDate.ToTDB().AddSeconds(60.0 * i)).ToArray();
         double worst = 0.0, fromPointMass = double.MaxValue;
 

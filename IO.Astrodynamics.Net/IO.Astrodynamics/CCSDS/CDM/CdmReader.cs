@@ -325,8 +325,8 @@ public sealed class CdmReader
 
     private static void SetSymmetric(Matrix matrix, int row, int column, double value)
     {
-        matrix.Set(row, column, value);
-        matrix.Set(column, row, value);
+        matrix.SetTerm(row, column, value);
+        matrix.SetTerm(column, row, value);
     }
 
     private static IReadOnlyList<string> GetComments(XElement element)

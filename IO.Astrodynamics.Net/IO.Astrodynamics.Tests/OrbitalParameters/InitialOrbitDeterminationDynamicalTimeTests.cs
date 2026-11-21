@@ -30,7 +30,7 @@ public class InitialOrbitDeterminationDynamicalTimeTests
     {
         // Arrange: a geosynchronous object seen from a station 2 min before, at and 2 min after 2017-01-01T00:00:30Z
         var site = new Site(80, "MyStation", TestHelpers.EarthAtJ2000, new Planetodetic(0.0, 45.0 * Deg, 0.0));
-        var e2 = new TimeSystem.Time(2017, 1, 1, 0, 0, 30, frame: TimeFrame.UTCFrame);
+        var e2 = new TimeSystem.Time(2017, 1, 1, 0, 0, 30, TimeScale.UTC);
         var epochs = new[] { e2.AddMinutes(-2.0), e2, e2.AddMinutes(2.0) };
         var orbit = new KeplerianElements(42164000.0, 0.0, 15.0 * Deg, 45.0 * Deg, 0.0, 45.0 * Deg,
             TestHelpers.EarthAtJ2000, e2, Frames.Frame.ICRF);
@@ -39,7 +39,7 @@ public class InitialOrbitDeterminationDynamicalTimeTests
         // Act
         var utc = Determine(observations, site, e => e);
         var tai = Determine(observations, site, e => e.ToTAI());
-        var tt = Determine(observations, site, e => e.ToTDT());
+        var tt = Determine(observations, site, e => e.ToTT());
 
         // Assert: the intervals are the same TT seconds in the three frames, 120 s and 121 s
         Assert.Equal(tai.Position, utc.Position);

@@ -29,7 +29,7 @@ public class CustomItemCenterOfMotionTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly TimeSystem.Time Epoch = new(2024, 3, 1, 12, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Epoch = new(2024, 3, 1, 12, 0, 0, TimeSystem.TimeScale.TDB);
 
     // A body from custom parameters on the orbit given
     private sealed class CustomBody(int naifId, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)

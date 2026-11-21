@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Reference;
@@ -70,7 +69,7 @@ internal static class StarsPage
         var barnard = new Star(4472832, "Barnard", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
             new Equatorial(4.73942005111 * deg, 269.44850252544 * deg, j2016),
             10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);
-        var in2100 = barnard.GetEquatorialCoordinates(new Time(2100, 1, 1));
+        var in2100 = barnard.GetEquatorialCoordinates(new Time(2100, 1, 1, TimeScale.TDB));
         #endregion
     }
 }

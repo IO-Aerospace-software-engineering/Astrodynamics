@@ -51,13 +51,13 @@ public class DeveloperGuideExamplesSmokeTests
             ));
 
         // Get horizontal coordinates to Moon
-        var epoch = new Time(2024, 1, 1, 12, 0, 0);
+        var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
 
         // Find visibility windows
         var windows = mySite.FindWindowsOnDistanceConstraint(
-            new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
+            new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
             moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
 
         _output.WriteLine($"Range {horizontal.Range:R} m, {horizontal.Range - 399039486.050:E3} m from spkcpo; {string.Join(", ", windows)}");
@@ -91,7 +91,7 @@ public class DeveloperGuideExamplesSmokeTests
         // Track from a ground station
         var goldstone = new Site(13, "DSS-13", earth);
 
-        var trackStart = new Time(2024, 6, 3);
+        var trackStart = new Time(2024, 6, 3, TimeScale.TDB);
         var trackEnd = trackStart.AddDays(1);
 
         var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(

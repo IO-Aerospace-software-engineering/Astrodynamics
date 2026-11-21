@@ -2,14 +2,13 @@
 
 using System;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Time;
 
 /// <summary>
-/// The TDB − TT series of <see cref="TDBTimeFrame"/>, shared by its conversions and the time argument of the
-/// propagation (#501): <see cref="TDBTimeFrame.ConvertToTAI"/> and <see cref="TDBTimeFrame.ConvertFromTAI"/> give, tick
+/// The TDB − TT series of <see cref="TimeScaleConversions.TdbMinusTt"/>, shared by its conversions and the time argument of the
+/// propagation (#501): <see cref="TimeSystem.Time.ToTAI"/> of a TDB time and <see cref="TimeSystem.Time.ToTDB"/> of a TAI time give, tick
 /// for tick, what the expressions they held before gave, on the TT instants every 0.05 day from 1972 to 2100 (935 041)
 /// and on 2 000 000 random ticks of the same span, the offset rounded to the nearest tick since #625. The reference is
 /// the former code of the two conversions, copied below, its truncation of the offset (TimeSpan.FromSeconds) replaced
@@ -55,17 +54,17 @@ public class TdbSeriesTests
     public void TdbMinusTt()
     {
         // The series at J2000 and at a quarter of the anomalistic year, against its closed form
-        double g = IO.Astrodynamics.Constants._2PI * 357.528 / 360.0;
-        Assert.Equal(0.001658 * System.Math.Sin(g + 0.0167 * System.Math.Sin(g)), TDBTimeFrame.TdbMinusTt(0.0));
-        Assert.Equal(0.0, TDBTimeFrame.TdbMinusTt((360.0 - 357.528) / 35999.05), 1e-15);
+        double g = IO.Astrodynamics.Constants.TwoPi * 357.528 / 360.0;
+        Assert.Equal(0.001658 * System.Math.Sin(g + 0.0167 * System.Math.Sin(g)), TimeScaleConversions.TdbMinusTt(0.0));
+        Assert.Equal(0.0, TimeScaleConversions.TdbMinusTt((360.0 - 357.528) / 35999.05), 1e-15);
     }
 
     private static void AssertUnchanged(long ticks)
     {
-        var tdb = new TimeSystem.Time(new DateTime(ticks), TimeFrame.TDBFrame);
-        var tai = new TimeSystem.Time(new DateTime(ticks), TimeFrame.TAIFrame);
-        long toTai = TimeFrame.TDBFrame.ConvertToTAI(tdb).DateTime.Ticks;
-        long fromTai = TimeFrame.TDBFrame.ConvertFromTAI(tai).DateTime.Ticks;
+        var tdb = new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB);
+        var tai = new TimeSystem.Time(new DateTime(ticks), TimeScale.TAI);
+        long toTai = tdb.ToTAI().DateTime.Ticks;
+        long fromTai = tai.ToTDB().DateTime.Ticks;
         if (toTai != FormerConvertToTai(tdb) || fromTai != FormerConvertFromTai(tai))
         {
             Assert.Fail($"{ticks}: to TAI {toTai} against {FormerConvertToTai(tdb)}, from TAI {fromTai} against " +
@@ -85,10 +84,10 @@ public class TdbSeriesTests
     // TDBTimeFrame.ConvertFromTAI before #501: g at the TT centuries; the offset to the nearest tick (#625)
     private static long FormerConvertFromTai(TimeSystem.Time time)
     {
-        var tdt = time.ToTDT();
+        var tdt = time.ToTT();
         var g = G(tdt.Centuries());
         return tdt.DateTime.AddTicks(ExactTicks.Nearest(0.001658 * System.Math.Sin(g + 0.0167 * System.Math.Sin(g)))).Ticks;
     }
 
-    private static double G(double t) => IO.Astrodynamics.Constants._2PI * (357.528 + 35999.05 * t) / 360.0;
+    private static double G(double t) => IO.Astrodynamics.Constants.TwoPi * (357.528 + 35999.05 * t) / 360.0;
 }

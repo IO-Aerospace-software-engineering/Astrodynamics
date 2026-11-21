@@ -8,7 +8,7 @@ IO.Astrodynamics.Net is a .NET 10 astrodynamics framework for orbital mechanics 
 
 - **Orbital Mechanics**: Compute orbital elements (Keplerian, equinoctial), state vectors, orbital periods, anomalies
 - **Ephemeris Computation**: Read and write SPICE kernel files for celestial bodies and spacecraft
-- **Time Systems**: Handle multiple time frames (UTC, TDB, TAI, TDT, GPS, Local)
+- **Time Scales**: TDB, TT, TAI, UTC and GPS (`TimeScale`), the scale a required argument, one string grammar (`Time.Parse`)
 - **Reference Frames**: Transform between inertial and body-fixed frames (ICRF, ECLIPTIC, IAU frames)
 - **Spacecraft Modeling**: Define spacecraft with instruments, engines, fuel tanks, payloads, and configurable body axes
 - **Orbital Propagation**: Propagate orbits using numerical integration with perturbation models
@@ -62,7 +62,7 @@ public const double Rad2Deg = 180.0 / Math.PI; // Radians to degrees
 
 ### Reference Standards
 
-- **Time**: managed conversions with no kernel read: the leap second table of `TimeFrame` (TAI − UTC from 10 s on 1972-01-01 to 37 s from 2017-01-01, a fixed 9 s before 1972), TT = TAI + 32.184 s, GPS = TAI − 19 s, and TDB − TT by the one-term series 0.001658 sin(g + 0.0167 sin g) s; CSPICE is given the managed TDB as its ephemeris time (see `docs/reference/time-and-windows.md#time-scales`)
+- **Time**: managed conversions with no kernel read: the leap second table of the library (TAI − UTC from 10 s on 1972-01-01 to 37 s from 2017-01-01, a fixed 9 s before 1972), TT = TAI + 32.184 s, GPS = TAI − 19 s, and TDB − TT by the one-term series 0.001658 sin(g + 0.0167 sin g) s; CSPICE is given the managed TDB as its ephemeris time (see `docs/reference/time-and-windows.md#time-scales`)
 - **Ephemerides**: JPL Development Ephemeris (DE series)
 - **Reference Frames**: IAU/IAG standards, IERS conventions
 - **Gravity Models**: EGM2008 (Earth Gravitational Model 2008), geodesy-normalized spherical harmonics up to degree/order 70
@@ -124,7 +124,7 @@ var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
 
 // Define epoch
-var epoch = new Time(2024, 6, 21, 12, 0, 0);
+var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
 // Get Earth's state vector relative to the Sun
 var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
@@ -144,7 +144,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 1, 1, 0, 0, 0);
+var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
 // Create from Keplerian elements
 var orbit = new KeplerianElements(
@@ -175,7 +175,7 @@ var tle = new TLE("ISS (ZARYA)",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
 // Propagate to a specific time
-var epoch = new Time(2021, 1, 21, 12, 0, 0);
+var epoch = new Time(2021, 1, 21, 12, 0, 0, TimeScale.TDB);
 var sv = tle.ToStateVector(epoch);
 
 Console.WriteLine($"ISS Position: {sv.Position}");
@@ -233,35 +233,39 @@ Configuration.Instance.SetDataProvider(new MemoryDataProvider());
 
 #### Time
 
-Represents a precise instant in time with time frame awareness.
+Represents a precise instant: a calendar in a time scale (`TimeScale`: TDB, TT, TAI, UTC, GPS), the scale a required
+argument (D3 of #668).
 
 | Constructor / Method | Description |
 |---------------------|-------------|
-| `Time(int year, int month, int day)` | Create from date (defaults to TDB) |
-| `Time(int year, int month, int day, int hour, int minute, int second)` | Create from date and time |
-| `Time(DateTime dateTime, ITimeFrame frame)` | Create from DateTime with specified frame |
-| `Time(string timeString)` | Parse an ISO 8601 calendar followed by its frame, with or without a space (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`); `Z` is UTC, no suffix TDB; a `Z` or an offset before a frame name throws |
-| `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from seconds since J2000 |
+| `Time(int year, int month, int day, TimeScale scale)` | Create from a date in a scale |
+| `Time(int year, int month, int day, int hour, int minute, int second, TimeScale scale)` | Create from a date and time in a scale |
+| `Time(DateTime dateTime, TimeScale scale)` | Create from a `DateTime` in a scale; a `DateTime` of kind `Local`, or of kind `Utc` with another scale than UTC, throws `ArgumentException` |
+| `Parse(string s)` | One grammar (`yyyy-MM-dd` or `yyyy-DDD`, an optional time, then `Z`, `±hh:mm` or a tag `UTC`, `TT`, `TDB`, `TAI`, `GPS`; or `JD n TAG`); an untagged string throws `FormatException` unless `Parse(s, scale)` names its scale, and a tag of another scale than `scale` throws; `TryParse` returns false instead and never throws |
+| `FromDayOfYear(int year, int dayOfYear, double seconds, TimeScale scale)` | Create from a day of year and the seconds of that day |
+| `Create(double secondsFromJ2000, TimeScale scale)` | Create from seconds since J2000 |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds |
-| `ToTDB()` | Convert to TDB time frame |
-| `ToUTC()` | Convert to UTC time frame |
-| `ToTAI()` | Convert to TAI time frame |
+| `ToTDB()` | Convert to TDB |
+| `ToUTC()` | Convert to UTC |
+| `ToTAI()` | Convert to TAI |
+| `ToTT()` | Convert to TT |
 | `ToJulianDate()` | Get Julian Date |
 | `TimeSpanFromJ2000()` | Get TimeSpan from J2000 epoch |
 | `Add(TimeSpan span)` | Add duration |
 | `AddDays(double days)` | Add days, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddHours(double hours)` | Add hours, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds, to the nearest tick (#625) |
-| `==`, `Equals`, `CompareTo` | The same instant, whatever the frames: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; local times compare as the instants of their zone, and `ToLocal()` keeps the instant in the repeated hour of a DST zone too (#751), the default time before every other; compare `DateTime` and `Frame` to tell two labels apart (a test of a label: `LabelAssert`, not `Assert.Equal`) |
+| `==`, `Equals`, `CompareTo` | The same instant, whatever the scales: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; the default time is 0001-01-01 TDB; `EqualsExact` (and `Time.ExactComparer`) tells two labels apart, the calendar and the scale (a test of a label: `LabelAssert`, not `Assert.Equal`) |
+| `ToString()`, `ToString(string format, IFormatProvider provider)` | The round-trip form, then the tag (`Z`, ` TDB`, ` TT`, ` TAI`, ` GPS`), which `Parse` reads back; another format is a `DateTime` format followed by the tag |
 
 ```csharp
 // Create times
-var t1 = new Time(2024, 6, 21, 12, 0, 0);
-var t2 = new Time("2024-06-21T12:00:00.000 UTC");
+var t1 = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
+var t2 = Time.Parse("2024-06-21T12:00:00.000 UTC");
 var t3 = Time.CreateTDB(788400000.0);  // Seconds from J2000
 
-// Convert between time frames
+// Convert between time scales
 var tdb = t1.ToTDB();
 var utc = tdb.ToUTC();
 
@@ -289,14 +293,14 @@ Represents a time interval.
 
 ```csharp
 var window = new Window(
-    new Time(2024, 1, 1),
-    new Time(2024, 1, 31)
+    new Time(2024, 1, 1, TimeScale.TDB),
+    new Time(2024, 1, 31, TimeScale.TDB)
 );
 
 Console.WriteLine($"Duration: {window.Length.TotalDays} days");
 
 // Check intersection
-var t = new Time(2024, 1, 15);
+var t = new Time(2024, 1, 15, TimeScale.TDB);
 if (window.Intersects(t))
     Console.WriteLine("Time is within window");
 ```
@@ -348,11 +352,11 @@ var state = earth.GetEphemeris(Time.J2000TDB, sun, Frame.ICRF, Aberration.None);
 var sv = state.ToStateVector();
 
 // Compute geosynchronous orbit
-var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, new Time(2024, 1, 1));
+var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, new Time(2024, 1, 1, TimeScale.TDB));
 
 // Find solar eclipses: the Sun (this item) behind the Moon, seen from the Earth's center
 var eclipses = sun.FindWindowsOnOccultationConstraint(
-    new Window(new Time(2024, 1, 1), new Time(2024, 12, 31)),
+    new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 12, 31, TimeScale.TDB)),
     earth, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid,
     OccultationType.Any, Aberration.None, TimeSpan.FromHours(1));
 ```
@@ -441,7 +445,7 @@ elements, the two-body motion to another epoch, the RTN rotations, and at the ce
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 1, 1);
+var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Create state vector
 var sv = new StateVector(
@@ -469,13 +473,14 @@ Classical Keplerian orbital elements (osculating or mean).
 
 | Constructor | Description |
 |------------|-------------|
-| `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements (the parameter of the RAAN is spelled `rigthAscendingNode`) |
-| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius: required within 1e-6 of e = 1, with the a of the same conic, q / (1 − e) to rounding, +Infinity at e = 1 (#459) |
+| `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements, outside the near-parabolic band (`rigthAscendingNode` before 11.0.0) |
 | `KeplerianElements(..., OrbitalElementsType elementsType)` | Create with explicit element type |
 
 | Factory Method | Description |
 |----------------|-------------|
 | `FromOMM(double meanMotion, double e, double i, double raan, double aop, double m, ILocalizable observer, Time epoch, Frame frame)` | Create mean elements from OMM data (units: rev/day for mean motion, degrees for angles) |
+| `FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double trueAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Elements given with their true anomaly: M(ν), `TrueAnomaly()` ν reduced to [0, 2π), the state from ν as given (#668, R23) |
+| `Parabolic(double perigeeRadius, double inclination, double ascendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, double eccentricity = 1.0)` | Parabola, or orbit within 1e-6 of e = 1, from its perigee radius: a = q / (1 − e), +Infinity at e = 1 (#459; the `perigeeRadius` parameter of the constructor before 11.0.0) |
 
 | Property | Description |
 |----------|-------------|
@@ -512,7 +517,7 @@ Classical Keplerian orbital elements (osculating or mean).
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 1, 1);
+var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Create osculating Keplerian elements (ISS-like orbit)
 var kep = new KeplerianElements(
@@ -581,7 +586,7 @@ The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F,
 ```csharp
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 1000.0),
-    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1), Frame.ICRF);
+    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
 var equinoctial = sv.ToEquinoctial();
 
 // Access equinoctial components
@@ -644,7 +649,7 @@ Console.WriteLine($"Elements type: {tle.ElementsType}"); // Mean
 var sv = tle.ToOsculating();
 
 // Or propagate to specific time
-var now = new Time(2021, 1, 21, 12, 0, 0);
+var now = new Time(2021, 1, 21, 12, 0, 0, TimeScale.TDB);
 var svAtTime = tle.ToStateVector(now);
 
 // Access TLE mean parameters
@@ -657,7 +662,7 @@ var meanKep = tle.ToMeanKeplerianElements();
 Console.WriteLine($"Mean motion: {meanKep.MeanMotion()} rad/s");
 
 // Create TLE from state vector
-var epoch = new Time(2024, 1, 1);
+var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 var state = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5413.8, 5413.8),
     PlanetsAndMoons.EARTH_BODY, epoch, Frame.ICRF);
@@ -792,7 +797,7 @@ var originalOmm = Omm.LoadFromFile("satellite.omm", validateSchema: false);
 var tle = originalOmm.ToTle();
 
 // Use TLE for propagation
-var sv = tle.ToStateVector(new Time(2024, 6, 15, 12, 0, 0));
+var sv = tle.ToStateVector(new Time(2024, 6, 15, 12, 0, 0, TimeScale.TDB));
 
 // Convert back to OMM
 var newOmm = tle.ToOmm();
@@ -959,7 +964,7 @@ opm.SaveToFile("iss_state.opm");
 `Frame.ICRF` (SPICE `J2000`, written before 11.0.0), the frame's own name otherwise (#339).
 
 The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported in km², km²/s and km²/s²
-when the OPM is written at the initial epoch (the default, or the same instant in any time frame). At another epoch the
+when the OPM is written at the initial epoch (the default, or the same instant in any time scale). At another epoch the
 OPM carries no covariance: moving it there would take the state transition matrix, which the export does not compute
 (#551).
 
@@ -1190,7 +1195,7 @@ var mySite = new Site(100, "MySite", earth,
     ));
 
 // Get horizontal coordinates to Moon
-var epoch = new Time(2024, 1, 1, 12, 0, 0);
+var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
 var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
 
@@ -1200,7 +1205,7 @@ Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
 
 // Find visibility windows
 var windows = mySite.FindWindowsOnDistanceConstraint(
-    new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
+    new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
     moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
 // One window, 2024-01-01 09:42:24.997 to 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
 ```
@@ -1291,7 +1296,7 @@ states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the ang
 ```csharp
 // Get equatorial coordinates
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 1, 1, 12, 0, 0);
+var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
 var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
 var eq = sv.ToEquatorial();
@@ -1362,7 +1367,7 @@ Represents a spacecraft with components.
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 1, 1);
+var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Define initial orbit
 var orbit = new KeplerianElements(
@@ -1584,7 +1589,7 @@ Solve Lambert's problem for transfer orbits.
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new Time(2024, 1, 1);
+var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Define departure and arrival states: a LEO, and a point of a higher circular orbit 45 minutes later
 var departure = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
@@ -1671,7 +1676,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Geopotential usage:**
 
 ```csharp
-var epoch = new Time(2024, 1, 1);
+var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 var clock = new Clock("Clock", 256);
 
 // Create Earth with degree-10 EGM2008 geopotential
@@ -1774,7 +1779,7 @@ The orientation cache of a propagation is active only on the thread that propaga
 | 70 | Maximum available (EGM2008_to70) | Highest fidelity |
 
 ```csharp
-var epoch = new Time(2024, 1, 1);
+var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Degree-10 geopotential (good balance of accuracy and speed)
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
@@ -1899,7 +1904,7 @@ var context = AtmosphericContext.FromPlanetodetic(
     altitude: 400000,                           // 400 km
     geodeticLatitude: 0,                        // Equator (rad)
     geodeticLongitude: 0,                       // Prime meridian (rad)
-    epoch: new Time(2024, 6, 21, 12, 0, 0)
+    epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
 );
 
 var atmosphere = model.GetAtmosphere(context);
@@ -1979,7 +1984,7 @@ var context = AtmosphericContext.FromPlanetodetic(
     altitude: 400000,
     geodeticLatitude: 45 * Constants.Deg2Rad,
     geodeticLongitude: -75 * Constants.Deg2Rad,
-    epoch: new Time(2024, 6, 21, 12, 0, 0)
+    epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
 );
 var atm2 = earth.GetAtmosphere(context);
 
@@ -2034,16 +2039,19 @@ if (atm2.Details is NrlmsiseDetails details)
 | Operators | Description |
 |-----------|-------------|
 | `+`, `-` | Vector addition/subtraction |
-| `*` (double) | Scalar multiplication |
-| `*` (Vector3) | Dot product |
+| `-` (unary) | Negation, the same as `Inverse()` |
+| `*` (double), double `*` | Scalar multiplication, either order |
+| Matrix `*` | Product of a 3 × 3 matrix and the vector |
 | `/` | Scalar division |
+
+The dot product is `Dot(Vector3)`: the operator `*` between two vectors is removed in 11.0.0 (#668, R26).
 
 ```csharp
 var v1 = new Vector3(1, 0, 0);
 var v2 = new Vector3(0, 1, 0);
 
 var cross = v1.Cross(v2);           // (0, 0, 1)
-var dot = v1 * v2;                  // 0
+var dot = v1.Dot(v2);               // 0
 var angle = v1.Angle(v2);           // π/2
 var sum = v1 + v2;                  // (1, 1, 0)
 var scaled = v1 * 2.0;              // (2, 0, 0)
@@ -2074,10 +2082,14 @@ Matrix operations.
 |------------|-------------|
 | `Matrix(double[,] data)` | Create from 2D array, copied: a later write to the array does not change the matrix (#745) |
 
+A `Matrix` is immutable (#668, R26: the public `Set` is removed in 11.0.0).
+
 | Method | Description |
 |--------|-------------|
-| `Get(int row, int col)` | Get element |
-| `Set(int row, int col, double value)` | Set element: it writes the array every copy of the struct shares; the public holders of a matrix (`StateVector.Covariance`, `EncounterState`, `CollisionRisk`, `EpochStatistics`, `CdmCovarianceMatrix`, `Iau2006Model.FrameBias()`) copy it in and out, so a term set afterwards does not reach them (#722) |
+| `this[int row, int col]`, `Get(int row, int col)` | Get element; `ArgumentOutOfRangeException` outside the matrix |
+| `With(int row, int col, double value)` | Copy with one element changed |
+| `Create(int rows, int columns, Func<int, int, double> term)` | Matrix of the terms of a function of the indexes |
+| `Diagonal(params double[] diagonal)`, `Identity(int dimension)` | Diagonal and identity matrices |
 | `Multiply(Matrix other)` | Matrix multiplication |
 | `Multiply(double[] vector)` | Matrix-vector multiplication |
 | `Inverse()` | Get inverse matrix |
@@ -2287,9 +2299,9 @@ SpiceAPI.Instance.ClearKernels();
 ### Time Handling
 
 ```csharp
-// Always be explicit about time frames
-var tdbByDefault = new Time(2024, 1, 1, 12, 0, 0);    // No frame given: TDB
-var utc = new Time(new DateTime(2024, 1, 1, 12, 0, 0), TimeFrame.UTCFrame);
+// The scale is a required argument: no calendar is TDB by default
+var tdbNoon = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
+var utc = new Time(new DateTime(2024, 1, 1, 12, 0, 0), TimeScale.UTC);
 
 // Convert as needed
 var tdb = utc.ToTDB();
@@ -2306,7 +2318,7 @@ var state = earth.GetEphemeris(utc.ToTDB(), sun, Frame.ICRF, Aberration.None);
 ```csharp
 // ICRF/J2000: Inertial frame for most calculations
 var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
-    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1), Frame.ICRF);
+    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
 
 // Body-fixed frames for surface operations
 var earthFrame = new Frame("IAU_EARTH");
@@ -2366,7 +2378,7 @@ using IO.Astrodynamics.Surface;
 var mission = new Mission("LunarExplorer");
 
 // Create a scenario with a time window
-var start = new Time(2024, 1, 1);
+var start = new Time(2024, 1, 1, TimeScale.TDB);
 var end = start.AddDays(7);
 var scenario = new Scenario("Phase1", mission, new Window(start, end));
 
@@ -2396,7 +2408,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var start = new Time(2024, 3, 1);
+var start = new Time(2024, 3, 1, TimeScale.TDB);
 var end = start.AddHours(12);
 
 // Create mission and scenario
@@ -2435,19 +2447,19 @@ chaser.AddEngine(engine);
 
 // Chain maneuvers: plane alignment -> apsidal alignment -> phasing -> circularization
 var maneuver1 = new PlaneAlignmentManeuver(
-    new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+    new Time(DateTime.MinValue, TimeScale.TDB),
     TimeSpan.Zero, targetOrbit, engine
 );
 
 maneuver1
     .SetNextManeuver(new ApsidalAlignmentManeuver(
-        new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        new Time(DateTime.MinValue, TimeScale.TDB),
         TimeSpan.Zero, targetOrbit, engine))
     .SetNextManeuver(new PhasingManeuver(
-        new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        new Time(DateTime.MinValue, TimeScale.TDB),
         TimeSpan.Zero, targetOrbit, 1, engine))
     .SetNextManeuver(new ApogeeHeightManeuver(
-        earth, new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        earth, new Time(DateTime.MinValue, TimeScale.TDB),
         TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
 
 // Set the maneuver sequence
@@ -2532,7 +2544,7 @@ using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.Coordinates;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var searchStart = new Time(2024, 6, 2);
+var searchStart = new Time(2024, 6, 2, TimeScale.TDB);
 
 // Create launch site (Kennedy Space Center)
 var launchSite = new LaunchSite(
@@ -2591,8 +2603,8 @@ var sun = new CelestialBody(Stars.Sun);
 
 // Search window: year 2024
 var searchWindow = new Window(
-    new Time(2024, 1, 1),
-    new Time(2024, 12, 31)
+    new Time(2024, 1, 1, TimeScale.TDB),
+    new Time(2024, 12, 31, TimeScale.TDB)
 );
 
 // Find lunar eclipses: the Moon (this item) behind the Earth, seen from the Sun
@@ -2639,7 +2651,7 @@ Find windows when a target is visible in an instrument's field of view:
 using IO.Astrodynamics.Body.Spacecraft;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var start = new Time(2024, 6, 10);
+var start = new Time(2024, 6, 10, TimeScale.TDB);
 var end = start.AddHours(2);
 
 // Create mission and scenario
@@ -2748,7 +2760,7 @@ var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
 // Track from a ground station
 var goldstone = new Site(13, "DSS-13", earth);
 
-var trackStart = new Time(2024, 6, 3);
+var trackStart = new Time(2024, 6, 3, TimeScale.TDB);
 var trackEnd = trackStart.AddDays(1);
 
 // Get ISS position relative to ground station over time
@@ -2848,7 +2860,7 @@ Velocity-Verlet at 5 minutes, 470 m from that integration (#704).
 Propagate a LEO satellite with EGM2008 spherical harmonics, Moon, and Sun perturbations:
 
 ```csharp
-var epoch = new Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
+var epoch = new Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
 
 // Earth with degree-10 EGM2008 geopotential
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
@@ -2887,7 +2899,7 @@ Point instruments at ground targets during observation passes:
 using IO.Astrodynamics.Maneuver;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var start = new Time(2024, 1, 1);
+var start = new Time(2024, 1, 1, TimeScale.TDB);
 var end = start.AddDays(1);
 
 var mission = new Mission("EarthObs");
@@ -2946,7 +2958,7 @@ using IO.Astrodynamics.Maneuver;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
-var start = new Time(2024, 6, 21, 12, 0, 0);
+var start = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 var end = start.AddHours(2);
 
 var mission = new Mission("ObservationMission");

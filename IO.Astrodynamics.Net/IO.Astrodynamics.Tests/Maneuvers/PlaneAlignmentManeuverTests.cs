@@ -22,16 +22,16 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
 
-            var targetOrbit = new KeplerianElements(double.PositiveInfinity, 1.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun,
-                new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), Frames.Frame.ECLIPTIC_J2000, perigeeRadius: 6800000.0);
+            var targetOrbit = KeplerianElements.Parabolic(6800000.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun,
+                new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), Frames.Frame.ECLIPTIC_J2000);
 
             PlaneAlignmentManeuver planeAlignmentManeuver =
-                new PlaneAlignmentManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), TimeSpan.FromDays(1.0), targetOrbit, eng);
+                new PlaneAlignmentManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), TimeSpan.FromDays(1.0), targetOrbit, eng);
 
             Assert.NotNull(planeAlignmentManeuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), planeAlignmentManeuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), planeAlignmentManeuver.MinimumEpoch);
-            LabelAssert.Equal(targetOrbit, planeAlignmentManeuver.TargetOrbit.AtEpoch(new TimeSystem.Time(2021, 01, 01)));
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), planeAlignmentManeuver.MinimumEpoch);
+            LabelAssert.Equal(targetOrbit, planeAlignmentManeuver.TargetOrbit.AtEpoch(new TimeSystem.Time(2021, 01, 01, TimeScale.TDB)));
             Assert.Equal(eng, planeAlignmentManeuver.Engine);
         }
 
@@ -46,7 +46,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 2000.0, 1900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             PlaneAlignmentManeuver planeAlignmentManeuver =
-                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var dnTrueAnomaly = 2.197937654;
             var anTrueAnomaly = dnTrueAnomaly + Astrodynamics.Constants.PI;
 
@@ -68,7 +68,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 2000.0, 1900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             PlaneAlignmentManeuver planeAlignmentManeuver =
-                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var dnTrueAnomaly = 2.197937654;
             var anTrueAnomaly = dnTrueAnomaly + Astrodynamics.Constants.PI;
 

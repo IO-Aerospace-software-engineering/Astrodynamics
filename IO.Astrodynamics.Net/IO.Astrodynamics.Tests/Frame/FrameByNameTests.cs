@@ -24,7 +24,7 @@ namespace IO.Astrodynamics.Tests.Frame;
 /// </summary>
 public class FrameByNameTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 6, 1, 12, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Epoch = new(2021, 6, 1, 12, 0, 0, TimeSystem.TimeScale.TDB);
 
     public FrameByNameTests()
     {
@@ -184,7 +184,7 @@ public class FrameByNameTests
     public void ACoverageGapOfAKnownFrame_StaysInvalidOperationException()
     {
         // ITRF93 before the Earth's binary PCK (earth_latest_high_prec.bpc starts in 2000): SPICE(FRAMEDATANOTFOUND)
-        var before = new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
+        var before = new TimeSystem.Time(1950, 1, 1, 0, 0, 0, TimeSystem.TimeScale.TDB);
         var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.TransformFrame(before, Frames.Frame.ITRF93, Frames.Frame.ICRF));
         Assert.Contains("ITRF93", e.Message);
     }

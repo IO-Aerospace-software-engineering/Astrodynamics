@@ -22,8 +22,8 @@ public class LambertDynamicalTimeTests
     private const double Deg = IO.Astrodynamics.Constants.Deg2Rad;
 
     // 2401 s of TT across the leap second, the calendars 2400 s apart
-    private static readonly TimeSystem.Time DepartureUtc = new(2016, 12, 31, 23, 40, 0, frame: TimeFrame.UTCFrame);
-    private static readonly TimeSystem.Time ArrivalUtc = new(2017, 1, 1, 0, 20, 0, frame: TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time DepartureUtc = new(2016, 12, 31, 23, 40, 0, TimeScale.UTC);
+    private static readonly TimeSystem.Time ArrivalUtc = new(2017, 1, 1, 0, 20, 0, TimeScale.UTC);
 
     private readonly ITestOutputHelper _output;
 
@@ -86,7 +86,7 @@ public class LambertDynamicalTimeTests
     {
         "UTC" => utc,
         "TAI" => utc.ToTAI(),
-        "TT" => utc.ToTDT(),
+        "TT" => utc.ToTT(),
         "TDB" => utc.ToTDB(),
         _ => throw new ArgumentOutOfRangeException(nameof(tag), tag, null)
     };

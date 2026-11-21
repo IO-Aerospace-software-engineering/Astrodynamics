@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Tests.Math
         [Fact]
         public void CreateByAxisAngle()
         {
-            Quaternion q = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2);
+            Quaternion q = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi);
             Assert.Equal(0.7071067811865476, q.W);
             Assert.Equal(0.0, q.VectorPart.X);
             Assert.Equal(0.0, q.VectorPart.Y);
@@ -28,11 +28,11 @@ namespace IO.Astrodynamics.Tests.Math
         [Fact]
         public void ToEulerAngle()
         {
-            Quaternion q = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2);
+            Quaternion q = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi);
             var res = q.ToEuler();
             Assert.Equal(0.0, res.X);
             Assert.Equal(0.0, res.Y);
-            Assert.Equal(Astrodynamics.Constants.PI2, res.Z, 12);
+            Assert.Equal(Astrodynamics.Constants.HalfPi, res.Z, 12);
         }
 
         [Fact]
@@ -104,8 +104,8 @@ namespace IO.Astrodynamics.Tests.Math
         {
             Vector3 instrumentVector = Spacecraft.Front;
 
-            Quaternion spacecraftOrientation = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2);
-            Quaternion instrumentOrientation = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2);
+            Quaternion spacecraftOrientation = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi);
+            Quaternion instrumentOrientation = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi);
 
             Quaternion globalOrientation = spacecraftOrientation * instrumentOrientation;
 
@@ -121,8 +121,8 @@ namespace IO.Astrodynamics.Tests.Math
         {
             Vector3 instrumentVector = Spacecraft.Front;
 
-            Quaternion spacecraftOrientation = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2);
-            Quaternion instrumentOrientation = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2 * 0.5);
+            Quaternion spacecraftOrientation = new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi);
+            Quaternion instrumentOrientation = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi * 0.5);
 
             Quaternion globalOrientation = spacecraftOrientation * instrumentOrientation;
 
@@ -219,7 +219,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void LERP()
         {
             Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
-            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi);
             Quaternion q3 = q1.Lerp(q2, 0.5);
             Assert.Equal(0.92387953251128674, q3.W, 12);
             Assert.Equal(0.38268343236508978, q3.VectorPart.X, 12);
@@ -231,7 +231,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void SLERP()
         {
             Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
-            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi);
             Quaternion q3 = q1.SLERP(q2, 0.5);
             Assert.Equal(0.92387953251128674, q3.W, 12);
             Assert.Equal(0.38268343236508978, q3.VectorPart.X, 12);
@@ -243,7 +243,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void LERP2()
         {
             Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
-            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants._2PI - IO.Astrodynamics.Constants.PI2);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.TwoPi - IO.Astrodynamics.Constants.HalfPi);
             Quaternion q3 = q1.Lerp(q2, 0.5); //Expected 135° on X
             Assert.Equal(0.38268343236500002, q3.W, 12);
             Assert.Equal(0.92387953251099997, q3.VectorPart.X, 12);
@@ -255,7 +255,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void SLERP2()
         {
             Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
-            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants._2PI - IO.Astrodynamics.Constants.PI2);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.TwoPi - IO.Astrodynamics.Constants.HalfPi);
             Quaternion q3 = q1.SLERP(q2, 0.5); //Expected -45° on X
             Assert.Equal(0.92387953251128674, q3.W, 12);
             Assert.Equal(-0.38268343236508984, q3.VectorPart.X, 12);
@@ -330,7 +330,7 @@ namespace IO.Astrodynamics.Tests.Math
         [InlineData(1e-200)]
         public void AxisAngle_AxisAlongZOfAnyLength_RotatesXToY(double length)
         {
-            var q = new Quaternion(new Vector3(0.0, 0.0, length), IO.Astrodynamics.Constants.PI2);
+            var q = new Quaternion(new Vector3(0.0, 0.0, length), IO.Astrodynamics.Constants.HalfPi);
             var rotated = Vector3.VectorX.Rotate(q);
             Assert.True(System.Math.Abs(q.Magnitude() - 1.0) <= AxisAngleNormTolerance, $"{q.Magnitude()}");
             Assert.True((rotated - Vector3.VectorY).Magnitude() <= AxisAngleRotationAngleTolerance, $"{rotated}");
@@ -363,12 +363,12 @@ namespace IO.Astrodynamics.Tests.Math
             } while (direction.Magnitude() < 1e-3);
 
             var axis = direction * System.Math.Pow(10.0, random.NextDouble() * 20.0 - 10.0);
-            double angle = (random.NextDouble() * 2.0 - 1.0) * IO.Astrodynamics.Constants._2PI;
+            double angle = (random.NextDouble() * 2.0 - 1.0) * IO.Astrodynamics.Constants.TwoPi;
             var v = new Vector3(random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0) * 7.0e6;
             return (axis, angle, v);
         }
 
-        private static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+        private static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
         // #688: new Quaternion(axis, angle) is the rotation by angle about the direction of axis, whatever its length:
         // Rodrigues' formula v' = v cos a + (k × v) sin a + k (k · v)(1 - cos a), k = axis / |axis|, in plain doubles
@@ -384,7 +384,7 @@ namespace IO.Astrodynamics.Tests.Math
 
                 double m = System.Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y + axis.Z * axis.Z);
                 var k = new Vector3(axis.X / m, axis.Y / m, axis.Z / m);
-                var expected = v * System.Math.Cos(angle) + k.Cross(v) * System.Math.Sin(angle) + k * ((k * v) * (1.0 - System.Math.Cos(angle)));
+                var expected = v * System.Math.Cos(angle) + k.Cross(v) * System.Math.Sin(angle) + k * (k.Dot(v) * (1.0 - System.Math.Cos(angle)));
                 var rotated = v.Rotate(q);
 
                 worstAngle = System.Math.Max(worstAngle, AngleBetween(rotated, expected));
@@ -472,7 +472,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void Slerp_NonUnitInputs_AreTheSlerpOfTheirRotations()
         {
             var from = Quaternion.Identity * 2.0;
-            var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2) * 3.0;
+            var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi) * 3.0;
             var s = from.SLERP(to, 0.5);
             double w = System.Math.Cos(System.Math.PI / 8.0), x = System.Math.Sin(System.Math.PI / 8.0);
             double worst = System.Math.Max(System.Math.Max(System.Math.Abs(s.W - w), System.Math.Abs(s.VectorPart.X - x)),
@@ -572,7 +572,7 @@ namespace IO.Astrodynamics.Tests.Math
                 worstMatrix = System.Math.Max(worstMatrix, System.Math.Abs(m.Get(i, j) - rx90[i, j]));
 
             var from = Quaternion.Identity * System.Math.ScaleB(1.0, 1000);
-            var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2) * System.Math.ScaleB(1.0, -1000);
+            var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi) * System.Math.ScaleB(1.0, -1000);
             var s = from.SLERP(to, 0.5);
             double cw = System.Math.Cos(System.Math.PI / 8.0), cx = System.Math.Sin(System.Math.PI / 8.0);
             double worstSlerp = System.Math.Max(System.Math.Max(System.Math.Abs(s.W - cw), System.Math.Abs(s.VectorPart.X - cx)),

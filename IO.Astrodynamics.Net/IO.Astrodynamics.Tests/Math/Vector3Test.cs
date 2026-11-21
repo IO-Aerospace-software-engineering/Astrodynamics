@@ -61,7 +61,7 @@ public class VectorTests
     {
         Vector3 m1 = new Vector3(2, 3, 4);
         Vector3 m2 = new Vector3(5, 6, 7);
-        double res = m1 * m2;
+        double res = m1.Dot(m2);
         Assert.Equal(56, res);
     }
 
@@ -372,7 +372,7 @@ public class VectorTests
     }
 
     // The angle between two vectors, atan2(|a × b|, a · b), accurate near 0 and π where acos is not
-    private static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     // The angle of the rotation from q to the closed form expected (sign free): 2 atan2(|q* p|_v, |(q* p)_w|)
     private static double RotationAngle(in Quaternion q, in Quaternion expected)

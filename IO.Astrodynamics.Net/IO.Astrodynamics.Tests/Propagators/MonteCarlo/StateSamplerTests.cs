@@ -30,13 +30,14 @@ public class StateSamplerTests
 
     private static Matrix CreateDiagonalCovariance()
     {
-        var cov = new Matrix(6, 6);
-        cov.Set(0, 0, 100.0);   // 10m position sigma
-        cov.Set(1, 1, 100.0);
-        cov.Set(2, 2, 100.0);
-        cov.Set(3, 3, 0.01);    // 0.1 m/s velocity sigma
-        cov.Set(4, 4, 0.01);
-        cov.Set(5, 5, 0.01);
+        var covTerms = new double[6, 6];
+        covTerms[0, 0] = 100.0;   // 10m position sigma
+        covTerms[1, 1] = 100.0;
+        covTerms[2, 2] = 100.0;
+        covTerms[3, 3] = 0.01;    // 0.1 m/s velocity sigma
+        covTerms[4, 4] = 0.01;
+        covTerms[5, 5] = 0.01;
+        var cov = new Matrix(covTerms);
         return cov;
     }
 
@@ -252,15 +253,16 @@ public class StateSamplerTests
         // Build covariance with known correlation ρ = 0.8 between X and Y
         // σ_x = 10 m, σ_y = 20 m → Cov(X,Y) = ρ * σ_x * σ_y = 0.8 * 10 * 20 = 160
         double sigmaX = 10.0, sigmaY = 20.0, rho = 0.8;
-        var cov = new Matrix(6, 6);
-        cov.Set(0, 0, sigmaX * sigmaX);       // 100
-        cov.Set(1, 1, sigmaY * sigmaY);       // 400
-        cov.Set(0, 1, rho * sigmaX * sigmaY); // 160
-        cov.Set(1, 0, rho * sigmaX * sigmaY); // 160
-        cov.Set(2, 2, 1.0);
-        cov.Set(3, 3, 0.01);
-        cov.Set(4, 4, 0.01);
-        cov.Set(5, 5, 0.01);
+        var covTerms = new double[6, 6];
+        covTerms[0, 0] = sigmaX * sigmaX;       // 100
+        covTerms[1, 1] = sigmaY * sigmaY;       // 400
+        covTerms[0, 1] = rho * sigmaX * sigmaY; // 160
+        covTerms[1, 0] = rho * sigmaX * sigmaY; // 160
+        covTerms[2, 2] = 1.0;
+        covTerms[3, 3] = 0.01;
+        covTerms[4, 4] = 0.01;
+        covTerms[5, 5] = 0.01;
+        var cov = new Matrix(covTerms);
 
         var nominal = CreateNominalWithCovariance(cov);
         int n = 100_000;
@@ -332,8 +334,9 @@ public class StateSamplerTests
     public void IdentityCovariance_SigmaEqualsOne()
     {
         // With identity covariance, each component should have σ = 1
-        var cov = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++) cov.Set(i, i, 1.0);
+        var covTerms = new double[6, 6];
+        for (int i = 0; i < 6; i++) covTerms[i, i] = 1.0;
+        var cov = new Matrix(covTerms);
 
         var nominal = CreateNominalWithCovariance(cov);
         int n = 100_000;

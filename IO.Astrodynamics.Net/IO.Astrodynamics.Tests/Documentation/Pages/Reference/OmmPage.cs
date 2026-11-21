@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Reference;
@@ -72,7 +71,7 @@ internal static class OmmPage
         if (omm.IsTleCompatible)
         {
             var tle = omm.ToTle();
-            var state = tle.ToOsculating(new Time(2024, 6, 1, 12, 0, 0));
+            var state = tle.ToOsculating(new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB));
             Console.WriteLine($"Position: {state.Position}");
         }
 

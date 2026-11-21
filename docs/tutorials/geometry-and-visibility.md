@@ -146,7 +146,7 @@ spacecraft.AddCircularInstrument(
     fieldOfView: 5.0 * Constants.Deg2Rad,       // half-angle
     boresight: Vector3.VectorZ,                 // +Z of the instrument frame
     refVector: Vector3.VectorX,
-    orientation: new Vector3(0.0, Constants.PI2, 0.0));
+    orientation: new Vector3(0.0, Constants.HalfPi, 0.0));
 ```
 
 The orientation is not a direction: it is the Euler angles (x, y, z), in

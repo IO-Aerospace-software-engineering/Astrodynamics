@@ -1,21 +1,46 @@
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace IO.Astrodynamics.Math;
 
+/// <summary>
+/// An immutable matrix of doubles, rows × columns (#668, R26): no member changes a matrix once built. A term is read with
+/// the indexer or <see cref="Get"/>, a changed copy is made with <see cref="With"/>, and a matrix is built from an array
+/// (copied), a row-major sequence, a function of the indexes (<see cref="Create"/>), a diagonal (<see cref="Diagonal"/>)
+/// or as the identity (<see cref="Identity"/>). <c>default(Matrix)</c> is the 0 × 0 matrix for every member. Before
+/// 11.0.0 a public <c>Set</c> wrote the terms in place, through every copy of the struct.
+/// </summary>
 public readonly record struct Matrix
 {
+    private static readonly double[,] NoTerms = new double[0, 0];
+
     readonly double[,] _data;
-    public int Rows { get; }
-    public int Columns { get; }
 
     /// <summary>
-    /// Constructor
+    /// The number of rows.
     /// </summary>
-    /// <param name="rows"></param>
-    /// <param name="columns"></param>
+    public int Rows { get; }
+
+    /// <summary>
+    /// The number of columns.
+    /// </summary>
+    public int Columns { get; }
+
+    // The terms, those of the 0 × 0 matrix for default(Matrix), whose array is null
+    private double[,] Data => _data ?? NoTerms;
+
+    /// <summary>
+    /// The matrix of <paramref name="rows"/> × <paramref name="columns"/> zeros.
+    /// </summary>
+    /// <param name="rows">The number of rows, 0 or more.</param>
+    /// <param name="columns">The number of columns, 0 or more.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A dimension is negative (#668, R26; an <see cref="OverflowException"/>
+    /// before 11.0.0).</exception>
     public Matrix(int rows, int columns)
     {
+        RequireDimensions(rows, columns);
         _data = new double[rows, columns];
         Rows = rows;
         Columns = columns;
@@ -23,8 +48,8 @@ public readonly record struct Matrix
 
     /// <summary>
     /// A matrix of the terms of <paramref name="data"/>, copied: a write to the array afterwards does not change the
-    /// matrix, its equality or its hash code, which change only through <see cref="Set"/> (#745, decided by S. Guillet,
-    /// 2026-11-18; before 11.0.0 the matrix wrapped the caller's array).
+    /// matrix, its equality or its hash code (#745, decided by S. Guillet, 2026-11-18; before 11.0.0 the matrix wrapped
+    /// the caller's array).
     /// </summary>
     /// <param name="data">The terms, row by row.</param>
     /// <exception cref="ArgumentNullException"><paramref name="data"/> is null.</exception>
@@ -50,16 +75,22 @@ public readonly record struct Matrix
     internal static Matrix Wrap(double[,] data) => new(data, true);
 
     /// <summary>
-    /// Constructor
+    /// The matrix of <paramref name="rows"/> × <paramref name="columns"/> terms read row by row from
+    /// <paramref name="data"/>, copied.
     /// </summary>
-    /// <param name="rows"></param>
-    /// <param name="columns"></param>
-    /// <param name="data"></param>
+    /// <param name="rows">The number of rows, 0 or more.</param>
+    /// <param name="columns">The number of columns, 0 or more.</param>
+    /// <param name="data">The terms, row-major: term (i, j) is <c>data[i * columns + j]</c>.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A dimension is negative.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="data"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="data"/> does not hold rows × columns terms.</exception>
     public Matrix(int rows, int columns, double[] data)
     {
+        RequireDimensions(rows, columns);
+        ArgumentNullException.ThrowIfNull(data);
         if (data.Length != rows * columns)
         {
-            throw new ArgumentException($"data parameter must have a size of {rows * columns}");
+            throw new ArgumentException($"data parameter must have a size of {rows * columns}", nameof(data));
         }
 
         Rows = rows;
@@ -75,25 +106,140 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// Get value at index
+    /// The matrix of <paramref name="rows"/> × <paramref name="columns"/> terms <paramref name="term"/>(i, j), called
+    /// once per term, row by row (#668, R26).
     /// </summary>
-    /// <param name="row"></param>
-    /// <param name="column"></param>
-    /// <returns></returns>
+    /// <param name="rows">The number of rows, 0 or more.</param>
+    /// <param name="columns">The number of columns, 0 or more.</param>
+    /// <param name="term">The term of row i and column j.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A dimension is negative.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="term"/> is null.</exception>
+    public static Matrix Create(int rows, int columns, Func<int, int, double> term)
+    {
+        RequireDimensions(rows, columns);
+        ArgumentNullException.ThrowIfNull(term);
+        var data = new double[rows, columns];
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < columns; j++)
+            {
+                data[i, j] = term(i, j);
+            }
+        }
+
+        return Wrap(data);
+    }
+
+    /// <summary>
+    /// The square matrix of the terms of <paramref name="diagonal"/> on its diagonal and zeros elsewhere, n × n for n
+    /// terms (#668, R26).
+    /// </summary>
+    /// <param name="diagonal">The diagonal, from (0, 0).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="diagonal"/> is null.</exception>
+    public static Matrix Diagonal(params double[] diagonal)
+    {
+        ArgumentNullException.ThrowIfNull(diagonal);
+        int n = diagonal.Length;
+        var data = new double[n, n];
+        for (int i = 0; i < n; i++)
+        {
+            data[i, i] = diagonal[i];
+        }
+
+        return Wrap(data);
+    }
+
+    /// <summary>
+    /// The identity matrix of dimension <paramref name="dimension"/> (#668, R26).
+    /// </summary>
+    /// <param name="dimension">The number of rows and of columns, 0 or more.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="dimension"/> is negative.</exception>
+    public static Matrix Identity(int dimension)
+    {
+        RequireDimensions(dimension, dimension);
+        var data = new double[dimension, dimension];
+        for (int i = 0; i < dimension; i++)
+        {
+            data[i, i] = 1.0;
+        }
+
+        return Wrap(data);
+    }
+
+    private static void RequireDimensions(int rows, int columns)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(rows);
+        ArgumentOutOfRangeException.ThrowIfNegative(columns);
+    }
+
+    /// <summary>
+    /// The term of row <paramref name="row"/> and column <paramref name="column"/>, both from 0 (#668, R26).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">An index is outside the matrix (an
+    /// <see cref="IndexOutOfRangeException"/> before 11.0.0, a <see cref="NullReferenceException"/> on
+    /// <c>default(Matrix)</c>).</exception>
+    public double this[int row, int column] => Get(row, column);
+
+    /// <summary>
+    /// The term of row <paramref name="row"/> and column <paramref name="column"/>, both from 0: the indexer's.
+    /// </summary>
+    /// <param name="row">The row, from 0.</param>
+    /// <param name="column">The column, from 0.</param>
+    /// <exception cref="ArgumentOutOfRangeException">An index is outside the matrix (an
+    /// <see cref="IndexOutOfRangeException"/> before 11.0.0, a <see cref="NullReferenceException"/> on
+    /// <c>default(Matrix)</c>).</exception>
     public double Get(int row, int column)
     {
+        RequireIndexes(row, column);
         return _data[row, column];
     }
 
     /// <summary>
-    /// Set value at index
+    /// A copy of this matrix whose term (<paramref name="row"/>, <paramref name="column"/>) is <paramref name="value"/>,
+    /// this matrix unchanged (#668, R26).
     /// </summary>
-    /// <param name="row"></param>
-    /// <param name="column"></param>
-    /// <param name="value"></param>
-    public void Set(int row, int column, double value)
+    /// <param name="row">The row, from 0.</param>
+    /// <param name="column">The column, from 0.</param>
+    /// <param name="value">The new term.</param>
+    /// <exception cref="ArgumentOutOfRangeException">An index is outside the matrix.</exception>
+    public Matrix With(int row, int column, double value)
+    {
+        RequireIndexes(row, column);
+        var data = (double[,])_data.Clone();
+        data[row, column] = value;
+        return Wrap(data);
+    }
+
+    private void RequireIndexes(int row, int column)
+    {
+        if ((uint)row >= (uint)Rows)
+        {
+            throw new ArgumentOutOfRangeException(nameof(row), row, $"The row must be in [0, {Rows}).");
+        }
+
+        if ((uint)column >= (uint)Columns)
+        {
+            throw new ArgumentOutOfRangeException(nameof(column), column, $"The column must be in [0, {Columns}).");
+        }
+    }
+
+    /// <summary>
+    /// Writes a term of a matrix the library is building, before any caller holds it: the only write of the type, never
+    /// on a matrix given or returned (#668, R26: it replaces the public <c>Set</c> of the library's own sites).
+    /// </summary>
+    internal void SetTerm(int row, int column, double value)
     {
         _data[row, column] = value;
+    }
+
+    // Σ_j v[j]·m[row, j] from 0 in column order, the arithmetic of Multiply(double[]) for a 3-column matrix
+    internal double RowTimes(int row, in Vector3 v)
+    {
+        double sum = 0.0;
+        sum += v.X * _data[row, 0];
+        sum += v.Y * _data[row, 1];
+        sum += v.Z * _data[row, 2];
+        return sum;
     }
 
     /// <summary>
@@ -109,6 +255,8 @@ public readonly record struct Matrix
         }
 
         var res = new Matrix(Rows, matrix.Columns);
+        var lhs = Data;
+        var rhs = matrix.Data;
 
         for (int i = 0; i < Rows; i++)
         {
@@ -117,7 +265,7 @@ public readonly record struct Matrix
                 double sum = 0.0;
                 for (int k = 0; k < Columns; k++)
                 {
-                    sum += _data[i, k] * matrix.Get(k, j);
+                    sum += lhs[i, k] * rhs[k, j];
                 }
 
                 res._data[i, j] = sum;
@@ -128,23 +276,52 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// Multiply a vector by this matrix
+    /// The product M v of this matrix and the column vector <paramref name="vector"/>: <see cref="Rows"/> components, each
+    /// the sum, from 0 and in column order, of m[i, j] · v[j]; the same product as <c>M * v</c>. Before 11.0.0 the result
+    /// had as many components as <paramref name="vector"/> (<see cref="Columns"/>), too few for a matrix of more rows than
+    /// columns, which threw <see cref="IndexOutOfRangeException"/> (#774).
     /// </summary>
-    /// <param name="vector"></param>
-    /// <returns></returns>
-    public double[] Multiply(double[] vector)
+    /// <param name="vector">The column vector, of <see cref="Columns"/> components.</param>
+    /// <returns>The <see cref="Rows"/> components of M v.</returns>
+    /// <exception cref="ArgumentException"><paramref name="vector"/> does not have <see cref="Columns"/> components.</exception>
+    public double[] Multiply(double[] vector) => MultiplyOnTheRight(vector, nameof(vector));
+
+    // M v: Rows components, each the sum, from 0 and in column order, of m[i, j] · v[j]
+    private double[] MultiplyOnTheRight(double[] vector, string parameterName)
     {
         if (Columns != vector.Length)
         {
-            throw new ArgumentException("Matrixes with incompatible size");
+            throw new ArgumentException($"A vector of {vector.Length} components cannot multiply a {Rows} × {Columns} matrix on the right: it needs {Columns}.", parameterName);
         }
 
-        double[] res = new double[vector.Length];
+        var data = Data;
+        double[] res = new double[Rows];
         for (int i = 0; i < Rows; i++)
         {
             for (int j = 0; j < Columns; j++)
             {
-                res[i] += vector[j] * _data[i, j];
+                res[i] += vector[j] * data[i, j];
+            }
+        }
+
+        return res;
+    }
+
+    // The row product vᵀ M: Columns components, each the sum, from 0 and in row order, of v[i] · m[i, j] (#774)
+    private double[] MultiplyOnTheLeft(double[] vector, string parameterName)
+    {
+        if (Rows != vector.Length)
+        {
+            throw new ArgumentException($"A vector of {vector.Length} components cannot multiply a {Rows} × {Columns} matrix on the left: it needs {Rows}.", parameterName);
+        }
+
+        var data = Data;
+        double[] res = new double[Columns];
+        for (int j = 0; j < Columns; j++)
+        {
+            for (int i = 0; i < Rows; i++)
+            {
+                res[j] += vector[i] * data[i, j];
             }
         }
 
@@ -192,7 +369,7 @@ public readonly record struct Matrix
         int n = Rows;
 
         // make a copy of m[][] into result lu[][]
-        lum = (double[,])_data.Clone();
+        lum = (double[,])Data.Clone();
 
         // make perm[]
         perm = new int[n];
@@ -284,11 +461,11 @@ public readonly record struct Matrix
     public static Matrix CreateRotationMatrixX(double angle)
     {
         Matrix mtx = new Matrix(3, 3);
-        mtx.Set(0, 0, 1.0);
-        mtx.Set(1, 1, System.Math.Cos(angle));
-        mtx.Set(1, 2, -System.Math.Sin(angle));
-        mtx.Set(2, 1, System.Math.Sin(angle));
-        mtx.Set(2, 2, System.Math.Cos(angle));
+        mtx.SetTerm(0, 0, 1.0);
+        mtx.SetTerm(1, 1, System.Math.Cos(angle));
+        mtx.SetTerm(1, 2, -System.Math.Sin(angle));
+        mtx.SetTerm(2, 1, System.Math.Sin(angle));
+        mtx.SetTerm(2, 2, System.Math.Cos(angle));
 
         return mtx;
     }
@@ -296,22 +473,22 @@ public readonly record struct Matrix
     public static Matrix CreateRotationMatrixY(double angle)
     {
         Matrix mtx = new Matrix(3, 3);
-        mtx.Set(0, 0, System.Math.Cos(angle));
-        mtx.Set(0, 2, System.Math.Sin(angle));
-        mtx.Set(1, 1, 1.0);
-        mtx.Set(2, 0, -System.Math.Sin(angle));
-        mtx.Set(2, 2, System.Math.Cos(angle));
+        mtx.SetTerm(0, 0, System.Math.Cos(angle));
+        mtx.SetTerm(0, 2, System.Math.Sin(angle));
+        mtx.SetTerm(1, 1, 1.0);
+        mtx.SetTerm(2, 0, -System.Math.Sin(angle));
+        mtx.SetTerm(2, 2, System.Math.Cos(angle));
         return mtx;
     }
 
     public static Matrix CreateRotationMatrixZ(double angle)
     {
         Matrix mtx = new Matrix(3, 3);
-        mtx.Set(0, 0, System.Math.Cos(angle));
-        mtx.Set(0, 1, -System.Math.Sin(angle));
-        mtx.Set(1, 0, System.Math.Sin(angle));
-        mtx.Set(1, 1, System.Math.Cos(angle));
-        mtx.Set(2, 2, 1.0);
+        mtx.SetTerm(0, 0, System.Math.Cos(angle));
+        mtx.SetTerm(0, 1, -System.Math.Sin(angle));
+        mtx.SetTerm(1, 0, System.Math.Sin(angle));
+        mtx.SetTerm(1, 1, System.Math.Cos(angle));
+        mtx.SetTerm(2, 2, 1.0);
         return mtx;
     }
 
@@ -319,39 +496,39 @@ public readonly record struct Matrix
     public Quaternion ToQuaternion()
     {
         double q0, q1, q2, q3;
-        double trace = _data[0, 0] + _data[1, 1] + _data[2, 2];  // Sum of diagonal elements
+        double trace = Data[0, 0] + Data[1, 1] + Data[2, 2];  // Sum of diagonal elements
         double s;
 
         if (trace > 0)
         {
             s = System.Math.Sqrt(trace + 1.0) * 2; // 4 * q0
             q0 = 0.25 * s;
-            q1 = (_data[2, 1] - _data[1, 2]) / s;
-            q2 = (_data[0, 2] - _data[2, 0]) / s;
-            q3 = (_data[1, 0] - _data[0, 1]) / s;
+            q1 = (Data[2, 1] - Data[1, 2]) / s;
+            q2 = (Data[0, 2] - Data[2, 0]) / s;
+            q3 = (Data[1, 0] - Data[0, 1]) / s;
         }
-        else if ((_data[0, 0] > _data[1, 1]) && (_data[0, 0] > _data[2, 2]))
+        else if ((Data[0, 0] > Data[1, 1]) && (Data[0, 0] > Data[2, 2]))
         {
-            s = System.Math.Sqrt(1.0 + _data[0, 0] - _data[1, 1] - _data[2, 2]) * 2; // 4 * q1
-            q0 = (_data[2, 1] - _data[1, 2]) / s;
+            s = System.Math.Sqrt(1.0 + Data[0, 0] - Data[1, 1] - Data[2, 2]) * 2; // 4 * q1
+            q0 = (Data[2, 1] - Data[1, 2]) / s;
             q1 = 0.25 * s;
-            q2 = (_data[0, 1] + _data[1, 0]) / s;
-            q3 = (_data[0, 2] + _data[2, 0]) / s;
+            q2 = (Data[0, 1] + Data[1, 0]) / s;
+            q3 = (Data[0, 2] + Data[2, 0]) / s;
         }
-        else if (_data[1, 1] > _data[2, 2])
+        else if (Data[1, 1] > Data[2, 2])
         {
-            s = System.Math.Sqrt(1.0 + _data[1, 1] - _data[0, 0] - _data[2, 2]) * 2; // 4 * q2
-            q0 = (_data[0, 2] - _data[2, 0]) / s;
-            q1 = (_data[0, 1] + _data[1, 0]) / s;
+            s = System.Math.Sqrt(1.0 + Data[1, 1] - Data[0, 0] - Data[2, 2]) * 2; // 4 * q2
+            q0 = (Data[0, 2] - Data[2, 0]) / s;
+            q1 = (Data[0, 1] + Data[1, 0]) / s;
             q2 = 0.25 * s;
-            q3 = (_data[1, 2] + _data[2, 1]) / s;
+            q3 = (Data[1, 2] + Data[2, 1]) / s;
         }
         else
         {
-            s = System.Math.Sqrt(1.0 + _data[2, 2] - _data[0, 0] - _data[1, 1]) * 2; // 4 * q3
-            q0 = (_data[1, 0] - _data[0, 1]) / s;
-            q1 = (_data[0, 2] + _data[2, 0]) / s;
-            q2 = (_data[1, 2] + _data[2, 1]) / s;
+            s = System.Math.Sqrt(1.0 + Data[2, 2] - Data[0, 0] - Data[1, 1]) * 2; // 4 * q3
+            q0 = (Data[1, 0] - Data[0, 1]) / s;
+            q1 = (Data[0, 2] + Data[2, 0]) / s;
+            q2 = (Data[1, 2] + Data[2, 1]) / s;
             q3 = 0.25 * s;
         }
 
@@ -381,7 +558,7 @@ public readonly record struct Matrix
                 // double.Equals, the semantics of Vector3 and of the record structs: NaN equals NaN only, +0 equals -0 (#680:
                 // |a - b| > Double.Epsilon is false for NaN and for two entries one smallest subnormal apart, which compared
                 // equal, so equality was not transitive and equal matrices hashed differently)
-                if (!_data[i, j].Equals(other.Get(i, j)))
+                if (!Data[i, j].Equals(other.Data[i, j]))
                 {
                     return false;
                 }
@@ -400,25 +577,49 @@ public readonly record struct Matrix
         {
             for (int j = 0; j < Columns; j++)
             {
-                datahash = datahash * prime + _data[i,j];
+                datahash = datahash * prime + Data[i,j];
             }
         }
         return HashCode.Combine(datahash, Rows, Columns);
     }
 
+    /// <summary>
+    /// The matrix product <paramref name="lhs"/> · <paramref name="rhs"/>, the same matrix as <see cref="Multiply(Matrix)"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException">The columns of <paramref name="lhs"/> are not as many as the rows of
+    /// <paramref name="rhs"/>.</exception>
     public static Matrix operator *(Matrix lhs, Matrix rhs)
     {
         return lhs.Multiply(rhs);
     }
 
+    /// <summary>
+    /// The product M v of the matrix <paramref name="lhs"/> and the column vector <paramref name="rhs"/>:
+    /// <c>lhs.Rows</c> components, each the sum, from 0 and in column order, of m[i, j] · v[j], the same product as
+    /// <see cref="Multiply(double[])"/> (#774: before 11.0.0, as many components as <paramref name="rhs"/>).
+    /// </summary>
+    /// <param name="lhs">The matrix M.</param>
+    /// <param name="rhs">The column vector v, of <c>lhs.Columns</c> components.</param>
+    /// <returns>The <c>lhs.Rows</c> components of M v.</returns>
+    /// <exception cref="ArgumentException"><paramref name="rhs"/> does not have <c>lhs.Columns</c> components.</exception>
     public static double[] operator *(Matrix lhs, double[] rhs)
     {
-        return lhs.Multiply(rhs);
+        return lhs.MultiplyOnTheRight(rhs, nameof(rhs));
     }
 
+    /// <summary>
+    /// The row product vᵀ M of the row vector <paramref name="lhs"/> and the matrix <paramref name="rhs"/>:
+    /// <c>rhs.Columns</c> components, each the sum, from 0 and in row order, of v[i] · m[i, j], the components of
+    /// Mᵀ v. Before 11.0.0 it was M v, which equals vᵀ M only for a symmetric matrix (#774); code that meant M v writes
+    /// <c>M * v</c>.
+    /// </summary>
+    /// <param name="lhs">The row vector v, of <c>rhs.Rows</c> components.</param>
+    /// <param name="rhs">The matrix M.</param>
+    /// <returns>The <c>rhs.Columns</c> components of vᵀ M.</returns>
+    /// <exception cref="ArgumentException"><paramref name="lhs"/> does not have <c>rhs.Rows</c> components.</exception>
     public static double[] operator *(double[] lhs, Matrix rhs)
     {
-        return rhs.Multiply(lhs);
+        return rhs.MultiplyOnTheLeft(lhs, nameof(lhs));
     }
 
     /// <summary>
@@ -432,7 +633,7 @@ public readonly record struct Matrix
         {
             for (int j = 0; j < Columns; j++)
             {
-                result.Set(j, i, _data[i, j]);
+                result.SetTerm(j, i, Data[i, j]);
             }
         }
         return result;
@@ -464,19 +665,19 @@ public readonly record struct Matrix
         var m = new Matrix(3, 3);
 
         // Row 0
-        m.Set(0, 0, 1 - 2 * (y * y + z * z));
-        m.Set(0, 1, 2 * (x * y - w * z));
-        m.Set(0, 2, 2 * (x * z + w * y));
+        m.SetTerm(0, 0, 1 - 2 * (y * y + z * z));
+        m.SetTerm(0, 1, 2 * (x * y - w * z));
+        m.SetTerm(0, 2, 2 * (x * z + w * y));
 
         // Row 1
-        m.Set(1, 0, 2 * (x * y + w * z));
-        m.Set(1, 1, 1 - 2 * (x * x + z * z));
-        m.Set(1, 2, 2 * (y * z - w * x));
+        m.SetTerm(1, 0, 2 * (x * y + w * z));
+        m.SetTerm(1, 1, 1 - 2 * (x * x + z * z));
+        m.SetTerm(1, 2, 2 * (y * z - w * x));
 
         // Row 2
-        m.Set(2, 0, 2 * (x * z - w * y));
-        m.Set(2, 1, 2 * (y * z + w * x));
-        m.Set(2, 2, 1 - 2 * (x * x + y * y));
+        m.SetTerm(2, 0, 2 * (x * z - w * y));
+        m.SetTerm(2, 1, 2 * (y * z + w * x));
+        m.SetTerm(2, 2, 1 - 2 * (x * x + y * y));
 
         return m;
     }
@@ -502,7 +703,7 @@ public readonly record struct Matrix
         {
             for (int j = 0; j < 3; j++)
             {
-                result.Set(i, j, upperLeft.Get(i, j));
+                result.SetTerm(i, j, upperLeft.Get(i, j));
             }
         }
 
@@ -511,7 +712,7 @@ public readonly record struct Matrix
         {
             for (int j = 0; j < 3; j++)
             {
-                result.Set(i + 3, j + 3, lowerRight.Get(i, j));
+                result.SetTerm(i + 3, j + 3, lowerRight.Get(i, j));
             }
         }
 
@@ -521,12 +722,12 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// A copy of this matrix that shares no array with it, since <see cref="Set"/> writes the array a <see cref="Matrix"/>
-    /// wraps and a copy of the struct shares it: the public types that hold a matrix copy it in and out with it, so that a
-    /// term set afterwards on the matrix given or returned does not reach them (#722). A matrix without terms
+    /// A copy of this matrix that shares no array with it: the public types that hold a matrix copy it in and out with it
+    /// (#722, when a public <c>Set</c> wrote the array every copy of the struct shares; kept since 11.0.0 so that no write
+    /// of <see cref="SetTerm"/> on a matrix the library is building reaches a holder). A matrix without terms
     /// (<c>default(Matrix)</c> included, whose array is null) is returned as it is.
     /// </summary>
-    internal Matrix Copy() => _data is null || Rows == 0 || Columns == 0 ? this : Wrap((double[,])_data.Clone());
+    internal Matrix Copy() => _data is null || Rows == 0 || Columns == 0 ? this : Wrap((double[,])Data.Clone());
 
     /// <summary>
     /// The copy of a nullable matrix (<see cref="Copy()"/>), null for null (#722).
@@ -539,7 +740,7 @@ public readonly record struct Matrix
     /// <returns>A 2D array containing the matrix data.</returns>
     public double[,] ToArray()
     {
-        return (double[,])_data.Clone();
+        return (double[,])Data.Clone();
     }
 
     /// <summary>
@@ -680,15 +881,7 @@ public readonly record struct Matrix
     /// Creates a 6x6 identity matrix suitable for covariance initialization.
     /// </summary>
     /// <returns>A 6x6 identity matrix.</returns>
-    public static Matrix Identity6x6()
-    {
-        var result = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++)
-        {
-            result.Set(i, i, 1.0);
-        }
-        return result;
-    }
+    public static Matrix Identity6x6() => Identity(6);
 
     /// <summary>
     /// Checks if this matrix is symmetric within the specified tolerance.
@@ -703,7 +896,7 @@ public readonly record struct Matrix
         {
             for (int j = i + 1; j < Columns; j++)
             {
-                if (System.Math.Abs(_data[i, j] - _data[j, i]) > tolerance)
+                if (System.Math.Abs(Data[i, j] - Data[j, i]) > tolerance)
                     return false;
             }
         }
@@ -736,11 +929,11 @@ public readonly record struct Matrix
             for (int k = 0; k < j; k++)
                 sum += L.Get(j, k) * L.Get(j, k);
 
-            double diag = _data[j, j] - sum;
+            double diag = Data[j, j] - sum;
             if (diag <= 0.0)
                 throw new InvalidOperationException("Matrix is not positive-definite.");
 
-            L.Set(j, j, System.Math.Sqrt(diag));
+            L.SetTerm(j, j, System.Math.Sqrt(diag));
 
             for (int i = j + 1; i < n; i++)
             {
@@ -748,7 +941,7 @@ public readonly record struct Matrix
                 for (int k = 0; k < j; k++)
                     innerSum += L.Get(i, k) * L.Get(j, k);
 
-                L.Set(i, j, (_data[i, j] - innerSum) / L.Get(j, j));
+                L.SetTerm(i, j, (Data[i, j] - innerSum) / L.Get(j, j));
             }
         }
 
@@ -773,7 +966,7 @@ public readonly record struct Matrix
         {
             for (int j = 0; j < Columns; j++)
             {
-                result.Set(i, j, _data[i, j] + other.Get(i, j));
+                result.SetTerm(i, j, Data[i, j] + other.Get(i, j));
             }
         }
 
@@ -808,7 +1001,7 @@ public readonly record struct Matrix
         {
             for (int j = 0; j < blockColumns; j++)
             {
-                result.Set(i, j, _data[startRow + i, startColumn + j]);
+                result.SetTerm(i, j, Data[startRow + i, startColumn + j]);
             }
         }
 
@@ -825,24 +1018,51 @@ public readonly record struct Matrix
     public static Matrix FromRowVectors(Vector3 row0, Vector3 row1, Vector3 row2)
     {
         var m = new Matrix(3, 3);
-        m.Set(0, 0, row0.X); m.Set(0, 1, row0.Y); m.Set(0, 2, row0.Z);
-        m.Set(1, 0, row1.X); m.Set(1, 1, row1.Y); m.Set(1, 2, row1.Z);
-        m.Set(2, 0, row2.X); m.Set(2, 1, row2.Y); m.Set(2, 2, row2.Z);
+        m.SetTerm(0, 0, row0.X); m.SetTerm(0, 1, row0.Y); m.SetTerm(0, 2, row0.Z);
+        m.SetTerm(1, 0, row1.X); m.SetTerm(1, 1, row1.Y); m.SetTerm(1, 2, row1.Z);
+        m.SetTerm(2, 0, row2.X); m.SetTerm(2, 1, row2.Y); m.SetTerm(2, 2, row2.Z);
         return m;
     }
 
     public static Matrix FromColumnVectors(Vector3 col0, Vector3 col1, Vector3 col2)
     {
         var m = new Matrix(3, 3);
-        m.Set(0, 0, col0.X);
-        m.Set(1, 0, col0.Y);
-        m.Set(2, 0, col0.Z);
-        m.Set(0, 1, col1.X);
-        m.Set(1, 1, col1.Y);
-        m.Set(2, 1, col1.Z);
-        m.Set(0, 2, col2.X);
-        m.Set(1, 2, col2.Y);
-        m.Set(2, 2, col2.Z);
+        m.SetTerm(0, 0, col0.X);
+        m.SetTerm(1, 0, col0.Y);
+        m.SetTerm(2, 0, col0.Z);
+        m.SetTerm(0, 1, col1.X);
+        m.SetTerm(1, 1, col1.Y);
+        m.SetTerm(2, 1, col1.Z);
+        m.SetTerm(0, 2, col2.X);
+        m.SetTerm(1, 2, col2.Y);
+        m.SetTerm(2, 2, col2.Z);
         return m;
+    }
+
+    /// <summary>
+    /// The rows of the matrix, <c>[[a, b], [c, d]]</c>, each term in invariant culture and round trip ("R"), <c>[]</c>
+    /// for a matrix without rows (#668, R26: the record's <c>Matrix { Rows = 2, Columns = 2 }</c> before 11.0.0).
+    /// </summary>
+    public override string ToString()
+    {
+        var data = Data;
+        var text = new StringBuilder("[");
+        for (int i = 0; i < Rows; i++)
+        {
+            text.Append(i == 0 ? "[" : ", [");
+            for (int j = 0; j < Columns; j++)
+            {
+                if (j > 0)
+                {
+                    text.Append(", ");
+                }
+
+                text.Append(data[i, j].ToString("R", CultureInfo.InvariantCulture));
+            }
+
+            text.Append(']');
+        }
+
+        return text.Append(']').ToString();
     }
 }

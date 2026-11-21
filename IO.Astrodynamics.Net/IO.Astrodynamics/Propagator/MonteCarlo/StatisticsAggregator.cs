@@ -67,7 +67,7 @@ internal static class StatisticsAggregator
 
                 for (int j = 0; j < 6; j++)
                     for (int l = 0; l < 6; l++)
-                        cov.Set(j, l, cov.Get(j, l) + diff[j] * diff[l]);
+                        cov.SetTerm(j, l, cov.Get(j, l) + diff[j] * diff[l]);
 
                 rssPos[i] = System.Math.Sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
                 rssVel[i] = System.Math.Sqrt(diff[3] * diff[3] + diff[4] * diff[4] + diff[5] * diff[5]);
@@ -76,7 +76,7 @@ internal static class StatisticsAggregator
             // Bessel correction
             for (int j = 0; j < 6; j++)
                 for (int l = 0; l < 6; l++)
-                    cov.Set(j, l, cov.Get(j, l) / (n - 1));
+                    cov.SetTerm(j, l, cov.Get(j, l) / (n - 1));
 
             // Standard deviation
             var stdDev = new StateComponents(

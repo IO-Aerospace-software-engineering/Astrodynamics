@@ -133,9 +133,9 @@ internal static class CcsdsValues
     }
 
     /// <summary>
-    /// A copy of a matrix that shares no array with it, since <see cref="Matrix.Set"/> writes the array a
-    /// <see cref="Matrix"/> wraps: a record of the data model holds and returns copies, so that a term set on the matrix
-    /// it was given or on the one it returned does not reach it (review of #717). A matrix without terms
+    /// A copy of a matrix that shares no array with it: a record of the data model holds and returns copies (review of
+    /// #717, when a public <c>Matrix.Set</c> wrote the array every copy of the struct shares; <see cref="Matrix"/> is
+    /// immutable since 11.0.0). A matrix without terms
     /// (<c>default(Matrix)</c> included, whose array is null) is returned as it is.
     /// </summary>
     /// <param name="value">The matrix.</param>

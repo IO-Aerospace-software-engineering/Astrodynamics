@@ -29,7 +29,7 @@ namespace IO.Astrodynamics.Tests;
 /// </remarks>
 public class KernelPathLengthTests : IDisposable
 {
-    private static readonly TimeSystem.Time Start = new(2024, 1, 1);
+    private static readonly TimeSystem.Time Start = new(2024, 1, 1, TimeScale.TDB);
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("kernel-length-");
     private int _targets;
 

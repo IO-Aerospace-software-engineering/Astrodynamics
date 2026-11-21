@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -16,7 +17,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 public class StateVectorFrameCovarianceTests
 {
     // Inside the coverage of the Earth orientation kernel of the test data.
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     // The state transformation is linear in (r, v) at a fixed epoch, so the central differences have no truncation
     // error: large steps keep the rounding error far below the tolerances.
@@ -102,11 +103,12 @@ public class StateVectorFrameCovarianceTests
         // Arrange: 100 m isotropic position uncertainty, no velocity uncertainty.
         const double sigmaPosition = 100.0;
         var itrf93 = new Frames.Frame("ITRF93");
-        var covariance = new Matrix(6, 6);
+        var covarianceTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            covariance.Set(i, i, sigmaPosition * sigmaPosition);
+            covarianceTerms[i, i] = sigmaPosition * sigmaPosition;
         }
+        var covariance = new Matrix(covarianceTerms);
 
         var state = CreateLeoState(covariance);
         double omega = Frames.Frame.ICRF.ToFrame(itrf93, Epoch).AngularVelocity.Magnitude();
@@ -213,7 +215,7 @@ public class StateVectorFrameCovarianceTests
 
     private static Matrix FiniteDifferenceJacobian(StateVector state, Frames.Frame target)
     {
-        var jacobian = new Matrix(6, 6);
+        var jacobianTerms = new double[6, 6];
         var nominal = state.ToArray();
         for (int k = 0; k < 6; k++)
         {
@@ -221,9 +223,10 @@ public class StateVectorFrameCovarianceTests
             var minus = Perturb(state, nominal, k, -FiniteDifferenceSteps[k]).ToFrame(target).ToStateVector().ToArray();
             for (int i = 0; i < 6; i++)
             {
-                jacobian.Set(i, k, (plus[i] - minus[i]) / (2.0 * FiniteDifferenceSteps[k]));
+                jacobianTerms[i, k] = (plus[i] - minus[i]) / (2.0 * FiniteDifferenceSteps[k]);
             }
         }
+        var jacobian = new Matrix(jacobianTerms);
 
         return jacobian;
     }

@@ -45,7 +45,7 @@ public class SpiceDataProvider : IDataProvider
         // attitude record, #682; the frame of a site of the kernels whose frame id no loaded kernel defines, third review of
         // #690) is read in J2000 and rotated by it (SpiceAPI.ManagedReadFrame)
         var result = SpiceAPI.Instance.ReadEphemerisRaw(date, observer, target.NaifId, frame, aberration);
-        // ReadEphemeris always returns TDB epoch; preserve the caller's time frame.
+        // ReadEphemeris always returns TDB epoch; preserve the caller's time scale.
         return new StateVector(result.Position, result.Velocity, observer, date, result.Frame);
     }
 

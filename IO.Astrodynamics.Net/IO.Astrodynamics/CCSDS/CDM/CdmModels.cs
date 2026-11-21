@@ -380,8 +380,8 @@ public sealed record CdmCovarianceMatrix
     /// </summary>
     /// <remarks>
     /// The record holds its own copy of the matrix: the init accessor checks the terms of a copy of the matrix it is given
-    /// and the getter returns a copy of the one it holds, so a term set afterwards on either <see cref="Matrix"/> (whose
-    /// <see cref="Matrix.Set"/> writes its shared array) does not reach the record (review of #717).
+    /// and the getter returns a copy of the one it holds (review of #717, when a public <c>Matrix.Set</c> wrote the array
+    /// every copy of the struct shares; <see cref="Matrix"/> is immutable since 11.0.0).
     /// </remarks>
     /// <exception cref="ArgumentException">The matrix given is not 6×6, <c>default(Matrix)</c> included (#730: it was
     /// accepted, and <see cref="CdmWriter"/> then threw <see cref="IndexOutOfRangeException"/> or

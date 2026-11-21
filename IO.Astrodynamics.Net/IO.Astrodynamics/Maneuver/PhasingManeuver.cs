@@ -85,7 +85,7 @@ namespace IO.Astrodynamics.Maneuver
         /// <summary>
         /// Fires at perigee: r·v = 0, transitioning from negative to positive.
         /// </summary>
-        public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+        public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
         public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
 
         protected override Vector3 Execute(StateVector stateVector)
@@ -95,20 +95,20 @@ namespace IO.Astrodynamics.Maneuver
             double deltaTrueAnomaly = targetTrueLongitude - stateVector.TrueLongitude();
             if (deltaTrueAnomaly < 0.0)
             {
-                deltaTrueAnomaly += Constants._2PI;
+                deltaTrueAnomaly += Constants.TwoPi;
             }
 
             double e = stateVector.Eccentricity();
 
             double E = OrbitalParameters.OrbitalParameters.EllipticAnomaly(deltaTrueAnomaly, e);
             double t1 = stateVector.Period().TotalSeconds;
-            double t = t1 / Constants._2PI * (E - e * System.Math.Sin(E));
+            double t = t1 / Constants.TwoPi * (E - e * System.Math.Sin(E));
 
             double t2 = t1 - t / RevolutionNumber;
 
             double u = stateVector.Observer.GM;
 
-            double a2 = System.Math.Pow((System.Math.Sqrt(u) * t2 / Constants._2PI), 2.0 / 3.0);
+            double a2 = System.Math.Pow((System.Math.Sqrt(u) * t2 / Constants.TwoPi), 2.0 / 3.0);
 
             double rp = stateVector.PerigeeVector().Magnitude();
             double ra = 2 * a2 - rp;

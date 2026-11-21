@@ -42,9 +42,9 @@ public class OccultationSearchTests
         TestKernels.EnsureOccultationReference();
     }
 
-    private static Window Eclipse2005Window => new(new TimeSystem.Time("2005-10-03 00:00:00"), new TimeSystem.Time("2005-10-04 00:00:00"));
+    private static Window Eclipse2005Window => new(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB));
 
-    private static Window Eclipse001Window => new(new TimeSystem.Time("2026-03-20T00:00:00.0000000 TDB"), new TimeSystem.Time("2026-03-20T12:00:00.0000000 TDB"));
+    private static Window Eclipse001Window => new(TimeSystem.Time.Parse("2026-03-20T00:00:00.0000000 TDB"), TimeSystem.Time.Parse("2026-03-20T12:00:00.0000000 TDB"));
 
     private static double WorstEdge(Window[] actual, Window[] expected)
     {

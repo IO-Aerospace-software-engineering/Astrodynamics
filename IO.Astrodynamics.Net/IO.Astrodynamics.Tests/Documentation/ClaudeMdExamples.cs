@@ -252,7 +252,7 @@ namespace ClaudeMdSamples
                 altitude: 400000,                           // 400 km
                 geodeticLatitude: 45 * Constants.Deg2Rad,
                 geodeticLongitude: -75 * Constants.Deg2Rad,
-                epoch: new Time(2024, 6, 21, 12, 0, 0)
+                epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
             );
             var nrlmsise = new Nrlmsise00Model(SpaceWeather.Nominal);
             var thermosphere = nrlmsise.GetAtmosphere(fullContext);

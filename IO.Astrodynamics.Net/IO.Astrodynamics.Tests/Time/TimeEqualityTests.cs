@@ -13,13 +13,13 @@ namespace IO.Astrodynamics.Tests.Time;
 /// when <see cref="TimeSystem.Time.CompareTo(TimeSystem.Time)"/> returns 0, the one order of times, by their TAI ticks
 /// within a frame and across frames, and equal times have equal hash codes. The instants come from the definitions of
 /// the scales: TAI − UTC = 37 s from 2017-01-01 (IERS Bulletin C 52), TT = TAI + 32.184 s, GPS = TAI − 19 s (IS-GPS-200);
-/// TDB from the library's own series (<see cref="TimeSystem.Frames.TDBTimeFrame"/>), the scale whose TAI ticks are not
+/// TDB from the library's own series (<see cref="TimeScaleConversions.TdbMinusTt"/>), the scale whose TAI ticks are not
 /// one to one with its own. Every expected value is a boolean or a count set by the contract of
 /// <see cref="IEquatable{T}"/>, <see cref="object.GetHashCode"/> and <see cref="IComparable{T}"/>.
 /// </summary>
 public class TimeEqualityTests
 {
-    private static readonly TimeSystem.Time Utc = new(new DateTime(2025, 3, 28, 0, 0, 0), TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time Utc = new(new DateTime(2025, 3, 28, 0, 0, 0), TimeScale.UTC);
 
     /// <summary>
     /// The instant of <see cref="Utc"/> in each frame, from the definitions of the scales.
@@ -28,9 +28,9 @@ public class TimeEqualityTests
 
     private static TimeSystem.Time SameInstant(string frame) => frame switch
     {
-        "TAI" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 0, 37), TimeFrame.TAIFrame),
-        "TT" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 1, 9, 184), TimeFrame.TDTFrame),
-        "GPS" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 0, 18), TimeFrame.GPSFrame),
+        "TAI" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 0, 37), TimeScale.TAI),
+        "TT" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 1, 9, 184), TimeScale.TT),
+        "GPS" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 0, 18), TimeScale.GPS),
         _ => Utc.ToTDB()
     };
 
@@ -40,7 +40,7 @@ public class TimeEqualityTests
     {
         // Arrange
         var other = SameInstant(frame);
-        Assert.NotEqual(Utc.Frame, other.Frame);
+        Assert.NotEqual(Utc.Scale, other.Scale);
 
         // Act and assert: the comparison, the equality and the hash code agree
         Assert.Equal(0, Utc.CompareTo(other));
@@ -80,11 +80,11 @@ public class TimeEqualityTests
     [Fact]
     public void LeapSecondEdges()
     {
-        var lastUtcOf2016 = new TimeSystem.Time(new DateTime(2016, 12, 31, 23, 59, 59).AddTicks(9_999_999), TimeFrame.UTCFrame);
-        var firstUtcOf2017 = new TimeSystem.Time(new DateTime(2017, 1, 1), TimeFrame.UTCFrame);
-        var taiBefore = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 0, 35).AddTicks(9_999_999), TimeFrame.TAIFrame);
-        var taiAfter = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 0, 37), TimeFrame.TAIFrame);
-        var leapSecond = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 0, 36), TimeFrame.TAIFrame);
+        var lastUtcOf2016 = new TimeSystem.Time(new DateTime(2016, 12, 31, 23, 59, 59).AddTicks(9_999_999), TimeScale.UTC);
+        var firstUtcOf2017 = new TimeSystem.Time(new DateTime(2017, 1, 1), TimeScale.UTC);
+        var taiBefore = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 0, 35).AddTicks(9_999_999), TimeScale.TAI);
+        var taiAfter = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 0, 37), TimeScale.TAI);
+        var leapSecond = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 0, 36), TimeScale.TAI);
 
         Assert.True(lastUtcOf2016 == taiBefore);
         Assert.Equal(lastUtcOf2016.GetHashCode(), taiBefore.GetHashCode());
@@ -138,7 +138,7 @@ public class TimeEqualityTests
     [Fact]
     public void CompareToEqualsAndHashCode_FollowTheTaiTicks()
     {
-        var frames = new ITimeFrame[] { TimeFrame.TDBFrame, TimeFrame.TDTFrame, TimeFrame.TAIFrame, TimeFrame.GPSFrame, TimeFrame.UTCFrame };
+        var frames = new TimeScale[] { TimeScale.TDB, TimeScale.TT, TimeScale.TAI, TimeScale.GPS, TimeScale.UTC };
         var random = new Random(512);
         var start = new DateTime(1990, 1, 1).Ticks;
         var span = new DateTime(2040, 1, 1).Ticks - start;
@@ -147,7 +147,7 @@ public class TimeEqualityTests
         {
             // A TAI instant, read in two frames, the second moved by -2 to +2 ticks
             var taiTicks = start + (long)(random.NextDouble() * span);
-            var tai = new TimeSystem.Time(new DateTime(taiTicks), TimeFrame.TAIFrame);
+            var tai = new TimeSystem.Time(new DateTime(taiTicks), TimeScale.TAI);
             var a = tai.ConvertTo(frames[random.Next(frames.Length)]);
             var b = tai.ConvertTo(frames[random.Next(frames.Length)]).AddTicks(random.Next(-2, 3));
 
@@ -188,7 +188,7 @@ public class TimeEqualityTests
     [Fact]
     public void AWindowFromALength_EqualsTheWindowOfItsEnds()
     {
-        var start = new TimeSystem.Time(new DateTime(2016, 12, 31, 23, 59, 0), TimeFrame.UTCFrame);
+        var start = new TimeSystem.Time(new DateTime(2016, 12, 31, 23, 59, 0), TimeScale.UTC);
         var fromLength = new Window(start, TimeSpan.FromSeconds(120.0));
         var fromEnds = new Window(start, fromLength.EndDate);
         Assert.NotEqual(fromLength.Length, fromEnds.Length);
@@ -198,7 +198,8 @@ public class TimeEqualityTests
     }
 
     /// <summary>
-    /// The default time, without a frame, compares without a throw: equal to itself, to no time with a frame.
+    /// The default time, 0001-01-01T00:00:00 TDB since 11.0.0 (D3.1: <see cref="TimeScale.TDB"/> is 0; before, a time
+    /// without a frame), compares without a throw: equal to itself and to that TDB calendar, before every later time.
     /// </summary>
     [Fact]
     public void TheDefaultTime_ComparesWithoutAThrow()
@@ -210,45 +211,15 @@ public class TimeEqualityTests
         Assert.False(Utc.Equals(none));
         Assert.Equal(none.GetHashCode(), default(TimeSystem.Time).GetHashCode());
 
-        // The order: the default time (the only time without a frame, every constructor requires one) before every time
-        // with a frame, so that CompareTo returns 0 exactly when Equals holds, the default time included
+        // The order: the default time is the earliest TDB calendar, so that CompareTo returns 0 exactly when Equals holds
         Assert.Equal(0, none.CompareTo(default(TimeSystem.Time)));
         Assert.Equal(0, none.CompareTo((object)default(TimeSystem.Time)));
         Assert.Equal(-1, none.CompareTo(Utc));
         Assert.Equal(1, Utc.CompareTo(none));
-        Assert.Equal(-1, none.CompareTo(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame)));
+        Assert.Equal(0, none.CompareTo(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB)));
+        Assert.True(none.EqualsExact(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB)));
         Assert.True(none < Utc && Utc > none && none <= default(TimeSystem.Time) && none >= default(TimeSystem.Time));
         Assert.Equal(new[] { none, Utc }, new SortedSet<TimeSystem.Time> { Utc, none, default(TimeSystem.Time) });
-    }
-
-    /// <summary>
-    /// A local time and a time of a frame defined outside the library compare through their conversion to TAI.
-    /// </summary>
-    [Fact]
-    public void LocalAndCustomFrames_CompareThroughTai()
-    {
-        var local = Utc.ToLocal();
-        Assert.True(local == Utc);
-        Assert.Equal(Utc.GetHashCode(), local.GetHashCode());
-
-        var custom = new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 0, 47), new TaiPlusTenSeconds());
-        Assert.True(custom == Utc);
-        Assert.Equal(Utc.GetHashCode(), custom.GetHashCode());
-        Assert.True(custom.AddTicks(1) > Utc);
-    }
-
-    /// <summary>
-    /// A frame 10 s ahead of TAI, defined as a caller would.
-    /// </summary>
-    private sealed class TaiPlusTenSeconds : ITimeFrame
-    {
-        public string Name => "TAI+10";
-
-        public TimeSystem.Time ConvertToTAI(TimeSystem.Time timeWithReference) =>
-            new(timeWithReference.DateTime.AddSeconds(-10.0), TimeFrame.TAIFrame);
-
-        public TimeSystem.Time ConvertFromTAI(TimeSystem.Time taiTimeWithReference) =>
-            new(taiTimeWithReference.DateTime.AddSeconds(10.0), this);
     }
 
     /// <summary>
@@ -258,7 +229,7 @@ public class TimeEqualityTests
     /// </summary>
     private static (TimeSystem.Time First, TimeSystem.Time Second) TdbTicksOfOneTaiTick(DateTime from)
     {
-        long Offset(long ticks) => new TimeSystem.Time(new DateTime(ticks), TimeFrame.TDBFrame).ToTAI().DateTime.Ticks - ticks;
+        long Offset(long ticks) => new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB).ToTAI().DateTime.Ticks - ticks;
 
         long lo = from.Ticks;
         long hi = lo + 600L * TimeSpan.TicksPerSecond;
@@ -271,6 +242,6 @@ public class TimeEqualityTests
             else hi = mid;
         }
 
-        return (new TimeSystem.Time(new DateTime(lo), TimeFrame.TDBFrame), new TimeSystem.Time(new DateTime(hi), TimeFrame.TDBFrame));
+        return (new TimeSystem.Time(new DateTime(lo), TimeScale.TDB), new TimeSystem.Time(new DateTime(hi), TimeScale.TDB));
     }
 }

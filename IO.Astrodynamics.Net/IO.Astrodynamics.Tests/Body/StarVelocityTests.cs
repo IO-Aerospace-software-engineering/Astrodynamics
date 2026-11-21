@@ -308,7 +308,7 @@ public class StarVelocityTests
             double radial = -c * beta * beta / (System.Math.Sqrt(1.0 - beta * beta) + 1.0);
             var inertial = velocity + u0 * radial;
             var position = u0 * star.Distance + inertial * (row.Years * JulianYearSeconds);
-            double rangeRate = inertial * position / position.Magnitude();
+            double rangeRate = inertial.Dot(position) / position.Magnitude();
             var expected = inertial * ((1.0 - (rangeRate - radial) / c) * (JulianYearSeconds / star.Distance));
             double relative = (expected - row.Starpm).Magnitude() / row.Starpm.Magnitude();
             double plain = (velocity * (JulianYearSeconds / star.Distance) - row.Starpm).Magnitude() / row.Starpm.Magnitude();
@@ -397,7 +397,7 @@ public class StarVelocityTests
         double worstRangeRate = 0.0;
         for (int month = 0; month < 12; month++)
         {
-            var epoch = new TimeSystem.Time(2026, 11, 17).AddDays(30.0 * month);
+            var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
 
             // Act
             var state = barnard.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -407,8 +407,8 @@ public class StarVelocityTests
             var expected = starVelocity - earthVelocity;
             double velocity = (state.Velocity - expected).Magnitude() / expected.Magnitude();
             var direction = state.Position / state.Position.Magnitude();
-            double rangeRate = System.Math.Abs(state.Velocity * direction - expected * direction);
-            _output.WriteLine($"MEASURE StarVelocityTests.FromTheEarth ({epoch}): relative velocity {velocity:E3}, range rate {rangeRate:E3} m/s ({expected * direction:F3} m/s)");
+            double rangeRate = System.Math.Abs(state.Velocity.Dot(direction) - expected.Dot(direction));
+            _output.WriteLine($"MEASURE StarVelocityTests.FromTheEarth ({epoch}): relative velocity {velocity:E3}, range rate {rangeRate:E3} m/s ({expected.Dot(direction):F3} m/s)");
             worstVelocity = System.Math.Max(worstVelocity, velocity);
             worstRangeRate = System.Math.Max(worstRangeRate, rangeRate);
         }
@@ -466,7 +466,7 @@ public class StarVelocityTests
         double worstPosition = 0.0;
         for (int month = 0; month < 12; month++)
         {
-            var epoch = new TimeSystem.Time(2026, 11, 17).AddDays(30.0 * month);
+            var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
             var aboutStar = new IO.Astrodynamics.OrbitalParameters.StateVector(AboutStarPosition, AboutStarVelocity, barnard, epoch, Frames.Frame.ICRF);
 
             // Act
@@ -508,7 +508,7 @@ public class StarVelocityTests
         double worstPosition = 0.0;
         for (int month = 0; month < 12; month++)
         {
-            var epoch = new TimeSystem.Time(2026, 11, 17).AddDays(30.0 * month);
+            var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
 
             // Act
             var state = earth.GetEphemeris(epoch, barnard, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -543,7 +543,7 @@ public class StarVelocityTests
         // Arrange
         var barnard = BarnardDr3(731005);
         var sun = Stars.SUN_BODY;
-        var epoch = new TimeSystem.Time(2026, 11, 17);
+        var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB);
         var aboutStar = new IO.Astrodynamics.OrbitalParameters.StateVector(AboutStarPosition, AboutStarVelocity, barnard, epoch, Frames.Frame.ICRF);
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-731005, "AboutBarnard", 1000.0, 10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("clk731", 256), aboutStar);
 
@@ -585,7 +585,7 @@ public class StarVelocityTests
         const double deg = System.Math.PI / 180.0;
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
         var j2016 = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
-        var start = new TimeSystem.Time(2001, 1, 1);
+        var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var stars = new[]
         {
             StarTests.NewStar(731001, start),

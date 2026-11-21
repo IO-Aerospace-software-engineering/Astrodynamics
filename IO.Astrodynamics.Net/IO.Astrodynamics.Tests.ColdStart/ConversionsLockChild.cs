@@ -33,7 +33,7 @@ internal static class ConversionsLockChild
         Configuration.Instance.SetDataProvider(probe);
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
 
-        var epoch = new Time(2021, 3, 20, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(399, Frame.ICRF, epoch);
         double gm = earth.GM;
         var state = new StateVector(new IO.Astrodynamics.Math.Vector3(6800000.0, 1000.0, 2000.0),

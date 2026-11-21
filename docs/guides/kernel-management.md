@@ -142,7 +142,7 @@ When using the [kernel-backed Spacecraft constructor](../reference/spacecraft.md
 SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/lro"));
 
 var lro = new Spacecraft(naifId: -85, name: "LRO",
-    epoch: new Time(2024, 6, 1, 12, 0, 0));
+    epoch: new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB));
 ```
 
 ## Tips

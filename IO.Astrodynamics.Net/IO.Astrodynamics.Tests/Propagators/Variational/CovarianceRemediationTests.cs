@@ -48,14 +48,15 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
     private static StateVector WithTrCorrelation(StateVector state, double rho)
     {
         var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
-        var rtn = new Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            rtn.Set(i, i, sigma[i] * sigma[i]);
+            rtnTerms[i, i] = sigma[i] * sigma[i];
         }
 
-        rtn.Set(1, 3, rho * sigma[1] * sigma[3]);
-        rtn.Set(3, 1, rho * sigma[1] * sigma[3]);
+        rtnTerms[1, 3] = rho * sigma[1] * sigma[3];
+        rtnTerms[3, 1] = rho * sigma[1] * sigma[3];
+        var rtn = new Matrix(rtnTerms);
         return WithCovariance(state, state.RotateCovarianceFromRtn(rtn));
     }
 
@@ -65,15 +66,16 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
     // The covariance with the element (i, j) set to value, and (j, i) when symmetric
     private static Matrix With(Matrix covariance, int i, int j, double value, bool symmetric = true)
     {
-        var result = new Matrix(6, 6);
+        var resultTerms = new double[6, 6];
         for (int k = 0; k < 36; k++)
         {
-            result.Set(k / 6, k % 6, covariance.Get(k / 6, k % 6));
+            resultTerms[k / 6, k % 6] = covariance.Get(k / 6, k % 6);
         }
 
-        result.Set(i, j, value);
+        resultTerms[i, j] = value;
         if (symmetric)
-            result.Set(j, i, value);
+            resultTerms[j, i] = value;
+        var result = new Matrix(resultTerms);
         return result;
     }
 

@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Reference;
@@ -65,13 +64,18 @@ internal static class TimeAndWindowsPage
     internal static void Block01()
     {
         #region docs/reference/time-and-windows.md:1
-        var t1 = new Time(2024, 6, 21, 12, 0, 0);
-        var t2 = new Time("2024-06-21T12:00:00.000 UTC");
+        var t1 = new Time(2024, 6, 21, 12, 0, 0, TimeScale.UTC);
+        var t2 = Time.Parse("2024-06-21T12:00:00.000 UTC");
+        var t3 = Time.Parse("2024-173T12:00:00Z");
+        var t4 = Time.Parse("JD 2460483.0 UTC");
+        var doy = Time.FromDayOfYear(2024, 173, 43200.0, TimeScale.UTC);
+        bool sameLabel = t1.EqualsExact(t2) && t1.EqualsExact(t3) && t1.EqualsExact(t4) && t1.EqualsExact(doy); // true
         var tdb = t1.ToTDB();
-        var utc = tdb.ToUTC();
-        var t3 = t1.AddDays(1.0);
-        var duration = t3 - t1;
-        var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
+        bool sameInstant = tdb == t1; // true: one instant in two scales
+        string text = $"{tdb:yyyy-MM-dd HH:mm:ss}"; // 2024-06-21 12:01:09 TDB
+        var later = t1.AddDays(1.0);
+        var duration = later - t1;
+        var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
         #endregion
     }
 
@@ -79,7 +83,7 @@ internal static class TimeAndWindowsPage
     internal static void Block02()
     {
         #region docs/reference/time-and-windows.md:2
-        var window = new Window(new Time(2024, 1, 1), new Time(2024, 1, 31));
+        var window = new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 31, TimeScale.TDB));
         Console.WriteLine($"Duration: {window.Length.TotalDays} days");
         #endregion
     }

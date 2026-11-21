@@ -194,7 +194,7 @@ var omm = Omm.LoadFromFile("satellite.omm",
 if (omm.IsTleCompatible)
 {
     var tle = omm.ToTle();
-    var state = tle.ToOsculating(new Time(2024, 6, 1, 12, 0, 0));
+    var state = tle.ToOsculating(new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB));
     Console.WriteLine($"Position: {state.Position}");
 }
 

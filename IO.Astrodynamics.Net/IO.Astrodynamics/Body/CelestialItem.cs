@@ -1057,7 +1057,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (distance > 0.0)
         {
             var direction = position / distance;
-            lightTimeRate = (direction * geometricVelocity) / (Constants.C - sign * (direction * targetSsbVelocity));
+            lightTimeRate = direction.Dot(geometricVelocity) / (Constants.C - sign * direction.Dot(targetSsbVelocity));
         }
 
         var velocity = geometricVelocity + targetSsbVelocity * (sign * lightTimeRate);
@@ -1120,12 +1120,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         var u = position / r;
         var w = observerVelocity / Constants.C;
         var wDot = observerAcceleration / Constants.C;
-        double rDot = u * velocity;
+        double rDot = u.Dot(velocity);
         var uDot = (velocity - u * rDot) / r;
-        double uw = u * w;
-        double uwDot = uDot * w + u * wDot;
-        double s2 = w * w - uw * uw;
-        double s2Dot = 2.0 * (w * wDot - uw * uwDot);
+        double uw = u.Dot(w);
+        double uwDot = uDot.Dot(w) + u.Dot(wDot);
+        double s2 = w.Dot(w) - uw * uw;
+        double s2Dot = 2.0 * (w.Dot(wDot) - uw * uwDot);
         double k = System.Math.Sqrt(1.0 - s2);
         double kDot = -s2Dot / (2.0 * k);
         double a = k - 1.0 - uw;

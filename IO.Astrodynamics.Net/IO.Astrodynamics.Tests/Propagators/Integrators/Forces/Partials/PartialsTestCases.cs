@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
@@ -35,7 +36,7 @@ public sealed class PartialsTestCases
 
     internal static readonly string[] StateNames = { Leo400, Leo800, Geo, HeoPerigee };
 
-    internal static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    internal static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     internal static TheoryData<string> States => new(StateNames);
 

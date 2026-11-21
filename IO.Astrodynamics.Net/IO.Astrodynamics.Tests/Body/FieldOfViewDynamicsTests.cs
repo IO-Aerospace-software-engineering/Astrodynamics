@@ -76,7 +76,7 @@ public class FieldOfViewDynamicsTests
     private static void AddInstruments(Spacecraft spacecraft)
     {
         int id = spacecraft.NaifId * 1000;
-        var y = new Vector3(0.0, IO.Astrodynamics.Constants.PI2, 0.0);
+        var y = new Vector3(0.0, IO.Astrodynamics.Constants.HalfPi, 0.0);
         spacecraft.AddCircularInstrument(id - 789, "CAMERA789", "fov515", 0.75, Vector3.VectorZ, Vector3.VectorY, y);
         spacecraft.AddEllipticalInstrument(id - 790, "ELL790", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
         spacecraft.AddRectangularInstrument(id - 791, "REC791", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
@@ -138,7 +138,7 @@ public class FieldOfViewDynamicsTests
             case "Nadir":
             {
                 var (spacecraft, engine) = Create(-5173, leo);
-                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, engine));
+                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
                 spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
                 return (spacecraft, window);
             }
@@ -161,7 +161,7 @@ public class FieldOfViewDynamicsTests
             {
                 // The nadir attitude through Scenario.SimulateAsync
                 var (spacecraft, engine) = Create(-5178, leo);
-                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, engine));
+                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
                 var scenario = new IO.Astrodynamics.Mission.Scenario($"FovDyn{spacecraft.NaifId}", new IO.Astrodynamics.Mission.Mission($"fovdyn{spacecraft.NaifId}"), propagation);
                 scenario.AddCelestialItem(moon);
                 scenario.AddCelestialItem(earth);

@@ -379,7 +379,8 @@ public class DocumentationPagesExamplesTests
             {
                 ("docs/get-started.md", 4), ("docs/get-started.md", 5),
                 ("docs/reference/integrators.md", 1), ("docs/reference/integrators.md", 2), ("docs/reference/integrators.md", 3),
-                ("docs/reference/math.md", 1), ("docs/reference/predefined-objects.md", 1),
+                ("docs/reference/math.md", 1), ("docs/reference/math.md", 2), ("docs/reference/math.md", 3),
+                ("docs/reference/predefined-objects.md", 1),
                 ("docs/reference/spacecraft.md", 4), ("docs/reference/spacecraft.md", 6), ("docs/reference/stars.md", 1),
                 ("docs/reference/time-and-windows.md", 1), ("docs/reference/time-and-windows.md", 2), ("docs/reference/tle.md", 1),
                 ("docs/tutorials/coordinate-conversions.md", 1), ("docs/tutorials/coordinate-conversions.md", 5),
@@ -414,7 +415,7 @@ public class DocumentationPagesExamplesTests
 
     #region The blocks that run with their inputs
 
-    private static readonly TimeSystem.Time Epoch = new TimeSystem.Time(2024, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new TimeSystem.Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     private static StateVector Leo(double radius, double inclination, TimeSystem.Time epoch)
     {
@@ -455,8 +456,8 @@ public class DocumentationPagesExamplesTests
     private static Vector3 TwoBodyPosition(Vector3 r0, Vector3 v0, double gm, double seconds)
     {
         double r = r0.Magnitude(), sqrtGm = System.Math.Sqrt(gm);
-        double radialVelocity = r0 * v0 / r;
-        double alpha = 2.0 / r - v0 * v0 / gm;
+        double radialVelocity = r0.Dot(v0) / r;
+        double alpha = 2.0 / r - v0.Dot(v0) / gm;
         (double C, double S) Stumpff(double z)
         {
             if (System.Math.Abs(z) < 1e-8)
@@ -570,7 +571,7 @@ public class DocumentationPagesExamplesTests
     }
 
     // The angle between two vectors, from atan2 of their cross and dot products
-    private static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     /// <summary>
     /// The lunar eclipse block of the geometry tutorial (#705: it passed <c>occultingBody:</c> and <c>occultedBody:</c>,
@@ -585,7 +586,7 @@ public class DocumentationPagesExamplesTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var sun = new CelestialBody(Stars.Sun);
-        var searchWindow = new Window(new TimeSystem.Time(2024, 3, 24, 0, 0, 0), new TimeSystem.Time(2024, 3, 27, 0, 0, 0));
+        var searchWindow = new Window(new TimeSystem.Time(2024, 3, 24, 0, 0, 0, TimeScale.TDB), new TimeSystem.Time(2024, 3, 27, 0, 0, 0, TimeScale.TDB));
         var windows = ((IEnumerable<Window>)Block("docs/tutorials/geometry-and-visibility.md", 1)
             .Invoke(null, new object[] { moon, searchWindow, sun, earth })!).ToList();
 

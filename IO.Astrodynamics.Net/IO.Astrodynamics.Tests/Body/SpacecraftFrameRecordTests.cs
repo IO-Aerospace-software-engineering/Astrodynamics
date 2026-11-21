@@ -50,7 +50,7 @@ public class SpacecraftFrameRecordTests
         Assert.True(delta <= RateTolerance, $"{what}: {delta:E3} rad/s");
     }
 
-    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
     private static readonly Vector3 Axis = new Vector3(1.0, 2.0, 3.0).Normalize();
     private const double Omega = 1.1e-3;
     private const double Phase = 0.4;

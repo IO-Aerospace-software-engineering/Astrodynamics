@@ -173,7 +173,7 @@ namespace IO.Astrodynamics.Surface
             var az = -System.Math.Atan2(position.Y, position.X);
             if (az < 0)
             {
-                az += Constants._2PI;
+                az += Constants.TwoPi;
             }
 
             var el = System.Math.Asin(position.Z / position.Magnitude());
@@ -664,7 +664,7 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             var sun = Stars.SUN_BODY;
-            return FindWindowsOnIlluminationConstraint(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.PI2 + twilight, 0.0,
+            return FindWindowsOnIlluminationConstraint(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, 0.0,
                 Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);
         }
 

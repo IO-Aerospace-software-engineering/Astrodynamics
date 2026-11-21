@@ -35,7 +35,7 @@ A LEO at 400 km, with the EGM2008 geopotential to degree 10, NRLMSISE-00 drag, S
 ```csharp
 SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-var epoch = new Time(2021, 3, 20, 12, 0, 0);
+var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
     new Nrlmsise00Model(SpaceWeather.Nominal));
@@ -56,11 +56,9 @@ var orbit = new KeplerianElements(6778137.0, 0.0005, 51.6 * Constants.Deg2Rad, 2
     15.0 * Constants.Deg2Rad, 0.0, earth, epoch, Frame.ICRF).ToStateVector();
 
 double[] sigma = { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };   // R, T, N (m), then their rates (m/s)
-var rtn = new Matrix(6, 6);
-for (int i = 0; i < 6; i++)
-    rtn.Set(i, i, sigma[i] * sigma[i]);
-rtn.Set(1, 3, -0.9 * sigma[1] * sigma[3]);   // along-track position and radial velocity
-rtn.Set(3, 1, -0.9 * sigma[1] * sigma[3]);
+var rtn = Matrix.Create(6, 6, (i, j) => i == j ? sigma[i] * sigma[i] : 0.0)
+    .With(1, 3, -0.9 * sigma[1] * sigma[3])   // along-track position and radial velocity
+    .With(3, 1, -0.9 * sigma[1] * sigma[3]);
 
 var initialState = new StateVector(orbit.Position, orbit.Velocity, earth, epoch, Frame.ICRF,
     orbit.RotateCovarianceFromRtn(rtn));
@@ -177,14 +175,9 @@ propagation, by the eigenvalue clipping of the conjunction analysis (Hall, Hejdu
 
 ```csharp
 // Inputs: initialState (StateVector), earth (CelestialBody), epoch (Time), window (Window), bodies (CelestialItem[])
-var rounded = new Matrix(6, 6);
-for (int i = 0; i < 3; i++)
-{
-    rounded.Set(i, i, 100.0 * 100.0);
-    rounded.Set(i + 3, i + 3, 0.1 * 0.1);
-}
-rounded.Set(1, 3, -1.0001 * 100.0 * 0.1);   // a correlation of −1 written as −1.0001
-rounded.Set(3, 1, -1.0001 * 100.0 * 0.1);
+var rounded = Matrix.Diagonal(100.0 * 100.0, 100.0 * 100.0, 100.0 * 100.0, 0.1 * 0.1, 0.1 * 0.1, 0.1 * 0.1)
+    .With(1, 3, -1.0001 * 100.0 * 0.1)   // a correlation of −1 written as −1.0001
+    .With(3, 1, -1.0001 * 100.0 * 0.1);
 var indefinite = new StateVector(initialState.Position, initialState.Velocity, earth, epoch, Frame.ICRF, rounded);
 
 var remediation = indefinite.WithRemediatedCovariance();
@@ -212,7 +205,7 @@ secondary passing 200 m from the protected one 24 h after the start (the case of
 
 ```csharp
 // Inputs: protectedOrbit and secondaryOrbit (StateVector)
-var start = new Time(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+var start = new Time(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
 var tca = start.AddHours(24.0);
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
 // protectedOrbit, a LEO at 700 km about earth; secondaryOrbit, 120 m radial and 160 m normal from it at tca, its
@@ -220,9 +213,7 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
 // RTN, as above, by this helper
 static StateVector WithRtnCovariance(StateVector orbit, double[] sigma)
 {
-    var rtn = new Matrix(6, 6);
-    for (int i = 0; i < 6; i++)
-        rtn.Set(i, i, sigma[i] * sigma[i]);
+    var rtn = Matrix.Create(6, 6, (i, j) => i == j ? sigma[i] * sigma[i] : 0.0);
     return new StateVector(orbit.Position, orbit.Velocity, orbit.Observer, orbit.Epoch, orbit.Frame,
         orbit.RotateCovarianceFromRtn(rtn));
 }

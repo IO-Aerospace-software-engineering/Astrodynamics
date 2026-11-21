@@ -21,8 +21,8 @@ public class AntiNormalAttitudeTests
     {
         FuelTank fuelTank = new FuelTank("My fuel tank", "ft2021", "sn0", 4000.0, 3000.0);
         Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
-        AntiNormalAttitude attitude = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromHours(1.0), eng);
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), attitude.MinimumEpoch);
+        AntiNormalAttitude attitude = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), eng);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), attitude.ManeuverHoldDuration);
         Assert.NotNull(attitude.Engine);
         Assert.Equal(eng, attitude.Engine);
@@ -36,7 +36,7 @@ public class AntiNormalAttitudeTests
         var spc = new Spacecraft(-672, "AntiNormalTestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -44,7 +44,7 @@ public class AntiNormalAttitudeTests
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
         var antiNormal = sv.Position.Cross(sv.Velocity).Inverse().Normalize();
 
-        double alignment = rotatedFront * antiNormal;
+        double alignment = rotatedFront.Dot(antiNormal);
         Assert.True(alignment > 0.9999, $"Front should align with anti-normal (-Z). Alignment: {alignment}");
     }
 
@@ -58,16 +58,16 @@ public class AntiNormalAttitudeTests
 
         var sv = orbitalParams.ToStateVector();
 
-        var normalManeuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        var normalManeuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
         normalManeuver.TryExecute(sv);
         var normalPointing = Spacecraft.Front.Rotate(normalManeuver.StateOrientation.Rotation).Normalize();
 
-        var antiNormalManeuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        var antiNormalManeuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
         antiNormalManeuver.TryExecute(sv);
         var antiNormalPointing = Spacecraft.Front.Rotate(antiNormalManeuver.StateOrientation.Rotation).Normalize();
 
         // Normal and anti-normal should be opposite (dot product close to -1)
-        double dotProduct = normalPointing * antiNormalPointing;
+        double dotProduct = normalPointing.Dot(antiNormalPointing);
         Assert.True(dotProduct < -0.9999, $"Normal and anti-normal should be opposite. Dot product: {dotProduct}");
     }
 
@@ -78,7 +78,7 @@ public class AntiNormalAttitudeTests
         var spc = new Spacecraft(-674, "TestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
         maneuver.TryExecute(orbitalParams.ToStateVector());
 
         Assert.Equal(0.0, maneuver.FuelBurned);
@@ -97,7 +97,7 @@ public class AntiNormalAttitudeTests
         var spc = new Spacecraft(-681, "PolarAntiNormalSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -111,13 +111,13 @@ public class AntiNormalAttitudeTests
 
         // Rotated front should align with anti-normal
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
-        double alignment = rotatedFront * antiNormal;
+        double alignment = rotatedFront.Dot(antiNormal);
         Assert.True(alignment > 0.9999,
             $"Front should align with anti-normal. Alignment: {alignment}");
 
         // Anti-normal must be opposite to normal
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
-        double oppositeness = antiNormal * normal;
+        double oppositeness = antiNormal.Dot(normal);
         Assert.True(oppositeness < -0.9999,
             $"Anti-normal should be opposite to normal. Dot product: {oppositeness}");
     }
@@ -136,7 +136,7 @@ public class AntiNormalAttitudeTests
         var spc = new Spacecraft(-682, "DegAntiNormalSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), sv);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => maneuver.TryExecute(sv));
@@ -152,7 +152,7 @@ public class AntiNormalAttitudeTests
             bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -161,7 +161,7 @@ public class AntiNormalAttitudeTests
         var rotatedFront = spc.BodyFront.Rotate(maneuver.StateOrientation.Rotation).Normalize();
         var antiNormal = sv.Position.Cross(sv.Velocity).Inverse().Normalize();
 
-        double alignment = rotatedFront * antiNormal;
+        double alignment = rotatedFront.Dot(antiNormal);
         Assert.True(alignment > 0.9999,
             $"Custom body front (+X) should align with anti-normal. Alignment: {alignment}");
     }

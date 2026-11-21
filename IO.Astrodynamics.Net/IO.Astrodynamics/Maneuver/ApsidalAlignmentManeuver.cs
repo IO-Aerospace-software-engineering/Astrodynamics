@@ -27,7 +27,7 @@ namespace IO.Astrodynamics.Maneuver
         {
             var intersectionDir = DetermineIntersectionDirection(localState);
             var perpDir = localState.SpecificAngularMomentum().Cross(intersectionDir).NormalizeOrZero();
-            return localState.Position * perpDir;
+            return localState.Position.Dot(perpDir);
         }
 
         public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
@@ -54,10 +54,10 @@ namespace IO.Astrodynamics.Maneuver
 
         private double AngleDifference(double angleA, double angleB)
         {
-            double delta = (angleA - angleB + Constants._2PI) % Constants._2PI;
+            double delta = (angleA - angleB + Constants.TwoPi) % Constants.TwoPi;
             if (delta > Constants.PI)
             {
-                delta = Constants._2PI - delta;
+                delta = Constants.TwoPi - delta;
             }
 
             return delta;
@@ -103,7 +103,7 @@ namespace IO.Astrodynamics.Maneuver
             var res = stateVector.PerigeeVector().AngleAboutNormalOrZero(TargetOrbit.PerigeeVector(), stateVector.SpecificAngularMomentum());
             if (res < 0.0)
             {
-                res += Constants._2PI;
+                res += Constants.TwoPi;
             }
 
             return res;
@@ -120,7 +120,7 @@ namespace IO.Astrodynamics.Maneuver
 
             if (res < 0.0)
             {
-                res += Constants._2PI;
+                res += Constants.TwoPi;
             }
 
             return res;
@@ -137,7 +137,7 @@ namespace IO.Astrodynamics.Maneuver
 
             if (res < 0.0)
             {
-                res += Constants._2PI;
+                res += Constants.TwoPi;
             }
 
             return res;

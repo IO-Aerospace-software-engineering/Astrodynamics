@@ -56,10 +56,13 @@ throw outside the coverage, the TT seconds of a propagation about the Earth, `Qu
 public statics, the equality of frames, the axes the TRIAD factories point, the straight-line motion of a star, its
 proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked, the
 parsec of 648000/π au, a repeated kernel load, which no longer reloads, with the order of a folder's kernels, and
-`NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, and a
-central body without GM refused by a propagation. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`,
-`Quaternion.Zero`, `Star.PropagationOutput`, `ExceptionBase` and six exports of the native library that .NET never
-called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+`NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, a
+central body without GM refused by a propagation, the scale of a `Time` a required argument, with `Time.Parse` in
+place of `Time(string)`, an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors, the row
+product vᵀ M of `double[] * Matrix`, and
+`KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters.
+**Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
+`ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3` and six exports of the native library that .NET never called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -167,9 +170,64 @@ release are listed under **Known limitations**.
 - **`InsufficientFuelException.RequiredMass` and `AvailableMass`** (kg) and the constructor that takes them (R03 of
   #668, section A): the fuel a burn needs and the fuel its tank holds, which `FuelTank` gives when a burn needs more
   than it holds, the tank named in the message; NaN from the three constructors without masses. Under **Changed**.
+- **`TimeScale`, a required scale, and one grammar for time strings** (lot L2 of the ergonomics review, R24 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D3 as amended, decided by
+  S. Guillet, 2026-11-19). `enum TimeScale { TDB = 0, TT, TAI, UTC, GPS }` and `Time.Scale`; the constructors
+  `Time(int, int, int, TimeScale)`, `Time(int, int, int, int, int, int, TimeScale)` and the millisecond and microsecond
+  ones, in `DateTime`'s shape; `Time.UtcNow`; `Time.FromDayOfYear(year, dayOfYear, seconds, scale)`; `Time.ToTT()`.
+  `Time.Parse(string)`, `Parse(string, TimeScale)`, `TryParse` and `ISpanParsable<Time>` read one grammar: an ISO 8601
+  date or a CCSDS day of year (`2024-173`), an optional `T` (or a space) and `hh:mm[:ss[.f…]]`, then `Z` or `±hh:mm` (the
+  UTC instant) or a scale tag (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`, any case), or a Julian date `JD n TAG` or
+  `n JD TAG` whose digits are read exactly to the nearest tick; an untagged string needs `Parse(s, scale)`, which
+  refuses a tag, `Z` or offset of another scale than `scale` (`FormatException`; `TDT` is TT, `Z` and an offset UTC).
+  `Parse` throws `FormatException` only and `TryParse` never throws, a Julian date of any number of digits included.
+  `Time` is `IFormattable` and `ISpanFormattable`: `G`, `O` and null give `ToString()`, another format is a custom
+  `DateTime` format followed by the tag (`$"{t:yyyy-MM-dd}"` is `2024-06-21 TDB`); a standard format (one letter, `u`
+  and `R` among them) and a zone specifier (`z`, `zz`, `zzz`, `K` outside quotes, which wrote the machine's offset
+  before the tag) throw `FormatException`, the scale being the tag. `EqualsExact(Time)` and `Time.ExactComparer` compare
+  the labels (the calendar and the scale; internal `HasSameLabel` and `LabelComparer` before), beside the equality of
+  instants of #512 (choice 4 of the re-baseline: the TAI tick kept). `Constants.TwoPi` and `Constants.HalfPi` (under
+  **Changed**). The CCSDS readers read the strict branch of the grammar, bit for bit (#619). See
+  [Time & Windows](../reference/time-and-windows.md).
+- **An immutable `Matrix` and the usual vector operators** (lot L2 of the ergonomics review, R26 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A as amended, decided
+  by S. Guillet, 2026-11-19). `Matrix`: the get-only indexer `m[row, column]`, `With(row, column, value)` (a copy with
+  one term changed), `Create(rows, columns, term)` (the terms of a function of the indexes, called once per term, row by
+  row), `Diagonal(params double[])` and `Identity(int)`; `ToString()` prints the rows (under **Changed**). `Vector3`:
+  `Dot(Vector3)`, the expression x·x' + y·y' + z·z' of the operator `*` it replaces (under **Removed**), the unary minus,
+  `double * Vector3` (the same vector as `Vector3 * double`) and `Matrix * Vector3` for a 3 × 3 matrix, the arithmetic
+  of `Matrix.Multiply(double[])` bit for bit, `ArgumentException` (`m`) for another size. The library's arithmetic is
+  unchanged, bit for bit: its own matrices are filled through an internal setter before any caller holds them, and its
+  dot products are the same expression. See [Math](../reference/math.md).
+- **`KeplerianElements.FromTrueAnomaly` and `KeplerianElements.Parabolic`** (lot L2 of the ergonomics review, R23 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19). `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis,
+  trueAnomaly, observer, epoch, frame)`: the elements whose true anomaly is ν, M(ν) of the closed-form eccentric anomaly,
+  `TrueAnomaly()` ν reduced to [0, 2π), the range of the true anomaly computed from M, so that equal elements give the
+  same angle (ν as given when in it: the conformance runner's former code, now its call), the state and the equinoctial
+  elements computed from ν as given, bit for bit the former `trueAnomaly:`; `ArgumentOutOfRangeException`
+  (`trueAnomaly`) for a ν of a hyperbola whose reduction to (−π, π] is on or beyond its asymptotes. `Parabolic(perigeeRadius, inclination,
+  ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, eccentricity = 1.0)`: a parabola, or an orbit
+  within 1e-6 of e = 1, from its perigee radius, a = q / (1 − e), +Infinity at e = 1;
+  `ArgumentOutOfRangeException` (`eccentricity`) outside the band. Both osculating. See
+  [Keplerian Elements](../reference/keplerian-elements.md).
+- **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
+  `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
+  could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
+  written `n JD TAG` and seconds `s TAG`, the tag of the target scale, so the command reads its output back as the same
+  instant (under **Changed**).
 
 **Fixed**
 
+- **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
+  ([#774](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/774), fixed in lot L2 of the ergonomics review, decided by S. Guillet, 2026-11-21). M v has one component per
+  row of M, but the result was allocated with the length of v, the number of columns: a 2 × 3 matrix returned three
+  components, the last one 0, and a 3 × 2 matrix threw `IndexOutOfRangeException`. The product now has `Rows`
+  components, each the sum, from 0 and in column order, of m[i, j] · v[j], as before; a vector of another length than
+  `Columns` throws `ArgumentException` as before, which now names its parameter (`vector` for `Multiply`, `rhs` for
+  the operator) and the lengths in its message (before 11.0.0, no parameter name and the message "Matrixes with
+  incompatible size"). A square matrix, every one the library multiplies a vector by, gives the same doubles, bit for
+  bit.
 - **The stored states of a propagation ended before its window when the output step rounded it down**
   ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by S. Guillet,
   2026-11-18). The outputs were the round(L/ΔT) + 1 points of the grid i·ΔT, while the propagation ran to the window
@@ -4305,6 +4363,110 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Changed**
 
+- **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D3, decided by S. Guillet,
+  2026-11-13 and amended 2026-11-19: no forwarder). `ITimeFrame`, `TimeFrame`, `TimeSystem.Frames` (`TDBTimeFrame`,
+  `TDTTimeFrame`, `TAITimeFrame`, `UTCTimeFrame`, `GPSTimeFrame`, `LocalTimeFrame`) and `TimeFrame.LeapSecondsFrom` are
+  replaced by `TimeScale` (under **Removed**); `Time.Frame` becomes `Time.Scale`, and every `ITimeFrame` parameter a
+  `TimeScale` (`Time(DateTime, TimeScale scale)`, `Create`, `CreateFromJD`, `ConvertTo`); `ToTDT()` becomes `ToTT()`.
+  The calendar constructor `Time(year, month, day, hour = 0, …, ITimeFrame frame = null)`, which read a calendar without
+  a frame as TDB, 69.18 s from UTC in 2024, is replaced by four constructors whose scale is the last argument. The
+  conversions are those of the frame classes tick for tick (`TdbSeriesTests`, `ConvertToOwnFrameTests`), so no result
+  moves. Migration: `TimeFrame.TDBFrame` → `TimeScale.TDB`, `UTCFrame` → `UTC`, `TAIFrame` → `TAI`, `TDTFrame` → `TT`,
+  `GPSFrame` → `GPS`; `t.Frame` → `t.Scale`, `t.Frame is UTCTimeFrame` → `t.Scale == TimeScale.UTC`; `t.ToTDT()` →
+  `t.ToTT()`; `new Time(2024, 1, 1)` → `new Time(2024, 1, 1, TimeScale.TDB)` (the old default; most callers meant
+  `TimeScale.UTC`), `new Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame)` → `new Time(2024, 1, 1, 12, 0, 0,
+  TimeScale.UTC)`, a call that gave an hour without minutes and seconds writes them as 0; a named `frame:` argument
+  becomes `scale:`.
+- **Breaking: `new Time(DateTime, TimeScale)` refuses a `DateTime` of kind `Local`, and one of kind `Utc` in another
+  scale than UTC** (D3.2 of #668), `ArgumentException` (`dateTime`); before, the frame replaced the kind silently, so a
+  `DateTime.UtcNow` given with `TDBFrame` was read as a TDB calendar, and a local `DateTime.Now` as a calendar of the
+  frame. A UTC time's `DateTime` is of kind `Utc`, so relabelling it in another scale throws too. The CCSDS readers give
+  their epochs, read in `TIME_SYSTEM`, as clock readings, bit for bit (internal `CcsdsTimeSystemMapping.ToTime`).
+  Migration: `new Time(DateTime.Now, …)` → `Time.UtcNow` (or `new Time(dt.ToUniversalTime(), TimeScale.UTC)`); a UTC
+  calendar meant in another scale: `DateTime.SpecifyKind(dt, DateTimeKind.Unspecified)`; an instant: `ConvertTo`.
+- **Breaking: `Time(string)` is replaced by `Time.Parse`** (D3.4 of #668), on one grammar: `new Time("2024-06-21T12:00:00
+  UTC")` → `Time.Parse("2024-06-21T12:00:00 UTC")`, an untagged string (TDB before) → `Time.Parse(s, TimeScale.TDB)`.
+  `Parse` throws `FormatException` only (`ArgumentException` for a second 60, an unknown tag or a tag after `Z` before);
+  `Parse(s, scale)` gives `scale` to an untagged string and refuses a tag of another scale.
+  Its changes of meaning: an offset (`+02:00`) is the UTC instant, where it gave a local time of the machine; a day of
+  year (`2024-173T12:00:00 UTC`) and a Julian date (`JD 2460483.0 UTC`) are read; the forms `DateTime.TryParse` read
+  beyond ISO 8601 are refused (`06/21/2024 12:00`, RFC 1123, a `GMT` suffix). Migration: `Time.Parse`, or
+  `Time.TryParse` for a string that may be refused.
+- **Breaking: `Time.ToString` writes TT as `TT`** (D3.5 of #668; `TDT` before), and `Parse` still reads `TDT`.
+  Migration: a consumer that matched ` TDT` matches ` TT`.
+- **Breaking: `default(Time)` is 0001-01-01T00:00:00 TDB** (D3.1 of #668, `TimeScale.TDB` is 0): a time with no frame
+  before, which came before every time with a frame and was equal to none; it is now that TDB calendar, equal to
+  `new Time(DateTime.MinValue, TimeScale.TDB)` and before every later instant. Migration: none for a sort or a
+  comparison with a later time.
+- **Breaking: `Time.Create(year, doy, sec)` becomes `Time.FromDayOfYear(year, dayOfYear, seconds, scale)`** (D3.2 of
+  #668), the scale explicit (the old factory was UTC), its checks those of #680, its parameters named `dayOfYear` and
+  `seconds` in the exceptions (`doy` and `sec` before). Migration: `Time.Create(2024, 173, 43200.0)` →
+  `Time.FromDayOfYear(2024, 173, 43200.0, TimeScale.UTC)`.
+- **Breaking: `Constants._2PI` and `Constants.PI2` become `Constants.TwoPi` and `Constants.HalfPi`** (R24 of #668, D2's
+  N3, section A), the same doubles (`TwoPi` is `Math.Tau`, `HalfPi` π/2: `PI2` was π/2 under a name that read 2π).
+  Migration: rename.
+- **Breaking: `Matrix` is immutable** (lot L2, R26 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A as amended, decided
+  by S. Guillet, 2026-11-19: no error-level trap, the public `Set` removed outright, under **Removed**). No member
+  changes a matrix once built, so a matrix given to a `StateVector`, an encounter, a CDM record or a Monte Carlo result,
+  or read from one, keeps its terms whatever the caller does afterwards (#722 and #745 had closed the aliasing through
+  copies; `Set` still wrote the matrix a caller held). With it: an index outside the matrix throws
+  `ArgumentOutOfRangeException` naming `row` or `column` from `Get` and the indexer (`IndexOutOfRangeException`
+  before); a negative dimension throws `ArgumentOutOfRangeException` from the constructors (`OverflowException` before);
+  `default(Matrix)` is the 0 × 0 matrix for every member (`Get`, `ToArray`, `Inverse` and `Decompose` threw
+  `NullReferenceException` on it); `ToString()` prints the rows, `[[1, 0], [0, 1]]`, each term in invariant culture
+  and round trip, `[]` without rows (the record's `Matrix { Rows = 2, Columns = 2 }` before; nothing of the library
+  read it). Results do not move. Migration: build the terms, then the matrix: `var m = new Matrix(6, 6); m.Set(0, 0,
+  25.0); …` → `Matrix.Diagonal(25.0, …)`, `new Matrix(terms)` from a `double[,]` filled first, or
+  `Matrix.Create(6, 6, (i, j) => …)`; a change of one term of an existing matrix → `m = m.With(i, j, value)`;
+  `catch (IndexOutOfRangeException)` around `Get` → `catch (ArgumentOutOfRangeException)`.
+- **Breaking: `double[] * Matrix` is the row product vᵀ M** ([#774](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/774), lot L2 of the ergonomics review, decided by
+  S. Guillet, 2026-11-21). The operator returned `rhs.Multiply(lhs)`, the column product M v, which equals vᵀ M only for
+  a symmetric matrix: for a rotation it applied the rotation where vᵀ M applies its inverse. It now returns vᵀ M,
+  `Columns` components, each the sum, from 0 and in row order, of v[i] · m[i, j] (the components of Mᵀ v), and throws
+  `ArgumentException` (`lhs`) for a vector of another length than `Rows` (before, for a length other than `Columns`,
+  with no parameter name and the message "Matrixes with incompatible size"). The
+  library's one use, the perifocal-to-inertial rotation of `OrbitalParameters.ToStateVector`, meant M v and is written
+  `r * pos`, the same arithmetic: its states do not move, bit for bit. Migration: code that meant M v writes `M * v`;
+  code that meant vᵀ M has its product now, where it had M v before.
+- **Breaking: one meaning per `KeplerianElements` constructor** (lot L2, R23 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, no forwarder). The public constructor is `KeplerianElements(semiMajorAxis, eccentricity, inclination,
+  ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, elementsType = Osculating)`: its optional
+  `trueAnomaly`, `period` and `perigeeRadius` are removed, which it stored unchecked beside the elements (a true anomaly
+  that put the state 6177.2 km from the mean anomaly's, a perigee radius of 1 m on an ellipse returned by
+  `PerigeeRadius()`, a period of 1 h on any orbit), and `rigthAscendingNode` is renamed `ascendingNode`. Within 1e-6 of
+  e = 1 the constructor throws `ArgumentException` naming `eccentricity`, pointing to `Parabolic` (before: naming
+  `perigeeRadius`). The library's own elements (conversions, the two-body motion, SPICE's elements, the TLE's mean set)
+  keep their computed values through an internal constructor: no state or element moves, bit for bit. Migration:
+  `new KeplerianElements(a, e, i, o, w, m, centre, epoch, frame, trueAnomaly: nu)` →
+  `KeplerianElements.FromTrueAnomaly(a, e, i, o, w, nu, centre, epoch, frame)` (its M is M(ν), not the m given beside
+  it); `new KeplerianElements(double.PositiveInfinity, 1.0, i, o, w, m, centre, epoch, frame, perigeeRadius: q)` →
+  `KeplerianElements.Parabolic(q, i, o, w, m, centre, epoch, frame)`, an e of the band as the last argument and its a
+  computed; `period:` → nothing (`Period()` computes it); a `perigeeRadius:` beside an ellipse or a hyperbola → nothing
+  (`PerigeeRadius()` computes a (1 − e)); `rigthAscendingNode:` → `ascendingNode:`.
+- **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
+  first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
+  (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
+  `ToEquinoctial()` keeps the perigee radius of its parabolas (internal constructor), bit for bit. Migration: drop the
+  argument when P is finite.
+- **Breaking: the CLI's epochs** (D3 of #668, choice 4 of R24): seconds from J2000 take any scale tag (`757339200 TT`
+  threw before; untagged stays TDB), and every other epoch is read by `Time.TryParse(s, TimeScale.TDB)`, so a day of
+  year is read, an offset is the UTC instant, a Julian date is its digits to the nearest tick (through a double before,
+  at most one tick away), `NaN JD` throws `FormatException` (`ArgumentOutOfRangeException` before), and a string holding
+  a `z` or the letters `utc` anywhere is no longer UTC for that reason. A tagged epoch is read by `Time.TryParse(s)`
+  first, so its tag gives its scale (`Parse(s, scale)` refuses a tag of another scale). `time-converter` without a
+  target or a format writes TDB in ISO (it threw before; under **Added**). Migration: none for the documented forms.
+- **Breaking: `time-converter` refuses an argument after the epoch** (D3.7 of #668), `ArgumentException` naming the
+  quoted epoch: before, `time-converter 2020-01-01T12:00:00 TAI -u` dropped `TAI` and read the epoch untagged, as TDB,
+  so it printed 2020-01-01T11:58:50.8160783Z, 69.18 s from the instant meant. Migration: quote an epoch that holds a
+  space, `time-converter "2020-01-01T12:00:00 TAI" -u`.
+- **Breaking: `time-converter --format jd` and `--format seconds` (`-j`, `-e`) write the tag of their scale** (D3.4 of
+  #668: no implicit scale), `2433282.5 JD UTC` and `631152069.1839217 TDB` where they wrote `2433282.5 JD` and
+  `631152069.1839217`, the numbers in invariant culture (the machine's culture before, `2433282,5` in French): an
+  untagged output of UTC, TAI or GPS read back as an epoch was taken as TDB, 69.18 s early for UTC in 2024. Migration: a
+  script that read the number takes the first token of the line.
 - **Breaking: an error SPICE signals throws `SpiceException`** (lot L1, R03 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 10, decided
   by S. Guillet, 2026-11-19), an `InvalidOperationException` with SPICE's `ShortMessage` and `LongMessage` (under
@@ -6460,6 +6622,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   consumer of `IO.Astrodynamics.so`, `.dll` or `.dylib` meets it. Migration: `Launch.FindLaunchWindows`, `Time.ToString`,
   `Time.ToUTC`, `Time.ToTDB` and `StateVector.ToEquatorial` in .NET; the C++ classes `Launch`, `TDB`, `UTC` and
   `StateVector` in C++.
+- **`ITimeFrame`, `TimeFrame` and the namespace `TimeSystem.Frames`** (`TDBTimeFrame`, `TDTTimeFrame`, `TAITimeFrame`,
+  `UTCTimeFrame`, `GPSTimeFrame`, `LocalTimeFrame`), with `Time.Frame`, `TimeFrame.LeapSecondsFrom` and a caller's own
+  `ITimeFrame` (lot L2, R24 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
+  Migration: `TimeScale` and `Time.Scale` (Changed above); TAI − UTC at an instant `t` is
+  `t.ToTAI().DateTime - t.ToUTC().DateTime`; a scale of the caller's own has no replacement.
+- **Local time: `Time.ToLocal()`, `TimeFrame.LocalFrame` and the offset form of `Time(string)` as a local time** (D3.1
+  of #668: a local time is not a scale, its instant depends on the zone and the daylight saving time of the machine, so
+  #751's handling of the repeated hour goes with it). Migration: `t.ToUTC().DateTime.ToLocalTime()` for the calendar of
+  the machine's zone; `new Time(localDateTime.ToUniversalTime(), TimeScale.UTC)` for the instant of a local calendar.
+- **`Time(string)`**: use `Time.Parse` (Changed above).
+- **`Time.J2000`**, a `DateTime` (2000-01-01T12:00:00, kind `Unspecified`) among `Time`'s members (section A of R24: not
+  retyped, so that `Time.J2000.AddDays(1)` cannot change meaning silently). Migration: `Time.J2000TDB`, or
+  `Time.J2000TDB.DateTime` for the calendar.
+- **`Time.Create(int, int, double)`**: use `Time.FromDayOfYear` (Changed above).
+- **`Matrix.Set(int, int, double)`** (lot L2, R26 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): it wrote the terms in place,
+  through every copy of the struct; `Matrix` is immutable (Changed above). Migration: `new Matrix(double[,])`,
+  `Matrix.Create`, `Matrix.Diagonal` or `Matrix.Identity` to build a matrix, `With` for a copy with one term changed.
+- **The operator `*` between two `Vector3`**, the dot product (R26 of #668, section A as amended: no forwarder;
+  `System.Numerics.Vector3 * Vector3` is component-wise, so the operator read as a trap). `v1 * v2` no longer compiles,
+  so no caller meets another meaning silently. Migration: `v1.Dot(v2)` (Added above), the same expression, bit for bit.
 
 **Known limitations**
 

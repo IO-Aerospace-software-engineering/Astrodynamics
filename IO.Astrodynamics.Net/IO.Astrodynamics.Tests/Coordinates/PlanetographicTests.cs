@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
@@ -79,7 +80,7 @@ public class PlanetographicTests
     public void Evaluation_EqualsRecpgr(int naifId, string name, bool positiveWest)
     {
         var body = new CelestialBody(naifId);
-        var epoch = new TimeSystem.Time(2024, 3, 1);
+        var epoch = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
         Assert.Equal(positiveWest, GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(body, epoch));
         double re = body.EquatorialRadius;
         double f = body.Flattening;
@@ -89,10 +90,10 @@ public class PlanetographicTests
             var position = unit * re;
             var managed = GeodeticCoordinates.ToPlanetographic(position, re, f, GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(body, epoch));
             var (lon, lat, alt) = CspiceDirect.Recpgr(name, [position.X / 1000.0, position.Y / 1000.0, position.Z / 1000.0], re / 1000.0, f);
-            Assert.InRange(managed.Longitude, 0.0, IO.Astrodynamics.Constants._2PI);
+            Assert.InRange(managed.Longitude, 0.0, IO.Astrodynamics.Constants.TwoPi);
             // The longitudes as angles: 0 and 2π are one direction
             double dLon = System.Math.Abs(managed.Longitude - lon);
-            dLon = System.Math.Min(dLon, IO.Astrodynamics.Constants._2PI - dLon);
+            dLon = System.Math.Min(dLon, IO.Astrodynamics.Constants.TwoPi - dLon);
             worstAngle = System.Math.Max(worstAngle, System.Math.Max(dLon, System.Math.Abs(managed.Latitude - lat)));
             worstAltitude = System.Math.Max(worstAltitude, System.Math.Abs(managed.Altitude - alt * 1000.0) / System.Math.Max(re, System.Math.Abs(alt * 1000.0)));
             Assert.True(dLon <= AngleLimit, $"{name} {unit}: longitude {managed.Longitude} against {lon}");

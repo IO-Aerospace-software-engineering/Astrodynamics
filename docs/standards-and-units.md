@@ -48,7 +48,7 @@ public const double Rad2Deg = 180.0 / Math.PI;
 
 ## Reference Standards
 
-- Time: the managed conversions (`Time`, `TimeFrame`) read no kernel. They use the leap second table of `TimeFrame` (last entry 2017-01-01, a fixed 9 s before 1972), TT = TAI + 32.184 s, GPS = TAI − 19 s and the one-term TDB − TT series 0.001658 sin(g + 0.0167 sin g) s. CSPICE is given the managed TDB as its ephemeris time; see [Time Scales](reference/time-and-windows.md#time-scales)
+- Time: the managed conversions between the scales of `Time` (`TimeScale`: TDB, TT, TAI, UTC, GPS) read no kernel. They use the leap second table of the library (last entry 2017-01-01, a fixed 9 s before 1972), TT = TAI + 32.184 s, GPS = TAI − 19 s and the one-term TDB − TT series 0.001658 sin(g + 0.0167 sin g) s. CSPICE is given the managed TDB as its ephemeris time; see [Time Scales](reference/time-and-windows.md#time-scales)
 - Ephemerides: JPL DE series
 - Frames: IAU, IAG, and IERS conventions
 - Gravity: EGM2008 spherical harmonics up to degree and order 70

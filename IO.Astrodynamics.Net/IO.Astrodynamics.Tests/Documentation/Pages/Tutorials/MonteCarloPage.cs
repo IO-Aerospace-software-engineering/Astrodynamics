@@ -53,7 +53,6 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -66,13 +65,9 @@ internal static class MonteCarloPage
     {
         #region docs/tutorials/monte-carlo.md:1
         // Inputs: r0 and v0 (double), earth (CelestialBody)
-        var cov = new Matrix(6, 6);
-        cov.Set(0, 0, 100.0);   // sigma_x^2  (m^2)
-        cov.Set(1, 1, 100.0);   // sigma_y^2
-        cov.Set(2, 2, 100.0);   // sigma_z^2
-        cov.Set(3, 3, 0.01);    // sigma_vx^2 (m^2/s^2)
-        cov.Set(4, 4, 0.01);    // sigma_vy^2
-        cov.Set(5, 5, 0.01);    // sigma_vz^2
+        var cov = Matrix.Diagonal(
+            100.0, 100.0, 100.0,   // sigma_x^2, sigma_y^2, sigma_z^2 (m^2)
+            0.01, 0.01, 0.01);     // sigma_vx^2, sigma_vy^2, sigma_vz^2 (m^2/s^2)
 
         var orbit = new StateVector(
             new Vector3(r0, 0, 0),
