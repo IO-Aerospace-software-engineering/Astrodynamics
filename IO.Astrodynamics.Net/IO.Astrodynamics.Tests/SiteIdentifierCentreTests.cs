@@ -45,7 +45,7 @@ public class SiteIdentifierCentreTests
         var info = SpiceAPI.Instance.GetCelestialBodyInfo(naifId);
 
         // Assert
-        Assert.Equal(naifId, info.Id);
+        Assert.Equal(naifId, info.NaifId);
         Assert.Equal(centre, info.CenterOfMotionId);
         Assert.Equal(barycentre, info.BarycenterOfMotionId);
     }

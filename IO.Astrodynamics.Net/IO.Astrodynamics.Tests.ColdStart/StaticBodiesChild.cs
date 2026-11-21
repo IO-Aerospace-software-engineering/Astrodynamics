@@ -10,7 +10,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using BodyInfo = IO.Astrodynamics.DTO.CelestialBody;
+using BodyInfo = IO.Astrodynamics.DataProvider.CelestialBodyInfo;
 
 namespace IO.Astrodynamics.Tests.ColdStart;
 
@@ -51,16 +51,16 @@ internal static class StaticBodiesChild
 {
     private static readonly Time J2000 = Time.J2000TDB;
 
-    private static readonly BodyInfo EarthInfo = new(399, 10, 3, "EARTH", new(6378137.0, 6378137.0, 6356752.0), 3.986004418e14,
+    private static readonly BodyInfo EarthInfo = new(399, "EARTH", 10, 3, new Vector3(6378137.0, 6378137.0, 6356752.0), 3.986004418e14,
         "ITRF93", 13000, 1.08e-3, 0.0, 0.0);
 
-    private static readonly BodyInfo EarthBarycenterInfo = new(3, 0, 0, "EARTH BARYCENTER", new(0.0, 0.0, 0.0), 4.0350323550225975e14,
+    private static readonly BodyInfo EarthBarycenterInfo = new(3, "EARTH BARYCENTER", 0, 0, new Vector3(0.0, 0.0, 0.0), 4.0350323550225975e14,
         "", 0, 0.0, 0.0, 0.0);
 
-    private static readonly BodyInfo SsbInfo = new(0, 0, 0, "SOLAR SYSTEM BARYCENTER", new(0.0, 0.0, 0.0), 1.3289e20, "", 0, 0.0, 0.0,
+    private static readonly BodyInfo SsbInfo = new(0, "SOLAR SYSTEM BARYCENTER", 0, 0, new Vector3(0.0, 0.0, 0.0), 1.3289e20, "", 0, 0.0, 0.0,
         0.0);
 
-    private static readonly BodyInfo SunInfo = new(10, 0, 0, "SUN", new(696000000.0, 696000000.0, 696000000.0), 1.32712440041e20,
+    private static readonly BodyInfo SunInfo = new(10, "SUN", 0, 0, new Vector3(696000000.0, 696000000.0, 696000000.0), 1.32712440041e20,
         "IAU_SUN", 10010, 0.0, 0.0, 0.0);
 
     internal static int RunMemory()

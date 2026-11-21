@@ -59,7 +59,7 @@ public class NativeAbortGuardTests
     {
         Assert.Empty(KernelTextValues.Radii(id));
         var first = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-        Assert.Equal(id, first.Id);
+        Assert.Equal(id, first.NaifId);
         AssertKernelGm(id, first.GM);
         Assert.Equal(0.0, first.Radii.X);
         Assert.Equal(0.0, first.Radii.Y);
@@ -90,7 +90,7 @@ public class NativeAbortGuardTests
         for (int i = 0; i < 3; i++)
         {
             var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-            Assert.Equal(id, info.Id);
+            Assert.Equal(id, info.NaifId);
             Assert.Equal(0.0, info.GM);
             Assert.Equal(radii[0], info.Radii.X);
             Assert.Equal(radii[1], info.Radii.Y);
@@ -197,7 +197,7 @@ public class NativeAbortGuardTests
         // A body with a frame first, so that the stack holds its frame name
         Assert.Equal("ITRF93", SpiceAPI.Instance.GetCelestialBodyInfo(399).FrameName);
         var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-        Assert.Equal(id, info.Id);
+        Assert.Equal(id, info.NaifId);
         Assert.Equal(name, info.Name);
         Assert.Equal(string.Empty, info.FrameName);
         Assert.Equal(0, info.FrameId);
@@ -250,7 +250,7 @@ public class NativeAbortGuardTests
     public void GetCelestialBodyInfo_ACelestialBody_IsRead(int id, string name)
     {
         var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-        Assert.Equal(id, info.Id);
+        Assert.Equal(id, info.NaifId);
         Assert.Equal(name, info.Name);
     }
 

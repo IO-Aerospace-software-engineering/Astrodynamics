@@ -977,7 +977,7 @@ public partial class SpiceApiTest
     {
         //Read celestial celestialItem information from spice kernels
         var res = SpiceAPI.Instance.GetCelestialBodyInfo(TestHelpers.EarthAtJ2000.NaifId);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.Id);
+        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.NaifId);
         Assert.Equal(Stars.Sun.NaifId, res.CenterOfMotionId);
         Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
         Assert.Equal(PlanetsAndMoons.EARTH.Name, res.Name);
@@ -997,7 +997,7 @@ public partial class SpiceApiTest
     {
         //Read celestial celestialItem information from spice kernels
         var res = SpiceAPI.Instance.GetCelestialBodyInfo(TestHelpers.MoonAtJ2000.NaifId);
-        Assert.Equal(PlanetsAndMoons.MOON.NaifId, res.Id);
+        Assert.Equal(PlanetsAndMoons.MOON.NaifId, res.NaifId);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.CenterOfMotionId);
         Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
         Assert.Equal(PlanetsAndMoons.MOON.Name, res.Name);
@@ -1475,7 +1475,7 @@ public partial class SpiceApiTest
     private static void AssertNothingPending()
     {
         var earth = SpiceAPI.Instance.GetCelestialBodyInfo(399);
-        Assert.Equal(399, earth.Id);
+        Assert.Equal(399, earth.NaifId);
         Assert.Equal("EARTH", earth.Name);
     }
 

@@ -447,10 +447,10 @@ internal static class Program
         public StateOrientation FrameTransformationToICRF(in Time date, Frame source) =>
             _inner.FrameTransformationToICRF(date, source);
 
-        public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame,
+        public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame,
             Aberration aberration) => _inner.GetEphemeris(date, target, observer, frame, aberration);
 
-        public DTO.CelestialBody GetCelestialBodyInfo(int naifId)
+        public CelestialBodyInfo GetCelestialBodyInfo(int naifId)
         {
             if (HoldsThisThread && !Entered.IsSet)
             {
