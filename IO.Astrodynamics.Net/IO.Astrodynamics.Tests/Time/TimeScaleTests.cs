@@ -182,8 +182,60 @@ public class TimeScaleTests
         LabelAssert.Equal(expected, TimeSystem.Time.Parse(text));
         Assert.True(TimeSystem.Time.TryParse(text, out var parsed));
         LabelAssert.Equal(expected, parsed);
-        // A tag, a Z or an offset in the string prevails over the scale given for untagged strings
-        LabelAssert.Equal(expected, TimeSystem.Time.Parse(text, scale == TimeScale.TDB ? TimeScale.UTC : TimeScale.TDB));
+        // The scale given for untagged strings agrees with a tag, a Z or an offset of the same scale
+        LabelAssert.Equal(expected, TimeSystem.Time.Parse(text, scale));
+        Assert.True(TimeSystem.Time.TryParse(text, scale, out parsed));
+        LabelAssert.Equal(expected, parsed);
+    }
+
+    /// <summary>
+    /// D3.4 of #668: <c>Parse(s, scale)</c> gives its scale to an untagged string, and a tag, a <c>Z</c> or an offset of
+    /// another scale contradicts it: <see cref="FormatException"/>, and false from <c>TryParse(s, scale)</c>.
+    /// </summary>
+    [Theory]
+    [InlineData("2024-01-01T00:00:00 TT", TimeScale.TDB)]
+    [InlineData("2024-01-01T00:00:00 TDT", TimeScale.UTC)]
+    [InlineData("2024-01-01T00:00:00Z", TimeScale.TDB)]
+    [InlineData("2024-01-01T00:00:00 UTC", TimeScale.TAI)]
+    [InlineData("2024-01-01T02:00:00+02:00", TimeScale.GPS)]
+    [InlineData("2024-001T00:00:00 TDB", TimeScale.TT)]
+    [InlineData("JD 2460310.5 TAI", TimeScale.TDB)]
+    [InlineData("2460310.5 JD GPS", TimeScale.UTC)]
+    public void Parse_WithAScale_RefusesAContradictingTag(string text, TimeScale scale)
+    {
+        var exception = Assert.Throws<FormatException>(() => TimeSystem.Time.Parse(text, scale));
+        Assert.Contains(scale.ToString(), exception.Message);
+        Assert.False(TimeSystem.Time.TryParse(text, scale, out var result));
+        LabelAssert.Equal(default, result);
+        // The string alone names its scale
+        Assert.True(TimeSystem.Time.TryParse(text, out _));
+    }
+
+    [Fact]
+    public void Parse_WithAScale_AcceptsTdtForTt()
+    {
+        LabelAssert.Equal(new TimeSystem.Time(2024, 1, 1, TimeScale.TT), TimeSystem.Time.Parse("2024-01-01T00:00:00 TDT", TimeScale.TT));
+    }
+
+    /// <summary>
+    /// D3.4 of #668: <c>Parse</c> throws <see cref="FormatException"/> only and <c>TryParse</c> never throws. A Julian date
+    /// of 17 or more integer digits overflowed the decimal product with the ticks of a day (7.9e28 at most) before the range
+    /// check: <see cref="OverflowException"/> from both.
+    /// </summary>
+    [Theory]
+    [InlineData("JD 100000000000000000000 TDB")]
+    [InlineData("JD 79228162514264337593543950335 TDB")]
+    [InlineData("JD -79228162514264337593543950335 TT")]
+    [InlineData("99999999999999999 JD UTC")]
+    [InlineData("JD 5373484.5 TDB")]
+    [InlineData("JD 1721425.4 TDB")]
+    public void Parse_OfAJulianDateOutOfRange_ThrowsAFormatException_AndTryParseReturnsFalse(string text)
+    {
+        Assert.Throws<FormatException>(() => TimeSystem.Time.Parse(text));
+        Assert.Throws<FormatException>(() => TimeSystem.Time.Parse(text, TimeScale.TDB));
+        Assert.False(TimeSystem.Time.TryParse(text, out _));
+        Assert.False(TimeSystem.Time.TryParse(text.AsSpan(), null, out _));
+        Assert.False(TimeSystem.Time.TryParse(text, TimeScale.TDB, out _));
     }
 
     /// <summary>
@@ -273,6 +325,47 @@ public class TimeScaleTests
         Assert.Equal("2024 TDB", buffer[..written].ToString());
         Assert.False(tdb.TryFormat(buffer[..3], out written, "yyyy", null));
         Assert.Equal(0, written);
+    }
+
+    /// <summary>
+    /// D3.5 of #668: a format other than null, G and O is a custom format of <see cref="DateTime"/>. A standard format (one
+    /// letter: <c>u</c> and <c>R</c> write their own UTC designator before the tag) and a zone specifier (<c>z</c>, <c>zz</c>,
+    /// <c>zzz</c>, <c>K</c>: the machine's offset for a calendar of kind Unspecified, a second Z after a UTC one) are
+    /// refused with <see cref="FormatException"/>; a quoted or escaped letter is a literal.
+    /// </summary>
+    [Theory]
+    [InlineData("u")]
+    [InlineData("R")]
+    [InlineData("r")]
+    [InlineData("s")]
+    [InlineData("d")]
+    [InlineData("U")]
+    [InlineData("yyyy-MM-ddTHH:mm:sszzz")]
+    [InlineData("yyyy-MM-ddTHH:mm:ssK")]
+    [InlineData("HH:mm z")]
+    [InlineData("HH:mm 'h' zz")]
+    [InlineData("%K")]
+    [InlineData("%z")]
+    public void Format_RefusesAStandardFormatAndAZoneSpecifier(string format)
+    {
+        foreach (var scale in new[] { TimeScale.TDB, TimeScale.TT, TimeScale.TAI, TimeScale.UTC, TimeScale.GPS })
+        {
+            var time = new TimeSystem.Time(Calendar, scale);
+            Assert.Throws<FormatException>(() => time.ToString(format, CultureInfo.InvariantCulture));
+            Assert.Throws<FormatException>(() => time.TryFormat(new char[64], out _, format, null));
+        }
+    }
+
+    [Fact]
+    public void Format_ReadsQuotedAndEscapedZoneLettersAsLiterals()
+    {
+        var tdb = new TimeSystem.Time(Calendar, TimeScale.TDB);
+        Assert.Equal("12:00 z TDB", tdb.ToString("HH:mm 'z'", null));
+        Assert.Equal("12:00 K TDB", tdb.ToString("HH:mm \\K", null));
+        Assert.Equal("12:00 zzz TDB", tdb.ToString("HH:mm \"zzz\"", null));
+        Assert.Equal("2024-06-21T12:00:00 TT", new TimeSystem.Time(Calendar, TimeScale.TT).ToString("yyyy-MM-ddTHH:mm:ss", null));
+        Assert.Equal("21 TDB", tdb.ToString("%d", null));
+        LabelAssert.Equal(tdb, TimeSystem.Time.Parse(tdb.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", null)));
     }
 
     [Fact]

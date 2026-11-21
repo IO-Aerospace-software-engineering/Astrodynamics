@@ -40,8 +40,8 @@ public class KeplerianFactoriesTests
     {
         var ke = KeplerianElements.FromTrueAnomaly(a, e, 0.5, 0.3, 0.2, nu, _earth, Epoch, Frames.Frame.ICRF);
 
-        // The true anomaly as given
-        Assert.Equal(nu, ke.TrueAnomaly());
+        // The true anomaly as given, an angle in [0, 2π) as the true anomaly computed from M (#668, R23)
+        Assert.Equal(nu < 0.0 ? nu + IO.Astrodynamics.Constants.TwoPi : nu, ke.TrueAnomaly());
 
         // M of the closed forms: tan(E/2) = √((1 − e)/(1 + e)) tan(ν/2), M = E − e sin E for an ellipse (in [0, 2π));
         // tanh(H/2) = √((e − 1)/(e + 1)) tan(ν/2), M = e sinh H − H for a hyperbola
@@ -72,6 +72,33 @@ public class KeplerianFactoriesTests
         Assert.Equal(p / (1.0 + e * System.Math.Cos(nu)), state.Position.Magnitude(), 1e-9 * state.Position.Magnitude());
     }
 
+    /// <summary>
+    /// ν is an angle (#668, R23): reduced to [0, 2π), the range of the true anomaly computed from M, so two equal elements
+    /// give the same true anomaly; on a hyperbola, its reduction to (−π, π] lies inside the asymptotes. Before, ν was
+    /// returned as given (7 against 0.7168 from M, −1 against 5.2832) and a hyperbola took ν = 7.
+    /// </summary>
+    [Theory]
+    [InlineData(7000000.0, 0.1, 7.0)]
+    [InlineData(7000000.0, 0.1, -1.0)]
+    [InlineData(7000000.0, 0.1, 20.0)]
+    [InlineData(-7000000.0, 1.5, 7.0)]
+    [InlineData(-7000000.0, 1.5, -1.0)]
+    [InlineData(-7000000.0, 1.5, -8.0)]
+    public void FromTrueAnomaly_ReducesTheAngle(double a, double e, double nu)
+    {
+        var ke = KeplerianElements.FromTrueAnomaly(a, e, 0.5, 0.3, 0.2, nu, _earth, Epoch, Frames.Frame.ICRF);
+        double reduced = ke.TrueAnomaly();
+        Assert.InRange(reduced, 0.0, IO.Astrodynamics.Constants.TwoPi);
+        Assert.True(reduced < IO.Astrodynamics.Constants.TwoPi);
+        // The same direction: cos and sin of the angle given
+        Assert.Equal(System.Math.Cos(nu), System.Math.Cos(reduced), 1e-14);
+        Assert.Equal(System.Math.Sin(nu), System.Math.Sin(reduced), 1e-14);
+
+        var byMeanAnomaly = new KeplerianElements(a, e, 0.5, 0.3, 0.2, ke.MeanAnomaly(), _earth, Epoch, Frames.Frame.ICRF);
+        Assert.Equal(byMeanAnomaly, ke);
+        Assert.Equal(byMeanAnomaly.TrueAnomaly(), reduced, 1e-12);
+    }
+
     [Fact]
     public void FromTrueAnomaly_Refusals_NameTheParameter()
     {
@@ -79,7 +106,7 @@ public class KeplerianFactoriesTests
         Assert.Equal("trueAnomaly", Assert.Throws<ArgumentException>(() =>
             KeplerianElements.FromTrueAnomaly(7e6, 0.1, 0.5, 0.3, 0.2, double.NaN, _earth, Epoch, Frames.Frame.ICRF)).ParamName);
         double asymptote = System.Math.Acos(-1.0 / 1.7);
-        foreach (double nu in new[] { asymptote + 1e-9, -asymptote - 1e-9, 3.0 })
+        foreach (double nu in new[] { asymptote + 1e-9, -asymptote - 1e-9, 3.0, 3.0 + IO.Astrodynamics.Constants.TwoPi, -3.0 - IO.Astrodynamics.Constants.TwoPi })
         {
             Assert.Equal("trueAnomaly", Assert.Throws<ArgumentOutOfRangeException>(() =>
                 KeplerianElements.FromTrueAnomaly(-1e7, 1.7, 0.5, 0.3, 0.2, nu, _earth, Epoch, Frames.Frame.ICRF)).ParamName);

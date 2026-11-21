@@ -53,12 +53,12 @@ A scale outside the enumeration throws `ArgumentOutOfRangeException`.
 | Method | Description |
 |--------|-------------|
 | `Parse(string s)` | The time a tagged string writes; a string without a tag, `Z` or offset throws `FormatException` |
-| `Parse(string s, TimeScale scale)` | The same, `scale` the scale of an untagged string; a tag, `Z` or offset in the string prevails |
-| `TryParse(string s, out Time result)`, `TryParse(string s, TimeScale scale, out Time result)` | The same, false instead of an exception |
+| `Parse(string s, TimeScale scale)` | The same, `scale` the scale of an untagged string; a tag of the same scale is accepted (`TDT` for TT, `Z` or an offset for UTC), and a tag, `Z` or offset of another scale contradicts it and throws `FormatException` (D3.4) |
+| `TryParse(string s, out Time result)`, `TryParse(string s, TimeScale scale, out Time result)` | The same, false instead of an exception; they never throw |
 | `ToString()` | The calendar in the round-trip form of `DateTime` (`O`), then `Z` for UTC or ` TDB`, ` TT`, ` TAI`, ` GPS`; `Parse` reads it back exactly (`EqualsExact`). TT is written `TT` (`TDT` before 11.0.0) |
-| `ToString(string format, IFormatProvider provider)` | `null`, `G`, `O` or `o` give `ToString()`; any other format is a `DateTime` format of the calendar followed by the tag (`Z` for UTC, ` TDB`, ` TT`, ` TAI`, ` GPS` otherwise): `$"{t:yyyy-MM-dd}"` is `2024-06-21 TDB` |
+| `ToString(string format, IFormatProvider provider)` | `null`, `G`, `O` or `o` give `ToString()`; any other format is a custom `DateTime` format of the calendar followed by the tag (`Z` for UTC, ` TDB`, ` TT`, ` TAI`, ` GPS` otherwise): `$"{t:yyyy-MM-dd}"` is `2024-06-21 TDB`. A standard format (one letter: `u` and `R` write their own UTC designator) and a zone specifier (`z`, `zz`, `zzz`, `K`: the machine's offset for a calendar of another scale than UTC) throw `FormatException`, the scale being the tag; a quoted or escaped letter is a literal (D3.5) |
 
-`Parse` throws `FormatException` only, and refuses a second 60 (a `Time` holds no leap second: give a UTC leap second in
+`Parse` throws `FormatException` only (a Julian date beyond every `Time` included, however many digits), and refuses a second 60 (a `Time` holds no leap second: give a UTC leap second in
 TAI), a field out of range, a tag after `Z` or an offset, and the forms `Time(string)` read through `DateTime.TryParse`
 before 11.0.0 (`06/21/2024 12:00`, RFC 1123, a `GMT` suffix). The CCSDS readers (OPM, OMM, CDM) use the strict branch of
 the same grammar: `T` and the seconds required, no tag (#619).

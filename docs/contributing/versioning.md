@@ -177,9 +177,13 @@ release are listed under **Known limitations**.
   `Time.Parse(string)`, `Parse(string, TimeScale)`, `TryParse` and `ISpanParsable<Time>` read one grammar: an ISO 8601
   date or a CCSDS day of year (`2024-173`), an optional `T` (or a space) and `hh:mm[:ss[.f…]]`, then `Z` or `±hh:mm` (the
   UTC instant) or a scale tag (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`, any case), or a Julian date `JD n TAG` or
-  `n JD TAG` whose digits are read exactly to the nearest tick; an untagged string needs `Parse(s, scale)`. `Time` is
-  `IFormattable` and `ISpanFormattable`: `G`, `O` and null give `ToString()`, another format is a `DateTime` format
-  followed by the tag (`$"{t:yyyy-MM-dd}"` is `2024-06-21 TDB`). `EqualsExact(Time)` and `Time.ExactComparer` compare
+  `n JD TAG` whose digits are read exactly to the nearest tick; an untagged string needs `Parse(s, scale)`, which
+  refuses a tag, `Z` or offset of another scale than `scale` (`FormatException`; `TDT` is TT, `Z` and an offset UTC).
+  `Parse` throws `FormatException` only and `TryParse` never throws, a Julian date of any number of digits included.
+  `Time` is `IFormattable` and `ISpanFormattable`: `G`, `O` and null give `ToString()`, another format is a custom
+  `DateTime` format followed by the tag (`$"{t:yyyy-MM-dd}"` is `2024-06-21 TDB`); a standard format (one letter, `u`
+  and `R` among them) and a zone specifier (`z`, `zz`, `zzz`, `K` outside quotes, which wrote the machine's offset
+  before the tag) throw `FormatException`, the scale being the tag. `EqualsExact(Time)` and `Time.ExactComparer` compare
   the labels (the calendar and the scale; internal `HasSameLabel` and `LabelComparer` before), beside the equality of
   instants of #512 (choice 4 of the re-baseline: the TAI tick kept). `Constants.TwoPi` and `Constants.HalfPi` (under
   **Changed**). The CCSDS readers read the strict branch of the grammar, bit for bit (#619). See
@@ -198,15 +202,18 @@ release are listed under **Known limitations**.
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
   2026-11-19). `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis,
   trueAnomaly, observer, epoch, frame)`: the elements whose true anomaly is ν, M(ν) of the closed-form eccentric anomaly,
-  `TrueAnomaly()` ν as given (the conformance runner's former code, now its call); `ArgumentOutOfRangeException`
-  (`trueAnomaly`) for a ν of a hyperbola on or beyond its asymptotes. `Parabolic(perigeeRadius, inclination,
+  `TrueAnomaly()` ν reduced to [0, 2π), the range of the true anomaly computed from M, so that equal elements give the
+  same angle (ν as given when in it: the conformance runner's former code, now its call); `ArgumentOutOfRangeException`
+  (`trueAnomaly`) for a ν of a hyperbola whose reduction to (−π, π] is on or beyond its asymptotes. `Parabolic(perigeeRadius, inclination,
   ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, eccentricity = 1.0)`: a parabola, or an orbit
   within 1e-6 of e = 1, from its perigee radius, a = q / (1 − e), +Infinity at e = 1;
   `ArgumentOutOfRangeException` (`eccentricity`) outside the band. Both osculating. See
   [Keplerian Elements](../reference/keplerian-elements.md).
 - **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
   `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
-  could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only.
+  could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
+  written `n JD TAG` and seconds `s TAG`, the tag of the target scale, so the command reads its output back as the same
+  instant (under **Changed**).
 
 **Fixed**
 
@@ -4369,7 +4376,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   calendar meant in another scale: `DateTime.SpecifyKind(dt, DateTimeKind.Unspecified)`; an instant: `ConvertTo`.
 - **Breaking: `Time(string)` is replaced by `Time.Parse`** (D3.4 of #668), on one grammar: `new Time("2024-06-21T12:00:00
   UTC")` → `Time.Parse("2024-06-21T12:00:00 UTC")`, an untagged string (TDB before) → `Time.Parse(s, TimeScale.TDB)`.
-  `Parse` throws `FormatException` only (`ArgumentException` for a second 60, an unknown tag or a tag after `Z` before).
+  `Parse` throws `FormatException` only (`ArgumentException` for a second 60, an unknown tag or a tag after `Z` before);
+  `Parse(s, scale)` gives `scale` to an untagged string and refuses a tag of another scale.
   Its changes of meaning: an offset (`+02:00`) is the UTC instant, where it gave a local time of the machine; a day of
   year (`2024-173T12:00:00 UTC`) and a Julian date (`JD 2460483.0 UTC`) are read; the forms `DateTime.TryParse` read
   beyond ISO 8601 are refused (`06/21/2024 12:00`, RFC 1123, a `GMT` suffix). Migration: `Time.Parse`, or
@@ -4427,8 +4435,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   threw before; untagged stays TDB), and every other epoch is read by `Time.TryParse(s, TimeScale.TDB)`, so a day of
   year is read, an offset is the UTC instant, a Julian date is its digits to the nearest tick (through a double before,
   at most one tick away), `NaN JD` throws `FormatException` (`ArgumentOutOfRangeException` before), and a string holding
-  a `z` or the letters `utc` anywhere is no longer UTC for that reason. `time-converter` without a target or a format
-  writes TDB in ISO (it threw before; under **Added**). Migration: none for the documented forms.
+  a `z` or the letters `utc` anywhere is no longer UTC for that reason. A tagged epoch is read by `Time.TryParse(s)`
+  first, so its tag gives its scale (`Parse(s, scale)` refuses a tag of another scale). `time-converter` without a
+  target or a format writes TDB in ISO (it threw before; under **Added**). Migration: none for the documented forms.
+- **Breaking: `time-converter` refuses an argument after the epoch** (D3.7 of #668), `ArgumentException` naming the
+  quoted epoch: before, `time-converter 2020-01-01T12:00:00 TAI -u` dropped `TAI` and read the epoch untagged, as TDB,
+  so it printed 2020-01-01T11:58:50.8160783Z, 69.18 s from the instant meant. Migration: quote an epoch that holds a
+  space, `time-converter "2020-01-01T12:00:00 TAI" -u`.
+- **Breaking: `time-converter --format jd` and `--format seconds` (`-j`, `-e`) write the tag of their scale** (D3.4 of
+  #668: no implicit scale), `2433282.5 JD UTC` and `631152069.1839217 TDB` where they wrote `2433282.5 JD` and
+  `631152069.1839217`, the numbers in invariant culture (the machine's culture before, `2433282,5` in French): an
+  untagged output of UTC, TAI or GPS read back as an epoch was taken as TDB, 69.18 s early for UTC in 2024. Migration: a
+  script that read the number takes the first token of the line.
 - **Breaking: an error SPICE signals throws `SpiceException`** (lot L1, R03 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 10, decided
   by S. Guillet, 2026-11-19), an `InvalidOperationException` with SPICE's `ShortMessage` and `LongMessage` (under

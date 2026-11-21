@@ -215,12 +215,15 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
 
     /// <summary>
     /// The time a string writes, of the grammar of <see cref="Parse(string)"/>, <paramref name="scale"/> the scale of a
-    /// string without a tag, <c>Z</c> or offset; a tag, <c>Z</c> or offset in the string gives its own scale.
+    /// string without a tag, <c>Z</c> or offset (D3.4 of #668); a tag of the same scale is accepted (<c>TDT</c> for
+    /// <see cref="TimeScale.TT"/>, <c>Z</c> or an offset for <see cref="TimeScale.UTC"/>), and one of another scale
+    /// contradicts it and throws.
     /// </summary>
     /// <param name="s">The string.</param>
     /// <param name="scale">The scale of an untagged string.</param>
     /// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
-    /// <exception cref="FormatException">The string is not of this grammar.</exception>
+    /// <exception cref="FormatException">The string is not of this grammar, or names another scale than
+    /// <paramref name="scale"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="scale"/> is not a member of
     /// <see cref="TimeScale"/>.</exception>
     public static Time Parse(string s, TimeScale scale)
@@ -277,8 +280,8 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     }
 
     /// <summary>
-    /// <see cref="Parse(string, TimeScale)"/> without exception: false for a null string, one the grammar refuses, or a
-    /// scale that is not a member of <see cref="TimeScale"/>.
+    /// <see cref="Parse(string, TimeScale)"/> without exception: false for a null string, one the grammar refuses, one that
+    /// names another scale than <paramref name="scale"/>, or a scale that is not a member of <see cref="TimeScale"/>.
     /// </summary>
     /// <param name="s">The string.</param>
     /// <param name="scale">The scale of an untagged string.</param>
@@ -324,14 +327,23 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     }
 
     /// <summary>
-    /// The time in <paramref name="format"/> (<see cref="IFormattable"/>): null, empty, <c>G</c>, <c>O</c> or <c>o</c>
-    /// give <see cref="ToString()"/>; any other format is a format of <see cref="System.DateTime"/> applied to the
-    /// calendar, followed by the tag of the scale (<c>Z</c> for UTC, <c> TDB</c>, <c> TT</c>, <c> TAI</c> or <c> GPS</c>).
+    /// The time in <paramref name="format"/> (<see cref="IFormattable"/>, D3.5 of #668): null, empty, <c>G</c>, <c>O</c>
+    /// or <c>o</c> give <see cref="ToString()"/>; any other format is a custom format of <see cref="System.DateTime"/>
+    /// applied to the calendar, followed by the tag of the scale (<c>Z</c> for UTC, <c> TDB</c>, <c> TT</c>, <c> TAI</c>
+    /// or <c> GPS</c>).
     /// </summary>
+    /// <remarks>
+    /// A standard format of <see cref="System.DateTime"/> (one letter, <c>u</c> or <c>R</c> among them, which write their
+    /// own UTC designator) and a zone specifier (<c>z</c>, <c>zz</c>, <c>zzz</c>, <c>K</c>, which write the machine's
+    /// offset for a calendar of another scale than UTC and a second designator after a UTC one) are refused: the scale is
+    /// the tag. A letter in quotes or after a backslash is a literal; <c>%</c> before a letter makes it a custom
+    /// specifier (<c>%d</c>).
+    /// </remarks>
     /// <param name="format">The format.</param>
     /// <param name="formatProvider">The culture of a format of <see cref="System.DateTime"/>; the invariant culture when
     /// null.</param>
-    /// <exception cref="FormatException">The format is not one of <see cref="System.DateTime"/>.</exception>
+    /// <exception cref="FormatException">The format is not a custom format of <see cref="System.DateTime"/>, is a standard
+    /// format, or holds a zone specifier.</exception>
     public string ToString(string format, IFormatProvider formatProvider)
     {
         if (IsRoundTripFormat(format))
@@ -339,6 +351,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
             return ToString();
         }
 
+        RequireCustomFormatWithoutZone(format);
         return DateTime.ToString(format, formatProvider ?? CultureInfo.InvariantCulture) + Tag(Scale);
     }
 
@@ -351,6 +364,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// <param name="format">The format.</param>
     /// <param name="provider">The culture of a format of <see cref="System.DateTime"/>; the invariant culture when null.</param>
     /// <returns>False when <paramref name="destination"/> is too short.</returns>
+    /// <exception cref="FormatException">The format is refused by <see cref="ToString(string, IFormatProvider)"/>.</exception>
     public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider provider)
     {
         string text = ToString(format.IsEmpty ? null : format.ToString(), provider);
@@ -366,6 +380,48 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     }
 
     private static bool IsRoundTripFormat(string format) => string.IsNullOrEmpty(format) || format is "G" or "O" or "o";
+
+    // A custom format of DateTime without a zone specifier (D3.5 of #668): one character is a standard format, and z or K
+    // outside quotes and escapes writes a zone the tag already gives (the machine's offset for a calendar of kind
+    // Unspecified)
+    private static void RequireCustomFormatWithoutZone(string format)
+    {
+        if (format.Length == 1)
+        {
+            throw new FormatException(
+                $"'{format}' is a standard format of DateTime: a Time takes null, G, O or a custom format (yyyy-MM-ddTHH:mm:ss), followed by the tag of its scale.");
+        }
+
+        char quote = '\0';
+        for (int i = 0; i < format.Length; i++)
+        {
+            char c = format[i];
+            if (quote != '\0')
+            {
+                if (c == quote)
+                {
+                    quote = '\0';
+                }
+                else if (c == '\\')
+                {
+                    i++;
+                }
+            }
+            else if (c is '\'' or '"')
+            {
+                quote = c;
+            }
+            else if (c == '\\')
+            {
+                i++;
+            }
+            else if (c is 'z' or 'K')
+            {
+                throw new FormatException(
+                    $"'{format}' holds the zone specifier '{c}': the scale of a Time is the tag written after the format, never an offset.");
+            }
+        }
+    }
 
     // The tag after a calendar written with a custom format: Z right after a UTC calendar, the scale after a space otherwise
     private static string Tag(TimeScale scale) =>

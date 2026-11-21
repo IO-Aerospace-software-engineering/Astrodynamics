@@ -18,7 +18,8 @@ public class TimeConverterCommand
     /// <c>--to tdb|tt|tai|utc|gps|local</c> and <c>--format iso|jd|seconds</c>, TDB and ISO by default; <c>-t</c>,
     /// <c>-u</c>, <c>-l</c>, <c>-j</c>, <c>-e</c> and <c>-d</c> are aliases of <c>--to tdb</c>, <c>--to utc</c>,
     /// <c>--to local</c>, <c>--format jd</c>, <c>--format seconds</c> and <c>--format iso</c>. Local is the calendar of the
-    /// machine's zone, written in ISO only.
+    /// machine's zone, written in ISO only. A Julian date is written <c>n JD TAG</c> and seconds <c>s TAG</c>, the tag of
+    /// the target scale, so that the command reads its output back as the same instant.
     /// </summary>
     /// <remarks>
     /// Before 11.0.0 one of <c>-t</c>, <c>-u</c>, <c>-l</c> and one of <c>-j</c>, <c>-e</c>, <c>-d</c> were required, an
@@ -80,10 +81,13 @@ public class TimeConverterCommand
             var converted = input.ConvertTo(Helpers.ScaleOfTag(scale is "tdb" or "tt" or "tai" or "utc" or "gps"
                 ? scale
                 : throw new ArgumentException($"Unknown scale '{to}': tdb, tt, tai, utc, gps or local.", nameof(to))));
+            // Every output names its scale, in a form the command reads back (D3.4 of #668: no implicit scale): n JD TAG and
+            // seconds TAG (the names of TimeScale are the tags), the numbers in invariant culture
+            string tag = converted.Scale.ToString();
             res = output switch
             {
-                "jd" => $"{converted.ToJulianDate()} JD",
-                "seconds" => $"{converted.TimeSpanFromJ2000().TotalSeconds}",
+                "jd" => $"{converted.ToJulianDate().ToString(CultureInfo.InvariantCulture)} JD {tag}",
+                "seconds" => $"{converted.TimeSpanFromJ2000().TotalSeconds.ToString(CultureInfo.InvariantCulture)} {tag}",
                 _ => converted.ToString()
             };
         }

@@ -19,12 +19,12 @@ public class EpochParserTests
     [InlineData("2021-03-20T12:00:00.000 TAI", "TAI")]
     [InlineData("2021-03-20T12:00:00.000 TT", "TT")]
     [InlineData("2021-03-20T12:00:00.000 TDB", "TDB")]
-    public void EachTag_GivesItsTimeFrame(string epoch, string scale)
+    public void EachTag_GivesItsTimeScale(string epoch, string scale)
     {
         // Act
         var time = EpochParser.Parse(epoch);
 
-        // Assert: TT is the framework's TDT
+        // Assert: each tag is the TimeScale of its name
         TimeScale expected = scale switch
         {
             "UTC" => TimeScale.UTC,
@@ -53,7 +53,7 @@ public class EpochParserTests
     [InlineData("2016-12-31T23:59:59.1234 UTC")] // four decimals
     [InlineData("2016-12-31T23:59:60.000 UTC")] // second 60: the instant is given in TAI
     [InlineData("2021-03-20T12:00:00.000 GPS")] // GPS is an output only
-    [InlineData("2021-03-20T12:00:00.000 TDT")] // the framework's name of TT
+    [InlineData("2021-03-20T12:00:00.000 TDT")] // the former name of TT, which spec.md section 3 does not take
     [InlineData("2021-03-20T12:00:00.000 tdb")]
     [InlineData("2021-03-20T12:00:00.000")] // no tag
     [InlineData("2021-03-20T12:00:00.000  TDB")] // two spaces

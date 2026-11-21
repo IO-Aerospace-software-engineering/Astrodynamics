@@ -241,7 +241,7 @@ argument (D3 of #668).
 | `Time(int year, int month, int day, TimeScale scale)` | Create from a date in a scale |
 | `Time(int year, int month, int day, int hour, int minute, int second, TimeScale scale)` | Create from a date and time in a scale |
 | `Time(DateTime dateTime, TimeScale scale)` | Create from a `DateTime` in a scale; a `DateTime` of kind `Local`, or of kind `Utc` with another scale than UTC, throws `ArgumentException` |
-| `Parse(string s)` | One grammar (`yyyy-MM-dd` or `yyyy-DDD`, an optional time, then `Z`, `±hh:mm` or a tag `UTC`, `TT`, `TDB`, `TAI`, `GPS`; or `JD n TAG`); an untagged string throws `FormatException` unless `Parse(s, scale)` names its scale; `TryParse` returns false instead |
+| `Parse(string s)` | One grammar (`yyyy-MM-dd` or `yyyy-DDD`, an optional time, then `Z`, `±hh:mm` or a tag `UTC`, `TT`, `TDB`, `TAI`, `GPS`; or `JD n TAG`); an untagged string throws `FormatException` unless `Parse(s, scale)` names its scale, and a tag of another scale than `scale` throws; `TryParse` returns false instead and never throws |
 | `FromDayOfYear(int year, int dayOfYear, double seconds, TimeScale scale)` | Create from a day of year and the seconds of that day |
 | `Create(double secondsFromJ2000, TimeScale scale)` | Create from seconds since J2000 |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
@@ -479,7 +479,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | Factory Method | Description |
 |----------------|-------------|
 | `FromOMM(double meanMotion, double e, double i, double raan, double aop, double m, ILocalizable observer, Time epoch, Frame frame)` | Create mean elements from OMM data (units: rev/day for mean motion, degrees for angles) |
-| `FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double trueAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Elements given with their true anomaly: M(ν), `TrueAnomaly()` ν (#668, R23) |
+| `FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double trueAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Elements given with their true anomaly: M(ν), `TrueAnomaly()` ν reduced to [0, 2π) (#668, R23) |
 | `Parabolic(double perigeeRadius, double inclination, double ascendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, double eccentricity = 1.0)` | Parabola, or orbit within 1e-6 of e = 1, from its perigee radius: a = q / (1 − e), +Infinity at e = 1 (#459; the `perigeeRadius` parameter of the constructor before 11.0.0) |
 
 | Property | Description |

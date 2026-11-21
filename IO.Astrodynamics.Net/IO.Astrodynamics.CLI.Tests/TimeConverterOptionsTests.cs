@@ -32,10 +32,40 @@ public class TimeConverterOptionsTests
     [Fact]
     public void Format_WritesSecondsAndJulianDatesOfTheTargetScale()
     {
-        Assert.Equal($"0{Environment.NewLine}", Run("2000-01-01T12:00:00 TAI", to: "tai", format: "seconds"));
-        Assert.Equal($"2451545 JD{Environment.NewLine}", Run("2000-01-01T12:00:00 GPS", to: "gps", format: "JD"));
+        Assert.Equal($"0 TAI{Environment.NewLine}", Run("2000-01-01T12:00:00 TAI", to: "tai", format: "seconds"));
+        Assert.Equal($"2451545 JD GPS{Environment.NewLine}", Run("2000-01-01T12:00:00 GPS", to: "gps", format: "JD"));
         // The aliases give the same outputs
         Assert.Equal(Run("0.0 TDB", to: "utc", format: "seconds"), Run("0.0 TDB", toUtc: true, toSeconds: true));
+    }
+
+    /// <summary>
+    /// Every output names its scale (D3.4 of #668), so the command reads it back as the same instant: an untagged Julian
+    /// date or seconds of UTC, TAI or GPS were read as TDB, 69.18 s early for UTC in 2024. 2024-01-01T00:00:00Z is JD
+    /// 2460310.5 UTC and 757339200 s of UTC from J2000 (8765.5 days), the definitions of the forms.
+    /// </summary>
+    [Theory]
+    [InlineData("utc", "jd", "2460310.5 JD UTC")]
+    [InlineData("utc", "seconds", "757339200 UTC")]
+    [InlineData("tai", "jd", null)]
+    [InlineData("tai", "seconds", "757339237 TAI")]
+    [InlineData("gps", "seconds", "757339218 GPS")]
+    [InlineData("tt", "seconds", "757339269.184 TT")]
+    [InlineData("tdb", "jd", null)]
+    [InlineData("tdb", "seconds", null)]
+    public void JulianDatesAndSeconds_NameTheirScale_AndReadBackAsTheSameInstant(string to, string format, string? expected)
+    {
+        const string epoch = "2024-01-01T00:00:00Z";
+        string written = Run(epoch, to: to, format: format).TrimEnd();
+        if (expected != null)
+        {
+            Assert.Equal(expected, written);
+        }
+
+        Assert.EndsWith(" " + to.ToUpperInvariant(), written);
+        // Read back and written in ISO UTC: the instant given, to the tick a Julian date's double holds (about 40 µs at
+        // JD 2.46e6)
+        var back = DateTime.Parse(Run(written, to: "utc").TrimEnd().TrimEnd('Z'), System.Globalization.CultureInfo.InvariantCulture);
+        Assert.True(System.Math.Abs((back - new DateTime(2024, 1, 1)).TotalSeconds) < 1e-4, $"{written} read back as {back:O}");
     }
 
     [Fact]

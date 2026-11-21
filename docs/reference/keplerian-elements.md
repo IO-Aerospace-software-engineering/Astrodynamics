@@ -27,7 +27,7 @@ motion finite and above 0.
 
 | Method | Description |
 |--------|-------------|
-| `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, trueAnomaly, observer, epoch, frame)` | Osculating elements of the constructor's conics whose true anomaly is ν: M(ν) from the closed-form eccentric anomaly (`OrbitalParameters.TrueAnomalyToMeanAnomaly`), `TrueAnomaly()` ν as given; `ArgumentException` (`trueAnomaly`) for a ν not finite, `ArgumentOutOfRangeException` (`trueAnomaly`) for a ν of a hyperbola on or beyond its asymptotes |
+| `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, trueAnomaly, observer, epoch, frame)` | Osculating elements of the constructor's conics whose true anomaly is ν: M(ν) from the closed-form eccentric anomaly (`OrbitalParameters.TrueAnomalyToMeanAnomaly`), `TrueAnomaly()` ν reduced to [0, 2π), the range of the true anomaly computed from M (ν as given when in it); `ArgumentException` (`trueAnomaly`) for a ν not finite, `ArgumentOutOfRangeException` (`trueAnomaly`) for a ν of a hyperbola whose reduction to (−π, π] is on or beyond its asymptotes |
 | `Parabolic(perigeeRadius, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, eccentricity = 1.0)` | Osculating elements of a parabola, or of an orbit within 1e-6 of e = 1, from its perigee radius q: a = q / (1 − e), +∞ at e = 1, the mean anomaly Barker's; `ArgumentOutOfRangeException` (`perigeeRadius`) for a q not finite and above 0, (`eccentricity`) for an e outside the band |
 | `FromOMM(meanMotion, e, i, raan, aop, m, observer, epoch, frame)` | Create mean elements from OMM data (units: rev/day, degrees) |
 

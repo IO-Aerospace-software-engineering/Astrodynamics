@@ -121,8 +121,8 @@ public class Helpers
     /// optional scale tag (<c>631152000.0</c>, <c>631152000.0 UTC</c>, <c>757339200 TT</c>; TDB without a tag), the CLI's
     /// own form, or any string of the grammar of <see cref="Time.Parse(string)"/> (an ISO 8601 date or a CCSDS day of year
     /// with an optional time, then <c>Z</c>, an offset or a tag; a Julian date <c>2458850.0 JD UTC</c> or
-    /// <c>JD 2458850.0 TDB</c>), read by <see cref="Time.TryParse(string, TimeScale, out Time)"/> with TDB for an untagged
-    /// string, as before.
+    /// <c>JD 2458850.0 TDB</c>), read by <see cref="Time.TryParse(string, out Time)"/>, and an untagged string by
+    /// <see cref="Time.TryParse(string, TimeScale, out Time)"/> with TDB, as before.
     /// </summary>
     /// <remarks>
     /// Before 11.0.0 the tag of seconds was UTC or TDB only (<c>757339200 TT</c> threw), a string held UTC when it held a
@@ -143,7 +143,9 @@ public class Helpers
             return Time.Create(value, tag.Success ? ScaleOfTag(tag.Value) : TimeScale.TDB);
         }
 
-        if (Time.TryParse(epoch, TimeScale.TDB, out var time))
+        // A tagged string names its scale; an untagged one is TDB. Parse(s, scale) refuses a tag of another scale (D3.4 of
+        // #668), so the tagged reading comes first
+        if (Time.TryParse(epoch, out var time) || Time.TryParse(epoch, TimeScale.TDB, out time))
         {
             return time;
         }

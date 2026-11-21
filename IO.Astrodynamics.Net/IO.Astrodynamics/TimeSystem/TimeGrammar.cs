@@ -38,6 +38,9 @@ internal static class TimeGrammar
     // The base of the rounding of a fraction longer than 7 digits
     private static readonly DateTime FractionBase = new(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
+    // A bound beyond the Julian dates of every Time, below which the ticks from J2000 fit a decimal
+    private const decimal MaximumJulianDate = 100_000_000m;
+
     private const DateTimeStyles FractionStyles = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal;
 
     private const string Grammar =
@@ -107,27 +110,41 @@ internal static class TimeGrammar
             return false;
         }
 
-        TimeScale scale;
-        if (match.Groups["zone"].Success)
-        {
+        TimeScale? named = match.Groups["zone"].Success
             // Z or an offset: the UTC instant, never the machine's local time
-            scale = TimeScale.UTC;
-        }
-        else if (match.Groups["tag"].Success)
+            ? TimeScale.UTC
+            : match.Groups["tag"].Success
+                ? ScaleOfTag(match.Groups["tag"].Value)
+                : null;
+        if (!TryScale(value, named, untaggedScale, "end it with Z, an offset or a tag (UTC, TT, TDB, TAI, GPS)", out var scale,
+                out error))
         {
-            scale = ScaleOfTag(match.Groups["tag"].Value);
-        }
-        else if (untaggedScale.HasValue)
-        {
-            scale = untaggedScale.Value;
-        }
-        else
-        {
-            error = $"'{value}' names no time scale: end it with Z, an offset or a tag (UTC, TT, TDB, TAI, GPS), or give the scale to Parse(s, scale).";
             return false;
         }
 
         result = new Time(new DateTime(ticks), scale);
+        return true;
+    }
+
+    // The scale of a string: the one it names, which must agree with the scale given for an untagged string (D3.4 of #668:
+    // a contradicting tag throws), or the scale given; false when the string names none and none is given
+    private static bool TryScale(string value, TimeScale? named, TimeScale? untaggedScale, string howToName, out TimeScale scale,
+        out string error)
+    {
+        scale = default;
+        if (named.HasValue && untaggedScale.HasValue && named.Value != untaggedScale.Value)
+        {
+            error = $"'{value}' names the scale {named.Value}, which contradicts the scale {untaggedScale.Value} given for an untagged string: drop the tag, or call Parse(s) to read the scale the string names.";
+            return false;
+        }
+
+        if (!(named ?? untaggedScale).HasValue)
+        {
+            error = $"'{value}' names no time scale: {howToName}, or give the scale to Parse(s, scale).";
+            return false;
+        }
+
+        scale = (named ?? untaggedScale).Value;
         error = null;
         return true;
     }
@@ -136,27 +153,20 @@ internal static class TimeGrammar
     {
         result = default;
         string value = match.Value;
-        TimeScale scale;
-        if (match.Groups["tag"].Success)
+        TimeScale? named = match.Groups["tag"].Success ? ScaleOfTag(match.Groups["tag"].Value) : null;
+        if (!TryScale(value, named, untaggedScale, "follow the Julian date with a tag (UTC, TT, TDB, TAI, GPS)", out var scale,
+                out error))
         {
-            scale = ScaleOfTag(match.Groups["tag"].Value);
-        }
-        else if (untaggedScale.HasValue)
-        {
-            scale = untaggedScale.Value;
-        }
-        else
-        {
-            error = $"'{value}' names no time scale: follow the Julian date with a tag (UTC, TT, TDB, TAI, GPS), or give the scale to Parse(s, scale).";
             return false;
         }
 
         // The digits read exactly (decimal holds 28 significant digits), the days from J2000 to the nearest tick, ties to
-        // even
+        // even. A Julian date beyond ±1e8 days is outside every Time (JD 1721425.5 to 5373484.5) and is refused before the
+        // product with the ticks of a day, which overflows a decimal from about 9.2e16 days (an OverflowException before)
         if (!decimal.TryParse(match.Groups["jd"].Value, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
-                CultureInfo.InvariantCulture, out decimal julianDate))
+                CultureInfo.InvariantCulture, out decimal julianDate) || julianDate is < -MaximumJulianDate or > MaximumJulianDate)
         {
-            error = $"'{value}' holds a Julian date out of range.";
+            error = $"'{value}' is outside the range of a Time.";
             return false;
         }
 

@@ -25,7 +25,7 @@ public class EpochInputTests
     [InlineData("2020-01-01 12:00:00 UTC")]
     public void ACalendarEpochTaggedUtc_IsUtc(string epoch)
     {
-        Assert.Equal($"{UtcNoonInTdbSeconds}{Environment.NewLine}", SecondsFromJ2000InTdb(epoch));
+        Assert.Equal($"{UtcNoonInTdbSeconds} TDB{Environment.NewLine}", SecondsFromJ2000InTdb(epoch));
     }
 
     [Theory]
@@ -50,7 +50,7 @@ public class EpochInputTests
     public void ACalendarEpochTaggedTdbOrUntagged_IsTdb(string epoch)
     {
         // The calendar difference of 2020-01-01T12:00:00 and 2000-01-01T12:00:00, 7305 days
-        Assert.Equal($"{7305 * 86400.0}{Environment.NewLine}", SecondsFromJ2000InTdb(epoch));
+        Assert.Equal($"{7305 * 86400.0} TDB{Environment.NewLine}", SecondsFromJ2000InTdb(epoch));
     }
 
     [Fact]
@@ -67,13 +67,13 @@ public class EpochInputTests
     public void AJulianDateTaggedUtc_IsUtc(string epoch)
     {
         // Unchanged by #509: JD 2458850.0 is 2020-01-01T12:00:00, 7305 days after JD 2451545.0
-        Assert.Equal($"{UtcNoonInTdbSeconds}{Environment.NewLine}", SecondsFromJ2000InTdb(epoch));
+        Assert.Equal($"{UtcNoonInTdbSeconds} TDB{Environment.NewLine}", SecondsFromJ2000InTdb(epoch));
     }
 
     [Fact]
     public void AnUntaggedJulianDate_IsTdb()
     {
-        Assert.Equal($"{7305 * 86400.0}{Environment.NewLine}", SecondsFromJ2000InTdb("2458850.0 JD"));
+        Assert.Equal($"{7305 * 86400.0} TDB{Environment.NewLine}", SecondsFromJ2000InTdb("2458850.0 JD"));
     }
 
     // #680: NaN is not a Julian date; CreateFromJD read it as 0 days from J2000, and the command ran at J2000. Since 11.0.0

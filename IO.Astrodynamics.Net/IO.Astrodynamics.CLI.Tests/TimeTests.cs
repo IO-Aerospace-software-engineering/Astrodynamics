@@ -19,7 +19,7 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = "1950-01-01T00:00:00Z" }, false, true, false, true, false, false);
             var res = sb.ToString();
 
-            Assert.Equal($"2433282.5 JD{Environment.NewLine}", res);
+            Assert.Equal($"2433282.5 JD UTC{Environment.NewLine}", res);
         }
     }
 
@@ -37,7 +37,7 @@ public class TimeTests
 
             // TDB − TT rounded to the nearest tick (#625): tools/seconds_to_ticks/time_conversion_reference.py, an exact
             // replica of the conversions (.1839218 when they truncated)
-            Assert.Equal($"631152069.1839217{Environment.NewLine}", res);
+            Assert.Equal($"631152069.1839217 TDB{Environment.NewLine}", res);
         }
     }
 
@@ -103,7 +103,7 @@ public class TimeTests
             var res = sb.ToString();
 
             // The nearest tick of TDB − TT (#625; .1839219 when it was truncated)
-            Assert.Equal($"631152069.1839218{Environment.NewLine}", res);
+            Assert.Equal($"631152069.1839218 TDB{Environment.NewLine}", res);
         }
     }
 
@@ -119,7 +119,7 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = "0.0 TDB" }, true, false, false, true, false, false);
             var res = sb.ToString();
 
-            Assert.Equal($"{Time.JULIAN_J2000} JD{Environment.NewLine}", res);
+            Assert.Equal($"{Time.JULIAN_J2000} JD TDB{Environment.NewLine}", res);
         }
     }
 
@@ -135,7 +135,7 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = "0.0 TDB" }, false, true, false, false, true, false);
             var res = sb.ToString();
 
-            Assert.Equal($"-64.1839273{Environment.NewLine}", res);
+            Assert.Equal($"-64.1839273 UTC{Environment.NewLine}", res);
         }
     }
 
@@ -151,7 +151,7 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = $"{Time.JULIAN_J2000} JD TDB" }, true, false, false, false, true, false);
             var res = sb.ToString();
 
-            Assert.Equal($"0{Environment.NewLine}", res);
+            Assert.Equal($"0 TDB{Environment.NewLine}", res);
         }
     }
 
@@ -185,7 +185,7 @@ public class TimeTests
 
             // J2000 TDB is 11:58:55.816074 UTC (TDB - TT is about -74 µs at J2000). The value used to be
             // truncated to the millisecond (...2571296).
-            Assert.Equal($"2451544.9992571305 JD{Environment.NewLine}", res);
+            Assert.Equal($"2451544.9992571305 JD UTC{Environment.NewLine}", res);
         }
     }
 

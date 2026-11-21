@@ -290,22 +290,23 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <summary>
         /// The Keplerian elements whose true anomaly is <paramref name="trueAnomaly"/> (#668, R23): the mean anomaly is
         /// M(ν) of the closed-form eccentric anomaly (<see cref="OrbitalParameters.TrueAnomalyToMeanAnomaly"/>), and
-        /// <see cref="OrbitalParameters.TrueAnomaly()"/> returns ν as given. The conic is one of the constructor, outside
-        /// the near-parabolic band.
+        /// <see cref="OrbitalParameters.TrueAnomaly()"/> returns ν reduced to [0, 2π), the range of the true anomaly
+        /// computed from M (ν as given when already in it). The conic is one of the constructor, outside the near-parabolic
+        /// band.
         /// </summary>
         /// <param name="semiMajorAxis">The semi-major axis, m: above 0 for an ellipse, below 0 for a hyperbola.</param>
         /// <param name="eccentricity">The eccentricity, finite and non-negative, |e − 1| ≥ 1e-6.</param>
         /// <param name="inclination">The inclination, rad, in [−π, π].</param>
         /// <param name="ascendingNode">The right ascension of the ascending node, rad.</param>
         /// <param name="argumentOfPeriapsis">The argument of periapsis, rad.</param>
-        /// <param name="trueAnomaly">The true anomaly, rad: inside the asymptotes of a hyperbola,
-        /// |ν| &lt; arccos(−1/e).</param>
+        /// <param name="trueAnomaly">The true anomaly, rad, an angle (any multiple of 2π added gives the same elements): on a
+        /// hyperbola, its reduction to (−π, π] inside the asymptotes, |ν| &lt; arccos(−1/e).</param>
         /// <param name="observer">The centre of motion.</param>
         /// <param name="epoch">The epoch.</param>
         /// <param name="frame">The frame of the elements.</param>
         /// <returns>Osculating Keplerian elements.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="eccentricity"/> is not finite or is negative, or
-        /// <paramref name="trueAnomaly"/> of a hyperbola is on or beyond its asymptotes.</exception>
+        /// the reduction to (−π, π] of <paramref name="trueAnomaly"/> of a hyperbola is on or beyond its asymptotes.</exception>
         /// <exception cref="ArgumentException">An element is not finite, the orbit is within 1e-6 of e = 1, or the conic is
         /// not one (the constructor's rules); the exception names the parameter.</exception>
         public static KeplerianElements FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode,
@@ -318,11 +319,13 @@ namespace IO.Astrodynamics.OrbitalParameters
             if (!double.IsFinite(meanAnomaly))
             {
                 throw new ArgumentOutOfRangeException(nameof(trueAnomaly), trueAnomaly,
-                    $"The true anomaly is on or beyond the asymptotes of the hyperbola, |ν| ≥ arccos(−1/e) (e = {eccentricity:R}).");
+                    $"The true anomaly is on or beyond the asymptotes of the hyperbola: its reduction to (−π, π] has |ν| ≥ arccos(−1/e) (e = {eccentricity:R}).");
             }
 
+            // ν is an angle: the true anomaly kept is in [0, 2π), as the one TrueAnomaly() computes from M, so equal elements
+            // give the same angle (#668, R23); M is that of ν as given, tan(ν/2) periodic in 2π
             return new KeplerianElements(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer,
-                epoch, frame, trueAnomaly, null, null, OrbitalElementsType.Osculating);
+                epoch, frame, SpecialFunctions.NormalizeAngle(trueAnomaly), null, null, OrbitalElementsType.Osculating);
         }
 
         /// <summary>
