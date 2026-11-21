@@ -219,7 +219,7 @@ public class ConjunctionTcaAccuracyTests
         {
             var (p, v) = pair.ProtectedTrajectory.InterpolateAt(epoch);
             var (s, w) = pair.SecondaryTrajectory.InterpolateAt(epoch);
-            return (s - p) * (w - v);
+            return (s - p).Dot(w - v);
         }
 
         var label = encounter.EncounterState.Epoch;
@@ -318,7 +318,7 @@ public class ConjunctionTcaAccuracyTests
         {
             var (a, _) = KeplerianStm.Propagate(mu, first.Position, first.Velocity, t);
             var (b, _) = KeplerianStm.Propagate(mu, second.Position, second.Velocity, t);
-            return (Position(b) - Position(a)) * (Velocity(b) - Velocity(a));
+            return (Position(b) - Position(a)).Dot(Velocity(b) - Velocity(a));
         }
 
         Assert.True(RangeRate(low) < 0.0 && RangeRate(high) > 0.0);

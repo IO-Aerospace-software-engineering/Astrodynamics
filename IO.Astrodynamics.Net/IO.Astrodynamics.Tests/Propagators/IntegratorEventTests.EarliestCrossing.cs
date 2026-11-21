@@ -49,7 +49,7 @@ public partial class IntegratorEventTests
         var k = new KeplerClosedForm(earth.GM, sv.Position, sv.Velocity, 0.0);
         double perigee = k.T / 2.0;
         var timeRoot = S.AddSeconds(perigee + 2.0);
-        var apsis = new Detector { Direction = CrossingDirection.NegativeToPositive, G = s => s.Position * s.Velocity };
+        var apsis = new Detector { Direction = CrossingDirection.NegativeToPositive, G = s => s.Position.Dot(s.Velocity) };
         var timed = new Detector { Direction = CrossingDirection.NegativeToPositive, G = s => (s.Epoch - timeRoot).TotalSeconds };
         foreach (bool timeFirst in new[] { true, false })
         {

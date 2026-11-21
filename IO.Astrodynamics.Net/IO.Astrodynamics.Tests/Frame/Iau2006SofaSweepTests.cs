@@ -130,10 +130,11 @@ public class Iau2006SofaSweepTests
             var tirsToIcrf = Matrix.FromQuaternion(tirs.GetStateOrientationToICRF(utc).Rotation);
 
             // SOFA gives GCRS -> TIRS, which is the transpose of TIRS -> ICRF (pivot = GCRS axes).
-            var sofa = new Matrix(3, 3);
+            var sofaTerms = new double[3, 3];
             for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
-                sofa.Set(i, j, epoch.GcrsToTirs[3 * i + j]);
+                sofaTerms[i, j] = epoch.GcrsToTirs[3 * i + j];
+            var sofa = new Matrix(sofaTerms);
 
             var gcrsToTirs = tirsToIcrf.Transpose();
             for (int i = 0; i < 3; i++)

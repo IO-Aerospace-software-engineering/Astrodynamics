@@ -149,21 +149,21 @@ public class OrbitalDirectionTargetTests
         // Prograde: in direction of velocity
         var progradeDir = OrbitalDirectionTarget.Prograde.GetDirection(sv);
         var velocityDir = sv.Velocity.Normalize();
-        double progradeAlignment = progradeDir * velocityDir;
+        double progradeAlignment = progradeDir.Dot(velocityDir);
         Assert.True(progradeAlignment > 0.9999,
             $"Prograde should align with velocity direction. Alignment: {progradeAlignment}");
 
         // Nadir: in direction of -position
         var nadirDir = OrbitalDirectionTarget.Nadir.GetDirection(sv);
         var negPositionDir = sv.Position.Inverse().Normalize();
-        double nadirAlignment = nadirDir * negPositionDir;
+        double nadirAlignment = nadirDir.Dot(negPositionDir);
         Assert.True(nadirAlignment > 0.9999,
             $"Nadir should align with -position direction. Alignment: {nadirAlignment}");
 
         // Normal: in direction of h = r x v
         var normalDir = OrbitalDirectionTarget.Normal.GetDirection(sv);
         var hDir = sv.Position.Cross(sv.Velocity).Normalize();
-        double normalAlignment = normalDir * hDir;
+        double normalAlignment = normalDir.Dot(hDir);
         Assert.True(normalAlignment > 0.9999,
             $"Normal should align with angular momentum direction. Alignment: {normalAlignment}");
 
@@ -175,11 +175,11 @@ public class OrbitalDirectionTargetTests
 
         // Verify dot product relationships hold
         // Prograde * Velocity > 0: velocity in same half-space as prograde
-        Assert.True(progradeDir * sv.Velocity > 0.0, "Prograde dot Velocity should be positive");
+        Assert.True(progradeDir.Dot(sv.Velocity) > 0.0, "Prograde dot Velocity should be positive");
         // Nadir * Position < 0: nadir points away from position vector
-        Assert.True(nadirDir * sv.Position < 0.0, "Nadir dot Position should be negative");
+        Assert.True(nadirDir.Dot(sv.Position) < 0.0, "Nadir dot Position should be negative");
         // Normal * (r x v) > 0: normal aligns with angular momentum
-        Assert.True(normalDir * sv.Position.Cross(sv.Velocity) > 0.0, "Normal dot (r x v) should be positive");
+        Assert.True(normalDir.Dot(sv.Position.Cross(sv.Velocity)) > 0.0, "Normal dot (r x v) should be positive");
     }
 
     [Fact]

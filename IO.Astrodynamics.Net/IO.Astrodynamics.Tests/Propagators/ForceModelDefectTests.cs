@@ -806,12 +806,13 @@ public class ForceModelDefectTests
         }
 
         // Monte Carlo: a factory returning one instance gives one run and RunCount − 1 failures
-        var cov = new Matrix(6, 6);
+        var covTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            cov.Set(i, i, 100.0);
-            cov.Set(i + 3, i + 3, 0.01);
+            covTerms[i, i] = 100.0;
+            covTerms[i + 3, i + 3] = 0.01;
         }
+        var cov = new Matrix(covTerms);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         int id = NextId();
@@ -933,8 +934,9 @@ public class ForceModelDefectTests
                 }
                 case "Monte Carlo":
                 {
-                    var cov = new Matrix(6, 6);
-                    for (int i = 0; i < 6; i++) cov.Set(i, i, i < 3 ? 100.0 : 0.01);
+                    var covTerms = new double[6, 6];
+                    for (int i = 0; i < 6; i++) covTerms[i, i] = i < 3 ? 100.0 : 0.01;
+                    var cov = new Matrix(covTerms);
                     var template = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
                     var state = (StateVector)template.InitialOrbitalParameters;
                     int id = NextId();

@@ -65,16 +65,16 @@ public class InitialOrbitDetermination
         Vector3 p2 = rhoHat1.Cross(rhoHat3);
         Vector3 p3 = rhoHat1.Cross(rhoHat2);
 
-        double d0 = rhoHat1 * p1;
-        double d11 = R1 * p1;
-        double d12 = R1 * p2;
-        double d13 = R1 * p3;
-        double d21 = R2 * p1;
-        double d22 = R2 * p2;
-        double d23 = R2 * p3;
-        double d31 = R3 * p1;
-        double d32 = R3 * p2;
-        double d33 = R3 * p3;
+        double d0 = rhoHat1.Dot(p1);
+        double d11 = R1.Dot(p1);
+        double d12 = R1.Dot(p2);
+        double d13 = R1.Dot(p3);
+        double d21 = R2.Dot(p1);
+        double d22 = R2.Dot(p2);
+        double d23 = R2.Dot(p3);
+        double d31 = R3.Dot(p1);
+        double d32 = R3.Dot(p2);
+        double d33 = R3.Dot(p3);
 
         // Step 5: Compute scaled coefficients with improved numerical stability
         double A = (1.0 / d0) * (-d12 * (tau3 / tau) + d22 + d32 * (tau1 / tau));
@@ -82,7 +82,7 @@ public class InitialOrbitDetermination
                    (-d12 * tau3 * (tau * tau - tau3 * tau3) + d32 * tau1 * (tau * tau - tau1 * tau1));
 
         // Step 6: Solve eighth-degree polynomial with improved coefficients
-        double E = R2 * rhoHat2;
+        double E = R2.Dot(rhoHat2);
 
         double polynomialA = -(A * A + 2.0 * A * E + R2.MagnitudeSquared());
         double polynomialB = -2.0 * mu * B * (A + E);
@@ -159,10 +159,10 @@ public class InitialOrbitDetermination
 
         // geometrics quality
         var normal = sightLines[0].Cross(sightLines[1]).NormalizeOrZero();
-        var coplanarity = 1 - System.Math.Abs(normal * sightLines[2]);
+        var coplanarity = 1 - System.Math.Abs(normal.Dot(sightLines[2]));
 
-        var angle1 = System.Math.Acos(sightLines[0] * sightLines[1]);
-        var angle2 = System.Math.Acos(sightLines[1] * sightLines[2]);
+        var angle1 = System.Math.Acos(sightLines[0].Dot(sightLines[1]));
+        var angle2 = System.Math.Acos(sightLines[1].Dot(sightLines[2]));
 
         var normalizedAngle1 = angle1 / (System.Math.PI / 2);
         var normalizedAngle2 = angle2 / (System.Math.PI / 2);
@@ -184,7 +184,7 @@ public class InitialOrbitDetermination
         for (int i = 0; i < 3; i++)
         {
             var observerDirection = observerPositions[i].NormalizeOrZero();
-            var angle = System.Math.Abs(sightLines[i] * observerDirection);
+            var angle = System.Math.Abs(sightLines[i].Dot(observerDirection));
             const double optimalAngle = 0.25;
             var normalizedDistance = System.Math.Abs(angle - optimalAngle);
             var quality = System.Math.Exp(-2 * normalizedDistance);

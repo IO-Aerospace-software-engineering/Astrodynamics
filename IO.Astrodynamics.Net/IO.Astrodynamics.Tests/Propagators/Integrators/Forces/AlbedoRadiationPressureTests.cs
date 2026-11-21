@@ -178,7 +178,7 @@ public class AlbedoRadiationPressureTests
 
         // At sub-solar point, body-to-SC unit vector = sunDir
         var accUnit = acc.Normalize();
-        double dot = sunDir * accUnit;
+        double dot = sunDir.Dot(accUnit);
         Assert.True(System.Math.Abs(dot - 1.0) < 1e-12,
             $"Acceleration must point radially outward from body. Dot product = {dot}");
     }

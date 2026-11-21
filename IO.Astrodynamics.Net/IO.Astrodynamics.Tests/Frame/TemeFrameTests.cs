@@ -388,7 +388,7 @@ public class TemeFrameTests
     private const double CkFrameReadAngle = 3.4e-16;
 
     // The angle between two vectors, resolved near zero (atan2 of the cross and dot products, not an arccosine)
-    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     /// <summary>The attitude of the kernels of <see cref="ManagedSpacecraftFrameKernels"/>: 90° about Z, then 30° about X.</summary>
     private static Quaternion CkAttitude(int k) => k < 60

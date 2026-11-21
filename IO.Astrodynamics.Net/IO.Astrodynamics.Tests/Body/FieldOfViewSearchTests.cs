@@ -201,7 +201,7 @@ public sealed class PropagatedFieldOfViewCase
         var sS = N(0.18971202, 0.90083906, 0.39051035);
         var sE = N(0.18851398, 0.90104487, 0.3906157);
         var e = sE - sS;
-        e = (e - s3 * (e * s3)).Normalize(); // the drift of the Sun
+        e = (e - s3 * e.Dot(s3)).Normalize(); // the drift of the Sun
         var sEdge = (s3 + e * 0.0048).Normalize(); // the Sun's limb reaches the field near S + 3000 s
         double ten = 10.0 * IO.Astrodynamics.Constants.Deg2Rad;
         var g = new Vector3(System.Math.Sin(ten), 0.0, System.Math.Cos(ten));

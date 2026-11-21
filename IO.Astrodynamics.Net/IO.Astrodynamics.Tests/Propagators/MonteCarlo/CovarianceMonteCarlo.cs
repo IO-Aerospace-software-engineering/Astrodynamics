@@ -136,12 +136,13 @@ internal static class CovarianceMonteCarlo
     /// <summary><paramref name="state"/> with P0: σ = 100 m and 0.1 m/s on each RTN axis.</summary>
     internal static StateVector WithInitialCovariance(StateVector state)
     {
-        var rtn = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             double sigma = i < 3 ? PositionSigma : VelocitySigma;
-            rtn.Set(i, i, sigma * sigma);
+            rtnTerms[i, i] = sigma * sigma;
         }
+        var rtn = new IO.Astrodynamics.Math.Matrix(rtnTerms);
 
         return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
             state.RotateCovarianceFromRtn(rtn));

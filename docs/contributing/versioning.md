@@ -57,10 +57,10 @@ public statics, the equality of frames, the axes the TRIAD factories point, the 
 proper motion in right ascension as a true angle, the space velocity of its states, its parallax checked, the
 parsec of 648000/π au, a repeated kernel load, which no longer reloads, with the order of a folder's kernels, and
 `NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, a
-central body without GM refused by a propagation, and the scale of a `Time` a required argument, with `Time.Parse` in
-place of `Time(string)`. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`,
-`Quaternion.Zero`, `Star.PropagationOutput`, `ExceptionBase` and six exports of the native library that .NET never
-called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+central body without GM refused by a propagation, the scale of a `Time` a required argument, with `Time.Parse` in
+place of `Time(string)`, and an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors.
+**Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
+`ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3` and six exports of the native library that .NET never called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -183,6 +183,16 @@ release are listed under **Known limitations**.
   instants of #512 (choice 4 of the re-baseline: the TAI tick kept). `Constants.TwoPi` and `Constants.HalfPi` (under
   **Changed**). The CCSDS readers read the strict branch of the grammar, bit for bit (#619). See
   [Time & Windows](../reference/time-and-windows.md).
+- **An immutable `Matrix` and the usual vector operators** (lot L2 of the ergonomics review, R26 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A as amended, decided
+  by S. Guillet, 2026-11-19). `Matrix`: the get-only indexer `m[row, column]`, `With(row, column, value)` (a copy with
+  one term changed), `Create(rows, columns, term)` (the terms of a function of the indexes, called once per term, row by
+  row), `Diagonal(params double[])` and `Identity(int)`; `ToString()` prints the rows (under **Changed**). `Vector3`:
+  `Dot(Vector3)`, the expression x·x' + y·y' + z·z' of the operator `*` it replaces (under **Removed**), the unary minus,
+  `double * Vector3` (the same vector as `Vector3 * double`) and `Matrix * Vector3` for a 3 × 3 matrix, the arithmetic
+  of `Matrix.Multiply(double[])` bit for bit, `ArgumentException` (`m`) for another size. The library's arithmetic is
+  unchanged, bit for bit: its own matrices are filled through an internal setter before any caller holds them, and its
+  dot products are the same expression. See [Math](../reference/math.md).
 - **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
   `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only.
@@ -4366,6 +4376,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: `Constants._2PI` and `Constants.PI2` become `Constants.TwoPi` and `Constants.HalfPi`** (R24 of #668, D2's
   N3, section A), the same doubles (`TwoPi` is `Math.Tau`, `HalfPi` π/2: `PI2` was π/2 under a name that read 2π).
   Migration: rename.
+- **Breaking: `Matrix` is immutable** (lot L2, R26 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A as amended, decided
+  by S. Guillet, 2026-11-19: no error-level trap, the public `Set` removed outright, under **Removed**). No member
+  changes a matrix once built, so a matrix given to a `StateVector`, an encounter, a CDM record or a Monte Carlo result,
+  or read from one, keeps its terms whatever the caller does afterwards (#722 and #745 had closed the aliasing through
+  copies; `Set` still wrote the matrix a caller held). With it: an index outside the matrix throws
+  `ArgumentOutOfRangeException` naming `row` or `column` from `Get` and the indexer (`IndexOutOfRangeException`
+  before); a negative dimension throws `ArgumentOutOfRangeException` from the constructors (`OverflowException` before);
+  `default(Matrix)` is the 0 × 0 matrix for every member (`Get`, `ToArray`, `Inverse` and `Decompose` threw
+  `NullReferenceException` on it); `ToString()` prints the rows, `[[1, 0], [0, 1]]`, each term in invariant culture
+  and round trip, `[]` without rows (the record's `Matrix { Rows = 2, Columns = 2 }` before; nothing of the library
+  read it). Results do not move. Migration: build the terms, then the matrix: `var m = new Matrix(6, 6); m.Set(0, 0,
+  25.0); …` → `Matrix.Diagonal(25.0, …)`, `new Matrix(terms)` from a `double[,]` filled first, or
+  `Matrix.Create(6, 6, (i, j) => …)`; a change of one term of an existing matrix → `m = m.With(i, j, value)`;
+  `catch (IndexOutOfRangeException)` around `Get` → `catch (ArgumentOutOfRangeException)`.
 - **Breaking: the CLI's epochs** (D3 of #668, choice 4 of R24): seconds from J2000 take any scale tag (`757339200 TT`
   threw before; untagged stays TDB), and every other epoch is read by `Time.TryParse(s, TimeScale.TDB)`, so a day of
   year is read, an offset is the UTC instant, a Julian date is its digits to the nearest tick (through a double before,
@@ -6541,6 +6566,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   retyped, so that `Time.J2000.AddDays(1)` cannot change meaning silently). Migration: `Time.J2000TDB`, or
   `Time.J2000TDB.DateTime` for the calendar.
 - **`Time.Create(int, int, double)`**: use `Time.FromDayOfYear` (Changed above).
+- **`Matrix.Set(int, int, double)`** (lot L2, R26 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): it wrote the terms in place,
+  through every copy of the struct; `Matrix` is immutable (Changed above). Migration: `new Matrix(double[,])`,
+  `Matrix.Create`, `Matrix.Diagonal` or `Matrix.Identity` to build a matrix, `With` for a copy with one term changed.
+- **The operator `*` between two `Vector3`**, the dot product (R26 of #668, section A as amended: no forwarder;
+  `System.Numerics.Vector3 * Vector3` is component-wise, so the operator read as a trap). `v1 * v2` no longer compiles,
+  so no caller meets another meaning silently. Migration: `v1.Dot(v2)` (Added above), the same expression, bit for bit.
 
 **Known limitations**
 

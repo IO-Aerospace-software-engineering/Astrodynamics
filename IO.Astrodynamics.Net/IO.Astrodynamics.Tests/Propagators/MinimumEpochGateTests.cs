@@ -564,8 +564,9 @@ public class MinimumEpochGateTests
             if (path.StartsWith("Cov"))
             {
                 var sv = orbit.ToStateVector();
-                var p0 = new Matrix(6, 6);
-                for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+                var p0Terms = new double[6, 6];
+                for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 100.0 : 1.0e-4;
+                var p0 = new Matrix(p0Terms);
                 orbit = new StateVector(sv.Position, sv.Velocity, sv.Observer, sv.Epoch, sv.Frame, p0);
             }
 
@@ -779,8 +780,8 @@ public class MinimumEpochGateTests
                         double nu = k.TrueAnomalyOf(d);
                         double t = System.Math.Min(k.TimeOfTrue(nu, gate), k.TimeOfTrue(nu + System.Math.PI, gate));
                         var (rr, v) = k.StateAt(t);
-                        double theta = System.Math.Acos(System.Math.Clamp(k.Hh * ht, -1.0, 1.0));
-                        var horizontal = v - rr.Normalize() * (v * rr.Normalize());
+                        double theta = System.Math.Acos(System.Math.Clamp(k.Hh.Dot(ht), -1.0, 1.0));
+                        var horizontal = v - rr.Normalize() * v.Dot(rr.Normalize());
                         return One(t, 2.0 * horizontal.Magnitude() * System.Math.Sin(theta / 2.0), k.T, "node");
                     },
                     Check = r =>
@@ -791,7 +792,7 @@ public class MinimumEpochGateTests
                         var (p, v) = r.Solution.InterpolateAt(gate);
                         var local = r.Local(gate, p, v);
                         var targetH = ((PlaneAlignmentManeuver)r.Chain[0]).TargetOrbit.SpecificAngularMomentum().Normalize();
-                        double g = local.Position * targetH, dgdt = local.Velocity * targetH;
+                        double g = local.Position.Dot(targetH), dgdt = local.Velocity.Dot(targetH);
                         bool ascending = System.Math.Abs(g) < 1e-6 * local.Position.Magnitude() ? g * dgdt > 0.0 ? g < 0.0 : dgdt > 0.0 : !(g > 0.0);
                         Assert.Equal(ascending, ((PlaneAlignmentManeuver)r.Chain[0]).IsAscendingNode);
                     }
@@ -913,7 +914,7 @@ public class MinimumEpochGateTests
                     Check = r =>
                     {
                         var sv = r.InitialIcrf.ToStateVector();
-                        Assert.Equal(0.0, sv.Position * sv.Velocity);
+                        Assert.Equal(0.0, sv.Position.Dot(sv.Velocity));
                     }
                 };
             }
@@ -1046,7 +1047,7 @@ public class MinimumEpochGateTests
         var tk = new KeplerClosedForm(k.Mu, tsv.Position, tsv.Velocity, 0.0);
         var (r, _) = k.StateAt(t);
         var (rt, _) = tk.StateAt(t);
-        double dnu = KeplerClosedForm.Normalized(System.Math.Atan2(rt.Cross(r) * -1.0 * k.Hh, rt * r));
+        double dnu = KeplerClosedForm.Normalized(System.Math.Atan2((rt.Cross(r) * -1.0).Dot(k.Hh), rt.Dot(r)));
         double e = k.E;
         double ea = 2.0 * System.Math.Atan(System.Math.Sqrt((1.0 - e) / (1.0 + e)) * System.Math.Tan(dnu / 2.0));
         double tt = k.T / (2.0 * System.Math.PI) * (ea - e * System.Math.Sin(ea));
@@ -1067,7 +1068,7 @@ internal sealed class AnyApsisImpulse : ImpulseManeuver
     {
     }
 
-    public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+    public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
 
     public override CrossingDirection EventCrossingDirection => CrossingDirection.Any;
 

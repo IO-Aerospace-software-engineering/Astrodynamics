@@ -236,7 +236,7 @@ internal static class OccultationGeometry
     /// <summary>The angle between two vectors, in [0, π], accurate at every angle (atan2 of |a × b| and a · b).</summary>
     internal static double Separation(in Vector3 a, in Vector3 b)
     {
-        return System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+        return System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ internal static class OccultationGeometry
         for (int i = 0; i < LimbSamples; i++)
         {
             var point = center + semiU * SampleCos[i] + semiV * SampleSin[i];
-            double cosine = (u * point) / point.Magnitude();
+            double cosine = u.Dot(point) / point.Magnitude();
             if (minimum ? cosine > bestCosine : cosine < bestCosine)
             {
                 bestCosine = cosine;

@@ -277,7 +277,7 @@ public partial class SpiceApiTest
             var before = Position(t.AddSeconds(-1.0));
             var after = Position(t.AddSeconds(1.0));
             var normal = before.Cross(after);
-            var rate = normal.Normalize() * (System.Math.Atan2(normal.Magnitude(), before * after) / 2.0);
+            var rate = normal.Normalize() * (System.Math.Atan2(normal.Magnitude(), before.Dot(after)) / 2.0);
             worstRate = System.Math.Max(worstRate, (res[i].AngularVelocity - rate).Magnitude());
         }
 

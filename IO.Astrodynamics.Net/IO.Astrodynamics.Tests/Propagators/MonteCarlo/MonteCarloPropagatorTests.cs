@@ -32,13 +32,14 @@ public class MonteCarloPropagatorTests
         double v0 = System.Math.Sqrt(earth.GM / r0);
 
         // Diagonal covariance: 100 m² position, 0.01 m²/s² velocity
-        var cov = new Matrix(6, 6);
-        cov.Set(0, 0, 100.0);
-        cov.Set(1, 1, 100.0);
-        cov.Set(2, 2, 100.0);
-        cov.Set(3, 3, 0.01);
-        cov.Set(4, 4, 0.01);
-        cov.Set(5, 5, 0.01);
+        var covTerms = new double[6, 6];
+        covTerms[0, 0] = 100.0;
+        covTerms[1, 1] = 100.0;
+        covTerms[2, 2] = 100.0;
+        covTerms[3, 3] = 0.01;
+        covTerms[4, 4] = 0.01;
+        covTerms[5, 5] = 0.01;
+        var cov = new Matrix(covTerms);
 
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
@@ -289,12 +290,13 @@ public class MonteCarloPropagatorTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(earth.GM / r0);
-        var cov = new Matrix(6, 6);
+        var covTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            cov.Set(i, i, 100.0);
-            cov.Set(i + 3, i + 3, 0.01);
+            covTerms[i, i] = 100.0;
+            covTerms[i + 3, i + 3] = 0.01;
         }
+        var cov = new Matrix(covTerms);
 
         var nominal = new StateVector(new Vector3(r0, 0, 0), new Vector3(0, 0.6 * v0, 0.8 * v0), earth, TimeSystem.Time.J2000TDB,
             Frames.Frame.TEME, cov);
@@ -338,13 +340,14 @@ public class MonteCarloPropagatorTests
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(earth.GM / r0);
 
-        var cov = new Matrix(6, 6);
-        cov.Set(0, 0, 100.0);
-        cov.Set(1, 1, 100.0);
-        cov.Set(2, 2, 100.0);
-        cov.Set(3, 3, 0.01);
-        cov.Set(4, 4, 0.01);
-        cov.Set(5, 5, 0.01);
+        var covTerms = new double[6, 6];
+        covTerms[0, 0] = 100.0;
+        covTerms[1, 1] = 100.0;
+        covTerms[2, 2] = 100.0;
+        covTerms[3, 3] = 0.01;
+        covTerms[4, 4] = 0.01;
+        covTerms[5, 5] = 0.01;
+        var cov = new Matrix(covTerms);
 
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),

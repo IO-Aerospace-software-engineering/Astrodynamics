@@ -62,7 +62,7 @@ public class CelestialAttitudeTargetTests
         }).ToArray();
     }
 
-    private static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     /// <summary>
     /// #740: the direction of a <see cref="CelestialAttitudeTarget"/> is the target as the spacecraft sees it, as

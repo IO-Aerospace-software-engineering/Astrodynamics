@@ -149,7 +149,7 @@ public class ThermalRadiationPressureTests
         // Body-to-SC unit vector (body at origin since it's the observer)
         var expectedDir = scPos.Normalize();
         var accDir = acc.Normalize();
-        double dot = expectedDir * accDir;
+        double dot = expectedDir.Dot(accDir);
 
         Assert.True(System.Math.Abs(dot - 1.0) < 1e-12,
             $"Acceleration must point radially outward from body. Dot product = {dot}");

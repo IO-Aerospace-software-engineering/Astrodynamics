@@ -12,10 +12,10 @@ using Xunit;
 namespace IO.Astrodynamics.Tests.Math;
 
 /// <summary>
-/// The public holders of a <see cref="Matrix"/> copy it in and out (#722, decided by S. Guillet, 2026-11-17: copies in
-/// the holders, <see cref="Matrix"/> kept mutable): <see cref="Matrix.Set"/> writes the array a matrix wraps, which a
-/// copy of the struct shares, so a term set on the matrix given to a holder, or on the one it returned, reached the
-/// holder before 11.0.0. The holders: <see cref="StateVector.Covariance"/>, <see cref="EncounterState.CombinedCovarianceRtn"/>,
+/// The public holders of a <see cref="Matrix"/> copy it in and out (#722, decided by S. Guillet, 2026-11-17): the public
+/// <c>Set</c> of the versions before 11.0.0 wrote the array a matrix wraps, which a copy of the struct shares, so a term
+/// set on the matrix given to a holder, or on the one it returned, reached the holder. <see cref="Matrix"/> is immutable
+/// since 11.0.0 (#668, R26); the copies stay, and these tests write through the internal setter. The holders: <see cref="StateVector.Covariance"/>, <see cref="EncounterState.CombinedCovarianceRtn"/>,
 /// <see cref="CollisionRisk.ProjectedCovariance"/>, <see cref="EpochStatistics.SampleCovariance"/> and
 /// <see cref="Iau2006Model.FrameBias"/> (<c>CdmCovarianceMatrix</c> since #719). The expected terms are those given.
 /// </summary>
@@ -33,8 +33,9 @@ public class MatrixHoldersTests
 
     private static Matrix Diagonal(int size)
     {
-        var matrix = new Matrix(size, size);
-        for (int i = 0; i < size; i++) matrix.Set(i, i, Term);
+        var matrixTerms = new double[size, size];
+        for (int i = 0; i < size; i++) matrixTerms[i, i] = Term;
+        var matrix = new Matrix(matrixTerms);
         return matrix;
     }
 
@@ -43,11 +44,11 @@ public class MatrixHoldersTests
     /// </summary>
     private static void AssertHolderIsolated(Matrix given, Func<Matrix> read)
     {
-        given.Set(0, 0, Changed);
+        given.SetTerm(0, 0, Changed);
         Assert.Equal(Term, read().Get(0, 0));
 
         var returned = read();
-        returned.Set(0, 0, Changed);
+        returned.SetTerm(0, 0, Changed);
         Assert.Equal(Term, read().Get(0, 0));
     }
 
@@ -62,8 +63,9 @@ public class MatrixHoldersTests
     }
 
     /// <summary>
-    /// One matrix reused to build the covariances of several states, the loop a caller writes with <see cref="Matrix.Set"/>:
-    /// each state keeps its own; before 11.0.0 all held the last one.
+    /// One matrix reused to build the covariances of several states, the loop a caller wrote with the public <c>Set</c>
+    /// before 11.0.0 (#722: all held the last one): each state keeps its own. <see cref="Matrix"/> is immutable since
+    /// 11.0.0 (#668, R26); the internal setter checks that the holder still copies.
     /// </summary>
     [Fact]
     public void OneMatrixReusedForSeveralStates_EachKeepsItsOwn()
@@ -72,7 +74,7 @@ public class MatrixHoldersTests
         var states = new StateVector[3];
         for (int k = 0; k < states.Length; k++)
         {
-            for (int i = 0; i < 6; i++) builder.Set(i, i, k + 1.0);
+            for (int i = 0; i < 6; i++) builder.SetTerm(i, i, k + 1.0);
             states[k] = new StateVector(new Vector3(6800e3 + k, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), TestHelpers.EarthAtJ2000, Epoch,
                 Frames.Frame.ICRF, builder);
         }
@@ -125,12 +127,12 @@ public class MatrixHoldersTests
         double original = returned.Get(0, 0);
         try
         {
-            returned.Set(0, 0, Changed);
+            returned.SetTerm(0, 0, Changed);
             Assert.Equal(original, Iau2006Model.FrameBias().Get(0, 0));
         }
         finally
         {
-            returned.Set(0, 0, original);
+            returned.SetTerm(0, 0, original);
         }
     }
 

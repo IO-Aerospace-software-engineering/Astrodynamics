@@ -147,9 +147,9 @@ public class FosterMonteCarloValidationTests : IClassFixture<ConjunctionCovarian
             var s = secondarySample.ToStateVector(epoch);
             var r = s.Position - p.Position;
             var v = s.Velocity - p.Velocity;
-            double rv = r * v;
-            double vv = v * v;
-            d2 = r * r - rv * rv / vv;
+            double rv = r.Dot(v);
+            double vv = v.Dot(v);
+            d2 = r.Dot(r) - rv * rv / vv;
             epoch = epoch.AddSeconds(-rv / vv);
         }
 

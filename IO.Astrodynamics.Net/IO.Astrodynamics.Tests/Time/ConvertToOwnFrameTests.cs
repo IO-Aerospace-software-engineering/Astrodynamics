@@ -84,12 +84,13 @@ public class ConvertToOwnFrameTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var state = new KeplerianElements(6778137.0, 0.0005, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.3, 0.2, 1.0,
             earth, epoch, Frames.Frame.ICRF).ToStateVector();
-        var covariance = new Matrix(6, 6);
+        var covarianceTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            covariance.Set(i, i, 100.0);
-            covariance.Set(i + 3, i + 3, 1e-4);
+            covarianceTerms[i, i] = 100.0;
+            covarianceTerms[i + 3, i + 3] = 1e-4;
         }
+        var covariance = new Matrix(covarianceTerms);
 
         var spacecraft = new Spacecraft(-5100, "CONVERT5100", 100.0, 1000.0, new Clock("convert5100", 65536),
             new StateVector(state.Position, state.Velocity, earth, epoch, Frames.Frame.ICRF, covariance));

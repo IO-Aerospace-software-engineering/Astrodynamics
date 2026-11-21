@@ -122,7 +122,7 @@ public abstract class ConjunctionDensePassTestBase
     protected static double CspiceRangeRate(TimeSystem.Time epoch, CrossingEncounterCase crossing)
     {
         var (position, velocity) = CspiceRelative(epoch, crossing);
-        return position * velocity;
+        return position.Dot(velocity);
     }
 
     protected static StateVector CspiceState(TimeSystem.Time epoch, int id, int observer = 399)
@@ -727,7 +727,7 @@ public abstract class ConjunctionDensePassTestBase
     {
         double h = epoch.AddSeconds(1.0e-3) > crossing.Window.EndDate ? -1.0e-3 : 1.0e-3;
         var (position, velocity) = CspiceRelative(epoch, crossing);
-        double g = position * velocity;
+        double g = position.Dot(velocity);
         double slope = (CspiceRangeRate(epoch.AddSeconds(h), crossing) - g) / h;
         double squared = position.MagnitudeSquared();
         if (slope <= 0.0)

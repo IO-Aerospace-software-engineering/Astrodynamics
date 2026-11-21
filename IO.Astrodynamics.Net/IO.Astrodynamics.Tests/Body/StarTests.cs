@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -1218,7 +1218,7 @@ public class StarTests
     /// The angle between two directions, atan2(|a × b|, a · b), which resolves an angle near zero to the rounding of its
     /// components; <see cref="Vector3.Angle"/>, the acos of the dot product, cannot (1.49e-8 rad at least).
     /// </summary>
-    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     // The records against iauStarpm, per horizon: twice the worst over Linux x64, Windows x64 and macOS arm64, rounded up at
     // the second digit: the direction 1.780e-17, 1.777e-17, 2.419e-14 and 2.412e-10 rad after 1, 10, 100 and 1000 years,

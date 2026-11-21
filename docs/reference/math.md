@@ -20,12 +20,12 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 | Member | Description |
 |--------|-------------|
 | `X`, `Y`, `Z` | Components |
-| `operator *(Vector3, Vector3)` | **Dot product** (not a `.Dot()` method) |
+| `Dot(Vector3)` | Dot product, x·x' + y·y' + z·z' (#668, R26: the operator `*` between two vectors, removed in 11.0.0) |
 | `Cross(Vector3)` | Cross product |
 | `Normalize()` | Unit vector of any finite non-zero vector; `InvalidOperationException` for the zero vector (#680) or a component that is not finite (third round of #668). A vector whose squared components would overflow or lose their digits (a component above about 1.34e154, or all below about 1e-150) is first scaled exactly by the power of two of its largest component; every other vector is divided by its unscaled magnitude, bit for bit |
 | `Magnitude()` | Euclidean length, scaled as `Normalize()` is when the squares would overflow or underflow: +Infinity only above `double.MaxValue`, 0 only for the zero vector (third round of #668: +Infinity for (1e200, 0, 0) and 0 for (1e-170, 0, 0) before 11.0.0); NaN for a NaN component, +Infinity for an infinite one |
 | `MagnitudeSquared()` | Squared Euclidean length (avoids square root), unscaled: +Infinity above about 1.34e154, 0 below about 1.5e-162 |
-| `Inverse()` | Negated vector (no unary `-` operator) |
+| `Inverse()` | Negated vector, the same as unary `-` |
 | `Rotate(Quaternion)` | Rotate by quaternion |
 | `Angle(Vector3)` | Angle between two vectors (rad), in [0, π]; 0 when either is zero, NaN for a non-finite component; vectors outside about 1e-150 to 1e150 compared through their scaled unit vectors (third round of #668: 0 or NaN before 11.0.0) |
 | `Angle(Vector3, Vector3)`, `Angle(Vector3, Plane)` | Signed angle about a plane normal of any finite non-zero length (a tiny or huge one included, third round of #668), atan2((a × b) · n̂, a · b), in (−π, π]; vectors whose sums of squares are not both in [1e-300, 1e300] scaled first by the powers of two of their largest components, exactly (third round of #668: π/4 instead of atan 2 from (1e200, 0, 0) to (1e200, 2e200, 0), NaN or 0 before 11.0.0), every other pair bit for bit; 0 when a vector is zero, NaN for a vector with a non-finite component, as `Angle(Vector3)`; `ArgumentException` (`plane`) for a zero or non-finite normal (#680's known limitation) |
@@ -33,11 +33,23 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 | `LinearInterpolation(Vector3, double)` | Linear interpolation between this and another vector |
 | `operator +(Vector3, Vector3)` | Vector addition |
 | `operator -(Vector3, Vector3)` | Vector subtraction |
-| `operator *(Vector3, double)` | Scalar multiplication |
+| `operator -(Vector3)` | Negated vector, (−x, −y, −z) |
+| `operator *(Vector3, double)`, `operator *(double, Vector3)` | Scalar multiplication, the same vector in either order |
+| `operator *(Matrix, Vector3)` | Product of a 3 × 3 matrix and a column vector, the arithmetic of `Matrix.Multiply(double[])`; `ArgumentException` (`m`) for a matrix that is not 3 × 3 |
 | `operator /(Vector3, double)` | Scalar division |
 
-!!! warning "Dot Product Convention"
-    Use `v1 * v2` for the dot product. There is no `.Dot()` method. `Vector3` has no unary `-` operator; use `.Inverse()` instead.
+!!! warning "Dot product"
+    The dot product is `v1.Dot(v2)`. The operator `*` between two vectors, which was the dot product before 11.0.0
+    (component-wise in `System.Numerics`), is removed (#668, R26): `v1 * v2` no longer compiles.
+
+```csharp
+var r = new Vector3(7000e3, 0.0, 0.0);
+var v = new Vector3(0.0, 7.5e3, 0.0);
+double radialVelocity = r.Dot(v) / r.Magnitude();   // 0
+Vector3 opposite = -r;                               // (−7000e3, 0, 0)
+Vector3 doubled = 2.0 * r;                           // (14000e3, 0, 0)
+Vector3 turned = Matrix.CreateRotationMatrixZ(Constants.HalfPi) * r;   // (0, 7000e3, 0) to rounding
+```
 
 ## Plane
 
@@ -89,23 +101,24 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 
 ## Matrix
 
-`Matrix` represents an M x N matrix.
+`Matrix` represents an M x N matrix, immutable: no member changes a matrix once built (#668, R26). `default(Matrix)` is the
+0 × 0 matrix for every member.
 
 ### Constructors
 
 | Constructor | Description |
 |-------------|-------------|
-| `Matrix(int rows, int columns)` | Zero matrix |
+| `Matrix(int rows, int columns)` | Zero matrix; `ArgumentOutOfRangeException` for a negative dimension |
 | `Matrix(double[,] data)` | From 2D array, copied: a later write to the array does not change the matrix (#745) |
-| `Matrix(int rows, int columns, double[] data)` | From flat array |
+| `Matrix(int rows, int columns, double[] data)` | From flat array, row-major, copied |
 
 ### Members
 
 | Member | Description |
 |--------|-------------|
 | `Rows`, `Columns` | Dimensions |
-| `Set(row, col, value)` | Set an element |
-| `Get(row, col)` | Get an element |
+| `this[row, col]`, `Get(row, col)` | Get an element; `ArgumentOutOfRangeException` (`row` or `column`) for an index outside the matrix (an `IndexOutOfRangeException` before 11.0.0) |
+| `With(row, col, value)` | A copy with one element changed, the matrix unchanged |
 | `Multiply(Matrix)` | Matrix multiplication |
 | `Multiply(double[])` | Matrix-vector multiplication |
 | `Transpose()` | Transposed matrix |
@@ -119,17 +132,20 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `operator +(Matrix, Matrix)` | Matrix addition |
 | `operator *(Matrix, Matrix)` | Matrix multiplication |
 | `Equals(Matrix)`, `==`, `!=` | Same dimensions and every element equal by `double.Equals`: NaN equals NaN only, +0 equals −0 (#680) |
+| `ToString()` | The rows, `[[1, 0], [0, 1]]`, each element in invariant culture and round trip; `[]` without rows (the record's `Matrix { Rows = 2, Columns = 2 }` before 11.0.0) |
 
-A `Matrix` is a struct over an array that `Set` writes, which every copy of the struct shares. The public types that
-hold a matrix copy it when they receive it and when they return it, so that a term set afterwards on the matrix given or
-returned does not reach them (#722, decided by S. Guillet, 2026-11-17: copies in the holders, `Matrix` kept mutable):
-`StateVector.Covariance`, `EncounterState.CombinedCovarianceRtn`, `CollisionRisk.ProjectedCovariance`,
-`EpochStatistics.SampleCovariance`, `CdmCovarianceMatrix.StateCovarianceRtn` (#717) and `Iau2006Model.FrameBias()`. One
-matrix can so build the covariances of several states in a loop. Each read of these members returns a new copy; the
-results of `PropagationSolution` (`GetStateTransitionMatrix`, `GetCovariance`, ...) and of the conversions are new
-matrices too. `new Matrix(double[,])` copies the array it is given, as `Matrix(rows, columns, double[])` and `ToArray()`
-do, so the terms of a matrix change only through its own `Set` (#745, decided by S. Guillet, 2026-11-18; before 11.0.0
-the matrix wrapped the caller's array, and a write to the array changed its terms and its hash code).
+A `Matrix` cannot be changed once built: a covariance given to a `StateVector` or read from it, or any other matrix a
+type holds or returns, keeps its terms whatever the caller does afterwards. Before 11.0.0 a public `Set` wrote the array
+every copy of the struct shares (#722 then made the holders copy in and out; #745 made `new Matrix(double[,])` copy its
+array). A matrix is built from an array, a function of the indexes, a diagonal or as the identity, and changed by
+copies:
+
+```csharp
+var cov = Matrix.Diagonal(100.0, 100.0, 100.0, 1.0, 1.0, 1.0);           // m², m²/s²
+var correlated = cov.With(1, 3, -5.0).With(3, 1, -5.0);                  // cov unchanged
+var block = Matrix.Create(3, 3, (i, j) => correlated[i + 3, j + 3]);
+double sigmaX = System.Math.Sqrt(cov[0, 0]);                            // 10 m
+```
 
 ### Static Methods
 
@@ -143,7 +159,10 @@ the matrix wrapped the caller's array, and a write to the array changed its term
 | `CreateRotationMatrixZ(angle)` | Rotation around Z axis |
 | `CreateBlockDiagonal(upperLeft, lowerRight)` | Create block-diagonal matrix |
 | `TransformCovariance(covariance, rotation)` | Rotate a 6x6 covariance with `diag(R, R)`; only between inertial frames, use `ToFrame` for a rotating frame; `ArgumentException` (`rotation`) for a zero or non-finite quaternion |
-| `Identity6x6()` | 6x6 identity matrix |
+| `Create(rows, columns, term)` | The matrix of the terms `term(i, j)`, called once per term, row by row; `ArgumentOutOfRangeException` for a negative dimension |
+| `Diagonal(params double[] diagonal)` | Square matrix of the diagonal given, zeros elsewhere |
+| `Identity(int dimension)` | Identity matrix of any dimension; `ArgumentOutOfRangeException` for a negative one |
+| `Identity6x6()` | 6x6 identity matrix, `Identity(6)` |
 
 ## Lagrange
 

@@ -171,7 +171,7 @@ internal sealed class ApparentPositionReader
         var axis = h / sinPhi;
         double cos = System.Math.Cos(phi);
         double sin = System.Math.Sin(phi);
-        return position * cos + axis.Cross(position) * sin + axis * ((axis * position) * (1.0 - cos));
+        return position * cos + axis.Cross(position) * sin + axis * (axis.Dot(position) * (1.0 - cos));
     }
 
     private StateVector ReferenceFromBarycenter(in Time epoch)

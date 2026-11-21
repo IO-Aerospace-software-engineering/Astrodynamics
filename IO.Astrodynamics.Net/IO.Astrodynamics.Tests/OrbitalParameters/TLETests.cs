@@ -884,9 +884,9 @@ public class TLETests
         var positionError = test.Position - reference.Position;
 
         // Project position error onto RTN axes
-        var radialError = positionError * radialUnit;
-        var transverseError = positionError * transverseUnit;
-        var normalError = positionError * normalUnit;
+        var radialError = positionError.Dot(radialUnit);
+        var transverseError = positionError.Dot(transverseUnit);
+        var normalError = positionError.Dot(normalUnit);
 
         return new RtnErrors
         {

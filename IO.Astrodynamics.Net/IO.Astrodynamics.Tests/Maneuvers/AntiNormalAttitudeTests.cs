@@ -44,7 +44,7 @@ public class AntiNormalAttitudeTests
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
         var antiNormal = sv.Position.Cross(sv.Velocity).Inverse().Normalize();
 
-        double alignment = rotatedFront * antiNormal;
+        double alignment = rotatedFront.Dot(antiNormal);
         Assert.True(alignment > 0.9999, $"Front should align with anti-normal (-Z). Alignment: {alignment}");
     }
 
@@ -67,7 +67,7 @@ public class AntiNormalAttitudeTests
         var antiNormalPointing = Spacecraft.Front.Rotate(antiNormalManeuver.StateOrientation.Rotation).Normalize();
 
         // Normal and anti-normal should be opposite (dot product close to -1)
-        double dotProduct = normalPointing * antiNormalPointing;
+        double dotProduct = normalPointing.Dot(antiNormalPointing);
         Assert.True(dotProduct < -0.9999, $"Normal and anti-normal should be opposite. Dot product: {dotProduct}");
     }
 
@@ -111,13 +111,13 @@ public class AntiNormalAttitudeTests
 
         // Rotated front should align with anti-normal
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
-        double alignment = rotatedFront * antiNormal;
+        double alignment = rotatedFront.Dot(antiNormal);
         Assert.True(alignment > 0.9999,
             $"Front should align with anti-normal. Alignment: {alignment}");
 
         // Anti-normal must be opposite to normal
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
-        double oppositeness = antiNormal * normal;
+        double oppositeness = antiNormal.Dot(normal);
         Assert.True(oppositeness < -0.9999,
             $"Anti-normal should be opposite to normal. Dot product: {oppositeness}");
     }
@@ -161,7 +161,7 @@ public class AntiNormalAttitudeTests
         var rotatedFront = spc.BodyFront.Rotate(maneuver.StateOrientation.Rotation).Normalize();
         var antiNormal = sv.Position.Cross(sv.Velocity).Inverse().Normalize();
 
-        double alignment = rotatedFront * antiNormal;
+        double alignment = rotatedFront.Dot(antiNormal);
         Assert.True(alignment > 0.9999,
             $"Custom body front (+X) should align with anti-normal. Alignment: {alignment}");
     }

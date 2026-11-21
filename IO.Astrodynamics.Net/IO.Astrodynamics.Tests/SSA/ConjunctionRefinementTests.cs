@@ -27,9 +27,9 @@ public class ConjunctionRefinementTests
     {
         var velocity = new Vector3(7000.0, -3000.0, 1500.0);
         var closest = new Vector3(120.0, 300.0, 40.0);
-        closest -= velocity * (closest * velocity / velocity.MagnitudeSquared());
+        closest -= velocity * (closest.Dot(velocity) / velocity.MagnitudeSquared());
         var r0 = closest - velocity * closestSeconds;
-        return epoch => (r0 + velocity * (epoch - Epoch).TotalSeconds) * velocity;
+        return epoch => (r0 + velocity * (epoch - Epoch).TotalSeconds).Dot(velocity);
     }
 
     // A range rate that only changes sign at t*, flat on each side: no secant is defined, so the refinement bisects

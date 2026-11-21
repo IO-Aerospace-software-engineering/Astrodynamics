@@ -117,14 +117,15 @@ public class NonlinearityIndexTests : IClassFixture<ConjunctionCovarianceCase>, 
     private static StateVector Scaled(StateVector state, double scale)
     {
         var covariance = state.Covariance.Value;
-        var scaled = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var scaledTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                scaled.Set(i, j, covariance.Get(i, j) * scale * scale);
+                scaledTerms[i, j] = covariance.Get(i, j) * scale * scale;
             }
         }
+        var scaled = new IO.Astrodynamics.Math.Matrix(scaledTerms);
 
         return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame, scaled);
     }

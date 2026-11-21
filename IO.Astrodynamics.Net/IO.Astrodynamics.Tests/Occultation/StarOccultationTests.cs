@@ -154,7 +154,7 @@ public class StarOccultationTests
     /// components (about 1e-16 rad); <see cref="Vector3.Angle"/>, the acos of the dot product, gives 0 or at least
     /// acos(1 − 2⁻⁵³) = 1.49e-8 rad there, so it cannot measure a direction against its reference.
     /// </summary>
-    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     /// <summary>The direction of the star at S + 1 h from DSS-13, without and with the stellar aberration.</summary>
     private static Vector3 ReferenceDirection(double distancePc, double properMotion, bool stellar) =>

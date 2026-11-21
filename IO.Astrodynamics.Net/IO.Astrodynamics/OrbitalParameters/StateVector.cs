@@ -385,11 +385,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             var e = EccentricityVector();
             var hHat = SpecificAngularMomentum().NormalizeOrZero();
-            var inPlane = e - hHat * (e * hHat);
+            var inPlane = e - hHat * e.Dot(hHat);
 
             // A second projection removes what the first left out of the plane, about ε |e| absolute, which is not small
             // against the part in the plane when the eccentricity vector is rounding noise (classical Gram-Schmidt twice)
-            inPlane -= hHat * (inPlane * hHat);
+            inPlane -= hHat * inPlane.Dot(hHat);
             double m = inPlane.Magnitude();
             if (m > 0.0)
             {
@@ -410,7 +410,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         private double AngleInOrbitPlane(in Vector3 from, in Vector3 to)
         {
             var hHat = SpecificAngularMomentum().NormalizeOrZero();
-            double angle = System.Math.Atan2(hHat * from.Cross(to), from * to);
+            double angle = System.Math.Atan2(hHat.Dot(from.Cross(to)), from.Dot(to));
             return angle < 0.0 ? angle + Constants.TwoPi : angle;
         }
 

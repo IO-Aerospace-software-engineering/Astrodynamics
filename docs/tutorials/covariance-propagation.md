@@ -56,11 +56,9 @@ var orbit = new KeplerianElements(6778137.0, 0.0005, 51.6 * Constants.Deg2Rad, 2
     15.0 * Constants.Deg2Rad, 0.0, earth, epoch, Frame.ICRF).ToStateVector();
 
 double[] sigma = { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };   // R, T, N (m), then their rates (m/s)
-var rtn = new Matrix(6, 6);
-for (int i = 0; i < 6; i++)
-    rtn.Set(i, i, sigma[i] * sigma[i]);
-rtn.Set(1, 3, -0.9 * sigma[1] * sigma[3]);   // along-track position and radial velocity
-rtn.Set(3, 1, -0.9 * sigma[1] * sigma[3]);
+var rtn = Matrix.Create(6, 6, (i, j) => i == j ? sigma[i] * sigma[i] : 0.0)
+    .With(1, 3, -0.9 * sigma[1] * sigma[3])   // along-track position and radial velocity
+    .With(3, 1, -0.9 * sigma[1] * sigma[3]);
 
 var initialState = new StateVector(orbit.Position, orbit.Velocity, earth, epoch, Frame.ICRF,
     orbit.RotateCovarianceFromRtn(rtn));
@@ -177,14 +175,9 @@ propagation, by the eigenvalue clipping of the conjunction analysis (Hall, Hejdu
 
 ```csharp
 // Inputs: initialState (StateVector), earth (CelestialBody), epoch (Time), window (Window), bodies (CelestialItem[])
-var rounded = new Matrix(6, 6);
-for (int i = 0; i < 3; i++)
-{
-    rounded.Set(i, i, 100.0 * 100.0);
-    rounded.Set(i + 3, i + 3, 0.1 * 0.1);
-}
-rounded.Set(1, 3, -1.0001 * 100.0 * 0.1);   // a correlation of −1 written as −1.0001
-rounded.Set(3, 1, -1.0001 * 100.0 * 0.1);
+var rounded = Matrix.Diagonal(100.0 * 100.0, 100.0 * 100.0, 100.0 * 100.0, 0.1 * 0.1, 0.1 * 0.1, 0.1 * 0.1)
+    .With(1, 3, -1.0001 * 100.0 * 0.1)   // a correlation of −1 written as −1.0001
+    .With(3, 1, -1.0001 * 100.0 * 0.1);
 var indefinite = new StateVector(initialState.Position, initialState.Velocity, earth, epoch, Frame.ICRF, rounded);
 
 var remediation = indefinite.WithRemediatedCovariance();
@@ -220,9 +213,7 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
 // RTN, as above, by this helper
 static StateVector WithRtnCovariance(StateVector orbit, double[] sigma)
 {
-    var rtn = new Matrix(6, 6);
-    for (int i = 0; i < 6; i++)
-        rtn.Set(i, i, sigma[i] * sigma[i]);
+    var rtn = Matrix.Create(6, 6, (i, j) => i == j ? sigma[i] * sigma[i] : 0.0);
     return new StateVector(orbit.Position, orbit.Velocity, orbit.Observer, orbit.Epoch, orbit.Frame,
         orbit.RotateCovarianceFromRtn(rtn));
 }

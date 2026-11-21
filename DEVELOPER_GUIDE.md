@@ -2038,16 +2038,19 @@ if (atm2.Details is NrlmsiseDetails details)
 | Operators | Description |
 |-----------|-------------|
 | `+`, `-` | Vector addition/subtraction |
-| `*` (double) | Scalar multiplication |
-| `*` (Vector3) | Dot product |
+| `-` (unary) | Negation, the same as `Inverse()` |
+| `*` (double), double `*` | Scalar multiplication, either order |
+| Matrix `*` | Product of a 3 × 3 matrix and the vector |
 | `/` | Scalar division |
+
+The dot product is `Dot(Vector3)`: the operator `*` between two vectors is removed in 11.0.0 (#668, R26).
 
 ```csharp
 var v1 = new Vector3(1, 0, 0);
 var v2 = new Vector3(0, 1, 0);
 
 var cross = v1.Cross(v2);           // (0, 0, 1)
-var dot = v1 * v2;                  // 0
+var dot = v1.Dot(v2);               // 0
 var angle = v1.Angle(v2);           // π/2
 var sum = v1 + v2;                  // (1, 1, 0)
 var scaled = v1 * 2.0;              // (2, 0, 0)
@@ -2078,10 +2081,14 @@ Matrix operations.
 |------------|-------------|
 | `Matrix(double[,] data)` | Create from 2D array, copied: a later write to the array does not change the matrix (#745) |
 
+A `Matrix` is immutable (#668, R26: the public `Set` is removed in 11.0.0).
+
 | Method | Description |
 |--------|-------------|
-| `Get(int row, int col)` | Get element |
-| `Set(int row, int col, double value)` | Set element: it writes the array every copy of the struct shares; the public holders of a matrix (`StateVector.Covariance`, `EncounterState`, `CollisionRisk`, `EpochStatistics`, `CdmCovarianceMatrix`, `Iau2006Model.FrameBias()`) copy it in and out, so a term set afterwards does not reach them (#722) |
+| `this[int row, int col]`, `Get(int row, int col)` | Get element; `ArgumentOutOfRangeException` outside the matrix |
+| `With(int row, int col, double value)` | Copy with one element changed |
+| `Create(int rows, int columns, Func<int, int, double> term)` | Matrix of the terms of a function of the indexes |
+| `Diagonal(params double[] diagonal)`, `Identity(int dimension)` | Diagonal and identity matrices |
 | `Multiply(Matrix other)` | Matrix multiplication |
 | `Multiply(double[] vector)` | Matrix-vector multiplication |
 | `Inverse()` | Get inverse matrix |

@@ -798,7 +798,7 @@ public class PropagatedArcsTests
         private static StateVector TurnedInItsPlane(StateVector state, double angle)
         {
             var n = state.Position.Cross(state.Velocity).Normalize();
-            Vector3 Turn(Vector3 x) => x * System.Math.Cos(angle) + n.Cross(x) * System.Math.Sin(angle) + n * (n * x) * (1.0 - System.Math.Cos(angle));
+            Vector3 Turn(Vector3 x) => x * System.Math.Cos(angle) + n.Cross(x) * System.Math.Sin(angle) + n * n.Dot(x) * (1.0 - System.Math.Cos(angle));
             return new StateVector(Turn(state.Position), Turn(state.Velocity), state.Observer, state.Epoch, state.Frame);
         }
 

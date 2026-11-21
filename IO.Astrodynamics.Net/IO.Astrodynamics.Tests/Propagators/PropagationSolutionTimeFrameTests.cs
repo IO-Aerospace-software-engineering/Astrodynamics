@@ -306,12 +306,13 @@ public class PropagationSolutionTimeFrameTests
 
     private static IO.Astrodynamics.Math.Matrix Diagonal(double position, double velocity)
     {
-        var matrix = new IO.Astrodynamics.Math.Matrix(6, 6);
+        var matrixTerms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            matrix.Set(i, i, position);
-            matrix.Set(i + 3, i + 3, velocity);
+            matrixTerms[i, i] = position;
+            matrixTerms[i + 3, i + 3] = velocity;
         }
+        var matrix = new IO.Astrodynamics.Math.Matrix(matrixTerms);
 
         return matrix;
     }

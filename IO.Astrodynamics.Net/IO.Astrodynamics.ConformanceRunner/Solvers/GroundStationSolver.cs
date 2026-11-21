@@ -113,7 +113,7 @@ public class GroundStationSolver : ICategorySolver
             outputs[OutputComparer.IndexedOutput(Samples, k, "elevation_deg")] = UnitConversion.RadToDeg(horizontal.Elevation);
             outputs[OutputComparer.IndexedOutput(Samples, k, "range_km")] = UnitConversion.MToKm(horizontal.Range);
             outputs[OutputComparer.IndexedOutput(Samples, k, "range_rate_km_s")] =
-                UnitConversion.MToKm(state.Position * state.Velocity / state.Position.Magnitude());
+                UnitConversion.MToKm(state.Position.Dot(state.Velocity) / state.Position.Magnitude());
         }
 
         return outputs;

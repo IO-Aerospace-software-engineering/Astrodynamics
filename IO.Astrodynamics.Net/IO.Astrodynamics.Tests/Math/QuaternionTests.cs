@@ -368,7 +368,7 @@ namespace IO.Astrodynamics.Tests.Math
             return (axis, angle, v);
         }
 
-        private static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+        private static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
         // #688: new Quaternion(axis, angle) is the rotation by angle about the direction of axis, whatever its length:
         // Rodrigues' formula v' = v cos a + (k × v) sin a + k (k · v)(1 - cos a), k = axis / |axis|, in plain doubles
@@ -384,7 +384,7 @@ namespace IO.Astrodynamics.Tests.Math
 
                 double m = System.Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y + axis.Z * axis.Z);
                 var k = new Vector3(axis.X / m, axis.Y / m, axis.Z / m);
-                var expected = v * System.Math.Cos(angle) + k.Cross(v) * System.Math.Sin(angle) + k * ((k * v) * (1.0 - System.Math.Cos(angle)));
+                var expected = v * System.Math.Cos(angle) + k.Cross(v) * System.Math.Sin(angle) + k * (k.Dot(v) * (1.0 - System.Math.Cos(angle)));
                 var rotated = v.Rotate(q);
 
                 worstAngle = System.Math.Max(worstAngle, AngleBetween(rotated, expected));

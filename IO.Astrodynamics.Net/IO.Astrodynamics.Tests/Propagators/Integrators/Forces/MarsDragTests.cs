@@ -67,7 +67,7 @@ public class MarsDragTests
 
             // Assert: along −v_rel, and not zero
             var relativeVelocity = state.Velocity - omega.Cross(state.Position);
-            double cosine = acceleration * relativeVelocity / (acceleration.Magnitude() * relativeVelocity.Magnitude());
+            double cosine = acceleration.Dot(relativeVelocity) / (acceleration.Magnitude() * relativeVelocity.Magnitude());
             Assert.True(acceleration.Magnitude() > 0.0, $"{altitude} m: no drag");
             Assert.True(cosine < -1.0 + 1e-12, $"{altitude} m: cos {cosine}");
         }

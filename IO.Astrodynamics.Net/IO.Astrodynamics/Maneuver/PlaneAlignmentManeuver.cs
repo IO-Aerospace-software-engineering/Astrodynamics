@@ -33,7 +33,7 @@ namespace IO.Astrodynamics.Maneuver
         public override double ComputeEventValue(StateVector localState)
         {
             var targetH = TargetOrbit.SpecificAngularMomentum().NormalizeOrZero();
-            double g = localState.Position * targetH;
+            double g = localState.Position.Dot(targetH);
 
             // On first evaluation, determine which node is closer and lock the direction
             if (IsAscendingNode == null)
@@ -47,7 +47,7 @@ namespace IO.Astrodynamics.Maneuver
                     // At/near the node: use rate of change dg/dt = v · ĥ_target
                     // Positive dg/dt → ascending through the plane → ascending node
                     // Negative dg/dt → descending through the plane → descending node
-                    double dgdt = localState.Velocity * targetH;
+                    double dgdt = localState.Velocity.Dot(targetH);
                     LockNode(dgdt > 0);
                 }
                 else
@@ -73,8 +73,8 @@ namespace IO.Astrodynamics.Maneuver
             if (IsAscendingNode == null)
             {
                 var targetH = TargetOrbit.SpecificAngularMomentum().NormalizeOrZero();
-                double g = localState.Position * targetH;
-                double dgdt = localState.Velocity * targetH;
+                double g = localState.Position.Dot(targetH);
+                double dgdt = localState.Velocity.Dot(targetH);
                 if (System.Math.Abs(g) < NodeThreshold * localState.Position.Magnitude() && g * dgdt > 0.0)
                 {
                     LockNode(g < 0.0);
@@ -106,7 +106,7 @@ namespace IO.Astrodynamics.Maneuver
             var pos = stateVector.Position;
 
             //Project vector
-            var projectedVector = vel - (pos * ((vel * pos) / (pos * pos)));
+            var projectedVector = vel - (pos * (vel.Dot(pos) / pos.Dot(pos)));
 
             //Compute relative inclination
             RelativeInclination = System.Math.Acos(System.Math.Cos(stateVector.Inclination()) * System.Math.Cos(TargetOrbit.Inclination()) +

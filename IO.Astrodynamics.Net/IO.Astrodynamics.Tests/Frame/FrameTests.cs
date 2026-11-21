@@ -50,7 +50,7 @@ public class FrameTests
         for (int j = 0; j < 3; j++)
         {
             // r = Aᵀ B with the columns of A and B the images of the axes
-            r[i, j] = a[i] * b[j];
+            r[i, j] = a[i].Dot(b[j]);
         }
 
         return RotationAngle(r);
@@ -145,7 +145,7 @@ public class FrameTests
         // Assert: the direction to 1e-15 rad, the position to 1e-12 relative
         foreach (var actual in new[] { byName, rotated })
         {
-            double angle = System.Math.Atan2(actual.Position.Cross(expected.Position).Magnitude(), actual.Position * expected.Position);
+            double angle = System.Math.Atan2(actual.Position.Cross(expected.Position).Magnitude(), actual.Position.Dot(expected.Position));
             _output.WriteLine($"MEASURE GOLDSTONE: direction {angle:E3} rad");
             Assert.True(angle < 1e-15, $"direction {angle:E3} rad");
             Assert.True((actual.Position - expected.Position).Magnitude() < 1e-12 * expected.Position.Magnitude());

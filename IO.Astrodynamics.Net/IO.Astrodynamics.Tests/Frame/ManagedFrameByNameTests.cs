@@ -122,7 +122,7 @@ public class ManagedFrameByNameTests
         m[0, 1] * v.X + m[1, 1] * v.Y + m[2, 1] * v.Z,
         m[0, 2] * v.X + m[1, 2] * v.Y + m[2, 2] * v.Z);
 
-    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     private static double Angle(Quaternion left, Quaternion right)
     {

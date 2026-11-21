@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,7 +55,7 @@ namespace IO.Astrodynamics.Tests.Surface
             double cosElevation = System.Math.Cos(horizontal.Elevation);
             var actual = new Vector3(cosElevation * System.Math.Cos(horizontal.Azimuth), -cosElevation * System.Math.Sin(horizontal.Azimuth),
                 System.Math.Sin(horizontal.Elevation));
-            double angle = System.Math.Atan2(actual.Cross(expected).Magnitude(), actual * expected);
+            double angle = System.Math.Atan2(actual.Cross(expected).Magnitude(), actual.Dot(expected));
             _output.WriteLine($"MEASURE #690 horizontal coordinates at {epoch} against spkezr in DSS-13_TOPO: {angle:E3} rad");
             Assert.True(angle <= KernelTopocentricThreshold, $"{angle:E3} rad");
         }
@@ -526,7 +526,7 @@ namespace IO.Astrodynamics.Tests.Surface
         private static double RotationAngle(Quaternion q) => 2.0 * System.Math.Atan2(q.VectorPart.Magnitude(), System.Math.Abs(q.W));
 
         // The angle between two vectors
-        private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+        private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
         // An SPK of the site written by the library over [J2000 - 1 d, J2000 + 3 d], for a site from the kernels
         private static FileInfo KernelSiteSpk(int id, string name)
@@ -1157,7 +1157,7 @@ namespace IO.Astrodynamics.Tests.Surface
             const double c = IO.Astrodynamics.Constants.C;
             var state = icrfRead(t);
             double lightTime = state.Position.Magnitude() / c;
-            double rate = state.Position.Normalize() * state.Velocity / c;
+            double rate = state.Position.Normalize().Dot(state.Velocity) / c;
             var centerEpoch = t.AddSeconds(-lightTime);
             double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds - lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
             var orientation = Frames.Frame.ICRF.ToFrame(frame, centerEpoch);

@@ -46,7 +46,7 @@ public class NormalAttitudeTests
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
 
         // Verify the rotated front aligns with orbital normal
-        double alignment = rotatedFront * normal;
+        double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999, $"Front should align with orbital normal (+Z). Alignment: {alignment}");
     }
 
@@ -67,7 +67,7 @@ public class NormalAttitudeTests
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
 
-        double alignment = rotatedFront * normal;
+        double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999, $"Front should align with inclined orbital normal. Alignment: {alignment}");
     }
 
@@ -102,7 +102,7 @@ public class NormalAttitudeTests
         var rotatedFront = spc.BodyFront.Rotate(maneuver.StateOrientation.Rotation).Normalize();
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
 
-        double alignment = rotatedFront * normal;
+        double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999, $"Custom body front (+X) should align with orbital normal. Alignment: {alignment}");
     }
 
@@ -134,7 +134,7 @@ public class NormalAttitudeTests
 
         // The rotated front should align with the orbital normal
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
-        double alignment = rotatedFront * normal;
+        double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999,
             $"Front should align with polar orbit normal. Alignment: {alignment}");
     }
@@ -166,7 +166,7 @@ public class NormalAttitudeTests
             $"Retrograde equatorial orbit normal should be -Z. Got: ({normal.X:F6},{normal.Y:F6},{normal.Z:F6})");
 
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
-        double alignment = rotatedFront * normal;
+        double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999,
             $"Front should align with retrograde orbit normal (-Z). Alignment: {alignment}");
     }
@@ -261,7 +261,7 @@ public class NormalAttitudeTests
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
         var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
 
-        double alignment = rotatedFront * normal;
+        double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999,
             $"Front should align with high-eccentricity orbit normal. Alignment: {alignment}");
     }

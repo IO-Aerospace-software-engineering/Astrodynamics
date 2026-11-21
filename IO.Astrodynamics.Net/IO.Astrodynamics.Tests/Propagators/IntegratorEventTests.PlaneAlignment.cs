@@ -67,12 +67,12 @@ public partial class IntegratorEventTests
         double tA = k.TimeOfTrue(nu, 0.0), tD = k.TimeOfTrue(nu + System.Math.PI, 0.0);
         double tc = System.Math.Min(tA, tD);
         var (rc, vc) = k.StateAt(tc);
-        double theta = System.Math.Acos(System.Math.Clamp(k.Hh * ht, -1.0, 1.0));
-        var horizontal = vc - rc.Normalize() * (vc * rc.Normalize());
+        double theta = System.Math.Acos(System.Math.Clamp(k.Hh.Dot(ht), -1.0, 1.0));
+        var horizontal = vc - rc.Normalize() * vc.Dot(rc.Normalize());
         double expectedDeltaV = 2.0 * horizontal.Magnitude() * System.Math.Sin(theta / 2.0);
         // The node ahead is ascending when g = r·ĥ_target rises through it
         var (rAfter, _) = k.StateAt(tc + 1.0);
-        bool aheadAscending = rAfter * ht > 0.0;
+        bool aheadAscending = rAfter.Dot(ht) > 0.0;
 
         Assert.True(solution.Segments.Count >= 2, "no burn");
         double burn = MinimumEpochGateTests.Tt(solution.Segments[1].BaseEpoch);

@@ -328,9 +328,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.Common
         {
             // A StateVector's covariance of double.MaxValue m² is MaxValue × 1e-6 km², whose product by 1e6 is finite: a
             // state the library holds converts to an OPM covariance and back
-            var matrix = new IO.Astrodynamics.Math.Matrix(6, 6);
+            var matrixTerms = new double[6, 6];
             for (int i = 0; i < 6; i++)
-                matrix.Set(i, i, double.MaxValue);
+                matrixTerms[i, i] = double.MaxValue;
+            var matrix = new IO.Astrodynamics.Math.Matrix(matrixTerms);
             var covariance = CovarianceMatrix.FromMatrixWithUnitConversion(matrix);
             Assert.True(double.IsFinite(covariance.ToMatrixWithUnitConversion().Get(0, 0)));
         }

@@ -55,7 +55,7 @@ public partial class ConjunctionAssessmentTests
             var sunState = sun.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
             var relPos = sunState.Position - moonState.Position;
             var relVel = sunState.Velocity - moonState.Velocity;
-            double rangeRate = relPos * relVel;
+            double rangeRate = relPos.Dot(relVel);
             double rangeRateNormalized = rangeRate / (relPos.Magnitude() * relVel.Magnitude());
             Assert.True(System.Math.Abs(rangeRateNormalized) < 1e-12,
                 $"Range-rate at TCA should be ≈ 0, normalized value = {rangeRateNormalized:E6}");
@@ -878,14 +878,15 @@ public partial class ConjunctionAssessmentTests
         // Analytical verification: projected miss magnitude = |miss - (miss·v̂)v̂|
         var relPos = new Vector3(100.0, 50.0, 30.0);
         var relVel = new Vector3(1000.0, 2000.0, 500.0);
-        var cov = new Matrix(3, 3);
-        cov.Set(0, 0, 100.0); cov.Set(1, 1, 200.0); cov.Set(2, 2, 150.0);
+        var covTerms = new double[3, 3];
+        covTerms[0, 0] = 100.0; covTerms[1, 1] = 200.0; covTerms[2, 2] = 150.0;
+        var cov = new Matrix(covTerms);
 
         var (miss2D, cov2D) = ConjunctionAssessment.ProjectOntoEncounterPlane(relPos, relVel, cov);
 
         // Analytical in-plane miss
         var vHat = relVel.Normalize();
-        double missAlongV = relPos * vHat;
+        double missAlongV = relPos.Dot(vHat);
         var missInPlane = relPos - vHat * missAlongV;
         double expectedMag = missInPlane.Magnitude();
         double actualMag = System.Math.Sqrt(miss2D[0] * miss2D[0] + miss2D[1] * miss2D[1]);
@@ -911,8 +912,9 @@ public partial class ConjunctionAssessmentTests
         var relPos = new Vector3(0.0, 100.0, 0.0);
         var relVel = new Vector3(1.0, 0.0, 0.0); // velocity along X → encounter plane is Y-Z
         double sx2 = 400.0, sy2 = 900.0, sz2 = 1600.0;
-        var cov = new Matrix(3, 3);
-        cov.Set(0, 0, sx2); cov.Set(1, 1, sy2); cov.Set(2, 2, sz2);
+        var covTerms = new double[3, 3];
+        covTerms[0, 0] = sx2; covTerms[1, 1] = sy2; covTerms[2, 2] = sz2;
+        var cov = new Matrix(covTerms);
 
         var (miss2D, cov2D) = ConjunctionAssessment.ProjectOntoEncounterPlane(relPos, relVel, cov);
 
@@ -939,10 +941,11 @@ public partial class ConjunctionAssessmentTests
         var relPos = new Vector3(0.0, 250.0, 0.0);
         var relVel = new Vector3(0.0, 10.0, 0.0);
         double sx2 = 25.0, sy2 = 49.0, sz2 = 81.0;
-        var cov = new Matrix(3, 3);
-        cov.Set(0, 0, sx2);
-        cov.Set(1, 1, sy2);
-        cov.Set(2, 2, sz2);
+        var covTerms = new double[3, 3];
+        covTerms[0, 0] = sx2;
+        covTerms[1, 1] = sy2;
+        covTerms[2, 2] = sz2;
+        var cov = new Matrix(covTerms);
 
         var (miss2D, cov2D) = ConjunctionAssessment.ProjectOntoEncounterPlane(relPos, relVel, cov);
 
@@ -963,9 +966,10 @@ public partial class ConjunctionAssessmentTests
         double sigma = 100.0;
         double radius = 10.0;
         var miss2D = new[] { 0.0, 0.0 };
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, sigma * sigma);
-        cov2D.Set(1, 1, sigma * sigma);
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = sigma * sigma;
+        cov2DTerms[1, 1] = sigma * sigma;
+        var cov2D = new Matrix(cov2DTerms);
 
         var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss2D, cov2D, radius);
 
@@ -982,9 +986,10 @@ public partial class ConjunctionAssessmentTests
         double radius = 5.0;
         double missX = 30.0, missY = 40.0; // d = 50m
         var miss2D = new[] { missX, missY };
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, sigma * sigma);
-        cov2D.Set(1, 1, sigma * sigma);
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = sigma * sigma;
+        cov2DTerms[1, 1] = sigma * sigma;
+        var cov2D = new Matrix(cov2DTerms);
 
         var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss2D, cov2D, radius);
         double expected = IntegrateIsotropicGaussianOverCircleByMidpointRule(miss2D, sigma, radius);
@@ -1001,9 +1006,10 @@ public partial class ConjunctionAssessmentTests
         double sigma = 10.0;
         double radius = 10.0;
         var miss2D = new[] { 100_000.0, 0.0 };
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, sigma * sigma);
-        cov2D.Set(1, 1, sigma * sigma);
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = sigma * sigma;
+        cov2DTerms[1, 1] = sigma * sigma;
+        var cov2D = new Matrix(cov2DTerms);
 
         var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss2D, cov2D, radius);
 
@@ -1037,9 +1043,10 @@ public partial class ConjunctionAssessmentTests
         double radius = 5.0;
         double miss = 20.0;
         var miss2D = new[] { miss, 0.0 };
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, sigmaMax * sigmaMax);
-        cov2D.Set(1, 1, sigmaMin * sigmaMin);
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = sigmaMax * sigmaMax;
+        cov2DTerms[1, 1] = sigmaMin * sigmaMin;
+        var cov2D = new Matrix(cov2DTerms);
 
         var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss2D, cov2D, radius);
 
@@ -1060,9 +1067,10 @@ public partial class ConjunctionAssessmentTests
     {
         // Official CARA tooling clips very small encounter-plane eigenvalues before computing Pc.
         var miss2D = new[] { 10.0, 0.0 };
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, 100.0);
-        cov2D.Set(1, 1, 1e-25); // near-singular
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = 100.0;
+        cov2DTerms[1, 1] = 1e-25; // near-singular
+        var cov2D = new Matrix(cov2DTerms);
 
         var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss2D, cov2D, 5.0);
 
@@ -1076,9 +1084,10 @@ public partial class ConjunctionAssessmentTests
     {
         double sigma = 75.0;
         double radius = 10.0;
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, sigma * sigma);
-        cov2D.Set(1, 1, sigma * sigma);
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = sigma * sigma;
+        cov2DTerms[1, 1] = sigma * sigma;
+        var cov2D = new Matrix(cov2DTerms);
 
         var near = ConjunctionAssessment.ComputeFosterCollisionProbability(new[] { 0.0, 0.0 }, cov2D, radius);
         var medium = ConjunctionAssessment.ComputeFosterCollisionProbability(new[] { 50.0, 0.0 }, cov2D, radius);
@@ -1099,19 +1108,21 @@ public partial class ConjunctionAssessmentTests
         double cosTheta = System.Math.Cos(theta);
         double sinTheta = System.Math.Sin(theta);
         var miss2D = new[] { 30.0, -40.0 };
-        var cov2D = new Matrix(2, 2);
-        cov2D.Set(0, 0, 900.0);
-        cov2D.Set(0, 1, 120.0);
-        cov2D.Set(1, 0, 120.0);
-        cov2D.Set(1, 1, 400.0);
+        var cov2DTerms = new double[2, 2];
+        cov2DTerms[0, 0] = 900.0;
+        cov2DTerms[0, 1] = 120.0;
+        cov2DTerms[1, 0] = 120.0;
+        cov2DTerms[1, 1] = 400.0;
+        var cov2D = new Matrix(cov2DTerms);
 
         var baseline = ConjunctionAssessment.ComputeFosterCollisionProbability(miss2D, cov2D, radius);
 
-        var rotation = new Matrix(2, 2);
-        rotation.Set(0, 0, cosTheta);
-        rotation.Set(0, 1, -sinTheta);
-        rotation.Set(1, 0, sinTheta);
-        rotation.Set(1, 1, cosTheta);
+        var rotationTerms = new double[2, 2];
+        rotationTerms[0, 0] = cosTheta;
+        rotationTerms[0, 1] = -sinTheta;
+        rotationTerms[1, 0] = sinTheta;
+        rotationTerms[1, 1] = cosTheta;
+        var rotation = new Matrix(rotationTerms);
         var rotatedMiss = rotation * miss2D;
         var rotatedCovariance = rotation * cov2D * rotation.Transpose();
 
@@ -1195,18 +1206,20 @@ public partial class ConjunctionAssessmentTests
     {
         // Frisbee AAS 15-717, Eqs. 11-14.
         var miss2D = new[] { 1000.0, 200.0 };
-        var knownCov2D = new Matrix(2, 2);
-        knownCov2D.Set(0, 0, 722500.0);
-        knownCov2D.Set(1, 1, 2500.0);
+        var knownCov2DTerms = new double[2, 2];
+        knownCov2DTerms[0, 0] = 722500.0;
+        knownCov2DTerms[1, 1] = 2500.0;
+        var knownCov2D = new Matrix(knownCov2DTerms);
 
         var criticalCovariance = ConjunctionAssessment.BuildMaximumProbabilityEncounterPlaneCovariance(miss2D, knownCov2D);
 
         Assert.NotNull(criticalCovariance);
-        var expected = new Matrix(2, 2);
-        expected.Set(0, 0, 261401250.0 / 157.0);
-        expected.Set(0, 1, 29593750.0 / 157.0);
-        expected.Set(1, 0, 29593750.0 / 157.0);
-        expected.Set(1, 1, 6311250.0 / 157.0);
+        var expectedTerms = new double[2, 2];
+        expectedTerms[0, 0] = 261401250.0 / 157.0;
+        expectedTerms[0, 1] = 29593750.0 / 157.0;
+        expectedTerms[1, 0] = 29593750.0 / 157.0;
+        expectedTerms[1, 1] = 6311250.0 / 157.0;
+        var expected = new Matrix(expectedTerms);
         AssertMatrixApproximatelyEqual(expected, criticalCovariance.Value, 1.0e-6);
     }
 
@@ -1220,9 +1233,10 @@ public partial class ConjunctionAssessmentTests
         // Frisbee AAS 15-717, Table 1 using the Eq. 11 example geometry (published to two or three digits); the expected
         // values are the exact maximum Pc of tools/collision_probability (rows "Frisbee AAS 15-717 table 1")
         var miss2D = new[] { 1000.0, 200.0 };
-        var knownCov2D = new Matrix(2, 2);
-        knownCov2D.Set(0, 0, 722500.0);
-        knownCov2D.Set(1, 1, 2500.0);
+        var knownCov2DTerms = new double[2, 2];
+        knownCov2DTerms[0, 0] = 722500.0;
+        knownCov2DTerms[1, 1] = 2500.0;
+        var knownCov2D = new Matrix(knownCov2DTerms);
 
         var pc = ConjunctionAssessment.ComputeSingleCovarianceMaximumCollisionProbability(miss2D, knownCov2D, hardBodyRadius);
 
@@ -1911,12 +1925,13 @@ public partial class ConjunctionAssessmentTests
 
         var initialPosition = new Vector3(radius, 0.0, 0.0);
         var initialVelocity = new Vector3(0.0, speed, 0.0);
-        var covarianceRtn = new Matrix(6, 6);
+        var covarianceRtnTerms = new double[6, 6];
         double[] variances = { 1.0, 1.0e4, 4.0, 1.0e-6, 1.0e-4, 4.0e-6 };
         for (int i = 0; i < 6; i++)
         {
-            covarianceRtn.Set(i, i, variances[i]);
+            covarianceRtnTerms[i, i] = variances[i];
         }
+        var covarianceRtn = new Matrix(covarianceRtnTerms);
 
         var initialOrientation = new StateVector(initialPosition, initialVelocity, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spacecraft = CreateSpacecraft(-3401, "RTN_HOLD", earth, initialPosition, initialVelocity,
@@ -2326,40 +2341,43 @@ public partial class ConjunctionAssessmentTests
 
     private static Matrix BuildCovariance(double positionVariance, double velocityVariance)
     {
-        var covariance = new Matrix(6, 6);
-        covariance.Set(0, 0, positionVariance);
-        covariance.Set(1, 1, positionVariance);
-        covariance.Set(2, 2, positionVariance);
-        covariance.Set(3, 3, velocityVariance);
-        covariance.Set(4, 4, velocityVariance);
-        covariance.Set(5, 5, velocityVariance);
+        var covarianceTerms = new double[6, 6];
+        covarianceTerms[0, 0] = positionVariance;
+        covarianceTerms[1, 1] = positionVariance;
+        covarianceTerms[2, 2] = positionVariance;
+        covarianceTerms[3, 3] = velocityVariance;
+        covarianceTerms[4, 4] = velocityVariance;
+        covarianceTerms[5, 5] = velocityVariance;
+        var covariance = new Matrix(covarianceTerms);
         return covariance;
     }
 
     private static Matrix BuildPositionCovariance(double[,] values, double scale = 1.0)
     {
-        var matrix = new Matrix(3, 3);
+        var matrixTerms = new double[3, 3];
         for (int row = 0; row < 3; row++)
         {
             for (int column = 0; column < 3; column++)
             {
-                matrix.Set(row, column, values[row, column] * scale);
+                matrixTerms[row, column] = values[row, column] * scale;
             }
         }
+        var matrix = new Matrix(matrixTerms);
 
         return matrix;
     }
 
     private static Matrix BuildStateCovarianceFromPosition(Matrix positionCovariance)
     {
-        var covariance = new Matrix(6, 6);
+        var covarianceTerms = new double[6, 6];
         for (int row = 0; row < 3; row++)
         {
             for (int column = 0; column < 3; column++)
             {
-                covariance.Set(row, column, positionCovariance.Get(row, column));
+                covarianceTerms[row, column] = positionCovariance.Get(row, column);
             }
         }
+        var covariance = new Matrix(covarianceTerms);
 
         return covariance;
     }
@@ -2496,10 +2514,11 @@ public partial class ConjunctionAssessmentTests
         var radial = position.Normalize();
         var crossTrack = position.Cross(velocity).Normalize();
         var inTrack = crossTrack.Cross(radial).Normalize();
-        var rotation = new Matrix(3, 3);
-        rotation.Set(0, 0, radial.X); rotation.Set(0, 1, radial.Y); rotation.Set(0, 2, radial.Z);
-        rotation.Set(1, 0, inTrack.X); rotation.Set(1, 1, inTrack.Y); rotation.Set(1, 2, inTrack.Z);
-        rotation.Set(2, 0, crossTrack.X); rotation.Set(2, 1, crossTrack.Y); rotation.Set(2, 2, crossTrack.Z);
+        var rotationTerms = new double[3, 3];
+        rotationTerms[0, 0] = radial.X; rotationTerms[0, 1] = radial.Y; rotationTerms[0, 2] = radial.Z;
+        rotationTerms[1, 0] = inTrack.X; rotationTerms[1, 1] = inTrack.Y; rotationTerms[1, 2] = inTrack.Z;
+        rotationTerms[2, 0] = crossTrack.X; rotationTerms[2, 1] = crossTrack.Y; rotationTerms[2, 2] = crossTrack.Z;
+        var rotation = new Matrix(rotationTerms);
         return rotation;
     }
 
@@ -2593,14 +2612,15 @@ public partial class ConjunctionAssessmentTests
 
     private static Matrix Add(Matrix left, Matrix right)
     {
-        var result = new Matrix(left.Rows, left.Columns);
+        var resultTerms = new double[left.Rows, left.Columns];
         for (int row = 0; row < left.Rows; row++)
         {
             for (int column = 0; column < left.Columns; column++)
             {
-                result.Set(row, column, left.Get(row, column) + right.Get(row, column));
+                resultTerms[row, column] = left.Get(row, column) + right.Get(row, column);
             }
         }
+        var result = new Matrix(resultTerms);
 
         return result;
     }

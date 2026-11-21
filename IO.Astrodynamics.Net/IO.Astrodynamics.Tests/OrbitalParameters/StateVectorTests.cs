@@ -605,13 +605,14 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 new Vector3(0.0, 7546.0, 0.0),
                 TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
 
-            var cov = new Matrix(6, 6);
-            cov.Set(0, 0, 100.0); // X variance → maps to R
-            cov.Set(1, 1, 200.0); // Y variance → maps to T
-            cov.Set(2, 2, 300.0); // Z variance → maps to N
-            cov.Set(3, 3, 1.0);
-            cov.Set(4, 4, 2.0);
-            cov.Set(5, 5, 3.0);
+            var covTerms = new double[6, 6];
+            covTerms[0, 0] = 100.0; // X variance → maps to R
+            covTerms[1, 1] = 200.0; // Y variance → maps to T
+            covTerms[2, 2] = 300.0; // Z variance → maps to N
+            covTerms[3, 3] = 1.0;
+            covTerms[4, 4] = 2.0;
+            covTerms[5, 5] = 3.0;
+            var cov = new Matrix(covTerms);
 
             var rtnCov = sv.RotateCovarianceToRtn(cov);
             Assert.Equal(100.0, rtnCov.Get(0, 0), 6); // R variance
@@ -758,8 +759,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 var perigee = sv.PerigeeVector();
                 var apogee = sv.ApogeeVector();
 
-                worstPlane = System.Math.Max(worstPlane, System.Math.Max(System.Math.Abs(perigee / perigee.Magnitude() * hHat),
-                    System.Math.Abs(apogee / apogee.Magnitude() * hHat)));
+                worstPlane = System.Math.Max(worstPlane, System.Math.Max(System.Math.Abs((perigee / perigee.Magnitude()).Dot(hHat)),
+                    System.Math.Abs((apogee / apogee.Magnitude()).Dot(hHat))));
                 double a = sv.SemiMajorAxis(), e = sv.Eccentricity();
                 worstRadius = System.Math.Max(worstRadius, System.Math.Max(System.Math.Abs(perigee.Magnitude() / (a * (1.0 - e)) - 1.0),
                     System.Math.Abs(apogee.Magnitude() / (a * (1.0 + e)) - 1.0)));

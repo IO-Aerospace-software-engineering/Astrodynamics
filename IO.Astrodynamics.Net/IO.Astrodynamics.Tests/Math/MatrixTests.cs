@@ -249,16 +249,17 @@ public class MatirxTests
     public void ToQuaternionXYZRotationAxis()
     {
         // Arrange
-        var matrix = new Matrix(3,3);
-        matrix.Set(0, 0, 0.7652395);
-        matrix.Set(0, 1, -0.3224221);
-        matrix.Set(0, 2, 0.5571826);
-        matrix.Set(1, 0, 0.5571826);
-        matrix.Set(1, 1, 0.7652395);
-        matrix.Set(1, 2, -0.3224221);
-        matrix.Set(2, 0, -0.3224221);
-        matrix.Set(2, 1, 0.5571826);
-        matrix.Set(2, 2, 0.7652395);
+        var matrixTerms = new double[3,3];
+        matrixTerms[0, 0] = 0.7652395;
+        matrixTerms[0, 1] = -0.3224221;
+        matrixTerms[0, 2] = 0.5571826;
+        matrixTerms[1, 0] = 0.5571826;
+        matrixTerms[1, 1] = 0.7652395;
+        matrixTerms[1, 2] = -0.3224221;
+        matrixTerms[2, 0] = -0.3224221;
+        matrixTerms[2, 1] = 0.5571826;
+        matrixTerms[2, 2] = 0.7652395;
+        var matrix = new Matrix(matrixTerms);
 
         // Act
         var quaternion = matrix.ToQuaternion();
@@ -274,16 +275,17 @@ public class MatirxTests
     public void ToQuaternionMinusXYZRotationAxis()
     {
         // Arrange
-        var matrix = new Matrix(3,3);
-        matrix.Set(0, 0, 0.7652395);
-        matrix.Set(0, 1, 0.5571826);
-        matrix.Set(0, 2, -0.3224221);
-        matrix.Set(1, 0, -0.3224221);
-        matrix.Set(1, 1, 0.7652395);
-        matrix.Set(1, 2, 0.5571826);
-        matrix.Set(2, 0, 0.5571826);
-        matrix.Set(2, 1, -0.3224221);
-        matrix.Set(2, 2, 0.7652395);
+        var matrixTerms = new double[3,3];
+        matrixTerms[0, 0] = 0.7652395;
+        matrixTerms[0, 1] = 0.5571826;
+        matrixTerms[0, 2] = -0.3224221;
+        matrixTerms[1, 0] = -0.3224221;
+        matrixTerms[1, 1] = 0.7652395;
+        matrixTerms[1, 2] = 0.5571826;
+        matrixTerms[2, 0] = 0.5571826;
+        matrixTerms[2, 1] = -0.3224221;
+        matrixTerms[2, 2] = 0.7652395;
+        var matrix = new Matrix(matrixTerms);
 
         // Act
         var quaternion = matrix.ToQuaternion();
@@ -691,13 +693,14 @@ public class MatirxTests
     public void Cholesky_6x6CovarianceMatrix_ReconstructsOriginal()
     {
         // Realistic LEO covariance (diagonal-dominant, units m² and m²/s²)
-        var P = new Matrix(6, 6);
-        P.Set(0, 0, 1e4); P.Set(0, 1, 1e2); P.Set(0, 2, 5e1);
-        P.Set(1, 0, 1e2); P.Set(1, 1, 2e4); P.Set(1, 2, 3e1);
-        P.Set(2, 0, 5e1); P.Set(2, 1, 3e1); P.Set(2, 2, 1.5e4);
-        P.Set(3, 3, 1e-2); P.Set(3, 4, 1e-4);
-        P.Set(4, 3, 1e-4); P.Set(4, 4, 2e-2); P.Set(4, 5, 5e-5);
-        P.Set(5, 4, 5e-5); P.Set(5, 5, 1.5e-2);
+        var PTerms = new double[6, 6];
+        PTerms[0, 0] = 1e4; PTerms[0, 1] = 1e2; PTerms[0, 2] = 5e1;
+        PTerms[1, 0] = 1e2; PTerms[1, 1] = 2e4; PTerms[1, 2] = 3e1;
+        PTerms[2, 0] = 5e1; PTerms[2, 1] = 3e1; PTerms[2, 2] = 1.5e4;
+        PTerms[3, 3] = 1e-2; PTerms[3, 4] = 1e-4;
+        PTerms[4, 3] = 1e-4; PTerms[4, 4] = 2e-2; PTerms[4, 5] = 5e-5;
+        PTerms[5, 4] = 5e-5; PTerms[5, 5] = 1.5e-2;
+        var P = new Matrix(PTerms);
 
         var L = P.Cholesky();
         var reconstructed = L * L.Transpose();
@@ -982,13 +985,14 @@ public class MatirxTests
     public void TransformCovariance_IdentityRotation_ReturnsSameCovariance()
     {
         // Create a diagonal covariance matrix
-        var covariance = new Matrix(6, 6);
-        covariance.Set(0, 0, 1.0);
-        covariance.Set(1, 1, 2.0);
-        covariance.Set(2, 2, 3.0);
-        covariance.Set(3, 3, 0.1);
-        covariance.Set(4, 4, 0.2);
-        covariance.Set(5, 5, 0.3);
+        var covarianceTerms = new double[6, 6];
+        covarianceTerms[0, 0] = 1.0;
+        covarianceTerms[1, 1] = 2.0;
+        covarianceTerms[2, 2] = 3.0;
+        covarianceTerms[3, 3] = 0.1;
+        covarianceTerms[4, 4] = 0.2;
+        covarianceTerms[5, 5] = 0.3;
+        var covariance = new Matrix(covarianceTerms);
 
         var identityRotation = new Quaternion(1, new Vector3(0, 0, 0));
 
@@ -1008,13 +1012,14 @@ public class MatirxTests
     public void TransformCovariance_DiagonalCovariance_180DegreeRotation_PreservesDiagonal()
     {
         // Diagonal covariance
-        var covariance = new Matrix(6, 6);
-        covariance.Set(0, 0, 1.0);
-        covariance.Set(1, 1, 1.0);
-        covariance.Set(2, 2, 1.0);
-        covariance.Set(3, 3, 0.01);
-        covariance.Set(4, 4, 0.01);
-        covariance.Set(5, 5, 0.01);
+        var covarianceTerms = new double[6, 6];
+        covarianceTerms[0, 0] = 1.0;
+        covarianceTerms[1, 1] = 1.0;
+        covarianceTerms[2, 2] = 1.0;
+        covarianceTerms[3, 3] = 0.01;
+        covarianceTerms[4, 4] = 0.01;
+        covarianceTerms[5, 5] = 0.01;
+        var covariance = new Matrix(covarianceTerms);
 
         // 180 degree rotation around Z
         var angle = System.Math.PI;
@@ -1035,13 +1040,14 @@ public class MatirxTests
     public void TransformCovariance_90DegreeZRotation_SwapsXYVariances()
     {
         // Covariance with different X and Y variances
-        var covariance = new Matrix(6, 6);
-        covariance.Set(0, 0, 4.0);  // σ²x = 4
-        covariance.Set(1, 1, 1.0);  // σ²y = 1
-        covariance.Set(2, 2, 9.0);  // σ²z = 9
-        covariance.Set(3, 3, 0.04); // σ²vx
-        covariance.Set(4, 4, 0.01); // σ²vy
-        covariance.Set(5, 5, 0.09); // σ²vz
+        var covarianceTerms = new double[6, 6];
+        covarianceTerms[0, 0] = 4.0;  // σ²x = 4
+        covarianceTerms[1, 1] = 1.0;  // σ²y = 1
+        covarianceTerms[2, 2] = 9.0;  // σ²z = 9
+        covarianceTerms[3, 3] = 0.04; // σ²vx
+        covarianceTerms[4, 4] = 0.01; // σ²vy
+        covarianceTerms[5, 5] = 0.09; // σ²vz
+        var covariance = new Matrix(covarianceTerms);
 
         // 90 degree rotation around Z
         var angle = System.Math.PI / 2;
@@ -1063,15 +1069,16 @@ public class MatirxTests
     public void TransformCovariance_PreservesSymmetry()
     {
         // Create a symmetric covariance matrix with off-diagonal terms
-        var covariance = new Matrix(6, 6);
-        covariance.Set(0, 0, 1.0);
-        covariance.Set(1, 1, 2.0);
-        covariance.Set(2, 2, 3.0);
-        covariance.Set(0, 1, 0.5); covariance.Set(1, 0, 0.5);
-        covariance.Set(3, 3, 0.1);
-        covariance.Set(4, 4, 0.2);
-        covariance.Set(5, 5, 0.3);
-        covariance.Set(3, 4, 0.05); covariance.Set(4, 3, 0.05);
+        var covarianceTerms = new double[6, 6];
+        covarianceTerms[0, 0] = 1.0;
+        covarianceTerms[1, 1] = 2.0;
+        covarianceTerms[2, 2] = 3.0;
+        covarianceTerms[0, 1] = 0.5; covarianceTerms[1, 0] = 0.5;
+        covarianceTerms[3, 3] = 0.1;
+        covarianceTerms[4, 4] = 0.2;
+        covarianceTerms[5, 5] = 0.3;
+        covarianceTerms[3, 4] = 0.05; covarianceTerms[4, 3] = 0.05;
+        var covariance = new Matrix(covarianceTerms);
 
         // Arbitrary rotation
         var rotation = new Quaternion(0.9, new Vector3(0.1, 0.2, 0.3)).Normalize();
@@ -1086,11 +1093,12 @@ public class MatirxTests
     public void TransformCovariance_PreservesPositiveDefiniteness()
     {
         // Create a positive definite covariance matrix (diagonal)
-        var covariance = new Matrix(6, 6);
+        var covarianceTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            covariance.Set(i, i, 1.0 + i * 0.1);
+            covarianceTerms[i, i] = 1.0 + i * 0.1;
         }
+        var covariance = new Matrix(covarianceTerms);
 
         var rotation = new Quaternion(0.7, new Vector3(0.3, 0.4, 0.5)).Normalize();
 
@@ -1117,13 +1125,14 @@ public class MatirxTests
     {
         // Manually verify P' = T * P * T^T
         // Create a simple covariance
-        var P = new Matrix(6, 6);
-        P.Set(0, 0, 4.0);
-        P.Set(1, 1, 1.0);
-        P.Set(2, 2, 1.0);
-        P.Set(3, 3, 0.04);
-        P.Set(4, 4, 0.01);
-        P.Set(5, 5, 0.01);
+        var PTerms = new double[6, 6];
+        PTerms[0, 0] = 4.0;
+        PTerms[1, 1] = 1.0;
+        PTerms[2, 2] = 1.0;
+        PTerms[3, 3] = 0.04;
+        PTerms[4, 4] = 0.01;
+        PTerms[5, 5] = 0.01;
+        var P = new Matrix(PTerms);
 
         // 90 degree Z rotation
         var angle = System.Math.PI / 2;
@@ -1163,9 +1172,10 @@ public class MatirxTests
     [InlineData(1e-170)]
     public void TransformCovariance_ExtremeFiniteRotation_IsTheRotationOfItsUnitQuaternion(double c)
     {
-        var P = new Matrix(6, 6);
+        var PTerms = new double[6, 6];
         double[] diagonal = { 4.0, 1.0, 9.0, 0.04, 0.01, 0.09 };
-        for (int i = 0; i < 6; i++) P.Set(i, i, diagonal[i]);
+        for (int i = 0; i < 6; i++) PTerms[i, i] = diagonal[i];
+        var P = new Matrix(PTerms);
         double[] expected = { 4.0, 9.0, 1.0, 0.04, 0.09, 0.01 };
 
         var result = Matrix.TransformCovariance(P, new Quaternion(c, c, 0.0, 0.0));
@@ -1459,9 +1469,10 @@ public class MatirxTests
         Assert.Equal(reference.GetHashCode(), matrix.GetHashCode());
         Assert.Equal(reference, matrix);
 
-        // The matrix still changes through its own Set, which the array does not see (#722 kept Matrix mutable by Set)
-        matrix.Set(0, 1, 7.0);
-        Assert.Equal(7.0, matrix.Get(0, 1));
+        // A copy with a changed term leaves the matrix and the array as they were (#668, R26: Matrix is immutable)
+        var changed = matrix.With(0, 1, 7.0);
+        Assert.Equal(7.0, changed.Get(0, 1));
+        Assert.Equal(0.0, matrix.Get(0, 1));
         Assert.Equal(0.0, array[0, 1]);
     }
 
@@ -1484,7 +1495,7 @@ public class MatirxTests
         var product = matrix.Multiply(matrix);
         var copy = matrix.Copy();
         array[0, 0] = 100.0;
-        matrix.Set(1, 1, 100.0);
+        matrix.SetTerm(1, 1, 100.0);
 
         // Closed forms: [[2, 1], [1, 3]]^-1 = [[3, -1], [-1, 2]] / 5 and [[2, 1], [1, 3]]^2 = [[5, 5], [5, 10]]
         Assert.Equal(0.6, inverse.Get(0, 0), 15);
@@ -1493,7 +1504,7 @@ public class MatirxTests
         Assert.Equal(10.0, product.Get(1, 1));
         Assert.Equal(2.0, copy.Get(0, 0));
         Assert.Equal(3.0, copy.Get(1, 1));
-        copy.Set(0, 0, -1.0);
+        copy.SetTerm(0, 0, -1.0);
         Assert.Equal(2.0, matrix.Get(0, 0));
 
         // The Jacobian of (x0 x1, x0 + x1) at (2, 3) is [[3, 2], [1, 1]] (central differences are exact for these terms but
@@ -1508,8 +1519,8 @@ public class MatirxTests
                  })
         {
             var first = evaluate();
-            first.Set(0, 0, 100.0);
-            first.Set(1, 1, 100.0);
+            first.SetTerm(0, 0, 100.0);
+            first.SetTerm(1, 1, 100.0);
             var second = evaluate();
             Assert.Equal(3.0, second.Get(0, 0), 8);
             Assert.Equal(2.0, second.Get(0, 1), 8);
@@ -1529,8 +1540,8 @@ public class MatirxTests
         {
             var first = read();
             double scale = first.Get(0, 0);
-            first.Set(0, 0, -7.0);
-            first.Set(2, 1, -7.0);
+            first.SetTerm(0, 0, -7.0);
+            first.SetTerm(2, 1, -7.0);
             var second = read();
             Assert.Equal(scale, second.Get(0, 0));
             Assert.Equal(0.3 * scale, second.Get(2, 1));

@@ -163,8 +163,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var velocity = sv.Velocity;
             maneuver.TryExecute(sv);
 
-            double dvError = System.Math.Abs(maneuver.DeltaV * velocity.Normalize() - dv);
-            double alongError = (maneuver.DeltaV - velocity.Normalize() * (maneuver.DeltaV * velocity.Normalize())).Magnitude();
+            double dvError = System.Math.Abs(maneuver.DeltaV.Dot(velocity.Normalize()) - dv);
+            double alongError = (maneuver.DeltaV - velocity.Normalize() * maneuver.DeltaV.Dot(velocity.Normalize())).Magnitude();
             double holdError = System.Math.Abs(maneuver.ManeuverHoldDuration.TotalSeconds - 0.9 * revolutions * t2);
 
             // The target-orbit constructor with the target on the same orbit at Δθ: its mean anomaly from the closed form

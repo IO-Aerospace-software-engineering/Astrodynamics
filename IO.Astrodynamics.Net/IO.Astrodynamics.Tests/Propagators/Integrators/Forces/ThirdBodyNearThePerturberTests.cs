@@ -168,7 +168,7 @@ public class ThirdBodyNearThePerturberTests
 
             // Assert: Battin's form as the library writes it (Battin, "An Introduction to the Methods of Astrodynamics", section 8.6)
             double d2 = d.Magnitude() * d.Magnitude();
-            double q = r * (r - d * 2.0) / d2;
+            double q = r.Dot(r - d * 2.0) / d2;
             double f = ThirdBodyPerturbation.BattinF(q);
             var battin = (r + d * f) * (-perturbingBody.GM / (d2 * d.Magnitude() * System.Math.Pow(1.0 + q, 1.5)));
             Assert.Equal((battin.X, battin.Y, battin.Z), (a.X, a.Y, a.Z));

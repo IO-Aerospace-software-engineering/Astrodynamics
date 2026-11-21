@@ -36,14 +36,15 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
     private static (Matrix Rtn, Matrix Inertial) WithTrCorrelation(StateVector state, double rho)
     {
         var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
-        var rtn = new Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            rtn.Set(i, i, sigma[i] * sigma[i]);
+            rtnTerms[i, i] = sigma[i] * sigma[i];
         }
 
-        rtn.Set(1, 3, rho * sigma[1] * sigma[3]);
-        rtn.Set(3, 1, rho * sigma[1] * sigma[3]);
+        rtnTerms[1, 3] = rho * sigma[1] * sigma[3];
+        rtnTerms[3, 1] = rho * sigma[1] * sigma[3];
+        var rtn = new Matrix(rtnTerms);
         return (rtn, Rotate(rtn, state, toRtn: false));
     }
 
@@ -68,14 +69,15 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
 
         var m = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.Dense(6, 6, (i, j) => p.Get(i, j));
         var result = toRtn ? rotation * m * rotation.Transpose() : rotation.Transpose() * m * rotation;
-        var matrix = new Matrix(6, 6);
+        var matrixTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                matrix.Set(i, j, 0.5 * (result[i, j] + result[j, i]));
+                matrixTerms[i, j] = 0.5 * (result[i, j] + result[j, i]);
             }
         }
+        var matrix = new Matrix(matrixTerms);
 
         return matrix;
     }
@@ -186,14 +188,15 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
             return scale * g;
         });
         var p = phi * a * a.Transpose() * phi.Transpose();
-        var matrix = new Matrix(6, 6);
+        var matrixTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                matrix.Set(i, j, 0.5 * (p[i, j] + p[j, i]));
+                matrixTerms[i, j] = 0.5 * (p[i, j] + p[j, i]);
             }
         }
+        var matrix = new Matrix(matrixTerms);
 
         return matrix;
     }
@@ -201,7 +204,7 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
     // Each element rounded to 4 significant digits, as a CDM writes it (one value for the two elements of a pair)
     private static Matrix RoundTo4Digits(Matrix p)
     {
-        var rounded = new Matrix(6, 6);
+        var roundedTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j <= i; j++)
@@ -209,10 +212,11 @@ public class CovarianceRemediationBoundTests : IClassFixture<PartialsTestCases>
                 double value = p.Get(i, j);
                 double r = value == 0.0 ? 0.0 : double.Parse(value.ToString("E3", System.Globalization.CultureInfo.InvariantCulture),
                     System.Globalization.CultureInfo.InvariantCulture);
-                rounded.Set(i, j, r);
-                rounded.Set(j, i, r);
+                roundedTerms[i, j] = r;
+                roundedTerms[j, i] = r;
             }
         }
+        var rounded = new Matrix(roundedTerms);
 
         return rounded;
     }

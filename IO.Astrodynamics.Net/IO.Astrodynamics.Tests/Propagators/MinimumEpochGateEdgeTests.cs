@@ -296,7 +296,7 @@ public class MinimumEpochGateEdgeTests
         double G(double t)
         {
             var (p, v) = ungatedSolution.InterpolateAtElapsed(t);
-            return p * v;
+            return p.Dot(v);
         }
 
         Assert.True(G(lo) > 0.0 && G(hi) < 0.0);
@@ -424,7 +424,7 @@ public class MinimumEpochGateEdgeTests
         var gate = S.AddSeconds(1000.0);
         var detector = new ManeuverEventDetector(new ApogeeHeightManeuver(earth, gate, TimeSpan.Zero, 8378137.0, engine));
         var state = orbit.ToStateVector();
-        double rv = state.Position * state.Velocity;
+        double rv = state.Position.Dot(state.Velocity);
 
         Assert.Equal(1.0, detector.Evaluate(state));
         var gated = (IGatedEventDetector)detector;

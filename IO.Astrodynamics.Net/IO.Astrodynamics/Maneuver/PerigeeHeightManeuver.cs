@@ -51,7 +51,7 @@ namespace IO.Astrodynamics.Maneuver
         /// <summary>
         /// Fires at apogee: r·v = 0, transitioning from positive to negative.
         /// </summary>
-        public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+        public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
         public override CrossingDirection EventCrossingDirection => CrossingDirection.PositiveToNegative;
 
         protected override Vector3 Execute(StateVector stateVector)

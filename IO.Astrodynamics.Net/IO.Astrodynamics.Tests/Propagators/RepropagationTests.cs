@@ -157,8 +157,9 @@ public class RepropagationTests
 
             if (!withP0) return orbit;
             var state = orbit.ToStateVector();
-            var p0 = new Matrix(6, 6);
-            for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+            var p0Terms = new double[6, 6];
+            for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 100.0 : 1.0e-4;
+            var p0 = new Matrix(p0Terms);
             return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame, p0);
         }
 
@@ -803,8 +804,9 @@ public class RepropagationTests
     {
         var orbit = env.PerigeeAfter(epoch, lead).ToStateVector();
         if (!withP0) return orbit;
-        var p0 = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+        var p0Terms = new double[6, 6];
+        for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 100.0 : 1.0e-4;
+        var p0 = new Matrix(p0Terms);
         return new StateVector(orbit.Position, orbit.Velocity, orbit.Observer, orbit.Epoch, orbit.Frame, p0);
     }
 

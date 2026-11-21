@@ -53,7 +53,7 @@ internal static class FieldOfViewGeometry
     internal static FieldOfViewAxes Axes(in Vector3 boresight, in Vector3 refVector)
     {
         var b = boresight.NormalizeOrZero();
-        var b1 = (refVector - b * (refVector * b)).NormalizeOrZero();
+        var b1 = (refVector - b * refVector.Dot(b)).NormalizeOrZero();
         return new FieldOfViewAxes(b, b1, b.Cross(b1));
     }
 
@@ -128,9 +128,9 @@ internal static class FieldOfViewGeometry
 
     private static double RectanglePointMargin(double refAngle, double crossAngle, in FieldOfViewAxes axes, in Vector3 direction)
     {
-        double z = direction * axes.Boresight;
-        double y = direction * axes.Ref;
-        double x = direction * axes.Cross;
+        double z = direction.Dot(axes.Boresight);
+        double y = direction.Dot(axes.Ref);
+        double x = direction.Dot(axes.Cross);
         return System.Math.Min(refAngle - System.Math.Abs(System.Math.Atan2(y, z)), crossAngle - System.Math.Abs(System.Math.Atan2(x, z)));
     }
 
@@ -138,26 +138,26 @@ internal static class FieldOfViewGeometry
     {
         // The space of the target's unit sphere: the observer at the origin, the center at c'
         var c = target.ToUnitSphere(target.Center);
-        double k = c * c - 1.0;
+        double k = c.Dot(c) - 1.0;
         if (!(k > 0.0))
         {
-            throw new InvalidOperationException($"The observer is inside the target, or on its surface (level {c * c}).");
+            throw new InvalidOperationException($"The observer is inside the target, or on its surface (level {c.Dot(c)}).");
         }
 
         // The ray v = b + X b2 + Y b1: w = w0 + X wx + Y wy
         var w0 = target.ToUnitSphere(axes.Boresight);
         var wx = target.ToUnitSphere(axes.Cross);
         var wy = target.ToUnitSphere(axes.Ref);
-        double l0 = w0 * c, lx = wx * c, ly = wy * c;
+        double l0 = w0.Dot(c), lx = wx.Dot(c), ly = wy.Dot(c);
         // h = hxx X² + 2 hxy XY + hyy Y² + 2 hx X + 2 hy Y + h0
-        double hxx = lx * lx - k * (wx * wx);
-        double hyy = ly * ly - k * (wy * wy);
-        double hxy = lx * ly - k * (wx * wy);
-        double hx = l0 * lx - k * (w0 * wx);
-        double hy = l0 * ly - k * (w0 * wy);
-        double h0 = l0 * l0 - k * (w0 * w0);
+        double hxx = lx * lx - k * wx.Dot(wx);
+        double hyy = ly * ly - k * wy.Dot(wy);
+        double hxy = lx * ly - k * wx.Dot(wy);
+        double hx = l0 * lx - k * w0.Dot(wx);
+        double hy = l0 * ly - k * w0.Dot(wy);
+        double h0 = l0 * l0 - k * w0.Dot(w0);
         double H(double px, double py) => hxx * px * px + 2.0 * hxy * px * py + hyy * py * py + 2.0 * hx * px + 2.0 * hy * py + h0;
-        double scale = k * (w0 * w0);
+        double scale = k * w0.Dot(w0);
 
         // The rectangle clipped by the half-plane l0 + lx X + ly Y ≥ 0 (Sutherland-Hodgman, one edge)
         double tx = System.Math.Tan(crossAngle), ty = System.Math.Tan(refAngle);

@@ -91,7 +91,7 @@ public sealed class AvoidanceFallbackCase
         double angle = 70.0 * IO.Astrodynamics.Constants.Deg2Rad;
         var v = protectedAtTca.Velocity;
         var velocity = v * System.Math.Cos(angle) + radial.Cross(v) * System.Math.Sin(angle) +
-                       radial * (radial * v) * (1.0 - System.Math.Cos(angle));
+                       radial * radial.Dot(v) * (1.0 - System.Math.Cos(angle));
         return ConjunctionCovarianceCase.WithRtnCovariance(
             new StateVector(protectedAtTca.Position + radial * 120.0 + normal * 160.0, velocity, protectedAtTca.Observer,
                 protectedAtTca.Epoch, protectedAtTca.Frame), new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 });

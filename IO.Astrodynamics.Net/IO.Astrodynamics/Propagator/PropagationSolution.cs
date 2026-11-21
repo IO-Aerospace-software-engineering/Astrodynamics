@@ -253,7 +253,7 @@ public sealed class PropagationSolution
         {
             for (int j = 0; j < VariationalEquations.StateDimension; j++)
             {
-                phi.Set(i, j, y[i * columns + j]);
+                phi.SetTerm(i, j, y[i * columns + j]);
             }
         }
 
@@ -289,7 +289,7 @@ public sealed class PropagationSolution
         {
             for (int j = 0; j < p; j++)
             {
-                psi.Set(i, j, y[i * columns + VariationalEquations.StateDimension + j]);
+                psi.SetTerm(i, j, y[i * columns + VariationalEquations.StateDimension + j]);
             }
         }
 

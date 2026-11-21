@@ -611,7 +611,7 @@ public class LightTimeCorrectionTests
     {
         const double c = global::IO.Astrodynamics.Constants.C;
         double lightTime = center.Position.Magnitude() / c;
-        double rate = center.Position.Normalize() * center.Velocity / c;
+        double rate = center.Position.Normalize().Dot(center.Velocity) / c;
         var t = state.Epoch;
         var centerEpoch = t.AddSeconds(sign * lightTime);
         double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds + sign * lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
@@ -754,7 +754,7 @@ public class LightTimeCorrectionTests
         {
             var horizontal = _site.GetHorizontalCoordinates(_epochs[e], target, flag);
             var state = target.GetEphemeris(_epochs[e], _site, Frames.Frame.ICRF, flag).ToStateVector();
-            return [horizontal.Range, horizontal.Azimuth, horizontal.Elevation, state.Position.Normalize() * state.Velocity];
+            return [horizontal.Range, horizontal.Azimuth, horizontal.Elevation, state.Position.Normalize().Dot(state.Velocity)];
         }
 
         double[] Expected(Aberration flag, int e) =>

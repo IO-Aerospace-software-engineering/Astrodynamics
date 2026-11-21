@@ -27,7 +27,7 @@ namespace IO.Astrodynamics.Maneuver
         {
             var intersectionDir = DetermineIntersectionDirection(localState);
             var perpDir = localState.SpecificAngularMomentum().Cross(intersectionDir).NormalizeOrZero();
-            return localState.Position * perpDir;
+            return localState.Position.Dot(perpDir);
         }
 
         public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;

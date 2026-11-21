@@ -39,12 +39,13 @@ public class CovariancePropagationSmokeTests
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, epoch);
         var sun = new CelestialBody(Stars.Sun);
 
-        var p0 = new Matrix(6, 6);
+        var p0Terms = new double[6, 6];
         for (int i = 0; i < 3; i++)
         {
-            p0.Set(i, i, 100.0 * 100.0);         // σ = 100 m
-            p0.Set(i + 3, i + 3, 0.1 * 0.1);     // σ = 0.1 m/s
+            p0Terms[i, i] = 100.0 * 100.0;         // σ = 100 m
+            p0Terms[i + 3, i + 3] = 0.1 * 0.1;     // σ = 0.1 m/s
         }
+        var p0 = new Matrix(p0Terms);
 
         var orbit = new KeplerianElements(6778137.0, 0.0005, 51.6 * Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch,
             Frame.ICRF).ToStateVector();

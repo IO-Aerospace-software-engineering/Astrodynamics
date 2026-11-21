@@ -1006,7 +1006,7 @@ internal static class DeveloperGuideExamples
         var v2 = new Vector3(0, 1, 0);
 
         var cross = v1.Cross(v2);           // (0, 0, 1)
-        var dot = v1 * v2;                  // 0
+        var dot = v1.Dot(v2);               // 0
         var angle = v1.Angle(v2);           // π/2
         var sum = v1 + v2;                  // (1, 1, 0)
         var scaled = v1 * 2.0;              // (2, 0, 0)

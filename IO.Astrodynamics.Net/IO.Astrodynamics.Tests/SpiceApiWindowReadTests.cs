@@ -263,7 +263,7 @@ public partial class SpiceApiTest
                     var expected = new IO.Astrodynamics.Math.Vector3(cmat[3 * 0 + axis], cmat[3 * 1 + axis], cmat[3 * 2 + axis]);
                     // atan2(|a × b|, a · b): exact near 0, where acos of the cosine rounds 1e-16 to 1.5e-8 rad or to 0
                     var actual = v.Rotate(records[i].Rotation);
-                    worstAngle = System.Math.Max(worstAngle, System.Math.Atan2(actual.Cross(expected).Magnitude(), actual * expected));
+                    worstAngle = System.Math.Max(worstAngle, System.Math.Atan2(actual.Cross(expected).Magnitude(), actual.Dot(expected)));
                 }
             }
 

@@ -418,7 +418,7 @@ public class AttitudeTimelineEdgeTests
         var withLead = AttitudeTimelineTests.TimelineRun.Run(NextId(), $"R5|{integrator}|Propagate|ICRF|10");
         var alone = AttitudeTimelineTests.TimelineRun.Run(NextId(), $"R5alone|{integrator}|Propagate|ICRF|10");
         var sv = withLead.InitialIcrf.ToStateVector();
-        Assert.Equal(0.0, sv.Position * sv.Velocity);
+        Assert.Equal(0.0, sv.Position.Dot(sv.Velocity));
         double burn = withLead.Seconds(withLead.Burns[0]);
         double later = alone.Seconds(alone.Burns[0]);
         var orbit = new KeplerClosedForm(withLead.Center.GM, sv.Position, sv.Velocity, 0.0);
@@ -618,7 +618,7 @@ internal sealed class NeverReadyImpulse : ImpulseManeuver
     {
     }
 
-    public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+    public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
 
     public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
 
@@ -634,7 +634,7 @@ internal sealed class NoAttitudeImpulse : ImpulseManeuver
     {
     }
 
-    public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+    public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
 
     public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
 

@@ -1185,7 +1185,7 @@ public class AttitudeRecordTests
     #region Closed forms
 
     /// <summary>The angle between two vectors, by atan2: accurate at any angle.</summary>
-    internal static double Angle(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    internal static double Angle(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     /// <summary>The angle of the rotation from <paramref name="a"/> to <paramref name="b"/>, two rotations as maps of vectors:
     /// E = B Aᵀ, its angle from its antisymmetric part and its trace.</summary>
@@ -1214,7 +1214,7 @@ public class AttitudeRecordTests
     /// <summary>The inverse of a rotation, a map of vectors, applied to <paramref name="v"/>: Lᵀ v, by the images of the
     /// axes.</summary>
     internal static Vector3 Transpose(Func<Vector3, Vector3> rotation, Vector3 v) =>
-        new(rotation(Vector3.VectorX) * v, rotation(Vector3.VectorY) * v, rotation(Vector3.VectorZ) * v);
+        new(rotation(Vector3.VectorX).Dot(v), rotation(Vector3.VectorY).Dot(v), rotation(Vector3.VectorZ).Dot(v));
 
     /// <summary>The rotation vector (angle times axis) of a rotation, a map of vectors: from the antisymmetric part and the
     /// trace of its matrix.</summary>
@@ -1241,14 +1241,14 @@ public class AttitudeRecordTests
         var b = to.Normalize();
         var axis = a.Cross(b);
         double sin = axis.Magnitude();
-        double cos = a * b;
+        double cos = a.Dot(b);
         if (sin == 0.0)
         {
             return v => v;
         }
 
         var k = axis / sin;
-        return v => v * cos + k.Cross(v) * sin + k * ((k * v) * (1.0 - cos));
+        return v => v * cos + k.Cross(v) * sin + k * (k.Dot(v) * (1.0 - cos));
     }
 
     /// <summary>The TRIAD rotation: the body triad of (<paramref name="b1"/>, <paramref name="b2"/>) to the reference triad of
@@ -1264,7 +1264,7 @@ public class AttitudeRecordTests
 
         var (s1, s2, s3) = Basis(b1, b2);
         var (d1, d2, d3) = Basis(r1, r2);
-        return v => d1 * (s1 * v) + d2 * (s2 * v) + d3 * (s3 * v);
+        return v => d1 * s1.Dot(v) + d2 * s2.Dot(v) + d3 * s3.Dot(v);
     }
 
     /// <summary>Rx(-x) Ry(-y) Rz(-z) acting on a vector: the frame rotations [x]1 [y]2 [z]3 of Frames Required Reading

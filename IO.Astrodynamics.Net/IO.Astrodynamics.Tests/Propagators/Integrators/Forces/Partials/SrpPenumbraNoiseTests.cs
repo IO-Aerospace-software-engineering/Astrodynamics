@@ -154,7 +154,7 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
             state.Observer, state.Frame, Aberration.None).ToStateVector().Position - state.Position;
         return (System.Math.Asin(sun.EquatorialRadius / toSun.Magnitude()),
             System.Math.Asin(earth.EquatorialRadius / toEarth.Magnitude()),
-            System.Math.Atan2(toSun.Cross(toEarth).Magnitude(), toSun * toEarth));
+            System.Math.Atan2(toSun.Cross(toEarth).Magnitude(), toSun.Dot(toEarth)));
     }
 
     // The time in [low, high] where the predicate turns from true to false

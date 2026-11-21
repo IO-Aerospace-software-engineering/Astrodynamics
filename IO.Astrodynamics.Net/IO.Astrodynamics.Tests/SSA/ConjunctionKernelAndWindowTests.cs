@@ -433,7 +433,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         var rHat = s1.Position.Normalize();
         var nHat = s1.Position.Cross(s1.Velocity).Normalize();
         var tHat = nHat.Cross(rHat);
-        return (new Vector3(dr * rHat, dr * tHat, dr * nHat), new Vector3(dv * rHat, dv * tHat, dv * nHat));
+        return (new Vector3(dr.Dot(rHat), dr.Dot(tHat), dr.Dot(nHat)), new Vector3(dv.Dot(rHat), dv.Dot(tHat), dv.Dot(nHat)));
     }
 
     private void AssertRtn(EncounterCase encounter, Vector3 position, Vector3 velocity, string observer)

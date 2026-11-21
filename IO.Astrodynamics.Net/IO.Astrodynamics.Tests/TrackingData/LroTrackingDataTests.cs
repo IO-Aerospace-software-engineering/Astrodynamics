@@ -150,7 +150,7 @@ public class LroTrackingDataTests
             rangeKm.Add(horizontal.Range / 1000.0);
 
             var sv = _lro.GetEphemeris(epoch, _site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            double rangeRate = (sv.Position * sv.Velocity) / sv.Position.Magnitude();
+            double rangeRate = sv.Position.Dot(sv.Velocity) / sv.Position.Magnitude();
             rangeRateKmS.Add(rangeRate / 1000.0);
         }
 
@@ -209,7 +209,7 @@ public class LroTrackingDataTests
         foreach (var epoch in sampleEpochs)
         {
             var sv = _lro.GetEphemeris(epoch, _site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            double analyticalRangeRate = (sv.Position * sv.Velocity) / sv.Position.Magnitude();
+            double analyticalRangeRate = sv.Position.Dot(sv.Velocity) / sv.Position.Magnitude();
 
             double rangePlus = _lro.GetEphemeris(epoch.Add(dt), _site, Frames.Frame.ICRF, Aberration.None)
                 .ToStateVector().Position.Magnitude();
@@ -350,7 +350,7 @@ public class LroTrackingDataTests
             for (var epoch = arc.StartDate; epoch <= arc.EndDate; epoch = epoch.Add(_step))
             {
                 var sv = _lro.GetEphemeris(epoch, _site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                double rangeRate = (sv.Position * sv.Velocity) / sv.Position.Magnitude();
+                double rangeRate = sv.Position.Dot(sv.Velocity) / sv.Position.Magnitude();
 
                 if (rangeRate > 0) hasPositive = true;
                 if (rangeRate < 0) hasNegative = true;

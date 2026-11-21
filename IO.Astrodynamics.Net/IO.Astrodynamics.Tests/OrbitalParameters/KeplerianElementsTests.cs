@@ -570,7 +570,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             return SpiceAPI.Instance.ConvertConicElementsToStateVector(ke).Position;
         }
 
-        internal static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+        internal static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
         // #686: the worst angle between an apsis vector of the elements and its reference: the perigee against the SPICE
         // conic at M = 0, the apogee against the opposite direction (the apoapsis of the conic is −a(1 + e) P̂; conics at

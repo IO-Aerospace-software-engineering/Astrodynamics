@@ -481,7 +481,7 @@ public abstract class PropagatorBase : IPropagator
         {
             for (int j = 0; j < 6; j++)
             {
-                matrix.Set(i, j, clipped[6 * i + j]);
+                matrix.SetTerm(i, j, clipped[6 * i + j]);
             }
         }
 
@@ -513,7 +513,7 @@ public abstract class PropagatorBase : IPropagator
         {
             for (int j = 0; j < 6; j++)
             {
-                rtn.Set(i, j, clippedRtn[6 * i + j]);
+                rtn.SetTerm(i, j, clippedRtn[6 * i + j]);
             }
         }
 

@@ -193,11 +193,12 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var center = TestHelpers.EarthAtJ2000;
             var elements = new KeplerianElements(7000000.0, 0.1, 0.3, 0.2, 0.4, 1.0, center, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var covariance = new Matrix(6, 6);
+            var covarianceTerms = new double[6, 6];
             for (int i = 0; i < 6; i++)
             {
-                covariance.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+                covarianceTerms[i, i] = i < 3 ? 100.0 : 1.0e-4;
             }
+            var covariance = new Matrix(covarianceTerms);
 
             IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit = initial switch
             {
@@ -689,7 +690,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var final = spacecraft.PropagatedStates.Last().ToFrame(Frames.Frame.ICRF).ToStateVector();
             var h = final.SpecificAngularMomentum();
             var hTarget = targetIcrf.ToStateVector().SpecificAngularMomentum();
-            double angle = System.Math.Atan2(h.Cross(hTarget).Magnitude(), h * hTarget);
+            double angle = System.Math.Atan2(h.Cross(hTarget).Magnitude(), h.Dot(hTarget));
             _output.WriteLine($"MEASURE plane change in {frame}: |dV| - closed form {deltaVError:E3} m/s (|dV| {maneuver.DeltaV.Magnitude():R}, " +
                               $"closed form {expected:R}), final angle(h, h target) {angle * IO.Astrodynamics.Constants.Rad2Deg:E3} deg, burn at {maneuver.ThrustWindow}");
             Assert.True(deltaVError < PlaneChangeDeltaVThreshold, $"|dV| - closed form {deltaVError:E3} m/s");

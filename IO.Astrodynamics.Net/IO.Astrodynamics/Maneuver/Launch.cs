@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -277,7 +277,7 @@ namespace IO.Astrodynamics.Maneuver
             // and the position vector of the launch site at the given date
             Vector3 h = TargetOrbit.ToStateVector().ToFrame(Frame.ICRF).SpecificAngularMomentum();
             Vector3 r = LaunchSite.GetEphemeris(date, LaunchSite.CelestialBody, Frame.ICRF, Aberration.None).ToStateVector().Position;
-            return h * r > 0.0;
+            return h.Dot(r) > 0.0;
         }
 
         private bool IsAscending(in Time date)
@@ -285,7 +285,7 @@ namespace IO.Astrodynamics.Maneuver
             // Determine if the launch will be ascending based on the dot product with the ascending node vector
             Vector3 launchSitePosition = LaunchSite.GetEphemeris(date, LaunchSite.CelestialBody, Frame.ICRF, Aberration.None).ToStateVector().Position;
             Vector3 ascendingNodeVector = TargetOrbit.ToStateVector().ToFrame(Frame.ICRF).AscendingNodeVector();
-            return (launchSitePosition * ascendingNodeVector) > 0.0;
+            return launchSitePosition.Dot(ascendingNodeVector) > 0.0;
         }
     }
 }

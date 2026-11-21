@@ -60,10 +60,34 @@ namespace DocumentationPageSamples.Reference;
 /// <summary>The C# examples of docs/reference/math.md, one method per block (#705).</summary>
 internal static class MathPage
 {
-    // docs/reference/math.md, "Tsiolkovski"
+    // docs/reference/math.md, "Vector3"
     internal static void Block01()
     {
         #region docs/reference/math.md:1
+        var r = new Vector3(7000e3, 0.0, 0.0);
+        var v = new Vector3(0.0, 7.5e3, 0.0);
+        double radialVelocity = r.Dot(v) / r.Magnitude();   // 0
+        Vector3 opposite = -r;                               // (−7000e3, 0, 0)
+        Vector3 doubled = 2.0 * r;                           // (14000e3, 0, 0)
+        Vector3 turned = Matrix.CreateRotationMatrixZ(Constants.HalfPi) * r;   // (0, 7000e3, 0) to rounding
+        #endregion
+    }
+
+    // docs/reference/math.md, "Matrix"
+    internal static void Block02()
+    {
+        #region docs/reference/math.md:2
+        var cov = Matrix.Diagonal(100.0, 100.0, 100.0, 1.0, 1.0, 1.0);           // m², m²/s²
+        var correlated = cov.With(1, 3, -5.0).With(3, 1, -5.0);                  // cov unchanged
+        var block = Matrix.Create(3, 3, (i, j) => correlated[i + 3, j + 3]);
+        double sigmaX = System.Math.Sqrt(cov[0, 0]);                            // 10 m
+        #endregion
+    }
+
+    // docs/reference/math.md, "Tsiolkovski"
+    internal static void Block03()
+    {
+        #region docs/reference/math.md:3
         double dv = Tsiolkovski.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
         TimeSpan burnTime = Tsiolkovski.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
         double fuelUsed = Tsiolkovski.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);

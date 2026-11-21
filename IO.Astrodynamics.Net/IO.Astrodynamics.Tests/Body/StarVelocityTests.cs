@@ -308,7 +308,7 @@ public class StarVelocityTests
             double radial = -c * beta * beta / (System.Math.Sqrt(1.0 - beta * beta) + 1.0);
             var inertial = velocity + u0 * radial;
             var position = u0 * star.Distance + inertial * (row.Years * JulianYearSeconds);
-            double rangeRate = inertial * position / position.Magnitude();
+            double rangeRate = inertial.Dot(position) / position.Magnitude();
             var expected = inertial * ((1.0 - (rangeRate - radial) / c) * (JulianYearSeconds / star.Distance));
             double relative = (expected - row.Starpm).Magnitude() / row.Starpm.Magnitude();
             double plain = (velocity * (JulianYearSeconds / star.Distance) - row.Starpm).Magnitude() / row.Starpm.Magnitude();
@@ -407,8 +407,8 @@ public class StarVelocityTests
             var expected = starVelocity - earthVelocity;
             double velocity = (state.Velocity - expected).Magnitude() / expected.Magnitude();
             var direction = state.Position / state.Position.Magnitude();
-            double rangeRate = System.Math.Abs(state.Velocity * direction - expected * direction);
-            _output.WriteLine($"MEASURE StarVelocityTests.FromTheEarth ({epoch}): relative velocity {velocity:E3}, range rate {rangeRate:E3} m/s ({expected * direction:F3} m/s)");
+            double rangeRate = System.Math.Abs(state.Velocity.Dot(direction) - expected.Dot(direction));
+            _output.WriteLine($"MEASURE StarVelocityTests.FromTheEarth ({epoch}): relative velocity {velocity:E3}, range rate {rangeRate:E3} m/s ({expected.Dot(direction):F3} m/s)");
             worstVelocity = System.Math.Max(worstVelocity, velocity);
             worstRangeRate = System.Math.Max(worstRangeRate, rangeRate);
         }

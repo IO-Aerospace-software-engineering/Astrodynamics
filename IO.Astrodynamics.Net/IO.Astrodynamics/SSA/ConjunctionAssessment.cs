@@ -693,7 +693,7 @@ public static class ConjunctionAssessment
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        covariance.Set(i + 3, j + 3, covariance.Get(i + 3, j + 3) + execution[3 * i + j]);
+                        covariance.SetTerm(i + 3, j + 3, covariance.Get(i + 3, j + 3) + execution[3 * i + j]);
                     }
                 }
             }
@@ -1906,7 +1906,7 @@ public static class ConjunctionAssessment
         var sState = secondarySource.GetState(epoch);
         var relPos = sState.Position - pState.Position;
         var relVel = sState.Velocity - pState.Velocity;
-        return relPos * relVel;
+        return relPos.Dot(relVel);
     }
 
     private static Time BisectForZero(
@@ -2644,7 +2644,7 @@ public static class ConjunctionAssessment
         {
             for (int j = 0; j < 3; j++)
             {
-                pos.Set(i, j, covariance.Get(i, j));
+                pos.SetTerm(i, j, covariance.Get(i, j));
             }
         }
 
@@ -2667,14 +2667,14 @@ public static class ConjunctionAssessment
         else
         {
             var vHat = relVelInertial * (1.0 / relVelMag);
-            double missAlongV = relPosInertial * vHat;
+            double missAlongV = relPosInertial.Dot(vHat);
             var missInPlane = relPosInertial - vHat * missAlongV;
             double missInPlaneMag = missInPlane.Magnitude();
 
             if (missInPlaneMag < 1e-10)
             {
                 var seed = System.Math.Abs(vHat.X) < 0.9 ? Vector3.VectorX : Vector3.VectorY;
-                e1 = (seed - vHat * (seed * vHat)).NormalizeOrZero();
+                e1 = (seed - vHat * seed.Dot(vHat)).NormalizeOrZero();
                 e2 = vHat.Cross(e1).NormalizeOrZero();
             }
             else
@@ -2684,13 +2684,13 @@ public static class ConjunctionAssessment
             }
         }
 
-        double m1 = relPosInertial * e1;
-        double m2 = relPosInertial * e2;
+        double m1 = relPosInertial.Dot(e1);
+        double m2 = relPosInertial.Dot(e2);
 
         // C2D = P * C3x3 * P^T where P is 2x3 [e1; e2]
         var proj = new Matrix(2, 3);
-        proj.Set(0, 0, e1.X); proj.Set(0, 1, e1.Y); proj.Set(0, 2, e1.Z);
-        proj.Set(1, 0, e2.X); proj.Set(1, 1, e2.Y); proj.Set(1, 2, e2.Z);
+        proj.SetTerm(0, 0, e1.X); proj.SetTerm(0, 1, e1.Y); proj.SetTerm(0, 2, e1.Z);
+        proj.SetTerm(1, 0, e2.X); proj.SetTerm(1, 1, e2.Y); proj.SetTerm(1, 2, e2.Z);
 
         var cov2D = proj * posCov * proj.Transpose();
         return (new[] { m1, m2 }, cov2D);

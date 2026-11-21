@@ -296,7 +296,7 @@ public class SpacecraftKernelsTests
                 new EpochParameters { Epoch = epoch.ToString() })), CultureInfo.InvariantCulture);
 
             // The angle of the two directions, by the atan2 of their cross and dot products
-            static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+            static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
             double expectedFromSpacecraft = Angle(spacecraftFromEarth.Inverse(), moonFromEarth - spacecraftFromEarth);
             double expectedFromEarth = Angle(spacecraftFromEarth, moonFromEarth);
             _output.WriteLine($"MEASURE #542 angular separation: from the spacecraft {fromSpacecraft - expectedFromSpacecraft:E3} rad, from the Earth {fromEarth - expectedFromEarth:E3} rad");

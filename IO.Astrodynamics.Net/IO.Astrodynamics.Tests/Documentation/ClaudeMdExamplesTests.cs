@@ -334,7 +334,7 @@ public class ClaudeMdExamplesTests
 
     // The angle between two vectors, by atan2(|a × b|, a · b), which resolves angles near 0 to the rounding of the
     // components (Vector3.Angle's acos resolves only about 1.5e-8 rad there)
-    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
 
     // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI run 43745883709, 2026-11-15;
     // MEASURE line below), rounded up at the second significant digit: the angles of the Earth observation TRIAD's Down to
@@ -365,7 +365,7 @@ public class ClaudeMdExamplesTests
             var sunFromEarth = SpiceAPI.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
                 Aberration.None).ToStateVector().Position;
             var sunDirection = sunFromEarth - state.Position;
-            var perpendicular = sunDirection - nadir * (sunDirection * nadir);
+            var perpendicular = sunDirection - nadir * sunDirection.Dot(nadir);
             worstDown = System.Math.Max(worstDown, AngleBetween(Spacecraft.Down.Rotate(q), nadir));
             worstRight = System.Math.Max(worstRight, AngleBetween(Spacecraft.Right.Rotate(q), perpendicular));
         }

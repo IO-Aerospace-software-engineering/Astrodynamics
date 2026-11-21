@@ -905,10 +905,11 @@ public class CdmTests
     {
         // The 21 terms of the lower triangle are written (CR_R ... CNDOT_NDOT); a term of the upper triangle is refused too,
         // the record holding no non-finite value
-        var matrix = new Matrix(6, 6);
+        var matrixTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
-            matrix.Set(i, i, 1.0);
-        matrix.Set(row, column, value);
+            matrixTerms[i, i] = 1.0;
+        matrixTerms[row, column] = value;
+        var matrix = new Matrix(matrixTerms);
 
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
@@ -948,8 +949,9 @@ public class CdmTests
 
         // A size error before a term error: a 3×3 matrix with a NaN throws ArgumentException for its size, not the
         // ArgumentOutOfRangeException of a term (Assert.Throws checks the exact type)
-        var matrix = new Matrix(3, 3);
-        matrix.Set(0, 0, double.NaN);
+        var matrixTerms = new double[3, 3];
+        matrixTerms[0, 0] = double.NaN;
+        var matrix = new Matrix(matrixTerms);
         ex = Assert.Throws<ArgumentException>(() => new CdmCovarianceMatrix { StateCovarianceRtn = matrix });
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
 
@@ -986,15 +988,14 @@ public class CdmTests
     [MemberData(nameof(NonFiniteLowerTriangleTerms))]
     public void Init_MatrixChangedAfterwards_TheRecordKeepsTheTermsItChecked(int row, int column, double value)
     {
-        // The review of #717: Matrix wraps a double[,] with a public Set, so a record that kept the caller's matrix held the
-        // NaN or ±Infinity set after the check, passed Validate, wrote it (CR_R, CT_R, CNDOT_NDOT) and its own reader refused it
-        var matrix = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++)
-            matrix.Set(i, i, 1.0);
+        // The review of #717: Matrix wrapped a double[,] with a public Set, so a record that kept the caller's matrix held the
+        // NaN or ±Infinity set after the check, passed Validate, wrote it (CR_R, CT_R, CNDOT_NDOT) and its own reader refused
+        // it. Matrix is immutable since 11.0.0 (#668, R26); the record still copies, which the internal setter checks
+        var matrix = Matrix.Identity(6);
         var byInit = new CdmCovarianceMatrix { StateCovarianceRtn = matrix };
         var byFactory = CdmCovarianceMatrix.FromRtnCovariance(matrix);
 
-        matrix.Set(row, column, value);
+        matrix.SetTerm(row, column, value);
 
         foreach (var covariance in new[] { byInit, byFactory })
         {
@@ -1013,7 +1014,7 @@ public class CdmTests
         var covariance = read.Segments[0].Data!.CovarianceMatrix!;
         var expected = covariance.StateCovarianceRtn.Get(row, column);
 
-        covariance.StateCovarianceRtn.Set(row, column, value);
+        covariance.StateCovarianceRtn.SetTerm(row, column, value);
 
         Assert.Equal(expected, covariance.StateCovarianceRtn.Get(row, column));
         Assert.True(read.Validate().IsValid);
@@ -1631,31 +1632,33 @@ public class CdmTests
 
     private static Matrix BuildStateCovariance(double[] diagonal, params (int Row, int Column, double Value)[] offDiagonalEntries)
     {
-        var covariance = new Matrix(6, 6);
+        var covarianceTerms = new double[6, 6];
         for (int index = 0; index < diagonal.Length; index++)
         {
-            covariance.Set(index, index, diagonal[index]);
+            covarianceTerms[index, index] = diagonal[index];
         }
 
         foreach (var entry in offDiagonalEntries)
         {
-            covariance.Set(entry.Row, entry.Column, entry.Value);
-            covariance.Set(entry.Column, entry.Row, entry.Value);
+            covarianceTerms[entry.Row, entry.Column] = entry.Value;
+            covarianceTerms[entry.Column, entry.Row] = entry.Value;
         }
+        var covariance = new Matrix(covarianceTerms);
 
         return covariance;
     }
 
     private static Matrix AddMatrices(Matrix left, Matrix right)
     {
-        var result = new Matrix(left.Rows, left.Columns);
+        var resultTerms = new double[left.Rows, left.Columns];
         for (int row = 0; row < left.Rows; row++)
         {
             for (int column = 0; column < left.Columns; column++)
             {
-                result.Set(row, column, left.Get(row, column) + right.Get(row, column));
+                resultTerms[row, column] = left.Get(row, column) + right.Get(row, column);
             }
         }
+        var result = new Matrix(resultTerms);
 
         return result;
     }
@@ -1672,16 +1675,17 @@ public class CdmTests
         var radial = state.Position.Normalize();
         var normal = state.Position.Cross(state.Velocity).Normalize();
         var transverse = normal.Cross(radial).Normalize();
-        var matrix = new Matrix(3, 3);
-        matrix.Set(0, 0, radial.X);
-        matrix.Set(0, 1, radial.Y);
-        matrix.Set(0, 2, radial.Z);
-        matrix.Set(1, 0, transverse.X);
-        matrix.Set(1, 1, transverse.Y);
-        matrix.Set(1, 2, transverse.Z);
-        matrix.Set(2, 0, normal.X);
-        matrix.Set(2, 1, normal.Y);
-        matrix.Set(2, 2, normal.Z);
+        var matrixTerms = new double[3, 3];
+        matrixTerms[0, 0] = radial.X;
+        matrixTerms[0, 1] = radial.Y;
+        matrixTerms[0, 2] = radial.Z;
+        matrixTerms[1, 0] = transverse.X;
+        matrixTerms[1, 1] = transverse.Y;
+        matrixTerms[1, 2] = transverse.Z;
+        matrixTerms[2, 0] = normal.X;
+        matrixTerms[2, 1] = normal.Y;
+        matrixTerms[2, 2] = normal.Z;
+        var matrix = new Matrix(matrixTerms);
         return matrix;
     }
 

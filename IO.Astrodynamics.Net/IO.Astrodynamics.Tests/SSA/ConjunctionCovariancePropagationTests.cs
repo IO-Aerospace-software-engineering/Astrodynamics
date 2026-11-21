@@ -58,7 +58,7 @@ public sealed class ConjunctionCovarianceCase
         double angle = 70.0 * IO.Astrodynamics.Constants.Deg2Rad;
         var v = protectedAtTca.Velocity;
         var velocity = v * System.Math.Cos(angle) + radial.Cross(v) * System.Math.Sin(angle) +
-                       radial * (radial * v) * (1.0 - System.Math.Cos(angle));
+                       radial * radial.Dot(v) * (1.0 - System.Math.Cos(angle));
         var secondaryAtTca = new StateVector(position, velocity, earth, tca, Frames.Frame.ICRF);
         return (protectedOrbit, secondaryAtTca.ToStateVector(start));
     }
@@ -75,14 +75,15 @@ public sealed class ConjunctionCovarianceCase
 
     internal static StateVector WithRtnCovariance(StateVector state, double[] sigma)
     {
-        var rtn = new Matrix(6, 6);
+        var rtnTerms = new double[6, 6];
         for (int i = 0; i < 6; i++)
         {
-            rtn.Set(i, i, sigma[i] * sigma[i]);
+            rtnTerms[i, i] = sigma[i] * sigma[i];
         }
 
-        rtn.Set(1, 3, -0.9 * sigma[1] * sigma[3]);
-        rtn.Set(3, 1, -0.9 * sigma[1] * sigma[3]);
+        rtnTerms[1, 3] = -0.9 * sigma[1] * sigma[3];
+        rtnTerms[3, 1] = -0.9 * sigma[1] * sigma[3];
+        var rtn = new Matrix(rtnTerms);
         return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
             state.RotateCovarianceFromRtn(rtn));
     }
