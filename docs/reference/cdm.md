@@ -69,10 +69,10 @@ reader refuses. `Cdm.Validate` keeps its own check of a miss distance of 0 or mo
 matrix that is not 6×6, `default(Matrix)` included, with `ArgumentException` naming the property, before its terms
 ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730)): before 11.0.0 it built, and `WriteToString` threw `IndexOutOfRangeException` or
 `NullReferenceException` (`Cdm.Validate` reported the size when it ran).
-`CdmCovarianceMatrix` holds a copy of the matrix it is given, and `StateCovarianceRtn` returns a copy of the one it holds:
-a `Matrix` wraps an array that its `Set` writes, so a term set afterwards on either matrix does not reach the record, a
-record read by `Cdm.ReadFromString` included. To change a term, build the record again or use
-`with { StateCovarianceRtn = matrix }`.
+`CdmCovarianceMatrix` holds a copy of the matrix it is given, and `StateCovarianceRtn` returns a copy of the one it holds
+(#717, when a public `Matrix.Set` wrote the array every copy of the struct shares; `Matrix` is immutable since 11.0.0,
+#668, R26). To change a term, build the record again with a changed copy:
+`with { StateCovarianceRtn = record.StateCovarianceRtn.With(row, column, value) }`.
 
 ### Schema validation
 
