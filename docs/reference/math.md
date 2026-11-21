@@ -120,7 +120,7 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `this[row, col]`, `Get(row, col)` | Get an element; `ArgumentOutOfRangeException` (`row` or `column`) for an index outside the matrix (an `IndexOutOfRangeException` before 11.0.0) |
 | `With(row, col, value)` | A copy with one element changed, the matrix unchanged |
 | `Multiply(Matrix)` | Matrix multiplication |
-| `Multiply(double[])` | Matrix-vector multiplication |
+| `Multiply(double[])` | The column product M v, `Rows` components, each the sum of m[i, j] · v[j] in column order, the same as `M * v`; `ArgumentException` (`vector`) for a vector of another length than `Columns` (#774: before 11.0.0 the result had the vector's length) |
 | `Transpose()` | Transposed matrix |
 | `Inverse()` | Matrix inverse |
 | `Add(Matrix)` | Element-wise addition |
@@ -131,6 +131,8 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `ToArray()` | Convert to 2D array |
 | `operator +(Matrix, Matrix)` | Matrix addition |
 | `operator *(Matrix, Matrix)` | Matrix multiplication |
+| `operator *(Matrix, double[])` | `M * v`, the column product M v, `Rows` components, the same as `Multiply(double[])`; `ArgumentException` (`rhs`) for a vector of another length than `Columns` |
+| `operator *(double[], Matrix)` | `v * M`, the row product vᵀ M, `Columns` components, each the sum of v[i] · m[i, j] in row order (the components of Mᵀ v); `ArgumentException` (`lhs`) for a vector of another length than `Rows` (#774: M v before 11.0.0, which equals vᵀ M only for a symmetric matrix) |
 | `Equals(Matrix)`, `==`, `!=` | Same dimensions and every element equal by `double.Equals`: NaN equals NaN only, +0 equals −0 (#680) |
 | `ToString()` | The rows, `[[1, 0], [0, 1]]`, each element in invariant culture and round trip; `[]` without rows (the record's `Matrix { Rows = 2, Columns = 2 }` before 11.0.0) |
 

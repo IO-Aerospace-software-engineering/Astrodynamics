@@ -112,7 +112,85 @@ public class MatirxTests
         Assert.Equal(-5.469294939745739, res[4]);
         Assert.Equal(0.0001817867528561834, res[5]);
         Assert.Equal(res, m * earthSv);
-        Assert.Equal(res, earthSv * m);
+        // The rotation is not symmetric: earthSv * m is the row product vᵀ M, the components of Mᵀ v, not M v (#774)
+        Assert.Equal(m.Transpose() * earthSv, earthSv * m);
+        Assert.NotEqual(res, earthSv * m);
+    }
+
+    // #774: M * v has Rows components, each Σ_j m[i, j] v[j]; v * M is the row product vᵀ M, Columns components, each
+    // Σ_i v[i] m[i, j]. The expected values are the products computed by hand.
+    private static readonly Matrix TwoByThree = new(new double[,] { { 1.0, 2.0, 3.0 }, { 4.0, 5.0, 6.0 } });
+    private static readonly Matrix ThreeByTwo = new(new double[,] { { 1.0, 2.0 }, { 3.0, 4.0 }, { 5.0, 6.0 } });
+    private static readonly Matrix NonSymmetric = new(new double[,] { { 1.0, 2.0 }, { 3.0, 4.0 } });
+
+    [Fact]
+    public void MatrixTimesVectorOfAWideMatrixHasRowsComponents()
+    {
+        // [1 2 3; 4 5 6] (1, -1, 2) = (1 - 2 + 6, 4 - 5 + 12)
+        double[] v = { 1.0, -1.0, 2.0 };
+        Assert.Equal(new[] { 5.0, 11.0 }, TwoByThree * v);
+        Assert.Equal(new[] { 5.0, 11.0 }, TwoByThree.Multiply(v));
+    }
+
+    [Fact]
+    public void MatrixTimesVectorOfATallMatrixHasRowsComponents()
+    {
+        // [1 2; 3 4; 5 6] (2, -1) = (2 - 2, 6 - 4, 10 - 6)
+        double[] v = { 2.0, -1.0 };
+        Assert.Equal(new[] { 0.0, 2.0, 4.0 }, ThreeByTwo * v);
+        Assert.Equal(new[] { 0.0, 2.0, 4.0 }, ThreeByTwo.Multiply(v));
+    }
+
+    [Fact]
+    public void MatrixTimesVectorOfANonSymmetricSquareMatrix()
+    {
+        // [1 2; 3 4] (1, 10) = (1 + 20, 3 + 40)
+        double[] v = { 1.0, 10.0 };
+        Assert.Equal(new[] { 21.0, 43.0 }, NonSymmetric * v);
+        Assert.Equal(new[] { 21.0, 43.0 }, NonSymmetric.Multiply(v));
+    }
+
+    [Fact]
+    public void VectorTimesMatrixIsTheRowProductOfANonSymmetricSquareMatrix()
+    {
+        // (1, 10) [1 2; 3 4] = (1 + 30, 2 + 40), not M v = (21, 43)
+        double[] v = { 1.0, 10.0 };
+        Assert.Equal(new[] { 31.0, 42.0 }, v * NonSymmetric);
+    }
+
+    [Fact]
+    public void VectorTimesMatrixIsTheRowProductOfAWideMatrix()
+    {
+        // (1, 10) [1 2 3; 4 5 6] = (1 + 40, 2 + 50, 3 + 60)
+        double[] v = { 1.0, 10.0 };
+        Assert.Equal(new[] { 41.0, 52.0, 63.0 }, v * TwoByThree);
+    }
+
+    [Fact]
+    public void VectorTimesMatrixIsTheRowProductOfATallMatrix()
+    {
+        // (1, 10, 100) [1 2; 3 4; 5 6] = (1 + 30 + 500, 2 + 40 + 600)
+        double[] v = { 1.0, 10.0, 100.0 };
+        Assert.Equal(new[] { 531.0, 642.0 }, v * ThreeByTwo);
+    }
+
+    [Fact]
+    public void MatrixTimesVectorOfAnotherLengthThanColumnsThrows()
+    {
+        Assert.Equal("rhs", Assert.Throws<ArgumentException>(() => TwoByThree * new[] { 1.0, 2.0 }).ParamName);
+        Assert.Equal("vector", Assert.Throws<ArgumentException>(() => TwoByThree.Multiply(new[] { 1.0, 2.0 })).ParamName);
+        Assert.Throws<ArgumentException>(() => ThreeByTwo * new[] { 1.0, 2.0, 3.0 });
+        Assert.Throws<ArgumentException>(() => ThreeByTwo.Multiply(new[] { 1.0, 2.0, 3.0 }));
+        Assert.Throws<ArgumentException>(() => NonSymmetric * new[] { 1.0, 2.0, 3.0 });
+        Assert.Throws<ArgumentException>(() => NonSymmetric.Multiply(new[] { 1.0, 2.0, 3.0 }));
+    }
+
+    [Fact]
+    public void VectorTimesMatrixOfAnotherLengthThanRowsThrows()
+    {
+        Assert.Equal("lhs", Assert.Throws<ArgumentException>(() => new[] { 1.0, 2.0, 3.0 } * TwoByThree).ParamName);
+        Assert.Throws<ArgumentException>(() => new[] { 1.0, 2.0 } * ThreeByTwo);
+        Assert.Throws<ArgumentException>(() => new[] { 1.0, 2.0, 3.0 } * NonSymmetric);
     }
 
     [Fact]

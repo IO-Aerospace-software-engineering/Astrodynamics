@@ -176,8 +176,8 @@ public class ConicStateTests
         double[] vel = [-System.Math.Sqrt(_earth.GM / p) * System.Math.Sin(nu), System.Math.Sqrt(_earth.GM / p) * velocityFactor, 0.0];
         var r = IO.Astrodynamics.Math.Matrix.CreateRotationMatrixZ(0.3) * IO.Astrodynamics.Math.Matrix.CreateRotationMatrixX(0.2) *
                 IO.Astrodynamics.Math.Matrix.CreateRotationMatrixZ(0.4);
-        double[] position = pos * r;
-        double[] velocity = vel * r;
+        double[] position = r * pos;
+        double[] velocity = r * vel;
         return (new Vector3(position[0], position[1], position[2]), new Vector3(velocity[0], velocity[1], velocity[2]));
     }
 

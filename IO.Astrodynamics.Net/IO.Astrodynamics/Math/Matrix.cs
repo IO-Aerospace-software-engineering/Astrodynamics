@@ -276,23 +276,52 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// Multiply a vector by this matrix
+    /// The product M v of this matrix and the column vector <paramref name="vector"/>: <see cref="Rows"/> components, each
+    /// the sum, from 0 and in column order, of m[i, j] · v[j]; the same product as <c>M * v</c>. Before 11.0.0 the result
+    /// had as many components as <paramref name="vector"/> (<see cref="Columns"/>), too few for a matrix of more rows than
+    /// columns, which threw <see cref="IndexOutOfRangeException"/> (#774).
     /// </summary>
-    /// <param name="vector"></param>
-    /// <returns></returns>
-    public double[] Multiply(double[] vector)
+    /// <param name="vector">The column vector, of <see cref="Columns"/> components.</param>
+    /// <returns>The <see cref="Rows"/> components of M v.</returns>
+    /// <exception cref="ArgumentException"><paramref name="vector"/> does not have <see cref="Columns"/> components.</exception>
+    public double[] Multiply(double[] vector) => MultiplyOnTheRight(vector, nameof(vector));
+
+    // M v: Rows components, each the sum, from 0 and in column order, of m[i, j] · v[j]
+    private double[] MultiplyOnTheRight(double[] vector, string parameterName)
     {
         if (Columns != vector.Length)
         {
-            throw new ArgumentException("Matrixes with incompatible size");
+            throw new ArgumentException($"A vector of {vector.Length} components cannot multiply a {Rows} × {Columns} matrix on the right: it needs {Columns}.", parameterName);
         }
 
-        double[] res = new double[vector.Length];
+        var data = Data;
+        double[] res = new double[Rows];
         for (int i = 0; i < Rows; i++)
         {
             for (int j = 0; j < Columns; j++)
             {
-                res[i] += vector[j] * Data[i, j];
+                res[i] += vector[j] * data[i, j];
+            }
+        }
+
+        return res;
+    }
+
+    // The row product vᵀ M: Columns components, each the sum, from 0 and in row order, of v[i] · m[i, j] (#774)
+    private double[] MultiplyOnTheLeft(double[] vector, string parameterName)
+    {
+        if (Rows != vector.Length)
+        {
+            throw new ArgumentException($"A vector of {vector.Length} components cannot multiply a {Rows} × {Columns} matrix on the left: it needs {Rows}.", parameterName);
+        }
+
+        var data = Data;
+        double[] res = new double[Columns];
+        for (int j = 0; j < Columns; j++)
+        {
+            for (int i = 0; i < Rows; i++)
+            {
+                res[j] += vector[i] * data[i, j];
             }
         }
 
@@ -554,19 +583,43 @@ public readonly record struct Matrix
         return HashCode.Combine(datahash, Rows, Columns);
     }
 
+    /// <summary>
+    /// The matrix product <paramref name="lhs"/> · <paramref name="rhs"/>, the same matrix as <see cref="Multiply(Matrix)"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException">The columns of <paramref name="lhs"/> are not as many as the rows of
+    /// <paramref name="rhs"/>.</exception>
     public static Matrix operator *(Matrix lhs, Matrix rhs)
     {
         return lhs.Multiply(rhs);
     }
 
+    /// <summary>
+    /// The product M v of the matrix <paramref name="lhs"/> and the column vector <paramref name="rhs"/>:
+    /// <c>lhs.Rows</c> components, each the sum, from 0 and in column order, of m[i, j] · v[j], the same product as
+    /// <see cref="Multiply(double[])"/> (#774: before 11.0.0, as many components as <paramref name="rhs"/>).
+    /// </summary>
+    /// <param name="lhs">The matrix M.</param>
+    /// <param name="rhs">The column vector v, of <c>lhs.Columns</c> components.</param>
+    /// <returns>The <c>lhs.Rows</c> components of M v.</returns>
+    /// <exception cref="ArgumentException"><paramref name="rhs"/> does not have <c>lhs.Columns</c> components.</exception>
     public static double[] operator *(Matrix lhs, double[] rhs)
     {
-        return lhs.Multiply(rhs);
+        return lhs.MultiplyOnTheRight(rhs, nameof(rhs));
     }
 
+    /// <summary>
+    /// The row product vᵀ M of the row vector <paramref name="lhs"/> and the matrix <paramref name="rhs"/>:
+    /// <c>rhs.Columns</c> components, each the sum, from 0 and in row order, of v[i] · m[i, j], the components of
+    /// Mᵀ v. Before 11.0.0 it was M v, which equals vᵀ M only for a symmetric matrix (#774); code that meant M v writes
+    /// <c>M * v</c>.
+    /// </summary>
+    /// <param name="lhs">The row vector v, of <c>rhs.Rows</c> components.</param>
+    /// <param name="rhs">The matrix M.</param>
+    /// <returns>The <c>rhs.Columns</c> components of vᵀ M.</returns>
+    /// <exception cref="ArgumentException"><paramref name="lhs"/> does not have <c>rhs.Rows</c> components.</exception>
     public static double[] operator *(double[] lhs, Matrix rhs)
     {
-        return rhs.Multiply(lhs);
+        return rhs.MultiplyOnTheLeft(lhs, nameof(lhs));
     }
 
     /// <summary>

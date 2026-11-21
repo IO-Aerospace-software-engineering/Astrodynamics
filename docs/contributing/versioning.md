@@ -58,7 +58,8 @@ proper motion in right ascension as a true angle, the space velocity of its stat
 parsec of 648000/π au, a repeated kernel load, which no longer reloads, with the order of a folder's kernels, and
 `NaifObject` without its frame, `SpiceException` for SPICE's errors, the bases of the library's own exceptions, a
 central body without GM refused by a propagation, the scale of a `Time` a required argument, with `Time.Parse` in
-place of `Time(string)`, an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors, and
+place of `Time(string)`, an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors, the row
+product vᵀ M of `double[] * Matrix`, and
 `KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3` and six exports of the native library that .NET never called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
@@ -218,6 +219,13 @@ release are listed under **Known limitations**.
 
 **Fixed**
 
+- **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
+  ([#774](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/774), fixed in lot L2 of the ergonomics review, decided by S. Guillet, 2026-11-21). M v has one component per
+  row of M, but the result was allocated with the length of v, the number of columns: a 2 × 3 matrix returned three
+  components, the last one 0, and a 3 × 2 matrix threw `IndexOutOfRangeException`. The product now has `Rows`
+  components, each the sum, from 0 and in column order, of m[i, j] · v[j], as before; a vector of another length than
+  `Columns` throws `ArgumentException` as before (`vector` for `Multiply`, `rhs` for the operator). A square matrix,
+  every one the library multiplies a vector by, gives the same doubles, bit for bit.
 - **The stored states of a propagation ended before its window when the output step rounded it down**
   ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by S. Guillet,
   2026-11-18). The outputs were the round(L/ΔT) + 1 points of the grid i·ΔT, while the propagation ran to the window
@@ -4411,6 +4419,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   25.0); …` → `Matrix.Diagonal(25.0, …)`, `new Matrix(terms)` from a `double[,]` filled first, or
   `Matrix.Create(6, 6, (i, j) => …)`; a change of one term of an existing matrix → `m = m.With(i, j, value)`;
   `catch (IndexOutOfRangeException)` around `Get` → `catch (ArgumentOutOfRangeException)`.
+- **Breaking: `double[] * Matrix` is the row product vᵀ M** ([#774](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/774), lot L2 of the ergonomics review, decided by
+  S. Guillet, 2026-11-21). The operator returned `rhs.Multiply(lhs)`, the column product M v, which equals vᵀ M only for
+  a symmetric matrix: for a rotation it applied the rotation where vᵀ M applies its inverse. It now returns vᵀ M,
+  `Columns` components, each the sum, from 0 and in row order, of v[i] · m[i, j] (the components of Mᵀ v), and throws
+  `ArgumentException` (`lhs`) for a vector of another length than `Rows` (the length of `Columns` before). The
+  library's one use, the perifocal-to-inertial rotation of `OrbitalParameters.ToStateVector`, meant M v and is written
+  `r * pos`, the same arithmetic: its states do not move, bit for bit. Migration: code that meant M v writes `M * v`;
+  code that meant vᵀ M has its product now, where it had M v before.
 - **Breaking: one meaning per `KeplerianElements` constructor** (lot L2, R23 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
   2026-11-19, no forwarder). The public constructor is `KeplerianElements(semiMajorAxis, eccentricity, inclination,

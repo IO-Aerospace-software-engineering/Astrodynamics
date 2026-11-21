@@ -752,8 +752,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             Matrix r = r3 * r1 * r3W;
             double[] pos = [x, y, 0.0];
             double[] vel = [dotX, dotY, 0.0];
-            double[] finalPos = pos * r;
-            double[] finalV = vel * r;
+            double[] finalPos = r * pos;
+            double[] finalV = r * vel;
 
             _stateVector = new StateVector(new Vector3(finalPos[0], finalPos[1], finalPos[2]), new Vector3(finalV[0], finalV[1], finalV[2]), Observer, Epoch, Frame);
         }
