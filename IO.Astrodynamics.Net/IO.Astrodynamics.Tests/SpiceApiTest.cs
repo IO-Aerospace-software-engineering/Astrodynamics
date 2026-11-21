@@ -267,7 +267,7 @@ public partial class SpiceApiTest
         // J2000 in J2000: the rotation of the positions, from spkezr 1 s before and after (the output step), about their
         // normal. Not the closed form pi/2 + n t of the circular orbit: Velocity-Verlet turns its positions at
         // n (1 + (n h)^2 / 6), 2.4e-10 rad/s faster than v / r (the review of the design)
-        Vector3 Position(TimeSystem.Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        Vector3 Position(TimeSystem.Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None).Position;
         double worstRotation = 0.0, worstRate = 0.0;
         for (int i = 1; i < res.Length - 1; i++)
         {
@@ -396,10 +396,10 @@ public partial class SpiceApiTest
     {
         var frame = SiteObserverFrame(frameName);
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
-        var reversed = SpiceAPI.Instance.ReadEphemeris(epoch, 301, 399013, frame, Aberration.None).ToStateVector();
+        var reversed = SpiceAPI.Instance.ReadEphemeris(epoch, 301, 399013, frame, Aberration.None);
         Assert.True(reversed.Position.Magnitude() > 3.0e8);
 
-        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, frame, Aberration.None).ToStateVector();
+        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, frame, Aberration.None);
         AssertSiteObserver(read, frame.Name);
         AssertNegatedState(reversed, read, $"{frameName} at an epoch");
 
@@ -410,7 +410,7 @@ public partial class SpiceApiTest
         for (int i = 0; i < reads.Length; i++)
         {
             AssertSiteObserver(reads[i], frame.Name);
-            var reversedAt = SpiceAPI.Instance.ReadEphemeris(reads[i].Epoch, 301, 399013, frame, Aberration.None).ToStateVector();
+            var reversedAt = SpiceAPI.Instance.ReadEphemeris(reads[i].Epoch, 301, 399013, frame, Aberration.None);
             AssertNegatedState(reversedAt, reads[i], $"{frameName} over a window, state {i}");
         }
     }
@@ -503,8 +503,8 @@ public partial class SpiceApiTest
                 Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1.0)));
             Assert.Equal("naifId", e.ParamName);
 
-            var asTarget = SpiceAPI.Instance.ReadEphemeris(epoch, 399, site.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            var managed = site.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var asTarget = SpiceAPI.Instance.ReadEphemeris(epoch, 399, site.NaifId, Frames.Frame.ICRF, Aberration.None);
+            var managed = site.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(managed.Position, asTarget.Position, TestHelpers.VectorComparer);
 
             SpiceAPI.Instance.LoadKernels(fk);
@@ -532,8 +532,8 @@ public partial class SpiceApiTest
         // The library's own path for a site observer: the Moon read from a Site object, through the data provider
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
         var site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var expected = TestHelpers.MoonAtJ2000.GetEphemeris(epoch, site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var expected = TestHelpers.MoonAtJ2000.GetEphemeris(epoch, site, Frames.Frame.ICRF, Aberration.None);
+        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, Frames.Frame.ICRF, Aberration.None);
         AssertSiteObserver(read, Frames.Frame.ICRF.Name);
         double dr = (read.Position - expected.Position).Magnitude();
         _output.WriteLine($"MEASURE site observer against the Site object |dr| m: {dr:E3}");
@@ -550,7 +550,7 @@ public partial class SpiceApiTest
         // epoch and over a window; a read in GCRF is the same numbers, labelled with the frame the caller gave
         var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var window = new Window(epoch, epoch.AddSeconds(120.0));
-        var j2000 = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, aberration).ToStateVector();
+        var j2000 = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, aberration);
         var j2000Window = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, aberration, TimeSpan.FromSeconds(60.0))
             .Select(x => x.ToStateVector()).ToArray();
         // The reference is a state, not the zeros of a read SPICE refused
@@ -560,7 +560,7 @@ public partial class SpiceApiTest
 
         foreach (var gcrf in GcrfFrames())
         {
-            var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, gcrf, aberration).ToStateVector();
+            var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, gcrf, aberration);
             Assert.Equal(gcrf.Name, read.Frame.Name);
             LabelAssert.Equal(j2000.Epoch, read.Epoch);
             Assert.Equal(j2000.Position, read.Position);
@@ -1221,7 +1221,7 @@ public partial class SpiceApiTest
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
         var spk = new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk");
         var epoch = TimeSystem.Time.CreateTDB(668100000.0);
-        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude() > 6.0e6);
+        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None).Position.Magnitude() > 6.0e6);
         SpiceAPI.Instance.UnloadKernels(spk);
 
         // The folder is no longer listed, but its other kernel files, which SPICE still holds (#673): before, the folder
@@ -1241,7 +1241,7 @@ public partial class SpiceApiTest
         // SPICE's reads: the SPK of DRAGONFLY32 (-1785) is gone, that of MySite (399132) is still there (both cover 668085625 to
         // 668174469 s TDB)
         Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
-        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 399132, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude() > 6.0e6);
+        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 399132, Frames.Frame.ICRF, Aberration.None).Position.Magnitude() > 6.0e6);
     }
 
     [Fact]
@@ -1864,14 +1864,14 @@ public partial class SpiceApiTest
     {
         var sv = LeoState(Vector3.Zero);
         var gm = TestHelpers.EarthAtJ2000.GM;
-        var before = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var before = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
         var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
         _output.WriteLine($"MESSAGE #714 Propagate2Bodies of a zero velocity: {error.Message}");
         Assert.EndsWith(": SPICE(ZEROVELOCITY)", error.Message);
         error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
         _output.WriteLine($"MESSAGE #714 ConvertStateVectorToConicOrbitalElement of a zero velocity: {error.Message}");
         Assert.EndsWith(": Zero vector for input velocity vector.", error.Message);
-        var moon = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var moon = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(before.Position, moon.Position);
         Assert.Equal(before.Velocity, moon.Velocity);
         AssertNothingPending();

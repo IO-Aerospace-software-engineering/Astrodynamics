@@ -96,8 +96,7 @@ public class CspiceWindowCapacityTests
         // reference is the relation it stands for, at the extreme of the search without an adjustment (one window)
         const double adjust = 1.0e5;
         double extreme = Coordinate(CoordinateWindow, relation, 0.0).Single().StartDate.TimeSpanFromJ2000().TotalSeconds;
-        double x = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.CreateTDB(extreme), 399, 301, new Frames.Frame("IAU_EARTH"), Aberration.None)
-            .ToStateVector().Position.X / 1000.0;
+        double x = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.CreateTDB(extreme), 399, 301, new Frames.Frame("IAU_EARTH"), Aberration.None).Position.X / 1000.0;
         var whole = Coordinate(CoordinateWindow, relation, 0.0, adjust).ToArray();
         var joined = relation == RelationnalOperator.AbsoluteMax
             ? Joined(CoordinateWindow, w => Coordinate(w, RelationnalOperator.Greater, x - adjust))

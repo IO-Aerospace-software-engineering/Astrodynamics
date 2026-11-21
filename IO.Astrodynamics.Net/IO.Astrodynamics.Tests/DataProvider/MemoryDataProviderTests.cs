@@ -136,8 +136,7 @@ public class MemoryDataProviderTests
     }
 
     private static StateVector Read(MemoryDataProvider provider, double t) =>
-        provider.GetEphemeris(Start.AddSeconds(t), TestHelpers.EarthAtJ2000, TestHelpers.SsbAtJ2000, Frames.Frame.ICRF, Aberration.None)
-            .ToStateVector();
+        provider.GetEphemeris(Start.AddSeconds(t), TestHelpers.EarthAtJ2000, TestHelpers.SsbAtJ2000, Frames.Frame.ICRF, Aberration.None);
 
     // Measured 8.805e-7 m at 605 s, the same on Linux, Windows and macOS arm64 (run 41567621620, 2026-11-03), the error of the
     // 8-point Lagrange interpolation of the nodes; the bound is twice it. Before the fix, 7.70 m after the 40 reads (#548).

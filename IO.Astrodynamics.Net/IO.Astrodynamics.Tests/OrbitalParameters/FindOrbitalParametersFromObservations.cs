@@ -82,7 +82,7 @@ public class InitialOrbitDeterminationTests
             var obs3 = target.GetEphemeris(e3, site, Frames.Frame.ICRF, Aberration.LT);
             double lightTime = obs2.ToStateVector().Position.Magnitude() / IO.Astrodynamics.Constants.C;
             var reference = target.GetEphemeris(e2 - TimeSpan.FromSeconds(lightTime), TestHelpers.Sun, Frames.Frame.ICRF,
-                Aberration.None).ToStateVector();
+                Aberration.None);
 
             // Act
             var determined = InitialOrbitDetermination.CreateFromObservation_Gauss(obs1.ToEquatorial(),
@@ -119,7 +119,7 @@ public class InitialOrbitDeterminationTests
         new(2000, 11, 6, 22, 34, 30, 0, 0, TimeSystem.TimeScale.UTC);
 
     private static readonly Equatorial MiddleObservation =
-        new(0.81897935661301124, 5.5588517883210384, 893559.82174179261, MiddleEpoch);
+        Equatorial.FromRightAscensionDeclination(5.5588517883210384, 0.81897935661301124, 893559.82174179261, MiddleEpoch);
 
     private static Site MarylandSite() => new(99, "Maryland university", TestHelpers.EarthAtJ2000,
         new Planetodetic(-76.95667 * Constants.DEG_RAD, 39.00167 * Constants.DEG_RAD, 53.0));
@@ -149,13 +149,13 @@ public class InitialOrbitDeterminationTests
             new Vector3(3062942.1778810532, -3905611.5695034186, 3992299.9926829929),
             new Vector3(3113940.4649475398, -3865075.2252871748, 3992298.0890825163)
         };
-        var obs1 = new Equatorial(-0.28566294527432967, 5.7075255380194969, 1457727.8257919517, ut1);
-        var obs3 = new Equatorial(1.327008296156168, 2.8898779558667966, 1600130.4050160523, ut3);
+        var obs1 = Equatorial.FromRightAscensionDeclination(5.7075255380194969, -0.28566294527432967, 1457727.8257919517, ut1);
+        var obs3 = Equatorial.FromRightAscensionDeclination(2.8898779558667966, 1.327008296156168, 1600130.4050160523, ut3);
         var site = MarylandSite();
 
         // Act
         double siteError = new[] { ut1, MiddleEpoch, ut3 }.Select((epoch, i) => (site
-            .GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToStateVector()
+            .GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None)
             .Position - spiceSites[i]).Magnitude()).Max();
         var (position, velocity) = Departure(obs1, obs3);
 
@@ -188,8 +188,8 @@ public class InitialOrbitDeterminationTests
 
         // Act
         var departures = observations.Select(o => Departure(
-            new Equatorial(o.First.Dec, o.First.Ra, o.First.Range, MiddleEpoch - TimeSpan.FromSeconds(o.Spacing)),
-            new Equatorial(o.Last.Dec, o.Last.Ra, o.Last.Range, MiddleEpoch + TimeSpan.FromSeconds(o.Spacing))))
+            Equatorial.FromRightAscensionDeclination(o.First.Ra, o.First.Dec, o.First.Range, MiddleEpoch - TimeSpan.FromSeconds(o.Spacing)),
+            Equatorial.FromRightAscensionDeclination(o.Last.Ra, o.Last.Dec, o.Last.Range, MiddleEpoch + TimeSpan.FromSeconds(o.Spacing))))
             .ToArray();
 
         // Assert: halving the spacing divides the departure by 4, down to 149 m at 22.5 s; a defect of the site, of

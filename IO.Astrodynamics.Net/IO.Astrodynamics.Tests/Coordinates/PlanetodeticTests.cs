@@ -25,7 +25,7 @@ public class PlanetodeticTests
     public void ToPlanetocentric()
     {
         Planetodetic planetodetic = new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85);
-        Planetocentric planetocentric = planetodetic.ToPlanetocentric(TestHelpers.EarthAtJ2000.Flattening, TestHelpers.EarthAtJ2000.EquatorialRadius);
+        Planetocentric planetocentric = planetodetic.ToPlanetocentric(TestHelpers.EarthAtJ2000);
         // SPICE georec_c and reclat_c on the ellipsoid of pck00011 (tools/geodetic_reference/test_values_ref.c)
         Assert.Equal(35.066018156829827, planetocentric.Latitude * Astrodynamics.Constants.Rad2Deg, 12);
         Assert.Equal(-116.79445837, planetocentric.Longitude * Astrodynamics.Constants.Rad2Deg, 12);

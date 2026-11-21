@@ -98,8 +98,7 @@ public class RadiationPressureObserverTests
         // Arrange: the Earth from the Sun by SPICE, geometric, and the models written out
         var state = EarthRelativeState(geometry).RelativeTo(Stars.SUN_BODY, Aberration.None).ToStateVector();
         var spacecraft = CreateSpacecraft(state);
-        var earthFromSun = _earth.GetEphemeris(Epoch, Stars.SUN_BODY, Frames.Frame.ICRF, Aberration.None)
-            .ToStateVector().Position;
+        var earthFromSun = _earth.GetEphemeris(Epoch, Stars.SUN_BODY, Frames.Frame.ICRF, Aberration.None).Position;
         double areaMassRatio = spacecraft.SectionalArea / spacecraft.GetTotalMass();
         double cr = spacecraft.SolarRadiationCoeff;
         double luminosityTerm = IO.Astrodynamics.Constants.SolarMeanRadiativeLuminosity /
@@ -180,7 +179,7 @@ public class RadiationPressureObserverTests
     // A state 7000 km from the Earth's centre, at a velocity of 7546 m/s, in the given geometry with respect to the Sun
     private StateVector EarthRelativeState(string geometry)
     {
-        var sunDirection = Stars.SUN_BODY.GetEphemeris(Epoch, _earth, Frames.Frame.ICRF, Aberration.None).ToStateVector()
+        var sunDirection = Stars.SUN_BODY.GetEphemeris(Epoch, _earth, Frames.Frame.ICRF, Aberration.None)
             .Position.Normalize();
         var side = sunDirection.Cross(Vector3.VectorZ).Normalize();
         var (position, velocity) = geometry switch

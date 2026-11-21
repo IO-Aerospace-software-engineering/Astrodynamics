@@ -81,11 +81,11 @@ public class GcrfPropagationTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         foreach (var target in new CelestialItem[] { new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(Stars.Sun) })
         {
-            var icrf = target.GetEphemeris(Start, earth, Frames.Frame.ICRF, aberration).ToStateVector();
+            var icrf = target.GetEphemeris(Start, earth, Frames.Frame.ICRF, aberration);
             Assert.True(icrf.Position.Magnitude() > 3.0e8);
             foreach (var frame in new[] { Frames.Frame.GCRF, new Frames.Frame("GCRF") })
             {
-                var gcrf = target.GetEphemeris(Start, earth, frame, aberration).ToStateVector();
+                var gcrf = target.GetEphemeris(Start, earth, frame, aberration);
                 Assert.Same(frame, gcrf.Frame);
                 AssertSameState(icrf, gcrf);
             }
@@ -163,9 +163,9 @@ public class GcrfPropagationTests
         var observer = icrfSpacecraft.InitialOrbitalParameters.Observer;
         foreach (var epoch in new[] { Start, Start.AddSeconds(150.0), Start.AddSeconds(437.5), Window.EndDate })
         {
-            var expected = icrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            AssertSameState(expected, gcrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector());
-            AssertSameState(expected, byNameSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector());
+            var expected = icrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None);
+            AssertSameState(expected, gcrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None));
+            AssertSameState(expected, byNameSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None));
             Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, gcrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
             Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, byNameSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
         }

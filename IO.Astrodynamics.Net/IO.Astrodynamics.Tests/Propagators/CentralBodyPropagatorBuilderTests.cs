@@ -316,7 +316,7 @@ public class CentralBodyPropagatorBuilderTests
             .WithPerturbingBody(Stars.SUN_BODY)
             .Build();
         prop1.Propagate();
-        var finalNoAlbedo = spc1.GetEphemeris(window.EndDate, earthNoAlbedo, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var finalNoAlbedo = spc1.GetEphemeris(window.EndDate, earthNoAlbedo, Frames.Frame.ICRF, Aberration.None);
 
         // With albedo
         var spc2 = CreateSpacecraft(earth);
@@ -326,7 +326,7 @@ public class CentralBodyPropagatorBuilderTests
             .IncludeAlbedo(earth)
             .Build();
         prop2.Propagate();
-        var finalWithAlbedo = spc2.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var finalWithAlbedo = spc2.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None);
 
         // There should be a measurable position difference (mm to cm scale for 1 orbit)
         var posDiff = (finalWithAlbedo.Position - finalNoAlbedo.Position).Magnitude();
@@ -383,7 +383,7 @@ public class CentralBodyPropagatorBuilderTests
             .WithPerturbingBody(Stars.SUN_BODY)
             .Build();
         prop1.Propagate();
-        var finalNoThermal = spc1.GetEphemeris(window.EndDate, earthNoThermal, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var finalNoThermal = spc1.GetEphemeris(window.EndDate, earthNoThermal, Frames.Frame.ICRF, Aberration.None);
 
         // With thermal
         var spc2 = CreateSpacecraft(earth);
@@ -393,7 +393,7 @@ public class CentralBodyPropagatorBuilderTests
             .IncludeThermalRadiation(earth)
             .Build();
         prop2.Propagate();
-        var finalWithThermal = spc2.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var finalWithThermal = spc2.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None);
 
         // There should be a measurable position difference
         var posDiff = (finalWithThermal.Position - finalNoThermal.Position).Magnitude();

@@ -891,7 +891,7 @@ public class ForceModelDefectTests
         spacecraft.Propagate(window, bodies, false, false, Step);
         var before = spacecraft.PropagatedStates;
         var integrator = NewRk78();
-        var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, Epoch), 0.1, 0.1, 0, 0, 0, 0, Epoch);
+        var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, Epoch), 0.1, 0.1, 0, 0, 0, 0, Epoch);
         string expectedName = entry switch
         {
             "Propagate" or "Propagate integrator" or "Propagate covariance" or "PropagateAsync" or "Scenario"

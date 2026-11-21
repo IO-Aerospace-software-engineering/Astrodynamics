@@ -247,7 +247,7 @@ public class ExporterTests
         var spacecraft = new Spacecraft(-8674, PathLimitSpacecraft, 1000.0, 2000.0, new Clock("EXP8674_CLK", 65536),
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         scenario.AddSpacecraft(spacecraft);
-        scenario.AddStar(new Astrodynamics.Body.Star(674, "star674", 1E+30, "spec", 2, 0.3792, new Astrodynamics.Coordinates.Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start));
+        scenario.AddStar(new Astrodynamics.Body.Star(674, "star674", 1E+30, "spec", 2, 0.3792, Astrodynamics.Coordinates.Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start));
         await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
         return scenario;
     }

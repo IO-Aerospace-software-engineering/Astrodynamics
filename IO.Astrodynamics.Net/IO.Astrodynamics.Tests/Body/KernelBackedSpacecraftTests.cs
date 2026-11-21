@@ -40,7 +40,7 @@ public class KernelBackedSpacecraftTests
     public void StarIsNotSpiceBacked()
     {
         var star = new Star(1, "TestStar", 1.989e30, "G2V", 4.83, 0.772,
-            new Equatorial(0.0, 0.0, 1.0, TimeSystem.Time.J2000TDB),
+            Equatorial.FromRightAscensionDeclination(0.0, 0.0, 1.0, TimeSystem.Time.J2000TDB),
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, TimeSystem.Time.J2000TDB);
         Assert.False(star.IsSpiceBacked);
     }
@@ -136,10 +136,10 @@ public class KernelBackedSpacecraftTests
             var earth = TestHelpers.EarthAtJ2000;
 
             // Get ephemeris via kernel-backed SC
-            var scEphemeris = sc.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var scEphemeris = sc.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
 
             // Get ephemeris directly from SPICE
-            var spiceEphemeris = SpiceAPI.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var spiceEphemeris = SpiceAPI.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None);
 
             // Should match to machine precision
             Assert.Equal(spiceEphemeris.Position.X, scEphemeris.Position.X, 6);
@@ -174,7 +174,7 @@ public class KernelBackedSpacecraftTests
             var scState = sc.GetGeometricStateRelativeTo(epoch, earth);
 
             // Get state directly from SPICE
-            var spiceState = SpiceAPI.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var spiceState = SpiceAPI.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None);
 
             Assert.Equal(spiceState.Position.X, scState.Position.X, 6);
             Assert.Equal(spiceState.Position.Y, scState.Position.Y, 6);
@@ -311,7 +311,7 @@ public class KernelBackedSpacecraftTests
             var moon = TestHelpers.MoonAtJ2000;
 
             // Moon ephemeris as seen from kernel SC observer — uses SPICE direct path
-            var moonFromSc = moon.GetEphemeris(epoch, sc, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var moonFromSc = moon.GetEphemeris(epoch, sc, Frames.Frame.ICRF, Aberration.None);
 
             Assert.NotEqual(0.0, moonFromSc.Position.Magnitude());
         }
@@ -337,7 +337,7 @@ public class KernelBackedSpacecraftTests
             var propagatedSc = TestHelpers.Spacecraft;
 
             var epoch = TimeSystem.Time.J2000TDB.Add(TimeSpan.FromSeconds(5));
-            var ephemeris = kernelSc.GetEphemeris(epoch, propagatedSc, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var ephemeris = kernelSc.GetEphemeris(epoch, propagatedSc, Frames.Frame.ICRF, Aberration.None);
 
             Assert.NotEqual(0.0, ephemeris.Position.Magnitude());
         }

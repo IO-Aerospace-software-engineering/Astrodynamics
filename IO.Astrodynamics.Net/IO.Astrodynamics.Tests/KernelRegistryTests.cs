@@ -665,7 +665,7 @@ public class KernelRegistryTests : IDisposable
     }
 
     private static StateVector ReadObject(int naifId, double seconds) =>
-        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(seconds), 399, naifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(seconds), 399, naifId, Frames.Frame.ICRF, Aberration.None);
 
     /// <summary>
     /// A file loaded through <see cref="SpiceAPI.LoadKernels"/>, then replaced by the native writer: its kernel object loaded

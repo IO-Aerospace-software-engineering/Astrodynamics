@@ -264,9 +264,8 @@ public class ShadowFractionPrecisionTests : IClassFixture<ReferenceCases>, IClas
             double nu = _partials.Sun.ShadowFraction(body, state, aberration);
 
             // Assert: the static overload on the angular sizes and separation of the same aberration, in the penumbra
-            var toSun = _partials.Sun.GetEphemeris(state.Epoch, state.Observer, state.Frame, aberration)
-                .ToStateVector().Position - state.Position;
-            var toBody = body.GetEphemeris(state.Epoch, state.Observer, state.Frame, aberration).ToStateVector()
+            var toSun = _partials.Sun.GetEphemeris(state.Epoch, state.Observer, state.Frame, aberration).Position - state.Position;
+            var toBody = body.GetEphemeris(state.Epoch, state.Observer, state.Frame, aberration)
                 .Position - state.Position;
             double expected = CelestialItem.ShadowFraction(_partials.Sun.AngularSeparation(state.Epoch, body, state,
                 aberration), _partials.Sun.AngularSize(toSun.Magnitude()), body.AngularSize(toBody.Magnitude()));
@@ -330,9 +329,9 @@ public class ShadowFractionPrecisionTests : IClassFixture<ReferenceCases>, IClas
     private StateVector BehindTheMoon(double offset)
     {
         var moonPosition = _partials.Moon.GetEphemeris(PartialsTestCases.Epoch, _partials.Earth, Frames.Frame.ICRF,
-            Aberration.None).ToStateVector().Position;
+            Aberration.None).Position;
         var sunPosition = _partials.Sun.GetEphemeris(PartialsTestCases.Epoch, _partials.Earth, Frames.Frame.ICRF,
-            Aberration.None).ToStateVector().Position;
+            Aberration.None).Position;
         var axis = (moonPosition - sunPosition).Normalize();
         var across = axis.Cross(Vector3.VectorZ).Normalize();
         return new StateVector(moonPosition + axis * 4e8 + across * offset, Vector3.VectorZ * 1000.0, _partials.Earth,
@@ -346,7 +345,7 @@ public class ShadowFractionPrecisionTests : IClassFixture<ReferenceCases>, IClas
         var position = state.ToStateVector().Position;
         Vector3 Geometric(CelestialItem item) => item.Equals(state.Observer)
             ? Vector3.Zero
-            : item.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None).ToStateVector().Position;
+            : item.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None).Position;
         var toSun = Geometric(sun) - position;
         var toBody = Geometric(body) - position;
         return (0.5 * sun.AngularSize(toSun.Magnitude()), 0.5 * body.AngularSize(toBody.Magnitude()),

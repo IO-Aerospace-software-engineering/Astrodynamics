@@ -106,7 +106,7 @@ public class SpiceAPISmokeTests
         var searchWindow = new Window(Time.CreateTDB(0.0), Time.CreateTDB(100.0));
         var results = SpiceAPI.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId,
                 PlanetsAndMoons.MOON.NaifId, Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0))
-            .Select(x => x.ToStateVector()).ToArray();
+            .ToArray();
 
         Assert.NotEmpty(results);
         Assert.NotEqual(0.0, results[0].Position.Magnitude());
@@ -119,10 +119,9 @@ public class SpiceAPISmokeTests
     public void ReadEphemeris_SingleEpoch()
     {
         var epoch = Time.CreateTDB(0.0);
-        var result = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId,
+        var sv = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId,
             PlanetsAndMoons.MOON.NaifId, Frame.ICRF, Aberration.LT);
 
-        var sv = result.ToStateVector();
         Assert.NotEqual(0.0, sv.Position.Magnitude());
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, sv.Observer.NaifId);
     }
@@ -131,9 +130,8 @@ public class SpiceAPISmokeTests
     public void ReadEphemeris_SsbObserver()
     {
         var epoch = Time.CreateTDB(0.0);
-        var result = SpiceAPI.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
+        var sv = SpiceAPI.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
             Frame.ICRF, Aberration.None);
-        var sv = result.ToStateVector();
         Assert.Equal(0, sv.Observer.NaifId);
         Assert.NotEqual(0.0, sv.Position.Magnitude());
     }
@@ -161,7 +159,7 @@ public class SpiceAPISmokeTests
             var window = new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(9.0));
             var results = SpiceAPI.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -900,
                     Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
-                .Select(x => x.ToStateVector()).ToArray();
+                .ToArray();
             Assert.Equal(size, results.Length);
             Assert.Equal(6800000.0, results[0].Position.X, 3);
         }

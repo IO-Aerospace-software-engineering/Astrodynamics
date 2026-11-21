@@ -210,7 +210,7 @@ public class InstrumentPointingAttitudeTests
         var (epoch, s, _) = Pointing()[3];
         var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epoch, Frames.Frame.ICRF);
         const double arcsec = System.Math.PI / 180.0 / 3600.0;
-        var star = new Star(9549, "S9549", 1.989e30, "G2V", 5.0, 1.0 / distancePc, new Equatorial(1.2, 0.3, 1.0, epoch.AddDays(-36525.0)),
+        var star = new Star(9549, "S9549", 1.989e30, "G2V", 5.0, 1.0 / distancePc, Equatorial.FromRightAscensionDeclination(0.3, 1.2, 1.0, epoch.AddDays(-36525.0)),
             0.1 * arcsec, 0.1 * arcsec, 0.0, 0.0, 0.0, 0.0, epoch.AddDays(-36525.0));
         foreach (var flag in Flags)
         {
@@ -221,7 +221,7 @@ public class InstrumentPointingAttitudeTests
             var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
             var geometric = star.GetEquatorialCoordinates(epoch).ToCartesian() - (state.Position + earth.GetGeometricStateFromICRF(epoch).ToStateVector().Position);
             var expected = flag is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS
-                ? star.GetEphemeris(epoch, spc, Frames.Frame.ICRF, flag).ToStateVector().Position
+                ? star.GetEphemeris(epoch, spc, Frames.Frame.ICRF, flag).Position
                 : geometric;
             double angle = Body.AttitudeRecordTests.Angle(boresight, expected);
             _output.WriteLine($"MEASURE #549 review: a star at {distancePc} pc {flag.GetDescription(),-6}: boresight from the closed form {angle:E3} rad");

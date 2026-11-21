@@ -101,8 +101,8 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
         foreach (var epoch in Epochs)
         {
             // Act
-            var fromNoto = SpiceAPI.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            var toNoto = SpiceAPI.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var fromNoto = SpiceAPI.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 399, Frames.Frame.ICRF, Aberration.None);
+            var toNoto = SpiceAPI.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None);
 
             // Assert: the observer is NOTO, read by its identifier; the geometric state is the negation of NOTO from the Earth
             Assert.IsType<KernelObject>(fromNoto.Observer);
@@ -124,7 +124,7 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
         for (int k = 0; k <= 48; k++)
         {
             var epoch = NotoKernel.Epoch.AddSeconds(-11.0 * 3600.0 + 1650.5 * k);
-            var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None);
             var expected = site.GetGeometricStateRelativeTo(epoch, earth);
             worstPosition = System.Math.Max(worstPosition, (read.Position - expected.Position).Magnitude());
             worstVelocity = System.Math.Max(worstVelocity, (read.Velocity - expected.Velocity).Magnitude());
@@ -147,7 +147,7 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
         Assert.Equal(6, states.Length);
         foreach (var state in states)
         {
-            var single = SpiceAPI.Instance.ReadEphemeris(state.Epoch, NotoKernel.NotoId, 301, Frames.Frame.ICRF, Aberration.LT).ToStateVector();
+            var single = SpiceAPI.Instance.ReadEphemeris(state.Epoch, NotoKernel.NotoId, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(NotoKernel.NotoId, state.Observer.NaifId);
             Assert.Equal(single.Position, state.Position);
             Assert.Equal(single.Velocity, state.Velocity);
@@ -183,7 +183,7 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
             {
                 foreach (var epoch in Epochs)
                 {
-                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 301, frame, flag).ToStateVector();
+                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 301, frame, flag);
                     var expected = CspiceDirect.Spkezr("MOON", epoch.TimeSpanFromJ2000().TotalSeconds, frame == Frames.Frame.ICRF ? "J2000" : "ITRF93",
                         flag.GetDescription(), "NOTO");
                     worstPosition = System.Math.Max(worstPosition, (read.Position - new Vector3(expected[0], expected[1], expected[2]) * 1000.0).Magnitude());
@@ -229,10 +229,10 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
             {
                 foreach (var t in Epochs)
                 {
-                    var read = moon.GetEphemeris(t, site, frame, flag).ToStateVector();
-                    var icrf = moon.GetEphemeris(t, site, Frames.Frame.ICRF, flag).ToStateVector();
+                    var read = moon.GetEphemeris(t, site, frame, flag);
+                    var icrf = moon.GetEphemeris(t, site, Frames.Frame.ICRF, flag);
                     var lightTimeOnly = flag == Aberration.XCNS ? Aberration.XCN : flag;
-                    var center = noto.GetEphemeris(t, site, Frames.Frame.ICRF, lightTimeOnly).ToStateVector();
+                    var center = noto.GetEphemeris(t, site, Frames.Frame.ICRF, lightTimeOnly);
                     double sign = flag is Aberration.LT or Aberration.CN ? -1.0 : 1.0;
                     var expected = LightTimeCorrectionTests.RotatedAtTheCentreEpoch(icrf, center, itrf93, sign);
                     worstPosition = System.Math.Max(worstPosition, (read.Position - expected.Position).Magnitude());

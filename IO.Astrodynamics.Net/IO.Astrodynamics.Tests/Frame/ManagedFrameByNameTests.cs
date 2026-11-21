@@ -213,9 +213,9 @@ public class ManagedFrameByNameTests
         foreach (var epoch in Epochs)
         {
             var byName = new Frames.Frame(name);
-            var read = moon.GetEphemeris(epoch.Utc, earth, byName, aberration).ToStateVector();
-            var inStatic = moon.GetEphemeris(epoch.Utc, earth, StaticFrameOf(name), aberration).ToStateVector();
-            var icrf = moon.GetEphemeris(epoch.Utc, earth, Frames.Frame.ICRF, aberration).ToStateVector();
+            var read = moon.GetEphemeris(epoch.Utc, earth, byName, aberration);
+            var inStatic = moon.GetEphemeris(epoch.Utc, earth, StaticFrameOf(name), aberration);
+            var icrf = moon.GetEphemeris(epoch.Utc, earth, Frames.Frame.ICRF, aberration);
 
             // The read in the static frame, bit for bit, labelled with the frame asked
             Assert.Equal(inStatic.Position, read.Position);

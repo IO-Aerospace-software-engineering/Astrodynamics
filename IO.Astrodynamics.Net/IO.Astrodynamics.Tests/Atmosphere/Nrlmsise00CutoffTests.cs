@@ -1,3 +1,4 @@
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.TimeSystem;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
@@ -32,9 +33,9 @@ public class Nrlmsise00CutoffTests
         double jump = 0.0, smooth = 0.0;
         foreach (var (latitude, longitude) in Places)
         {
-            double below = model.GetDensity(AtmosphericContext.FromPlanetodetic(altitude - 1e-3, latitude, longitude, Epoch));
-            double above = model.GetDensity(AtmosphericContext.FromPlanetodetic(altitude + 1e-3, latitude, longitude, Epoch));
-            double far = model.GetDensity(AtmosphericContext.FromPlanetodetic(altitude + 1e3, latitude, longitude, Epoch));
+            double below = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude - 1e-3), Epoch));
+            double above = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude + 1e-3), Epoch));
+            double far = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude + 1e3), Epoch));
             jump = System.Math.Max(jump, System.Math.Abs(above / below - 1.0));
             smooth = System.Math.Max(smooth, System.Math.Abs(far / below - 1.0) * 2e-6);
         }

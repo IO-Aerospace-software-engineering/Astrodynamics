@@ -187,7 +187,7 @@ public class TrackingDataSolver : ICategorySolver
             var horizontal = site.GetHorizontalCoordinates(epoch, spacecraft, Aberration.None);
             rangeKm.Add(horizontal.Range / 1000.0);
 
-            var sv = spacecraft.GetEphemeris(epoch, site, Frame.ICRF, Aberration.None).ToStateVector();
+            var sv = spacecraft.GetEphemeris(epoch, site, Frame.ICRF, Aberration.None);
             double rangeRate = sv.Position.Dot(sv.Velocity) / sv.Position.Magnitude();
             rangeRateKmS.Add(rangeRate / 1000.0);
         }

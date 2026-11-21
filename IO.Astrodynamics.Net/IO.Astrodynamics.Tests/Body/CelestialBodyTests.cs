@@ -109,7 +109,7 @@ public class CelestialBodyTests
     {
         var sun = TestHelpers.Sun;
         var earth = TestHelpers.EarthAtJ2000;
-        var res = sun.AngularSize(earth.GetEphemeris(TimeSystem.Time.J2000TDB, sun, Frames.Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector().Position.Magnitude());
+        var res = sun.AngularSize(earth.GetEphemeris(TimeSystem.Time.J2000TDB, sun, Frames.Frame.ECLIPTIC_J2000, Aberration.None).Position.Magnitude());
         Assert.Equal(0.009459, res, 6);
     }
 
@@ -785,7 +785,7 @@ public class CelestialBodyTests
             for (int i = 0; i < states.Length; i++)
             {
                 var epoch = window.StartDate + step * i;
-                var single = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var single = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None);
                 LabelAssert.Equal(epoch, states[i].Epoch);
                 Assert.Equal(single.Position, states[i].Position);
                 Assert.Equal(single.Velocity, states[i].Velocity);

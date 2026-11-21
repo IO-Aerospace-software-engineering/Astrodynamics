@@ -341,7 +341,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void ToKeplerian()
         {
             var earth = TestHelpers.EarthAtJ2000;
-            var sv = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var sv = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None);
             LabelAssert.Equal(
                 new StateVector(new Vector3(-26499033677.425095, 132757417338.33946, 57556718470.53819),
                     new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv);
@@ -388,7 +388,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var moon = TestHelpers.MoonAtJ2000;
             var ra = moon.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
-            LabelAssert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), ra);
+            LabelAssert.Equal(Equatorial.FromRightAscensionDeclination(3.8824377884372114, -0.19024413568211912, 402448639.8873273, TimeSystem.Time.J2000TDB), ra);
         }
 
         [Fact]
@@ -515,8 +515,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void RelativeTo2()
         {
-            var earthSv = TestHelpers.EarthAtJ2000.GetEphemeris(Astrodynamics.TimeSystem.Time.J2000TDB, TestHelpers.MoonAtJ2000, Frames.Frame.ICRF, Aberration.None)
-                .ToStateVector();
+            var earthSv = TestHelpers.EarthAtJ2000.GetEphemeris(Astrodynamics.TimeSystem.Time.J2000TDB, TestHelpers.MoonAtJ2000, Frames.Frame.ICRF, Aberration.None);
             var earthSvFromSun = earthSv.RelativeTo(TestHelpers.Sun, Aberration.None).ToStateVector();
             LabelAssert.Equal(
                 new StateVector(new Vector3(-26499033677.42509, 132757417338.33946, 57556718470.53819),

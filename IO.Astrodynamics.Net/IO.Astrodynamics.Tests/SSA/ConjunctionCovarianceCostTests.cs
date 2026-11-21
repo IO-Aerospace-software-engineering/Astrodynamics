@@ -103,7 +103,7 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         else
             protectedCraft.Propagate(propagation, r2.Bodies, true, false, TimeSpan.FromSeconds(1.0));
         var secondaryCraft = ReferenceCase.NewSpacecraft(rk78 ? -6813 : -6814, AvoidanceFallbackCase.SecondaryNear(
-            protectedCraft.GetEphemeris(tca, r2.InitialState.Observer, r2.InitialState.Frame, Aberration.None).ToStateVector()));
+            protectedCraft.GetEphemeris(tca, r2.InitialState.Observer, r2.InitialState.Frame, Aberration.None)));
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             new TimeSystem.Window(start, start.AddHours(7.0)), new ConjunctionAnalysisOptions { CovariancePropagation = null });
 

@@ -220,9 +220,9 @@ public class ShadowFunctionPartialsTests : IClassFixture<PartialsTestCases>
         // 4.3e-3 rad, is below that of the Sun: an annular eclipse (eq. 4.88 of the GMAT Mathematical Specification) near
         // the axis, a partial one (eq. 4.87) off it
         var moonPosition = _cases.Moon.GetEphemeris(PartialsTestCases.Epoch, _cases.Earth, Frames.Frame.ICRF,
-            Aberration.None).ToStateVector().Position;
+            Aberration.None).Position;
         var sunPosition = _cases.Sun.GetEphemeris(PartialsTestCases.Epoch, _cases.Earth, Frames.Frame.ICRF,
-            Aberration.None).ToStateVector().Position;
+            Aberration.None).Position;
         var axis = (moonPosition - sunPosition).Normalize();
         var across = axis.Cross(Vector3.VectorZ).Normalize();
         double offset = annular ? 50e3 : 1800e3;

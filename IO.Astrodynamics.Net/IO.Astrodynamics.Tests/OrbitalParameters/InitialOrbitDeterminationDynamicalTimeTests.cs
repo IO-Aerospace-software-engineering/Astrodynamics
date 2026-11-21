@@ -51,7 +51,7 @@ public class InitialOrbitDeterminationDynamicalTimeTests
     private static StateVector Determine(Equatorial[] observations, Site site, Func<TimeSystem.Time, TimeSystem.Time> tag)
     {
         var tagged = Array.ConvertAll(observations,
-            o => new Equatorial(o.Declination, o.RightAscension, o.Distance, tag(o.Epoch)));
+            o => Equatorial.FromRightAscensionDeclination(o.RightAscension, o.Declination, o.Distance, tag(o.Epoch)));
         return InitialOrbitDetermination.CreateFromObservation_Gauss(tagged[0], tagged[1], tagged[2], site,
             PlanetsAndMoons.EARTH_BODY, 42000000.0).OrbitalParameters.ToStateVector();
     }

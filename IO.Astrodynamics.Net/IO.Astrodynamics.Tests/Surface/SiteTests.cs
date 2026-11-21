@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             Site site = new Site(13, "DSS-13", earth);
 
-            var sv = site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var sv = site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
 
             Assert.Equal(
                 new StateVector(new Vector3(-4998233.547629601, 1489959.565879058, 3660827.7952649333),
@@ -51,7 +51,7 @@ namespace IO.Astrodynamics.Tests.Surface
 
         private void AssertAgainstKernelTopocentricFrame(in TimeSystem.Time epoch, Horizontal horizontal)
         {
-            var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None).ToStateVector().Position;
+            var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None).Position;
             double cosElevation = System.Math.Cos(horizontal.Elevation);
             var actual = new Vector3(cosElevation * System.Math.Cos(horizontal.Azimuth), -cosElevation * System.Math.Sin(horizontal.Azimuth),
                 System.Math.Sin(horizontal.Elevation));
@@ -213,7 +213,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             Site site = new Site(13, "DSS-13", earth);
 
-            var sv = site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Velocity;
+            var sv = site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Velocity;
 
             Assert.Equal(new Vector3(-108.65703014473667, -364.46975244800444, -0.013117011914007314), sv, TestHelpers.VectorComparer);
         }
@@ -591,8 +591,8 @@ namespace IO.Astrodynamics.Tests.Surface
                     // Act and assert, at each epoch
                     foreach (var epoch in KernelSiteEpochs)
                     {
-                        var moonInReference = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, referenceFrame, Aberration.None).ToStateVector();
-                        var siteInReference = SpiceAPI.Instance.ReadEphemeris(epoch, 399, site.NaifId, referenceFrame, Aberration.None).ToStateVector();
+                        var moonInReference = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, referenceFrame, Aberration.None);
+                        var siteInReference = SpiceAPI.Instance.ReadEphemeris(epoch, 399, site.NaifId, referenceFrame, Aberration.None);
                         Compare(moonInReference, moon.GetEphemeris(epoch, earth, site.Frame, Aberration.None), $"the Moon at {epoch}");
                         Compare(moonInReference, SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, site.Frame, Aberration.None), $"SpiceAPI at {epoch}");
                         Compare(siteInReference, site.GetEphemeris(epoch, earth, site.Frame, Aberration.None), $"the site at {epoch}");
@@ -601,7 +601,7 @@ namespace IO.Astrodynamics.Tests.Surface
                         Assert.Equal(3, windowed.Length);
                         foreach (var state in windowed)
                         {
-                            Compare(SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, referenceFrame, Aberration.None).ToStateVector(), state,
+                            Compare(SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, referenceFrame, Aberration.None), state,
                                 $"SpiceAPI over a window at {state.Epoch}");
                         }
 
@@ -656,10 +656,10 @@ namespace IO.Astrodynamics.Tests.Surface
                 var window = new Window(epoch, epoch.AddHours(2.0));
 
                 // Act: the managed read, without the frame kernel
-                var managed = moon.GetEphemeris(epoch, earth, site.Frame, Aberration.None).ToStateVector();
+                var managed = moon.GetEphemeris(epoch, earth, site.Frame, Aberration.None);
                 var managedOverWindow = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, site.Frame, Aberration.None, TimeSpan.FromHours(1.0))
                     .Select(x => x.ToStateVector()).ToArray();
-                var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
                 Assert.True(AngleBetween(icrf.Position, managed.Position) > 0.1);
 
                 SpiceAPI.Instance.LoadKernels(frameKernel);
@@ -667,11 +667,11 @@ namespace IO.Astrodynamics.Tests.Surface
                 {
                     // Assert: the kernel frame, by its kernel name, on every path
                     var kernelFrame = new Frames.Frame("RV781K_TOPO");
-                    var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, kernelFrame, Aberration.None).ToStateVector();
+                    var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, kernelFrame, Aberration.None);
                     foreach (var read in new[]
                              {
-                                 moon.GetEphemeris(epoch, earth, site.Frame, Aberration.None).ToStateVector(),
-                                 SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, site.Frame, Aberration.None).ToStateVector()
+                                 moon.GetEphemeris(epoch, earth, site.Frame, Aberration.None),
+                                 SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, site.Frame, Aberration.None)
                              })
                     {
                         Assert.Equal(expected.Position, read.Position);
@@ -694,7 +694,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 }
 
                 // The frame kernel unloaded: the managed read again
-                var again = moon.GetEphemeris(epoch, earth, site.Frame, Aberration.None).ToStateVector();
+                var again = moon.GetEphemeris(epoch, earth, site.Frame, Aberration.None);
                 Assert.Equal(managed.Position, again.Position);
                 Assert.Equal(managed.Velocity, again.Velocity);
                 var againOverWindow = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, site.Frame, Aberration.None, TimeSpan.FromHours(1.0))
@@ -1194,10 +1194,10 @@ namespace IO.Astrodynamics.Tests.Surface
                     for (int k = 0; k < 3; k++)
                     {
                         var t = start.AddSeconds(7.0 * 3600.0 * k);
-                        var read = site.GetEphemeris(t, observer, site.Frame, aberration).ToStateVector();
+                        var read = site.GetEphemeris(t, observer, site.Frame, aberration);
                         var expected = aberration == Aberration.None
                             ? site.GetEphemeris(t, observer, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector()
-                            : RotatedAtTheTargetEpoch(e => site.GetEphemeris(e, observer, Frames.Frame.ICRF, aberration).ToStateVector(), t, site.Frame);
+                            : RotatedAtTheTargetEpoch(e => site.GetEphemeris(e, observer, Frames.Frame.ICRF, aberration), t, site.Frame);
                         AssertSameState(expected, read, site.Frame, $"site from {observer.Name} {aberration} at {t}");
                     }
                 }
@@ -1206,11 +1206,11 @@ namespace IO.Astrodynamics.Tests.Surface
             var epoch = start.AddSeconds(3600.0);
             // The Moon from the Earth, both of the kernels, with LT: at the epoch of the site, the centre of the frame, seen
             // from the Earth (#739: before, at the epoch of the observation, 590 m off)
-            AssertSameState(LightTimeCorrectionTests.RotatedAtTheCentreEpoch(moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToStateVector(),
-                    site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToStateVector(), site.Frame, -1.0),
-                moon.GetEphemeris(epoch, earth, site.Frame, Aberration.LT).ToStateVector(), site.Frame, "the Moon from the Earth");
+            AssertSameState(LightTimeCorrectionTests.RotatedAtTheCentreEpoch(moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT),
+                    site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT), site.Frame, -1.0),
+                moon.GetEphemeris(epoch, earth, site.Frame, Aberration.LT), site.Frame, "the Moon from the Earth");
             AssertSameState(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(site.Frame).ToStateVector(),
-                SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, site.Frame, Aberration.None).ToStateVector(), site.Frame, "SpiceAPI at an epoch");
+                SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, site.Frame, Aberration.None), site.Frame, "SpiceAPI at an epoch");
             var windowed = SpiceAPI.Instance.ReadEphemeris(new Window(start, start.AddSeconds(7200.0)), 399, 301, site.Frame, Aberration.None, TimeSpan.FromHours(1.0))
                 .Select(x => x.ToStateVector()).ToArray();
             Assert.Equal(3, windowed.Length);
@@ -1248,7 +1248,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var moon = new CelestialBody(PlanetsAndMoons.MOON);
             var site = new Site(917, "F07SITE", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
             var epochs = Enumerable.Range(0, 5).Select(k => new TimeSystem.Time(2024, 3, 1, TimeScale.TDB).AddSeconds(7.0 * 3600.0 * k)).ToArray();
-            var library = epochs.Select(t => site.GetEphemeris(t, moon, site.Frame, Aberration.None).ToStateVector()).ToArray();
+            var library = epochs.Select(t => site.GetEphemeris(t, moon, site.Frame, Aberration.None)).ToArray();
 
             var directory = Directory.CreateTempSubdirectory("f07site-");
             var frameKernel = new FileInfo(Path.Combine(directory.FullName, "f07site.tf"));

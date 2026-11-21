@@ -60,7 +60,7 @@ public class ThirdBodyPerturbationTests
         // LEO satellite at 400 km altitude, on the Earth-Sun line (worst case for tidal acceleration)
         var epoch = TimeSystem.Time.J2000TDB;
         // Get Sun direction from Earth to place satellite on Earth-Sun line
-        var sunFromEarth = sun.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        var sunFromEarth = sun.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunFromEarth * (1.0 / sunFromEarth.Magnitude());
 
         // Satellite at 6778 km from Earth center, along the Earth-Sun line
@@ -87,7 +87,7 @@ public class ThirdBodyPerturbationTests
         var thirdBody = new ThirdBodyPerturbation(moon, earth);
 
         var epoch = TimeSystem.Time.J2000TDB;
-        var moonFromEarth = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        var moonFromEarth = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var moonDir = moonFromEarth * (1.0 / moonFromEarth.Magnitude());
 
         double r = 6778000.0;
@@ -125,7 +125,7 @@ public class ThirdBodyPerturbationTests
         var battinResult = thirdBody.Apply(sv);
 
         // Direct formula: a = -mu * ((r - d)/|r - d|^3 + d/|d|^3)
-        var dj = sun.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        var dj = sun.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var rMinusDj = satPosition - dj;
         double rMinusDjMag = rMinusDj.Magnitude();
         double djMag = dj.Magnitude();

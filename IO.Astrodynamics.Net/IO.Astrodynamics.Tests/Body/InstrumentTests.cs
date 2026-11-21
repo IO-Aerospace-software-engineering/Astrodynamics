@@ -1027,7 +1027,7 @@ namespace IO.Astrodynamics.Tests.Body
             var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var earth = new CelestialBody(399);
             var moon = new CelestialBody(301);
-            var boresight = atMoon ? moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize() : Vector3.VectorZ;
+            var boresight = atMoon ? moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position.Normalize() : Vector3.VectorZ;
             var refVector = atMoon ? boresight.Cross(Vector3.VectorZ).Normalize() : Vector3.VectorX;
             int id = -7155001;
             var ik = FrameKernelFiles.NewFile("ik715", ".ti");
@@ -1068,7 +1068,7 @@ namespace IO.Astrodynamics.Tests.Body
             var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var earth = new CelestialBody(399);
             var moon = new CelestialBody(301);
-            var boresight = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize();
+            var boresight = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position.Normalize();
             int id = -7155001;
             var ik = FrameKernelFiles.NewFile("ik715u", ".ti");
             await File.WriteAllTextAsync(ik.FullName, AnglesKernel(id, "RECTANGLE", boresight, boresight.Cross(Vector3.VectorZ).Normalize(), 0.1, 0.1));
@@ -1125,7 +1125,7 @@ namespace IO.Astrodynamics.Tests.Body
             var spc = Host(-7156, "T715");
             spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
             var moon = new CelestialBody(301);
-            var boresight = moon.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Normalize();
+            var boresight = moon.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).Position.Normalize();
             var refVector = boresight.Cross(Vector3.VectorZ).Normalize();
             if (shape == "Circular")
                 spc.AddCircularInstrument(-7156001, "CAM", "M", refAngle, boresight, refVector, Vector3.Zero);
@@ -1226,7 +1226,7 @@ namespace IO.Astrodynamics.Tests.Body
                 spc.AddEllipticalInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
             else
                 spc.AddRectangularInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
-            Assert.Equal(0.0, twin.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude());
+            Assert.Equal(0.0, twin.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).Position.Magnitude());
             return (spc.Instruments.Single(), twin);
         }
 

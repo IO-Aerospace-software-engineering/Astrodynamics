@@ -192,7 +192,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
             var star = _root.GetProperty("star");
             var epoch = Epoch;
             return new Star(470001, "FOVSTAR1", 1.989e30, "G2V", 5.0, 1.0e-6,
-                new Equatorial(star.GetProperty("declination").GetDouble(), star.GetProperty("rightAscension").GetDouble(), epoch), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                Equatorial.FromRightAscensionDeclination(star.GetProperty("rightAscension").GetDouble(), star.GetProperty("declination").GetDouble(), epoch), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                 epoch);
         }
     }

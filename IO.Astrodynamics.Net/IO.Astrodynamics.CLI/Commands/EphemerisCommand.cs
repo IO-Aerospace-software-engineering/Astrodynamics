@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,7 +43,7 @@ public class EphemerisCommand
 
         var observerItem = Helpers.CreateLocalizable(observerId, window.StartDate);
 
-        var ephemeris = localizableObject.GetEphemeris(window, observerItem, Helpers.ResolveFrame(frame),
+        IEnumerable<OrbitalParameters.OrbitalParameters> ephemeris = localizableObject.GetEphemeris(window, observerItem, Helpers.ResolveFrame(frame),
             Enum.Parse<Aberration>(aberration, true), step);
 
 
@@ -53,10 +54,6 @@ public class EphemerisCommand
         else if (toEquinoctial)
         {
             ephemeris = ephemeris.Select(x => x.ToEquinoctial());
-        }
-        else
-        {
-            ephemeris = ephemeris.Select(x => x.ToStateVector());
         }
 
         foreach (var eph in ephemeris)
@@ -104,13 +101,13 @@ public class EphemerisCommand
         if (cartesian)
         {
             Console.WriteLine(planetocentric.ToCartesianCoordinates().Normalize() *
-                              planetocentric.RadiusFromPlanetocentricLatitude(celestialBody.EquatorialRadius, celestialBody.Flattening));
+                              planetocentric.RadiusFromPlanetocentricLatitude(celestialBody));
             return Task.CompletedTask;
         }
 
         if (planetodetic)
         {
-            Console.WriteLine(planetocentric.ToPlanetodetic(celestialBody.Flattening, celestialBody.EquatorialRadius));
+            Console.WriteLine(planetocentric.ToPlanetodetic(celestialBody));
             return Task.CompletedTask;
         }
 

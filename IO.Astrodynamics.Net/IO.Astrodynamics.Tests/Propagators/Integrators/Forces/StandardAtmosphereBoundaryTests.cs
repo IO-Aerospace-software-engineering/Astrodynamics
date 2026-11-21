@@ -177,8 +177,7 @@ public class StandardAtmosphereBoundaryTests
                 scenario.AddCelestialItem(body);
                 scenario.AddSpacecraft(spacecraft);
                 await scenario.SimulateAsync(true, false, TimeSpan.FromSeconds(1.0));
-                state = epoch => spacecraft.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None)
-                    .ToStateVector();
+                state = epoch => spacecraft.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None);
                 break;
             }
             default:
@@ -336,8 +335,7 @@ public class StandardAtmosphereBoundaryTests
                 scenario.AddCelestialItem(body);
                 scenario.AddSpacecraft(spacecraft);
                 await scenario.SimulateAsync(true, false, TimeSpan.FromSeconds(1.0), () => Integrator(), options);
-                state = epoch => spacecraft.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None)
-                    .ToStateVector();
+                state = epoch => spacecraft.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None);
                 break;
             }
             default:

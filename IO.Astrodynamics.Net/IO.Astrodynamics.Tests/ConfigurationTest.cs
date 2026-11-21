@@ -115,7 +115,7 @@ public class ConfigurationTest
 
         dataProvider.AddStateVector(target.NaifId, date, stateVector);
 
-        var result = dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None).ToStateVector();
+        var result = dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None);
 
         Assert.Equal(Vector3.Zero, result.Position);
         Assert.Equal(Vector3.Zero, result.Velocity);

@@ -1099,7 +1099,7 @@ internal static class Program
     }
 
     private static StateVector ReadObject(int naifId) =>
-        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, naifId, Frame.ICRF, Aberration.None).ToStateVector();
+        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, naifId, Frame.ICRF, Aberration.None);
 
     private static void CheckSameObject(StateVector before, int naifId, string what)
     {
@@ -1125,7 +1125,7 @@ internal static class Program
         }
     }
 
-    private static StateVector ReadMoon() => SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector();
+    private static StateVector ReadMoon() => SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None);
 
     private static void CheckSameMoon(StateVector before, string what)
     {
@@ -1150,7 +1150,7 @@ internal static class Program
     }
 
     private static StateVector ReadRelativeObject() =>
-        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, -1999972, Frame.ICRF, Aberration.None).ToStateVector();
+        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, -1999972, Frame.ICRF, Aberration.None);
 
     // Three states of a circular orbit about the Earth in ICRF, 60 s apart from the epoch
     private static StateVector[] EarthStates()
@@ -1188,7 +1188,7 @@ internal static class Program
     // loaded before every kernel of the scenarios, so that its search passes every SPK loaded after it)
     private static (Quaternion IauEarth, StateVector Moon) SearchesBefore() =>
         (SpiceAPI.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation,
-            SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector());
+            SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None));
 
     // Loads 25 copies of the L1 SPK, then reads IAU_EARTH and the Moon: bit for bit what they were before the scenario
     private static void CheckSearchesAfterManyDafs(DirectoryInfo root, DirectoryInfo kernels, (Quaternion IauEarth, StateVector Moon) before)
@@ -1205,7 +1205,7 @@ internal static class Program
             var q = SpiceAPI.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation;
             Check(q.W == before.IauEarth.W && q.VectorPart == before.IauEarth.VectorPart,
                 $"IAU_EARTH after {ManyDafs} more DAFs is the rotation read before ({q} against {before.IauEarth})");
-            var moon = SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector();
+            var moon = SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None);
             Check(moon.Position == before.Moon.Position && moon.Velocity == before.Moon.Velocity,
                 $"the Moon after {ManyDafs} more DAFs is the state read before ({moon.Position} against {before.Moon.Position})");
         }

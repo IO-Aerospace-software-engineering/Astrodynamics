@@ -56,7 +56,7 @@ public sealed class AvoidanceFallbackCase
         // Relative to the point-mass Earth, the central body of its propagation on its two-body orbit
         var reference = ReferenceCase.NewSpacecraft(-6700, ProtectedStart);
         Propagate(reference, true);
-        var secondary = SecondaryNear(reference.GetEphemeris(Tca, Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector());
+        var secondary = SecondaryNear(reference.GetEphemeris(Tca, Earth, Frames.Frame.ICRF, Aberration.None));
         SecondaryAtTca = new StateVector(secondary.Position, secondary.Velocity, PointMassEarth, Tca, secondary.Frame,
             secondary.Covariance);
     }
@@ -292,7 +292,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var protectedCraft = new Spacecraft(-6790, "TLE6790", 100.0, 1000.0, new Clock("tle6790", 65536), tle, 10.0, 2.2, null, 1.5);
         var tca = tle.Epoch.AddHours(2.0);
         var secondary = ReferenceCase.NewSpacecraft(-6791,
-            AvoidanceFallbackCase.SecondaryNear(protectedCraft.GetEphemeris(tca, tle.Observer, Frames.Frame.ICRF, Aberration.None).ToStateVector()));
+            AvoidanceFallbackCase.SecondaryNear(protectedCraft.GetEphemeris(tca, tle.Observer, Frames.Frame.ICRF, Aberration.None)));
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
             new Window(tle.Epoch, tle.Epoch.AddHours(2.5)));
 
@@ -650,7 +650,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         before.Propagate(new Window(AvoidanceFallbackCase.Start, option.BurnEpoch), _case.Bodies, true, true,
             AvoidanceFallbackCase.VelocityVerletStep);
         // The stored states run to the burn, the window end, whether the step divides the window or not (#741)
-        var atBurn = before.GetEphemeris(option.BurnEpoch, _case.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var atBurn = before.GetEphemeris(option.BurnEpoch, _case.Earth, Frames.Frame.ICRF, Aberration.None);
         var afterBurn = new StateVector(atBurn.Position, atBurn.Velocity + option.DeltaVInertial, _case.Earth, option.BurnEpoch,
             Frames.Frame.ICRF);
 

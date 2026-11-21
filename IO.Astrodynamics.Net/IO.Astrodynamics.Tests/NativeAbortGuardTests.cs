@@ -155,7 +155,7 @@ public class NativeAbortGuardTests
     public void ReadEphemeris_FromAnUnnamedLagrangePoint_IsALagrangePoint()
     {
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
-        var reads = new[] { SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector() }
+        var reads = new[] { SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None) }
             .Concat(SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 391, 399, Frames.Frame.ICRF,
                 Aberration.None, TimeSpan.FromSeconds(60.0)).Select(x => x.ToStateVector()))
             .ToArray();
@@ -165,7 +165,7 @@ public class NativeAbortGuardTests
             var observer = Assert.IsType<LagrangePoint>(read.Observer);
             Assert.Equal(391, observer.NaifId);
             Assert.Equal("L1", observer.Name);
-            var reversed = SpiceAPI.Instance.ReadEphemeris(read.Epoch, 399, 391, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var reversed = SpiceAPI.Instance.ReadEphemeris(read.Epoch, 399, 391, Frames.Frame.ICRF, Aberration.None);
             // L1 is about 1.5e9 m from the Earth: the reference is a state, not the zeros of a read SPICE refused
             Assert.True(reversed.Position.Magnitude() > 1.0e9);
             double dr = (read.Position + reversed.Position).Magnitude();

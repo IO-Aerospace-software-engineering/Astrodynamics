@@ -505,7 +505,7 @@ public class TimeArgumentTests
         var later = epoch.AddHours(1.0);
 
         // Act
-        var state = spacecraft.GetEphemeris(later, _earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var state = spacecraft.GetEphemeris(later, _earth, Frames.Frame.ICRF, Aberration.None);
 
         // Assert: the two-body motion (AtEpoch) over the TT seconds between the two epochs
         double elapsed = DynamicalTimeReference.TtSecondsBetween(epoch, later);

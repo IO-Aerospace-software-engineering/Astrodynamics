@@ -23,7 +23,7 @@ internal static class PenumbraStates
     {
         double radius = PartialsTestCases.State(orbit, cases.Earth).Position.Magnitude();
         var sunDirection = cases.Sun.GetEphemeris(PartialsTestCases.Epoch, cases.Earth, Frames.Frame.ICRF,
-            Aberration.None).ToStateVector().Position.Normalize();
+            Aberration.None).Position.Normalize();
         var side = sunDirection.Cross(Vector3.VectorZ).Normalize();
         var velocity = Vector3.VectorZ * System.Math.Sqrt(cases.Earth.GM / radius);
         return new StateVector((sunDirection * -System.Math.Cos(angle) + side * System.Math.Sin(angle)) * radius,
@@ -72,11 +72,11 @@ internal static class PenumbraStates
         StateVector state, CelestialBody occultingBody)
     {
         var position = state.Position;
-        var toSun = cases.Sun.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None).ToStateVector()
+        var toSun = cases.Sun.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None)
             .Position - position;
         var toBody = (occultingBody.Equals(state.Observer)
             ? Vector3.Zero
-            : occultingBody.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None).ToStateVector()
+            : occultingBody.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None)
                 .Position) - position;
         return (System.Math.Asin(cases.Sun.EquatorialRadius / toSun.Magnitude()),
             System.Math.Asin(occultingBody.EquatorialRadius / toBody.Magnitude()),

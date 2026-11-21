@@ -107,7 +107,7 @@ public class GroundStationSolver : ICategorySolver
         {
             var epoch = EpochParser.ParseInstant(inputs.SampleEpochs[k]);
             var horizontal = site.GetHorizontalCoordinates(epoch, target, aberration);
-            var state = target.GetEphemeris(epoch, site, Frame.ICRF, aberration).ToStateVector();
+            var state = target.GetEphemeris(epoch, site, Frame.ICRF, aberration);
             outputs[OutputComparer.IndexedOutput(Samples, k, "epoch")] = inputs.SampleEpochs[k];
             outputs[OutputComparer.IndexedOutput(Samples, k, "azimuth_deg")] = UnitConversion.RadToDeg(horizontal.Azimuth);
             outputs[OutputComparer.IndexedOutput(Samples, k, "elevation_deg")] = UnitConversion.RadToDeg(horizontal.Elevation);

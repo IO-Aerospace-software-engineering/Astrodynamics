@@ -68,7 +68,7 @@ public class OrbitalEventsSolver : ICategorySolver
                         request.Type == OrbitalEventRequest.Periapsis ? RelationnalOperator.LocalMin : RelationnalOperator.LocalMax,
                         0.0, Aberration.None, step).Select(w => w.StartDate).ToList();
                     Add(outputs, request.Type, extremes, window.StartDate,
-                        t => UnitConversion.MToKm(spacecraft.GetEphemeris(t, center, Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude()));
+                        t => UnitConversion.MToKm(spacecraft.GetEphemeris(t, center, Frame.ICRF, Aberration.None).Position.Magnitude()));
                     break;
                 case OrbitalEventRequest.AscendingNode:
                 case OrbitalEventRequest.DescendingNode:

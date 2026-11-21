@@ -120,7 +120,7 @@ public class PropagateTests
             {
                 SpiceAPI.Instance.LoadKernels(ephemeris);
                 start = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, -1000, Frames.Frame.ICRF,
-                    Aberration.None).ToStateVector();
+                    Aberration.None);
                 gm = new Body.CelestialBody(399).GM;
             }
             finally
@@ -375,7 +375,7 @@ public class PropagateTests
         try
         {
             SpiceAPI.Instance.LoadKernels(ephemeris);
-            return SpiceAPI.Instance.ReadEphemeris(end, 399, -1000, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+            return SpiceAPI.Instance.ReadEphemeris(end, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
         }
         finally
         {
@@ -424,7 +424,7 @@ public class PropagateTests
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(earth);
         await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
-        return spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        return spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).Position;
     }
 
     private const string IssLine1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
@@ -477,13 +477,13 @@ public class PropagateTests
                 SpiceAPI.Instance.LoadKernels(ephemeris);
                 foreach (var epoch in epochs)
                 {
-                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                    var expected = twin.GetEphemeris(epoch, cliEarth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None);
+                    var expected = twin.GetEphemeris(epoch, cliEarth, Frames.Frame.ICRF, Aberration.None);
                     worst = System.Math.Max(worst, (fromSpk.Position - expected.Position).Magnitude());
                 }
 
-                var end = SpiceAPI.Instance.ReadEphemeris(epochs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                fromPointMass = (end.Position - pointMass.GetEphemeris(epochs[^1], cliEarth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position)
+                var end = SpiceAPI.Instance.ReadEphemeris(epochs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None);
+                fromPointMass = (end.Position - pointMass.GetEphemeris(epochs[^1], cliEarth, Frames.Frame.ICRF, Aberration.None).Position)
                     .Magnitude();
             }
             finally

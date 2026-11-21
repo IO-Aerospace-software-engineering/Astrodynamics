@@ -198,7 +198,7 @@ public class SpacecraftKernelsTests
     /// <summary>The state of the spacecraft relative to the Earth from <c>spkezr</c>.</summary>
     private static StateVector Spkezr(Time epoch, string frame, Aberration aberration)
     {
-        var state = SpiceAPI.Instance.ReadEphemeris(epoch, 399, SpacecraftId, new Frame(frame), aberration).ToStateVector();
+        var state = SpiceAPI.Instance.ReadEphemeris(epoch, 399, SpacecraftId, new Frame(frame), aberration);
         // The native read returns zeros on a SPICE error: the reference is the orbit, about 6 778 km from the Earth
         Assert.InRange(state.Position.Magnitude(), 6.7e6, 6.9e6);
         return state;
@@ -286,7 +286,7 @@ public class SpacecraftKernelsTests
         {
             var kernels = Kernels();
             var epoch = Start.AddSeconds(301.5);
-            var moonFromEarth = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector().Position;
+            var moonFromEarth = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frame.ICRF, Aberration.None).Position;
             var spacecraftFromEarth = Spkezr(epoch, "J2000", Aberration.None).Position;
 
             // From the spacecraft, between the Earth and the Moon; from the Earth, between the spacecraft and the Moon

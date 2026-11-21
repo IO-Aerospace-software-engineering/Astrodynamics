@@ -622,9 +622,9 @@ public class AttitudeRecordTests
                 for (int b = 0; b < 2; b++)
                 {
                     var body = b == 0 ? run.Earth : run.Sun;
-                    var inFrame = sc.GetEphemeris(t, body, sc.Frame, Aberration.None).ToStateVector();
-                    var spice = SpiceAPI.Instance.ReadEphemeris(t, body.NaifId, sc.NaifId, run.Kernel.Frame, Aberration.None).ToStateVector();
-                    var inIcrf = sc.GetEphemeris(t, body, Frame.ICRF, Aberration.None).ToStateVector();
+                    var inFrame = sc.GetEphemeris(t, body, sc.Frame, Aberration.None);
+                    var spice = SpiceAPI.Instance.ReadEphemeris(t, body.NaifId, sc.NaifId, run.Kernel.Frame, Aberration.None);
+                    var inIcrf = sc.GetEphemeris(t, body, Frame.ICRF, Aberration.None);
                     double positionDelta = (inFrame.Position - spice.Position).Magnitude();
                     double velocityDelta = (inFrame.Velocity - spice.Velocity).Magnitude();
                     double term = (inFrame.Velocity - inIcrf.Velocity.Rotate(managed.Rotation.Conjugate())).Magnitude();
@@ -926,7 +926,7 @@ public class AttitudeRecordTests
         sc.AddEngine(engine);
         sc.AddCircularInstrument(id * 1000 - 1, "I1", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[0]);
         var instrument = sc.Instruments.First();
-        Vector3 FromEarth(CelestialItem body) => SpiceAPI.Instance.ReadEphemeris(start, 399, body.NaifId, Frame.ICRF, Aberration.None).ToStateVector().Position;
+        Vector3 FromEarth(CelestialItem body) => SpiceAPI.Instance.ReadEphemeris(start, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
         var boresight = EulerToSpacecraft(instrument.Orientation, instrument.Boresight);
         var reference = EulerToSpacecraft(instrument.Orientation, instrument.RefVector);
         var cases = new (string, Attitude, Func<Vector3, Vector3>)[]
@@ -991,7 +991,7 @@ public class AttitudeRecordTests
             {
                 var t = start.AddSeconds(k * 10.0);
                 var expected = tle.ToStateVector(t).ToFrame(Frame.ICRF).ToStateVector();
-                var read = SpiceAPI.Instance.ReadEphemeris(t, 399, sc.NaifId, Frame.ICRF, Aberration.None).ToStateVector();
+                var read = SpiceAPI.Instance.ReadEphemeris(t, 399, sc.NaifId, Frame.ICRF, Aberration.None);
                 position = System.Math.Max(position, (read.Position - expected.Position).Magnitude());
                 velocity = System.Math.Max(velocity, (read.Velocity - expected.Velocity).Magnitude());
             }
@@ -1616,7 +1616,7 @@ public class AttitudeRecordTests
 
             if (Ssb)
             {
-                var earth = SpiceAPI.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None).ToStateVector();
+                var earth = SpiceAPI.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None);
                 position -= earth.Position;
                 velocity -= earth.Velocity;
             }
@@ -1625,7 +1625,7 @@ public class AttitudeRecordTests
         }
 
         // The geometric position of a body relative to the Earth in ICRF (spkezr)
-        private Vector3 FromEarth(CelestialBody body, Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, body.NaifId, Frame.ICRF, Aberration.None).ToStateVector().Position;
+        private Vector3 FromEarth(CelestialBody body, Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
 
         /// <summary>The event of the impulse, tc: the base of the segment that follows it in the solution.</summary>
         internal Time ImpulseEpoch => Solution.Segments[1].BaseEpoch;

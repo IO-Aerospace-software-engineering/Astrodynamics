@@ -112,12 +112,12 @@ public class PropagationToTheWindowEndTests
         LabelAssert.Equal(window.EndDate, solution.StateVectors[^1].Epoch);
 
         var observer = (CelestialItem)initial.Observer;
-        var atEnd = spacecraft.GetEphemeris(window.EndDate, observer, Frame.ICRF, Aberration.None).ToStateVector();
+        var atEnd = spacecraft.GetEphemeris(window.EndDate, observer, Frame.ICRF, Aberration.None);
         var (endPosition, endVelocity) = solution.InterpolateAt(window.EndDate);
         double endAgainstSolution = (atEnd.Position - endPosition).Magnitude();
         double endVelocityAgainstSolution = (atEnd.Velocity - endVelocity).Magnitude();
         var inside = window.StartDate.AddSeconds(3605.0);
-        var atInside = spacecraft.GetEphemeris(inside, observer, Frame.ICRF, Aberration.None).ToStateVector();
+        var atInside = spacecraft.GetEphemeris(inside, observer, Frame.ICRF, Aberration.None);
         double insideAgainstSolution = (atInside.Position - solution.InterpolateAt(inside).position).Magnitude();
         _output.WriteLine($"MEASURE #741 {integrator} {central} 3610 s / 60 s: at the end {endAgainstSolution:E3} m " +
                           $"{endVelocityAgainstSolution:E3} m/s from the solution, at 3605 s {insideAgainstSolution:E3} m");
@@ -131,7 +131,7 @@ public class PropagationToTheWindowEndTests
             foreach (var epoch in new[] { inside, window.EndDate })
             {
                 var expected = initial.AtEpoch(epoch).ToStateVector();
-                var read = spacecraft.GetEphemeris(epoch, observer, Frame.ICRF, Aberration.None).ToStateVector();
+                var read = spacecraft.GetEphemeris(epoch, observer, Frame.ICRF, Aberration.None);
                 worst = System.Math.Max(worst, (read.Position - expected.Position).Magnitude());
             }
 
@@ -208,8 +208,7 @@ public class PropagationToTheWindowEndTests
         var states = spacecraft.PropagatedStates;
         Assert.Equal(62, states.Length);
         LabelAssert.Equal(window.EndDate.ToTDB(), states[^1].Epoch);
-        var read = spacecraft.GetEphemeris(window.EndDate, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None)
-            .ToStateVector();
+        var read = spacecraft.GetEphemeris(window.EndDate, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None);
         Assert.Equal(0.0, (read.Position - solution.InterpolateAt(window.EndDate.ToTDB()).position).Magnitude());
     }
 
@@ -236,8 +235,7 @@ public class PropagationToTheWindowEndTests
             double worst = 0.0;
             foreach (var epoch in new[] { Start.AddSeconds(3605.0), window.EndDate })
             {
-                var managed = spacecraft.GetEphemeris(epoch, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None)
-                    .ToStateVector();
+                var managed = spacecraft.GetEphemeris(epoch, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None);
                 // The windowed read, which throws on a SPICE error
                 var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch), 399, spacecraft.NaifId, Frame.ICRF,
                     Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();

@@ -437,7 +437,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     // the angle between a window's edge and the 0/2π cut of the planetographic longitude, whatever its sense
     private static double EastLongitude(ILocalizable target, CelestialBody observer, TimeSystem.Time epoch)
     {
-        var position = target.GetEphemeris(epoch, observer, observer.Frame, Aberration.None).ToStateVector().Position;
+        var position = target.GetEphemeris(epoch, observer, observer.Frame, Aberration.None).Position;
         return System.Math.Atan2(position.Y, position.X);
     }
 
@@ -604,10 +604,10 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             for (int k = 0; k < 3; k++)
             {
                 var t = start.AddSeconds(7.0 * 3600.0 * k);
-                var read = site.GetEphemeris(t, lro, site.Frame, aberration).ToStateVector();
+                var read = site.GetEphemeris(t, lro, site.Frame, aberration);
                 var expected = aberration == Aberration.None
                     ? site.GetEphemeris(t, lro, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector()
-                    : Surface.SiteTests.RotatedAtTheTargetEpoch(e => site.GetEphemeris(e, lro, Frames.Frame.ICRF, aberration).ToStateVector(), t, site.Frame);
+                    : Surface.SiteTests.RotatedAtTheTargetEpoch(e => site.GetEphemeris(e, lro, Frames.Frame.ICRF, aberration), t, site.Frame);
                 Assert.Same(site.Frame, read.Frame);
                 Assert.InRange((read.Position - expected.Position).Magnitude(), 0.0, 1e-6);
                 Assert.InRange((read.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);

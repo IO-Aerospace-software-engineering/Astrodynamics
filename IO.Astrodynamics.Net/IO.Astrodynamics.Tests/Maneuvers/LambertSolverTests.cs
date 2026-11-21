@@ -189,7 +189,7 @@ public class LambertSolverTests
         var earth = TestHelpers.EarthAtJ2000;
         var arrivalTime = TimeSystem.Time.J2000UTC.AddDays(3);
         var op1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var op2 = TestHelpers.MoonAtJ2000.GetEphemeris(arrivalTime, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var op2 = TestHelpers.MoonAtJ2000.GetEphemeris(arrivalTime, earth, Frames.Frame.ICRF, Aberration.None);
         var result = solver.Solve(false, op1, op2, earth, 0);
         Assert.NotNull(result);
         Assert.True(result.Solutions.Count > 0);
@@ -214,7 +214,7 @@ public class LambertSolverTests
         var moon = TestHelpers.MoonAtJ2000;
         var arrivalTime = TimeSystem.Time.J2000UTC.AddDays(3);
         var op1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var op2 = TestHelpers.MoonAtJ2000.GetEphemeris(arrivalTime, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var op2 = TestHelpers.MoonAtJ2000.GetEphemeris(arrivalTime, earth, Frames.Frame.ICRF, Aberration.None);
         var result = solver.Solve(true, op1, op2, earth, 0);
         Assert.NotNull(result);
         Assert.True(result.Solutions.Count > 0);

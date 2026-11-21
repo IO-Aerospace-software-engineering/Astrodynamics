@@ -34,11 +34,11 @@ public class PlanetocentricTests
     public void ToCartesian2()
     {
         var geodetic = new Planetodetic(19.89367 * Constants.DEG_RAD, 47.91748 * Constants.DEG_RAD, 984);
-        var plan = geodetic.ToPlanetocentric(TestHelpers.EarthAtJ2000.Flattening, TestHelpers.EarthAtJ2000.EquatorialRadius);
+        var plan = geodetic.ToPlanetocentric(TestHelpers.EarthAtJ2000);
         var res = plan.ToCartesianCoordinates();
 
         var centric = new Planetocentric(19.89367 * Constants.DEG_RAD, 47.91748 * Constants.DEG_RAD, 6367310.6587192528);
-        var plentodetic = centric.ToPlanetodetic(TestHelpers.EarthAtJ2000.Flattening, TestHelpers.EarthAtJ2000.EquatorialRadius);
+        var plentodetic = centric.ToPlanetodetic(TestHelpers.EarthAtJ2000);
         var res2 = centric.ToCartesianCoordinates();
 
     }
@@ -47,7 +47,7 @@ public class PlanetocentricTests
     public void ToPlanetodetic()
     {
         var plan = new Planetocentric(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.06601815 * Astrodynamics.Constants.Deg2Rad, 6372125.09695);
-        var res = plan.ToPlanetodetic(TestHelpers.EarthAtJ2000.Flattening, TestHelpers.EarthAtJ2000.EquatorialRadius);
+        var res = plan.ToPlanetodetic(TestHelpers.EarthAtJ2000);
         // SPICE recgeo_c on the ellipsoid of pck00011 (tools/geodetic_reference/test_values_ref.c): the geodetic
         // coordinates of DSS-13 in earth_topo_201023.tf on the WGS84 spheroid are 35.2471635434595° and 1070.44 m.
         // Before #411: 35.24719500924553° and 1073.2434613695368 m, the latitude relation of the surface
@@ -60,7 +60,7 @@ public class PlanetocentricTests
     public void Radius()
     {
         var plan = new Planetocentric(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.06601815 * Astrodynamics.Constants.Deg2Rad, 6372125.09695);
-        var radius = plan.RadiusFromPlanetocentricLatitude(TestHelpers.EarthAtJ2000.EquatorialRadius, TestHelpers.EarthAtJ2000.Flattening);
+        var radius = plan.RadiusFromPlanetocentricLatitude(TestHelpers.EarthAtJ2000);
         Assert.Equal(6371054.241003811, radius);
     }
 }

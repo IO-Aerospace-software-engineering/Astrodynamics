@@ -415,7 +415,7 @@ public class TlePropagationTests
             var geometric = spacecraft.GetGeometricStateRelativeTo(state.Epoch, earth);
             Assert.Equal(state.Position, geometric.Position);
             Assert.Equal(state.Velocity, geometric.Velocity);
-            var read = spacecraft.GetEphemeris(state.Epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var read = spacecraft.GetEphemeris(state.Epoch, earth, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(state.Position, read.Position);
             Assert.Equal(state.Velocity, read.Velocity);
         }
@@ -441,7 +441,7 @@ public class TlePropagationTests
         {
             foreach (var state in stored)
             {
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var fromSpk = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None);
                 worst = System.Math.Max(worst, (fromSpk.Position - state.Position).Magnitude());
             }
         }
@@ -472,7 +472,7 @@ public class TlePropagationTests
         twin.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep);
         var tca = tle.Epoch.AddHours(2.0);
         var earth = (CelestialItem)tle.Observer;
-        var secondaryState = AvoidanceFallbackCase.SecondaryNear(fromTle.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector());
+        var secondaryState = AvoidanceFallbackCase.SecondaryNear(fromTle.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None));
         var screening = new Window(tle.Epoch, tle.Epoch.AddHours(2.5));
         var options = new AvoidanceSearchOptions
         {
@@ -527,7 +527,7 @@ public class TlePropagationTests
                 Assert.Null(spacecraft.InterpolatedStatesWindow);
             }
 
-            var ephemeris = unpropagated.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var ephemeris = unpropagated.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(sgp4.Position, ephemeris.Position);
             Assert.Equal(sgp4.Velocity, ephemeris.Velocity);
         }
@@ -539,12 +539,12 @@ public class TlePropagationTests
         for (int i = 0; i < 60; i++)
         {
             var sample = window.StartDate.ToTDB().AddSeconds(60.0 * i);
-            var atSample = sampled.GetEphemeris(sample, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var atSample = sampled.GetEphemeris(sample, earth, Frames.Frame.ICRF, Aberration.None);
             var sgp4AtSample = tle.ToStateVector(sample).ToFrame(Frames.Frame.ICRF).ToStateVector();
             Assert.Equal(sgp4AtSample.Position, atSample.Position);
             Assert.Equal(sgp4AtSample.Velocity, atSample.Velocity);
             var middle = sample.AddSeconds(30.0);
-            var between = sampled.GetEphemeris(middle, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var between = sampled.GetEphemeris(middle, earth, Frames.Frame.ICRF, Aberration.None);
             worst = System.Math.Max(worst, (tle.ToStateVector(middle).ToFrame(Frames.Frame.ICRF).ToStateVector().Position - between.Position).Magnitude());
         }
 

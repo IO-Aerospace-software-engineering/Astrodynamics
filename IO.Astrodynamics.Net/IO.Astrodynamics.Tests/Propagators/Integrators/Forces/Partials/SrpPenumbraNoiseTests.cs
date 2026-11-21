@@ -148,10 +148,10 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
     private static (double SunRadius, double BodyRadius, double Separation) Discs(CelestialBody sun, CelestialBody earth,
         StateVector state)
     {
-        var toSun = sun.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None).ToStateVector().Position -
+        var toSun = sun.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None).Position -
                     state.Position;
         var toEarth = earth.Equals(state.Observer) ? state.Position * -1.0 : earth.GetEphemeris(state.Epoch,
-            state.Observer, state.Frame, Aberration.None).ToStateVector().Position - state.Position;
+            state.Observer, state.Frame, Aberration.None).Position - state.Position;
         return (System.Math.Asin(sun.EquatorialRadius / toSun.Magnitude()),
             System.Math.Asin(earth.EquatorialRadius / toEarth.Magnitude()),
             System.Math.Atan2(toSun.Cross(toEarth).Magnitude(), toSun.Dot(toEarth)));

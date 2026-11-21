@@ -92,7 +92,7 @@ public class PropagatedStatesSpanTests
             var geometric = spacecraft.GetGeometricStateRelativeTo(end.Epoch, earth);
             Assert.Equal(end.Position, geometric.Position);
             Assert.Equal(end.Velocity, geometric.Velocity);
-            var read = spacecraft.GetEphemeris(end.Epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
+            var read = spacecraft.GetEphemeris(end.Epoch, earth, Frame.ICRF, Aberration.None);
             Assert.Equal(end.Position, read.Position);
             Assert.Equal(end.Velocity, read.Velocity);
             Assert.NotNull(spacecraft.GetEphemeris(end.Epoch, moon, Frame.ICRF, Aberration.None));
@@ -152,7 +152,7 @@ public class PropagatedStatesSpanTests
                 lt = expected.Magnitude() / IO.Astrodynamics.Constants.C;
             }
 
-            var read = spacecraft.GetEphemeris(t, moon, Frame.ICRF, aberration).ToStateVector();
+            var read = spacecraft.GetEphemeris(t, moon, Frame.ICRF, aberration);
             double delta = (read.Position - expected).Magnitude();
             worst = System.Math.Max(worst, delta);
             _output.WriteLine($"MEASURE #527 {integrator} {aberration} at {(t - S).TotalSeconds:R} s, light time {lt:R} s: |Δr| {delta:E3} m against the correction on the two-body motion");
@@ -297,7 +297,7 @@ public class PropagatedStatesSpanTests
         foreach (var t in new[] { window.StartDate.AddSeconds(-360.0), window.EndDate.AddSeconds(360.0) })
         {
             var sgp4 = tle.ToStateVector(t).ToFrame(Frame.ICRF).ToStateVector();
-            var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None).ToStateVector();
+            var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None);
             double delta = (read.Position - sgp4.Position).Magnitude();
             worst = System.Math.Max(worst, delta);
             _output.WriteLine($"MEASURE #527 sampled TLE at {(t - window.StartDate).TotalSeconds:R} s: |Δr| {delta:E3} m against SGP4");

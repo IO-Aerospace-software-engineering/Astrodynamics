@@ -545,7 +545,7 @@ namespace IO.Astrodynamics.Tests.Mission
             var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
             var end = start.AddDays(365 * 4);
             var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
-            var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start);
+            var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start);
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission102");
             Scenario scenario = new Scenario("scn100", mission, new Window(start, end));
@@ -559,7 +559,7 @@ namespace IO.Astrodynamics.Tests.Mission
             // rad (to 3 decimals) at the catalog distance
             foreach (var at in new[] { start, start.Add(TimeSpan.FromDays(365)), start.Add(TimeSpan.FromDays(365 + 365)) })
             {
-                var eph = star.GetEphemeris(at, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var eph = star.GetEphemeris(at, observer, Frames.Frame.ICRF, Aberration.None);
                 var expected = IO.Astrodynamics.Tests.Body.StarTests.CatalogPosition(star, at);
                 double relative = (eph.Position - expected).Magnitude() / expected.Magnitude();
                 _output.WriteLine($"MEASURE ScenarioTests.PropagateStar ({(at - start).TotalDays} d): relative position {relative:E3}");
@@ -575,7 +575,7 @@ namespace IO.Astrodynamics.Tests.Mission
             // against CSPICE is the Validation test below
             var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
             var end = start.AddDays(365 * 4);
-            var star = new Star(668006, "star668006", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
+            var star = new Star(668006, "star668006", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
                 start);
             var scenario = new Scenario("scn668b", new Astrodynamics.Mission.Mission("mission668b"), new Window(start, end));
             scenario.AddStar(star);
@@ -623,7 +623,7 @@ namespace IO.Astrodynamics.Tests.Mission
             // Arrange: IsPropagated was always false before (it read an output directory no code set)
             var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
             var end = start.AddDays(365 * 4);
-            var star = new Star(668005, "star668005", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
+            var star = new Star(668005, "star668005", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
                 start);
             var scenario = new Scenario("scn668", new Astrodynamics.Mission.Mission("mission668"), new Window(start, end));
             scenario.AddStar(star);
@@ -648,8 +648,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 int k = 0;
                 for (var epoch = start; epoch <= end; epoch += step, k++)
                 {
-                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None)
-                        .ToStateVector();
+                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                     var catalog = IO.Astrodynamics.Tests.Body.StarTests.SpiceStraightLinePosition(star, 365m * k / 365.25m);
                     double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
                     _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: step {k}, relative position {relative:E3}");
@@ -714,8 +713,8 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.True(simulated.IsPropagated);
             AssertSameEphemeris(reference, simulated, window);
             var earth = TestHelpers.EarthAtJ2000;
-            Assert.NotEqual(velocityVerlet.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position,
-                simulated.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position);
+            Assert.NotEqual(velocityVerlet.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).Position,
+                simulated.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).Position);
         }
 
         [Fact]
@@ -834,8 +833,8 @@ namespace IO.Astrodynamics.Tests.Mission
             var earth = TestHelpers.EarthAtJ2000;
             for (var epoch = window.StartDate; epoch <= window.EndDate; epoch = epoch.AddSeconds(600.0))
             {
-                var expectedState = expected.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                var actualState = actual.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var expectedState = expected.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
+                var actualState = actual.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
                 Assert.Equal(expectedState.Position, actualState.Position);
                 Assert.Equal(expectedState.Velocity, actualState.Velocity);
             }
@@ -901,8 +900,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
             // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
             var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
-            StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None)
-                .ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
+            StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
             scenario.AddSpacecraft(spc);
@@ -917,8 +915,8 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddCelestialItem(new Barycenter(8));
             var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(100.0));
 
-            var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
+            var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
 
             var delta = spcSV.RelativeTo(moon, Aberration.None).ToStateVector();
             var deltaP = delta.Position.Magnitude();
@@ -953,8 +951,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
                 // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
                 var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
-                StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None)
-                    .ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
+                StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
                 Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
                 scenario.AddSpacecraft(spc);
@@ -969,7 +966,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 scenario.AddCelestialItem(new Barycenter(8));
                 var summary = await scenario.SimulateAsync( false, false, step);
 
-                var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
 
                 var delta = spcSV.RelativeTo(moon, Aberration.None).ToStateVector();
                 var deltaP = delta.Position.Magnitude();
@@ -1035,8 +1032,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
                 // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
                 var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
-                StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None)
-                    .ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
+                StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
                 Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
                 scenario.AddSpacecraft(spc);
@@ -1051,7 +1047,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 scenario.AddCelestialItem(new Barycenter(8));
                 var summary = await scenario.SimulateAsync( false, false, step);
 
-                var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
 
                 var delta = spcSV.RelativeTo(moon, Aberration.None).ToStateVector();
                 var deltaP = delta.Position.Magnitude();
@@ -1125,7 +1121,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var step = TimeSpan.FromSeconds(stepSize);
                 var summary2 = await scenario10s.SimulateAsync( false, false, step);
 
-                var spc10SV = spc10s.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var spc10SV = spc10s.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
 
                 var delta = spc10SV.RelativeTo(spc10s,Aberration.None).ToStateVector();
                 var deltaP = delta.Position.Magnitude();

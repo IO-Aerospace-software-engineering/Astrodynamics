@@ -149,7 +149,7 @@ public partial class IntegratorEventTests
         var expectedVelocity = before.EndVelocity + maneuver.DeltaV;
         var last = solution.StateVectors[^1];
         var (_, interpolated) = solution.InterpolateAt(end);
-        var ephemeris = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None).ToStateVector();
+        var ephemeris = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
         double lastOutput = (last.Velocity - expectedVelocity).Magnitude();
         double atEnd = (interpolated - expectedVelocity).Magnitude();
         double stored = (ephemeris.Velocity - expectedVelocity).Magnitude();

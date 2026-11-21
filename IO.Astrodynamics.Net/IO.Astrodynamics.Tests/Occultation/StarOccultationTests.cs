@@ -78,7 +78,7 @@ public class StarOccultationTests
         (double ra, double dec, double parallax) = distancePc == 20.0
             ? (2.407051209225294, 0.30736687728991774, 0.049999989188762965)
             : (2.407051126402387, 0.30736690591041477, 0.00999999956755045);
-        return new Star(533000 + (int)distancePc, $"STAR533_{distancePc}", 1.989e30, "G2V", 5.0, parallax, new Equatorial(dec, ra, S),
+        return new Star(533000 + (int)distancePc, $"STAR533_{distancePc}", 1.989e30, "G2V", 5.0, parallax, Equatorial.FromRightAscensionDeclination(ra, dec, S),
             0.0, properMotionArcsecPerYear * Arcsec, 0.0, 0.0, 0.0, 0.0, S);
     }
 
@@ -189,7 +189,7 @@ public class StarOccultationTests
         var star = NewStar(distancePc, properMotion);
         TimeSystem.Time epoch = S.AddSeconds(3600.0);
 
-        var position = star.GetEphemeris(epoch, dss13, Frames.Frame.ICRF, aberration).ToStateVector().Position;
+        var position = star.GetEphemeris(epoch, dss13, Frames.Frame.ICRF, aberration).Position;
         bool stellar = aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS;
         var expected = ReferenceDirection(distancePc, properMotion, stellar && aberration is Aberration.LTS or Aberration.CNS);
         if (aberration is Aberration.XLTS or Aberration.XCNS)
