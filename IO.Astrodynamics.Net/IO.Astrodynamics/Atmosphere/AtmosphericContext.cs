@@ -1,5 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Atmosphere;
@@ -40,22 +41,20 @@ public record AtmosphericContext : IAtmosphericContext
     };
 
     /// <summary>
-    /// Creates a full context with position and time (for complex atmospheric models).
+    /// Creates a full context with position and time (for complex atmospheric models): the altitude, the geodetic latitude
+    /// and the longitude of <paramref name="planetodetic"/>. It replaces <c>FromPlanetodetic(altitude, geodeticLatitude,
+    /// geodeticLongitude, epoch)</c> of 10.x, whose three doubles ran in the order opposite to that of
+    /// <see cref="Planetodetic"/> (R20 of #668).
     /// </summary>
-    /// <param name="altitude">Altitude in meters.</param>
-    /// <param name="geodeticLatitude">Geodetic latitude in radians.</param>
-    /// <param name="geodeticLongitude">Geodetic longitude in radians.</param>
+    /// <param name="planetodetic">The geodetic coordinates of the point: longitude and latitude in radians, altitude in
+    /// meters.</param>
     /// <param name="epoch">Epoch time.</param>
     /// <returns>Atmospheric context with full data.</returns>
-    public static AtmosphericContext FromPlanetodetic(
-        double altitude,
-        double geodeticLatitude,
-        double geodeticLongitude,
-        Time epoch) => new()
+    public static AtmosphericContext FromPlanetodetic(Planetodetic planetodetic, Time epoch) => new()
     {
-        Altitude = altitude,
-        GeodeticLatitude = geodeticLatitude,
-        GeodeticLongitude = geodeticLongitude,
+        Altitude = planetodetic.Altitude,
+        GeodeticLatitude = planetodetic.Latitude,
+        GeodeticLongitude = planetodetic.Longitude,
         Epoch = epoch
     };
 }

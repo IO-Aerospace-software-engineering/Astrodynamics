@@ -118,7 +118,7 @@ namespace IO.Astrodynamics.Surface
             {
                 _isFromKernel = true;
                 InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, celestialItem, celestialItem.Frame, Aberration.None);
-                Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
+                Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody);
             }
             else
             {
@@ -168,7 +168,7 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public Horizontal GetHorizontalCoordinates(in Time epoch, ILocalizable target, Aberration aberration)
         {
-            var position = target.GetEphemeris(epoch, this, Frame, aberration).ToStateVector().Position;
+            var position = target.GetEphemeris(epoch, this, Frame, aberration).Position;
 
             var az = -System.Math.Atan2(position.Y, position.X);
             if (az < 0)
@@ -182,6 +182,34 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
+        /// The geometric state of the site seen from <paramref name="observer"/> in ICRF at <paramref name="epoch"/>: the read
+        /// of <see cref="GetEphemeris(in Time, ILocalizable, Frame, Aberration)"/> with <see cref="Frames.Frame.ICRF"/> and
+        /// <see cref="Aberration.None"/>, bit for bit (R20 of #668).
+        /// </summary>
+        /// <param name="epoch">The epoch of the state.</param>
+        /// <param name="observer">The origin of the state.</param>
+        /// <returns>The state vector of the site relative to <paramref name="observer"/>, in ICRF, without correction.</returns>
+        public StateVector GetEphemeris(in Time epoch, ILocalizable observer)
+        {
+            return GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None);
+        }
+
+        /// <summary>
+        /// The geometric states of the site seen from <paramref name="observer"/> in ICRF every <paramref name="stepSize"/>
+        /// over <paramref name="searchWindow"/>: the read of
+        /// <see cref="GetEphemeris(in Window, ILocalizable, Frame, Aberration, in TimeSpan)"/> with <see cref="Frames.Frame.ICRF"/>
+        /// and <see cref="Aberration.None"/>, bit for bit (R20 of #668).
+        /// </summary>
+        /// <param name="searchWindow">The window of the states.</param>
+        /// <param name="observer">The origin of the states.</param>
+        /// <param name="stepSize">The step between two states, from the start of the window.</param>
+        /// <returns>The state vectors of the site relative to <paramref name="observer"/>, in ICRF, without correction.</returns>
+        public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, in TimeSpan stepSize)
+        {
+            return GetEphemeris(searchWindow, observer, Frames.Frame.ICRF, Aberration.None, stepSize);
+        }
+
+        /// <summary>
         /// Get site ephemeris
         /// </summary>
         /// <param name="searchWindow"></param>
@@ -190,10 +218,10 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration,
+        public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration,
             in TimeSpan stepSize)
         {
-            var ephemeris = new List<OrbitalParameters.OrbitalParameters>();
+            var ephemeris = new List<StateVector>();
             for (Time i = searchWindow.StartDate; i <= searchWindow.EndDate; i += stepSize)
             {
                 ephemeris.Add(GetEphemeris(i, observer, frame, aberration));
@@ -210,12 +238,12 @@ namespace IO.Astrodynamics.Surface
         {
             if (_isFromKernel)
             {
-                return _dataProvider.GetEphemeris(epoch, this, referenceBody, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                return _dataProvider.GetEphemeris(epoch, this, referenceBody, Frames.Frame.ICRF, Aberration.None);
             }
 
             // Custom site: body-fixed → ICRF
             var siteOnBody = new StateVector(
-                Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
+                Planetodetic.ToCartesianCoordinates(CelestialBody),
                 Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame)
                 .ToFrame(Frames.Frame.ICRF).ToStateVector();
 
@@ -245,7 +273,7 @@ namespace IO.Astrodynamics.Surface
         /// from <c>spkcpt_c</c> seen from the Moon with LT, about 15000 km from the Sun, and the geometric state seen from
         /// its own body (640 m with LT). Without correction, the geometric state is unchanged, bit for bit.
         /// </remarks>
-        public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
+        public StateVector GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
         {
             // For SPICE-backed CelestialItem observers (planets, moons, barycenters, kernel-backed spacecraft)
             if (observer is CelestialItem && observer.IsSpiceBacked)
@@ -259,7 +287,7 @@ namespace IO.Astrodynamics.Surface
                 {
                     // Custom site, geometric: body-fixed computation with RelativeTo for observer change
                     var siteInFrame = new StateVector(
-                        Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
+                        Planetodetic.ToCartesianCoordinates(CelestialBody),
                         Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
                     return siteInFrame.RelativeTo(observer, Aberration.None);
                 }
@@ -280,8 +308,8 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public double AngularSeparation(in Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
         {
-            var target1Position = target1.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
-            var target2Position = target2.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
+            var target1Position = target1.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position;
+            var target2Position = target2.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position;
             return target1Position.Angle(target2Position);
         }
 
@@ -456,8 +484,7 @@ namespace IO.Astrodynamics.Surface
                     evaluateCoordinates = date =>
                     {
                         var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                        var celestialBody = stateVector.Observer as CelestialBody;
-                        var geodetic = stateVector.ToPlanetocentric(aberration).ToPlanetodetic(celestialBody.Flattening, celestialBody.EquatorialRadius);
+                        var geodetic = stateVector.ToPlanetodetic();
                         return coordinate switch
                         {
                             Coordinate.Latitude => geodetic.Latitude,
@@ -559,7 +586,7 @@ namespace IO.Astrodynamics.Surface
         /// </remarks>
         public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
         {
-            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position.Angle(EllipsoidNormalInIcrf(date));
+            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position.Angle(EllipsoidNormalInIcrf(date));
         }
 
         /// <summary>
@@ -575,7 +602,7 @@ namespace IO.Astrodynamics.Surface
         /// <see cref="Frame"/> for a site from coordinates (#690).</remarks>
         public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position;
             return EllipsoidNormalInIcrf(date).Angle(illuminationPosition);
         }
 
@@ -599,8 +626,8 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public double IlluminationPhase(Time date, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
-            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position.Angle(illuminationPosition);
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position;
+            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position.Angle(illuminationPosition);
         }
 
         /// <summary>

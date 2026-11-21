@@ -105,6 +105,22 @@ namespace IO.Astrodynamics.OrbitalParameters
             return this;
         }
 
+        /// <inheritdoc cref="OrbitalParameters.ToFrame(Frame)"/>
+        /// <returns>The state vector in <paramref name="frame"/>: this state when it is in that frame (R20 of #668: typed as
+        /// a state vector, bit for bit the conversion of <see cref="OrbitalParameters.ToFrame(Frame)"/>).</returns>
+        public override StateVector ToFrame(Frame frame)
+        {
+            return (StateVector)base.ToFrame(frame);
+        }
+
+        /// <inheritdoc cref="OrbitalParameters.RelativeTo"/>
+        /// <returns>The state vector relative to <paramref name="localizable"/>: this state when it is its observer (R20 of
+        /// #668: typed as a state vector, bit for bit the conversion of <see cref="OrbitalParameters.RelativeTo"/>).</returns>
+        public override StateVector RelativeTo(ILocalizable localizable, Aberration aberration)
+        {
+            return (StateVector)base.RelativeTo(localizable, aberration);
+        }
+
         /// <summary>
         /// The state vector at a given epoch: this state, with its covariance, at the instant of <see cref="OrbitalParameters.Epoch"/>;
         /// the two-body motion of <see cref="OrbitalParameters.AtEpoch"/>, without a covariance, at any other instant.

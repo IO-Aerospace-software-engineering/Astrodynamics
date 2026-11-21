@@ -584,6 +584,34 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
+    /// The geometric state of this item seen from <paramref name="observer"/> in ICRF at <paramref name="epoch"/>: the read
+    /// of <see cref="GetEphemeris(in Time, ILocalizable, Frame, Aberration)"/> with <see cref="Frame.ICRF"/> and
+    /// <see cref="Aberration.None"/>, bit for bit, the defaults of the propagation and of the attitude targets (R20 of #668).
+    /// </summary>
+    /// <param name="epoch">The epoch of the state.</param>
+    /// <param name="observer">The origin of the state.</param>
+    /// <returns>The state vector of this item relative to <paramref name="observer"/>, in ICRF, without correction.</returns>
+    public StateVector GetEphemeris(in Time epoch, ILocalizable observer)
+    {
+        return GetEphemeris(epoch, observer, Frame.ICRF, Aberration.None);
+    }
+
+    /// <summary>
+    /// The geometric states of this item seen from <paramref name="observer"/> in ICRF every <paramref name="stepSize"/> over
+    /// <paramref name="searchWindow"/>: the read of
+    /// <see cref="GetEphemeris(in Window, ILocalizable, Frame, Aberration, in TimeSpan)"/> with <see cref="Frame.ICRF"/>
+    /// and <see cref="Aberration.None"/>, bit for bit (R20 of #668).
+    /// </summary>
+    /// <param name="searchWindow">The window of the states.</param>
+    /// <param name="observer">The origin of the states.</param>
+    /// <param name="stepSize">The step between two states, from the start of the window.</param>
+    /// <returns>The state vectors of this item relative to <paramref name="observer"/>, in ICRF, without correction.</returns>
+    public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, in TimeSpan stepSize)
+    {
+        return GetEphemeris(searchWindow, observer, Frame.ICRF, Aberration.None, stepSize);
+    }
+
+    /// <summary>
     /// Get ephemeris
     /// </summary>
     /// <remarks>
@@ -598,11 +626,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
+    public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
         // An upper bound of the count: the Length counts the leap seconds the calendar placement does not
         var occurences = (int)((searchWindow.Length / stepSize) + 1);
-        var ephemeris = new List<OrbitalParameters.OrbitalParameters>(occurences);
+        var ephemeris = new List<StateVector>(occurences);
         for (int i = 0; i < occurences; i++)
         {
             var epoch = searchWindow.StartDate + stepSize * i;
@@ -625,7 +653,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// (<see cref="ApparentStateFromReferenceBody"/>; before 11.0.0 at <paramref name="epoch"/>, 620 m off for the Moon seen
     /// from DSS-13 in ITRF93 with LT and 1.48 km in MOON_ME, #593).
     /// </summary>
-    public virtual OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+    public virtual StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
         // For SPICE-backed CelestialItem observers, use SPICE directly (handles aberration natively).
         // Sites are not CelestialItems and handle their own SPICE delegation in Site.GetEphemeris.
@@ -871,7 +899,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         return (t, _) =>
         {
-            var fromSsb = SpiceAPI.Instance.ReadEphemeris(t, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, centerId, Frame.ICRF, Aberration.None).ToStateVector();
+            var fromSsb = SpiceAPI.Instance.ReadEphemeris(t, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, centerId, Frame.ICRF, Aberration.None);
             if (referenceBody.NaifId == Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId)
             {
                 return new StateVector(fromSsb.Position, fromSsb.Velocity, referenceBody, t, Frame.ICRF);
@@ -912,7 +940,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         if (NaifId == referenceBody.NaifId)
             return new StateVector(Vector3.Zero, Vector3.Zero, referenceBody, epoch, Frame.ICRF);
-        return ItemProvider.GetEphemeris(epoch, this, referenceBody, Frame.ICRF, Aberration.None).ToStateVector();
+        return ItemProvider.GetEphemeris(epoch, this, referenceBody, Frame.ICRF, Aberration.None);
     }
 
     /// <summary>
@@ -1134,7 +1162,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     internal virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return ItemProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None).ToStateVector();
+        return ItemProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None);
     }
 
     /// <summary>
@@ -1159,8 +1187,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public double AngularSeparation(in Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
     {
-        var target1Position = target1.GetEphemeris(epoch, this, Frame.ICRF, aberration).ToStateVector().Position;
-        var target2Position = target2.GetEphemeris(epoch, this, Frame.ICRF, aberration).ToStateVector().Position;
+        var target1Position = target1.GetEphemeris(epoch, this, Frame.ICRF, aberration).Position;
+        var target2Position = target2.GetEphemeris(epoch, this, Frame.ICRF, aberration).Position;
         return target1Position.Angle(target2Position);
     }
 
@@ -1174,9 +1202,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public double AngularSeparation(in Time epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
     {
-        var target1Position = target1.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
+        var target1Position = target1.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).Position -
                               fromPosition.ToStateVector().Position;
-        var target2Position = this.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
+        var target2Position = this.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).Position -
                               fromPosition.ToStateVector().Position;
         return target1Position.NormalizeOrZero().Angle(target2Position.NormalizeOrZero());
     }
@@ -1274,7 +1302,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     private static OccultationBody OccultationBodyAt(OccultationBodyModel model, OrbitalParameters.OrbitalParameters from, in Vector3 observer,
         Aberration aberration)
     {
-        var position = model.Item.GetEphemeris(from.Epoch, from.Observer, Frame.ICRF, aberration).ToStateVector().Position - observer;
+        var position = model.Item.GetEphemeris(from.Epoch, from.Observer, Frame.ICRF, aberration).Position - observer;
         double lightTime = aberration switch
         {
             Aberration.None => 0.0,
@@ -1354,7 +1382,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public double ShadowFraction(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
     {
         double backSize = AngularSize((GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
-        double bySize = by.AngularSize((by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
+        double bySize = by.AngularSize((by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).Position - from.ToStateVector().Position).Magnitude());
         var angularSeparation = this.AngularSeparation(from.Epoch, by, from, aberration);
         return ShadowFraction(angularSeparation, backSize, bySize);
     }
@@ -1709,8 +1737,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 evaluateCoordinates = date =>
                 {
                     var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                    var celestialBody = stateVector.Observer as CelestialBody;
-                    var geodetic = stateVector.ToPlanetocentric(aberration).ToPlanetodetic(celestialBody.Flattening, celestialBody.EquatorialRadius);
+                    var geodetic = stateVector.ToPlanetodetic();
                     return coordinate switch
                     {
                         Coordinate.Latitude => geodetic.Latitude,

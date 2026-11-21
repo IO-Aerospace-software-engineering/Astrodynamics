@@ -1197,7 +1197,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Converts the orbital parameters to a different reference frame.
     /// </summary>
     /// <param name="frame">The reference frame to which to convert the orbital parameters.</param>
-    /// <returns>The orbital parameters in the new reference frame.</returns>
+    /// <returns>The orbital parameters in the new reference frame: these parameters themselves when they are in
+    /// <paramref name="frame"/> (a <see cref="TLE.TLE"/> in TEME stays the TLE), otherwise their
+    /// <see cref="StateVector"/> in the new frame; <see cref="StateVector.ToFrame(Frame)"/> is typed as that state vector
+    /// (R20 of #668).</returns>
     /// <remarks>
     /// <para>
     /// The state transforms as r' = R r and v' = R v - (R ω) × r', where R and ω come from
@@ -1219,7 +1222,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 an <see cref="InvalidOperationException"/>).</exception>
     /// <exception cref="InvalidOperationException">The data do not give the orientation of a known frame at the epoch
     /// (SPICE's <see cref="Exceptions.SpiceException"/>).</exception>
-    public OrbitalParameters ToFrame(Frame frame)
+    public virtual OrbitalParameters ToFrame(Frame frame)
     {
         if (frame == Frame)
         {
@@ -1314,29 +1317,59 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </remarks>
     /// <param name="localizable">The localizable object to which to convert the orbital parameters.</param>
     /// <param name="aberration">The correction of the new origin, seen from the current observer.</param>
-    /// <returns>The orbital parameters relative to the specified localizable object.</returns>
-    public OrbitalParameters RelativeTo(ILocalizable localizable, Aberration aberration)
+    /// <returns>The orbital parameters relative to the specified localizable object: these parameters themselves when it is
+    /// their observer, otherwise a <see cref="StateVector"/>; <see cref="StateVector.RelativeTo"/> is typed as that state
+    /// vector (R20 of #668).</returns>
+    public virtual OrbitalParameters RelativeTo(ILocalizable localizable, Aberration aberration)
     {
         if (localizable.NaifId == this.Observer.NaifId)
         {
             return this;
         }
 
-        var eph = localizable.GetEphemeris(Epoch, Observer, Frame, aberration).ToStateVector();
+        var eph = localizable.GetEphemeris(Epoch, Observer, Frame, aberration);
         var position = (ToStateVector().Position - eph.Position);
         var velocity = (ToStateVector().Velocity - eph.Velocity);
         return new StateVector(position, velocity, localizable, eph.Epoch, Frame);
     }
 
     /// <summary>
-    /// Converts the orbital parameters to planetocentric coordinates.
+    /// The planetocentric coordinates of the position in the body-fixed frame of the observer, a
+    /// <see cref="CelestialBody"/>: the position rotated to the body's frame at the epoch (<see cref="ToFrame(Frame)"/>),
+    /// then longitude atan2(y, x), latitude asin(z / r) and radius r (CSPICE <c>reclat_c</c>).
     /// </summary>
-    /// <param name="aberration">The aberration to consider in the conversion.</param>
-    /// <returns>The planetocentric coordinates.</returns>
-    public Planetocentric ToPlanetocentric(Aberration aberration)
+    /// <returns>The planetocentric longitude and latitude (rad) and radius (m) of the position.</returns>
+    /// <remarks>Before 11.0.0 <c>ToPlanetocentric(Aberration)</c>, whose correction was not used (R20 of #668).</remarks>
+    /// <exception cref="InvalidOperationException">The observer is not a <see cref="CelestialBody"/>, which has no
+    /// body-fixed frame (before 11.0.0 an <see cref="InvalidCastException"/>).</exception>
+    public Planetocentric ToPlanetocentric()
     {
-        var body = Observer as CelestialBody;
-        return ((CelestialBody)Observer).SubObserverPoint(ToFrame(body!.Frame).ToStateVector().Position, Epoch, aberration);
+        var body = ObserverBody(nameof(ToPlanetocentric));
+        var position = ToFrame(body.Frame).ToStateVector().Position;
+        double radius = position.Magnitude();
+        return new Planetocentric(System.Math.Atan2(position.Y, position.X), System.Math.Asin(position.Z / radius), radius);
+    }
+
+    /// <summary>
+    /// The planetodetic (geodetic) coordinates of the position on the ellipsoid of the observer, a
+    /// <see cref="CelestialBody"/>, in its body-fixed frame: <see cref="ToPlanetocentric()"/> then
+    /// <see cref="Planetocentric.ToPlanetodetic(CelestialBody)"/>, bit for bit, in one call (R20 of #668).
+    /// </summary>
+    /// <returns>The geodetic longitude and latitude (rad) and altitude (m) of the position, CSPICE <c>recgeo_c</c>'s on the
+    /// body's equatorial radius and flattening.</returns>
+    /// <exception cref="InvalidOperationException">The observer is not a <see cref="CelestialBody"/>, which has no
+    /// ellipsoid.</exception>
+    public Planetodetic ToPlanetodetic()
+    {
+        var body = ObserverBody(nameof(ToPlanetodetic));
+        return ToPlanetocentric().ToPlanetodetic(body);
+    }
+
+    // The observer as the body whose frame and ellipsoid the coordinates take
+    private CelestialBody ObserverBody(string conversion)
+    {
+        return Observer as CelestialBody ?? throw new InvalidOperationException(
+            $"{conversion} needs an observer that is a celestial body, with a body-fixed frame and an ellipsoid: the observer of these parameters is {Observer.Name} ({Observer.NaifId}).");
     }
 
     /// <summary>

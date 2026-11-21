@@ -530,7 +530,7 @@ public static class ConjunctionAssessment
                 return new StateVector(position, velocity, _forceModel.Observer, burnEpoch, _forceModel.Frame);
             }
 
-            return _spacecraft.GetEphemeris(burnEpoch, _forceModel.Observer, _forceModel.Frame, Aberration.None).ToStateVector();
+            return _spacecraft.GetEphemeris(burnEpoch, _forceModel.Observer, _forceModel.Frame, Aberration.None);
         }
 
         // The mass of the trajectory at the burn, that of the spacecraft without a propagation
@@ -2386,7 +2386,7 @@ public static class ConjunctionAssessment
 
     private static StateVector GetState(ILocalizable localizable, Time epoch, ILocalizable observer)
     {
-        return localizable.GetEphemeris(epoch, observer, Frame.ICRF, Aberration.None).ToStateVector();
+        return localizable.GetEphemeris(epoch, observer, Frame.ICRF, Aberration.None);
     }
 
     // --- Core encounter building ---

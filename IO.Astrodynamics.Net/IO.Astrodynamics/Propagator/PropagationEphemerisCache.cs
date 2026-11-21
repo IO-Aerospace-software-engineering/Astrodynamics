@@ -104,7 +104,7 @@ internal sealed class PropagationEphemerisCache : IDisposable
             {
                 double epochSec = _startEpochSeconds + i * _gridStepSeconds;
                 var epoch = Time.CreateTDB(epochSec);
-                var sv = body.GetEphemeris(epoch, observer, frame, aberration).ToStateVector();
+                var sv = body.GetEphemeris(epoch, observer, frame, aberration);
                 points[i] = new EphemerisPoint(sv.Position, sv.Velocity, epochSec);
             }
 
@@ -209,7 +209,7 @@ internal sealed class PropagationEphemerisCache : IDisposable
 
     // The state of the body at the epoch, from the data provider, in the frame of the cache
     private StateVector ReadAt(int bodyNaifId, Aberration aberration, in Time epoch) =>
-        _bodies[(bodyNaifId, aberration)].GetEphemeris(epoch, _observer, Frame, aberration).ToStateVector();
+        _bodies[(bodyNaifId, aberration)].GetEphemeris(epoch, _observer, Frame, aberration);
 
     /// <summary>
     /// Check whether this cache contains data for the given body and aberration mode.

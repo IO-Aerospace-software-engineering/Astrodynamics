@@ -310,7 +310,7 @@ public class Star : CelestialBody
             }
         }
 
-        return new Equatorial(dec, ra, distance, epoch);
+        return Equatorial.FromRightAscensionDeclination(ra, dec, distance, epoch);
     }
 
     /// <summary>
@@ -388,7 +388,7 @@ public class Star : CelestialBody
     /// read a star (#533). Before 11.0.0 the star was read at t − lt, its light time, 65 years at 20 pc: its proper
     /// motion over that time moved its direction (6.2″ for 0.1″/yr at 20 pc).
     /// </remarks>
-    public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+    public override StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
         var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         var starSsb = GetGeometricStateRelativeTo(epoch, ssb);

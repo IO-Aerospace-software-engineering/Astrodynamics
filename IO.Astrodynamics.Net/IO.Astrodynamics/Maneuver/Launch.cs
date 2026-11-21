@@ -184,7 +184,7 @@ namespace IO.Astrodynamics.Maneuver
                 double inertialInsertionVelocity = GetInertialInsertionVelocity();
                 double inertialAscendingAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
 
-                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000TDB, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).ToStateVector().Velocity.Magnitude();
+                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000TDB, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).Velocity.Magnitude();
 
                 double vrotx = inertialInsertionVelocity * System.Math.Sin(inertialAscendingAzimuthLaunch) -
                                launchSiteVelocityMagnitude;
@@ -254,7 +254,7 @@ namespace IO.Astrodynamics.Maneuver
                 double inertialInsertionVelocity = GetInertialInsertionVelocity();
                 double inertialAscendingAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
 
-                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000TDB, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).ToStateVector().Velocity.Magnitude();
+                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000TDB, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).Velocity.Magnitude();
 
                 double vrotx = inertialInsertionVelocity * System.Math.Sin(inertialAscendingAzimuthLaunch) -
                                launchSiteVelocityMagnitude;
@@ -276,14 +276,14 @@ namespace IO.Astrodynamics.Maneuver
             // Compute the dot product between the specific angular momentum vector of the target orbit
             // and the position vector of the launch site at the given date
             Vector3 h = TargetOrbit.ToStateVector().ToFrame(Frame.ICRF).SpecificAngularMomentum();
-            Vector3 r = LaunchSite.GetEphemeris(date, LaunchSite.CelestialBody, Frame.ICRF, Aberration.None).ToStateVector().Position;
+            Vector3 r = LaunchSite.GetEphemeris(date, LaunchSite.CelestialBody, Frame.ICRF, Aberration.None).Position;
             return h.Dot(r) > 0.0;
         }
 
         private bool IsAscending(in Time date)
         {
             // Determine if the launch will be ascending based on the dot product with the ascending node vector
-            Vector3 launchSitePosition = LaunchSite.GetEphemeris(date, LaunchSite.CelestialBody, Frame.ICRF, Aberration.None).ToStateVector().Position;
+            Vector3 launchSitePosition = LaunchSite.GetEphemeris(date, LaunchSite.CelestialBody, Frame.ICRF, Aberration.None).Position;
             Vector3 ascendingNodeVector = TargetOrbit.ToStateVector().ToFrame(Frame.ICRF).AscendingNodeVector();
             return launchSitePosition.Dot(ascendingNodeVector) > 0.0;
         }

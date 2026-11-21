@@ -556,8 +556,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
 
         CelestialBody sun = Stars.SUN_BODY;
         var sideralRotation = SideralRotationPeriod(epoch);
-        var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
-        var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
+        var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPTIC_J2000, Aberration.LT).Position;
+        var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPTIC_J2000, Aberration.LT).Position;
         var angle = eph0.Angle(eph1);
         return sideralRotation + Time.SecondsToSpan(angle / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
@@ -671,7 +671,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             return model.GetDensity(altitude, geodeticLatitude, geodeticLongitude, epoch);
         }
 
-        return GetAirDensity(AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch));
+        return GetAirDensity(AtmosphericContext.FromPlanetodetic(new Coordinates.Planetodetic(geodeticLongitude, geodeticLatitude, altitude), epoch));
     }
 
     /// <summary>

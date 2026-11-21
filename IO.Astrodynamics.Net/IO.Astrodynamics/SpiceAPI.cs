@@ -1890,7 +1890,7 @@ public class SpiceAPI
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
     /// <see cref="Aberration.None"/>, read the site as target from the observer and negate the state (documented in the
     /// fourth round of #668).</remarks>
-    public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
+    public IEnumerable<OrbitalParameters.StateVector> ReadEphemeris(TimeSystem.Window searchWindow,
         int observerId, int targetId, Frame frame,
         Aberration aberration, TimeSpan stepSize)
     {
@@ -1900,7 +1900,7 @@ public class SpiceAPI
         var observer = CreateObserver(observerId);
         lock (lockObject)
         {
-            List<OrbitalParameters.OrbitalParameters> orbitalParameters = [];
+            List<OrbitalParameters.StateVector> orbitalParameters = [];
             // A managed frame is read in J2000, then rotated (#558)
             var managed = ManagedReadFrame(frame);
             string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
@@ -2012,7 +2012,7 @@ public class SpiceAPI
     /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
     /// <see cref="Aberration.None"/>, read the site as target from the observer and negate the state (documented in the
     /// fourth round of #668).</remarks>
-    public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, int observerId,
+    public OrbitalParameters.StateVector ReadEphemeris(Time epoch, int observerId,
         int targetId, Frame frame, Aberration aberration)
     {
         ArgumentNullException.ThrowIfNull(frame);

@@ -35,17 +35,14 @@ public class InitialOrbitDetermination
         // from the Earth's centre, about 500 s of the Earth's orbit for any site seen from the Sun
         Vector3 R1 = observer
             .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
-            .ToStateVector()
             .Position / distanceScale;
 
         Vector3 R2 = observer
             .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
-            .ToStateVector()
             .Position / distanceScale;
 
         Vector3 R3 = observer
             .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
-            .ToStateVector()
             .Position / distanceScale;
 
         // Step 2: Convert equatorial coordinates to unit direction vectors
