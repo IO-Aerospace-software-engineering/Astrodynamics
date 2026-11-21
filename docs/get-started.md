@@ -84,8 +84,7 @@ var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
-var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
-    .ToStateVector();
+var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None);
 
 Console.WriteLine($"Position: {stateVector.Position}");
 Console.WriteLine($"Velocity: {stateVector.Velocity}");

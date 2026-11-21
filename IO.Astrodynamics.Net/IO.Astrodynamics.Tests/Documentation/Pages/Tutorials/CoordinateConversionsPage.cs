@@ -72,7 +72,7 @@ internal static class CoordinateConversionsPage
             new Vector3(0.0, 7700.0, 0.0),
             earth, epoch, Frame.ICRF);
 
-        var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+        var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000);
 
         Console.WriteLine($"ICRF position:     {svICRF.Position}");
         Console.WriteLine($"Ecliptic position: {svEcliptic.Position}");
@@ -86,7 +86,7 @@ internal static class CoordinateConversionsPage
         #region docs/tutorials/coordinate-conversions.md:2
         // Inputs: svICRF (StateVector)
         var earthFrame = new Frame("IAU_EARTH");
-        var svBodyFixed = svICRF.ToFrame(earthFrame).ToStateVector();
+        var svBodyFixed = svICRF.ToFrame(earthFrame);
 
         Console.WriteLine($"Body-fixed position: {svBodyFixed.Position}");
         #endregion
@@ -144,8 +144,20 @@ internal static class CoordinateConversionsPage
         #region docs/tutorials/coordinate-conversions.md:6
         // Inputs: coords (Planetodetic)
         var earth = PlanetsAndMoons.EARTH_BODY;
-        var planetocentric = coords.ToPlanetocentric(earth.Flattening, earth.EquatorialRadius);
-        var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadius); // coords, to about 1e-15
+        var planetocentric = coords.ToPlanetocentric(earth);
+        var back = planetocentric.ToPlanetodetic(earth); // coords, to about 1e-15
         #endregion
+    }
+
+    // docs/tutorials/coordinate-conversions.md, "Planetodetic Coordinates"
+    internal static (Planetodetic Below, Vector3 Position) Block07(StateVector svICRF, Planetodetic coords)
+    {
+        #region docs/tutorials/coordinate-conversions.md:7
+        // Inputs: svICRF (StateVector), coords (Planetodetic)
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        Planetodetic below = svICRF.ToPlanetodetic();            // in IAU_EARTH at the state's epoch, as CSPICE recgeo_c
+        Vector3 position = coords.ToCartesianCoordinates(earth); // body-fixed position, m, as CSPICE georec_c
+        #endregion
+        return (below, position);
     }
 }

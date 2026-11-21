@@ -16,6 +16,7 @@ using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.CCSDS.OMM;
 using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.DataProvider;
@@ -249,11 +250,8 @@ namespace ClaudeMdSamples
 
             // Full context with NRLMSISE-00
             var fullContext = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000,                           // 400 km
-                geodeticLatitude: 45 * Constants.Deg2Rad,
-                geodeticLongitude: -75 * Constants.Deg2Rad,
-                epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
-            );
+                new Planetodetic(-75 * Constants.Deg2Rad, 45 * Constants.Deg2Rad, 400000),  // longitude, latitude (rad), altitude (m): 400 km
+                new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB));
             var nrlmsise = new Nrlmsise00Model(SpaceWeather.Nominal);
             var thermosphere = nrlmsise.GetAtmosphere(fullContext);
 

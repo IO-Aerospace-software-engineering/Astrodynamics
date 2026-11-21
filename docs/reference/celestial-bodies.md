@@ -61,8 +61,10 @@ identifiers they are objects of the kernels read by their identifier
 
 | Method | Description |
 |--------|-------------|
-| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state at epoch |
-| `GetEphemeris(Window, ILocalizable, Frame, Aberration, TimeSpan)` | Get states over window: every step from the start, in the window's calendar, up to its end (across a leap second the end bounds them, #682) |
+| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state at epoch, a `StateVector` (11.0.0: typed `OrbitalParameters` before, R20 of #668) |
+| `GetEphemeris(Time, ILocalizable)` | Get state at epoch in ICRF without correction, bit for bit the read with `Frame.ICRF` and `Aberration.None` (11.0.0) |
+| `GetEphemeris(Window, ILocalizable, Frame, Aberration, TimeSpan)` | Get states over window, `StateVector`s: every step from the start, in the window's calendar, up to its end (across a leap second the end bounds them, #682) |
+| `GetEphemeris(Window, ILocalizable, TimeSpan)` | Get states over window in ICRF without correction (11.0.0) |
 | `GetOrientation(Frame, Time)` | Get body orientation |
 | `GeosynchronousOrbit(double, double, Time)` | Compute geosynchronous orbit, of the sidereal rotation period of the body frame at the epoch |
 | `GeosynchronousOrbit(double, double, Time, TimeSpan)` | Compute geosynchronous orbit of a declared period |
@@ -79,7 +81,7 @@ identifiers they are objects of the kernels read by their identifier
 // Inputs: epoch (Time)
 var earth = PlanetsAndMoons.EARTH_BODY;
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
-var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
+var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 ```
 
 ## CelestialItem

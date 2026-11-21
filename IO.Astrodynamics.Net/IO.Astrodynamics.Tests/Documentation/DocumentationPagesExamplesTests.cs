@@ -595,8 +595,8 @@ public class DocumentationPagesExamplesTests
         // The separation of the discs minus the sum of their angular radii, for the Earth's radius given
         double Margin(TimeSystem.Time at, double earthRadius)
         {
-            var toEarth = SpiceAPI.Instance.ReadEphemeris(at, 10, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
-            var toMoon = SpiceAPI.Instance.ReadEphemeris(at, 10, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+            var toEarth = SpiceAPI.Instance.ReadEphemeris(at, 10, 399, Frames.Frame.ICRF, Aberration.None).Position;
+            var toMoon = SpiceAPI.Instance.ReadEphemeris(at, 10, 301, Frames.Frame.ICRF, Aberration.None).Position;
             return Angle(toEarth, toMoon) - System.Math.Asin(earthRadius / toEarth.Magnitude()) - System.Math.Asin(moon.EquatorialRadius / toMoon.Magnitude());
         }
 

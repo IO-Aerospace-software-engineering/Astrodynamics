@@ -127,7 +127,7 @@ internal static class TleAndOmmPage
         new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
 
         var end = solution.StateVectors[^1];
-        var sgp4AtEnd = tle.ToStateVector(end.Epoch).ToFrame(Frame.ICRF).ToStateVector();
+        var sgp4AtEnd = tle.ToStateVector(end.Epoch).ToFrame(Frame.ICRF);
         Console.WriteLine($"Numerical - SGP4 after 6 h: {(end.Position - sgp4AtEnd.Position).Magnitude():F0} m");
         #endregion
     }

@@ -112,8 +112,10 @@ small angular momentum.
 | `ToKeplerianElements()` | Convert to Keplerian elements |
 | `ToEquinoctial()` | Convert to equinoctial elements |
 | `ToEquatorial()` | Right ascension and declination in ICRF, whatever the frame of the state (rotated at its epoch, #680), and the distance |
-| `ToFrame(Frame)` | Transform to different reference frame |
-| `RelativeTo(ILocalizable, Aberration)` | Transform to a different center: the state minus the new center as the current center sees it, corrected by the aberration; the state itself is not moved in time, so the result is not the object seen from the new center with light time (for a site, `Site.GetEphemeris`, [#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)) |
+| `ToFrame(Frame)` | Transform to different reference frame; on a `StateVector` typed as a `StateVector` (11.0.0, R20 of #668), this state when it is in that frame |
+| `ToPlanetocentric()` | Longitude, planetocentric latitude and radius of the position in the body-fixed frame of the observer, a `CelestialBody`, at the epoch (`reclat_c`); `InvalidOperationException` for another observer (11.0.0, replaces `ToPlanetocentric(Aberration)`, whose correction was not used) |
+| `ToPlanetodetic()` | Geodetic longitude, latitude and altitude of the position on the ellipsoid of the observer, a `CelestialBody`, in its body-fixed frame at the epoch (`recgeo_c`): `ToPlanetocentric()` then `ToPlanetodetic(body)` in one call, bit for bit; `InvalidOperationException` for another observer (11.0.0) |
+| `RelativeTo(ILocalizable, Aberration)` | Typed as a `StateVector` on a `StateVector` (11.0.0); transform to a different center: the state minus the new center as the current center sees it, corrected by the aberration; the state itself is not moved in time, so the result is not the object seen from the new center with light time (for a site, `Site.GetEphemeris`, [#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)) |
 | `Inverse()` | Invert position and velocity |
 | `ToTLE(TLE.Configuration)` | Convert to TLE format (a fit of SGP4 mean elements in TEME); an orbit about the Earth only, `InvalidOperationException` naming the centre otherwise (#607) |
 

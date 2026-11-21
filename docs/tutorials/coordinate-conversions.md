@@ -28,7 +28,7 @@ var svICRF = new StateVector(
     new Vector3(0.0, 7700.0, 0.0),
     earth, epoch, Frame.ICRF);
 
-var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000);
 
 Console.WriteLine($"ICRF position:     {svICRF.Position}");
 Console.WriteLine($"Ecliptic position: {svEcliptic.Position}");
@@ -43,7 +43,7 @@ Transform to a body-fixed frame to get coordinates that rotate with the body:
 ```csharp
 // Inputs: svICRF (StateVector)
 var earthFrame = new Frame("IAU_EARTH");
-var svBodyFixed = svICRF.ToFrame(earthFrame).ToStateVector();
+var svBodyFixed = svICRF.ToFrame(earthFrame);
 
 Console.WriteLine($"Body-fixed position: {svBodyFixed.Position}");
 ```
@@ -122,8 +122,19 @@ altitude, on the surface as in orbit:
 ```csharp
 // Inputs: coords (Planetodetic)
 var earth = PlanetsAndMoons.EARTH_BODY;
-var planetocentric = coords.ToPlanetocentric(earth.Flattening, earth.EquatorialRadius);
-var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadius); // coords, to about 1e-15
+var planetocentric = coords.ToPlanetocentric(earth);
+var back = planetocentric.ToPlanetodetic(earth); // coords, to about 1e-15
+```
+
+The geodetic coordinates of a state take one call, on the ellipsoid of its observer and in its body-fixed frame at the
+state's epoch (an observer that is not a `CelestialBody` throws `InvalidOperationException`), and the body-fixed
+position of a geodetic point one more:
+
+```csharp
+// Inputs: svICRF (StateVector), coords (Planetodetic)
+var earth = PlanetsAndMoons.EARTH_BODY;
+Planetodetic below = svICRF.ToPlanetodetic();            // in IAU_EARTH at the state's epoch, as CSPICE recgeo_c
+Vector3 position = coords.ToCartesianCoordinates(earth); // body-fixed position, m, as CSPICE georec_c
 ```
 
 ## Summary
@@ -131,4 +142,4 @@ var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadiu
 - All frame transforms pivot through ICRF. Use `ToFrame` to convert between any supported frames.
 - Body-fixed frames (`IAU_EARTH`, `IAU_MOON`, etc.) rotate with the body.
 - GCRF, CIRS, and TIRS frames provide the IAU CIO-based Earth orientation chain.
-- `ToEquatorial` extracts the ICRF RA/Dec whatever the frame of the state; `Planetodetic` represents geodetic surface coordinates.
+- `ToEquatorial` extracts the ICRF RA/Dec whatever the frame of the state; `Planetodetic` represents geodetic surface coordinates, and `ToPlanetodetic()` gives those of a state in one call.

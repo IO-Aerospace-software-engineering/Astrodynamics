@@ -67,7 +67,7 @@ internal static class CelestialBodiesPage
         // Inputs: epoch (Time)
         var earth = PlanetsAndMoons.EARTH_BODY;
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
+        var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
         #endregion
     }
 }

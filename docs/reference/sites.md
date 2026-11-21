@@ -26,7 +26,8 @@ Ground-based observation or tracking site.
 | Method | Description |
 |--------|-------------|
 | `GetHorizontalCoordinates(Time, ILocalizable, Aberration)` | Get azimuth, elevation, range |
-| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer: a site of the kernels seen from a body, a barycenter or a kernel spacecraft by `spkezr_c`; a site given by its coordinates corrected as `spkcpt_c` corrects it, the site itself at t ∓ lt ([Light time of a site](#light-time-of-a-site)) |
+| `GetEphemeris(Time, ILocalizable)` | Get site state relative to observer in ICRF without correction, bit for bit the read with `Frame.ICRF` and `Aberration.None`; `GetEphemeris(Window, ILocalizable, TimeSpan)` over a window (11.0.0, R20 of #668) |
+| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer, a `StateVector` (11.0.0): a site of the kernels seen from a body, a barycenter or a kernel spacecraft by `spkezr_c`; a site given by its coordinates corrected as `spkcpt_c` corrects it, the site itself at t ∓ lt ([Light time of a site](#light-time-of-a-site)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnCoordinateConstraint(...)` | Find coordinate constraint windows of this site seen from an observer; for the visibility of a spacecraft, search the spacecraft from the site: `spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, mask, 0.0, aberration, step)` (the declination in the site's frame is the elevation) |
@@ -233,9 +234,12 @@ Specialized site for launch operations.
 | `Latitude` | Latitude (rad) |
 | `Altitude` | Altitude above ellipsoid (m) |
 
-`Planetodetic.ToPlanetocentric(flattening, equatorialRadius)` and `Planetocentric.ToPlanetodetic(flattening,
-equatorialRadius)` convert between geodetic and planetocentric coordinates on the ellipsoid of revolution of the body
-(its equatorial radius and flattening, from the PCK), exactly at any altitude: the geodetic latitude is that of the
+`Planetodetic.ToPlanetocentric(body)` and `Planetocentric.ToPlanetodetic(body)` convert between geodetic and
+planetocentric coordinates on the ellipsoid of revolution of the `CelestialBody` (its equatorial radius and flattening,
+from the PCK), exactly at any altitude, `Planetodetic.ToCartesianCoordinates(body)` gives the body-fixed position
+(`georec_c`) and `StateVector.ToPlanetodetic()` the geodetic coordinates of a state on the ellipsoid of its observer in
+one call (11.0.0, R20 of #668: before, the ellipsoid was given as a flattening and a radius, in the order opposite to
+that of `RadiusFromPlanetocentricLatitude(equatorialRadius, flattening)`, so a swap compiled): the geodetic latitude is that of the
 normal to the ellipsoid through the point, and the altitude is measured along it. Oblate, spherical and prolate bodies
 are covered; the flattening must be below 1. The conversion from Cartesian coordinates is the closed form of Vermeille
 (2002) with the changes of Karney (2011), without iteration; both directions agree with CSPICE `georec_c`/`recgeo_c` to
