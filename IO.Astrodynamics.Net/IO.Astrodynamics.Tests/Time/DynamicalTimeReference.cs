@@ -1,8 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
-using IO.Astrodynamics.TimeSystem.Frames;
-
 namespace IO.Astrodynamics.Tests.Time;
 
 /// <summary>
@@ -24,7 +23,7 @@ internal static class DynamicalTimeReference
     private const double Eb = 1.671e-2;
     private const double M0 = 6.239996;
     private const double M1 = 1.99096871e-7;
-    private static readonly long J2000Ticks = TimeSystem.Time.J2000.Ticks;
+    private static readonly long J2000Ticks = TimeSystem.Time.J2000Calendar.Ticks;
 
     /// <summary>The bound of a difference through a TDB tag: twice the largest departure of the two series.</summary>
     internal const double SeriesBound = 2.49e-6;
@@ -75,31 +74,27 @@ internal static class DynamicalTimeReference
     private static (long Ticks, double Correction) TtParts(TimeSystem.Time time)
     {
         long ticks = time.DateTime.Ticks;
-        switch (time.Frame)
+        switch (time.Scale)
         {
-            case TDTTimeFrame:
+            case TimeScale.TT:
                 return (ticks, 0.0);
-            case TAITimeFrame:
+            case TimeScale.TAI:
                 return (ticks + Seconds(32.184), 0.0);
-            case GPSTimeFrame:
+            case TimeScale.GPS:
                 return (ticks + Seconds(19.0 + 32.184), 0.0);
-            case UTCTimeFrame:
+            case TimeScale.UTC:
                 return (ticks + Seconds(TaiMinusUtc(time.DateTime) + 32.184), 0.0);
-            case LocalTimeFrame:
-                // The UTC of the local time, by the time zone of the system
-                var utc = DateTime.SpecifyKind(time.DateTime, DateTimeKind.Local).ToUniversalTime();
-                return (utc.Ticks + Seconds(TaiMinusUtc(utc) + 32.184), 0.0);
-            case TDBTimeFrame:
+            case TimeScale.TDB:
                 return (ticks, -TdbMinusTtAtTdb((ticks - J2000Ticks) / (double)TimeSpan.TicksPerSecond));
             default:
-                throw new ArgumentException($"No reference for the frame {time.Frame}.", nameof(time));
+                throw new ArgumentException($"No reference for the scale {time.Scale}.", nameof(time));
         }
     }
 
     // TDB as ticks of a TDB calendar plus a correction in seconds
     private static (long Ticks, double Correction) TdbParts(TimeSystem.Time time)
     {
-        if (time.Frame is TDBTimeFrame)
+        if (time.Scale == TimeScale.TDB)
             return (time.DateTime.Ticks, 0.0);
 
         var (ticks, correction) = TtParts(time);

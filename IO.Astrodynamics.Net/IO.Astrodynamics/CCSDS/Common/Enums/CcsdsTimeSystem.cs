@@ -10,41 +10,41 @@ namespace IO.Astrodynamics.CCSDS.Common.Enums;
 /// <remarks>
 /// The CCSDS OMM schema allows any string for TIME_SYSTEM, but this enum
 /// is restricted to time systems that can be processed by the framework.
-/// Maps to IO.Astrodynamics.TimeSystem.TimeFrame instances.
+/// Maps to the members of IO.Astrodynamics.TimeSystem.TimeScale.
 /// </remarks>
 public enum CcsdsTimeSystem
 {
     /// <summary>
     /// Coordinated Universal Time.
-    /// Maps to TimeFrame.UTCFrame. Standard for TLE/SGP4 data.
+    /// Maps to TimeScale.UTC. Standard for TLE/SGP4 data.
     /// </summary>
     [Description("UTC")]
     UTC,
 
     /// <summary>
     /// International Atomic Time.
-    /// Maps to TimeFrame.TAIFrame.
+    /// Maps to TimeScale.TAI.
     /// </summary>
     [Description("TAI")]
     TAI,
 
     /// <summary>
     /// Barycentric Dynamical Time.
-    /// Maps to TimeFrame.TDBFrame.
+    /// Maps to TimeScale.TDB.
     /// </summary>
     [Description("TDB")]
     TDB,
 
     /// <summary>
     /// Terrestrial Time (formerly TDT - Terrestrial Dynamical Time).
-    /// Maps to TimeFrame.TDTFrame.
+    /// Maps to TimeScale.TT.
     /// </summary>
     [Description("TT")]
     TT,
 
     /// <summary>
     /// Global Positioning System time.
-    /// Maps to TimeFrame.GPSFrame.
+    /// Maps to TimeScale.GPS.
     /// </summary>
     [Description("GPS")]
     GPS

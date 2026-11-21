@@ -1,142 +1,402 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
-using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.TimeSystem;
 
-public readonly record struct Time : IComparable<Time>, IComparable
+/// <summary>
+/// An instant: a calendar (<see cref="DateTime"/>, to the tick of 100 ns) in a time scale (<see cref="Scale"/>). The scale
+/// is a required argument of every constructor and factory (D3 of #668, approved by S. Guillet, 2026-11-13, amended 2026-11-19): nothing reads
+/// a calendar as TDB by default any more.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Two times are equal when they are the same instant, whatever their scales (#512): <see cref="Equals(Time)"/>,
+/// <c>==</c>, <see cref="GetHashCode"/> and <see cref="CompareTo(Time)"/> follow one key, the tick of the instant in TAI,
+/// so two consecutive TDB ticks of one TAI tick are equal. <see cref="EqualsExact"/> and <see cref="ExactComparer"/>
+/// compare the labels: the calendar and the scale.
+/// </para>
+/// <para>
+/// The default time is 0001-01-01T00:00:00 TDB (<see cref="TimeScale.TDB"/> is 0).
+/// </para>
+/// </remarks>
+public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsable<Time>, ISpanFormattable
 {
-    public static readonly DateTime J2000 = new DateTime(2000, 01, 01, 12, 0, 0, DateTimeKind.Unspecified);
-    public static readonly Time J2000TDB = new TimeSystem.Time(J2000, TimeFrame.TDBFrame);
-    public static readonly Time J2000UTC = new TimeSystem.Time(J2000, TimeFrame.UTCFrame);
+    /// <summary>
+    /// The calendar of J2000, 2000-01-01T12:00:00, of kind <see cref="DateTimeKind.Unspecified"/>: the origin of the
+    /// seconds of <see cref="Create(double, TimeScale)"/> and <see cref="TimeSpanFromJ2000"/> in every scale.
+    /// </summary>
+    internal static readonly DateTime J2000Calendar = new DateTime(2000, 01, 01, 12, 0, 0, DateTimeKind.Unspecified);
+
+    /// <summary>
+    /// J2000, 2000-01-01T12:00:00 TDB.
+    /// </summary>
+    public static readonly Time J2000TDB = new Time(J2000Calendar, TimeScale.TDB);
+
+    /// <summary>
+    /// 2000-01-01T12:00:00 UTC.
+    /// </summary>
+    public static readonly Time J2000UTC = new Time(J2000Calendar, TimeScale.UTC);
+
+    /// <summary>
+    /// The Julian date of B1950's day, 1950-01-01T00:00:00.
+    /// </summary>
     public const double JULIAN_J1950 = 2433282.5;
+
+    /// <summary>
+    /// The Julian date of J2000, 2000-01-01T12:00:00.
+    /// </summary>
     public const double JULIAN_J2000 = 2451545.0;
+
+    /// <summary>
+    /// The Julian year, in days.
+    /// </summary>
     public const double JULIAN_YEAR = 365.25;
+
+    /// <summary>
+    /// The seconds of a day without leap second.
+    /// </summary>
     public const double SECONDS_PER_DAY = 86400.0;
+
+    /// <summary>
+    /// The calendar of this time in its <see cref="Scale"/>: of kind <see cref="DateTimeKind.Utc"/> in UTC,
+    /// <see cref="DateTimeKind.Unspecified"/> otherwise.
+    /// </summary>
     public DateTime DateTime { get; }
-    public ITimeFrame Frame { get; }
 
     /// <summary>
-    /// The time of the calendar <paramref name="dateTime"/> in <paramref name="frame"/>. The kind of the
-    /// <see cref="System.DateTime"/> is set to the frame's (<see cref="DateTimeKind.Utc"/> for UTC,
-    /// <see cref="DateTimeKind.Local"/> for local time, <see cref="DateTimeKind.Unspecified"/> otherwise); a local
-    /// <see cref="System.DateTime"/> of the repeated hour given for local time is kept as it is, so the daylight time mark
-    /// that <see cref="System.DateTime.ToLocalTime"/> sets on an instant of the first of the two hours survives and
-    /// <see cref="ToLocal"/> keeps the instant (#751). The mark is dropped outside the repeated hour, where it holds no
-    /// information, so that the arithmetic of a local time, that of its calendar, keeps it while the label stays in the
-    /// repeated hour and two local times of one instant and one calendar give the same result (second review of #751). A
-    /// calendar of another kind in the repeated hour reads with the standard offset of the zone.
+    /// The time scale of the calendar (replaces <c>Frame</c>, an <c>ITimeFrame</c>, of 10.x, D3 of #668).
     /// </summary>
-    /// <exception cref="ArgumentNullException"><paramref name="frame"/> is null.</exception>
-    public Time(in DateTime dateTime, ITimeFrame frame)
-    {
-        Frame = frame ?? throw new ArgumentNullException(nameof(frame));
-        DateTime = dateTime;
-        if (frame is UTCTimeFrame)
-        {
-            DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Utc);
-        }
-        else if (frame is LocalTimeFrame)
-        {
-            // A local DateTime of the repeated hour is kept as it is: SpecifyKind would drop the daylight time mark
-            // DateTime.ToLocalTime sets on an instant of the first of the two hours, which ToUniversalTime then read with the
-            // standard offset, an hour later (#751). Outside that hour the mark, which DateTime.AddTicks carries, is dropped:
-            // a label moved out of the repeated hour and back would read with the daylight offset where an equal label of
-            // the same calendar reads with the standard one (second review of #751)
-            if (DateTime.Kind != DateTimeKind.Local || !TimeZoneInfo.Local.IsAmbiguousTime(DateTime))
-            {
-                DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Local);
-            }
-        }
-        else
-        {
-            DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Unspecified);
-        }
-    }
+    public TimeScale Scale { get; }
 
-    public Time(int year, int month, int day, int hour = 0, int minute = 0, int second = 0, int millisecond = 0, int microseconds = 0, ITimeFrame frame = null) : this(
-        new DateTime(year, month, day, hour, minute, second, millisecond, microseconds), frame ?? TimeFrame.TDBFrame)
+    /// <summary>
+    /// The time of the calendar <paramref name="dateTime"/> in <paramref name="scale"/>. The calendar is stored with the
+    /// kind of its scale: <see cref="DateTimeKind.Utc"/> for UTC, <see cref="DateTimeKind.Unspecified"/> otherwise.
+    /// </summary>
+    /// <param name="dateTime">The calendar, of kind <see cref="DateTimeKind.Unspecified"/>, or
+    /// <see cref="DateTimeKind.Utc"/> with <see cref="TimeScale.UTC"/>.</param>
+    /// <param name="scale">The time scale of the calendar.</param>
+    /// <exception cref="ArgumentException"><paramref name="dateTime"/> is of kind <see cref="DateTimeKind.Local"/> (a
+    /// local time is not a scale: give its <see cref="System.DateTime.ToUniversalTime"/> with <see cref="TimeScale.UTC"/>),
+    /// or of kind <see cref="DateTimeKind.Utc"/> with another scale than UTC (D3 of #668: before 11.0.0 the kind was
+    /// replaced by the frame's, silently).</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="scale"/> is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public Time(in DateTime dateTime, TimeScale scale)
     {
+        RequireScale(scale, nameof(scale));
+        if (dateTime.Kind == DateTimeKind.Local)
+        {
+            throw new ArgumentException(
+                "A local DateTime has no time scale: give its ToUniversalTime() with TimeScale.UTC.", nameof(dateTime));
+        }
+
+        if (dateTime.Kind == DateTimeKind.Utc && scale != TimeScale.UTC)
+        {
+            throw new ArgumentException(
+                $"A DateTime of kind Utc is a UTC calendar: give TimeScale.UTC, or a calendar of kind Unspecified for {scale}.",
+                nameof(dateTime));
+        }
+
+        Scale = scale;
+        DateTime = System.DateTime.SpecifyKind(dateTime,
+            scale == TimeScale.UTC ? DateTimeKind.Utc : DateTimeKind.Unspecified);
     }
 
     /// <summary>
-    /// The time a string writes: an ISO 8601 calendar ending in Z (UTC), with an offset (local) or with neither (TDB), or a
-    /// calendar followed by the name of its frame, with or without a space, in any case: UTC, TT or TDT, TDB, TAI, GPS (#455).
+    /// The time of midnight of a day in <paramref name="scale"/>.
     /// </summary>
-    /// <exception cref="ArgumentException">The string is empty, names another frame, holds a second 60, or gives a Z or an
-    /// offset before a frame name.</exception>
-    /// <exception cref="FormatException">The calendar before the frame name cannot be read.</exception>
-    public Time(string timeString)
+    /// <param name="year">The year, from 1 to 9999.</param>
+    /// <param name="month">The month, from 1 to 12.</param>
+    /// <param name="day">The day of the month.</param>
+    /// <param name="scale">The time scale of the calendar.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A field is outside its range, or the scale is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public Time(int year, int month, int day, TimeScale scale)
+        : this(new DateTime(year, month, day), scale)
     {
-        if (string.IsNullOrEmpty(timeString)) throw new ArgumentException("Value cannot be null or empty.", nameof(timeString));
-
-        if (DateTime.TryParse(timeString, CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind, out DateTime datetime))
-        {
-            DateTime = datetime;
-            Frame = datetime.Kind == DateTimeKind.Utc ? TimeFrame.UTCFrame : datetime.Kind == DateTimeKind.Local ? TimeFrame.LocalFrame : TimeFrame.TDBFrame;
-        }
-        else
-        {
-            if (LeapSecond.IsMatch(timeString))
-                throw new ArgumentException("Second 60 cannot be represented: a Time holds no leap second (a UTC leap second can be given in TAI).", nameof(timeString));
-
-            // The calendar, then the name of its frame, with or without a space (#455)
-            var match = FrameName.Match(timeString);
-            if (!match.Success) throw new ArgumentException("Value is not a valid time frame.", nameof(timeString));
-            var frame = FrameFromName(match.Groups["name"].Value);
-
-            // A Z or an offset gives the zone of the calendar: DateTime would convert it to the machine's local time
-            var dateTime = DateTime.Parse(match.Groups["calendar"].Value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-            if (dateTime.Kind != DateTimeKind.Unspecified)
-                throw new ArgumentException("A calendar with a Z or an offset takes no frame name.", nameof(timeString));
-            DateTime = frame is UTCTimeFrame ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc) : dateTime;
-            Frame = frame;
-        }
     }
 
     /// <summary>
-    /// A second 60, in the hh:mm:ss of a calendar.
+    /// The time of a calendar to the second in <paramref name="scale"/>.
     /// </summary>
-    private static readonly Regex LeapSecond = new(@"\d:\d{2}:60(?!\d)", RegexOptions.CultureInvariant);
-
-    /// <summary>
-    /// A calendar, then the name of a frame after a space or right after the calendar's last digit or Z, in any case.
-    /// </summary>
-    private static readonly Regex FrameName = new(@"^\s*(?<calendar>\S.*?)\s*(?<=[\dZz\s])(?<name>UTC|TT|TDT|TDB|TAI|GPS)\s*$",
-        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-
-    /// <summary>
-    /// The frame a time string names after its calendar, in any case: TDB, TT or TDT, TAI, GPS, UTC; null for another name.
-    /// </summary>
-    private static ITimeFrame FrameFromName(string name)
+    /// <param name="year">The year, from 1 to 9999.</param>
+    /// <param name="month">The month, from 1 to 12.</param>
+    /// <param name="day">The day of the month.</param>
+    /// <param name="hour">The hour, from 0 to 23.</param>
+    /// <param name="minute">The minute, from 0 to 59.</param>
+    /// <param name="second">The second, from 0 to 59 (a time holds no leap second).</param>
+    /// <param name="scale">The time scale of the calendar.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A field is outside its range, or the scale is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public Time(int year, int month, int day, int hour, int minute, int second, TimeScale scale)
+        : this(new DateTime(year, month, day, hour, minute, second), scale)
     {
-        return name.ToUpperInvariant() switch
-        {
-            "TDB" => TimeFrame.TDBFrame,
-            "TT" or "TDT" => TimeFrame.TDTFrame,
-            "TAI" => TimeFrame.TAIFrame,
-            "GPS" => TimeFrame.GPSFrame,
-            "UTC" => TimeFrame.UTCFrame,
-            _ => null
-        };
     }
 
+    /// <summary>
+    /// The time of a calendar to the millisecond in <paramref name="scale"/>.
+    /// </summary>
+    /// <param name="year">The year, from 1 to 9999.</param>
+    /// <param name="month">The month, from 1 to 12.</param>
+    /// <param name="day">The day of the month.</param>
+    /// <param name="hour">The hour, from 0 to 23.</param>
+    /// <param name="minute">The minute, from 0 to 59.</param>
+    /// <param name="second">The second, from 0 to 59 (a time holds no leap second).</param>
+    /// <param name="millisecond">The millisecond, from 0 to 999.</param>
+    /// <param name="scale">The time scale of the calendar.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A field is outside its range, or the scale is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public Time(int year, int month, int day, int hour, int minute, int second, int millisecond, TimeScale scale)
+        : this(new DateTime(year, month, day, hour, minute, second, millisecond), scale)
+    {
+    }
+
+    /// <summary>
+    /// The time of a calendar to the microsecond in <paramref name="scale"/>.
+    /// </summary>
+    /// <param name="year">The year, from 1 to 9999.</param>
+    /// <param name="month">The month, from 1 to 12.</param>
+    /// <param name="day">The day of the month.</param>
+    /// <param name="hour">The hour, from 0 to 23.</param>
+    /// <param name="minute">The minute, from 0 to 59.</param>
+    /// <param name="second">The second, from 0 to 59 (a time holds no leap second).</param>
+    /// <param name="millisecond">The millisecond, from 0 to 999.</param>
+    /// <param name="microsecond">The microsecond, from 0 to 999.</param>
+    /// <param name="scale">The time scale of the calendar.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A field is outside its range, or the scale is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public Time(int year, int month, int day, int hour, int minute, int second, int millisecond, int microsecond,
+        TimeScale scale)
+        : this(new DateTime(year, month, day, hour, minute, second, millisecond, microsecond), scale)
+    {
+    }
+
+    /// <summary>
+    /// The instant of the clock of the machine, in UTC (<see cref="System.DateTime.UtcNow"/>).
+    /// </summary>
+    public static Time UtcNow => new Time(System.DateTime.UtcNow, TimeScale.UTC);
+
+    private static void RequireScale(TimeScale scale, string paramName)
+    {
+        if (scale is < TimeScale.TDB or > TimeScale.GPS)
+        {
+            throw new ArgumentOutOfRangeException(paramName, scale, "Unknown time scale.");
+        }
+    }
+
+    #region Parse and format
+
+    /// <summary>
+    /// The time a tagged string writes (D3 of #668): an ISO 8601 date (<c>yyyy-MM-dd</c>) or a CCSDS day of year
+    /// (<c>yyyy-DDD</c>), then optionally <c>T</c> (or a space) and <c>hh:mm</c>, <c>hh:mm:ss</c> or
+    /// <c>hh:mm:ss.f…</c>, then <c>Z</c> or <c>±hh:mm</c> (the UTC instant) or the tag of its scale (<c>UTC</c>,
+    /// <c>TT</c> or <c>TDT</c>, <c>TDB</c>, <c>TAI</c>, <c>GPS</c>, in any case, the space before it optional); or a Julian
+    /// date <c>JD n</c> or <c>n JD</c> followed by its tag, its digits read exactly to the nearest tick. <see cref="ToString()"/>
+    /// writes a string it reads back exactly (<see cref="EqualsExact"/>).
+    /// </summary>
+    /// <remarks>
+    /// A fraction of up to 7 digits is exact; a longer one is rounded to the tick as <see cref="System.DateTime"/>
+    /// parsing rounds it. A second 60 is refused (a time holds no leap second; give a UTC leap second in TAI), and so are a
+    /// tag after <c>Z</c> or an offset, a string without a tag (<see cref="Parse(string, TimeScale)"/> gives one its
+    /// scale), and the other forms <c>Time(string)</c> read through <see cref="System.DateTime.TryParse(string, out DateTime)"/>
+    /// before 11.0.0 (<c>06/21/2024 12:00</c>, RFC 1123). An offset is the UTC instant it writes, never the machine's
+    /// local time.
+    /// </remarks>
+    /// <param name="s">The string.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+    /// <exception cref="FormatException">The string is not of this grammar, or names no scale.</exception>
+    public static Time Parse(string s)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        return Parse(s.AsSpan(), null);
+    }
+
+    /// <summary>
+    /// The time a string writes, of the grammar of <see cref="Parse(string)"/>, <paramref name="scale"/> the scale of a
+    /// string without a tag, <c>Z</c> or offset; a tag, <c>Z</c> or offset in the string gives its own scale.
+    /// </summary>
+    /// <param name="s">The string.</param>
+    /// <param name="scale">The scale of an untagged string.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+    /// <exception cref="FormatException">The string is not of this grammar.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="scale"/> is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public static Time Parse(string s, TimeScale scale)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        RequireScale(scale, nameof(scale));
+        if (!TimeGrammar.TryParse(s.AsSpan(), scale, out var result, out var error))
+        {
+            throw new FormatException(error);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>): the grammar is
+    /// culture invariant.
+    /// </summary>
+    /// <param name="s">The string.</param>
+    /// <param name="provider">Unused.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+    /// <exception cref="FormatException">The string is not of the grammar, or names no scale.</exception>
+    public static Time Parse(string s, IFormatProvider provider)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        return Parse(s.AsSpan(), provider);
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string)"/> of a span, <paramref name="provider"/> unused (<see cref="ISpanParsable{TSelf}"/>).
+    /// </summary>
+    /// <param name="s">The characters.</param>
+    /// <param name="provider">Unused.</param>
+    /// <exception cref="FormatException">The string is not of the grammar, or names no scale.</exception>
+    public static Time Parse(ReadOnlySpan<char> s, IFormatProvider provider)
+    {
+        if (!TimeGrammar.TryParse(s, null, out var result, out var error))
+        {
+            throw new FormatException(error);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string)"/> without exception: false for a null string or one the grammar refuses.
+    /// </summary>
+    /// <param name="s">The string.</param>
+    /// <param name="result">The time, the default time when false.</param>
+    public static bool TryParse([NotNullWhen(true)] string s, out Time result)
+    {
+        result = default;
+        return s != null && TimeGrammar.TryParse(s.AsSpan(), null, out result, out _);
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string, TimeScale)"/> without exception: false for a null string, one the grammar refuses, or a
+    /// scale that is not a member of <see cref="TimeScale"/>.
+    /// </summary>
+    /// <param name="s">The string.</param>
+    /// <param name="scale">The scale of an untagged string.</param>
+    /// <param name="result">The time, the default time when false.</param>
+    public static bool TryParse([NotNullWhen(true)] string s, TimeScale scale, out Time result)
+    {
+        result = default;
+        return s != null && scale is >= TimeScale.TDB and <= TimeScale.GPS &&
+               TimeGrammar.TryParse(s.AsSpan(), scale, out result, out _);
+    }
+
+    /// <summary>
+    /// <see cref="TryParse(string, out Time)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>).
+    /// </summary>
+    /// <param name="s">The string.</param>
+    /// <param name="provider">Unused.</param>
+    /// <param name="result">The time, the default time when false.</param>
+    public static bool TryParse([NotNullWhen(true)] string s, IFormatProvider provider, out Time result)
+    {
+        return TryParse(s, out result);
+    }
+
+    /// <summary>
+    /// <see cref="TryParse(string, out Time)"/> of a span, <paramref name="provider"/> unused
+    /// (<see cref="ISpanParsable{TSelf}"/>).
+    /// </summary>
+    /// <param name="s">The characters.</param>
+    /// <param name="provider">Unused.</param>
+    /// <param name="result">The time, the default time when false.</param>
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider provider, out Time result)
+    {
+        return TimeGrammar.TryParse(s, null, out result, out _);
+    }
+
+    /// <summary>
+    /// The calendar in the round-trip form of <see cref="System.DateTime"/> (<c>O</c>), then the tag of the scale:
+    /// <c>Z</c> for UTC, <c> TDB</c>, <c> TT</c>, <c> TAI</c> or <c> GPS</c> otherwise (TT was written <c>TDT</c> before
+    /// 11.0.0). <see cref="Parse(string)"/> reads it back exactly.
+    /// </summary>
+    public override string ToString()
+    {
+        return DateTime.ToString("O", CultureInfo.InvariantCulture) + TimeScaleConversions.Suffix(Scale);
+    }
+
+    /// <summary>
+    /// The time in <paramref name="format"/> (<see cref="IFormattable"/>): null, empty, <c>G</c>, <c>O</c> or <c>o</c>
+    /// give <see cref="ToString()"/>; any other format is a format of <see cref="System.DateTime"/> applied to the
+    /// calendar, followed by the tag of the scale (<c>Z</c> for UTC, <c> TDB</c>, <c> TT</c>, <c> TAI</c> or <c> GPS</c>).
+    /// </summary>
+    /// <param name="format">The format.</param>
+    /// <param name="formatProvider">The culture of a format of <see cref="System.DateTime"/>; the invariant culture when
+    /// null.</param>
+    /// <exception cref="FormatException">The format is not one of <see cref="System.DateTime"/>.</exception>
+    public string ToString(string format, IFormatProvider formatProvider)
+    {
+        if (IsRoundTripFormat(format))
+        {
+            return ToString();
+        }
+
+        return DateTime.ToString(format, formatProvider ?? CultureInfo.InvariantCulture) + Tag(Scale);
+    }
+
+    /// <summary>
+    /// <see cref="ToString(string, IFormatProvider)"/> written into <paramref name="destination"/>
+    /// (<see cref="ISpanFormattable"/>).
+    /// </summary>
+    /// <param name="destination">The span written.</param>
+    /// <param name="charsWritten">The characters written, 0 when false.</param>
+    /// <param name="format">The format.</param>
+    /// <param name="provider">The culture of a format of <see cref="System.DateTime"/>; the invariant culture when null.</param>
+    /// <returns>False when <paramref name="destination"/> is too short.</returns>
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider provider)
+    {
+        string text = ToString(format.IsEmpty ? null : format.ToString(), provider);
+        if (text.Length > destination.Length)
+        {
+            charsWritten = 0;
+            return false;
+        }
+
+        text.AsSpan().CopyTo(destination);
+        charsWritten = text.Length;
+        return true;
+    }
+
+    private static bool IsRoundTripFormat(string format) => string.IsNullOrEmpty(format) || format is "G" or "O" or "o";
+
+    // The tag after a calendar written with a custom format: Z right after a UTC calendar, the scale after a space otherwise
+    private static string Tag(TimeScale scale) =>
+        scale == TimeScale.UTC ? "Z" : TimeScaleConversions.Suffix(scale);
+
+    #endregion
+
+    #region Arithmetic
+
+    /// <summary>
+    /// This time plus <paramref name="timeSpan"/>, in its scale.
+    /// </summary>
     public Time Add(in TimeSpan timeSpan)
     {
-        return new TimeSystem.Time(DateTime.Add(timeSpan), Frame);
+        return new Time(DateTime.Add(timeSpan), Scale);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="years"/> years of its calendar.
+    /// </summary>
     public Time AddYears(int years)
     {
-        return new Time(DateTime.AddYears(years), Frame);
+        return new Time(DateTime.AddYears(years), Scale);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="months"/> months of its calendar.
+    /// </summary>
     public Time AddMonths(int months)
     {
-        return new Time(DateTime.AddMonths(months), Frame);
+        return new Time(DateTime.AddMonths(months), Scale);
     }
 
     /// <summary>
@@ -148,7 +408,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddDays(double days)
     {
-        return new Time(DateTime.AddTicks(ToNearestTicks(days, TimeSpan.TicksPerDay, nameof(days))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(days, TimeSpan.TicksPerDay, nameof(days))), Scale);
     }
 
     /// <summary>
@@ -159,7 +419,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddHours(double hours)
     {
-        return new Time(DateTime.AddTicks(ToNearestTicks(hours, TimeSpan.TicksPerHour, nameof(hours))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(hours, TimeSpan.TicksPerHour, nameof(hours))), Scale);
     }
 
     /// <summary>
@@ -170,7 +430,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMinutes(double minutes)
     {
-        return new Time(DateTime.AddTicks(ToNearestTicks(minutes, TimeSpan.TicksPerMinute, nameof(minutes))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(minutes, TimeSpan.TicksPerMinute, nameof(minutes))), Scale);
     }
 
     /// <summary>
@@ -180,7 +440,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// the range of <see cref="System.DateTime"/>.</exception>
     public Time AddSeconds(double seconds)
     {
-        return new Time(DateTime.AddTicks(SecondsToTicks(seconds)), Frame);
+        return new Time(DateTime.AddTicks(SecondsToTicks(seconds)), Scale);
     }
 
     /// <summary>
@@ -190,7 +450,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMilliseconds(double milliseconds)
     {
-        return new Time(DateTime.AddTicks(ToNearestTicks(milliseconds, TimeSpan.TicksPerMillisecond, nameof(milliseconds))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(milliseconds, TimeSpan.TicksPerMillisecond, nameof(milliseconds))), Scale);
     }
 
     /// <summary>
@@ -200,14 +460,15 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMicroseconds(double microseconds)
     {
-        return new Time(DateTime.AddTicks(ToNearestTicks(microseconds, TimeSpan.TicksPerMicrosecond, nameof(microseconds))), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(microseconds, TimeSpan.TicksPerMicrosecond, nameof(microseconds))), Scale);
     }
 
     /// <summary>
     /// The tick count (100 ns) nearest <paramref name="seconds"/>, ties to even, symmetric in sign: the conversion of the
     /// seconds of <c>Create</c>, <see cref="AddSeconds"/> (with the ticks per millisecond and microsecond, of
-    /// <see cref="AddMilliseconds"/> and <see cref="AddMicroseconds"/>) and of the TDB − TT offset to ticks (#625). <see cref="System.DateTime.AddSeconds"/> and <see cref="TimeSpan.FromSeconds(double)"/>
-    /// truncate toward zero instead, up to one tick early after J2000 and late before it.
+    /// <see cref="AddMilliseconds"/> and <see cref="AddMicroseconds"/>) and of the TDB − TT offset to ticks (#625).
+    /// <see cref="System.DateTime.AddSeconds"/> and <see cref="TimeSpan.FromSeconds(double)"/> truncate toward zero
+    /// instead, up to one tick early after J2000 and late before it.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="seconds"/> is not finite or its ticks do not fit in
     /// a <see cref="long"/>.</exception>
@@ -273,16 +534,25 @@ public readonly record struct Time : IComparable<Time>, IComparable
         return value < 0.0 ? -ticks : ticks;
     }
 
+    /// <summary>
+    /// This time plus <paramref name="ticks"/> ticks (100 ns) of its calendar.
+    /// </summary>
     public Time AddTicks(long ticks)
     {
-        return new Time(DateTime.AddTicks(ticks), Frame);
+        return new Time(DateTime.AddTicks(ticks), Scale);
     }
 
+    /// <summary>
+    /// <paramref name="left"/> plus <paramref name="right"/>, in its scale.
+    /// </summary>
     public static Time operator +(Time left, TimeSpan right)
     {
         return left.Add(right);
     }
 
+    /// <summary>
+    /// <paramref name="left"/> less <paramref name="right"/>, in its scale.
+    /// </summary>
     public static Time operator -(Time left, TimeSpan right)
     {
         return left.Add(right.Negate());
@@ -290,174 +560,179 @@ public readonly record struct Time : IComparable<Time>, IComparable
 
     /// <summary>
     /// The time elapsed from <paramref name="right"/> to <paramref name="left"/>: the difference of their calendars in a
-    /// uniform frame (TDB, TT, TAI, GPS), otherwise the difference of their TAI, so that the leap seconds between two UTC
-    /// (or local) times count (#508).
+    /// uniform scale (TDB, TT, TAI, GPS), otherwise the difference of their TAI, so that the leap seconds between two UTC
+    /// times count (#508).
     /// </summary>
     /// <remarks>
     /// A UTC calendar skips the leap seconds: from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z, 121 s elapse, the
-    /// leap second 2016-12-31T23:59:60 included, while the calendars differ by 120 s. Between two frames, the difference
-    /// is that of TAI, so TT seconds, as before.
+    /// leap second 2016-12-31T23:59:60 included, while the calendars differ by 120 s. Between two scales, the difference
+    /// is that of TAI, so TT seconds. Two equal times (<see cref="Equals(Time)"/>) of two consecutive TDB ticks differ by
+    /// one tick.
     /// </remarks>
     public static TimeSpan operator -(Time left, Time right)
     {
-        if (left.Frame.Equals(right.Frame) && left.Frame is not (UTCTimeFrame or LocalTimeFrame))
+        if (left.Scale == right.Scale && left.Scale != TimeScale.UTC)
         {
             return left.DateTime.Subtract(right.DateTime);
         }
 
-        // Convert both times to TAI to ensure correct physical time difference
-        // when the times are in different frames (e.g., UTC vs TDB) or in a frame with leap seconds
-        var leftTai = left.ToTAI();
-        var rightTai = right.ToTAI();
-        return leftTai.DateTime.Subtract(rightTai.DateTime);
+        return new TimeSpan(TimeScaleConversions.TaiTicks(left) - TimeScaleConversions.TaiTicks(right));
     }
 
+    #endregion
+
+    #region Conversions
+
     /// <summary>
-    /// This time in <paramref name="targetReference"/>, through TAI; this time itself when it is already in that frame.
+    /// This time in <paramref name="scale"/>, through TAI; this time itself when it is already in that scale.
     /// </summary>
     /// <remarks>
     /// The round trip through TAI of a TDB time rounds TDB − TT to the nearest 100 ns tick twice, at two arguments of the
     /// series, so it can move the time by a tick (1 of the 935 041 TT instants every 0.05 day from 1972 to 2100, #625;
-    /// 2 when the conversions truncated, #510); a conversion to the frame of the time is the identity.
+    /// 2 when the conversions truncated, #510); a conversion to the scale of the time is the identity.
     /// </remarks>
-    public Time ConvertTo(ITimeFrame targetReference)
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="scale"/> is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public Time ConvertTo(TimeScale scale)
     {
-        if (Frame.Equals(targetReference))
+        RequireScale(scale, nameof(scale));
+        if (Scale == scale)
         {
             return this;
         }
 
-        var taiTimeWithRef = Frame.ConvertToTAI(this);
-        return targetReference.ConvertFromTAI(taiTimeWithRef);
+        var tai = new DateTime(TimeScaleConversions.TaiTicks(this));
+        return new Time(TimeScaleConversions.FromTai(tai, scale), scale);
     }
 
+    /// <summary>
+    /// This time in GPS time.
+    /// </summary>
     public Time ToGPS()
     {
-        return ConvertTo(TimeFrame.GPSFrame);
+        return ConvertTo(TimeScale.GPS);
     }
 
+    /// <summary>
+    /// This time in TAI.
+    /// </summary>
     public Time ToTAI()
     {
-        return ConvertTo(TimeFrame.TAIFrame);
+        return ConvertTo(TimeScale.TAI);
     }
 
-    public Time ToTDT()
+    /// <summary>
+    /// This time in TT (<c>ToTDT</c> before 11.0.0).
+    /// </summary>
+    public Time ToTT()
     {
-        return ConvertTo(TimeFrame.TDTFrame);
+        return ConvertTo(TimeScale.TT);
     }
 
+    /// <summary>
+    /// This time in UTC.
+    /// </summary>
     public Time ToUTC()
     {
-        return ConvertTo(TimeFrame.UTCFrame);
+        return ConvertTo(TimeScale.UTC);
     }
 
+    /// <summary>
+    /// This time in TDB.
+    /// </summary>
     public Time ToTDB()
     {
-        return ConvertTo(TimeFrame.TDBFrame);
+        return ConvertTo(TimeScale.TDB);
     }
 
-    public Time ToLocal()
-    {
-        return ConvertTo(TimeFrame.LocalFrame);
-    }
-
-    public override string ToString()
-    {
-        string suffix = string.Empty;
-        if (!string.IsNullOrEmpty(this.Frame.ToString()))
-        {
-            suffix = " " + this.Frame.ToString();
-        }
-
-        return DateTime.ToString("O") + suffix;
-    }
-
+    /// <summary>
+    /// The span of the calendar from J2000 (2000-01-01T12:00:00 of the same scale), the seconds of
+    /// <see cref="Create(double, TimeScale)"/>.
+    /// </summary>
     public TimeSpan TimeSpanFromJ2000()
     {
-        return DateTime - J2000;
+        return DateTime - J2000Calendar;
     }
 
     /// <summary>
-    /// Create a time from seconds elapsed from J2000 in <paramref name="frame"/>, to the nearest tick (100 ns), ties to
-    /// even (#625): an ET of SPICE from 2017 to 2028 comes back from <see cref="TimeSpanFromJ2000"/> exactly.
+    /// The time of <paramref name="secondsFromJ2000"/> seconds of the calendar of <paramref name="scale"/> from
+    /// 2000-01-01T12:00:00 of that scale, to the nearest tick (100 ns), ties to even (#625): an ET of SPICE from 2017 to
+    /// 2028 comes back from <see cref="TimeSpanFromJ2000"/> exactly.
     /// </summary>
-    /// <param name="secondsFromJ2000"></param>
-    /// <param name="frame"></param>
-    /// <returns></returns>
-    public static Time Create(double secondsFromJ2000, ITimeFrame frame)
+    /// <param name="secondsFromJ2000">The seconds from J2000.</param>
+    /// <param name="scale">The time scale.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="secondsFromJ2000"/> is not finite or the result is
+    /// outside the range of <see cref="System.DateTime"/>, or <paramref name="scale"/> is not a member of
+    /// <see cref="TimeScale"/>.</exception>
+    public static Time Create(double secondsFromJ2000, TimeScale scale)
     {
-        var date = J2000.AddTicks(SecondsToTicks(secondsFromJ2000));
-        if (frame is UTCTimeFrame utcFrame)
-        {
-            date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
-            return new TimeSystem.Time(date, TimeFrame.UTCFrame);
-        }
-
-        return new TimeSystem.Time(date, frame);
+        return new Time(J2000Calendar.AddTicks(SecondsToTicks(secondsFromJ2000)), scale);
     }
-    
+
     /// <summary>
-    /// Create a UTC time from year, day of year, and seconds of day, to the nearest tick (100 ns), ties to even (#625)
+    /// The time of a day of year and the seconds of that day in <paramref name="scale"/>, to the nearest tick (100 ns),
+    /// ties to even (#625); <c>Time.Create(year, doy, sec)</c> before 11.0.0, which was UTC.
     /// </summary>
     /// <remarks>
     /// The seconds are those of a day without leap second; a value below 86400 whose nearest tick is 86400 s is the next
-    /// day's midnight, the nearest instant, except on 9999-12-31, whose next midnight no <see cref="DateTime"/> holds: there
-    /// seconds above 86399.99999995, whose nearest tick is 86400 s, throw naming <paramref name="sec"/>. Before 11.0.0
-    /// nothing was checked (#680): year 0 was read as 2000, and a day or seconds outside their range rolled into the
-    /// neighbouring day or year.
+    /// day's midnight, the nearest instant, except on 9999-12-31, whose next midnight no <see cref="System.DateTime"/>
+    /// holds: there seconds above 86399.99999995, whose nearest tick is 86400 s, throw naming <paramref name="seconds"/>.
+    /// Before 11.0.0 nothing was checked (#680): year 0 was read as 2000, and a day or seconds outside their range rolled
+    /// into the neighbouring day or year.
     /// </remarks>
     /// <param name="year">The year, from 1 to 9999.</param>
-    /// <param name="doy">The day of the year, from 1 to 365, or 366 in a leap year of the Gregorian calendar.</param>
-    /// <param name="sec">The seconds of the day, finite, in [0, 86400).</param>
-    /// <returns>The UTC time.</returns>
+    /// <param name="dayOfYear">The day of the year, from 1 to 365, or 366 in a leap year of the Gregorian calendar.</param>
+    /// <param name="seconds">The seconds of the day, finite, in [0, 86400).</param>
+    /// <param name="scale">The time scale.</param>
     /// <exception cref="ArgumentOutOfRangeException">An argument is outside its range; the exception names it.</exception>
-    public static Time Create(int year, int doy, double sec)
+    public static Time FromDayOfYear(int year, int dayOfYear, double seconds, TimeScale scale)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(year, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(year, 9999);
-        ArgumentOutOfRangeException.ThrowIfLessThan(doy, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(doy, DateTime.IsLeapYear(year) ? 366 : 365);
-        if (!(sec >= 0.0 && sec < 86400.0))
+        ArgumentOutOfRangeException.ThrowIfLessThan(dayOfYear, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(dayOfYear, System.DateTime.IsLeapYear(year) ? 366 : 365);
+        if (!(seconds >= 0.0 && seconds < 86400.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(sec), sec, "The seconds of a day are finite, in [0, 86400).");
+            throw new ArgumentOutOfRangeException(nameof(seconds), seconds, "The seconds of a day are finite, in [0, 86400).");
         }
 
-        var day = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(doy - 1);
-        long ticks = SecondsToTicks(sec);
-        if (ticks > DateTime.MaxValue.Ticks - day.Ticks)
+        RequireScale(scale, nameof(scale));
+        var day = new DateTime(year, 1, 1).AddDays(dayOfYear - 1);
+        long ticks = SecondsToTicks(seconds);
+        if (ticks > System.DateTime.MaxValue.Ticks - day.Ticks)
         {
-            throw new ArgumentOutOfRangeException(nameof(sec), sec, "The nearest tick of the seconds is past 9999-12-31T23:59:59.9999999.");
+            throw new ArgumentOutOfRangeException(nameof(seconds), seconds, "The nearest tick of the seconds is past 9999-12-31T23:59:59.9999999.");
         }
 
-        return new Time(day.AddTicks(ticks), TimeFrame.UTCFrame);
+        return new Time(day.AddTicks(ticks), scale);
     }
 
     /// <summary>
-    /// Create UTC from elapsed seconds from J2000
+    /// The UTC time of <paramref name="secondsFromJ2000"/> seconds of the UTC calendar from 2000-01-01T12:00:00Z
+    /// (<see cref="Create(double, TimeScale)"/>).
     /// </summary>
-    /// <param name="secondsFromJ2000"></param>
-    /// <returns></returns>
+    /// <param name="secondsFromJ2000">The seconds from J2000.</param>
     public static Time CreateUTC(double secondsFromJ2000)
     {
-        return Create(secondsFromJ2000, TimeFrame.UTCFrame);
+        return Create(secondsFromJ2000, TimeScale.UTC);
     }
 
     /// <summary>
-    /// Create TDB from elapsed seconds from J2000
+    /// The TDB time of <paramref name="secondsFromJ2000"/> seconds from J2000 TDB, an ET of SPICE
+    /// (<see cref="Create(double, TimeScale)"/>).
     /// </summary>
-    /// <param name="secondsFromJ2000"></param>
-    /// <returns></returns>
+    /// <param name="secondsFromJ2000">The seconds from J2000.</param>
     public static Time CreateTDB(double secondsFromJ2000)
     {
-        return Create(secondsFromJ2000, TimeFrame.TDBFrame);
+        return Create(secondsFromJ2000, TimeScale.TDB);
     }
 
     /// <summary>
-    /// Convert to julian date, in this time frame.
+    /// The Julian date of this time, in its scale.
     /// </summary>
     /// <remarks>
     /// Computed from the <see cref="System.DateTime"/> ticks (0.1 µs). A Julian date held in a single double
-    /// resolves about 40 µs; <see cref="DaysFromJ2000"/> keeps the full resolution.
+    /// resolves about 40 µs; <see cref="Centuries"/> and the ticks keep the full resolution.
     /// </remarks>
     public double ToJulianDate()
     {
@@ -465,40 +740,39 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// Days elapsed since J2000 (2000-01-01 12:00:00) in this time frame, from the <see cref="System.DateTime"/> ticks.
+    /// Days elapsed since J2000 (2000-01-01 12:00:00) in this time scale, from the <see cref="System.DateTime"/> ticks.
     /// </summary>
     internal double DaysFromJ2000()
     {
-        return (DateTime.Ticks - J2000.Ticks) / (double)TimeSpan.TicksPerDay;
+        return (DateTime.Ticks - J2000Calendar.Ticks) / (double)TimeSpan.TicksPerDay;
     }
 
     /// <summary>
-    /// Get number of centuries
+    /// The Julian centuries of this time's calendar from J2000, in its scale.
     /// </summary>
-    /// <returns></returns>
     public double Centuries()
     {
         return DaysFromJ2000() / 36525.0;
     }
 
     /// <summary>
-    /// The time of <paramref name="julianDate"/> in <paramref name="frame"/>: J2000 plus the nearest tick of the days
+    /// The time of <paramref name="julianDate"/> in <paramref name="scale"/>: J2000 plus the nearest tick of the days
     /// <paramref name="julianDate"/> − 2451545.0, ties to even (#637, decided by S. Guillet, 2026-11-17; before 11.0.0,
     /// <see cref="System.DateTime.AddDays"/>, which truncates toward zero). The difference is exact for a Julian date from
     /// 1225772.5 to 4903090 (Sterbenz's lemma), about the years −1356 to 8711.
     /// </summary>
+    /// <param name="julianDate">The Julian date.</param>
+    /// <param name="scale">The time scale.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="julianDate"/> is not finite (#680: NaN gave J2000
-    /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
-    public static Time CreateFromJD(double julianDate, ITimeFrame frame)
+    /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>, or <paramref name="scale"/> is
+    /// not a member of <see cref="TimeScale"/>.</exception>
+    public static Time CreateFromJD(double julianDate, TimeScale scale)
     {
-        var date = J2000.AddTicks(ToNearestTicks(julianDate - JULIAN_J2000, TimeSpan.TicksPerDay, nameof(julianDate)));
-        if (frame is UTCTimeFrame)
-        {
-            date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
-        }
-
-        return new TimeSystem.Time(date, frame);
+        var date = J2000Calendar.AddTicks(ToNearestTicks(julianDate - JULIAN_J2000, TimeSpan.TicksPerDay, nameof(julianDate)));
+        return new Time(date, scale);
     }
+
+    #endregion
 
     #region COMPARATOR
 
@@ -507,50 +781,32 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// </summary>
     internal long TaiTicks()
     {
-        return Frame is TimeFrame frame ? frame.TaiTicks(this) : Frame.ConvertToTAI(this).DateTime.Ticks;
+        return TimeScaleConversions.TaiTicks(this);
     }
 
     /// <summary>
-    /// Compares the instants of two times, within a frame and across frames alike, by their ticks converted to TAI: one
+    /// Compares the instants of two times, within a scale and across scales alike, by their ticks converted to TAI: one
     /// total order, so that two times compare to 0 exactly when they are equal (<see cref="Equals(Time)"/>, #512).
     /// </summary>
     /// <remarks>
     /// Within UTC, TAI, TT or GPS the conversion to TAI keeps the order of the calendars, which are compared directly.
     /// Within TDB it does too for times two ticks or more apart; two consecutive TDB ticks can convert to one TAI tick
-    /// (TDB − TT, rounded to the tick, gains one there), and then compare to 0. Before 11.0.0, times of one frame were
-    /// compared by their calendars, and so two such TDB ticks were in order while each compared to 0 with their TAI time.
-    /// Within TDB, <c>-</c> still counts the ticks of the calendars: two such equal ticks differ by one tick. A local
-    /// time is the instant <see cref="System.DateTime.ToUniversalTime"/> gives its calendar in the time zone of the
-    /// machine, local times included (#512: before 11.0.0 they were compared by their calendars). The default time (no
-    /// frame) comes before every time with a frame and compares to 0 with itself, so that comparing it never throws.
+    /// (TDB − TT, rounded to the tick, gains one there), and then compare to 0. Within TDB, <c>-</c> still counts the ticks
+    /// of the calendars: two such equal ticks differ by one tick. The default time is 0001-01-01T00:00:00 TDB.
     /// </remarks>
     public int CompareTo(Time other)
     {
-        // The default time, the only time without a frame, before every time with one
-        if (Frame is null)
+        if (Scale == other.Scale)
         {
-            return other.Frame is null ? DateTime.Ticks.CompareTo(other.DateTime.Ticks) : -1;
-        }
-
-        if (other.Frame is null)
-        {
-            return 1;
-        }
-
-        if (this.Frame.Equals(other.Frame))
-        {
-            switch (Frame)
+            if (Scale != TimeScale.TDB)
             {
-                case UTCTimeFrame or TAITimeFrame or TDTTimeFrame or GPSTimeFrame:
-                    return this.DateTime.CompareTo(other.DateTime);
-                case TDBTimeFrame:
-                    long difference = this.DateTime.Ticks - other.DateTime.Ticks;
-                    if (difference is not (1 or -1))
-                    {
-                        return difference.CompareTo(0L);
-                    }
+                return DateTime.CompareTo(other.DateTime);
+            }
 
-                    break;
+            long difference = DateTime.Ticks - other.DateTime.Ticks;
+            if (difference is not (1 or -1))
+            {
+                return difference.CompareTo(0L);
             }
         }
 
@@ -558,16 +814,14 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// Whether two times are the same instant, whatever their frames: <see cref="CompareTo(Time)"/> returns 0 (#512,
-    /// decided by S. Guillet, 2026-11-17). <c>==</c>, <c>!=</c>, <see cref="object.Equals(object)"/> and the hash
-    /// collections follow it, and <see cref="GetHashCode"/> hashes the TAI ticks. Two default times (no frame) are equal
-    /// when their calendars are, and a default time equals no time with a frame.
+    /// Whether two times are the same instant, whatever their scales: <see cref="CompareTo(Time)"/> returns 0 (#512,
+    /// decided by S. Guillet, 2026-11-17; the TAI tick confirmed as the key by S. Guillet, 2026-11-19). <c>==</c>,
+    /// <c>!=</c>, <see cref="object.Equals(object)"/> and the hash collections follow it, and <see cref="GetHashCode"/>
+    /// hashes the TAI ticks.
     /// </summary>
     /// <remarks>
-    /// Before 11.0.0 the frame took part (the record's default equality on the calendar and the frame), so that the same
-    /// instant in two frames was not equal while it compared to 0, and a <see cref="Dictionary{TKey,TValue}"/> or a
-    /// <see cref="HashSet{T}"/> keyed by times missed it. To tell the labels apart, compare <see cref="DateTime"/> and
-    /// <see cref="Frame"/>.
+    /// To tell the labels apart (the same calendar in the same scale), use <see cref="EqualsExact"/> or
+    /// <see cref="ExactComparer"/>.
     /// </remarks>
     public bool Equals(Time other)
     {
@@ -575,59 +829,76 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// Whether two times carry the same label: the same calendar in the same frame. Equal times (<see cref="Equals(Time)"/>)
-    /// can carry different labels, the same instant in two frames (#512).
+    /// Whether two times carry the same label: the same calendar, to the tick, in the same scale. Equal times
+    /// (<see cref="Equals(Time)"/>) can carry different labels, the same instant in two scales, or two consecutive TDB
+    /// ticks of one TAI tick (#512).
     /// </summary>
-    internal bool HasSameLabel(Time other)
+    /// <param name="other">The other time.</param>
+    public bool EqualsExact(Time other)
     {
-        return DateTime.Ticks == other.DateTime.Ticks && object.Equals(Frame, other.Frame);
+        return DateTime.Ticks == other.DateTime.Ticks && Scale == other.Scale;
     }
 
     /// <summary>
-    /// The equality of labels (<see cref="HasSameLabel"/>), for the library's caches whose values carry their key as a
-    /// label (the orientations of a <see cref="IO.Astrodynamics.Frames.Frame"/>, the range rates of the conjunction
-    /// search): a key in another frame, or a TDB tick next to one of the same TAI tick, is read again rather than given
-    /// the value of another label, as before 11.0.0, bit for bit (#512).
+    /// The equality of labels (<see cref="EqualsExact"/>), for a hash collection that keeps the labels apart. The
+    /// library's caches whose values carry their key as a label use it too (the range rates of the conjunction search, the
+    /// orientations of <c>TLEPropagator</c>): a key in another scale, or a TDB tick next to one of the same TAI tick, is
+    /// read again rather than given the value of another label, bit for bit (#512).
     /// </summary>
-    internal static IEqualityComparer<Time> LabelComparer { get; } = new TimeLabelComparer();
+    public static IEqualityComparer<Time> ExactComparer { get; } = new TimeExactComparer();
 
-    private sealed class TimeLabelComparer : IEqualityComparer<Time>
+    private sealed class TimeExactComparer : IEqualityComparer<Time>
     {
-        public bool Equals(Time x, Time y) => x.HasSameLabel(y);
+        public bool Equals(Time x, Time y) => x.EqualsExact(y);
 
-        public int GetHashCode(Time time) => HashCode.Combine(time.DateTime.Ticks, time.Frame);
+        public int GetHashCode(Time time) => HashCode.Combine(time.DateTime.Ticks, time.Scale);
     }
 
     /// <summary>
-    /// The hash code of the instant: that of its TAI ticks (of its calendar for a default time), so that equal times,
-    /// in any frames, share it (#512).
+    /// The hash code of the instant: that of its TAI ticks, so that equal times, in any scales, share it (#512).
     /// </summary>
     public override int GetHashCode()
     {
-        return Frame is null ? DateTime.Ticks.GetHashCode() : TaiTicks().GetHashCode();
+        return TaiTicks().GetHashCode();
     }
 
+    /// <summary>
+    /// <see cref="CompareTo(Time)"/> of a boxed time; a null object is before every time.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="Time"/>.</exception>
     public int CompareTo(object obj)
     {
         if (obj is null) return 1;
         return obj is Time other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(Time)}");
     }
 
+    /// <summary>
+    /// Whether <paramref name="left"/> is before <paramref name="right"/> (<see cref="CompareTo(Time)"/>).
+    /// </summary>
     public static bool operator <(Time left, Time right)
     {
         return left.CompareTo(right) < 0;
     }
 
+    /// <summary>
+    /// Whether <paramref name="left"/> is after <paramref name="right"/> (<see cref="CompareTo(Time)"/>).
+    /// </summary>
     public static bool operator >(Time left, Time right)
     {
         return left.CompareTo(right) > 0;
     }
 
+    /// <summary>
+    /// Whether <paramref name="left"/> is before or equal to <paramref name="right"/> (<see cref="CompareTo(Time)"/>).
+    /// </summary>
     public static bool operator <=(Time left, Time right)
     {
         return left.CompareTo(right) <= 0;
     }
 
+    /// <summary>
+    /// Whether <paramref name="left"/> is after or equal to <paramref name="right"/> (<see cref="CompareTo(Time)"/>).
+    /// </summary>
     public static bool operator >=(Time left, Time right)
     {
         return left.CompareTo(right) >= 0;

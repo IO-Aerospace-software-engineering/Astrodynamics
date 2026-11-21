@@ -14,8 +14,8 @@ namespace IO.Astrodynamics.Tests.Time;
 /// </summary>
 public class LeapSecondDifferenceTests
 {
-    private static readonly TimeSystem.Time BeforeLeap = new(2016, 12, 31, 23, 59, 0, frame: TimeFrame.UTCFrame);
-    private static readonly TimeSystem.Time AfterLeap = new(2017, 1, 1, 0, 1, 0, frame: TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time BeforeLeap = new(2016, 12, 31, 23, 59, 0, TimeScale.UTC);
+    private static readonly TimeSystem.Time AfterLeap = new(2017, 1, 1, 0, 1, 0, TimeScale.UTC);
 
     public LeapSecondDifferenceTests()
     {
@@ -41,13 +41,13 @@ public class LeapSecondDifferenceTests
     [Fact]
     public void TwoUtcTimes_WithoutALeapSecond_DifferByTheirCalendars()
     {
-        var start = new TimeSystem.Time(2016, 12, 30, 23, 59, 0, frame: TimeFrame.UTCFrame);
-        var end = new TimeSystem.Time(2016, 12, 31, 0, 1, 0, frame: TimeFrame.UTCFrame);
+        var start = new TimeSystem.Time(2016, 12, 30, 23, 59, 0, TimeScale.UTC);
+        var end = new TimeSystem.Time(2016, 12, 31, 0, 1, 0, TimeScale.UTC);
 
         Assert.Equal(TimeSpan.FromSeconds(120.0), end - start);
         Assert.Equal(new TimeSpan(new DateTime(2017, 6, 1, 0, 0, 0, 1).Ticks - new DateTime(2017, 1, 1).Ticks),
-            new TimeSystem.Time(new DateTime(2017, 6, 1, 0, 0, 0, 1), TimeFrame.UTCFrame) -
-            new TimeSystem.Time(new DateTime(2017, 1, 1), TimeFrame.UTCFrame));
+            new TimeSystem.Time(new DateTime(2017, 6, 1, 0, 0, 0, 1), TimeScale.UTC) -
+            new TimeSystem.Time(new DateTime(2017, 1, 1), TimeScale.UTC));
     }
 
     [Fact]
@@ -55,24 +55,17 @@ public class LeapSecondDifferenceTests
     {
         // TAI, TT and GPS are uniform, and the instants differ by whole ticks in them: the same 121 s, exactly
         Assert.Equal(AfterLeap.ToTAI() - BeforeLeap.ToTAI(), AfterLeap - BeforeLeap);
-        Assert.Equal(AfterLeap.ToTDT() - BeforeLeap.ToTDT(), AfterLeap - BeforeLeap);
+        Assert.Equal(AfterLeap.ToTT() - BeforeLeap.ToTT(), AfterLeap - BeforeLeap);
         Assert.Equal(AfterLeap.ToGPS() - BeforeLeap.ToGPS(), AfterLeap - BeforeLeap);
         Assert.Equal(AfterLeap.ToTAI() - BeforeLeap, AfterLeap - BeforeLeap);
-    }
-
-    [Fact]
-    public void TwoLocalTimes_AcrossTheLeapSecond_Differ_By121Seconds()
-    {
-        // Local time is UTC moved by the zone: its calendar skips the leap second too
-        Assert.Equal(TimeSpan.FromSeconds(121.0), AfterLeap.ToLocal() - BeforeLeap.ToLocal());
     }
 
     [Fact]
     public void TwoTdbTimes_DifferByTheirCalendars()
     {
         // TDB has no leap second: the difference of its calendar, the expression before #508
-        var start = new TimeSystem.Time(2016, 12, 31, 23, 59, 0);
-        var end = new TimeSystem.Time(2017, 1, 1, 0, 1, 0);
+        var start = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, TimeScale.TDB);
+        var end = new TimeSystem.Time(2017, 1, 1, 0, 1, 0, TimeScale.TDB);
 
         Assert.Equal(end.DateTime - start.DateTime, end - start);
     }
