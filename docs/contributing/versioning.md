@@ -60,9 +60,12 @@ parsec of 648000/π au, a repeated kernel load, which no longer reloads, with th
 central body without GM refused by a propagation, the scale of a `Time` a required argument, with `Time.Parse` in
 place of `Time(string)`, an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors, the row
 product vᵀ M of `double[] * Matrix`, and
-`KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters.
+`KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters, and the data
+provider seam in domain types (`StateVector`, `CelestialBodyInfo`) with the read-only public structs.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
-`ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3` and six exports of the native library that .NET never called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+`ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
+public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI` and the public helpers of the
+implementation. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -211,6 +214,15 @@ release are listed under **Known limitations**.
   within 1e-6 of e = 1, from its perigee radius, a = q / (1 − e), +Infinity at e = 1;
   `ArgumentOutOfRangeException` (`eccentricity`) outside the band. Both osculating. See
   [Keplerian Elements](../reference/keplerian-elements.md).
+- **`CelestialBodyInfo`** (lot L3 of the ergonomics review, R04 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A of the re-baseline, decided by S.
+  Guillet, 2026-11-19), `IO.Astrodynamics.DataProvider`: the information a data provider gives on a celestial body, a
+  public sealed record of SI values, `CelestialBodyInfo(NaifId, Name, CenterOfMotionId, BarycenterOfMotionId, Radii,
+  GM, FrameName, FrameId = 0, J2 = NaN, J3 = NaN, J4 = NaN)`, `Radii` a `Vector3` in m, equal to another when every
+  value is (NaN equal to NaN). `SpiceAPI.GetCelestialBodyInfo` gives the native record field for field, bit for bit
+  (`CelestialBodyInfoTests`, against the native record and the kernel texts of `gm_de440.tpc` and `pck00011.tpc`). It
+  replaces the public interop struct `IO.Astrodynamics.DTO.CelestialBody` on the provider seam (under **Changed**). See
+  [SpiceAPI & Data Providers](../reference/spice-api.md#the-provider-seam).
 - **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
   `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
@@ -4446,6 +4458,31 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `KeplerianElements.Parabolic(q, i, o, w, m, centre, epoch, frame)`, an e of the band as the last argument and its a
   computed; `period:` → nothing (`Period()` computes it); a `perigeeRadius:` beside an ellipse or a hyperbola → nothing
   (`PerigeeRadius()` computes a (1 − e)); `rigthAscendingNode:` → `ascendingNode:`.
+- **Breaking: the data provider seam speaks domain types** (lot L3, R04 with R20 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, so that a
+  custom provider changes once). `IDataProvider.GetEphemeris` returns a `StateVector` (`OrbitalParameters` before,
+  always built as a `StateVector`); `IDataProvider.GetCelestialBodyInfo`, `SpiceAPI.GetCelestialBodyInfo` and
+  `MemoryDataProvider.GetCelestialBodyInfo` return a `CelestialBodyInfo`, and `MemoryDataProvider.AddCelestialBodyInfo`
+  takes `params CelestialBodyInfo[]` (the interop struct `IO.Astrodynamics.DTO.CelestialBody` before, now internal,
+  whose name clashed with `IO.Astrodynamics.Body.CelestialBody`), throwing `ArgumentNullException`
+  (`celestialBodyInfos`) for a null array or record and storing nothing (`NullReferenceException` part way before). The
+  values are the same, bit for bit. The interface documents its exception contract (an unknown name or identifier
+  `ArgumentException`, a known item without data `InvalidOperationException`), unchanged since #680. Migration: a custom
+  provider returns `StateVector` from `GetEphemeris` and `CelestialBodyInfo` from `GetCelestialBodyInfo`; a caller that
+  wrote `.ToStateVector()` after a provider read may drop it; `info.Id` → `info.NaifId`; `new DTO.CelestialBody(id,
+  centerOfMotionId, barycenterOfMotionId, name, new Vector3D(x, y, z), gm, frameName, frameId, j2, j3, j4)` → `new
+  CelestialBodyInfo(id, name, centerOfMotionId, barycenterOfMotionId, new Vector3(x, y, z), gm, frameName, frameId, j2,
+  j3, j4)` (the name second), or named arguments; `using BodyInfo = IO.Astrodynamics.DTO.CelestialBody` → `using
+  IO.Astrodynamics.DataProvider`.
+- **Breaking: `CelestialItem.ExtendedInformation` is private protected** (R04 of #668, section A): a field of the
+  interop struct, protected, so that a subclass outside the library read the body information through it. Migration:
+  read the members of the body (`Name`, `GM`, `Radii`, `Frame`, `J2`, `CenterOfMotionId`, ...), or
+  `Configuration.Instance.DataProvider.GetCelestialBodyInfo(naifId)`.
+- **Breaking: every public struct is read only** (R04 of #668: `IntegrationResult`, `EventInfo` and `EventResult`, the
+  positional record structs of the integrators and the event detectors, had public setters, and `Plane` was not read
+  only), so that a copy taken from a property or a collection cannot be changed in the belief that the original is
+  (`PublicSurfaceScopeTests`). Migration: `result = result with { Action = EventAction.Continue }` in place of
+  `result.Action = EventAction.Continue`.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -6643,7 +6680,37 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **The operator `*` between two `Vector3`**, the dot product (R26 of #668, section A as amended: no forwarder;
   `System.Numerics.Vector3 * Vector3` is component-wise, so the operator read as a trap). `v1 * v2` no longer compiles,
   so no caller meets another meaning silently. Migration: `v1.Dot(v2)` (Added above), the same expression, bit for bit.
-
+- **The public interop structs of `IO.Astrodynamics.DTO`** (lot L3, R04 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `AzimuthRange`, `CelestialBody`, `EquinoctialElements`,
+  `FrameTransformation`, `KeplerianElements`, `Launch`, `Planetodetic`, `Quaternion`, `Site`, `StateOrientation`,
+  `StateVector`, `TLEElements`, `Vector3D` and `Window`, the P/Invoke layouts of the native layer, are internal: eleven
+  bore the names of domain types, so that a `using IO.Astrodynamics.DTO` made them ambiguous (CS0104), and only
+  `GetCelestialBodyInfo` reached one. Migration: `CelestialBodyInfo` for the body information (Changed above); the
+  domain types (`IO.Astrodynamics.Math.Vector3`, `Quaternion`, `OrbitalParameters.StateVector`, `TimeSystem.Window`,
+  `Coordinates.Planetodetic`, ...) for the others.
+- **The ten raw conversions of `SpiceAPI`** (lot L3, R04 of #668, choice 1 as amended by section 7 of the re-baseline,
+  decided by S. Guillet, 2026-11-19: removed from the public API outright, no forwarder): `ConvertTleToStateVector(line1,
+  line2, line3, epoch)`, `ConvertStateVectorToConicOrbitalElement(stateVector)` and `(stateVector, gm)`,
+  `ConvertEquinoctialElementsToStateVector(elements)`, `ConvertConicElementsToStateVector(elements)`, `(elements, epoch)`
+  and `(elements, epoch, gm)`, `Propagate2Bodies(stateVector, dt)`, `(stateVector, gm, dt)` and `(stateVector,
+  targetEpoch)`. They twinned the object API through CSPICE; the library keeps them internal, the SPICE references of its
+  tests. Migration, the object API, the library's own computation, which agrees with CSPICE to the tolerances of the
+  tests, not bit for bit: `new TLE(name, line1, line2).ToStateVector(epoch)` (the same `evsgp4_c`);
+  `stateVector.ToKeplerianElements()`; `elements.ToStateVector()` and `elements.ToStateVector(epoch)`;
+  `stateVector.AtEpoch(stateVector.Epoch + dt).ToStateVector()` and `stateVector.AtEpoch(targetEpoch).ToStateVector()`,
+  which count the TT seconds between the instants about the Earth (#508) where `Propagate2Bodies` counted the difference
+  of the labels (the two differ by the change of TDB − TT over the interval, 3.3 ms at most, twice the 1.66 ms
+  amplitude of TDB − TT); an explicit GM through an observer of that GM, a
+  `CelestialBody` built from custom parameters. See [Two-body calls and element
+  conversions](../reference/spice-api.md#two-body-calls-and-element-conversions).
+- **The public helpers of the implementation** (lot L3, R04 of #668): `DictionnaryExtension` (a `GetOrAdd` on
+  `IDictionary`), `Enumeration` (`GetDescription`, `GetValueFromDescription`), `ArrayBuilder`,
+  `Converters.ProfilesConfiguration` (internal members only), `Helpers.Utf8StringWriter`,
+  `Propagator.PropagationEphemerisCache` and `Propagator.PropagationFrameOrientationCache` (the force caches a
+  propagation builds for itself), and the JSON model of the Cosmographia exporter (`Cosmographia.Model`, 50 types), whose
+  files are the exporter's only output. Migration: `ConcurrentDictionary.GetOrAdd` or `CollectionExtensions`;
+  `DescriptionAttribute` read by reflection; `new T[n]` filled by the caller; `StringWriter` with an `Encoding`
+  override; the exporter's files for the Cosmographia model.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is

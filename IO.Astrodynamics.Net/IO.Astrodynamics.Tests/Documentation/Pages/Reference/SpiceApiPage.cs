@@ -87,13 +87,14 @@ internal static class SpiceApiPage
     }
 
     // docs/reference/spice-api.md, "MemoryDataProvider"
-    internal static void Block03(IO.Astrodynamics.DTO.CelestialBody customEarth)
+    internal static void Block03()
     {
         #region docs/reference/spice-api.md:3
-        // Inputs: customEarth (IO.Astrodynamics.DTO.CelestialBody)
         var memoryProvider = new MemoryDataProvider();
+        memoryProvider.AddCelestialBodyInfo(new CelestialBodyInfo(NaifId: 399, Name: "EARTH", CenterOfMotionId: 10,
+            BarycenterOfMotionId: 3, Radii: new Vector3(6378137.0, 6378137.0, 6356752.0), GM: 3.986004418e14,
+            FrameName: "ITRF93", FrameId: 13000));
         Configuration.Instance.SetDataProvider(memoryProvider);
-        memoryProvider.AddCelestialBodyInfo(customEarth);
         #endregion
     }
 }

@@ -9,7 +9,7 @@ Integrators advance spacecraft state through time under configured force models.
 | `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations; called by every `CentralBodyPropagator` constructor and after each event |
 | `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` | Advance state, returning `IntegrationResult` |
 
-`IntegrationResult` contains the completed `PropagationSegment` and optional event information if a detector triggered during the segment.
+`IntegrationResult` contains the completed `PropagationSegment` and optional event information (`EventInfo`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
 
 The `duration` of `IntegrateSegment`, `PropagationSegment.Duration`, the `CumulativeTime` and `StepSize` of an
 `AcceptedStep` and the time of an event count the seconds of the time argument of the propagation: TT about the Earth,

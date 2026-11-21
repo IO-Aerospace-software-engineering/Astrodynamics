@@ -1030,15 +1030,17 @@ internal static class DeveloperGuideExamples
     }
 
     // DEVELOPER_GUIDE.md, "MemoryDataProvider"
-    internal static void Block41(IO.Astrodynamics.DTO.CelestialBody customEarth, Time epoch, StateVector earthState)
+    internal static void Block41(Time epoch, StateVector earthState)
     {
         #region guide:41
-        // customEarth: the information of a body (IO.Astrodynamics.DTO.CelestialBody); epoch: Time; earthState: a StateVector of the Earth
+        // epoch: Time; earthState: a StateVector of the Earth
         // For testing without SPICE kernels
         var memoryProvider = new MemoryDataProvider();
         Configuration.Instance.SetDataProvider(memoryProvider);
 
-        memoryProvider.AddCelestialBodyInfo(customEarth);
+        memoryProvider.AddCelestialBodyInfo(new CelestialBodyInfo(NaifId: 399, Name: "EARTH", CenterOfMotionId: 10,
+            BarycenterOfMotionId: 3, Radii: new Vector3(6378137.0, 6378137.0, 6356752.0), GM: 3.986004418e14,
+            FrameName: "ITRF93", FrameId: 13000));
         memoryProvider.AddStateVector(399, epoch, earthState);
         #endregion
     }

@@ -2147,17 +2147,19 @@ In-memory data provider for testing.
 
 | Method | Description |
 |--------|-------------|
-| `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add the information of bodies (NAIF id, radii, GM, frame) |
+| `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies (NAIF id, name, radii, GM, frame), a `CelestialBodyInfo` since 11.0.0 (the interop struct, now internal, `IO.Astrodynamics.DTO.CelestialBody` before) |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
 | `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines and never reads from stored entries (#744) |
 
 ```csharp
-// customEarth: the information of a body (IO.Astrodynamics.DTO.CelestialBody); epoch: Time; earthState: a StateVector of the Earth
+// epoch: Time; earthState: a StateVector of the Earth
 // For testing without SPICE kernels
 var memoryProvider = new MemoryDataProvider();
 Configuration.Instance.SetDataProvider(memoryProvider);
 
-memoryProvider.AddCelestialBodyInfo(customEarth);
+memoryProvider.AddCelestialBodyInfo(new CelestialBodyInfo(NaifId: 399, Name: "EARTH", CenterOfMotionId: 10,
+    BarycenterOfMotionId: 3, Radii: new Vector3(6378137.0, 6378137.0, 6356752.0), GM: 3.986004418e14,
+    FrameName: "ITRF93", FrameId: 13000));
 memoryProvider.AddStateVector(399, epoch, earthState);
 ```
 
