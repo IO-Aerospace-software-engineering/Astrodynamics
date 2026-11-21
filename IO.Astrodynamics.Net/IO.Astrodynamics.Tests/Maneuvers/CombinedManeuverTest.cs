@@ -42,7 +42,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var state = orbitalParams.ToStateVector(PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
             // A target equal to the apogee: the apogee radius the maneuver reads from the state
             double target = equalToApogee ? state.ApogeeVector().Magnitude() : targetRadius;
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, target, 0.0,
+            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, target, 0.0,
                 spc.Engines.First());
             return (state, maneuver);
         }
@@ -101,11 +101,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
 
-            CombinedManeuver maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), TimeSpan.FromDays(1.0), 151000000.0, 1.0, eng);
+            CombinedManeuver maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), 151000000.0, 1.0, eng);
 
             Assert.NotNull(maneuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), maneuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), maneuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), maneuver.MinimumEpoch);
             Assert.Equal(151000000.0, maneuver.TargetPerigeeHeight);
             Assert.Equal(1.0, maneuver.TargetInclination);
         }
@@ -123,7 +123,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
 
             var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,
-                new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
                 alignedOrbit.ApogeeVector().Magnitude() + 100000.0, 10.0,
                 new Engine("eng", "engmk1", "12345", 450, 50,
                     new FuelTank("ft", "ftA", "123456", 1000, 1000)));
@@ -154,7 +154,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 42164000.0, 0.0, spc.Engines.First());
+            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0, 0.0, spc.Engines.First());
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee
@@ -185,7 +185,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 6600000.0, 0.0, spc.Engines.First());
+            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 6600000.0, 0.0, spc.Engines.First());
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee

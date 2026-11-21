@@ -99,8 +99,8 @@ public class EpochAtMeanAnomalyTests
             {
                 var state = EarthOrbit(m0, a, e).ToStateVector();
                 double n = state.MeanMotion();
-                double period = IO.Astrodynamics.Constants._2PI / n;
-                for (double target = 0.05; target < IO.Astrodynamics.Constants._2PI; target += 0.3)
+                double period = IO.Astrodynamics.Constants.TwoPi / n;
+                for (double target = 0.05; target < IO.Astrodynamics.Constants.TwoPi; target += 0.3)
                 {
                     double expected = IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(target - m0) / n;
                     double actual = TtSeconds(Epoch, state.EpochAtMeanAnomaly(target));
@@ -122,7 +122,7 @@ public class EpochAtMeanAnomalyTests
         // threw (OverflowException in 10.x, ArgumentOutOfRangeException since #625)
         var comet = new KeplerianElements(1e4 * Au, 1.0 - 1e-6, 0.5, 0.3, 0.2, -0.02, TestHelpers.Sun, Epoch, Frames.Frame.ECLIPTIC_J2000);
         Assert.Equal(-0.02, comet.MeanAnomaly());
-        var passage = comet.EpochAtMeanAnomaly(IO.Astrodynamics.Constants._2PI - 0.01);
+        var passage = comet.EpochAtMeanAnomaly(IO.Astrodynamics.Constants.TwoPi - 0.01);
         AssertSeconds(50226428909.255040238, (passage - Epoch).TotalSeconds, CometTolerance, "comet M -0.02");
     }
 
@@ -146,10 +146,10 @@ public class EpochAtMeanAnomalyTests
     {
         // M = 2π − 0.001 rad moved by 300 Julian years past the perihelion, held unreduced (6.284 rad): −61.3 years before
         // #474 for a passage beyond TimeSpan, a past epoch
-        var comet = new KeplerianElements(1e4 * Au, 1.0 - 1e-6, 0.5, 0.3, 0.2, IO.Astrodynamics.Constants._2PI - 0.001, TestHelpers.Sun, Epoch,
+        var comet = new KeplerianElements(1e4 * Au, 1.0 - 1e-6, 0.5, 0.3, 0.2, IO.Astrodynamics.Constants.TwoPi - 0.001, TestHelpers.Sun, Epoch,
             Frames.Frame.ECLIPTIC_J2000);
         var later = comet.AtEpoch(Epoch.AddSeconds(9467280000.0));
-        Assert.True(later.MeanAnomaly() > IO.Astrodynamics.Constants._2PI);
+        Assert.True(later.MeanAnomaly() > IO.Astrodynamics.Constants.TwoPi);
         var passage = later.EpochAtMeanAnomaly(0.002);
         AssertSeconds(5600648672.7794670488, (passage - later.Epoch).TotalSeconds, CometTolerance, "comet 300 yr");
 

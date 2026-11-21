@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.IO;
 using IO.Astrodynamics.Body;
@@ -23,7 +24,7 @@ public class GeopotentialModelDegreeTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     // 300 km above the reference radius of EGM2008, the radius of the issue
     private const double Radius = 6678137.0;

@@ -20,7 +20,7 @@ public sealed class CaseKernelsTests : IDisposable
 {
     private const string Kernel = "earth_latest_high_prec.bpc";
     private const string Pointer = SuiteDataFile.LfsPointerHeader + "v1\noid sha256:a3e65d8acf\nsize 5153792\n";
-    private static readonly Time Epoch = new(new DateTime(2021, 3, 20, 12, 0, 0), TimeFrame.TDBFrame);
+    private static readonly Time Epoch = new(new DateTime(2021, 3, 20, 12, 0, 0), TimeScale.TDB);
 
     private readonly string _directory;
 

@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -16,7 +17,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 public class StateVectorFrameCovarianceTests
 {
     // Inside the coverage of the Earth orientation kernel of the test data.
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     // The state transformation is linear in (r, v) at a fixed epoch, so the central differences have no truncation
     // error: large steps keep the rounding error far below the tolerances.

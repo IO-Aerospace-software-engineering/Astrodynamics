@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// </summary>
 public class SsbModeThirdBodyTests
 {
-    private static readonly TimeSystem.Time Start = new(new DateTime(2024, 3, 1, 12, 0, 0), TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Start = new(new DateTime(2024, 3, 1, 12, 0, 0), TimeScale.TDB);
     private static readonly Window Window = new(Start, Start.AddSeconds(3600.0));
     private static readonly TimeSpan Output = TimeSpan.FromSeconds(10.0);
     private readonly ITestOutputHelper _output;

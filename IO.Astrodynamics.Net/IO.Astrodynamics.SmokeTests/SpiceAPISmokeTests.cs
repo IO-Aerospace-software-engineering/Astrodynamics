@@ -33,10 +33,10 @@ public class SpiceAPISmokeTests
     }
 
     private static CelestialBody EarthAtJ2000 =>
-        new(PlanetsAndMoons.EARTH, Frame.ICRF, new Time(2000, 1, 1, 12, 0, 0));
+        new(PlanetsAndMoons.EARTH, Frame.ICRF, new Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
     private static CelestialBody MoonAtJ2000 =>
-        new(PlanetsAndMoons.MOON, Frame.ICRF, new Time(2000, 1, 1, 12, 0, 0));
+        new(PlanetsAndMoons.MOON, Frame.ICRF, new Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
     private static CelestialBody Sun => new(Stars.Sun);
 
@@ -249,7 +249,7 @@ public class SpiceAPISmokeTests
             "ISS",
             "1 25544U 98067A   24001.00000000  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703",
-            new Time(2024, 1, 1, frame: TimeFrame.UTCFrame));
+            new Time(2024, 1, 1, TimeScale.UTC));
 
         var sv = result.ToStateVector();
         Assert.NotEqual(0.0, sv.Position.Magnitude());
@@ -465,7 +465,7 @@ public class SpiceAPISmokeTests
         var parkingOrbit = new StateVector(
             new Vector3(6800000.0, 0.0, 0.0),
             new Vector3(0.0, 7656.2204182967143, 0.0),
-            EarthAtJ2000, Time.Create(676555130.0, TimeFrame.TDBFrame), Frame.ICRF);
+            EarthAtJ2000, Time.Create(676555130.0, TimeScale.TDB), Frame.ICRF);
 
         var spacecraft = new Spacecraft(-904, "SmokeFovSpc", 1000.0, 5000.0, clock, parkingOrbit);
         spacecraft.AddCircularInstrument(-904789, "SMOKECAM", "mod1", 0.75,
@@ -473,8 +473,8 @@ public class SpiceAPISmokeTests
             new Vector3(0.0, System.Math.PI * 0.5, 0.0));
 
         var searchWindow = new Window(
-            Time.Create(676555200.0, TimeFrame.TDBFrame),
-            Time.Create(676561646.0, TimeFrame.TDBFrame));
+            Time.Create(676555200.0, TimeScale.TDB),
+            Time.Create(676561646.0, TimeScale.TDB));
 
         var results = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
             searchWindow, spacecraft.NaifId, spacecraft.Instruments.First().NaifId,

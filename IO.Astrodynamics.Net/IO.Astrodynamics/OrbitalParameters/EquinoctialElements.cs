@@ -381,7 +381,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         // L0 within one turn of zero. Beyond, it is reduced through its sine and cosine, whose argument reduction is
         // exact: a remainder by the double 2π (NormalizeAngle) loses 2.4e-16 rad per turn, 3.9e-7 rad at 1e10 rad (#452)
-        private double TrueLongitudeWithinOneTurn() => System.Math.Abs(L0) <= Constants._2PI
+        private double TrueLongitudeWithinOneTurn() => System.Math.Abs(L0) <= Constants.TwoPi
             ? L0
             : System.Math.Atan2(System.Math.Sin(L0), System.Math.Cos(L0));
 

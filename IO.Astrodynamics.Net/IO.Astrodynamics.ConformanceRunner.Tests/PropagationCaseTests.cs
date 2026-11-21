@@ -487,9 +487,9 @@ public class PropagationCaseTests
         var utcCase = PropagationCase.Build(utc, KernelsPath);
 
         // Assert
-        Assert.Equal(TimeSystem.TimeFrame.TDBFrame, tdbCase.Window.StartDate.Frame);
+        Assert.Equal(TimeSystem.TimeScale.TDB, tdbCase.Window.StartDate.Scale);
         Assert.Equal(86400.0, tdbCase.Window.Length.TotalSeconds);
-        Assert.Equal(TimeSystem.TimeFrame.TDBFrame, tdbCase.Spacecraft.InitialOrbitalParameters.Epoch.Frame);
+        Assert.Equal(TimeSystem.TimeScale.TDB, tdbCase.Spacecraft.InitialOrbitalParameters.Epoch.Scale);
         Assert.Equal(TimeSpan.FromTicks(861_640_998_101L), utcCase.Window.Length);
     }
 

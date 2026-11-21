@@ -33,7 +33,7 @@ public class CovariancePropagationSmokeTests
     public void ReferencePageExample_RunsAndGivesASymmetricPositiveCovariance()
     {
         // The example of docs/reference/covariance-propagation.md
-        var epoch = new Time(2021, 3, 20, 12, 0, 0);
+        var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, epoch);

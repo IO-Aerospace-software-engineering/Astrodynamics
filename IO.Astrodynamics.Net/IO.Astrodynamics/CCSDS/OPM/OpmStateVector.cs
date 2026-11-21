@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -109,20 +110,20 @@ public class OpmStateVector
     /// </remarks>
     public StateVector ToStateVector(ILocalizable observer, Frame frame, Matrix? covariance = null)
     {
-        return ToStateVector(observer, frame, covariance, TimeFrame.UTCFrame);
+        return ToStateVector(observer, frame, covariance, TimeScale.UTC);
     }
 
     /// <summary>
-    /// Converts this OPM state vector to a framework StateVector, its epoch read in <paramref name="timeFrame"/>, the
-    /// time frame of the message's <c>TIME_SYSTEM</c> (#485).
+    /// Converts this OPM state vector to a framework StateVector, its epoch read in <paramref name="timeScale"/>, the
+    /// time scale of the message's <c>TIME_SYSTEM</c> (#485).
     /// </summary>
-    internal StateVector ToStateVector(ILocalizable observer, Frame frame, Matrix? covariance, ITimeFrame timeFrame)
+    internal StateVector ToStateVector(ILocalizable observer, Frame frame, Matrix? covariance, TimeScale timeScale)
     {
         // Convert km to m, km/s to m/s: finite, the constructor refusing a component whose product is not (#729)
         var position = new Vector3(X * KilometersToMeters, Y * KilometersToMeters, Z * KilometersToMeters);
         var velocity = new Vector3(XDot * KilometersToMeters, YDot * KilometersToMeters, ZDot * KilometersToMeters);
 
-        var epoch = new Time(Epoch, timeFrame);
+        var epoch = CcsdsTimeSystemMapping.ToTime(Epoch, timeScale);
 
         return new StateVector(position, velocity, observer, epoch, frame, covariance);
     }

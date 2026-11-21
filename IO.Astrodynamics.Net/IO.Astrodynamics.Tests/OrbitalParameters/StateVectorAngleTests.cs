@@ -82,7 +82,7 @@ public class StateVectorAngleTests
         // Before #368, ω of an equatorial orbit was reflected on the sign of e_z, which is zero: ω stayed in [0, π],
         // and the state at another epoch was wrong by up to the orbit diameter (3 609 km in a conjunction test)
         var earth = TestHelpers.EarthAtJ2000;
-        for (double periapsis = 0.25; periapsis < IO.Astrodynamics.Constants._2PI; periapsis += 0.5)
+        for (double periapsis = 0.25; periapsis < IO.Astrodynamics.Constants.TwoPi; periapsis += 0.5)
         {
             var elements = new KeplerianElements(7000000.0, 0.1, 0.0, 0.0, periapsis, 1.0, earth, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
@@ -140,7 +140,7 @@ public class StateVectorAngleTests
         StateVector AfterAngle(KeplerianElements elements, double u, double dt)
         {
             double trueAnomaly = u - elements.AOP;
-            var atAngle = elements.ToStateVector(trueAnomaly < 0.0 ? trueAnomaly + IO.Astrodynamics.Constants._2PI : trueAnomaly);
+            var atAngle = elements.ToStateVector(trueAnomaly < 0.0 ? trueAnomaly + IO.Astrodynamics.Constants.TwoPi : trueAnomaly);
             var (x, _) = KeplerianStm.Propagate(earth.GM, atAngle.Position, atAngle.Velocity, dt);
             return new StateVector(new Vector3(x[0], x[1], x[2]), new Vector3(x[3], x[4], x[5]), earth, epoch, frame);
         }

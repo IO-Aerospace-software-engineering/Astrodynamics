@@ -67,7 +67,7 @@ public class Star : CelestialBody
     /// per Julian year of TDB.</param>
     /// <param name="rightAscensionSigmaProperMotion">The standard deviation of the proper motion in right ascension as a
     /// true angle, σμα*, in radians per Julian year of TDB (Gaia's <c>pmra_error</c>).</param>
-    /// <param name="epoch">The catalog epoch, read in its own time frame and converted to TDB (#709).</param>
+    /// <param name="epoch">The catalog epoch, read in its own time scale and converted to TDB (#709).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="parallax"/> is 0, negative, NaN or infinite, or so small
     /// that 1/parallax parsecs overflows a double (below about 1.7e-292″): no distance in front of the star (#732, decided
     /// by S. Guillet, 2026-11-17). Before 11.0.0 it was accepted: 0 gave an infinite distance, a negative parallax put the
@@ -153,7 +153,7 @@ public class Star : CelestialBody
 
     /// <summary>
     /// Gets the epoch time for the star: the catalog epoch, as given. The catalog motion counts the Julian years of TDB
-    /// from it, whatever its time frame (#709).
+    /// from it, whatever its time scale (#709).
     /// </summary>
     public Time Epoch { get; }
 
@@ -207,13 +207,13 @@ public class Star : CelestialBody
     /// <summary>
     /// The Julian years of TDB from the catalog epoch to <paramref name="epoch"/>, both converted to TDB, from the exact
     /// difference of their ticks rounded once to a double, as SOFA's <c>iauStarpm</c> and <c>iauPmsafe</c> take TDB dates
-    /// (<c>external-lib/sofa-src/starpm.c</c> and <c>pmsafe.c</c>, Note 1, #709): the same instant gives the same position whatever its time frame, and a leap second between two UTC times
+    /// (<c>external-lib/sofa-src/starpm.c</c> and <c>pmsafe.c</c>, Note 1, #709): the same instant gives the same position whatever its time scale, and a leap second between two UTC times
     /// counts. A time in TDB is used as it is, bit for bit.
     /// </summary>
     /// <remarks>
     /// Before 11.0.0 it was the difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day,
     /// about 40 µs) before the subtraction: off whole and half days from J2000 the star was that of an epoch up to about
-    /// 20 µs away, half that resolution. It was also the difference of the two calendars, each in its own time frame
+    /// 20 µs away, half that resolution. It was also the difference of the two calendars, each in its own time scale
     /// (#709): an epoch in UTC moved a star of the catalog epoch of TDB by its proper motion over the 64 to 69 s of
     /// TDB − UTC (2.3e-7 relative at 0.1 rad/yr), and two UTC times skipped the leap seconds between them.
     /// </remarks>
@@ -281,30 +281,30 @@ public class Star : CelestialBody
             dec = System.Math.Atan2(sinDec + y * cosDec, System.Math.Sqrt(x * x + e * e));
             distance = Distance * System.Math.Sqrt(1.0 + x * x + y * y);
         }
-        else if (System.Math.Abs(dec) > Constants.PI2)
+        else if (System.Math.Abs(dec) > Constants.HalfPi)
         {
             // A catalog declination past a pole: in (−π, π], then reflected through the pole it passed, the right ascension
             // turned by π (cos(π − d) = −cos d, sin(π − d) = sin d)
-            dec = System.Math.IEEERemainder(dec, Constants._2PI);
-            if (dec > Constants.PI2)
+            dec = System.Math.IEEERemainder(dec, Constants.TwoPi);
+            if (dec > Constants.HalfPi)
             {
                 dec = Constants.PI - dec;
                 ra += Constants.PI;
             }
-            else if (dec < -Constants.PI2)
+            else if (dec < -Constants.HalfPi)
             {
                 dec = -Constants.PI - dec;
                 ra += Constants.PI;
             }
         }
 
-        ra %= Constants._2PI;
+        ra %= Constants.TwoPi;
         if (ra < 0.0)
         {
             // A right ascension just below 0 (above −ulp(2π)/2) rounds to 2π, the end [0, 2π) excludes: it is the direction
             // of 0
-            ra += Constants._2PI;
-            if (ra == Constants._2PI)
+            ra += Constants.TwoPi;
+            if (ra == Constants.TwoPi)
             {
                 ra = 0.0;
             }

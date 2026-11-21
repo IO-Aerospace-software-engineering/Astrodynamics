@@ -511,7 +511,7 @@ public class AttitudeTimelineEdgeTests
     [InlineData("Moon", "VV1")]
     public void AttitudeAtAUtcMinimumEpoch_LabelledTdb_HeldAcrossALeapSecond(string centre, string integrator)
     {
-        var minimum = new Time(new DateTime(2016, 12, 31, 23, 59, 30), TimeFrame.UTCFrame);
+        var minimum = new Time(new DateTime(2016, 12, 31, 23, 59, 30), TimeScale.UTC);
         var start = minimum.ToTDB().AddSeconds(-30.0);
         var body = new CelestialBody(centre == "Moon" ? PlanetsAndMoons.MOON : PlanetsAndMoons.EARTH, Frame.ICRF, start);
         double ra = centre == "Moon" ? MoonRadius + 300000.0 : MinimumEpochGateTests.Apogee0;
@@ -524,15 +524,15 @@ public class AttitudeTimelineEdgeTests
         var activation = prograde.ThrustWindow!.Value.StartDate;
         var end = prograde.ManeuverWindow!.Value.EndDate;
         double hold = TimelineRules.SecondsBetween(activation, end, centre == "Earth");
-        _output.WriteLine($"MEASURE #539 attitude at a UTC minimum epoch, {centre} {integrator}: activation {activation.Frame.GetType().Name} - minimum " +
+        _output.WriteLine($"MEASURE #539 attitude at a UTC minimum epoch, {centre} {integrator}: activation {activation.Scale} - minimum " +
                           $"{(activation - minimum).TotalSeconds:E2} s, hold {hold - 60.0:E2} s from 60 s, nadir - end {(nadir.ThrustWindow!.Value.StartDate - end).TotalSeconds:E2} s");
-        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(activation.Frame);
+        Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, activation.Scale);
         LabelAssert.Equal(minimum.ToTDB(), activation);
         LabelAssert.Equal(activation, prograde.ManeuverWindow.Value.StartDate);
-        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(prograde.ManeuverWindow.Value.StartDate.Frame);
-        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(end.Frame);
+        Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, prograde.ManeuverWindow.Value.StartDate.Scale);
+        Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, end.Scale);
         LabelAssert.Equal(end, nadir.ThrustWindow.Value.StartDate);
-        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(nadir.ThrustWindow.Value.StartDate.Frame);
+        Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, nadir.ThrustWindow.Value.StartDate.Scale);
         Assert.True(System.Math.Abs(hold - 60.0) <= TimelineRules.RuleBound, $"hold {hold:R} s");
         var summary = spacecraft.GetSummary();
         LabelAssert.Equal(activation, summary.ManeuverWindow!.Value.StartDate);
@@ -630,7 +630,7 @@ internal sealed class NeverReadyImpulse : ImpulseManeuver
 /// <summary>A user impulse at the perigee, 100 m/s along the velocity, whose execution returns no attitude.</summary>
 internal sealed class NoAttitudeImpulse : ImpulseManeuver
 {
-    internal NoAttitudeImpulse(CelestialItem center, Engine engine) : base(center, new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, engine)
+    internal NoAttitudeImpulse(CelestialItem center, Engine engine) : base(center, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine)
     {
     }
 

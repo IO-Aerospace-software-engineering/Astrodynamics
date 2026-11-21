@@ -203,7 +203,8 @@ public class TimeTests
         var command2 = new TimeConverterCommand();
         await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, false, false, false, true, false, true));
         await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, true, false, true, false, true));
-        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, false, false));
+        // Local time in another format than ISO (D3.7; before 11.0.0 a scale without a format threw here, ISO is now the default)
+        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, false, false, true, true, false, false));
         await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, true, true, false));
         await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, true, false, true));
         await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, true, true));

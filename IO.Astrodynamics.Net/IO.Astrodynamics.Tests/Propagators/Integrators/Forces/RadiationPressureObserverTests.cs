@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -24,7 +25,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces;
 /// </remarks>
 public class RadiationPressureObserverTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     // The heliocentric coordinates round the position by about 1e-5 m (1.5e11 m at a relative 1e-16), which moves the
     // acceleration by its gradient: about 1/r relative in sunlight, measured 3.8e-12 at most (the terminator albedo),

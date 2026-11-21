@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Atmosphere;
@@ -16,7 +17,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere;
 /// </summary>
 public class Nrlmsise00AllocationTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     // Every branch of the model: troposphere, stratosphere, mesosphere (below and above 72.5 km), lower thermosphere
     // (below the 120 km of the spline nodes and below 300 km) and the upper thermosphere

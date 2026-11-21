@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// </summary>
 public class ElementsValidationTests
 {
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.TT);
     private readonly CelestialBody _earth;
 
     public ElementsValidationTests()
@@ -385,7 +385,7 @@ public class ElementsValidationTests
     {
         // 2π √(a³/μ), the closed form, to the nearest tick (#637; ExactTicks, the exact integer reference)
         var ke = Keplerian(a: 7000000.0, e: 0.1);
-        Assert.Equal(IO.Astrodynamics.Tests.Time.ExactTicks.Nearest(IO.Astrodynamics.Constants._2PI * System.Math.Sqrt(7e6 * 7e6 * 7e6 / _earth.GM)),
+        Assert.Equal(IO.Astrodynamics.Tests.Time.ExactTicks.Nearest(IO.Astrodynamics.Constants.TwoPi * System.Math.Sqrt(7e6 * 7e6 * 7e6 / _earth.GM)),
             ke.Period().Ticks);
     }
 

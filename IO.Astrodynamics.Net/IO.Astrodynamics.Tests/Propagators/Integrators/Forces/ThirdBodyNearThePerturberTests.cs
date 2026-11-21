@@ -24,7 +24,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces;
 /// </summary>
 public class ThirdBodyNearThePerturberTests
 {
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2024, 3, 1, 12, 0, 0), TimeSystem.TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2024, 3, 1, 12, 0, 0), TimeSystem.TimeScale.TDB);
     private readonly ITestOutputHelper _output;
 
     public ThirdBodyNearThePerturberTests(ITestOutputHelper output)

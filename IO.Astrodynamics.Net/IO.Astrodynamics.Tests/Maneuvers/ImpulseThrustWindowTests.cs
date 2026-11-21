@@ -53,7 +53,7 @@ public class ImpulseThrustWindowTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
     private static Spacecraft NewSpacecraft(int naifId, StateVector initial, double dry, double fuel, out Engine engine)
     {

@@ -100,8 +100,8 @@ internal static class FieldOfViewKernels
         double worst = 0.0;
         for (int i = 0; i < expected.Count; i++)
         {
-            Assert.Equal(TimeFrame.TDBFrame, actual[i].StartDate.Frame);
-            Assert.Equal(TimeFrame.TDBFrame, actual[i].EndDate.Frame);
+            Assert.Equal(TimeScale.TDB, actual[i].StartDate.Scale);
+            Assert.Equal(TimeScale.TDB, actual[i].EndDate.Scale);
             worst = System.Math.Max(worst, System.Math.Abs((actual[i].StartDate - expected[i].StartDate).TotalSeconds));
             worst = System.Math.Max(worst, System.Math.Abs((actual[i].EndDate - expected[i].EndDate).TotalSeconds));
         }
@@ -136,8 +136,8 @@ public sealed class PropagatedFieldOfViewCase
         End = Start.AddSeconds(6448.0);
         // The light time of a spacecraft target reads it before the search window: one second inside the propagation
         SearchWindow = new Window(Start.AddSeconds(1.0), End.AddSeconds(-1.0));
-        Earth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
-        Moon = new CelestialBody(301, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
+        Earth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
+        Moon = new CelestialBody(301, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
         Sun = new CelestialBody(10);
         Dss13 = new Site(13, "DSS-13", Earth);
         // A site given by its coordinates (the managed path; its SPK written by Site.WriteEphemeris for gftfov)
@@ -206,7 +206,7 @@ public sealed class PropagatedFieldOfViewCase
         double ten = 10.0 * IO.Astrodynamics.Constants.Deg2Rad;
         var g = new Vector3(System.Math.Sin(ten), 0.0, System.Math.Cos(ten));
         var gRef = new Vector3(System.Math.Cos(ten), 0.0, -System.Math.Sin(ten));
-        var y = new Vector3(0.0, IO.Astrodynamics.Constants.PI2, 0.0);
+        var y = new Vector3(0.0, IO.Astrodynamics.Constants.HalfPi, 0.0);
         var zero = Vector3.Zero;
         var mX = new Vector3(-1.0, 0.0, 0.0);
         var turned = new Vector3(0.0, System.Math.Cos(System.Math.PI / 6.0), System.Math.Sin(System.Math.PI / 6.0));
@@ -755,10 +755,10 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 spacecraft.AddEllipticalInstrument(id - 903, "NOCROSSE", "fov515", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero)).ParamName);
             Assert.Equal("crossAngle", Assert.Throws<ArgumentOutOfRangeException>(() =>
                 spacecraft.AddRectangularInstrument(id - 904, "NOCROSSR", "fov515", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero)).ParamName);
-            spacecraft.AddCircularInstrument(id - 905, "WIDEC", "fov515", IO.Astrodynamics.Constants.PI2 - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-            spacecraft.AddRectangularInstrument(id - 906, "WIDER", "fov515", IO.Astrodynamics.Constants.PI2 - 1e-7, 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-            spacecraft.AddRectangularInstrument(id - 907, "HALFPI", "fov515", 0.1, IO.Astrodynamics.Constants.PI2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-            spacecraft.AddEllipticalInstrument(id - 908, "WIDEE", "fov515", 0.1, IO.Astrodynamics.Constants.PI2 - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+            spacecraft.AddCircularInstrument(id - 905, "WIDEC", "fov515", IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+            spacecraft.AddRectangularInstrument(id - 906, "WIDER", "fov515", IO.Astrodynamics.Constants.HalfPi - 1e-7, 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+            spacecraft.AddRectangularInstrument(id - 907, "HALFPI", "fov515", 0.1, IO.Astrodynamics.Constants.HalfPi, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+            spacecraft.AddEllipticalInstrument(id - 908, "WIDEE", "fov515", 0.1, IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
             foreach (var instrument in spacecraft.Instruments.Where(x => -x.NaifId % 1000 > 900))
             {
                 Assert.Throws<InvalidOperationException>(() =>
@@ -835,7 +835,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         var earth = _case.Earth;
         var moon = _case.Moon;
-        var epoch = new TimeSystem.Time(2024, 3, 1);
+        var epoch = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, 3000.0, new Clock("FOV6822_CLK", 65536), tle);
@@ -871,7 +871,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
             // A field error first: a field wider than gftfov's bound (a zero boresight and a cross angle of 0 are rejected when
             // the instrument is added, #707, #715)
-            spacecraft.AddEllipticalInstrument(spacecraft.NaifId * 1000 - 2, "WIDE", "fov682", 0.3, IO.Astrodynamics.Constants.PI2 - 1e-7, Vector3.VectorY,
+            spacecraft.AddEllipticalInstrument(spacecraft.NaifId * 1000 - 2, "WIDE", "fov682", 0.3, IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorY,
                 Vector3.VectorX, Vector3.Zero);
             var wide = spacecraft.Instruments.First(x => x.Name == "WIDE");
             var fieldError = Assert.Throws<InvalidOperationException>(() =>
@@ -900,14 +900,14 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     public void AttitudeAddedByHand_IsTheOneSearched()
     {
         var earth = _case.Earth;
-        var epoch = new TimeSystem.Time(2024, 3, 1);
+        var epoch = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
         var window = new Window(epoch, epoch.AddSeconds(6.0 * 3600.0));
         double halfAngle = 30.0 * IO.Astrodynamics.Constants.Deg2Rad;
         double worst = 0.0;
         int id = -6823;
         // The identity keeps the boresight +Y 51.6° from the orbit's plane, the Earth's centre never within the 30° of the
         // field; a rotation of ±90° about Z brings it to ∓X, in the plane, swept once per orbit
-        foreach (var q in new[] { Quaternion.Identity, new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2), new Quaternion(Vector3.VectorZ, -IO.Astrodynamics.Constants.PI2) })
+        foreach (var q in new[] { Quaternion.Identity, new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi), new Quaternion(Vector3.VectorZ, -IO.Astrodynamics.Constants.HalfPi) })
         {
             var spacecraft = Unpropagated(id--, epoch);
             spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame));
@@ -993,7 +993,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 spacecraft.AddFuelTank(tank);
                 var engine = new Engine("eng515", "model", "sn515", 300.0, 10.0, tank);
                 spacecraft.AddEngine(engine);
-                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, engine));
+                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
                 target = _case.Sun;
                 targetShape = ShapeType.Point;
                 number = 795;

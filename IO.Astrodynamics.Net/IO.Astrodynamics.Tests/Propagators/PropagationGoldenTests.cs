@@ -103,7 +103,7 @@ public class PropagationGoldenTests
     private const string CaptureVariable = "IO_ASTRODYNAMICS_GOLDEN_CAPTURE";
     private const string GoldenDirectory = "Data/Golden";
 
-    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     public PropagationGoldenTests()
     {

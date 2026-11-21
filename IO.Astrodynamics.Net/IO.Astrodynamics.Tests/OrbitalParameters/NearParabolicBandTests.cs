@@ -25,7 +25,7 @@ public class NearParabolicBandTests
 {
     // An epoch tagged TT: about the Earth the two-body motion counts TT seconds (#501, #508), so +600 s here is 600 s of
     // the motion, the time of the references
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.TT);
     private const double Mu = 398600435507022.6;
 
     // The motion of the band against the exact conic (#753): twice the worst over Linux x64, Windows x64 and macOS arm64

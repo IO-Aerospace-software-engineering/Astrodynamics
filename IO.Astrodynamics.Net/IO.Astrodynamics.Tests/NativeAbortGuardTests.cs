@@ -154,7 +154,7 @@ public class NativeAbortGuardTests
     [Fact]
     public void ReadEphemeris_FromAnUnnamedLagrangePoint_IsALagrangePoint()
     {
-        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
         var reads = new[] { SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector() }
             .Concat(SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 391, 399, Frames.Frame.ICRF,
                 Aberration.None, TimeSpan.FromSeconds(60.0)).Select(x => x.ToStateVector()))

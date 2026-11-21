@@ -21,8 +21,8 @@ public class NormalAttitudeTests
     {
         FuelTank fuelTank = new FuelTank("My fuel tank", "ft2021", "sn0", 4000.0, 3000.0);
         Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
-        NormalAttitude attitude = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.FromHours(1.0), eng);
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), attitude.MinimumEpoch);
+        NormalAttitude attitude = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), eng);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), attitude.ManeuverHoldDuration);
         Assert.NotNull(attitude.Engine);
         Assert.Equal(eng, attitude.Engine);
@@ -36,7 +36,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-668, "NormalTestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -59,7 +59,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-669, "InclinedTestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -78,7 +78,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-670, "TestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
         maneuver.TryExecute(orbitalParams.ToStateVector());
 
         Assert.Equal(0.0, maneuver.FuelBurned);
@@ -93,7 +93,7 @@ public class NormalAttitudeTests
             bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -120,7 +120,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-676, "PolarSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -154,7 +154,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-677, "RetrogradeSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -184,7 +184,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-678, "ExactQSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);
@@ -233,7 +233,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-679, "DegenerateSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), sv);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => maneuver.TryExecute(sv));
@@ -253,7 +253,7 @@ public class NormalAttitudeTests
         var spc = new Spacecraft(-680, "HighEccSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
         maneuver.TryExecute(sv);

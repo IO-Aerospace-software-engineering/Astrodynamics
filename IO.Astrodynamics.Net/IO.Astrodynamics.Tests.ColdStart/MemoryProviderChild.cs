@@ -50,7 +50,7 @@ internal static class MemoryProviderChild
     // up at the second significant digit
     private const double CacheTolerance = 2.3e-16;
 
-    private static readonly Time T0 = new(2024, 6, 21, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time T0 = new(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
     private static readonly BodyInfo EarthInfo = new(399, 10, 3, "EARTH", new(6378137.0, 6378137.0, 6356752.0), 3.986004418e14, "ITRF93",
         13000, 1.08e-3, 0.0, 0.0);
@@ -76,7 +76,7 @@ internal static class MemoryProviderChild
             GC.KeepAlive(Frame.ECLIPTIC_J2000);
 
             // The reference: SPICE outside de440s
-            var early = new Time(1500, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+            var early = new Time(1500, 1, 1, 0, 0, 0, TimeScale.TDB);
             CheckWithoutOrbit("SPICE, the Earth at 1500", new CelestialBody(399, Frame.ICRF, early));
             // The reference of the unknown ids: what SPICE throws for each, through each public path
             var spiceUnknownIds = ThrownByUnknownIds(new SpiceDataProvider());

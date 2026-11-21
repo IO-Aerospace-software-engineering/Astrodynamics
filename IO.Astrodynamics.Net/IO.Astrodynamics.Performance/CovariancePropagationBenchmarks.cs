@@ -50,7 +50,7 @@ public enum VariationalMode
 [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, iterationCount: 10)]
 public class CovariancePropagationBenchmarks
 {
-    internal static readonly Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    internal static readonly Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     internal const string GeopotentialModel = "Data/SolarSystem/EGM2008_to70_TideFree";
     internal const double EarthEquatorialRadius = 6378137.0;
     internal const double Tolerance = 1e-11;

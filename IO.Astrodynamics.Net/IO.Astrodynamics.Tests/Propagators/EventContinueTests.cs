@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// </remarks>
 public class EventContinueTests
 {
-    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private const double SemiMajorAxis = 11480000.0;
     private const double MeanAnomaly = System.Math.PI - 0.15;
 

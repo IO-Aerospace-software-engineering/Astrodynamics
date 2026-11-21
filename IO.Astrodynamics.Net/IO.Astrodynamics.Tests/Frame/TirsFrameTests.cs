@@ -2,7 +2,6 @@ using System;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TimeSystem_Time = IO.Astrodynamics.TimeSystem.Time;
 using Xunit;
 
@@ -23,7 +22,7 @@ public class TirsFrameTests
         // 0.4 ms of UT1 is 2.9e-8 rad of Earth rotation. The ERA used to be fed a millisecond-truncated
         // Julian date, so both epochs gave the same orientation.
         var tirs = new TirsFrame();
-        var first = new TimeSystem_Time(new DateTime(2024, 1, 1, 6, 30, 15).AddTicks(1234567), TimeFrame.UTCFrame);
+        var first = new TimeSystem_Time(new DateTime(2024, 1, 1, 6, 30, 15).AddTicks(1234567), TimeScale.UTC);
         var second = first.Add(TimeSpan.FromTicks(4000));
 
         double angle = QuaternionAngleDifference(tirs.GetStateOrientationToICRF(first).Rotation,
@@ -38,7 +37,7 @@ public class TirsFrameTests
     public void TirsAngularVelocityIsEarthRotation()
     {
         var tirs = new TirsFrame();
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         var orientation = tirs.GetStateOrientationToICRF(epoch);
         double omegaMag = orientation.AngularVelocity.Magnitude();
@@ -51,7 +50,7 @@ public class TirsFrameTests
     public void TirsAngularVelocityDirectionIsNearZAxis()
     {
         var tirs = new TirsFrame();
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         var orientation = tirs.GetStateOrientationToICRF(epoch);
         var omega = orientation.AngularVelocity;
@@ -68,7 +67,7 @@ public class TirsFrameTests
     public void TirsOrientationMatrixIsOrthogonal()
     {
         var tirs = new TirsFrame();
-        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, TimeScale.TDB);
 
         var orientation = tirs.GetStateOrientationToICRF(epoch);
         var rotMatrix = Matrix.FromQuaternion(orientation.Rotation);
@@ -88,7 +87,7 @@ public class TirsFrameTests
     public void TirsRotationChangesSignificantlyOver1Hour()
     {
         var tirs = new TirsFrame();
-        var epoch1 = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch1 = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var epoch2 = epoch1.AddHours(1);
 
         var q1 = tirs.GetStateOrientationToICRF(epoch1).Rotation;
@@ -139,7 +138,7 @@ public class TirsFrameTests
         // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtDate.
         // The residual, about 6e-12 rad, is the precession-nutation rate of the CIP, which TIRS leaves out.
         var tirs = new TirsFrame();
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var propagated = TestHelpers.RotateWithFrameAngularVelocity(tirs.GetStateOrientationToICRF(epoch), 1.0);
         var recomputed = tirs.GetStateOrientationToICRF(epoch.AddSeconds(1));
 

@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
@@ -29,7 +30,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// </remarks>
 public class DenseAirStepControlTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private static readonly TimeSystem.Window Window = new(Epoch, Epoch.AddSeconds(120.0));
     private readonly ITestOutputHelper _output;
 

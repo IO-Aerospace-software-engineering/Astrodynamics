@@ -79,7 +79,7 @@ public class OutputComparerTests
     public void AnAscendingNodeOf2PiExactly_MatchesAZeroGolden()
     {
         // AscendingNode() adds 2π to a negative atan2: one below the ulp of 2π gives 2π exactly
-        var measure = CompareOne("orbital_elements", "raan_deg", UnitConversion.RadToDeg(IO.Astrodynamics.Constants._2PI), "0.0");
+        var measure = CompareOne("orbital_elements", "raan_deg", UnitConversion.RadToDeg(IO.Astrodynamics.Constants.TwoPi), "0.0");
 
         Assert.InRange(measure.AbsoluteDelta, 0.0, 1e-13);
         Assert.True(measure.Passed);
@@ -372,7 +372,7 @@ public class OutputComparerTests
     public void AnInstant_IsComparedInSeconds_ByItsAbsoluteDeltaOnly(string golden)
     {
         // Arrange: 4 ms after the golden, and an override whose relative threshold must not apply
-        var computed = new Time(new DateTime(2026, 3, 20, 0, 18, 37, 498), TimeFrame.UTCFrame);
+        var computed = new Time(new DateTime(2026, 3, 20, 0, 18, 37, 498), TimeScale.UTC);
         var caseInput = Case("eclipse", overrides: new Dictionary<string, TolerancePair>
         {
             ["eclipse_time_s"] = new() { AbsTol = 3e-3, RelTol = 1e-6, Justification = "a relative threshold that must not apply" }
@@ -420,7 +420,7 @@ public class OutputComparerTests
     public void AnExactOutput_PassesWhenItEqualsTheGolden_WithoutATolerance()
     {
         // Arrange: arcs of a 60 s grid
-        static Time Utc(int hour, int minute) => new(new DateTime(2023, 12, 15, hour, minute, 0), TimeFrame.UTCFrame);
+        static Time Utc(int hour, int minute) => new(new DateTime(2023, 12, 15, hour, minute, 0), TimeScale.UTC);
         const string golden = "[{\"rise\": \"2023-12-15T00:25:00 UTC\", \"fall\": \"2023-12-15T01:36:00 UTC\"}," +
                               " {\"rise\": \"2023-12-15T02:22:00 UTC\", \"fall\": \"2023-12-15T03:33:00 UTC\"}]";
         var arcs = new[] { new Window(Utc(0, 25), Utc(1, 36)), new Window(Utc(2, 22), Utc(3, 33)) };

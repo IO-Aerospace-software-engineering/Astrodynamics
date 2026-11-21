@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             TestKernels.EnsureSolarSystem();
         }
 
-        private static readonly TimeSystem.Time MinimumEpoch = new(DateTime.MinValue, TimeFrame.TDBFrame);
+        private static readonly TimeSystem.Time MinimumEpoch = new(DateTime.MinValue, TimeScale.TDB);
 
         private static ImpulseManeuver Create(string maneuver, IO.Astrodynamics.OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) => maneuver switch
         {

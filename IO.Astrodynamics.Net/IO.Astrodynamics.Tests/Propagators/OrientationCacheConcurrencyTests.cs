@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Threading;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
@@ -27,7 +28,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 public class OrientationCacheConcurrencyTests
 {
     private const int Queries = 4000;
-    private static readonly TimeSystem.Time EpochA = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time EpochA = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private static readonly TimeSystem.Time EpochB = EpochA.AddDays(10.0);
     private static readonly TimeSpan Duration = TimeSpan.FromHours(6.0);
 

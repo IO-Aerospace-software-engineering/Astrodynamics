@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -24,7 +25,7 @@ public class NearCircularRoundTripTests
     private const double Deg = IO.Astrodynamics.Constants.Deg2Rad;
     private const double GeoSemiMajorAxis = 42164137.0;
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     private readonly ITestOutputHelper _output;
     private readonly CelestialBody _earth;

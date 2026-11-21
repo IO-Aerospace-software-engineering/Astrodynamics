@@ -38,7 +38,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// </remarks>
 public class EquinoctialElementsSingularityTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     // The TT seconds from the epoch, the time of a two-body motion about the Earth (#501, #508): Epoch + dt is dt TDB
     // seconds later, dt + δ of TT, δ = 4.7e-8 s for 600 s and −2.3e-7 s for −3000 s
@@ -440,13 +440,13 @@ public class EquinoctialElementsSingularityTests
 
             if (special || c.Group == "underflow")
             {
-                Assert.InRange(periapsis, 0.0, IO.Astrodynamics.Constants._2PI);
+                Assert.InRange(periapsis, 0.0, IO.Astrodynamics.Constants.TwoPi);
                 Assert.False(double.IsNegative(periapsis), c.Name);
             }
 
             if (special)
             {
-                Assert.InRange(nu, 0.0, IO.Astrodynamics.Constants._2PI);
+                Assert.InRange(nu, 0.0, IO.Astrodynamics.Constants.TwoPi);
                 Assert.False(double.IsNegative(nu), c.Name);
             }
 

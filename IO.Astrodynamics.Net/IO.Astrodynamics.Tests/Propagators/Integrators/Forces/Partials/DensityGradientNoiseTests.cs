@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
@@ -27,7 +28,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// </remarks>
 public class DensityGradientNoiseTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private readonly ITestOutputHelper _output;
 
     public DensityGradientNoiseTests(ITestOutputHelper output)

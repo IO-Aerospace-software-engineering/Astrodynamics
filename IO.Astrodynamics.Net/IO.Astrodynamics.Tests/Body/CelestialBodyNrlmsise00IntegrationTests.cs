@@ -64,7 +64,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0, // 400 km in meters
                 geodeticLatitude: 60.0 * Constants.DEG_RAD, // 60° N
                 geodeticLongitude: -70.0 * Constants.DEG_RAD, // 70° W
-                epoch:  TimeSystem.Time.Create(2000, 172, 29000)
+                epoch:  TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act - Get atmospheric properties through CelestialBody
@@ -93,21 +93,21 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0, // 400 km
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             var context600km = AtmosphericContext.FromPlanetodetic(
                 altitude: 600000.0, // 600 km
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             var context800km = AtmosphericContext.FromPlanetodetic(
                 altitude: 800000.0, // 800 km
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act
@@ -146,7 +146,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 100000.0, // 100 km
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act
@@ -173,7 +173,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0,
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act
@@ -204,7 +204,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0,
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act
@@ -229,7 +229,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0,
                 geodeticLatitude: 0.0, // Equator
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act
@@ -258,7 +258,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0,
                 geodeticLatitude: 0.0, // Equator for clearer diurnal signal
                 geodeticLongitude: 0.0,
-                epoch: TimeSystem.Time.Create(2000, 172, 43200) // Noon UTC at 0° longitude
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 43200, TimeScale.UTC) // Noon UTC at 0° longitude
             );
 
             // Local midnight (LST ~ 00:00)
@@ -266,7 +266,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0,
                 geodeticLatitude: 0.0, // Equator
                 geodeticLongitude: 180.0 * Constants.DEG_RAD, // 180° longitude (opposite side)
-                epoch: TimeSystem.Time.Create(2000, 172, 43200) // Same UTC time, different local time
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 43200, TimeScale.UTC) // Same UTC time, different local time
             );
 
             // Act
@@ -318,7 +318,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0,
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act
@@ -362,7 +362,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 400000.0,
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act
@@ -410,7 +410,7 @@ namespace IO.Astrodynamics.Tests.Body
                 altitude: 0.0,
                 geodeticLatitude: 60.0 * Constants.DEG_RAD,
                 geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.Create(2000, 172, 29000)
+                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
             );
 
             // Act

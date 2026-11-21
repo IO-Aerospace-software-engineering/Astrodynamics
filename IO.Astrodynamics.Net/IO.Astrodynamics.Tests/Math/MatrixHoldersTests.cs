@@ -24,7 +24,7 @@ public class MatrixHoldersTests
     private const double Term = 4.0;
     private const double Changed = 99.0;
 
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2025, 3, 28), TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2025, 3, 28), TimeScale.UTC);
 
     public MatrixHoldersTests()
     {

@@ -19,7 +19,7 @@ internal static class FieldOfViewSearch
     internal static readonly TimeSpan ConvergenceTolerance = TimeSpan.FromTicks(10);
 
     // ZZGFFVIN rejects a field whose angular radius exceeds pi/2 - 1e-6 (SPICE(FOVTOOWIDE), zzgffvu.c, N0067)
-    private const double MaximumAngularRadius = Constants.PI2 - 1e-6;
+    private const double MaximumAngularRadius = Constants.HalfPi - 1e-6;
 
     /// <summary>
     /// The managed search: the windows, in TDB, where the target is in the field of view of the instrument, its
@@ -122,7 +122,7 @@ internal static class FieldOfViewSearch
         // The boresight, the reference vector, the field of view and the cross angle are finite, and the half-angles positive,
         // checked by the constructors (#707, #715): the cross angle of a circle is its field of view
         double angularRadius = instrument.Shape != InstrumentShape.Rectangular ? System.Math.Max(instrument.FieldOfView, crossAngle)
-            : instrument.FieldOfView >= Constants.PI2 || crossAngle >= Constants.PI2 ? Constants.PI2
+            : instrument.FieldOfView >= Constants.HalfPi || crossAngle >= Constants.HalfPi ? Constants.HalfPi
             : System.Math.Atan(System.Math.Sqrt(System.Math.Pow(System.Math.Tan(instrument.FieldOfView), 2) + System.Math.Pow(System.Math.Tan(crossAngle), 2)));
         if (angularRadius > MaximumAngularRadius)
         {

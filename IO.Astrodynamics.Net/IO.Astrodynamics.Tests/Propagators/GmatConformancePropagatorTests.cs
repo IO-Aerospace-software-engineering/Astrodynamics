@@ -125,13 +125,13 @@ public class GmatConformancePropagatorTests
         return name switch
         {
             "001" => new GmatCase(Path.Combine(DataDirectory, "propagator_001", "propagator_24h_geo10_001_output.txt"),
-                new TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame), 10,
+                new TimeSystem.Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC), 10,
                 new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
                 new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
                 () => new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }),
             "002" => new GmatCase(
                 Path.Combine(DataDirectory, "propagator_002", "propagator_24h_geo70_full_002_output.txt"),
-                new TimeSystem.Time(2026, 2, 9, 10, 22, 58, millisecond: 958, frame: TimeFrame.UTCFrame), 70,
+                new TimeSystem.Time(2026, 2, 9, 10, 22, 58, 958, TimeScale.UTC), 70,
                 new Vector3(19283848.018390324, 37944390.563573960, -328553.515505210),
                 new Vector3(-2727.809889171343, 1386.957738048448, 52.987319351738),
                 () => new CelestialItem[]
@@ -142,7 +142,7 @@ public class GmatConformancePropagatorTests
                     Barycenters.PLUTO_BARYCENTER
                 }),
             "003" => new GmatCase(Path.Combine(DataDirectory, "propagator_003", "propagator_24h_sso_003_output.txt"),
-                new TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame), 10,
+                new TimeSystem.Time(2025, 6, 1, 10, 30, 0, TimeScale.UTC), 10,
                 new Vector3(972520.62166446251, -260586.11519760552, 6999012.2132351244),
                 new Vector3(-1944.1954872554523, -7255.8363382834763, 4.5349106380634854e-13),
                 () => new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }),

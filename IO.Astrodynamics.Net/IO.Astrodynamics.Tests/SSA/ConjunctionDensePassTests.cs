@@ -539,8 +539,8 @@ public abstract class ConjunctionDensePassTestBase
             else if (locmin.Length > 0 && locmin.All(m => NearAnEnd(m.Epoch)))
             {
                 // Only minima within the band of an end, none listed: an end, as AssertSlowPassLists
-                Assert.True(encounter.EncounterState.Epoch.HasSameLabel(window.StartDate) ||
-                            encounter.EncounterState.Epoch.HasSameLabel(window.EndDate));
+                Assert.True(encounter.EncounterState.Epoch.EqualsExact(window.StartDate) ||
+                            encounter.EncounterState.Epoch.EqualsExact(window.EndDate));
             }
             else
             {
@@ -649,7 +649,7 @@ public abstract class ConjunctionDensePassTestBase
         if (locmin.Length > 0)
         {
             // Only minima within the band of an end, none listed: an end
-            Assert.True(encounter.EncounterState.Epoch.HasSameLabel(window.StartDate) || encounter.EncounterState.Epoch.HasSameLabel(window.EndDate));
+            Assert.True(encounter.EncounterState.Epoch.EqualsExact(window.StartDate) || encounter.EncounterState.Epoch.EqualsExact(window.EndDate));
             return;
         }
 

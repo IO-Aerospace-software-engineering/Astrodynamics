@@ -390,7 +390,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var epoch = IO.Astrodynamics.TimeSystem.Time.J2000TDB;
             var kep = new IO.Astrodynamics.OrbitalParameters.KeplerianElements(6778137.0, 0.001, 0.9, -1e-17, -1e-17, -1e-17,
                 earth, epoch, IO.Astrodynamics.Frames.Frame.ICRF);
-            Assert.Equal(IO.Astrodynamics.Constants._2PI, kep.AscendingNode());
+            Assert.Equal(IO.Astrodynamics.Constants.TwoPi, kep.AscendingNode());
             Assert.Equal(360.0, kep.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg);
 
             var elements = OpmKeplerianElements.FromKeplerianElements(kep, useTrueAnomaly);

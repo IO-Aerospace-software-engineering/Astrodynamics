@@ -8,45 +8,45 @@
 
         public AzimuthRange(double start, double end)
         {
-            Start = start %Constants._2PI;
+            Start = start %Constants.TwoPi;
             if (Start < 0.0)
             {
-                Start +=Constants._2PI;
+                Start +=Constants.TwoPi;
             }
 
-            End = end %Constants._2PI;
+            End = end %Constants.TwoPi;
             if (End < 0.0)
             {
-                End +=Constants._2PI;
+                End +=Constants.TwoPi;
             }
 
             Span = End - Start;
             if (Span < 0.0)
             {
-                Span +=Constants._2PI;
+                Span +=Constants.TwoPi;
             }
         }
 
         public bool IsInRange(double angle)
         {
-            var a = angle - Start %Constants._2PI;
+            var a = angle - Start %Constants.TwoPi;
             if (a < 0.0)
             {
-                a +=Constants._2PI;
+                a +=Constants.TwoPi;
             }
 
             var end = End;
 
             if (end < Start)
             {
-                end +=Constants._2PI;
+                end +=Constants.TwoPi;
             }
 
             end -= Start;
 
             if (end < 0.0)
             {
-                end +=Constants._2PI;
+                end +=Constants.TwoPi;
             }
 
             if (a >= 0.0 && a <= end)

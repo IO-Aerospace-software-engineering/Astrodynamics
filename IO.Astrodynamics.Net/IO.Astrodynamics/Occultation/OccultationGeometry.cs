@@ -65,7 +65,7 @@ internal static class OccultationGeometry
     // and the samples are not the precision of the result
     private const int LimbSamples = 64;
 
-    private static readonly double SampleSpacing = Constants._2PI / LimbSamples;
+    private static readonly double SampleSpacing = Constants.TwoPi / LimbSamples;
     private static readonly double[] SampleCos = BuildTable(System.Math.Cos);
     private static readonly double[] SampleSin = BuildTable(System.Math.Sin);
 
@@ -78,7 +78,7 @@ internal static class OccultationGeometry
         var table = new double[LimbSamples];
         for (int i = 0; i < LimbSamples; i++)
         {
-            table[i] = function(i * Constants._2PI / LimbSamples);
+            table[i] = function(i * Constants.TwoPi / LimbSamples);
         }
 
         return table;

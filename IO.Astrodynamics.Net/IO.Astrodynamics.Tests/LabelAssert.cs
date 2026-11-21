@@ -20,7 +20,7 @@ internal static class LabelAssert
 {
     public static void Equal(TimeSystem.Time expected, TimeSystem.Time actual)
     {
-        Assert.Equal((expected.DateTime, expected.Frame), (actual.DateTime, actual.Frame));
+        Assert.Equal((expected.DateTime, expected.Scale), (actual.DateTime, actual.Scale));
     }
 
     public static void Equal(TimeSystem.Time? expected, TimeSystem.Time? actual)
@@ -74,7 +74,7 @@ internal static class LabelAssert
 
     public static void Equal(IEnumerable<TimeSystem.Time> expected, IEnumerable<TimeSystem.Time> actual)
     {
-        Assert.Equal(expected.Select(x => (x.DateTime, x.Frame)), actual.Select(x => (x.DateTime, x.Frame)));
+        Assert.Equal(expected.Select(x => (x.DateTime, x.Scale)), actual.Select(x => (x.DateTime, x.Scale)));
     }
 
     public static void Equal(IEnumerable<Window> expected, IEnumerable<Window> actual)
@@ -112,13 +112,13 @@ internal static class LabelAssert
 
     public static void Contains(TimeSystem.Time expected, IEnumerable<TimeSystem.Time> collection)
     {
-        Assert.Contains(collection, x => x.DateTime.Equals(expected.DateTime) && Equals(x.Frame, expected.Frame));
+        Assert.Contains(collection, x => x.DateTime.Equals(expected.DateTime) && Equals(x.Scale, expected.Scale));
     }
 
     public static void Contains(Window expected, IEnumerable<Window> collection)
     {
-        Assert.Contains(collection, x => x.StartDate.DateTime.Equals(expected.StartDate.DateTime) && Equals(x.StartDate.Frame, expected.StartDate.Frame) &&
-                                         x.EndDate.DateTime.Equals(expected.EndDate.DateTime) && Equals(x.EndDate.Frame, expected.EndDate.Frame) &&
+        Assert.Contains(collection, x => x.StartDate.DateTime.Equals(expected.StartDate.DateTime) && Equals(x.StartDate.Scale, expected.StartDate.Scale) &&
+                                         x.EndDate.DateTime.Equals(expected.EndDate.DateTime) && Equals(x.EndDate.Scale, expected.EndDate.Scale) &&
                                          x.Length == expected.Length);
     }
 }

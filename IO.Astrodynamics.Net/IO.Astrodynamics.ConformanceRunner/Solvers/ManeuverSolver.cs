@@ -87,7 +87,7 @@ public class ManeuverSolver : ICategorySolver
         {
             // The hold of step k is the earliest epoch of step k + 1 after its burn; the minimum epoch of the first step
             // the start plus its earliest epoch, in TT seconds
-            var minimumEpoch = start.ToTDT().AddSeconds(k == 0 ? chain.Steps[0].EarliestAfterPreviousS : 0.0);
+            var minimumEpoch = start.ToTT().AddSeconds(k == 0 ? chain.Steps[0].EarliestAfterPreviousS : 0.0);
             var hold = TimeSpan.FromSeconds(k + 1 < chain.Steps.Count ? chain.Steps[k + 1].EarliestAfterPreviousS : 0.0);
             var maneuver = CreateManeuver(chain.Steps[k], center, initialState, minimumEpoch, hold, engine);
             if (k == 0)

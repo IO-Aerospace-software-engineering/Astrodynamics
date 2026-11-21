@@ -194,7 +194,7 @@ public class CdmSolver : ICategorySolver
         _ => throw new InvalidOperationException($"The framework reads the reference frame {frame}, which is not a REF_FRAME of CCSDS 508.0.")
     };
 
-    private static Time Utc(DateTime instant) => new(instant, TimeFrame.UTCFrame);
+    private static Time Utc(DateTime instant) => new(instant, TimeScale.UTC);
 
     private static double[] Km(Vector3 vector) =>
         [UnitConversion.MToKm(vector.X), UnitConversion.MToKm(vector.Y), UnitConversion.MToKm(vector.Z)];

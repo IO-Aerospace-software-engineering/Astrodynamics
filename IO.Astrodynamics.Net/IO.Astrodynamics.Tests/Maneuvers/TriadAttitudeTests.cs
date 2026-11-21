@@ -27,7 +27,7 @@ public class TriadAttitudeTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(0.0, 7727.0, 0.0),
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
+            new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
         var spc = new Spacecraft(-667, "TriadTestSpacecraft", 1000.0, 3000.0, new Clock("TestClk", 65536), orbitalParams);
@@ -69,7 +69,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -92,7 +92,7 @@ public class TriadAttitudeTests
 
         var instruments = spc.Instruments.ToList();
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             instruments[0],
             TestHelpers.MoonAtJ2000,
@@ -111,7 +111,7 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -131,7 +131,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             spc.Instruments.First(),
             null,
@@ -146,7 +146,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -160,7 +160,7 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             (Instrument)null,
             TestHelpers.MoonAtJ2000,
@@ -174,7 +174,7 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.Zero,
             TestHelpers.MoonAtJ2000,
@@ -189,7 +189,7 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -208,7 +208,7 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         var ex = Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -225,7 +225,7 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         var ex = Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -248,7 +248,7 @@ public class TriadAttitudeTests
             System.Math.Cos(angle));
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -271,7 +271,7 @@ public class TriadAttitudeTests
             System.Math.Cos(angle));
 
         Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -293,7 +293,7 @@ public class TriadAttitudeTests
 
         // Use custom minimum of 1 degree
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -317,7 +317,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -345,7 +345,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -387,7 +387,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -410,7 +410,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -446,7 +446,7 @@ public class TriadAttitudeTests
 
         // TRIAD pointing (fully constrained - uses both boresight and refVector)
         var triadManeuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -503,7 +503,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "NadirCam", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.EarthAtJ2000, // Point at Earth (nadir)
@@ -538,7 +538,7 @@ public class TriadAttitudeTests
 
         var instruments = spc.Instruments.ToList();
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             instruments[0], // LunarCam points at Moon
             TestHelpers.MoonAtJ2000,
@@ -571,9 +571,9 @@ public class TriadAttitudeTests
 
         var epochs = new[]
         {
-            new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
-            new TimeSystem.Time(2021, 01, 01, 14, 0, 0),
-            new TimeSystem.Time(2021, 01, 01, 15, 0, 0)
+            new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
+            new TimeSystem.Time(2021, 01, 01, 14, 0, 0, TimeScale.TDB),
+            new TimeSystem.Time(2021, 01, 01, 15, 0, 0, TimeScale.TDB)
         };
 
         foreach (var epoch in epochs)
@@ -586,7 +586,7 @@ public class TriadAttitudeTests
                 Frames.Frame.ICRF);
 
             var maneuver = new TriadAttitude(
-                new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
                 TimeSpan.FromSeconds(10.0),
                 spc.Instruments.First(),
                 TestHelpers.MoonAtJ2000,
@@ -616,7 +616,7 @@ public class TriadAttitudeTests
 
         // Orthogonal vectors are optimal for TRIAD (maximum numerical stability)
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -641,7 +641,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -673,7 +673,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
             TestHelpers.MoonAtJ2000,
@@ -683,8 +683,8 @@ public class TriadAttitudeTests
         maneuver.TryExecute(orbitalParams);
 
         Assert.Equal(0.0, maneuver.FuelBurned);
-        LabelAssert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0), TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
-        LabelAssert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0), TimeSpan.Zero), maneuver.ThrustWindow);
+        LabelAssert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB), TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
+        LabelAssert.Equal(new Window(new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB), TimeSpan.Zero), maneuver.ThrustWindow);
     }
 
     [Fact]
@@ -700,7 +700,7 @@ public class TriadAttitudeTests
             System.Math.Cos(angle));
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             TestHelpers.MoonAtJ2000,
@@ -761,7 +761,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
@@ -783,7 +783,7 @@ public class TriadAttitudeTests
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
             null,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
@@ -799,7 +799,7 @@ public class TriadAttitudeTests
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Spacecraft.Front,
             null,
@@ -815,7 +815,7 @@ public class TriadAttitudeTests
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
@@ -831,7 +831,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
@@ -863,7 +863,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Spacecraft.Down,
             OrbitalDirectionTarget.Nadir,
@@ -894,7 +894,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
@@ -926,7 +926,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Nadir,
@@ -944,7 +944,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
@@ -969,7 +969,7 @@ public class TriadAttitudeTests
 
         // ILocalizable constructor — maneuverCenter is set internally to MoonAtJ2000
         var localizableManeuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Spacecraft.Front,
             TestHelpers.MoonAtJ2000,
@@ -981,7 +981,7 @@ public class TriadAttitudeTests
         // Use MoonAtJ2000 as maneuverCenter to match the ILocalizable path.
         var attitudeTargetManeuver = new TriadAttitude(
             TestHelpers.MoonAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Spacecraft.Front,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
@@ -1022,7 +1022,7 @@ public class TriadAttitudeTests
 
         var maneuver = TriadAttitude.CreateLVLH(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Engines.First());
 
@@ -1048,7 +1048,7 @@ public class TriadAttitudeTests
 
         var maneuver = TriadAttitude.CreateProgradeWithSunTracking(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             TestHelpers.Sun,
             spc.Engines.First());
@@ -1075,7 +1075,7 @@ public class TriadAttitudeTests
 
         Assert.Throws<ArgumentNullException>(() => TriadAttitude.CreateProgradeWithSunTracking(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             null,
             spc.Engines.First()));
@@ -1090,13 +1090,13 @@ public class TriadAttitudeTests
 
         var factoryManeuver = TriadAttitude.CreateLVLH(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             spc.Engines.First());
 
         var manualManeuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Spacecraft.Down,
             OrbitalDirectionTarget.Nadir,
@@ -1146,7 +1146,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
@@ -1189,7 +1189,7 @@ public class TriadAttitudeTests
 
         var maneuver = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(targetSpacecraft),
@@ -1226,7 +1226,7 @@ public class TriadAttitudeTests
 
         var maneuverLT = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.LT),
@@ -1236,7 +1236,7 @@ public class TriadAttitudeTests
 
         var maneuverNone = new TriadAttitude(
             TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.None),
@@ -1294,7 +1294,7 @@ public class TriadAttitudeTests
     // the triad that carries the engine of the attitude
     private static (Spacecraft spacecraft, StateVector state) CustomAxesSpacecraft(string triad)
     {
-        var state = new KeplerianElements(7000000.0, 0.001, 0.9, 0.4, 1.1, 0.3, TestHelpers.EarthAtJ2000, new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
+        var state = new KeplerianElements(7000000.0, 0.001, 0.9, 0.4, 1.1, 0.3, TestHelpers.EarthAtJ2000, new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF).ToStateVector();
         var (front, right, up) = BodyAxes(triad);
         var spc = new Spacecraft(-669, "TriadAxesSpacecraft", 1000.0, 3000.0, new Clock("AxesClk", 65536), state, bodyFront: front, bodyRight: right, bodyUp: up);
@@ -1315,7 +1315,7 @@ public class TriadAttitudeTests
     public void CreateLVLH_CustomAxes_PointsTheSpacecraftAxes(string triad)
     {
         var (spc, state) = CustomAxesSpacecraft(triad);
-        var maneuver = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+        var maneuver = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         maneuver.TryExecute(state);
         var q = maneuver.StateOrientation.Rotation;
@@ -1345,7 +1345,7 @@ public class TriadAttitudeTests
     public void CreateProgradeWithSunTracking_CustomAxes_PointsTheSpacecraftAxes(string triad)
     {
         var (spc, state) = CustomAxesSpacecraft(triad);
-        var maneuver = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+        var maneuver = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             TestHelpers.Sun, spc.Engines.First());
 
         maneuver.TryExecute(state);
@@ -1372,7 +1372,7 @@ public class TriadAttitudeTests
     public void Factories_DefaultAxes_BitForBitTheStaticForm()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        var min = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var min = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var engine = spc.Engines.First();
 
         var lvlh = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, engine);
@@ -1406,7 +1406,7 @@ public class TriadAttitudeTests
     {
         var tank = new FuelTank("ft", "ftA", "123456", 1000.0, 900.0);
         var engine = new Engine("eng", "engmk1", "12345", 450, 50, tank);
-        var min = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var min = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var lvlh = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, engine);
         var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, TestHelpers.Sun, engine);
 
@@ -1498,7 +1498,7 @@ public class TriadAttitudeTests
         spc.AddCircularInstrument(-667600, "CAM1", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         spc.AddCircularInstrument(-667601, "CAM2", "mod1", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
         var instruments = spc.Instruments.ToList();
-        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var hold = TimeSpan.FromHours(1.0);
         var engine = spc.Engines.First();
 
@@ -1533,7 +1533,7 @@ public class TriadAttitudeTests
     public void Separation_HalfPi_PerpendicularVectors_IsAccepted()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0), Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde,
             spc.Engines.First(), System.Math.PI / 2.0);
 
@@ -1555,7 +1555,7 @@ public class TriadAttitudeTests
     public void Separation_LowestSeparation_IsAccepted()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var perpendicular = new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromSeconds(10.0), Vector3.VectorZ,
             OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde, spc.Engines.First(), LowestSeparation);
         var close = new TriadAttitude(epoch, TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000,
@@ -1577,7 +1577,7 @@ public class TriadAttitudeTests
     public void AntiparallelBodyVectors_TinySeparation_Throws()
     {
         var (spc, _) = CreateTestSpacecraft();
-        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000, Vector3.VectorZ.Inverse(), TestHelpers.Sun,
             spc.Engines.First(), LowestSeparation));
     }
@@ -1589,7 +1589,7 @@ public class TriadAttitudeTests
     {
         var (spc, _) = CreateTestSpacecraft();
         var engine = spc.Engines.First();
-        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var random = new Random(668);
         double Component() => (random.NextDouble() * 2.0 - 1.0) * System.Math.Pow(10.0, random.Next(-3, 4));
         double worstSine = 0.0;
@@ -1626,7 +1626,7 @@ public class TriadAttitudeTests
         IAttitudeTarget secondary = geometry == "antiparallel"
             ? OrbitalDirectionTarget.Zenith
             : new CelestialAttitudeTarget(TestHelpers.EarthAtJ2000);
-        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0), Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY, secondary,
             spc.Engines.First(), LowestSeparation);
 
@@ -1651,7 +1651,7 @@ public class TriadAttitudeTests
         _output.WriteLine($"MEASURE acos angle of v and {k} v from collinear {fromCollinear:E3} rad");
         Assert.True(fromCollinear > 1e-12, $"the pair is not one that acos resolves apart: {fromCollinear:E3} rad");
 
-        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0), v, TestHelpers.MoonAtJ2000, w, TestHelpers.Sun, spc.Engines.First(), 1e-12));
     }
 
@@ -1668,7 +1668,7 @@ public class TriadAttitudeTests
         var nonFinite = new Vector3(0.0, 0.0, value);
         var primaryVector = primary ? nonFinite : Vector3.VectorZ;
         var secondaryVector = primary ? Vector3.VectorY : nonFinite;
-        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
 
         Assert.Throws<ArgumentException>(() => new TriadAttitude(epoch, TimeSpan.FromHours(1.0), primaryVector, TestHelpers.MoonAtJ2000,
             secondaryVector, TestHelpers.Sun, spc.Engines.First()));

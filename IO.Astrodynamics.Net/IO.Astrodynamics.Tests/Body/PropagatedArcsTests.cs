@@ -649,7 +649,7 @@ public class PropagatedArcsTests
         public double TwinStates { get; private init; }
         public FileInfo SpkFile { get; private set; }
 
-        private static readonly Time Min = new(DateTime.MinValue, TimeFrame.TDBFrame);
+        private static readonly Time Min = new(DateTime.MinValue, TimeScale.TDB);
 
         internal static ArcRun Run(int naifId, string key, bool writeKernel = true)
         {
@@ -679,7 +679,7 @@ public class PropagatedArcsTests
             }
             else
             {
-                start = new Time(variant == "2026" ? 2026 : 2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+                start = new Time(variant == "2026" ? 2026 : 2024, 3, 1, 12, 0, 0, TimeScale.TDB);
                 window = new Window(start, start.AddHours(2.0));
                 if (moonCentred)
                 {

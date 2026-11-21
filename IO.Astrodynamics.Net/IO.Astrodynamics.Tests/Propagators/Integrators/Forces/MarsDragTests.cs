@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces;
 /// </remarks>
 public class MarsDragTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private readonly ITestOutputHelper _output;
 
     public MarsDragTests(ITestOutputHelper output)

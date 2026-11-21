@@ -78,7 +78,7 @@ public class VVIntegratorTests
     [InlineData(300000.0, 1.0e-2)]
     public void GlobalErrorIsSecondOrderWithDrag(double perigeeHeight, double area)
     {
-        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch, atmosphericModel: new EarthStandardAtmosphere());
         double rp = earth.EquatorialRadius + perigeeHeight, ra = earth.EquatorialRadius + 400000.0;
         double a = (rp + ra) / 2.0, e = (ra - rp) / (ra + rp);

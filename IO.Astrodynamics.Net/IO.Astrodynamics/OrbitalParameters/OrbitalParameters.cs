@@ -276,15 +276,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         if (IsElliptical())
         {
-            _trueAnomaly = EllipticalTrueAnomaly() % Constants._2PI;
+            _trueAnomaly = EllipticalTrueAnomaly() % Constants.TwoPi;
         }
         else if (IsParabolic())
         {
-            _trueAnomaly = ParabolicTrueAnomaly() % Constants._2PI;
+            _trueAnomaly = ParabolicTrueAnomaly() % Constants.TwoPi;
         }
         else if (IsHyperbolic())
         {
-            _trueAnomaly = HyperbolicTrueAnomaly() % Constants._2PI;
+            _trueAnomaly = HyperbolicTrueAnomaly() % Constants.TwoPi;
         }
         else
         {
@@ -295,7 +295,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         if (_trueAnomaly < 0)
         {
-            _trueAnomaly += Constants._2PI;
+            _trueAnomaly += Constants.TwoPi;
         }
 
         return _trueAnomaly.Value;
@@ -526,7 +526,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         if (trueAnomaly < 0.0)
         {
-            trueAnomaly += Constants._2PI;
+            trueAnomaly += Constants.TwoPi;
         }
 
         // On an open orbit the mean anomaly is not an angle: it grows without bound, negative before the periapsis, so it
@@ -539,8 +539,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             }
 
             // Kepler's equation in the forms that do not cancel near the periapsis at e → 1 (#484)
-            var res = KeplerEquation.EllipticMeanAnomaly(eccentricAnomaly, eccentricity) % Constants._2PI;
-            return res < 0 ? res + Constants._2PI : res;
+            var res = KeplerEquation.EllipticMeanAnomaly(eccentricAnomaly, eccentricity) % Constants.TwoPi;
+            return res < 0 ? res + Constants.TwoPi : res;
         }
         else if (eccentricity > 1)
         {
@@ -573,7 +573,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // returned either
         ThrowIfOpen("period");
 
-        _period ??= Time.SecondsToSpan(Constants._2PI * System.Math.Sqrt((a * a * a) / Observer.GM));
+        _period ??= Time.SecondsToSpan(Constants.TwoPi * System.Math.Sqrt((a * a * a) / Observer.GM));
         return _period.Value;
     }
 
@@ -659,10 +659,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         double time = TimeFromPeriapsis(EccentricAnomaly()) + elapsed;
         double universal = UniversalKepler.Solve(time, q, e, gm);
         var (barker, trueAnomaly) = UniversalKepler.Anomalies(universal, q, e);
-        trueAnomaly %= Constants._2PI;
+        trueAnomaly %= Constants.TwoPi;
         if (trueAnomaly < 0.0)
         {
-            trueAnomaly += Constants._2PI;
+            trueAnomaly += Constants.TwoPi;
         }
 
         return (barker + System.Math.Pow(barker, 3) / 3.0, trueAnomaly);
@@ -1074,7 +1074,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// orbit plane (#687).</exception>
     public double TrueLongitude()
     {
-        _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly()) % Constants._2PI;
+        _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly()) % Constants.TwoPi;
         return _trueLongitude.Value;
     }
 
@@ -1090,7 +1090,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// orbit plane (#687).</exception>
     public double TrueLongitude(Time epoch)
     {
-        return (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly(epoch)) % Constants._2PI;
+        return (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly(epoch)) % Constants.TwoPi;
     }
 
     /// <summary>
@@ -1101,7 +1101,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// orbit plane (#687).</exception>
     public double MeanLongitude()
     {
-        _meanLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + MeanAnomaly()) % Constants._2PI;
+        _meanLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + MeanAnomaly()) % Constants.TwoPi;
         return _meanLongitude.Value;
     }
 
@@ -1481,7 +1481,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Value equality within one concrete type (#475, decided by S. Guillet, 2026-11-17): each type of the library
     /// overrides this method to compare, for an object of its own type, its values, its observer's NAIF id, its
-    /// <see cref="Epoch"/> (an instant, whatever its time frame, #512), its <see cref="Frame"/> and its
+    /// <see cref="Epoch"/> (an instant, whatever its time scale, #512), its <see cref="Frame"/> and its
     /// <see cref="ElementsType"/>, without computing a state; a type that does not override it has reference equality.
     /// </summary>
     /// <remarks>

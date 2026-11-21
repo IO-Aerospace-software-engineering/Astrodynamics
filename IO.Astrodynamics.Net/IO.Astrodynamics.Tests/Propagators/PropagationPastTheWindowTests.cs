@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 public class PropagationPastTheWindowTests
 {
     private static readonly TimeSystem.Time Start =
-        new TimeSystem.Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeFrame.TDTFrame).AddSeconds(7.0e8);
+        new TimeSystem.Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.TT).AddSeconds(7.0e8);
 
     private readonly ITestOutputHelper _output;
 

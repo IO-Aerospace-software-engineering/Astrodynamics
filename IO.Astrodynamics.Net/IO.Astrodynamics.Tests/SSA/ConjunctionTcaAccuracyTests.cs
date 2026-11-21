@@ -134,12 +134,12 @@ public class ConjunctionTcaAccuracyTests
             KeplerianTca(mu, protectedInitial, secondaryInitial, meeting - 100.0, meeting + 100.0));
     }
 
-    private static TimeSystem.ITimeFrame LabelFrame(string frame) => frame switch
+    private static TimeSystem.TimeScale LabelFrame(string frame) => frame switch
     {
-        "UTC" => TimeSystem.TimeFrame.UTCFrame,
-        "TT" => TimeSystem.TimeFrame.TDTFrame,
-        "TAI" => TimeSystem.TimeFrame.TAIFrame,
-        _ => TimeSystem.TimeFrame.TDBFrame
+        "UTC" => TimeSystem.TimeScale.UTC,
+        "TT" => TimeSystem.TimeScale.TT,
+        "TAI" => TimeSystem.TimeScale.TAI,
+        _ => TimeSystem.TimeScale.TDB
     };
 
     // The analysis window, a minute inside the propagations at each end, in the given frame: the TCA lies between two
@@ -176,13 +176,13 @@ public class ConjunctionTcaAccuracyTests
         // Assert: one label, the scale of the window start, on both paths (#683: the dense TCA took the TDB scale of the
         // step that opens its bracket), the states read at it, never a window end
         Assert.NotEmpty(dense);
-        Assert.Equal(window.StartDate.Frame, sampled.EncounterState.Epoch.Frame);
+        Assert.Equal(window.StartDate.Scale, sampled.EncounterState.Epoch.Scale);
         foreach (var encounter in dense)
         {
             var epoch = encounter.EncounterState.Epoch;
             _output.WriteLine($"LABEL {frame} rk78={rk78} all={all}: {epoch} ({epoch.DateTime.Ticks}) miss " +
                               $"{encounter.EncounterState.MissDistanceMeters:R} m; sampled {sampled.EncounterState.Epoch}");
-            Assert.Equal(window.StartDate.Frame, epoch.Frame);
+            Assert.Equal(window.StartDate.Scale, epoch.Scale);
             LabelAssert.Equal(epoch, encounter.ProtectedState.Epoch);
             LabelAssert.Equal(epoch, encounter.SecondaryState.Epoch);
             Assert.NotEqual(window.StartDate, epoch);
@@ -223,7 +223,7 @@ public class ConjunctionTcaAccuracyTests
         }
 
         var label = encounter.EncounterState.Epoch;
-        Assert.Equal(LabelFrame(frame), label.Frame);
+        Assert.Equal(LabelFrame(frame), label.Scale);
         double atLabel = System.Math.Abs(RangeRate(label));
         double before = System.Math.Abs(RangeRate(label.AddTicks(-1)));
         double after = System.Math.Abs(RangeRate(label.AddTicks(1)));
@@ -293,7 +293,7 @@ public class ConjunctionTcaAccuracyTests
 
         // Assert: the frame of the window start; an epoch already in it unchanged, a window end that end; otherwise the
         // tick where |g| is smaller (the lower one on a tie), never a window end (#683)
-        Assert.Equal(window.StartDate.Frame, label.Frame);
+        Assert.Equal(window.StartDate.Scale, label.Scale);
         var expected = row switch
         {
             "inFrame" => middle.AddTicks(12),

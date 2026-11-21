@@ -28,7 +28,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 public class KeplerPeriapsisTests
 {
     private const string ReferenceFile = "Data/KeplerEquationReference/kepler_periapsis_reference.json";
-    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.TDTFrame);
+    private static readonly TimeSystem.Time Epoch = new(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.TT);
     private static readonly Lazy<PeriapsisReference> Reference = new(Load);
 
     // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the MEASURE lines, CI run 44395076184, 2026-11-18),

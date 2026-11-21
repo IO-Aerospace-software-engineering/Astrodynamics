@@ -261,7 +261,7 @@ public class Frame : IEquatable<Frame>
         // The provider read: a static frame's follows the process, so an orientation of another provider is read again
         var provider = Provider;
         var last = Volatile.Read(ref _lastOrientation);
-        if (last != null && last.KernelPoolGeneration == generation && ReferenceEquals(last.Provider, provider) && last.Date.HasSameLabel(date))
+        if (last != null && last.KernelPoolGeneration == generation && ReferenceEquals(last.Provider, provider) && last.Date.EqualsExact(date))
         {
             return last.Orientation;
         }

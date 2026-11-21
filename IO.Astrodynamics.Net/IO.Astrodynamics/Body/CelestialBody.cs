@@ -407,7 +407,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// </summary>
     internal double SideralRotationSeconds(Time epoch)
     {
-        return Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude();
+        return Constants.TwoPi / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude();
     }
 
     public double AngularVelocity(Time epoch)
@@ -467,7 +467,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     {
         if (longitude < -Constants.PI || longitude > Constants.PI)
             throw new ArgumentOutOfRangeException(nameof(longitude), longitude, "Longitude must be in range [-π, π] radians.");
-        if (latitude < -Constants.PI2 || latitude > Constants.PI2)
+        if (latitude < -Constants.HalfPi || latitude > Constants.HalfPi)
             throw new ArgumentOutOfRangeException(nameof(latitude), latitude, "Latitude must be in range [-π/2, π/2] radians.");
     }
 
@@ -523,15 +523,15 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         //Make raan in range 0.0->2PI
         if (raanLongitude < 0.0)
         {
-            raanLongitude += Constants._2PI;
+            raanLongitude += Constants.TwoPi;
         }
 
-        var trueAnomaly = Constants.PI + Constants.PI2;
+        var trueAnomaly = Constants.PI + Constants.HalfPi;
 
         double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity,
             OrbitalParameters.OrbitalParameters.EllipticAnomaly(trueAnomaly, eccentricity));
 
-        return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.PI2, m, this, epochAtDescendingNode, Frame.ICRF);
+        return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.HalfPi, m, this, epochAtDescendingNode, Frame.ICRF);
     }
 
     /// <summary>

@@ -24,7 +24,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             CelestialBody sun = new CelestialBody(Stars.Sun);
 
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, sun, new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame),
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, sun, new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk1 = new Clock("My clock", 256);
             Payload pl1 = new Payload("pl1", 300, "sn");
@@ -38,13 +38,13 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc1.AddPayload(pl1);
             spc1.AddEngine(eng);
 
-            var targetOrbit = new KeplerianElements(double.PositiveInfinity, 1.0, 0.0, 0.0, 0.0, 0.0, sun, new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame),
+            var targetOrbit = new KeplerianElements(double.PositiveInfinity, 1.0, 0.0, 0.0, 0.0, 0.0, sun, new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB),
                 Frames.Frame.ECLIPTIC_J2000, perigeeRadius: 6800000.0);
 
-            ApsidalAlignmentManeuver maneuver = new ApsidalAlignmentManeuver(new TimeSystem.Time(2021, 1, 1), TimeSpan.FromDays(1.0), targetOrbit, spc1.Engines.First());
+            ApsidalAlignmentManeuver maneuver = new ApsidalAlignmentManeuver(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), TimeSpan.FromDays(1.0), targetOrbit, spc1.Engines.First());
             Assert.NotNull(maneuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), maneuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), maneuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), maneuver.MinimumEpoch);
             Assert.Equal(eng, maneuver.Engine);
             LabelAssert.Equal(targetOrbit, maneuver.TargetOrbit);
         }
@@ -60,7 +60,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
             ApsidalAlignmentManeuver maneuver =
-                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var atP = orbitalParams.ToStateVector(156.5 * Astrodynamics.Constants.Deg2Rad);
             var res = maneuver.TryExecute(atP);
             Assert.Equal(maneuver.DeltaV, new Vector3(-1352.4744534060974, 564.6811827253609, 0.0),TestHelpers.VectorComparer);
@@ -86,7 +86,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
             ApsidalAlignmentManeuver maneuver =
-                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbitalParams, spc.Engines.First());
+                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbitalParams, spc.Engines.First());
             var atQ = orbitalParams.ToStateVector(341.77 * Astrodynamics.Constants.Deg2Rad);
             var res = maneuver.TryExecute(atQ);
             Assert.Equal(maneuver.DeltaV, new Vector3(-1368.8299700588411, 498.1271161206587, 0.0), TestHelpers.VectorComparer);

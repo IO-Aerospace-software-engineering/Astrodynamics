@@ -231,12 +231,12 @@ public class GeometryFinderTests
     [Fact]
     public void WindowsInTheFrameOfTheStart()
     {
-        var start = new TimeSystem.Time(2024, 2, 29, 12, 0, 0, frame: TimeFrame.UTCFrame);
+        var start = new TimeSystem.Time(2024, 2, 29, 12, 0, 0, TimeScale.UTC);
         var window = new Window(start, start.AddSeconds(600.0));
         var windows = new GeometryFinder().FindWindowsWithCondition(window, t => (t - start).TotalSeconds - 30.3, RelationnalOperator.Greater, 0.0,
             Step).ToArray();
         Assert.Single(windows);
-        Assert.Equal(TimeFrame.UTCFrame, windows[0].StartDate.Frame);
+        Assert.Equal(TimeScale.UTC, windows[0].StartDate.Scale);
         Assert.InRange((windows[0].StartDate - start).TotalSeconds - 30.3, -RootTolerance, RootTolerance);
         LabelAssert.Equal(window.EndDate, windows[0].EndDate);
     }
@@ -308,7 +308,7 @@ public class GeometryFinderTests
     [Fact]
     public void EarthMoonDistance_AgainstGfdist()
     {
-                var window = new Window(TimeSystem.Time.J2000TDB, new TimeSystem.Time("2000-04-01 12:00:00.0000 TDB"));
+                var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB"));
         var step = TimeSpan.FromDays(1.0);
         var moon = TestHelpers.MoonAtJ2000;
         var earth = TestHelpers.EarthAtJ2000;
@@ -331,7 +331,7 @@ public class GeometryFinderTests
     public void MoonFromSite_AgainstGfposc()
     {
                 Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var window = new Window(TimeSystem.Time.J2000TDB, new TimeSystem.Time("2000-01-02 12:00:00.0000 TDB"));
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.Parse("2000-01-02 12:00:00.0000 TDB"));
         var step = TimeSpan.FromSeconds(60.0);
         var moon = TestHelpers.MoonAtJ2000;
         IReadOnlyList<Window> Search(CoordinateSystem system, Coordinate coordinate, RelationnalOperator relation) =>

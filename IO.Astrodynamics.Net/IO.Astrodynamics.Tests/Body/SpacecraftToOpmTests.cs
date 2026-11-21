@@ -35,7 +35,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </summary>
 public class SpacecraftToOpmTests
 {
-    private static readonly Time S = new(2024, 1, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time S = new(2024, 1, 15, 12, 0, 0, TimeScale.TDB);
     private const double Dry = 1000.0, Fuel = 900.0, Isp = 450.0;
 
     /// <summary>The state of the OPM against the solution of the propagation, in the frame of the initial orbit, m: the read

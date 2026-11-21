@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// </summary>
 public sealed class ConjunctionCovarianceCase
 {
-    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
     internal static readonly TimeSystem.Time Tca = Start.AddHours(24.0);
 
     public ConjunctionCovarianceCase()

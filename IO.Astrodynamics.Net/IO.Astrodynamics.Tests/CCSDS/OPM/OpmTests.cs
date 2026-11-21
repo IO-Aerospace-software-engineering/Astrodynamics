@@ -878,7 +878,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [InlineData(0.0, -6778137.0, -7800.0, 0.0, 90.0)] // periapsis on -Y, h along -Z
         public void ToOpm_RetrogradeEquatorialOrbit_WritesAnglesInSchemaRange(double x, double y, double vx, double vy, double expectedAop)
         {
-            var epoch = new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame);
+            var epoch = new TimeSystem.Time(_testEpoch, TimeSystem.TimeScale.UTC);
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
             var sv = new StateVector(new Vector3(x, y, 0.0), new Vector3(vx, vy, 0.0), earth, epoch, Frames.Frame.ICRF);
             Assert.Equal(System.Math.PI, sv.Inclination(), 12);
@@ -906,7 +906,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public void ToSpacecraft_RoundTrip_PreservesData()
         {
             // Create spacecraft
-            var epoch = new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame);
+            var epoch = new TimeSystem.Time(_testEpoch, TimeSystem.TimeScale.UTC);
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
             var clock = new Clock("OnboardClock", 256);
             var position = new Vector3(6778137.0, 0.0, 0.0);
@@ -1203,7 +1203,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
         #region Centre from CENTER_NAME (#679)
 
-        private static readonly TimeSystem.Time CentreEpoch = new(2024, 6, 21, 12, 0, 0, 0, 0, TimeSystem.TimeFrame.UTCFrame);
+        private static readonly TimeSystem.Time CentreEpoch = new(2024, 6, 21, 12, 0, 0, 0, 0, TimeSystem.TimeScale.UTC);
 
         private static Opm WriteAndLoad(string objectName, StateVector stateVector)
         {
@@ -1292,7 +1292,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Contains("DSS-13", exSpacecraft.Message);
 
             // With an observer, the centre is the caller's, as before
-            var earth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame));
+            var earth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(_testEpoch, TimeSystem.TimeScale.UTC));
             var read = opm.ToStateVector(earth);
             Assert.Same(earth, read.Observer);
         }
@@ -1310,7 +1310,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             // A consistent observer: the EMB passed for an EMB OPM, bit for bit the read without an observer
             var emb = CreateOpmAbout("EMB");
-            var withObserver = emb.ToStateVector(new Barycenter(3, new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame)));
+            var withObserver = emb.ToStateVector(new Barycenter(3, new TimeSystem.Time(_testEpoch, TimeSystem.TimeScale.UTC)));
             var withoutObserver = emb.ToStateVector();
             Assert.Equal(3, withObserver.Observer.NaifId);
             Assert.Equal(withoutObserver.Observer.NaifId, withObserver.Observer.NaifId);
@@ -1334,7 +1334,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public void ToStateVector_EarthOpm_DefaultObserverUnchanged()
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
-            var explicitEarth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame));
+            var explicitEarth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(_testEpoch, TimeSystem.TimeScale.UTC));
 
             var withoutObserver = opm.ToStateVector();
             var withObserver = opm.ToStateVector(explicitEarth);

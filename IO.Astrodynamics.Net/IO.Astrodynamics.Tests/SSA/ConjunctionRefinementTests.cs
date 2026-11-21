@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
 using IO.Astrodynamics.SSA;
@@ -14,7 +15,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// </summary>
 public class ConjunctionRefinementTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private const double Tolerance = 1.0e-9;
 
     // Candidates every 100 s, as the step boundaries of the polynomial search

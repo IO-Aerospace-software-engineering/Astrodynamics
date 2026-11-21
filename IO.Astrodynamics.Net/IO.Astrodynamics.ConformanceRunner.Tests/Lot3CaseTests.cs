@@ -175,7 +175,7 @@ public sealed class Lot3CaseTests : IDisposable
     {
         // Arrange
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
-        var epoch = new Time(2026, 1, 20, 6, 0, 0, frame: TimeFrame.UTCFrame);
+        var epoch = new Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
         var state = new StateVector(new Vector3(6428778.39, 2100929.85, -1661580.75), new Vector3(-1460.44, 6743.21, 3149.61), earth, epoch,
             Frames.Frame.ICRF);

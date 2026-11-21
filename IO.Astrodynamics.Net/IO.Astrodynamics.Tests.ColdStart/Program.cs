@@ -58,9 +58,6 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// parent gives through <c>TZ</c>, see <see cref="CcsdsLocalTimeChild"/> (#617).
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
-/// The mode <c>local-dst</c> takes no schedule and loads no kernel: the local times of a zone with daylight saving time,
-/// see <see cref="LocalTimeChild"/> (#512). The mode <c>local-tolocal</c> likewise: <see cref="Time.ToLocal"/> over the
-/// transitions of 2025 in that zone (#751).
 /// </para>
 /// <para>
 /// The schedules: <c>race</c> starts the two threads behind a <see cref="Barrier"/>, the reproduction of #623;
@@ -159,18 +156,6 @@ internal static class Program
             return CheckSpiceErrorsSilent(args[0]);
         }
 
-        // No kernel loaded: the local times of a zone with daylight saving time, set before the first read of the zone (#512)
-        if (args.Length == 2 && args[1] == "local-dst")
-        {
-            return LocalTimeChild.Run();
-        }
-
-        // No kernel loaded: ToLocal over both transitions of 2025 in America/New_York, the instant kept (#751)
-        if (args.Length == 2 && args[1] == "local-tolocal")
-        {
-            return LocalTimeChild.RunToLocal();
-        }
-
         // Before any kernel is loaded: a TLE read before its kernels throws SPICE's error, and works once they are loaded
         if (args.Length == 2 && args[1] == "tle-before-kernels")
         {
@@ -196,7 +181,7 @@ internal static class Program
         }
 
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(args[0]));
-        var epoch = new Time(2021, 1, 20, 18, 0, 0, frame: TimeFrame.UTCFrame);
+        var epoch = new Time(2021, 1, 20, 18, 0, 0, TimeScale.UTC);
 
         Action threadA;
         Action threadB;
@@ -291,7 +276,7 @@ internal static class Program
     private static int Usage()
     {
         Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
-                                "or <kernel directory> memory-provider|conversions-lock|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic|local-dst");
+                                "or <kernel directory> memory-provider|conversions-lock|static-bodies-memory|static-bodies-spice|tle-text|two-body-first-propagate|two-body-first-conic");
         return 2;
     }
 
@@ -318,7 +303,7 @@ internal static class Program
         var sample = reference.GetProperty("samples")[24];
         var epoch = new Time(DateTime.ParseExact(sample.GetProperty("utc").GetString(), "yyyy-MM-ddTHH:mm:ss.fffffff",
             System.Globalization.CultureInfo.InvariantCulture,
-            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal), TimeFrame.UTCFrame);
+            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal), TimeScale.UTC);
         var tle = new TLE(Name, line1, line2);
 
         int failures = Expect<SpiceException>("state before the kernels", () =>
@@ -405,7 +390,7 @@ internal static class Program
     private static int CheckSpiceErrorsSilent(string kernels)
     {
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
-        var past = new Time(2160, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        var past = new Time(2160, 3, 1, 0, 0, 0, TimeScale.TDB);
         int failures = 0;
         failures += Expect<SpiceException>("ReadEphemeris", () => SpiceAPI.Instance.ReadEphemeris(past, 399, 301, Frame.ICRF, Aberration.None),
             e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));

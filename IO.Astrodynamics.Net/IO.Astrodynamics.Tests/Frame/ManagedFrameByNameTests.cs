@@ -55,7 +55,7 @@ public class ManagedFrameByNameTests
         {
             var utc = DateTime.ParseExact(e.GetProperty("utc").GetString()!, "yyyy-MM-dd'T'HH:mm:ss.fffffff",
                 CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
-            epochs.Add(new SofaEpoch(new TimeSystem_Time(utc, TimeFrame.UTCFrame), e.GetProperty("cip_x").GetDouble(),
+            epochs.Add(new SofaEpoch(new TimeSystem_Time(utc, TimeScale.UTC), e.GetProperty("cip_x").GetDouble(),
                 e.GetProperty("cip_y").GetDouble(), e.GetProperty("cio_s").GetDouble(),
                 e.GetProperty("gcrs_to_tirs").EnumerateArray().Select(v => v.GetDouble()).ToArray()));
         }

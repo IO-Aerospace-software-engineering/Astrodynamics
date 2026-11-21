@@ -43,7 +43,7 @@ public class CrossingEncounterCase : IDisposable
         ProtectedId = id1;
         SecondaryId = id2;
         TestKernels.EnsureSolarSystem();
-        T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, frame: TimeFrame.UTCFrame).ToTDB();
+        T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTDB();
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, T0);
         var (s1, s2) = states(earth, T0);
 
@@ -871,12 +871,12 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
 
         // A frame past its PCK (earth_latest_high_prec.bpc ends in 2026): before, the zero quaternion
         var frame = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2040, 1, 1), new Frames.Frame("ITRF93"), Frames.Frame.ICRF));
+            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2040, 1, 1, TimeScale.TDB), new Frames.Frame("ITRF93"), Frames.Frame.ICRF));
         Assert.Contains("ITRF93", frame.Message);
 
         // A propagation reads the orientation of its central body only where a force needs it: a point mass about the
         // Earth runs past the PCK, a geopotential there throws
-        var epoch2040 = new TimeSystem.Time(2040, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch2040 = new TimeSystem.Time(2040, 1, 1, 0, 0, 0, TimeScale.TDB);
         var window2040 = new Window(epoch2040, epoch2040.AddSeconds(600.0));
         StateVector Leo(CelestialBody body) => new(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 7612.6, 0.0), body, epoch2040,
             Frames.Frame.ICRF);

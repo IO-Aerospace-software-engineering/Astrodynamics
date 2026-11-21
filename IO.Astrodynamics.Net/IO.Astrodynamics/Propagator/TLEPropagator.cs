@@ -26,7 +26,7 @@ public class TLEPropagator : IPropagator
     private readonly Time[] _sampleEpochs;
     private StateVector[] _svCache;
     // Keyed by label (#512), as the orientations of a frame
-    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.LabelComparer);
+    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.ExactComparer);
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }

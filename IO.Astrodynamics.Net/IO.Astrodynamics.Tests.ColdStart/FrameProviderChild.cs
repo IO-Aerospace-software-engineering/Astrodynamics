@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// </remarks>
 internal static class FrameProviderChild
 {
-    private static readonly Time Epoch = new(2021, 6, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Epoch = new(2021, 6, 1, 12, 0, 0, TimeScale.TDB);
 
     internal static int Run()
     {

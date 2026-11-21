@@ -50,7 +50,7 @@ public class ForceModelDefectTests
 
     #region Helpers
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
     private static Window OneHour => new(Epoch, Epoch.AddHours(1.0));
     private static readonly CovariancePropagationOptions Stm = new() { Mode = CovariancePropagationMode.StateTransitionOnly };
@@ -225,7 +225,7 @@ public class ForceModelDefectTests
 
     private static void AssertSameState(StateVector expected, StateVector actual, string label)
     {
-        Assert.True(expected.Epoch.HasSameLabel(actual.Epoch), $"{label}: epoch {expected.Epoch} != {actual.Epoch}");
+        Assert.True(expected.Epoch.EqualsExact(actual.Epoch), $"{label}: epoch {expected.Epoch} != {actual.Epoch}");
         Assert.True(expected.Position.X == actual.Position.X && expected.Position.Y == actual.Position.Y &&
                     expected.Position.Z == actual.Position.Z,
             $"{label}: position {expected.Position} != {actual.Position}, {(expected.Position - actual.Position).Magnitude():E3} m");

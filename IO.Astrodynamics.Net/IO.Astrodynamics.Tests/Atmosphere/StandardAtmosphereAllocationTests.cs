@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
@@ -20,7 +21,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere;
 /// </summary>
 public class StandardAtmosphereAllocationTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     // Every layer and transition of the Earth model (#437): below sea level, the ends and the bases of the transitions at
     // the bases of the 1976 layers (11.019 km ± 100 m), the junction from 86 to 86.2 km, the switch of the mean molecular

@@ -56,7 +56,7 @@ public class LambertCaseSolver : ICategorySolver
         var center = new CelestialBody(BodyResolver.ResolveNaif(inputs.CentralBody), Frame.ICRF, departure);
         var r1 = Metres(inputs.R1Km);
         var initial = new StateVector(r1, Vector3.Zero, center, departure, Frame.ICRF);
-        var target = new StateVector(Metres(inputs.R2Km), Vector3.Zero, center, departure.ToTDT().AddSeconds(inputs.TimeOfFlightS), Frame.ICRF);
+        var target = new StateVector(Metres(inputs.R2Km), Vector3.Zero, center, departure.ToTT().AddSeconds(inputs.TimeOfFlightS), Frame.ICRF);
 
         var result = new LambertSolver().Solve(retrograde, initial, target, center, (ushort)inputs.Revolutions);
         var solution = Select(result, inputs, r1, center.GM);

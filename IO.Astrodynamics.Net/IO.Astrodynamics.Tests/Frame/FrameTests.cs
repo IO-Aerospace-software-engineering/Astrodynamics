@@ -98,7 +98,7 @@ public class FrameTests
     public void KernelSiteFrameIsTheKernelFrame(string date)
     {
         // Arrange
-        var epoch = new TimeSystem.Time(date + " TDB");
+        var epoch = TimeSystem.Time.Parse(date + " TDB");
         var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
         var spice = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF);
         var itrf93 = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
@@ -134,7 +134,7 @@ public class FrameTests
     public void KernelSiteNamedOtherwise_ReadsItsKernelFrame()
     {
         // Arrange
-        var epoch = new TimeSystem.Time("2024-03-01T00:00:00 TDB");
+        var epoch = TimeSystem.Time.Parse("2024-03-01T00:00:00 TDB");
         var site = new Site(13, "GOLDSTONE", PlanetsAndMoons.EARTH_BODY);
         var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None).ToStateVector();
 
@@ -224,7 +224,7 @@ public class FrameTests
         // DSS-13_TOPO (earth_topo_201023.tf) is the SPICE topocentric frame of DSS-13, x north, y west, z zenith,
         // fixed in ITRF93 like the site frame of the library. The site is placed at the planetodetic coordinates of the
         // frame kernel, so that both frames have the same axes.
-        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var site = CreateSiteAtSpiceDss13Coordinates();
 
         var actual = site.Frame.GetStateOrientationToICRF(epoch);
@@ -242,7 +242,7 @@ public class FrameTests
     [InlineData(2021)]
     public void StateInSiteFrameMatchesSpiceTopocentricFrame(int year)
     {
-        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var earth = PlanetsAndMoons.EARTH_BODY;
         var moon = PlanetsAndMoons.MOON_BODY;
         var site = CreateSiteAtSpiceDss13Coordinates();
@@ -262,7 +262,7 @@ public class FrameTests
     {
         // The former site frame angular velocity was expressed in the wrong axes: 1.5e-7 rad/s relative to ITRF93 in
         // 2021, 44 m/s on the Moon seen in the site frame.
-        var epoch = new TimeSystem.Time(2021, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
         var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
 
         var orientation = new Frames.Frame("ITRF93").ToFrame(site.Frame, epoch);
@@ -404,7 +404,7 @@ public class FrameTests
         // The library's comparisons with == (#562): StateVector.Equals, and the identity shortcut of ToFrame. A state in
         // Frame.CIRS converted to new Frame("CIRS") is the same state (the identity, the closed form), where it went to SPICE
         // with the name CIRS and came back r = (0, 0, 0)
-        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var position = new Vector3(6778137.0, 1234.5, -4321.0);
         var velocity = new Vector3(-1.5, 7668.6, 2.25);
         foreach (var (library, name) in new[] { (Frames.Frame.GCRF, "GCRF"), (Frames.Frame.CIRS, "CIRS"), (Frames.Frame.TIRS, "tirs"), (Frames.Frame.TEME, "TEME") })
@@ -468,7 +468,7 @@ public class FrameTests
         // A frame keeps the orientation of its last epoch (#541), and two labels of one instant are equal times (#512): the
         // frame compares the labels, so a read in UTC after a read in TDB of the same instant carries the UTC epoch asked,
         // as each read did when the frame kept one orientation per label
-        var tdb = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var tdb = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var utc = tdb.ToUTC();
         Assert.True(tdb == utc);
         foreach (var frame in new[] { new CirsFrame(), new TirsFrame(), new TemeFrame(), new Frames.Frame("ITRF93") })
@@ -484,7 +484,7 @@ public class FrameTests
     {
         // The last epoch a frame keeps (#541) is replaced by each read at another epoch: reads at t1, t2 and t1 again are
         // those of fresh frames, bit for bit
-        var t1 = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var t1 = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var t2 = t1.AddSeconds(3600.0);
         foreach (var (frame, fresh) in new (Frames.Frame, Func<Frames.Frame>)[]
                  {

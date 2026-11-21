@@ -113,7 +113,7 @@ namespace IO.Astrodynamics.Maneuver
                                                    (System.Math.Sin(stateVector.Inclination()) * System.Math.Sin(TargetOrbit.Inclination())) *
                                                    System.Math.Cos(TargetOrbit.AscendingNode() - stateVector.AscendingNode()));
 
-            double rotationAngle = Constants.PI2 + RelativeInclination * 0.5;
+            double rotationAngle = Constants.HalfPi + RelativeInclination * 0.5;
 
             if (IsAscendingNode == true)
             {

@@ -65,9 +65,9 @@ namespace IO.Astrodynamics.Math
         /// <returns></returns>
         public static double NormalizeAngle(double angle)
         {
-            angle %= Constants._2PI;
+            angle %= Constants.TwoPi;
             if (angle < 0)
-                angle += Constants._2PI;
+                angle += Constants.TwoPi;
             return angle;
         }
 
@@ -78,7 +78,7 @@ namespace IO.Astrodynamics.Math
         /// <returns>The normalized angle difference in the range [-π, π].</returns>
         public static double NormalizeAngleDifference(double angleDiff)
         {
-            angleDiff %= (Constants._2PI);
+            angleDiff %= (Constants.TwoPi);
             if (angleDiff > Constants.PI)
                 angleDiff -= 2 * Constants.PI;
             else if (angleDiff < -Constants.PI)

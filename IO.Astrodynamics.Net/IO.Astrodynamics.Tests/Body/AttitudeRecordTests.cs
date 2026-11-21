@@ -229,7 +229,7 @@ public class AttitudeRecordTests
 
     private const double Length = 3600.0;
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(10.0);
-    private static readonly Time Min = new(DateTime.MinValue, TimeFrame.TDBFrame);
+    private static readonly Time Min = new(DateTime.MinValue, TimeScale.TDB);
 
     private static readonly Vector3[] InstrumentOrientations = [new(0.3, 0.5, 0.2), new(0.0, System.Math.PI / 2.0, 0.0), new(-0.7, 1.1, 2.3)];
 
@@ -911,7 +911,7 @@ public class AttitudeRecordTests
 
     private void TryExecute(string frame)
     {
-        var start = new Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, start);
@@ -970,7 +970,7 @@ public class AttitudeRecordTests
     {
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var start = new Time(2021, 1, 20, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var start = new Time(2021, 1, 20, 12, 0, 0, TimeScale.TDB);
         var sc = new Spacecraft(-8441, "TLE8441", 1000.0, 3000.0, new Clock("TLE8441_CLK", 65536), tle);
         using (var propagator = new TLEPropagator(new Window(start, start.AddSeconds(600.0)), sc, TimeSpan.FromSeconds(10.0)))
         {
@@ -1019,7 +1019,7 @@ public class AttitudeRecordTests
     [Fact]
     public void StoredStates_FromAnotherFrame_AreInIcrfWithTheirCovariance()
     {
-        var start = new Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
         var f = Frame.ECLIPTIC_J2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
@@ -1080,7 +1080,7 @@ public class AttitudeRecordTests
     [Fact]
     public void StatesFromAnotherFrame_NotPropagatedOrAdded_AreReadInIcrf()
     {
-        var start = new Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
         var f = Frame.ECLIPTIC_J2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
@@ -1328,7 +1328,7 @@ public class AttitudeRecordTests
         {
             hooks ??= new Hooks();
             var step = hooks.Step ?? Step;
-            var start = new Time(year, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+            var start = new Time(year, 3, 1, 12, 0, 0, TimeScale.TDB);
             var window = new Window(start, start.AddSeconds(Length));
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
             var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);

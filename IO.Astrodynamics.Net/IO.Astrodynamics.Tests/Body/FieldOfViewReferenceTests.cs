@@ -269,8 +269,8 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         double worst = 0.0;
         for (int i = 0; i < reference.Length; i++)
         {
-            Assert.Equal(TimeFrame.TDBFrame, actual[i].StartDate.Frame);
-            Assert.Equal(TimeFrame.TDBFrame, actual[i].EndDate.Frame);
+            Assert.Equal(TimeScale.TDB, actual[i].StartDate.Scale);
+            Assert.Equal(TimeScale.TDB, actual[i].EndDate.Scale);
             worst = System.Math.Max(worst, System.Math.Abs(actual[i].StartDate.TimeSpanFromJ2000().TotalSeconds - reference[i][0]));
             worst = System.Math.Max(worst, System.Math.Abs(actual[i].EndDate.TimeSpanFromJ2000().TotalSeconds - reference[i][1]));
         }
@@ -454,7 +454,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     {
         var instrument = InstrumentOf(-470101001);
         var utcWindow = new Window(SearchWindow.StartDate.ToUTC(), SearchWindow.EndDate.ToUTC());
-        Assert.Equal(TimeFrame.UTCFrame, utcWindow.StartDate.Frame);
+        Assert.Equal(TimeScale.UTC, utcWindow.StartDate.Scale);
         foreach (var key in new[] { "-470101001 EARTH ITRF93 LT", "-470101001 399013 POINT LT" })
         {
             var parts = key.Split(' ');

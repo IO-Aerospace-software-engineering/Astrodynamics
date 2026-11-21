@@ -17,7 +17,7 @@ namespace IO.Astrodynamics.Tests.Frame;
 /// </summary>
 public class FrameRotationTests
 {
-    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     public FrameRotationTests()
     {

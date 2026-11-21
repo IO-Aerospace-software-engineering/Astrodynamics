@@ -52,7 +52,7 @@ public class Sgp4ReferenceTests
         new Vector3(e[0].GetDouble(), e[1].GetDouble(), e[2].GetDouble()) * 1e3;
 
     private static TimeSystem.Time Utc(string iso) => new(DateTime.ParseExact(iso, "yyyy-MM-ddTHH:mm:ss.fffffff",
-        CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal), TimeFrame.UTCFrame);
+        CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal), TimeScale.UTC);
 
     private static TimeSpan Minutes(double minutes) => new((long)System.Math.Round(minutes * TimeSpan.TicksPerMinute));
 
@@ -73,7 +73,7 @@ public class Sgp4ReferenceTests
                 // most 7 decimals of a minute, whole multiples of 6 us (TimeSpan.FromSeconds truncates 60 * 54.2028672 to
                 // a tick below, 0.77 mm on 22312)
                 double tsince = sample.GetProperty("tsince_min").GetDouble();
-                var epoch = tle.Epoch.ToTDT() + Minutes(tsince);
+                var epoch = tle.Epoch.ToTT() + Minutes(tsince);
                 var sv = tle.ToOsculating(epoch);
                 setR = System.Math.Max(setR, MaxComponent(sv.Position - Km(sample.GetProperty("r_km"))));
                 setV = System.Math.Max(setV, MaxComponent(sv.Velocity - Km(sample.GetProperty("v_km_s"))));
@@ -132,7 +132,7 @@ public class Sgp4ReferenceTests
             string line1 = set.GetProperty("line1").GetString(), line2 = set.GetProperty("line2").GetString();
             var tle = new TLE("VER", line1, line2);
             var expected = Utc(set.GetProperty("epoch_utc").GetString());
-            Assert.Equal(TimeFrame.UTCFrame, tle.Epoch.Frame);
+            Assert.Equal(TimeScale.UTC, tle.Epoch.Scale);
             Assert.Equal(expected.DateTime.Ticks, tle.Epoch.DateTime.Ticks);
 
             Assert.Equal(set.GetProperty("epoch_et").GetDouble(), SpiceAPI.Instance.ReadTleEpoch("VER", line1, line2));
@@ -150,7 +150,7 @@ public class Sgp4ReferenceTests
             Assert.NotEqual(0, item.GetProperty("sgp4_error").GetInt32());
             Assert.StartsWith("SPICE(", item.GetProperty("cspice_error").GetString());
             var tle = new TLE("ERR", item.GetProperty("line1").GetString(), item.GetProperty("line2").GetString());
-            var epoch = tle.Epoch.ToTDT() + Minutes(item.GetProperty("tsince_min").GetDouble());
+            var epoch = tle.Epoch.ToTT() + Minutes(item.GetProperty("tsince_min").GetDouble());
             Assert.Throws<SpiceException>(() => tle.ToOsculating(epoch));
         }
     }

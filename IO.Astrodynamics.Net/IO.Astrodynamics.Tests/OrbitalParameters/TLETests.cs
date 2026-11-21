@@ -64,7 +64,7 @@ public class TLETests
 
         // 6 h after the TLE epoch. Reference: the SGP4 state of Vallado's code (sgp4 2.27, WGS-72 old, AFSPC mode, the model of
         // CSPICE's evsgp4_c) through GMAT R2026a's TEME -> EarthICRF, "ISS 2021 +6 h" of tools/teme_reference (#451)
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 18, 50, 13, 663, DateTimeKind.Utc), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 18, 50, 13, 663, DateTimeKind.Utc), TimeScale.UTC);
         var stateVector = tle.AtEpoch(epoch).ToStateVector().ToFrame(Frames.Frame.ICRF) as StateVector;
 
         LabelAssert.Equal(stateVector, tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF) as StateVector);
@@ -120,7 +120,7 @@ public class TLETests
         TLE tle = new TLE("CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
             "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468");
 
-        TimeSystem.Time epoch = new TimeSystem.Time("2024-08-26T22:34:20.00000Z");
+        TimeSystem.Time epoch = TimeSystem.Time.Parse("2024-08-26T22:34:20.00000Z");
         var stateVector = tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF);
 
         // Assert.Equal(32718528.303724434, stateVector.Position.X, 1);
@@ -233,7 +233,7 @@ public class TLETests
     [Fact]
     public void Create_InvalidCosparId_ThrowsArgumentException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF);
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.ICRF);
         string name = "TestSatellite";
         ushort noradId = 12345;
         string cosparId = "123";
@@ -245,7 +245,7 @@ public class TLETests
     [Fact]
     public void Create_InvalidElementSetNumber_ThrowsArgumentOutOfRangeException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.TEME,
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.TEME,
             elementsType: OrbitalElementsType.Mean);
         string name = "TestSatellite";
         ushort noradId = 12345;
@@ -269,7 +269,7 @@ public class TLETests
     [Fact]
     public void Create_InvalidName_ThrowsNullArgumentException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.TEME,
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.TEME,
             elementsType: OrbitalElementsType.Mean);
         string name = "";
         ushort noradId = 12345;
@@ -282,7 +282,7 @@ public class TLETests
     [Fact]
     public void ToTLE_ValidOrbit_ReturnsValidTLE()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
         var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A");
         var tle = sv.ToTLE(config);
@@ -308,7 +308,7 @@ public class TLETests
     [Fact]
     public void ToTLE_ValidISSOrbit_ReturnsValidTLE()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var sv = new StateVector(new Vector3(5465479.168061836, -4037598.9299125164, 3.8812307310800365), // Position vector (X, Y, Z)
             new Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
         // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
@@ -409,7 +409,7 @@ public class TLETests
         var tle = new TLE("ISS", line1, line2);
 
         double gm = SpiceAPI.Instance.GetCelestialBodyInfo(399).GM;
-        double n = double.Parse(line2.Substring(52, 11), System.Globalization.CultureInfo.InvariantCulture) * IO.Astrodynamics.Constants._2PI / 86400.0;
+        double n = double.Parse(line2.Substring(52, 11), System.Globalization.CultureInfo.InvariantCulture) * IO.Astrodynamics.Constants.TwoPi / 86400.0;
 
         Assert.Equal(System.Math.Cbrt(gm / (n * n)), tle.MeanSemiMajorAxis);
         Assert.Equal(gm, ((CelestialBody)tle.Observer).GM);
@@ -584,7 +584,7 @@ public class TLETests
     [Fact]
     public void Create_ExtremeValues_HandlesCorrectly()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var kep = new KeplerianElements(
             42164000.0, // GEO semi-major axis
             0.0001, // Very low eccentricity
@@ -657,7 +657,7 @@ public class TLETests
     public void BStarConversion_RoundTrip_PreservesValue(double bstarValue, string expectedTleField)
     {
         // Arrange: Create a simple orbit to use as base for TLE creation
-        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var kep = new KeplerianElements(
             7000000.0, // Semi-major axis (m)
             0.001, // Eccentricity
@@ -685,7 +685,7 @@ public class TLETests
     [Fact]
     public void TLEFitting()
     {
-        var epoch = new IO.Astrodynamics.TimeSystem.Time(new DateTime(2025, 08, 25, 11, 55, 44, 305), TimeFrame.UTCFrame);
+        var epoch = new IO.Astrodynamics.TimeSystem.Time(new DateTime(2025, 08, 25, 11, 55, 44, 305), TimeScale.UTC);
 
         CelestialBody observer = new CelestialBody(399);
 
@@ -933,7 +933,7 @@ public class TLETests
     [Fact]
     public void StateVector_HasOsculatingElementsType()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var sv = new StateVector(
             new Vector3(6778137.0, 0.0, 0.0),
             new Vector3(0.0, 7668.0, 0.0),
@@ -947,7 +947,7 @@ public class TLETests
     [Fact]
     public void KeplerianElements_Default_HasOsculatingElementsType()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var kep = new KeplerianElements(
             7000000.0, 0.001, 0.9, 0.0, 0.0, 0.0,
             TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
@@ -959,7 +959,7 @@ public class TLETests
     /// #729: FromOMM converts rev/day to rad/s as (n × 2π) / 86400, two roundings of double arithmetic; the product
     /// n × 2π overflows to +Infinity above about 2.86e307 rev/day, where the quotient is finite (about 2.08e303 rad/s).
     /// The reference is the same two roundings with an unbounded exponent (round to 53 bits, ties to even, of
-    /// round(n × 2π) / 86400, 2π the double of Constants._2PI), computed in exact rational arithmetic (Python fractions,
+    /// round(n × 2π) / 86400, 2π the double of Constants.TwoPi), computed in exact rational arithmetic (Python fractions,
     /// 2026-11-17); below the overflow it is the former result, bit for bit.
     /// </summary>
     [Theory]
@@ -970,7 +970,7 @@ public class TLETests
     [InlineData(double.MaxValue, 0x7f13104b57cf96a2L)]
     public void FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient(double meanMotion, long expectedBits)
     {
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeScale.UTC);
         var meanKep = KeplerianElements.FromOMM(meanMotion, 0.001, 51.6, 10.0, 20.0, 30.0, TestHelpers.EarthAtJ2000, epoch,
             Frames.Frame.TEME);
 
@@ -987,7 +987,7 @@ public class TLETests
         double raan = 353.0312; // degrees
         double argumentOfPeriapsis = 320.8755; // degrees
         double meanAnomaly = 39.2360; // degrees
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeScale.UTC);
 
         var meanKep = KeplerianElements.FromOMM(
             meanMotion, eccentricity, inclination, raan,
@@ -1008,7 +1008,7 @@ public class TLETests
 
         // Verify mean motion is preserved (convert back to rev/day)
         double meanMotionRadPerSec = meanKep.MeanMotion();
-        double meanMotionRevPerDay = meanMotionRadPerSec * 86400.0 / Astrodynamics.Constants._2PI;
+        double meanMotionRevPerDay = meanMotionRadPerSec * 86400.0 / Astrodynamics.Constants.TwoPi;
         Assert.Equal(meanMotion, meanMotionRevPerDay, 10);
     }
 
@@ -1023,7 +1023,7 @@ public class TLETests
         double raan = 353.0312; // degrees
         double argumentOfPeriapsis = 320.8755; // degrees
         double meanAnomaly = 39.2360; // degrees
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeScale.UTC);
 
         // Create mean elements from OMM data
         var meanKep = KeplerianElements.FromOMM(
@@ -1103,7 +1103,7 @@ public class TLETests
         double raan = 353.0312; // degrees
         double argumentOfPeriapsis = 320.8755; // degrees
         double meanAnomaly = 39.2360; // degrees
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeScale.UTC);
 
         var meanKep = KeplerianElements.FromOMM(
             meanMotion, eccentricity, inclination, raan,
@@ -1120,7 +1120,7 @@ public class TLETests
     [Fact]
     public void OsculatingElements_ToEquinoctial_PreservesElementsType()
     {
-        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var sv = new StateVector(
             new Vector3(6778137.0, 0.0, 0.0),
             new Vector3(0.0, 7668.0, 0.0),
@@ -1145,7 +1145,7 @@ public class TLETests
         double raan = 353.0312; // degrees
         double argumentOfPeriapsis = 320.8755; // degrees
         double meanAnomaly = 39.2360; // degrees
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeScale.UTC);
 
         var meanKep = KeplerianElements.FromOMM(
             meanMotion, eccentricity, inclination, raan,
@@ -1162,7 +1162,7 @@ public class TLETests
     public void MeanKeplerianElements_ToStateVectorAtEpoch_ThrowsInvalidOperationException()
     {
         var meanMotion = 15.49309423;
-        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeScale.UTC);
 
         var meanKep = KeplerianElements.FromOMM(
             meanMotion, 0.0001, 51.6, 0.0, 0.0, 0.0,

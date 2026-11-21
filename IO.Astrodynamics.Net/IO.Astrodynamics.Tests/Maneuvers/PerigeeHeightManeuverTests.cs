@@ -24,11 +24,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
 
-            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), TimeSpan.FromDays(1.0), 151000000.0, eng);
+            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), 151000000.0, eng);
 
             Assert.NotNull(perigeeHeightManeuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), perigeeHeightManeuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), perigeeHeightManeuver.MinimumEpoch);
             Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeHeight);
         }
 
@@ -38,12 +38,12 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
 
-            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), TimeSpan.FromDays(1.0),
+            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0),
                 new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), eng);
 
             Assert.NotNull(perigeeHeightManeuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), perigeeHeightManeuver.MinimumEpoch);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), perigeeHeightManeuver.MinimumEpoch);
             Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeHeight);
         }
 
@@ -60,7 +60,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
-            var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 42164000.0, spc.Engines.First());
+            var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0, spc.Engines.First());
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee
@@ -95,7 +95,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
-            var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 6678000.0, spc.Engines.First());
+            var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 6678000.0, spc.Engines.First());
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee

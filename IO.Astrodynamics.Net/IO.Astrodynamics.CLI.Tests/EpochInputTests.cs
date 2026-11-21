@@ -76,15 +76,64 @@ public class EpochInputTests
         Assert.Equal($"{7305 * 86400.0}{Environment.NewLine}", SecondsFromJ2000InTdb("2458850.0 JD"));
     }
 
-    // #680: NaN is not a Julian date; CreateFromJD read it as 0 days from J2000, and the command ran at J2000
+    // #680: NaN is not a Julian date; CreateFromJD read it as 0 days from J2000, and the command ran at J2000. Since 11.0.0
+    // (D3 of #668) a Julian date is read by Time.Parse's grammar, whose digits are ASCII: NaN is no epoch
     [Theory]
     [InlineData("NaN JD")]
     [InlineData("NaN JD UTC")]
     [InlineData("nan jd tdb")]
     public void NaNJulianDate_IsRejected(string epoch)
     {
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => SecondsFromJ2000InTdb(epoch));
-        Assert.Equal("julianDate", exception.ParamName);
+        Assert.Throws<FormatException>(() => SecondsFromJ2000InTdb(epoch));
+    }
+
+    // D3 of #668: seconds take any scale tag (757339200 TT threw a FormatException before 11.0.0), and the calendar forms
+    // are Time.Parse's grammar, the day of year included (it threw before), a Julian date its digits to the nearest tick.
+    // 757 339 200 s is 8765.5 days: J2000 (2000-01-01T12:00:00) plus it is 2024-01-01T00:00:00 of the same scale
+    [Theory]
+    [InlineData("757339200 TT", "tt", "2024-01-01T00:00:00.0000000 TT")]
+    [InlineData("757339200tai", "tai", "2024-01-01T00:00:00.0000000 TAI")]
+    [InlineData("757339200 GPS", "gps", "2024-01-01T00:00:00.0000000 GPS")]
+    [InlineData("  757339200.5   TDT ", "tt", "2024-01-01T00:00:00.5000000 TT")]
+    [InlineData("-1.5e3 UTC", "utc", "2000-01-01T11:35:00.0000000Z")]
+    [InlineData("757339200", "tdb", "2024-01-01T00:00:00.0000000 TDB")]
+    public void SecondsTaggedWithAnyScale_AreSecondsOfThatScale(string epoch, string scale, string expected)
+    {
+        Assert.Equal($"{expected}{Environment.NewLine}", Convert(epoch, scale, "iso"));
+    }
+
+    [Theory]
+    [InlineData("2024-001T00:00:00Z", "utc", "2024-01-01T00:00:00.0000000Z")]
+    [InlineData("2024-001T00:00:00 TAI", "tai", "2024-01-01T00:00:00.0000000 TAI")]
+    [InlineData("2024-001T00:00:00", "tdb", "2024-01-01T00:00:00.0000000 TDB")]
+    [InlineData("2024-01-01T02:00:00+02:00", "utc", "2024-01-01T00:00:00.0000000Z")]
+    [InlineData("2460310.5 JD TT", "tt", "2024-01-01T00:00:00.0000000 TT")]
+    [InlineData("JD 2460310.75 GPS", "gps", "2024-01-01T06:00:00.0000000 GPS")]
+    public void CalendarsDaysOfYearAndJulianDates_AreTheirInstants(string epoch, string scale, string expected)
+    {
+        Assert.Equal($"{expected}{Environment.NewLine}", Convert(epoch, scale, "iso"));
+    }
+
+    [Theory]
+    [InlineData("2024-13-01T00:00:00Z")]
+    [InlineData("12:00")]
+    [InlineData("757339200 TCG")]
+    [InlineData("tomorrow")]
+    public void AnEpochOfNoForm_ThrowsAFormatExceptionListingTheForms(string epoch)
+    {
+        var exception = Assert.Throws<FormatException>(() => Convert(epoch, "tdb", "iso"));
+        Assert.Contains("Julian date", exception.Message);
+    }
+
+    private static string Convert(string epoch, string to, string format)
+    {
+        using (Configuration.Lock())
+        {
+            var sb = new StringBuilder();
+            Console.SetOut(new StringWriter(sb));
+            new TimeConverterCommand().TimeConverter(new EpochParameters { Epoch = epoch }, to: to, format: format);
+            return sb.ToString();
+        }
     }
 
     private static string SecondsFromJ2000InTdb(string epoch)

@@ -20,12 +20,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Create()
         {
-            var so = new StateOrientation(new Quaternion(1, 2, 3, 4), Vector3.VectorX, new TimeSystem.Time(DateTime.MaxValue, TimeFrame.TDBFrame),
+            var so = new StateOrientation(new Quaternion(1, 2, 3, 4), Vector3.VectorX, new TimeSystem.Time(DateTime.MaxValue, TimeScale.TDB),
                 Frames.Frame.ICRF);
             Assert.NotNull(so);
             Assert.Equal(new Quaternion(1, 2, 3, 4), so.Rotation);
             Assert.Equal(Vector3.VectorX, so.AngularVelocity);
-            LabelAssert.Equal(new TimeSystem.Time(DateTime.MaxValue, TimeFrame.TDBFrame), so.Epoch);
+            LabelAssert.Equal(new TimeSystem.Time(DateTime.MaxValue, TimeScale.TDB), so.Epoch);
             Assert.Equal(Frames.Frame.ICRF, so.ReferenceFrame);
         }
 

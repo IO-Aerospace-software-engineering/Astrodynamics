@@ -174,7 +174,7 @@ internal static class TimelineRules
         var expectedStart = tc.AddSeconds(-ThrustLead(deltaV, isp) * duration.TotalSeconds);
         double startError = (actual.Value.StartDate - expectedStart).TotalSeconds;
         Xunit.Assert.True(System.Math.Abs(startError) <= 1.0e-7, $"thrust start {startError:E3} s from the centroid rule");
-        Xunit.Assert.Same(tc.Frame, actual.Value.StartDate.Frame);
+        Xunit.Assert.Equal(tc.Scale, actual.Value.StartDate.Scale);
         Xunit.Assert.Equal(duration, actual.Value.Length);
     }
 

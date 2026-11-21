@@ -1,3 +1,4 @@
+using IO.Astrodynamics.TimeSystem;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
@@ -13,7 +14,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere;
 /// </summary>
 public class Nrlmsise00CutoffTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private static readonly (double Latitude, double Longitude)[] Places = { (0.25, 0.1), (-0.8, 2.0), (1.2, -2.5), (0.0, 3.0) };
 
     private readonly ITestOutputHelper _output;

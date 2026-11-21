@@ -70,7 +70,7 @@ public class TemeFrameTests
     private static IEnumerable<Point> FramePoints => Points.Value.Where(p => p.Kind == "frame");
 
     private static TimeSystem_Time Utc(string iso) => new(DateTime.ParseExact(iso, "yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture,
-        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal), TimeFrame.UTCFrame);
+        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal), TimeScale.UTC);
 
     private static double Angle(Quaternion left, Quaternion right)
     {
@@ -91,7 +91,9 @@ public class TemeFrameTests
     {
         var dateTime = DateTime.ParseExact(instant[..23], "yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture,
             DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
-        return instant.EndsWith("TDB") ? new TimeSystem_Time(dateTime, TimeFrame.TDBFrame) : new TimeSystem_Time(dateTime, TimeFrame.UTCFrame);
+        return instant.EndsWith("TDB")
+            ? new TimeSystem_Time(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified), TimeScale.TDB)
+            : new TimeSystem_Time(dateTime, TimeScale.UTC);
     }
 
     internal static Vector3 Position(double[] s) => new Vector3(s[0], s[1], s[2]) * 1e3;
@@ -179,9 +181,9 @@ public class TemeFrameTests
         {
             var utc = Utc(p.Utc);
             double gmst = TemeFrame.Gmst82(TimeSystem_Time.JULIAN_J2000, utc.DaysFromJ2000());
-            double difference = System.Math.Abs(System.Math.IEEERemainder(gmst - p.Gmst82Rad, IO.Astrodynamics.Constants._2PI));
+            double difference = System.Math.Abs(System.Math.IEEERemainder(gmst - p.Gmst82Rad, IO.Astrodynamics.Constants.TwoPi));
             worst = System.Math.Max(worst, difference);
-            Assert.InRange(gmst, 0.0, IO.Astrodynamics.Constants._2PI);
+            Assert.InRange(gmst, 0.0, IO.Astrodynamics.Constants.TwoPi);
         }
 
         _output.WriteLine($"GMST82 - ERFA gmst82: {worst:E3} rad");
@@ -341,7 +343,7 @@ public class TemeFrameTests
     {
         // #682: the frame of a managed spacecraft, which only the library holds, reached spkezr_c by name
         // (SPICE(UNKNOWNFRAME)); with an attitude record it is read in J2000 and rotated by the record, as the frames of #558
-        var epoch = new TimeSystem_Time(2024, 3, 1);
+        var epoch = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
@@ -390,7 +392,7 @@ public class TemeFrameTests
 
     /// <summary>The attitude of the kernels of <see cref="ManagedSpacecraftFrameKernels"/>: 90° about Z, then 30° about X.</summary>
     private static Quaternion CkAttitude(int k) => k < 60
-        ? new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2)
+        ? new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi)
         : new Quaternion(Vector3.VectorX, 30.0 * IO.Astrodynamics.Constants.Deg2Rad);
 
     /// <summary>
@@ -455,7 +457,7 @@ public class TemeFrameTests
     [Fact]
     public void EphemerisReadInManagedSpacecraftFrame_EmptyRecord_ReadsTheKernelsByName()
     {
-        var start = new TimeSystem_Time(2024, 3, 1);
+        var start = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         using var kernels = new ManagedSpacecraftFrameKernels(-6826, "F07CK", start);
@@ -501,7 +503,7 @@ public class TemeFrameTests
     [Trait("Category", "Validation")]
     public void EphemerisReadInManagedSpacecraftFrame_MatchesSpkezrOnTheKernelsWritten()
     {
-        var start = new TimeSystem_Time(2024, 3, 1);
+        var start = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         using var kernels = new ManagedSpacecraftFrameKernels(-6827, "F07CKV", start);

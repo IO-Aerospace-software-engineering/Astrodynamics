@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Tests;
 /// <c>Data/TerrestrialSecondsReference/terrestrial_seconds_reference.json</c>): 100 labels in the 6 h after
 /// 2026-01-20T06:00:00 UTC, the epoch of the conjunction cases (TDB − TT = +0.47 ms), and 100 after
 /// 2026-10-20T06:00:00 UTC (−1.61 ms), the last of each 6 h after its epoch. The expression the runner used before,
-/// <c>(t.ToTDT() - epoch.ToTDT()).TotalSeconds</c>, is off there by 0.0004 to 0.992 tick and by −0.995 to −0.006 tick
+/// <c>(t.ToTT() - epoch.ToTT()).TotalSeconds</c>, is off there by 0.0004 to 0.992 tick and by −0.995 to −0.006 tick
 /// (<c>former_error_ticks</c> of the file).
 /// </summary>
 public class TerrestrialSecondsTests
@@ -45,10 +45,10 @@ public class TerrestrialSecondsTests
         int count = 0;
         foreach (var epoch in document.RootElement.GetProperty("epochs").EnumerateArray())
         {
-            var utc = new Time(new DateTime(epoch.GetProperty("utc_ticks").GetInt64()), TimeFrame.UTCFrame);
+            var utc = new Time(new DateTime(epoch.GetProperty("utc_ticks").GetInt64()), TimeScale.UTC);
             foreach (var label in epoch.GetProperty("labels").EnumerateArray())
             {
-                var tdb = new Time(new DateTime(label.GetProperty("tdb_ticks").GetInt64()), TimeFrame.TDBFrame);
+                var tdb = new Time(new DateTime(label.GetProperty("tdb_ticks").GetInt64()), TimeScale.TDB);
                 double expected = double.Parse(label.GetProperty("tt_seconds").GetString(), CultureInfo.InvariantCulture);
                 double error = System.Math.Abs(TerrestrialSeconds.Between(utc, tdb) - expected);
                 worst = System.Math.Max(worst, error);
@@ -67,8 +67,8 @@ public class TerrestrialSecondsTests
     {
         // The last label of the first epoch: 2026-01-20T12:01:09.1844785 TDB, TT 21600.0000000397406 s after
         // 2026-01-20T06:00:00 UTC; the former expression gave 0.60 tick more
-        var utc = new Time(new DateTime(2026, 1, 20, 6, 0, 0), TimeFrame.UTCFrame);
-        var tdb = new Time(new DateTime(639045072691844785L), TimeFrame.TDBFrame);
+        var utc = new Time(new DateTime(2026, 1, 20, 6, 0, 0), TimeScale.UTC);
+        var tdb = new Time(new DateTime(639045072691844785L), TimeScale.TDB);
         Assert.Equal(new DateTime(2026, 1, 20, 12, 1, 9).AddTicks(1844785), tdb.DateTime);
         Assert.InRange(TerrestrialSeconds.Between(utc, tdb) - 21600.0000000397406058875229913, -Bound, Bound);
     }
@@ -77,8 +77,8 @@ public class TerrestrialSecondsTests
     public void BetweenUtcEpochs_CountsTheLeapSecond()
     {
         // Exact in ticks between UTC epochs, the leap second of 2016-12-31 counted (TAI - UTC 36 s, then 37 s)
-        var before = new Time(new DateTime(2016, 12, 31, 23, 59, 59), TimeFrame.UTCFrame);
-        var after = new Time(new DateTime(2017, 1, 1, 0, 0, 0), TimeFrame.UTCFrame);
+        var before = new Time(new DateTime(2016, 12, 31, 23, 59, 59), TimeScale.UTC);
+        var after = new Time(new DateTime(2017, 1, 1, 0, 0, 0), TimeScale.UTC);
         Assert.Equal(2.0, TerrestrialSeconds.Between(before, after));
         Assert.Equal(-2.0, TerrestrialSeconds.Between(after, before));
         Assert.Equal(0.0, TerrestrialSeconds.Between(after, after));

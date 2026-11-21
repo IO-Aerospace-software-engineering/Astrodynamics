@@ -150,7 +150,7 @@ public class MatirxTests
     [Fact]
     public void CreateRotationMatrixX()
     {
-        var res = Matrix.CreateRotationMatrixX(Astrodynamics.Constants.PI2);
+        var res = Matrix.CreateRotationMatrixX(Astrodynamics.Constants.HalfPi);
         Assert.Equal(1.0, res.Get(0, 0));
         Assert.Equal(-1.0, res.Get(1, 2));
         Assert.Equal(1.0, res.Get(2, 1));
@@ -159,7 +159,7 @@ public class MatirxTests
     [Fact]
     public void CreateRotationMatrixY()
     {
-        var res = Matrix.CreateRotationMatrixY(Astrodynamics.Constants.PI2);
+        var res = Matrix.CreateRotationMatrixY(Astrodynamics.Constants.HalfPi);
         Assert.Equal(1.0, res.Get(0, 2));
         Assert.Equal(1.0, res.Get(1, 1));
         Assert.Equal(-1.0, res.Get(2, 0));
@@ -170,7 +170,7 @@ public class MatirxTests
     [Fact]
     public void CreateRotationMatrixZ()
     {
-        var res = Matrix.CreateRotationMatrixZ(Astrodynamics.Constants.PI2);
+        var res = Matrix.CreateRotationMatrixZ(Astrodynamics.Constants.HalfPi);
         Assert.Equal(-1.0, res.Get(0, 1));
         Assert.Equal(1.0, res.Get(1, 0));
         Assert.Equal(1.0, res.Get(2, 2));

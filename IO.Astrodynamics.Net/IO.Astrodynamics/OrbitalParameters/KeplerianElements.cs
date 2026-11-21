@@ -298,14 +298,14 @@ namespace IO.Astrodynamics.OrbitalParameters
         // (#729: +Infinity before)
         private static double RevolutionsPerDayToRadiansPerSecond(double meanMotion)
         {
-            double product = meanMotion * Constants._2PI;
+            double product = meanMotion * Constants.TwoPi;
             if (double.IsFinite(product) || !double.IsFinite(meanMotion))
             {
                 return product / 86400.0;
             }
 
             const double scale = 1.0 / 1024.0;
-            return meanMotion * scale * Constants._2PI / (86400.0 * scale);
+            return meanMotion * scale * Constants.TwoPi / (86400.0 * scale);
         }
 
         /// <summary>

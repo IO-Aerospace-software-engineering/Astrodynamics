@@ -165,7 +165,7 @@ internal static class GeodeticCoordinates
     {
         var geodetic = FromBodyFixed(position, equatorialRadius, flattening);
         double longitude = positiveWest ? -geodetic.Longitude : geodetic.Longitude;
-        return geodetic with { Longitude = longitude < 0.0 ? longitude + Constants._2PI : longitude };
+        return geodetic with { Longitude = longitude < 0.0 ? longitude + Constants.TwoPi : longitude };
     }
 
     /// <summary>

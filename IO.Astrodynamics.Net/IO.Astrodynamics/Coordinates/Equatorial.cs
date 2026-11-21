@@ -61,7 +61,7 @@ namespace IO.Astrodynamics.Coordinates
             Distance = position.Magnitude();
             RightAscension = System.Math.Atan2(position.Y, position.X);
             if (RightAscension < 0)
-                RightAscension += Constants._2PI;
+                RightAscension += Constants.TwoPi;
 
             Declination = System.Math.Asin(position.Z / Distance);
             Epoch = epoch;

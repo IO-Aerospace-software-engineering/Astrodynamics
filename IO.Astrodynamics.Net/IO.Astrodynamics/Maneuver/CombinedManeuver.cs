@@ -77,7 +77,7 @@ namespace IO.Astrodynamics.Maneuver
                 e = 1.0 - (2.0 / ((TargetPerigeeHeight / apogee) + 1.0));
 
                 //Periapse argument will turn by 180°
-                meanAnomaly = (meanAnomaly + Constants.PI) % Constants._2PI;
+                meanAnomaly = (meanAnomaly + Constants.PI) % Constants.TwoPi;
                 periapsisArgument += Constants.PI;
             }
             else

@@ -18,6 +18,6 @@ public class Example
         TestKernels.EnsureSolarSystem();
         var earth = PlanetsAndMoons.EARTH_BODY;
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var ephemeris = moon.GetEphemeris(new TimeSystem.Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeFrame.UTCFrame), earth, Frames.Frame.ICRF, Aberration.None);
+        var ephemeris = moon.GetEphemeris(new TimeSystem.Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.UTC), earth, Frames.Frame.ICRF, Aberration.None);
     }
 }

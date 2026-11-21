@@ -63,7 +63,7 @@ public class ConfigurationTest
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(0.5);
         var stateOrientation1 = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000TDB, frame);
-        var stateOrientation2 = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.PI2), new Vector3(1.0, 1.0, 1.0), date2, frame);
+        var stateOrientation2 = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi), new Vector3(1.0, 1.0, 1.0), date2, frame);
 
         dataProvider.AddStateOrientationToICRF(frame, date1, stateOrientation1);
         dataProvider.AddStateOrientationToICRF(frame, date2, stateOrientation2);
@@ -83,7 +83,7 @@ public class ConfigurationTest
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(2);
         var stateOrientation1 = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000TDB, frame);
-        var stateOrientation2 = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.PI2), new Vector3(1.0, 1.0, 1.0), date2, frame);
+        var stateOrientation2 = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi), new Vector3(1.0, 1.0, 1.0), date2, frame);
 
         dataProvider.AddStateOrientationToICRF(frame, date1, stateOrientation1);
         dataProvider.AddStateOrientationToICRF(frame, date2, stateOrientation2);

@@ -39,7 +39,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </remarks>
 public class ManeuverEngineBindingTests
 {
-    private static readonly Time Epoch = new(2024, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Epoch = new(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
     private static readonly Window Window = new(Epoch, Epoch.AddSeconds(7200.0));
     private static readonly TimeSpan Output = TimeSpan.FromSeconds(60.0);
     private const double Isp = 320.0;

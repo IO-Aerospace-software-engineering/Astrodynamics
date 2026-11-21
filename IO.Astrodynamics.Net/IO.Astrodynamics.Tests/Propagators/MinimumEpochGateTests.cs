@@ -112,7 +112,7 @@ public class MinimumEpochGateTests
         ["intersection|VV10"] = 2.9, ["time|VV1"] = 0.5e-7 + 4.6e-13, ["time|VV10"] = 0.5e-7 + 4.6e-13, ["moon|VV1"] = 5.2e-4, ["moon|VV10"] = 5.2e-2
     };
 
-    internal static readonly Time S = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    internal static readonly Time S = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
     internal const double Apogee0 = 7378137.0;
     internal const double Perigee0 = 6778137.0;
     internal const double A0 = (Apogee0 + Perigee0) / 2.0;

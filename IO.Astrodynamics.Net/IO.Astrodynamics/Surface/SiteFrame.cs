@@ -71,7 +71,7 @@ public class SiteFrame : Frame
             .Replace("{fixedframe}", Site.CelestialBody.Frame.Name.ToUpper())
             .Replace("{matrix}", matrix)
             .Replace("{long}", (-Site.Planetodetic.Longitude).ToString(CultureInfo.InvariantCulture))
-            .Replace("{colat}", (-(Constants.PI2 - Site.Planetodetic.Latitude)).ToString(CultureInfo.InvariantCulture));
+            .Replace("{colat}", (-(Constants.HalfPi - Site.Planetodetic.Latitude)).ToString(CultureInfo.InvariantCulture));
         await using var sw = new StreamWriter(outputFile.FullName);
         await sw.WriteAsync(data);
     }

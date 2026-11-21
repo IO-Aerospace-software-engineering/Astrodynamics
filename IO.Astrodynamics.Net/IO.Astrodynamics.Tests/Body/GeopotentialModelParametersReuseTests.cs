@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.IO;
 using System.Linq;
@@ -27,7 +28,7 @@ public class GeopotentialModelParametersReuseTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
 
     private static string ModelPath => Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree");
 

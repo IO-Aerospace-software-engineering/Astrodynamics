@@ -116,7 +116,7 @@ public class PropagatedArcsEdgeTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
     private static StateVector Leo(CelestialItem earth) =>
         new(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF);

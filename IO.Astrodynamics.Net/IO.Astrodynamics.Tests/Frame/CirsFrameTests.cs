@@ -2,7 +2,6 @@ using System;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TimeSystem_Time = IO.Astrodynamics.TimeSystem.Time;
 using Xunit;
 
@@ -42,7 +41,7 @@ public class CirsFrameTests
     {
         var cirs = new CirsFrame();
         // 2024-01-01 12:00:00 TDB
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         var orientation = cirs.GetStateOrientationToICRF(epoch);
 
@@ -58,7 +57,7 @@ public class CirsFrameTests
     public void CirsAngularVelocityIsPrecessionRate()
     {
         var cirs = new CirsFrame();
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         var orientation = cirs.GetStateOrientationToICRF(epoch);
         double omegaMag = orientation.AngularVelocity.Magnitude();
@@ -73,7 +72,7 @@ public class CirsFrameTests
     public void CirsOrientationMatrixIsOrthogonal()
     {
         var cirs = new CirsFrame();
-        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, TimeScale.TDB);
 
         var orientation = cirs.GetStateOrientationToICRF(epoch);
         var rotMatrix = Matrix.FromQuaternion(orientation.Rotation);
@@ -110,7 +109,7 @@ public class CirsFrameTests
     {
         // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtDate.
         var cirs = new CirsFrame();
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var propagated = TestHelpers.RotateWithFrameAngularVelocity(cirs.GetStateOrientationToICRF(epoch), 1.0);
         var recomputed = cirs.GetStateOrientationToICRF(epoch.AddSeconds(1));
 

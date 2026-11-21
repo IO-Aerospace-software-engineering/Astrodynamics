@@ -32,8 +32,8 @@ namespace IO.Astrodynamics.Performance;
 public class RK78Benchmarks
 {
     // Epochs from conformance test cases
-    private static readonly Time LeoEpoch = new(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
-    private static readonly Time SsoEpoch = new(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
+    private static readonly Time LeoEpoch = new(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
+    private static readonly Time SsoEpoch = new(2025, 6, 1, 10, 30, 0, TimeScale.UTC);
 
     // Shared celestial bodies — created once in GlobalSetup, safe for sequential reuse.
     // GeopotentialGravitationalField is NOT thread-safe but sequential benchmark

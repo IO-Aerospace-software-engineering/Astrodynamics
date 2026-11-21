@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// </summary>
 public class TLENoradIdTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2024, 6, 21, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
     public TLENoradIdTests()
     {

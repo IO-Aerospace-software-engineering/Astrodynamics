@@ -23,7 +23,7 @@ public class CelestialBodyAtmosphereTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly TimeSystem.Time Epoch = new(2024, 6, 21, 12, 0, 0, frame: TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time Epoch = new(2024, 6, 21, 12, 0, 0, TimeScale.UTC);
 
     private static AtmosphericContext Full(double altitude, double latitude = 0.5, double longitude = 0.3) =>
         AtmosphericContext.FromPlanetodetic(altitude, latitude, longitude, Epoch);

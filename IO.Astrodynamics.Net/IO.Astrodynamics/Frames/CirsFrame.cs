@@ -2,8 +2,6 @@
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
-
 namespace IO.Astrodynamics.Frames;
 
 /// <summary>
@@ -34,7 +32,7 @@ public sealed class CirsFrame : Frame
     private StateOrientation ComputeOrientation(Time date)
     {
         // Compute the standard CIO-based matrix Q(t), which maps ICRF -> CIRS.
-        var tdb = date.ConvertTo(TimeFrame.TDBFrame);
+        var tdb = date.ConvertTo(TimeScale.TDB);
         double t = tdb.Centuries();
 
         var (x, y) = Iau2006Model.CipXY(t);

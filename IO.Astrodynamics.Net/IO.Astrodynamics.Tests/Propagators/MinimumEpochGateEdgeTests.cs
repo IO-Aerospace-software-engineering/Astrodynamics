@@ -170,8 +170,8 @@ public class MinimumEpochGateEdgeTests
     [InlineData("VV10", "TDB")]
     public void UtcGate_WhoseTdbTickComparesBeforeIt_TheEventIsNotBeforeTheGate(string integratorName, string timeArgument)
     {
-        var from = new Time(new DateTime(2024, 3, 19, 23, 17, 0), TimeFrame.TDBFrame);
-        var gate = new Time(new DateTime(2024, 3, 19, 23, 17, 12, DateTimeKind.Utc).AddTicks(8864997), TimeFrame.UTCFrame);
+        var from = new Time(new DateTime(2024, 3, 19, 23, 17, 0), TimeScale.TDB);
+        var gate = new Time(new DateTime(2024, 3, 19, 23, 17, 12, DateTimeKind.Utc).AddTicks(8864997), TimeScale.UTC);
         Assert.True(gate.ToTDB() < gate);
         var firstTickNotBefore = gate.ToTDB();
         while (firstTickNotBefore < gate) firstTickNotBefore += TimeSpan.FromTicks(1);

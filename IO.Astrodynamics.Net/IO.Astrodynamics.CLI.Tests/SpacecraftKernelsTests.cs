@@ -35,7 +35,7 @@ public class SpacecraftKernelsTests
     private const string SpacecraftFrame = SpacecraftName + "_FRAME";
 
     // Inside the Earth orientation kernel of Data (earth_latest_high_prec.bpc, to 2023-05-12), which ITRF93 needs
-    private static readonly Time Start = new(2023, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time Start = new(2023, 3, 1, 12, 0, 0, TimeScale.TDB);
 
     private static readonly Time End = Start.AddSeconds(600.0);
 
@@ -71,7 +71,7 @@ public class SpacecraftKernelsTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, engine));
+        spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
         spacecraft.Propagate(new Window(Start, End), [earth, sun, moon], false, false, TimeSpan.FromSeconds(10.0));
 
         // A relative path out of Data, which the other tests load: the native writers take a bounded file name
@@ -155,7 +155,7 @@ public class SpacecraftKernelsTests
             for (int i = 0; i < lines.Length; i++)
             {
                 // The epoch the command printed: the instant of the grid, within the rounding of a UTC window to the tick
-                var epoch = new Time(Between(lines[i], "Epoch : ", " Orientation :"));
+                var epoch = Time.Parse(Between(lines[i], "Epoch : ", " Orientation :"));
                 Assert.True(System.Math.Abs((epoch - Start.AddSeconds(3.25 + 6.5 * i)).TotalSeconds) <= 1.0e-7, lines[i]);
                 // ICRF is Frame.ICRF, labelled J2000 on every path (#657; before, the command rewrote it as j2000)
                 Assert.EndsWith($"Frame : {(frameArgument == "ICRF" ? "J2000" : frameArgument)}", lines[i]);

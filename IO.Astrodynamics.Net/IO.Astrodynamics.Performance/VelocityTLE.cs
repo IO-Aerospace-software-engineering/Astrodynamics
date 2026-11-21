@@ -20,7 +20,7 @@ public class VelocityTLE
     public VelocityTLE()
     {
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-        _epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        _epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         _sv = new StateVector(new Vector3(6800000.0, 1000.0, 0.0), new Vector3(100.0, 8000.0, 0.0), CelestialItem.Create(399), _epoch, Frames.Frame.ICRF);
     }
 

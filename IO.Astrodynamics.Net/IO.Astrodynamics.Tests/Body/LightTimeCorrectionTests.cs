@@ -228,7 +228,7 @@ public class LightTimeCorrectionTests
     public void CoordinateSiteGuideWindow()
     {
         var expected = _reference.GetProperty("guide_window_lt").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
-        var windows = _site.FindWindowsOnDistanceConstraint(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1), new TimeSystem.Time(2024, 1, 2)), _moon,
+        var windows = _site.FindWindowsOnDistanceConstraint(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _moon,
             RelationnalOperator.Lower, 400000000, Aberration.LT, System.TimeSpan.FromMinutes(10)).ToArray();
         Assert.Single(windows);
         double start = (windows[0].StartDate - expected[0]).TotalSeconds;
@@ -768,13 +768,13 @@ public class LightTimeCorrectionTests
                 var actual = Values(flag, e);
                 var expected = Expected(flag, e);
                 var delta = actual.Zip(expected, (a, x) => a - x).ToArray();
-                delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants._2PI);
+                delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants.TwoPi);
                 if (flag != Aberration.None)
                 {
                     var none = Values(Aberration.None, e);
                     var noneExpected = Expected(Aberration.None, e);
                     for (int k = 0; k < 4; k++) delta[k] -= none[k] - noneExpected[k];
-                    delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants._2PI);
+                    delta[1] = System.Math.IEEERemainder(delta[1], global::IO.Astrodynamics.Constants.TwoPi);
                 }
 
                 worstAngle = System.Math.Max(worstAngle, System.Math.Max(System.Math.Abs(delta[1] * System.Math.Cos(expected[2])), System.Math.Abs(delta[2])));

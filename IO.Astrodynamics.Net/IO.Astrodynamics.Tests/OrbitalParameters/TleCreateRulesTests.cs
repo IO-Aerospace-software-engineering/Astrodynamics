@@ -17,7 +17,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// </summary>
 public class TleCreateRulesTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2021, 1, 20, 12, 50, 14, frame: TimeSystem.TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time Epoch = new(2021, 1, 20, 12, 50, 14, TimeSystem.TimeScale.UTC);
 
     public TleCreateRulesTests()
     {

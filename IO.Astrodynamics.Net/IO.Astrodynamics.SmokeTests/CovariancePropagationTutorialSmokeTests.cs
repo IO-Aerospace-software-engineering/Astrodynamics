@@ -39,7 +39,7 @@ public class CovariancePropagationTutorialSmokeTests
     // Section "The case": a LEO 400 km with EGM2008 10×10, NRLMSISE-00 drag, SRP, the Moon and the Sun
     private static (CelestialItem[] Bodies, CelestialBody Earth, Time Epoch) Environment()
     {
-        var epoch = new Time(2021, 3, 20, 12, 0, 0);
+        var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
@@ -179,7 +179,7 @@ public class CovariancePropagationTutorialSmokeTests
     {
         // Section "To a collision probability": two-body, a protected LEO at 700 km and a secondary object that passes
         // 200 m from it 24 h after the start (120 m radial, 160 m normal), its velocity turned by 70° about the radial
-        var start = new Time(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+        var start = new Time(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
         var tca = start.AddHours(24.0);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
 

@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </summary>
 public class SatellitesTests
 {
-    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 0, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
     public SatellitesTests()
     {

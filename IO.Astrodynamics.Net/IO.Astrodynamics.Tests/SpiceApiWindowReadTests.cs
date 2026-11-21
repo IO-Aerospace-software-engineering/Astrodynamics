@@ -63,7 +63,7 @@ public partial class SpiceApiTest
         // last at the end), each state the read of its epoch alone, labelled with it in UTC. Before, the grid was taken in TDB
         // and a window shorter in TDB than in UTC lost its end (6000 states in July and October 2026, the last at
         // 00:09:59.9000002Z)
-        var start = new TimeSystem.Time(2026, month, 1, frame: TimeSystem.TimeFrame.UTCFrame);
+        var start = new TimeSystem.Time(2026, month, 1, TimeSystem.TimeScale.UTC);
         var stepSize = TimeSpan.FromSeconds(0.1);
         var window = new Window(start, start.AddSeconds(600.0));
         var states = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).Cast<StateVector>().ToArray();
@@ -74,7 +74,7 @@ public partial class SpiceApiTest
         {
             var epoch = start + stepSize * i;
             LabelAssert.Equal(epoch, states[i].Epoch);
-            Assert.Equal(TimeSystem.TimeFrame.UTCFrame, states[i].Epoch.Frame);
+            Assert.Equal(TimeSystem.TimeScale.UTC, states[i].Epoch.Scale);
             var single = (StateVector)SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(single.Position, states[i].Position);
             Assert.Equal(single.Velocity, states[i].Velocity);
@@ -92,7 +92,7 @@ public partial class SpiceApiTest
         // SPICE's (str2et_c) by up to 1.06 µs (docs/reference/time-and-windows.md); measured here, and bounded by twice the
         // worst on Linux x64 (1.073e-6 s, CI run 44225490669), rounded up at the second significant digit: a record of the
         // Validation category, which CI runs on Linux x64 alone
-        var start = new TimeSystem.Time(2026, month, 1, frame: TimeSystem.TimeFrame.UTCFrame);
+        var start = new TimeSystem.Time(2026, month, 1, TimeSystem.TimeScale.UTC);
         var stepSize = TimeSpan.FromSeconds(0.1);
         var window = new Window(start, start.AddSeconds(600.0));
         var states = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.None, stepSize).Cast<StateVector>().ToArray();
@@ -199,7 +199,7 @@ public partial class SpiceApiTest
         SpiceAPI.Instance.LoadKernels(ckFile);
         try
         {
-            var start = new TimeSystem.Time(year, month, 1, frame: TimeSystem.TimeFrame.UTCFrame);
+            var start = new TimeSystem.Time(year, month, 1, TimeSystem.TimeScale.UTC);
             var stepSize = TimeSpan.FromSeconds(0.1);
             var tolerance = TimeSpan.FromSeconds(60.0);
             var window = new Window(start, start.AddSeconds(600.0));

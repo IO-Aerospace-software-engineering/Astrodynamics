@@ -103,7 +103,7 @@ public class SolarRadiationPressureTests
         Assert.Throws<ArgumentNullException>(() => new SolarRadiationPressure(spc, null));
     }
 
-    private static readonly TimeSystem.Time SunlitEpoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time SunlitEpoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     private static (CelestialBody Earth, Spacecraft Spacecraft, StateVector State) SunlitLeo()
     {

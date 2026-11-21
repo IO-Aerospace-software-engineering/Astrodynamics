@@ -23,8 +23,8 @@ public class TwoBodyDynamicalTimeTests
     private const double Deg = IO.Astrodynamics.Constants.Deg2Rad;
 
     // Ten days across the leap second of 2016-12-31, near the perihelion, where TDB − TT changes fastest: 2.8e-4 s
-    private static readonly TimeSystem.Time StartUtc = new(2016, 12, 25, 0, 0, 0, frame: TimeFrame.UTCFrame);
-    private static readonly TimeSystem.Time EndUtc = new(2017, 1, 4, 0, 0, 0, frame: TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time StartUtc = new(2016, 12, 25, 0, 0, 0, TimeScale.UTC);
+    private static readonly TimeSystem.Time EndUtc = new(2017, 1, 4, 0, 0, 0, TimeScale.UTC);
 
     private readonly ITestOutputHelper _output;
 
@@ -101,7 +101,7 @@ public class TwoBodyDynamicalTimeTests
         var elements = Orbit(body, StartUtc);
         var state = elements.ToStateVector();
 
-        foreach (var epoch in new[] { StartUtc.ToTAI(), StartUtc.ToTDT(), StartUtc.ToGPS(), StartUtc.ToTDB() })
+        foreach (var epoch in new[] { StartUtc.ToTAI(), StartUtc.ToTT(), StartUtc.ToGPS(), StartUtc.ToTDB() })
         {
             // Act
             var at = elements.AtEpoch(epoch);
@@ -118,8 +118,8 @@ public class TwoBodyDynamicalTimeTests
     public void AcrossTheLeapSecond_TwoUtcEpochs_CountIt()
     {
         // Arrange: a minute before and a minute after the leap second, 121 s of TT and of TDB (to the series)
-        var before = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, frame: TimeFrame.UTCFrame);
-        var after = new TimeSystem.Time(2017, 1, 1, 0, 1, 0, frame: TimeFrame.UTCFrame);
+        var before = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, TimeScale.UTC);
+        var after = new TimeSystem.Time(2017, 1, 1, 0, 1, 0, TimeScale.UTC);
 
         foreach (var body in new[] { "Earth", "Moon" })
         {
@@ -164,7 +164,7 @@ public class TwoBodyDynamicalTimeTests
         double reference = ReferenceSeconds(body, elements.Epoch, epoch);
         _output.WriteLine($"MEASURE {body} {tag}: the half turn {elapsed - halfTurn:E3} s, the reference " +
                           $"{reference - halfTurn:E3} s");
-        Assert.Equal(elements.Epoch.Frame, epoch.Frame);
+        Assert.Equal(elements.Epoch.Scale, epoch.Scale);
         Assert.InRange(elapsed - halfTurn, -1e-7, 1e-7);
         Assert.InRange(reference - halfTurn, -1e-7 - Bound(body, tag, tag), 1e-7 + Bound(body, tag, tag));
     }
@@ -173,7 +173,7 @@ public class TwoBodyDynamicalTimeTests
     public void EpochAtMeanAnomaly_AcrossTheLeapSecond_CountsIt()
     {
         // Arrange: elements a minute before the leap second, about the Earth and about the Moon, in UTC
-        var before = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, frame: TimeFrame.UTCFrame);
+        var before = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, TimeScale.UTC);
         foreach (var body in new[] { "Earth", "Moon" })
         {
             var elements = Orbit(body, before);
@@ -185,7 +185,7 @@ public class TwoBodyDynamicalTimeTests
             // the Moon through TDB and back, two conversions of a tick each, and TDB − TT changes by 4e-8 s in the two
             // minutes
             double bound = body == "Earth" ? 1e-7 : 2.4e-7;
-            Assert.Equal(TimeFrame.UTCFrame, epoch.Frame);
+            Assert.Equal(TimeScale.UTC, epoch.Scale);
             Assert.InRange((epoch.DateTime - new DateTime(2017, 1, 1, 0, 1, 0)).TotalSeconds, -bound, bound);
         }
     }
@@ -204,7 +204,7 @@ public class TwoBodyDynamicalTimeTests
     {
         "UTC" => utc,
         "TAI" => utc.ToTAI(),
-        "TT" => utc.ToTDT(),
+        "TT" => utc.ToTT(),
         "TDB" => utc.ToTDB(),
         _ => throw new ArgumentOutOfRangeException(nameof(tag), tag, null)
     };
@@ -230,7 +230,7 @@ public class TwoBodyDynamicalTimeTests
     {
         double n = elements.MeanMotion();
         double difference = meanAnomaly - (elements.MeanAnomaly() + n * expected);
-        difference -= IO.Astrodynamics.Constants._2PI * System.Math.Round(difference / IO.Astrodynamics.Constants._2PI);
+        difference -= IO.Astrodynamics.Constants.TwoPi * System.Math.Round(difference / IO.Astrodynamics.Constants.TwoPi);
         return expected + difference / n;
     }
 

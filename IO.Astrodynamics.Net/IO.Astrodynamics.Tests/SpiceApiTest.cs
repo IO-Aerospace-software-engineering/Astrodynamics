@@ -237,7 +237,7 @@ public partial class SpiceApiTest
         spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
         spacecraft.AddCircularInstrument(-1794600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
 
-        spacecraft.SetStandbyManeuver(new NadirAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+        spacecraft.SetStandbyManeuver(new NadirAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             spacecraft.Engines.First()));
 
         scenario.AddSpacecraft(spacecraft);
@@ -395,7 +395,7 @@ public partial class SpiceApiTest
     public void ReadEphemeris_FromASite_IsTheNegatedReadToTheSite(string frameName)
     {
         var frame = SiteObserverFrame(frameName);
-        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
         var reversed = SpiceAPI.Instance.ReadEphemeris(epoch, 301, 399013, frame, Aberration.None).ToStateVector();
         Assert.True(reversed.Position.Magnitude() > 3.0e8);
 
@@ -438,7 +438,7 @@ public partial class SpiceApiTest
     public void ReadEphemeris_FromAnUnnamedSite_Throws()
     {
         // A site identifier SPICE does not name has no site to build (#672)
-        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
         var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399998, 301, Frames.Frame.ICRF, Aberration.None));
         Assert.Equal("naifId", e.ParamName);
         e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 399998, 301,
@@ -460,7 +460,7 @@ public partial class SpiceApiTest
     public void ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage()
     {
         var site = new Site(714, "PROBE714", new IO.Astrodynamics.Body.CelestialBody(PlanetsAndMoons.MARS), new Planetodetic(0.1, 0.2, 0.0));
-        var start = new TimeSystem.Time(2150, 1, 20, frame: TimeFrame.TDBFrame);
+        var start = new TimeSystem.Time(2150, 1, 20, TimeScale.TDB);
         var window = new Window(start, start.AddDays(5.0));
         var step = TimeSpan.FromHours(12.0);
 
@@ -486,7 +486,7 @@ public partial class SpiceApiTest
     [Fact]
     public async Task ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks()
     {
-        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var site = new Site(786, "RE786", PlanetsAndMoons.EARTH_BODY, new Planetodetic(0.5, 0.2, 1000.0));
         var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786", ".bsp");
         var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786_names");
@@ -530,7 +530,7 @@ public partial class SpiceApiTest
     public void ReadEphemeris_FromASite_ObserverMatchesTheSiteObject()
     {
         // The library's own path for a site observer: the Moon read from a Site object, through the data provider
-        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
         var site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
         var expected = TestHelpers.MoonAtJ2000.GetEphemeris(epoch, site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
         var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -548,7 +548,7 @@ public partial class SpiceApiTest
     {
         // GCRF has the axes of J2000 (GcrfFrame): the reference is SPICE's read of the Moon from the Earth in J2000, at an
         // epoch and over a window; a read in GCRF is the same numbers, labelled with the frame the caller gave
-        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var window = new Window(epoch, epoch.AddSeconds(120.0));
         var j2000 = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, aberration).ToStateVector();
         var j2000Window = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, aberration, TimeSpan.FromSeconds(60.0))
@@ -584,7 +584,7 @@ public partial class SpiceApiTest
     {
         // The reference is SPICE's transformation from and to J2000 (sxform); from or to GCRF it is the same, through
         // SpiceAPI and through Frame.ToFrame of a frame built from the name, which the data provider hands to SPICE
-        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         foreach (var other in new[] { Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("IAU_EARTH"), Frames.Frame.ICRF })
         {
             var fromJ2000 = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, other);
@@ -693,12 +693,12 @@ public partial class SpiceApiTest
     // printed it, dropped it and returned no window, which a caller could not tell from a condition that never holds.
     // The reference is SPICE's own error signal, read through the native library (getmsg_c), so these tests run on every
     // platform; the windows of the valid searches are the CSPICE goldens of the tests above, unchanged
-    private static readonly Window ErrorSearchWindow = new(new TimeSystem.Time(2024, 3, 1, frame: TimeFrame.TDBFrame),
-        new TimeSystem.Time(2024, 3, 10, frame: TimeFrame.TDBFrame));
+    private static readonly Window ErrorSearchWindow = new(new TimeSystem.Time(2024, 3, 1, TimeScale.TDB),
+        new TimeSystem.Time(2024, 3, 10, TimeScale.TDB));
 
     // Past the coverage of de440s.bsp (1849 to 2150) and of the Earth's high-precision PCK
-    private static readonly Window PastTheEphemerisWindow = new(new TimeSystem.Time(2160, 3, 1, frame: TimeFrame.TDBFrame),
-        new TimeSystem.Time(2160, 3, 10, frame: TimeFrame.TDBFrame));
+    private static readonly Window PastTheEphemerisWindow = new(new TimeSystem.Time(2160, 3, 1, TimeScale.TDB),
+        new TimeSystem.Time(2160, 3, 10, TimeScale.TDB));
 
     private static readonly Planetodetic ErrorSearchPoint = new(30.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0);
 
@@ -1091,7 +1091,7 @@ public partial class SpiceApiTest
     // quaternion is free)
     private static double RotationAngleFromIcrfDeg(string frameName)
     {
-        var q = SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1), new Frames.Frame(frameName), Frames.Frame.ICRF).Rotation;
+        var q = SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new Frames.Frame(frameName), Frames.Frame.ICRF).Rotation;
         return 2.0 * System.Math.Acos(System.Math.Min(1.0, System.Math.Abs(q.W))) * Astrodynamics.Constants.Rad2Deg;
     }
 
@@ -1314,7 +1314,7 @@ public partial class SpiceApiTest
     {
         var res = SpiceAPI.Instance.ConvertTleToStateVector("ISS",
             "1 25544U 98067A   24001.00000000  .00016717  00000-0  10270-3 0  9054",
-            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703", new TimeSystem.Time(2024, 1, 1, frame: TimeFrame.UTCFrame));
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703", new TimeSystem.Time(2024, 1, 1, TimeScale.UTC));
         
     }
 
@@ -1661,7 +1661,7 @@ public partial class SpiceApiTest
         try
         {
             // Create the window in UTC — the customer's natural time frame
-            var start = new TimeSystem.Time(2024, 1, 8, 8, 16, 19, frame: TimeSystem.TimeFrame.UTCFrame);
+            var start = new TimeSystem.Time(2024, 1, 8, 8, 16, 19, TimeSystem.TimeScale.UTC);
             var window = new Window(start, start.AddSeconds(60.0));
 
             var results = SpiceAPI.Instance.ReadOrientation(
@@ -1716,7 +1716,7 @@ public partial class SpiceApiTest
         try
         {
             // Use a TDB time safely within CK coverage (a few minutes after start)
-            var start = new TimeSystem.Time(2024, 1, 8, 8, 20, 0);
+            var start = new TimeSystem.Time(2024, 1, 8, 8, 20, 0, TimeScale.TDB);
             var window = new Window(start, start.AddSeconds(60.0));
 
             var results = SpiceAPI.Instance.ReadOrientation(

@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.IO;
 using IO.Astrodynamics.Body;
@@ -22,7 +23,7 @@ public class GeopotentialCentralTermTests
     private const double Egm2008Radius = 6378136.3;
     private const double Deg = IO.Astrodynamics.Constants.Deg2Rad;
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 
     private readonly ITestOutputHelper _output;
 
@@ -194,7 +195,7 @@ public class GeopotentialCentralTermTests
     public void DegreeZero_ReadsNoOrientationOfTheBody(GeopotentialCentralTerm centralTerm)
     {
         // Arrange
-        var epoch = new TimeSystem.Time(2030, 1, 1, 0, 0, 0);
+        var epoch = new TimeSystem.Time(2030, 1, 1, 0, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(Model, 0) { CentralTerm = centralTerm });
         var state = new KeplerianElements(6778137.0, 0.0005, 51.6 * Deg, 20.0 * Deg, 15.0 * Deg, 0.0, earth, epoch,

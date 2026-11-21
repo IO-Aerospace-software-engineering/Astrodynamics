@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Body;
@@ -15,8 +16,6 @@ using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
-
 namespace IO.Astrodynamics.CLI;
 
 public class Helpers
@@ -117,56 +116,61 @@ public class Helpers
         };
     }
 
+    /// <summary>
+    /// The epoch of a command argument (D3 of #668, decided by S. Guillet, 2026-11-19): seconds from J2000 followed by an
+    /// optional scale tag (<c>631152000.0</c>, <c>631152000.0 UTC</c>, <c>757339200 TT</c>; TDB without a tag), the CLI's
+    /// own form, or any string of the grammar of <see cref="Time.Parse(string)"/> (an ISO 8601 date or a CCSDS day of year
+    /// with an optional time, then <c>Z</c>, an offset or a tag; a Julian date <c>2458850.0 JD UTC</c> or
+    /// <c>JD 2458850.0 TDB</c>), read by <see cref="Time.TryParse(string, TimeScale, out Time)"/> with TDB for an untagged
+    /// string, as before.
+    /// </summary>
+    /// <remarks>
+    /// Before 11.0.0 the tag of seconds was UTC or TDB only (<c>757339200 TT</c> threw), a string held UTC when it held a
+    /// Z or the letters UTC anywhere, an offset was the machine's local time, and a Julian date went through a double (now
+    /// its digits to the nearest tick, at most one tick away).
+    /// </remarks>
+    /// <exception cref="ArgumentException">The epoch is null or empty.</exception>
+    /// <exception cref="FormatException">The epoch is of neither form; the message lists the forms.</exception>
     internal static Time ConvertDateTimeInput(string epoch)
     {
-        if (string.IsNullOrEmpty(epoch)) throw new ArgumentException("Value cannot be null or empty.", nameof(epoch));
-        var isutc = epoch.Contains("utc", StringComparison.InvariantCultureIgnoreCase) || epoch.Contains("z", StringComparison.InvariantCultureIgnoreCase);
-        var isjd = epoch.Contains("jd", StringComparison.InvariantCultureIgnoreCase);
+        if (string.IsNullOrWhiteSpace(epoch)) throw new ArgumentException("Value cannot be null or empty.", nameof(epoch));
 
-        //clean string
-        epoch = epoch.Replace("utc", "", StringComparison.InvariantCultureIgnoreCase).Replace("tdb", "", StringComparison.InvariantCultureIgnoreCase).Trim();
-
-        //Input
-        Time input;
-        if (isjd)
+        var seconds = SecondsFromJ2000.Match(epoch);
+        if (seconds.Success &&
+            double.TryParse(seconds.Groups["seconds"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
         {
-            epoch = epoch.Replace("jd", "", StringComparison.InvariantCultureIgnoreCase).Trim();
-            double value = double.Parse(epoch, CultureInfo.InvariantCulture);
-            if (isutc)
-            {
-                input = Time.CreateFromJD(value, TimeFrame.UTCFrame);
-            }
-            else
-            {
-                input = Time.CreateFromJD(value, TimeFrame.TDBFrame);
-            }
-        }
-        else if (double.TryParse(epoch, NumberStyles.Any, CultureInfo.InvariantCulture, out double doubleInput))
-        {
-            if (isutc)
-            {
-                input = Time.CreateUTC(doubleInput);
-            }
-            else
-            {
-                input = Time.CreateTDB(doubleInput);
-            }
-        }
-        else if (isutc)
-        {
-            // A calendar epoch tagged UTC, in any case and with or without a space, is a UTC calendar (#509): without
-            // its tag, removed above, the calendar parses as an untagged epoch, which is TDB (69.18 s off in 2025); one
-            // ending in Z already parses as UTC
-            var parsed = new Time(epoch);
-            input = parsed.Frame is TDBTimeFrame ? new Time(parsed.DateTime, TimeFrame.UTCFrame) : parsed;
-        }
-        else
-        {
-            input = new(epoch);
+            var tag = seconds.Groups["tag"];
+            return Time.Create(value, tag.Success ? ScaleOfTag(tag.Value) : TimeScale.TDB);
         }
 
-        return input;
+        if (Time.TryParse(epoch, TimeScale.TDB, out var time))
+        {
+            return time;
+        }
+
+        throw new FormatException(
+            $"'{epoch}' is not an epoch: seconds from J2000 with an optional scale tag (631152000.0 UTC), an ISO 8601 date or a day of year with an optional time then Z, an offset or a scale tag (2024-01-01T21:00:00Z, 2024-172T12:00:00 TT), or a Julian date (2458850.0 JD UTC); the scale tags are UTC, TT, TDT, TDB, TAI and GPS, TDB when none is given.");
     }
+
+    /// <summary>
+    /// The scale a tag names, in any case; TT and TDT are TT.
+    /// </summary>
+    internal static TimeScale ScaleOfTag(string tag) => tag.ToUpperInvariant() switch
+    {
+        "UTC" => TimeScale.UTC,
+        "TT" or "TDT" => TimeScale.TT,
+        "TAI" => TimeScale.TAI,
+        "GPS" => TimeScale.GPS,
+        "TDB" => TimeScale.TDB,
+        _ => throw new ArgumentException($"Unknown time scale '{tag}': UTC, TT, TDT, TDB, TAI or GPS.", nameof(tag))
+    };
+
+    /// <summary>
+    /// Seconds from J2000, then an optional scale tag, in any case.
+    /// </summary>
+    private static readonly Regex SecondsFromJ2000 = new(
+        @"^\s*(?<seconds>[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?)\s*(?<tag>UTC|TT|TDT|TDB|TAI|GPS)?\s*\z",
+        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
     /// <summary>
     /// The member of <typeparamref name="T"/> a command argument names, by its description (the value its help lists, e.g.

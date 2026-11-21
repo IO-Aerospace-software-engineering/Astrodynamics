@@ -244,7 +244,7 @@ public static class ConjunctionAssessment
     /// says so, the cubic Hermite of the stored steps only seeding the search (#363): a minimum whose range-rate zero lies
     /// outside the window is never returned, however near an end, and a range rate negative at the start and positive at
     /// the end returns the minimum between them, however flat the distance over the window; a minimum of the Hermite that
-    /// the range rate does not bracket, a maximum of the distance on a slow pass, is never returned in place of the end. The epoch of the encounter is labelled in the time frame of the window
+    /// the range rate does not bracket, a maximum of the distance on a slow pass, is never returned in place of the end. The epoch of the encounter is labelled in the time scale of the window
     /// start, as on the sampled path (#683).
     /// </returns>
     /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft; a
@@ -336,7 +336,7 @@ public static class ConjunctionAssessment
     /// positive at the end lists the minimum between them, however flat the distance over the window. Every encounter listed
     /// on that path is a zero of the range rate going from negative to positive, each minimum listed once: a minimum of the
     /// Hermite that the range rate does not bracket, a maximum of the distance on a slow pass, is not listed. The epochs of
-    /// the encounters are labelled in the time frame of the window start, as on the sampled path (#683).
+    /// the encounters are labelled in the time scale of the window start, as on the sampled path (#683).
     /// </returns>
     /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft; a
     /// trajectory was propagated for another spacecraft than its participant (compared by reference: the instance that was
@@ -943,7 +943,7 @@ public static class ConjunctionAssessment
     }
 
     /// <summary>
-    /// A close approach of the dense search labelled in the time frame of the window start, as on the sampled path (#683:
+    /// A close approach of the dense search labelled in the time scale of the window start, as on the sampled path (#683:
     /// its frame was that of the left end of its bracket, the TDB of a step epoch most of the time). An epoch in that frame
     /// is returned as it is (a TDB window bit for bit), a window end as that end. Another is converted, and of that tick and
     /// its neighbour toward the zero of the range rate, the one where |g| is smaller is kept, the lower one on a tie
@@ -954,8 +954,8 @@ public static class ConjunctionAssessment
     /// </summary>
     internal static Time InWindowScale(Time epoch, Window window, Func<Time, double> rangeRate)
     {
-        var frame = window.StartDate.Frame;
-        if (epoch.Frame.Equals(frame))
+        var frame = window.StartDate.Scale;
+        if (epoch.Scale == frame)
         {
             return epoch;
         }
@@ -1557,7 +1557,7 @@ public static class ConjunctionAssessment
     // consecutive TDB ticks of one TAI tick, which are equal times, are two reads of the bisection in ticks (#624)
     private static Func<Time, double> ReadOnce(Func<Time, double> rangeRate)
     {
-        var values = new Dictionary<Time, double>(Time.LabelComparer);
+        var values = new Dictionary<Time, double>(Time.ExactComparer);
         return epoch =>
         {
             if (!values.TryGetValue(epoch, out double value))

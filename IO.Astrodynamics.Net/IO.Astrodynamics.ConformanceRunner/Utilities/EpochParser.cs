@@ -13,8 +13,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Utilities;
 /// <remarks>
 /// The epoch is first matched against the pattern of <c>tagged_epoch</c> in <c>schemas/v1/case.schema.json</c>, so that
 /// the parser rejects whatever the schema rejects, then read by <see cref="DateTime.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/>
-/// with the invariant culture, which also rejects a date the pattern lets through (30 February). TT is the framework's
-/// TDT.
+/// with the invariant culture, which also rejects a date the pattern lets through (30 February).
 /// </remarks>
 public static class EpochParser
 {
@@ -49,7 +48,7 @@ public static class EpochParser
     };
 
     /// <summary>
-    /// The instant of a tagged epoch, in the time frame of its tag.
+    /// The instant of a tagged epoch, in the time scale of its tag.
     /// </summary>
     /// <exception cref="FormatException">The epoch is not a tagged epoch of spec.md section 3.</exception>
     public static Time Parse(string epoch)
@@ -80,7 +79,7 @@ public static class EpochParser
             throw new FormatException($"The epoch '{epoch}' is not a date of the calendar: {ex.Message}", ex);
         }
 
-        return new Time(dateTime, Frame(scale));
+        return new Time(dateTime, ScaleOf(scale));
     }
 
     /// <summary>
@@ -94,7 +93,7 @@ public static class EpochParser
         if (instant != null && instant.EndsWith('Z'))
         {
             var dateTime = DateTime.ParseExact(instant[..^1], ZuluFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
-            return new Time(dateTime, TimeFrame.UTCFrame);
+            return new Time(dateTime, TimeScale.UTC);
         }
 
         return Parse(instant);
@@ -131,15 +130,15 @@ public static class EpochParser
         return (epoch[..space], epoch[(space + 1)..]);
     }
 
-    private static ITimeFrame Frame(string scale)
+    private static TimeScale ScaleOf(string scale)
     {
         // The pattern admits no other tag than these four
         return scale switch
         {
-            "UTC" => TimeFrame.UTCFrame,
-            "TAI" => TimeFrame.TAIFrame,
-            "TT" => TimeFrame.TDTFrame,
-            _ => TimeFrame.TDBFrame
+            "UTC" => TimeScale.UTC,
+            "TAI" => TimeScale.TAI,
+            "TT" => TimeScale.TT,
+            _ => TimeScale.TDB
         };
     }
 }

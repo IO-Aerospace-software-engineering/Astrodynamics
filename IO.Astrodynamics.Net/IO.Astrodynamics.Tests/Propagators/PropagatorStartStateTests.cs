@@ -26,7 +26,7 @@ public class PropagatorStartStateTests
 {
     private const double Deg = IO.Astrodynamics.Constants.Deg2Rad;
 
-    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, frame: TimeFrame.UTCFrame);
+    private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, TimeScale.UTC);
 
     private readonly CelestialBody _earth;
     private readonly ITestOutputHelper _output;

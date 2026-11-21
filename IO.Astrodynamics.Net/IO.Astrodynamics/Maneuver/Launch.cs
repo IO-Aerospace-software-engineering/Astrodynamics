@@ -193,7 +193,7 @@ namespace IO.Astrodynamics.Maneuver
                 _nonInertialAscendingAzimuthLaunch = System.Math.Atan2(vrotx, vroty);
                 if (_nonInertialAscendingAzimuthLaunch < 0.0)
                 {
-                    _nonInertialAscendingAzimuthLaunch += Constants._2PI;
+                    _nonInertialAscendingAzimuthLaunch += Constants.TwoPi;
                 }
             }
 
@@ -207,7 +207,7 @@ namespace IO.Astrodynamics.Maneuver
                 _nonInertialDescendingAzimuthLaunch = Constants.PI - GetNonInertialAscendingAzimuthLaunch();
                 if (_nonInertialDescendingAzimuthLaunch < 0.0)
                 {
-                    _nonInertialDescendingAzimuthLaunch += Constants._2PI;
+                    _nonInertialDescendingAzimuthLaunch += Constants.TwoPi;
                 }
             }
 
@@ -226,7 +226,7 @@ namespace IO.Astrodynamics.Maneuver
 
                 if (_inertialAscendingAzimuthLaunch < 0.0)
                 {
-                    _inertialAscendingAzimuthLaunch += Constants._2PI;
+                    _inertialAscendingAzimuthLaunch += Constants.TwoPi;
                 }
             }
 
@@ -240,7 +240,7 @@ namespace IO.Astrodynamics.Maneuver
                 _inertialDescendingAzimuthLaunch = Constants.PI - GetInertialAscendingAzimuthLaunch();
                 if (_inertialDescendingAzimuthLaunch < 0.0)
                 {
-                    _inertialDescendingAzimuthLaunch += Constants._2PI;
+                    _inertialDescendingAzimuthLaunch += Constants.TwoPi;
                 }
             }
 

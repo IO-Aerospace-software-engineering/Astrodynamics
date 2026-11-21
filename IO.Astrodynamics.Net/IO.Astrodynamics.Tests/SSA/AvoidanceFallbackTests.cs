@@ -28,7 +28,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// </summary>
 public sealed class AvoidanceFallbackCase
 {
-    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
     internal static readonly TimeSystem.Time Tca = Start.AddHours(2.0);
     internal static readonly ManeuverExecutionError Gates = new()
         { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };

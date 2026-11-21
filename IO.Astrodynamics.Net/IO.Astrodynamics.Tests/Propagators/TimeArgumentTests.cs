@@ -45,7 +45,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// </remarks>
 public class TimeArgumentTests
 {
-    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0);
+    private static readonly TimeSystem.Time Start = new(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(600.0);
 
     // RK7(8) at 1e-13 against Kepler over the reference seconds, in LEO and LLO after an hour: a tenth of the 2.2 mm of a
@@ -70,7 +70,7 @@ public class TimeArgumentTests
     public static TheoryData<string, bool> TaggedWindows()
     {
         var data = new TheoryData<string, bool>();
-        foreach (string tags in new[] { "TDB", "UTC", "TT", "TAI", "GPS", "Local", "TDB to UTC", "UTC leap second" })
+        foreach (string tags in new[] { "TDB", "UTC", "TT", "TAI", "GPS", "TDB to UTC", "UTC leap second" })
         foreach (bool rk78 in new[] { true, false })
             data.Add(tags, rk78);
         return data;
@@ -603,13 +603,12 @@ public class TimeArgumentTests
         {
             "TDB" => new TimeSystem.Window(Start, end),
             "UTC" => new TimeSystem.Window(Start.ToUTC(), end.ToUTC()),
-            "TT" => new TimeSystem.Window(Start.ToTDT(), end.ToTDT()),
+            "TT" => new TimeSystem.Window(Start.ToTT(), end.ToTT()),
             "TAI" => new TimeSystem.Window(Start.ToTAI(), end.ToTAI()),
-            "GPS" => new TimeSystem.Window(Start.ConvertTo(TimeFrame.GPSFrame), end.ConvertTo(TimeFrame.GPSFrame)),
-            "Local" => new TimeSystem.Window(Start.ConvertTo(TimeFrame.LocalFrame), end.ConvertTo(TimeFrame.LocalFrame)),
+            "GPS" => new TimeSystem.Window(Start.ConvertTo(TimeScale.GPS), end.ConvertTo(TimeScale.GPS)),
             "TDB to UTC" => new TimeSystem.Window(Start, end.ToUTC()),
-            "UTC leap second" => new TimeSystem.Window(new TimeSystem.Time(2016, 12, 31, 23, 30, 0, frame: TimeFrame.UTCFrame),
-                new TimeSystem.Time(2017, 1, 1, 0, 30, 0, frame: TimeFrame.UTCFrame)),
+            "UTC leap second" => new TimeSystem.Window(new TimeSystem.Time(2016, 12, 31, 23, 30, 0, TimeScale.UTC),
+                new TimeSystem.Time(2017, 1, 1, 0, 30, 0, TimeScale.UTC)),
             _ => throw new ArgumentOutOfRangeException(nameof(tags))
         };
     }
@@ -654,7 +653,7 @@ public class TimeArgumentTests
         Assert.Equal(expected.StateVectors.Count, actual.StateVectors.Count);
         for (int i = 0; i < expected.StateVectors.Count; i++)
         {
-            Assert.True(expected.StateVectors[i].Epoch.HasSameLabel(actual.StateVectors[i].Epoch) &&
+            Assert.True(expected.StateVectors[i].Epoch.EqualsExact(actual.StateVectors[i].Epoch) &&
                         expected.StateVectors[i].Position == actual.StateVectors[i].Position &&
                         expected.StateVectors[i].Velocity == actual.StateVectors[i].Velocity,
                 $"{path}: state {i} {actual.StateVectors[i].Position} against {expected.StateVectors[i].Position}");

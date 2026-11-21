@@ -228,7 +228,7 @@ internal static class StaticBodiesChild
             Check("EARTH_BODY's sphere of influence after the switch is finite",
                 double.IsFinite(PlanetsAndMoons.EARTH_BODY.SphereOfInfluence) && PlanetsAndMoons.EARTH_BODY.SphereOfInfluence > 0.0);
 
-            var epoch = new Time(2021, 1, 20, 18, 0, 0, frame: TimeFrame.UTCFrame);
+            var epoch = new Time(2021, 1, 20, 18, 0, 0, TimeScale.UTC);
             var spkezr = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 3, Frame.ICRF, Aberration.None).ToStateVector();
             var ephemeris = Barycenters.EARTH_BARYCENTER.GetEphemeris(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF,
                 Aberration.None).ToStateVector();

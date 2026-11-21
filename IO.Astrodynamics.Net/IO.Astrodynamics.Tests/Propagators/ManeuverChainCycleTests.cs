@@ -43,7 +43,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </remarks>
 public class ManeuverChainCycleTests
 {
-    private static readonly Time S = new(2025, 6, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly Time S = new(2025, 6, 1, 0, 0, 0, TimeScale.TDB);
     private static readonly Window SixHours = new(S, S.AddSeconds(6.0 * 3600.0));
     private static readonly TimeSpan Output = TimeSpan.FromSeconds(60.0);
     private static int _nextId = -585000;

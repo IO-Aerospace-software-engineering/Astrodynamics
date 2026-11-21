@@ -2,8 +2,6 @@
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
-
 namespace IO.Astrodynamics.Frames;
 
 /// <summary>
@@ -59,7 +57,7 @@ public sealed class TirsFrame : Frame
 
     private StateOrientation ComputeOrientation(Time date)
     {
-        var tdb = date.ConvertTo(TimeFrame.TDBFrame);
+        var tdb = date.ConvertTo(TimeScale.TDB);
         double t = tdb.Centuries();
 
         // Build Q(t), the CIO-based precession-nutation matrix (ICRF -> CIRS).
@@ -68,7 +66,7 @@ public sealed class TirsFrame : Frame
         var qt = Iau2006Model.PrecessionNutationMatrix(x, y, s);
 
         // Earth Rotation Angle
-        var utc = date.ConvertTo(TimeFrame.UTCFrame);
+        var utc = date.ConvertTo(TimeScale.UTC);
         double deltaUT1 = _eop.GetDeltaUT1(utc);
         // Two-part Julian date (J2000 + days elapsed), so that the ERA keeps the 0.1 µs resolution of the epoch.
         double jdUt1High = TimeSystem.Time.JULIAN_J2000;

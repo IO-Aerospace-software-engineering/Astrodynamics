@@ -94,7 +94,7 @@ internal static class Program
     // More DAFs than the 23 logical units of CSPICE's handle manager, with those of Data/SolarSystem
     private const int ManyDafs = 25;
 
-    private static readonly Time Epoch = new(2024, 1, 1);
+    private static readonly Time Epoch = new(2024, 1, 1, TimeScale.TDB);
 
     private static int Main(string[] args)
     {

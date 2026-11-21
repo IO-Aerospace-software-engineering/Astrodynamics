@@ -131,7 +131,7 @@ public class GeometryFinder
     /// <summary>
     /// The windows of the search window where the quantity satisfies the relation; see the remarks of the class.
     /// </summary>
-    /// <param name="searchWindow">The search window; the windows are in the time frame of its start.</param>
+    /// <param name="searchWindow">The search window; the windows are in the time scale of its start.</param>
     /// <param name="calculateValue">The quantity at an epoch: a <see cref="double"/>, or a <see cref="bool"/> for
     /// <see cref="RelationnalOperator.Equal"/> and <see cref="RelationnalOperator.NotEqual"/>.</param>
     /// <param name="relationalOperator">The relation.</param>
@@ -155,7 +155,7 @@ public class GeometryFinder
     /// The windows of the search window where the quantity satisfies the relation, with the adjustment value of the
     /// absolute extremes (CSPICE's <c>adjust</c>); see the remarks of the class.
     /// </summary>
-    /// <param name="searchWindow">The search window; the windows are in the time frame of its start.</param>
+    /// <param name="searchWindow">The search window; the windows are in the time scale of its start.</param>
     /// <param name="calculateValue">The quantity at an epoch.</param>
     /// <param name="relationalOperator">The relation.</param>
     /// <param name="targetValue">The value; ignored by the extremes.</param>
@@ -579,8 +579,8 @@ public class GeometryFinder
             _start = searchWindow.StartDate;
             _quantity = quantity;
 
-            // The end in the time frame of the start, whose calendar the samples follow
-            long totalTicks = System.Math.Max(0L, (searchWindow.EndDate.ConvertTo(_start.Frame).DateTime - _start.DateTime).Ticks);
+            // The end in the time scale of the start, whose calendar the samples follow
+            long totalTicks = System.Math.Max(0L, (searchWindow.EndDate.ConvertTo(_start.Scale).DateTime - _start.DateTime).Ticks);
             var offsets = new List<double>();
             for (long ticks = 0; ticks < totalTicks; ticks += step.Ticks)
             {

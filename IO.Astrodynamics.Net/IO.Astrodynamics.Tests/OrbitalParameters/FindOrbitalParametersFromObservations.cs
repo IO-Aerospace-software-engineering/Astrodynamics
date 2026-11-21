@@ -1,3 +1,4 @@
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Body;
@@ -29,7 +30,7 @@ public class InitialOrbitDeterminationTests
             var timespan = TimeSpan.FromMinutes(i * 2);
             Site site = new Site(80, "MyStation", TestHelpers.EarthAtJ2000, new Planetodetic(0.0, 45.0 * Constants.DEG_RAD, 0.0));
 
-            var e2 = new TimeSystem.Time(2024, 1, 2);
+            var e2 = new TimeSystem.Time(2024, 1, 2, TimeScale.TDB);
 
             var e1 = e2 - timespan;
             var e3 = e2 + timespan;
@@ -70,7 +71,7 @@ public class InitialOrbitDeterminationTests
         // middle observation carries, e2 - lt (SPICE): the position the method determines, R + rho rho-hat, is the
         // target's there.
         Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var e2 = new TimeSystem.Time(2023, 3, 1);
+        var e2 = new TimeSystem.Time(2023, 3, 1, TimeScale.TDB);
         var target = new Barycenter(4);
         var departures = new[] { 10.0, 5.0, 2.5 }.Select(days =>
         {
@@ -115,7 +116,7 @@ public class InitialOrbitDeterminationTests
     // pck00011 and pxform_c from ITRF93 to J2000, the object by prop2b_c from its state at the middle epoch, the
     // geometric direction from one to the other by recrad_c
     private static readonly TimeSystem.Time MiddleEpoch =
-        new(2000, 11, 6, 22, 34, 30, 0, 0, TimeSystem.TimeFrame.UTCFrame);
+        new(2000, 11, 6, 22, 34, 30, 0, 0, TimeSystem.TimeScale.UTC);
 
     private static readonly Equatorial MiddleObservation =
         new(0.81897935661301124, 5.5588517883210384, 893559.82174179261, MiddleEpoch);
@@ -140,8 +141,8 @@ public class InitialOrbitDeterminationTests
     public void FromTheExactSite_SpiceObservations()
     {
         // Arrange: the epochs of the COBE observations, 181 s before and 180 s after the middle one
-        var ut1 = new TimeSystem.Time(2000, 11, 6, 22, 31, 29, 0, 0, TimeSystem.TimeFrame.UTCFrame);
-        var ut3 = new TimeSystem.Time(2000, 11, 6, 22, 37, 30, 0, 0, TimeSystem.TimeFrame.UTCFrame);
+        var ut1 = new TimeSystem.Time(2000, 11, 6, 22, 31, 29, 0, 0, TimeSystem.TimeScale.UTC);
+        var ut3 = new TimeSystem.Time(2000, 11, 6, 22, 37, 30, 0, 0, TimeSystem.TimeScale.UTC);
         var spiceSites = new[]
         {
             new Vector3(3011128.5143432664, -3945694.6188169341, 3992301.9416880687),

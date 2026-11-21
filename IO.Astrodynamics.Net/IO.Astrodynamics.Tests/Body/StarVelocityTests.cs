@@ -397,7 +397,7 @@ public class StarVelocityTests
         double worstRangeRate = 0.0;
         for (int month = 0; month < 12; month++)
         {
-            var epoch = new TimeSystem.Time(2026, 11, 17).AddDays(30.0 * month);
+            var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
 
             // Act
             var state = barnard.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -466,7 +466,7 @@ public class StarVelocityTests
         double worstPosition = 0.0;
         for (int month = 0; month < 12; month++)
         {
-            var epoch = new TimeSystem.Time(2026, 11, 17).AddDays(30.0 * month);
+            var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
             var aboutStar = new IO.Astrodynamics.OrbitalParameters.StateVector(AboutStarPosition, AboutStarVelocity, barnard, epoch, Frames.Frame.ICRF);
 
             // Act
@@ -508,7 +508,7 @@ public class StarVelocityTests
         double worstPosition = 0.0;
         for (int month = 0; month < 12; month++)
         {
-            var epoch = new TimeSystem.Time(2026, 11, 17).AddDays(30.0 * month);
+            var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
 
             // Act
             var state = earth.GetEphemeris(epoch, barnard, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -543,7 +543,7 @@ public class StarVelocityTests
         // Arrange
         var barnard = BarnardDr3(731005);
         var sun = Stars.SUN_BODY;
-        var epoch = new TimeSystem.Time(2026, 11, 17);
+        var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB);
         var aboutStar = new IO.Astrodynamics.OrbitalParameters.StateVector(AboutStarPosition, AboutStarVelocity, barnard, epoch, Frames.Frame.ICRF);
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-731005, "AboutBarnard", 1000.0, 10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("clk731", 256), aboutStar);
 
@@ -585,7 +585,7 @@ public class StarVelocityTests
         const double deg = System.Math.PI / 180.0;
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
         var j2016 = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
-        var start = new TimeSystem.Time(2001, 1, 1);
+        var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var stars = new[]
         {
             StarTests.NewStar(731001, start),

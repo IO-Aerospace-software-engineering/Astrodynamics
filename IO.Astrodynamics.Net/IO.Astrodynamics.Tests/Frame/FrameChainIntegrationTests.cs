@@ -7,7 +7,6 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 using TimeSystem_Time = IO.Astrodynamics.TimeSystem.Time;
 using Xunit;
 
@@ -25,7 +24,7 @@ public class FrameChainIntegrationTests
     {
         // SOFA test date MJD 53736.0 TT. rc2i maps GCRS to CIRS; the SPICE pivot is the ICRS, so
         // GCRF -> CIRS must be Q(t) alone, without a second application of the frame bias.
-        var epoch = TimeSystem_Time.CreateFromJD(2400000.5 + 53736.0, TimeFrame.TDTFrame);
+        var epoch = TimeSystem_Time.CreateFromJD(2400000.5 + 53736.0, TimeScale.TT);
         var gcrfToCirs = Frames.Frame.GCRF.ToFrame(Frames.Frame.CIRS, epoch);
 
         // Column j is the image of the j-th GCRF axis expressed in CIRS.
@@ -58,7 +57,7 @@ public class FrameChainIntegrationTests
     [Fact]
     public void TirsToCirsIsPureEraRotation()
     {
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         var tirsToCirs = Frames.Frame.TIRS.ToFrame(Frames.Frame.CIRS, epoch);
 
@@ -81,7 +80,7 @@ public class FrameChainIntegrationTests
     [Fact]
     public void TirsToIcrfFullChain()
     {
-        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, TimeScale.TDB);
 
         // Direct TIRS→ICRF
         var tirsToIcrf = Frames.Frame.TIRS.GetStateOrientationToICRF(epoch);
@@ -103,7 +102,7 @@ public class FrameChainIntegrationTests
     [Fact]
     public void StateVectorIcrfToTirsRoundTrip()
     {
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var tirs = Frames.Frame.TIRS;
 
         // ISS-like state vector in ICRF
@@ -134,7 +133,7 @@ public class FrameChainIntegrationTests
     {
         // TIRS with NullEop (no polar motion) should approximate ITRF93
         // within ~0.5" (the typical polar motion magnitude)
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var tirs = Frames.Frame.TIRS;
         var itrf93 = new Frames.Frame("ITRF93");
 
@@ -168,7 +167,7 @@ public class FrameChainIntegrationTests
         // frame axes. Over one second the measured residual is below 2e-13 rad. StateOrientation.AtDate, built for
         // attitudes, would turn the other way.
         var frame = new Frames.Frame(frameName);
-        var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         var propagated = TestHelpers.RotateWithFrameAngularVelocity(frame.GetStateOrientationToICRF(epoch), 1.0);
         var recomputed = frame.GetStateOrientationToICRF(epoch.AddSeconds(1)).Rotation;
@@ -187,7 +186,7 @@ public class FrameChainIntegrationTests
         // orientation kernel. TIRS leaves out the precession-nutation rate of the CIP (a few 1e-12 rad/s) and the
         // length-of-day variations (about 1e-12 rad/s). The former TIRS angular velocity had the opposite sign,
         // 1.5e-4 rad/s away.
-        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         var tirs = Frames.Frame.ICRF.ToFrame(Frames.Frame.TIRS, epoch).AngularVelocity;
         var itrf93 = Frames.Frame.ICRF.ToFrame(new Frames.Frame("ITRF93"), epoch).AngularVelocity;
@@ -205,7 +204,7 @@ public class FrameChainIntegrationTests
         // ICRF position, here a central difference over +/- 1 s (truncation error about 1e-9 in relative terms). TIRS
         // leaves out the precession-nutation rate of the CIP, a few 1e-12 against 7.3e-5 rad/s: about 1e-7. The former
         // TIRS angular velocity gave the opposite velocity.
-        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var position = new Vector3(4.2e6, -3.2e6, 4.4e6);
 
         var velocity = FixedPointInIcrf(Frames.Frame.TIRS, position, epoch).Velocity;
@@ -224,7 +223,7 @@ public class FrameChainIntegrationTests
         // ICRF. The CIRS angular velocity is itself a central difference over +/- 100 s: measured agreement below 6e-7
         // from 2000 to 2024. Over +/- 0.01 s the rounding reached 2e-3 on macOS arm64. The former CIRS angular
         // velocity gave the opposite velocity.
-        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var position = new Vector3(2.3e8, 0.0, 3.07e8);
 
         var velocity = FixedPointInIcrf(Frames.Frame.CIRS, position, epoch).Velocity;
@@ -237,7 +236,7 @@ public class FrameChainIntegrationTests
     [Fact]
     public void StateRoundTripThroughTirsRestoresTheState()
     {
-        var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0);
+        var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
         var state = new StateVector(new Vector3(4211623.0, -3218447.0, 4402165.0), new Vector3(4523.1, 5601.7, 1188.4),
             PlanetsAndMoons.EARTH_BODY, epoch, Frames.Frame.ICRF);
 
@@ -271,7 +270,7 @@ public class FrameChainIntegrationTests
     [Fact]
     public void TemeToCircTransformation()
     {
-        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
         // This tests that the hub-and-spoke architecture works:
         // TEME→ICRF→CIRS
@@ -299,7 +298,7 @@ public class FrameChainIntegrationTests
         // UT1 = UTC (with NullEop), and precession-nutation from TDB ≈ UTC + ~66s
         // (negligible difference in t for precession).
         // Epoch: 2010-06-15 12:00 UTC (MJD 55362.0, not on a leap second boundary)
-        var epoch = TimeSystem_Time.CreateFromJD(2400000.5 + 55362.0, TimeFrame.UTCFrame);
+        var epoch = TimeSystem_Time.CreateFromJD(2400000.5 + 55362.0, TimeScale.UTC);
 
         var tirs = new TirsFrame();
         var orientation = tirs.GetStateOrientationToICRF(epoch);

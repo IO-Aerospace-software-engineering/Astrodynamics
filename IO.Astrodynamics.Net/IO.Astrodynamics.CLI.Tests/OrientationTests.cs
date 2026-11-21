@@ -20,8 +20,8 @@ public class OrientationsTests
             command.Orientation("Data", 399,
                 new WindowParameters
                 {
-                    Begin = new Time(2023, 01, 01, 1, 0, 0).ToString(),
-                    End = new Time(2023, 01, 01, 1, 1, 0).ToString()
+                    Begin = new Time(2023, 01, 01, 1, 0, 0, TimeScale.TDB).ToString(),
+                    End = new Time(2023, 01, 01, 1, 1, 0, TimeScale.TDB).ToString()
                 }, TimeSpan.FromMinutes(1), "ICRF");
             var res = sb.ToString();
 
@@ -43,8 +43,8 @@ public class OrientationsTests
             command.Orientation("Data", 399,
                 new WindowParameters
                 {
-                    Begin = new Time(2023, 01, 01, 1, 0, 0).ToString(),
-                    End = new Time(2023, 01, 01, 1, 1, 0).ToString()
+                    Begin = new Time(2023, 01, 01, 1, 0, 0, TimeScale.TDB).ToString(),
+                    End = new Time(2023, 01, 01, 1, 1, 0, TimeScale.TDB).ToString()
                 }, TimeSpan.FromMinutes(1));
             var res = sb.ToString();
             OutputAssert.EqualApprox(

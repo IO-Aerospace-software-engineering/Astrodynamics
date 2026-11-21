@@ -535,7 +535,7 @@ public class RK78IntegratorTests
     public void IntegratesWithDragAndSrpViaCustomIntegrator()
     {
         // Verify RK78 works with drag and SRP via CentralBodyPropagator API
-        var epoch = new TimeSystem.Time(2025, 6, 1, 12, 0, 0, frame: TimeFrame.UTCFrame);
+        var epoch = new TimeSystem.Time(2025, 6, 1, 12, 0, 0, TimeScale.UTC);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new EarthStandardAtmosphere());
@@ -587,7 +587,7 @@ public class RK78IntegratorTests
         // Conformance case propagator_24h_leo_grav10_001, RK7(8) with tolerances 1e-11, as the conformance runner runs it.
         Clock clk = new Clock("My clock", 256);
 
-        var utcEpoch = new TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
+        var utcEpoch = new TimeSystem.Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
@@ -641,7 +641,7 @@ public class RK78IntegratorTests
         Clock clk = new Clock("My clock", 256);
 
         // Initial state of the conformance case (inputs.yaml), from which the golden was produced.
-        var utcEpoch = new TimeSystem.Time(2026, 2, 9, 10, 22, 58, millisecond: 958, frame: TimeFrame.UTCFrame);
+        var utcEpoch = new TimeSystem.Time(2026, 2, 9, 10, 22, 58, 958, TimeScale.UTC);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70)
@@ -707,7 +707,7 @@ public class RK78IntegratorTests
         // Conformance case propagator_24h_sso_grav10_003, RK7(8) with tolerances 1e-11, as the conformance runner runs it.
         Clock clk = new Clock("My clock", 256);
 
-        var utcEpoch = new TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
+        var utcEpoch = new TimeSystem.Time(2025, 6, 1, 10, 30, 0, TimeScale.UTC);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)

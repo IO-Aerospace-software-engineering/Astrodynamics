@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -163,13 +164,13 @@ public class ForceModelComparisonTests
         // Arrange: the orbit on the Earth, two Moons of different atmospheres listed
         var earth = PlanetsAndMoons.EARTH_BODY;
         var spacecraft = new Spacecraft(-7401, "FMC", 100.0, 1000.0, new Clock("fmcclk", 65536),
-            new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), earth, new TimeSystem.Time(2021, 1, 1),
+            new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), earth, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB),
                 Frames.Frame.ICRF));
         var moons = new CelestialItem[]
         {
             new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(PlanetsAndMoons.MOON, atmosphericModel: new ScaleHeightAtmosphere(1e4))
         };
-        var window = new TimeSystem.Window(new TimeSystem.Time(2021, 1, 1), new TimeSystem.Time(2021, 1, 1).AddMinutes(10.0));
+        var window = new TimeSystem.Window(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, TimeScale.TDB).AddMinutes(10.0));
 
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
@@ -188,7 +189,7 @@ public class ForceModelComparisonTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: new EarthStandardAtmosphere());
         var mars = new CelestialBody(PlanetsAndMoons.MARS, atmosphericModel: new MarsStandardAtmosphere());
         var spacecraft = new Spacecraft(-7402, "FMC", 100.0, 1000.0, new Clock("fmcclk2", 65536),
-            new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), earth, new TimeSystem.Time(2021, 1, 1),
+            new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), earth, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB),
                 Frames.Frame.ICRF));
 
         // Act: the central body unlisted, listed twice, and listed after another atmosphere

@@ -25,14 +25,14 @@ public class EpochParserTests
         var time = EpochParser.Parse(epoch);
 
         // Assert: TT is the framework's TDT
-        ITimeFrame expected = scale switch
+        TimeScale expected = scale switch
         {
-            "UTC" => TimeFrame.UTCFrame,
-            "TAI" => TimeFrame.TAIFrame,
-            "TT" => TimeFrame.TDTFrame,
-            _ => TimeFrame.TDBFrame
+            "UTC" => TimeScale.UTC,
+            "TAI" => TimeScale.TAI,
+            "TT" => TimeScale.TT,
+            _ => TimeScale.TDB
         };
-        Assert.Equal(expected, time.Frame);
+        Assert.Equal(expected, time.Scale);
         Assert.Equal(new DateTime(2021, 3, 20, 12, 0, 0), time.DateTime);
         Assert.Equal(scale, EpochParser.Scale(epoch));
     }
@@ -78,7 +78,7 @@ public class EpochParserTests
         var time = EpochParser.ParseWindowEnd(epoch);
 
         Assert.Equal(new DateTime(2025, 6, 15, 23, 56, 0).Ticks + ticks, time.DateTime.Ticks);
-        Assert.Equal(TimeFrame.UTCFrame, time.Frame);
+        Assert.Equal(TimeScale.UTC, time.Scale);
     }
 
     [Theory]

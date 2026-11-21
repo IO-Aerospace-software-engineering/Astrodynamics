@@ -28,7 +28,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.CDM;
 /// </summary>
 public sealed class CdmPropagatedCovarianceCase
 {
-    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
     internal static readonly TimeSystem.Time Tca = Start.AddHours(2.0);
 
     internal static readonly CovariancePropagationOptions Options = new()
