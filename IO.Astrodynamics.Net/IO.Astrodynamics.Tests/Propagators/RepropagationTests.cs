@@ -201,6 +201,9 @@ public class RepropagationTests
         public Spacecraft Spacecraft { get; init; }
         public Maneuver.Maneuver[] Chain { get; init; }
         public Time[] Given { get; init; }
+
+        // The propagator of the SameInstance path, built at its first run and run again by the next (#782)
+        public CentralBodyPropagator Propagator { get; set; }
     }
 
     private static Sc Build(Env env, OrbitalParams orbit, string chain, Time? userGate = null)
@@ -315,6 +318,16 @@ public class RepropagationTests
                 // A CentralBodyPropagator built directly, the covariance by its constructor (#583)
                 var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 solution = propagator.Propagate();
+                break;
+            }
+            case "SameInstance":
+            {
+                // One CentralBodyPropagator built at the first run of the spacecraft and run again by each later run on
+                // the same window (#782)
+                Assert.Null(covariance);
+                sc.Propagator ??= new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = CovariancePropagationOptions.None });
+                Assert.Equal(window, sc.Propagator.Window);
+                solution = sc.Propagator.Propagate();
                 break;
             }
             case "Batch":
@@ -1134,12 +1147,17 @@ public class RepropagationTests
     /// An identical second run through a <see cref="CentralBodyPropagator"/> built directly is a fresh spacecraft's (#583): before the fix run 2 fired no burn, started with the fuel left by
     /// run 1 and kept run 1's <c>ExecutedManeuvers</c> (7.247e6 m off on the issue's case). The reference, a spacecraft
     /// built identically and never propagated, run once on the same path, is checked against the Keplerian closed form.
+    /// <c>SameInstance</c> runs the same propagator instance twice (#782): before its fix, run 2 of an adaptive RK7(8)
+    /// started from the last step and PI history of run 1; Velocity-Verlet, which keeps no step state, is a guard.
     /// </summary>
     [Theory]
     [InlineData("apo-apo", "RK", "Direct")]
     [InlineData("apo-apo", "VV1", "Direct")]
     [InlineData("att1000", "RK", "Direct")]
     [InlineData("att1000", "VV1", "Direct")]
+    [InlineData("apo-apo", "RK", "SameInstance")]
+    [InlineData("apo-apo", "VV1", "SameInstance")]
+    [InlineData("att1000", "RK", "SameInstance")]
     public void PropagatorPaths_IdenticalRun_IsAFreshSpacecrafts(string chain, string integrator, string path)
     {
         // Arrange

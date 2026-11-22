@@ -142,8 +142,10 @@ public sealed class RK78Integrator : Integrator
 
     /// <summary>
     /// Initialize the integrator with the initial state.
-    /// Sets the observer and frame, allocates the stage pool, and resets the PI controller.
-    /// Called by the propagator after forces have been added and at segment boundaries.
+    /// Sets the observer and frame, allocates the stage pool, and resets the step and the PI controller.
+    /// Called by the propagator once the forces are added, at the start of every run and after each event (#782: before
+    /// 11.0.0 not at the start of a run, so the first segment of a second run of one propagator started from the last
+    /// step and controller history of the first).
     /// </summary>
     public override void Initialize(StateVector initialState)
     {

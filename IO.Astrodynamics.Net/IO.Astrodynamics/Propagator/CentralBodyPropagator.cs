@@ -331,17 +331,18 @@ public class CentralBodyPropagator : PropagatorBase
     /// </summary>
     /// <param name="window">The propagation window.</param>
     /// <param name="spacecraft">The spacecraft.</param>
-    /// <param name="integrator">The integrator and its forces; the state transition matrix needs an
-    /// <see cref="RK78Integrator"/>. The propagator initializes it with its initial state, as the overload without
-    /// <paramref name="covariancePropagation"/>; a later <see cref="IIntegrator.Initialize"/> by the caller replaces
-    /// it.</param>
+    /// <param name="integrator">The integrator and its forces, given to no other propagator; the state transition matrix
+    /// needs an <see cref="RK78Integrator"/>. The propagator initializes it with its initial state at construction, at the
+    /// start of every run and after each event, as the overload without <paramref name="covariancePropagation"/>, so an
+    /// <see cref="IIntegrator.Initialize"/> by the caller has no effect on the run (#782).</param>
     /// <param name="deltaT">The step of the output states.</param>
     /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance; null
     /// for none.</param>
     /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator is
     /// not an <see cref="RK78Integrator"/>.</exception>
     /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
-    /// parameter without its force.</exception>
+    /// parameter without its force; or the integrator was already given to a propagator (#782), naming
+    /// <c>integrator</c>.</exception>
     /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
     /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
     /// semi-definite.</exception>
@@ -388,12 +389,20 @@ public class CentralBodyPropagator : PropagatorBase
     /// <para>
     /// The propagator initializes the integrator with its initial state (<see cref="IIntegrator.Initialize"/>): about the
     /// central body, the Sun in SSB mode, in the inertial frame of the propagation (ICRF for a TLE or a TEME state), at
-    /// the TDB start of the window. A later <see cref="IIntegrator.Initialize"/> by the caller replaces it. Before 11.0.0
-    /// the integrator was used as given, and one its caller had not initialized threw
+    /// the TDB start of the window; at construction, at the start of every run and after each event, so an
+    /// <see cref="IIntegrator.Initialize"/> by the caller between construction and <see cref="PropagatorBase.Propagate"/>
+    /// has no effect on the run (#782, decision 23 of lot L4 of #668, decided by S. Guillet, 2026-11-22: before, a later
+    /// one by the caller replaced it for the first segment, and with another observer or frame changed the run, under
+    /// both integrators). Before 11.0.0 the integrator was used as given, and one its caller had not initialized threw
     /// <see cref="NullReferenceException"/> at the first step.
+    /// </para>
+    /// <para>
+    /// The integrator belongs to this propagator (#782, decision 24 of lot L4 of #668): give each propagator a new one.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming <c>integrator</c>
+    /// (#782; before 11.0.0 the last propagator built set its observer, frame and time argument for all).</exception>
     /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
     /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
     /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>

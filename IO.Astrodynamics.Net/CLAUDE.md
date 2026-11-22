@@ -570,7 +570,7 @@ PropagatorBase (abstract)
 - `PropagatorBase`: Abstract base with segment-based propagation loop, event detection, and dense output
 - `CentralBodyPropagator`: Concrete implementation with auto force-building and ephemeris cache injection
 - Force caches: `PropagationFrameOrientationCache` (the central body's orientation, 60 s grid, exact SLERP, #561) and `PropagationEphemerisCache` (the bodies, 8-point Lagrange) cover the span the propagation integrates, its window (#626; up to ΔT/2 past it before choice 6 of #668); a read outside their grid reads the data provider at its epoch
-- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet. When the covariance propagation is on, Φ, Ψ and P at any epoch, by the same shortened step with the variational equations (the getters serialize on a lock of the solution and evaluate the forces, like `InterpolateAt`)
+- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet. When the covariance propagation is on, Φ, Ψ and P at any epoch, by the same shortened step with the variational equations (the getters serialize on the lock of the forces of the propagator, one per instance, shared by the solutions of all its runs and held by each run, #782, and evaluate the forces, like `InterpolateAt`)
 - `PropagationSegment`: List of `AcceptedStep` records with Hermite interpolation
 - `AcceptedStep`: Start/end position, velocity, and acceleration for cubic Hermite dense output
 - `IntegrationResult`: Segment + optional `EventInfo` (detector index, precise event time and state), both read-only record structs (11.0.0, as `EventResult`)
@@ -594,7 +594,7 @@ public interface IIntegrator
 }
 ```
 
-Every `CentralBodyPropagator` constructor calls `Initialize` with the initial state of the propagation (about the central body, in the inertial frame of the propagation, at the TDB start of the window), those that take an integrator with its forces included; a later `Initialize` by the caller replaces it.
+Every `CentralBodyPropagator` constructor calls `Initialize` with the initial state of the propagation (about the central body, in the inertial frame of the propagation, at the TDB start of the window), those that take an integrator with its forces included, and `PropagatorBase.Propagate` calls it again at the start of every run, after the token check and before the re-arm, so every run of one instance is a fresh run and an `Initialize` by the caller between construction and the run has no effect on it, under both integrators (#782, decisions 22 and 23 of lot L4 of #668); an `IIntegrator` resets in `Initialize` every state a run depends on, and a `PropagatorBase` subclass sets `InitialState` before `Propagate`. An integrator belongs to one propagator: a second propagator given it throws `ArgumentException` (`integrator`, decision 24). A reused instance keeps the initial state, covariance and options of its construction (#783).
 
 VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV, the step integrated again to the tick of the label of its end, #572) or with sub-step bisection refinement (RK78) on states computed by shortened RK7(8) steps; the RK7(8) restart after a maneuver uses the same shortened step, never the cubic Hermite interpolation, which is off by up to ~100 m in LEO (#363).
 
@@ -831,7 +831,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 
 ## Development Guidelines
 
-1. **Thread Safety**: CSPICE operations are not thread-safe - all API calls must use the shared lock object
+1. **Thread Safety**: CSPICE operations are not thread-safe - all API calls must use the shared lock object; a propagator instance has one lock for its forces, held by each of its runs and taken by the evaluations of the solutions of all its runs (#782, decision 25 of lot L4 of #668), and an integrator belongs to one propagator (decision 24)
 2. **Kernel Management**: Load/unload SPICE kernels appropriately to avoid memory leaks
 3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, the five `FindWindows*` proxies of the CSPICE window searches, and the kernel writers and loaders, #706) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `SpiceException` (an `InvalidOperationException`, `ShortMessage` and `LongMessage` from `GetLastErrorShortProxy()` and `GetLastErrorLongProxy()`) for SPICE's error, `InvalidOperationException` for another failure of the native layer, with the native message (R03 of #668).
 4. **Native Resources**: Properly free unmanaged memory returned from native calls

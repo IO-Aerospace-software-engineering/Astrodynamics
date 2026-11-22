@@ -6,7 +6,7 @@ Integrators advance spacecraft state through time under configured force models.
 
 | Method | Description |
 |--------|-------------|
-| `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations; called by every `CentralBodyPropagator` constructor and after each event |
+| `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations, and reset every state a run depends on (step, step-control history, event bookkeeping); called by every `CentralBodyPropagator` constructor, at the start of every run and after each event |
 | `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` | Advance state, returning `IntegrationResult` |
 
 `IntegrationResult` contains the completed `PropagationSegment` and optional event information (`EventInfo`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
@@ -181,7 +181,7 @@ batch or a campaign.
 | Entry point | How to choose the integrator |
 |-------------|------------------------------|
 | Every options entry point | `PropagationOptions.Integrator`: `RK78IntegratorOptions` or `VVIntegratorOptions` |
-| `CentralBodyPropagator` | The constructor taking an `IIntegrator` already configured with its forces, which it initializes with the initial state of the propagation (a later `Initialize` by the caller replaces it) |
+| `CentralBodyPropagator` | The constructor taking an `IIntegrator` already configured with its forces and given to no other propagator, which it initializes with the initial state of the propagation at construction, at the start of every run and after each event (an `Initialize` by the caller has no effect on the run, #782) |
 
 The members that took an integrator instance, a factory or no integrator at all were removed in 11.0.0 (R07 of #668:
 the flag overloads of `Spacecraft.Propagate`, the flag constructors of `CentralBodyPropagator`, the builder,

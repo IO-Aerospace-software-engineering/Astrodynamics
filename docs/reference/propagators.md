@@ -167,8 +167,16 @@ having one ([Force Models](force-models.md#atmosphericdrag)). A central body who
 R03 of #668: before, the propagation ran without central gravity, on a straight line; `new CelestialBody(id)` still accepts
 the GM of 0); the constructors without celestial bodies use the integrator and its forces as
 given and initialize it with the initial state of the propagation: about the central body (the Sun in SSB mode), in the
-inertial frame of the propagation, at the TDB start of the window; a later `Initialize` by the caller replaces it. Before
-11.0.0 they used it as given, and one its caller had not initialized threw `NullReferenceException` at the first step. A step of zero or less throws `ArgumentOutOfRangeException`: `deltaT` on the
+inertial frame of the propagation, at the TDB start of the window; at construction, at the start of every run and after
+each event, so an `Initialize` by the caller between construction and `Propagate` has no effect on the run, under both
+integrators (#782, decision 23 of lot L4 of #668, decided by S. Guillet, 2026-11-22: before, a later one replaced it for
+the first segment, and with another frame or observer changed the run, 2.9e4 m over 2 h in ECLIPJ2000 about an EGM2008
+10×10 Earth, 1.3e6 m over 2 days with an SSB-centred state). Before 11.0.0 they used it as given, and one its caller had
+not initialized threw `NullReferenceException` at the first step. An integrator belongs to one propagator: a constructor
+given an integrator already given to another propagator throws `ArgumentException` (`integrator`) before it changes it
+(decision 24; before, the last propagator built set the observer, frame, time argument and variational equations of the
+integrator for all). A subclass of `PropagatorBase` sets `InitialState` in its constructor: `Propagate` initializes the
+integrator with it at every run. A step of zero or less throws `ArgumentOutOfRangeException`: `deltaT` on the
 constructors that take an integrator, `OutputStep` (or the integrator's `Step`) where the options are built (#674).
 
 A constructor changes nothing on the spacecraft. `Propagate` re-arms it once its checks pass, on every path, as
@@ -176,6 +184,21 @@ A constructor changes nothing on the spacecraft. `Propagate` re-arms it once its
 previous propagation cleared, the maneuver chain started again from its head, and the spacecraft `IsPropagated` after
 the run (#583, decided by S. Guillet, 2026-11-17; before 11.0.0 a second run through a propagator built directly fired no
 burn and started with the fuel the first left).
+
+Every run of one propagator instance is a fresh run (#782, decisions 22 to 25 of lot L4 of #668, decided by S. Guillet,
+2026-11-22): once its checks pass and its token is read, and before the re-arm, `Propagate` initializes the integrator
+with the initial state of the propagation, so runs 2 and 3 of an instance, after a completed or a stopped run, are bit
+for bit a fresh spacecraft and propagator (positions, velocities, steps, stored states, attitude record, maneuvers, fuel,
+Φ and P; `PropagatorReuseTests`), and an `Initialize` that throws changes nothing. Before, an adaptive RK7(8) started the
+first segment of a second run from the last step and controller history of the first: 1.7e-5 m on a 2 h point-mass LEO,
+2.0e-5 m with EGM2008 10×10, the Moon, the Sun, drag, SRP and an impulse over 3 h, 1.5e-4 m in SSB mode at 1e-12 over 2
+days (2 steps against 13), every element of Φ and P off; Velocity-Verlet and a fixed-step RK7(8), which keep no step
+state, were already fresh. Each run holds the lock of the forces of the instance, which the evaluations of the solutions
+of all its runs take, so an evaluation of an earlier solution and a later run serialize; the solution of an earlier run
+gives the same values after a later run. A reused instance keeps the initial state, the covariance and the options of
+its construction: a later `SetInitialOrbitalParameters` on the spacecraft does not reach it
+([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783)); build a new propagator to
+propagate from another initial orbit.
 
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
 initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
@@ -405,7 +428,8 @@ What a stopped run leaves (C2 of lot L4):
   propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included), is not `IsPropagated`, and keeps nothing
   for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
 - its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
-  its fuel; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated;
+  its fuel; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated,
+  a next run of the same propagator instance included (#782);
 - in `Scenario.Simulate` and a batch, the stars and spacecraft completed before the stop are complete, the later ones
   untouched; `IsSimulated` stays false, and no summary or result is returned.
 

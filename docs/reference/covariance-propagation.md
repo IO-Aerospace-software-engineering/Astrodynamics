@@ -512,9 +512,9 @@ covariance at their burn, [Avoidance Studies](avoidance.md).
 
 ## Thread Safety
 
-The evaluations of a solution (`InterpolateAt` and the getters above) run under a lock of the solution. They evaluate the
-forces, so they must not run concurrently with a propagation or an evaluation that shares a `CelestialBody` with a
-geopotential. See [Thread Safety](../guides/thread-safety.md).
+The evaluations of a solution (`InterpolateAt` and the getters above) run under the lock of the forces of its
+propagator, one per instance, shared by the solutions of all its runs and held by each run (#782; a lock per solution
+before). They evaluate the forces of their propagation, its own geopotential field included. See [Thread Safety](../guides/thread-safety.md).
 
 ## See Also
 

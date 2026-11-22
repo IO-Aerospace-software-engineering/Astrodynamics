@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -28,6 +29,11 @@ public abstract class PropagatorBase : IPropagator
     public IIntegrator Integrator { get; }
     public TimeSpan DeltaT { get; }
 
+    /// <summary>
+    /// The initial state of the propagation, about its central body in its inertial frame at the start of the window. A
+    /// subclass sets it in its constructor, before <see cref="Propagate"/>: the base initializes the integrator with it at
+    /// the start of every run (#782, decision 23 of lot L4 of #668).
+    /// </summary>
     protected StateVector InitialState { get; set; }
 
     // The attitude timeline of the propagation (#539): the activations of its maneuver chain, sampled on the solution once
@@ -73,10 +79,17 @@ public abstract class PropagatorBase : IPropagator
     private protected string CovarianceAbsence { get; set; }
 
     /// <summary>
-    /// In RK7(8), the lock of the dynamics of the solution: null for a lock of its own; the lock of another propagation
-    /// whose forces this one shares (an avoidance option, a perturbed propagation of the non-linearity index).
+    /// The lock of the forces of this propagator (#782, decision 25 of lot L4 of #668, decided by S. Guillet,
+    /// 2026-11-22): one per instance, kept across its runs, held by each run and taken by the evaluations of the solutions
+    /// of all its runs (the dynamics of an RK7(8) solution, the force model of an RK7(8) or Velocity-Verlet one), so they
+    /// serialize; the lock of another propagation whose forces this one shares (an avoidance option, a perturbed
+    /// propagation of the non-linearity index), set by its constructor. Before 11.0.0 each run took a new lock.
     /// </summary>
-    private protected object DynamicsSyncRoot { get; set; }
+    private protected object DynamicsSyncRoot { get; set; } = new();
+
+    // The propagator each integrator was given to (#782, decision 24 of lot L4 of #668): an integrator belongs to one
+    // propagator. Held weakly by the integrator, as the propagator holds it
+    private static readonly ConditionalWeakTable<IIntegrator, PropagatorBase> IntegratorOwners = new();
 
     /// <summary>
     /// The time argument of the propagation (#501): TT about the Earth and TDB about any other central body for a
@@ -169,7 +182,15 @@ public abstract class PropagatorBase : IPropagator
     /// <summary>
     /// A propagator over TDB seconds, with output states every <paramref name="deltaT"/>.
     /// </summary>
+    /// <remarks>
+    /// The subclass sets <see cref="InitialState"/> in its constructor: <see cref="Propagate"/> initializes
+    /// <paramref name="integrator"/> with it at the start of every run, replacing any initialization by the subclass or
+    /// the caller (#782, decision 23 of lot L4 of #668, decided by S. Guillet, 2026-11-22). The integrator belongs to this
+    /// propagator (decision 24).
+    /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming
+    /// <c>integrator</c>.</exception>
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
         : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)), PropagationTimeArgument.Tdb)
     {
@@ -238,9 +259,32 @@ public abstract class PropagatorBase : IPropagator
         DeltaT = deltaT;
         TimeArgument = timeArgument ?? throw new ArgumentNullException(nameof(timeArgument));
         _windowLength = TimeArgument.Length(window, Window);
+
+        // The integrator is this propagator's, before anything changes it (#782, decision 24 of lot L4 of #668)
+        ClaimIntegrator(integrator);
         if (integrator is Integrator integratorWithForces)
         {
             integratorWithForces.TimeArgument = TimeArgument;
+        }
+    }
+
+    /// <summary>
+    /// Takes <paramref name="integrator"/> for this propagator, atomically: an integrator belongs to one propagator (#782,
+    /// decision 24 of lot L4 of #668, decided by S. Guillet, 2026-11-22), which initializes it at construction, at the
+    /// start of every run and after each event, and sets its time argument and its variational equations. Before 11.0.0
+    /// one integrator could be given to several propagators, the last one built setting its observer, frame, time
+    /// argument and variational equations for all.
+    /// </summary>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming
+    /// <c>integrator</c>.</exception>
+    private void ClaimIntegrator(IIntegrator integrator)
+    {
+        if (!IntegratorOwners.TryAdd(integrator, this))
+        {
+            throw new ArgumentException(
+                "The integrator was already given to another propagator, which initializes it, sets its time argument and " +
+                "its variational equations, and runs it: give each propagator a new integrator (for example " +
+                "new RK78Integrator(...) with its forces).", nameof(integrator));
         }
     }
 
@@ -607,6 +651,18 @@ public abstract class PropagatorBase : IPropagator
     /// directly fired no burn and started with the fuel left by the first. The spacecraft is then
     /// <see cref="Spacecraft.IsPropagated"/>, whatever the path.
     /// <para>
+    /// Every run is a fresh run (#782, decisions 22 to 25 of lot L4 of #668, decided by S. Guillet, 2026-11-22): once the
+    /// token is read and before the re-arm, the run initializes the integrator with the initial state of the propagation
+    /// (<see cref="IIntegrator.Initialize"/>), so the runs of one instance, after a completed or a stopped run, are bit
+    /// for bit those of a fresh propagator, and an <see cref="IIntegrator.Initialize"/> that throws changes nothing.
+    /// Before, an adaptive <see cref="RK78Integrator"/> started the first segment of a second run from the last step and
+    /// controller history of the first (1.7e-5 m on a 2 h point-mass LEO, 1.5e-4 m in SSB mode, Φ and P off). Each run
+    /// holds the lock of the forces of the instance, which the evaluations of the solutions of all its runs take, so they
+    /// serialize. A reused instance keeps the initial state, the covariance and the options of its construction: a later
+    /// <see cref="Spacecraft.SetInitialOrbitalParameters"/> does not reach it (#783; build a new propagator to propagate
+    /// from another initial orbit).
+    /// </para>
+    /// <para>
     /// Cancellation (R28 of #668): <paramref name="cancellationToken"/> is read once the checks pass, before the re-arm,
     /// so that a token already cancelled changes nothing; then before each segment, and by <see cref="VVIntegrator"/>
     /// and <see cref="RK78Integrator"/> at each accepted step (never between the rejections of a step, at most 101); an
@@ -635,6 +691,9 @@ public abstract class PropagatorBase : IPropagator
         // see each other's cache, and none is left on the shared frame
         var (cacheFrame, cache) = OrientationCache;
         using (Frame.UseOrientationCache(cacheFrame, cache))
+        // The run holds the lock of the forces of the propagator, so that it serializes with the evaluations of the
+        // solutions of its earlier runs, which evaluate the same forces (#782, decision 25 of lot L4 of #668)
+        lock (DynamicsSyncRoot)
         {
             // The token of the run, read by the integrators of the library at each accepted step and reset after the run,
             // so that the forces kept by the solution never stop on it (R28 of #668)
@@ -697,6 +756,12 @@ public abstract class PropagatorBase : IPropagator
         // Before the re-arm, so that a token already cancelled changes nothing (decision 6 of lot L4 of #668)
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Every run starts its integrator from the initial state of the propagation, so that each run of this instance is
+        // a fresh run (#782, decision 22 of lot L4 of #668, decided by S. Guillet, 2026-11-22: an adaptive RK7(8) reset its
+        // step and the history of its controller only here); after the token, so that a token already cancelled changes
+        // nothing, and before the re-arm, so that an Initialize that throws changes nothing either
+        Integrator.Initialize(InitialState);
+
         // Every check passed: the spacecraft is re-armed, on every path (#583)
         Spacecraft.ResetPropagation();
         reArmed = true;
@@ -718,7 +783,7 @@ public abstract class PropagatorBase : IPropagator
         {
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
                 InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations,
-                _covarianceModel, DynamicsSyncRoot ?? new object()) { Integrator = rk78, TimeArgument = TimeArgument };
+                _covarianceModel, DynamicsSyncRoot) { Integrator = rk78, TimeArgument = TimeArgument };
         }
 
         var variational = _variationalOptions != null ? rk78.VariationalEquations : null;
@@ -898,8 +963,7 @@ public abstract class PropagatorBase : IPropagator
         }
 
         solution.Dynamics = dynamics;
-        solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache,
-            dynamics?.SyncRoot ?? DynamicsSyncRoot);
+        solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache, DynamicsSyncRoot);
         solution.Observer = InitialState.Observer;
         solution.Frame = InitialState.Frame;
         solution.CovariancePropagation = _covariancePropagation;

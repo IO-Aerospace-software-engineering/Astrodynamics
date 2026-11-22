@@ -663,8 +663,8 @@ public class ForceModelDefectTests
         user.AddForce(new GravitationalAcceleration(earth));
         var userSpacecraft = NewSpacecraft(earth);
         var builtSpacecraft = NewSpacecraft(earth);
-        // The constructor without forces uses the integrator's forces as given and initializes it with its initial state;
-        // an Initialize by the caller before construction, as here, is replaced by it, with the same observer and frame
+        // The constructor without forces uses the integrator's forces as given and initializes it with its initial state,
+        // at construction and at the start of every run (#782): an Initialize by the caller, as here, has no effect
         user.Initialize((StateVector)userSpacecraft.InitialOrbitalParameters);
 
         // Act

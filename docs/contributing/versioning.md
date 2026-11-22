@@ -2935,10 +2935,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the state transition matrix) and Velocity-Verlet, without any `Initialize` by the caller, against the two-body closed
   form over the TT seconds of the hour about the Earth (9.95e-5 m in RK7(8) at 1e-10, 15.9 m by Velocity-Verlet at 1 s,
   its truncation), about the Sun in SSB mode over the TDB seconds of a day (1.22e-4 m), from an ECLIPJ2000 state
-  integrated in ECLIPJ2000 (9.95e-5 m) (the same on the three platforms; thresholds twice the worst); bit for bit the run the caller
-  initializes after construction, with and without an impulse, and the force-building constructor with the same single
-  force; a recording `IIntegrator` sees one `Initialize`, by the constructor, with the central body, the frame and the
-  TDB start of a UTC window.
+  integrated in ECLIPJ2000 (9.95e-5 m) (the same on the three platforms; thresholds twice the worst); bit for bit the run
+  with an `Initialize` by the caller after construction, with and without an impulse, and the force-building constructor
+  with the same single force; a recording `IIntegrator` sees one `Initialize` by the constructor and one at the start of
+  the run (#782, below), each with the central body, the frame and the TDB start of a UTC window.
 
 - **A static solar system object read on a `MemoryDataProvider` without its data left its class unusable for the life
   of the process** (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
@@ -4456,6 +4456,38 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   differed after the same step of ±30, ±60 or ±90 min; the child's check, red before the mark was dropped). The limit
   stated there since #512 is removed.
 
+- **A second `Propagate` on one `CentralBodyPropagator` under an adaptive RK7(8) was not a fresh run**
+  ([#782](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/782), decisions 21, 22 and 25 of lot L4
+  of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-22). `RK78Integrator` resets its step and the history of its PI controller only in `Initialize`, which the
+  propagator called at construction and after each event, never at the start of a run: since #583 a second run re-armed
+  the spacecraft, but its first segment started from the step the first run proposed last (188 to 340 s against the
+  initial 60 s in LEO, the maximum step of a day in SSB mode) and from its last error. Measured at 1dc77ffc, run 2 against
+  a fresh spacecraft and propagator, Linux x64 (`PropagatorReuseTests`): 119 of 121 outputs off, up to 1.7e-5 m, one step
+  fewer, on a 2 h point-mass LEO at 1e-10; 180 of 181 outputs, up to 2.0e-5 m, with EGM2008 10×10, the Moon, the Sun,
+  NRLMSISE-00, SRP, a prograde attitude and an apogee impulse over 3 h (83 + 48 steps against 83 + 52), the burn, ΔV, fuel
+  and attitude record off; every element of Φ and P off with the covariance asked for, under Auto, and with process
+  noise, consider parameters and the step control (136 steps against 135); 2 steps against 13 and 1.5e-4 m in SSB mode at
+  1e-12 over 2 days; 3.5e-5 m after a run stopped inside its first segment (a stop past an impulse was fresh by chance,
+  the event having re-initialized the integrator); 1.7e-5 m for a subclass of `PropagatorBase` and for a bare
+  `IIntegrator` wrapping an RK7(8), whose `Initialize` the library never called again. Every library path builds a new
+  propagator per run (`Spacecraft.Propagate`, `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator`, the
+  avoidance options and the non-linearity index), so only a propagator a caller ran twice was affected. `Propagate` now
+  initializes the integrator with the initial state of the propagation at the start of every run, once the token is read
+  (a token already cancelled still changes nothing, decision 6) and before the re-arm (an `Initialize` that throws
+  changes nothing); runs 2 and 3 of an instance are bit for bit a fresh run in every case above, after a completed or a
+  stopped run (positions, velocities, steps, stored states arc by arc, attitude record as rotation angles, executed
+  maneuvers and their windows to the tick, fuel, Φ and P; `RepropagationTests` gains a `SameInstance` path). The solutions
+  of the runs of one instance share one lock of their forces, held by each run (decision 25): before, each run took a
+  new lock, so an evaluation of an earlier solution could run concurrently with a later run over the same force instances,
+  whose partials are not reentrant (found by reading the code, not measured). Velocity-Verlet and a fixed-step RK7(8) keep
+  no step state and were already fresh; every first run is bit for bit unchanged (an extra `Initialize` with the initial
+  state before a first run is a no-op, measured on 15 configurations), every golden unchanged, except a run whose caller
+  re-initialized the integrator with another observer or frame (under **Changed**). A reused instance keeps the initial
+  state, covariance and options of its construction: a later `SetInitialOrbitalParameters` does not reach it, now stated
+  in the remarks of `Propagate` ([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783),
+  lot L5).
+
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -4703,6 +4735,30 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   no resource. A `using` of a propagator does not compile (CS1674; the 53 of the repository removed, 4 in the library
   and 49 in the tests). Binary break. Migration: `using var propagator = new CentralBodyPropagator(…)` →
   `var propagator = …`; `using (var p = …) { … }` → the block with `var p = …`.
+- **Breaking: an `Initialize` by the caller between construction and `Propagate` has no effect on the run**
+  ([#782](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/782), decision 23 of lot L4 of #668,
+  decided by S. Guillet, 2026-11-22): the propagator initializes its integrator with the initial state of the propagation
+  at construction, at the start of every run and after each event. Before, a later `Initialize` by the caller replaced
+  the propagator's for the first segment, the whole run without an event: with another observer or frame it changed the
+  run, under both integrators (measured at 1dc77ffc, Linux x64, `IntegratorInitializationTests`: 2.941e4 m over 2 h for a
+  state in ECLIPJ2000 on an ICRF propagation about an EGM2008 10×10 Earth, 1.265e6 m over 2 days for the state about the
+  solar system barycentre of a spacecraft in SSB mode, RK7(8) and Velocity-Verlet alike); with the observer and the frame
+  of the propagation it changed nothing. An `IIntegrator` implemented outside the library receives `Initialize` at the
+  start of every run and must reset there every state a run depends on (a recording one counts the construction plus one
+  per run, plus one per event); a subclass of `PropagatorBase` sets `InitialState` in its constructor, the base
+  initializing the integrator with it at every run. First runs are unchanged unless the caller re-initialized with
+  another observer or frame, which now changes the run under both integrators. Migration: drop the `Initialize`; to
+  integrate from another state, give it as the spacecraft's initial orbit and build a new propagator.
+- **Breaking: an integrator belongs to one propagator** ([#782](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/782),
+  decision 24 of lot L4 of #668, decided by S. Guillet, 2026-11-22): every constructor that receives an integrator
+  (`CentralBodyPropagator(window, spacecraft, integrator, deltaT)`, its overload with `covariancePropagation`, the
+  protected constructor of `PropagatorBase`) claims it atomically and throws `ArgumentException` (`integrator`) for one
+  already given to another propagator, before it changes it: the integrator and the first propagator are untouched.
+  Before, a second propagator re-initialized the integrator with its own state and set its time argument and variational
+  equations for both: an Earth propagator run after a Moon propagator was built on its integrator was 5.16e7 m off, and
+  two covariance propagators sharing one threw from the variational equations of the other (gap analysis of #782). Runs
+  with one integrator per propagator, every golden, are unchanged (`PropagatorReuseTests`). Migration: build a new
+  integrator, with its forces, for each propagator.
 - **Breaking: the step of `GetEphemeris` over a window is above zero** (R11 of #668): `CelestialItem.GetEphemeris(window,
   observer, …, stepSize)` (spacecraft, bodies, stars, barycentres) and `Site.GetEphemeris(window, observer, …, stepSize)`
   throw `ArgumentOutOfRangeException` (`stepSize`) for a step of zero or less, where a zero step looped without end on a
@@ -6239,10 +6295,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **Breaking: the constructors of `CentralBodyPropagator` that take an integrator with its forces initialize it**
   (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above) with
-  the initial state of the propagation. A run that threw `NullReferenceException` now propagates. An `Initialize` the
-  caller made before construction with another observer or frame (the spacecraft's state about the solar system
-  barycentre in SSB mode, for instance) is replaced by the propagator's; one made after construction still wins.
-  Migration: drop the explicit `Initialize`, or keep it after construction with the propagator's initial state. No
+  the initial state of the propagation, and `Propagate` again at the start of every run (#782, below). A run that threw
+  `NullReferenceException` now propagates. An `Initialize` the caller makes with another observer or frame (the
+  spacecraft's state about the solar system barycentre in SSB mode, for instance), before or after construction, is
+  replaced by the propagator's (after construction it won before #782). Migration: drop the explicit `Initialize`. No
   result moves for a caller who initialized with the central body and the frame of the propagation.
 
 - **Breaking: the static objects of `Barycenters`, `PlanetsAndMoons` and `Stars` read their provider data at first use**

@@ -1673,7 +1673,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)
 
 **Integrator Interface (`IIntegrator`):**
-- `Initialize(StateVector initialState)` — set observer, frame, workspace; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), and after each event
+- `Initialize(StateVector initialState)` — set observer, frame, workspace and reset every state a run depends on; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), at the start of every run of `Propagate` (so each run of one propagator instance is a fresh run, and an `Initialize` by the caller between construction and the run has no effect on it, #782) and after each event; an integrator belongs to one propagator, a second one given it throwing `ArgumentException` (`integrator`)
 - `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`: one event per call, the earliest crossing of the step, ties in list order (#578); a g exactly zero at a step end after a non-zero one is a crossing there (#580)
 - Default of the options entry points: `RK78Integrator` at `RK78IntegratorOptions.Default` (1e-9, 1e-9; since 11.0.0)
 - `VVIntegrator` (Velocity-Verlet, fixed-step, 1 s by default in `VVIntegratorOptions`, second order with drag too (#439), event detection at step boundaries, the step of an event integrated again to the tick of its label, #572)

@@ -229,9 +229,8 @@ public sealed class PropagationSolution
     /// <para>
     /// For an RK7(8) propagation, the state is computed by a shortened RK7(8) step from the start of the accepted step
     /// that contains the epoch, so it has the accuracy of the integrator; at a step boundary, the stored state is
-    /// returned. Inside a step this costs 13 evaluations of the forces, which run under a lock of the solution: like the
-    /// propagation itself, it must not run concurrently with another propagation or solution that shares a
-    /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> with a geopotential.
+    /// returned. Inside a step this costs 13 evaluations of the forces, which run under the lock of the forces of the
+    /// propagator, one per instance, shared by the solutions of all its runs and held by each run (#782).
     /// </para>
     /// <para>
     /// For another integrator, the state is the cubic Hermite interpolation of the accepted step
@@ -265,9 +264,8 @@ public sealed class PropagationSolution
     /// <para>
     /// Inside an integration step, the value comes from a shortened RK7(8) step from the start of that step, at the
     /// accuracy of the integrator; at a step boundary, the stored value. At a maneuver, the value after it: the maneuver is
-    /// open loop, so Φ is continuous there. The evaluation runs under the lock of the solution; it evaluates the forces,
-    /// so it must not run concurrently with a propagation or an evaluation sharing a
-    /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> with a geopotential.
+    /// open loop, so Φ is continuous there. The evaluation evaluates the forces under the lock of the forces of the
+    /// propagator, one per instance, shared by the solutions of all its runs and held by each run (#782).
     /// </para>
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its

@@ -25,12 +25,19 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <summary>
 /// The constructors of <see cref="CentralBodyPropagator"/> that take an integrator with its forces initialize it with
 /// the initial state of the propagation: before, a caller who did not call <see cref="IIntegrator.Initialize"/> got a
-/// <see cref="NullReferenceException"/> from the first step (no observer, frame, evaluation state or RK7(8) stages).
+/// <see cref="NullReferenceException"/> from the first step (no observer, frame, evaluation state or RK7(8) stages). The
+/// propagator initializes it again at the start of every run (#782, decisions 22 and 23 of lot L4 of #668, decided by
+/// S. Guillet, 2026-11-22), so an <see cref="IIntegrator.Initialize"/> by the caller between construction and
+/// <see cref="PropagatorBase.Propagate"/> has no effect on the run, under both integrators.
 /// </summary>
 /// <remarks>
 /// The last state, and Φ when it is propagated, are checked against the two-body closed form (<see cref="KeplerianStm"/>)
-/// over the seconds of the time argument, TT about the Earth, TDB about the Sun; and bit for bit against the same run initialized by the caller after
-/// construction, the pattern of the tests before, whose results the existing goldens establish.
+/// over the seconds of the time argument, TT about the Earth, TDB about the Sun; and bit for bit against the same run
+/// with an <see cref="IIntegrator.Initialize"/> by the caller after construction, with the initial state (the pattern of
+/// the tests before 11.0.0, whose results the existing goldens establish) or with another frame or observer: the run
+/// without it is the reference. Before #782 a caller's Initialize after construction replaced the propagator's for the
+/// first segment: with another frame or observer it changed the run (2.941e4 m over 2 h in ECLIPJ2000 under EGM2008
+/// 10×10, 1.265e6 m over 2 days with an SSB-centred state, both integrators, Linux x64).
 /// </remarks>
 public class IntegratorInitializationTests
 {
@@ -143,7 +150,7 @@ public class IntegratorInitializationTests
 
     [Theory]
     [MemberData(nameof(Configurations))]
-    public void TheRun_IsBitForBitTheOneTheCallerInitializedAfterConstruction(string kind, bool stm)
+    public void ACallerInitializeWithTheInitialState_ChangesNothing(string kind, bool stm)
     {
         // Arrange
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -213,7 +220,7 @@ public class IntegratorInitializationTests
     }
 
     [Fact]
-    public void TheConstructor_InitializesOnce_WithTheCentralBodyTheFrameAndTheTdbStart()
+    public void TheConstructorAndEveryRun_Initialize_WithTheCentralBodyTheFrameAndTheTdbStart()
     {
         // Arrange
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -227,13 +234,17 @@ public class IntegratorInitializationTests
         var atConstruction = recorder.Initializations.ToArray();
         propagator.Propagate();
 
-        // Assert: once, by the constructor, and not again without an event
-        var state = Assert.Single(atConstruction);
-        Assert.Single(recorder.Initializations);
-        Assert.Same(earth, state.Observer);
-        Assert.Equal(Frames.Frame.ICRF, state.Frame);
-        Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
-        LabelAssert.Equal(window.StartDate.ToTDB(), state.Epoch);
+        // Assert: once by the constructor, once at the start of the run, and not again without an event (#782)
+        Assert.Single(atConstruction);
+        Assert.Equal(2, recorder.Initializations.Count);
+        foreach (var state in recorder.Initializations)
+        {
+            Assert.Same(earth, state.Observer);
+            Assert.Equal(Frames.Frame.ICRF, state.Frame);
+            Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
+            LabelAssert.Equal(window.StartDate.ToTDB(), state.Epoch);
+        }
+
         Assert.NotEmpty(spacecraft.PropagatedStates);
     }
 
@@ -255,10 +266,10 @@ public class IntegratorInitializationTests
         var propagator = new CentralBodyPropagator(window, spacecraft, recorder, TimeSpan.FromMinutes(10.0));
         var solution = propagator.Propagate();
 
-        // Assert: initialized about the Sun, as the propagator states the initial orbit, and Kepler about the Sun over
-        // the TDB seconds of the window
-        var state = Assert.Single(recorder.Initializations);
-        Assert.Same(sun, state.Observer);
+        // Assert: initialized about the Sun, as the propagator states the initial orbit, at construction and at the start
+        // of the run (#782), and Kepler about the Sun over the TDB seconds of the window
+        Assert.Equal(2, recorder.Initializations.Count);
+        Assert.All(recorder.Initializations, state => Assert.Same(sun, state.Observer));
         var initial = ssbState.RelativeTo(sun, Aberration.None).ToStateVector();
         double elapsed = PropagationTimeArgument.Tdb.SecondsBetween(window.StartDate, window.EndDate);
         double error = KeplerError(initial, solution, window, elapsed);
@@ -281,7 +292,8 @@ public class IntegratorInitializationTests
         var solution = propagator.Propagate();
 
         // Assert
-        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, Assert.Single(recorder.Initializations).Frame);
+        Assert.Equal(2, recorder.Initializations.Count);
+        Assert.All(recorder.Initializations, state => Assert.Equal(Frames.Frame.ECLIPTIC_J2000, state.Frame));
         double elapsed = PropagationTimeArgument.Tt.SecondsBetween(window.StartDate, window.EndDate);
         double error = KeplerError(initial, solution, window, elapsed);
         _output.WriteLine($"MEASURE IntegratorInitializationTests ECLIPJ2000: Kepler {error:E3} m");
@@ -291,7 +303,7 @@ public class IntegratorInitializationTests
     [Theory]
     [InlineData("RK78")]
     [InlineData("VV")]
-    public void WithAnImpulse_TheRunIsBitForBitTheOneTheCallerInitialized(string kind)
+    public void WithAnImpulse_ACallerInitializeWithTheInitialState_ChangesNothing(string kind)
     {
         // Arrange: an apogee raise at the next perigee, about 1.6 h after the start; the integrator re-initialized after
         // the event as before
@@ -329,6 +341,83 @@ public class IntegratorInitializationTests
         {
             AssertSameBits(explicitSpacecraft.PropagatedStates[i].Position, implicitSpacecraft.PropagatedStates[i].Position,
                 $"state {i}");
+        }
+    }
+
+    /// <summary>
+    /// An <see cref="IIntegrator.Initialize"/> by the caller after construction with another frame or another observer
+    /// than the propagation's has no effect on the run, under RK7(8) and Velocity-Verlet (#782, decision 23 of lot L4 of
+    /// #668): the propagator initializes its integrator with its initial state at the start of every run. ECLIPJ2000 on an
+    /// ICRF propagation about an EGM2008 10×10 Earth over 2 h (the options constructor); the state about the solar system
+    /// barycenter of a spacecraft in SSB mode, propagated about the Sun by an integrator holding the point masses of the
+    /// Sun and the Earth (the constructor of an integrator with its forces), over 2 days. Before the fix the caller's state governed the
+    /// first segment, a whole run without event: 2.941e4 m over 2 h in ECLIPJ2000, 1.265e6 m over 2 days in SSB mode, under
+    /// both integrators (these cases on Linux x64 at 1dc77ffc).
+    /// </summary>
+    [Theory]
+    [InlineData("RK78", "ECLIPJ2000")]
+    [InlineData("RK78", "SSB")]
+    [InlineData("VV", "ECLIPJ2000")]
+    [InlineData("VV", "SSB")]
+    public void ACallerInitializeWithAnotherFrameOrObserver_ChangesNothing(string kind, string state)
+    {
+        // Arrange
+        (CentralBodyPropagator Propagator, Spacecraft Spacecraft) New()
+        {
+            if (state == "ECLIPJ2000")
+            {
+                var leo = NewLeo(new CelestialBody(PlanetsAndMoons.EARTH));
+                return (new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(2.0)), leo, new PropagationOptions
+                {
+                    Integrator = kind == "RK78"
+                        ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }
+                        : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
+                    OutputStep = Step,
+                    Geopotential = new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
+                    CovariancePropagation = CovariancePropagationOptions.None
+                }), leo);
+            }
+
+            var sun = Stars.SUN_BODY;
+            var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0), sun,
+                Epoch, Frames.Frame.ICRF);
+            int id = NextId();
+            var ssb = new Spacecraft(id, $"II{-id}", 100.0, 10000.0, new Clock($"iiclk{-id}", 65536),
+                heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector(), 10.0, 2.2);
+            // The gravity of the Sun and of the Earth as point masses about the observer of the state
+            Integrator integrator = kind == "RK78"
+                ? new RK78Integrator(1e-12, 1e-12)
+                : new VVIntegrator(TimeSpan.FromMinutes(10.0));
+            integrator.AddForce(new GravitationalAcceleration(sun));
+            integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
+            return (new CentralBodyPropagator(new Window(Epoch, Epoch.AddDays(2.0)), ssb, integrator,
+                TimeSpan.FromMinutes(30.0)), ssb);
+        }
+
+        var reference = New();
+        var expected = reference.Propagator.Propagate().StateVectors;
+        var (propagator, spacecraft) = New();
+        var callerState = state == "ECLIPJ2000"
+            ? ((StateVector)spacecraft.InitialOrbitalParameters).ToFrame(Frames.Frame.ECLIPTIC_J2000)
+            : spacecraft.InitialOrbitalParameters.ToStateVector();
+
+        // Act
+        propagator.Integrator.Initialize(callerState);
+        var actual = propagator.Propagate().StateVectors;
+
+        // Assert
+        Assert.Equal(expected.Count, actual.Count);
+        double worst = 0.0;
+        for (int i = 0; i < expected.Count; i++)
+        {
+            worst = System.Math.Max(worst, (expected[i].Position - actual[i].Position).Magnitude());
+        }
+
+        _output.WriteLine($"MEASURE IntegratorInitializationTests caller Initialize {kind} {state}: {worst:E3} m");
+        for (int i = 0; i < expected.Count; i++)
+        {
+            AssertSameBits(expected[i].Position, actual[i].Position, $"state {i}");
+            AssertSameBits(expected[i].Velocity, actual[i].Velocity, $"velocity {i}");
         }
     }
 }
