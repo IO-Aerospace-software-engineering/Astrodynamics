@@ -95,7 +95,8 @@ public class TLEPropagator : IPropagator
     /// them as a solution.
     /// </summary>
     /// <param name="cancellationToken">Read before the first sample and at each sample (R28 of #668): a run stopped adds
-    /// nothing to the spacecraft, which is left as it was.</param>
+    /// nothing to the spacecraft, which is left as it was, its stored states those it had before the run (decision 19 of
+    /// lot L4: the exception to C2, since this propagator adds its samples instead of replacing the stored states).</param>
     /// <returns>The solution.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
     /// carries it.</exception>

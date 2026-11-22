@@ -20,11 +20,11 @@ results and cost do not change, even when the initial state carries a covariance
     Auto resolves to exactly `new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }`, the
     options a caller passes to ask for the covariance: its run and its cost are those of that request, the cost the
     covariance propagation always had, not a new one. What changes in 11.0.0 is that a covariance given at the window
-    start is propagated without being asked for. Over a LEO day at the RK7(8) defaults it costs 3 to 4 times the run
-    without covariance about a point-mass Earth (3.2 to 4.4 measured), about 10 times with EGM2008 10×10 and drag (8.4 to
-    10.7), and 1.5 times in SSB mode with the Earth, the Moon and the Sun (the MEASURE lines of
-    `DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, lot L4 of #668, Linux, two runs); the trajectory is the same, bit
-    for bit. To propagate the state alone, pass
+    start is propagated without being asked for. Over a LEO day at the RK7(8) defaults it costs about 2.5 times the run
+    without covariance about a point-mass Earth, about 8 times with EGM2008 10×10 and drag, and 1.5 times in SSB mode
+    with the Earth, the Moon and the Sun (the MEASURE lines of `DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, lot
+    L4 of #668, best of five, Linux; decision 20 of lot L4, decided by S. Guillet, 2026-11-22); the trajectory is the
+    same, bit for bit. To propagate the state alone, pass
     `options with { CovariancePropagation = CovariancePropagationOptions.None }`, or give the initial orbital parameters
     no covariance (decision 17 of lot L4, decided by S. Guillet, 2026-11-22).
 

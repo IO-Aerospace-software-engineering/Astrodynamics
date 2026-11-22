@@ -124,6 +124,32 @@ public class ZeroLengthWindowTests
     }
 
     /// <summary>
+    /// <see cref="Scenario.Simulate"/> checks the window whatever the scenario holds (decision 18 of lot L4 of #668,
+    /// decided by S. Guillet, 2026-11-22): a scenario of stars alone over a zero-length window throws before anything
+    /// runs, its star not propagated and <see cref="Scenario.IsSimulated"/> unchanged. Before, the stars were propagated
+    /// and the scenario reported simulated. <see cref="Star.Propagate"/> itself is unchanged (left to L6).
+    /// </summary>
+    [Fact]
+    public void Scenario_OfStarsAlone_AZeroLengthWindow_Throws_NamingTheWindow()
+    {
+        // Arrange
+        var scenario = new Scenario("zerostars", new IO.Astrodynamics.Mission.Mission("zerostars"), Empty);
+        var star = new Star(4, "ZEROSTARALONE", 1e30, "spec", 2, 0.3792,
+            IO.Astrodynamics.Coordinates.Equatorial.FromRightAscensionDeclination(1.0, 1.0, Start), 0.1, 0.1, 0, 0, 0, 0,
+            Start);
+        scenario.AddStar(star);
+        bool simulatedBefore = scenario.IsSimulated;
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() => scenario.Simulate());
+
+        // Assert
+        Assert.Equal("window", exception.ParamName);
+        Assert.False(star.IsPropagated);
+        Assert.Equal(simulatedBefore, scenario.IsSimulated);
+    }
+
+    /// <summary>
     /// <see cref="MonteCarloPropagator.Propagate(MonteCarloConfiguration, System.IProgress{BatchProgress}, System.Threading.CancellationToken)"/>
     /// throws at the start of the call, before anything is sampled, as every propagation path (decisions 7 and 15); before,
     /// each run failed inside the batch and the campaign returned no statistics and no reason.

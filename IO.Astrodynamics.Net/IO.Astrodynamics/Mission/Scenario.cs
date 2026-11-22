@@ -146,8 +146,10 @@ namespace IO.Astrodynamics.Mission
         /// carries it.</exception>
         /// <exception cref="InvalidOperationException">There is nothing to simulate; or a propagation throws it (see
         /// <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions, System.Threading.CancellationToken)"/>).</exception>
-        /// <exception cref="ArgumentException"><see cref="PropagationOptions.ThirdBodies"/> differs from the bodies of the
-        /// scenario; or a propagation throws it.</exception>
+        /// <exception cref="ArgumentException">The window of the scenario has zero length, whatever the scenario holds
+        /// (stars alone included), checked before anything runs (decisions 7 and 18 of lot L4 of #668); or
+        /// <see cref="PropagationOptions.ThirdBodies"/> differs from the bodies of the scenario; or a propagation throws
+        /// it.</exception>
         public ScenarioSummary Simulate(PropagationOptions options = null, CancellationToken cancellationToken = default)
         {
             options ??= PropagationOptions.Default;
@@ -156,11 +158,8 @@ namespace IO.Astrodynamics.Mission
                 throw new InvalidOperationException("There is nothing to simulate");
             }
 
-            // Before any star is propagated (decision 7 of lot L4 of #668)
-            if (_spacecrafts.Count > 0)
-            {
-                Propagator.PropagatorBase.RequireWindowLength(Window);
-            }
+            // Before any star is propagated, whatever the scenario holds (decisions 7 and 18 of lot L4 of #668)
+            Propagator.PropagatorBase.RequireWindowLength(Window);
 
             if (options.ThirdBodies != null && _celestialBodies.Count > 0)
             {

@@ -57,11 +57,13 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    last integration step move too when the integration step does not divide ΔT, the last step now ending at the window
    end (67.48 m at the output of 3 540 s of a 3 590 s window, Velocity-Verlet at 100 s about the Earth, 60 s outputs).
    A window of zero length throws `ArgumentException` (`window`) at the start of the call, on every path that builds a
-   numerical propagation, in `Scenario.Simulate` before its stars, in `MonteCarloPropagator.Propagate` before anything is
-   sampled and in the `TLEPropagator` constructor, one rule on
-   every propagation path (decisions 7 and 15 of lot L4, decided by S. Guillet, 2026-11-22; before, a numerical
-   propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution contains no segments", and
-   `TLEPropagator` returned one sample at the start).
+   numerical propagation, in `Scenario.Simulate` before its stars, whatever the scenario holds (a scenario of stars alone
+   included, its stars not propagated and `IsSimulated` unchanged), in `MonteCarloPropagator.Propagate` before anything
+   is sampled and in the `TLEPropagator` constructor, one rule on every propagation path (decisions 7, 15 and 18 of lot
+   L4, decided by S. Guillet, 2026-11-22; before, a numerical propagation re-armed the spacecraft and threw
+   `InvalidOperationException` "Solution contains no segments", `TLEPropagator` returned one sample at the start, and a
+   scenario of stars alone propagated them and reported itself simulated). `Star.Propagate` itself is unchanged in
+   11.0.0: its grid is unified with the propagation outputs in a later lot.
 
 ### Supported Perturbations
 
@@ -111,9 +113,9 @@ Console.WriteLine($"{solution.Options.ThirdBodies.Count} third bodies, {solution
     With `CovariancePropagation` null (Auto), a covariance that the initial orbital parameters carry at the window start
     is propagated under RK7(8), with the options `new CovariancePropagationOptions { Mode =
     CovariancePropagationMode.Covariance }` exactly, so the run costs what asking for the covariance always cost, not a
-    new cost: over a LEO day at the RK7(8) defaults, 3 to 4 times the run without covariance about a point-mass Earth,
-    about 10 times with EGM2008 10×10 and drag, 1.5 times in SSB mode (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`,
-    Linux), the trajectory unchanged bit for bit. Pass `CovariancePropagation = CovariancePropagationOptions.None` to
+    new cost: over a LEO day at the RK7(8) defaults, about 2.5 times the run without covariance about a point-mass Earth,
+    about 8 times with EGM2008 10×10 and drag, 1.5 times in SSB mode (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`,
+    best of five, Linux; decision 20 of lot L4), the trajectory unchanged bit for bit. Pass `CovariancePropagation = CovariancePropagationOptions.None` to
     propagate the state alone ([Covariance Propagation](covariance-propagation.md#activation); decision 17 of lot L4 of
     #668, decided by S. Guillet, 2026-11-22).
 
@@ -406,6 +408,12 @@ What a stopped run leaves (C2 of lot L4):
   its fuel; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated;
 - in `Scenario.Simulate` and a batch, the stars and spacecraft completed before the stop are complete, the later ones
   untouched; `IsSimulated` stays false, and no summary or result is returned.
+
+One exception: a stopped `TLEPropagator` run adds nothing and leaves the spacecraft as it was, its stored states,
+attitude record and `IsPropagated` those it had before the run (decision 19 of lot L4, decided by S. Guillet,
+2026-11-22). `TLEPropagator` adds its samples to the stored states instead of replacing them, so a run it never
+completed has nothing to replace; this is revisited with R08 in lot L5 (`CancellationTests`, a stop in the middle of a
+run).
 
 The propagators hold no resource: `IPropagator`, `PropagatorBase` and `TLEPropagator` no longer implement
 `IDisposable` (their `Dispose` was empty, or cleared two fields), so `using var propagator = new CentralBodyPropagator(…)`

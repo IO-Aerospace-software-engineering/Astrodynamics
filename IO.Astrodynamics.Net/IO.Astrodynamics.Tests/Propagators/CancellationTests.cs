@@ -250,6 +250,71 @@ public class CancellationTests
         Assert.Empty(tleSpacecraft.PropagatedStates);
     }
 
+    /// <summary>
+    /// A stop in the middle of a <see cref="TLEPropagator"/> run adds nothing and leaves the spacecraft as it was (decision
+    /// 19 of lot L4, decided by S. Guillet, 2026-11-22: the exception to C2, since <see cref="TLEPropagator"/> adds its
+    /// samples instead of replacing the stored states; revisited in L5 with R08): the stored states of an earlier run,
+    /// before and after, are the same, and the exception carries the caller's token. The token is cancelled from inside
+    /// the tenth SGP4 sample of the run (<see cref="CancellingTle"/>), of 61.
+    /// </summary>
+    [Fact]
+    public void AStopInTheMiddleOfATLEPropagatorRun_AddsNothing_TheSpacecraftAsItWas()
+    {
+        // Arrange: a TLE spacecraft sampled once over the first hour, so that it holds stored states
+        var tle = new CancellingTle("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        int id = NextId();
+        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, 10000.0, new Clock($"cxclk{-id}", 65536), tle);
+        var start = tle.Epoch;
+        new TLEPropagator(new Window(start, start.AddHours(1.0)), spacecraft, Output).Propagate();
+        var before = spacecraft.PropagatedStates.ToArray();
+        Assert.NotEmpty(before);
+        bool propagatedBefore = spacecraft.IsPropagated;
+        var attitudesBefore = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray();
+        var second = new TLEPropagator(new Window(start.AddHours(1.0), start.AddHours(2.0)), spacecraft, Output);
+        using var cts = new CancellationTokenSource();
+        tle.CancelAt(cts, 10);
+
+        // Act
+        var exception = Assert.Throws<OperationCanceledException>(() => second.Propagate(cts.Token));
+
+        // Assert: stopped in the middle of the samples, nothing added
+        Assert.Equal(cts.Token, exception.CancellationToken);
+        Assert.Equal(10, tle.Calls);
+        AssertSameStates(before, spacecraft.PropagatedStates);
+        Assert.Equal(propagatedBefore, spacecraft.IsPropagated);
+        Assert.Equal(attitudesBefore, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray());
+    }
+
+    // A TLE that cancels a token from inside its SGP4 call of a given rank, once armed: the seam of a stop in the middle
+    // of a TLEPropagator run, which samples through ToStateVector(Time)
+    private sealed class CancellingTle(string name, string line1, string line2) : TLE(name, line1, line2)
+    {
+        private CancellationTokenSource _source;
+        private int _rank;
+
+        internal int Calls { get; private set; }
+
+        internal void CancelAt(CancellationTokenSource source, int rank)
+        {
+            _source = source;
+            _rank = rank;
+            Calls = 0;
+        }
+
+        public override StateVector ToStateVector(TimeSystem.Time date)
+        {
+            var state = base.ToStateVector(date);
+            if (_source != null && ++Calls == _rank)
+            {
+                _source.Cancel();
+            }
+
+            return state;
+        }
+    }
+
     [Fact]
     public void AnAlreadyCancelledToken_ChangesNothing_InAScenario()
     {

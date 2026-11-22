@@ -267,10 +267,10 @@ release are listed under **Known limitations**.
   **The cost of Auto is that of an explicit request**: Auto resolves to exactly `new CovariancePropagationOptions { Mode =
   CovariancePropagationMode.Covariance }`, the options a caller passes to ask for the covariance, so a run of a spacecraft
   whose initial state carries a covariance at the window start costs what the covariance propagation always cost, not a
-  new cost: over a LEO day at the RK7(8) defaults, 3 to 4 times the run without covariance about a point-mass Earth (3.2
-  to 4.4 measured), about 10 times with EGM2008 10×10 and drag (8.4 to 10.7), 1.5 times in SSB mode with the Earth, the
-  Moon and the Sun (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, Linux, two runs; the design's 1.8 times
-  underestimated it), the trajectory unchanged, bit for bit. To propagate the state alone, pass `CovariancePropagation =
+  new cost: over a LEO day at the RK7(8) defaults, about 2.5 times the run without covariance about a point-mass Earth,
+  about 8 times with EGM2008 10×10 and drag, 1.5 times in SSB mode with the Earth, the Moon and the Sun
+  (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, best of five, Linux; decision 20 of lot L4, decided by
+  S. Guillet, 2026-11-22; the design's 1.8 times underestimated it), the trajectory unchanged, bit for bit. To propagate the state alone, pass `CovariancePropagation =
   CovariancePropagationOptions.None` (decision 17 of lot L4, decided by S. Guillet, 2026-11-22).
   The entry points: `Spacecraft.Propagate(window, options = null)`, `CentralBodyPropagator(window, spacecraft, options =
   null)`, `Scenario.Simulate(options = null)` (synchronous, the stars then each spacecraft in turn; `ThirdBodies` and the
@@ -4653,8 +4653,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   constructor.
 - **Breaking: a propagation over a window of zero length throws `ArgumentException`** (`window`; decision 7 of lot L4,
   decided by S. Guillet, 2026-11-22) at the start of the call, before anything changes: `Spacecraft.Propagate`, both
-  `CentralBodyPropagator` constructors and `Scenario.Simulate` (before its stars, when it holds a spacecraft); a batch task
-  reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
+  `CentralBodyPropagator` constructors and `Scenario.Simulate` (before its stars, whatever the scenario holds: a scenario
+  of stars alone throws too, its stars not propagated and `IsSimulated` unchanged, decision 18 of lot L4, decided by
+  S. Guillet, 2026-11-22, where it propagated its stars and reported itself simulated; `Star.Propagate` itself unchanged,
+  its grid left to L6); a batch task reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
   contains no segments". The `TLEPropagator` constructor throws it too, for a window in TDB or in UTC, one rule on every
   propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start,
   and so does `MonteCarloPropagator.Propagate` for a `MonteCarloConfiguration.Window` of zero length, before anything is
@@ -4678,8 +4680,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (those added by hand to a spacecraft never propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included),
   not `IsPropagated`, nothing kept for the conjunction analysis (a TLE spacecraft reads SGP4 again, any other its initial
   orbit), its fuel, `ExecutedManeuvers` and standby chain advanced up to the stop; in `Scenario.Simulate` and a batch the
-  earlier spacecraft are complete, `IsSimulated` stays false and no summary or result is returned. A run with a live
-  token is the run without one, bit for bit, every golden unchanged (`CancellationTests`: both integrators, an outer
+  earlier spacecraft are complete, `IsSimulated` stays false and no summary or result is returned. One exception: a
+  stopped `TLEPropagator` run adds nothing and leaves the spacecraft as it was, since it adds its samples instead of
+  replacing the stored states (decision 19 of lot L4, decided by S. Guillet, 2026-11-22; revisited in L5 with R08). A
+  run with a live token is the run without one, bit for bit, every golden unchanged (`CancellationTests`: both integrators, an outer
   integrator, the covariance, an impulse, the SSB mode, a TLE spacecraft, a batch, a Monte Carlo campaign, a scenario, a
   task; a stop inside a step makes only the force evaluations left in it, 2 to 4 for RK7(8) about the Earth, 8 in SSB
   mode, none for Velocity-Verlet, Linux). Binary break; source break for an implementation of `IPropagator`, which takes
