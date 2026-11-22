@@ -1743,14 +1743,17 @@ Configuration for enabling geopotential gravity on a `CelestialBody`.
 
 | Constructor | Description |
 |------------|-------------|
-| `GeopotentialModelParameters(string path, ushort degree = 60)` | Load model from file path |
-| `GeopotentialModelParameters(Stream stream, ushort degree = 60)` | Load model from stream |
-| `GeopotentialModelParameters(string path, ushort degree, double gravitationalParameter, double referenceRadius)` and its `Stream` form | Load a model whose harmonics take the given GM (m³/s²) and reference radius (m) |
+| `GeopotentialModelParameters(string path, int degree = 60)` | Load model from file path, checked here, read once by the first body or propagation |
+| `GeopotentialModelParameters(Stream stream, int degree = 60)` | Load model from stream, read to its end here |
+| `GeopotentialModelParameters(string path, int degree, double gravitationalParameter, double referenceRadius)` and its `Stream` form | Load a model whose harmonics take the given GM (m³/s²) and reference radius (m) |
+| `GeopotentialModelParameters.Egm2008(int degree)` | EGM2008, tide free, embedded in the library to degree 70 (11.0.0, R06 of #668) |
+
+A value since 11.0.0 (R06 of #668): a sealed record equal to another of the same source, degree, constants and central
+term; every body and every propagation built from it shares its coefficients, each with its own field (#674).
 
 | Property | Description |
 |----------|-------------|
-| `GeopotentialModelPath` | Stream reader for the model file, read once by the first body built from the parameters; every body shares its coefficients (#674) |
-| `GeopotentialDegree` | Maximum degree/order to use |
+| `GeopotentialDegree` | Maximum degree/order to use (an `int`) |
 | `GravitationalParameter`, `ReferenceRadius` | The constants given to the four-argument constructors; null otherwise. The harmonics then take EGM2008's GM (3.986004415e14 m³/s²) and radius (6378136.3 m) for the Earth, the kernel GM and equatorial radius for another body; the central term always takes the kernel GM (#410) |
 
 #### GeopotentialGravitationalField

@@ -62,12 +62,15 @@ place of `Time(string)`, an immutable `Matrix` with `Vector3.Dot` in place of th
 product vᵀ M of `double[] * Matrix`, and
 `KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters, and the data
 provider seam in domain types (`StateVector`, `CelestialBodyInfo`) with the read-only public structs, the ephemeris
-reads typed as the `StateVector` they build, with `ToFrame` and `RelativeTo` typed so on a state vector.
+reads typed as the `StateVector` they build, with `ToFrame` and `RelativeTo` typed so on a state vector, and the
+geopotential parameters as a value, a null covariance option of the conjunction analysis that throws, and the task of a
+batch with a constructor of options.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
 implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
-radius. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+radius, `GeopotentialModelParameters.GeopotentialModelPath`, the public constructors of `GeopotentialGravitationalField`
+and `VVIntegrator.DeltaTs`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -245,6 +248,49 @@ release are listed under **Known limitations**.
   [Celestial Bodies](../reference/celestial-bodies.md#atmospheric-context) (`AtmosphericContext`),
   [State Vector](../reference/state-vector.md), [Sites](../reference/sites.md#coordinates) (the coordinate records and
   `Equatorial`) and [Coordinate Conversions](../tutorials/coordinate-conversions.md#equatorial-coordinates).
+- **`PropagationOptions`: one record of the settings of a propagation** (lot L4 of the ergonomics review, R06 and R12 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 3 and section A
+  of the re-baseline, decided by S. Guillet, 2026-11-19). A sealed record of values, `PropagationOptions.Default with
+  { … }`: `Integrator` (`RK78IntegratorOptions.Default` by default), `OutputStep` (60 s), `ThirdBodies` (null: none, the
+  scenario's bodies on `Scenario.Simulate`), `AtmosphericDrag`, `SolarRadiationPressure`, `AlbedoRadiationPressure`,
+  `ThermalRadiationPressure` (of the central body, a coefficient of 0 throwing `ArgumentException`), `Geopotential` and
+  `Atmosphere` (fallbacks for a central body without a model, an equal model accepted, another throwing `ArgumentException`
+  naming both; R12: the point-mass Earth of a TLE counts as without one) and `CovariancePropagation` (null for Auto: the
+  covariance of the initial orbital parameters propagated under RK7(8) when it is given at the window start, an
+  indefinite one throwing and naming `StateVector.WithRemediatedCovariance()` and `CovariancePropagationOptions.None`).
+  The entry points: `Spacecraft.Propagate(window, options = null)`, `CentralBodyPropagator(window, spacecraft, options =
+  null)`, `Scenario.Simulate(options = null)` (synchronous, the stars then each spacecraft in turn; `ThirdBodies` and the
+  scenario's bodies one setting, a list that differs from them, the central body aside, throwing before anything runs),
+  `PropagationTask(spacecraft, window, options = null)` with `BatchPropagator.Propagate`, and
+  `MonteCarloConfiguration.Propagation` (its runs share their bodies). Each run builds its own integrator, forces and
+  geopotential field. `PropagationSolution.Options` gives the resolved settings, the third bodies of the run, the
+  geopotential and the atmosphere of the central body (`CelestialBody.Atmosphere`, public now) and the covariance options
+  it used, which repeat the run when passed back. With the integrator, forces and covariance options its settings name, a
+  run is bit for bit that of the constructor or overload taking them, and each default equals its explicit settings:
+  `spacecraft.Propagate(window)` is the run of `new RK78Integrator()` about the central body alone, every 60 s
+  (`PropagationOptionsPathTests`, `PropagationOptionsEntryPointTests`, `GeopotentialOptionsTests`: both integrators,
+  fixed-step RK7(8), drag, SRP, albedo and thermal against the builder, the covariance modes, maneuvers, SSB mode, a
+  non-ICRF start, a TLE start, a scenario, a batch, a Monte Carlo campaign). See
+  [Propagators](../reference/propagators.md#propagation-options).
+- **`IntegratorOptions`, `RK78IntegratorOptions` and `VVIntegratorOptions`** (R06 of #668, structuring choice 5): the
+  integrator of `PropagationOptions` as values, a closed hierarchy. `RK78IntegratorOptions` holds every parameter of the
+  `RK78Integrator` constructors, its steps as `TimeSpan`s (`InitialStep` 60 s, `MinStep` 1 µs, `MaxStep` one day) and
+  `FixedStep` (`TimeSpan?`, the fixed-step mode; with another setting than its default, `ArgumentException` at the start
+  of the call); `Default` builds the integrator of `new RK78Integrator()` bit for bit. `VVIntegratorOptions.Step` is 1 s
+  by default. A value out of range throws `ArgumentOutOfRangeException` naming the property in `init`. See
+  [Integrators](../reference/integrators.md#integrator-options).
+- **`GeopotentialModelParameters.Egm2008(degree)`** (R06 of #668): EGM2008, tide free, embedded in the library to degree 70
+  (`Egm2008MaximumDegree`), the coefficients of `EGM2008_to70_TideFree` byte for byte, whose field is that file's at
+  degrees 2, 10 and 70, bit for bit (`GeopotentialOptionsTests`), with no file to ship (under **Changed**: the parameters
+  are a value). See [Force Models](../reference/force-models.md#geopotential-model-parameters).
+- **`CovariancePropagationOptions.None`** and `CovariancePropagationMode.None` (R06 of #668, structuring choice 3): no
+  propagation of the state transition matrix or of the covariance, where null means another rule (Auto in
+  `PropagationOptions`; in `ConjunctionAnalysisOptions` the covariance held in RTN, under **Changed**). It refuses process
+  noise and consider parameters (`ArgumentException`); the members that take the options alone take it as null.
+- **`PropagationSolution.GetCovariance` and `GetExtendedCovariance` say why a solution holds no covariance** (R06 of #668,
+  D4.3): the message names the reason of Auto (no covariance, Velocity-Verlet, a covariance at another epoch,
+  `CovariancePropagationOptions.None`), or how to propagate one; the exception is the `InvalidOperationException` of
+  before, an epoch outside the propagation still `ArgumentOutOfRangeException` first.
 - **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
   `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
@@ -4536,6 +4582,37 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   takes the lower-case name, `new Planetodetic(Longitude: lon, Latitude: lat, Altitude: h)` →
   `new Planetodetic(longitude: lon, latitude: lat, altitude: h)`; positional calls, `with` and deconstruction are
   unchanged.
+- **Breaking: `GeopotentialModelParameters` is a value** (lot L4, R06 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): a sealed record (`with` for
+  `CentralTerm`), equal to another of the same source (the full path of a model file, EGM2008 embedded, or streams of the
+  same bytes), degree, constants and central term (by reference before); `GeopotentialDegree` and the degree of the
+  constructors are an `int` (a `ushort` before; a negative degree throws `ArgumentOutOfRangeException`), and the
+  constructor of a path checks the file (`FileNotFoundException`, as the `FileStream` it opened before) and reads it at
+  the first body or propagation; a stream is read to its end by the constructor and left open (it was closed by the first
+  body). The fields and the results are the same, bit for bit. Migration: none for a call with a `ushort` or literal
+  degree; `(ushort)n` casts may go; the `StreamReader` of `GeopotentialModelPath` is gone (under **Removed**).
+- **One geopotential field per propagation** (R06 of #668, section A of the re-baseline, decided by S. Guillet,
+  2026-11-19): every propagation that builds its forces evaluates the central gravity with its own field, built from the
+  body's model over the coefficients the model reads once, where it evaluated the body's field; the results are the same,
+  bit for bit (`GeopotentialOptionsTests`), and a `CelestialBody` with a geopotential may now be shared by concurrent
+  propagations, a batch, a scenario and a Monte Carlo campaign, and by the RK7(8) evaluations of their solutions
+  ([Thread Safety](../guides/thread-safety.md)). The body's own `EvaluateGravitationalAcceleration` still evaluates its
+  field, one thread at a time. Not breaking.
+- **Breaking: a null `ConjunctionAnalysisOptions.CovariancePropagation` throws** (R06 of #668, structuring choice 3,
+  decided by S. Guillet, 2026-11-19: throw, rather than flip silently to Auto): `ArgumentNullException` in `init`, naming
+  `CovariancePropagation` and pointing to `CovariancePropagationOptions.None`; before, null held the covariance of the
+  initial state in RTN, while in `PropagationOptions` a null value is Auto. Migration: `CovariancePropagation = null` →
+  `CovariancePropagation = CovariancePropagationOptions.None`, the same results, bit for bit (the 25 call sites of the
+  repository, the covariance tutorial among them).
+- **Breaking: `PropagationTask` is no longer a positional record** (R06 of #668): `new PropagationTask(spacecraft,
+  window, options = null)` is its constructor, and the constructor of the flags and the integrator factory of 10.x stays,
+  its parameters camelCase (`includeAtmosphericDrag:`, `deltaT:`, `integratorFactory:`; PascalCase before, the names of
+  the positional parameters) and its properties get-only; `Deconstruct` is gone. Migration: a named argument takes the
+  lower-case name (the 15 call sites of the repository); deconstruct by the properties.
+- **`MonteCarloConfiguration.DeltaT` and `CelestialBodiesFactory` are no longer `required`** (R06 of #668): a campaign of
+  `Propagation` sets neither; a configuration of flags still needs both (`ArgumentNullException`,
+  `ArgumentOutOfRangeException` before any run), and `Propagation` set with a member of the flags configuration throws
+  `ArgumentException`. Not breaking.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -6781,6 +6858,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `RadiusFromPlanetocentricLatitude(body)` with the `CelestialBody` of the ellipsoid (the same arithmetic, bit for bit),
   or `body.RadiusFromPlanetocentricLatitude(latitude)`; `ToPlanetocentric(...).ToCartesianCoordinates()` →
   `ToCartesianCoordinates(body)`.
+- **`GeopotentialModelParameters.GeopotentialModelPath`** (lot L4, R06 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): the `StreamReader` of the model
+  file, which the first body read to its end and closed, so that the property of a used instance was a closed reader.
+  Migration: keep the path or the stream you gave; `GeopotentialModelParameters` is a value (under **Changed**).
+- **The public constructors of `GeopotentialGravitationalField`** (R06 of #668): `GeopotentialGravitationalField(StreamReader,
+  ushort)`, internal now; a field is built from `GeopotentialModelParameters` by a `CelestialBody` or a propagation, which
+  give it the constants of the model (the constructor took the body's GM and radius for the harmonics, whatever the
+  model). Migration: `new CelestialBody(naifId, new GeopotentialModelParameters(path, degree))` and
+  `body.EvaluateGravitationalAcceleration(state)`; for the GM and radius of the body's kernels in the harmonics, give them
+  to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`.
+- **`VVIntegrator.DeltaTs` and `HalfDeltaTs`** (R06 of #668), the step in seconds and its half, internal. Migration:
+  `integrator.DeltaT.TotalSeconds`.
 - **`OrbitalParameters.ToPlanetocentric(Aberration)`** (R20 of #668), whose correction was not used. Migration:
   `ToPlanetocentric()`, the same values, bit for bit; `ToPlanetodetic()` for the geodetic coordinates.
 - **`AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`** (R20 of #668), whose
