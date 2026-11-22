@@ -116,7 +116,10 @@ public abstract class PropagatorBase : IPropagator
     /// round(L/ΔT)·ΔT past it, ends at the window end since 11.0.0 too (R11 of #668, structuring choice 6, decided by
     /// S. Guillet, 2026-11-19: before, the propagation ran to that last output, up to ΔT/2 past the window, #626), the
     /// rule of <see cref="TLEPropagator"/>. In both cases the outputs number round(L/ΔT) + 1, the window end replacing a
-    /// grid point within ΔT/10 of it; only the last output of a grid that rounds the window up moves. In TT, a grid that
+    /// grid point within ΔT/10 of it. Against a grid that rounds the window up, the last output moves in RK7(8), every other
+    /// output bit for bit; in Velocity-Verlet, or an integrator without dynamics, the outputs inside the last integration
+    /// step move too when the step does not divide ΔT (67 m at one output, step 100 s, about the Earth; decision 8 of lot
+    /// L4 of #668). In TT, a grid that
     /// misses the end of the window by the drift between TT and the labels ends at the window, its last output labelled
     /// with the end of the window.
     /// </summary>
@@ -641,9 +644,17 @@ public abstract class PropagatorBase : IPropagator
                 hooked.Cancellation = cancellationToken;
             }
 
+            bool reArmed = false;
             try
             {
-                return PropagateWithOrientationCache(cacheFrame, cache, cancellationToken);
+                return PropagateWithOrientationCache(cacheFrame, cache, cancellationToken, ref reArmed);
+            }
+            catch (OperationCanceledException) when (reArmed)
+            {
+                // A run stopped after the re-arm leaves no stored state and no attitude record, those added by hand to a
+                // spacecraft never propagated included, which the re-arm keeps (C2 of lot L4 of #668)
+                Spacecraft.DropStoredStatesAndAttitudes();
+                throw;
             }
             finally
             {
@@ -656,7 +667,7 @@ public abstract class PropagatorBase : IPropagator
     }
 
     private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, ref bool reArmed)
     {
         // 1. The length of the propagation, in seconds of the time argument: that of the window (choice 6 of #668). A
         // grid that does not reach the window end exactly ends with it (#741, choice 6), and in TT a grid that misses the
@@ -688,6 +699,7 @@ public abstract class PropagatorBase : IPropagator
 
         // Every check passed: the spacecraft is re-armed, on every path (#583)
         Spacecraft.ResetPropagation();
+        reArmed = true;
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
         var eventDetectors = BuildEventDetectors();

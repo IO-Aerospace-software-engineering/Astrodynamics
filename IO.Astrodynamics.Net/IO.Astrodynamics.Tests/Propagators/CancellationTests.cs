@@ -453,6 +453,40 @@ public class CancellationTests
         AssertLeftAsAStoppedRun(spacecraft);
     }
 
+    [Theory]
+    [InlineData("RK")]
+    [InlineData("VV")]
+    public void AStop_DropsTheStatesAndAttitudesAddedByHand_OfASpacecraftNeverPropagated(string kind)
+    {
+        // Arrange: a spacecraft never propagated that holds states (AddPropagatedStates, the second 1 km off the initial
+        // orbit, so that the read can tell them apart) and an attitude (AddStateOrientationToICRF), as C2 of lot L4 covers
+        var earth = NewEarth();
+        var spacecraft = NewSpacecraft(earth);
+        var first = spacecraft.InitialOrbitalParameters.ToStateVector(Epoch);
+        var second = spacecraft.InitialOrbitalParameters.ToStateVector(Epoch.AddMinutes(1.0));
+        spacecraft.AddPropagatedStates(first, new StateVector(second.Position + new Vector3(1000.0, 0.0, 0.0),
+            second.Velocity, second.Observer, second.Epoch, second.Frame));
+        spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch,
+            spacecraft.Frame));
+        Assert.False(spacecraft.IsPropagated);
+        Assert.Equal(2, spacecraft.PropagatedStates.Length);
+        using var cts = new CancellationTokenSource();
+        var atmosphere = new CancellingAtmosphere(cts, Epoch.AddMinutes(30.0));
+
+        // Act
+        var exception = Assert.Throws<OperationCanceledException>(() =>
+            spacecraft.Propagate(TwoHours, Options(kind, atmosphere), cts.Token));
+
+        // Assert: no stored state and no attitude record, and the initial orbit read again
+        Assert.Equal(cts.Token, exception.CancellationToken);
+        AssertLeftAsAStoppedRun(spacecraft);
+        var at = Epoch.AddSeconds(30.0);
+        var read = spacecraft.GetGeometricStateRelativeTo(at, earth);
+        var orbit = spacecraft.InitialOrbitalParameters.ToStateVector(at);
+        Assert.Equal(orbit.Position, read.Position);
+        Assert.Equal(orbit.Velocity, read.Velocity);
+    }
+
     [Fact]
     public void AStopOfATleSpacecraft_ReadsSgp4Again()
     {

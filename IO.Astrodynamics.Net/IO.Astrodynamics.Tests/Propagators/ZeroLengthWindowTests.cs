@@ -8,6 +8,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -120,5 +121,36 @@ public class ZeroLengthWindowTests
         Assert.False(star.IsPropagated);
         Assert.False(scenario.IsSimulated);
         Assert.Equal("window", Assert.IsType<ArgumentException>(Assert.Single(batch.Results).Error).ParamName);
+    }
+
+    /// <summary>
+    /// <see cref="MonteCarloPropagator.Propagate(MonteCarloConfiguration, System.IProgress{BatchProgress}, System.Threading.CancellationToken)"/>
+    /// throws at the start of the call, before anything is sampled, as every propagation path (decisions 7 and 15); before,
+    /// each run failed inside the batch and the campaign returned no statistics and no reason.
+    /// </summary>
+    [Fact]
+    public void MonteCarlo_AZeroLengthWindow_Throws_NamingTheWindow()
+    {
+        // Arrange
+        int id = System.Threading.Interlocked.Decrement(ref _nextId);
+        var orbit = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0),
+            PlanetsAndMoons.EARTH_BODY, Start, Frames.Frame.ICRF,
+            IO.Astrodynamics.Math.Matrix.Diagonal(100.0, 100.0, 100.0, 1e-4, 1e-4, 1e-4));
+        var template = new Spacecraft(id, "ZERO" + -id, 1000.0, 3000.0, new Clock("zero" + -id, 65536), orbit);
+        var config = new MonteCarloConfiguration
+        {
+            RunCount = 3, Seed = 1, TemplateSpacecraft = template, Window = Empty, BaseNaifId = id - 100000
+        };
+        var reports = new System.Collections.Generic.List<BatchProgress>();
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() => MonteCarloPropagator.Propagate(config, null));
+        var withProgress = Assert.Throws<ArgumentException>(() =>
+            MonteCarloPropagator.Propagate(config, new System.Progress<BatchProgress>(reports.Add)));
+
+        // Assert
+        Assert.Equal("window", exception.ParamName);
+        Assert.Equal("window", withProgress.ParamName);
+        Assert.Empty(reports);
     }
 }

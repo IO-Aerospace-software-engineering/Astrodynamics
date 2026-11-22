@@ -57,7 +57,8 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    last integration step move too when the integration step does not divide ΔT, the last step now ending at the window
    end (67.48 m at the output of 3 540 s of a 3 590 s window, Velocity-Verlet at 100 s about the Earth, 60 s outputs).
    A window of zero length throws `ArgumentException` (`window`) at the start of the call, on every path that builds a
-   numerical propagation, in `Scenario.Simulate` before its stars and in the `TLEPropagator` constructor, one rule on
+   numerical propagation, in `Scenario.Simulate` before its stars, in `MonteCarloPropagator.Propagate` before anything is
+   sampled and in the `TLEPropagator` constructor, one rule on
    every propagation path (decisions 7 and 15 of lot L4, decided by S. Guillet, 2026-11-22; before, a numerical
    propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution contains no segments", and
    `TLEPropagator` returned one sample at the start).
@@ -398,7 +399,8 @@ Earth, 8 in SSB mode, none for Velocity-Verlet, whose one evaluation per step is
 
 What a stopped run leaves (C2 of lot L4):
 
-- the spacecraft it stopped in holds no stored state and no attitude record, is not `IsPropagated`, and keeps nothing
+- the spacecraft it stopped in holds no stored state and no attitude record (those added by hand to a spacecraft never
+  propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included), is not `IsPropagated`, and keeps nothing
   for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
 - its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
   its fuel; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated;

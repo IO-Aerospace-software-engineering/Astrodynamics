@@ -27,7 +27,9 @@ public static class MonteCarloPropagator
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than
     /// 2.</exception>
-    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
+    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance, or,
+    /// before anything is sampled, when <see cref="MonteCarloConfiguration.Window"/> has zero length, naming <c>window</c>
+    /// (decisions 7 and 15 of lot L4 of #668).</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown, before any run is propagated, when the NAIF ID of a run,
     /// <see cref="MonteCarloConfiguration.BaseNaifId"/> − i, is not in [-2147483, -1] (#676).</exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
@@ -55,7 +57,9 @@ public static class MonteCarloPropagator
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than
     /// 2, or, before any run is propagated, when the NAIF ID of a run is not in [-2147483, -1] (#676).</exception>
-    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
+    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance, or,
+    /// before anything is sampled, when <see cref="MonteCarloConfiguration.Window"/> has zero length, naming <c>window</c>
+    /// (decisions 7 and 15 of lot L4 of #668).</exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
     /// carries it.</exception>
     public static MonteCarloResult Propagate(MonteCarloConfiguration config, IProgress<BatchProgress> progress,
@@ -155,5 +159,9 @@ public static class MonteCarloPropagator
         if (config.RunCount < 2)
             throw new ArgumentOutOfRangeException(nameof(config.RunCount), "RunCount must be at least 2.");
         ArgumentNullException.ThrowIfNull(config.TemplateSpacecraft);
+
+        // A window of zero length throws at the start of the call, as on every propagation path (decisions 7 and 15 of
+        // lot L4 of #668): before, each run failed inside the batch and the campaign returned no statistics and no reason
+        PropagatorBase.RequireWindowLength(config.Window);
     }
 }

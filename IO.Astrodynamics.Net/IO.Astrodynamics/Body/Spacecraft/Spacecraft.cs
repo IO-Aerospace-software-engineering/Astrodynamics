@@ -969,7 +969,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// leaves nothing to replay. The conjunction analysis reads the covariance at the TCA from it, or replays its
         /// variational equations (step 10, E2). It keeps the accepted steps, the forces of the propagation and their
         /// ephemeris cache alive until the next propagation (with <see cref="LastForceModel"/> about 0.58 MB for one day in
-        /// LEO with EGM2008 10×10, the Moon, the Sun and drag, RK7(8) at 1e-11 or 1e-9; lot L4 of #668,
+        /// LEO with EGM2008 10×10, the Moon, the Sun and drag, RK7(8) at 1e-11 or 1e-9, and about 1.07 MB with an initial
+        /// covariance propagated in the run, a covariance per output state; lot L4 of #668,
         /// <c>DefaultIntegratorFiguresTests</c>).
         /// </summary>
         internal PropagationSolution LastPropagation { get; set; }
@@ -1161,10 +1162,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             LastForceModel = null;
             if (IsPropagated)
             {
-                _isPropagated = false;
-                _propagatedStates.Clear();
-                _holdsPropagatedStates = false;
-                Frame.ClearStateOrientations();
+                DropStoredStatesAndAttitudes();
             }
 
             _executedManeuvers.Clear();
@@ -1175,6 +1173,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             Maneuver.Maneuver.ResetChain(InitialManeuver);
             StandbyManeuver = InitialManeuver;
+        }
+
+        /// <summary>
+        /// Drops the stored states and the attitude record, whatever filled them (a propagation, <see cref="AddPropagatedStates"/>,
+        /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), and marks the spacecraft not propagated: the re-arm of a
+        /// propagated spacecraft, and a run stopped after the re-arm (C2 of lot L4 of #668), so that a TLE spacecraft reads
+        /// SGP4 again and any other its initial orbit.
+        /// </summary>
+        internal void DropStoredStatesAndAttitudes()
+        {
+            _isPropagated = false;
+            _propagatedStates.Clear();
+            _holdsPropagatedStates = false;
+            Frame.ClearStateOrientations();
         }
 
         /// <summary>
