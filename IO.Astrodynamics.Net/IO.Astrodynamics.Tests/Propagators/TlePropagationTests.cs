@@ -142,7 +142,7 @@ public class TlePropagationTests
             }
             case "Constructor":
             {
-                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = bodies, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
+                var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = bodies, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
                 return propagator.Propagate();
             }
             default:
@@ -489,10 +489,7 @@ public class TlePropagationTests
         var window = OneHour(tle);
         var unpropagated = NewSpacecraft(-7041, tle);
         var sampled = NewSpacecraft(-7042, tle);
-        using (var propagator = new TLEPropagator(window, sampled, OutputStep))
-        {
-            propagator.Propagate();
-        }
+        new TLEPropagator(window, sampled, OutputStep).Propagate();
 
         // Act, assert: the geometric state is SGP4 in ICRF at any epoch, between the samples too, and the window of
         // interpolated states is none (#527's check skipped); the ephemeris of the unpropagated one from its Earth too

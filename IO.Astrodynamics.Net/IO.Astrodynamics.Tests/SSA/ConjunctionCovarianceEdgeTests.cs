@@ -57,7 +57,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var model = new CovarianceModel(Enumerable.Range(0, 36).Select(i => i % 7 == 0 ? 1.0 : 0.0).ToArray(),
             new VariationalOptions(ForceParameters.DragCoefficient, PropagateCovariance: true,
                 ConsiderParameters: new ConsiderParameters(0.1)));
-        using var propagator = new CentralBodyPropagator(ConjunctionCovarianceCase.PropagationWindow, ConjunctionCovarianceCase.NewSpacecraft(-6901, _case.ProtectedStart), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _case.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(ConjunctionCovarianceCase.PropagationWindow, ConjunctionCovarianceCase.NewSpacecraft(-6901, _case.ProtectedStart), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _case.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act, assert: 6 × 1 values, finite; a propagator without the covariance has no consider covariance to set
         Assert.Throws<ArgumentException>(() => model.SetInitialCrossCovariance(new double[5]));

@@ -104,7 +104,7 @@ public class ManeuverEngineBindingTests
             case "Constructor":
                 return Record.Exception(() =>
                 {
-                    using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
+                    var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                     propagator.Propagate();
                 });
             case "Scenario":

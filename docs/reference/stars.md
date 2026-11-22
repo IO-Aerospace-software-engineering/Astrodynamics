@@ -43,7 +43,7 @@ too fast in right ascension, 77.9 times for Polaris (#718).
 | `EquatorialCoordinatesAtEpoch` | The catalog right ascension and declination, radians |
 | `RightAscensionProperMotion`, `DeclinationProperMotion` | μα* and μδ, radians per Julian year of TDB |
 | `RightAscensionSigma`, `DeclinationSigma`, `RightAscensionSigmaProperMotion`, `DeclinationSigmaProperMotion` | σα*, σδ, σμα*, σμδ |
-| `IsPropagated` | True once `Propagate`, `PropagateAsync` or `Scenario.Simulate` stored states |
+| `IsPropagated` | True once `Propagate` or `Scenario.Simulate` stored states |
 
 ### Methods
 
@@ -53,7 +53,7 @@ too fast in right ascension, 77.9 times for Polaris (#718).
 | `GetRightAscensionSigma(Time)`, `GetDeclinationSigma(Time)` | √(σ² + (dt σμ)²), radians, not reduced (#709); the right ascension's a true angle |
 | `GetGeometricStateRelativeTo(Time, CelestialItem)` | The position and the space velocity ([The velocity](#the-velocity)) minus the reference body's state, in ICRF |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | The star from an observer at the epoch: a direction, no light time on the star whatever the correction, the stellar aberration of the `+S` corrections ([Occultations](occultations.md)); the velocity the space velocity minus the observer's |
-| `Propagate(Window, TimeSpan)`, `PropagateAsync(Window, TimeSpan)` | The states every step from the start of the window, with the space velocity, replacing those held |
+| `Propagate(Window, TimeSpan)` | The states every step from the start of the window, with the space velocity, replacing those held; synchronous (`PropagateAsync`, a bare `Task.Run` of it, is removed in 11.0.0, R28 of #668) |
 | `WriteEphemeris(FileInfo)` | The SPK of the last propagation |
 
 ## The catalog epoch and dt
@@ -118,7 +118,7 @@ The state of a star carries its space velocity, the derivative of its straight l
     v = r0 (μα* e_α + μδ e_δ) / (365.25 · 86 400 s)
 
 r0 the catalog `Distance`, in m/s of TDB, perpendicular to the catalog direction. `GetGeometricStateRelativeTo` gives it
-minus the velocity of the reference body, `GetEphemeris` minus the observer's, and `Propagate`, `PropagateAsync` and
+minus the velocity of the reference body, `GetEphemeris` minus the observer's, and `Propagate` and
 `Scenario.Simulate` store it with each position, so the SPK of `WriteEphemeris` holds it: `spkezr` reads it back
 (`StarVelocityTests`). Barnard's star moves at 89 km/s. Before 11.0.0 the velocity was zero while the position moved:
 from the barycenter a zero velocity, from an observer the opposite of the observer's velocity.

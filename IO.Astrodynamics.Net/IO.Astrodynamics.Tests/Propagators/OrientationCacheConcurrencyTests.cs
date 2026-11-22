@@ -256,9 +256,7 @@ public class OrientationCacheConcurrencyTests
         var alone = LeoSpacecraft(earth, EpochB, -1983).Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
-        using (new CentralBodyPropagator(new TimeSystem.Window(EpochA, EpochA.AddHours(1.0)), LeoSpacecraft(earth, EpochA, -1984), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }))
-        {
-        }
+        _ = new CentralBodyPropagator(new TimeSystem.Window(EpochA, EpochA.AddHours(1.0)), LeoSpacecraft(earth, EpochA, -1984), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
         var afterUnused = LeoSpacecraft(earth, EpochB, -1985).Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 

@@ -17,7 +17,6 @@ D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.ToXmlString(bool, bool)
 D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.TryLoadFromFile(string, out Opm, out OpmValidationResult, bool, bool)
 D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.BuildCentralBodyForces(CelestialItem, CelestialItem[], Spacecraft, bool, bool)
 D1.default	IO.Astrodynamics.CCSDS.CDM.CdmExportOptions
-D1.default	IO.Astrodynamics.Propagator.BatchOptions
 D1.default	IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions
 D1.default	IO.Astrodynamics.SSA.AvoidanceSearchOptions
 D1.default	IO.Astrodynamics.SSA.ConjunctionAnalysisOptions

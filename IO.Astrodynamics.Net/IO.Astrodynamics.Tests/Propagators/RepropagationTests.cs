@@ -313,7 +313,7 @@ public class RepropagationTests
             case "Direct":
             {
                 // A CentralBodyPropagator built directly, the covariance by its constructor (#583)
-                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
+                var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 solution = propagator.Propagate();
                 break;
             }
@@ -1208,7 +1208,7 @@ public class RepropagationTests
         {
             case "BuiltNotRun":
             {
-                using var unused = new CentralBodyPropagator(Win(S), reused.Spacecraft, new PropagationOptions { Integrator = env.NewIntegrator("RK"), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = CovariancePropagationOptions.None });
+                var unused = new CentralBodyPropagator(Win(S), reused.Spacecraft, new PropagationOptions { Integrator = env.NewIntegrator("RK"), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = CovariancePropagationOptions.None });
                 break;
             }
             default:

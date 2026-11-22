@@ -441,12 +441,12 @@ public partial class ConjunctionAssessmentTests
                 return spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth } });
             case "CentralBodyPropagator":
             {
-                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
+                var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
                 return propagator.Propagate();
             }
             case "Builder":
             {
-                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), CovariancePropagation = CovariancePropagationOptions.None });
+                var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), CovariancePropagation = CovariancePropagationOptions.None });
                 return propagator.Propagate();
             }
             case "Batch":
@@ -460,7 +460,7 @@ public partial class ConjunctionAssessmentTests
             }
             default:
             {
-                using var propagator = new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0));
+                var propagator = new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0));
                 return propagator.Propagate();
             }
         }

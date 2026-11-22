@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
@@ -24,9 +25,9 @@ namespace IO.Astrodynamics.Propagator;
 public class TLEPropagator : IPropagator
 {
     private readonly Time[] _sampleEpochs;
-    private StateVector[] _svCache;
+    private readonly StateVector[] _svCache;
     // Keyed by label (#512), as the orientations of a frame
-    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.ExactComparer);
+    private readonly Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.ExactComparer);
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }
@@ -89,12 +90,23 @@ public class TLEPropagator : IPropagator
         _svCache[0] = initialState;
     }
 
-    public PropagationSolution Propagate()
+    /// <summary>
+    /// Samples the SGP4 state at the epochs of the grid, adds the samples to the spacecraft's stored states and returns
+    /// them as a solution.
+    /// </summary>
+    /// <param name="cancellationToken">Read before the first sample and at each sample (R28 of #668): a run stopped adds
+    /// nothing to the spacecraft, which is left as it was.</param>
+    /// <returns>The solution.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.StartDate, Frame.ICRF);
         int sampleCount = _sampleEpochs.Length;
         for (int i = 1; i < sampleCount; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             _svCache[i] = Spacecraft.InitialOrbitalParameters.ToStateVector(_sampleEpochs[i]);
         }
 
@@ -106,6 +118,7 @@ public class TLEPropagator : IPropagator
         var accelerations = new Vector3[sampleCount];
         for (int i = 0; i < sampleCount; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             accelerations[i] = Sgp4Acceleration(_sampleEpochs[i]);
         }
 
@@ -148,9 +161,4 @@ public class TLEPropagator : IPropagator
         return (after - before) / (2.0 * Sgp4DifferenceStep);
     }
 
-    public void Dispose()
-    {
-        _svCache = null;
-        _stateOrientation = null;
-    }
 }

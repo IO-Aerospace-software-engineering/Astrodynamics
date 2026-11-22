@@ -276,7 +276,7 @@ foreach (var r in result.Results)
 `PropagationOptions.CovariancePropagation` propagates the state transition matrix and the covariance of a task; it needs
 `RK78IntegratorOptions`, otherwise the task fails with a `NotSupportedException` in its result.
 
-Key features: fault isolation (a failed task does not corrupt others), `CancellationToken` via `BatchOptions`, `IProgress<BatchProgress>` for tracking, duplicate `Spacecraft` detection.
+Key features: fault isolation (a failed task does not corrupt others), a `CancellationToken` that stops the running tasks too ([Cancellation](#cancellation)), an `IProgress<BatchProgress>` for tracking, duplicate `Spacecraft` detection. The token and the progress are parameters, `Propagate(tasks, options, cancellationToken)` and `Propagate(tasks, progress, options, cancellationToken)`; `BatchOptions` holds the parallelism alone, and `PropagateAsync` is removed (11.0.0, R28 of #668). `Propagate(tasks, null)` is ambiguous between the two overloads (CS0121): write `Propagate(tasks, options: null)`.
 
 Each maneuver draws on a fuel tank of the spacecraft of its task, and a tank belongs to one spacecraft
 (`Spacecraft.AddFuelTank` rejects a tank held by another): distinct spacecraft imply distinct maneuvers and engines. A
@@ -298,7 +298,7 @@ records, or threw `NullReferenceException` at the burn).
 | `Window` | `Window` | Propagation time window |
 | `Propagation` | `PropagationOptions` | The settings of every run ([Propagation Options](#propagation-options)); null for `PropagationOptions.Default`. The runs share their bodies, a geopotential included (11.0.0: `CelestialBodiesFactory`, `DeltaT`, `IncludeAtmosphericDrag`, `IncludeSolarRadiationPressure` and `IntegratorFactory` removed, R07 of #668) |
 | `BaseNaifId` | `int` | Base NAIF ID (default -100000) |
-| `BatchOptions` | `BatchOptions` | Parallelism and cancellation options |
+| `BatchOptions` | `BatchOptions` | The parallelism of the runs; null for `BatchOptions.Default` (the token and the progress are parameters of `MonteCarloPropagator.Propagate` since 11.0.0) |
 
 ### MonteCarloResult
 
@@ -352,6 +352,62 @@ Console.WriteLine($"Success: {result.SuccessCount}/{result.TotalCount}");
 var last = result.EpochStatistics[^1];
 Console.WriteLine($"Position 95th percentile RSS: {last.RssPositionPercentiles.P95:F1} m");
 ```
+
+## Cancellation
+
+The methods that run take a `CancellationToken` as their last parameter (R28 of #668, decision 4 of lot L4, decided by
+S. Guillet, 2026-11-22): `Spacecraft.Propagate(window, options, cancellationToken)`,
+`Scenario.Simulate(options, cancellationToken)`, `IPropagator.Propagate(cancellationToken)` (`CentralBodyPropagator`
+and `TLEPropagator`), `BatchPropagator.Propagate(…, cancellationToken)` and
+`MonteCarloPropagator.Propagate(config, [progress,] cancellationToken)`. No constructor, record or property holds a
+token. The work is synchronous: the asynchronous members over it (`Spacecraft.PropagateAsync`, `Star.PropagateAsync`,
+`Scenario.SimulateAsync`, `BatchPropagator.PropagateAsync`, `MonteCarloPropagator.PropagateAsync`) are removed in
+11.0.0, and a caller that wants a task runs the call in one.
+
+```csharp
+// Inputs: spacecraft (Spacecraft), window (Window)
+using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+try
+{
+    var solution = spacecraft.Propagate(window, PropagationOptions.Default, cts.Token);
+}
+catch (OperationCanceledException)
+{
+    // Not propagated: no stored state, and the next Propagate re-arms the spacecraft
+}
+
+// A task of the synchronous call, cancelled with the token
+var task = Task.Run(() => spacecraft.Propagate(window, cancellationToken: cts.Token), cts.Token);
+```
+
+Where the token is read:
+
+| Path | Read |
+|------|------|
+| `Spacecraft.Propagate`, `CentralBodyPropagator.Propagate` | Once the checks pass, before the spacecraft is re-armed; before each segment; by `VVIntegrator` and `RK78Integrator` at each accepted step, never between the rejections of a step (at most 101). Not after the last segment, so the outputs, the attitude record and the stored states are written as one block |
+| An `IIntegrator` implemented outside the library | Between its segments only (the interface does not change) |
+| `TLEPropagator.Propagate` | Before the first sample and at each sample; a stopped run adds nothing to the spacecraft |
+| `Scenario.Simulate` | Once the settings are checked, before anything changes; before each star and each spacecraft; inside each propagation |
+| `BatchPropagator.Propagate`, `MonteCarloPropagator.Propagate` | Before anything runs; before each task; inside each running propagation (before 11.0.0 the token of `BatchOptions` was read before each task only, and a running task ran to its end) |
+
+A token already cancelled throws before anything changes. Every path throws `OperationCanceledException` carrying the
+caller's token: a batch and a Monte Carlo campaign throw one, never an `AggregateException`. The bound is one step: a
+propagation stopped inside a step makes only the force evaluations left in it (measured: 2 to 4 for RK7(8) about the
+Earth, 8 in SSB mode, none for Velocity-Verlet, whose one evaluation per step is the one in progress;
+`CancellationTests`).
+
+What a stopped run leaves (C2 of lot L4):
+
+- the spacecraft it stopped in holds no stored state and no attitude record, is not `IsPropagated`, and keeps nothing
+  for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
+- its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
+  its fuel; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated;
+- in `Scenario.Simulate` and a batch, the stars and spacecraft completed before the stop are complete, the later ones
+  untouched; `IsSimulated` stays false, and no summary or result is returned.
+
+The propagators hold no resource: `IPropagator`, `PropagatorBase` and `TLEPropagator` no longer implement
+`IDisposable` (their `Dispose` was empty, or cleared two fields), so `using var propagator = new CentralBodyPropagator(…)`
+does not compile (CS1674) and becomes `var propagator = …` (a binary break: a compiled caller is rebuilt).
 
 ## See Also
 

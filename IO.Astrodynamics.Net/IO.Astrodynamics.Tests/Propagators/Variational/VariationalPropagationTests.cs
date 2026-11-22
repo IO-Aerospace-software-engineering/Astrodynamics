@@ -359,7 +359,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         // that rounding changed the step sequence from the second step on, so the two Ψ composed to 5.8e-9 only (Φ to
         // 1.3e-13): the integration error of Ψ, which is not in the step control (A2), not its partials. From the exact
         // state, the steps are the same, and the test checks the composition itself.
-        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(te, t2), independent, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(new TimeSystem.Window(te, t2), independent, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
         propagator.EnableVariationalEquations(options);
         var second = propagator.Propagate();
         AssertSameBits(postBurn.Position, second.Segments[0].Steps[0].StartPosition, "start position");

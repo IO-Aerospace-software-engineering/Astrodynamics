@@ -155,33 +155,32 @@ public class MonteCarloPropagatorTests
         var cts = new CancellationTokenSource();
         cts.Cancel(); // pre-cancel
 
-        var config = CreateDefaultConfig(runCount: 10, seed: 42) with
-        {
-            BatchOptions = new BatchOptions { CancellationToken = cts.Token }
-        };
+        var config = CreateDefaultConfig(runCount: 10, seed: 42);
 
-        Assert.Throws<OperationCanceledException>(() => MonteCarloPropagator.Propagate(config));
+        // The token is a parameter since 11.0.0 (decision 4 of lot L4 of #668), carried by the exception
+        var exception = Assert.Throws<OperationCanceledException>(() => MonteCarloPropagator.Propagate(config, cts.Token));
+        Assert.Equal(cts.Token, exception.CancellationToken);
     }
 
     [Fact]
     public void ProgressReporting()
     {
-        int reportCount = 0;
-        var progress = new Progress<BatchProgress>(p => Interlocked.Increment(ref reportCount));
+        var reports = new List<BatchProgress>();
+        var progress = new SynchronousProgress(reports);
 
         var config = CreateDefaultConfig(runCount: 3, seed: 42) with
         {
             BatchOptions = new BatchOptions
             {
-                Progress = progress,
                 MaxDegreeOfParallelism = 1 // sequential for deterministic progress
             }
         };
 
-        var result = MonteCarloPropagator.Propagate(config);
+        // The progress is a parameter since 11.0.0 (decision 4 of lot L4 of #668), reported after each run
+        var result = MonteCarloPropagator.Propagate(config, progress);
 
-        // Progress may report asynchronously; just verify propagation succeeded
         Assert.Equal(3, result.SuccessCount);
+        Assert.Equal([new BatchProgress(1, 3), new BatchProgress(2, 3), new BatchProgress(3, 3)], reports);
     }
 
     [Fact]
@@ -332,5 +331,11 @@ public class MonteCarloPropagatorTests
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, cov);
 
         return new Spacecraft(-1000, "Template", 100.0, 10000.0, new Clock("clk", 256), orbit);
+    }
+
+    // A progress that records each report on the reporting thread, so that the reports can be asserted
+    private sealed class SynchronousProgress(List<BatchProgress> reports) : IProgress<BatchProgress>
+    {
+        public void Report(BatchProgress value) => reports.Add(value);
     }
 }

@@ -120,7 +120,7 @@ public class IntegratorInitializationTests
         var spacecraft = NewLeo(earth);
         var initial = (StateVector)spacecraft.InitialOrbitalParameters;
         var window = OneHour;
-        using var propagator = NewPropagator(window, spacecraft, NewIntegrator(kind, earth), stm);
+        var propagator = NewPropagator(window, spacecraft, NewIntegrator(kind, earth), stm);
 
         // Act
         var solution = propagator.Propagate();
@@ -153,16 +153,11 @@ public class IntegratorInitializationTests
         var explicitIntegrator = NewIntegrator(kind, earth);
 
         // Act
-        using (var implicitPropagator = NewPropagator(window, implicitSpacecraft, NewIntegrator(kind, earth), stm))
-        {
-            implicitPropagator.Propagate();
-        }
+        NewPropagator(window, implicitSpacecraft, NewIntegrator(kind, earth), stm).Propagate();
 
-        using (var explicitPropagator = NewPropagator(window, explicitSpacecraft, explicitIntegrator, stm))
-        {
-            explicitIntegrator.Initialize(explicitSpacecraft.InitialOrbitalParameters.ToStateVector());
-            explicitPropagator.Propagate();
-        }
+        var explicitPropagator = NewPropagator(window, explicitSpacecraft, explicitIntegrator, stm);
+        explicitIntegrator.Initialize(explicitSpacecraft.InitialOrbitalParameters.ToStateVector());
+        explicitPropagator.Propagate();
 
         // Assert
         Assert.Equal(explicitSpacecraft.PropagatedStates.Length, implicitSpacecraft.PropagatedStates.Length);
@@ -185,15 +180,9 @@ public class IntegratorInitializationTests
         var built = NewLeo(earth);
 
         // Act
-        using (var p = new CentralBodyPropagator(window, given, NewIntegrator("RK78", earth), Step))
-        {
-            p.Propagate();
-        }
+        new CentralBodyPropagator(window, given, NewIntegrator("RK78", earth), Step).Propagate();
 
-        using (var p = new CentralBodyPropagator(window, built, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = Step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None }))
-        {
-            p.Propagate();
-        }
+        new CentralBodyPropagator(window, built, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = Step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None }).Propagate();
 
         // Assert
         Assert.Equal(built.PropagatedStates.Length, given.PropagatedStates.Length);
@@ -234,7 +223,7 @@ public class IntegratorInitializationTests
         var window = new Window(Epoch.ToUTC(), Epoch.ToUTC().AddHours(1.0));
 
         // Act
-        using var propagator = new CentralBodyPropagator(window, spacecraft, recorder, Step);
+        var propagator = new CentralBodyPropagator(window, spacecraft, recorder, Step);
         var atConstruction = recorder.Initializations.ToArray();
         propagator.Propagate();
 
@@ -263,7 +252,7 @@ public class IntegratorInitializationTests
         var window = new Window(Epoch, Epoch.AddDays(1.0));
 
         // Act
-        using var propagator = new CentralBodyPropagator(window, spacecraft, recorder, TimeSpan.FromMinutes(10.0));
+        var propagator = new CentralBodyPropagator(window, spacecraft, recorder, TimeSpan.FromMinutes(10.0));
         var solution = propagator.Propagate();
 
         // Assert: initialized about the Sun, as the propagator states the initial orbit, and Kepler about the Sun over
@@ -288,7 +277,7 @@ public class IntegratorInitializationTests
         var window = OneHour;
 
         // Act
-        using var propagator = new CentralBodyPropagator(window, spacecraft, recorder, Step);
+        var propagator = new CentralBodyPropagator(window, spacecraft, recorder, Step);
         var solution = propagator.Propagate();
 
         // Assert
@@ -327,16 +316,11 @@ public class IntegratorInitializationTests
         var explicitIntegrator = NewIntegrator(kind, earth);
 
         // Act
-        using (var p = new CentralBodyPropagator(window, implicitSpacecraft, NewIntegrator(kind, earth), Step))
-        {
-            p.Propagate();
-        }
+        new CentralBodyPropagator(window, implicitSpacecraft, NewIntegrator(kind, earth), Step).Propagate();
 
-        using (var p = new CentralBodyPropagator(window, explicitSpacecraft, explicitIntegrator, Step))
-        {
-            explicitIntegrator.Initialize(explicitSpacecraft.InitialOrbitalParameters.ToStateVector());
-            p.Propagate();
-        }
+        var explicitPropagator = new CentralBodyPropagator(window, explicitSpacecraft, explicitIntegrator, Step);
+        explicitIntegrator.Initialize(explicitSpacecraft.InitialOrbitalParameters.ToStateVector());
+        explicitPropagator.Propagate();
 
         // Assert: the impulse fired, and every state is the same
         Assert.Single(implicitSpacecraft.ExecutedManeuvers);

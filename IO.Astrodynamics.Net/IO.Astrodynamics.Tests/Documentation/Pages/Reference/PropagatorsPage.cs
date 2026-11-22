@@ -151,4 +151,24 @@ internal static class PropagatorsPage
         Console.WriteLine($"Position 95th percentile RSS: {last.RssPositionPercentiles.P95:F1} m");
         #endregion
     }
+
+    // docs/reference/propagators.md, "Cancellation"
+    internal static void Block05(Spacecraft spacecraft, Window window)
+    {
+        #region docs/reference/propagators.md:5
+        // Inputs: spacecraft (Spacecraft), window (Window)
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        try
+        {
+            var solution = spacecraft.Propagate(window, PropagationOptions.Default, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Not propagated: no stored state, and the next Propagate re-arms the spacecraft
+        }
+
+        // A task of the synchronous call, cancelled with the token
+        var task = Task.Run(() => spacecraft.Propagate(window, cancellationToken: cts.Token), cts.Token);
+        #endregion
+    }
 }

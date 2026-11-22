@@ -38,6 +38,15 @@ public abstract class Integrator : IIntegrator
     /// </summary>
     internal virtual PropagationTimeArgument TimeArgument { get; set; } = PropagationTimeArgument.Tdb;
 
+    /// <summary>
+    /// The cancellation token of the propagation that runs this integrator (R28 of #668, the internal per-step hook):
+    /// set by <see cref="PropagatorBase.Propagate"/> for its run and reset after it, read by <see cref="VVIntegrator"/>
+    /// and <see cref="RK78Integrator"/> at each accepted step (never between rejections, C1 of lot L4). None by default,
+    /// so the replays and the propagations of the library that are not a run of a caller never stop. A subclass outside
+    /// the library does not read it: the propagator checks the token between its segments.
+    /// </summary>
+    internal CancellationToken Cancellation { get; set; }
+
     public Integrator(IEnumerable<ForceBase> forces)
     {
         _forces = new List<ForceBase>(forces);

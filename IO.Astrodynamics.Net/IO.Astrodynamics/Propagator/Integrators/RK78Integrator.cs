@@ -356,6 +356,9 @@ public sealed class RK78Integrator : Integrator
                     CommitVariational(variational);
                 }
 
+                // The token of the run, at each accepted step, never between rejections (R28 of #668, C1 of lot L4)
+                Cancellation.ThrowIfCancellationRequested();
+
                 t += h;
                 pos = posNew;
                 vel = velNew;
@@ -405,6 +408,9 @@ public sealed class RK78Integrator : Integrator
                     AdvanceVariational(h);
                     CommitVariational(variational);
                 }
+
+                // The token of the run, at each accepted step (R28 of #668)
+                Cancellation.ThrowIfCancellationRequested();
 
                 t += h;
                 pos = posNew;

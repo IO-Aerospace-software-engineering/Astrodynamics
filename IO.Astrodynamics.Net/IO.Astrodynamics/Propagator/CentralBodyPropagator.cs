@@ -60,7 +60,7 @@ public class CentralBodyPropagator : PropagatorBase
     }
 
     /// <summary>
-    /// The propagator of a scenario's spacecraft (<see cref="Mission.Scenario.Simulate(PropagationOptions)"/>): the
+    /// The propagator of a scenario's spacecraft (<see cref="Mission.Scenario.Simulate(PropagationOptions, System.Threading.CancellationToken)"/>): the
     /// scenario's bodies when <see cref="PropagationOptions.ThirdBodies"/> is null.
     /// </summary>
     internal CentralBodyPropagator(in Window window, Spacecraft spacecraft, PropagationOptions options,

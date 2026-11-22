@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
@@ -113,7 +114,7 @@ namespace IO.Astrodynamics.Mission
 
         /// <summary>
         /// Propagate this scenario with the settings of <paramref name="options"/> (R06 of #668): each spacecraft, in
-        /// turn, as <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions)"/> does, with the bodies of
+        /// turn, as <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions, System.Threading.CancellationToken)"/> does, with the bodies of
         /// the scenario (<see cref="AddCelestialItem"/>) as its third bodies when
         /// <see cref="PropagationOptions.ThirdBodies"/> is null; each star at a step of the window length / 1000, between
         /// <see cref="PropagationOptions.OutputStep"/> and 60 s.
@@ -128,14 +129,26 @@ namespace IO.Astrodynamics.Mission
         /// <c>SimulateAsync</c> overloads of flags, removed in 11.0.0 (R07 and R28 of #668): the settings of their
         /// integrator, flags and step give each spacecraft their run, bit for bit (the overload without a factory,
         /// <see cref="VVIntegratorOptions"/> with its step).
+        /// <para>
+        /// Cancellation (R28 of #668): <paramref name="cancellationToken"/> is read once the settings are checked, before
+        /// anything changes, so that a token already cancelled changes nothing; then before each star and each
+        /// spacecraft, and inside each spacecraft's propagation (see
+        /// <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions, System.Threading.CancellationToken)"/>).
+        /// A simulation stopped returns no summary and leaves <see cref="IsSimulated"/> false: the stars and spacecraft
+        /// propagated before the stop are complete, the spacecraft it stopped in is left as a stopped propagation leaves it
+        /// (C2 of lot L4), the later ones are untouched.
+        /// </para>
         /// </remarks>
         /// <param name="options">The settings; null for <see cref="PropagationOptions.Default"/>.</param>
+        /// <param name="cancellationToken">The token that stops the simulation; none by default.</param>
         /// <returns>The summary of the simulation.</returns>
+        /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+        /// carries it.</exception>
         /// <exception cref="InvalidOperationException">There is nothing to simulate; or a propagation throws it (see
-        /// <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions)"/>).</exception>
+        /// <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions, System.Threading.CancellationToken)"/>).</exception>
         /// <exception cref="ArgumentException"><see cref="PropagationOptions.ThirdBodies"/> differs from the bodies of the
         /// scenario; or a propagation throws it.</exception>
-        public ScenarioSummary Simulate(PropagationOptions options = null)
+        public ScenarioSummary Simulate(PropagationOptions options = null, CancellationToken cancellationToken = default)
         {
             options ??= PropagationOptions.Default;
             if (_spacecrafts.Count == 0 && _sites.Count == 0 && _stars.Count == 0)
@@ -157,15 +170,19 @@ namespace IO.Astrodynamics.Mission
                 }
             }
 
+            // Before anything changes, so that a token already cancelled changes nothing (decision 6 of lot L4 of #668)
+            cancellationToken.ThrowIfCancellationRequested();
             IsSimulated = false;
             foreach (var star in _stars)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 star.Propagate(Window, StarStep(options.OutputStep));
             }
 
             foreach (var spacecraft in _spacecrafts)
             {
-                spacecraft.Propagate(Window, options, _celestialBodies);
+                cancellationToken.ThrowIfCancellationRequested();
+                spacecraft.Propagate(Window, options, _celestialBodies, cancellationToken);
             }
 
             return Summarize();

@@ -604,7 +604,7 @@ public class MinimumEpochGateTests
             }
             else if (path.StartsWith("CovConstructor"))
             {
-                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = output, ThirdBodies = bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
+                var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = output, ThirdBodies = bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 solution = propagator.Propagate();
             }
             else if (path.StartsWith("CovTask"))

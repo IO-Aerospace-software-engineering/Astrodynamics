@@ -684,7 +684,7 @@ public class KeplerEquationTests
     // The first state of a 60 s propagation of a spacecraft whose initial orbit is the elements
     private static (string, Vector3, Vector3) FirstState(string path, KeplerianElements elements, bool rk78)
     {
-        using var propagator = Propagator(elements, rk78);
+        var propagator = Propagator(elements, rk78);
         var first = propagator.Propagate().Segments[0].Steps[0];
         return (path, first.StartPosition, first.StartVelocity);
     }

@@ -92,26 +92,29 @@ which object failed.
 
 ### Progress reporting
 
-Pass an `IProgress<BatchProgress>` to monitor completion:
+Pass an `IProgress<BatchProgress>` to monitor completion; it is a parameter of `BatchPropagator.Propagate`, placed
+before the options (since 11.0.0, R28 of #668: `BatchOptions.Progress` is removed):
 
 ```csharp
 // Inputs: tasks (List<PropagationTask>)
-var result = BatchPropagator.Propagate(tasks, new BatchOptions
+var progress = new Progress<BatchProgress>(p =>
 {
-    MaxDegreeOfParallelism = 4,
-    Progress = new Progress<BatchProgress>(p =>
-    {
-        Console.WriteLine($"Progress: {p.Completed}/{p.Total}");
-    })
+    Console.WriteLine($"Progress: {p.Completed}/{p.Total}");
 });
+var result = BatchPropagator.Propagate(tasks, progress, new BatchOptions { MaxDegreeOfParallelism = 4 });
 ```
 
 It is reported each time a task completes (successfully or not); `Progress<T>` calls its handler on the thread pool,
-or on the synchronization context it was created on.
+or on the synchronization context it was created on. A task stopped by a cancellation is not reported.
+
+`BatchPropagator.Propagate(tasks, null)` does not compile (CS0121): `null` fits both the options of the overload
+without progress and the progress of the other. Name the argument, `BatchPropagator.Propagate(tasks, options: null)`,
+or leave it out.
 
 ### Cancellation
 
-Use a `CancellationToken` to abort the batch early:
+Pass a `CancellationToken` as the last argument to abort the batch early (since 11.0.0, R28 of #668:
+`BatchOptions.CancellationToken` is removed):
 
 ```csharp
 // Inputs: tasks (List<PropagationTask>)
@@ -120,15 +123,20 @@ var cts = new CancellationTokenSource();
 // Cancel after 30 seconds
 cts.CancelAfter(TimeSpan.FromSeconds(30));
 
-var result = BatchPropagator.Propagate(tasks, new BatchOptions
-{
-    MaxDegreeOfParallelism = 4,
-    CancellationToken = cts.Token
-});
+var result = BatchPropagator.Propagate(tasks, new BatchOptions { MaxDegreeOfParallelism = 4 }, cts.Token);
 ```
 
-Cancellation stops new tasks from starting. Tasks already in progress
-run to completion.
+The token stops the tasks not yet started and the running ones too, at the next accepted step of their integrator
+(before 11.0.0 the running tasks ran to their end). The batch then throws one `OperationCanceledException` that
+carries the token, never an `AggregateException`, and returns no result:
+
+- the tasks completed before the stop are complete: their spacecraft hold their stored states;
+- a spacecraft whose propagation was stopped holds no stored state and no attitude record, is not `IsPropagated`
+  (a TLE spacecraft reads SGP4 again, any other its initial orbit), and its fuel, `ExecutedManeuvers` and standby
+  chain are advanced up to the stop; its next propagation re-arms it;
+- the tasks not started are untouched.
+
+A token already cancelled throws before anything runs, and changes nothing.
 
 ## Thread safety requirements
 
@@ -157,6 +165,7 @@ var tasks = spacecraftList.Select(spacecraft => new PropagationTask(spacecraft, 
 - Each `PropagationTask` specifies its settings in a `PropagationOptions`
   value, which tasks may share.
 - Use `MaxDegreeOfParallelism` to control concurrency.
-- Progress callbacks and `CancellationToken` support operational monitoring.
+- A progress callback and a `CancellationToken`, parameters of `BatchPropagator.Propagate`, support operational
+  monitoring; the token stops the running tasks too.
 - Tasks may share their bodies, a geopotential included: each propagation
   builds its own field.

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
@@ -690,7 +691,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </remarks>
         /// <param name="window">The propagation window.</param>
         /// <param name="options">The settings; null for <see cref="PropagationOptions.Default"/>.</param>
+        /// <param name="cancellationToken">Stops the run (R28 of #668): read before the spacecraft is re-armed, so that a
+        /// token already cancelled changes nothing, then at each accepted step of the integrator, never after the last
+        /// segment; see <see cref="PropagatorBase.Propagate"/> for the spacecraft a stopped run leaves. Synchronous:
+        /// a caller that wants a task runs this method in one (<c>Task.Run</c>); <c>PropagateAsync</c>, which took no
+        /// token, is removed in 11.0.0.</param>
         /// <returns>The solution.</returns>
+        /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+        /// carries it.</exception>
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; drag is asked about a central
         /// body without an atmosphere; or the covariance cannot be propagated (see
         /// <see cref="PropagationOptions.CovariancePropagation"/>).</exception>
@@ -698,23 +706,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <see cref="CentralBodyPropagator(in Window, Spacecraft, PropagationOptions)"/>), or the target orbit of an
         /// impulse of the maneuver chain is not in the frame the spacecraft is propagated in (#685).</exception>
         /// <exception cref="NotSupportedException">The covariance propagation is asked for under Velocity-Verlet.</exception>
-        public PropagationSolution Propagate(Window window, PropagationOptions options = null)
+        public PropagationSolution Propagate(Window window, PropagationOptions options = null,
+            CancellationToken cancellationToken = default)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            using var propagator = new CentralBodyPropagator(window, this, options);
-            return propagator.Propagate();
+            var propagator = new CentralBodyPropagator(window, this, options);
+            return propagator.Propagate(cancellationToken);
         }
 
         /// <summary>
-        /// The propagation of a scenario (<see cref="Mission.Scenario.Simulate(PropagationOptions)"/>): the scenario's
-        /// bodies when <see cref="PropagationOptions.ThirdBodies"/> is null.
+        /// The propagation of a scenario (<see cref="Mission.Scenario.Simulate(PropagationOptions, CancellationToken)"/>):
+        /// the scenario's bodies when <see cref="PropagationOptions.ThirdBodies"/> is null.
         /// </summary>
         internal PropagationSolution Propagate(Window window, PropagationOptions options,
-            IEnumerable<CelestialItem> scenarioBodies)
+            IEnumerable<CelestialItem> scenarioBodies, CancellationToken cancellationToken)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            using var propagator = new CentralBodyPropagator(window, this, options, scenarioBodies);
-            return propagator.Propagate();
+            var propagator = new CentralBodyPropagator(window, this, options, scenarioBodies);
+            return propagator.Propagate(cancellationToken);
         }
 
         /// <summary>

@@ -1373,7 +1373,7 @@ Represents a spacecraft with components.
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
 | `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set the head of the maneuver chain, which the next propagation starts from (a second call replaces the first, null clears it, #584); a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
-| `Propagate(Window window, PropagationOptions options = null)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution` |
+| `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
 | `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
@@ -1640,7 +1640,7 @@ The constructors of flags (bodies, drag, SRP, with or without an integrator) wer
 
 | Method | Description |
 |--------|-------------|
-| `Propagate()` | Execute propagation with event detection and dense output, returns `PropagationSolution` |
+| `Propagate(CancellationToken cancellationToken = default)` | Execute propagation with event detection and dense output, returns `PropagationSolution`; the token is read before the re-arm, before each segment and at each accepted step of the library's integrators (R28 of #668) |
 
 **State transition matrix and covariance** (`IO.Astrodynamics.Propagator.Variational`, off by default): with
 `CovariancePropagationOptions` (`Mode` `StateTransitionOnly` or `Covariance`, `ProcessNoise` an `RtnProcessNoise`,
@@ -1736,7 +1736,7 @@ SGP4/SDP4 propagator for TLE elements.
 
 | Method | Description |
 |--------|-------------|
-| `Propagate()` | Execute propagation, returns `PropagationSolution` |
+| `Propagate(CancellationToken cancellationToken = default)` | Execute propagation, returns `PropagationSolution`; the token is read before the first sample and at each sample (R28 of #668) |
 
 ---
 

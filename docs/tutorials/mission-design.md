@@ -106,6 +106,8 @@ var summary = scenario.Simulate();
 and returns a summary with ephemeris data. Without settings it runs the defaults
 of `PropagationOptions`: RK7(8) at 1e-9, an output every 60 s, the bodies of the
 scenario as the third bodies of each spacecraft.
+`Simulate(options, cancellationToken)` stops at the token: no summary, `IsSimulated` false, the spacecraft
+propagated before the stop complete ([Propagators](../reference/propagators.md#cancellation)).
 
 ### Choosing the integrator
 

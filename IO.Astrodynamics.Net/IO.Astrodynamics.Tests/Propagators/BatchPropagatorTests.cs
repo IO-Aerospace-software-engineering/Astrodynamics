@@ -195,10 +195,10 @@ public class BatchPropagatorTests
             CreateTask(CreateSpacecraft(-6001, "Cancelled"))
         };
 
-        var options = new BatchOptions { CancellationToken = cts.Token };
-
-        Assert.Throws<OperationCanceledException>(() =>
-            BatchPropagator.Propagate(tasks, options));
+        // The token is a parameter since 11.0.0 (decision 4 of lot L4 of #668), carried by the exception
+        var exception = Assert.Throws<OperationCanceledException>(() =>
+            BatchPropagator.Propagate(tasks, cancellationToken: cts.Token));
+        Assert.Equal(cts.Token, exception.CancellationToken);
     }
 
     [Fact]
@@ -217,11 +217,11 @@ public class BatchPropagatorTests
         // Force sequential to get deterministic progress ordering
         var options = new BatchOptions
         {
-            MaxDegreeOfParallelism = 1,
-            Progress = progress
+            MaxDegreeOfParallelism = 1
         };
 
-        var result = BatchPropagator.Propagate(tasks, options);
+        // The progress is a parameter since 11.0.0 (decision 4 of lot L4 of #668)
+        var result = BatchPropagator.Propagate(tasks, progress, options);
 
         Assert.True(result.AllSucceeded);
 

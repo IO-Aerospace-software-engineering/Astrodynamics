@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
@@ -21,6 +21,8 @@ public static class MonteCarloPropagator
     /// Executes a Monte Carlo propagation campaign synchronously.
     /// </summary>
     /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
+    /// <param name="cancellationToken">Stops the campaign (see
+    /// <see cref="Propagate(MonteCarloConfiguration, IProgress{BatchProgress}, CancellationToken)"/>).</param>
     /// <returns>Aggregated statistics across all successful runs.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than
@@ -28,9 +30,39 @@ public static class MonteCarloPropagator
     /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown, before any run is propagated, when the NAIF ID of a run,
     /// <see cref="MonteCarloConfiguration.BaseNaifId"/> − i, is not in [-2147483, -1] (#676).</exception>
-    public static MonteCarloResult Propagate(MonteCarloConfiguration config)
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public static MonteCarloResult Propagate(MonteCarloConfiguration config, CancellationToken cancellationToken = default)
+    {
+        return Propagate(config, progress: null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a Monte Carlo propagation campaign synchronously, reporting the number of completed runs after each one.
+    /// </summary>
+    /// <remarks>
+    /// Cancellation (R28 of #668): the token is read before anything is sampled, so that a token already cancelled
+    /// changes nothing, then by the batch of the runs, the running ones included (see
+    /// <see cref="BatchPropagator.Propagate(IReadOnlyList{PropagationTask}, IProgress{BatchProgress}, BatchOptions, CancellationToken)"/>).
+    /// A campaign stopped throws one <see cref="OperationCanceledException"/> carrying the token and returns no
+    /// statistics. It replaces <c>PropagateAsync</c> and the progress of <see cref="MonteCarloConfiguration.BatchOptions"/>,
+    /// removed in 11.0.0 (decision 4 of lot L4).
+    /// </remarks>
+    /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
+    /// <param name="progress">Receives the number of completed runs after each one, propagated or failed; null for none.</param>
+    /// <param name="cancellationToken">Stops the campaign, the running runs included.</param>
+    /// <returns>Aggregated statistics across all successful runs.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than
+    /// 2, or, before any run is propagated, when the NAIF ID of a run is not in [-2147483, -1] (#676).</exception>
+    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public static MonteCarloResult Propagate(MonteCarloConfiguration config, IProgress<BatchProgress> progress,
+        CancellationToken cancellationToken = default)
     {
         Validate(config);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -40,7 +72,8 @@ public static class MonteCarloPropagator
 
         var perturbedStates = StateSampler.Sample(nominalSv, config.RunCount, config.Seed);
 
-        var batchResult = PropagateRuns(config, nominalSv, perturbedStates, 0);
+        var batchResult = PropagateRuns(config, nominalSv, perturbedStates, 0, progress: progress,
+            cancellationToken: cancellationToken);
 
         var successful = batchResult.Results
             .Where(r => r.Succeeded)
@@ -75,12 +108,13 @@ public static class MonteCarloPropagator
     /// Propagates the runs <paramref name="firstRun"/> to <paramref name="firstRun"/> + n − 1 of a campaign, from their
     /// initial states, each with a clone of the template spacecraft (NAIF ID <c>BaseNaifId − run</c>) and the settings of
     /// <see cref="MonteCarloConfiguration.Propagation"/>; the coefficients, when given, replace the drag and reflectivity coefficients of the template,
-    /// run by run. The runs of <see cref="Propagate"/>, exposed internally so that the validation of the propagated
+    /// run by run. The runs of <see cref="Propagate(MonteCarloConfiguration, IProgress{BatchProgress}, CancellationToken)"/>, exposed internally so that the validation of the propagated
     /// covariance can read the state of every run at any epoch, in batches.
     /// </summary>
     internal static BatchResult PropagateRuns(MonteCarloConfiguration config, StateVector nominal,
         IReadOnlyList<StateVector> initialStates, int firstRun,
-        IReadOnlyList<(double DragCoefficient, double ReflectivityCoefficient)> coefficients = null)
+        IReadOnlyList<(double DragCoefficient, double ReflectivityCoefficient)> coefficients = null,
+        IProgress<BatchProgress> progress = null, CancellationToken cancellationToken = default)
     {
         var template = config.TemplateSpacecraft;
         var tasks = new PropagationTask[initialStates.Count];
@@ -112,18 +146,7 @@ public static class MonteCarloPropagator
             tasks[k] = new PropagationTask(sc, config.Window, config.Propagation);
         }
 
-        return BatchPropagator.Propagate(tasks, config.BatchOptions);
-    }
-
-    /// <summary>
-    /// Executes a Monte Carlo propagation campaign asynchronously on a thread-pool thread.
-    /// </summary>
-    /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
-    /// <returns>A task that completes with the aggregated statistics across all successful runs, or faults with the
-    /// exceptions of <see cref="Propagate"/>, a NAIF ID of a run out of [-2147483, -1] included (#676).</returns>
-    public static Task<MonteCarloResult> PropagateAsync(MonteCarloConfiguration config)
-    {
-        return Task.Run(() => Propagate(config));
+        return BatchPropagator.Propagate(tasks, progress, config.BatchOptions, cancellationToken);
     }
 
     private static void Validate(MonteCarloConfiguration config)

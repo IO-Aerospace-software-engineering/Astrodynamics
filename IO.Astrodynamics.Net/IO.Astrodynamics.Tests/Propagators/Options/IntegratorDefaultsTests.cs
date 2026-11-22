@@ -172,11 +172,11 @@ public class IntegratorDefaultsTests
         var library = typeof(PropagationOptions).Assembly;
         Assert.Null(library.GetType("IO.Astrodynamics.Propagator.CentralBodyPropagatorBuilder"));
 
-        // Spacecraft: Propagate(window, options), no async overload
+        // Spacecraft: Propagate(window, options, cancellationToken), no async overload (R28 of #668)
         var propagate = typeof(Spacecraft).GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(m => m.Name is "Propagate" or "PropagateAsync").ToArray();
         var only = Assert.Single(propagate);
-        Assert.Equal(new[] { typeof(Window), typeof(PropagationOptions) },
+        Assert.Equal(new[] { typeof(Window), typeof(PropagationOptions), typeof(System.Threading.CancellationToken) },
             only.GetParameters().Select(p => p.ParameterType).ToArray());
 
         // Scenario: Simulate(options), no flags overload

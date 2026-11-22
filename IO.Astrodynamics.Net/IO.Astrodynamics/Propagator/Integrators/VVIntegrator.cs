@@ -120,6 +120,9 @@ public sealed class VVIntegrator : Integrator
             var accepted = new AcceptedStep(t, h, pos, vel, newPos, newVel, startAccel, accel);
             segment.AddStep(accepted);
 
+            // The token of the run, at each accepted step (R28 of #668)
+            Cancellation.ThrowIfCancellationRequested();
+
             t += h;
             pos = newPos;
             vel = newVel;

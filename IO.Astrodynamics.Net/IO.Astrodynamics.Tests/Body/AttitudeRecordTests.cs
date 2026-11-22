@@ -973,10 +973,7 @@ public class AttitudeRecordTests
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var start = new Time(2021, 1, 20, 12, 0, 0, TimeScale.TDB);
         var sc = new Spacecraft(-8441, "TLE8441", 1000.0, 3000.0, new Clock("TLE8441_CLK", 65536), tle);
-        using (var propagator = new TLEPropagator(new Window(start, start.AddSeconds(600.0)), sc, TimeSpan.FromSeconds(10.0)))
-        {
-            propagator.Propagate();
-        }
+        new TLEPropagator(new Window(start, start.AddSeconds(600.0)), sc, TimeSpan.FromSeconds(10.0)).Propagate();
 
         string directory = "Data/User/AttitudeRecord537/TLE8441";
         Directory.CreateDirectory(directory);

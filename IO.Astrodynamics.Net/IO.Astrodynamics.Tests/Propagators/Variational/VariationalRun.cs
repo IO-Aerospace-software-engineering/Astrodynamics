@@ -34,7 +34,7 @@ internal static class VariationalRun
                 nameof(options));
         }
 
-        using var propagator = new CentralBodyPropagator(window, spacecraft,
+        var propagator = new CentralBodyPropagator(window, spacecraft,
             options with { CovariancePropagation = CovariancePropagationOptions.None });
         if (variationalOptions != null)
         {

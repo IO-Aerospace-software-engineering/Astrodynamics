@@ -100,7 +100,7 @@ public partial class IntegratorEventTests
         double massBefore = spacecraft.GetTotalMass();
         var integrator = new NoStepAtZeroDuration(new VVIntegrator([new GravitationalAcceleration(earth)], TimeSpan.FromSeconds(1.0),
             spacecraft.InitialOrbitalParameters.ToStateVector()));
-        using var propagator = new CentralBodyPropagator(window, spacecraft, integrator, TimeSpan.FromSeconds(4.0));
+        var propagator = new CentralBodyPropagator(window, spacecraft, integrator, TimeSpan.FromSeconds(4.0));
         var solution = propagator.Propagate();
 
         Assert.Equal(1, integrator.ZeroDurationCalls);

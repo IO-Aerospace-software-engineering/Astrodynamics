@@ -433,7 +433,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             // built before its tank is on the spacecraft (no check at construction)
             var earth = TestHelpers.EarthAtJ2000;
             var spacecraft = PlaneChangeSpacecraft(integrator == "VV" ? -6855 : -6856, CircularOrbit(earth, 30.0));
-            using var propagator = new Propagator.CentralBodyPropagator(PlaneChangeWindow, spacecraft, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
+            var propagator = new Propagator.CentralBodyPropagator(PlaneChangeWindow, spacecraft, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
             var tank = new FuelTank("ft685", "ftA", "sn6855", 1000.0, 900.0);
             var engine = new Engine("eng685", "engmk1", "sn6855", 450, 50, tank);
             var rejected = CreateAt(nameof(PlaneAlignmentManeuver), CircularOrbit(earth, 32.0).ToFrame(Frames.Frame.ECLIPTIC_J2000), engine);
@@ -506,11 +506,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spacecraft.SetStandbyManeuver(leading);
             if (propagator != null)
             {
-                using (propagator)
-                {
-                    var solution = propagator.Propagate();
-                    return (maneuver, solution.StateVectors[^1]);
-                }
+                var solution = propagator.Propagate();
+                return (maneuver, solution.StateVectors[^1]);
             }
 
             spacecraft.Propagate(window, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });

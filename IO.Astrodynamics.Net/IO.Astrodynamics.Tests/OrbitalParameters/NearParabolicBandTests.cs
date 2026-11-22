@@ -1065,7 +1065,7 @@ public class NearParabolicBandTests
         var bodies = new CelestialItem[] { _earth };
 
         // Act (before: ArgumentException from the constructor of the propagator)
-        using var propagator = rk78
+        var propagator = rk78
             ? new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
             : new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
         var first = propagator.Propagate().Segments[0].Steps[0];

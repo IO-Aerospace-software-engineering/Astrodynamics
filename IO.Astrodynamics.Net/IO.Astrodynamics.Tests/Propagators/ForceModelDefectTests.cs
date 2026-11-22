@@ -147,19 +147,19 @@ public class ForceModelDefectTests
         {
             case "RK78 constructor":
             {
-                using var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
+                var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
                 p.Propagate();
                 break;
             }
             case "RK78 covariance constructor":
             {
-                using var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = Stm });
+                var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = Stm });
                 p.Propagate();
                 break;
             }
             case "VV constructor":
             {
-                using var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = dt }, OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp });
+                var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = dt }, OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp });
                 p.Propagate();
                 break;
             }
@@ -668,10 +668,7 @@ public class ForceModelDefectTests
         user.Initialize((StateVector)userSpacecraft.InitialOrbitalParameters);
 
         // Act
-        using (var p = new CentralBodyPropagator(OneHour, userSpacecraft, user, Step))
-        {
-            p.Propagate();
-        }
+        new CentralBodyPropagator(OneHour, userSpacecraft, user, Step).Propagate();
 
         Run("RK78 constructor", builtSpacecraft, new CelestialItem[] { earth }, false, false);
 

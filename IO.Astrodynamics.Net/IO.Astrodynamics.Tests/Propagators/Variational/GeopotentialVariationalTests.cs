@@ -41,7 +41,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     public void EnableVariationalEquations_DegreeBelowTwo_Throws(int degree)
     {
         // Arrange
-        using var propagator = Propagator(_bodies.Earths[10]);
+        var propagator = Propagator(_bodies.Earths[10]);
 
         // Act
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -57,7 +57,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     {
         // Arrange
         var earth = _bodies.Earths[GeopotentialGravitationalField.MaxPartialsDegree + 10];
-        using var propagator = Propagator(earth);
+        var propagator = Propagator(earth);
         var integrator = (RK78Integrator)propagator.Integrator;
 
         // Act and assert: the failure comes before the propagation, and leaves the forces as they were
@@ -75,8 +75,8 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     {
         // Arrange
         var pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        using var first = Propagator(_bodies.Earths[10]);
-        using var second = Propagator(pointMassEarth);
+        var first = Propagator(_bodies.Earths[10]);
+        var second = Propagator(pointMassEarth);
         var withGeopotential = (RK78Integrator)first.Integrator;
         var pointMass = (RK78Integrator)second.Integrator;
 

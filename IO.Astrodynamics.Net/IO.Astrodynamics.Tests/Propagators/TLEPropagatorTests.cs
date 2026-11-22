@@ -126,16 +126,13 @@ public class TLEPropagatorTests
         Assert.True(Fails(end.AddSeconds(1.0)));
         var spacecraft = new Spacecraft(-1003, "Decayed", 100.0, 10000.0, new Clock("Decayed clock", 256), tle);
         var step = TimeSpan.FromSeconds(60.0);
-        using (var first = new TLEPropagator(new Window(end.AddSeconds(-3600.0), end.AddSeconds(-1800.0)), spacecraft, step))
-        {
-            first.Propagate();
-        }
+        new TLEPropagator(new Window(end.AddSeconds(-3600.0), end.AddSeconds(-1800.0)), spacecraft, step).Propagate();
 
         var before = spacecraft.PropagatedStates;
         Assert.Equal(31, before.Length);
 
         // Act: a window whose samples SGP4 gives, the acceleration at its end not
-        using var propagator = new TLEPropagator(new Window(end.AddSeconds(-600.0), end), spacecraft, step);
+        var propagator = new TLEPropagator(new Window(end.AddSeconds(-600.0), end), spacecraft, step);
         Assert.Throws<SpiceException>(() => propagator.Propagate());
 
         // Assert: the rejected run adds no state; the spacecraft holds the states of the first run as they were

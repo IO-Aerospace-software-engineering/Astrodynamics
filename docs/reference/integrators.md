@@ -27,6 +27,11 @@ returns no step for it gets that step from the propagator, with the acceleration
 `Integrator`, the end acceleration of the previous segment for a bare `IIntegrator` (a step of zero length is never
 interpolated).
 
+The cancellation token of a propagation ([Propagators](propagators.md#cancellation)) is read by `VVIntegrator` and
+`RK78Integrator` at each accepted step, through an internal hook the propagator sets for its run, so the interface does
+not change (R28 of #668); a custom integrator, a bare `IIntegrator` or a subclass of `Integrator`, is stopped by the
+propagator between its segments, never inside one.
+
 ## AcceptedStep
 
 Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (`PropagationSegment.InterpolateAt`), which is exact at the step ends only.

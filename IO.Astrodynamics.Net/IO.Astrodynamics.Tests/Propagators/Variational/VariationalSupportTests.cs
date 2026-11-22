@@ -46,7 +46,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
     {
         // Arrange: the default integrator of the propagator is Velocity-Verlet
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
-        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)), PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _cases.Earth } });
+        var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)), PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _cases.Earth } });
 
         // Act
         var exception = Assert.Throws<NotSupportedException>(() =>
@@ -62,7 +62,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
     {
         // Arrange
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
-        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)), PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _cases.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)), PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _cases.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() => propagator.EnableVariationalEquations(null));

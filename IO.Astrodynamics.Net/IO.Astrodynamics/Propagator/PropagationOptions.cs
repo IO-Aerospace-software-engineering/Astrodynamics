@@ -14,9 +14,9 @@ namespace IO.Astrodynamics.Propagator;
 /// <summary>
 /// The settings of a numerical propagation (R06 of #668, D1): the integrator, the output step, the third bodies, the
 /// forces, the geopotential and atmosphere of the central body, and the propagation of the covariance. One record for
-/// every options entry point: <see cref="Body.Spacecraft.Spacecraft.Propagate(TimeSystem.Window, PropagationOptions)"/>,
+/// every options entry point: <see cref="Body.Spacecraft.Spacecraft.Propagate(TimeSystem.Window, PropagationOptions, System.Threading.CancellationToken)"/>,
 /// <see cref="CentralBodyPropagator(in TimeSystem.Window, Body.Spacecraft.Spacecraft, PropagationOptions)"/>,
-/// <see cref="Mission.Scenario.Simulate(PropagationOptions)"/>, <see cref="PropagationTask"/> (with
+/// <see cref="Mission.Scenario.Simulate(PropagationOptions, System.Threading.CancellationToken)"/>, <see cref="PropagationTask"/> (with
 /// <see cref="BatchPropagator"/>) and <see cref="MonteCarlo.MonteCarloConfiguration.Propagation"/>.
 /// </summary>
 /// <remarks>
@@ -78,10 +78,10 @@ public sealed record PropagationOptions
     /// <summary>
     /// The bodies other than the central body that take part: their third-body perturbation, their shadow for solar
     /// radiation pressure, and the drag of those with an atmosphere (an Earth always has one). Null by default, which
-    /// means none on <see cref="Body.Spacecraft.Spacecraft.Propagate(TimeSystem.Window, PropagationOptions)"/>,
+    /// means none on <see cref="Body.Spacecraft.Spacecraft.Propagate(TimeSystem.Window, PropagationOptions, System.Threading.CancellationToken)"/>,
     /// <see cref="CentralBodyPropagator"/>, <see cref="PropagationTask"/> and
     /// <see cref="MonteCarlo.MonteCarloConfiguration.Propagation"/> (the central body alone, D4 sub-choice 4), and the
-    /// bodies added to the scenario on <see cref="Mission.Scenario.Simulate(PropagationOptions)"/>, where a list that
+    /// bodies added to the scenario on <see cref="Mission.Scenario.Simulate(PropagationOptions, System.Threading.CancellationToken)"/>, where a list that
     /// differs from them throws (section A of the re-baseline of #668).
     /// </summary>
     /// <remarks>

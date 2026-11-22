@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
 /// Propagates multiple spacecraft in parallel with fault isolation, cancellation, and progress reporting.
-/// Each task runs an independent <see cref="Body.Spacecraft.Spacecraft.Propagate(IO.Astrodynamics.TimeSystem.Window, PropagationOptions)"/>
+/// Each task runs an independent <see cref="Body.Spacecraft.Spacecraft.Propagate(IO.Astrodynamics.TimeSystem.Window, PropagationOptions, System.Threading.CancellationToken)"/>
 /// call with the settings of <see cref="PropagationTask.Options"/> (R06 of #668).
 /// </summary>
 /// <remarks>
@@ -62,22 +62,61 @@ public static class BatchPropagator
     /// <summary>
     /// Propagate all tasks in parallel (blocking).
     /// </summary>
+    /// <remarks>
+    /// <c>Propagate(tasks, null)</c> is ambiguous between this overload and the one with a progress callback (CS0121),
+    /// accepted by decision 5 of lot L4 of #668: name the argument, <c>Propagate(tasks, options: null)</c>, or leave it
+    /// out.
+    /// </remarks>
     /// <param name="tasks">Propagation tasks to execute. Must not contain duplicate Spacecraft instances.</param>
-    /// <param name="options">Parallelism, cancellation, and progress options. Null uses defaults.</param>
+    /// <param name="options">The parallelism; null for <see cref="BatchOptions.Default"/>.</param>
+    /// <param name="cancellationToken">Stops the batch, the running tasks included (see
+    /// <see cref="Propagate(IReadOnlyList{PropagationTask}, IProgress{BatchProgress}, BatchOptions, CancellationToken)"/>).</param>
     /// <returns>Aggregated batch result.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="tasks"/> contains duplicate Spacecraft instances.</exception>
-    /// <exception cref="OperationCanceledException">The cancellation token was triggered.</exception>
-    public static BatchResult Propagate(IReadOnlyList<PropagationTask> tasks, BatchOptions options = null)
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public static BatchResult Propagate(IReadOnlyList<PropagationTask> tasks, BatchOptions options = null,
+        CancellationToken cancellationToken = default)
+    {
+        return Propagate(tasks, progress: null, options, cancellationToken);
+    }
+
+    /// <summary>
+    /// Propagate all tasks in parallel (blocking), reporting the progress after each task that completes, propagated or
+    /// failed.
+    /// </summary>
+    /// <remarks>
+    /// Cancellation (R28 of #668): the token is read before anything runs, so that a token already cancelled changes
+    /// nothing, then by each task before it starts and inside its propagation, at each accepted step of its integrator
+    /// (see <see cref="Body.Spacecraft.Spacecraft.Propagate(IO.Astrodynamics.TimeSystem.Window, PropagationOptions, CancellationToken)"/>):
+    /// the running tasks stop too, where before 11.0.0 the token of <c>BatchOptions</c> was read before each task only
+    /// and the running ones ran to their end. A batch stopped throws one <see cref="OperationCanceledException"/>
+    /// carrying the token, never an <see cref="AggregateException"/>, and returns no result: the tasks completed before
+    /// the stop are complete, each spacecraft it stopped is left as a stopped propagation leaves it (C2 of lot L4), the
+    /// tasks not started are untouched. A stopped task is not reported to <paramref name="progress"/>.
+    /// </remarks>
+    /// <param name="tasks">Propagation tasks to execute. Must not contain duplicate Spacecraft instances.</param>
+    /// <param name="progress">Receives the number of completed tasks after each one; null for none.</param>
+    /// <param name="options">The parallelism; null for <see cref="BatchOptions.Default"/>.</param>
+    /// <param name="cancellationToken">Stops the batch, the running tasks included.</param>
+    /// <returns>Aggregated batch result.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="tasks"/> contains duplicate Spacecraft instances.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public static BatchResult Propagate(IReadOnlyList<PropagationTask> tasks, IProgress<BatchProgress> progress,
+        BatchOptions options = null, CancellationToken cancellationToken = default)
     {
         if (tasks == null) throw new ArgumentNullException(nameof(tasks));
+
+        ValidateNoDuplicateSpacecraft(tasks);
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (tasks.Count == 0)
             return new BatchResult(Array.Empty<PropagationResult>(), TimeSpan.Zero);
 
-        ValidateNoDuplicateSpacecraft(tasks);
-
-        options ??= new BatchOptions();
+        options ??= BatchOptions.Default;
 
         var results = new PropagationResult[tasks.Count];
         int completed = 0;
@@ -86,47 +125,34 @@ public static class BatchPropagator
         var parallelOptions = new ParallelOptions
         {
             MaxDegreeOfParallelism = options.MaxDegreeOfParallelism,
-            CancellationToken = options.CancellationToken
+            CancellationToken = cancellationToken
         };
 
         Parallel.ForEach(Enumerable.Range(0, tasks.Count), parallelOptions, index =>
         {
-            options.CancellationToken.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
 
             var task = tasks[index];
             try
             {
-                var solution = task.Spacecraft.Propagate(task.Window, task.Options);
+                var solution = task.Spacecraft.Propagate(task.Window, task.Options, cancellationToken);
                 results[index] = new PropagationResult(task.Spacecraft, solution, null);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                throw; // let Parallel.ForEach propagate cancellation
+                throw; // the batch stops: Parallel.ForEach throws one OperationCanceledException of the token
             }
             catch (Exception ex)
             {
                 results[index] = new PropagationResult(task.Spacecraft, null, ex);
             }
-            finally
-            {
-                int done = Interlocked.Increment(ref completed);
-                options.Progress?.Report(new BatchProgress(done, tasks.Count));
-            }
+
+            int done = Interlocked.Increment(ref completed);
+            progress?.Report(new BatchProgress(done, tasks.Count));
         });
 
         stopwatch.Stop();
         return new BatchResult(results, stopwatch.Elapsed);
-    }
-
-    /// <summary>
-    /// Propagate all tasks in parallel (async wrapper).
-    /// </summary>
-    /// <param name="tasks">Propagation tasks to execute. Must not contain duplicate Spacecraft instances.</param>
-    /// <param name="options">Parallelism, cancellation, and progress options. Null uses defaults.</param>
-    /// <returns>Aggregated batch result.</returns>
-    public static Task<BatchResult> PropagateAsync(IReadOnlyList<PropagationTask> tasks, BatchOptions options = null)
-    {
-        return Task.Run(() => Propagate(tasks, options), options?.CancellationToken ?? default);
     }
 
     private static void ValidateNoDuplicateSpacecraft(IReadOnlyList<PropagationTask> tasks)

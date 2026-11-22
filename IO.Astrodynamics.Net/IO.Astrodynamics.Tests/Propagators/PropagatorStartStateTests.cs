@@ -61,7 +61,7 @@ public class PropagatorStartStateTests
         var bodies = new CelestialItem[] { _earth };
 
         // Act
-        using var propagator = name.StartsWith("RK")
+        var propagator = name.StartsWith("RK")
             ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
             : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
         var solution = propagator.Propagate();
@@ -110,7 +110,7 @@ public class PropagatorStartStateTests
         var bodies = new CelestialItem[] { _earth };
 
         // Act: the constructor with an integrator and its forces, and the default Velocity-Verlet one
-        using var propagator = start.StartsWith("RK")
+        var propagator = start.StartsWith("RK")
             ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
             : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
         var solution = propagator.Propagate();

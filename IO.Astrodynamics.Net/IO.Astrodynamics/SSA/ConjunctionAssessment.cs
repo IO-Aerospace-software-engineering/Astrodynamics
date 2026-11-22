@@ -592,7 +592,7 @@ public static class ConjunctionAssessment
     {
         lock (syncRoot)
         {
-            using var propagator = new CentralBodyPropagator(window, trial, integrator, window.Length,
+            var propagator = new CentralBodyPropagator(window, trial, integrator, window.Length,
                 covariancePropagation, orientationCache, syncRoot);
             var cross = crossCovariance?.Invoke();
             if (cross != null)

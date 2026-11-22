@@ -317,7 +317,7 @@ public class ManeuverChainCycleTests
         // The chain is valid when the propagator is built
         setup.Spacecraft.SetStandbyManeuver(kind.StartsWith("nadir") ? nadir : apo);
         if (kind != "nadir>nadir" && kind != "apo>apo") apo.SetNextManeuver(nadir);
-        using var propagator = new CentralBodyPropagator(SixHours, setup.Spacecraft, new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(SixHours, setup.Spacecraft, new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, CovariancePropagation = CovariancePropagationOptions.None });
 
         switch (kind)
         {

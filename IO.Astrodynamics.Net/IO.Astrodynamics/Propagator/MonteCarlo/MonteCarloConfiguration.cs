@@ -48,8 +48,9 @@ public sealed record MonteCarloConfiguration
     public int BaseNaifId { get; init; } = -100_000;
 
     /// <summary>
-    /// Optional batch propagation options (parallelism, error handling).
-    /// When <c>null</c>, defaults from <see cref="BatchPropagator"/> are used.
+    /// Optional batch propagation options (the parallelism of the runs); null for <see cref="Propagator.BatchOptions.Default"/>.
+    /// The token and the progress of a campaign are parameters of <see cref="MonteCarloPropagator.Propagate(MonteCarloConfiguration, System.IProgress{BatchProgress}, System.Threading.CancellationToken)"/>
+    /// since 11.0.0 (R28 of #668).
     /// </summary>
     public BatchOptions BatchOptions { get; init; }
 }

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -602,26 +603,60 @@ public abstract class PropagatorBase : IPropagator
     /// 11.0.0 only <c>Spacecraft.Propagate</c> re-armed it: a second run through the builder of 10.x or a propagator built
     /// directly fired no burn and started with the fuel left by the first. The spacecraft is then
     /// <see cref="Spacecraft.IsPropagated"/>, whatever the path.
+    /// <para>
+    /// Cancellation (R28 of #668): <paramref name="cancellationToken"/> is read once the checks pass, before the re-arm,
+    /// so that a token already cancelled changes nothing; then before each segment, and by <see cref="VVIntegrator"/>
+    /// and <see cref="RK78Integrator"/> at each accepted step (never between the rejections of a step, at most 101); an
+    /// integrator implemented outside the library is stopped between its segments only. It is not read after the last
+    /// segment, so the outputs, the attitude record and the stored states are written as one block. A run stopped leaves
+    /// the spacecraft re-armed and partial: no stored state and no attitude record, not
+    /// <see cref="Spacecraft.IsPropagated"/>, no solution or force model kept for the conjunction analysis (internal
+    /// <c>LastPropagation</c>, <c>LastForceModel</c>; a TLE spacecraft reads SGP4 again, any other its initial orbit), its
+    /// fuel, <see cref="Spacecraft.ExecutedManeuvers"/> and standby chain advanced up to the stop; the next propagation
+    /// re-arms it (C2 of lot L4).
+    /// </para>
     /// </remarks>
+    /// <param name="cancellationToken">The token that stops the run; none by default, bit for bit the run without it.</param>
     /// <returns>The solution.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
     /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
     /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
     /// of the chain has its target orbit in another frame than the frame the propagator integrates in (GCRF and ICRF
     /// counting as one, third review of #685), a maneuver attached after the propagator was built (#685; the constructor
     /// throws <see cref="ArgumentException"/> for those it sees); or
     /// a maneuver draws on a tank that is not the spacecraft's (#676). Nothing runs.</exception>
-    public PropagationSolution Propagate()
+    public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
         // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
         // see each other's cache, and none is left on the shared frame
         var (cacheFrame, cache) = OrientationCache;
         using (Frame.UseOrientationCache(cacheFrame, cache))
         {
-            return PropagateWithOrientationCache(cacheFrame, cache);
+            // The token of the run, read by the integrators of the library at each accepted step and reset after the run,
+            // so that the forces kept by the solution never stop on it (R28 of #668)
+            var hooked = Integrator as Integrators.Integrator;
+            if (hooked != null)
+            {
+                hooked.Cancellation = cancellationToken;
+            }
+
+            try
+            {
+                return PropagateWithOrientationCache(cacheFrame, cache, cancellationToken);
+            }
+            finally
+            {
+                if (hooked != null)
+                {
+                    hooked.Cancellation = default;
+                }
+            }
         }
     }
 
-    private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache)
+    private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache,
+        CancellationToken cancellationToken)
     {
         // 1. The length of the propagation, in seconds of the time argument: that of the window (choice 6 of #668). A
         // grid that does not reach the window end exactly ends with it (#741, choice 6), and in TT a grid that misses the
@@ -647,6 +682,9 @@ public abstract class PropagatorBase : IPropagator
         }
 
         Spacecraft.CheckManeuverEngines();
+
+        // Before the re-arm, so that a token already cancelled changes nothing (decision 6 of lot L4 of #668)
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Every check passed: the spacecraft is re-armed, on every path (#583)
         Spacecraft.ResetPropagation();
@@ -699,6 +737,11 @@ public abstract class PropagatorBase : IPropagator
             double remaining = TimeArgument.Remaining(Window.StartDate, propagationDuration, propagationEnd, currentEpoch);
             bool lastAfterImpulse = remaining <= 0.0;
             if (lastAfterImpulse && !afterImpulse) break;
+
+            // Before each segment, so between the segments of an integrator that does not read the token, and never after
+            // the last one: the outputs, the attitude record and the stored states are written as one block (decision 6
+            // of lot L4 of #668)
+            cancellationToken.ThrowIfCancellationRequested();
 
             // a. Integrate segment, with the mass and coefficients of the segment, recorded for the force model of the
             // propagation (#402) and, in RK7(8), for the evaluations of its solution
@@ -1367,7 +1410,4 @@ public abstract class PropagatorBase : IPropagator
         return null;
     }
 
-    public void Dispose()
-    {
-    }
 }

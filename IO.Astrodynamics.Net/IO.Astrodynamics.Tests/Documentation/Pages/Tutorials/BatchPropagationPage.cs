@@ -122,14 +122,11 @@ internal static class BatchPropagationPage
     {
         #region docs/tutorials/batch-propagation.md:4
         // Inputs: tasks (List<PropagationTask>)
-        var result = BatchPropagator.Propagate(tasks, new BatchOptions
+        var progress = new Progress<BatchProgress>(p =>
         {
-            MaxDegreeOfParallelism = 4,
-            Progress = new Progress<BatchProgress>(p =>
-            {
-                Console.WriteLine($"Progress: {p.Completed}/{p.Total}");
-            })
+            Console.WriteLine($"Progress: {p.Completed}/{p.Total}");
         });
+        var result = BatchPropagator.Propagate(tasks, progress, new BatchOptions { MaxDegreeOfParallelism = 4 });
         #endregion
     }
 
@@ -143,11 +140,7 @@ internal static class BatchPropagationPage
         // Cancel after 30 seconds
         cts.CancelAfter(TimeSpan.FromSeconds(30));
 
-        var result = BatchPropagator.Propagate(tasks, new BatchOptions
-        {
-            MaxDegreeOfParallelism = 4,
-            CancellationToken = cts.Token
-        });
+        var result = BatchPropagator.Propagate(tasks, new BatchOptions { MaxDegreeOfParallelism = 4 }, cts.Token);
         #endregion
     }
 

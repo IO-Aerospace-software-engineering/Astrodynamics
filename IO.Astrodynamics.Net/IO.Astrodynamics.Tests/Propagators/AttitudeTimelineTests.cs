@@ -362,7 +362,7 @@ public class AttitudeTimelineTests
                 }
                 case "Direct":
                 {
-                    using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
+                    var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                     solution = propagator.Propagate();
                     break;
                 }
