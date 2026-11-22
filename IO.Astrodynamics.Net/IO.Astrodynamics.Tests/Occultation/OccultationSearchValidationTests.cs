@@ -8,6 +8,8 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
@@ -282,7 +284,7 @@ public class OccultationSearchValidationTests
         var orbit = new KeplerianElements(7000000.0, 0.001, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, earth,
             Eclipse001Window.StartDate, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(naifId, "Eclipse001", 100.0, 1000.0, new Clock("Eclipse001Clk", 65536), orbit);
-        spacecraft.Propagate(Eclipse001Window, [earth], new RK78Integrator(1e-12, 1e-12, 60.0), false, false, outputStep);
+        spacecraft.Propagate(Eclipse001Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12, InitialStep = TimeSpan.FromSeconds(60.0) }, OutputStep = outputStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         return spacecraft;
     }
 

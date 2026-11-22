@@ -104,14 +104,9 @@ public class CovariancePropagationBenchmarks
     public void IterationSetup()
     {
         var spacecraft = NewSpacecraft(-1101, _initialState);
-        var builder = new CentralBodyPropagatorBuilder(new Window(Epoch, Epoch.AddDays(1.0)), spacecraft,
-                new RK78Integrator(Tolerance, Tolerance), TimeSpan.FromSeconds(OutputStepSeconds))
-            .WithPerturbingBodies(_bodies);
-        if (_drag) builder.IncludeAtmosphericDrag();
-        if (_srp) builder.IncludeSolarRadiationPressure();
-        if (Mode != VariationalMode.None)
-        {
-            builder.WithCovariancePropagation(new CovariancePropagationOptions
+        var covariancePropagation = Mode == VariationalMode.None
+            ? CovariancePropagationOptions.None
+            : new CovariancePropagationOptions
             {
                 Mode = Mode == VariationalMode.Covariance
                     ? CovariancePropagationMode.Covariance
@@ -119,10 +114,16 @@ public class CovariancePropagationBenchmarks
                 ConsiderParameters = Mode == VariationalMode.Covariance
                     ? _drag ? new ConsiderParameters(dragCoefficientSigma: 0.1) : new ConsiderParameters(reflectivityCoefficientSigma: 0.1)
                     : null
-            });
-        }
-
-        _propagator = builder.Build();
+            };
+        _propagator = new CentralBodyPropagator(new Window(Epoch, Epoch.AddDays(1.0)), spacecraft, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = Tolerance, RelativeTolerance = Tolerance },
+            OutputStep = TimeSpan.FromSeconds(OutputStepSeconds),
+            ThirdBodies = _bodies,
+            AtmosphericDrag = _drag,
+            SolarRadiationPressure = _srp,
+            CovariancePropagation = covariancePropagation
+        });
     }
 
     [Benchmark(Description = "RK7(8) one day")]
@@ -188,8 +189,18 @@ public class ConjunctionCovarianceBenchmarks
         var propagation = new Window(epoch, epoch.AddDays(1.0));
         foreach (var craft in new[] { protectedCraft, _secondary })
         {
-            craft.Propagate(propagation, bodies, new RK78Integrator(CovariancePropagationBenchmarks.Tolerance,
-                CovariancePropagationBenchmarks.Tolerance), true, false, TimeSpan.FromSeconds(60.0), null);
+            craft.Propagate(propagation, new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions
+                {
+                    AbsoluteTolerance = CovariancePropagationBenchmarks.Tolerance,
+                    RelativeTolerance = CovariancePropagationBenchmarks.Tolerance
+                },
+                OutputStep = TimeSpan.FromSeconds(60.0),
+                ThirdBodies = bodies,
+                AtmosphericDrag = true,
+                CovariancePropagation = CovariancePropagationOptions.None
+            });
         }
 
         _protected = new ProtectedSpacecraftProfile(protectedCraft);

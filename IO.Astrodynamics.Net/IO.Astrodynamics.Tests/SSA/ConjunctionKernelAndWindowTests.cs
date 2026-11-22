@@ -7,6 +7,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.SSA;
@@ -26,19 +27,18 @@ public class CrossingEncounterCase : IDisposable
     internal const int Id1 = -620001;
     internal const int Id2 = -620002;
 
-    public CrossingEncounterCase() : this(Id1, Id2, "CROSS", () => new RK78Integrator(absoluteTolerance: 1e-13,
-        relativeTolerance: 1e-13, initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 60.0))
+    public CrossingEncounterCase() : this(Id1, Id2, "CROSS", () => new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(60.0) })
     {
     }
 
-    protected CrossingEncounterCase(int id1, int id2, string name, Func<RK78Integrator> integrator)
+    protected CrossingEncounterCase(int id1, int id2, string name, Func<IntegratorOptions> integrator)
         : this(id1, id2, name, CrossingStates, integrator, integrator)
     {
     }
 
     protected CrossingEncounterCase(int id1, int id2, string name,
-        Func<CelestialBody, TimeSystem.Time, (StateVector, StateVector)> states, Func<RK78Integrator> integrator1,
-        Func<RK78Integrator> integrator2)
+        Func<CelestialBody, TimeSystem.Time, (StateVector, StateVector)> states, Func<IntegratorOptions> integrator1,
+        Func<IntegratorOptions> integrator2)
     {
         ProtectedId = id1;
         SecondaryId = id2;
@@ -50,8 +50,8 @@ public class CrossingEncounterCase : IDisposable
         Sat1 = new Spacecraft(id1, name + "1", 500.0, 5000.0, new Clock(name + "1_CLK", 256), s1);
         Sat2 = new Spacecraft(id2, name + "2", 100.0, 1000.0, new Clock(name + "2_CLK", 256), s2);
         Window = new Window(T0, T0.AddSeconds(10800.0));
-        Solution1 = Sat1.Propagate(Window, new CelestialItem[] { earth }, integrator1(), false, false, TimeSpan.FromSeconds(60.0));
-        Solution2 = Sat2.Propagate(Window, new CelestialItem[] { earth }, integrator2(), false, false, TimeSpan.FromSeconds(60.0));
+        Solution1 = Sat1.Propagate(Window, new PropagationOptions { Integrator = integrator1(), OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
+        Solution2 = Sat2.Propagate(Window, new PropagationOptions { Integrator = integrator2(), OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         _directory = Directory.CreateTempSubdirectory("io-crossing-");
         Spk1 = new FileInfo(Path.Combine(_directory.FullName, name.ToLowerInvariant() + "1.bsp"));
@@ -132,7 +132,7 @@ public class CrossingEncounterCase : IDisposable
 /// </summary>
 public sealed class DefaultStepCrossingEncounterCase : CrossingEncounterCase
 {
-    public DefaultStepCrossingEncounterCase() : base(-620011, -620012, "CROSSD", () => new RK78Integrator())
+    public DefaultStepCrossingEncounterCase() : base(-620011, -620012, "CROSSD", () => RK78IntegratorOptions.Default)
     {
     }
 }
@@ -146,8 +146,7 @@ public sealed class SlowPassEncounterCase : CrossingEncounterCase
     {
     }
 
-    internal static RK78Integrator Steps60() => new(absoluteTolerance: 1e-13, relativeTolerance: 1e-13, initialStepSize: 60.0,
-        minStepSize: 1e-3, maxStepSize: 60.0);
+    internal static IntegratorOptions Steps60() => new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(60.0) };
 }
 
 /// <summary>
@@ -158,7 +157,7 @@ public sealed class SlowPassEncounterCase : CrossingEncounterCase
 public sealed class DefaultStepSlowPassEncounterCase : CrossingEncounterCase
 {
     public DefaultStepSlowPassEncounterCase() : base(-620031, -620032, "SLOWD", SlowPassStates(100.0),
-        () => new RK78Integrator(), () => new RK78Integrator())
+        () => RK78IntegratorOptions.Default, () => RK78IntegratorOptions.Default)
     {
     }
 }
@@ -170,9 +169,8 @@ public sealed class DefaultStepSlowPassEncounterCase : CrossingEncounterCase
 /// </summary>
 public sealed class MixedStepSlowPassEncounterCase : CrossingEncounterCase
 {
-    public MixedStepSlowPassEncounterCase() : base(-620041, -620042, "SLOWX", SlowPassStates(1.0), () => new RK78Integrator(),
-        () => new RK78Integrator(absoluteTolerance: 1e-13, relativeTolerance: 1e-13, initialStepSize: 30.0, minStepSize: 1e-3,
-            maxStepSize: 30.0))
+    public MixedStepSlowPassEncounterCase() : base(-620041, -620042, "SLOWX", SlowPassStates(1.0), () => RK78IntegratorOptions.Default,
+        () => new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13, InitialStep = TimeSpan.FromSeconds(30.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(30.0) })
     {
     }
 }
@@ -192,14 +190,14 @@ public abstract class CwPassEncounterCase : CrossingEncounterCase
     {
     }
 
-    protected CwPassEncounterCase(int id1, int id2, string name, double y0, Func<RK78Integrator> integrator1,
-        Func<RK78Integrator> integrator2)
+    protected CwPassEncounterCase(int id1, int id2, string name, double y0, Func<IntegratorOptions> integrator1,
+        Func<IntegratorOptions> integrator2)
         : base(id1, id2, name, CwStates(y0), integrator1, integrator2)
     {
     }
 
-    private static Func<RK78Integrator> Steps(bool defaultSteps) =>
-        defaultSteps ? () => new RK78Integrator() : SlowPassEncounterCase.Steps60;
+    private static Func<IntegratorOptions> Steps(bool defaultSteps) =>
+        defaultSteps ? () => RK78IntegratorOptions.Default : SlowPassEncounterCase.Steps60;
 
     /// <summary>
     /// The step of CSPICE's <c>gfdist_c</c> for the reference minima: 1 s, the maxima lying less than 60 s from a minimum.
@@ -262,8 +260,8 @@ public abstract class CwPassFoldEncounterCase : CwPassEncounterCase
     {
     }
 
-    protected CwPassFoldEncounterCase(int id1, int id2, string name, Func<RK78Integrator> integrator1,
-        Func<RK78Integrator> integrator2)
+    protected CwPassFoldEncounterCase(int id1, int id2, string name, Func<IntegratorOptions> integrator1,
+        Func<IntegratorOptions> integrator2)
         : base(id1, id2, name, 1502.358, integrator1, integrator2)
     {
     }
@@ -294,7 +292,7 @@ public sealed class CwPassFoldStep60Case : CwPassFoldEncounterCase
 /// </summary>
 public sealed class CwPassMixedStep1500Case : CwPassEncounterCase
 {
-    public CwPassMixedStep1500Case() : base(-620111, -620112, "CWM", 1500.0, () => new RK78Integrator(),
+    public CwPassMixedStep1500Case() : base(-620111, -620112, "CWM", 1500.0, () => RK78IntegratorOptions.Default,
         SlowPassEncounterCase.Steps60)
     {
     }
@@ -303,7 +301,7 @@ public sealed class CwPassMixedStep1500Case : CwPassEncounterCase
 /// <summary>The pass with two minima per orbit, <c>y0</c> = 1490 m, at the default steps and 60 s steps (#628).</summary>
 public sealed class CwPassMixedStep1490Case : CwPassEncounterCase
 {
-    public CwPassMixedStep1490Case() : base(-620121, -620122, "CWM90", 1490.0, () => new RK78Integrator(),
+    public CwPassMixedStep1490Case() : base(-620121, -620122, "CWM90", 1490.0, () => RK78IntegratorOptions.Default,
         SlowPassEncounterCase.Steps60)
     {
     }
@@ -317,7 +315,7 @@ public sealed class CwPassMixedStep1490Case : CwPassEncounterCase
 public sealed class CwPassMixedStep1495Case : CwPassEncounterCase
 {
     public CwPassMixedStep1495Case() : base(-620131, -620132, "CWN", 1495.0, SlowPassEncounterCase.Steps60,
-        () => new RK78Integrator())
+        () => RK78IntegratorOptions.Default)
     {
     }
 }
@@ -328,8 +326,8 @@ public sealed class CwPassMixedStep1495Case : CwPassEncounterCase
 /// </summary>
 public sealed class CwPassStep600Case : CwPassEncounterCase
 {
-    public CwPassStep600Case() : base(-620141, -620142, "CW600", 1490.0, () => new RK78Integrator(600.0),
-        () => new RK78Integrator(600.0))
+    public CwPassStep600Case() : base(-620141, -620142, "CW600", 1490.0, () => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(600.0) },
+        () => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(600.0) })
     {
     }
 }
@@ -337,8 +335,8 @@ public sealed class CwPassStep600Case : CwPassEncounterCase
 /// <summary>The pass with two minima per orbit, <c>y0</c> = 1500 m, at fixed 600 s steps (#628).</summary>
 public sealed class CwPass1500Step600Case : CwPassEncounterCase
 {
-    public CwPass1500Step600Case() : base(-620151, -620152, "CWE600", 1500.0, () => new RK78Integrator(600.0),
-        () => new RK78Integrator(600.0))
+    public CwPass1500Step600Case() : base(-620151, -620152, "CWE600", 1500.0, () => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(600.0) },
+        () => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(600.0) })
     {
     }
 }
@@ -351,7 +349,7 @@ public sealed class CwPass1500Step600Case : CwPassEncounterCase
 /// </summary>
 public sealed class CwPassFoldMixedStepCase : CwPassFoldEncounterCase
 {
-    public CwPassFoldMixedStepCase() : base(-620161, -620162, "CWFM", () => new RK78Integrator(), SlowPassEncounterCase.Steps60)
+    public CwPassFoldMixedStepCase() : base(-620161, -620162, "CWFM", () => RK78IntegratorOptions.Default, SlowPassEncounterCase.Steps60)
     {
     }
 }
@@ -882,12 +880,11 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
             Frames.Frame.ICRF);
         var pointMass = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch2040);
         var free = new Spacecraft(-620004, "PCK2040", 100.0, 1000.0, new Clock("PCK2040_CLK", 256), Leo(pointMass));
-        free.Propagate(window2040, new CelestialItem[] { pointMass }, new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0));
+        free.Propagate(window2040, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { pointMass }, CovariancePropagation = CovariancePropagationOptions.None });
         var withField = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch2040,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var bound = new Spacecraft(-620005, "PCK2040F", 100.0, 1000.0, new Clock("PCK2040F_CLK", 256), Leo(withField));
-        Assert.Throws<InvalidOperationException>(() => bound.Propagate(window2040, new CelestialItem[] { withField }, new RK78Integrator(),
-            false, false, TimeSpan.FromSeconds(60.0)));
+        Assert.Throws<InvalidOperationException>(() => bound.Propagate(window2040, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { withField }, CovariancePropagation = CovariancePropagationOptions.None }));
 
         // de440s does not chain Mars to its barycenter: the body is built without initial orbital parameters (an
         // undefined state before), and a read of its position throws

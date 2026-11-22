@@ -131,16 +131,17 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
 
 ## Propagate An Orbit
 
-=== "Velocity-Verlet"
+=== "Adaptive RK7(8)"
 
-    The fixed-step symplectic integrator:
+    The default: the adaptive Prince-Dormand integrator at 1e-9 with sub-step event refinement, an output every 60 s,
+    the settings in one `PropagationOptions` value:
 
     ```csharp
     using IO.Astrodynamics.Body.Spacecraft;
     using IO.Astrodynamics.Propagator;
     using IO.Astrodynamics.Propagator.Integrators;
 
-    // Inputs: orbit (StateVector), epoch (Time), earth (CelestialBody)
+    // Inputs: orbit (StateVector), epoch (Time)
     var spacecraft = new Spacecraft(
         -1001,                         // NAIF id
         "MySat",
@@ -151,50 +152,43 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
 
     var window = new Window(epoch, epoch.AddHours(2));
 
-    using var propagator = new CentralBodyPropagator(
-        window,
-        spacecraft,
-        new VVIntegrator(TimeSpan.FromSeconds(10.0)),
-        new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        includeAtmosphericDrag: false,
-        includeSolarRadiationPressure: false,
-        deltaT: TimeSpan.FromSeconds(60.0));
+    var solution = spacecraft.Propagate(window, new PropagationOptions
+    {
+        Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
+        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+        AtmosphericDrag = true,
+        SolarRadiationPressure = true
+    });
 
-    var solution = propagator.Propagate();
     var (position, velocity) = solution.InterpolateAt(window.EndDate);
     ```
 
-=== "Adaptive RK7(8)"
+    The orbit is on `PlanetsAndMoons.EARTH_BODY`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
+    space weather. Give the Earth an `IAtmosphericModel` for another one.
 
-    The adaptive Prince-Dormand integrator with sub-step event refinement, assembled with the
-    fluent builder:
+=== "Velocity-Verlet"
+
+    The fixed-step symplectic integrator, its own step set apart from the output step:
 
     ```csharp
     using IO.Astrodynamics.Propagator;
     using IO.Astrodynamics.Propagator.Integrators;
 
     // Inputs: epoch (Time), spacecraft (Spacecraft)
-    var integrator = new RK78Integrator(
-        absoluteTolerance: 1e-10,
-        relativeTolerance: 1e-10,
-        initialStepSize: 30.0);
-
     var window = new Window(epoch, epoch.AddHours(2));
 
-    using var propagator = new CentralBodyPropagatorBuilder(
-            window, spacecraft, integrator, TimeSpan.FromSeconds(60.0))
-        .WithPerturbingBody(Stars.SUN_BODY)
-        .WithPerturbingBody(PlanetsAndMoons.MOON_BODY)
-        .IncludeAtmosphericDrag()
-        .IncludeSolarRadiationPressure()
-        .Build();
+    var solution = spacecraft.Propagate(window, new PropagationOptions
+    {
+        Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
+        OutputStep = TimeSpan.FromSeconds(60.0),
+        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    });
 
-    var solution = propagator.Propagate();
     var (position, velocity) = solution.InterpolateAt(window.EndDate);
     ```
 
-    The orbit is on `PlanetsAndMoons.EARTH_BODY`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
-    space weather. Give the Earth an `IAtmosphericModel` for another one.
+    Velocity-Verlet's error grows as the square of its step: a LEO day ends 974 km from Kepler at 60 s, 271 m at 1 s,
+    where RK7(8) at its defaults ends 1.36 m from it.
 
 ## Next Steps
 

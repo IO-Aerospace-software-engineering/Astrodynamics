@@ -10,6 +10,9 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
+using IO.Astrodynamics.Propagator.Integrators;
 namespace IO.Astrodynamics.Tests.Body
 {
     public class ClockTests
@@ -195,8 +198,7 @@ namespace IO.Astrodynamics.Tests.Body
             var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);
             spacecraft.AddEngine(engine);
             spacecraft.SetStandbyManeuver(Maneuver.TriadAttitude.CreateLVLH(earth, epoch, TimeSpan.Zero, engine));
-            spacecraft.Propagate(new Window(epoch, epoch.AddSeconds(3600.0)), [earth], new Propagator.Integrators.RK78Integrator(1e-10, 1e-10),
-                false, false, TimeSpan.FromSeconds(60.0));
+            spacecraft.Propagate(new Window(epoch, epoch.AddSeconds(3600.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
             var directory = Constants.OutputPath.CreateSubdirectory("Clock676").CreateSubdirectory(Guid.NewGuid().ToString("N")[..8]);
             var sclk = new FileInfo(Path.Combine(directory.FullName, "ownclk.tsc"));
             var fk = new FileInfo(Path.Combine(directory.FullName, "ownclk.tf"));

@@ -60,28 +60,30 @@ namespace DocumentationPageSamples.Guides;
 /// <summary>The C# examples of docs/guides/thread-safety.md, one method per block (#705).</summary>
 internal static class ThreadSafetyPage
 {
-    // docs/guides/thread-safety.md, "Per-Task CelestialBody Pattern"
+    // docs/guides/thread-safety.md, "Shared Bodies, One Options Value"
     internal static BatchResult Block01(int taskCount, StateVector orbit, Window window)
     {
         #region docs/guides/thread-safety.md:1
         // Inputs: taskCount (int), orbit (StateVector), window (Window)
-        var tasks = new List<PropagationTask>();
+        // One Earth with geopotential, shared by every task
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+        var options = new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        };
 
+        var tasks = new List<PropagationTask>();
         for (int i = 0; i < taskCount; i++)
         {
-            // Each task gets its own CelestialBody with geopotential
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH,
-                new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-
-            // The same state about this task's Earth: the orbit's centre and the listed Earth must have the same models
+            // The same state about the shared Earth
             var spacecraft = new Spacecraft(-(1000 + i), $"Sat-{i}", 100.0, 10000.0,
                 new Clock($"clk-{i}", 256), new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame));
-
-            tasks.Add(new PropagationTask(spacecraft, window,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
-                deltaT: TimeSpan.FromSeconds(60),
-                integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)));
+            tasks.Add(new PropagationTask(spacecraft, window, options));
         }
 
         var result = BatchPropagator.Propagate(tasks);
@@ -89,7 +91,7 @@ internal static class ThreadSafetyPage
         return result;
     }
 
-    // docs/guides/thread-safety.md, "Monte Carlo Factory Pattern"
+    // docs/guides/thread-safety.md, "Monte Carlo Pattern"
     internal static void Block02(Spacecraft spacecraft, Window window)
     {
         #region docs/guides/thread-safety.md:2
@@ -100,15 +102,14 @@ internal static class ThreadSafetyPage
             Seed = 42,
             TemplateSpacecraft = spacecraft,   // its initial state carries the covariance that is sampled
             Window = window,
-            DeltaT = TimeSpan.FromSeconds(60),
-            CelestialBodiesFactory = () =>
-            [
-                new CelestialBody(PlanetsAndMoons.EARTH,
-                    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)),
-                Stars.SUN_BODY,
-                PlanetsAndMoons.MOON_BODY
-            ],
-            IntegratorFactory = () => new RK78Integrator(1e-10, 1e-10, 30.0),
+            Propagation = new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions
+                {
+                    AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+                },
+                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            }
         };
         #endregion
     }

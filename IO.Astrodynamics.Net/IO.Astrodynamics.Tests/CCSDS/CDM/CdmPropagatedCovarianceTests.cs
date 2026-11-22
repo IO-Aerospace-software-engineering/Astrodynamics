@@ -79,8 +79,7 @@ public sealed class CdmPropagatedCovarianceCase
     internal PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options = null,
         bool pointMass = false, double tolerance = 1e-11)
     {
-        return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), pointMass ? PointMassBodies : Bodies,
-            new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(60.0), options);
+        return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = pointMass ? PointMassBodies : Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
     }
 }
 
@@ -257,12 +256,11 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         {
             if (integrator == "RK7(8)")
             {
-                craft.Propagate(window, _case.PointMassBodies, new RK78Integrator(1e-11, 1e-11), true, false,
-                    TimeSpan.FromSeconds(60.0));
+                craft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = _case.PointMassBodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
             }
             else
             {
-                craft.Propagate(window, _case.PointMassBodies, true, false, TimeSpan.FromSeconds(1.0));
+                craft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = _case.PointMassBodies, AtmosphericDrag = true });
             }
         }
 

@@ -16,27 +16,24 @@ workflow that processes many objects over the same time window.
 ## Setting up propagation tasks
 
 Each spacecraft is wrapped in a `PropagationTask` that specifies the time
-window, celestial environment, force model options, output step size, and
-integrator factory.
+window and the settings of its propagation, a `PropagationOptions` value: the
+integrator, the output step, the third bodies and the forces
+([Propagation Options](../reference/propagators.md#propagation-options)).
 
 ```csharp
-// Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
+// Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window)
+var gravity = new PropagationOptions
+{
+    Integrator = new RK78IntegratorOptions
+    {
+        AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+    },
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+};
 var tasks = new List<PropagationTask>
 {
-    new PropagationTask(
-        spacecraft1, window,
-        new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        includeAtmosphericDrag: false,
-        includeSolarRadiationPressure: false,
-        deltaT: TimeSpan.FromSeconds(60),
-        integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
-    new PropagationTask(
-        spacecraft2, window,
-        new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        includeAtmosphericDrag: true,
-        includeSolarRadiationPressure: true,
-        deltaT: TimeSpan.FromSeconds(60),
-        integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
+    new PropagationTask(spacecraft1, window, gravity),
+    new PropagationTask(spacecraft2, window, gravity with { AtmosphericDrag = true, SolarRadiationPressure = true }),
 };
 ```
 
@@ -135,41 +132,31 @@ run to completion.
 
 ## Thread safety requirements
 
-!!! warning "One CelestialBody per task for geopotential"
-    The `GeopotentialGravitationalField` force model is **not** thread-safe.
-    Each `PropagationTask` must use its own `CelestialBody` instance when
-    geopotential harmonics are enabled. Sharing a single `CelestialBody`
-    across tasks causes data races and incorrect results.
-
-Create separate instances for each task:
+!!! note "Shared bodies"
+    Since 11.0.0 each propagation builds its own geopotential field from the central body's model (R06 of #668), so the
+    tasks may share one `CelestialBody` with geopotential harmonics, and one `PropagationOptions` value: each task builds
+    its own integrator and forces from it. Before, each task needed its own `CelestialBody` and an integrator factory.
 
 ```csharp
 // Inputs: spacecraftList (List<Spacecraft>), window (Window)
-var tasks = Enumerable.Range(0, spacecraftList.Count).Select(i =>
+var options = new PropagationOptions
 {
-    // Fresh CelestialBody per task
-    var taskEarth = new CelestialBody(PlanetsAndMoons.EARTH);
-
-    return new PropagationTask(
-        spacecraftList[i], window,
-        new CelestialItem[] { taskEarth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        includeAtmosphericDrag: false,
-        includeSolarRadiationPressure: false,
-        deltaT: TimeSpan.FromSeconds(60),
-        integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0));
-}).ToList();
+    Integrator = new RK78IntegratorOptions
+    {
+        AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+    },
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+};
+var tasks = spacecraftList.Select(spacecraft => new PropagationTask(spacecraft, window, options)).ToList();
 ```
-
-The `IntegratorFactory` delegate already creates a fresh integrator per task,
-so no additional care is needed there.
 
 ## Summary
 
 - `BatchPropagator.Propagate` runs multiple spacecraft propagations in
   parallel with fault isolation.
-- Each `PropagationTask` specifies its own force model, output step, and
-  integrator factory.
+- Each `PropagationTask` specifies its settings in a `PropagationOptions`
+  value, which tasks may share.
 - Use `MaxDegreeOfParallelism` to control concurrency.
 - Progress callbacks and `CancellationToken` support operational monitoring.
-- Create a separate `CelestialBody` instance per task when using geopotential
-  gravity to avoid thread-safety issues.
+- Tasks may share their bodies, a geopotential included: each propagation
+  builds its own field.

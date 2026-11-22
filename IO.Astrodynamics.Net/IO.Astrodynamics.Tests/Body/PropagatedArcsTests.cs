@@ -9,6 +9,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -40,7 +41,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// per platform, and its figures were MEASURE lines with no assertion; with the direct difference near the Earth they are
 /// asserted again (<see cref="NearRkSsb"/>, <see cref="VelocityBeforeSsbRkSolution"/>), and the velocity 1 µs before an
 /// impulse is also measured against the anchored reference, <see cref="ArcRun.AnchoredVelocityBefore"/>. The
-/// Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
+/// Velocity-Verlet path of <c>Scenario.Simulate</c> keeps no solution: that of a twin propagated by
 /// <c>Spacecraft.Propagate</c>, whose stored states equal the scenario's to the bit.
 /// </para>
 /// <para>
@@ -741,11 +742,11 @@ public class PropagatedArcsTests
                 return (spacecraft, chain);
             }
 
-            Integrator NewIntegrator() => integrator switch
+            IntegratorOptions NewIntegrator() => integrator switch
             {
-                "VV" => new VVIntegrator(TimeSpan.FromSeconds(1.0)),
-                "VVd" => new VVIntegrator(step),
-                _ => ssb ? new RK78Integrator(AttitudeRecordTests.SsbRk78Tolerance, AttitudeRecordTests.SsbRk78Tolerance) : new RK78Integrator(1e-12, 1e-12)
+                "VV" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+                "VVd" => new VVIntegratorOptions { Step = step },
+                _ => ssb ? new RK78IntegratorOptions { AbsoluteTolerance = AttitudeRecordTests.SsbRk78Tolerance, RelativeTolerance = AttitudeRecordTests.SsbRk78Tolerance } : new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }
             };
 
             string runName = $"PA{-naifId}";
@@ -758,14 +759,14 @@ public class PropagatedArcsTests
                 var scenario = new Scenario("S" + runName, new IO.Astrodynamics.Mission.Mission("m" + runName), window);
                 foreach (var body in bodies) scenario.AddCelestialItem(body);
                 scenario.AddSpacecraft(sc);
-                scenario.SimulateAsync(false, false, step, NewIntegrator).GetAwaiter().GetResult();
+                scenario.Simulate(new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, CovariancePropagation = CovariancePropagationOptions.None });
                 solution = sc.LastPropagation;
                 if (solution == null)
                 {
                     // The Velocity-Verlet path keeps no solution: that of a twin propagated by Spacecraft.Propagate with the
                     // scenario's bodies, in its order, whose stored states are compared with the scenario's
                     var (twin, twinChain) = Build(naifId - 100000, runName + "T");
-                    solution = twin.Propagate(window, scenario.CelestialBodies, NewIntegrator(), false, false, step);
+                    solution = twin.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = scenario.CelestialBodies.ToArray(), CovariancePropagation = CovariancePropagationOptions.None });
                     reference = twinChain;
                     var a = sc.PropagatedStates;
                     var b = twin.PropagatedStates;
@@ -776,7 +777,7 @@ public class PropagatedArcsTests
             }
             else
             {
-                solution = sc.Propagate(window, bodies, NewIntegrator(), false, false, step);
+                solution = sc.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
             }
 
             var run = new ArcRun

@@ -645,10 +645,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="observer"></param>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
+    /// <param name="stepSize">The step between two states, positive.</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative (R11 of #668: before
+    /// 11.0.0 a zero step asked a list of int.MaxValue states and a negative one threw the list's exception).</exception>
     public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
+        RequirePositiveEphemerisStep(stepSize);
         // An upper bound of the count: the Length counts the leap seconds the calendar placement does not
         var occurences = (int)((searchWindow.Length / stepSize) + 1);
         var ephemeris = new List<StateVector>(occurences);
@@ -664,6 +667,21 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         return ephemeris;
+    }
+
+    /// <summary>
+    /// <paramref name="stepSize"/>, the step of a window read of <c>GetEphemeris</c>, when it is positive (R11 of #668).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The step is zero or negative.</exception>
+    internal static TimeSpan RequirePositiveEphemerisStep(in TimeSpan stepSize)
+    {
+        if (stepSize <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize,
+                "The step of an ephemeris read must be positive.");
+        }
+
+        return stepSize;
     }
 
     /// <summary>

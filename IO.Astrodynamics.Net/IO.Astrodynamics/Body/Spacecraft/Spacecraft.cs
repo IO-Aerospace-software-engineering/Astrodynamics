@@ -110,9 +110,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private bool _isPropagated;
 
         /// <summary>
-        /// Whether a numerical propagation ran on the spacecraft, by any path: <c>Propagate</c>, <c>PropagateAsync</c>,
-        /// <c>Scenario.SimulateAsync</c>, <see cref="BatchPropagator"/>, <see cref="CentralBodyPropagatorBuilder"/> or a
-        /// <see cref="CentralBodyPropagator"/> built directly (#583: the last two left it false before 11.0.0).
+        /// Whether a numerical propagation ran on the spacecraft, by any path: <c>Propagate</c>, <c>Scenario.Simulate</c>,
+        /// <see cref="BatchPropagator"/> or a <see cref="CentralBodyPropagator"/> built directly (#583: the builder of
+        /// 10.x and a propagator built directly left it false before 11.0.0).
         /// </summary>
         public bool IsPropagated => _isPropagated;
 
@@ -718,130 +718,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Propagate spacecraft
-        /// </summary>
-        /// <param name="window"></param>
-        /// <param name="celestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP</param>
-        /// <param name="includeAtmosphericDrag"></param>
-        /// <param name="includeSolarRadiationPressure"></param>
-        /// <param name="propagatorStepSize"></param>
-        public Task<PropagationSolution> PropagateAsync(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
-            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
-        {
-            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
-            return Task.Run(() => Propagate(window, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
-        }
-
-        /// <summary>
-        /// Propagate the spacecraft with the default integrator (Velocity-Verlet at <paramref name="propagatorStepSize"/>).
-        /// </summary>
-        /// <param name="window">The propagation window.</param>
-        /// <param name="celestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP.</param>
-        /// <param name="includeAtmosphericDrag">Whether to include atmospheric drag.</param>
-        /// <param name="includeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
-        /// <param name="propagatorStepSize">The step of the output states.</param>
-        /// <returns>The solution.</returns>
-        /// <exception cref="ArgumentException">The target orbit of an impulse of the maneuver chain is not in the frame the
-        /// spacecraft is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685), GCRF and ICRF
-        /// counting as one frame, whose axes they share (third review of #685); nothing changes.</exception>
-        /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive.</exception>
-        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
-            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
-        {
-            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
-
-            // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
-            // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
-            // The propagation resets the spacecraft once its checks pass, so that a rejected input leaves the previous
-            // propagation as it was (#583)
-            using var propagator = new CentralBodyPropagator(window, this, celestialBodies,
-                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            return propagator.Propagate();
-        }
-
-        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
-            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
-        {
-            return PropagateWithVariationalEquations(window, celestialBodies, integrator, includeAtmosphericDrag,
-                includeSolarRadiationPressure, propagatorStepSize, null);
-        }
-
-        /// <summary>
-        /// Propagate the spacecraft with <paramref name="integrator"/>, and the state transition matrix and the covariance
-        /// of <paramref name="covariancePropagation"/> with it.
-        /// </summary>
-        /// <param name="window">The propagation window.</param>
-        /// <param name="celestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP.</param>
-        /// <param name="integrator">The integrator, a new instance; the state transition matrix needs an
-        /// <see cref="RK78Integrator"/>.</param>
-        /// <param name="includeAtmosphericDrag">Whether to include atmospheric drag.</param>
-        /// <param name="includeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
-        /// <param name="propagatorStepSize">The step of the output states.</param>
-        /// <param name="covariancePropagation">The propagation of the state transition matrix and, in
-        /// <see cref="CovariancePropagationMode.Covariance"/>, of the covariance of
-        /// <see cref="ILocalizable.InitialOrbitalParameters"/>; null for none, as the overload without it.</param>
-        /// <returns>The solution, from which Φ, Ψ and P are read at any epoch of the window; in covariance mode, its
-        /// output states, which the spacecraft stores, carry their covariance.</returns>
-        /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator
-        /// is not an <see cref="RK78Integrator"/>.</exception>
-        /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a
-        /// consider parameter without its force; the integrator already holds forces or was already used by a
-        /// propagation that builds its forces; listed bodies of one NAIF identifier, the observer's included, have
-        /// different models; or the target orbit of an impulse of the maneuver chain is not in the frame the spacecraft
-        /// is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685), GCRF and ICRF
-        /// counting as one frame, whose axes they share (third review of #685).</exception>
-        /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
-        /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
-        /// or carry one that is not symmetric and positive semi-definite; or drag is asked about a central body other
-        /// than the Earth and the Sun without an atmospheric model, or about the Sun with no listed Earth and no listed
-        /// body with a model.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive.</exception>
-        /// <remarks>
-        /// The options and the initial covariance are checked before anything changes: when they are rejected, the
-        /// states, maneuvers and fuel of a previous propagation are left as they were.
-        /// </remarks>
-        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator,
-            bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan propagatorStepSize,
-            CovariancePropagationOptions covariancePropagation)
-        {
-            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
-
-            // Built, and so the options and P0 checked, before the reset of the propagation (#583): a rejected activation
-            // leaves the previous propagation as it was
-            using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
-                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, covariancePropagation);
-            return propagator.Propagate();
-        }
-
-        /// <summary>
-        /// Propagate the spacecraft with <paramref name="integrator"/>, integrating the variational equations of
-        /// <paramref name="variationalOptions"/> when it is not null (internal until the public API of step 8).
-        /// </summary>
-        internal PropagationSolution PropagateWithVariationalEquations(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
-            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, VariationalOptions variationalOptions)
-        {
-            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
-
-            // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
-            // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
-            // Built and activated before the reset of the propagation (#583), so that a rejected input leaves the previous
-            // propagation as it was
-            using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
-                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            if (variationalOptions != null)
-            {
-                propagator.EnableVariationalEquations(variationalOptions);
-            }
-
-            return propagator.Propagate();
-        }
-
-        /// <summary>
         /// Computes the geometric state relative to a reference body.
         /// Uses cached propagation states with Lagrange interpolation, chaining via SPICE if needed.
         /// </summary>
@@ -1083,16 +959,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// propagation; null before any propagation, after a reset and after a propagation by another integrator, which
         /// leaves nothing to replay. The conjunction analysis reads the covariance at the TCA from it, or replays its
         /// variational equations (step 10, E2). It keeps the accepted steps, the forces of the propagation and their
-        /// ephemeris cache alive until the next propagation (about 0.55 MB for one day in LEO with EGM2008 10×10, the
-        /// Moon, the Sun and drag, RK7(8) at 1e-11).
+        /// ephemeris cache alive until the next propagation (with <see cref="LastForceModel"/> about 0.58 MB for one day in
+        /// LEO with EGM2008 10×10, the Moon, the Sun and drag, RK7(8) at 1e-11 or 1e-9; lot L4 of #668,
+        /// <c>DefaultIntegratorFiguresTests</c>).
         /// </summary>
         internal PropagationSolution LastPropagation { get; set; }
 
         /// <summary>
         /// The force model of the last propagation by RK7(8) or Velocity-Verlet (forces with their ephemeris cache,
         /// integrator settings, orientation cache, mass and coefficients of each segment), without its steps, for the
-        /// avoidance options of the conjunction assessment (#402); null after another integrator or none. About 0.2 MB for
-        /// one day in LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun, kept until the next propagation.
+        /// avoidance options of the conjunction assessment (#402); null after another integrator or none. About 0.34 MB for
+        /// one day in LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun, kept until the next propagation (lot L4
+        /// of #668, <c>DefaultIntegratorFiguresTests</c>).
         /// </summary>
         internal PropagationForceModel LastForceModel { get; set; }
 
@@ -1100,7 +978,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Adds states to the stored states, each to the arc that holds its epoch (the later one at an impulse of the last
         /// propagation), replacing a stored state of that arc at the same epoch; without stored states they make one arc.
         /// They are kept in ICRF, the frame of the readers (#535). A propagation by <c>Propagate</c>
-        /// or <c>Scenario.SimulateAsync</c> replaces every stored state, those added before it included (11.0.0, #540: they
+        /// or <c>Scenario.Simulate</c> replaces every stored state, those added before it included (11.0.0, #540: they
         /// were merged with the propagated ones before); <see cref="TLEPropagator"/> adds its states through this method.
         /// </summary>
         /// <param name="stateVectors">The states, relative to one central body.</param>
@@ -1120,7 +998,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <summary>
         /// Creates a CCSDS OPM (Orbit Parameter Message) of this spacecraft at <paramref name="epoch"/>: its state, its mass
         /// and its maneuvers at that instant (#658, decided by S. Guillet, 2026-11-17). A spacecraft that holds propagated
-        /// states (by <c>Propagate</c>, <c>Scenario.SimulateAsync</c>, the builder, a propagator built directly or
+        /// states (by <c>Propagate</c>, <c>Scenario.Simulate</c>, a propagator built directly or
         /// <see cref="AddPropagatedStates"/>) writes the state read from them, <see cref="GetEphemeris"/> relative to the
         /// observer and in the frame of its initial orbital parameters without aberration, with the mass and the impulses
         /// ignited by then; one without them, the motion of its initial orbital parameters (two-body for
@@ -1265,7 +1143,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// record of the previous propagation are dropped, <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
         /// the chain from <see cref="InitialManeuver"/> reset (its windows and the gates of the last propagation) and put back
         /// in standby. <see cref="PropagatorBase.Propagate"/> calls it once its checks pass, on every path: before 11.0.0
-        /// only <c>Spacecraft.Propagate</c> did, so a second run through <see cref="CentralBodyPropagatorBuilder"/> or a
+        /// only <c>Spacecraft.Propagate</c> did, so a second run through the builder of 10.x or a
         /// <see cref="CentralBodyPropagator"/> built directly fired no burn and started with the fuel left by the first.
         /// </summary>
         internal void ResetPropagation()

@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -189,9 +190,9 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
     {
         var spacecraft = new Spacecraft(-1965, "NONCONSERVATIVE", 100.0, 1000.0, new Clock("nonconservative", 65536),
             start, 10.0, dragCoefficient, null, reflectivityCoefficient);
-        return spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(start.Epoch, start.Epoch.Add(referenceCase.Duration)),
-            referenceCase.Bodies, new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
-            referenceCase.SolarRadiationPressure, TimeSpan.FromSeconds(3600.0), options);
+        return spacecraft.PropagateWithVariational(new TimeSystem.Window(start.Epoch, start.Epoch.Add(referenceCase.Duration)),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(3600.0), ThirdBodies = referenceCase.Bodies, AtmosphericDrag = referenceCase.AtmosphericDrag, SolarRadiationPressure = referenceCase.SolarRadiationPressure },
+            options);
     }
 
     private static double Norm(double[] v) => System.Math.Sqrt(v.Sum(x => x * x));

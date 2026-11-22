@@ -11,7 +11,7 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 | `CheckPreconditions(StateVector)` | Optional additional constraints (returns `true` to allow firing). When it returns `false`, the occurrence is skipped and the maneuver waits for its next crossing; if none satisfies it within the window, the maneuver is not executed (`ThrustWindow` stays null) |
 | `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state |
 | `ThrustWindow` | Window of the equivalent finite burn (see below) |
-| `ManeuverWindow` | Thrust window extended by the maneuver hold duration |
+| `ManeuverWindow` | Thrust window extended by the maneuver hold duration (zero or more: a negative hold throws `ArgumentOutOfRangeException`, `maneuverHoldDuration`, since 11.0.0, R11 of #668) |
 | `ExecutionError` | Optional execution error by the model of Gates (`ManeuverExecutionError`), set with an object initializer; added to the velocity covariance at the burn when the propagation propagates the covariance, ignored otherwise. See [Covariance Propagation](covariance-propagation.md#execution-error-of-an-impulsive-maneuver) |
 
 `ManeuverExecutionError` takes its four standard deviations by name, so that two of different units cannot be swapped:
@@ -28,9 +28,8 @@ commanded ΔV (open loop).
 the integrated state, so the target is given in the frame the spacecraft is propagated in: the frame of its initial
 orbit, or ICRF for a spacecraft whose initial orbit is a TLE or an osculating TEME state, which is propagated in ICRF
 ([Propagation Frame](propagators.md#propagation-frame)). The propagation checks every target of the chain, leading and
-chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate` and `PropagateAsync`,
-`Scenario.SimulateAsync`, `BatchPropagator`, `MonteCarloPropagator`, the constructors, the builder and the avoidance
-propagations of the conjunction analysis): a target in another frame throws `ArgumentException` (parameter
+chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate`, `Scenario.Simulate`,
+`BatchPropagator`, `MonteCarloPropagator`, the constructors and the avoidance propagations of the conjunction analysis): a target in another frame throws `ArgumentException` (parameter
 `spacecraft`) naming the maneuver, the two frames and the fix, `targetOrbit.ToFrame(Frame.ICRF)` for ICRF, before it
 changes anything, and again when the propagator propagates (`PropagatorBase.Propagate`, which reads the chain of the
 spacecraft again), against the frame it integrates in: a maneuver attached after the propagator was built and whose
@@ -117,7 +116,7 @@ its g-function in its direction at or after the minimum epoch, searched from the
 - That gate belongs to the propagation that set it (#573). `MinimumEpoch` reports the later of the minimum epoch the
   maneuver was given (its constructor, or `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`, which lasts) and that
   gate, which holds after the propagation with the windows of the maneuver; the next `Spacecraft.Propagate` (and
-  `Scenario.SimulateAsync` and `BatchPropagator` through it) clears it before it runs. A spacecraft propagated again,
+  `Scenario.Simulate` and `BatchPropagator` through it) clears it before it runs. A spacecraft propagated again,
   from another state or over another window, so fires its maneuvers as a spacecraft never propagated would.
 - With Velocity-Verlet, the decision follows its own trajectory, whose crossings lag the Keplerian epoch: with 10 s
   steps, up to 0.096 s at a node, 0.18 s at an apsis of the orbit after a Velocity-Verlet burn and 1.5 s at the
@@ -203,10 +202,10 @@ keeps one record (its windows, `DeltaV`, `FuelBurned`), so a maneuver met twice 
 rejected where it is made: `SetNextManeuver` throws `ArgumentException` when the chain from the next maneuver comes back
 to the maneuver itself or already holds a cycle, and leaves the chain as it was. A cycle built past it, by a subclass
 that sets the protected `NextManeuver`, is rejected by `Spacecraft.SetStandbyManeuver` (`ArgumentException`), by the
-construction of the propagator (`Spacecraft.Propagate` and so the scenario, the batch and the Monte Carlo propagators, the builder's
-`Build`, a `CentralBodyPropagator` built directly: `InvalidOperationException`, before the states of an earlier
+construction of the propagator (`Spacecraft.Propagate` and so the scenario, the batch and the Monte Carlo propagators, a
+`CentralBodyPropagator` built directly: `InvalidOperationException`, before the states of an earlier
 propagation are cleared) and by `Propagate` (`InvalidOperationException`). Before 11.0.0 a cycle ended the process with
-a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder.
+a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder of 10.x.
 
 Each maneuver of the chain draws on a tank of the propagated spacecraft: its `Engine.FuelTank` is one of the
 spacecraft's tank instances, held by it. The same constructions and `Propagate` check it and throw
@@ -218,7 +217,7 @@ one on another spacecraft's tank burnt that spacecraft's fuel.
 
 ```csharp
 // Inputs: earth (CelestialBody), engine (Engine), spacecraft (Spacecraft), window (Window), perturbingBodies
-//   (CelestialItem[]), deltaT (TimeSpan)
+//   (CelestialItem[])
 // Raise the apogee radius to 42,164 km (meters), at the first perigee after J2000 TDB.
 var maneuver = new ApogeeHeightManeuver(
     earth,
@@ -228,7 +227,7 @@ var maneuver = new ApogeeHeightManeuver(
     engine);
 
 spacecraft.SetStandbyManeuver(maneuver);
-var solution = spacecraft.Propagate(window, perturbingBodies, false, false, deltaT);
+var solution = spacecraft.Propagate(window, new PropagationOptions { ThirdBodies = perturbingBodies });
 ```
 
 ## See Also

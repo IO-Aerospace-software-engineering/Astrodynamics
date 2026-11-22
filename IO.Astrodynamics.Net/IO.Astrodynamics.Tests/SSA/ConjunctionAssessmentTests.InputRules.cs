@@ -16,6 +16,7 @@ using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using IO.Astrodynamics.Propagator.Variational;
 
+using System.Threading.Tasks;
 namespace IO.Astrodynamics.Tests.SSA;
 
 /// <summary>
@@ -62,8 +63,7 @@ public partial class ConjunctionAssessmentTests
             hardBodyRadius: hardBodyRadius);
 
     private static PropagationSolution PropagateRk78(Spacecraft spacecraft, CelestialBody earth) =>
-        spacecraft.Propagate(InputRuleWindow, new CelestialItem[] { earth }, new RK78Integrator(), false, false,
-            TimeSpan.FromSeconds(60.0));
+        spacecraft.Propagate(InputRuleWindow, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
     public static IEnumerable<object[]> PrecedenceRows()
     {
@@ -436,28 +436,24 @@ public partial class ConjunctionAssessmentTests
         switch (producer)
         {
             case "Rk78":
-                return spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), false, false,
-                    TimeSpan.FromSeconds(60.0));
+                return spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
             case "VelocityVerlet":
-                return spacecraft.Propagate(window, new CelestialItem[] { earth }, false, false, TimeSpan.FromSeconds(10.0));
+                return spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth } });
             case "CentralBodyPropagator":
             {
-                using var propagator = new CentralBodyPropagator(window, spacecraft, new RK78Integrator(),
-                    new CelestialItem[] { earth }, false, false, TimeSpan.FromSeconds(60.0));
+                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
                 return propagator.Propagate();
             }
             case "Builder":
             {
-                using var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(),
-                    TimeSpan.FromSeconds(60.0)).Build();
+                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), CovariancePropagation = CovariancePropagationOptions.None });
                 return propagator.Propagate();
             }
             case "Batch":
             {
                 var result = BatchPropagator.Propagate(new[]
                 {
-                    new PropagationTask(spacecraft, window, new CelestialItem[] { earth }, false, false,
-                        TimeSpan.FromSeconds(60.0), () => new RK78Integrator())
+                    new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None })
                 });
                 Assert.True(result.AllSucceeded);
                 return result.Results[0].Solution;

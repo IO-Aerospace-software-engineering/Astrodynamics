@@ -9,6 +9,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -53,7 +54,7 @@ public partial class IntegratorEventTests
         spacecraft.SetStandbyManeuver(maneuver);
         var window = new Window(S, MinimumEpochGateTests.GateAtTt(length));
         double massBefore = spacecraft.GetTotalMass();
-        var solution = spacecraft.Propagate(window, [earth], NewIntegrator(integratorName), false, false, TimeSpan.FromSeconds(outputStep));
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(outputStep), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         AssertEndsAfterTheBurn(spacecraft, maneuver, solution, window, massBefore, earth);
     }
@@ -75,7 +76,7 @@ public partial class IntegratorEventTests
         spacecraft.SetStandbyManeuver(impulse);
         var window = new Window(S, end);
         double massBefore = spacecraft.GetTotalMass();
-        var solution = spacecraft.Propagate(window, [earth], NewIntegrator(integratorName), false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         AssertEndsAfterTheBurn(spacecraft, impulse, solution, window, massBefore, earth);
     }

@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -276,10 +277,9 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
     private static PropagationSolution Propagate(ReferenceCase referenceCase, double tolerance = Tolerance)
     {
         var start = referenceCase.InitialState;
-        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(
-            new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration), referenceCase.Bodies,
-            new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
-            referenceCase.SolarRadiationPressure, TimeSpan.FromHours(1.0), new VariationalOptions());
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariational(new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromHours(1.0), ThirdBodies = referenceCase.Bodies, AtmosphericDrag = referenceCase.AtmosphericDrag, SolarRadiationPressure = referenceCase.SolarRadiationPressure },
+            new VariationalOptions());
     }
 
     private static double[] Phi(PropagationSolution solution, TimeSystem.Time epoch)

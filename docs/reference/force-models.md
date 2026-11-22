@@ -213,7 +213,7 @@ Where `f(phi) = (pi - phi) * cos(phi) + sin(phi)` is the Lambertian visibility f
 new AlbedoRadiationPressure(spacecraft, reflectingBody)
 ```
 
-**Configuration**: Set `albedo` on the `CelestialBody` constructor, then call `IncludeAlbedo()` on the builder.
+**Configuration**: Set `albedo` on the `CelestialBody` constructor of the central body, then set `PropagationOptions.AlbedoRadiationPressure` ([Propagation Options](propagators.md#propagation-options)); a body other than the central body goes through a force list of your own (`new AlbedoRadiationPressure(spacecraft, body)` added to an integrator given to the `CentralBodyPropagator` constructor that takes one).
 
 | Body | Bond Albedo |
 |------|-------------|
@@ -234,7 +234,7 @@ a = Cr * (A/m) * epsilon * sigma * T_eff^4 * R^2 / (c * r^2)
 new ThermalRadiationPressure(spacecraft, emittingBody)
 ```
 
-**Configuration**: Set `thermalEffectiveTemperature` (Kelvin) and `thermalEmissivity` on the `CelestialBody` constructor, then call `IncludeThermalRadiation()` on the builder.
+**Configuration**: Set `thermalEffectiveTemperature` (Kelvin) and `thermalEmissivity` on the `CelestialBody` constructor of the central body, then set `PropagationOptions.ThermalRadiationPressure`; a body other than the central body goes through a force list of your own, as for the albedo.
 
 | Body | T_eff (K) | Emissivity |
 |------|-----------|------------|
@@ -281,6 +281,5 @@ the finite-difference steps and the measured accuracy are in the
 
 ## See Also
 
-- [Propagator Builder](propagator-builder.md)
 - [Propagators](propagators.md)
 - [Integrators](integrators.md)

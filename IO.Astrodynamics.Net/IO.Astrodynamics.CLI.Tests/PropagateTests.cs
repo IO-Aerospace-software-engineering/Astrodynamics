@@ -11,6 +11,8 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Tests.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 
 namespace IO.Astrodynamics.CLI.Tests;
 
@@ -173,8 +175,8 @@ public class PropagateTests
         using (await Configuration.LockAsync())
         {
             var cli = await RunAndReadEnd(activation, values, frame, name, end, degree);
-            var library = await LibraryRunEnd(activation, values, frame, degree, end);
-            var degree10 = await LibraryRunEnd(activation, values, frame, 10, end);
+            var library = LibraryRunEnd(activation, values, frame, degree, end);
+            var degree10 = LibraryRunEnd(activation, values, frame, 10, end);
 
             var error = (cli - library).Magnitude();
             var separation = (cli - degree10).Magnitude();
@@ -201,7 +203,7 @@ public class PropagateTests
             Assert.Equal(File.ReadAllBytes(withoutOption.FullName), File.ReadAllBytes(with10.FullName));
 
             var cli = ReadEnd(withoutOption, end);
-            var library = await LibraryRunEnd("s", StateValues, "ICRF", 10, end);
+            var library = LibraryRunEnd("s", StateValues, "ICRF", 10, end);
             var error = (cli - library).Magnitude();
             _output.WriteLine($"MEASURE #681 DefaultDegree_IsDegree10: CLI SPK to the library run of degree 10 {error:E2} m");
             Assert.True(error < SpkInterpolationThreshold, $"CLI SPK {error:E2} m from the library run of degree 10");
@@ -240,7 +242,7 @@ public class PropagateTests
 
             var end = Time.J2000TDB.AddSeconds(10.0);
             var cli = await RunAndReadEnd("s", StateValues, "ICRF", "NM", end, (ushort)maximum);
-            var library = await LibraryRunEnd("s", StateValues, "ICRF", (ushort)maximum, end);
+            var library = LibraryRunEnd("s", StateValues, "ICRF", (ushort)maximum, end);
             var error = (cli - library).Magnitude();
             _output.WriteLine($"MEASURE #681 EarthGeopotentialDegreeAbove100_IsAnArgumentError, n = {maximum}: CLI SPK to the library run {error:E2} m");
             Assert.True(error < SpkInterpolationThreshold, $"CLI SPK {error:E2} m from the library run of degree {maximum}");
@@ -272,8 +274,8 @@ public class PropagateTests
         using (await Configuration.LockAsync())
         {
             var cli = await RunAndReadEnd("t", values, "ICRF", $"N{degree}t", end, degree, start);
-            var library = await LibraryRunEnd("t", values, "ICRF", degree, end, start);
-            var degree10 = await LibraryRunEnd("t", values, "ICRF", 10, end, start);
+            var library = LibraryRunEnd("t", values, "ICRF", degree, end, start);
+            var degree10 = LibraryRunEnd("t", values, "ICRF", 10, end, start);
 
             var error = (cli - library).Magnitude();
             var separation = (cli - degree10).Magnitude();
@@ -302,7 +304,7 @@ public class PropagateTests
             Assert.Equal(File.ReadAllBytes(withoutOption.FullName), File.ReadAllBytes(with10.FullName));
 
             var cli = ReadEnd(withoutOption, end);
-            var library = await LibraryRunEnd("t", values, "ICRF", 10, end, start);
+            var library = LibraryRunEnd("t", values, "ICRF", 10, end, start);
             var error = (cli - library).Magnitude();
             _output.WriteLine($"MEASURE #681 DefaultDegree_IsDegree10_FromTle: CLI SPK to the library run of degree 10 {error:E2} m");
             Assert.True(error < SpkInterpolationThreshold, $"CLI SPK {error:E2} m from the library run of degree 10");
@@ -389,7 +391,7 @@ public class PropagateTests
     /// TLE (<c>t</c>, its two lines separated by a comma), the SGP4 state at the TDB start of the window in TEME on that
     /// Earth, as <see cref="Helpers.TleStartState"/> builds it from <c>tle.ToStateVector</c> (#675).
     /// </summary>
-    private static async Task<Vector3> LibraryRunEnd(string activation, string values, string frame, ushort degree, Time end,
+    private static Vector3 LibraryRunEnd(string activation, string values, string frame, ushort degree, Time end,
         Time? startEpoch = null)
     {
         var stream = typeof(PropagateCommand).Assembly.GetManifestResourceStream(EmbeddedModel)!;
@@ -400,7 +402,7 @@ public class PropagateTests
         {
             var lines = values.Split(',');
             var sgp4 = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("Reference", lines[0], lines[1]).ToStateVector(start);
-            return await LibraryRunEnd(new IO.Astrodynamics.OrbitalParameters.StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frames.Frame.TEME),
+            return LibraryRunEnd(new IO.Astrodynamics.OrbitalParameters.StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frames.Frame.TEME),
                 earth, start, end);
         }
 
@@ -412,18 +414,21 @@ public class PropagateTests
             "k" => new IO.Astrodynamics.OrbitalParameters.KeplerianElements(v[0], v[1], v[2], v[3], v[4], v[5], earth, start, inputFrame),
             _ => new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(v[0], v[1], v[2], v[3], v[4], v[5], earth, start, inputFrame)
         };
-        return await LibraryRunEnd(initial, earth, start, end);
+        return LibraryRunEnd(initial, earth, start, end);
     }
 
     /// <summary>The scenario of the command from <paramref name="initial"/>: Velocity-Verlet 1 s, no drag or SRP.</summary>
-    private static async Task<Vector3> LibraryRunEnd(IO.Astrodynamics.OrbitalParameters.OrbitalParameters initial, CelestialBody earth, Time start,
+    private static Vector3 LibraryRunEnd(IO.Astrodynamics.OrbitalParameters.OrbitalParameters initial, CelestialBody earth, Time start,
         Time end)
     {
         var spacecraft = new Spacecraft(-1000, "Reference", 100.0, 100.0, new Clock("clockReference", 65536), initial, 1.0, 0.3);
         var scenario = new Mission.Scenario("ScenarioReference", new Mission.Mission("MissionReference"), new Window(start, end));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(earth);
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0)
+        });
         return spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).Position;
     }
 
@@ -513,7 +518,11 @@ public class PropagateTests
         var scenario = new Mission.Scenario($"ScenarioP675R{-naifId}", new Mission.Mission($"MissionP675R{-naifId}"), window);
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(center);
-        scenario.SimulateAsync(drag, true, TimeSpan.FromSeconds(1.0)).GetAwaiter().GetResult();
+        scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0),
+            AtmosphericDrag = drag, SolarRadiationPressure = true
+        });
         return spacecraft;
     }
 

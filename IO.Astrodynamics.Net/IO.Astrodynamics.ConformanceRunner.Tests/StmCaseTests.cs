@@ -165,9 +165,8 @@ public sealed class StmCaseTests : IDisposable
         using var kernels = new CaseKernels(_directory, InputParser.ParseKernels(Case().Inputs));
         var reference = PropagationCase.Build(Case(), Path.Combine(_directory, "data"));
         var solution = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
-            PropagatorSolver.CreateIntegrator(), reference.Bodies, reference.Drag,
-            reference.SolarRadiationPressure, reference.StepSize,
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly }).Propagate();
+            PropagatorSolver.Options(reference, reference.StepSize,
+                new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly })).Propagate();
         var end = reference.Window.EndDate;
         var phi = solution.GetStateTransitionMatrix(end);
         var (position, velocity) = solution.InterpolateAt(end);

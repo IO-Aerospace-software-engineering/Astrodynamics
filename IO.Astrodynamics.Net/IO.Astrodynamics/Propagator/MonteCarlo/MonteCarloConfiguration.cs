@@ -1,9 +1,5 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
-using System;
-using System.Collections.Generic;
-using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator.MonteCarlo;
@@ -31,38 +27,18 @@ public sealed record MonteCarloConfiguration
     public required Window Window { get; init; }
 
     /// <summary>
-    /// The settings of every run (R06 of #668): null for <see cref="PropagationOptions.Default"/> when no member of the
-    /// flags configuration (<see cref="CelestialBodiesFactory"/>, <see cref="DeltaT"/>, <see cref="IntegratorFactory"/>,
-    /// <see cref="IncludeAtmosphericDrag"/>, <see cref="IncludeSolarRadiationPressure"/>) is set. Each run builds its own
-    /// integrator, forces and geopotential field, so the runs share their bodies
-    /// (<see cref="PropagationOptions.ThirdBodies"/> and the template's central body), a geopotential included; each run
-    /// starts from its sampled state about the template's observer.
+    /// The settings of every run (R06 of #668); null for <see cref="PropagationOptions.Default"/>, RK7(8) at 1e-9 every
+    /// 60 s about the template's central body alone. Each run builds its own integrator, forces and geopotential field,
+    /// so the runs share their bodies (<see cref="PropagationOptions.ThirdBodies"/> and the template's central body), a
+    /// geopotential included; each run starts from its sampled state about the template's observer.
     /// </summary>
-    /// <remarks>Set together with a member of the flags configuration, the campaign throws
-    /// <see cref="ArgumentException"/> before any run.</remarks>
+    /// <remarks>The members of the flags configuration of 10.x (<c>CelestialBodiesFactory</c>,
+    /// <c>IncludeAtmosphericDrag</c>, <c>IncludeSolarRadiationPressure</c>, <c>DeltaT</c>, <c>IntegratorFactory</c>)
+    /// were removed in 11.0.0 (R07 of #668): their settings are those of this property, a configuration without an
+    /// integrator factory <see cref="Integrators.VVIntegratorOptions"/> at its <c>DeltaT</c>, the bodies of the factory
+    /// given once in <see cref="PropagationOptions.ThirdBodies"/> (a geopotential central body as the template's
+    /// observer, or in <see cref="PropagationOptions.Geopotential"/>).</remarks>
     public PropagationOptions Propagation { get; init; }
-
-    /// <summary>
-    /// Factory that produces a fresh set of celestial bodies for each run of the flags configuration, with
-    /// <see cref="DeltaT"/>; null for a campaign of <see cref="Propagation"/>, whose runs share their bodies.
-    /// </summary>
-    public Func<IEnumerable<CelestialItem>> CelestialBodiesFactory { get; init; }
-
-    /// <summary>Whether to include atmospheric drag in the force model of the flags configuration.</summary>
-    public bool IncludeAtmosphericDrag { get; init; }
-
-    /// <summary>Whether to include solar radiation pressure in the force model of the flags configuration.</summary>
-    public bool IncludeSolarRadiationPressure { get; init; }
-
-    /// <summary>Output time step of the flags configuration, with <see cref="CelestialBodiesFactory"/>; zero for a
-    /// campaign of <see cref="Propagation"/>.</summary>
-    public TimeSpan DeltaT { get; init; }
-
-    /// <summary>
-    /// Optional factory that creates an integrator for each run of the flags configuration. When <c>null</c>, the
-    /// Velocity-Verlet integrator at <see cref="DeltaT"/> is used.
-    /// </summary>
-    public Func<Integrator> IntegratorFactory { get; init; }
 
     /// <summary>
     /// Base NAIF ID for generated spacecraft. Run <c>i</c> gets ID <c>BaseNaifId - i</c>, which must stay in

@@ -12,8 +12,7 @@ namespace IO.Astrodynamics.Propagator;
 /// <summary>
 /// Propagates multiple spacecraft in parallel with fault isolation, cancellation, and progress reporting.
 /// Each task runs an independent <see cref="Body.Spacecraft.Spacecraft.Propagate(IO.Astrodynamics.TimeSystem.Window, PropagationOptions)"/>
-/// call with the settings of <see cref="PropagationTask.Options"/> (R06 of #668), or the flags call of a task of the flags
-/// constructor.
+/// call with the settings of <see cref="PropagationTask.Options"/> (R06 of #668).
 /// </summary>
 /// <remarks>
 /// <h3>Thread Safety</h3>
@@ -22,9 +21,7 @@ namespace IO.Astrodynamics.Propagator;
 /// when many tasks need ephemeris data concurrently.
 /// </para>
 /// <para>
-/// <b>Integrators:</b> a task of <see cref="PropagationTask.Options"/> builds its own integrator. Integrator instances
-/// must not be shared across tasks of the flags constructor: use <see cref="PropagationTask.IntegratorFactory"/> to
-/// create a fresh instance per task.
+/// <b>Integrators:</b> each task builds its own integrator from <see cref="PropagationTask.Options"/>.
 /// </para>
 /// <para>
 /// <b>CelestialBody without geopotential:</b> Safe to share across tasks. Two-body gravity is
@@ -99,40 +96,7 @@ public static class BatchPropagator
             var task = tasks[index];
             try
             {
-                PropagationSolution solution;
-                if (!task.IsLegacy)
-                {
-                    if (task.CovariancePropagation != null)
-                    {
-                        throw new ArgumentException(
-                            "A task of PropagationOptions takes its covariance from Options.CovariancePropagation: leave " +
-                            "PropagationTask.CovariancePropagation null.", nameof(tasks));
-                    }
-
-                    solution = task.Spacecraft.Propagate(task.Window, task.Options);
-                }
-                else if (task.IntegratorFactory != null)
-                {
-                    var integrator = task.IntegratorFactory();
-                    solution = task.Spacecraft.Propagate(
-                        task.Window, task.CelestialBodies, integrator,
-                        task.IncludeAtmosphericDrag, task.IncludeSolarRadiationPressure,
-                        task.DeltaT, task.CovariancePropagation);
-                }
-                else if (task.CovariancePropagation != null)
-                {
-                    throw new NotSupportedException(
-                        "The state transition matrix is integrated by the RK7(8) integrator (RK78Integrator) only; " +
-                        "give the task an IntegratorFactory that creates one.");
-                }
-                else
-                {
-                    solution = task.Spacecraft.Propagate(
-                        task.Window, task.CelestialBodies,
-                        task.IncludeAtmosphericDrag, task.IncludeSolarRadiationPressure,
-                        task.DeltaT);
-                }
-
+                var solution = task.Spacecraft.Propagate(task.Window, task.Options);
                 results[index] = new PropagationResult(task.Spacecraft, solution, null);
             }
             catch (OperationCanceledException)

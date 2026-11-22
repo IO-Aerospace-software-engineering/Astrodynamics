@@ -4,6 +4,8 @@ using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
+using System;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
@@ -42,21 +44,32 @@ public class PropagatorSolver : ICategorySolver
     /// estimate misses the jumps of the shadow function's derivative at the contacts: 0.21 m of integration error on
     /// 015, and 011 fails at 1e-10 (design of #500, section 6.2).
     /// </summary>
-    internal static RK78Integrator CreateIntegrator() => new(
-        absoluteTolerance: Tolerance, relativeTolerance: Tolerance,
-        initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
+    internal static RK78IntegratorOptions Integrator { get; } = TwoBodyTrajectory.Integrator(Tolerance);
+
+    /// <summary>
+    /// The settings of a propagation of <paramref name="propagationCase"/>: <see cref="Integrator"/>, the outputs every
+    /// <paramref name="outputStep"/>, the case's bodies and forces, and the covariance propagation given (none when
+    /// null, the propagations of the runner before the options of #668).
+    /// </summary>
+    internal static PropagationOptions Options(PropagationCase propagationCase, TimeSpan outputStep,
+        CovariancePropagationOptions covariancePropagation = null) => new()
+    {
+        Integrator = Integrator,
+        OutputStep = outputStep,
+        ThirdBodies = propagationCase.Bodies,
+        AtmosphericDrag = propagationCase.Drag,
+        SolarRadiationPressure = propagationCase.SolarRadiationPressure,
+        CovariancePropagation = covariancePropagation ?? CovariancePropagationOptions.None
+    };
 
     public Dictionary<string, object> Solve(CaseInput caseInput)
     {
         using var kernels = new CaseKernels(_conformanceTestsPath, InputParser.ParseKernels(caseInput.Inputs));
         var propagationCase = PropagationCase.Build(caseInput, _dataPath);
 
-        var integrator = CreateIntegrator();
-
         // Propagate
-        var propagator = new CentralBodyPropagator(
-            propagationCase.Window, propagationCase.Spacecraft, integrator, propagationCase.Bodies,
-            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.OutputStep);
+        var propagator = new CentralBodyPropagator(propagationCase.Window, propagationCase.Spacecraft,
+            Options(propagationCase, propagationCase.OutputStep));
 
         var res = propagator.Propagate();
 

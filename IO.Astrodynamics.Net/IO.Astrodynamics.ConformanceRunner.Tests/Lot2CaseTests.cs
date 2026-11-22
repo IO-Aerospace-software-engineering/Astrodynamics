@@ -10,6 +10,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.ConformanceRunner.Solvers;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
@@ -184,10 +185,9 @@ public sealed class Lot2CaseTests : IDisposable
         }
 
         // Act
-        var integrator = PropagatorSolver.CreateIntegrator();
-        _ = new CentralBodyPropagator(propagationCase.Window, propagationCase.Spacecraft, integrator, propagationCase.Bodies,
-            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.OutputStep);
-        var srp = integrator.Forces.OfType<SolarRadiationPressure>().Single();
+        var propagator = new CentralBodyPropagator(propagationCase.Window, propagationCase.Spacecraft,
+            PropagatorSolver.Options(propagationCase, propagationCase.OutputStep));
+        var srp = ((Integrator)propagator.Integrator).Forces.OfType<SolarRadiationPressure>().Single();
         var occulters = (CelestialBody[])typeof(SolarRadiationPressure)
             .GetField("_occultingBodies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(srp);
 

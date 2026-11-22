@@ -6,6 +6,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -379,7 +380,9 @@ public class PropagationFrameOrientationCacheTests
     [InlineData(0.0, 3600.0, false)]
     [InlineData(-30.0, 3600.0, false)]
     [InlineData(1.0, UnalignedLength, true)]
-    [InlineData(0.0, 3570.0, true)] // 59.5 steps of 60 s: the propagation runs to 3600 s, 30 s past the coverage
+    // 59.5 steps of 60 s: before 11.0.0 the propagation ran to 3600 s, 30 s past the coverage, and threw; since choice 6 of
+    // #668 it ends at the window end, within the coverage
+    [InlineData(0.0, 3570.0, false)]
     public void Propagation_EndingAtTheCoverageEnd_Runs(double endFromCoverageEnd, double length, bool throws)
     {
         // A geopotential reads the orientation of the Earth at every stage, up to the window end
@@ -391,8 +394,7 @@ public class PropagationFrameOrientationCacheTests
         int id = -622100 - (int)(endFromCoverageEnd + 31.0) * 10 - (int)(length - 3600.0);
         var spacecraft = new Spacecraft(id, $"KR1{-id}", 100.0, 1000.0, new Clock($"KR1{-id}CLK", 256), leo);
 
-        void Propagate() => spacecraft.Propagate(new Window(start, end), new CelestialItem[] { earth }, new RK78Integrator(), false,
-            false, TimeSpan.FromSeconds(60.0));
+        void Propagate() => spacecraft.Propagate(new Window(start, end), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         if (throws)
         {

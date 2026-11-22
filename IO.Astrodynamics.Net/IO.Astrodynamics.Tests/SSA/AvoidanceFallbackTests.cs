@@ -68,8 +68,7 @@ public sealed class AvoidanceFallbackCase
 
     /// <summary>The secondary spacecraft propagated in RK7(8) on its two-body orbit over the window.</summary>
     internal PropagationSolution PropagateTwoBody(Spacecraft secondary) =>
-        secondary.Propagate(PropagationWindow, new CelestialItem[] { PointMassEarth }, new RK78Integrator(1e-12, 1e-12), false,
-            false, TimeSpan.FromSeconds(60.0));
+        secondary.Propagate(PropagationWindow, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { PointMassEarth }, CovariancePropagation = CovariancePropagationOptions.None });
 
     internal CelestialItem[] Bodies { get; }
 
@@ -112,9 +111,8 @@ public sealed class AvoidanceFallbackCase
         double tolerance = Tolerance)
     {
         return rk78
-            ? spacecraft.Propagate(PropagationWindow, Bodies, new RK78Integrator(tolerance, tolerance), true, true,
-                TimeSpan.FromSeconds(60.0), options)
-            : spacecraft.Propagate(PropagationWindow, Bodies, true, true, VelocityVerletStep);
+            ? spacecraft.Propagate(PropagationWindow, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = options ?? CovariancePropagationOptions.None })
+            : spacecraft.Propagate(PropagationWindow, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = VelocityVerletStep }, OutputStep = VelocityVerletStep, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true });
     }
 }
 
@@ -647,8 +645,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
     private (Spacecraft, PropagationSolution) BurnPropagatedInTwoParts(AvoidanceOption option, StateVector start, int naifId)
     {
         var before = AvoidanceFallbackCase.WithEngine(naifId, start, out _);
-        before.Propagate(new Window(AvoidanceFallbackCase.Start, option.BurnEpoch), _case.Bodies, true, true,
-            AvoidanceFallbackCase.VelocityVerletStep);
+        before.Propagate(new Window(AvoidanceFallbackCase.Start, option.BurnEpoch), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = AvoidanceFallbackCase.VelocityVerletStep }, OutputStep = AvoidanceFallbackCase.VelocityVerletStep, ThirdBodies = _case.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true });
         // The stored states run to the burn, the window end, whether the step divides the window or not (#741)
         var atBurn = before.GetEphemeris(option.BurnEpoch, _case.Earth, Frames.Frame.ICRF, Aberration.None);
         var afterBurn = new StateVector(atBurn.Position, atBurn.Velocity + option.DeltaVInertial, _case.Earth, option.BurnEpoch,
@@ -664,8 +661,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var tank = new FuelTank("tank" + -naifId, "model", "sn1", 100.0, 100.0 - option.FuelCostEstimateKilograms);
         after.AddFuelTank(tank);
         after.AddEngine(new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank));
-        var solution = after.Propagate(new Window(option.BurnEpoch, AvoidanceFallbackCase.PropagationWindow.EndDate),
-            _case.Bodies, true, true, AvoidanceFallbackCase.VelocityVerletStep);
+        var solution = after.Propagate(new Window(option.BurnEpoch, AvoidanceFallbackCase.PropagationWindow.EndDate), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = AvoidanceFallbackCase.VelocityVerletStep }, OutputStep = AvoidanceFallbackCase.VelocityVerletStep, ThirdBodies = _case.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true });
         return (after, solution);
     }
 

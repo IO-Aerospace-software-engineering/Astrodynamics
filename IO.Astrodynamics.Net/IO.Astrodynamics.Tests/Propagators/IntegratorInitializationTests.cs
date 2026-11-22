@@ -190,8 +190,7 @@ public class IntegratorInitializationTests
             p.Propagate();
         }
 
-        using (var p = new CentralBodyPropagator(window, built, new RK78Integrator(1e-10, 1e-10), [earth], false, false,
-                   Step))
+        using (var p = new CentralBodyPropagator(window, built, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = Step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None }))
         {
             p.Propagate();
         }

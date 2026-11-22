@@ -10,25 +10,29 @@ force parameters Cd and Cr, and the covariance P of the state. The values are re
 
 **Namespace:** `IO.Astrodynamics.Propagator.Variational`
 
-It is off by default. A propagation without it evaluates no partial derivative, and its results and cost do not change,
-even when the initial state carries a covariance ([see below](#an-initial-covariance-without-activation)).
+On the options entry points it is **Auto** by default: the covariance of the initial orbital parameters is propagated
+when it is given at the start of the window and the integrator is RK7(8) ([Activation](#activation)).
+`CovariancePropagationOptions.None` turns it off: a propagation without it evaluates no partial derivative, and its
+results and cost do not change, even when the initial state carries a covariance
+([see below](#an-initial-covariance-without-activation)).
 
 ## Example
 
 ```csharp
 // Inputs: window (Window), spacecraft (Spacecraft), moon and sun (CelestialBody), tca (Time)
-var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-11, 1e-11), TimeSpan.FromSeconds(60))
-    .WithPerturbingBodies(new CelestialItem[] { moon, sun })   // the central body, the observer of the spacecraft, is added
-    .IncludeAtmosphericDrag()
-    .WithCovariancePropagation(new CovariancePropagationOptions
+var solution = spacecraft.Propagate(window, new PropagationOptions
+{
+    Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+    ThirdBodies = new CelestialItem[] { moon, sun },   // the central body, the observer of the spacecraft, takes part
+    AtmosphericDrag = true,
+    CovariancePropagation = new CovariancePropagationOptions
     {
         Mode = CovariancePropagationMode.Covariance,
         ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 1e-12),
         ConsiderParameters = new ConsiderParameters(dragCoefficientSigma: 0.1)
-    })
-    .Build();
+    }
+});
 
-var solution = propagator.Propagate();
 Matrix phi = solution.GetStateTransitionMatrix(tca);  // Φ(tca, t0), 6×6
 Matrix p = solution.GetCovariance(tca);               // 6×6, inertial frame of the propagation
 ```
@@ -42,17 +46,15 @@ the start of the window. This example runs as a smoke test against the packed Nu
 | Entry point | Member |
 |-------------|--------|
 | Options | `PropagationOptions.CovariancePropagation`, on `Spacecraft.Propagate(window, options)`, `CentralBodyPropagator(window, spacecraft, options)`, `Scenario.Simulate(options)`, `PropagationTask(spacecraft, window, options)` and `MonteCarloConfiguration.Propagation`: null for Auto (below) |
-| Builder | `CentralBodyPropagatorBuilder.WithCovariancePropagation(CovariancePropagationOptions)` |
-| Propagator | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT, covariancePropagation)` and `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` |
-| Spacecraft | `Spacecraft.Propagate(window, celestialBodies, integrator, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, covariancePropagation)` |
-| Batch | `PropagationTask.CovariancePropagation { get; init; }`, with an `IntegratorFactory` that creates an `RK78Integrator` |
-| Scenario | `Scenario.SimulateAsync(includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, integratorFactory, covariancePropagation)` |
+| Propagator | `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)`, an integrator holding its forces |
 
-- The integrator must be an `RK78Integrator`. Any other, Velocity-Verlet included, throws `NotSupportedException`.
-  Velocity-Verlet stays the default integrator of the members that take no integrator; the options entry points run
-  RK7(8).
-- Null options mean "off" in the constructors, the flags overloads of `Spacecraft.Propagate`, the flags constructor of
-  `PropagationTask` and `SimulateAsync`; `WithCovariancePropagation` takes a non-null value and may be called once.
+The flag members of 10.x that took covariance options (the builder's `WithCovariancePropagation`, the flag constructor
+of `CentralBodyPropagator` and overload of `Spacecraft.Propagate`, `PropagationTask.CovariancePropagation`,
+`Scenario.SimulateAsync`) were removed in 11.0.0 (R07 of #668): the options take them.
+
+- The integrator must be RK7(8) (`RK78IntegratorOptions`, an `RK78Integrator`). Any other, Velocity-Verlet included,
+  throws `NotSupportedException` for explicit options; under Auto it propagates no covariance and says why.
+- Null options mean "off" in the constructor that takes an integrator holding its forces.
 - On the options entry points, a null `PropagationOptions.CovariancePropagation` means **Auto** (R06 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 3, decided by
   S. Guillet, 2026-11-19): the covariance of the initial orbital parameters is propagated in
@@ -61,17 +63,19 @@ the start of the window. This example runs as a smoke test against the packed Nu
   not propagated, and `GetCovariance` says why in its message. A covariance that is not symmetric and positive
   semi-definite throws `InvalidOperationException` naming `StateVector.WithRemediatedCovariance()` and
   `CovariancePropagationOptions.None`. Auto leaves the trajectory unchanged, bit for bit (the step control follows the
-  state only; `PropagationOptionsPathTests`), at the cost of the variational equations (about 1.8 times the run, the
-  design's measurement). `PropagationSolution.Options.CovariancePropagation` gives the options the run used.
+  state only; `PropagationOptionsPathTests`), at the cost of the variational equations: over a LEO day at the RK7(8)
+  defaults, 3.2 to 4.4 times the run about a point-mass Earth, 8.4 to 10.7 times with EGM2008 10×10 and drag, 1.5 times in
+  SSB mode with the Earth, the Moon and the Sun (the MEASURE lines of `DefaultIntegratorFiguresTests.CovarianceAuto_Cost`,
+  lot L4 of #668, Linux, two runs; the design's 1.8 times was one case). `PropagationSolution.Options.CovariancePropagation` gives the options the run used.
 - `CovariancePropagationOptions.None` (mode `CovariancePropagationMode.None`, 11.0.0) turns the propagation off where a
   null value means another rule: Auto here, and in `ConjunctionAnalysisOptions.CovariancePropagation` the covariance of
   the initial state held in RTN (null throws there since 11.0.0). It refuses process noise and consider parameters, and
   the paths of options alone take it as null, off.
-- The options are checked at activation (construction, `Build`, `Propagate`), never during the integration.
+- The options are checked at activation (construction, `Propagate`), never during the integration.
 - In a `Scenario`, the options apply to every spacecraft. In covariance mode, the states that each spacecraft stores
   carry their covariance; a spacecraft without a valid initial covariance makes the simulation throw, naming it. The
-  matrices themselves are read from the `PropagationSolution` of `Spacecraft.Propagate`, since `SimulateAsync` returns
-  a summary.
+  matrices themselves are read from the `PropagationSolution` of `Spacecraft.Propagate`, since `Simulate` returns a
+  summary.
 
 ## Options
 
@@ -398,7 +402,9 @@ var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7000000.0, 
 
 ## An Initial Covariance Without Activation
 
-When the initial orbital parameters carry a covariance and the propagation is not activated, the covariance stays on the
+When the initial orbital parameters carry a covariance and the propagation is not activated
+(`CovariancePropagationOptions.None`, or Auto with Velocity-Verlet or a covariance at another epoch than the start of
+the window), the covariance stays on the
 initial orbital parameters, the output states carry none, and no partial derivative is evaluated: the propagation costs
 and allocates the same as without the initial covariance, and gives the same states bit for bit
 (`CovariancePropagationApiTests.WithoutActivation_*`).
@@ -428,8 +434,11 @@ if (remediation.Remediated)
     Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
 
 var spacecraft = new Spacecraft(-1001, "SAT", 100.0, 1000.0, clock, remediation.State);
-var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0),
-    new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+var solution = spacecraft.Propagate(window, new PropagationOptions
+{
+    ThirdBodies = bodies,
+    CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }
+});
 ```
 
 | Covariance of the state | Result |
@@ -498,7 +507,6 @@ geopotential. See [Thread Safety](../guides/thread-safety.md).
 
 - [Covariance Provenance](covariance-propagation-provenance.md)
 - [Propagators](propagators.md)
-- [Propagator Builder](propagator-builder.md)
 - [Integrators](integrators.md)
 - [Impulse Maneuvers](impulse-maneuvers.md)
 - [StateVector](state-vector.md)

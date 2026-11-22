@@ -5,6 +5,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.SSA;
@@ -77,10 +78,8 @@ public class ConjunctionTcaAccuracyTests
         var window = new TimeSystem.Window(Start, Start.AddHours(1.0));
         var protectedSpacecraft = Spacecraft(-1981, "TCAP", protectedInitial);
         var secondarySpacecraft = Spacecraft(-1982, "TCAS", secondaryInitial);
-        var protectedTrajectory = protectedSpacecraft.Propagate(window, new CelestialItem[] { _earth },
-            new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0));
-        var secondaryTrajectory = secondarySpacecraft.Propagate(window, new CelestialItem[] { _earth },
-            new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0));
+        var protectedTrajectory = protectedSpacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
+        var secondaryTrajectory = secondarySpacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // The reference: the zero of the range rate of the Keplerian states
         double referenceTca = KeplerianTca(mu, protectedInitial, secondaryInitial, meeting - 100.0, meeting + 100.0);
@@ -126,8 +125,8 @@ public class ConjunctionTcaAccuracyTests
         var protectedSpacecraft = Spacecraft(naifId, "TCAP" + -naifId, protectedInitial);
         var secondarySpacecraft = Spacecraft(naifId - 1, "TCAS" + -naifId, secondaryInitial);
         PropagationSolution Propagate(Spacecraft spacecraft) => rk78
-            ? spacecraft.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0))
-            : spacecraft.Propagate(window, new CelestialItem[] { _earth }, false, false, TimeSpan.FromSeconds(10.0));
+            ? spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None })
+            : spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _earth } });
         var protectedTrajectory = Propagate(protectedSpacecraft);
         var secondaryTrajectory = Propagate(secondarySpacecraft);
         return (protectedSpacecraft, protectedTrajectory, secondarySpacecraft, secondaryTrajectory,

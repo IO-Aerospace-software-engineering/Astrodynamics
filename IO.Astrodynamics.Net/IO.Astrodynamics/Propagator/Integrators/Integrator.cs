@@ -60,9 +60,10 @@ public abstract class Integrator : IIntegrator
     private int _claimed;
 
     /// <summary>
-    /// Takes this integrator for a propagation that builds its forces (the constructors of
-    /// <see cref="CentralBodyPropagator"/> with celestial bodies, the builder, <c>Spacecraft.Propagate</c>, the batch, Monte
-    /// Carlo and scenario paths), atomically: two threads given one instance cannot both take it (#674).
+    /// Takes this integrator for a propagation that builds its forces (the options constructor of
+    /// <see cref="CentralBodyPropagator"/>, and so every options entry point, which builds a new integrator per run, and
+    /// the internal constructor of flags), atomically: two threads given one instance cannot both take it (#674). Since
+    /// 11.0.0 no public member hands a caller's integrator to a path that builds its forces (R07 of #668).
     /// </summary>
     /// <exception cref="ArgumentException">The integrator already holds forces, or a propagation already took it.</exception>
     internal void ClaimForForces()

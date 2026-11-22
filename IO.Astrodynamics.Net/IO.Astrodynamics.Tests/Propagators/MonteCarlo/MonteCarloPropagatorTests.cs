@@ -57,13 +57,7 @@ public class MonteCarloPropagatorTests
             Seed = seed,
             TemplateSpacecraft = template,
             Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1)),
-            CelestialBodiesFactory = () =>
-            [
-                new CelestialBody(PlanetsAndMoons.EARTH),
-                Stars.SUN_BODY,
-                PlanetsAndMoons.MOON_BODY
-            ],
-            DeltaT = TimeSpan.FromSeconds(60),
+            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.EARTH), Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY] },
         };
     }
 
@@ -206,8 +200,7 @@ public class MonteCarloPropagatorTests
             Seed = 42,
             TemplateSpacecraft = null,
             Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1)),
-            CelestialBodiesFactory = () => Array.Empty<CelestialItem>(),
-            DeltaT = TimeSpan.FromSeconds(60),
+            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = Array.Empty<CelestialItem>() },
         };
 
         Assert.Throws<ArgumentNullException>(() => MonteCarloPropagator.Propagate(config));
@@ -231,27 +224,10 @@ public class MonteCarloPropagatorTests
             Seed = 42,
             TemplateSpacecraft = sc,
             Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1)),
-            CelestialBodiesFactory = () => [earth],
-            DeltaT = TimeSpan.FromSeconds(60),
+            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [earth] },
         };
 
         Assert.Throws<ArgumentException>(() => MonteCarloPropagator.Propagate(config));
-    }
-
-    [Fact]
-    public void InvalidConfig_NullFactory_Throws()
-    {
-        var config = new MonteCarloConfiguration
-        {
-            RunCount = 2,
-            Seed = 42,
-            TemplateSpacecraft = CreateTemplateSpacecraft(),
-            Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1)),
-            CelestialBodiesFactory = null,
-            DeltaT = TimeSpan.FromSeconds(60),
-        };
-
-        Assert.Throws<ArgumentNullException>(() => MonteCarloPropagator.Propagate(config));
     }
 
     [Fact]
@@ -265,14 +241,17 @@ public class MonteCarloPropagatorTests
             Seed = 42,
             TemplateSpacecraft = template,
             Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10)),
-            CelestialBodiesFactory = () =>
-            [
-                new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
-                    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)),
-                Stars.SUN_BODY,
-                PlanetsAndMoons.MOON_BODY
-            ],
-            DeltaT = TimeSpan.FromSeconds(60),
+            Propagation = new PropagationOptions
+            {
+                Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60),
+                ThirdBodies =
+                [
+                    new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+                        new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)),
+                    Stars.SUN_BODY,
+                    PlanetsAndMoons.MOON_BODY
+                ]
+            },
         };
 
         var result = MonteCarloPropagator.Propagate(config);
@@ -306,8 +285,7 @@ public class MonteCarloPropagatorTests
             Seed = 675,
             TemplateSpacecraft = new Spacecraft(-1675, "TemeTemplate", 100.0, 10000.0, new Clock("clk675", 256), nominal),
             Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10)),
-            CelestialBodiesFactory = () => [new CelestialBody(PlanetsAndMoons.EARTH)],
-            DeltaT = TimeSpan.FromSeconds(60),
+            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.EARTH)] },
             BaseNaifId = -1680
         };
         var samples = StateSampler.Sample(nominal, 3, 675);

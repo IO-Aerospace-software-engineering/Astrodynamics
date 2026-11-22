@@ -163,8 +163,8 @@ internal abstract class PropagationTimeArgument
     /// (<see cref="DriftBound"/> × <paramref name="length"/>), so that a window of a whole number of output steps in its
     /// own tags ends where the caller ended it. Whatever the time argument, a grid that ends before the window by more
     /// than that gains the window end as its last output in <c>PropagatorBase.SpanOf</c>
-    /// (#741), its last output then labelled with the end of the window too, and one that overshoots it runs to its last
-    /// output, up to half an output step past the window.
+    /// (#741), its last output then labelled with the end of the window too, and so does one that overshoots it (choice 6
+    /// of #668; before 11.0.0 it ran to its last output, up to half an output step past the window).
     /// </summary>
     internal abstract bool EndsAtWindowEnd(double length, double outputDuration);
 

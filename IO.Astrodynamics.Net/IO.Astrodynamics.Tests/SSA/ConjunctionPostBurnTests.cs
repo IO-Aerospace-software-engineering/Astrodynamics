@@ -72,9 +72,7 @@ public class ConjunctionPostBurnTests
         var spacecraft = NewSpacecraft(NextId(), orbit, out var engine);
         var maneuver = new ApogeeHeightManeuver(_earth, _start, TimeSpan.Zero, 8378137.0, engine);
         spacecraft.SetStandbyManeuver(maneuver);
-        var solution = spacecraft.Propagate(new Window(_start, _start.AddHours(2.0)), new CelestialItem[] { _earth },
-            rk78 ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0)), false, false,
-            TimeSpan.FromSeconds(60.0));
+        var solution = spacecraft.Propagate(new Window(_start, _start.AddHours(2.0)), new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Equal(2, solution.Segments.Count);
         return (spacecraft, solution, solution.Segments[1].BaseEpoch, maneuver.DeltaV);
     }
@@ -96,8 +94,7 @@ public class ConjunctionPostBurnTests
         var atTc = new StateVector(position + normal * 30.0, velocity + relativeVelocity, _earth, tc, Frames.Frame.ICRF);
         var window = new Window(tc.AddSeconds(-150.0), tc.AddSeconds(150.0));
         var spacecraft = NewSpacecraft(NextId(), atTc.AtEpoch(window.StartDate).ToStateVector(), out _);
-        var solution = spacecraft.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-12, 1e-12), false,
-            false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
         return (spacecraft, solution, window);
     }
 
@@ -223,8 +220,7 @@ public class ConjunctionPostBurnTests
             System.Math.PI * 0.5, System.Math.PI - 0.15, _earth, _start, Frames.Frame.ICRF);
         var spacecraft = NewSpacecraft(NextId(), orbit, out var engine);
         spacecraft.SetStandbyManeuver(new CombinedManeuver(_earth, _start, TimeSpan.Zero, 9000000.0, 0.1, engine));
-        var solution = spacecraft.Propagate(new Window(_start, _start.AddHours(1.0)), new CelestialItem[] { _earth },
-            new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(60.0));
+        var solution = spacecraft.Propagate(new Window(_start, _start.AddHours(1.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Equal(2, solution.Segments.Count);
         var eventEpoch = solution.Segments[1].BaseEpoch;
         var stepEnd = EndOfTheStepOfTheEvent(solution);

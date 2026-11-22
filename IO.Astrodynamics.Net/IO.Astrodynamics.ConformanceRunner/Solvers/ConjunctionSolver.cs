@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// <para>
 /// A propagated object is the spacecraft of a <c>propagator</c> case (<see cref="PropagationCase"/>) built from its state
 /// and spacecraft and the case's force model, its initial state carrying its covariance rotated from its RTN, propagated
-/// in RK7(8) (<see cref="PropagatorSolver.CreateIntegrator"/>) from the epoch to the end of the window, about the Earth
+/// in RK7(8) (<see cref="PropagatorSolver.Integrator"/>) from the epoch to the end of the window, about the Earth
 /// over TT seconds; the analysis runs on the two <see cref="PropagationSolution"/>s, and the framework propagates each
 /// covariance to TCA by a replay of the variational equations along the steps of its propagation (P = Φ P0 Φᵀ, no
 /// process noise). A kernel object is a kernel-backed spacecraft whose orbit is read about the Earth (#620), the SPKs of
@@ -177,8 +177,8 @@ public class ConjunctionSolver : ICategorySolver
             o.CovarianceRtn == null ? null : LowerTriangle.ToMatrix(o.CovarianceRtn, 1e6), k == 0 ? hardBodyRadius : 0.0);
         var spacecraft = propagationCase.Spacecraft;
 
-        var solution = spacecraft.Propagate(new Window(propagationCase.Window.StartDate, window.EndDate), propagationCase.Bodies,
-            PropagatorSolver.CreateIntegrator(), propagationCase.Drag, propagationCase.SolarRadiationPressure, OutputStep);
+        var solution = spacecraft.Propagate(new Window(propagationCase.Window.StartDate, window.EndDate),
+            PropagatorSolver.Options(propagationCase, OutputStep));
         return (spacecraft, solution);
     }
 

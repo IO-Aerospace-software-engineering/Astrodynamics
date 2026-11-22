@@ -312,8 +312,10 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
   evaluations, an analysis must not run concurrently with another propagation or evaluation sharing a `CelestialBody`
   with a geopotential (see [Thread Safety](../guides/thread-safety.md)).
 - Memory: to replay it, a `Spacecraft` propagated in RK7(8) keeps its last propagation (the accepted steps, the forces
-  and their ephemeris cache) until it is propagated again, about 0.55 MB for one day in LEO with EGM2008 10×10, the Moon,
-  the Sun and drag at 1e-11 (H3 review of step 10). A propagation by Velocity-Verlet keeps nothing beyond its output
+  and their ephemeris cache) until it is propagated again, about 0.58 MB for one day in LEO with EGM2008 10×10, the Moon,
+  the Sun and drag, its solution and its force model together, 0.24 MB and 0.34 MB, at 1e-11 as at the 1e-9 of the
+  default (measured again in lot L4 of #668, `DefaultIntegratorFiguresTests.LastPropagation_Memory`, Linux; 0.55 MB in
+  the H3 review of step 10). A propagation by Velocity-Verlet keeps nothing beyond its output
   states.
 - With both covariances, Pc is the Foster 2D probability of the combined covariance: CARA's `Pc2D`, the integral of the
   Gaussian of the encounter plane over the disc of the combined hard-body radius centred on the in-plane miss, each

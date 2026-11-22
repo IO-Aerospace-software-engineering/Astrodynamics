@@ -16,28 +16,47 @@ public readonly record struct Window
     public TimeSpan Length { get; }
 
     /// <summary>
-    /// Constructor
+    /// The window from <paramref name="startDate"/> to <paramref name="endDate"/>, each end in its own scale.
     /// </summary>
-    /// <param name="startDate"></param>
-    /// <param name="endDate"></param>
+    /// <remarks>
+    /// The ends are compared as instants (#512), and an end equal to the start gives a window of zero length. Reversed
+    /// ends throw since 11.0.0 (R11 of #668, decided by S. Guillet, 2026-11-19): before, they were swapped silently, so an
+    /// argument-order mistake went unnoticed.
+    /// </remarks>
+    /// <param name="startDate">The start.</param>
+    /// <param name="endDate">The end, at or after the start.</param>
+    /// <exception cref="ArgumentException"><paramref name="endDate"/> is before <paramref name="startDate"/>.</exception>
     public Window(Time startDate, Time endDate)
     {
         if (startDate > endDate)
         {
-            (endDate, startDate) = (startDate, endDate);
+            throw new ArgumentException(
+                $"The end of the window, {endDate}, is before its start, {startDate}: give the start first.",
+                nameof(endDate));
         }
+
         StartDate = startDate;
         EndDate = endDate;
         Length = endDate - startDate;
     }
 
     /// <summary>
-    /// Constructor
+    /// The window of <paramref name="length"/> from <paramref name="startDate"/>, its end in the scale of its start.
     /// </summary>
-    /// <param name="startDate"></param>
-    /// <param name="length"></param>
+    /// <remarks>
+    /// A length of zero is accepted. A negative length throws since 11.0.0 (R11 of #668, decided by S. Guillet,
+    /// 2026-11-19): before, the window ended before it started.
+    /// </remarks>
+    /// <param name="startDate">The start.</param>
+    /// <param name="length">The length, zero or positive.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is negative.</exception>
     public Window(Time startDate, TimeSpan length)
     {
+        if (length < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length), length, "The length of a window cannot be negative.");
+        }
+
         StartDate = startDate;
         EndDate = startDate + length;
         Length = length;

@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
@@ -123,16 +125,14 @@ public class GeopotentialModelParametersReuseTests
             start.SignalAndWait();
             var earth = Earth(shared);
             var spacecraft = NewSpacecraft(-7301 - i, earth);
-            spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(1e-10, 1e-10), false, false,
-                TimeSpan.FromSeconds(60.0));
+            spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
             return spacecraft.PropagatedStates[^1];
         }, TaskCreationOptions.LongRunning)).ToArray();
         Task.WaitAll(tasks);
 
         var freshEarth = Earth(new GeopotentialModelParameters(ModelPath, 10));
         var reference = NewSpacecraft(-7310, freshEarth);
-        reference.Propagate(window, new CelestialItem[] { freshEarth }, new RK78Integrator(1e-10, 1e-10), false, false,
-            TimeSpan.FromSeconds(60.0));
+        reference.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { freshEarth }, CovariancePropagation = CovariancePropagationOptions.None });
         var expected = reference.PropagatedStates[^1];
 
         // Assert

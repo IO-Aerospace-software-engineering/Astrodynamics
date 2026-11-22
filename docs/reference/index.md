@@ -34,7 +34,6 @@ Numerical integration and force models.
 - [Propagators](propagators.md) — `CentralBodyPropagator`, `TLEPropagator`, propagation solution
 - [Integrators](integrators.md) — `VVIntegrator`, `RK78Integrator`
 - [Force Models](force-models.md) — gravity, drag, SRP, albedo, thermal
-- [Propagator Builder](propagator-builder.md) — fluent builder API
 - [Event Detection](event-detection.md) — g-function zero-crossing, `BisectionEventFinder`
 - [Covariance Propagation](covariance-propagation.md) — state transition matrix, sensitivity and covariance: options, results, units
 - [Covariance Provenance](covariance-propagation-provenance.md) — source and tests of each covariance equation

@@ -65,9 +65,7 @@ public class Rk78OutputAccuracyTests
         double mu = _pointMassEarth.GM;
 
         // Act
-        var solution = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, Start.AddHours(3.0)),
-            new CelestialItem[] { _pointMassEarth }, new RK78Integrator(tolerance, tolerance), false, false,
-            TimeSpan.FromSeconds(10.0));
+        var solution = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, Start.AddHours(3.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _pointMassEarth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         var segment = solution.Segments.Single();
@@ -108,8 +106,7 @@ public class Rk78OutputAccuracyTests
         var bodies = new CelestialItem[]
             { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
         var initial = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
-        var full = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)),
-            bodies, new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(60.0));
+        var full = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
         var segment = full.Segments.Single();
         var te = Start.AddSeconds(3000.25);
         double t = (te - Start).TotalSeconds;
@@ -118,8 +115,7 @@ public class Rk78OutputAccuracyTests
 
         // Act
         var (position, velocity) = full.InterpolateAt(te);
-        var stopped = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, te), bodies,
-            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(t));
+        var stopped = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, te), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(t), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         var last = stopped.Segments.Single().Steps[^1];
@@ -189,8 +185,8 @@ public class Rk78OutputAccuracyTests
         var end = Start.AddHours(3.0);
 
         // Act
-        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, end), new CelestialItem[] { _pointMassEarth },
-            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(60.0),
+        var solution = spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, end),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _pointMassEarth } },
             new VariationalOptions(ForceParameters.None));
 
         // Assert: the event at the perigee, half a period after the apogee
@@ -252,8 +248,7 @@ public class Rk78OutputAccuracyTests
         double mu = _pointMassEarth.GM;
 
         // Act
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)),
-            new CelestialItem[] { _pointMassEarth }, new RK78Integrator(30.0), false, false, TimeSpan.FromSeconds(60.0));
+        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _pointMassEarth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: measured −5.28e-9 s from the Keplerian perigee with the TT time argument of #501 (Linux, 2026-11-01;
         // 6.57e-8 s before), a draw within the tick of the label of the event, held to twice that tick (2e-7 s), and the
@@ -311,8 +306,7 @@ public class Rk78OutputAccuracyTests
     {
         // Arrange
         var initial = PartialsTestCases.State(PartialsTestCases.Leo400, _pointMassEarth);
-        var solution = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, Start.AddHours(1.0)),
-            new CelestialItem[] { _pointMassEarth }, false, false, TimeSpan.FromSeconds(7.0));
+        var solution = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, Start.AddHours(1.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(7.0) }, OutputStep = TimeSpan.FromSeconds(7.0), ThirdBodies = new CelestialItem[] { _pointMassEarth } });
         var epoch = Start.AddSeconds(1234.5);
 
         // Act

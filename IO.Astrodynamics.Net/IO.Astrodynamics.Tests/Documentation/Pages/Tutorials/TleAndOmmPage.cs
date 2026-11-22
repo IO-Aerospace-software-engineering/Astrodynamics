@@ -120,8 +120,7 @@ internal static class TleAndOmmPage
         var sgp4AtStart = tle.ToStateVector(start);
         var numerical = new Spacecraft(-1001, "ISS-NUM", 420000.0, 450000.0, new Clock("issnum", 65536),
             new StateVector(sgp4AtStart.Position, sgp4AtStart.Velocity, earth, start, Frame.TEME), 1600.0, 2.2);
-        var solution = numerical.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, false,
-            TimeSpan.FromSeconds(60.0));
+        var solution = numerical.Propagate(window, new PropagationOptions { AtmosphericDrag = true });
 
         var sampled = new Spacecraft(-1002, "ISS-SGP4", 420000.0, 450000.0, new Clock("issgp4", 65536), tle);
         new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();

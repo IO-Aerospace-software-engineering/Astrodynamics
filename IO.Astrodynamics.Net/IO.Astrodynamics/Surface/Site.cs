@@ -216,11 +216,14 @@ namespace IO.Astrodynamics.Surface
         /// <param name="observer"></param>
         /// <param name="frame"></param>
         /// <param name="aberration"></param>
-        /// <param name="stepSize"></param>
+        /// <param name="stepSize">The step between two states, positive.</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative (R11 of #668: before
+        /// 11.0.0 a zero step read without end).</exception>
         public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration,
             in TimeSpan stepSize)
         {
+            CelestialItem.RequirePositiveEphemerisStep(stepSize);
             var ephemeris = new List<StateVector>();
             for (Time i = searchWindow.StartDate; i <= searchWindow.EndDate; i += stepSize)
             {

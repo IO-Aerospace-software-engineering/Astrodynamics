@@ -59,7 +59,14 @@ public class VelocityScenario
         //     new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
         //     TimeSystem.Time.J2000TDB, Frame.ICRF));
         _spacecraftPropagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + spc.InitialOrbitalParameters.Period()), spc,
-            new[] { _moon, _earth, _sun }, true, true, TimeSpan.FromSeconds(1.0));
+            new Propagator.PropagationOptions
+            {
+                Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+                OutputStep = TimeSpan.FromSeconds(1.0),
+                ThirdBodies = new[] { _moon, _earth, _sun },
+                AtmosphericDrag = true,
+                SolarRadiationPressure = true
+            });
     }
 
     // [Benchmark(Description = "Spacecraft spacecraftPropagator C++")]

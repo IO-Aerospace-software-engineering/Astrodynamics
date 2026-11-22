@@ -33,6 +33,7 @@ using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -774,14 +775,16 @@ internal static class DeveloperGuideExamples
             new Vector3(0, 0, 0)                 // Orientation
         );
 
-        // Propagate (returns PropagationSolution for dense output). The default integrator, Velocity-Verlet, is of the second
-        // order: its error grows as the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s)
+        // Propagate (returns PropagationSolution for dense output). Velocity-Verlet is of the second order: its error grows as
+        // the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s); without an integrator the
+        // options run RK7(8) at 1e-9
         var solution = spacecraft.Propagate(
             new Window(epoch, epoch.AddDays(1)),
-            new[] { earth },
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            TimeSpan.FromSeconds(1)
+            new PropagationOptions
+            {
+                Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1) },
+                OutputStep = TimeSpan.FromSeconds(1)
+            }
         );
 
         // Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
@@ -877,8 +880,12 @@ internal static class DeveloperGuideExamples
         var propagator = new CentralBodyPropagator(
             new Window(epoch, epoch.AddDays(1)),
             spacecraft,
-            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-            false, false, TimeSpan.FromSeconds(1.0));
+            new PropagationOptions
+            {
+                Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+                OutputStep = TimeSpan.FromSeconds(1.0),
+                ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+            });
         var solution = propagator.Propagate();
 
         // Use dense output for sub-step interpolation
@@ -1217,11 +1224,11 @@ internal static class DeveloperGuideExamples
         scenario.AddSpacecraft(chaser);
 
         // Run the simulation
-        var summary = await scenario.SimulateAsync(
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            TimeSpan.FromSeconds(1.0)
-        );
+        var summary = scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+            OutputStep = TimeSpan.FromSeconds(1.0)
+        });
 
         // Read maneuver results
         var executedManeuver = chaser.InitialManeuver;
@@ -1425,7 +1432,11 @@ internal static class DeveloperGuideExamples
         scenario.AddSpacecraft(spacecraft);
 
         // Simulate
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+            OutputStep = TimeSpan.FromSeconds(1.0)
+        });
 
         // Find windows when Earth is in the camera's field of view: any part of its ellipsoid, oriented by its frame, with the light time.
         // The spacecraft is propagated, so the library searches; the windows are those of CSPICE's gftfov, in TDB, to 1 µs
@@ -1463,7 +1474,11 @@ internal static class DeveloperGuideExamples
         var mission = new Mission("Visualization");
         var scenario = new Scenario("Demo", mission, new Window(start, end));
         // ... add celestial items, spacecraft, run simulation ...
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+            OutputStep = TimeSpan.FromSeconds(1.0)
+        });
 
         // Export to Cosmographia
         var exporter = new CosmographiaExporter();
@@ -1564,13 +1579,13 @@ internal static class DeveloperGuideExamples
         scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
         scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
 
-        // Propagate at a 5-minute step. Velocity-Verlet, the default integrator, is of the second order: it ends about 470 m
-        // from an exact integration of these forces after 25 days
-        var summary = await scenario.SimulateAsync(
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            TimeSpan.FromMinutes(5)
-        );
+        // Propagate at a 5-minute step. Velocity-Verlet is of the second order: it ends about 470 m from an exact integration of
+        // these forces after 25 days
+        var summary = scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromMinutes(5) },
+            OutputStep = TimeSpan.FromMinutes(5)
+        });
 
         // Compare the propagated Moon with the Moon of the ephemeris (DE440)
         var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
@@ -1608,9 +1623,12 @@ internal static class DeveloperGuideExamples
         var propagator = new CentralBodyPropagator(
             new Window(epoch, epoch.AddDays(1)),
             spacecraft,
-            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-            false, false,
-            TimeSpan.FromSeconds(1.0));
+            new PropagationOptions
+            {
+                Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+                OutputStep = TimeSpan.FromSeconds(1.0),
+                ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+            });
 
         var solution = propagator.Propagate();
 
@@ -1672,7 +1690,11 @@ internal static class DeveloperGuideExamples
         spacecraft.SetStandbyManeuver(pointingManeuver);
 
         // Simulate
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+            OutputStep = TimeSpan.FromSeconds(1.0)
+        });
 
         Console.WriteLine($"Pointing maneuver executed at: {pointingManeuver.ManeuverWindow?.StartDate}");
         #endregion
@@ -1728,7 +1750,11 @@ internal static class DeveloperGuideExamples
         spacecraft.SetStandbyManeuver(triadManeuver);
 
         // Simulate with high time resolution for attitude dynamics
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+            OutputStep = TimeSpan.FromSeconds(1.0)
+        });
 
         Console.WriteLine($"TRIAD maneuver executed at: {triadManeuver.ManeuverWindow?.StartDate}");
         Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained toward Sun");

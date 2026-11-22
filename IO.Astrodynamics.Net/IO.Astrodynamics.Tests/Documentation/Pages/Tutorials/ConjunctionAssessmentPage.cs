@@ -166,8 +166,9 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:6
         // Inputs: step (TimeSpan), protectedSpacecraft and secondarySpacecraft (Spacecraft), window (Window),
         //   perturbingBodies (CelestialItem[])
-        var protectedTrajectory = protectedSpacecraft.Propagate(window, perturbingBodies, false, false, step);
-        var secondaryTrajectory = secondarySpacecraft.Propagate(window, perturbingBodies, false, false, step);
+        var options = new PropagationOptions { OutputStep = step, ThirdBodies = perturbingBodies };
+        var protectedTrajectory = protectedSpacecraft.Propagate(window, options);
+        var secondaryTrajectory = secondarySpacecraft.Propagate(window, options);
 
         var encounter = ConjunctionAssessment.Analyze(
             new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
@@ -182,9 +183,16 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:7
         // Inputs: window (Window), perturbingBodies (CelestialItem[]), step (TimeSpan), protectedSpacecraft and
         //   secondarySpacecraft (Spacecraft)
-        var integrator = new RK78Integrator(1e-11, 1e-11);
-        protectedSpacecraft.Propagate(window, perturbingBodies, integrator, true, true, step, null);
-        secondarySpacecraft.Propagate(window, perturbingBodies, new RK78Integrator(1e-11, 1e-11), true, true, step, null);
+        var options = new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = step,
+            ThirdBodies = perturbingBodies,
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true
+        };
+        protectedSpacecraft.Propagate(window, options);
+        secondarySpacecraft.Propagate(window, options);
 
         var encounter = ConjunctionAssessment.Analyze(
             new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft, window,

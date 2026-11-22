@@ -30,39 +30,6 @@ public class CentralBodyPropagator : PropagatorBase
     private readonly PropagationFrameOrientationCache _orientationCache;
 
     /// <summary>
-    /// Instantiate central-body propagator with a custom integrator.
-    /// Forces (gravity, third-body perturbations, drag, SRP) are built automatically from the
-    /// provided celestial bodies and flags.
-    /// The central body is inferred from the spacecraft's orbital parameters observer.
-    /// </summary>
-    /// <remarks>
-    /// The central body takes part whether or not it is listed, with the models of the observer: inserted first when no
-    /// listed body has its NAIF identifier, so that a run that lists it is unchanged. Listed bodies of one NAIF identifier,
-    /// the observer's included, must have the same models (GM, radii, gravitational field, atmospheric model). Drag about a
-    /// central body is that of its atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without one;
-    /// each other listed body with an atmosphere adds its drag, an Earth always having one, and about the Sun (a star or
-    /// barycentre observer) the drag is that of those bodies. The integrator must be a new instance: the propagator adds
-    /// the forces to it (#674).
-    /// </remarks>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
-    /// <exception cref="ArgumentException">The integrator already holds forces or was already used by a propagation that
-    /// builds its forces; or two listed bodies of one NAIF identifier, or a listed body and the observer, have different
-    /// models.</exception>
-    /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
-    /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
-    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
-    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
-    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
-    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
-        IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
-        bool includeSolarRadiationPressure, TimeSpan deltaT)
-        : this(window, spacecraft, integrator, deltaT,
-            PlanForces(spacecraft, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT,
-                integrator))
-    {
-    }
-
-    /// <summary>
     /// A central-body propagator of the settings of <paramref name="options"/> (R06 of #668): the integrator, the output
     /// step, the third bodies, the forces, the geopotential and atmosphere of the central body, and the propagation of
     /// the covariance, each run building its own integrator, forces and geopotential field.
@@ -127,6 +94,7 @@ public class CentralBodyPropagator : PropagatorBase
     private static OptionsPlan PlanOptions(in Window window, Spacecraft spacecraft, PropagationOptions options,
         IEnumerable<CelestialItem> scenarioBodies)
     {
+        RequireWindowLength(window);
         options ??= PropagationOptions.Default;
         options.Integrator.Validate();
         ArgumentNullException.ThrowIfNull(spacecraft);
@@ -238,7 +206,7 @@ public class CentralBodyPropagator : PropagatorBase
             "body without a model. Remove options.Atmosphere, or build the body without an atmospheric model.", "options");
     }
 
-    // The albedo and thermal radiation pressure of the central body, after the other forces, as the builder adds them
+    // The albedo and thermal radiation pressure of the central body, after the other forces, as the builder of 10.x added them
     private static void AddRadiationForces(List<ForceBase> forces, CelestialItem centralBody, Spacecraft spacecraft,
         PropagationOptions options)
     {
@@ -310,13 +278,13 @@ public class CentralBodyPropagator : PropagatorBase
         return (new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }, null);
     }
 
-    // The force-building constructors once their inputs are checked and the integrator claimed (PlanForces)
+    // The options constructors once their forces are planned and the integrator claimed (PlanOptions)
     private CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator, TimeSpan deltaT,
         ForceModelPlan plan)
         : this(window, spacecraft, integrator, deltaT,
             PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
-        // The caches cover the span the propagation integrates, up to half an output step past the window (#626)
+        // The caches cover the span the propagation integrates, the window since choice 6 of #668 (#626)
         var cacheWindow = Span.CacheWindow(Window);
         InjectEphemerisCache(cacheWindow, plan.Forces, plan.Bodies, _centralBody, InitialState.Frame);
         _orientationCache = CreateFrameOrientationCache(cacheWindow, _centralBody);
@@ -330,28 +298,6 @@ public class CentralBodyPropagator : PropagatorBase
 
     /// <summary>The bodies and forces of a force-building constructor, checked before anything changes.</summary>
     private sealed record ForceModelPlan(CelestialItem[] Bodies, List<ForceBase> Forces);
-
-    /// <summary>
-    /// Checks the step, the bodies and the drag request, builds the forces, then claims <paramref name="integrator"/>
-    /// (null for the default integrator, which is new): a rejected input leaves the integrator and the spacecraft as they
-    /// were (#674).
-    /// </summary>
-    private static ForceModelPlan PlanForces(Spacecraft spacecraft, IEnumerable<CelestialItem> celestialBodies,
-        bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan deltaT, Integrator integrator)
-    {
-        RequirePositiveStep(deltaT, nameof(deltaT));
-        ArgumentNullException.ThrowIfNull(spacecraft);
-
-        // The checks of the initial orbit of PropagatorBase, before the initial state is computed here (#463)
-        ValidateInertialFrame(spacecraft);
-        ValidateOsculatingInitialOrbit(spacecraft);
-        var centralBody = ResolveCentralBody(spacecraft);
-        var bodies = ForceModelBodies(centralBody, celestialBodies);
-        var forces = BuildCentralBodyForces(centralBody, bodies, spacecraft, includeAtmosphericDrag,
-            includeSolarRadiationPressure);
-        integrator?.ClaimForForces();
-        return new ForceModelPlan(bodies, forces);
-    }
 
     /// <summary>
     /// The bodies of the force model: the listed ones, each NAIF identifier once, the central body among them with the
@@ -375,40 +321,6 @@ public class CentralBodyPropagator : PropagatorBase
         }
 
         return bodies.ToArray();
-    }
-
-    /// <summary>
-    /// Instantiate a central-body propagator with a custom integrator and its forces, built as by the overload without
-    /// <paramref name="covariancePropagation"/>, which also propagates the state transition matrix and, in
-    /// <see cref="CovariancePropagationMode.Covariance"/>, the covariance of the initial orbital parameters.
-    /// </summary>
-    /// <param name="window">The propagation window.</param>
-    /// <param name="spacecraft">The spacecraft.</param>
-    /// <param name="integrator">The integrator; the state transition matrix needs an <see cref="RK78Integrator"/>.</param>
-    /// <param name="celestialBodies">The bodies of gravity, third-body perturbations, drag and SRP.</param>
-    /// <param name="includeAtmosphericDrag">Whether to include atmospheric drag.</param>
-    /// <param name="includeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
-    /// <param name="deltaT">The step of the output states.</param>
-    /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance; null
-    /// for none, as the overload without it. Without it, a covariance of the initial orbital parameters is not
-    /// propagated: the output states carry none, and no partial derivative is evaluated.</param>
-    /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator is
-    /// not an <see cref="RK78Integrator"/>.</exception>
-    /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
-    /// parameter without its force.</exception>
-    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
-    /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
-    /// semi-definite.</exception>
-    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
-    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
-    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
-    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
-        IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
-        bool includeSolarRadiationPressure, TimeSpan deltaT, CovariancePropagationOptions covariancePropagation)
-        : this(window, spacecraft, integrator, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure,
-            deltaT)
-    {
-        EnableCovariancePropagation(covariancePropagation);
     }
 
     /// <summary>
@@ -529,34 +441,6 @@ public class CentralBodyPropagator : PropagatorBase
     }
 
     /// <summary>
-    /// Instantiate central-body propagator with default Velocity-Verlet integrator.
-    /// Forces (gravity, third-body perturbations, drag, SRP) are built automatically from the
-    /// provided celestial bodies and flags.
-    /// The central body is inferred from the spacecraft's orbital parameters observer.
-    /// </summary>
-    /// <remarks>The forces are built as by the constructor with an integrator.</remarks>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
-    /// <exception cref="ArgumentException">Two listed bodies of one NAIF identifier, or a listed body and the observer,
-    /// have different models.</exception>
-    /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
-    /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
-    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
-    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
-    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
-    public CentralBodyPropagator(in Window window, Spacecraft spacecraft,
-        IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
-        bool includeSolarRadiationPressure, TimeSpan deltaT)
-        : this(window, spacecraft,
-            CreateDefaultIntegrator(window, spacecraft, celestialBodies,
-                includeAtmosphericDrag, includeSolarRadiationPressure, deltaT),
-            deltaT, PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
-    {
-        // The Velocity-Verlet integrator is initialized by its constructor with the initial state, and the step checked
-        // by CreateDefaultIntegrator (PlanForces); the cache covers the span the propagation integrates (#626)
-        _orientationCache = CreateFrameOrientationCache(Span.CacheWindow(Window), _centralBody);
-    }
-
-    /// <summary>
     /// Resolves the central body from the spacecraft's observer.
     /// For Star or Barycenter observers, returns the Sun.
     /// </summary>
@@ -595,24 +479,6 @@ public class CentralBodyPropagator : PropagatorBase
             $"The central body {centralBody.Name} ({centralBody.NaifId}) has a GM of {centralBody.GM} m^3/s^2, where a propagation " +
             $"needs one above 0: for a body read from the kernels, the kernel pool holds no BODY{centralBody.NaifId}_GM. Load a GM " +
             "kernel, such as NAIF's gm_de440.tpc, before building the body.", paramName);
-    }
-
-    private static IIntegrator CreateDefaultIntegrator(Window window, Spacecraft spacecraft,
-        IEnumerable<CelestialItem> celestialItems, bool includeAtmosphericDrag,
-        bool includeSolarRadiationPressure, TimeSpan deltaT)
-    {
-        var plan = PlanForces(spacecraft, celestialItems, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT,
-            null);
-        var centralBody = ResolveCentralBody(spacecraft);
-
-        var tdbStartDate = window.StartDate.ToTDB();
-        var initialState = StartState(InertialInitialOrbit(spacecraft.InitialOrbitalParameters, tdbStartDate), tdbStartDate)
-            .RelativeTo(centralBody, Aberration.None).ToStateVector();
-        var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
-        // The span of the propagator these inputs build, before it exists (#626)
-        var span = SpanOf(PropagationTimeArgument.For(spacecraft.InitialOrbitalParameters.Observer), window, deltaT);
-        InjectEphemerisCache(span.CacheWindow(tdbWindow), plan.Forces, plan.Bodies, centralBody, initialState.Frame);
-        return new VVIntegrator(plan.Forces, deltaT, initialState);
     }
 
     /// <summary>

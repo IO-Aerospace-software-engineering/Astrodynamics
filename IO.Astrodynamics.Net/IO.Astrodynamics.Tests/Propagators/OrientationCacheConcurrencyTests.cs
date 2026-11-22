@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Threading;
@@ -53,8 +54,9 @@ public class OrientationCacheConcurrencyTests
     private static PropagationSolution PropagateLeo(CelestialBody earth, TimeSystem.Time epoch, int naifId,
         VariationalOptions options = null)
     {
-        return LeoSpacecraft(earth, epoch, naifId).PropagateWithVariationalEquations(new TimeSystem.Window(epoch, epoch + Duration),
-            new CelestialItem[] { earth }, new RK78Integrator(), true, false, TimeSpan.FromSeconds(60.0), options);
+        return LeoSpacecraft(earth, epoch, naifId).PropagateWithVariational(new TimeSystem.Window(epoch, epoch + Duration),
+            new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, AtmosphericDrag = true },
+            options);
     }
 
     // Epochs inside the steps, where InterpolateAt computes a shortened step with the forces
@@ -227,16 +229,12 @@ public class OrientationCacheConcurrencyTests
         var bodies = new CelestialItem[] { earth };
         var windowA = new TimeSystem.Window(EpochA, EpochA + Duration);
         var windowB = new TimeSystem.Window(EpochB, EpochB + Duration);
-        var aloneA = new CentralBodyPropagator(windowA, LeoSpacecraft(earth, EpochA, -1979), bodies, true, false,
-            TimeSpan.FromSeconds(10.0)).Propagate();
-        var aloneB = new CentralBodyPropagator(windowB, LeoSpacecraft(earth, EpochB, -1980), bodies, true, false,
-            TimeSpan.FromSeconds(10.0)).Propagate();
+        var aloneA = new CentralBodyPropagator(windowA, LeoSpacecraft(earth, EpochA, -1979), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies, AtmosphericDrag = true }).Propagate();
+        var aloneB = new CentralBodyPropagator(windowB, LeoSpacecraft(earth, EpochB, -1980), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies, AtmosphericDrag = true }).Propagate();
 
         // Act: both built, then both propagated (Velocity-Verlet, the default)
-        var propagatorA = new CentralBodyPropagator(windowA, LeoSpacecraft(earth, EpochA, -1981), bodies, true, false,
-            TimeSpan.FromSeconds(10.0));
-        var propagatorB = new CentralBodyPropagator(windowB, LeoSpacecraft(earth, EpochB, -1982), bodies, true, false,
-            TimeSpan.FromSeconds(10.0));
+        var propagatorA = new CentralBodyPropagator(windowA, LeoSpacecraft(earth, EpochA, -1981), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies, AtmosphericDrag = true });
+        var propagatorB = new CentralBodyPropagator(windowB, LeoSpacecraft(earth, EpochB, -1982), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies, AtmosphericDrag = true });
         var builtFirstA = propagatorA.Propagate();
         var builtFirstB = propagatorB.Propagate();
 
@@ -255,18 +253,14 @@ public class OrientationCacheConcurrencyTests
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var bodies = new CelestialItem[] { earth };
         var window = new TimeSystem.Window(EpochB, EpochB.AddHours(3.0));
-        var alone = LeoSpacecraft(earth, EpochB, -1983).Propagate(window, bodies, new RK78Integrator(), false, false,
-            TimeSpan.FromSeconds(60.0));
+        var alone = LeoSpacecraft(earth, EpochB, -1983).Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
-        using (new CentralBodyPropagator(new TimeSystem.Window(EpochA, EpochA.AddHours(1.0)),
-                   LeoSpacecraft(earth, EpochA, -1984), new RK78Integrator(), bodies, false, false,
-                   TimeSpan.FromSeconds(60.0)))
+        using (new CentralBodyPropagator(new TimeSystem.Window(EpochA, EpochA.AddHours(1.0)), LeoSpacecraft(earth, EpochA, -1984), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }))
         {
         }
 
-        var afterUnused = LeoSpacecraft(earth, EpochB, -1985).Propagate(window, bodies, new RK78Integrator(), false,
-            false, TimeSpan.FromSeconds(60.0));
+        var afterUnused = LeoSpacecraft(earth, EpochB, -1985).Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         AssertSameOutputs(alone, afterUnused);

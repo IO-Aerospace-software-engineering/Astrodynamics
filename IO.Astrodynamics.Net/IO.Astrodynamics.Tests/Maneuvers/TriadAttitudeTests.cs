@@ -9,6 +9,8 @@ using IO.Astrodynamics.Tests.Body;
 using Xunit;
 using Xunit.Abstractions;
 
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 namespace IO.Astrodynamics.Tests.Maneuvers;
 
 public class TriadAttitudeTests
@@ -1461,7 +1463,7 @@ public class TriadAttitudeTests
         spc.SetStandbyManeuver(attitude);
 
         var earth = new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH);
-        var exception = Record.Exception(() => spc.Propagate(new Window(epoch, epoch.AddSeconds(1200.0)), [earth], false, false, TimeSpan.FromSeconds(60.0)));
+        var exception = Record.Exception(() => spc.Propagate(new Window(epoch, epoch.AddSeconds(1200.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth] }));
 
         var rejected = Assert.IsType<InvalidOperationException>(exception);
         Assert.Contains(engine.Name, rejected.Message);

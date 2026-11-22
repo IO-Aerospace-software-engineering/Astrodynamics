@@ -47,13 +47,15 @@ var config = new MonteCarloConfiguration
     Seed = 42,
     TemplateSpacecraft = spacecraft,
     Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
-    CelestialBodiesFactory = () => [
-        new CelestialBody(PlanetsAndMoons.EARTH),
-        Stars.SUN_BODY,
-        PlanetsAndMoons.MOON_BODY
-    ],
-    DeltaT = TimeSpan.FromSeconds(60),
-    IntegratorFactory = () => new RK78Integrator(1e-10, 1e-10, 30.0),
+    Propagation = new PropagationOptions
+    {
+        Integrator = new RK78IntegratorOptions
+        {
+            AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+        },
+        OutputStep = TimeSpan.FromSeconds(60),
+        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    }
 };
 ```
 
@@ -63,29 +65,14 @@ var config = new MonteCarloConfiguration
 | `Seed` | RNG seed for reproducibility (same seed = same results) |
 | `TemplateSpacecraft` | Spacecraft whose initial state covariance is sampled |
 | `Window` | Propagation time window |
-| `CelestialBodiesFactory` | Factory that creates a fresh set of celestial bodies per thread |
-| `DeltaT` | Output step size for statistics |
-| `IntegratorFactory` | Factory that creates a fresh integrator per thread |
+| `Propagation` | The settings of every run, a `PropagationOptions` value ([Propagation Options](../reference/propagators.md#propagation-options)); null for its defaults, RK7(8) at 1e-9 every 60 s about the central body alone. `OutputStep` is the step of the statistics |
 
-### Thread safety with CelestialBodiesFactory
+### Thread safety
 
-The `GeopotentialGravitationalField` force model is **not** thread-safe ---
-each propagation thread needs its own `CelestialBody` instance. The
-`CelestialBodiesFactory` delegate is called once per thread to create
-isolated instances:
-
-```csharp
-// The configuration's factory, as a variable: CelestialBodiesFactory = celestialBodiesFactory
-Func<IEnumerable<CelestialItem>> celestialBodiesFactory = () =>
-[
-    new CelestialBody(PlanetsAndMoons.EARTH),   // fresh Earth per thread
-    Stars.SUN_BODY,
-    PlanetsAndMoons.MOON_BODY
-];
-```
-
-If you omit the geopotential model (degree 0), you can share instances,
-but using the factory pattern is always safe and recommended.
+Each run builds its own integrator, forces and geopotential field from `Propagation` (11.0.0, R06 of #668), so the runs
+share their bodies, the template's central body with a geopotential included. The `CelestialBodiesFactory`, `DeltaT`
+and `IntegratorFactory` of 10.x, which gave each run its own bodies and integrator, were removed in 11.0.0 (R07 of
+#668).
 
 ## Running the campaign
 
@@ -191,7 +178,7 @@ variance sets that noise. See [Validation](../guides/validation.md#state-transit
 
 - `MonteCarloPropagator.Propagate` runs a dispersion campaign by sampling
   initial state covariance.
-- Use `CelestialBodiesFactory` and `IntegratorFactory` to ensure thread safety.
+- `MonteCarloConfiguration.Propagation` holds the settings of every run; the runs share their bodies.
 - `EpochStatistics` provides per-epoch mean, standard deviation, and RSS
   percentiles (P50, P95, P99).
 - Set an explicit `Seed` for reproducible results.

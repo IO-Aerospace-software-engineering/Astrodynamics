@@ -227,8 +227,8 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 
 | Constructor | Description |
 |-------------|-------------|
-| `Window(Time start, Time end)` | Create from start and end times |
-| `Window(Time start, TimeSpan duration)` | Create from start and duration |
+| `Window(Time start, Time end)` | Create from start and end times, each kept in its scale; an end before the start throws `ArgumentException` (`endDate`; since 11.0.0, R11 of #668), equal ends give a window of zero length |
+| `Window(Time start, TimeSpan duration)` | Create from start and duration; a negative duration throws `ArgumentOutOfRangeException` (`length`; since 11.0.0), zero gives a window of zero length |
 
 ### Properties & Methods
 

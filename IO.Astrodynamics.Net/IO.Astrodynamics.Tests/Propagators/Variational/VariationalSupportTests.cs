@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
@@ -45,9 +46,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
     {
         // Arrange: the default integrator of the propagator is Velocity-Verlet
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
-        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)),
-            PartialsTestCases.Spacecraft(state), new CelestialItem[] { _cases.Earth }, false, false,
-            TimeSpan.FromSeconds(60.0));
+        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)), PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _cases.Earth } });
 
         // Act
         var exception = Assert.Throws<NotSupportedException>(() =>
@@ -63,9 +62,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
     {
         // Arrange
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
-        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)),
-            PartialsTestCases.Spacecraft(state), new RK78Integrator(), new CelestialItem[] { _cases.Earth }, false,
-            false, TimeSpan.FromSeconds(60.0));
+        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)), PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _cases.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() => propagator.EnableVariationalEquations(null));
@@ -130,9 +127,9 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
     private PropagationSolution Propagate(StateVector start, VariationalOptions options)
     {
         var spacecraft = PartialsTestCases.Spacecraft(start);
-        return spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddDays(Days)),
-            new CelestialItem[] { Stars.SUN_BODY, _cases.Earth }, new RK78Integrator(StepSize), false, false,
-            TimeSpan.FromSeconds(StepSize), options);
+        return spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, Start.AddDays(Days)),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(StepSize) }, OutputStep = TimeSpan.FromSeconds(StepSize), ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, _cases.Earth } },
+            options);
     }
 
     private static double[] Phi(PropagationSolution solution, TimeSystem.Time epoch)

@@ -8,6 +8,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -216,8 +217,8 @@ public class ManeuverChainCycleTests
         Assert.Null(setup.Spacecraft.InitialManeuver);
     }
 
-    private static Integrator Integrator(string integrator) =>
-        integrator == "VV" ? new VVIntegrator(TimeSpan.FromSeconds(1.0)) : new RK78Integrator(1e-12, 1e-12);
+    private static IntegratorOptions Integrator(string integrator) =>
+        integrator == "VV" ? new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) } : new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 };
 
     /// <summary>
     /// The head of the chain set in standby, then the chain closed on it: the cycle the propagation meets. The head is an
@@ -269,21 +270,21 @@ public class ManeuverChainCycleTests
         var setup = Create();
         var bodies = new CelestialItem[] { setup.Earth };
         // A propagation without maneuvers first: the rejected one must leave its states
-        setup.Spacecraft.Propagate(SixHours, bodies, Integrator(integrator), false, false, Output);
+        setup.Spacecraft.Propagate(SixHours, new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
         Assert.True(setup.Spacecraft.IsPropagated);
         var states = setup.Spacecraft.PropagatedStates.Length;
 
         CloseAfterStandby(setup, kind);
         var e = Assert.Throws<InvalidOperationException>(() =>
-            setup.Spacecraft.Propagate(SixHours, bodies, Integrator(integrator), false, false, Output));
+            setup.Spacecraft.Propagate(SixHours, new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }));
         Assert.Contains("cycle", e.Message);
         Assert.True(setup.Spacecraft.IsPropagated);
         Assert.Equal(states, setup.Spacecraft.PropagatedStates.Length);
 
         // The overload without an integrator and the one with the covariance options
-        Assert.Throws<InvalidOperationException>(() => setup.Spacecraft.Propagate(SixHours, bodies, false, false, Output));
+        Assert.Throws<InvalidOperationException>(() => setup.Spacecraft.Propagate(SixHours, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Output }, OutputStep = Output, ThirdBodies = bodies }));
         Assert.Throws<InvalidOperationException>(() =>
-            setup.Spacecraft.Propagate(SixHours, bodies, Integrator(integrator), false, false, Output, null));
+            setup.Spacecraft.Propagate(SixHours, new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }));
     }
 
     [Theory]
@@ -293,12 +294,12 @@ public class ManeuverChainCycleTests
     [InlineData("apo>nadir>nadir", "RK")]
     [InlineData("apo>nadir>nadir", "VV")]
     [InlineData("apo>nadir>apo", "RK")]
-    public void Builder_ACycle_ThrowsAtBuild(string kind, string integrator)
+    public void Constructor_ACycle_Throws(string kind, string integrator)
     {
         var setup = Create();
         CloseAfterStandby(setup, kind);
-        var builder = new CentralBodyPropagatorBuilder(SixHours, setup.Spacecraft, Integrator(integrator), Output);
-        Assert.Throws<InvalidOperationException>(() => builder.Build());
+        var options = new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, CovariancePropagation = CovariancePropagationOptions.None };
+        Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(SixHours, setup.Spacecraft, options));
     }
 
     [Theory]
@@ -308,7 +309,7 @@ public class ManeuverChainCycleTests
     [InlineData("apo>apo", "VV")]
     [InlineData("apo>nadir>nadir", "RK")]
     [InlineData("apo>nadir>apo", "VV")]
-    public void Builder_ACycleMadeAfterTheBuild_ThrowsAtPropagate(string kind, string integrator)
+    public void Constructor_ACycleMadeAfterTheConstruction_ThrowsAtPropagate(string kind, string integrator)
     {
         var setup = Create();
         var apo = setup.Apogee();
@@ -316,7 +317,7 @@ public class ManeuverChainCycleTests
         // The chain is valid when the propagator is built
         setup.Spacecraft.SetStandbyManeuver(kind.StartsWith("nadir") ? nadir : apo);
         if (kind != "nadir>nadir" && kind != "apo>apo") apo.SetNextManeuver(nadir);
-        using var propagator = new CentralBodyPropagatorBuilder(SixHours, setup.Spacecraft, Integrator(integrator), Output).Build();
+        using var propagator = new CentralBodyPropagator(SixHours, setup.Spacecraft, new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, CovariancePropagation = CovariancePropagationOptions.None });
 
         switch (kind)
         {
@@ -341,8 +342,7 @@ public class ManeuverChainCycleTests
     {
         var setup = Create();
         CloseAfterStandby(setup, "apo>nadir>apo");
-        var task = new PropagationTask(setup.Spacecraft, SixHours, [setup.Earth], false, false, Output,
-            () => new RK78Integrator(1e-12, 1e-12));
+        var task = new PropagationTask(setup.Spacecraft, SixHours, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = Output, ThirdBodies = [setup.Earth], CovariancePropagation = CovariancePropagationOptions.None });
         var result = BatchPropagator.Propagate([task]).Results[0];
         Assert.False(result.Succeeded);
         Assert.IsType<InvalidOperationException>(result.Error);

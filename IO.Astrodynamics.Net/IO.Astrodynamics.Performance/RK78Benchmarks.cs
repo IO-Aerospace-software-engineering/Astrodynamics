@@ -11,6 +11,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -135,13 +136,26 @@ public class RK78Benchmarks
             _earthLeo, LeoEpoch, Frame.ICRF);
         var spc = new Spacecraft(-1001, "LEO_Bench", 100.0, 10000.0, clk, orbit);
         var window = new Window(LeoEpoch, orbit.Period());
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
-        return new CentralBodyPropagator(window, spc, integrator,
+        return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            false, false, TimeSpan.FromSeconds(10.0));
+            false, false));
     }
+
+    // RK7(8) at 1e-11, steps from 1 ms to 300 s, outputs every 10 s, without covariance
+    private static PropagationOptions Options(CelestialItem[] thirdBodies, bool atmosphericDrag,
+        bool solarRadiationPressure) => new()
+    {
+        Integrator = new RK78IntegratorOptions
+        {
+            AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0),
+            MinStep = TimeSpan.FromMilliseconds(1.0), MaxStep = TimeSpan.FromSeconds(300.0)
+        },
+        OutputStep = TimeSpan.FromSeconds(10.0),
+        ThirdBodies = thirdBodies,
+        AtmosphericDrag = atmosphericDrag,
+        SolarRadiationPressure = solarRadiationPressure,
+        CovariancePropagation = CovariancePropagationOptions.None
+    };
 
     private CentralBodyPropagator BuildSsoPropagator()
     {
@@ -156,12 +170,9 @@ public class RK78Benchmarks
         var orbit = keplerianOrbit.ToStateVector();
         var spc = new Spacecraft(-1002, "SSO_Bench", 100.0, 1000.0, clk, orbit);
         var window = new Window(SsoEpoch, keplerianOrbit.Period());
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
-        return new CentralBodyPropagator(window, spc, integrator,
+        return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            false, false, TimeSpan.FromSeconds(10.0));
+            false, false));
     }
 
     private CentralBodyPropagator BuildGeoPropagator()
@@ -176,10 +187,7 @@ public class RK78Benchmarks
         var spc = new Spacecraft(-1003, "GEO_Bench", 3000.0, 5000.0, clk, orbit,
             sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
         var window = new Window(_geoTleEpoch, orbit.Period());
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
-        return new CentralBodyPropagator(window, spc, integrator,
+        return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[]
             {
                 PlanetsAndMoons.MOON_BODY,
@@ -193,7 +201,7 @@ public class RK78Benchmarks
                 Barycenters.NEPTUNE_BARYCENTER,
                 Barycenters.PLUTO_BARYCENTER
             },
-            false, false, TimeSpan.FromSeconds(10.0));
+            false, false));
     }
 
     private CentralBodyPropagator BuildLeoDragSrpPropagator()
@@ -207,12 +215,8 @@ public class RK78Benchmarks
         var spc = new Spacecraft(-1004, "LEO_Full_Bench", 100.0, 10000.0, clk, orbit,
             sectionalArea: 10.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
         var window = new Window(LeoEpoch, orbit.Period());
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
-        return new CentralBodyPropagator(window, spc, integrator,
+        return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[] { _earthLeoAtm, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            includeAtmosphericDrag: true, includeSolarRadiationPressure: true,
-            TimeSpan.FromSeconds(10.0));
+            atmosphericDrag: true, solarRadiationPressure: true));
     }
 }

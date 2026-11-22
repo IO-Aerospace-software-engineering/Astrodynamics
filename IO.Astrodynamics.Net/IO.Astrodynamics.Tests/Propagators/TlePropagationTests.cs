@@ -20,6 +20,7 @@ using IO.Astrodynamics.Tests.SSA;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
+using System.Threading.Tasks;
 using Matrix = IO.Astrodynamics.Math.Matrix;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -44,7 +45,7 @@ public class TlePropagationTests
     private const string Line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
 
     private static readonly string[] Paths =
-        { "Propagate", "VVIntegrator", "RK78Integrator", "PropagateAsync", "Scenario", "BatchPropagator", "Constructor", "Builder" };
+        { "Propagate", "VVIntegrator", "RK78Integrator", "Scenario", "BatchPropagator", "Constructor" };
 
     private static readonly TimeSpan OutputStep = TimeSpan.FromSeconds(60.0);
 
@@ -112,13 +113,11 @@ public class TlePropagationTests
         switch (path)
         {
             case "Propagate":
-                return spacecraft.Propagate(window, bodies, false, srp, OutputStep);
+                return spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = OutputStep }, OutputStep = OutputStep, ThirdBodies = bodies, SolarRadiationPressure = srp });
             case "VVIntegrator":
-                return spacecraft.Propagate(window, bodies, new VVIntegrator(TimeSpan.FromSeconds(1.0)), false, srp, OutputStep);
+                return spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = OutputStep, ThirdBodies = bodies, SolarRadiationPressure = srp });
             case "RK78Integrator":
-                return spacecraft.Propagate(window, bodies, new RK78Integrator(), false, srp, OutputStep);
-            case "PropagateAsync":
-                return spacecraft.PropagateAsync(window, bodies, false, srp, OutputStep).GetAwaiter().GetResult();
+                return spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = bodies, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
             case "Scenario":
             {
                 var scenario = new IO.Astrodynamics.Mission.Scenario($"TleScn{-spacecraft.NaifId}",
@@ -129,32 +128,21 @@ public class TlePropagationTests
                 }
 
                 scenario.AddSpacecraft(spacecraft);
-                scenario.SimulateAsync(false, srp, OutputStep).GetAwaiter().GetResult();
+                scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = OutputStep }, OutputStep = OutputStep, SolarRadiationPressure = srp });
                 return null;
             }
             case "BatchPropagator":
             {
                 var result = BatchPropagator.Propagate(new[]
                 {
-                    new PropagationTask(spacecraft, window, bodies, false, srp, OutputStep, () => new RK78Integrator())
+                    new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = bodies, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None })
                 });
                 Assert.True(result.AllSucceeded, result.Failed.FirstOrDefault()?.Error?.ToString());
                 return result.Results[0].Solution;
             }
             case "Constructor":
             {
-                using var propagator = new CentralBodyPropagator(window, spacecraft, new RK78Integrator(), bodies, false, srp, OutputStep);
-                return propagator.Propagate();
-            }
-            case "Builder":
-            {
-                var builder = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(), OutputStep).WithPerturbingBodies(bodies);
-                if (srp)
-                {
-                    builder.IncludeSolarRadiationPressure();
-                }
-
-                using var propagator = builder.Build();
+                using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = bodies, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
                 return propagator.Propagate();
             }
             default:
@@ -169,14 +157,11 @@ public class TlePropagationTests
     [InlineData("VVIntegrator", true)]
     [InlineData("RK78Integrator", false)]
     [InlineData("RK78Integrator", true)]
-    [InlineData("PropagateAsync", true)]
     [InlineData("Scenario", false)]
     [InlineData("Scenario", true)]
     [InlineData("BatchPropagator", true)]
     [InlineData("Constructor", false)]
     [InlineData("Constructor", true)]
-    [InlineData("Builder", false)]
-    [InlineData("Builder", true)]
     public void TleStart_EqualsItsIcrfTwin(string path, bool thirdBodiesAndSrp)
     {
         // Arrange: the TLE spacecraft and its twin, the central body only (the point-mass Earth of the TLE), or with the Moon
@@ -211,7 +196,6 @@ public class TlePropagationTests
     [InlineData("Propagate")]
     [InlineData("RK78Integrator")]
     [InlineData("Scenario")]
-    [InlineData("Builder")]
     public void TleStart_AwayFromItsEpoch_IsSgp4AtTheWindowStart(string path)
     {
         // Arrange: a window 6 h after the TLE epoch; the start is SGP4 at the window start, rotated to ICRF, not SGP4 at the
@@ -296,11 +280,10 @@ public class TlePropagationTests
             var spacecraft = NewSpacecraft(id, start);
             return variant switch
             {
-                "Covariance" => spacecraft.Propagate(window, bodies, new RK78Integrator(), false, false, OutputStep,
-                    new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }),
-                "Ssb" => spacecraft.Propagate(window, bodies, new RK78Integrator(1e-9, 1e-9), false, false, OutputStep),
-                "DragVV" => spacecraft.Propagate(window, bodies, new VVIntegrator(TimeSpan.FromSeconds(1.0)), drag && withDrag, true, OutputStep),
-                _ => spacecraft.Propagate(window, bodies, new RK78Integrator(), drag && withDrag, true, OutputStep)
+                "Covariance" => spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = bodies, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } }),
+                "Ssb" => spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-9, RelativeTolerance = 1e-9 }, OutputStep = OutputStep, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }),
+                "DragVV" => spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = OutputStep, ThirdBodies = bodies, AtmosphericDrag = drag && withDrag, SolarRadiationPressure = true }),
+                _ => spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = bodies, AtmosphericDrag = drag && withDrag, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None })
             };
         }
 
@@ -343,12 +326,12 @@ public class TlePropagationTests
         Assert.Equal(Frames.Frame.TEME, mean.InitialOrbitalParameters.Frame);
 
         // Act, assert: the exception of the inertial-frame check, as before
-        var e = Assert.Throws<ArgumentException>(() => mean.Propagate(window, Array.Empty<CelestialItem>(), false, false, OutputStep));
+        var e = Assert.Throws<ArgumentException>(() => mean.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = OutputStep }, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>() }));
         Assert.Contains("must be defined in inertial frame", e.Message);
 
         // A TEME target chained on a TLE spacecraft: rejected when the propagator is built, the previous run left as it was
         var (spacecraft, engine) = WithEngine(-6982, tle);
-        spacecraft.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep);
+        spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
         var before = spacecraft.PropagatedStates;
         var temeTarget = new KeplerianElements(6800000.0, 0.0, 55.0 * IO.Astrodynamics.Constants.Deg2Rad, 6.0, 0.0, 0.0,
             tle.Observer, window.StartDate.ToTDB(), Frames.Frame.TEME);
@@ -357,7 +340,7 @@ public class TlePropagationTests
         first.SetNextManeuver(new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, temeTarget, engine));
         spacecraft.SetStandbyManeuver(first);
         var chained = Assert.Throws<ArgumentException>(() =>
-            spacecraft.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep));
+            spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None }));
         Assert.Contains("ToFrame(Frame.ICRF)", chained.Message);
         AssertSameStates(before, spacecraft.PropagatedStates);
     }
@@ -373,7 +356,7 @@ public class TlePropagationTests
         var kepler = new KeplerClosedForm(((CelestialBody)tle.Observer).GM, start.Position, start.Velocity, 0.0);
 
         // Act
-        var solution = spacecraft.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(1e-12, 1e-12), false, false, OutputStep);
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: every output against the two-body motion over the TT seconds from the TDB start of the window, where the
         // integration starts (the UTC start of the window is 7 ns off its TDB label, 5.3e-5 m)
@@ -393,7 +376,6 @@ public class TlePropagationTests
     [Theory]
     [InlineData("VVIntegrator")]
     [InlineData("RK78Integrator")]
-    [InlineData("Builder")]
     public void PropagatedTleSpacecraft_ReadsItsStates(string path)
     {
         // Arrange: a TLE spacecraft propagated on its point-mass Earth, 1 h; IsPropagated on every path, the builder
@@ -468,8 +450,8 @@ public class TlePropagationTests
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(3.0));
         var fromTle = NewSpacecraft(-7031, tle);
         var twin = NewSpacecraft(-7032, Twin(tle, window));
-        fromTle.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep);
-        twin.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep);
+        fromTle.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
+        twin.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
         var tca = tle.Epoch.AddHours(2.0);
         var earth = (CelestialItem)tle.Observer;
         var secondaryState = AvoidanceFallbackCase.SecondaryNear(fromTle.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None));
@@ -574,8 +556,8 @@ public class TlePropagationTests
         // Act: the ICRF target constructs on a TLE spacecraft (it threw "must be defined in the same frame")
         var (fromTle, maneuver) = Build(-7051, tle);
         var (twin, twinManeuver) = Build(-7052, Twin(tle, window));
-        var solution = fromTle.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep);
-        var twinSolution = twin.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep);
+        var solution = fromTle.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
+        var twinSolution = twin.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: executed, its ΔV, epoch and the final state bit for bit the twin's
         Assert.NotNull(maneuver.ThrustWindow);
@@ -591,7 +573,7 @@ public class TlePropagationTests
         var temeManeuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.TEME), engine);
         temeSpacecraft.SetStandbyManeuver(temeManeuver);
         var e = Assert.Throws<ArgumentException>(() =>
-            temeSpacecraft.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, OutputStep));
+            temeSpacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None }));
         Assert.Contains("ToFrame(Frame.ICRF)", e.Message);
         Assert.False(temeSpacecraft.IsPropagated);
 
@@ -603,7 +585,6 @@ public class TlePropagationTests
         late.AddFuelTank(tank);
         late.AddEngine(detached);
         late.SetStandbyManeuver(early);
-        Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(window, late, new RK78Integrator(), Array.Empty<CelestialItem>(),
-            false, false, OutputStep));
+        Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(window, late, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None }));
     }
 }

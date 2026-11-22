@@ -12,6 +12,7 @@ using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Tests.Propagators;
@@ -47,7 +48,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// propagation, rotated from its frame to ICRF by <c>pxform</c>, never the SPK the library wrote. In SSB mode the solution
 /// is relative to the Sun: less the Earth's state of <c>spkezr</c> on the planetary ephemeris. The positions are measured
 /// across the impulses too, the stored states being split into arcs at each impulse (#540).
-/// The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
+/// The Velocity-Verlet path of <c>Scenario.Simulate</c> keeps no solution: that of a twin propagated by
 /// <c>Spacecraft.Propagate</c> with the scenario's bodies, whose stored states equal the scenario's to the bit. The
 /// directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric, as the attitudes read them
 /// (<c>Aberration.None</c>, which the instrument pointing is given here: its light-time direction, its default since #549,
@@ -57,7 +58,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// <para>
 /// <b>The case</b> of the prototype probe: an inclined LEO (a = 6 778 137 m, e = 0.001, i = 51.6°) from 2024-03-01 12:00
 /// TDB, one hour, 10 s outputs, the Earth, the Moon and the Sun; Velocity-Verlet at the output step or RK7(8) at 1e-12;
-/// the six inertial initial frames F; the paths of <c>Spacecraft.Propagate</c> and <c>Scenario.SimulateAsync</c>; SSB mode;
+/// the six inertial initial frames F; the paths of <c>Spacecraft.Propagate</c> and <c>Scenario.Simulate</c>; SSB mode;
 /// an epoch after 2025-01-19, where the spacing of the encoded SCLK doubles. Each spacecraft carries three instruments,
 /// their Euler angles (0.3, 0.5, 0.2), (0, π/2, 0) and (-0.7, 1.1, 2.3).
 /// </para>
@@ -271,7 +272,7 @@ public class AttitudeRecordTests
             cases.Add($"{law}|{integrator}|ECLIPJ2000|Propagate|2026");
 
         // Added after the review of the implementation (appended, so that the cases above keep their identifiers): the other
-        // laws through Scenario.SimulateAsync, the discrete and instrument laws in SSB mode, and RK7(8) in SSB mode
+        // laws through Scenario.Simulate, the discrete and instrument laws in SSB mode, and RK7(8) in SSB mode
         foreach (var law in Laws.Where(x => x != "Nadir" && x != "ImpulseTriad"))
         foreach (var integrator in new[] { "VV", "RK78" })
         foreach (var frame in new[] { "ICRF", "ECLIPJ2000", "GALACTIC" })
@@ -362,7 +363,7 @@ public class AttitudeRecordTests
     // The TRIAD factories on a spacecraft whose body axes are not the default ones (#677): LVLH and prograde with Sun
     // tracking, leading or chained after the apogee-raising impulse, and a leading LVLH that the impulse interrupts and the
     // timeline resumes after it, over both integrators, an ICRF and an ECLIPJ2000 start, Spacecraft.Propagate, SSB mode and
-    // Scenario.SimulateAsync; their own cases and NAIF identifiers, outside the grid
+    // Scenario.Simulate; their own cases and NAIF identifiers, outside the grid
     private static readonly string[] FactoryAxesCases = BuildFactoryAxesCases();
 
     private static string[] BuildFactoryAxesCases()
@@ -1029,8 +1030,7 @@ public class AttitudeRecordTests
         for (int i = 0; i < 6; i++) p0[i * 7] = sigma[i] * sigma[i];
         var sc = new Spacecraft(-8451, "COV8451", 1000.0, 3000.0, new Clock("COV8451_CLK", 65536),
             new StateVector(inF.Position, inF.Velocity, earth, start, f, new Matrix(6, 6, p0)));
-        var solution = sc.Propagate(new Window(start, start.AddSeconds(600.0)), new CelestialItem[] { earth }, new RK78Integrator(1e-12, 1e-12), false, false,
-            TimeSpan.FromSeconds(60.0), new IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions { Mode = IO.Astrodynamics.Propagator.Variational.CovariancePropagationMode.Covariance });
+        var solution = sc.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = new IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions { Mode = IO.Astrodynamics.Propagator.Variational.CovariancePropagationMode.Covariance } });
         var q = SpiceAPI.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
         // R, the matrix of pxform(ECLIPJ2000, J2000), by the images of the axes
         Vector3[] columns = [Vector3.VectorX.Rotate(q), Vector3.VectorY.Rotate(q), Vector3.VectorZ.Rotate(q)];
@@ -1473,17 +1473,17 @@ public class AttitudeRecordTests
                 scenario.AddSpacecraft(sc);
                 if (integrator == "RK78")
                 {
-                    scenario.SimulateAsync(false, false, step, () => new RK78Integrator(1e-12, 1e-12)).GetAwaiter().GetResult();
+                    scenario.Simulate(new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, CovariancePropagation = CovariancePropagationOptions.None });
                     // The solution the RK7(8) propagation keeps
                     solution = sc.LastPropagation;
                 }
                 else
                 {
-                    scenario.SimulateAsync(false, false, step).GetAwaiter().GetResult();
+                    scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step });
                     // The Velocity-Verlet path keeps no solution: that of a twin propagated by Spacecraft.Propagate with the
                     // scenario's bodies, in its order, whose stored states are compared with the scenario's
                     var twin = Build(naifId - 100000, name + "T");
-                    solution = twin.Propagate(window, scenario.CelestialBodies, false, false, step);
+                    solution = twin.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = scenario.CelestialBodies.ToArray() });
                     var a = sc.PropagatedStates;
                     var b = twin.PropagatedStates;
                     twinStates = a.Length == b.Length ? a.Zip(b, (x, y) => x.Epoch == y.Epoch ? (x.Position - y.Position).Magnitude() + (x.Velocity - y.Velocity).Magnitude() : double.PositiveInfinity).Max() : double.PositiveInfinity;
@@ -1491,11 +1491,11 @@ public class AttitudeRecordTests
             }
             else if (integrator == "RK78")
             {
-                solution = sc.Propagate(window, bodies, new RK78Integrator(tolerance, tolerance), false, false, step);
+                solution = sc.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
             }
             else
             {
-                solution = sc.Propagate(window, bodies, false, false, step);
+                solution = sc.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies });
             }
 
             cancel.Cancel();

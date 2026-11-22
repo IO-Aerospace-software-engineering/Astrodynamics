@@ -25,6 +25,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -285,10 +286,13 @@ namespace ClaudeMdSamples
             var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, epoch, Frame.ICRF);
             var spacecraft = new Spacecraft(-1000, "Sat", 100.0, 10000.0, clock, orbit);
 
-            // The propagator automatically uses the geopotential model when present
-            var propagator = new CentralBodyPropagator(window, spacecraft,
-                [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-                false, false, TimeSpan.FromSeconds(1.0));
+            // The propagator uses the geopotential model of the orbit's centre; the settings in one PropagationOptions value
+            var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
+            {
+                Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+                OutputStep = TimeSpan.FromSeconds(1.0),
+                ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+            });
             #endregion
             return propagator;
         }

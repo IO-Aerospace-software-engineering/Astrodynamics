@@ -377,7 +377,7 @@ public class StarTests
     // The noise-level record of the SPK read against the catalog position written in the test (its straight line, #718):
     // twice the worst on Linux x64, rounded up at the second digit (2.780e-16,
     // StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone, Validation category, Linux only, CI run 43974478027, 2026-11-16;
-    // StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore the same on Linux x64, 2.780e-16 and
+    // StarTests.Propagate_Twice and ScenarioTests.Simulate_OfAStarPropagatedBefore the same on Linux x64, 2.780e-16 and
     // 1.966e-16 on Windows x64, 1.966e-16 on macOS arm64; 1.390e-16 for the linear angles before #718, CI run
     // 43773937161), asserted by the Validation test alone (the epochs are whole half
     // days from the catalog epoch, whose Julian dates, which the star differences, are exact). The tests of every platform

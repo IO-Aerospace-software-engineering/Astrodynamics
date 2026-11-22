@@ -55,17 +55,19 @@ public class CovariancePropagationSmokeTests
         var window = new Window(epoch, epoch.AddHours(2.0));
         var tca = epoch.AddSeconds(5000.5);
 
-        var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-11, 1e-11),
-                TimeSpan.FromSeconds(60))
-            .WithPerturbingBodies(new CelestialItem[] { moon, sun })
-            .IncludeAtmosphericDrag()
-            .WithCovariancePropagation(new CovariancePropagationOptions
+        var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(60),
+            ThirdBodies = new CelestialItem[] { moon, sun },
+            AtmosphericDrag = true,
+            CovariancePropagation = new CovariancePropagationOptions
             {
                 Mode = CovariancePropagationMode.Covariance,
                 ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 1e-12),
                 ConsiderParameters = new ConsiderParameters(dragCoefficientSigma: 0.1)
-            })
-            .Build();
+            }
+        });
 
         var solution = propagator.Propagate();
         Matrix phi = solution.GetStateTransitionMatrix(tca);  // Φ(tca, t0), 6×6

@@ -8,6 +8,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -48,22 +49,6 @@ public class PropagationOptionsEntryPointTests
         }
 
         return scenario;
-    }
-
-    [Fact]
-    public async Task Simulate_EqualsSimulateAsyncOfItsIntegratorAndFlags_WithTheScenariosBodies()
-    {
-        var viaOptions = NewSpacecraft();
-        var reference = NewSpacecraft();
-        var options = PropagationOptions.Default with { SolarRadiationPressure = true };
-
-        var summary = NewScenario(viaOptions, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY)
-            .Simulate(options);
-        await NewScenario(reference, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY)
-            .SimulateAsync(false, true, Output, () => new RK78Integrator());
-
-        Assert.NotNull(summary);
-        PropagationOptionsPathTests.AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
     }
 
     [Fact]
@@ -117,15 +102,6 @@ public class PropagationOptionsEntryPointTests
         }
     }
 
-    [Fact]
-    public void ABatchTaskOfOptions_WithTheCovariancePropertyOfTheFlagsConstructor_Fails()
-    {
-        var task = new PropagationTask(NewSpacecraft(), OneHour)
-            { CovariancePropagation = new Propagator.Variational.CovariancePropagationOptions() };
-        var result = BatchPropagator.Propagate(new[] { task });
-        Assert.IsType<ArgumentException>(result.Results[0].Error);
-    }
-
     private static Spacecraft Template(ILocalizable earth)
     {
         var covariance = IO.Astrodynamics.Math.Matrix.Diagonal(100.0, 100.0, 100.0, 0.01, 0.01, 0.01);
@@ -134,41 +110,4 @@ public class PropagationOptionsEntryPointTests
                 covariance));
     }
 
-    [Fact]
-    public void MonteCarloPropagation_EqualsTheFlagsConfiguration_OfItsIntegratorAndBodies()
-    {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var viaOptions = MonteCarloPropagator.Propagate(new MonteCarloConfiguration
-        {
-            RunCount = 4, Seed = 7, TemplateSpacecraft = Template(earth), Window = OneHour,
-            Propagation = PropagationOptions.Default with
-                { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY } }
-        });
-        var reference = MonteCarloPropagator.Propagate(new MonteCarloConfiguration
-        {
-            RunCount = 4, Seed = 7, TemplateSpacecraft = Template(earth), Window = OneHour,
-            CelestialBodiesFactory = () => new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            DeltaT = Output, IntegratorFactory = () => new RK78Integrator()
-        });
-
-        Assert.Equal(4, viaOptions.SuccessCount);
-        Assert.Equal(reference.EpochStatistics.Count, viaOptions.EpochStatistics.Count);
-        for (int i = 0; i < reference.EpochStatistics.Count; i++)
-        {
-            Assert.Equal(reference.EpochStatistics[i].MeanPosition, viaOptions.EpochStatistics[i].MeanPosition);
-            Assert.Equal(reference.EpochStatistics[i].MeanVelocity, viaOptions.EpochStatistics[i].MeanVelocity);
-        }
-    }
-
-    [Fact]
-    public void MonteCarloPropagation_WithAMemberOfTheFlagsConfiguration_Throws()
-    {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var config = new MonteCarloConfiguration
-        {
-            RunCount = 2, Seed = 7, TemplateSpacecraft = Template(earth), Window = OneHour,
-            Propagation = PropagationOptions.Default, DeltaT = Output
-        };
-        Assert.Throws<ArgumentException>(() => MonteCarloPropagator.Propagate(config));
-    }
 }

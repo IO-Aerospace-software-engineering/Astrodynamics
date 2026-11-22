@@ -61,11 +61,11 @@ namespace DocumentationPageSamples.Reference;
 internal static class ImpulseManeuversPage
 {
     // docs/reference/impulse-maneuvers.md, "Example"
-    internal static void Block01(CelestialBody earth, Engine engine, Spacecraft spacecraft, Window window, CelestialItem[] perturbingBodies, TimeSpan deltaT)
+    internal static void Block01(CelestialBody earth, Engine engine, Spacecraft spacecraft, Window window, CelestialItem[] perturbingBodies)
     {
         #region docs/reference/impulse-maneuvers.md:1
         // Inputs: earth (CelestialBody), engine (Engine), spacecraft (Spacecraft), window (Window), perturbingBodies
-        //   (CelestialItem[]), deltaT (TimeSpan)
+        //   (CelestialItem[])
         // Raise the apogee radius to 42,164 km (meters), at the first perigee after J2000 TDB.
         var maneuver = new ApogeeHeightManeuver(
             earth,
@@ -75,7 +75,7 @@ internal static class ImpulseManeuversPage
             engine);
 
         spacecraft.SetStandbyManeuver(maneuver);
-        var solution = spacecraft.Propagate(window, perturbingBodies, false, false, deltaT);
+        var solution = spacecraft.Propagate(window, new PropagationOptions { ThirdBodies = perturbingBodies });
         #endregion
     }
 }

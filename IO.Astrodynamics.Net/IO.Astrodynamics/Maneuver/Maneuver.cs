@@ -65,7 +65,7 @@ namespace IO.Astrodynamics.Maneuver
         /// of the window of the previous maneuver of the chain, which the chain sets when that maneuver executes (an impulse
         /// or an attitude, leading or chained: the last leading attitude gates the first impulse). The gate
         /// belongs to one propagation (#573): it holds after the propagation, with the windows of the maneuver, and the next
-        /// <c>Spacecraft.Propagate</c> (and <c>Scenario.SimulateAsync</c> and <c>BatchPropagator</c> through it) clears it
+        /// <c>Spacecraft.Propagate</c> (and <c>Scenario.Simulate</c> and <c>BatchPropagator</c> through it) clears it
         /// before it runs. A spacecraft propagated again, from another state or over another window, then gates its maneuvers
         /// as a spacecraft never propagated.
         /// </para>
@@ -96,7 +96,27 @@ namespace IO.Astrodynamics.Maneuver
         /// This property represents the duration as a TimeSpan object.
         /// </remarks>
         /// <returns>The maneuver hold duration as a TimeSpan.</returns>
-        public TimeSpan ManeuverHoldDuration { get; protected set; }
+        /// <remarks>
+        /// Zero or positive: the constructor and <see cref="PhasingManeuver"/> set it through one check, a negative hold
+        /// throwing <see cref="ArgumentOutOfRangeException"/> (R11 and decision 11 of lot L4 of #668: before 11.0.0 a
+        /// protected setter accepted it, and the window it gave the maneuver mid-propagation ended before it started).
+        /// </remarks>
+        public TimeSpan ManeuverHoldDuration
+        {
+            get => _maneuverHoldDuration;
+            private protected set
+            {
+                if (value < TimeSpan.Zero)
+                {
+                    throw new ArgumentOutOfRangeException("maneuverHoldDuration", value,
+                        "The hold of a maneuver cannot be negative.");
+                }
+
+                _maneuverHoldDuration = value;
+            }
+        }
+
+        private TimeSpan _maneuverHoldDuration;
 
         public Engine Engine { get; }
 
@@ -131,6 +151,18 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         public double FuelBurned { get; internal set; }
 
+        /// <summary>
+        /// A maneuver about <paramref name="maneuverCenter"/>, at or after <paramref name="minimumEpoch"/>, held for
+        /// <paramref name="maneuverHoldDuration"/>, burning on <paramref name="engine"/>.
+        /// </summary>
+        /// <param name="maneuverCenter">The centre of the maneuver.</param>
+        /// <param name="minimumEpoch">The earliest epoch of the maneuver.</param>
+        /// <param name="maneuverHoldDuration">The hold, zero or positive.</param>
+        /// <param name="engine">The engine.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="maneuverHoldDuration"/> is negative (R11 of #668:
+        /// before 11.0.0 it was accepted, and the window it gave the maneuver mid-propagation ended before it
+        /// started).</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="engine"/> is null.</exception>
         protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
         {
             ManeuverCenter = maneuverCenter;

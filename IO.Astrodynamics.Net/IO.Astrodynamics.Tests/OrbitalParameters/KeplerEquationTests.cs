@@ -12,6 +12,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -696,9 +697,8 @@ public class KeplerEquationTests
         var window = new Window(Epoch, Epoch.AddSeconds(60.0));
         var bodies = new CelestialItem[] { (CelestialBody)elements.Observer };
         return rk78
-            ? new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-12, 1e-12), bodies, false, false,
-                TimeSpan.FromSeconds(60.0))
-            : new CentralBodyPropagator(window, spacecraft, bodies, false, false, TimeSpan.FromSeconds(10.0));
+            ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
+            : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
     }
 
     // The errors of the position and of the velocity relative to the state at 60 digits

@@ -124,9 +124,10 @@ namespace IO.Astrodynamics.Mission
         /// applies; given with a scenario that holds bodies, it must hold the same ones, each spacecraft's central body
         /// aside (the list of <see cref="PropagationSolution.Options"/> omits it), with the same models, or the call throws
         /// before anything is propagated. Synchronous and sequential: a spacecraft whose central body has a geopotential
-        /// may share it with the others, each propagation building its own field. With the integrator, forces and
-        /// covariance options the settings name, each spacecraft's run is bit for bit that of
-        /// <c>SimulateAsync(drag, srp, step, factory, covariance)</c>.
+        /// may share it with the others, each propagation building its own field. It replaces the three
+        /// <c>SimulateAsync</c> overloads of flags, removed in 11.0.0 (R07 and R28 of #668): the settings of their
+        /// integrator, flags and step give each spacecraft their run, bit for bit (the overload without a factory,
+        /// <see cref="VVIntegratorOptions"/> with its step).
         /// </remarks>
         /// <param name="options">The settings; null for <see cref="PropagationOptions.Default"/>.</param>
         /// <returns>The summary of the simulation.</returns>
@@ -140,6 +141,12 @@ namespace IO.Astrodynamics.Mission
             if (_spacecrafts.Count == 0 && _sites.Count == 0 && _stars.Count == 0)
             {
                 throw new InvalidOperationException("There is nothing to simulate");
+            }
+
+            // Before any star is propagated (decision 7 of lot L4 of #668)
+            if (_spacecrafts.Count > 0)
+            {
+                Propagator.PropagatorBase.RequireWindowLength(Window);
             }
 
             if (options.ThirdBodies != null && _celestialBodies.Count > 0)
@@ -183,127 +190,6 @@ namespace IO.Astrodynamics.Mission
                     $"central body of {spacecraft.Name} aside: they are one setting. Leave ThirdBodies null to take the " +
                     "bodies of the scenario, or give the same bodies.", "options");
             }
-        }
-
-        /// <summary>
-        /// Propagate this scenario with the default Velocity-Verlet integrator, whose step is
-        /// <paramref name="propagatorStepSize"/>.
-        /// </summary>
-        /// <param name="includeAtmosphericDrag">The drag will be computed relatively to initial spacecraft's center of motion</param>
-        /// <param name="includeSolarRadiationPressure">Radiation pressure will be computed from drag coefficient defined in spacecraft</param>
-        /// <param name="propagatorStepSize"></param>
-        /// <exception cref="InvalidOperationException"></exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive; checked
-        /// before any star is propagated.</exception>
-        public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
-            TimeSpan propagatorStepSize)
-        {
-            return await SimulateAsync(propagatorStepSize, spacecraft => spacecraft.PropagateAsync(Window, _celestialBodies,
-                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
-        }
-
-        /// <summary>
-        /// Propagate this scenario with the integrator that <paramref name="integratorFactory"/> creates for each spacecraft.
-        /// </summary>
-        /// <param name="includeAtmosphericDrag">The drag will be computed relatively to initial spacecraft's center of motion</param>
-        /// <param name="includeSolarRadiationPressure">Radiation pressure will be computed from drag coefficient defined in spacecraft</param>
-        /// <param name="propagatorStepSize">Step of the propagated states. It is also the integration step of a
-        /// Velocity-Verlet integrator; an adaptive <see cref="RK78Integrator"/> chooses its own steps.</param>
-        /// <param name="integratorFactory">Creates the integrator of one spacecraft, for example
-        /// <c>() => new RK78Integrator()</c>. It is called once per spacecraft and must return a new instance each
-        /// time: the propagator adds the force model of the spacecraft to its integrator.</param>
-        /// <returns>The summary of the simulation.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="integratorFactory"/> is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive; checked
-        /// before any star is propagated.</exception>
-        /// <exception cref="InvalidOperationException">There is nothing to simulate, or the factory returns null or an
-        /// instance it already returned for another spacecraft.</exception>
-        /// <remarks>
-        /// The overload without a factory keeps the default Velocity-Verlet integrator. Stars are propagated the same
-        /// way by both overloads; the propagation of a star replaces the states it held (<see cref="Star.Propagate"/>), as
-        /// that of a spacecraft does.
-        /// </remarks>
-        public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
-            TimeSpan propagatorStepSize, Func<Integrator> integratorFactory)
-        {
-            return await SimulateAsync(includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize,
-                integratorFactory, null);
-        }
-
-        /// <summary>
-        /// Propagate this scenario with the integrator that <paramref name="integratorFactory"/> creates for each
-        /// spacecraft, and the state transition matrix and the covariance of <paramref name="covariancePropagation"/> for
-        /// every spacecraft.
-        /// </summary>
-        /// <param name="includeAtmosphericDrag">The drag will be computed relatively to initial spacecraft's center of motion</param>
-        /// <param name="includeSolarRadiationPressure">Radiation pressure will be computed from drag coefficient defined in spacecraft</param>
-        /// <param name="propagatorStepSize">Step of the propagated states. It is also the integration step of a
-        /// Velocity-Verlet integrator; an adaptive <see cref="RK78Integrator"/> chooses its own steps.</param>
-        /// <param name="integratorFactory">Creates the integrator of one spacecraft, for example
-        /// <c>() => new RK78Integrator()</c>, which the state transition matrix needs. It is called once per spacecraft
-        /// and must return a new instance each time.</param>
-        /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance, for
-        /// every spacecraft; null for none, as the overload without it. In
-        /// <see cref="CovariancePropagationMode.Covariance"/>, every spacecraft needs a covariance on its initial orbital
-        /// parameters, at the start of the window; the stored states of each spacecraft then carry their covariance.
-        /// </param>
-        /// <returns>The summary of the simulation.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="integratorFactory"/> is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive; checked
-        /// before any star is propagated.</exception>
-        /// <exception cref="InvalidOperationException">There is nothing to simulate, or the factory returns null or an
-        /// instance it already returned for another spacecraft; or the covariance is asked for and a spacecraft has no
-        /// valid initial covariance at the start of the window (the message names the spacecraft).</exception>
-        /// <exception cref="NotSupportedException">The covariance propagation is asked for and the factory creates
-        /// another integrator than <see cref="RK78Integrator"/>.</exception>
-        /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a
-        /// consider parameter without its force.</exception>
-        public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
-            TimeSpan propagatorStepSize, Func<Integrator> integratorFactory,
-            CovariancePropagationOptions covariancePropagation)
-        {
-            if (integratorFactory == null) throw new ArgumentNullException(nameof(integratorFactory));
-
-            var integrators = new HashSet<Integrator>(ReferenceEqualityComparer.Instance);
-            return await SimulateAsync(propagatorStepSize, spacecraft =>
-            {
-                var integrator = integratorFactory() ??
-                                 throw new InvalidOperationException("The integrator factory returned null.");
-                if (!integrators.Add(integrator))
-                {
-                    throw new InvalidOperationException(
-                        "The integrator factory must return a new instance for each spacecraft: the propagator adds the forces of each spacecraft to its integrator.");
-                }
-
-                // A rejected initial covariance names its spacecraft (PropagatorBase); any other failure keeps its own
-                // message
-                return Task.Run(() => spacecraft.Propagate(Window, _celestialBodies, integrator, includeAtmosphericDrag,
-                    includeSolarRadiationPressure, propagatorStepSize, covariancePropagation));
-            });
-        }
-
-        private async Task<ScenarioSummary> SimulateAsync(TimeSpan propagatorStepSize,
-            Func<Body.Spacecraft.Spacecraft, Task> propagateSpacecraft)
-        {
-            // Before the stars are propagated (#674)
-            Propagator.PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
-            IsSimulated = false;
-            if (_spacecrafts.Count == 0 && _sites.Count == 0 && _stars.Count == 0)
-            {
-                throw new InvalidOperationException("There is nothing to simulate");
-            }
-
-            foreach (var star in _stars)
-            {
-                await star.PropagateAsync(Window, StarStep(propagatorStepSize));
-            }
-
-            foreach (var spacecraft in _spacecrafts)
-            {
-                await propagateSpacecraft(spacecraft);
-            }
-
-            return Summarize();
         }
 
         // The step of a star: the window length / 1000, at least the output step and at most 60 s

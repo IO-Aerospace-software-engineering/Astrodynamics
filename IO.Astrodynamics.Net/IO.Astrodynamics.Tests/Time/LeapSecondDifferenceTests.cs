@@ -35,7 +35,8 @@ public class LeapSecondDifferenceTests
         var window = new Window(BeforeLeap, AfterLeap);
 
         Assert.Equal(TimeSpan.FromSeconds(121.0), window.Length);
-        Assert.Equal(TimeSpan.FromSeconds(121.0), new Window(AfterLeap, BeforeLeap).Length);
+        // Reversed ends throw since 11.0.0 (R11 of #668), where they were swapped
+        Assert.Throws<ArgumentException>(() => new Window(AfterLeap, BeforeLeap));
     }
 
     [Fact]

@@ -8,6 +8,8 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
@@ -23,7 +25,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// dynamics"), each against CSPICE's <c>gftfov</c> in the process (choice 9 (b)) on the kernels the library writes
 /// (<c>Spacecraft.WriteEphemeris</c> and <c>WriteOrientation</c>), what a user gives CSPICE or another tool: RK7(8), an
 /// impulsive maneuver followed by a TRIAD attitude inside the window (a discrete attitude), a nadir attitude (a continuous
-/// one), SSB mode, the six inertial initial frames, the path of <c>Scenario.SimulateAsync</c>, a TLE, and a TLE propagated
+/// one), SSB mode, the six inertial initial frames, the path of <c>Scenario.Simulate</c>, a TLE, and a TLE propagated
 /// by RK7(8) from its SGP4 state at the start, rotated once to ICRF (#675), which reads its stored states.
 /// </summary>
 /// <remarks>
@@ -118,7 +120,7 @@ public class FieldOfViewDynamicsTests
             case "RK78":
             {
                 var (spacecraft, _) = Create(-5171, leo);
-                spacecraft.Propagate(propagation, bodies, new RK78Integrator(1e-12, 1e-12), false, false, oneSecond);
+                spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = oneSecond, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                 return (spacecraft, window);
             }
             case "ImpulseThenTriad":
@@ -130,7 +132,7 @@ public class FieldOfViewDynamicsTests
                 var impulse = new ApogeeHeightManeuver(earth, Start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
                 impulse.SetNextManeuver(new TriadAttitude(Start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun, engine));
                 spacecraft.SetStandbyManeuver(impulse);
-                spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
+                spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 Assert.NotNull(impulse.ThrustWindow);
                 Assert.InRange((impulse.ThrustWindow.Value.StartDate - Start).TotalSeconds, 100.0, 2900.0);
                 return (spacecraft, window);
@@ -139,7 +141,7 @@ public class FieldOfViewDynamicsTests
             {
                 var (spacecraft, engine) = Create(-5173, leo);
                 spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
-                spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
+                spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 return (spacecraft, window);
             }
             case "SSB":
@@ -148,18 +150,18 @@ public class FieldOfViewDynamicsTests
                 var orbit = new StateVector(earthFromSsb.Position + leo.Position, earthFromSsb.Velocity + leo.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, Start,
                     Frames.Frame.ICRF);
                 var (spacecraft, _) = Create(-5174, orbit);
-                spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
+                spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 return (spacecraft, window);
             }
             case "ECLIPJ2000":
             {
                 var (spacecraft, _) = Create(-5175, leo.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector());
-                spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
+                spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 return (spacecraft, window);
             }
             case "NadirScenario":
             {
-                // The nadir attitude through Scenario.SimulateAsync
+                // The nadir attitude through Scenario.Simulate
                 var (spacecraft, engine) = Create(-5178, leo);
                 spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
                 var scenario = new IO.Astrodynamics.Mission.Scenario($"FovDyn{spacecraft.NaifId}", new IO.Astrodynamics.Mission.Mission($"fovdyn{spacecraft.NaifId}"), propagation);
@@ -167,7 +169,7 @@ public class FieldOfViewDynamicsTests
                 scenario.AddCelestialItem(earth);
                 scenario.AddCelestialItem(sun);
                 scenario.AddSpacecraft(spacecraft);
-                scenario.SimulateAsync(false, false, oneSecond).GetAwaiter().GetResult();
+                scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond });
                 return (spacecraft, window);
             }
             case "TLE":
@@ -191,8 +193,7 @@ public class FieldOfViewDynamicsTests
                 var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, 3000.0, new Clock("FOV5179_CLK", 65536), tle);
                 AddInstruments(spacecraft);
                 var tleStart = tle.Epoch.ToTDB();
-                spacecraft.Propagate(new Window(tleStart, tleStart.AddSeconds(3000.0)), new CelestialItem[] { moon, sun }, new RK78Integrator(1e-12, 1e-12),
-                    false, false, oneSecond);
+                spacecraft.Propagate(new Window(tleStart, tleStart.AddSeconds(3000.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = oneSecond, ThirdBodies = new CelestialItem[] { moon, sun }, CovariancePropagation = CovariancePropagationOptions.None });
                 return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
             }
             default:
@@ -257,7 +258,7 @@ public class FieldOfViewDynamicsTests
     public void Variant_MatchesGftfov(string variant) => Check(variant);
 
     /// <summary>The variants added by #537: the nadir and TRIAD attitudes from the five other inertial frames, RK7(8) and
-    /// SSB mode from other frames, the nadir attitude through <c>Scenario.SimulateAsync</c>.</summary>
+    /// SSB mode from other frames, the nadir attitude through <c>Scenario.Simulate</c>.</summary>
     [Theory]
     [Trait("Category", "Validation")]
     [InlineData("NadirScenario")]

@@ -20,8 +20,8 @@ namespace IO.Astrodynamics.Propagator;
 /// </summary>
 /// <remarks>
 /// Kept by the <see cref="PropagationSolution"/> of an RK7(8) or Velocity-Verlet propagation and by its spacecraft
-/// until its next propagation (<see cref="Spacecraft.LastForceModel"/>), without the steps: about 0.2 MB for one day in
-/// LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun. The forces are not reentrant (their buffers and those of
+/// until its next propagation (<see cref="Spacecraft.LastForceModel"/>), without the steps: about 0.34 MB for one day
+/// in LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun (lot L4 of #668, <c>DefaultIntegratorFiguresTests</c>). The forces are not reentrant (their buffers and those of
 /// the geopotential): every propagation with them runs under <see cref="SyncRoot"/>, the lock of the dynamics of an
 /// RK7(8) solution.
 /// </remarks>

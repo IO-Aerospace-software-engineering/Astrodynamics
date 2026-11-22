@@ -23,10 +23,8 @@ public static class MonteCarloPropagator
     /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
     /// <returns>Aggregated statistics across all successful runs.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than 2,
-    /// or <see cref="MonteCarloConfiguration.DeltaT"/> of a flags configuration is not positive.</exception>
-    /// <exception cref="ArgumentException">Thrown when <see cref="MonteCarloConfiguration.Propagation"/> is set together
-    /// with a member of the flags configuration.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than
+    /// 2.</exception>
     /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown, before any run is propagated, when the NAIF ID of a run,
     /// <see cref="MonteCarloConfiguration.BaseNaifId"/> − i, is not in [-2147483, -1] (#676).</exception>
@@ -75,8 +73,8 @@ public static class MonteCarloPropagator
 
     /// <summary>
     /// Propagates the runs <paramref name="firstRun"/> to <paramref name="firstRun"/> + n − 1 of a campaign, from their
-    /// initial states, each with a clone of the template spacecraft (NAIF ID <c>BaseNaifId − run</c>) and a fresh set of
-    /// celestial bodies; the coefficients, when given, replace the drag and reflectivity coefficients of the template,
+    /// initial states, each with a clone of the template spacecraft (NAIF ID <c>BaseNaifId − run</c>) and the settings of
+    /// <see cref="MonteCarloConfiguration.Propagation"/>; the coefficients, when given, replace the drag and reflectivity coefficients of the template,
     /// run by run. The runs of <see cref="Propagate"/>, exposed internally so that the validation of the propagated
     /// covariance can read the state of every run at any epoch, in batches.
     /// </summary>
@@ -85,21 +83,11 @@ public static class MonteCarloPropagator
         IReadOnlyList<(double DragCoefficient, double ReflectivityCoefficient)> coefficients = null)
     {
         var template = config.TemplateSpacecraft;
-        bool legacy = IsFlagsConfiguration(config);
         var tasks = new PropagationTask[initialStates.Count];
         for (int k = 0; k < initialStates.Count; k++)
         {
             int i = firstRun + k;
-            IList<CelestialItem> bodiesList = null;
             var runObserver = nominal.Observer;
-            if (legacy)
-            {
-                var bodies = config.CelestialBodiesFactory();
-                bodiesList = bodies as IList<CelestialItem> ?? bodies.ToList();
-
-                // Find matching observer by NAIF ID in factory output
-                runObserver = bodiesList.FirstOrDefault(b => b.NaifId == nominal.Observer.NaifId) ?? nominal.Observer;
-            }
 
             var runState = new StateVector(
                 initialStates[k].Position,
@@ -121,16 +109,7 @@ public static class MonteCarloPropagator
                 coefficients?[k].DragCoefficient ?? template.DragCoefficient,
                 solarRadiationCoeff: coefficients?[k].ReflectivityCoefficient ?? template.SolarRadiationCoeff);
 
-            tasks[k] = legacy
-                ? new PropagationTask(
-                    sc,
-                    config.Window,
-                    bodiesList,
-                    config.IncludeAtmosphericDrag,
-                    config.IncludeSolarRadiationPressure,
-                    config.DeltaT,
-                    config.IntegratorFactory)
-                : new PropagationTask(sc, config.Window, config.Propagation);
+            tasks[k] = new PropagationTask(sc, config.Window, config.Propagation);
         }
 
         return BatchPropagator.Propagate(tasks, config.BatchOptions);
@@ -153,26 +132,5 @@ public static class MonteCarloPropagator
         if (config.RunCount < 2)
             throw new ArgumentOutOfRangeException(nameof(config.RunCount), "RunCount must be at least 2.");
         ArgumentNullException.ThrowIfNull(config.TemplateSpacecraft);
-        if (!IsFlagsConfiguration(config))
-        {
-            return;
-        }
-
-        if (config.Propagation != null)
-        {
-            throw new ArgumentException(
-                "MonteCarloConfiguration.Propagation is set together with a member of the flags configuration " +
-                "(CelestialBodiesFactory, DeltaT, IntegratorFactory, IncludeAtmosphericDrag, " +
-                "IncludeSolarRadiationPressure): give the settings of the runs in Propagation alone.", nameof(config));
-        }
-
-        ArgumentNullException.ThrowIfNull(config.CelestialBodiesFactory);
-        // Before any run: through the batch, a bad step would fail every run without an exception (#674)
-        PropagatorBase.RequirePositiveStep(config.DeltaT, nameof(config.DeltaT));
     }
-
-    // Whether the campaign is of the flags configuration of 10.x rather than of Propagation (R06 of #668)
-    private static bool IsFlagsConfiguration(MonteCarloConfiguration config) =>
-        config.CelestialBodiesFactory != null || config.DeltaT != TimeSpan.Zero || config.IntegratorFactory != null ||
-        config.IncludeAtmosphericDrag || config.IncludeSolarRadiationPressure;
 }

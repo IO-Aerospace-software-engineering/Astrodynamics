@@ -85,8 +85,7 @@ public class TimeArgumentTests
         var initial = Leo(window.StartDate.ToTDB());
 
         // Act
-        var solution = Spacecraft(-5011, initial).Propagate(window, new CelestialItem[] { _earth },
-            rk78 ? new RK78Integrator(1e-13, 1e-13) : new VVIntegrator(TimeSpan.FromSeconds(10.0)), false, false, Step);
+        var solution = Spacecraft(-5011, initial).Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the TT seconds between the instants, exact in ticks without a TDB tag, within the change of the
         // departure of the two series between two TDB tags (1.8e-9 s over the hour), within the departure itself from a
@@ -129,8 +128,7 @@ public class TimeArgumentTests
         var initial = Llo(window.StartDate.ToTDB());
 
         // Act
-        var solution = Spacecraft(-5012, initial).Propagate(window, new CelestialItem[] { _moon },
-            rk78 ? new RK78Integrator(1e-13, 1e-13) : new VVIntegrator(TimeSpan.FromSeconds(10.0)), false, false, Step);
+        var solution = Spacecraft(-5012, initial).Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _moon }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the TDB seconds between the TDB labels of the ends, the expression of main, the longer of them and of
         // the output grid; within two ticks and the departure of the series of the TDB seconds between the instants
@@ -168,10 +166,9 @@ public class TimeArgumentTests
         var data = new TheoryData<string, bool>();
         foreach (string path in new[]
                  {
-                     "builder", "constructor", "constructor with options", "constructor with an integrator and its forces",
-                     "constructor with an integrator, its forces and options", "Velocity-Verlet constructor", "Spacecraft.Propagate", "Spacecraft.Propagate with an integrator",
-                     "Spacecraft.Propagate with options", "Spacecraft.PropagateAsync", "PropagationTask",
-                     "PropagationTask with options", "builder with options"
+                     "constructor", "constructor with options", "constructor with an integrator and its forces",
+                     "constructor with an integrator, its forces and options", "Velocity-Verlet constructor", "Spacecraft.Propagate",
+                     "Spacecraft.Propagate with options", "PropagationTask", "PropagationTask with options"
                  })
         foreach (bool aboutTheEarth in new[] { true, false })
             data.Add(path, aboutTheEarth);
@@ -188,37 +185,25 @@ public class TimeArgumentTests
         var initial = aboutTheEarth ? Leo(window.StartDate.ToTDB()) : Llo(window.StartDate.ToTDB());
         var bodies = new CelestialItem[] { body };
         var options = new CovariancePropagationOptions();
-        bool velocityVerlet = path is "Velocity-Verlet constructor" or "Spacecraft.Propagate" or "Spacecraft.PropagateAsync" or
-            "PropagationTask";
+        bool velocityVerlet = path is "Velocity-Verlet constructor" or "Spacecraft.Propagate" or "PropagationTask";
         var spacecraft = Spacecraft(-5013, initial);
 
         // Act
         var solution = path switch
         {
-            "builder" => new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-13, 1e-13), Step)
-                .Build().Propagate(),
-            "builder with options" => new CentralBodyPropagatorBuilder(window, spacecraft,
-                new RK78Integrator(1e-13, 1e-13), Step).WithCovariancePropagation(options).Build().Propagate(),
-            "constructor" => new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-13, 1e-13), bodies,
-                false, false, Step).Propagate(),
-            "constructor with options" => new CentralBodyPropagator(window, spacecraft,
-                new RK78Integrator(1e-13, 1e-13), bodies, false, false, Step, options).Propagate(),
+            "constructor" => new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }).Propagate(),
+            "constructor with options" => new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = options ?? CovariancePropagationOptions.None }).Propagate(),
             "constructor with an integrator and its forces" => WithItsForces(window, spacecraft, body, null),
             "constructor with an integrator, its forces and options" => WithItsForces(window, spacecraft, body, options),
-            "Velocity-Verlet constructor" => new CentralBodyPropagator(window, spacecraft, bodies, false, false, Step)
+            "Velocity-Verlet constructor" => new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies })
                 .Propagate(),
-            "Spacecraft.Propagate" => spacecraft.Propagate(window, bodies, false, false, Step),
-            "Spacecraft.Propagate with an integrator" => spacecraft.Propagate(window, bodies,
-                new RK78Integrator(1e-13, 1e-13), false, false, Step),
-            "Spacecraft.Propagate with options" => spacecraft.Propagate(window, bodies,
-                new RK78Integrator(1e-13, 1e-13), false, false, Step, options),
-            "Spacecraft.PropagateAsync" => await spacecraft.PropagateAsync(window, bodies, false, false, Step),
+            "Spacecraft.Propagate" => spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies }),
+            "Spacecraft.Propagate with options" => spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = options ?? CovariancePropagationOptions.None }),
             "PropagationTask" => BatchPropagator.Propagate(new[]
-                { new PropagationTask(spacecraft, window, bodies, false, false, Step) }).Results.Single().Solution,
+                { new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies }) }).Results.Single().Solution,
             "PropagationTask with options" => BatchPropagator.Propagate(new[]
             {
-                new PropagationTask(spacecraft, window, bodies, false, false, Step,
-                    () => new RK78Integrator(1e-13, 1e-13)) { CovariancePropagation = options }
+                new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = options ?? CovariancePropagationOptions.None })
             }).Results.Single().Solution,
             _ => throw new ArgumentOutOfRangeException(nameof(path))
         };
@@ -226,9 +211,8 @@ public class TimeArgumentTests
         // Assert: the time argument of the central body, the window integrated in it, and the propagation of the same
         // integrator through the constructor, bit for bit
         var reference = velocityVerlet
-            ? new CentralBodyPropagator(window, Spacecraft(-5014, initial), bodies, false, false, Step).Propagate()
-            : new CentralBodyPropagator(window, Spacecraft(-5014, initial), new RK78Integrator(1e-13, 1e-13), bodies,
-                false, false, Step).Propagate();
+            ? new CentralBodyPropagator(window, Spacecraft(-5014, initial), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies }).Propagate()
+            : new CentralBodyPropagator(window, Spacecraft(-5014, initial), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }).Propagate();
         Assert.Same(aboutTheEarth ? PropagationTimeArgument.Tt : PropagationTimeArgument.Tdb, solution.TimeArgument);
         if (aboutTheEarth)
         {
@@ -241,18 +225,18 @@ public class TimeArgumentTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task Scenario_EveryOverload_PropagatesItsSpacecraftOverTheTimeArgumentOfItsCentralBody(bool aboutTheEarth)
+    public async Task Scenario_EverySetting_PropagatesItsSpacecraftOverTheTimeArgumentOfItsCentralBody(bool aboutTheEarth)
     {
         // Arrange
         var window = WindowOf("UTC");
         var body = aboutTheEarth ? _earth : _moon;
         var initial = aboutTheEarth ? Leo(window.StartDate.ToTDB()) : Llo(window.StartDate.ToTDB());
         var bodies = new CelestialItem[] { body };
-        var velocityVerlet = Spacecraft(-5015, initial).Propagate(window, bodies, false, false, Step);
-        var rk78 = Spacecraft(-5016, initial).Propagate(window, bodies, new RK78Integrator(1e-13, 1e-13), false, false,
-            Step);
+        var velocityVerlet = Spacecraft(-5015, initial).Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies });
+        var rk78 = Spacecraft(-5016, initial).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
-        // Act and assert: the three overloads, each the propagation of its integrator, its states labelled as the
+        // Act and assert: the settings of the three former overloads (Velocity-Verlet, RK7(8), RK7(8) with the
+        // covariance options), each the propagation of its integrator, its states labelled as the
         // propagation labels them (the last one the end of the window)
         for (int overload = 0; overload < 3; overload++)
         {
@@ -263,10 +247,9 @@ public class TimeArgumentTests
             scenario.AddSpacecraft(spacecraft);
             _ = overload switch
             {
-                0 => await scenario.SimulateAsync(false, false, Step),
-                1 => await scenario.SimulateAsync(false, false, Step, () => new RK78Integrator(1e-13, 1e-13)),
-                _ => await scenario.SimulateAsync(false, false, Step, () => new RK78Integrator(1e-13, 1e-13),
-                    new CovariancePropagationOptions())
+                0 => scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step }),
+                1 => scenario.Simulate(new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, CovariancePropagation = CovariancePropagationOptions.None }),
+                _ => scenario.Simulate(new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, CovariancePropagation = new CovariancePropagationOptions() })
             };
 
             var expected = (overload == 0 ? velocityVerlet : rk78).StateVectors;
@@ -291,13 +274,16 @@ public class TimeArgumentTests
         // Arrange: two runs from a LEO with a covariance, over a UTC hour
         var window = WindowOf("UTC");
         var initial = PropagatorsTestCovariance(Leo(window.StartDate.ToTDB()));
-        var reference = Spacecraft(-5021, initial).Propagate(window, new CelestialItem[] { _earth },
-            new RK78Integrator(1e-11, 1e-11), false, false, Step);
+        var reference = Spacecraft(-5021, initial).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
         var config = new MonteCarloConfiguration
         {
             RunCount = 2, Seed = 501, TemplateSpacecraft = Spacecraft(-5022, initial), Window = window,
-            CelestialBodiesFactory = () => new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start) },
-            DeltaT = Step, IntegratorFactory = () => new RK78Integrator(1e-11, 1e-11)
+            Propagation = new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step,
+                ThirdBodies = new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start) },
+                CovariancePropagation = CovariancePropagationOptions.None
+            }
         };
 
         // Act
@@ -323,8 +309,7 @@ public class TimeArgumentTests
         var bodies = new CelestialItem[] { new CelestialBody(Stars.Sun), _earth };
 
         // Act
-        var solution = Spacecraft(-5031, initial).Propagate(window, bodies,
-            rk78 ? new RK78Integrator(10.0) : new VVIntegrator(TimeSpan.FromSeconds(10.0)), false, false, Step);
+        var solution = Spacecraft(-5031, initial).Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(10.0) } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
@@ -345,8 +330,7 @@ public class TimeArgumentTests
         var initial = icrf.ToFrame(frame).ToStateVector();
 
         // Act
-        var solution = Spacecraft(-5041, initial).Propagate(window, new CelestialItem[] { _earth },
-            new RK78Integrator(1e-13, 1e-13), false, false, Step);
+        var solution = Spacecraft(-5041, initial).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: TT seconds, and Kepler over them in the inertial frame of the propagation
         double error = KeplerError(initial, solution, DynamicalTimeReference.TtSecondsBetween(window.StartDate,
@@ -377,9 +361,7 @@ public class TimeArgumentTests
             engine));
 
         // Act
-        var solution = spacecraft.Propagate(window, new CelestialItem[] { _earth },
-            rk78 ? new RK78Integrator(1e-11, 1e-11) : new VVIntegrator(TimeSpan.FromSeconds(10.0)), false, false,
-            TimeSpan.FromSeconds(60.0));
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: in RK7(8) the event time of the first segment, in TT seconds, carried to its label (OnEpochGrid), is
         // the TT seconds between the two bases to the rounding of the seconds (one ulp, 4.5e-13 s; bound 1e-12 s);
@@ -424,8 +406,7 @@ public class TimeArgumentTests
             var initial = Leo(window.StartDate.ToTDB());
 
             // Act
-            var solution = Spacecraft(-5061 - k, initial).Propagate(window, new CelestialItem[] { _earth },
-                new RK78Integrator(1e-11, 1e-11), false, false, window.Length);
+            var solution = Spacecraft(-5061 - k, initial).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert
             if (!WindowEndAssert.Reaches(window, solution) ||
@@ -469,8 +450,7 @@ public class TimeArgumentTests
             Frames.Frame.ICRF);
         var protectedSpacecraft = Spacecraft(-5081, protectedInitial);
         var secondary = Spacecraft(-5082, secondaryInitial);
-        protectedSpacecraft.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-13, 1e-13), false,
-            false, TimeSpan.FromSeconds(10.0));
+        protectedSpacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
         var encounter = IO.Astrodynamics.SSA.ConjunctionAssessment.Analyze(new IO.Astrodynamics.SSA.ProtectedSpacecraftProfile(protectedSpacecraft),
@@ -520,10 +500,8 @@ public class TimeArgumentTests
     {
         // Arrange
         var window = WindowOf("UTC");
-        var velocityVerlet = Spacecraft(-5111, Leo(window.StartDate.ToTDB())).Propagate(window,
-            new CelestialItem[] { _earth }, false, false, Step);
-        var rk78 = Spacecraft(-5112, Leo(window.StartDate.ToTDB())).Propagate(window, new CelestialItem[] { _earth },
-            new RK78Integrator(1e-11, 1e-11), false, false, Step, new CovariancePropagationOptions());
+        var velocityVerlet = Spacecraft(-5111, Leo(window.StartDate.ToTDB())).Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth } });
+        var rk78 = Spacecraft(-5112, Leo(window.StartDate.ToTDB())).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = new CovariancePropagationOptions() });
 
         // Act and assert: without segments, without the variational equations; the dynamics of RK7(8) take the time
         // argument of the propagation

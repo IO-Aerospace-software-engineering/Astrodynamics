@@ -43,7 +43,7 @@ too fast in right ascension, 77.9 times for Polaris (#718).
 | `EquatorialCoordinatesAtEpoch` | The catalog right ascension and declination, radians |
 | `RightAscensionProperMotion`, `DeclinationProperMotion` | μα* and μδ, radians per Julian year of TDB |
 | `RightAscensionSigma`, `DeclinationSigma`, `RightAscensionSigmaProperMotion`, `DeclinationSigmaProperMotion` | σα*, σδ, σμα*, σμδ |
-| `IsPropagated` | True once `Propagate`, `PropagateAsync` or `Scenario.SimulateAsync` stored states |
+| `IsPropagated` | True once `Propagate`, `PropagateAsync` or `Scenario.Simulate` stored states |
 
 ### Methods
 
@@ -119,7 +119,7 @@ The state of a star carries its space velocity, the derivative of its straight l
 
 r0 the catalog `Distance`, in m/s of TDB, perpendicular to the catalog direction. `GetGeometricStateRelativeTo` gives it
 minus the velocity of the reference body, `GetEphemeris` minus the observer's, and `Propagate`, `PropagateAsync` and
-`Scenario.SimulateAsync` store it with each position, so the SPK of `WriteEphemeris` holds it: `spkezr` reads it back
+`Scenario.Simulate` store it with each position, so the SPK of `WriteEphemeris` holds it: `spkezr` reads it back
 (`StarVelocityTests`). Barnard's star moves at 89 km/s. Before 11.0.0 the velocity was zero while the position moved:
 from the barycenter a zero velocity, from an observer the opposite of the observer's velocity.
 

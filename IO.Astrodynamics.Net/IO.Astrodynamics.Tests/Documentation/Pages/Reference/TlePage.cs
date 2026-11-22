@@ -81,7 +81,7 @@ internal static class TlePage
         var sgp4 = tle.ToStateVector(start);
         var spacecraft = new Spacecraft(-1001, "ISS", 420000.0, 450000.0, new Clock("iss", 65536),
             new StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frame.TEME), 1600.0, 2.2);
-        spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, true, TimeSpan.FromSeconds(60.0));
+        spacecraft.Propagate(window, new PropagationOptions { AtmosphericDrag = true, SolarRadiationPressure = true });
         #endregion
     }
 

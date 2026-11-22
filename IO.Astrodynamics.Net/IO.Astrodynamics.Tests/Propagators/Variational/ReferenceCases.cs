@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,9 +91,9 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
     /// </summary>
     internal PropagationSolution Propagate(int naifId, double tolerance, VariationalOptions options)
     {
-        return NewSpacecraft(naifId, InitialState).PropagateWithVariationalEquations(Window, Bodies,
-            new RK78Integrator(tolerance, tolerance), AtmosphericDrag, SolarRadiationPressure,
-            TimeSpan.FromSeconds(3600.0), options);
+        return NewSpacecraft(naifId, InitialState).PropagateWithVariational(Window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(3600.0), ThirdBodies = Bodies, AtmosphericDrag = AtmosphericDrag, SolarRadiationPressure = SolarRadiationPressure },
+            options);
     }
 
     /// <summary>
@@ -103,9 +104,7 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
     internal PropagationSolution PropagateReference(int naifId, StateVector start, double dragCoefficient,
         double reflectivityCoefficient, double tolerance)
     {
-        var propagator = new CentralBodyPropagator(Window,
-            NewSpacecraft(naifId, start, dragCoefficient, reflectivityCoefficient), new RK78Integrator(tolerance, tolerance),
-            Bodies, AtmosphericDrag, SolarRadiationPressure, TimeSpan.FromSeconds(3600.0));
+        var propagator = new CentralBodyPropagator(Window, NewSpacecraft(naifId, start, dragCoefficient, reflectivityCoefficient), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(3600.0), ThirdBodies = Bodies, AtmosphericDrag = AtmosphericDrag, SolarRadiationPressure = SolarRadiationPressure, CovariancePropagation = CovariancePropagationOptions.None });
         return propagator.Propagate();
     }
 
@@ -363,8 +362,9 @@ public sealed class ReferenceCases
         VariationalOptions options)
     {
         var spacecraft = EclipsingSpacecraft(naifId, Eclipsing.InitialState);
-        var solution = spacecraft.PropagateWithVariationalEquations(Eclipsing.Window, Eclipsing.Bodies,
-            new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
+        var solution = spacecraft.PropagateWithVariational(Eclipsing.Window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Eclipsing.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true },
+            options);
         return (solution, (ImpulseManeuver)spacecraft.InitialManeuver);
     }
 
@@ -378,9 +378,7 @@ public sealed class ReferenceCases
         double reflectivityCoefficient = ReflectivityCoefficient, double tolerance = ReferenceTolerance)
     {
         var spacecraft = EclipsingSpacecraft(naifId, start, maneuver, dragCoefficient, reflectivityCoefficient);
-        var propagator = new CentralBodyPropagator(Eclipsing.Window, spacecraft,
-            new RK78Integrator(tolerance, tolerance), Eclipsing.Bodies, true, true,
-            TimeSpan.FromSeconds(600.0));
+        var propagator = new CentralBodyPropagator(Eclipsing.Window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Eclipsing.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
         return propagator.Propagate();
     }
 

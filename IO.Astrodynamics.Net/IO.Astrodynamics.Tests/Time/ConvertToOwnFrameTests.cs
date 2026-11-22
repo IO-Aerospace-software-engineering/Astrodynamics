@@ -96,9 +96,7 @@ public class ConvertToOwnFrameTests
             new StateVector(state.Position, state.Velocity, earth, epoch, Frames.Frame.ICRF, covariance));
 
         // Act: before #510 the propagator rejected the covariance, given at the epoch it had moved by a tick
-        var propagator = new CentralBodyPropagator(new Window(epoch, epoch.AddHours(1.0)), spacecraft,
-            new RK78Integrator(1e-12, 1e-12), new CelestialItem[] { earth }, false, false, TimeSpan.FromSeconds(60.0),
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var propagator = new CentralBodyPropagator(new Window(epoch, epoch.AddHours(1.0)), spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } });
         var solution = propagator.Propagate();
 
         // Assert: the propagation starts at the epoch of the state, from the state itself, with its covariance

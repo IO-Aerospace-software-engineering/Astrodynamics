@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator;
@@ -58,9 +59,9 @@ public class CovarianceValidationTests : IClassFixture<ReferenceCases>
             ConsiderParameters: parameters == ForceParameters.None ? null : consider);
         var spacecraft = new Spacecraft(-1966, "COVARIANCE", 100.0, 1000.0, new Clock("covariance", 65536), start, 10.0,
             2.2, null, 1.5);
-        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration),
-            referenceCase.Bodies, new RK78Integrator(1e-11, 1e-11), referenceCase.AtmosphericDrag,
-            referenceCase.SolarRadiationPressure, TimeSpan.FromHours(1.0), options);
+        var solution = spacecraft.PropagateWithVariational(new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromHours(1.0), ThirdBodies = referenceCase.Bodies, AtmosphericDrag = referenceCase.AtmosphericDrag, SolarRadiationPressure = referenceCase.SolarRadiationPressure },
+            options);
         int columns = 6 + (parameters == ForceParameters.None ? 0 : 1);
         int dimension = 6 + (options.ConsiderParameters == null ? 0 : 1);
 

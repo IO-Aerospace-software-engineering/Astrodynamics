@@ -6,6 +6,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -61,9 +62,8 @@ public class PropagatorStartStateTests
 
         // Act
         using var propagator = name.StartsWith("RK")
-            ? new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-12, 1e-12), bodies, false, false,
-                TimeSpan.FromSeconds(60.0))
-            : new CentralBodyPropagator(window, spacecraft, bodies, false, false, TimeSpan.FromSeconds(10.0));
+            ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
+            : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
         var solution = propagator.Propagate();
 
         // Assert
@@ -111,9 +111,8 @@ public class PropagatorStartStateTests
 
         // Act: the constructor with an integrator and its forces, and the default Velocity-Verlet one
         using var propagator = start.StartsWith("RK")
-            ? new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-12, 1e-12), bodies, false, false,
-                TimeSpan.FromSeconds(60.0))
-            : new CentralBodyPropagator(window, spacecraft, bodies, false, false, TimeSpan.FromSeconds(10.0));
+            ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
+            : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
         var solution = propagator.Propagate();
 
         // Assert against the 60-digit state of the elements. The start goes through AtEpoch (K): measured again on the

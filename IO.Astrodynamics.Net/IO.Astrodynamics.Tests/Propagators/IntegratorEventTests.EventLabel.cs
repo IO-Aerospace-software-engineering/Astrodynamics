@@ -77,8 +77,8 @@ public partial class IntegratorEventTests
         var (without, _) = NewSpacecraft(moon ? -7923 : -7924, Orbit());
         var integratorStep = TimeSpan.FromSeconds(step);
         var output = TimeSpan.FromSeconds(60.0);
-        var solution = withEvents.Propagate(window, [center], new VVIntegrator(integratorStep), false, false, output);
-        var free = without.Propagate(window, [center], new VVIntegrator(integratorStep), false, false, output);
+        var solution = withEvents.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = integratorStep }, OutputStep = output, ThirdBodies = [center] });
+        var free = without.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = integratorStep }, OutputStep = output, ThirdBodies = [center] });
 
         Assert.True(never.Checks >= 4, $"{never.Checks} events");
         Assert.Equal(never.Checks + 1, solution.Segments.Count);

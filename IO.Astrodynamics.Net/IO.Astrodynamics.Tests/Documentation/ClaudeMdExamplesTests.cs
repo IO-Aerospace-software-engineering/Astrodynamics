@@ -14,6 +14,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -281,7 +282,7 @@ public class ClaudeMdExamplesTests
         var spacecraft = SpacecraftWithEngine(naifId, out var engine, "2024-001A");
         impulse = new ApogeeHeightManeuver(Earth, Epoch, TimeSpan.Zero, 7000000.0, engine);
         spacecraft.SetStandbyManeuver(impulse);
-        spacecraft.Propagate(new Window(Epoch, Epoch.AddHours(2.0)), [Earth], false, false, TimeSpan.FromSeconds(60.0));
+        spacecraft.Propagate(new Window(Epoch, Epoch.AddHours(2.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [Earth] });
         return spacecraft;
     }
 
@@ -325,8 +326,7 @@ public class ClaudeMdExamplesTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var spacecraft = new Spacecraft(-6730, "CLAUDEMD6730", 100.0, 10000.0, NewClock("CLAUDEMD6730_CLK"), Orbit());
-        var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft,
-            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY], false, false, TimeSpan.FromSeconds(1.0)));
+        var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] }));
         Assert.Equal("celestialBodies", exception.ParamName);
 
         Assert.NotNull(ClaudeMdExamples.Net12(Epoch, new Window(Epoch, Epoch.AddHours(1)), NewClock("CLAUDEMD12B_CLK")));

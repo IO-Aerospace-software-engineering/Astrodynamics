@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// <summary>
 /// The <c>orbital_events</c> category (spec.md section 14.2): the apsides with their radii, the nodes on the ICRF equator
 /// and the crossings of a geodetic altitude of the propagation of the <c>propagator</c> category
-/// (<see cref="PropagationCase"/>, <see cref="PropagatorSolver.CreateIntegrator"/>), each epoch in TT seconds from the
+/// (<see cref="PropagationCase"/>, <see cref="PropagatorSolver.Integrator"/>), each epoch in TT seconds from the
 /// start.
 /// </summary>
 /// <remarks>
@@ -53,8 +53,7 @@ public class OrbitalEventsSolver : ICategorySolver
         var spacecraft = propagationCase.Spacecraft;
         var center = (CelestialBody)propagationCase.Bodies[0];
         var window = propagationCase.Window;
-        spacecraft.Propagate(window, propagationCase.Bodies, PropagatorSolver.CreateIntegrator(), propagationCase.Drag,
-            propagationCase.SolarRadiationPressure, OutputStep);
+        spacecraft.Propagate(window, PropagatorSolver.Options(propagationCase, OutputStep));
 
         var step = propagationCase.StepSize;
         var outputs = new Dictionary<string, object>();

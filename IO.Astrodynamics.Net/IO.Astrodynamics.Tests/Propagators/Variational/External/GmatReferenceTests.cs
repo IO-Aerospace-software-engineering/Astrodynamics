@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -377,9 +378,8 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         RtnProcessNoise noise, double tolerance = ReferenceCases.Tolerance)
     {
         var spacecraft = ReferenceCase.NewSpacecraft(NaifId - 2, start);
-        return spacecraft.PropagateWithVariationalEquations(referenceCase.Window, referenceCase.Bodies,
-            new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
-            referenceCase.SolarRadiationPressure, TimeSpan.FromHours(1.0),
+        return spacecraft.PropagateWithVariational(referenceCase.Window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromHours(1.0), ThirdBodies = referenceCase.Bodies, AtmosphericDrag = referenceCase.AtmosphericDrag, SolarRadiationPressure = referenceCase.SolarRadiationPressure },
             new VariationalOptions(ForceParameters.None, noise, PropagateCovariance: true));
     }
 

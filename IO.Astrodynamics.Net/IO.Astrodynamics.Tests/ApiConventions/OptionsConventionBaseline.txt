@@ -3,10 +3,6 @@
 # members with two bools or more (D1.bools) and doubles named Step, Duration or Tolerance without Seconds (D1.seconds),
 # a method keyed by its signature. The file may only shrink: a new member follows D1, and the lots that replace these
 # members (options L4 to L7, renames L9) remove their lines.
-D1.bools	IO.Astrodynamics.Body.Spacecraft.Spacecraft.Propagate(Window, IEnumerable<CelestialItem>, Integrator, bool, bool, TimeSpan)
-D1.bools	IO.Astrodynamics.Body.Spacecraft.Spacecraft.Propagate(Window, IEnumerable<CelestialItem>, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)
-D1.bools	IO.Astrodynamics.Body.Spacecraft.Spacecraft.Propagate(Window, IEnumerable<CelestialItem>, bool, bool, TimeSpan)
-D1.bools	IO.Astrodynamics.Body.Spacecraft.Spacecraft.PropagateAsync(Window, IEnumerable<CelestialItem>, bool, bool, TimeSpan)
 D1.bools	IO.Astrodynamics.Body.Spacecraft.Spacecraft.ToOpm(string, Time?, bool, bool, bool)
 D1.bools	IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromFile(string, bool, bool)
 D1.bools	IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromStream(Stream, bool, bool)
@@ -19,14 +15,7 @@ D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.SaveToFile(string, bool, bool, bool)
 D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.SaveToStream(Stream, bool, bool, bool)
 D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.ToXmlString(bool, bool)
 D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.TryLoadFromFile(string, out Opm, out OpmValidationResult, bool, bool)
-D1.bools	IO.Astrodynamics.Mission.Scenario.SimulateAsync(bool, bool, TimeSpan)
-D1.bools	IO.Astrodynamics.Mission.Scenario.SimulateAsync(bool, bool, TimeSpan, Func<Integrator>)
-D1.bools	IO.Astrodynamics.Mission.Scenario.SimulateAsync(bool, bool, TimeSpan, Func<Integrator>, CovariancePropagationOptions)
 D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.BuildCentralBodyForces(CelestialItem, CelestialItem[], Spacecraft, bool, bool)
-D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(in Window, Spacecraft, IEnumerable<CelestialItem>, bool, bool, TimeSpan)
-D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(in Window, Spacecraft, Integrator, IEnumerable<CelestialItem>, bool, bool, TimeSpan)
-D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(in Window, Spacecraft, Integrator, IEnumerable<CelestialItem>, bool, bool, TimeSpan, CovariancePropagationOptions)
-D1.bools	IO.Astrodynamics.Propagator.PropagationTask.ctor(Spacecraft, Window, IEnumerable<CelestialItem>, bool, bool, TimeSpan, Func<Integrator>)
 D1.default	IO.Astrodynamics.CCSDS.CDM.CdmExportOptions
 D1.default	IO.Astrodynamics.Propagator.BatchOptions
 D1.default	IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions
@@ -34,11 +23,7 @@ D1.default	IO.Astrodynamics.SSA.AvoidanceSearchOptions
 D1.default	IO.Astrodynamics.SSA.ConjunctionAnalysisOptions
 D1.default	IO.Astrodynamics.SSA.ScreeningOptions
 D1.parameter	IO.Astrodynamics.Body.CelestialItem.FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions):options
-D1.parameter	IO.Astrodynamics.Body.Spacecraft.Spacecraft.Propagate(Window, IEnumerable<CelestialItem>, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions):covariancePropagation
-D1.parameter	IO.Astrodynamics.Mission.Scenario.SimulateAsync(bool, bool, TimeSpan, Func<Integrator>, CovariancePropagationOptions):covariancePropagation
 D1.parameter	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(in Window, Spacecraft, IIntegrator, TimeSpan, CovariancePropagationOptions):covariancePropagation
-D1.parameter	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(in Window, Spacecraft, Integrator, IEnumerable<CelestialItem>, bool, bool, TimeSpan, CovariancePropagationOptions):covariancePropagation
-D1.parameter	IO.Astrodynamics.Propagator.CentralBodyPropagatorBuilder.WithCovariancePropagation(CovariancePropagationOptions):options
 D1.parameter	IO.Astrodynamics.Surface.Site.FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions):options
 D1.seconds	BisectionMethod.Solve(Func<double, double>, double, double, double, int):tolerance
 D1.seconds	IO.Astrodynamics.CCSDS.OPM.OpmManeuverParameters.ManDuration

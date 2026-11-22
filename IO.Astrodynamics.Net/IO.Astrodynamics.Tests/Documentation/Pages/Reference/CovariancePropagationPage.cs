@@ -65,18 +65,19 @@ internal static class CovariancePropagationPage
     {
         #region docs/reference/covariance-propagation.md:1
         // Inputs: window (Window), spacecraft (Spacecraft), moon and sun (CelestialBody), tca (Time)
-        var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-11, 1e-11), TimeSpan.FromSeconds(60))
-            .WithPerturbingBodies(new CelestialItem[] { moon, sun })   // the central body, the observer of the spacecraft, is added
-            .IncludeAtmosphericDrag()
-            .WithCovariancePropagation(new CovariancePropagationOptions
+        var solution = spacecraft.Propagate(window, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            ThirdBodies = new CelestialItem[] { moon, sun },   // the central body, the observer of the spacecraft, takes part
+            AtmosphericDrag = true,
+            CovariancePropagation = new CovariancePropagationOptions
             {
                 Mode = CovariancePropagationMode.Covariance,
                 ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 1e-12),
                 ConsiderParameters = new ConsiderParameters(dragCoefficientSigma: 0.1)
-            })
-            .Build();
+            }
+        });
 
-        var solution = propagator.Propagate();
         Matrix phi = solution.GetStateTransitionMatrix(tca);  // Φ(tca, t0), 6×6
         Matrix p = solution.GetCovariance(tca);               // 6×6, inertial frame of the propagation
         #endregion
@@ -107,8 +108,11 @@ internal static class CovariancePropagationPage
             Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
 
         var spacecraft = new Spacecraft(-1001, "SAT", 100.0, 1000.0, clock, remediation.State);
-        var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0),
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var solution = spacecraft.Propagate(window, new PropagationOptions
+        {
+            ThirdBodies = bodies,
+            CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }
+        });
         #endregion
     }
 }

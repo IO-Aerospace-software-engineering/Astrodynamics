@@ -11,6 +11,7 @@ using IO.Astrodynamics.CCSDS.CDM;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Tests.Body;
@@ -100,7 +101,7 @@ public class GeopotentialOptionsTests
         var reference = NewSpacecraft(earth);
 
         var solution = viaOptions.Propagate(OneHour);
-        reference.Propagate(OneHour, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, Output);
+        reference.Propagate(OneHour, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
 
         PropagationOptionsPathTests.AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
         Assert.Equal(GeopotentialModelParameters.Egm2008(10), solution.Options.Geopotential);
@@ -114,7 +115,7 @@ public class GeopotentialOptionsTests
 
         var solution = viaOption.Propagate(OneHour, PropagationOptions.Default with
             { Geopotential = GeopotentialModelParameters.Egm2008(10) });
-        reference.Propagate(OneHour, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, Output);
+        reference.Propagate(OneHour, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
 
         PropagationOptionsPathTests.AssertSameStates(reference.PropagatedStates, viaOption.PropagatedStates);
         Assert.Equal(GeopotentialModelParameters.Egm2008(10), solution.Options.Geopotential);
@@ -152,7 +153,7 @@ public class GeopotentialOptionsTests
         var viaOptions = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
         var reference = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
         var solution = viaOptions.Propagate(OneHour);
-        reference.Propagate(OneHour, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, Output);
+        reference.Propagate(OneHour, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
         PropagationOptionsPathTests.AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
         Assert.Null(solution.Options.Geopotential);
     }
@@ -173,7 +174,7 @@ public class GeopotentialOptionsTests
         var fromTle = PropagationOptionsPathTests.NewSpacecraft(tle);
 
         fromTle.Propagate(window, PropagationOptions.Default with { Geopotential = GeopotentialModelParameters.Egm2008(10) });
-        twin.Propagate(window, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, Output);
+        twin.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
 
         PropagationOptionsPathTests.AssertSameStates(twin.PropagatedStates, fromTle.PropagatedStates);
     }

@@ -123,12 +123,12 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
-Each propagation, by every path (`Propagate`, `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
-`CentralBodyPropagatorBuilder` and a `CentralBodyPropagator` built directly), starts the maneuver chain again from its
+Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator` and a
+`CentralBodyPropagator` built directly), starts the maneuver chain again from its
 head, the maneuver `SetStandbyManeuver` set: it refuels the tanks, clears `ExecutedManeuvers`, the stored states, the
 attitude record, the windows of the maneuvers and the gates of the previous propagation (#573), and the spacecraft is
 then `IsPropagated`. The reset belongs to `PropagatorBase.Propagate`, once its checks pass (#583, decided by S. Guillet,
-2026-11-17: before 11.0.0 only `Spacecraft.Propagate` reset the spacecraft, so a second run through the builder or a
+2026-11-17: before 11.0.0 only `Spacecraft.Propagate` reset the spacecraft, so a second run through the builder of 10.x or a
 propagator built directly fired no burn and started with the fuel left by the first). The inputs of a propagation are
 checked when its propagator is built, and its chain again when it runs, before anything is reset: a propagation
 rejected there, or a propagator built and never run, leaves the previous one as it was. A spacecraft propagated again fires
@@ -206,10 +206,10 @@ across the jump:
   (`ImpulseManeuver.ExecutionError`), a filled state that of its epoch.
 - **`AddPropagatedStates`** puts each state in the arc that holds its epoch (the later one at an impulse), replacing a
   stored state of that arc at the same epoch; without stored states, they make one arc. A propagation by
-  `Spacecraft.Propagate` or `Scenario.SimulateAsync` replaces every stored state, those added before it included: before
+  `Spacecraft.Propagate` or `Scenario.Simulate` replaces every stored state, those added before it included: before
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
-- **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, the builder and
-  a `CentralBodyPropagator` built directly included (which make it `IsPropagated` since #583, false before), and SGP4 otherwise: unpropagated,
+- **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, a
+  `CentralBodyPropagator` built directly included (which make it `IsPropagated` since #583, false before), and SGP4 otherwise: unpropagated,
   or sampled by `TLEPropagator`, whose `AddPropagatedStates` does not change the rule (#675; before 11.0.0 it read SGP4
   whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
   `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
@@ -605,7 +605,7 @@ rows it bounds, rounded up at the second significant digit.
 | Propagated spacecraft, the public managed path and its kernel-backed twin: 26 fields, both target shapes, the Earth, the Moon, the Sun, DSS-13, a site given by its coordinates, a spacecraft, the Earth-Moon barycenter, L1, a star; `None`, `LT` and `LT+S` on every field, the nine aberrations on a circle and a narrow field (221 searches off the grazing and slow edges) | `gftfov` at 1 µs on the kernels the library writes | 1.3e-6 s |
 | RK7(8), SSB mode, a TLE | same (for the TLE, an SPK of its states, which the library does not write for a TLE that is not propagated) | 1.2e-6 s |
 | A TLE propagated by RK7(8) (#675; the same on Linux x64, Windows and macOS arm64, CI run 43591654097, 2026-11-14) | same | 5.0e-7 s |
-| An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of `Scenario.SimulateAsync` (CI run 41522747911, 2026-11-02: the variants of #515 the same on the three platforms, those of #537 on Linux only) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
+| An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of the scenario (CI run 41522747911, 2026-11-02: the variants of #515 the same on the three platforms, those of #537 on Linux only) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
 | Fields that graze the Earth's limb (a margin of slope 1.2e-6 rad/s at the contact) | `gftfov` at a step of 1 s | 2.5e-4 s |
 | A slow edge (an ellipse, slope 6.1e-4 per second, `LT+S`) | same | 4.4e-6 s |
 | `IsInFOV` on a grid of epochs more than 1 ms from an edge | `fovtrg` and `fovray` | every epoch equal |

@@ -61,33 +61,38 @@ namespace DocumentationPageSamples.Guides;
 internal static class HighFidelityPropagationPage
 {
     // docs/guides/high-fidelity-propagation.md, "Full Force Model Assembly"
-    internal static void Block01(Window window, Spacecraft spacecraft, TimeSpan deltaT)
+    internal static void Block01(Window window, StateVector orbit, TimeSpan outputStep)
     {
         #region docs/guides/high-fidelity-propagation.md:1
-        // Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
+        // Inputs: window (Window), orbit (StateVector), outputStep (TimeSpan)
         // Central body with geopotential, atmosphere, albedo, and thermal properties
         var earth = new CelestialBody(PlanetsAndMoons.EARTH,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal),
             albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
 
-        // Adaptive integrator
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-10,
-            relativeTolerance: 1e-10,
-            initialStepSize: 30.0);
+        // The orbit about this Earth: the central body carries the models and the coefficients
+        var spacecraft = new Spacecraft(-1001, "HiFiSat", 100.0, 10000.0, new Clock("HiFiClock", 65536),
+            new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame));
 
-        // Assemble propagator with all perturbations
-        using var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, integrator, deltaT)
-            .WithPerturbingBody(Stars.SUN_BODY)
-            .WithPerturbingBody(PlanetsAndMoons.MOON_BODY)
-            .IncludeAtmosphericDrag()
-            .IncludeSolarRadiationPressure()
-            .IncludeAlbedo(earth)
-            .IncludeThermalRadiation(earth)
-            .Build();
+        // The adaptive integrator and every perturbation
+        var options = new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10,
+                RelativeTolerance = 1e-10,
+                InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            OutputStep = outputStep,
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true,
+            AlbedoRadiationPressure = true,
+            ThermalRadiationPressure = true
+        };
 
-        var solution = propagator.Propagate();
+        var solution = spacecraft.Propagate(window, options);
         #endregion
     }
 }

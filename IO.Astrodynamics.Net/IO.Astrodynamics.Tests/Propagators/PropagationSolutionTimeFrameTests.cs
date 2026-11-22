@@ -193,9 +193,7 @@ public class PropagationSolutionTimeFrameTests
             Diagonal(100.0, 1e-4));
         var spacecraft = ReferenceCase.NewSpacecraft(body == "Earth" ? -1509 : -1510, initial);
         var window = new Window(start, start.AddHours(1.0));
-        using var propagator = new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-12, 1e-12),
-            new CelestialItem[] { centralBody }, false, false, TimeSpan.FromMinutes(10.0),
-            new CovariancePropagationOptions());
+        using var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromMinutes(10.0), ThirdBodies = new CelestialItem[] { centralBody }, CovariancePropagation = new CovariancePropagationOptions() });
         var solution = propagator.Propagate();
 
         // Act
@@ -242,13 +240,9 @@ public class PropagationSolutionTimeFrameTests
         var window = new Window(start, start.AddHours(1.0));
         var bodies = new CelestialItem[] { centralBody };
         var spacecraft = ReferenceCase.NewSpacecraft(body == "Earth" ? -1511 : -1512, initial);
-        using var covariancePropagator = new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-12, 1e-12),
-            bodies, false, false, TimeSpan.FromMinutes(10.0),
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        using var covariancePropagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromMinutes(10.0), ThirdBodies = bodies, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } });
         var replayedCraft = ReferenceCase.NewSpacecraft(body == "Earth" ? -1513 : -1514, initial);
-        using var transitionPropagator = new CentralBodyPropagator(window, replayedCraft,
-            new RK78Integrator(1e-12, 1e-12), bodies, false, false, TimeSpan.FromMinutes(10.0),
-            new CovariancePropagationOptions());
+        using var transitionPropagator = new CentralBodyPropagator(window, replayedCraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromMinutes(10.0), ThirdBodies = bodies, CovariancePropagation = new CovariancePropagationOptions() });
 
         // Act
         var solution = covariancePropagator.Propagate();
@@ -285,11 +279,9 @@ public class PropagationSolutionTimeFrameTests
         var bodies = new CelestialItem[] { centralBody };
         using var propagator = rk78
             ? withCovariance
-                ? new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-13, 1e-13), bodies, false,
-                    false, TimeSpan.FromHours(1.0), new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance })
-                : new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-13, 1e-13), bodies, false,
-                    false, TimeSpan.FromHours(1.0))
-            : new CentralBodyPropagator(window, spacecraft, bodies, false, false, TimeSpan.FromSeconds(10.0));
+                ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromHours(1.0), ThirdBodies = bodies, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } })
+                : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromHours(1.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
+            : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
         return propagator.Propagate();
     }
 

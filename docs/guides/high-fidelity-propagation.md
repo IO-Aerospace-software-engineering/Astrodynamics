@@ -1,48 +1,55 @@
 # High-Fidelity Propagation
 
-The `CentralBodyPropagatorBuilder` fluent API assembles a propagator with the full suite of force models in a single declarative setup.
+One `PropagationOptions` value ([Propagation Options](../reference/propagators.md#propagation-options)) assembles a
+propagation with the full suite of force models in a single declarative setup. (The fluent `CentralBodyPropagatorBuilder`
+of 10.x was removed in 11.0.0.)
 
 ## Full Force Model Assembly
 
 ```csharp
-// Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
+// Inputs: window (Window), orbit (StateVector), outputStep (TimeSpan)
 // Central body with geopotential, atmosphere, albedo, and thermal properties
 var earth = new CelestialBody(PlanetsAndMoons.EARTH,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
     new Nrlmsise00Model(SpaceWeather.Nominal),
     albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
 
-// Adaptive integrator
-var integrator = new RK78Integrator(
-    absoluteTolerance: 1e-10,
-    relativeTolerance: 1e-10,
-    initialStepSize: 30.0);
+// The orbit about this Earth: the central body carries the models and the coefficients
+var spacecraft = new Spacecraft(-1001, "HiFiSat", 100.0, 10000.0, new Clock("HiFiClock", 65536),
+    new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame));
 
-// Assemble propagator with all perturbations
-using var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, integrator, deltaT)
-    .WithPerturbingBody(Stars.SUN_BODY)
-    .WithPerturbingBody(PlanetsAndMoons.MOON_BODY)
-    .IncludeAtmosphericDrag()
-    .IncludeSolarRadiationPressure()
-    .IncludeAlbedo(earth)
-    .IncludeThermalRadiation(earth)
-    .Build();
+// The adaptive integrator and every perturbation
+var options = new PropagationOptions
+{
+    Integrator = new RK78IntegratorOptions
+    {
+        AbsoluteTolerance = 1e-10,
+        RelativeTolerance = 1e-10,
+        InitialStep = TimeSpan.FromSeconds(30.0)
+    },
+    OutputStep = outputStep,
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    AtmosphericDrag = true,
+    SolarRadiationPressure = true,
+    AlbedoRadiationPressure = true,
+    ThermalRadiationPressure = true
+};
 
-var solution = propagator.Propagate();
+var solution = spacecraft.Propagate(window, options);
 ```
 
 ## Force Models
 
-The builder supports the following perturbations:
+The options support the following perturbations:
 
-| Method | Force Model |
+| Setting | Force Model |
 |--------|-------------|
-| *(automatic)* | Central-body gravity |
-| `WithPerturbingBody(body)` | Third-body perturbation |
-| `IncludeAtmosphericDrag()` | Atmospheric drag |
-| `IncludeSolarRadiationPressure()` | Direct solar radiation pressure |
-| `IncludeAlbedo(body)` | Reflected sunlight (Lambertian sphere) |
-| `IncludeThermalRadiation(body)` | Infrared emission (isotropic emitter) |
+| *(automatic)* | Central-body gravity, with its geopotential when the body has one (or `Geopotential`) |
+| `ThirdBodies` | Third-body perturbation |
+| `AtmosphericDrag` | Atmospheric drag of the central body's atmosphere (or `Atmosphere`) |
+| `SolarRadiationPressure` | Direct solar radiation pressure |
+| `AlbedoRadiationPressure` | Reflected sunlight of the central body (Lambertian sphere) |
+| `ThermalRadiationPressure` | Infrared emission of the central body (isotropic emitter) |
 
 ## Geopotential Degree Guidance
 
@@ -66,6 +73,6 @@ For context, approximate acceleration magnitudes at 400 km altitude:
 
 ## See Also
 
-- [Propagator Builder](../reference/propagator-builder.md) — full builder method table
+- [Propagators](../reference/propagators.md#propagation-options) — the settings of `PropagationOptions`
 - [Force Models](../reference/force-models.md) — physics equations and parameter tables
 - [Thread Safety](thread-safety.md) — constraints for parallel propagation

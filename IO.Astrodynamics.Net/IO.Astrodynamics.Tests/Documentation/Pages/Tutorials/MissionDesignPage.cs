@@ -123,7 +123,7 @@ internal static class MissionDesignPage
     }
 
     // docs/tutorials/mission-design.md, "Mission and Scenario"
-    internal static async Task Block04(Time start, Time end, CelestialBody earth, CelestialBody moon, Spacecraft spacecraft)
+    internal static void Block04(Time start, Time end, CelestialBody earth, CelestialBody moon, Spacecraft spacecraft)
     {
         #region docs/tutorials/mission-design.md:4
         // Inputs: start and end (Time), earth and moon (CelestialBody), spacecraft (Spacecraft)
@@ -142,28 +142,25 @@ internal static class MissionDesignPage
         scenario.AddSpacecraft(spacecraft);
 
         // Run simulation
-        var summary = await scenario.SimulateAsync(
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            TimeSpan.FromSeconds(1.0));
+        var summary = scenario.Simulate();
         #endregion
     }
 
     // docs/tutorials/mission-design.md, "Choosing the integrator"
-    internal static async Task Block05(Scenario scenario)
+    internal static void Block05(Scenario scenario)
     {
         #region docs/tutorials/mission-design.md:5
         // Inputs: scenario (Scenario)
-        var summary = await scenario.SimulateAsync(
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            TimeSpan.FromSeconds(10.0),
-            () => new RK78Integrator(absoluteTolerance: 1e-11, relativeTolerance: 1e-11));
+        var summary = scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(10.0)
+        });
         #endregion
     }
 
     // docs/tutorials/mission-design.md, "Multiple scenarios"
-    internal static async Task Block06(Window nominalWindow, Spacecraft spacecraft, Window backupWindow, Spacecraft spacecraftBackup)
+    internal static void Block06(Window nominalWindow, Spacecraft spacecraft, Window backupWindow, Spacecraft spacecraftBackup)
     {
         #region docs/tutorials/mission-design.md:6
         // Inputs: nominalWindow and backupWindow (Window), spacecraft and spacecraftBackup (Spacecraft)
@@ -176,13 +173,14 @@ internal static class MissionDesignPage
         backupScenario.AddSpacecraft(spacecraftBackup);
 
         // Simulate each independently
-        var nominalResult = await nominalScenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10));
-        var backupResult = await backupScenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10));
+        var options = new PropagationOptions { OutputStep = TimeSpan.FromSeconds(10) };
+        var nominalResult = nominalScenario.Simulate(options);
+        var backupResult = backupScenario.Simulate(options);
         #endregion
     }
 
     // docs/tutorials/mission-design.md, "Spacecraft rendezvous"
-    internal static async Task Block07(OrbitalParameters targetOrbit, Engine engine, Spacecraft spacecraft, Mission mission, Window window, CelestialBody earth)
+    internal static void Block07(OrbitalParameters targetOrbit, Engine engine, Spacecraft spacecraft, Mission mission, Window window, CelestialBody earth)
     {
         #region docs/tutorials/mission-design.md:7
         // Inputs: targetOrbit (OrbitalParameters), engine (Engine), spacecraft (Spacecraft), mission (Mission), window
@@ -210,7 +208,7 @@ internal static class MissionDesignPage
         var scenario = new Scenario("Rendezvous", mission, window);
         scenario.AddCelestialItem(earth);
         scenario.AddSpacecraft(spacecraft);
-        var result = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1));
+        var result = scenario.Simulate(new PropagationOptions { OutputStep = TimeSpan.FromSeconds(1) });
         #endregion
     }
 

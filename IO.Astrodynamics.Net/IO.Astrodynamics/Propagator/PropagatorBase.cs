@@ -89,9 +89,10 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// The span a propagation integrates (#626): its output count, its length in seconds of the time argument and the TDB
-    /// label of its end, which lies up to half an output step past the end of the window when the step rounds the window
-    /// up, and whether its last output is labelled with the end of the window (a grid that ends before the window, #741,
-    /// or, in TT, one that misses its end by the drift between TT and the labels).
+    /// label of its end, the end of the window since 11.0.0 (choice 6 of #668; before, up to half an output step past it
+    /// when the step rounded the window up), and whether its last output is labelled with the end of the window (a grid
+    /// that does not reach the window end exactly, #741 and choice 6, or, in TT, one that misses its end by the drift
+    /// between TT and the labels).
     /// </summary>
     internal readonly record struct PropagationSpan(uint OutputCount, double Duration, Time End, bool EndsAtWindowEnd)
     {
@@ -107,14 +108,16 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// The span of a propagation over <paramref name="tdbWindow"/>, of <paramref name="windowLength"/> seconds of
-    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/> on the grid of round(L/ΔT) + 1
-    /// outputs. A grid that reaches the window end, or rounds it up, is kept: the propagation runs to its last output,
-    /// round(L/ΔT)·ΔT, up to ΔT/2 past the window. A grid that ends before the window gains the window end as its last
-    /// output, in place of its last point when that lies within ΔT/10 of the end (the rule of #598 and #540, so that no
-    /// two outputs are near-coincident), and the propagation runs to the window end (#741, decided by S. Guillet,
-    /// 2026-11-18: before 11.0.0 its outputs, and so the stored states, ended up to ΔT/2 before the window, where a read
-    /// threw). In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the window,
-    /// its last output labelled with the end of the window.
+    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/>: start + i·ΔT inside the window,
+    /// then the window end, in place of the last grid point when that lies within ΔT/10 of the end (the rule of #598 and
+    /// #540, so that no two outputs are near-coincident), the propagation running to the window end. A grid that ends
+    /// before the window gained its end in #741 (decided by S. Guillet, 2026-11-18); a grid that rounds the window up,
+    /// round(L/ΔT)·ΔT past it, ends at the window end since 11.0.0 too (R11 of #668, structuring choice 6, decided by
+    /// S. Guillet, 2026-11-19: before, the propagation ran to that last output, up to ΔT/2 past the window, #626), the
+    /// rule of <see cref="TLEPropagator"/>. In both cases the outputs number round(L/ΔT) + 1, the window end replacing a
+    /// grid point within ΔT/10 of it; only the last output of a grid that rounds the window up moves. In TT, a grid that
+    /// misses the end of the window by the drift between TT and the labels ends at the window, its last output labelled
+    /// with the end of the window.
     /// </summary>
     internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, double windowLength,
         in Window tdbWindow, TimeSpan deltaT)
@@ -127,10 +130,17 @@ public abstract class PropagatorBase : IPropagator
             return new PropagationSpan(gridCount, windowLength, tdbWindow.EndDate, true);
         }
 
-        if (gridDuration >= windowLength)
+        if (gridDuration == windowLength)
         {
             return new PropagationSpan(gridCount, gridDuration, timeArgument.EpochAt(tdbWindow.StartDate, gridDuration),
                 false);
+        }
+
+        if (gridDuration > windowLength)
+        {
+            // The grid rounds the window up (choice 6 of #668): its last point, at least ΔT/2 past the end of the
+            // window, becomes the window end, the points before it, at least ΔT/2 before the end, kept
+            return new PropagationSpan(gridCount, windowLength, tdbWindow.EndDate, true);
         }
 
         // The grid ends before the window (#741): the window end replaces its last point within ΔT/10 of it, never the
@@ -162,6 +172,22 @@ public abstract class PropagatorBase : IPropagator
     }
 
     /// <summary>
+    /// Checks that <paramref name="window"/>, the window of a numerical propagation, has a length (decision 7 of lot L4 of
+    /// #668, decided by S. Guillet, 2026-11-22: before 11.0.0 a window of zero length ran, re-armed the spacecraft and threw
+    /// <see cref="InvalidOperationException"/> "Solution contains no segments").
+    /// </summary>
+    /// <exception cref="ArgumentException">The window has zero length, naming <c>window</c>.</exception>
+    internal static void RequireWindowLength(in Window window)
+    {
+        if (window.Length == TimeSpan.Zero)
+        {
+            throw new ArgumentException(
+                $"The window of the propagation, from {window.StartDate} to {window.EndDate}, has zero length: give an end " +
+                "after its start.", nameof(window));
+        }
+    }
+
+    /// <summary>
     /// <paramref name="step"/>, a step of a propagation, when it is positive (#674).
     /// </summary>
     /// <param name="step">The step.</param>
@@ -185,6 +211,7 @@ public abstract class PropagatorBase : IPropagator
     private protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
         PropagationTimeArgument timeArgument)
     {
+        RequireWindowLength(window);
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
         ValidateInertialFrame(spacecraft);
@@ -569,10 +596,10 @@ public abstract class PropagatorBase : IPropagator
     /// Once its checks pass, the propagation re-arms the spacecraft, on every path (#583, decided by S. Guillet,
     /// 2026-11-17): the solution, the stored states and the attitude record of the previous propagation are dropped,
     /// <see cref="Spacecraft.ExecutedManeuvers"/> is cleared, the tanks are refuelled and the chain is reset and put back
-    /// in standby, so that a spacecraft propagated again, through <see cref="CentralBodyPropagatorBuilder"/>, a
-    /// <see cref="CentralBodyPropagator"/> built directly or <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
+    /// in standby, so that a spacecraft propagated again, through a <see cref="CentralBodyPropagator"/> built directly or
+    /// <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
     /// never propagated; a propagator built and never run, or rejected by its constructor, changes nothing. Before
-    /// 11.0.0 only <c>Spacecraft.Propagate</c> re-armed it: a second run through the builder or a propagator built
+    /// 11.0.0 only <c>Spacecraft.Propagate</c> re-armed it: a second run through the builder of 10.x or a propagator built
     /// directly fired no burn and started with the fuel left by the first. The spacecraft is then
     /// <see cref="Spacecraft.IsPropagated"/>, whatever the path.
     /// </remarks>
@@ -596,11 +623,10 @@ public abstract class PropagatorBase : IPropagator
 
     private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache)
     {
-        // 1. The length of the propagation (may exceed the window by up to half a step when the step rounds it up), in
-        // seconds of the time argument. A grid that ends before the window ends with the window end (#741), and in TT a
-        // grid that misses the end of the window by the drift between TT and the labels ends at the window: the last
-        // output labelled with the end of the window as the caller gave it. The caches of the forces cover the same span
-        // (#626)
+        // 1. The length of the propagation, in seconds of the time argument: that of the window (choice 6 of #668). A
+        // grid that does not reach the window end exactly ends with it (#741, choice 6), and in TT a grid that misses the
+        // end of the window by the drift between TT and the labels ends at the window: the last output labelled with the
+        // end of the window as the caller gave it. The caches of the forces cover the same span (#626)
         var span = Span;
         uint outputCount = span.OutputCount;
         double propagationDuration = span.Duration;
@@ -1065,8 +1091,9 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// Generate output StateVectors at DeltaT intervals with <see cref="PropagationSolution.InterpolateAt"/>.
-    /// Output may extend up to half a step past the window end when the step rounds the window up; a grid that ends
-    /// before the window ends with the window end (<see cref="SpanOf(PropagationTimeArgument, double, in Window, TimeSpan)"/>, #741).
+    /// A grid that does not reach the window end exactly ends with it, whether it ends before the window (#741) or
+    /// rounds it up (choice 6 of #668; before 11.0.0 up to half a step past the window end)
+    /// (<see cref="SpanOf(PropagationTimeArgument, double, in Window, TimeSpan)"/>).
     /// </summary>
     /// <remarks>
     /// The outputs are uniform in the time argument and labelled TDB (<see cref="PropagationTimeArgument.OutputEpoch"/>);

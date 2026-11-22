@@ -20,11 +20,11 @@ using Xunit;
 namespace IO.Astrodynamics.Tests.Propagators.Options;
 
 /// <summary>
-/// The options entry points of R06 of #668 (lot L4): each run of <see cref="PropagationOptions"/> is bit for bit the run
-/// of the constructor that takes the integrator, the bodies, the flags and the covariance options the settings name
-/// (both integrators, fixed-step RK7(8), drag, SRP, albedo and thermal through the builder, the covariance modes,
-/// maneuvers, SSB mode, a non-ICRF start), and each default equals its explicit settings (D4.7). The references are the
-/// entry points of 10.x, whose results the conformance suite and the validation tests measure.
+/// The options entry points of R06 of #668 (lot L4): each default equals its explicit settings (D4.7), the covariance
+/// follows the Auto rule, albedo and thermal radiation need their coefficient, the resolved settings are on the solution
+/// and repeat the run, and the atmosphere and geopotential options follow D1's fallback rule. The comparisons with the
+/// flag entry points of 10.x were run while those existed (lot L4, step 1, bit for bit), and went with them in step 2
+/// (R07 of #668, section 7 of the re-baseline).
 /// </summary>
 public class PropagationOptionsPathTests
 {
@@ -76,67 +76,10 @@ public class PropagationOptionsPathTests
         var expected = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
 
         var solution = byDefault.Propagate(OneHour);
-        var reference = expected.Propagate(OneHour, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false,
-            Output, null);
+        var reference = expected.Propagate(OneHour, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
 
         AssertSameStates(reference.StateVectors, solution.StateVectors);
         AssertSameStates(expected.PropagatedStates, byDefault.PropagatedStates);
-    }
-
-    public static IEnumerable<object[]> ForceModels()
-    {
-        foreach (var integrator in new[] { "rk78", "rk78fixed", "vv" })
-        {
-            yield return new object[] { integrator, false, false };
-            yield return new object[] { integrator, true, true };
-        }
-    }
-
-    private static (IntegratorOptions Options, Func<Integrator> Instance) Integrators(string name) => name switch
-    {
-        "rk78" => (new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(30) },
-            () => new RK78Integrator(1e-10, 1e-11, 30.0)),
-        "rk78fixed" => (new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(20) }, () => new RK78Integrator(20.0)),
-        _ => (new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10) }, () => new VVIntegrator(TimeSpan.FromSeconds(10)))
-    };
-
-    [Theory]
-    [MemberData(nameof(ForceModels))]
-    public void Options_EqualTheConstructorOfTheirIntegratorBodiesAndFlags(string integrator, bool drag, bool srp)
-    {
-        var (integratorOptions, instance) = Integrators(integrator);
-        var options = new PropagationOptions
-        {
-            Integrator = integratorOptions, OutputStep = Output, ThirdBodies = SunAndMoon(), AtmosphericDrag = drag,
-            SolarRadiationPressure = srp
-        };
-        var viaOptions = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
-        var reference = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
-
-        viaOptions.Propagate(OneHour, options);
-        reference.Propagate(OneHour, SunAndMoon(), instance(), drag, srp, Output);
-
-        AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
-    }
-
-    [Fact]
-    public void AlbedoAndThermal_EqualTheBuilderOfTheCentralBody()
-    {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start, albedo: 0.3,
-            thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
-        var viaOptions = NewSpacecraft(Leo(earth));
-        var reference = NewSpacecraft(Leo(earth));
-
-        viaOptions.Propagate(OneHour, PropagationOptions.Default with
-        {
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY }, SolarRadiationPressure = true,
-            AlbedoRadiationPressure = true, ThermalRadiationPressure = true
-        });
-        new CentralBodyPropagatorBuilder(OneHour, reference, new RK78Integrator(), Output)
-            .WithPerturbingBody(Stars.SUN_BODY).IncludeSolarRadiationPressure().IncludeAlbedo(earth)
-            .IncludeThermalRadiation(earth).Build().Propagate();
-
-        AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
     }
 
     [Theory]
@@ -151,21 +94,6 @@ public class PropagationOptionsPathTests
             : PropagationOptions.Default with { ThermalRadiationPressure = true };
         Assert.Throws<ArgumentException>(() => spacecraft.Propagate(OneHour, options));
         Assert.False(spacecraft.IsPropagated);
-    }
-
-    [Fact]
-    public void ExplicitCovariance_EqualsTheConstructorOfTheCovarianceOptions()
-    {
-        var covariance = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
-        var viaOptions = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
-        var reference = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
-
-        var solution = viaOptions.Propagate(OneHour, PropagationOptions.Default with { CovariancePropagation = covariance });
-        var expected = reference.Propagate(OneHour, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, Output,
-            covariance);
-
-        AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
-        Assert.Equal(expected.GetCovariance(OneHour.EndDate), solution.GetCovariance(OneHour.EndDate));
     }
 
     [Fact]
@@ -231,53 +159,6 @@ public class PropagationOptionsPathTests
     }
 
     [Fact]
-    public void Maneuvers_EqualTheConstructorPath()
-    {
-        static (Spacecraft, Engine) WithEngine()
-        {
-            var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
-            var tank = new FuelTank($"ft{spacecraft.NaifId}", "model", "sn", 1000.0, 1000.0);
-            spacecraft.AddFuelTank(tank);
-            var engine = new Engine($"eng{spacecraft.NaifId}", "model", "sn", 300.0, 10.0, tank);
-            spacecraft.AddEngine(engine);
-            spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(PlanetsAndMoons.EARTH_BODY, Start, TimeSpan.Zero,
-                7378137.0, engine));
-            return (spacecraft, engine);
-        }
-
-        var window = new Window(Start, Start + TimeSpan.FromHours(3));
-        var (viaOptions, _) = WithEngine();
-        var (reference, _) = WithEngine();
-
-        viaOptions.Propagate(window, PropagationOptions.Default with { ThirdBodies = SunAndMoon() });
-        reference.Propagate(window, SunAndMoon(), new RK78Integrator(), false, false, Output);
-
-        Assert.NotEmpty(reference.ExecutedManeuvers);
-        Assert.Equal(reference.ExecutedManeuvers.Count, viaOptions.ExecutedManeuvers.Count);
-        AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
-    }
-
-    [Fact]
-    public void SsbMode_AndANonIcrfStart_EqualTheConstructorPath()
-    {
-        var earth = new CelestialBody(399);
-        var geocentric = Leo(earth);
-        var ssb = geocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
-        var bodies = new CelestialItem[] { earth, new CelestialBody(301), new CelestialBody(10) };
-        foreach (var start in new[] { ssb, geocentric.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector() })
-        {
-            var viaOptions = NewSpacecraft(start);
-            var reference = NewSpacecraft(start);
-            var window = new Window(Start, Start + TimeSpan.FromMinutes(20));
-
-            viaOptions.Propagate(window, PropagationOptions.Default with { ThirdBodies = bodies, SolarRadiationPressure = true });
-            reference.Propagate(window, bodies, new RK78Integrator(), false, true, Output);
-
-            AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
-        }
-    }
-
-    [Fact]
     public void SolutionOptions_AreTheResolvedSettings_AndRepeatTheRun()
     {
         var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
@@ -305,7 +186,9 @@ public class PropagationOptionsPathTests
     public void SolutionOptions_OfAConstructorThatTakesAnIntegrator_AreNull()
     {
         var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
-        var solution = spacecraft.Propagate(OneHour, Array.Empty<CelestialItem>(), new RK78Integrator(), false, false, Output);
+        var integrator = new RK78Integrator();
+        integrator.AddForce(new Propagator.Forces.GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
+        var solution = new CentralBodyPropagator(OneHour, spacecraft, integrator, Output).Propagate();
         Assert.Null(solution.Options);
     }
 

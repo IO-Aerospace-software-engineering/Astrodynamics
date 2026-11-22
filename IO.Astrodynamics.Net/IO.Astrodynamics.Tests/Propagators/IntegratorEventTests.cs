@@ -9,6 +9,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -60,13 +61,13 @@ public partial class IntegratorEventTests
         public bool IsActive => true;
     }
 
-    private static Integrator NewIntegrator(string name) => name switch
+    private static IntegratorOptions NewIntegrator(string name) => name switch
     {
-        "VV1" => new VVIntegrator(TimeSpan.FromSeconds(1.0)),
-        "VV10" => new VVIntegrator(TimeSpan.FromSeconds(10.0)),
-        "RKf10" => new RK78Integrator(10.0),
-        "RKf60" => new RK78Integrator(60.0),
-        "RK" => new RK78Integrator(1e-12, 1e-12),
+        "VV1" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+        "VV10" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
+        "RKf10" => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(10.0) },
+        "RKf60" => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(60.0) },
+        "RK" => new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 },
         _ => throw new ArgumentException(name)
     };
 
@@ -86,7 +87,7 @@ public partial class IntegratorEventTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var start = new StateVector(new Vector3(0.0, 7e6, 0.0), new Vector3(1.0, 0.0, 0.0), earth, S, Frame.ICRF);
-        var integrator = NewIntegrator(integratorName);
+        var integrator = NewIntegrator(integratorName).CreateIntegrator();
         integrator.Initialize(start);
         return (integrator, start);
     }
@@ -199,7 +200,7 @@ public partial class IntegratorEventTests
         var root = MinimumEpochGateTests.GateAtTt(1100.0);
         var impulse = new TimeLikeImpulse(earth, S, engine, root, sign);
         spacecraft.SetStandbyManeuver(impulse);
-        var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), [earth], NewIntegrator(integratorName), false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         _output.WriteLine($"MEASURE #580 time-like impulse {integratorName} {sign:+0;-0}: {solution.Segments.Count} segments" +
                           (solution.Segments.Count > 1 ? $", burn at TT {MinimumEpochGateTests.Tt(solution.Segments[1].BaseEpoch):R} s" : ""));
@@ -233,7 +234,7 @@ public partial class IntegratorEventTests
         var gate = S.Add(TimeSpan.FromSeconds(-gateBefore));
         var maneuver = new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine);
         spacecraft.SetStandbyManeuver(maneuver);
-        var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), [earth], NewIntegrator(integratorName), false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         Assert.True(solution.Segments.Count >= 2, $"{solution.Segments.Count} segments: no burn in the window");
         double burn = MinimumEpochGateTests.Tt(solution.Segments[1].BaseEpoch);

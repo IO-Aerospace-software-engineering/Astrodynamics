@@ -7,6 +7,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Tests.Propagators.Variational;
@@ -66,9 +67,7 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         var start = r3.InitialState;
         var spacecraft = new Spacecraft(-1423, "PENUMBRA", 100.0, 1000.0, new Clock("penumbra", 65536), start, 10.0,
             ReferenceCases.DragCoefficient, null, ReferenceCases.ReflectivityCoefficient);
-        var solution = new CentralBodyPropagator(new TimeSystem.Window(start.Epoch, start.Epoch.AddSeconds(3600.0)),
-            spacecraft, new RK78Integrator(ReferenceCases.Tolerance, ReferenceCases.Tolerance), r3.Bodies, false, true,
-            TimeSpan.FromSeconds(600.0)).Propagate();
+        var solution = new CentralBodyPropagator(new TimeSystem.Window(start.Epoch, start.Epoch.AddSeconds(3600.0)), spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = ReferenceCases.Tolerance, RelativeTolerance = ReferenceCases.Tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None }).Propagate();
         var srp = new SolarRadiationPressure(spacecraft, r3.Bodies.OfType<CelestialBody>());
         var unshadowed = new SolarRadiationPressure(spacecraft, Array.Empty<CelestialBody>());
         var context = ForceEvaluationContext.FromSpacecraft(spacecraft);

@@ -11,6 +11,8 @@ using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using FuelTank = IO.Astrodynamics.Body.Spacecraft.FuelTank;
 using KeplerianElements = IO.Astrodynamics.OrbitalParameters.KeplerianElements;
 using NadirAttitude = IO.Astrodynamics.Maneuver.NadirAttitude;
@@ -244,7 +246,7 @@ public partial class SpiceApiTest
 
         //Execute scenario
         var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name).CreateSubdirectory("Spacecrafts");
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
         var ckFile = new FileInfo(root + "/OrientationTestFile.ck");
         var clckFile = new FileInfo(root + "/ClckTestFile.tsc");
         await spacecraft.Clock.WriteAsync(clckFile);

@@ -98,10 +98,8 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
         var start = CovariancePropagationTests.WithCovariance(r2.InitialState);
         var plain = ReferenceCase.NewSpacecraft(-6103, start);
         var propagated = ReferenceCase.NewSpacecraft(-6104, start);
-        var withoutCovariance = plain.Propagate(r2.Window, r2.Bodies, new RK78Integrator(1e-12, 1e-12), true, false,
-            TimeSpan.FromSeconds(3600.0), null);
-        var withCovariance = propagated.Propagate(r2.Window, r2.Bodies, new RK78Integrator(1e-12, 1e-12), true, false,
-            TimeSpan.FromSeconds(3600.0), options);
+        var withoutCovariance = plain.Propagate(r2.Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(3600.0), ThirdBodies = r2.Bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
+        var withCovariance = propagated.Propagate(r2.Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(3600.0), ThirdBodies = r2.Bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
 
         // Act
         var replayed = VariationalReplay.Replay(withoutCovariance, plain, options, r2.Window.EndDate);
@@ -149,8 +147,7 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
         var withStmSpacecraft = EclipsingSpacecraft(-6107, orbit, null);
         var withStm = Propagate(withStmSpacecraft, covariance);
         var vvSpacecraft = EclipsingSpacecraft(-6108, orbit, null);
-        var vv = vvSpacecraft.Propagate(_cases.Eclipsing.Window, _cases.Eclipsing.Bodies, true, true,
-            TimeSpan.FromSeconds(600.0));
+        var vv = vvSpacecraft.Propagate(_cases.Eclipsing.Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(600.0) }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = _cases.Eclipsing.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true });
 
         // Act, assert: the step control on Φ and Ψ would change the steps; a solution that already propagated the
         // covariance, or of another integrator, is not replayed; an end outside the propagation is rejected
@@ -173,8 +170,7 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
 
     private PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options)
     {
-        return spacecraft.Propagate(_cases.Eclipsing.Window, _cases.Eclipsing.Bodies, new RK78Integrator(1e-12, 1e-12),
-            true, true, TimeSpan.FromSeconds(600.0), options);
+        return spacecraft.Propagate(_cases.Eclipsing.Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = _cases.Eclipsing.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
     }
 
     private static void AssertSameVariationalData(PropagationSolution expected, PropagationSolution actual)

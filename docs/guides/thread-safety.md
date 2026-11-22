@@ -7,7 +7,7 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | Component | Thread-safe? | Guidance |
 |-----------|-------------|----------|
 | SPICE API | Yes (global lock) | Safe but serialized — may limit parallel scaling |
-| Integrator instances | No | The options entry points (`PropagationOptions`) build one per run. Otherwise use `IntegratorFactory` to create one per task; an entry point that builds the forces takes its integrator atomically and rejects one already used or holding forces, so a factory returning one instance gives one run and failed tasks for the others |
+| Integrator instances | No | The options entry points (`PropagationOptions`) build one per run, every task of a batch and every run of a Monte Carlo campaign included. The constructor of `CentralBodyPropagator` that takes an integrator holding its forces uses the instance given: give each propagation its own (11.0.0: the factories and the flag members that took an instance were removed, R07 of #668) |
 | `PropagationOptions`, `RK78IntegratorOptions`, `VVIntegratorOptions` | Yes | Immutable values: one serves any number of runs, each building its own integrator, forces and geopotential field |
 | `CelestialBody` without geopotential | Yes | Two-body gravity is stateless |
 | `CelestialBody` with `GeopotentialModelParameters` | Yes in propagations, **no** for its own field | Since 11.0.0 each propagation that builds its forces builds its own field from the body's model, over the shared coefficients (R06 of #668), so propagations, batches, scenarios and Monte Carlo runs may share the body, bit for bit the runs of separate bodies. The body's own field, which `EvaluateGravitationalAcceleration` evaluates (and a force list of your own built on `GravitationalAcceleration`), has mutable Legendre/trig buffers, overwritten on every evaluation: one thread at a time |
@@ -23,46 +23,47 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | Attitude record of a managed spacecraft (`SpacecraftFrame`) and the frames only the library holds | Yes | The record is read under a lock of the record. An ephemeris read in the frame of a managed spacecraft with an attitude record, or of a site built from coordinates, is read in J2000 and rotated by that frame under the shared SPICE lock ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)): the record lock nests inside the SPICE lock, so no region of the record lock calls SPICE, which keeps the two locks free of an inversion. A `SiteFrame` reads its body's frame through SPICE under the same lock, which is re-entrant |
 | `CovariancePropagationOptions`, `RtnProcessNoise`, `ConsiderParameters`, `ManeuverExecutionError` | Yes | Immutable |
 
-## Per-Task CelestialBody Pattern
+## Shared Bodies, One Options Value
 
 Since 11.0.0 a task need not have its own `CelestialBody` with geopotential: each propagation builds its own field
 from the body's model (R06 of #668), so the tasks may share one Earth, and one `PropagationOptions` value
-([Propagation Options](../reference/propagators.md#propagation-options)). The pattern below, a body per task, still runs
-and gives the same states.
+([Propagation Options](../reference/propagators.md#propagation-options)), bit for bit the runs of a body per task.
 
-Build each task's initial state on its own Earth: the bodies of one NAIF identifier in a propagation, the centre of the
-orbit included, must have the same GM, radii, gravitational field and atmospheric model, so a state about a shared Earth
+Build each task's initial state on that Earth: the bodies of one NAIF identifier in a propagation, the centre of the
+orbit included, must have the same GM, radii, gravitational field and atmospheric model, so a state about another Earth
 without the geopotential fails every task with `ArgumentException` (#674).
 
 ```csharp
 // Inputs: taskCount (int), orbit (StateVector), window (Window)
-var tasks = new List<PropagationTask>();
+// One Earth with geopotential, shared by every task
+var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+var options = new PropagationOptions
+{
+    Integrator = new RK78IntegratorOptions
+    {
+        AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+    },
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+};
 
+var tasks = new List<PropagationTask>();
 for (int i = 0; i < taskCount; i++)
 {
-    // Each task gets its own CelestialBody with geopotential
-    var earth = new CelestialBody(PlanetsAndMoons.EARTH,
-        new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-
-    // The same state about this task's Earth: the orbit's centre and the listed Earth must have the same models
+    // The same state about the shared Earth
     var spacecraft = new Spacecraft(-(1000 + i), $"Sat-{i}", 100.0, 10000.0,
         new Clock($"clk-{i}", 256), new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame));
-
-    tasks.Add(new PropagationTask(spacecraft, window,
-        new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
-        deltaT: TimeSpan.FromSeconds(60),
-        integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)));
+    tasks.Add(new PropagationTask(spacecraft, window, options));
 }
 
 var result = BatchPropagator.Propagate(tasks);
 ```
 
-## Monte Carlo Factory Pattern
+## Monte Carlo Pattern
 
 A campaign of `MonteCarloConfiguration.Propagation` shares its bodies, the template's central body with a geopotential
-included: each run builds its own integrator, forces and field (11.0.0, R06 of #668). The configuration of flags below
-takes a `CelestialBodiesFactory` that returns fresh instances per run, as before.
+included: each run builds its own integrator, forces and field (11.0.0, R06 of #668). The `CelestialBodiesFactory`,
+`DeltaT` and `IntegratorFactory` of 10.x were removed in 11.0.0 (R07 of #668).
 
 ```csharp
 // Inputs: spacecraft (Spacecraft), window (Window)
@@ -72,15 +73,14 @@ var config = new MonteCarloConfiguration
     Seed = 42,
     TemplateSpacecraft = spacecraft,   // its initial state carries the covariance that is sampled
     Window = window,
-    DeltaT = TimeSpan.FromSeconds(60),
-    CelestialBodiesFactory = () =>
-    [
-        new CelestialBody(PlanetsAndMoons.EARTH,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)),
-        Stars.SUN_BODY,
-        PlanetsAndMoons.MOON_BODY
-    ],
-    IntegratorFactory = () => new RK78Integrator(1e-10, 1e-10, 30.0),
+    Propagation = new PropagationOptions
+    {
+        Integrator = new RK78IntegratorOptions
+        {
+            AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+        },
+        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    }
 };
 ```
 
@@ -88,8 +88,8 @@ var config = new MonteCarloConfiguration
 
 - **Duplicate detection**: Reusing the same `Spacecraft` instance across tasks throws `ArgumentException`.
 - **Fault isolation**: A failed task does not cancel or corrupt other tasks.
-- **Integrator sharing**: Never share integrator instances. Always supply an `IntegratorFactory` that returns a new
-  instance: a shared one is taken by one task, and the others fail with `ArgumentException` (`integrator`).
+- **Integrators**: each task builds its own integrator from its `PropagationOptions`, so one options value serves
+  every task.
 
 ## See Also
 

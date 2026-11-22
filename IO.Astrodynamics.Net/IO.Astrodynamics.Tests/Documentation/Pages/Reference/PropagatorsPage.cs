@@ -90,22 +90,22 @@ internal static class PropagatorsPage
     }
 
     // docs/reference/propagators.md, "BatchPropagator"
-    internal static void Block03(Spacecraft spacecraft1, Window window, CelestialBody earth, Spacecraft spacecraft2)
+    internal static void Block03(Spacecraft spacecraft1, Window window, Spacecraft spacecraft2)
     {
         #region docs/reference/propagators.md:3
-        // Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
+        // Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window)
+        var options = new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        };
         var tasks = new List<PropagationTask>
         {
-            new PropagationTask(spacecraft1, window,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
-                deltaT: TimeSpan.FromSeconds(60),
-                integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
-            new PropagationTask(spacecraft2, window,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
-                deltaT: TimeSpan.FromSeconds(60),
-                integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0))
+            new PropagationTask(spacecraft1, window, options),
+            new PropagationTask(spacecraft2, window, options)
         };
 
         var result = BatchPropagator.Propagate(tasks, new BatchOptions
@@ -134,14 +134,14 @@ internal static class PropagatorsPage
             Seed = 42,
             TemplateSpacecraft = spacecraft,
             Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
-            CelestialBodiesFactory = () =>
-            [
-                new CelestialBody(PlanetsAndMoons.EARTH),
-                Stars.SUN_BODY,
-                PlanetsAndMoons.MOON_BODY
-            ],
-            DeltaT = TimeSpan.FromSeconds(60),
-            IntegratorFactory = () => new RK78Integrator(1e-10, 1e-10, 30.0),
+            Propagation = new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions
+                {
+                    AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+                },
+                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            }
         };
 
         var result = MonteCarloPropagator.Propagate(config);

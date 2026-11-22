@@ -7,6 +7,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Tests.Propagators;
@@ -164,10 +165,8 @@ public class ImpulseThrustWindowTests
 
         // Act
         var solution = integrator == "RK"
-            ? spacecraft.Propagate(window, new CelestialItem[] { body }, new RK78Integrator(1e-12, 1e-12), false, false,
-                TimeSpan.FromSeconds(10.0))
-            : spacecraft.Propagate(window, new CelestialItem[] { body }, new VVIntegrator(TimeSpan.FromSeconds(1.0)), false,
-                false, TimeSpan.FromSeconds(10.0));
+            ? spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { body }, CovariancePropagation = CovariancePropagationOptions.None })
+            : spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { body } });
 
         // Assert: the event, the base of the segment after the impulse; the windows in seconds of the time argument
         var argument = solution.TimeArgument;

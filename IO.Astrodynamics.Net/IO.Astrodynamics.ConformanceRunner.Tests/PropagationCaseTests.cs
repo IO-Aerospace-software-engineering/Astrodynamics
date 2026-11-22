@@ -156,8 +156,7 @@ public class PropagationCaseTests
         CaseInput Case() => Parse(KeplerianOrbit, Geopotential10, "[\"Moon\", \"Sun\"]", NoForces);
         var reference = PropagationCase.Build(Case(), KernelsPath);
         var (position, velocity) = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
-                PropagatorSolver.CreateIntegrator(), reference.Bodies, reference.Drag, reference.SolarRadiationPressure,
-                reference.StepSize)
+                PropagatorSolver.Options(reference, reference.StepSize))
             .Propagate().InterpolateAt(reference.Window.EndDate);
 
         // Act
@@ -497,12 +496,15 @@ public class PropagationCaseTests
     public void TheIntegratorOfTheCategory_IsRk78At1em13()
     {
         // Act
-        var integrator = PropagatorSolver.CreateIntegrator();
+        var integrator = PropagatorSolver.Integrator;
 
         // Assert
         Assert.Equal(1e-13, integrator.AbsoluteTolerance);
         Assert.Equal(1e-13, integrator.RelativeTolerance);
-        Assert.True(integrator.AdaptiveMode);
+        Assert.Null(integrator.FixedStep);
+        Assert.Equal(TimeSpan.FromSeconds(60.0), integrator.InitialStep);
+        Assert.Equal(TimeSpan.FromMilliseconds(1.0), integrator.MinStep);
+        Assert.Equal(TimeSpan.FromSeconds(300.0), integrator.MaxStep);
     }
 
     [Fact]

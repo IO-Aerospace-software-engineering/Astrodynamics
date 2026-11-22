@@ -196,7 +196,7 @@ public class Star : CelestialBody
 
     /// <summary>
     /// Gets a value indicating whether the star holds propagated states: true once <see cref="Propagate"/>,
-    /// <see cref="PropagateAsync"/> or <c>Scenario.SimulateAsync</c> stored them.
+    /// <see cref="PropagateAsync"/> or <c>Scenario.Simulate</c> stored them.
     /// </summary>
     /// <remarks>
     /// Before 11.0.0 it read <c>PropagationOutput</c>, which no code set, and was always false; that property, always null,

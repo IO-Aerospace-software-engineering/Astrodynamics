@@ -10,6 +10,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -278,8 +279,7 @@ public class MinimumEpochGateEdgeTests
 
         PropagationSolution Propagate(Spacecraft spacecraft)
         {
-            var task = Task.Run(() => spacecraft.Propagate(new Window(S, S.AddSeconds(200.0)), [earth], new RK78Integrator(1e-12, 1e-12), false, false,
-                TimeSpan.FromSeconds(10.0)));
+            var task = Task.Run(() => spacecraft.Propagate(new Window(S, S.AddSeconds(200.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None }));
             Assert.True(task.Wait(TimeSpan.FromSeconds(60.0)), "the propagation did not end");
             return task.Result;
         }
@@ -456,7 +456,7 @@ public class MinimumEpochGateEdgeTests
         var impulse = new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine);
         protectedCraft.SetStandbyManeuver(impulse);
         var window = new Window(S, S.AddHours(3.0));
-        var solution = protectedCraft.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(60.0));
+        var solution = protectedCraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         // The closed form: the apogee at or after the gate, the perigee raise along the velocity there
         double tA = k.NextApsis(MinimumEpochGateTests.Tt(gate), true);
@@ -528,13 +528,11 @@ public class MinimumEpochGateEdgeTests
             return spacecraft;
         }
 
-        var one = Build(perigeeRaise ? -7851 : -7861, start, true).Propagate(new Window(S, end), [earth, sun], new RK78Integrator(tolerance, tolerance), false, false,
-            TimeSpan.FromSeconds(10.0));
-        var toGate = Build(perigeeRaise ? -7852 : -7862, start, false).Propagate(new Window(S, gate), [earth, sun], new RK78Integrator(tolerance, tolerance), false, false,
-            TimeSpan.FromSeconds(10.0));
+        var one = Build(perigeeRaise ? -7851 : -7861, start, true).Propagate(new Window(S, end), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth, sun], CovariancePropagation = CovariancePropagationOptions.None });
+        var toGate = Build(perigeeRaise ? -7852 : -7862, start, false).Propagate(new Window(S, gate), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth, sun], CovariancePropagation = CovariancePropagationOptions.None });
         var (position, velocity) = toGate.InterpolateAt(gate);
         var two = Build(perigeeRaise ? -7853 : -7863, new StateVector(position, velocity, toGate.Observer, gate, Frame.ICRF), true)
-            .Propagate(new Window(gate, end), [earth, sun], new RK78Integrator(tolerance, tolerance), false, false, TimeSpan.FromSeconds(10.0));
+            .Propagate(new Window(gate, end), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth, sun], CovariancePropagation = CovariancePropagationOptions.None });
 
         Assert.Equal(2, one.Segments.Count);
         Assert.Equal(2, two.Segments.Count);
