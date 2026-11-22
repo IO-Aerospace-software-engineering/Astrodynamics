@@ -63,14 +63,18 @@ product vᵀ M of `double[] * Matrix`, and
 `KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters, and the data
 provider seam in domain types (`StateVector`, `CelestialBodyInfo`) with the read-only public structs, the ephemeris
 reads typed as the `StateVector` they build, with `ToFrame` and `RelativeTo` typed so on a state vector, and the
-geopotential parameters as a value, a null covariance option of the conjunction analysis that throws, and the task of a
-batch with a constructor of options.
+geopotential parameters as a value, a null covariance option of the conjunction analysis that throws, the task of a
+batch with a constructor of options, the outputs of a propagation that end at its window end whatever its step, a
+reversed window, a negative hold and a step of zero refused.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
 implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
 radius, `GeopotentialModelParameters.GeopotentialModelPath`, the public constructors of `GeopotentialGravitationalField`
-and `VVIntegrator.DeltaTs`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+and `VVIntegrator.DeltaTs`, and the members that propagate without `PropagationOptions` or an integrator that holds its
+forces (the flag overloads of `Spacecraft.Propagate`, `Spacecraft.PropagateAsync`, the three `Scenario.SimulateAsync`,
+the flags constructors of `CentralBodyPropagator` and `PropagationTask`, `CentralBodyPropagatorBuilder`, and the
+factories and flags of `MonteCarloConfiguration`). Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -269,7 +273,8 @@ release are listed under **Known limitations**.
   run is bit for bit that of the constructor or overload taking them, and each default equals its explicit settings:
   `spacecraft.Propagate(window)` is the run of `new RK78Integrator()` about the central body alone, every 60 s
   (`PropagationOptionsPathTests`, `PropagationOptionsEntryPointTests`, `GeopotentialOptionsTests`: both integrators,
-  fixed-step RK7(8), drag, SRP, albedo and thermal against the builder, the covariance modes, maneuvers, SSB mode, a
+  fixed-step RK7(8), drag, SRP, albedo and thermal against the constructor of an integrator that holds its forces, the
+  covariance modes, maneuvers, SSB mode, a
   non-ICRF start, a TLE start, a scenario, a batch, a Monte Carlo campaign). See
   [Propagators](../reference/propagators.md#propagation-options).
 - **`IntegratorOptions`, `RK78IntegratorOptions` and `VVIntegratorOptions`** (R06 of #668, structuring choice 5): the
@@ -4604,15 +4609,49 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   initial state in RTN, while in `PropagationOptions` a null value is Auto. Migration: `CovariancePropagation = null` →
   `CovariancePropagation = CovariancePropagationOptions.None`, the same results, bit for bit (the 25 call sites of the
   repository, the covariance tutorial among them).
-- **Breaking: `PropagationTask` is no longer a positional record** (R06 of #668): `new PropagationTask(spacecraft,
-  window, options = null)` is its constructor, and the constructor of the flags and the integrator factory of 10.x stays,
-  its parameters camelCase (`includeAtmosphericDrag:`, `deltaT:`, `integratorFactory:`; PascalCase before, the names of
-  the positional parameters) and its properties get-only; `Deconstruct` is gone. Migration: a named argument takes the
-  lower-case name (the 15 call sites of the repository); deconstruct by the properties.
-- **`MonteCarloConfiguration.DeltaT` and `CelestialBodiesFactory` are no longer `required`** (R06 of #668): a campaign of
-  `Propagation` sets neither; a configuration of flags still needs both (`ArgumentNullException`,
-  `ArgumentOutOfRangeException` before any run), and `Propagation` set with a member of the flags configuration throws
-  `ArgumentException`. Not breaking.
+- **Breaking: `PropagationTask` is no longer a positional record** (R06 and R07 of #668): `new PropagationTask(spacecraft,
+  window, options = null)` is its one constructor, with `Spacecraft`, `Window` and `Options`; `Deconstruct` is gone, and
+  the constructor of the flags and the integrator factory of 10.x with its properties is removed (under **Removed**).
+  Migration: deconstruct by the properties.
+- **Breaking: the outputs of a propagation end at its window end whatever its step** (R11 of #668, structuring choice
+  6, decided by S. Guillet, 2026-11-19): when round(L/ΔT) rounds the window of length L up, the outputs are start + i·ΔT
+  inside the window, then the window end, which replaces the last grid point (at least ΔT/2 past the end) and is merged
+  with a point within ΔT/10 of it, on every path: `Spacecraft.Propagate`, `CentralBodyPropagator` (both forms),
+  `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator` and `TLEPropagator`, whose rule of #598 this is. Before,
+  the grid ran to round(L/ΔT)·ΔT, up to ΔT/2 past the window, and the propagation with it (#626): 3 590 s at 60 s
+  outputs ended at 3 600 s. What moves (decision 8 of lot L4, decided by S. Guillet, 2026-11-22): in RK7(8) only the last
+  output, now the state at the window end, every other output bit for bit; in Velocity-Verlet, or an integrator without
+  dynamics, the last output and, when the integration step does not divide ΔT, the outputs inside the last integration
+  step, which ends at the window end where it ended at round(L/ΔT)·ΔT (67.48 m at the output of 3 540 s for Velocity-Verlet
+  at 100 s about the Earth, 60 s outputs, Linux; `OutputGridTests.WhatMoves_AgainstTheFormerGrid`). Every output of a
+  window the step divides or rounds down (#741) is that of before, bit for bit, and the accepted steps are those of the
+  propagation of the window with one output step (`OutputGridTests`: RK7(8) and Velocity-Verlet, the Earth in TT seconds
+  and the Moon in TDB seconds, every path). The force caches cover the window (#626), and a propagation no
+  longer reads data past it. Migration: none for a step that divides the window; a caller that read the state at
+  round(L/ΔT)·ΔT reads it from a window that long.
+- **Breaking: a reversed window throws** (R11 of #668, section A of the re-baseline, decided by S. Guillet, 2026-11-19): `new Window(start, end)` throws `ArgumentException`
+  (`endDate`) for an end before its start, and `new Window(start, length)` `ArgumentOutOfRangeException` (`length`) for a
+  negative length, where they built a window of negative length; a window of zero length is accepted, and each end keeps
+  its scale (`WindowTests`). Migration: order the ends.
+- **Breaking: a negative maneuver hold throws** (R11 of #668): every maneuver constructor, impulses and attitudes, throws
+  `ArgumentOutOfRangeException` (`maneuverHoldDuration`) for a hold below zero, which it accepted, the window it gave an
+  attitude or an impulse mid-propagation ending before it started; zero is accepted; `ManeuverHoldDuration` is set through
+  the same check by a setter no type outside the library reaches (decision 11 of lot L4, decided by S. Guillet,
+  2026-11-22: `private protected`, where it was `protected`; `PhasingManeuver` sets its computed hold through it)
+  (`ManeuverHoldTests`). Migration: a hold of zero or more; a subclass outside the library gives its hold to the
+  constructor.
+- **Breaking: a propagation over a window of zero length throws `ArgumentException`** (`window`; decision 7 of lot L4,
+  decided by S. Guillet, 2026-11-22) at the start of the call, before anything changes: `Spacecraft.Propagate`, both
+  `CentralBodyPropagator` constructors and `Scenario.Simulate` (before its stars, when it holds a spacecraft); a batch task
+  reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
+  contains no segments" (`ZeroLengthWindowTests`). Migration: a window with a length.
+- **Breaking: the step of `GetEphemeris` over a window is above zero** (R11 of #668): `CelestialItem.GetEphemeris(window,
+  observer, …, stepSize)` (spacecraft, bodies, stars, barycentres) and `Site.GetEphemeris(window, observer, …, stepSize)`
+  throw `ArgumentOutOfRangeException` (`stepSize`) for a step of zero or less, where a zero step looped without end on a
+  site and asked a list of `int.MaxValue` states on a body, and a negative one threw the list's `capacity` exception or
+  returned the start alone, and so does `SpiceAPI.TransformFrame(window, fromFrame, toFrame, stepSize)` at the call, not
+  at the enumeration, where a zero step enumerated without end (decision 10 of lot L4, decided by S. Guillet, 2026-11-22;
+  its end, dropped even on the grid, is #781, lot L6) (`EphemerisWindowStepTests`). Migration: a positive step.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -6870,6 +6909,53 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`.
 - **`VVIntegrator.DeltaTs` and `HalfDeltaTs`** (R06 of #668), the step in seconds and its half, internal. Migration:
   `integrator.DeltaT.TotalSeconds`.
+- **The members that propagate without `PropagationOptions`** (lot L4, R07 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 5 as amended
+  by section 7 of the re-baseline, decided by S. Guillet, 2026-11-19: removed outright, no forwarder): the members of
+  flags, and with them those that propagated with no integrator, Velocity-Verlet at the output step: 974 km from the
+  two-body closed form after a day in a 6 800 km LEO at 60 s (27.1 km at 10 s, 271 m at 1 s, 1.36 m for RK7(8) at the
+  1e-9 of `RK78IntegratorOptions.Default`, 1.06 mm at 1e-12; the MEASURE lines of
+  `DefaultIntegratorFiguresTests.PointMassLeoDay_AgainstKepler`, decision 12 of lot L4: 974.02 km, 27.12 km, 271.24 m,
+  1.364 m and 1.062 mm on Linux, the other platforms read from the CI logs). Removed:
+  `Spacecraft.Propagate(window, bodies, drag, srp, step)`, `Spacecraft.PropagateAsync(window, bodies, drag, srp, step)`,
+  `Spacecraft.Propagate(window, bodies, integrator, drag, srp, step)` and its form with covariance options; the
+  `CentralBodyPropagator` constructors of flags (`(window, spacecraft, bodies, drag, srp, deltaT)`, with no integrator, and
+  `(window, spacecraft, integrator, bodies, drag, srp, deltaT)` with and without covariance options); the three
+  `Scenario.SimulateAsync(drag, srp, step[, integratorFactory[, covariancePropagation]])`; `CentralBodyPropagatorBuilder`;
+  the `PropagationTask` constructor of flags with its `CelestialBodies`, `IncludeAtmosphericDrag`,
+  `IncludeSolarRadiationPressure`, `DeltaT`, `IntegratorFactory` and `CovariancePropagation`; and
+  `MonteCarloConfiguration.CelestialBodiesFactory`, `IncludeAtmosphericDrag`, `IncludeSolarRadiationPressure`, `DeltaT` and
+  `IntegratorFactory`. The options entry points that remain run RK7(8) at `RK78IntegratorOptions.Default` when given no
+  integrator, each default equal to its explicit settings, bit for bit (`IntegratorDefaultsTests`: every entry point
+  against `new RK78Integrator()`, `VVIntegratorOptions.Default` against `new VVIntegrator(1 s)`, a Monte Carlo campaign).
+  Migration, the same run bit for bit (decision 2 of lot L4, decided by S. Guillet, 2026-11-22: 1 442 of 1 442 states of
+  a LEO day with drag, SRP, the Moon, the Sun and a burn, the removed members on 49cebf0b against the migration on this
+  branch, on `Spacecraft.Propagate`, `PropagateAsync`, the `CentralBodyPropagator` of flags, `Scenario.SimulateAsync` and
+  the flags `PropagationTask`, Linux):
+  - a call with no integrator, which stepped Velocity-Verlet at its step: `new PropagationOptions { Integrator = new
+    VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies, AtmosphericDrag = drag,
+    SolarRadiationPressure = srp }` (the integrator `new VVIntegrator(step)`), or RK7(8) for its accuracy (above). The
+    Hohmann transfer of the tutorial (6 678 → 42 164 km) at Velocity-Verlet 60 s burns its second impulse 209.9 s late,
+    3.6 m/s short of the closed form (1 466.824 m/s), and ends at e = 3.9e-3; RK7(8) at 1e-9 gives both Δv of the closed
+    form to the mm/s, e = 5.0e-11 (`DefaultIntegratorFiguresTests.HohmannToGeo_AgainstTheClosedForm`, Linux);
+  - a call with an integrator: `Integrator = new RK78IntegratorOptions { AbsoluteTolerance = …, RelativeTolerance = …,
+    InitialStep = …, MinStep = …, MaxStep = … }` (or `FixedStep`), the covariance options in `CovariancePropagation`, a
+    call that gave none `CovariancePropagation = CovariancePropagationOptions.None` (null is Auto, which propagates a
+    covariance given at the window start);
+  - `Spacecraft.PropagateAsync`: `Task.Run(() => spacecraft.Propagate(window, options))`; `Scenario.SimulateAsync`:
+    `scenario.Simulate(options)`, its `ThirdBodies` null for the scenario's bodies;
+  - `CentralBodyPropagatorBuilder`: `WithPerturbingBodies` → `ThirdBodies`, `IncludeAtmosphericDrag()` →
+    `AtmosphericDrag = true`, `IncludeSolarRadiationPressure()` → `SolarRadiationPressure = true`,
+    `IncludeAlbedo(centralBody)` → `AlbedoRadiationPressure = true`, `IncludeThermalRadiation(centralBody)` →
+    `ThermalRadiationPressure = true`, `WithCovariancePropagation(o)` → `CovariancePropagation = o`; a reflecting or
+    emitting body other than the central body takes the constructor of an integrator that holds its forces;
+  - a `PropagationTask` or a `MonteCarloConfiguration` of flags: their `PropagationOptions` (`Options`, `Propagation`),
+    a factory's integrator as its `IntegratorOptions` (each run or task builds its own); the bodies of
+    `CelestialBodiesFactory` as `ThirdBodies`, shared by the runs, as a central body with a geopotential now is (one field
+    per propagation).
+  In 11.0.0 the SSB mode costs 5.4 ms per propagated hour in RK7(8) at 1e-9 (89 steps over 6 h, the LEO of #544 about
+  the solar system barycentre with the Earth, the Moon and the Sun), 217 ms at 1e-12 (29 695 steps), against 1.3 ms for
+  Velocity-Verlet at 60 s.
 - **`OrbitalParameters.ToPlanetocentric(Aberration)`** (R20 of #668), whose correction was not used. Migration:
   `ToPlanetocentric()`, the same values, bit for bit; `ToPlanetodetic()` for the geodetic coordinates.
 - **`AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`** (R20 of #668), whose
