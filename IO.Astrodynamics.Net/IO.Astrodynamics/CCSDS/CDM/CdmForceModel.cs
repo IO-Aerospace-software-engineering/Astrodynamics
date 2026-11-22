@@ -42,13 +42,13 @@ internal sealed record CdmForceModel(string GravityModel, string AtmosphericMode
         int centralId = dynamics.Observer.NaifId;
 
         var central = forces.OfType<GravitationalAcceleration>().FirstOrDefault(g => g.CelestialItem.NaifId == centralId);
-        string gravity = central?.CelestialItem.Field is GeopotentialGravitationalField geopotential
+        string gravity = central?.Field is GeopotentialGravitationalField geopotential
             ? string.Create(CultureInfo.InvariantCulture,
                 $"{geopotential.ModelName ?? "GEOPOTENTIAL"}: {geopotential.MaxDegree}D {geopotential.MaxDegree}O")
             : "POINT MASS";
 
         var drag = forces.OfType<AtmosphericDrag>().FirstOrDefault();
-        string atmosphere = drag?.CelestialBody.Atmosphere is { } model ? AtmosphereName(model) : "NONE";
+        string atmosphere = drag?.Atmosphere is { } model ? AtmosphereName(model) : "NONE";
 
         var bodies = new List<string>();
         foreach (var force in forces)

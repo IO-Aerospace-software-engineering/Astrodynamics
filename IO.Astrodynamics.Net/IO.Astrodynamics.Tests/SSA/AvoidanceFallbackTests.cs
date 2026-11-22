@@ -141,7 +141,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         MaxReturnedOptions = 6
     };
 
-    private static readonly ConjunctionAnalysisOptions HeldInRtn = new() { CovariancePropagation = null };
+    private static readonly ConjunctionAnalysisOptions HeldInRtn = new() { CovariancePropagation = CovariancePropagationOptions.None };
 
     private Spacecraft Secondary(int naifId) => ReferenceCase.NewSpacecraft(naifId, _case.SecondaryAtTca);
 
@@ -677,7 +677,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var post = option.PostManeuverEncounter;
         var expected = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(reference), secondary,
             new Window(option.BurnEpoch, AvoidanceFallbackCase.ScreeningWindow.EndDate),
-            new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         var tca = post.EncounterState.Epoch;
         double tcaError = System.Math.Abs((tca - expected.EncounterState.Epoch).TotalSeconds);
         // The state on the steps of the reference; its analysis samples its ephemeris, interpolated between its outputs

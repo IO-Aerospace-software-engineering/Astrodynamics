@@ -60,6 +60,18 @@ public abstract class PropagatorBase : IPropagator
     private CovariancePropagationOptions _covariancePropagation;
 
     /// <summary>
+    /// The resolved settings of a propagator built from <see cref="PropagationOptions"/>, reported by
+    /// <see cref="PropagationSolution.Options"/>; null for the other constructors.
+    /// </summary>
+    private protected PropagationOptions ResolvedOptions { get; set; }
+
+    /// <summary>
+    /// Why the covariance is not propagated, for the message of <see cref="PropagationSolution.GetCovariance"/>; null when
+    /// it is, or on a path that does not say (R06 of #668).
+    /// </summary>
+    private protected string CovarianceAbsence { get; set; }
+
+    /// <summary>
     /// In RK7(8), the lock of the dynamics of the solution: null for a lock of its own; the lock of another propagation
     /// whose forces this one shares (an avoidance option, a perturbed propagation of the non-linearity index).
     /// </summary>
@@ -238,7 +250,7 @@ public abstract class PropagatorBase : IPropagator
         var gravities = rk78.ForceList.OfType<GravitationalAcceleration>().ToArray();
         foreach (var gravity in gravities)
         {
-            gravity.CelestialItem.ValidateGravitationalPartialsDegree(options.GeopotentialPartialsDegree);
+            gravity.ValidatePartialsDegree(options.GeopotentialPartialsDegree);
         }
 
         foreach (var gravity in gravities)
@@ -255,7 +267,8 @@ public abstract class PropagatorBase : IPropagator
     /// <summary>
     /// Propagate the state transition matrix, and the covariance in
     /// <see cref="CovariancePropagationMode.Covariance"/>, with the state: the public activation of the variational
-    /// equations (D2). Null leaves them off. Called once the forces of the integrator are final, since the columns of Ψ
+    /// equations (D2). Null and <see cref="CovariancePropagationOptions.None"/> leave them off. Called once the forces of
+    /// the integrator are final, since the columns of Ψ
     /// follow them.
     /// </summary>
     /// <param name="options">The options, or null for none.</param>
@@ -267,7 +280,7 @@ public abstract class PropagatorBase : IPropagator
     /// semi-definite.</exception>
     internal void EnableCovariancePropagation(CovariancePropagationOptions options)
     {
-        if (options == null)
+        if (options is not { IsActive: true })
         {
             return;
         }
@@ -809,6 +822,8 @@ public abstract class PropagatorBase : IPropagator
         solution.Observer = InitialState.Observer;
         solution.Frame = InitialState.Frame;
         solution.CovariancePropagation = _covariancePropagation;
+        solution.Options = ResolvedOptions;
+        solution.CovarianceAbsence = CovarianceAbsence;
         var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
         // 5b. The attitude record, from the timeline, on the solution (#539)

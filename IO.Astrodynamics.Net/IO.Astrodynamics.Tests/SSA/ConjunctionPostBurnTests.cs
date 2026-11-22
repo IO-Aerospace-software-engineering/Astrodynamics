@@ -15,6 +15,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.Tests.SSA;
 
@@ -36,7 +37,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// </remarks>
 public class ConjunctionPostBurnTests
 {
-    private static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = null };
+    private static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = CovariancePropagationOptions.None };
     private static int _ids = -574_000;
 
     private readonly ITestOutputHelper _output;

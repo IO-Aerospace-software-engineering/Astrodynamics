@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -59,6 +60,254 @@ public class CentralBodyPropagator : PropagatorBase
             PlanForces(spacecraft, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT,
                 integrator))
     {
+    }
+
+    /// <summary>
+    /// A central-body propagator of the settings of <paramref name="options"/> (R06 of #668): the integrator, the output
+    /// step, the third bodies, the forces, the geopotential and atmosphere of the central body, and the propagation of
+    /// the covariance, each run building its own integrator, forces and geopotential field.
+    /// </summary>
+    /// <remarks>
+    /// The central body is that of the spacecraft's initial orbit (the Sun for a star or barycentre observer), and takes
+    /// part with the models of the observer (#674); <see cref="PropagationOptions.ThirdBodies"/> null means none. The
+    /// settings are checked here, before the integrator is built and before anything changes; the resolved ones are on
+    /// <see cref="PropagationSolution.Options"/>. With the integrator, forces and covariance options the settings name,
+    /// the run is bit for bit that of the constructor taking them (<c>CentralBodyPropagatorOptionsTests</c>).
+    /// </remarks>
+    /// <param name="window">The propagation window.</param>
+    /// <param name="spacecraft">The spacecraft.</param>
+    /// <param name="options">The settings; null for <see cref="PropagationOptions.Default"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="spacecraft"/> is null.</exception>
+    /// <exception cref="ArgumentException">The settings contradict each other (<see cref="RK78IntegratorOptions.FixedStep"/>
+    /// with another setting), or the inputs: a geopotential or an atmosphere other than the central body's model, either
+    /// on a central body that cannot take it, albedo or thermal radiation pressure on a central body without the
+    /// coefficient, two bodies of one NAIF identifier with different models; or the GM of the central body is not above
+    /// 0.</exception>
+    /// <exception cref="InvalidOperationException">Drag is asked about a central body without an atmosphere; or the
+    /// covariance is propagated (Auto or asked for) from a covariance that is not positive semi-definite, or asked for
+    /// without a valid covariance at the start of the window.</exception>
+    /// <exception cref="NotSupportedException">The covariance propagation is asked for under Velocity-Verlet.</exception>
+    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, PropagationOptions options = null)
+        : this(window, spacecraft, PlanOptions(window, spacecraft, options, null))
+    {
+    }
+
+    /// <summary>
+    /// The propagator of a scenario's spacecraft (<see cref="Mission.Scenario.Simulate(PropagationOptions)"/>): the
+    /// scenario's bodies when <see cref="PropagationOptions.ThirdBodies"/> is null.
+    /// </summary>
+    internal CentralBodyPropagator(in Window window, Spacecraft spacecraft, PropagationOptions options,
+        IEnumerable<CelestialItem> scenarioBodies)
+        : this(window, spacecraft, PlanOptions(window, spacecraft, options, scenarioBodies))
+    {
+    }
+
+    // The options constructors once the settings are resolved and the integrator claimed (PlanOptions)
+    private CentralBodyPropagator(in Window window, Spacecraft spacecraft, OptionsPlan plan)
+        : this(window, spacecraft, plan.Integrator, plan.OutputStep, plan.Forces)
+    {
+        EnableCovariancePropagation(plan.CovariancePropagation);
+        ResolvedOptions = plan.Resolved;
+        CovarianceAbsence = plan.CovarianceAbsence;
+    }
+
+    /// <summary>
+    /// The resolved settings of an options constructor: the integrator, built and claimed, its forces, the covariance
+    /// options to enable (null for none), why the covariance is not propagated under Auto, and the settings reported on
+    /// the solution.
+    /// </summary>
+    private sealed record OptionsPlan(Integrator Integrator, TimeSpan OutputStep, ForceModelPlan Forces,
+        CovariancePropagationOptions CovariancePropagation, string CovarianceAbsence, PropagationOptions Resolved);
+
+    /// <summary>
+    /// Resolves <paramref name="options"/> for <paramref name="spacecraft"/>: checks the settings and the inputs, then
+    /// builds the integrator and the forces, the central body's geopotential and atmosphere by D1's fallback rule, and
+    /// the covariance by the Auto rule; nothing changes when a check fails.
+    /// </summary>
+    private static OptionsPlan PlanOptions(in Window window, Spacecraft spacecraft, PropagationOptions options,
+        IEnumerable<CelestialItem> scenarioBodies)
+    {
+        options ??= PropagationOptions.Default;
+        options.Integrator.Validate();
+        ArgumentNullException.ThrowIfNull(spacecraft);
+        ValidateInertialFrame(spacecraft);
+        ValidateOsculatingInitialOrbit(spacecraft);
+        var centralBody = ResolveCentralBody(spacecraft);
+
+        var (runGeopotential, geopotential) = ResolveGeopotential(centralBody, options.Geopotential);
+        var (runAtmosphere, atmosphere) = ResolveAtmosphere(centralBody, options.Atmosphere);
+        var bodies = ForceModelBodies(centralBody, options.ThirdBodies ?? scenarioBodies);
+        var forces = BuildCentralBodyForces(centralBody, bodies, spacecraft, options.AtmosphericDrag,
+            options.SolarRadiationPressure, centralBody.CreatePropagationField(runGeopotential), runAtmosphere);
+        AddRadiationForces(forces, centralBody, spacecraft, options);
+
+        var integrator = options.Integrator.CreateIntegrator();
+        var tdbStart = window.StartDate.ToTDB();
+        var (covariance, absence) = ResolveCovariance(spacecraft, tdbStart, integrator, options.CovariancePropagation);
+        integrator.ClaimForForces();
+
+        var resolved = options with
+        {
+            ThirdBodies = bodies.Where(body => body.NaifId != centralBody.NaifId).ToArray(),
+            Geopotential = geopotential,
+            Atmosphere = atmosphere,
+            CovariancePropagation = covariance ?? CovariancePropagationOptions.None
+        };
+        return new OptionsPlan(integrator, options.OutputStep, new ForceModelPlan(bodies, forces), covariance, absence,
+            resolved);
+    }
+
+    /// <summary>
+    /// The geopotential of the central body by D1's fallback rule (R06, R12 of #668): the model the run builds its field
+    /// from (null for the body's own), and the model reported (null for a point mass).
+    /// </summary>
+    /// <exception cref="ArgumentException">The option differs from the body's model, or the central body cannot take a
+    /// geopotential.</exception>
+    private static (GeopotentialModelParameters Run, GeopotentialModelParameters Reported) ResolveGeopotential(
+        CelestialItem centralBody, GeopotentialModelParameters option)
+    {
+        var own = centralBody.GeopotentialModel;
+        if (option == null)
+        {
+            return (null, own);
+        }
+
+        if (centralBody is not CelestialBody)
+        {
+            throw new ArgumentException(
+                $"options.Geopotential is given, and the central body {centralBody.Name} (NAIF {centralBody.NaifId}) is " +
+                "not a CelestialBody, which a geopotential needs (its orientation).", "options");
+        }
+
+        if (own == null)
+        {
+            // A body without a model counts as not given: the option fills it (R12 of #668)
+            return (option, option);
+        }
+
+        if (own.Equals(option) || centralBody.Field.HasSameModel(
+                CelestialItem.CreateGravitationalField(centralBody.NaifId, centralBody.GM, option)))
+        {
+            return (null, own);
+        }
+
+        throw new ArgumentException(
+            $"The central body {centralBody.Name} (NAIF {centralBody.NaifId}) has the geopotential {own.Description}, and " +
+            $"options.Geopotential is {option.Description}: an option of the same quantity is a fallback for a body " +
+            "without a model. Remove options.Geopotential, or build the body without a geopotential.", "options");
+    }
+
+    /// <summary>
+    /// The atmosphere of the central body's drag by D1's fallback rule (R06 of #668): the atmosphere the drag takes in
+    /// place of the body's (null for the body's), and the atmosphere reported (the body's, which an Earth without a model
+    /// has, or null).
+    /// </summary>
+    /// <exception cref="ArgumentException">The option differs from the body's model, or the central body cannot take an
+    /// atmosphere.</exception>
+    private static (IAtmosphericModel Run, IAtmosphericModel Reported) ResolveAtmosphere(CelestialItem centralBody,
+        IAtmosphericModel option)
+    {
+        var body = centralBody as CelestialBody;
+        if (option == null)
+        {
+            return (null, body?.Atmosphere);
+        }
+
+        if (body == null || centralBody.NaifId == Stars.Sun.NaifId)
+        {
+            throw new ArgumentException(
+                $"options.Atmosphere is given, and the central body {centralBody.Name} (NAIF {centralBody.NaifId}) cannot " +
+                "take one: about the Sun the drag is that of the third bodies with an atmosphere.", "options");
+        }
+
+        if (!body.HasAtmosphericModel)
+        {
+            // A body without a model counts as not given: the option replaces it, an Earth's NRLMSISE-00 at nominal
+            // space weather included
+            return (option, option);
+        }
+
+        if (AtmosphericModelComparer.AreEquivalent(body.Atmosphere, option))
+        {
+            return (null, body.Atmosphere);
+        }
+
+        throw new ArgumentException(
+            $"The central body {body.Name} (NAIF {body.NaifId}) has the atmosphere {body.Atmosphere.GetType().Name}, and " +
+            $"options.Atmosphere is another {option.GetType().Name}: an option of the same quantity is a fallback for a " +
+            "body without a model. Remove options.Atmosphere, or build the body without an atmospheric model.", "options");
+    }
+
+    // The albedo and thermal radiation pressure of the central body, after the other forces, as the builder adds them
+    private static void AddRadiationForces(List<ForceBase> forces, CelestialItem centralBody, Spacecraft spacecraft,
+        PropagationOptions options)
+    {
+        if (!options.AlbedoRadiationPressure && !options.ThermalRadiationPressure)
+        {
+            return;
+        }
+
+        var body = centralBody as CelestialBody ?? throw new ArgumentException(
+            $"Albedo or thermal radiation pressure is asked, and the central body {centralBody.Name} (NAIF " +
+            $"{centralBody.NaifId}) is not a CelestialBody, which has the coefficients.", "options");
+        if (options.AlbedoRadiationPressure)
+        {
+            forces.Add(new AlbedoRadiationPressure(spacecraft, body));
+        }
+
+        if (options.ThermalRadiationPressure)
+        {
+            forces.Add(new ThermalRadiationPressure(spacecraft, body));
+        }
+    }
+
+    /// <summary>
+    /// The covariance options to enable (null for none) and, when none, why: the options given, or under Auto (null) the
+    /// covariance of the initial orbital parameters when the integrator is RK7(8) and the covariance is at the start of
+    /// the window (R06 of #668, D4.3).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Under Auto, the covariance at the start of the window is not 6×6,
+    /// symmetric and positive semi-definite.</exception>
+    private static (CovariancePropagationOptions Options, string Absence) ResolveCovariance(Spacecraft spacecraft,
+        in Time tdbStart, Integrator integrator, CovariancePropagationOptions requested)
+    {
+        if (requested != null)
+        {
+            return requested.IsActive
+                ? (requested, null)
+                : (null, "PropagationOptions.CovariancePropagation is CovariancePropagationOptions.None.");
+        }
+
+        var initial = InertialInitialOrbit(spacecraft.InitialOrbitalParameters, tdbStart);
+        var covariance = initial.ToStateVector().Covariance;
+        if (!covariance.HasValue)
+        {
+            return (null, "the initial orbital parameters of the spacecraft carry no covariance.");
+        }
+
+        if (integrator is not RK78Integrator)
+        {
+            return (null, "under Auto the covariance is propagated by the RK7(8) integrator only, and the propagation " +
+                          "used Velocity-Verlet.");
+        }
+
+        if (initial.Epoch.ToTDB() != tdbStart)
+        {
+            return (null, $"the covariance of the initial orbital parameters is given at {initial.Epoch.ToTDB()}, and the " +
+                          $"propagation starts at {tdbStart}: the propagator does not carry a covariance from another " +
+                          "epoch.");
+        }
+
+        if (InitialCovarianceRejection(covariance.Value, out _) is { } reason)
+        {
+            throw new InvalidOperationException(
+                $"The covariance of spacecraft '{spacecraft.Name}' is propagated under Auto " +
+                $"(PropagationOptions.CovariancePropagation null), and it cannot be: {reason} Remediate it with " +
+                "StateVector.WithRemediatedCovariance(), or set CovariancePropagation to " +
+                "CovariancePropagationOptions.None.");
+        }
+
+        return (new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }, null);
     }
 
     // The force-building constructors once their inputs are checked and the integrator claimed (PlanForces)
@@ -384,10 +633,25 @@ public class CentralBodyPropagator : PropagatorBase
         CelestialItem[] items, Spacecraft spacecraft,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
     {
+        return BuildCentralBodyForces(centralBody, items, spacecraft, includeAtmosphericDrag,
+            includeSolarRadiationPressure, centralBody.CreatePropagationField(), null);
+    }
+
+    /// <summary>
+    /// The forces of <see cref="BuildCentralBodyForces(CelestialItem, CelestialItem[], Spacecraft, bool, bool)"/>, the
+    /// central gravity evaluated with <paramref name="centralField"/>, the field of this run (R06 of #668: one field per
+    /// run over the shared coefficients), and the drag of the central body with <paramref name="centralAtmosphere"/> in
+    /// place of its own when given.
+    /// </summary>
+    private static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
+        CelestialItem[] items, Spacecraft spacecraft,
+        bool includeAtmosphericDrag, bool includeSolarRadiationPressure, GravitationalField centralField,
+        IAtmosphericModel centralAtmosphere)
+    {
         List<ForceBase> forces = new List<ForceBase>();
 
-        // Central body gravity (two-body + geopotential if configured)
-        forces.Add(new GravitationalAcceleration(centralBody));
+        // Central body gravity (two-body + geopotential if configured), with the field of this run
+        forces.Add(new GravitationalAcceleration(centralBody, centralField));
 
         // Third-body perturbations for all other bodies: Battin's form far from the perturbing body, the direct
         // difference where |r - d| < |d|/2 (ThirdBodyPerturbation, #576)
@@ -401,7 +665,7 @@ public class CentralBodyPropagator : PropagatorBase
 
         if (includeAtmosphericDrag)
         {
-            AddDrag(forces, centralBody, items, spacecraft);
+            AddDrag(forces, centralBody, items, spacecraft, centralAtmosphere);
         }
 
         if (includeSolarRadiationPressure)
@@ -415,13 +679,13 @@ public class CentralBodyPropagator : PropagatorBase
     // The drag forces, in the order of the bodies, the central body's where it is listed, first otherwise; each body with
     // an atmosphere, an Earth without a model taking NRLMSISE-00 at nominal space weather (amendment of 2026-11-14)
     private static void AddDrag(List<ForceBase> forces, CelestialItem centralBody, CelestialItem[] items,
-        Spacecraft spacecraft)
+        Spacecraft spacecraft, IAtmosphericModel atmosphereOverride)
     {
         bool aboutTheSun = centralBody.NaifId == Stars.Sun.NaifId;
         CelestialBody centralAtmosphere = null;
         if (!aboutTheSun)
         {
-            centralAtmosphere = centralBody is CelestialBody { Atmosphere: not null } body
+            centralAtmosphere = centralBody is CelestialBody body && (body.Atmosphere != null || atmosphereOverride != null)
                 ? body
                 : throw new InvalidOperationException(
                     $"Atmospheric drag is asked about the central body {centralBody.Name} (NAIF {centralBody.NaifId}), " +
@@ -437,7 +701,7 @@ public class CentralBodyPropagator : PropagatorBase
             {
                 if (centralAtmosphere != null && !centralAdded)
                 {
-                    forces.Add(new AtmosphericDrag(spacecraft, centralAtmosphere));
+                    forces.Add(new AtmosphericDrag(spacecraft, centralAtmosphere, atmosphereOverride));
                     centralAdded = true;
                 }
             }
@@ -449,7 +713,7 @@ public class CentralBodyPropagator : PropagatorBase
 
         if (centralAtmosphere != null && !centralAdded)
         {
-            forces.Insert(first, new AtmosphericDrag(spacecraft, centralAtmosphere));
+            forces.Insert(first, new AtmosphericDrag(spacecraft, centralAtmosphere, atmosphereOverride));
         }
 
         if (forces.Count == first)

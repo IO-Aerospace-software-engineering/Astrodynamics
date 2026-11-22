@@ -658,8 +658,8 @@ public class DocumentationPagesExamplesTests
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
             var spacecraft = new Spacecraft(-(7061 + i), $"SHARED{i}", 100.0, 10000.0, new Clock($"SHARED{i}_CLK", 256), orbit);
             tasks.Add(new PropagationTask(spacecraft, window, new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false, DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new IO.Astrodynamics.Propagator.Integrators.RK78Integrator(1e-10, 1e-10, 30.0)));
+                includeAtmosphericDrag: false, includeSolarRadiationPressure: false, deltaT: TimeSpan.FromSeconds(60),
+                integratorFactory: () => new IO.Astrodynamics.Propagator.Integrators.RK78Integrator(1e-10, 1e-10, 30.0)));
         }
 
         var result = BatchPropagator.Propagate(tasks);

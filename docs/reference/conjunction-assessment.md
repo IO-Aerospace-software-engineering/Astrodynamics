@@ -43,7 +43,7 @@ during the search, in this order:
    propagate in RK7(8) (Velocity-Verlet, not propagated and so two-body, TLE, SPICE), for an initial covariance at another
    epoch than the start of the propagation, for one that rounding does not explain (a negative variance, a value that is
    not finite: the analysis does not throw, it holds that covariance in RTN as before 10.2.0-preview-1), and for every
-   participant when `CovariancePropagation` is null. The
+   participant when `CovariancePropagation` is `CovariancePropagationOptions.None` (null before 11.0.0, which throws since). The
    covariance of the initial `StateVector` is rotated into RTN with the initial state, then back into the inertial frame
    with the state at TCA. It is **not propagated**: its shape relative to the orbit is kept, its size does not grow. Its
    age is reported, and `EncounterQualityFlags.StaleCovarianceUsed` is raised beyond
@@ -60,7 +60,7 @@ held in RTN.
     The covariance propagation is on by default (`CovariancePropagationMode.Covariance`, no process noise, no consider
     parameter): the Pc of `Analyze` and `AnalyzeAll` changes for a participant propagated in RK7(8) with an initial
     covariance, and becomes the Pc of the propagated covariance. Set
-    `ConjunctionAnalysisOptions.CovariancePropagation = null` to restore the covariance held in RTN. On the two-body
+    `ConjunctionAnalysisOptions.CovariancePropagation = CovariancePropagationOptions.None` to restore the covariance held in RTN. On the two-body
     conjunction of the tests, 24 h after the initial states (σ 50 to 300 m and 0.03 to 0.3 m/s), the in-track σ at TCA
     is 21.7 km propagated against 232 m held in RTN, and the Pc 2.0e-6 against 1.9e-4.
 
@@ -287,7 +287,7 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 | `BisectionToleranceSeconds` | 1e-9 s | TCA refinement tolerance; the epochs have a resolution of 100 ns, which bounds the refinement below this value: below a tick the bisection ends on a bracket one tick wide and returns its tick nearer the zero, half a tick from it at most ([#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624)); a tolerance of a tick or more ends on the middle of its bracket, in ticks, the middle of each step of the bisection being taken in ticks too (#624: through `TimeSpan.FromSeconds` it could fall a tick low) |
 | `LowRelativeSpeedThresholdMetersPerSecond` | 1 m/s | Below this relative speed, `LowRelativeVelocityEncounter` is raised |
 | `StaleCovarianceThreshold` | 60 s | Covariance age beyond which `StaleCovarianceUsed` is raised (covariance held in RTN) |
-| `CovariancePropagation` | `Covariance` mode, no noise, no consider parameter | Propagation of the covariance of the participants to TCA; null for the covariance held in RTN. `StateTransitionOnly` and `IncludeInStepControl` are rejected (`ArgumentException`), as is a consider parameter whose force a propagated participant lacks |
+| `CovariancePropagation` | `Covariance` mode, no noise, no consider parameter | Propagation of the covariance of the participants to TCA; `CovariancePropagationOptions.None` for the covariance held in RTN, null throwing `ArgumentNullException` in `init` (R06 of #668, structuring choice 3, decided by S. Guillet, 2026-11-19: null held it in RTN before 11.0.0, and is Auto in `PropagationOptions`). `StateTransitionOnly` and `IncludeInStepControl` are rejected (`ArgumentException`), as is a consider parameter whose force a propagated participant lacks |
 | `ComputeNonlinearityIndex` | false | Whether the non-linearity index of each propagated covariance is computed (12 STM propagations per participant) |
 | `NonlinearityIndexThreshold` | 1.0 | Index above which `NonlinearCovariancePropagation` is raised |
 

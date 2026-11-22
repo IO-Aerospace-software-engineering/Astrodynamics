@@ -20,7 +20,15 @@ public enum CovariancePropagationMode
     /// Φ, Ψ and the covariance P(t) = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q(t), from the covariance P0 of the initial orbital parameters
     /// of the spacecraft.
     /// </summary>
-    Covariance
+    Covariance,
+
+    /// <summary>
+    /// Nothing: no partial derivative and no covariance (<see cref="CovariancePropagationOptions.None"/>). Turns the
+    /// propagation off where a null value means another rule: Auto in <see cref="PropagationOptions"/>, and in
+    /// <see cref="SSA.ConjunctionAnalysisOptions"/> the covariance of the initial state held in RTN (R06 of #668,
+    /// structuring choice 3, decided by S. Guillet, 2026-11-19).
+    /// </summary>
+    None
 }
 
 /// <summary>
@@ -29,8 +37,10 @@ public enum CovariancePropagationMode
 /// </summary>
 /// <remarks>
 /// <para>
-/// Off unless given: a propagation without these options computes no partial derivative, and an initial covariance is
-/// not propagated (the output states carry none). See <c>docs/reference/covariance-propagation.md</c> for the equations,
+/// Off unless given on the paths that take these options alone: a propagation without them computes no partial
+/// derivative, and an initial covariance is not propagated (the output states carry none). On the options entry points
+/// (<see cref="PropagationOptions.CovariancePropagation"/>) a null value is Auto: the covariance of the initial orbital
+/// parameters is propagated when it can be (R06 of #668). See <c>docs/reference/covariance-propagation.md</c> for the equations,
 /// the modeling assumptions and the units.
 /// </para>
 /// <para>
@@ -42,9 +52,19 @@ public sealed record CovariancePropagationOptions
 {
     private readonly CovariancePropagationMode _mode;
     private readonly int? _geopotentialPartialsDegree;
+    private readonly RtnProcessNoise _processNoise;
+    private readonly ConsiderParameters _considerParameters;
 
     /// <summary>
-    /// What is integrated: Φ and Ψ only (the default), or also the covariance.
+    /// No propagation of the state transition matrix or of the covariance (<see cref="CovariancePropagationMode.None"/>):
+    /// what a propagation gives without these options, and in a conjunction analysis the covariance of the initial state
+    /// held in RTN (R06 of #668, structuring choice 3, decided by S. Guillet, 2026-11-19).
+    /// </summary>
+    public static CovariancePropagationOptions None { get; } = new() { Mode = CovariancePropagationMode.None };
+
+    /// <summary>
+    /// What is integrated: Φ and Ψ only (the default), also the covariance, or nothing
+    /// (<see cref="CovariancePropagationMode.None"/>, <see cref="None"/>).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The value is not a defined mode.</exception>
     public CovariancePropagationMode Mode
@@ -57,6 +77,11 @@ public sealed record CovariancePropagationOptions
                 throw new ArgumentOutOfRangeException(nameof(Mode), value, "Undefined covariance propagation mode.");
             }
 
+            if (value == CovariancePropagationMode.None && (_processNoise != null || _considerParameters != null))
+            {
+                throw new ArgumentException(NoneWithCovarianceSettings, nameof(Mode));
+            }
+
             _mode = value;
         }
     }
@@ -66,13 +91,34 @@ public sealed record CovariancePropagationOptions
     /// in which case P is the linear propagation of P0 and of the consider parameters only, which is often optimistic.
     /// Covariance mode only.
     /// </summary>
-    public RtnProcessNoise ProcessNoise { get; init; }
+    /// <exception cref="ArgumentException">Set with <see cref="CovariancePropagationMode.None"/>.</exception>
+    public RtnProcessNoise ProcessNoise
+    {
+        get => _processNoise;
+        init => _processNoise = value != null && _mode == CovariancePropagationMode.None
+            ? throw new ArgumentException(NoneWithCovarianceSettings, nameof(ProcessNoise))
+            : value;
+    }
 
     /// <summary>
     /// The standard deviations of the consider parameters, Pp = diag(σ²); null (the default) for none. Covariance mode
     /// only, and each needs its force in the propagation (Cd: drag; Cr: a radiation force).
     /// </summary>
-    public ConsiderParameters ConsiderParameters { get; init; }
+    /// <exception cref="ArgumentException">Set with <see cref="CovariancePropagationMode.None"/>.</exception>
+    public ConsiderParameters ConsiderParameters
+    {
+        get => _considerParameters;
+        init => _considerParameters = value != null && _mode == CovariancePropagationMode.None
+            ? throw new ArgumentException(NoneWithCovarianceSettings, nameof(ConsiderParameters))
+            : value;
+    }
+
+    private const string NoneWithCovarianceSettings =
+        "Process noise and consider parameters act on the propagated covariance: they cannot be set with " +
+        "CovariancePropagationMode.None.";
+
+    /// <summary>Whether these options propagate anything (<see cref="Mode"/> other than None).</summary>
+    internal bool IsActive => _mode != CovariancePropagationMode.None;
 
     /// <summary>
     /// Whether the error of Φ and Ψ takes part in the step-size control of the integrator. False by default: the steps

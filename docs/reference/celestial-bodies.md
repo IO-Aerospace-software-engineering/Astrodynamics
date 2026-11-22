@@ -22,6 +22,7 @@
 | `SphereOfInfluence` | Sphere of influence radius (m) |
 | `GravitationalField` | Gravity model (point-mass or geopotential) |
 | `HasAtmosphericModel` | Whether an atmospheric model was given (an Earth without one still has the NRLMSISE-00 default of its drag and getters) |
+| `Atmosphere` | The atmosphere its drag reads: its model, NRLMSISE-00 at nominal space weather for an Earth without one, null for another body without one (public since 11.0.0, R06 of #668; `PropagationSolution.Options.Atmosphere` reports it) |
 | `Albedo` | Bond albedo for reflected sunlight |
 | `ThermalEffectiveTemperature` | Effective radiating temperature in Kelvin |
 | `ThermalEmissivity` | Thermal emissivity |
@@ -32,7 +33,7 @@
 |-------------|-------------|
 | `CelestialBody(NaifObject naifObject)` | Create from NAIF object |
 | `CelestialBody(NaifObject, Frame, Time, GeopotentialModelParameters)` | Create with geopotential |
-| `GeopotentialModelParameters(path, degree)` / `(path, degree, gravitationalParameter, referenceRadius)`, and the same with a `Stream` instead of the path | The geopotential of a body: its harmonics with the constants of EGM2008 for the Earth, of the kernels for another body, or the given ones; see [Force Models](force-models.md#geopotentialgravitationalfield). One instance builds any number of bodies, on any thread: the coefficients are read once and shared, each body with its own field (#674) |
+| `GeopotentialModelParameters.Egm2008(degree)`, `GeopotentialModelParameters(path, degree)` / `(path, degree, gravitationalParameter, referenceRadius)`, and the same with a `Stream` instead of the path | The geopotential of a body: its harmonics with the constants of EGM2008 for the Earth, of the kernels for another body, or the given ones; see [Force Models](force-models.md#geopotential-model-parameters). A value (11.0.0, R06 of #668): equal to another of the same source, `int` degree, constants and central term; `Egm2008` embedded in the library to degree 70. One instance builds any number of bodies and propagations, on any thread: the coefficients are read once and shared, each body and each propagation with its own field (#674) |
 | `GeopotentialModelParameters.CentralTerm` (`init`) | The GM of the central term: the body's (`GeopotentialCentralTerm.BodyGravitationalParameter`, the default) or the model's (`ModelGravitationalParameter`, as GMAT applies a `.cof` header); see [Force Models](force-models.md#the-central-term-with-the-gm-of-the-model) |
 | `CelestialBody(NaifObject, geopotentialModelParameters = null, atmosphericModel = null, albedo = 0, thermalEffectiveTemperature = 0, thermalEmissivity = 0)` | Create with a geopotential, an atmosphere and radiation properties (named arguments for the last three, e.g. `albedo: 0.3`) |
 

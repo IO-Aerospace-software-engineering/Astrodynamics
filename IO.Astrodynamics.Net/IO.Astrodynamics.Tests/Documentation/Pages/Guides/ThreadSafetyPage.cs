@@ -79,9 +79,9 @@ internal static class ThreadSafetyPage
 
             tasks.Add(new PropagationTask(spacecraft, window,
                 new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)));
+                includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
+                deltaT: TimeSpan.FromSeconds(60),
+                integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)));
         }
 
         var result = BatchPropagator.Propagate(tasks);

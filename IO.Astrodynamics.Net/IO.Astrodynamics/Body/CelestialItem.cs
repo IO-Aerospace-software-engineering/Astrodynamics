@@ -86,6 +86,25 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     internal GravitationalField Field => GravitationalField;
 
     /// <summary>
+    /// The geopotential model the body was built with, null for a point mass: a propagation builds its own field from it
+    /// (R06 of #668, one field per run over the shared coefficients), so that propagations sharing the body never share a
+    /// field.
+    /// </summary>
+    internal GeopotentialModelParameters GeopotentialModel { get; }
+
+    /// <summary>
+    /// The gravitational field a propagation about this item evaluates: a new geopotential field of
+    /// <paramref name="parameters"/> (the body's model by default), with the constants and the GM this item gives it,
+    /// or the point mass of the item, which holds no buffer, when there is no model (R06 of #668).
+    /// </summary>
+    /// <param name="parameters">The model, or null for the body's own.</param>
+    internal GravitationalField CreatePropagationField(GeopotentialModelParameters parameters = null)
+    {
+        parameters ??= GeopotentialModel;
+        return parameters == null ? GravitationalField : CreateGravitationalField(NaifId, GM, parameters);
+    }
+
+    /// <summary>
     /// Gets or sets the initial orbital parameters of the celestial item.
     /// </summary>
     public OrbitalParameters.OrbitalParameters InitialOrbitalParameters
@@ -384,6 +403,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         _mass = ExtendedInformation.GM / Constants.G;
         _gm = ExtendedInformation.GM;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
+        GeopotentialModel = geopotentialModelParameters;
 
         BarycenterOfMotionId = FindBarycenterOfMotionId(this);
         CenterOfMotionId = FindCenterOfMotionId(this);
@@ -473,6 +493,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         _gm = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
+        GeopotentialModel = geopotentialModelParameters;
         // #747: about the observer of the initial orbit, as the natural-body constructors give it (before, 0 and 0)
         SetCustomCenterOfMotion(initialOrbitalParameters);
     }
@@ -521,7 +542,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// the GM of the model when the parameters ask for it (<see cref="GeopotentialModelParameters.CentralTerm"/>,
     /// decision 18 of #457).
     /// </summary>
-    private static GravitationalField CreateGravitationalField(int naifId, double gm,
+    internal static GravitationalField CreateGravitationalField(int naifId, double gm,
         GeopotentialModelParameters parameters)
     {
         if (parameters == null)
@@ -1394,11 +1415,21 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public Vector3 EvaluateGravitationalAcceleration(OrbitalParameters.OrbitalParameters orbitalParameters)
     {
-        return GravitationalField.ComputeGravitationalAcceleration(RelativeToThis(orbitalParameters));
+        return EvaluateGravitationalAcceleration(orbitalParameters, GravitationalField);
     }
 
     /// <summary>
-    /// Adds the analytic ∂a/∂r of <see cref="EvaluateGravitationalAcceleration"/> to <paramref name="dadr"/>, if the
+    /// The gravitational acceleration of <paramref name="field"/>, a field of this item (the field of a propagation,
+    /// <see cref="CreatePropagationField"/>), at the state relative to this item.
+    /// </summary>
+    internal Vector3 EvaluateGravitationalAcceleration(OrbitalParameters.OrbitalParameters orbitalParameters,
+        GravitationalField field)
+    {
+        return field.ComputeGravitationalAcceleration(RelativeToThis(orbitalParameters));
+    }
+
+    /// <summary>
+    /// Adds the analytic ∂a/∂r of <see cref="EvaluateGravitationalAcceleration(OrbitalParameters.OrbitalParameters)"/> to <paramref name="dadr"/>, if the
     /// gravitational field of this item has them.
     /// </summary>
     /// <param name="orbitalParameters">The state, relative to any observer: the partials do not depend on it, since
@@ -1410,8 +1441,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     internal bool TryAccumulateGravitationalPositionPartials(OrbitalParameters.OrbitalParameters orbitalParameters,
         Span<double> dadr, int? partialsDegree = null)
     {
-        return GravitationalField.TryAccumulatePositionPartials(RelativeToThis(orbitalParameters), dadr,
-            partialsDegree);
+        return TryAccumulateGravitationalPositionPartials(orbitalParameters, dadr, partialsDegree, GravitationalField);
+    }
+
+    /// <summary>
+    /// The analytic ∂a/∂r of <paramref name="field"/>, a field of this item (the field of a propagation), as
+    /// <see cref="TryAccumulateGravitationalPositionPartials(OrbitalParameters.OrbitalParameters, Span{double}, int?)"/>.
+    /// </summary>
+    internal bool TryAccumulateGravitationalPositionPartials(OrbitalParameters.OrbitalParameters orbitalParameters,
+        Span<double> dadr, int? partialsDegree, GravitationalField field)
+    {
+        return field.TryAccumulatePositionPartials(RelativeToThis(orbitalParameters), dadr, partialsDegree);
     }
 
     /// <summary>

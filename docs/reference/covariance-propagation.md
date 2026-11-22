@@ -41,6 +41,7 @@ the start of the window. This example runs as a smoke test against the packed Nu
 
 | Entry point | Member |
 |-------------|--------|
+| Options | `PropagationOptions.CovariancePropagation`, on `Spacecraft.Propagate(window, options)`, `CentralBodyPropagator(window, spacecraft, options)`, `Scenario.Simulate(options)`, `PropagationTask(spacecraft, window, options)` and `MonteCarloConfiguration.Propagation`: null for Auto (below) |
 | Builder | `CentralBodyPropagatorBuilder.WithCovariancePropagation(CovariancePropagationOptions)` |
 | Propagator | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT, covariancePropagation)` and `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` |
 | Spacecraft | `Spacecraft.Propagate(window, celestialBodies, integrator, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, covariancePropagation)` |
@@ -48,9 +49,24 @@ the start of the window. This example runs as a smoke test against the packed Nu
 | Scenario | `Scenario.SimulateAsync(includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, integratorFactory, covariancePropagation)` |
 
 - The integrator must be an `RK78Integrator`. Any other, Velocity-Verlet included, throws `NotSupportedException`.
-  Velocity-Verlet stays the default integrator everywhere.
-- Null options mean "off" in the constructors, `Spacecraft.Propagate`, `PropagationTask` and `SimulateAsync`;
-  `WithCovariancePropagation` takes a non-null value and may be called once.
+  Velocity-Verlet stays the default integrator of the members that take no integrator; the options entry points run
+  RK7(8).
+- Null options mean "off" in the constructors, the flags overloads of `Spacecraft.Propagate`, the flags constructor of
+  `PropagationTask` and `SimulateAsync`; `WithCovariancePropagation` takes a non-null value and may be called once.
+- On the options entry points, a null `PropagationOptions.CovariancePropagation` means **Auto** (R06 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 3, decided by
+  S. Guillet, 2026-11-19): the covariance of the initial orbital parameters is propagated in
+  `CovariancePropagationMode.Covariance`, without process noise or consider parameters, when the integrator is RK7(8) and
+  the covariance is given at the start of the window. A covariance at another epoch, under Velocity-Verlet, or none, is
+  not propagated, and `GetCovariance` says why in its message. A covariance that is not symmetric and positive
+  semi-definite throws `InvalidOperationException` naming `StateVector.WithRemediatedCovariance()` and
+  `CovariancePropagationOptions.None`. Auto leaves the trajectory unchanged, bit for bit (the step control follows the
+  state only; `PropagationOptionsPathTests`), at the cost of the variational equations (about 1.8 times the run, the
+  design's measurement). `PropagationSolution.Options.CovariancePropagation` gives the options the run used.
+- `CovariancePropagationOptions.None` (mode `CovariancePropagationMode.None`, 11.0.0) turns the propagation off where a
+  null value means another rule: Auto here, and in `ConjunctionAnalysisOptions.CovariancePropagation` the covariance of
+  the initial state held in RTN (null throws there since 11.0.0). It refuses process noise and consider parameters, and
+  the paths of options alone take it as null, off.
 - The options are checked at activation (construction, `Build`, `Propagate`), never during the integration.
 - In a `Scenario`, the options apply to every spacecraft. In covariance mode, the states that each spacecraft stores
   carry their covariance; a spacecraft without a valid initial covariance makes the simulation throw, naming it. The
@@ -274,7 +290,7 @@ The conjunction analysis with the covariance propagated to TCA costs the replay 
 participants up to the TCA (`ConjunctionCovarianceBenchmarks`, same machine and date): two participants on a 700 km
 sun-synchronous orbit in the force model of R2, crossing 23 h after the start, propagated over one day at 1e-11 without
 the variational equations; `Analyze` over a 2 h window around the crossing takes 1.71 ± 0.08 s with the covariance
-propagated to TCA against 0.83 ± 0.08 s with the covariance held in RTN (`CovariancePropagation = null`), 2.1 times.
+propagated to TCA against 0.83 ± 0.08 s with the covariance held in RTN (`CovariancePropagation = CovariancePropagationOptions.None`), 2.1 times.
 Each call allocates about 403 MB either way, so the replay adds little memory; that allocation, which grows with the
 number of pairs of `AnalyzeAll`, is [#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447). See
 [Conjunction Assessment](conjunction-assessment.md#covariance-at-tca).

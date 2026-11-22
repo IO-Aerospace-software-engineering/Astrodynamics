@@ -7,6 +7,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.Tests.SSA;
 
@@ -35,7 +36,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// </remarks>
 public abstract class ConjunctionDensePassTestBase
 {
-    protected static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = null };
+    protected static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = CovariancePropagationOptions.None };
 
     // The reads of the range rate over the window of the dense search (#628), opt-in (decision 54 of #457)
     protected static readonly ConjunctionAnalysisOptions ReadOverWindowOptions = Options with { ReadRangeRateOverWindow = true };

@@ -173,7 +173,7 @@ public static class ConjunctionAssessment
                     LowRelativeSpeedThresholdMetersPerSecond = options.LowRelativeSpeedThresholdMetersPerSecond,
 
                     // The screening ranks many candidates and never propagates the covariance (E2)
-                    CovariancePropagation = null
+                    CovariancePropagation = CovariancePropagationOptions.None
                 });
 
             if (encounter.EncounterState.MissDistanceMeters <= options.MaxMissDistanceMeters)
@@ -491,7 +491,7 @@ public static class ConjunctionAssessment
         internal FallbackAvoidance(EncounterCase encounterCase, ILocalizable observer, ConjunctionAnalysisOptions reanalysis)
         {
             _encounterCase = encounterCase;
-            _analysisOptions = reanalysis with { CovariancePropagation = null };
+            _analysisOptions = reanalysis with { CovariancePropagation = CovariancePropagationOptions.None };
             _observer = observer;
             _spacecraft = encounterCase.ProtectedAsset.Spacecraft;
             _trajectory = encounterCase.ProtectedTrajectory;
@@ -778,7 +778,9 @@ public static class ConjunctionAssessment
     private static EncounterCovarianceResolver CreateResolver(ILocalizable participant, StateSamplingSource source,
         ConjunctionAnalysisOptions options, in Time lastEncounter)
     {
-        return new EncounterCovarianceResolver(participant, source.Solution, options.CovariancePropagation, lastEncounter,
+        // CovariancePropagationOptions.None holds the covariance in RTN, as null before 11.0.0 (choice 3 of #668)
+        var covariancePropagation = options.CovariancePropagation is { IsActive: true } active ? active : null;
+        return new EncounterCovarianceResolver(participant, source.Solution, covariancePropagation, lastEncounter,
             options.ComputeNonlinearityIndex);
     }
 
@@ -2947,14 +2949,14 @@ public static class ConjunctionAssessment
             throw new ArgumentOutOfRangeException(nameof(options.MaximumEventSearchStep), "Maximum event search step must be positive.");
         }
 
-        if (options.CovariancePropagation is { } covariance)
+        if (options.CovariancePropagation is { IsActive: true } covariance)
         {
             if (covariance.Mode != CovariancePropagationMode.Covariance)
             {
                 throw new ArgumentException(
                     "The conjunction analysis propagates the covariance: CovariancePropagation.Mode must be " +
-                    $"{nameof(CovariancePropagationMode.Covariance)}, or the options null to hold the initial covariance " +
-                    "in RTN.", nameof(options));
+                    $"{nameof(CovariancePropagationMode.Covariance)}, or CovariancePropagation " +
+                    "CovariancePropagationOptions.None to hold the initial covariance in RTN.", nameof(options));
             }
 
             if (covariance.IncludeInStepControl)

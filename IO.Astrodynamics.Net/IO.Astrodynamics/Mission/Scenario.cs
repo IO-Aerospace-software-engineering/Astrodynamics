@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Surface;
@@ -108,6 +109,80 @@ namespace IO.Astrodynamics.Mission
         {
             if (star == null) throw new ArgumentNullException(nameof(star));
             _stars.Add(star);
+        }
+
+        /// <summary>
+        /// Propagate this scenario with the settings of <paramref name="options"/> (R06 of #668): each spacecraft, in
+        /// turn, as <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions)"/> does, with the bodies of
+        /// the scenario (<see cref="AddCelestialItem"/>) as its third bodies when
+        /// <see cref="PropagationOptions.ThirdBodies"/> is null; each star at a step of the window length / 1000, between
+        /// <see cref="PropagationOptions.OutputStep"/> and 60 s.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PropagationOptions.ThirdBodies"/> and the bodies of the scenario are one setting (section A of the
+        /// re-baseline of #668, decided by S. Guillet, 2026-11-19): given with a scenario that holds no body, the list
+        /// applies; given with a scenario that holds bodies, it must hold the same ones, each spacecraft's central body
+        /// aside (the list of <see cref="PropagationSolution.Options"/> omits it), with the same models, or the call throws
+        /// before anything is propagated. Synchronous and sequential: a spacecraft whose central body has a geopotential
+        /// may share it with the others, each propagation building its own field. With the integrator, forces and
+        /// covariance options the settings name, each spacecraft's run is bit for bit that of
+        /// <c>SimulateAsync(drag, srp, step, factory, covariance)</c>.
+        /// </remarks>
+        /// <param name="options">The settings; null for <see cref="PropagationOptions.Default"/>.</param>
+        /// <returns>The summary of the simulation.</returns>
+        /// <exception cref="InvalidOperationException">There is nothing to simulate; or a propagation throws it (see
+        /// <see cref="Body.Spacecraft.Spacecraft.Propagate(Window, PropagationOptions)"/>).</exception>
+        /// <exception cref="ArgumentException"><see cref="PropagationOptions.ThirdBodies"/> differs from the bodies of the
+        /// scenario; or a propagation throws it.</exception>
+        public ScenarioSummary Simulate(PropagationOptions options = null)
+        {
+            options ??= PropagationOptions.Default;
+            if (_spacecrafts.Count == 0 && _sites.Count == 0 && _stars.Count == 0)
+            {
+                throw new InvalidOperationException("There is nothing to simulate");
+            }
+
+            if (options.ThirdBodies != null && _celestialBodies.Count > 0)
+            {
+                foreach (var spacecraft in _spacecrafts)
+                {
+                    RequireSameThirdBodies(options.ThirdBodies, spacecraft);
+                }
+            }
+
+            IsSimulated = false;
+            foreach (var star in _stars)
+            {
+                star.Propagate(Window, StarStep(options.OutputStep));
+            }
+
+            foreach (var spacecraft in _spacecrafts)
+            {
+                spacecraft.Propagate(Window, options, _celestialBodies);
+            }
+
+            return Summarize();
+        }
+
+        // The list of the options and the bodies of the scenario name the same bodies with the same models, the central
+        // body of the spacecraft aside (section A of the re-baseline of #668)
+        private void RequireSameThirdBodies(IReadOnlyList<Body.CelestialItem> thirdBodies,
+            Body.Spacecraft.Spacecraft spacecraft)
+        {
+            int central = Propagator.CentralBodyPropagator.ResolveCentralBody(spacecraft).NaifId;
+            var given = thirdBodies.Where(body => body.NaifId != central).GroupBy(body => body.NaifId)
+                .ToDictionary(group => group.Key, group => group.First());
+            var held = _celestialBodies.Where(body => body.NaifId != central).ToDictionary(body => body.NaifId);
+            bool same = given.Count == held.Count && given.All(pair =>
+                held.TryGetValue(pair.Key, out var body) && body.ModelDifference(pair.Value) == null);
+            if (!same)
+            {
+                throw new ArgumentException(
+                    $"PropagationOptions.ThirdBodies ({string.Join(", ", given.Values.Select(body => body.Name))}) differs " +
+                    $"from the bodies of the scenario ({string.Join(", ", held.Values.Select(body => body.Name))}), the " +
+                    $"central body of {spacecraft.Name} aside: they are one setting. Leave ThirdBodies null to take the " +
+                    "bodies of the scenario, or give the same bodies.", "options");
+            }
         }
 
         /// <summary>
@@ -218,33 +293,37 @@ namespace IO.Astrodynamics.Mission
                 throw new InvalidOperationException("There is nothing to simulate");
             }
 
-            if (_stars.Count > 0)
+            foreach (var star in _stars)
             {
-                //step size 1s up to 1000.0s window length
-                //step size variable from 1000.0s up to 60000s window length
-                //step size 60s after 60000s window length
-                var starStepSize = Window.Length / 1000.0;
-                if (starStepSize < propagatorStepSize)
-                {
-                    starStepSize = propagatorStepSize;
-                }
-                else if (starStepSize > TimeSpan.FromMinutes(1.0))
-                {
-                    starStepSize = TimeSpan.FromMinutes(1.0);
-                }
-
-                foreach (var star in _stars)
-                {
-                    await star.PropagateAsync(Window, starStepSize);
-                }
+                await star.PropagateAsync(Window, StarStep(propagatorStepSize));
             }
-
 
             foreach (var spacecraft in _spacecrafts)
             {
                 await propagateSpacecraft(spacecraft);
             }
 
+            return Summarize();
+        }
+
+        // The step of a star: the window length / 1000, at least the output step and at most 60 s
+        private TimeSpan StarStep(TimeSpan outputStep)
+        {
+            var starStepSize = Window.Length / 1000.0;
+            if (starStepSize < outputStep)
+            {
+                starStepSize = outputStep;
+            }
+            else if (starStepSize > TimeSpan.FromMinutes(1.0))
+            {
+                starStepSize = TimeSpan.FromMinutes(1.0);
+            }
+
+            return starStepSize;
+        }
+
+        private ScenarioSummary Summarize()
+        {
             ScenarioSummary scenarioSummary = new ScenarioSummary(this.Window);
             foreach (var spacecraft in _spacecrafts)
             {

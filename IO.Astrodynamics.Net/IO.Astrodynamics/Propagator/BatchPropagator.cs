@@ -11,7 +11,9 @@ namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
 /// Propagates multiple spacecraft in parallel with fault isolation, cancellation, and progress reporting.
-/// Each task runs an independent <see cref="Body.Spacecraft.Spacecraft.Propagate(IO.Astrodynamics.TimeSystem.Window, System.Collections.Generic.IEnumerable{IO.Astrodynamics.Body.CelestialItem}, bool, bool, System.TimeSpan)"/> call.
+/// Each task runs an independent <see cref="Body.Spacecraft.Spacecraft.Propagate(IO.Astrodynamics.TimeSystem.Window, PropagationOptions)"/>
+/// call with the settings of <see cref="PropagationTask.Options"/> (R06 of #668), or the flags call of a task of the flags
+/// constructor.
 /// </summary>
 /// <remarks>
 /// <h3>Thread Safety</h3>
@@ -20,8 +22,9 @@ namespace IO.Astrodynamics.Propagator;
 /// when many tasks need ephemeris data concurrently.
 /// </para>
 /// <para>
-/// <b>Integrators:</b> Integrator instances must not be shared across tasks. Use
-/// <see cref="PropagationTask.IntegratorFactory"/> to create a fresh instance per task.
+/// <b>Integrators:</b> a task of <see cref="PropagationTask.Options"/> builds its own integrator. Integrator instances
+/// must not be shared across tasks of the flags constructor: use <see cref="PropagationTask.IntegratorFactory"/> to
+/// create a fresh instance per task.
 /// </para>
 /// <para>
 /// <b>CelestialBody without geopotential:</b> Safe to share across tasks. Two-body gravity is
@@ -29,7 +32,11 @@ namespace IO.Astrodynamics.Propagator;
 /// <c>ConcurrentDictionary</c> cache that is inherently thread-safe.
 /// </para>
 /// <para>
-/// <b>CelestialBody with <c>GeopotentialModelParameters</c>:</b> <b>NOT</b> safe to share.
+/// <b>CelestialBody with <c>GeopotentialModelParameters</c>:</b> safe to share across tasks since 11.0.0: each
+/// propagation builds its own field from the body's model, over its shared coefficients (R06 of #668, one field per run).
+/// Before, the propagation evaluated the field of the body, which is <b>NOT</b> thread-safe, as the body's own
+/// <see cref="IO.Astrodynamics.Body.CelestialItem.EvaluateGravitationalAcceleration(IO.Astrodynamics.OrbitalParameters.OrbitalParameters)"/>
+/// still is:
 /// Each <see cref="IO.Astrodynamics.Body.CelestialBody"/> constructed with geopotential parameters
 /// owns a <see cref="IO.Astrodynamics.Body.GeopotentialGravitationalField"/> that uses pre-allocated
 /// mutable buffers (<c>_P</c>, <c>_dP</c> Legendre tables and <c>_cosMLambda</c>, <c>_sinMLambda</c>
@@ -49,10 +56,8 @@ namespace IO.Astrodynamics.Propagator;
 /// before, it burnt the other spacecraft's fuel and wrote its records, or threw a <see cref="NullReferenceException"/>).
 /// </para>
 /// <para>
-/// <b>Recommendation:</b> When using geopotential gravity, create a separate
-/// <see cref="IO.Astrodynamics.Body.CelestialBody"/> instance per task for the central body.
-/// This ensures each task has its own <c>GeopotentialGravitationalField</c> buffers. Third-body perturbation bodies (Sun, Moon, etc.) that do not
-/// use geopotential can safely be shared.
+/// <b>Recommendation:</b> share the bodies across tasks, and give the settings once, in one
+/// <see cref="PropagationOptions"/> value.
 /// </para>
 /// </remarks>
 public static class BatchPropagator
@@ -95,7 +100,18 @@ public static class BatchPropagator
             try
             {
                 PropagationSolution solution;
-                if (task.IntegratorFactory != null)
+                if (!task.IsLegacy)
+                {
+                    if (task.CovariancePropagation != null)
+                    {
+                        throw new ArgumentException(
+                            "A task of PropagationOptions takes its covariance from Options.CovariancePropagation: leave " +
+                            "PropagationTask.CovariancePropagation null.", nameof(tasks));
+                    }
+
+                    solution = task.Spacecraft.Propagate(task.Window, task.Options);
+                }
+                else if (task.IntegratorFactory != null)
                 {
                     var integrator = task.IntegratorFactory();
                     solution = task.Spacecraft.Propagate(

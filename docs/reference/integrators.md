@@ -49,8 +49,7 @@ given.
 
 | Property | Description |
 |----------|-------------|
-| `DeltaT` | The configured step (`TimeSpan`) |
-| `DeltaTs` | The step in seconds |
+| `DeltaT` | The configured step (`TimeSpan`); its seconds and their half, the internal `DeltaTs` and `HalfDeltaTs`, public before 11.0.0 (R06 of #668) |
 
 - Symplectic: conserves energy over long durations for conservative systems.
 - Second order: the global error grows with the square of the step (see below), with drag too: the acceleration at the
@@ -131,6 +130,34 @@ var integrator = new RK78Integrator(
 // Fixed-step
 var fixedIntegrator = new RK78Integrator(fixedStepSize: 10.0);
 ```
+
+## Integrator options
+
+The options entry points take the integrator as values (`PropagationOptions.Integrator`, R06 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0), from which each run builds
+its own integrator: the closed hierarchy `IntegratorOptions` (a record no type outside the library derives from), with
+two sealed records. To change one setting of an options record's integrator, go through a typed local: `with` on the
+abstract property does not compile (CS0117).
+
+| `RK78IntegratorOptions` | Type | Default | `RK78Integrator` parameter |
+|-------------------------|------|---------|----------------------------|
+| `AbsoluteTolerance` | `double` | `1e-9` | `absoluteTolerance` |
+| `RelativeTolerance` | `double` | `1e-9` | `relativeTolerance` |
+| `InitialStep` | `TimeSpan` | 60 s | `initialStepSize` |
+| `MinStep` | `TimeSpan` | 1 µs | `minStepSize` |
+| `MaxStep` | `TimeSpan` | 1 day | `maxStepSize` |
+| `SafetyFactor` | `double` | `0.9` | `safetyFactor` |
+| `MinFactor` | `double` | `0.2` | `minFactor` |
+| `MaxFactor` | `double` | `5.0` | `maxFactor` |
+| `FixedStep` | `TimeSpan?` | null | `fixedStepSize`: the fixed-step mode; with another setting than its default, `ArgumentException` at the start of the call |
+
+`RK78IntegratorOptions.Default` equals `new()` and builds the integrator of `new RK78Integrator()`, bit for bit: the
+steps are exact (60 s, 10 ticks, 86400 s), and an entry point that takes no integrator runs RK7(8) at these tolerances
+(a point-mass LEO day 1.36 m from Kepler; structuring choice 5 of #668, decided by S. Guillet, 2026-11-19). A step given
+through `TimeSpan.FromSeconds` may be a tick short of its decimal value; the exact factories avoid it.
+`VVIntegratorOptions.Step` is 1 s by default, the integration step only (the output step is
+`PropagationOptions.OutputStep`): a point-mass LEO day ends 271 m from Kepler at 1 s, 27.1 km at 10 s and 974 km at 60 s.
+A value out of range (not finite, zero or negative) throws `ArgumentOutOfRangeException` naming the property, in `init`.
 
 ## Choosing the integrator
 

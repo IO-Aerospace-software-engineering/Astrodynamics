@@ -200,7 +200,8 @@ var source = encounter.EncounterState.ProtectedCovariance;
 Console.WriteLine($"{source.Source}, process noise {source.ProcessNoiseApplied}, ν {source.NonlinearityIndex:E2}");
 ```
 
-`CovariancePropagation = null` restores the covariance held in RTN.
+`CovariancePropagation = CovariancePropagationOptions.None` restores the covariance held in RTN (a null value, which
+held it before 11.0.0, throws since).
 
 ## Avoidance trade study
 

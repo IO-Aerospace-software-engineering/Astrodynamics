@@ -130,7 +130,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the same TCA and miss distance; the covariance used is that of the propagation with the covariance at
         // the TCA (E1, 1e-12), propagated for both participants, age zero, no process noise, never stale
@@ -181,7 +181,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = noisy });
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the stored Φ are not read; the replay applies the options of the analysis, the process noise included,
         // and gives the covariance of the propagation with the covariance at the TCA, bit for bit
@@ -333,7 +333,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
             var withDefaults = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(vv), secondary,
                 ConjunctionCovarianceCase.AnalysisWindow);
             var withoutPropagation = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(vv), secondary,
-                ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+                ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert: the fallback, the same results bit for bit as without the propagation of the covariance
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, withDefaults.EncounterState.ProtectedCovariance.Source);

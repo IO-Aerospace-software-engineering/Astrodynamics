@@ -50,10 +50,10 @@ public class BatchPropagatorTests
             sc,
             DefaultWindow,
             new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            IncludeAtmosphericDrag: false,
-            IncludeSolarRadiationPressure: false,
-            DeltaT: TimeSpan.FromSeconds(60),
-            IntegratorFactory: integratorFactory);
+            includeAtmosphericDrag: false,
+            includeSolarRadiationPressure: false,
+            deltaT: TimeSpan.FromSeconds(60),
+            integratorFactory: integratorFactory);
     }
 
     #endregion
@@ -333,10 +333,10 @@ public class BatchPropagatorTests
             tasks.Add(new PropagationTask(
                 sc, DefaultWindow,
                 new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false,
-                IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(
+                includeAtmosphericDrag: false,
+                includeSolarRadiationPressure: false,
+                deltaT: TimeSpan.FromSeconds(60),
+                integratorFactory: () => new RK78Integrator(
                     absoluteTolerance: 1e-10,
                     relativeTolerance: 1e-10,
                     initialStepSize: 30.0)));

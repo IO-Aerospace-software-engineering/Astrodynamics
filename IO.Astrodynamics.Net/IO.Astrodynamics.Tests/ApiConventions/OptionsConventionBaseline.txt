@@ -56,15 +56,11 @@ D1.seconds	IO.Astrodynamics.Propagator.AcceptedStep.ctor(double, double, Vector3
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.BisectionEventFinder.FindRoot(in AcceptedStep, Func<Vector3, Vector3, Time, double>, double, double, Time, double):tolerance
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.IIntegrator.IntegrateSegment(Vector3, Vector3, Time, double, IReadOnlyList<IEventDetector>):duration
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.Integrator.IntegrateSegment(Vector3, Vector3, Time, double, IReadOnlyList<IEventDetector>):duration
-D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.AbsoluteTolerance
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.IntegrateSegment(Vector3, Vector3, Time, double, IReadOnlyList<IEventDetector>):duration
-D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.RelativeTolerance
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double):fixedStepSize
-D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double, double, double, double, double, double, double, double):absoluteTolerance
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double, double, double, double, double, double, double, double):initialStepSize
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double, double, double, double, double, double, double, double):maxStepSize
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double, double, double, double, double, double, double, double):minStepSize
-D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double, double, double, double, double, double, double, double):relativeTolerance
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.VVIntegrator.IntegrateSegment(Vector3, Vector3, Time, double, IReadOnlyList<IEventDetector>):duration
 D1.seconds	IO.Astrodynamics.Propagator.PropagationSegment.Duration
 D1.siblings	IO.Astrodynamics.SSA.AvoidanceSearchOptions.LowRelativeSpeedThresholdMetersPerSecond ~ IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.LowRelativeSpeedThresholdMetersPerSecond

@@ -233,7 +233,7 @@ var profile = new ProtectedSpacecraftProfile(protectedCraft);
 var window = new Window(tca.AddHours(-1.0), tca.AddHours(1.0));
 var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, window);
 var held = ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
-    new ConjunctionAnalysisOptions { CovariancePropagation = null });
+    new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
 var source = encounter.EncounterState.ProtectedCovariance.Source;   // CovarianceSource.Propagated
 ```
@@ -241,7 +241,7 @@ var source = encounter.EncounterState.ProtectedCovariance.Source;   // Covarianc
 - `EncounterState.ProtectedCovariance` and `SecondaryCovariance` give the source of each covariance
   (`CovarianceSource`): `Propagated`, `ProvidedAtEncounter`, `InitialStateHeldInRtn` (the participant is not propagated
   in RK7(8): Velocity-Verlet, TLE, SPICE) or `None`; with the age and whether a process noise was applied.
-- `CovariancePropagation = null` gives the former behaviour: the initial covariance held fixed in RTN up to the TCA,
+- `CovariancePropagation = CovariancePropagationOptions.None` (a null value before 11.0.0, which throws since) gives the former behaviour: the initial covariance held fixed in RTN up to the TCA,
   its size not growing, flagged `StaleCovarianceUsed`. On this case (miss distance 151 m) the propagated covariance gives
   a Pc of 2.0e-6 where the covariance held in RTN gave 1.9e-4: the along-track uncertainty grown over 24 h spreads the
   probability, two orders of magnitude lower here.

@@ -33,10 +33,11 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// (positional flags become options, "the 23 members with two or more bools").</item>
 /// <item>D1.seconds: no double property, field or parameter of the surface whose name holds Step, Duration or Tolerance
 /// lacks the Seconds suffix (sub-choice 7: a duration is a TimeSpan, a tolerance below 100 ns a double named
-/// ...Seconds). The rule reads names, not units: a tolerance that is no time (RK78Integrator.AbsoluteTolerance) is
-/// listed too, for its lot to rename or to settle.</item>
+/// ...Seconds). The rule reads names, not units: a tolerance that is no time is listed too, for its lot to rename or to
+/// settle; lot L4 settled the error tolerances of an integrator (AbsoluteTolerance, RelativeTolerance).</item>
 /// <item>D1.siblings: two options types that hold a property of one name hold it with one type and one value in new()
-/// (sub-choice 11: Step, Aberration, ConvergenceTolerance repeated "with the same names, types, defaults").</item>
+/// (sub-choice 11: Step, Aberration, ConvergenceTolerance repeated "with the same names, types, defaults"), but for
+/// the pairs whose defaults differ by decision (CovariancePropagation, structuring choice 3 of #668).</item>
 /// </list>
 /// Every method and constructor is keyed by its signature (<see cref="PublicSurface.Signature"/>), so a new overload is
 /// a new symbol.
@@ -61,11 +62,18 @@ public class OptionsConventionTests
     private static bool IsInitOnly(MethodInfo setter) =>
         setter.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
 
-    // The closed hierarchy of rule 5: an abstract record no caller can derive from
+    // The closed hierarchy of rule 5: an abstract record no caller can derive from, its constructors not visible outside
+    // the library; the copy constructor the compiler requires protected on a record that is not sealed (CS8878) aside, a
+    // derived record outside the library failing on the internal abstract members of the hierarchy (lot L4,
+    // IntegratorOptions)
     private static bool IsClosedAbstractRecord(Type type) =>
         type.IsAbstract && IsRecord(type) &&
         type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Where(c => !IsCopyConstructor(type, c))
             .All(c => !(c.IsPublic || c.IsFamily || c.IsFamilyOrAssembly));
+
+    private static bool IsCopyConstructor(Type type, ConstructorInfo constructor) =>
+        constructor.GetParameters() is { Length: 1 } parameters && parameters[0].ParameterType == type;
 
     // An integrator, a force or a delegate, or a type built on one: an array, a nullable, a collection or any generic
     // argument of it (IReadOnlyList<ForceBase>, Func<Integrator>, Dictionary<string, ForceBase>)
@@ -89,12 +97,26 @@ public class OptionsConventionTests
 
     private static bool IsDouble(Type type) => type == typeof(double) || type == typeof(double?);
 
+    // The error tolerances of an integrator, in m, m/s and relative, no time: the names RK78IntegratorOptions takes from
+    // the design (R06 of #668, D1's Before/After), settled by lot L4 as the rule's doc foresees
+    private static readonly string[] IntegratorErrorTolerances = ["AbsoluteTolerance", "RelativeTolerance"];
+
     // A time quantity by its name: Step, Duration or Tolerance in it, and not ...Seconds
     internal static bool LacksSecondsSuffix(string name) =>
         (name.Contains("step", StringComparison.OrdinalIgnoreCase) ||
          name.Contains("duration", StringComparison.OrdinalIgnoreCase) ||
          name.Contains("tolerance", StringComparison.OrdinalIgnoreCase)) &&
-        !name.EndsWith("Seconds", StringComparison.Ordinal);
+        !name.EndsWith("Seconds", StringComparison.Ordinal) &&
+        !IntegratorErrorTolerances.Contains(name, StringComparer.OrdinalIgnoreCase);
+
+    // The siblings whose defaults differ by decision: CovariancePropagation, null (Auto) in PropagationOptions and
+    // Covariance mode in ConjunctionAnalysisOptions, whose null throws (R06 of #668, structuring choice 3, decided by
+    // S. Guillet, 2026-11-19)
+    private static readonly (string A, string B)[] DecidedSiblings =
+    [
+        ("IO.Astrodynamics.Propagator.PropagationOptions.CovariancePropagation",
+            "IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.CovariancePropagation")
+    ];
 
     /// <summary>Every violation of D1 by the given types, as "rule&lt;TAB&gt;symbol".</summary>
     internal static IEnumerable<string> Violations(IReadOnlyList<Type> types)
@@ -212,7 +234,8 @@ public class OptionsConventionTests
                 for (int j = i + 1; j < holders.Count; j++)
                 {
                     var (a, b) = (holders[i], holders[j]);
-                    if (!Agree(a.Type, a.Property, b.Type, b.Property))
+                    if (!Agree(a.Type, a.Property, b.Type, b.Property) &&
+                        !DecidedSiblings.Contains((PublicSurface.Key(a.Property), PublicSurface.Key(b.Property))))
                     {
                         yield return $"D1.siblings\t{PublicSurface.Key(a.Property)} ~ {PublicSurface.Key(b.Property)}";
                     }

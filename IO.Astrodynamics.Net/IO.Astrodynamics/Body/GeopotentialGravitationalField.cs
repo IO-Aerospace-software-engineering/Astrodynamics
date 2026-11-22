@@ -54,13 +54,14 @@ public class GeopotentialGravitationalField : GravitationalField
     /// <see cref="GeopotentialModelParameters"/> gives its field the constants of the model instead, and its choice of
     /// <see cref="GeopotentialModelParameters.CentralTerm"/>. The file must hold every coefficient (n, m) with
     /// 2 ≤ n ≤ <paramref name="maxDegrees"/>; degrees 0 and 1, absent from the models, are the point mass. Before 11.0.0
-    /// a degree above the file, or a missing coefficient, was read as zero (#689).
+    /// a degree above the file, or a missing coefficient, was read as zero (#689). Internal since 11.0.0 (R06 of #668): a
+    /// field is built by a <see cref="CelestialBody"/> or a propagation from <see cref="GeopotentialModelParameters"/>.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxDegrees"/> is 2 or more and above the highest
     /// degree of the file (EGM2008_to70_TideFree: 70).</exception>
     /// <exception cref="ArgumentException">The file has no coefficient for an (n, m) with
     /// 2 ≤ n ≤ <paramref name="maxDegrees"/>.</exception>
-    public GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees = 70)
+    internal GeopotentialGravitationalField(StreamReader geopotentialModelFile, int maxDegrees = 70)
         : this(geopotentialModelFile, maxDegrees, null, null, 1.0, null)
     {
     }
@@ -79,7 +80,7 @@ public class GeopotentialGravitationalField : GravitationalField
     /// default.</param>
     /// <param name="modelName">The name of the model, for the CDM, or null when it is not known.</param>
     /// <param name="centralTerm">The GM of the central term: that of the body, or that of the model.</param>
-    internal GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees,
+    internal GeopotentialGravitationalField(StreamReader geopotentialModelFile, int maxDegrees,
         double? gravitationalParameter, double? referenceRadius, double bodyGravitationalParameter,
         string modelName, GeopotentialCentralTerm centralTerm = GeopotentialCentralTerm.BodyGravitationalParameter)
         : this(new GeopotentialModelReader(geopotentialModelFile), maxDegrees, gravitationalParameter, referenceRadius,
@@ -96,7 +97,7 @@ public class GeopotentialGravitationalField : GravitationalField
     /// degree of the file.</exception>
     /// <exception cref="ArgumentException">The file has no coefficient for an (n, m) with
     /// 2 ≤ n ≤ <paramref name="maxDegrees"/>.</exception>
-    internal GeopotentialGravitationalField(GeopotentialModelReader geopotentialModelReader, ushort maxDegrees,
+    internal GeopotentialGravitationalField(GeopotentialModelReader geopotentialModelReader, int maxDegrees,
         double? gravitationalParameter, double? referenceRadius, double bodyGravitationalParameter,
         string modelName, GeopotentialCentralTerm centralTerm)
     {

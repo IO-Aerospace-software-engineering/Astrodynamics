@@ -7,24 +7,28 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | Component | Thread-safe? | Guidance |
 |-----------|-------------|----------|
 | SPICE API | Yes (global lock) | Safe but serialized — may limit parallel scaling |
-| Integrator instances | No | Use `IntegratorFactory` to create one per task; an entry point that builds the forces takes its integrator atomically and rejects one already used or holding forces, so a factory returning one instance gives one run and failed tasks for the others |
+| Integrator instances | No | The options entry points (`PropagationOptions`) build one per run. Otherwise use `IntegratorFactory` to create one per task; an entry point that builds the forces takes its integrator atomically and rejects one already used or holding forces, so a factory returning one instance gives one run and failed tasks for the others |
+| `PropagationOptions`, `RK78IntegratorOptions`, `VVIntegratorOptions` | Yes | Immutable values: one serves any number of runs, each building its own integrator, forces and geopotential field |
 | `CelestialBody` without geopotential | Yes | Two-body gravity is stateless |
-| `CelestialBody` with `GeopotentialModelParameters` | **No** | Mutable Legendre/trig buffers, and the Cunningham tables of the partials when the state transition matrix is integrated, are overwritten on every evaluation |
-| `GeopotentialModelParameters` | Yes | Builds any number of bodies, on any thread: the coefficients are read once and shared read only; each body gets its own field and buffers |
+| `CelestialBody` with `GeopotentialModelParameters` | Yes in propagations, **no** for its own field | Since 11.0.0 each propagation that builds its forces builds its own field from the body's model, over the shared coefficients (R06 of #668), so propagations, batches, scenarios and Monte Carlo runs may share the body, bit for bit the runs of separate bodies. The body's own field, which `EvaluateGravitationalAcceleration` evaluates (and a force list of your own built on `GravitationalAcceleration`), has mutable Legendre/trig buffers, overwritten on every evaluation: one thread at a time |
+| `GeopotentialModelParameters` | Yes | An immutable value that builds any number of bodies and propagations, on any thread: the coefficients are read once and shared read only; each body and each propagation gets its own field and buffers |
 | Frame orientation cache of a propagation | Yes | Active only on the thread that propagates or evaluates the propagation; the shared `Frame` is never changed |
 | Third-body perturbation bodies (Sun, Moon, etc.) | Yes | Stateless — safe to share |
 | `Nrlmsise00Model` | Yes | Thread-safe atmospheric model; its calls are serialized on a lock of the instance, so one configured model shared by parallel propagations serializes their densities (4 threads × 200 000 densities: 5.8 s on one instance, 0.9 s on one per thread). The default atmosphere of an Earth built without a model is one instance per thread |
 | `NRLMSISE00` (the low-level model) | No | Keeps intermediate values and work arrays between calls; `Nrlmsise00Model` serializes its calls to its own instance |
-| `PropagationSolution.InterpolateAt` of an RK7(8) solution | Serialized per solution | Evaluates the forces of the propagation (a shortened RK7(8) step) under a lock of the solution. Solutions that share a central body without a geopotential may be queried concurrently. Like a propagation, it must not run concurrently with another propagation or RK7(8) solution that shares a `CelestialBody` with a geopotential |
-| `PropagationSolution.GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector` (and the internal `EvaluateVariational`, `EvaluateCovariance`, `EvaluateExtendedCovariance`) | Serialized per solution | Same lock and the same rule as `InterpolateAt`: they evaluate the forces inside a step, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential |
-| `ConjunctionAssessment.Analyze`, `AnalyzeAll` with a propagated covariance, `EvaluateAvoidance` | Serialized per solution | The replay of the variational equations, the propagations of the non-linearity index and of the avoidance options use the forces of the participant's propagation (in RK7(8) or by Velocity-Verlet for the avoidance options), under the lock of its solution or of the force model its spacecraft keeps: an analysis must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential |
+| `PropagationSolution.InterpolateAt` of an RK7(8) solution | Serialized per solution | Evaluates the forces of the propagation (a shortened RK7(8) step) under a lock of the solution. Solutions may be queried concurrently: each evaluates the forces of its own propagation, with its own geopotential field since 11.0.0 (before, solutions sharing a `CelestialBody` with a geopotential could not) |
+| `PropagationSolution.GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector` (and the internal `EvaluateVariational`, `EvaluateCovariance`, `EvaluateExtendedCovariance`) | Serialized per solution | Same lock and the same rule as `InterpolateAt`: they evaluate the forces of their propagation inside a step |
+| `ConjunctionAssessment.Analyze`, `AnalyzeAll` with a propagated covariance, `EvaluateAvoidance` | Serialized per solution | The replay of the variational equations, the propagations of the non-linearity index and of the avoidance options use the forces of the participant's propagation (in RK7(8) or by Velocity-Verlet for the avoidance options), under the lock of its solution or of the force model its spacecraft keeps, each with its own geopotential field |
 | Managed occultation search (`FindWindowsOnOccultationConstraint`, `IsOcculted`) and field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`, `IsInFOV`) | Yes | They keep no state and read the kernels through the shared lock of `SpiceAPI`, so searches on separate propagations may run concurrently. A search reads the attitude without changing it: the attitude record of a managed spacecraft is filled by its propagation only (and `AddStateOrientationToICRF`), and a read stores nothing ([#523](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/523); see the next row), so the attitude a search reads depends neither on earlier reads nor on the order of the threads. The frame of a kernel-backed spacecraft reads SPICE at each call and caches nothing. Searches on the same spacecraft or on fresh ones, concurrently or in sequence, give the same windows to the tick (`FieldOfViewSearchTests.ConcurrentSearches_EqualSequentialSearches`, `OccultationSearchValidationTests.ConcurrentSearches_GiveTheResultsOfSequentialOnes`) |
 | Attitude record of a managed spacecraft (`SpacecraftFrame`) and the frames only the library holds | Yes | The record is read under a lock of the record. An ephemeris read in the frame of a managed spacecraft with an attitude record, or of a site built from coordinates, is read in J2000 and rotated by that frame under the shared SPICE lock ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)): the record lock nests inside the SPICE lock, so no region of the record lock calls SPICE, which keeps the two locks free of an inversion. A `SiteFrame` reads its body's frame through SPICE under the same lock, which is re-entrant |
 | `CovariancePropagationOptions`, `RtnProcessNoise`, `ConsiderParameters`, `ManeuverExecutionError` | Yes | Immutable |
 
 ## Per-Task CelestialBody Pattern
 
-When using geopotential gravity, create a separate `CelestialBody` instance per task. This gives each task its own `GeopotentialGravitationalField` buffers. A `CelestialBody` without geopotential, with or without an atmospheric model, can be shared.
+Since 11.0.0 a task need not have its own `CelestialBody` with geopotential: each propagation builds its own field
+from the body's model (R06 of #668), so the tasks may share one Earth, and one `PropagationOptions` value
+([Propagation Options](../reference/propagators.md#propagation-options)). The pattern below, a body per task, still runs
+and gives the same states.
 
 Build each task's initial state on its own Earth: the bodies of one NAIF identifier in a propagation, the centre of the
 orbit included, must have the same GM, radii, gravitational field and atmospheric model, so a state about a shared Earth
@@ -46,9 +50,9 @@ for (int i = 0; i < taskCount; i++)
 
     tasks.Add(new PropagationTask(spacecraft, window,
         new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-        DeltaT: TimeSpan.FromSeconds(60),
-        IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)));
+        includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
+        deltaT: TimeSpan.FromSeconds(60),
+        integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)));
 }
 
 var result = BatchPropagator.Propagate(tasks);
@@ -56,7 +60,9 @@ var result = BatchPropagator.Propagate(tasks);
 
 ## Monte Carlo Factory Pattern
 
-`MonteCarloPropagator` requires a `CelestialBodiesFactory` that returns fresh instances per run. Sharing SPICE-backed bodies or geopotential-enabled bodies across parallel runs causes data corruption.
+A campaign of `MonteCarloConfiguration.Propagation` shares its bodies, the template's central body with a geopotential
+included: each run builds its own integrator, forces and field (11.0.0, R06 of #668). The configuration of flags below
+takes a `CelestialBodiesFactory` that returns fresh instances per run, as before.
 
 ```csharp
 // Inputs: spacecraft (Spacecraft), window (Window)

@@ -46,7 +46,7 @@ against a retargeted burn, Φ after the burn was off by 0.23 to 0.48 in the vali
 ([#397](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/397)).
 
 Otherwise (the covariance of the protected participant held in RTN, given at TCA, or none: a participant propagated
-by Velocity-Verlet or without an initial covariance, `ConjunctionAnalysisOptions.CovariancePropagation = null`, a
+by Velocity-Verlet or without an initial covariance, `ConjunctionAnalysisOptions.CovariancePropagation = CovariancePropagationOptions.None`, a
 participant not propagated), each option is propagated from the state after its burn with the **force model of the
 protected participant's own propagation**, when there is one
 ([#402](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/402)):

@@ -95,8 +95,9 @@ public sealed record ConjunctionAnalysisOptions
     public TimeSpan StaleCovarianceThreshold { get; init; } = TimeSpan.FromSeconds(60);
 
     /// <summary>
-    /// Gets the propagation of the covariance of the participants to the encounter epoch; null restores the covariance
-    /// of the initial state held in RTN (<see cref="CovarianceSource.InitialStateHeldInRtn"/>) for every participant.
+    /// Gets the propagation of the covariance of the participants to the encounter epoch;
+    /// <see cref="CovariancePropagationOptions.None"/> holds the covariance of the initial state in RTN
+    /// (<see cref="CovarianceSource.InitialStateHeldInRtn"/>) for every participant.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -115,8 +116,24 @@ public sealed record ConjunctionAnalysisOptions
     /// propagation, are rejected; a consider parameter needs its force in the propagation of each participant whose
     /// covariance is propagated.
     /// </para>
+    /// <para>
+    /// Null throws (R06 of #668, structuring choice 3, decided by S. Guillet, 2026-11-19): before 11.0.0 it held the
+    /// covariance in RTN, which <see cref="CovariancePropagationOptions.None"/> does now, while in
+    /// <see cref="PropagationOptions.CovariancePropagation"/> a null value is Auto. The default differs from that of
+    /// <see cref="PropagationOptions"/> for that reason, a decided exception to D1's sibling rule.
+    /// </para>
     /// </remarks>
-    public CovariancePropagationOptions CovariancePropagation { get; init; } =
+    /// <exception cref="ArgumentNullException">The value is null: <see cref="CovariancePropagationOptions.None"/> holds
+    /// the covariance in RTN.</exception>
+    public CovariancePropagationOptions CovariancePropagation
+    {
+        get => _covariancePropagation;
+        init => _covariancePropagation = value ?? throw new ArgumentNullException(nameof(CovariancePropagation),
+            "CovariancePropagation cannot be null: pass CovariancePropagationOptions.None to hold the covariance of the " +
+            "initial state in RTN (a null value did so before 11.0.0).");
+    }
+
+    private readonly CovariancePropagationOptions _covariancePropagation =
         new() { Mode = CovariancePropagationMode.Covariance };
 
     /// <summary>

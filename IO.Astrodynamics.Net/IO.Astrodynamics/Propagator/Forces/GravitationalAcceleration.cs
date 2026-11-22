@@ -18,13 +18,45 @@ public class GravitationalAcceleration : ForceBase
     }
 
     /// <summary>
+    /// The gravity of <paramref name="celestialItem"/> evaluated with <paramref name="field"/>, a field of that item that
+    /// this force alone evaluates: the field of a propagation (<see cref="CelestialItem.CreatePropagationField"/>), so
+    /// that propagations sharing a body with a geopotential never share its buffers (R06 of #668).
+    /// </summary>
+    internal GravitationalAcceleration(CelestialItem celestialItem, GravitationalField field)
+    {
+        CelestialItem = celestialItem;
+        _field = field ?? throw new ArgumentNullException(nameof(field));
+    }
+
+    // The field this force evaluates; null for the field of the body
+    private readonly GravitationalField _field;
+
+    /// <summary>The gravitational field this force evaluates: its own, or that of the body.</summary>
+    internal GravitationalField Field => _field ?? CelestialItem.Field;
+
+    /// <summary>
+    /// Checks that the partials of <see cref="Field"/> can be computed at <paramref name="partialsDegree"/>, as
+    /// <see cref="CelestialItem.ValidateGravitationalPartialsDegree"/> does for the field of the body.
+    /// </summary>
+    internal void ValidatePartialsDegree(int? partialsDegree)
+    {
+        if (Field is GeopotentialGravitationalField geopotential)
+        {
+            geopotential.PartialsDegree(partialsDegree);
+        }
+    }
+
+    /// <summary>
     /// Evaluate gravitational acceleration at given stateVector
     /// </summary>
     /// <param name="stateVector"></param>
     /// <returns></returns>
     public override Vector3 Apply(StateVector stateVector)
     {
-        return CelestialItem.EvaluateGravitationalAcceleration(RelativeToBodyFromCache(stateVector));
+        var state = RelativeToBodyFromCache(stateVector);
+        return _field == null
+            ? CelestialItem.EvaluateGravitationalAcceleration(state)
+            : CelestialItem.EvaluateGravitationalAcceleration(state, _field);
     }
 
     internal override bool DependsOnVelocity => false;
@@ -53,7 +85,7 @@ public class GravitationalAcceleration : ForceBase
         in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
     {
         if (!CelestialItem.TryAccumulateGravitationalPositionPartials(RelativeToBodyFromCache(stateVector), dadr,
-                PartialsDegree))
+                PartialsDegree, Field))
         {
             base.AccumulateStatePartialsCore(stateVector, context, dadr, dadv);
         }

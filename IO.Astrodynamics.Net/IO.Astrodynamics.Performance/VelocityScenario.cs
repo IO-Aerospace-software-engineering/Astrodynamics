@@ -26,7 +26,9 @@ namespace IO.Astrodynamics.Performance;
 [ShortRunJob]
 public class VelocityScenario
 {
-    private readonly GeopotentialGravitationalField _geopotential;
+    // An Earth of EGM2008 to degree 70, whose field the gravity benchmark evaluates (the field's StreamReader
+    // constructor is internal since 11.0.0, R06 of #668)
+    private readonly CelestialBody _geopotential;
     private readonly CelestialBody _earth;
     private readonly CelestialBody _sun;
     private readonly CelestialBody _moon;
@@ -40,7 +42,8 @@ public class VelocityScenario
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 30), new EarthStandardAtmosphere());
         _moon = new CelestialBody(PlanetsAndMoons.MOON);
         _sun = new CelestialBody(Stars.Sun);
-        _geopotential = new GeopotentialGravitationalField(new StreamReader("Data/SolarSystem/EGM2008_to70_TideFree"));
+        _geopotential = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000TDB,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
         Clock clk = new Clock("My clock", 256);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
             new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), _earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
@@ -70,7 +73,7 @@ public class VelocityScenario
     {
         var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
             TimeSystem.Time.J2000TDB, Frame.ICRF);
-        var res = _geopotential.ComputeGravitationalAcceleration(sv);
+        var res = _geopotential.EvaluateGravitationalAcceleration(sv);
     }
 
     // [Benchmark(Description = "Solar radiation pressure")]

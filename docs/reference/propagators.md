@@ -62,6 +62,61 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
 - Albedo radiation pressure
 - Thermal radiation pressure
 
+### Propagation Options
+
+`PropagationOptions` (R06 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot
+L4, 11.0.0) holds every setting of a numerical propagation, as values: each run builds its own integrator, forces and
+geopotential field from them, so one value serves any number of propagations, on any thread. A variant is
+`PropagationOptions.Default with { … }`; a one-property check runs in `init`, and so again in a `with`; the rules between
+the settings and the inputs run at the start of the call, before anything changes.
+
+```csharp
+// Inputs: spacecraft (Spacecraft), window (Window)
+var rk = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 };
+var options = PropagationOptions.Default with
+{
+    Integrator = rk,
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    AtmosphericDrag = true,
+    SolarRadiationPressure = true,
+    Geopotential = GeopotentialModelParameters.Egm2008(10)
+};
+var solution = spacecraft.Propagate(window, options);
+Console.WriteLine($"{solution.Options.ThirdBodies.Count} third bodies, {solution.Options.Atmosphere.GetType().Name}");
+```
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `Integrator` | `RK78IntegratorOptions.Default` | The integrator: `RK78IntegratorOptions` (RK7(8), the tolerances of 1e-9 of `new RK78Integrator()`, `FixedStep` for the fixed-step mode) or `VVIntegratorOptions` (Velocity-Verlet, `Step` 1 s); see [Integrators](integrators.md#integrator-options). Null throws |
+| `OutputStep` | 60 s | The step of the output states, an output step only: the integrator takes its own steps |
+| `ThirdBodies` | null | The bodies other than the central body: none on `Spacecraft.Propagate`, `CentralBodyPropagator`, `PropagationTask` and `MonteCarloConfiguration.Propagation`; the bodies of the scenario on `Scenario.Simulate`, where a list that differs from them throws. Held as a copy, compared by value |
+| `AtmosphericDrag`, `SolarRadiationPressure` | false | The forces of the flags of the constructors |
+| `AlbedoRadiationPressure`, `ThermalRadiationPressure` | false | The albedo and thermal radiation pressure of the central body, which needs the coefficients of its `CelestialBody` constructor: a coefficient of 0, the value of every predefined body, throws `ArgumentException`. Another body's goes through the constructor that takes an integrator with its forces |
+| `Geopotential` | null | The geopotential of the central body, a fallback: a body without a model takes it, a body with an equal model runs with it, a body with another model throws `ArgumentException` naming both; null, the body's ([Force Models](force-models.md#geopotential-model-parameters)) |
+| `Atmosphere` | null | The atmosphere of the central body's drag, the same fallback (an Earth without a model counts as not given: the option replaces its NRLMSISE-00 at nominal space weather); about the Sun it throws |
+| `CovariancePropagation` | null (Auto) | The covariance options; Auto propagates the covariance of the initial orbital parameters under RK7(8) when it is given at the window start, and says otherwise why in `GetCovariance`; an indefinite one throws, naming `StateVector.WithRemediatedCovariance()` and `CovariancePropagationOptions.None`, which turns it off ([Covariance Propagation](covariance-propagation.md#activation)) |
+
+The options entry points are `Spacecraft.Propagate(window, options)`, `CentralBodyPropagator(window, spacecraft,
+options)`, `Scenario.Simulate(options)` (synchronous, the spacecraft in turn), `PropagationTask(spacecraft, window,
+options)` with `BatchPropagator.Propagate`, and `MonteCarloConfiguration.Propagation`; no async overload takes them
+(resolution C2 of the design). With the integrator, forces and covariance options its settings name, a run is bit for bit
+that of the constructor taking them (`PropagationOptionsPathTests`: both integrators, fixed-step RK7(8), drag, SRP,
+albedo and thermal against the builder, the covariance modes, maneuvers, SSB mode, a non-ICRF start), and each default
+equals its explicit settings: `spacecraft.Propagate(window)` is the run of `new RK78Integrator()` about the central body
+alone, every 60 s.
+
+`PropagationSolution.Options` holds the resolved settings of a run of these entry points, with no null left where a
+value applies: the third bodies of the run (the central body aside), the geopotential of the central body (null for a
+point mass), the atmosphere of its drag (`CelestialBody.Atmosphere`: its model, NRLMSISE-00 at nominal space weather for
+an Earth without one, or null), and the covariance options the run used (`CovariancePropagationOptions.None` when it
+propagated none). Passed back to the same entry point, they repeat the run. A run of the other constructors has none.
+
+Each run builds the geopotential field of the central body from its model, over the coefficients the model reads once:
+propagations, a batch, a scenario and a Monte Carlo campaign may share one `CelestialBody` with a geopotential, on any
+thread, bit for bit the runs of separate bodies (section A of the re-baseline of #668, decided by S. Guillet, 2026-11-19;
+before 11.0.0 a propagation evaluated the field of the body, whose buffers are not thread-safe). The body's own
+`EvaluateGravitationalAcceleration` still evaluates its field, on one thread at a time.
+
 ### CentralBodyPropagator Constructors
 
 | Constructor | Description |
@@ -109,6 +164,7 @@ derivative is evaluated.
 | `StateVectors` | Output state vectors at the requested cadence |
 | `InterpolateAt(Time epoch)` | State at any epoch within the solution window; returns `(Vector3 position, Vector3 velocity)`. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it |
 | `GetStateVector(Time epoch)` | The state of `InterpolateAt` as a `StateVector`, with its covariance when the propagation propagated it; throws outside the propagation |
+| `Options` | The resolved settings of a run of `PropagationOptions` (above); null for the other constructors |
 | `CovariancePropagation`, `SensitivityParameters`, `ExtendedCovarianceParameters` | The options of the covariance propagation (null when off), the columns of Ψ, the consider parameters of the extended covariance |
 | `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance` | Φ, Ψ, P and the extended covariance at any epoch; see [Covariance Propagation](covariance-propagation.md#results) |
 
@@ -151,6 +207,9 @@ SGP4 fails within 1 s of an end of the window throws, before the spacecraft rece
 ## BatchPropagator
 
 `BatchPropagator` propagates multiple spacecraft in parallel with fault isolation, cancellation support, and progress reporting.
+A task is `new PropagationTask(spacecraft, window, options)`, the settings of a [Propagation Options](#propagation-options)
+value that every task may share, or the constructor of the flags and the integrator factory below (since 11.0.0
+`PropagationTask` is not a positional record: its parameters are camelCase and it has no `Deconstruct`).
 
 ```csharp
 // Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
@@ -158,14 +217,14 @@ var tasks = new List<PropagationTask>
 {
     new PropagationTask(spacecraft1, window,
         new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-        DeltaT: TimeSpan.FromSeconds(60),
-        IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
+        includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
+        deltaT: TimeSpan.FromSeconds(60),
+        integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
     new PropagationTask(spacecraft2, window,
         new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-        DeltaT: TimeSpan.FromSeconds(60),
-        IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0))
+        includeAtmosphericDrag: false, includeSolarRadiationPressure: false,
+        deltaT: TimeSpan.FromSeconds(60),
+        integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0))
 };
 
 var result = BatchPropagator.Propagate(tasks, new BatchOptions
@@ -213,8 +272,9 @@ records, or threw `NullReferenceException` at the burn).
 | `Seed` | `int` | Random seed for reproducibility |
 | `TemplateSpacecraft` | `Spacecraft` | Nominal spacecraft with 6x6 covariance |
 | `Window` | `Window` | Propagation time window |
-| `CelestialBodiesFactory` | `Func<IEnumerable<CelestialItem>>` | Factory for thread-safe body creation |
-| `DeltaT` | `TimeSpan` | Output time step |
+| `Propagation` | `PropagationOptions` | The settings of every run ([Propagation Options](#propagation-options)); null for `PropagationOptions.Default` when no member of the flags configuration below is set. The runs share their bodies, a geopotential included; set with a member of the flags configuration, it throws `ArgumentException` (11.0.0) |
+| `CelestialBodiesFactory` | `Func<IEnumerable<CelestialItem>>` | The flags configuration: a factory of the bodies of each run (no longer `required` since 11.0.0) |
+| `DeltaT` | `TimeSpan` | The flags configuration: output time step (no longer `required`) |
 | `IncludeAtmosphericDrag` | `bool` | Enable drag |
 | `IncludeSolarRadiationPressure` | `bool` | Enable SRP |
 | `IntegratorFactory` | `Func<Integrator>` | Optional per-run integrator factory |

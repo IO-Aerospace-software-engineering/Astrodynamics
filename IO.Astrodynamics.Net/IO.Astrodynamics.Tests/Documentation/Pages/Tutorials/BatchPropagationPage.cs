@@ -70,17 +70,17 @@ internal static class BatchPropagationPage
             new PropagationTask(
                 spacecraft1, window,
                 new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false,
-                IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
+                includeAtmosphericDrag: false,
+                includeSolarRadiationPressure: false,
+                deltaT: TimeSpan.FromSeconds(60),
+                integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
             new PropagationTask(
                 spacecraft2, window,
                 new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: true,
-                IncludeSolarRadiationPressure: true,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
+                includeAtmosphericDrag: true,
+                includeSolarRadiationPressure: true,
+                deltaT: TimeSpan.FromSeconds(60),
+                integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
         };
         #endregion
         return tasks;
@@ -168,10 +168,10 @@ internal static class BatchPropagationPage
             return new PropagationTask(
                 spacecraftList[i], window,
                 new CelestialItem[] { taskEarth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false,
-                IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0));
+                includeAtmosphericDrag: false,
+                includeSolarRadiationPressure: false,
+                deltaT: TimeSpan.FromSeconds(60),
+                integratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0));
         }).ToList();
         #endregion
     }

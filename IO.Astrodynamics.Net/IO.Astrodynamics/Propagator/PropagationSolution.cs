@@ -159,6 +159,36 @@ public sealed class PropagationSolution
     public CovariancePropagationOptions CovariancePropagation { get; internal set; }
 
     /// <summary>
+    /// The resolved settings of a propagation built from <see cref="PropagationOptions"/> (R06 of #668, D1 rule 10), with
+    /// no null left where a value applies: the integrator, the output step, the third bodies of the run (the central body
+    /// aside), the forces, the geopotential of the central body (null for a point mass), the atmosphere of its drag (its
+    /// model, NRLMSISE-00 at nominal space weather for an Earth without one, or null for a body without one;
+    /// <see cref="Body.CelestialBody.Atmosphere"/>), and the covariance options it ran with
+    /// (<see cref="CovariancePropagationOptions.None"/> when it propagated none). Passed back to the same entry point,
+    /// they repeat the run. Null for a propagation built otherwise (the constructors that take an integrator, the
+    /// builder, <see cref="TLEPropagator"/>).
+    /// </summary>
+    public PropagationOptions Options { get; internal set; }
+
+    /// <summary>Why the propagation did not propagate the covariance, for the message of <see cref="GetCovariance"/>.</summary>
+    internal string CovarianceAbsence { get; set; }
+
+    // The InvalidOperationException of a covariance read on a solution that holds none, saying why (R06 of #668)
+    private void RequireCovariance()
+    {
+        if (Dynamics?.Covariance == null)
+        {
+            throw new InvalidOperationException(
+                "The solution holds no covariance: the propagation did not propagate the covariance, " +
+                (CovarianceAbsence != null
+                    ? "because " + CovarianceAbsence
+                    : "which needs the RK7(8) integrator, CovariancePropagationOptions in Covariance mode (or, through " +
+                      "PropagationOptions, Auto) and a covariance on the initial orbital parameters at the start of the " +
+                      "window."));
+        }
+    }
+
+    /// <summary>
     /// The force parameters of the columns of the sensitivity Ψ (<see cref="GetParameterSensitivity"/>), in their order:
     /// Cd with atmospheric drag, then Cr with a radiation force. Empty when the propagation did not integrate the
     /// variational equations, or has none of these forces.
@@ -312,6 +342,8 @@ public sealed class PropagationSolution
     /// (<see cref="CovariancePropagationMode.Covariance"/>).</exception>
     public Matrix GetCovariance(Time epoch)
     {
+        CheckWithin(epoch);
+        RequireCovariance();
         var covariance = new double[VariationalEquations.StateDimension * VariationalEquations.StateDimension];
         EvaluateCovariance(epoch, covariance);
         return new Matrix(VariationalEquations.StateDimension, VariationalEquations.StateDimension, covariance);
@@ -334,6 +366,7 @@ public sealed class PropagationSolution
     public Matrix GetExtendedCovariance(Time epoch)
     {
         CheckWithin(epoch);
+        RequireCovariance();
         var model = Dynamics?.Covariance;
         if (model != null && model.ConsiderCount == 0)
             throw new InvalidOperationException(

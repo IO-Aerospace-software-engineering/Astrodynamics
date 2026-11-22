@@ -14,6 +14,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.Tests.SSA;
 
@@ -241,7 +242,7 @@ public partial class ConjunctionAssessmentTests
                 MaximumEventSearchStep = screeningOptions.MaximumEventSearchStep,
                 SecondaryHardBodyRadiusMeters = ownRadius ? null : secondaryRadius,
                 LowRelativeSpeedThresholdMetersPerSecond = screeningOptions.LowRelativeSpeedThresholdMetersPerSecond,
-                CovariancePropagation = null
+                CovariancePropagation = CovariancePropagationOptions.None
             });
             Assert.Equal(analyzed.CollisionRisk.CombinedHardBodyRadiusMeters, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
             LabelAssert.Equal(analyzed.EncounterState.Epoch, encounter.EncounterState.Epoch);
@@ -561,9 +562,9 @@ public partial class ConjunctionAssessmentTests
 
         // Act
         var byHand = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondaryCraft, secondaryByHand, InputRuleWindow,
-            new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         var own = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondaryCraft, secondaryOwn, InputRuleWindow,
-            new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         var all = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondaryCraft, secondaryByHand, InputRuleWindow);
 
         // Assert: accepted, and the same close approach within the Hermite of the solution built by hand (its steps of 60 s
@@ -640,7 +641,7 @@ public partial class ConjunctionAssessmentTests
         }
 
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            InputRuleWindow, path == "forceModel" ? new ConjunctionAnalysisOptions { CovariancePropagation = null } : null);
+            InputRuleWindow, path == "forceModel" ? new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None } : null);
         Assert.Equal(path == "propagatedCovariance" ? CovarianceSource.Propagated : CovarianceSource.InitialStateHeldInRtn,
             encounter.EncounterState.ProtectedCovariance.Source);
         var step = TimeSpan.FromSeconds(seconds);

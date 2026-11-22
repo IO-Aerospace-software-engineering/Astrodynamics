@@ -221,7 +221,7 @@ internal static class CovariancePropagationPage
         var window = new Window(tca.AddHours(-1.0), tca.AddHours(1.0));
         var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, window);
         var held = ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
-            new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         var source = encounter.EncounterState.ProtectedCovariance.Source;   // CovarianceSource.Propagated
         #endregion

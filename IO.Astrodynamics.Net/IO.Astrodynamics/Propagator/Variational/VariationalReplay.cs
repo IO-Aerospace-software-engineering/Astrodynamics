@@ -89,7 +89,7 @@ internal static class VariationalReplay
             initialCovariance);
         foreach (var gravity in forces.OfType<GravitationalAcceleration>())
         {
-            gravity.CelestialItem.ValidateGravitationalPartialsDegree(variationalOptions.GeopotentialPartialsDegree);
+            gravity.ValidatePartialsDegree(variationalOptions.GeopotentialPartialsDegree);
         }
 
         var equations = new VariationalEquations(variationalOptions);

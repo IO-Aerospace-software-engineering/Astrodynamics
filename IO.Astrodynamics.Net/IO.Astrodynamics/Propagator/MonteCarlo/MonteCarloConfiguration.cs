@@ -1,7 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -32,24 +31,36 @@ public sealed record MonteCarloConfiguration
     public required Window Window { get; init; }
 
     /// <summary>
-    /// Factory that produces a fresh set of celestial bodies for each run.
-    /// A factory is required because SPICE-backed objects are not thread-safe and each
-    /// parallel propagation needs its own instances.
+    /// The settings of every run (R06 of #668): null for <see cref="PropagationOptions.Default"/> when no member of the
+    /// flags configuration (<see cref="CelestialBodiesFactory"/>, <see cref="DeltaT"/>, <see cref="IntegratorFactory"/>,
+    /// <see cref="IncludeAtmosphericDrag"/>, <see cref="IncludeSolarRadiationPressure"/>) is set. Each run builds its own
+    /// integrator, forces and geopotential field, so the runs share their bodies
+    /// (<see cref="PropagationOptions.ThirdBodies"/> and the template's central body), a geopotential included; each run
+    /// starts from its sampled state about the template's observer.
     /// </summary>
-    public required Func<IEnumerable<CelestialItem>> CelestialBodiesFactory { get; init; }
-
-    /// <summary>Whether to include atmospheric drag in the force model.</summary>
-    public bool IncludeAtmosphericDrag { get; init; }
-
-    /// <summary>Whether to include solar radiation pressure in the force model.</summary>
-    public bool IncludeSolarRadiationPressure { get; init; }
-
-    /// <summary>Output time step for the propagation dense output.</summary>
-    public required TimeSpan DeltaT { get; init; }
+    /// <remarks>Set together with a member of the flags configuration, the campaign throws
+    /// <see cref="ArgumentException"/> before any run.</remarks>
+    public PropagationOptions Propagation { get; init; }
 
     /// <summary>
-    /// Optional factory that creates an integrator for each run. When <c>null</c>, the
-    /// default integrator is used.
+    /// Factory that produces a fresh set of celestial bodies for each run of the flags configuration, with
+    /// <see cref="DeltaT"/>; null for a campaign of <see cref="Propagation"/>, whose runs share their bodies.
+    /// </summary>
+    public Func<IEnumerable<CelestialItem>> CelestialBodiesFactory { get; init; }
+
+    /// <summary>Whether to include atmospheric drag in the force model of the flags configuration.</summary>
+    public bool IncludeAtmosphericDrag { get; init; }
+
+    /// <summary>Whether to include solar radiation pressure in the force model of the flags configuration.</summary>
+    public bool IncludeSolarRadiationPressure { get; init; }
+
+    /// <summary>Output time step of the flags configuration, with <see cref="CelestialBodiesFactory"/>; zero for a
+    /// campaign of <see cref="Propagation"/>.</summary>
+    public TimeSpan DeltaT { get; init; }
+
+    /// <summary>
+    /// Optional factory that creates an integrator for each run of the flags configuration. When <c>null</c>, the
+    /// Velocity-Verlet integrator at <see cref="DeltaT"/> is used.
     /// </summary>
     public Func<Integrator> IntegratorFactory { get; init; }
 

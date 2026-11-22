@@ -161,6 +161,20 @@ public sealed class RK78Integrator : Integrator
     }
 
     /// <summary>
+    /// The settings of this integrator as options (<see cref="RK78IntegratorOptions"/>), the steps rounded to the nearest
+    /// tick: the integrator of a propagation reported by <see cref="PropagationSolution.Options"/>.
+    /// </summary>
+    internal RK78IntegratorOptions Settings => AdaptiveMode
+        ? new RK78IntegratorOptions
+        {
+            AbsoluteTolerance = AbsoluteTolerance, RelativeTolerance = RelativeTolerance,
+            InitialStep = Time.SecondsToSpan(_initialH), MinStep = Time.SecondsToSpan(_controller.MinStepSize),
+            MaxStep = Time.SecondsToSpan(_controller.MaxStepSize), SafetyFactor = _controller.SafetyFactor,
+            MinFactor = _controller.MinFactor, MaxFactor = _controller.MaxFactor
+        }
+        : new RK78IntegratorOptions { FixedStep = Time.SecondsToSpan(_initialH) };
+
+    /// <summary>
     /// A new integrator with the settings of this one (tolerances, step sizes and controller, or the fixed step), without
     /// forces or variational equations: the integrator of the propagation of an avoidance option from the state at its
     /// burn (step 10, E4).

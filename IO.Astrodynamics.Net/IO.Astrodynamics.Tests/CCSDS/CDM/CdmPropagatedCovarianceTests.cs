@@ -233,7 +233,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
 
         // The former behaviour still refuses a stale covariance by default
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Throws<InvalidOperationException>(() => held.ToCdm());
         var heldCdm = held.ToCdm(new CdmExportOptions { AllowStaleCovariance = true });
         Assert.Null(heldCdm.Segments[0].Metadata.GravityModel);
@@ -291,7 +291,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
 
         // The covariance held in RTN was not propagated: omitted, as the other force-model keywords (YES from Cr before)
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         AssertOmitted(held.ToCdm(export));
 
         static void AssertOmitted(Cdm cdm)

@@ -198,7 +198,7 @@ public class ConjunctionCovarianceBenchmarks
 
     [Benchmark(Baseline = true, Description = "Analyze, covariance held in RTN")]
     public EncounterCase HeldInRtn() => ConjunctionAssessment.Analyze(_protected, _secondary, _window,
-        new ConjunctionAnalysisOptions { CovariancePropagation = null });
+        new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
     [Benchmark(Description = "Analyze, covariance propagated to TCA")]
     public EncounterCase Propagated() => ConjunctionAssessment.Analyze(_protected, _secondary, _window);

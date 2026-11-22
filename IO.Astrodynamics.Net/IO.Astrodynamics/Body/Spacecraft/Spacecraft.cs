@@ -677,6 +677,47 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
+        /// Propagate the spacecraft over <paramref name="window"/> with the settings of <paramref name="options"/> (R06 of
+        /// #668): by default RK7(8) at 1e-9, an output state every 60 s, the central body of the initial orbit alone with
+        /// its models, and the covariance of the initial orbital parameters propagated when it can be (Auto).
+        /// </summary>
+        /// <remarks>
+        /// A spacecraft whose initial orbit is a TLE or a TEME state starts from its SGP4 (or given) state at the window
+        /// start, rotated once to ICRF (#675); its Earth is a point mass, which <see cref="PropagationOptions.Geopotential"/>
+        /// fills (R12 of #668: a body without a model counts as not given). The propagation replaces the stored states of
+        /// the spacecraft once the settings are checked, so that a rejected input leaves the previous propagation as it was
+        /// (#583). The resolved settings are on <see cref="PropagationSolution.Options"/>.
+        /// </remarks>
+        /// <param name="window">The propagation window.</param>
+        /// <param name="options">The settings; null for <see cref="PropagationOptions.Default"/>.</param>
+        /// <returns>The solution.</returns>
+        /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; drag is asked about a central
+        /// body without an atmosphere; or the covariance cannot be propagated (see
+        /// <see cref="PropagationOptions.CovariancePropagation"/>).</exception>
+        /// <exception cref="ArgumentException">The settings contradict each other or the inputs (see
+        /// <see cref="CentralBodyPropagator(in Window, Spacecraft, PropagationOptions)"/>), or the target orbit of an
+        /// impulse of the maneuver chain is not in the frame the spacecraft is propagated in (#685).</exception>
+        /// <exception cref="NotSupportedException">The covariance propagation is asked for under Velocity-Verlet.</exception>
+        public PropagationSolution Propagate(Window window, PropagationOptions options = null)
+        {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
+            using var propagator = new CentralBodyPropagator(window, this, options);
+            return propagator.Propagate();
+        }
+
+        /// <summary>
+        /// The propagation of a scenario (<see cref="Mission.Scenario.Simulate(PropagationOptions)"/>): the scenario's
+        /// bodies when <see cref="PropagationOptions.ThirdBodies"/> is null.
+        /// </summary>
+        internal PropagationSolution Propagate(Window window, PropagationOptions options,
+            IEnumerable<CelestialItem> scenarioBodies)
+        {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
+            using var propagator = new CentralBodyPropagator(window, this, options, scenarioBodies);
+            return propagator.Propagate();
+        }
+
+        /// <summary>
         /// Propagate spacecraft
         /// </summary>
         /// <param name="window"></param>

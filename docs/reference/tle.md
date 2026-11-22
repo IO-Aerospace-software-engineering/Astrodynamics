@@ -117,6 +117,24 @@ var spacecraft = new Spacecraft(-1001, "ISS", 420000.0, 450000.0, new Clock("iss
 spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, true, TimeSpan.FromSeconds(60.0));
 ```
 
+The options of a propagation do it in one line (R12 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0): the point-mass Earth of the
+TLE has no model, which counts as not given, so `PropagationOptions.Geopotential` and `PropagationOptions.Atmosphere`
+fill it ([Propagation Options](propagators.md#propagation-options)), bit for bit the run of the TEME twin on an Earth
+built with that model (`GeopotentialOptionsTests`):
+
+```csharp
+// Inputs: window (Window), tle (TLE)
+var spacecraft = new Spacecraft(-1002, "ISS", 420000.0, 450000.0, new Clock("iss2", 65536), tle, 1600.0, 2.2);
+spacecraft.Propagate(window, PropagationOptions.Default with
+{
+    Geopotential = GeopotentialModelParameters.Egm2008(10),
+    Atmosphere = new Nrlmsise00Model(SpaceWeather.Nominal),
+    AtmosphericDrag = true,
+    SolarRadiationPressure = true
+});
+```
+
 With EGM2008 at degree 10 and no drag, the same ISS is 0.555 km, 0.788 km and 7.217 km from SGP4 after 1 h, 6 h and
 24 h. The command `astro propagate -t` does so, on the Earth of the CLI (EGM2008 at the degree of `-n`, 10 by default,
 the U.S. Standard Atmosphere 1976 with `-a`); its centre of motion must be the Earth (399).
