@@ -689,6 +689,54 @@ public class PropagatorReuseTests
             Take(first.Propagate(), spacecraft, TwoHours, false, false));
     }
 
+    // ELARA (507): named by SPICE, no BODY507_GM in gm_de440.tpc, so its kernel GM is 0 and a propagation about it is
+    // refused (R03 of #668), after the claim of the integrator
+    private static Spacecraft AboutABodyWithoutGm()
+    {
+        var elara = new CelestialBody(507);
+        Assert.Equal(0.0, elara.GM);
+        int id = NextId();
+        var state = new StateVector(new Vector3(100000.0, 0.0, 0.0), new Vector3(0.0, 10.0, 0.0), elara, Epoch,
+            Frames.Frame.ICRF);
+        return new Spacecraft(id, $"RU{-id}", 100.0, 10000.0, new Clock($"ruclk{-id}", 65536), state, 10.0, 2.2);
+    }
+
+    /// <summary>
+    /// A constructor that takes an integrator and is rejected by a check made after its claim, the GM of the central body
+    /// or the covariance options, leaves the integrator claimed (decision 27 of lot L4 of #668, decided by S. Guillet,
+    /// 2026-11-22): the claim is never released, as <c>ClaimForForces</c>, so a second propagator given that integrator
+    /// throws <see cref="ArgumentException"/> naming <c>integrator</c>, and the caller builds a new integrator.
+    /// </summary>
+    [Theory]
+    [InlineData("GM 0")]
+    [InlineData("covariance options")]
+    public void AConstructorRejectedAfterTheClaim_LeavesTheIntegratorClaimed(string check)
+    {
+        // Arrange
+        var integrator = CallerRk78();
+
+        // Act
+        if (check == "GM 0")
+        {
+            var gm = Assert.Throws<ArgumentException>(() =>
+                new CentralBodyPropagator(TwoHours, AboutABodyWithoutGm(), integrator, Step));
+            Assert.Equal("spacecraft", gm.ParamName);
+            Assert.Contains("BODY507_GM", gm.Message);
+        }
+        else
+        {
+            // The covariance is asked for, and the initial orbital parameters carry none
+            Assert.Throws<InvalidOperationException>(() =>
+                new CentralBodyPropagator(TwoHours, Leo(), integrator, Step, Covariance));
+        }
+
+        var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(TwoHours, Leo(), integrator, Step));
+
+        // Assert
+        Assert.Equal("integrator", exception.ParamName);
+        Assert.Contains("already given to another propagator", exception.Message);
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------
     // Decision 25: one dynamics lock per propagator instance
     // ---------------------------------------------------------------------------------------------------------------------

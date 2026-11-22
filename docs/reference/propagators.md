@@ -163,7 +163,8 @@ and atmospheric model (`ArgumentException` otherwise). Drag is that of the centr
 nominal space weather for an Earth without a model, and of each other listed body with an atmosphere, an Earth always
 having one ([Force Models](force-models.md#atmosphericdrag)). A central body whose GM is not above 0, a body of the kernels whose
 `BODYnnn_GM` the kernel pool lacks (no GM kernel such as NAIF's `gm_de440.tpc`), throws `ArgumentException`
-(`spacecraft`) naming it, on every constructor and so on every propagation path, before the integrator is claimed (11.0.0,
+(`spacecraft`) naming it, on every constructor and so on every propagation path, before the integrator of an options
+constructor is built and claimed, after the claim of an integrator given to the constructor (decision 27, below) (11.0.0,
 R03 of #668: before, the propagation ran without central gravity, on a straight line; `new CelestialBody(id)` still accepts
 the GM of 0); the constructors without celestial bodies use the integrator and its forces as
 given and initialize it with the initial state of the propagation: about the central body (the Sun in SSB mode), in the
@@ -175,7 +176,10 @@ the first segment, and with another frame or observer changed the run, 2.9e4 m o
 not initialized threw `NullReferenceException` at the first step. An integrator belongs to one propagator: a constructor
 given an integrator already given to another propagator throws `ArgumentException` (`integrator`) before it changes it
 (decision 24; before, the last propagator built set the observer, frame, time argument and variational equations of the
-integrator for all). A subclass of `PropagatorBase` sets `InitialState` in its constructor: `Propagate` initializes the
+integrator for all). The claim is made once the checks of the window, the spacecraft and its maneuvers pass, before
+anything changes the integrator, and is never released: a constructor rejected by a later check (a central body of GM 0,
+covariance options the integrator or the initial covariance cannot take) leaves the integrator claimed, and the caller
+builds a new one (decision 27 of lot L4 of #668, decided by S. Guillet, 2026-11-22). A subclass of `PropagatorBase` sets `InitialState` in its constructor: `Propagate` initializes the
 integrator with it at every run. A step of zero or less throws `ArgumentOutOfRangeException`: `deltaT` on the
 constructors that take an integrator, `OutputStep` (or the integrator's `Step`) where the options are built (#674).
 

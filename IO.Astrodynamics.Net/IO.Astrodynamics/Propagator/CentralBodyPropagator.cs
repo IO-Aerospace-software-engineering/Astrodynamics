@@ -343,6 +343,12 @@ public class CentralBodyPropagator : PropagatorBase
     /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
     /// parameter without its force; or the integrator was already given to a propagator (#782), naming
     /// <c>integrator</c>.</exception>
+    /// <remarks>
+    /// The integrator is claimed once the checks of the window, the spacecraft and its maneuvers pass, before anything
+    /// changes it, and the claim is never released: a constructor rejected by a later check (the GM of the central body,
+    /// the covariance options) leaves it claimed, and the caller builds a new one (decision 27 of lot L4 of #668, decided
+    /// by S. Guillet, 2026-11-22).
+    /// </remarks>
     /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
     /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
     /// semi-definite.</exception>
@@ -361,7 +367,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// the orientation cache of that propagation, which must cover <paramref name="window"/>: the propagation of an
     /// avoidance option from the state at its burn, with the force model of the trajectory it leaves (step 10, E4;
     /// #402, in RK7(8) or by Velocity-Verlet).
-    /// The solution evaluates those forces under <paramref name="syncRoot"/>, the lock of that propagation.
+    /// The solution evaluates those forces under <paramref name="syncRoot"/>, the lock of that propagation. The integrator
+    /// is claimed as by the public constructors, and stays claimed when a later check rejects the constructor (decision 27
+    /// of lot L4 of #668).
     /// </summary>
     internal CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator, TimeSpan deltaT,
         CovariancePropagationOptions covariancePropagation, PropagationFrameOrientationCache orientationCache,
@@ -397,7 +405,10 @@ public class CentralBodyPropagator : PropagatorBase
     /// <see cref="NullReferenceException"/> at the first step.
     /// </para>
     /// <para>
-    /// The integrator belongs to this propagator (#782, decision 24 of lot L4 of #668): give each propagator a new one.
+    /// The integrator belongs to this propagator (#782, decision 24 of lot L4 of #668): give each propagator a new one. It
+    /// is claimed once the checks of the window, the spacecraft and its maneuvers pass, before anything changes it, and the
+    /// claim is never released: a constructor rejected by a later check (the GM of the central body) leaves it claimed, and
+    /// the caller builds a new one (decision 27 of lot L4 of #668, decided by S. Guillet, 2026-11-22).
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>

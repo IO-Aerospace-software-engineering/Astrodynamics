@@ -822,6 +822,5 @@ public class ForceModelDefectTests
         Assert.Empty(spacecraft.PropagatedStates);
     }
 
-    // The refusal comes before the integrator is claimed (#674): the integrator propagates about the Earth afterwards
     #endregion
 }

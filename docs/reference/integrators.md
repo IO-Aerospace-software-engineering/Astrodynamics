@@ -181,7 +181,7 @@ batch or a campaign.
 | Entry point | How to choose the integrator |
 |-------------|------------------------------|
 | Every options entry point | `PropagationOptions.Integrator`: `RK78IntegratorOptions` or `VVIntegratorOptions` |
-| `CentralBodyPropagator` | The constructor taking an `IIntegrator` already configured with its forces and given to no other propagator, which it initializes with the initial state of the propagation at construction, at the start of every run and after each event (an `Initialize` by the caller has no effect on the run, #782) |
+| `CentralBodyPropagator` | The constructor taking an `IIntegrator` already configured with its forces and given to no other propagator, which it initializes with the initial state of the propagation at construction, at the start of every run and after each event (an `Initialize` by the caller has no effect on the run, #782); the integrator is claimed by the first constructor it is given to, and stays claimed when a later check rejects that constructor (a central body of GM 0, covariance options): build a new one (decision 27 of lot L4 of #668) |
 
 The members that took an integrator instance, a factory or no integrator at all were removed in 11.0.0 (R07 of #668:
 the flag overloads of `Spacecraft.Propagate`, the flag constructors of `CentralBodyPropagator`, the builder,

@@ -4754,11 +4754,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`CentralBodyPropagator(window, spacecraft, integrator, deltaT)`, its overload with `covariancePropagation`, the
   protected constructor of `PropagatorBase`) claims it atomically and throws `ArgumentException` (`integrator`) for one
   already given to another propagator, before it changes it: the integrator and the first propagator are untouched.
+  The claim is made once the checks of the window, the spacecraft and its maneuvers pass, and is never released, as that
+  of an options propagation: a constructor rejected by a later check (a central body of GM 0, covariance options the
+  integrator or the initial covariance cannot take) leaves the integrator claimed, and a second propagator given it
+  throws (decision 27 of lot L4 of #668, decided by S. Guillet, 2026-11-22).
   Before, a second propagator re-initialized the integrator with its own state and set its time argument and variational
   equations for both: an Earth propagator run after a Moon propagator was built on its integrator was 5.16e7 m off, and
   two covariance propagators sharing one threw from the variational equations of the other (gap analysis of #782). Runs
   with one integrator per propagator, every golden, are unchanged (`PropagatorReuseTests`). Migration: build a new
-  integrator, with its forces, for each propagator.
+  integrator, with its forces, for each propagator, and a new one after a constructor that threw.
 - **Breaking: the step of `GetEphemeris` over a window is above zero** (R11 of #668): `CelestialItem.GetEphemeris(window,
   observer, …, stepSize)` (spacecraft, bodies, stars, barycentres) and `Site.GetEphemeris(window, observer, …, stepSize)`
   throw `ArgumentOutOfRangeException` (`stepSize`) for a step of zero or less, where a zero step looped without end on a

@@ -69,10 +69,12 @@ public abstract class Integrator : IIntegrator
     private int _claimed;
 
     /// <summary>
-    /// Takes this integrator for a propagation that builds its forces (the options constructor of
-    /// <see cref="CentralBodyPropagator"/>, and so every options entry point, which builds a new integrator per run, and
-    /// the internal constructor of flags), atomically: two threads given one instance cannot both take it (#674). Since
-    /// 11.0.0 no public member hands a caller's integrator to a path that builds its forces (R07 of #668).
+    /// Takes this integrator for a propagation that builds its forces (the options constructors of
+    /// <see cref="CentralBodyPropagator"/>, and so every options entry point, each building a new integrator per run),
+    /// atomically: two threads given one instance cannot both take it (#674). The claim is never released. Since 11.0.0 no
+    /// public member hands a caller's integrator to a path that builds its forces (R07 of #668: the constructors of flags
+    /// were removed), and a caller's integrator is claimed by the propagator it is given to instead (#782, decision 24 of
+    /// lot L4 of #668).
     /// </summary>
     /// <exception cref="ArgumentException">The integrator already holds forces, or a propagation already took it.</exception>
     internal void ClaimForForces()

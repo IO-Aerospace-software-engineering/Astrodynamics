@@ -186,7 +186,9 @@ public abstract class PropagatorBase : IPropagator
     /// The subclass sets <see cref="InitialState"/> in its constructor: <see cref="Propagate"/> initializes
     /// <paramref name="integrator"/> with it at the start of every run, replacing any initialization by the subclass or
     /// the caller (#782, decision 23 of lot L4 of #668, decided by S. Guillet, 2026-11-22). The integrator belongs to this
-    /// propagator (decision 24).
+    /// propagator (decision 24): it is claimed once the checks of the window, the spacecraft and its maneuvers pass, before
+    /// anything changes it, and the claim is never released, so a subclass constructor that throws after the base
+    /// constructor leaves it claimed, and the caller builds a new one (decision 27).
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming
@@ -273,7 +275,10 @@ public abstract class PropagatorBase : IPropagator
     /// decision 24 of lot L4 of #668, decided by S. Guillet, 2026-11-22), which initializes it at construction, at the
     /// start of every run and after each event, and sets its time argument and its variational equations. Before 11.0.0
     /// one integrator could be given to several propagators, the last one built setting its observer, frame, time
-    /// argument and variational equations for all.
+    /// argument and variational equations for all. The claim is never released, as
+    /// <see cref="Integrators.Integrator.ClaimForForces"/>: a constructor rejected by a later check (the GM of the central
+    /// body, the covariance options) leaves the integrator claimed (decision 27 of lot L4 of #668, decided by S. Guillet,
+    /// 2026-11-22).
     /// </summary>
     /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming
     /// <c>integrator</c>.</exception>
