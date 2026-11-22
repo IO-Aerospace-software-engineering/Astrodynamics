@@ -18,8 +18,9 @@ namespace IO.Astrodynamics.Body
         /// <param name="frame">The reference frame for the ephemeris data.</param>
         /// <param name="aberration">The aberration correction to apply.</param>
         /// <param name="stepSize">The step size for the ephemeris data.</param>
-        /// <returns>An enumerable of orbital parameters over the specified time window.</returns>
-        IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize);
+        /// <returns>The state vectors over the specified time window (before 11.0.0, typed as orbital parameters: R20 of
+        /// #668).</returns>
+        IEnumerable<OrbitalParameters.StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>
         /// Computes the geometric state of this object relative to a reference body in ICRF.
@@ -37,8 +38,8 @@ namespace IO.Astrodynamics.Body
         /// <param name="observer">The observer of the celestial object.</param>
         /// <param name="frame">The reference frame for the ephemeris data.</param>
         /// <param name="aberration">The aberration correction to apply.</param>
-        /// <returns>The orbital parameters at the specified epoch.</returns>
-        OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration);
+        /// <returns>The state vector at the specified epoch (before 11.0.0, typed as orbital parameters: R20 of #668).</returns>
+        OrbitalParameters.StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration);
 
         /// <summary>
         /// Computes the angular separation between two target celestial objects at a specific epoch.

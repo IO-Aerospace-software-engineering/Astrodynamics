@@ -115,7 +115,7 @@ public class SpacecraftToOpmTests
 
             // Assert: the state of GetEphemeris at the epoch, in km
             var t = epoch ?? spacecraft.InitialOrbitalParameters.Epoch;
-            var read = spacecraft.GetEphemeris(t, earth, initialFrame, Aberration.None).ToStateVector();
+            var read = spacecraft.GetEphemeris(t, earth, initialFrame, Aberration.None);
             var sv = opm.Data.StateVector;
             Assert.Equal(read.Position.X / 1000.0, sv.X);
             Assert.Equal(read.Position.Y / 1000.0, sv.Y);
@@ -172,7 +172,7 @@ public class SpacecraftToOpmTests
         var propagated = new Spacecraft(-6585, "OPM6585", 1000.0, 3000.0, new Clock("OPM6585_CLK", 65536), tle, cosparId: "1998-067A");
         propagated.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(60.0));
         var opm = propagated.ToOpm(epoch: end);
-        var read = propagated.GetEphemeris(end, earth, Frame.TEME, Aberration.None).ToStateVector();
+        var read = propagated.GetEphemeris(end, earth, Frame.TEME, Aberration.None);
         var written = new Vector3(opm.Data.StateVector.X, opm.Data.StateVector.Y, opm.Data.StateVector.Z) * 1000.0;
         double fromSgp4 = (written - sgp4.Position).Magnitude();
         _output.WriteLine($"MEASURE #658 TLE propagated: the OPM state {fromSgp4:E3} m from SGP4 at the end of 1 h");

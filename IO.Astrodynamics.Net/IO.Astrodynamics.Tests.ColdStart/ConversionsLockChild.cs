@@ -105,14 +105,14 @@ internal static class ConversionsLockChild
             return _inner.FrameTransformationToICRF(date, source);
         }
 
-        public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame,
+        public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame,
             Aberration aberration)
         {
             Count();
             return _inner.GetEphemeris(date, target, observer, frame, aberration);
         }
 
-        public DTO.CelestialBody GetCelestialBodyInfo(int naifId)
+        public CelestialBodyInfo GetCelestialBodyInfo(int naifId)
         {
             Count();
             return _inner.GetCelestialBodyInfo(naifId);

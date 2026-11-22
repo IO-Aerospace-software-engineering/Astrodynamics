@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public struct Quaternion
+internal struct Quaternion
 {
     public double W;
     public double X;

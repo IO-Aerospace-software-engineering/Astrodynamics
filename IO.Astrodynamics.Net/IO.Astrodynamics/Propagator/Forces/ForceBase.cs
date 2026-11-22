@@ -64,8 +64,7 @@ public abstract class ForceBase
         if (EphemerisCache != null && EphemerisCache.Contains(body.NaifId, Aberration.None))
             return EphemerisCache.GetPosition(body.NaifId, Aberration.None, stateVector.Epoch);
 
-        return body.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None)
-            .ToStateVector().Position;
+        return body.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None).Position;
     }
 
     public abstract Vector3 Apply(StateVector stateVector);

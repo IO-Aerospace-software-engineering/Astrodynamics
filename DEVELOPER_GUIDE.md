@@ -127,8 +127,7 @@ var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
 // Get Earth's state vector relative to the Sun
-var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
-    .ToStateVector();
+var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None);
 
 Console.WriteLine($"Position: {stateVector.Position}");
 Console.WriteLine($"Velocity: {stateVector.Velocity}");
@@ -433,8 +432,10 @@ Cartesian position and velocity state.
 | `ToKeplerianElements()` | Convert to Keplerian elements |
 | `ToEquinoctial()` | Convert to equinoctial elements |
 | `ToEquatorial()` | Right ascension and declination in ICRF, whatever the frame of the state (rotated at its epoch, #680), and the distance |
-| `ToFrame(Frame frame)` | Transform to different reference frame |
-| `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
+| `ToFrame(Frame frame)` | Transform to different reference frame; typed as a `StateVector` on a `StateVector` (11.0.0) |
+| `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center; typed as a `StateVector` on a `StateVector` (11.0.0) |
+| `ToPlanetocentric()` | Planetocentric coordinates in the body-fixed frame of the observer, a `CelestialBody` (11.0.0) |
+| `ToPlanetodetic()` | Geodetic coordinates on the ellipsoid of the observer, a `CelestialBody`, in one call (11.0.0) |
 | `Inverse()` | Invert position and velocity |
 | `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607); a null or blank `CosparId` writes blank columns 10-17 (#604) |
 
@@ -1189,9 +1190,9 @@ var goldstone = new Site(13, "DSS-13", earth);
 // Create site with explicit coordinates
 var mySite = new Site(100, "MySite", earth,
     new Planetodetic(
-        Longitude: -117.0 * Constants.Deg2Rad,
-        Latitude: 34.0 * Constants.Deg2Rad,
-        Altitude: 1000.0  // meters
+        longitude: -117.0 * Constants.Deg2Rad,
+        latitude: 34.0 * Constants.Deg2Rad,
+        altitude: 1000.0  // meters
     ));
 
 // Get horizontal coordinates to Moon
@@ -1242,7 +1243,7 @@ Geodetic coordinates (longitude, latitude, altitude).
 
 | Constructor | Description |
 |------------|-------------|
-| `Planetodetic(double Longitude, double Latitude, double Altitude)` | Create coordinates (a record struct: its parameters are its properties) |
+| `Planetodetic(double longitude, double latitude, double altitude)` | Create coordinates (11.0.0: camelCase parameters, `longitude:`; `init` properties and `Deconstruct` kept) |
 
 | Property | Description |
 |----------|-------------|
@@ -1252,14 +1253,15 @@ Geodetic coordinates (longitude, latitude, altitude).
 
 | Method | Description |
 |--------|-------------|
-| `ToPlanetocentric(double flattening, double equatorialRadius)` | Convert to planetocentric |
+| `ToPlanetocentric(CelestialBody body)` | Convert to planetocentric on the ellipsoid of the body (11.0.0; before, a flattening and a radius) |
+| `ToCartesianCoordinates(CelestialBody body)` | Body-fixed position on the ellipsoid of the body, m (`georec_c`; 11.0.0) |
 
 ```csharp
 // Create geodetic coordinates
 var coords = new Planetodetic(
-    Longitude: -122.0 * Constants.Deg2Rad,
-    Latitude: 37.0 * Constants.Deg2Rad,
-    Altitude: 100.0
+    longitude: -122.0 * Constants.Deg2Rad,
+    latitude: 37.0 * Constants.Deg2Rad,
+    altitude: 100.0
 );
 ```
 
@@ -1267,11 +1269,15 @@ var coords = new Planetodetic(
 
 Planetocentric coordinates.
 
+| Constructor | Description |
+|------------|-------------|
+| `Planetocentric(double longitude, double latitude, double radius)` | Create coordinates (11.0.0: camelCase parameters) |
+
 | Method | Description |
 |--------|-------------|
-| `ToPlanetodetic(double flattening, double equatorialRadius)` | Convert to planetodetic |
+| `ToPlanetodetic(CelestialBody body)` | Convert to planetodetic on the ellipsoid of the body (11.0.0; before, a flattening and a radius) |
 | `ToCartesianCoordinates()` | Convert to Cartesian |
-| `RadiusFromPlanetocentricLatitude(double equatorialRadius, double flattening)` | Get radius at latitude |
+| `RadiusFromPlanetocentricLatitude(CelestialBody body)` | Get the radius of the body's ellipsoid at the latitude (11.0.0; before, a radius and a flattening) |
 
 #### Equatorial
 
@@ -1288,6 +1294,11 @@ states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the ang
 | `Distance` | Distance from observer (m) |
 | `Epoch` | Epoch of coordinates |
 
+| Factory | Description |
+|---------|-------------|
+| `FromRightAscensionDeclination(double rightAscension, double declination, Time epoch)` | Coordinates of a right ascension and a declination, in the order of the name, without a distance (11.0.0: replaces the constructor `Equatorial(declination, rightAscension, epoch)`) |
+| `FromRightAscensionDeclination(double rightAscension, double declination, double distance, Time epoch)` | The same with a distance (m) |
+
 | Method | Description |
 |--------|-------------|
 | `ToCartesian()` | Convert to Cartesian vector, in the frame of the angles (ICRF for a state's, #680) |
@@ -1298,7 +1309,7 @@ states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the ang
 var earth = PlanetsAndMoons.EARTH_BODY;
 var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
-var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
+var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 var eq = sv.ToEquatorial();
 
 Console.WriteLine($"RA: {eq.RightAscension * Constants.Rad2Deg:F4}°");
@@ -1308,6 +1319,10 @@ Console.WriteLine($"Dec: {eq.Declination * Constants.Rad2Deg:F4}°");
 #### Horizontal
 
 Azimuth, elevation, range (topocentric).
+
+| Constructor | Description |
+|------------|-------------|
+| `Horizontal(double azimuth, double elevation, double range, Time epoch)` | Create coordinates (11.0.0: camelCase parameters) |
 
 | Property | Description |
 |----------|-------------|
@@ -1406,10 +1421,9 @@ var solution = spacecraft.Propagate(
 // Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
 var (positionAtHalfDay, velocityAtHalfDay) = solution.InterpolateAt(epoch.AddHours(12));
 
-// Read the stored states relative to an observer: every minute over the first four
-var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, Frame.ICRF, Aberration.None,
-    TimeSpan.FromMinutes(1));
-foreach (var sv in states.Select(x => x.ToStateVector()))
+// Read the stored states relative to an observer, in ICRF without correction: every minute over the first four
+var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, TimeSpan.FromMinutes(1));
+foreach (var sv in states)
 {
     Console.WriteLine($"{sv.Epoch}: {sv.Position.Magnitude():F0} m");
 }
@@ -1854,7 +1868,7 @@ Context record for atmospheric calculations.
 | Factory Method | Description |
 |----------------|-------------|
 | `FromAltitude(double altitude)` | Create simple context with altitude only |
-| `FromPlanetodetic(altitude, latitude, longitude, epoch)` | Create full context |
+| `FromPlanetodetic(Planetodetic planetodetic, Time epoch)` | Create full context: the altitude, geodetic latitude and longitude of the coordinates (11.0.0; before, three doubles in the order altitude, latitude, longitude) |
 
 #### EarthStandardAtmosphere
 
@@ -1901,11 +1915,8 @@ var solarMaxModel = new Nrlmsise00Model(SpaceWeather.SolarMaximum);
 
 // Full context required
 var context = AtmosphericContext.FromPlanetodetic(
-    altitude: 400000,                           // 400 km
-    geodeticLatitude: 0,                        // Equator (rad)
-    geodeticLongitude: 0,                       // Prime meridian (rad)
-    epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
-);
+    new Planetodetic(0, 0, 400000),  // prime meridian, equator, 400 km
+    new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB));
 
 var atmosphere = model.GetAtmosphere(context);
 Console.WriteLine($"Density at 400 km: {atmosphere.Density:E3} kg/m³");
@@ -1981,11 +1992,8 @@ var atm1 = earth.GetAtmosphere(10000);  // 10 km altitude
 
 // Full context: NRLMSISE-00 at nominal space weather for an Earth without a model
 var context = AtmosphericContext.FromPlanetodetic(
-    altitude: 400000,
-    geodeticLatitude: 45 * Constants.Deg2Rad,
-    geodeticLongitude: -75 * Constants.Deg2Rad,
-    epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
-);
+    new Planetodetic(-75 * Constants.Deg2Rad, 45 * Constants.Deg2Rad, 400000),  // longitude, latitude (rad), altitude (m)
+    new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB));
 var atm2 = earth.GetAtmosphere(context);
 
 // Access NRLMSISE-00 specific data
@@ -2147,17 +2155,19 @@ In-memory data provider for testing.
 
 | Method | Description |
 |--------|-------------|
-| `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add the information of bodies (NAIF id, radii, GM, frame) |
+| `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies (NAIF id, name, radii, GM, frame), a `CelestialBodyInfo` since 11.0.0 (the interop struct, now internal, `IO.Astrodynamics.DTO.CelestialBody` before) |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
 | `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines and never reads from stored entries (#744) |
 
 ```csharp
-// customEarth: the information of a body (IO.Astrodynamics.DTO.CelestialBody); epoch: Time; earthState: a StateVector of the Earth
+// epoch: Time; earthState: a StateVector of the Earth
 // For testing without SPICE kernels
 var memoryProvider = new MemoryDataProvider();
 Configuration.Instance.SetDataProvider(memoryProvider);
 
-memoryProvider.AddCelestialBodyInfo(customEarth);
+memoryProvider.AddCelestialBodyInfo(new CelestialBodyInfo(NaifId: 399, Name: "EARTH", CenterOfMotionId: 10,
+    BarycenterOfMotionId: 3, Radii: new Vector3(6378137.0, 6378137.0, 6356752.0), GM: 3.986004418e14,
+    FrameName: "ITRF93", FrameId: 13000));
 memoryProvider.AddStateVector(399, epoch, earthState);
 ```
 
@@ -2501,8 +2511,7 @@ var departureState = new StateVector(
 
 // Define arrival (Moon position in 3 days)
 var arrivalEpoch = departureEpoch.AddDays(3);
-var moonState = moon.GetEphemeris(arrivalEpoch, earth, Frame.ICRF, Aberration.None)
-    .ToStateVector();
+var moonState = moon.GetEphemeris(arrivalEpoch, earth, Frame.ICRF, Aberration.None);
 
 // Solve Lambert's problem
 var solver = new LambertSolver();
@@ -2814,8 +2823,7 @@ var mission = new Mission("DeepSpaceTest");
 var scenario = new Scenario("LunarOrbit", mission, new Window(start, end));
 
 // Start at the Moon's position and velocity
-var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None)
-    .ToStateVector();
+var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None);
 
 var clock = new Clock("Clock", 256);
 var spacecraft = new Spacecraft(-1001, "Probe", 100.0, 10000.0, clock, moonState);
@@ -2837,10 +2845,8 @@ var summary = await scenario.SimulateAsync(
 );
 
 // Compare the propagated Moon with the Moon of the ephemeris (DE440)
-var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
-    .ToStateVector();
-var ephemerisMoon = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
-    .ToStateVector();
+var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
+var ephemerisMoon = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
 
 var positionDifference = (propagatedMoon.Position - ephemerisMoon.Position).Magnitude();
 var velocityDifference = (propagatedMoon.Velocity - ephemerisMoon.Velocity).Magnitude();

@@ -862,7 +862,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Spacecraft ephemeris using reference-body approach.
         /// Short-circuits when observer IS the central body with no aberration.
         /// </summary>
-        public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+        public override StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
             // Kernel-backed: use SPICE directly when observer is also SPICE-backed
             if (_isFromKernel && observer.IsSpiceBacked)
@@ -1141,7 +1141,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             var stateVector = initialState;
             if (propagated)
             {
-                var read = GetEphemeris(targetEpoch, InitialOrbitalParameters.Observer, InitialOrbitalParameters.Frame, Aberration.None).ToStateVector();
+                var read = GetEphemeris(targetEpoch, InitialOrbitalParameters.Observer, InitialOrbitalParameters.Frame, Aberration.None);
                 stateVector = new StateVector(read.Position, read.Velocity, InitialOrbitalParameters.Observer, targetEpoch, InitialOrbitalParameters.Frame,
                     initialState.Covariance);
             }

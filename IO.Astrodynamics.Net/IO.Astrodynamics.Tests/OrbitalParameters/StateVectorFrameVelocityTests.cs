@@ -78,8 +78,8 @@ public class StateVectorFrameVelocityTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var itrf93 = new Frames.Frame("ITRF93");
         var station = new Site(13, "DSS-13", earth);
-        var inItrf93 = station.GetEphemeris(epoch, earth, itrf93, Aberration.None).ToStateVector();
-        var expected = station.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var inItrf93 = station.GetEphemeris(epoch, earth, itrf93, Aberration.None);
+        var expected = station.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
 
         // Act
         var actual = inItrf93.ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -107,7 +107,7 @@ public class StateVectorFrameVelocityTests
 
     private static StateVector GeocentricMoon(TimeSystem.Time epoch, Frames.Frame frame)
     {
-        return PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None).ToStateVector();
+        return PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
     }
 
     private static void AssertClose(Vector3 expected, Vector3 actual)

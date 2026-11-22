@@ -2,14 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class SpacecraftRootObject
+internal class SpacecraftRootObject
 {
     public string version { get; set; }
     public string name { get; set; }
     public SpacecraftItem[] items { get; set; }
 }
 
-public class SpacecraftItem
+internal class SpacecraftItem
 {
     [JsonPropertyName("class")] public string spacecraftClass { get; set; }
     public string name { get; set; }
@@ -23,20 +23,20 @@ public class SpacecraftItem
     public SpacecraftTrajectoryPlot trajectoryPlot { get; set; }
 }
 
-public class SpacecraftTrajectory
+internal class SpacecraftTrajectory
 {
     public string type { get; set; }
     public string target { get; set; }
     public string center { get; set; }
 }
 
-public class SpacecraftBodyFrame
+internal class SpacecraftBodyFrame
 {
     public string type { get; set; }
     public string name { get; set; }
 }
 
-public class SpacecraftGeometry
+internal class SpacecraftGeometry
 {
     public string type { get; set; }
     public int[] meshRotation { get; set; }
@@ -45,13 +45,13 @@ public class SpacecraftGeometry
     public string source { get; set; }
 }
 
-public class SpacecraftLabel
+internal class SpacecraftLabel
 {
     public double[] color { get; set; }
     public bool showText { get; set; }
 }
 
-public class SpacecraftTrajectoryPlot
+internal class SpacecraftTrajectoryPlot
 {
     public double[] color { get; set; }
     public string duration { get; set; }

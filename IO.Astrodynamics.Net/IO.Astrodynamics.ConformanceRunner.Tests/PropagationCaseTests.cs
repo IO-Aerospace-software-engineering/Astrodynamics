@@ -110,7 +110,7 @@ public class PropagationCaseTests
 
         // NRLMSISE-00 at the space weather of the case, every switch on (switch 9 = 1: the daily Ap alone), bit for bit;
         // F10.7 and F10.7A swapped give another density
-        var context = AtmosphericContext.FromPlanetodetic(400e3, 0.5, 1.0, state.Epoch);
+        var context = AtmosphericContext.FromPlanetodetic(new IO.Astrodynamics.Coordinates.Planetodetic(1.0, 0.5, 400e3), state.Epoch);
         var standard = NrlmsiseFlags.CreateStandard();
         Assert.Equal(1, standard.Switches[9]);
         Assert.Equal(new Nrlmsise00Model(standard, new SpaceWeather { F107 = 160.0, F107A = 145.0, Ap = 15.0 }).GetDensity(context),

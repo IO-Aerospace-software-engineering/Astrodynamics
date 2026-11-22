@@ -321,7 +321,7 @@ public class GeometryFinderTests
         GeometryReference.AssertWindows(_output, "earth_moon_distance ABSMAX", Distance(RelationnalOperator.AbsoluteMax), GeometryReference.ThresholdDistanceExtreme);
 
         // The adjustment, which the distance search does not take, on the same quantity
-        Func<TimeSystem.Time, double> distance = t => moon.GetEphemeris(t, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude();
+        Func<TimeSystem.Time, double> distance = t => moon.GetEphemeris(t, earth, Frames.Frame.ICRF, Aberration.None).Position.Magnitude();
         GeometryReference.AssertWindows(_output, "earth_moon_distance ABSMIN adjust 1000 km",
             new GeometryFinder().FindWindowsWithCondition(window, distance, RelationnalOperator.AbsoluteMin, 0.0, 1000000.0, step).ToArray(),
             GeometryReference.ThresholdCrossing);

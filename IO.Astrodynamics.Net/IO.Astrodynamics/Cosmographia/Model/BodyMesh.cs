@@ -4,14 +4,14 @@ using System.Text.Json.Serialization;
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class BodyMeshRootObject
+internal class BodyMeshRootObject
 {
     public string version { get; set; }
     public string name { get; set; }
     public BodyMeshItems[] items { get; set; }
 }
 
-public class BodyMeshItems
+internal class BodyMeshItems
 {
     [JsonPropertyName("class")]
     public string bodyMeshClass { get; set; }
@@ -26,20 +26,20 @@ public class BodyMeshItems
     public BodyMeshTrajectoryPlot trajectoryPlot { get; set; }
 }
 
-public class BodyMeshTrajectory
+internal class BodyMeshTrajectory
 {
     public string type { get; set; }
     public string target { get; set; }
     public string center { get; set; }
 }
 
-public class BodyMeshBodyFrame
+internal class BodyMeshBodyFrame
 {
     public string type { get; set; }
     public string name { get; set; }
 }
 
-public class BodyMeshGeometry
+internal class BodyMeshGeometry
 {
     public string type { get; set; }
     public int[] meshRotation { get; set; }
@@ -47,12 +47,12 @@ public class BodyMeshGeometry
     public string source { get; set; }
 }
 
-public class BodyMeshLabel
+internal class BodyMeshLabel
 {
     public int[] color { get; set; }
 }
 
-public class BodyMeshTrajectoryPlot
+internal class BodyMeshTrajectoryPlot
 {
     public int[] color { get; set; }
     public string duration { get; set; }

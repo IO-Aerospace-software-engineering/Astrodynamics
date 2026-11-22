@@ -127,7 +127,7 @@ public abstract class ConjunctionDensePassTestBase
 
     protected static StateVector CspiceState(TimeSystem.Time epoch, int id, int observer = 399)
     {
-        return SpiceAPI.Instance.ReadEphemeris(epoch, observer, id, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        return SpiceAPI.Instance.ReadEphemeris(epoch, observer, id, Frames.Frame.ICRF, Aberration.None);
     }
 
     // ---- Round 4 of the lot-6 review: a maximum of the distance is no close approach ----

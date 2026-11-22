@@ -48,13 +48,12 @@ catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
-| `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454); over a window, at start + i·step in the time frame of the window start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid, each state the read of its epoch alone and labelled with it in that frame (#563) |
+| `ReadEphemeris(...)` | Read state data, a `StateVector` (over a window, `StateVector`s; 11.0.0: typed `OrbitalParameters` before, R20 of #668) (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454); over a window, at start + i·step in the time frame of the window start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid, each state the read of its epoch alone and labelled with it in that frame (#563) |
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714); at start + i·step in the time frame of the window start, i from 0 while within the window, in a buffer of the epochs read, each record labelled with the TDB epoch of the CK's record (#563) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, or that SPICE does not name, #714, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
-| `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
+| `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body as a `CelestialBodyInfo` (11.0.0: the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before, the same values; throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
 | `TransformFrame(Time, Frame, Frame)` | The rotation and angular velocity from one frame to another (throws `ArgumentException` naming `fromFrame` or `toFrame` for a name SPICE does not know, the error below its inner exception, 11.0.0; `InvalidOperationException` naming the frames and the epoch, then SPICE's message, when SPICE gives none for frames it knows: frame data that do not cover the epoch, #714) |
-| `Propagate2Bodies(...)`, `ConvertStateVectorToConicOrbitalElement(...)` | Two-body motion and osculating elements through `prop2b_c` and `oscltx_c` (see [Two-body calls](#two-body-calls)) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
 celestial body: a barycenter (0 to 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or an identifier
@@ -265,45 +264,28 @@ ended the process before 11.0.0, #560), in increasing order of their encoded SCL
 is loaded. To write the attitude of a propagated spacecraft, use `Spacecraft.WriteOrientation`, which writes its
 attitude record in this convention, in J2000 ([Attitude and kernels](spacecraft.md#attitude-and-kernels)).
 
-### Two-body calls
+### Two-body calls and element conversions
 
-`Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` are CSPICE's `prop2b_c` and `oscltx_c`
-([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). They throw, before the native call,
-`ArgumentNullException` for a null state, `ArgumentException` (`stateVector`) for a position or a velocity that is not
-finite (SPICE returns NaN for it with no error), `ArgumentOutOfRangeException` (`gm`) for a given GM that is not finite and
-above 0 (`SPICE(NONPOSITIVEMASS)` in `prop2b.c` and `oscelt.c`), and, for the overloads that take the GM of the observer,
-`InvalidOperationException` naming `BODYnnn_GM` when that GM is not finite and above 0 (a body whose GM the kernel pool
-lacks, ELARA among them). A state SPICE rejects throws `InvalidOperationException` with SPICE's message: a zero position,
-a zero velocity, a position parallel to the velocity or an out-of-range time for `prop2b_c` (`SPICE(ZEROPOSITION)`,
-`SPICE(ZEROVELOCITY)`, `SPICE(NONCONICMOTION)`, which carry no long message, so the message is the short one, and
-`SPICE(DTOUTOFRANGE)`), and `SPICE(DEGENERATECASE)` for `oscltx_c` ("Zero vector for input velocity vector." and the like).
-Before 11.0.0 the native proxies activated no error management: as the first native call of a process, SPICE's default
-action (ABORT) ended it with exit code 1; otherwise the values SPICE never wrote, the stack's contents (about 1e-310), came
-back with no error. The results on ordinary inputs are those of `prop2b_c` and `oscltx_c`, bit for bit.
-`ConvertStateVectorToConicOrbitalElement` keeps `oscltx_c`'s semi-major axis within 1e-6 of e = 1, the conic's −μ/(2ξ)
-(+Infinity where `oscltx_c` gives 0: e = 1 or a zero energy), with its perifocal distance (#459; before 11.0.0, +Infinity
-in the whole band, so Barker's mean motion), and passes its period only when it is above 0 and fits a `TimeSpan`: the
-elements of an open orbit throw `InvalidOperationException` from `Period()` (#663; before, 00:00:00), and those of an
-ellipse whose period exceeds `TimeSpan.MaxValue` (e within about 5e-6 of 1) are built (before, `OverflowException` from
-the conversion).
+The ten raw conversions of `SpiceAPI` that twinned the object API left the public API in 11.0.0, outright, with no
+forwarder (R04 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section 7 of the
+re-baseline of #671, decided by S. Guillet, 2026-11-19); the library keeps them internal, the SPICE references of its
+tests. Use the object API, whose results are the library's own computation, not CSPICE's: they agree with `prop2b_c`,
+`oscltx_c`, `conics_c`, `eqncpv_c` and `evsgp4_c` to the tolerances of the tests, not bit for bit, and a two-body motion
+about the Earth counts the TT seconds between its instants (#508), where `Propagate2Bodies` counted the difference of
+the labels.
 
-The element conversions (`ConvertConicElementsToStateVector`, three overloads, and
-`ConvertEquinoctialElementsToStateVector`) throw `ArgumentException` for an element that is not finite (#714): CONICS checks
-its domain with comparisons NaN passes, so that a NaN mean anomaly gave a finite state and a NaN inclination a NaN state.
-
-`ConvertEquinoctialElementsToStateVector` gives `eqncpv_c` the mean longitude of the elements, `MeanLongitude()`, its
-fourth element ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450): before 11.0.0 the
-true longitude L0, the state of another point of the orbit, 1029 km off for an ordinary LEO); its state is that of
-`EquinoctialElements.ToStateVector()` within 1.0e-15 relative.
-
-The result of each two-body call and element conversion is about the observer and in the frame of its input, the same
-instances ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)): a body with a geopotential
-or an atmospheric model, a barycentre or a body built from custom parameters comes back as given, so a propagation started
-from the result runs with the caller's models. Before 11.0.0 the result carried a new `CelestialBody` built from the
-identifier of the centre and a frame rebuilt from its name: the caller's models were lost, a barycentre threw, and a body
-SPICE does not name made the overloads with an explicit GM throw. The result is built after the SPICE lock, which holds
-only the native call ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)): before, the
-new body read the data provider 9 times under the lock, about 80 µs for a native call of 1.8 µs.
+| Removed | Object API |
+|---------|------------|
+| internal `ConvertTleToStateVector(name, line1, line2, epoch)` | `new TLE(name, line1, line2).ToStateVector(epoch)` (SGP4 in `Frame.TEME`, the same `evsgp4_c`) |
+| internal `ConvertStateVectorToConicOrbitalElement(stateVector)` | `stateVector.ToKeplerianElements()` |
+| internal `ConvertStateVectorToConicOrbitalElement(stateVector, gm)` | `stateVector.ToKeplerianElements()` about an observer of that GM, a `CelestialBody` built from custom parameters |
+| internal `ConvertEquinoctialElementsToStateVector(elements)` | `elements.ToStateVector()` |
+| internal `ConvertConicElementsToStateVector(elements)` | `elements.ToStateVector()` |
+| internal `ConvertConicElementsToStateVector(elements, epoch)` | `elements.ToStateVector(epoch)` |
+| internal `ConvertConicElementsToStateVector(elements, epoch, gm)` | `elements.ToStateVector(epoch)` about an observer of that GM |
+| internal `Propagate2Bodies(stateVector, dt)` | `stateVector.AtEpoch(stateVector.Epoch + dt).ToStateVector()` |
+| internal `Propagate2Bodies(stateVector, gm, dt)` | the same about an observer of that GM |
+| internal `Propagate2Bodies(stateVector, targetEpoch)` | `stateVector.AtEpoch(targetEpoch).ToStateVector()` |
 
 Each proxy that reports through `GetLastErrorProxy()` clears it when it starts (#714), so the message read after a call is
 that call's: before, it held the message of the last failure, about another call, until another failure replaced it.
@@ -333,6 +315,30 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 | `SpiceDataProvider` | Default provider using SPICE kernels for production use |
 | `MemoryDataProvider` | In-memory provider for testing without kernel files |
 
+### The provider seam
+
+A provider implements `IDataProvider`, three members in domain types:
+
+| Member | Returns |
+|--------|---------|
+| `FrameTransformationToICRF(in Time date, Frame source)` | The orientation of the frame relative to ICRF, a `StateOrientation` labelled with the frame |
+| `GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)` | The state of the target from the observer, a `StateVector` (11.0.0: `OrbitalParameters` before) |
+| `GetCelestialBodyInfo(int naifId)` | The information of a celestial body, a `CelestialBodyInfo` (11.0.0: the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before), never null |
+
+`CelestialBodyInfo` is a sealed record of SI values: `NaifId`, `Name`, `CenterOfMotionId`, `BarycenterOfMotionId`,
+`Radii` (a `Vector3`, m), `GM` (m³/s²), `FrameName`, and the optional `FrameId` (0 when not given) and `J2`, `J3`, `J4`
+(NaN when not given, as SPICE gives them for a body without them); two records are equal when every value is. The record
+`SpiceAPI.GetCelestialBodyInfo` reads is the native one field for field, bit for bit. The interop structs of the native
+layer, `IO.Astrodynamics.DTO`, are internal since 11.0.0 (R04 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): eleven of them bore the names of
+domain types (`CelestialBody`, `StateVector`, `Quaternion`, ...), so that a `using IO.Astrodynamics.DTO` made them
+ambiguous.
+
+A provider follows one exception contract, on which the library's handlers of missing data rely: an unknown name (a
+frame) or identifier (a body) throws `ArgumentException` naming the parameter; a known item without data at the date
+throws `InvalidOperationException` (`SpiceException` on SPICE). It may run under the SPICE lock (an ephemeris read in
+TEME, CIRS or TIRS), so it must not read `PlanetsAndMoons`, `Stars` or `Barycenters` there (#623).
+
 ### Which provider an object reads
 
 `Configuration.Instance.DataProvider` is the provider of the process, which `SetDataProvider` replaces. The objects
@@ -349,7 +355,7 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 
 | Method | Description |
 |--------|-------------|
-| `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add celestial body data: the records of `IO.Astrodynamics.DTO`, not `IO.Astrodynamics.Body.CelestialBody` |
+| `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies, each under its `NaifId` (`ArgumentNullException` for a null array or record); a `CelestialBodyInfo` since 11.0.0, the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
 | `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
 
@@ -400,10 +406,11 @@ instances held), so that a kernel loaded later, or unloaded, reaches them (third
 runtime keeps for the life of the process.
 
 ```csharp
-// Inputs: customEarth (IO.Astrodynamics.DTO.CelestialBody)
 var memoryProvider = new MemoryDataProvider();
+memoryProvider.AddCelestialBodyInfo(new CelestialBodyInfo(NaifId: 399, Name: "EARTH", CenterOfMotionId: 10,
+    BarycenterOfMotionId: 3, Radii: new Vector3(6378137.0, 6378137.0, 6356752.0), GM: 3.986004418e14,
+    FrameName: "ITRF93", FrameId: 13000));
 Configuration.Instance.SetDataProvider(memoryProvider);
-memoryProvider.AddCelestialBodyInfo(customEarth);
 ```
 
 ## See Also

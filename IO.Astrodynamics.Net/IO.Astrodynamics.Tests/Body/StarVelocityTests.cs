@@ -201,7 +201,7 @@ public class StarVelocityTests
     private static (Star Star, TimeSystem.Time At) StarOf(VelocityCase row, int index)
     {
         var epoch = TimeSystem.Time.CreateTDB(row.EpochDays * 86400.0);
-        var star = new Star(731000 + index, $"star{731000 + index}", 1E+30, "spec", 2, row.Parallax, new Equatorial(row.Declination, row.RightAscension, epoch),
+        var star = new Star(731000 + index, $"star{731000 + index}", 1E+30, "spec", 2, row.Parallax, Equatorial.FromRightAscensionDeclination(row.RightAscension, row.Declination, epoch),
             row.DeclinationProperMotion, row.RightAscensionProperMotion, 0, 0, 0, 0, epoch);
         var at = epoch + TimeSpan.FromTicks((long)System.Math.Round(row.Years * 365.25 * TimeSpan.TicksPerDay));
         return (star, at);
@@ -242,7 +242,7 @@ public class StarVelocityTests
             // Act
             var state = star.GetGeometricStateRelativeTo(at, ssb);
             var fromIcrf = star.GetGeometricStateFromICRF(at).ToStateVector();
-            var ephemeris = star.GetEphemeris(at, ssb, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var ephemeris = star.GetEphemeris(at, ssb, Frames.Frame.ICRF, Aberration.None);
 
             // Assert
             var velocity = state.Velocity * (JulianYearSeconds / star.Distance);
@@ -389,7 +389,7 @@ public class StarVelocityTests
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
         var j2016 = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
         var barnard = new Star(4472832, "Barnard", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
-            new Equatorial(4.73942005111 * deg, 269.44850252544 * deg, j2016),
+            Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
             10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);
         var earth = PlanetsAndMoons.EARTH_BODY;
         var starVelocity = SpaceVelocity(barnard);
@@ -400,10 +400,10 @@ public class StarVelocityTests
             var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
 
             // Act
-            var state = barnard.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var state = barnard.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
 
             // Assert
-            var earthVelocity = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector().Velocity;
+            var earthVelocity = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None).Velocity;
             var expected = starVelocity - earthVelocity;
             double velocity = (state.Velocity - expected).Magnitude() / expected.Magnitude();
             var direction = state.Position / state.Position.Magnitude();
@@ -436,7 +436,7 @@ public class StarVelocityTests
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
         var j2016 = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
         return new Star(naifId, $"Barnard{naifId}", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
-            new Equatorial(4.73942005111 * deg, 269.44850252544 * deg, j2016),
+            Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
             10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);
     }
 
@@ -473,7 +473,7 @@ public class StarVelocityTests
             var aboutSun = aboutStar.RelativeTo(sun, Aberration.None).ToStateVector();
 
             // Assert
-            var sunSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var sunSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None);
             var starSsb = barnard.GetEquatorialCoordinates(epoch).ToCartesian();
             var expectedVelocity = AboutStarVelocity + starVelocity - sunSsb.Velocity;
             var expectedPosition = AboutStarPosition + starSsb - sunSsb.Position;
@@ -511,10 +511,10 @@ public class StarVelocityTests
             var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB).AddDays(30.0 * month);
 
             // Act
-            var state = earth.GetEphemeris(epoch, barnard, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var state = earth.GetEphemeris(epoch, barnard, Frames.Frame.ICRF, Aberration.None);
 
             // Assert
-            var earthSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var earthSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
             var expectedVelocity = earthSsb.Velocity - starVelocity;
             var expectedPosition = earthSsb.Position - barnard.GetEquatorialCoordinates(epoch).ToCartesian();
             double velocity = (state.Velocity - expectedVelocity).Magnitude() / expectedVelocity.Magnitude();
@@ -549,10 +549,10 @@ public class StarVelocityTests
 
         // Act
         spacecraft.Propagate(new Window(epoch, epoch.AddHours(6.0)), [sun], false, false, TimeSpan.FromSeconds(60.0));
-        var start = spacecraft.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var start = spacecraft.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None);
 
         // Assert
-        var sunSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var sunSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None);
         var expectedVelocity = AboutStarVelocity + SpaceVelocity(barnard) - sunSsb.Velocity;
         var expectedPosition = AboutStarPosition + barnard.GetEquatorialCoordinates(epoch).ToCartesian() - sunSsb.Position;
         double velocity = (start.Velocity - expectedVelocity).Magnitude() / expectedVelocity.Magnitude();
@@ -589,7 +589,7 @@ public class StarVelocityTests
         var stars = new[]
         {
             StarTests.NewStar(731001, start),
-            new Star(731002, "Barnard731", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0, new Equatorial(4.73942005111 * deg, 269.44850252544 * deg, j2016),
+            new Star(731002, "Barnard731", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0, Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
                 10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016)
         };
         double worst = 0.0;
@@ -611,7 +611,7 @@ public class StarVelocityTests
                 var expected = SpaceVelocity(star);
                 foreach (var epoch in StarTests.Grid(window, step))
                 {
-                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                     double relative = (read.Velocity - expected).Magnitude() / expected.Magnitude();
                     _output.WriteLine($"MEASURE StarVelocityTests.TheSpkHoldsTheSpaceVelocity ({star.Name}, {epoch}): relative velocity {relative:E3}");
                     worst = System.Math.Max(worst, relative);

@@ -30,7 +30,7 @@ before the step, or loses that crossing (decided by S. Guillet, 2026-11-17). The
 
 ## EventResult
 
-`EventResult` is a record returned by `HandleEvent` containing:
+`EventResult` is a read-only record struct returned by `HandleEvent` (11.0.0: its properties had public setters before; build another with `with`) containing:
 
 | Property | Description |
 |----------|-------------|

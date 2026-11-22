@@ -1,5 +1,6 @@
 using System;
 using Xunit;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
@@ -60,12 +61,7 @@ namespace IO.Astrodynamics.Tests.Body
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
             // Create atmospheric context with position and time
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0, // 400 km in meters
-                geodeticLatitude: 60.0 * Constants.DEG_RAD, // 60° N
-                geodeticLongitude: -70.0 * Constants.DEG_RAD, // 70° W
-                epoch:  TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act - Get atmospheric properties through CelestialBody
             double density = earth.GetAirDensity(context);
@@ -89,26 +85,11 @@ namespace IO.Astrodynamics.Tests.Body
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
             // Test at three different altitudes
-            var context400km = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0, // 400 km
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context400km = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
-            var context600km = AtmosphericContext.FromPlanetodetic(
-                altitude: 600000.0, // 600 km
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context600km = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 600000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
-            var context800km = AtmosphericContext.FromPlanetodetic(
-                altitude: 800000.0, // 800 km
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context800km = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 800000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double density400 = earth.GetAirDensity(context400km);
@@ -142,12 +123,7 @@ namespace IO.Astrodynamics.Tests.Body
             var atmosphericModel = new Nrlmsise00Model(spaceWeather);
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 100000.0, // 100 km
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 100000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double density = earth.GetAirDensity(context);
@@ -169,12 +145,7 @@ namespace IO.Astrodynamics.Tests.Body
             var atmosphericModel = new Nrlmsise00Model(spaceWeather);
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0,
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double density = earth.GetAirDensity(context);
@@ -200,12 +171,7 @@ namespace IO.Astrodynamics.Tests.Body
             var atmosphericModel = new Nrlmsise00Model(spaceWeather);
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0,
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double density = earth.GetAirDensity(context);
@@ -225,12 +191,7 @@ namespace IO.Astrodynamics.Tests.Body
             var atmosphericModel = new Nrlmsise00Model(spaceWeather);
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0,
-                geodeticLatitude: 0.0, // Equator
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 0.0, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double density = earth.GetAirDensity(context);
@@ -254,20 +215,12 @@ namespace IO.Astrodynamics.Tests.Body
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
             // Local noon (LST ~ 12:00)
-            var contextNoon = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0,
-                geodeticLatitude: 0.0, // Equator for clearer diurnal signal
-                geodeticLongitude: 0.0,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 43200, TimeScale.UTC) // Noon UTC at 0° longitude
-            );
+            var contextNoon = AtmosphericContext.FromPlanetodetic(new Planetodetic(0.0, 0.0, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 43200, TimeScale.UTC));
 
             // Local midnight (LST ~ 00:00)
-            var contextMidnight = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0,
-                geodeticLatitude: 0.0, // Equator
-                geodeticLongitude: 180.0 * Constants.DEG_RAD, // 180° longitude (opposite side)
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 43200, TimeScale.UTC) // Same UTC time, different local time
-            );
+            // At 180° longitude (opposite side), the same UTC time, a different local time
+            var contextMidnight = AtmosphericContext.FromPlanetodetic(new Planetodetic(180.0 * Constants.DEG_RAD, 0.0, 400000.0),
+                TimeSystem.Time.FromDayOfYear(2000, 172, 43200, TimeScale.UTC));
 
             // Act
             double densityNoon = earth.GetAirDensity(contextNoon);
@@ -314,12 +267,7 @@ namespace IO.Astrodynamics.Tests.Body
             var earthNom = new CelestialBody(399, atmosphericModel: nominal);
             var earthMax = new CelestialBody(399, atmosphericModel: solarMax);
 
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0,
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double densityMin = earthMin.GetAirDensity(context);
@@ -358,12 +306,7 @@ namespace IO.Astrodynamics.Tests.Body
             var atmosphericModel = new Nrlmsise00Model();
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 400000.0,
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 400000.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double densityKgM3 = earth.GetAirDensity(context);
@@ -406,12 +349,7 @@ namespace IO.Astrodynamics.Tests.Body
             var atmosphericModel = new Nrlmsise00Model();
             var earth = new CelestialBody(399, atmosphericModel: atmosphericModel);
 
-            var context = AtmosphericContext.FromPlanetodetic(
-                altitude: 0.0,
-                geodeticLatitude: 60.0 * Constants.DEG_RAD,
-                geodeticLongitude: -70.0 * Constants.DEG_RAD,
-                epoch: TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC)
-            );
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-70.0 * Constants.DEG_RAD, 60.0 * Constants.DEG_RAD, 0.0), TimeSystem.Time.FromDayOfYear(2000, 172, 29000, TimeScale.UTC));
 
             // Act
             double densityKgM3 = earth.GetAirDensity(context);

@@ -144,7 +144,7 @@ public sealed class PropagatedFieldOfViewCase
         CoordinateSite = new Site(151, "FOVSITE151", Earth, new Planetodetic(-116.8 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0));
         Barycenter = new Barycenter(3);
         L1 = new LagrangePoint(LagrangePoints.L1);
-        Star = new Star(515002, "FOVSTAR5152", 1.989e30, "G2V", 5.0, 1.0, new Equatorial(1.2, 0.3, Start), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Start);
+        Star = new Star(515002, "FOVSTAR5152", 1.989e30, "G2V", 5.0, 1.0, Equatorial.FromRightAscensionDeclination(0.3, 1.2, Start), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Start);
         // A light time of 1.03e8 s
         Star.Propagate(new Window(Start.AddSeconds(-1.2e8), End.AddSeconds(1.2e8)), TimeSpan.FromSeconds(1.0e6));
 
@@ -705,7 +705,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         var earth = _case.Earth;
         var window = _case.SearchWindow;
-        var star = new Star(515001, "FOVSTAR515", 1.989e30, "G2V", 5.0, 1.0e-6, new Equatorial(0.3, 1.2, _case.Start), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, _case.Start);
+        var star = new Star(515001, "FOVSTAR515", 1.989e30, "G2V", 5.0, 1.0e-6, Equatorial.FromRightAscensionDeclination(1.2, 0.3, _case.Start), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, _case.Start);
 
         // A propagated spacecraft (the managed path) and the same trajectory read from its kernels (the SPICE path with a
         // kernel target): a step not positive, the instrument's spacecraft as the target, an ellipsoid without radii
@@ -913,7 +913,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame));
             var camera = spacecraft.Instruments.First();
             var boresight = Vector3.VectorY.Rotate(q);
-            double Angle(TimeSystem.Time t) => boresight.Angle(earth.GetEphemeris(t, spacecraft, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position);
+            double Angle(TimeSystem.Time t) => boresight.Angle(earth.GetEphemeris(t, spacecraft, Frames.Frame.ICRF, Aberration.None).Position);
             int inView = 0;
             for (int k = 0; k < 60; k++)
             {

@@ -72,7 +72,7 @@ internal static class ReadmePage
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var epoch = new Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.UTC);
 
-        var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
+        var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 
         Console.WriteLine($"Position: {state.Position} m");
         Console.WriteLine($"Velocity: {state.Velocity} m/s");

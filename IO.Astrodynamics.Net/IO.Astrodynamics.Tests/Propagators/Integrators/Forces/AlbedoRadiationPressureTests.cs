@@ -63,8 +63,7 @@ public class AlbedoRadiationPressureTests
     private static (StateVector state, double dSunBody, Vector3 sunDir) CreateSubSolarState(
         CelestialBody body, double rSc, TimeSystem.Time epoch)
     {
-        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None)
-            .ToStateVector().Position;
+        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunPos.Normalize();
         double dSunBody = sunPos.Magnitude();
 
@@ -142,8 +141,7 @@ public class AlbedoRadiationPressureTests
         var earth = CreateEarth();
         var epoch = TimeSystem.Time.J2000TDB;
 
-        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None)
-            .ToStateVector().Position;
+        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunPos.Normalize();
 
         // Place spacecraft on opposite side of Earth from Sun

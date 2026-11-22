@@ -167,7 +167,7 @@ public class OccultationSearchTests
         OccultationType? At(double seconds, CelestialItem target, CelestialItem by)
         {
             var epoch = TimeSystem.Time.CreateTDB(seconds);
-            var from = site.GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var from = site.GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None);
             return target.IsOcculted(by, from, Aberration.None);
         }
 
@@ -184,10 +184,10 @@ public class OccultationSearchTests
         // In the middle of the first umbra of eclipse 001 (gfoclt: 827237996.05 to 827240060.05 TDB seconds)
         var epoch = TimeSystem.Time.CreateTDB(827239000.0);
         var spacecraft = new Spacecraft(-470001, "eclipse_001", epoch: epoch);
-        var from = spacecraft.GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var from = spacecraft.GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(OccultationType.Full, TestHelpers.Sun.IsOcculted(TestHelpers.EarthAtJ2000, from, Aberration.LT));
         var later = TimeSystem.Time.CreateTDB(827242000.0);
-        var fromLater = spacecraft.GetEphemeris(later, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var fromLater = spacecraft.GetEphemeris(later, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(OccultationType.None, TestHelpers.Sun.IsOcculted(TestHelpers.EarthAtJ2000, fromLater, Aberration.None));
     }
 

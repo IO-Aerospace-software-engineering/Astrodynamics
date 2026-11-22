@@ -60,7 +60,7 @@ public class MemoryDataProviderFrameTests
         {
             foreach (var id in new[] { 301, 399 })
             {
-                var state = SpiceAPI.Instance.ReadEphemeris(epoch, 0, id, storedIn, Aberration.None).ToStateVector();
+                var state = SpiceAPI.Instance.ReadEphemeris(epoch, 0, id, storedIn, Aberration.None);
                 provider.AddStateVector(id, epoch, new StateVector(state.Position, state.Velocity, TestHelpers.SsbAtJ2000, epoch, storedIn));
             }
         }
@@ -69,14 +69,14 @@ public class MemoryDataProviderFrameTests
     }
 
     private static StateVector Spkezr(TimeSystem.Time epoch, Frames.Frame frame) =>
-        SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None).ToStateVector();
+        SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
 
     private void Measure(string label, MemoryDataProvider provider, Frames.Frame frame, double velocityTolerance = VelocityTolerance)
     {
         double worstPosition = 0.0, worstVelocity = 0.0;
         foreach (var epoch in Epochs)
         {
-            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None).ToStateVector();
+            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
             var reference = Spkezr(epoch, frame);
             Assert.Equal(frame, read.Frame);
             Assert.Same(frame, read.Frame);
@@ -128,7 +128,7 @@ public class MemoryDataProviderFrameTests
         double worst = 0.0;
         foreach (var epoch in Epochs)
         {
-            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, teme, Aberration.None).ToStateVector();
+            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, teme, Aberration.None);
             var reference = Spkezr(epoch, Frames.Frame.TEME);
             worst = System.Math.Max(worst, (read.Position - reference.Position).Magnitude());
             Assert.InRange((read.Velocity - reference.Velocity).Magnitude(), 0.0, VelocityTolerance);
@@ -147,9 +147,9 @@ public class MemoryDataProviderFrameTests
         {
             foreach (var epoch in Epochs)
             {
-                var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None).ToStateVector();
-                var moon = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                var earth = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
+                var moon = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 301, Frames.Frame.ICRF, Aberration.None);
+                var earth = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
                 Assert.Equal(moon.Position - earth.Position, read.Position);
                 Assert.Equal(moon.Velocity - earth.Velocity, read.Velocity);
                 Assert.Same(frame, read.Frame);
@@ -169,8 +169,7 @@ public class MemoryDataProviderFrameTests
         provider.AddStateVector(3, epoch, new StateVector(r, v, TestHelpers.SsbAtJ2000, epoch, Frames.Frame.ICRF));
         var barycentre = new Barycenter(3);
 
-        var read = provider.GetEphemeris(epoch, barycentre, TestHelpers.SsbAtJ2000, Frames.Frame.ECLIPTIC_J2000, Aberration.None)
-            .ToStateVector();
+        var read = provider.GetEphemeris(epoch, barycentre, TestHelpers.SsbAtJ2000, Frames.Frame.ECLIPTIC_J2000, Aberration.None);
 
         double eps = 84381.448 / 3600.0 * System.Math.PI / 180.0;
         double c = System.Math.Cos(eps), s = System.Math.Sin(eps);

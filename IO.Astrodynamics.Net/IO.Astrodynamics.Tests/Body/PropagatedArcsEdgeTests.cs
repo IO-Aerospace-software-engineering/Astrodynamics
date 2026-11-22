@@ -167,7 +167,7 @@ public class PropagatedArcsEdgeTests
             var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
             var end = window.EndDate;
             var (position, velocity) = solution.InterpolateAt(end);
-            var managed = sc.GetEphemeris(end, earth, Frame.ICRF, Aberration.None).ToStateVector();
+            var managed = sc.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
             var read = kernel.GetGeometricStateRelativeTo(end, earth);
             double managedVelocity = (managed.Velocity - velocity).Magnitude(), spkVelocity = (read.Velocity - velocity).Magnitude();
             double managedPosition = (managed.Position - position).Magnitude(), spkPosition = (read.Position - position).Magnitude();
@@ -252,7 +252,7 @@ public class PropagatedArcsEdgeTests
             foreach (var t in new[] { window.StartDate, window.EndDate })
             {
                 var (position, velocity) = solution.InterpolateAt(t);
-                var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None);
                 managed = System.Math.Max(managed, (read.Position - position).Magnitude());
                 managedVelocity = System.Math.Max(managedVelocity, (read.Velocity - velocity).Magnitude());
                 // The windowed read, which throws on a SPICE error (the single-epoch read does not, spk-O1 of the review)
@@ -325,13 +325,13 @@ public class PropagatedArcsEdgeTests
             {
                 var t = tc.AddSeconds(i * 0.25);
                 var (position, _) = solution.InterpolateAt(t);
-                var managed = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                var managed = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None);
                 near = System.Math.Max(near, (managed.Position - position).Magnitude());
                 spkAgainstManaged = System.Math.Max(spkAgainstManaged, (kernel.GetGeometricStateRelativeTo(t, earth).Position - managed.Position).Magnitude());
             }
 
             var (_, vAt) = solution.InterpolateAt(tc);
-            double atTc = (spacecraft.GetEphemeris(tc, earth, Frame.ICRF, Aberration.None).ToStateVector().Velocity - vAt).Magnitude();
+            double atTc = (spacecraft.GetEphemeris(tc, earth, Frame.ICRF, Aberration.None).Velocity - vAt).Magnitude();
             _output.WriteLine($"MEASURE #540 two impulses at one event S + {(tc - Start).TotalSeconds:R} s: arcs [{string.Join(",", arcs.Select(a => a.Length))}], {segments} segments, " +
                               $"boundary positions {boundary:E2} m, jump - dV1 - dV2 {jump:E2} m/s, near managed {near:E2} m, SPK - managed {spkAgainstManaged:E2} m, v at tc {atTc:E2} m/s");
             Assert.Equal(2, segments);
@@ -406,7 +406,7 @@ public class PropagatedArcsEdgeTests
             foreach (var t in epochs)
             {
                 var (r, v) = Reference(t);
-                var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None);
                 managedR = System.Math.Max(managedR, (read.Position - r).Magnitude());
                 managedV = System.Math.Max(managedV, (read.Velocity - v).Magnitude());
                 // The windowed read, which throws on a SPICE error, against the managed read (the SPK's epochs are doubles of
@@ -429,7 +429,7 @@ public class PropagatedArcsEdgeTests
             else
             {
                 var (rAt, vAt) = solution.InterpolateAt(t1);
-                var read = spacecraft.GetEphemeris(t1, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                var read = spacecraft.GetEphemeris(t1, earth, Frame.ICRF, Aberration.None);
                 Assert.Equal(rAt, read.Position);
                 Assert.Equal(vAt, read.Velocity);
             }
@@ -663,7 +663,7 @@ public class PropagatedArcsEdgeTests
             atImpulses++;
             Assert.DoesNotContain(stored, x => x.Epoch == output.Epoch && x.Epoch != tc);
             Assert.True(System.Math.Abs((output.Epoch - tc).Ticks) <= 1, $"an output {(output.Epoch - tc).TotalSeconds:E3} s from the impulse");
-            var read = run.Spacecraft.GetEphemeris(output.Epoch, run.ReadCenter, Frame.ICRF, Aberration.None).ToStateVector();
+            var read = run.Spacecraft.GetEphemeris(output.Epoch, run.ReadCenter, Frame.ICRF, Aberration.None);
             double error = (read.Position - output.Position).Magnitude();
             if (output.Epoch < tc)
                 worstBefore = System.Math.Max(worstBefore, error / (output.Velocity.Magnitude() * 0.5e-7));

@@ -59,7 +59,7 @@ public class NativeAbortGuardTests
     {
         Assert.Empty(KernelTextValues.Radii(id));
         var first = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-        Assert.Equal(id, first.Id);
+        Assert.Equal(id, first.NaifId);
         AssertKernelGm(id, first.GM);
         Assert.Equal(0.0, first.Radii.X);
         Assert.Equal(0.0, first.Radii.Y);
@@ -90,7 +90,7 @@ public class NativeAbortGuardTests
         for (int i = 0; i < 3; i++)
         {
             var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-            Assert.Equal(id, info.Id);
+            Assert.Equal(id, info.NaifId);
             Assert.Equal(0.0, info.GM);
             Assert.Equal(radii[0], info.Radii.X);
             Assert.Equal(radii[1], info.Radii.Y);
@@ -155,7 +155,7 @@ public class NativeAbortGuardTests
     public void ReadEphemeris_FromAnUnnamedLagrangePoint_IsALagrangePoint()
     {
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
-        var reads = new[] { SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector() }
+        var reads = new[] { SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None) }
             .Concat(SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 391, 399, Frames.Frame.ICRF,
                 Aberration.None, TimeSpan.FromSeconds(60.0)).Select(x => x.ToStateVector()))
             .ToArray();
@@ -165,7 +165,7 @@ public class NativeAbortGuardTests
             var observer = Assert.IsType<LagrangePoint>(read.Observer);
             Assert.Equal(391, observer.NaifId);
             Assert.Equal("L1", observer.Name);
-            var reversed = SpiceAPI.Instance.ReadEphemeris(read.Epoch, 399, 391, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var reversed = SpiceAPI.Instance.ReadEphemeris(read.Epoch, 399, 391, Frames.Frame.ICRF, Aberration.None);
             // L1 is about 1.5e9 m from the Earth: the reference is a state, not the zeros of a read SPICE refused
             Assert.True(reversed.Position.Magnitude() > 1.0e9);
             double dr = (read.Position + reversed.Position).Magnitude();
@@ -197,7 +197,7 @@ public class NativeAbortGuardTests
         // A body with a frame first, so that the stack holds its frame name
         Assert.Equal("ITRF93", SpiceAPI.Instance.GetCelestialBodyInfo(399).FrameName);
         var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-        Assert.Equal(id, info.Id);
+        Assert.Equal(id, info.NaifId);
         Assert.Equal(name, info.Name);
         Assert.Equal(string.Empty, info.FrameName);
         Assert.Equal(0, info.FrameId);
@@ -250,7 +250,7 @@ public class NativeAbortGuardTests
     public void GetCelestialBodyInfo_ACelestialBody_IsRead(int id, string name)
     {
         var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
-        Assert.Equal(id, info.Id);
+        Assert.Equal(id, info.NaifId);
         Assert.Equal(name, info.Name);
     }
 

@@ -60,7 +60,7 @@ public class ThirdBodyNearThePerturberTests
         var centralBody = new CelestialBody(central);
         var perturbingBody = new CelestialBody(perturber);
         var force = new ThirdBodyPerturbation(perturbingBody, centralBody);
-        var d = perturbingBody.GetEphemeris(Epoch, centralBody, Frames.Frame.ICRF, Aberration.None).ToStateVector()
+        var d = perturbingBody.GetEphemeris(Epoch, centralBody, Frames.Frame.ICRF, Aberration.None)
             .Position;
         double[] ratios = { 1e-6, 1e-5, 4.6e-5, 1e-4, 1e-3, 1e-2, 0.1, 0.3, 0.49, 0.499999, 0.500001, 0.51, 0.7, 1.0, 1.5 };
 
@@ -105,7 +105,7 @@ public class ThirdBodyNearThePerturberTests
         var sun = new CelestialBody(10);
         var earth = new CelestialBody(399);
         var force = new ThirdBodyPerturbation(earth, sun);
-        var d = earth.GetEphemeris(Epoch, sun, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        var d = earth.GetEphemeris(Epoch, sun, Frames.Frame.ICRF, Aberration.None).Position;
         var u = Directions[1].Normalize();
         double half = 0.5 * d.Magnitude();
 
@@ -157,7 +157,7 @@ public class ThirdBodyNearThePerturberTests
         var earth = new CelestialBody(399);
         var perturbingBody = new CelestialBody(perturber);
         var force = new ThirdBodyPerturbation(perturbingBody, earth);
-        var d = perturbingBody.GetEphemeris(Epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        var d = perturbingBody.GetEphemeris(Epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
 
         foreach (var direction in Directions)
         {

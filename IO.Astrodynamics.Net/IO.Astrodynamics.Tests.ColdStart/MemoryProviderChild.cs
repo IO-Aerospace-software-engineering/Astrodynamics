@@ -11,7 +11,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.TimeSystem;
-using BodyInfo = IO.Astrodynamics.DTO.CelestialBody;
+using BodyInfo = IO.Astrodynamics.DataProvider.CelestialBodyInfo;
 
 namespace IO.Astrodynamics.Tests.ColdStart;
 
@@ -52,18 +52,18 @@ internal static class MemoryProviderChild
 
     private static readonly Time T0 = new(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
-    private static readonly BodyInfo EarthInfo = new(399, 10, 3, "EARTH", new(6378137.0, 6378137.0, 6356752.0), 3.986004418e14, "ITRF93",
+    private static readonly BodyInfo EarthInfo = new(399, "EARTH", 10, 3, new Vector3(6378137.0, 6378137.0, 6356752.0), 3.986004418e14, "ITRF93",
         13000, 1.08e-3, 0.0, 0.0);
 
-    private static readonly BodyInfo EarthBarycenterInfo = new(3, 0, 0, "EARTH BARYCENTER", new(0.0, 0.0, 0.0), 4.0350323550225975e14, "",
+    private static readonly BodyInfo EarthBarycenterInfo = new(3, "EARTH BARYCENTER", 0, 0, new Vector3(0.0, 0.0, 0.0), 4.0350323550225975e14, "",
         0, 0.0, 0.0, 0.0);
 
-    private static readonly BodyInfo SsbInfo = new(0, 0, 0, "SOLAR SYSTEM BARYCENTER", new(0.0, 0.0, 0.0), 1.3289e20, "", 0, 0.0, 0.0, 0.0);
+    private static readonly BodyInfo SsbInfo = new(0, "SOLAR SYSTEM BARYCENTER", 0, 0, new Vector3(0.0, 0.0, 0.0), 1.3289e20, "", 0, 0.0, 0.0, 0.0);
 
-    private static readonly BodyInfo SunInfo = new(10, 0, 0, "SUN", new(696000000.0, 696000000.0, 696000000.0), 1.32712440041e20, "IAU_SUN",
+    private static readonly BodyInfo SunInfo = new(10, "SUN", 0, 0, new Vector3(696000000.0, 696000000.0, 696000000.0), 1.32712440041e20, "IAU_SUN",
         10010, 0.0, 0.0, 0.0);
 
-    private static readonly BodyInfo MoonInfo = new(301, 399, 3, "MOON", new(1737400.0, 1737400.0, 1737400.0), 4.9e12, "IAU_MOON", 31001,
+    private static readonly BodyInfo MoonInfo = new(301, "MOON", 399, 3, new Vector3(1737400.0, 1737400.0, 1737400.0), 4.9e12, "IAU_MOON", 31001,
         0.0, 0.0, 0.0);
 
     internal static int Run(string kernels)

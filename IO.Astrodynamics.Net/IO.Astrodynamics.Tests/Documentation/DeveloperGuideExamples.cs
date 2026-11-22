@@ -71,8 +71,7 @@ internal static class DeveloperGuideExamples
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
         // Get Earth's state vector relative to the Sun
-        var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
-            .ToStateVector();
+        var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None);
 
         Console.WriteLine($"Position: {stateVector.Position}");
         Console.WriteLine($"Velocity: {stateVector.Velocity}");
@@ -679,9 +678,9 @@ internal static class DeveloperGuideExamples
         // Create site with explicit coordinates
         var mySite = new Site(100, "MySite", earth,
             new Planetodetic(
-                Longitude: -117.0 * Constants.Deg2Rad,
-                Latitude: 34.0 * Constants.Deg2Rad,
-                Altitude: 1000.0  // meters
+                longitude: -117.0 * Constants.Deg2Rad,
+                latitude: 34.0 * Constants.Deg2Rad,
+                altitude: 1000.0  // meters
             ));
 
         // Get horizontal coordinates to Moon
@@ -721,9 +720,9 @@ internal static class DeveloperGuideExamples
         #region guide:28
         // Create geodetic coordinates
         var coords = new Planetodetic(
-            Longitude: -122.0 * Constants.Deg2Rad,
-            Latitude: 37.0 * Constants.Deg2Rad,
-            Altitude: 100.0
+            longitude: -122.0 * Constants.Deg2Rad,
+            latitude: 37.0 * Constants.Deg2Rad,
+            altitude: 100.0
         );
         #endregion
     }
@@ -736,7 +735,7 @@ internal static class DeveloperGuideExamples
         var earth = PlanetsAndMoons.EARTH_BODY;
         var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
+        var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
         var eq = sv.ToEquatorial();
 
         Console.WriteLine($"RA: {eq.RightAscension * Constants.Rad2Deg:F4}°");
@@ -788,10 +787,9 @@ internal static class DeveloperGuideExamples
         // Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
         var (positionAtHalfDay, velocityAtHalfDay) = solution.InterpolateAt(epoch.AddHours(12));
 
-        // Read the stored states relative to an observer: every minute over the first four
-        var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, Frame.ICRF, Aberration.None,
-            TimeSpan.FromMinutes(1));
-        foreach (var sv in states.Select(x => x.ToStateVector()))
+        // Read the stored states relative to an observer, in ICRF without correction: every minute over the first four
+        var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, TimeSpan.FromMinutes(1));
+        foreach (var sv in states)
         {
             Console.WriteLine($"{sv.Epoch}: {sv.Position.Magnitude():F0} m");
         }
@@ -942,11 +940,8 @@ internal static class DeveloperGuideExamples
 
         // Full context required
         var context = AtmosphericContext.FromPlanetodetic(
-            altitude: 400000,                           // 400 km
-            geodeticLatitude: 0,                        // Equator (rad)
-            geodeticLongitude: 0,                       // Prime meridian (rad)
-            epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
-        );
+            new Planetodetic(0, 0, 400000),  // prime meridian, equator, 400 km
+            new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB));
 
         var atmosphere = model.GetAtmosphere(context);
         Console.WriteLine($"Density at 400 km: {atmosphere.Density:E3} kg/m³");
@@ -983,11 +978,8 @@ internal static class DeveloperGuideExamples
 
         // Full context: NRLMSISE-00 at nominal space weather for an Earth without a model
         var context = AtmosphericContext.FromPlanetodetic(
-            altitude: 400000,
-            geodeticLatitude: 45 * Constants.Deg2Rad,
-            geodeticLongitude: -75 * Constants.Deg2Rad,
-            epoch: new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB)
-        );
+            new Planetodetic(-75 * Constants.Deg2Rad, 45 * Constants.Deg2Rad, 400000),  // longitude, latitude (rad), altitude (m)
+            new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB));
         var atm2 = earth.GetAtmosphere(context);
 
         // Access NRLMSISE-00 specific data
@@ -1030,15 +1022,17 @@ internal static class DeveloperGuideExamples
     }
 
     // DEVELOPER_GUIDE.md, "MemoryDataProvider"
-    internal static void Block41(IO.Astrodynamics.DTO.CelestialBody customEarth, Time epoch, StateVector earthState)
+    internal static void Block41(Time epoch, StateVector earthState)
     {
         #region guide:41
-        // customEarth: the information of a body (IO.Astrodynamics.DTO.CelestialBody); epoch: Time; earthState: a StateVector of the Earth
+        // epoch: Time; earthState: a StateVector of the Earth
         // For testing without SPICE kernels
         var memoryProvider = new MemoryDataProvider();
         Configuration.Instance.SetDataProvider(memoryProvider);
 
-        memoryProvider.AddCelestialBodyInfo(customEarth);
+        memoryProvider.AddCelestialBodyInfo(new CelestialBodyInfo(NaifId: 399, Name: "EARTH", CenterOfMotionId: 10,
+            BarycenterOfMotionId: 3, Radii: new Vector3(6378137.0, 6378137.0, 6356752.0), GM: 3.986004418e14,
+            FrameName: "ITRF93", FrameId: 13000));
         memoryProvider.AddStateVector(399, epoch, earthState);
         #endregion
     }
@@ -1255,8 +1249,7 @@ internal static class DeveloperGuideExamples
 
         // Define arrival (Moon position in 3 days)
         var arrivalEpoch = departureEpoch.AddDays(3);
-        var moonState = moon.GetEphemeris(arrivalEpoch, earth, Frame.ICRF, Aberration.None)
-            .ToStateVector();
+        var moonState = moon.GetEphemeris(arrivalEpoch, earth, Frame.ICRF, Aberration.None);
 
         // Solve Lambert's problem
         var solver = new LambertSolver();
@@ -1558,8 +1551,7 @@ internal static class DeveloperGuideExamples
         var scenario = new Scenario("LunarOrbit", mission, new Window(start, end));
 
         // Start at the Moon's position and velocity
-        var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None)
-            .ToStateVector();
+        var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None);
 
         var clock = new Clock("Clock", 256);
         var spacecraft = new Spacecraft(-1001, "Probe", 100.0, 10000.0, clock, moonState);
@@ -1581,10 +1573,8 @@ internal static class DeveloperGuideExamples
         );
 
         // Compare the propagated Moon with the Moon of the ephemeris (DE440)
-        var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
-            .ToStateVector();
-        var ephemerisMoon = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
-            .ToStateVector();
+        var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
+        var ephemerisMoon = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
 
         var positionDifference = (propagatedMoon.Position - ephemerisMoon.Position).Magnitude();
         var velocityDifference = (propagatedMoon.Velocity - ephemerisMoon.Velocity).Magnitude();

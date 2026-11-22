@@ -51,8 +51,8 @@ public partial class ConjunctionAssessmentTests
             Assert.True(window.Intersects(tca), "TCA must be within the screening window");
 
             // At TCA, range-rate (r_rel · v_rel) should be ≈ 0
-            var moonState = moon.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            var sunState = sun.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var moonState = moon.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None);
+            var sunState = sun.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None);
             var relPos = sunState.Position - moonState.Position;
             var relVel = sunState.Velocity - moonState.Velocity;
             double rangeRate = relPos.Dot(relVel);
@@ -62,12 +62,12 @@ public partial class ConjunctionAssessmentTests
 
             // Distance at TCA should be a local minimum: d(TCA) < d(TCA ± 1 hour)
             double distAtTca = relPos.Magnitude();
-            var moonBefore = moon.GetEphemeris(tca - TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            var sunBefore = sun.GetEphemeris(tca - TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var moonBefore = moon.GetEphemeris(tca - TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None);
+            var sunBefore = sun.GetEphemeris(tca - TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None);
             double distBefore = (sunBefore.Position - moonBefore.Position).Magnitude();
 
-            var moonAfter = moon.GetEphemeris(tca + TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            var sunAfter = sun.GetEphemeris(tca + TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var moonAfter = moon.GetEphemeris(tca + TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None);
+            var sunAfter = sun.GetEphemeris(tca + TimeSpan.FromHours(1), earth, Frames.Frame.ICRF, Aberration.None);
             double distAfter = (sunAfter.Position - moonAfter.Position).Magnitude();
 
             Assert.True(distAtTca <= distBefore,
@@ -273,9 +273,7 @@ public partial class ConjunctionAssessmentTests
         var encounter = ConjunctionAssessment.Analyze(profile, secondary1, window);
 
         // The reference: the distance of the two-body states at each end
-        double Distance(TimeSystem.Time epoch) => (secondary1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None)
-            .ToStateVector().Position - protected1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None)
-            .ToStateVector().Position).Magnitude();
+        double Distance(TimeSystem.Time epoch) => (secondary1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position - protected1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position).Magnitude();
         var expected = Distance(window.EndDate) < Distance(window.StartDate) ? window.EndDate : window.StartDate;
         LabelAssert.Equal(expected, encounter.EncounterState.Epoch);
         Assert.Equal(Distance(expected), encounter.EncounterState.MissDistanceMeters, 9);
@@ -773,8 +771,8 @@ public partial class ConjunctionAssessmentTests
             new ConjunctionAnalysisOptions { SampleStep = TimeSpan.FromHours(6) });
 
         // Independently query the SAME objects (spacecraft + Sun) at TCA epoch
-        var scAtTca = moonSc.GetEphemeris(encounter.EncounterState.Epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-        var sunAtTca = sun.GetEphemeris(encounter.EncounterState.Epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var scAtTca = moonSc.GetEphemeris(encounter.EncounterState.Epoch, earth, Frames.Frame.ICRF, Aberration.None);
+        var sunAtTca = sun.GetEphemeris(encounter.EncounterState.Epoch, earth, Frames.Frame.ICRF, Aberration.None);
         double independentDistance = (sunAtTca.Position - scAtTca.Position).Magnitude();
 
         Assert.True(System.Math.Abs(encounter.EncounterState.MissDistanceMeters - independentDistance) < 1e-06,
@@ -2335,7 +2333,7 @@ public partial class ConjunctionAssessmentTests
     private static Spacecraft CreateSpacecraftFromBody(CelestialBody body, int naifId, string name, double hardBodyRadius = 0.0)
     {
         var earth = CreateEarth();
-        var state = body.GetEphemeris(TimeSystem.Time.J2000TDB, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var state = body.GetEphemeris(TimeSystem.Time.J2000TDB, earth, Frames.Frame.ICRF, Aberration.None);
         return new Spacecraft(naifId, name, 1000.0, 2000.0, new Clock($"{name}_CLK", 256), state, sectionalArea: 10.0, dragCoeff: 2.2, cosparId: $"2026-001{name[0]}", solarRadiationCoeff: 1.2, hardBodyRadius: hardBodyRadius);
     }
 
@@ -2655,7 +2653,7 @@ public partial class ConjunctionAssessmentTests
 
         public double Mass => 0.0;
 
-        public IEnumerable<IO.Astrodynamics.OrbitalParameters.OrbitalParameters> GetEphemeris(
+        public IEnumerable<StateVector> GetEphemeris(
             in Window searchWindow,
             ILocalizable observer,
             Frames.Frame frame,
@@ -2670,7 +2668,7 @@ public partial class ConjunctionAssessmentTests
             return BuildState(epoch);
         }
 
-        public IO.Astrodynamics.OrbitalParameters.OrbitalParameters GetEphemeris(in TimeSystem.Time epoch, ILocalizable observer, Frames.Frame frame, Aberration aberration)
+        public StateVector GetEphemeris(in TimeSystem.Time epoch, ILocalizable observer, Frames.Frame frame, Aberration aberration)
         {
             return BuildState(epoch);
         }
@@ -2778,7 +2776,7 @@ public partial class ConjunctionAssessmentTests
 
         public double Mass => 0.0;
 
-        public IEnumerable<IO.Astrodynamics.OrbitalParameters.OrbitalParameters> GetEphemeris(
+        public IEnumerable<StateVector> GetEphemeris(
             in Window searchWindow,
             ILocalizable observer,
             Frames.Frame frame,
@@ -2793,7 +2791,7 @@ public partial class ConjunctionAssessmentTests
             return BuildState(epoch);
         }
 
-        public IO.Astrodynamics.OrbitalParameters.OrbitalParameters GetEphemeris(in TimeSystem.Time epoch, ILocalizable observer, Frames.Frame frame, Aberration aberration)
+        public StateVector GetEphemeris(in TimeSystem.Time epoch, ILocalizable observer, Frames.Frame frame, Aberration aberration)
         {
             return BuildState(epoch);
         }

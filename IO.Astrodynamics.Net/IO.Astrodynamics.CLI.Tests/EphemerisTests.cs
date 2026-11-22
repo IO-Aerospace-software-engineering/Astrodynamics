@@ -274,7 +274,7 @@ public class EphemerisTests
                     var sb = new StringBuilder();
                     Console.SetOut(new StringWriter(sb));
                     await command.Ephemeris("Data", 301, 399777, window, TimeSpan.FromMinutes(1));
-                    var expected = SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    var expected = SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None);
                     Assert.Equal("CLISITE", expected.Observer.Name);
                     // The command reads through GetEphemeris: the position of the library's read to its last digit (5.960e-8 m
                     // in X, 1.487e-16 relative, the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161,
@@ -333,7 +333,7 @@ public class EphemerisTests
                 Console.SetOut(new StringWriter(sb));
                 await command.Ephemeris("Data", 301, 398989, new WindowParameters { Begin = begin.ToString(), End = begin.AddSeconds(60.0).ToString() },
                     TimeSpan.FromMinutes(1));
-                var expected = SpiceAPI.Instance.ReadEphemeris(begin, 398989, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var expected = SpiceAPI.Instance.ReadEphemeris(begin, 398989, 301, Frames.Frame.ICRF, Aberration.None);
                 Assert.Equal("NOTO", expected.Observer.Name);
                 var line = sb.ToString().Split(Environment.NewLine)[0];
                 Assert.StartsWith($"Epoch : {begin} Position : ", line);
@@ -347,7 +347,7 @@ public class EphemerisTests
                 var subPoint = new StringBuilder();
                 Console.SetOut(new StringWriter(subPoint));
                 await command.SubPoint("Data", 398989, 399, new EpochParameters { Epoch = begin.ToString() });
-                var fixedPosition = SpiceAPI.Instance.ReadEphemeris(begin, 399, 398989, earth.Frame, Aberration.None).ToStateVector().Position;
+                var fixedPosition = SpiceAPI.Instance.ReadEphemeris(begin, 399, 398989, earth.Frame, Aberration.None).Position;
                 var planetocentric = new Coordinates.Planetocentric(System.Math.Atan2(fixedPosition.Y, fixedPosition.X),
                     System.Math.Asin(fixedPosition.Z / fixedPosition.Magnitude()), fixedPosition.Magnitude());
                 Assert.Equal($"{planetocentric}{Environment.NewLine}", subPoint.ToString());

@@ -10,7 +10,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using BodyInfo = IO.Astrodynamics.DTO.CelestialBody;
+using BodyInfo = IO.Astrodynamics.DataProvider.CelestialBodyInfo;
 
 namespace IO.Astrodynamics.Tests.ColdStart;
 
@@ -51,16 +51,16 @@ internal static class StaticBodiesChild
 {
     private static readonly Time J2000 = Time.J2000TDB;
 
-    private static readonly BodyInfo EarthInfo = new(399, 10, 3, "EARTH", new(6378137.0, 6378137.0, 6356752.0), 3.986004418e14,
+    private static readonly BodyInfo EarthInfo = new(399, "EARTH", 10, 3, new Vector3(6378137.0, 6378137.0, 6356752.0), 3.986004418e14,
         "ITRF93", 13000, 1.08e-3, 0.0, 0.0);
 
-    private static readonly BodyInfo EarthBarycenterInfo = new(3, 0, 0, "EARTH BARYCENTER", new(0.0, 0.0, 0.0), 4.0350323550225975e14,
+    private static readonly BodyInfo EarthBarycenterInfo = new(3, "EARTH BARYCENTER", 0, 0, new Vector3(0.0, 0.0, 0.0), 4.0350323550225975e14,
         "", 0, 0.0, 0.0, 0.0);
 
-    private static readonly BodyInfo SsbInfo = new(0, 0, 0, "SOLAR SYSTEM BARYCENTER", new(0.0, 0.0, 0.0), 1.3289e20, "", 0, 0.0, 0.0,
+    private static readonly BodyInfo SsbInfo = new(0, "SOLAR SYSTEM BARYCENTER", 0, 0, new Vector3(0.0, 0.0, 0.0), 1.3289e20, "", 0, 0.0, 0.0,
         0.0);
 
-    private static readonly BodyInfo SunInfo = new(10, 0, 0, "SUN", new(696000000.0, 696000000.0, 696000000.0), 1.32712440041e20,
+    private static readonly BodyInfo SunInfo = new(10, "SUN", 0, 0, new Vector3(696000000.0, 696000000.0, 696000000.0), 1.32712440041e20,
         "IAU_SUN", 10010, 0.0, 0.0, 0.0);
 
     internal static int RunMemory()
@@ -166,7 +166,7 @@ internal static class StaticBodiesChild
             Check($"MOON_BODY.GM {PlanetsAndMoons.MOON_BODY.GM:R}, SPICE {SpiceAPI.Instance.GetCelestialBodyInfo(301).GM:R}",
                 PlanetsAndMoons.MOON_BODY.GM == SpiceAPI.Instance.GetCelestialBodyInfo(301).GM);
 
-            var spkezr = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector();
+            var spkezr = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
             var orbit = earth.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 orbit.Position == spkezr.Position && orbit.Velocity == spkezr.Velocity && orbit.Frame == Frame.ECLIPTIC_J2000);
@@ -217,11 +217,11 @@ internal static class StaticBodiesChild
             Check($"EARTH_BODY.Frame after the switch {PlanetsAndMoons.EARTH_BODY.Frame.Name}, SPICE {earthInfo.FrameName}",
                 PlanetsAndMoons.EARTH_BODY.Frame.Name == earthInfo.FrameName);
 
-            var barycenterOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 0, 3, Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector();
+            var barycenterOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 0, 3, Frame.ECLIPTIC_J2000, Aberration.None);
             var barycenterState = Barycenters.EARTH_BARYCENTER.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BARYCENTER's orbit after the switch is spkezr's state of 3 about 0 in ECLIPJ2000 at J2000 TDB",
                 barycenterState.Position == barycenterOrbit.Position && barycenterState.Velocity == barycenterOrbit.Velocity);
-            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector();
+            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
             var earthState = PlanetsAndMoons.EARTH_BODY.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);
@@ -229,9 +229,9 @@ internal static class StaticBodiesChild
                 double.IsFinite(PlanetsAndMoons.EARTH_BODY.SphereOfInfluence) && PlanetsAndMoons.EARTH_BODY.SphereOfInfluence > 0.0);
 
             var epoch = new Time(2021, 1, 20, 18, 0, 0, TimeScale.UTC);
-            var spkezr = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 3, Frame.ICRF, Aberration.None).ToStateVector();
+            var spkezr = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 3, Frame.ICRF, Aberration.None);
             var ephemeris = Barycenters.EARTH_BARYCENTER.GetEphemeris(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF,
-                Aberration.None).ToStateVector();
+                Aberration.None);
             Check("EARTH_BARYCENTER's ephemeris after the switch is spkezr's state of 3 about 0 in ICRF",
                 ephemeris.Position == spkezr.Position && ephemeris.Velocity == spkezr.Velocity);
 
@@ -239,7 +239,7 @@ internal static class StaticBodiesChild
             Configuration.Instance.SetDataProvider(new MemoryDataProvider());
             Check("EARTH_BODY.GM, once read, stays SPICE's under a later provider", PlanetsAndMoons.EARTH_BODY.GM == earthInfo.GM);
             var kept = Barycenters.EARTH_BARYCENTER.GetEphemeris(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF,
-                Aberration.None).ToStateVector();
+                Aberration.None);
             Check("EARTH_BARYCENTER's ephemeris, once its data are read, stays SPICE's under a later provider",
                 kept.Position == spkezr.Position && kept.Velocity == spkezr.Velocity);
             return 0;
@@ -349,7 +349,7 @@ internal static class StaticBodiesChild
             Check($"EARTH_BODY.J2 after the kernels {earth.J2:R}, SPICE {earthInfo.J2:R}", earth.J2.Equals(earthInfo.J2) && double.IsFinite(earth.J2));
             Check($"EARTH_BODY.Frame after the kernels {earth.Frame.Name}, SPICE {earthInfo.FrameName}",
                 earth.Frame.Name == earthInfo.FrameName && earth.Frame.Name == "ITRF93");
-            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector();
+            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
             var earthState = earth.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);

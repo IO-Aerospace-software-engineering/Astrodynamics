@@ -35,14 +35,16 @@ Retrieve the Earth-Sun state vector in the ICRF frame at one instant:
 
 ```csharp
 // Inputs: earth and sun (CelestialBody), epoch (Time)
-var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
-    .ToStateVector();
+var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None);
 
 Console.WriteLine($"Position: {stateVector.Position} m");
 Console.WriteLine($"Velocity: {stateVector.Velocity} m/s");
 ```
 
-The returned `StateVector` contains position and velocity in SI units (meters and meters per second).
+The returned `StateVector` contains position and velocity in SI units (meters and meters per second). Every read of
+`GetEphemeris` and `SpiceAPI.ReadEphemeris` is typed as the `StateVector` it builds, so no `.ToStateVector()` follows it
+(11.0.0, R20 of #668). Without a frame and an aberration, `earth.GetEphemeris(epoch, sun)` reads in ICRF without
+correction, bit for bit the read above; the window form is `GetEphemeris(window, observer, step)`.
 
 ## Time Series
 
@@ -56,7 +58,7 @@ var states = moon.GetEphemeris(window, earth, Frame.ICRF, Aberration.LT,
 
 foreach (var sv in states)
 {
-    Console.WriteLine($"{sv.Epoch}  range = {sv.ToStateVector().Position.Magnitude():F0} m");
+    Console.WriteLine($"{sv.Epoch}  range = {sv.Position.Magnitude():F0} m");
 }
 ```
 

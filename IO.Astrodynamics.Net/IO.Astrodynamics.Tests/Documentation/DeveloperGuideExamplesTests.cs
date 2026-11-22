@@ -275,7 +275,7 @@ public class DeveloperGuideExamplesTests
             var a = r * (-central / System.Math.Pow(r.Magnitude(), 3));
             for (int k = 0; k < DeepSpaceThirdBodies.Length; k++)
             {
-                var body = spice.ReadEphemeris(at, 399, DeepSpaceThirdBodies[k], Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+                var body = spice.ReadEphemeris(at, 399, DeepSpaceThirdBodies[k], Frames.Frame.ICRF, Aberration.None).Position;
                 var d = body - r;
                 a += d * (gm[k] / System.Math.Pow(d.Magnitude(), 3)) - body * (gm[k] / System.Math.Pow(body.Magnitude(), 3));
             }
@@ -335,9 +335,9 @@ public class DeveloperGuideExamplesTests
     {
         var (spacecraft, moonState, start, end) = await DeveloperGuideExamples.Block54();
         var earth = moonState.Observer;
-        var moon = SpiceAPI.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var moon = SpiceAPI.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None);
 
-        var final = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var final = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
         var reference = DeepSpaceReference(moonState, start, end, moonMass: true);
         double dr = (final.Position - reference.Position).Magnitude();
         double dv = (final.Velocity - reference.Velocity).Magnitude();

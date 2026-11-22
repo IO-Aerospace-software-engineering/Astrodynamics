@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
@@ -26,7 +27,7 @@ public class CelestialBodyAtmosphereTests
     private static readonly TimeSystem.Time Epoch = new(2024, 6, 21, 12, 0, 0, TimeScale.UTC);
 
     private static AtmosphericContext Full(double altitude, double latitude = 0.5, double longitude = 0.3) =>
-        AtmosphericContext.FromPlanetodetic(altitude, latitude, longitude, Epoch);
+        AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude), Epoch);
 
     public static TheoryData<double, double> UpperRows() => EarthStandardAtmosphereReferenceTests.UpperRows();
 

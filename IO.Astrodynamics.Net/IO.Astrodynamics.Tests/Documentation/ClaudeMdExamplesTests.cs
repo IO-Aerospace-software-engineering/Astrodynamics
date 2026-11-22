@@ -363,7 +363,7 @@ public class ClaudeMdExamplesTests
             var q = attitude.ComputeOrientation(state);
             var nadir = state.Position.Inverse() / state.Position.Magnitude();
             var sunFromEarth = SpiceAPI.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
-                Aberration.None).ToStateVector().Position;
+                Aberration.None).Position;
             var sunDirection = sunFromEarth - state.Position;
             var perpendicular = sunDirection - nadir * sunDirection.Dot(nadir);
             worstDown = System.Math.Max(worstDown, AngleBetween(Spacecraft.Down.Rotate(q), nadir));

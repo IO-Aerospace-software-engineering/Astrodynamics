@@ -302,8 +302,8 @@ public class NearestTickSpanTests
                 }
 
                 // The true solar day: the sidereal period plus the angle the Sun moves over it, at the rate |ω|
-                var eph0 = body.GetEphemeris(epoch, Stars.SUN_BODY, Frames.Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
-                var eph1 = body.GetEphemeris(epoch + sidereal, Stars.SUN_BODY, Frames.Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
+                var eph0 = body.GetEphemeris(epoch, Stars.SUN_BODY, Frames.Frame.ECLIPTIC_J2000, Aberration.LT).Position;
+                var eph1 = body.GetEphemeris(epoch + sidereal, Stars.SUN_BODY, Frames.Frame.ECLIPTIC_J2000, Aberration.LT).Position;
                 double angle = eph0.Angle(eph1);
                 long? extra = NearestTick(D(angle) / w);
                 if (extra is null)

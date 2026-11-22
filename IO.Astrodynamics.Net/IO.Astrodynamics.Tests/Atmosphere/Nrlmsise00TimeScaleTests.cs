@@ -1,3 +1,4 @@
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
@@ -34,8 +35,8 @@ public class Nrlmsise00TimeScaleTests
         var utcEpoch = TdbEpoch.ToUTC();
 
         // Act
-        double tdb = model.GetDensity(AtmosphericContext.FromPlanetodetic(Altitude, Latitude, Longitude, TdbEpoch));
-        double utc = model.GetDensity(AtmosphericContext.FromPlanetodetic(Altitude, Latitude, Longitude, utcEpoch));
+        double tdb = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(Longitude, Latitude, Altitude), TdbEpoch));
+        double utc = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(Longitude, Latitude, Altitude), utcEpoch));
 
         // Assert
         Assert.Equal(utc, tdb);
@@ -61,7 +62,7 @@ public class Nrlmsise00TimeScaleTests
 
         // Act
         double density = new Nrlmsise00Model(SpaceWeather.Nominal)
-            .GetDensity(AtmosphericContext.FromPlanetodetic(Altitude, Latitude, Longitude, TdbEpoch));
+            .GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(Longitude, Latitude, Altitude), TdbEpoch));
 
         // Assert
         Assert.Equal(expected, density, expected * 1e-14);
@@ -80,9 +81,9 @@ public class Nrlmsise00TimeScaleTests
         {
             double latitude = -0.9 + 1.8 * (i % 6) / 5.0;
             double longitude = -3.0 + 0.25 * i;
-            double now = model.GetDensity(AtmosphericContext.FromPlanetodetic(Altitude, latitude, longitude, TdbEpoch));
+            double now = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, Altitude), TdbEpoch));
             double before = model.GetDensity(
-                AtmosphericContext.FromPlanetodetic(Altitude, latitude, longitude, tdbCalendarAsUtc));
+                AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, Altitude), tdbCalendarAsUtc));
             worst = System.Math.Max(worst, System.Math.Abs(before / now - 1.0));
         }
 
@@ -106,8 +107,8 @@ public class Nrlmsise00TimeScaleTests
         {
             double latitude = -0.9 + 1.8 * (i % 6) / 5.0;
             double longitude = -3.0 + 0.25 * i;
-            double atUtc = model.GetDensity(AtmosphericContext.FromPlanetodetic(Altitude, latitude, longitude, utc));
-            double atUt1 = model.GetDensity(AtmosphericContext.FromPlanetodetic(Altitude, latitude, longitude, ut1));
+            double atUtc = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, Altitude), utc));
+            double atUt1 = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, Altitude), ut1));
             worst = System.Math.Max(worst, System.Math.Abs(atUt1 / atUtc - 1.0));
         }
 

@@ -2,14 +2,14 @@
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class SiteRootObject
+internal class SiteRootObject
 {
     public string version { get; set; }
     public string name { get; set; }
     public SiteItem[] items { get; set; }
 }
 
-public class SiteItem
+internal class SiteItem
 {
     public string type { get; set; }
     public string name { get; set; }
@@ -17,7 +17,7 @@ public class SiteItem
     public SiteFeature[] features { get; set; }
 }
 
-public class SiteFeature
+internal class SiteFeature
 {
     public string origin { get; set; }
     public double diameter { get; set; }

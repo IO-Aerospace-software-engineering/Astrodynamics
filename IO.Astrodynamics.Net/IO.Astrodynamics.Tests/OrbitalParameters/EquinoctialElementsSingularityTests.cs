@@ -653,7 +653,7 @@ public class EquinoctialElementsSingularityTests
         {
             var spacecraft = new Spacecraft(-1452, "OPM452", 100.0, 1000.0, new Clock("opm452", 256),
                 c.Elements(_earth, Epoch, Frames.Frame.ICRF), 1.0, 2.2, "2021-001A");
-            var ephemeris = spacecraft.GetEphemeris(Epoch, _earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var ephemeris = spacecraft.GetEphemeris(Epoch, _earth, Frames.Frame.ICRF, Aberration.None);
             var opm = spacecraft.ToOpm().Data.StateVector;
             var fromOpm = new StateVector(new Vector3(opm.X * 1000.0, opm.Y * 1000.0, opm.Z * 1000.0),
                 new Vector3(opm.XDot * 1000.0, opm.YDot * 1000.0, opm.ZDot * 1000.0), _earth, Epoch, Frames.Frame.ICRF);
@@ -661,7 +661,7 @@ public class EquinoctialElementsSingularityTests
             errors.Add(($"{c.Name}, OPM", c.At(0.0).RelativeError(fromOpm)));
             later.Add(($"{c.Name}, GetEphemeris at +600 s", At(c.At(600.0), Epoch + TimeSpan.FromSeconds(600.0))
                 .RelativeError(spacecraft.GetEphemeris(Epoch + TimeSpan.FromSeconds(600.0), _earth, Frames.Frame.ICRF,
-                    Aberration.None).ToStateVector())));
+                    Aberration.None))));
         }
 
         // Assert; the OPM, in km, gives the same doubles here. (K) measured again on the Kepler solver of #453; twice

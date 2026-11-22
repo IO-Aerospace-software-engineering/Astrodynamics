@@ -404,7 +404,7 @@ public class PropagationFrameOrientationCacheTests
         Propagate();
         // At the window end: the stored states run to it (#741; at 60 s outputs a window of 3 610 s stored them to 3 600 s
         // before, and a read past them throws, #527)
-        var last = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var last = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
         Assert.InRange(last.Position.Magnitude(), 6.0e6, 8.0e6);
     }
 

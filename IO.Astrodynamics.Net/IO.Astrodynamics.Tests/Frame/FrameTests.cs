@@ -136,10 +136,10 @@ public class FrameTests
         // Arrange
         var epoch = TimeSystem.Time.Parse("2024-03-01T00:00:00 TDB");
         var site = new Site(13, "GOLDSTONE", PlanetsAndMoons.EARTH_BODY);
-        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None).ToStateVector();
+        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None);
 
         // Act
-        var byName = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, site, site.Frame, Aberration.None).ToStateVector();
+        var byName = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, site, site.Frame, Aberration.None);
         var rotated = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, site, Frames.Frame.ICRF, Aberration.None).ToFrame(site.Frame).ToStateVector();
 
         // Assert: the direction to 1e-15 rad, the position to 1e-12 relative
@@ -246,8 +246,8 @@ public class FrameTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var moon = PlanetsAndMoons.MOON_BODY;
         var site = CreateSiteAtSpiceDss13Coordinates();
-        var inIcrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-        var expected = moon.GetEphemeris(epoch, earth, new Frames.Frame("DSS-13_TOPO"), Aberration.None).ToStateVector();
+        var inIcrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
+        var expected = moon.GetEphemeris(epoch, earth, new Frames.Frame("DSS-13_TOPO"), Aberration.None);
 
         var actual = inIcrf.ToFrame(site.Frame).ToStateVector();
 

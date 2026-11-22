@@ -162,7 +162,7 @@ public class MarsDragTests
         scenario.AddCelestialItem(body);
         scenario.AddSpacecraft(spacecraft);
         await scenario.SimulateAsync(drag, false, TimeSpan.FromSeconds(1.0));
-        return spacecraft.GetEphemeris(window.EndDate, body, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        return spacecraft.GetEphemeris(window.EndDate, body, Frames.Frame.ICRF, Aberration.None);
     }
 
     // An elliptical orbit whose perigee lies below the base of the isothermal layer (49.887 km) and whose apoapsis lies

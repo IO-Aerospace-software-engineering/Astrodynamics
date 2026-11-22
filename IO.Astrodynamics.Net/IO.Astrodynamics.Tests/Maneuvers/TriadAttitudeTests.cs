@@ -1351,7 +1351,7 @@ public class TriadAttitudeTests
         maneuver.TryExecute(state);
         var q = maneuver.StateOrientation.Rotation;
         var vHat = state.Velocity.Normalize();
-        var sun = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 10, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position - state.Position;
+        var sun = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 10, Frames.Frame.ICRF, Aberration.None).Position - state.Position;
         var sPerp = (sun - vHat * sun.Dot(vHat)).Normalize();
         double front = AttitudeRecordTests.Angle(spc.BodyFront.Rotate(q), vHat);
         double up = AttitudeRecordTests.Angle(spc.BodyUp.Rotate(q), sPerp);

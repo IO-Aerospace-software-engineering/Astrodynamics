@@ -113,8 +113,7 @@ public class ThirdBodyPerturbation : ForceBase
         if (EphemerisCache != null && EphemerisCache.Contains(PerturbingBody.NaifId, Aberration.None))
             return EphemerisCache.GetPosition(PerturbingBody.NaifId, Aberration.None, epoch);
 
-        return PerturbingBody.GetEphemeris(epoch, CentralBody, frame, Aberration.None)
-            .ToStateVector().Position;
+        return PerturbingBody.GetEphemeris(epoch, CentralBody, frame, Aberration.None).Position;
     }
 
     /// <summary>

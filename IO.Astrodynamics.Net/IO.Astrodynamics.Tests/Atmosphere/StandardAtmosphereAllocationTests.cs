@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.TimeSystem;
 using System;
 using IO.Astrodynamics.Atmosphere;
@@ -60,7 +61,7 @@ public class StandardAtmosphereAllocationTests
         IGeodeticDensityModel geodetic = (IGeodeticDensityModel)model;
         foreach (var altitude in Altitudes(name))
         {
-            var context = AtmosphericContext.FromPlanetodetic(altitude, 0.5, -1.0, Epoch);
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(-1.0, 0.5, altitude), Epoch);
 
             // Act
             double density = geodetic.GetDensity(altitude, 0.5, -1.0, Epoch);
@@ -79,7 +80,7 @@ public class StandardAtmosphereAllocationTests
         // Arrange
         var model = Model(name);
         IGeodeticDensityModel geodetic = (IGeodeticDensityModel)model;
-        var context = AtmosphericContext.FromPlanetodetic(30e3, 0.5, 1.0, Epoch);
+        var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(1.0, 0.5, 30e3), Epoch);
         _ = model.GetDensity(context);
         _ = geodetic.GetDensity(30e3, 0.5, 1.0, Epoch);
         // and in the thermosphere, whose tables are integrated when Thermosphere1976 loads (2.4 MB, #441)
@@ -121,7 +122,7 @@ public class StandardAtmosphereAllocationTests
         var body = Body(name);
         foreach (var altitude in Altitudes(name))
         {
-            var context = AtmosphericContext.FromPlanetodetic(altitude, -0.3, 2.0, Epoch);
+            var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(2.0, -0.3, altitude), Epoch);
 
             // Act and assert
             AssertSameBits(body.GetAirDensity(context), body.GetAirDensity(altitude, -0.3, 2.0, Epoch));

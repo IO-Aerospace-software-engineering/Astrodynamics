@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace IO.Astrodynamics;
 
-public static class DictionnaryExtension
+internal static class DictionnaryExtension
 {
     public static TU GetOrAdd<T, TU>(this IDictionary<T, TU> dictionary, in T key, Func<T, TU> add)
     {

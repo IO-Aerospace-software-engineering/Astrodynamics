@@ -5,7 +5,7 @@ using System.Text;
 
 namespace IO.Astrodynamics.Helpers;
 
-public class Utf8StringWriter : StringWriter
+internal class Utf8StringWriter : StringWriter
 {
     public override Encoding Encoding => Encoding.UTF8;
 }

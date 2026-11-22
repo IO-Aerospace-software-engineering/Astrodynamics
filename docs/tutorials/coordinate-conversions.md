@@ -28,7 +28,7 @@ var svICRF = new StateVector(
     new Vector3(0.0, 7700.0, 0.0),
     earth, epoch, Frame.ICRF);
 
-var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000);
 
 Console.WriteLine($"ICRF position:     {svICRF.Position}");
 Console.WriteLine($"Ecliptic position: {svEcliptic.Position}");
@@ -43,7 +43,7 @@ Transform to a body-fixed frame to get coordinates that rotate with the body:
 ```csharp
 // Inputs: svICRF (StateVector)
 var earthFrame = new Frame("IAU_EARTH");
-var svBodyFixed = svICRF.ToFrame(earthFrame).ToStateVector();
+var svBodyFixed = svICRF.ToFrame(earthFrame);
 
 Console.WriteLine($"Body-fixed position: {svBodyFixed.Position}");
 ```
@@ -86,7 +86,10 @@ These frames are critical for precise orbit determination and high-accuracy grou
 ## Equatorial Coordinates
 
 Extract right ascension and declination from a state vector. They are in ICRF whatever the frame of the state: a
-state in another frame is rotated to ICRF at its epoch first (#680).
+state in another frame is rotated to ICRF at its epoch first (#680). Coordinates known as angles are built by
+`Equatorial.FromRightAscensionDeclination(rightAscension, declination, epoch)`, or with a distance
+`(rightAscension, declination, distance, epoch)`, in the order of the name (11.0.0: the constructor of two angles took
+the declination first, so a swap compiled).
 
 ```csharp
 // Inputs: svICRF (StateVector)
@@ -95,6 +98,11 @@ var eq = svICRF.ToEquatorial();
 Console.WriteLine($"RA:  {eq.RightAscension * Constants.Rad2Deg:F4} deg");
 Console.WriteLine($"Dec: {eq.Declination * Constants.Rad2Deg:F4} deg");
 Console.WriteLine($"Distance: {eq.Distance:F0} m");
+
+// Coordinates given as angles, right ascension first as the factory's name says (Vega, J2000)
+var vega = Equatorial.FromRightAscensionDeclination(279.23473479 * Constants.Deg2Rad, 38.78368896 * Constants.Deg2Rad,
+    svICRF.Epoch);
+Vector3 towardVega = vega.ToDirection(); // unit vector in ICRF
 ```
 
 Equatorial coordinates are useful for observation planning and sensor pointing.
@@ -105,9 +113,9 @@ Define a surface location using geodetic longitude, latitude, and altitude:
 
 ```csharp
 var coords = new Planetodetic(
-    Longitude: -122.0 * Constants.Deg2Rad,
-    Latitude: 37.0 * Constants.Deg2Rad,
-    Altitude: 100.0);
+    longitude: -122.0 * Constants.Deg2Rad,
+    latitude: 37.0 * Constants.Deg2Rad,
+    altitude: 100.0);
 
 Console.WriteLine($"Longitude: {coords.Longitude * Constants.Rad2Deg:F2} deg");
 Console.WriteLine($"Latitude:  {coords.Latitude * Constants.Rad2Deg:F2} deg");
@@ -122,8 +130,21 @@ altitude, on the surface as in orbit:
 ```csharp
 // Inputs: coords (Planetodetic)
 var earth = PlanetsAndMoons.EARTH_BODY;
-var planetocentric = coords.ToPlanetocentric(earth.Flattening, earth.EquatorialRadius);
-var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadius); // coords, to about 1e-15
+var planetocentric = coords.ToPlanetocentric(earth);
+var back = planetocentric.ToPlanetodetic(earth); // coords, to about 1e-15
+```
+
+The geodetic coordinates of a state take one call, on the ellipsoid of its observer and in its body-fixed frame at the
+state's epoch (the body's `Frame`: ITRF93 for the Earth, not the `IAU_EARTH` of the block above; the geodetic
+coordinates are those of CSPICE `recgeo_c` but at the centre of the body and on the polar axis with a negative-zero
+coordinate, see [Sites](../reference/sites.md#planetodetic)) (an observer that is not a `CelestialBody` throws `InvalidOperationException`), and the body-fixed
+position of a geodetic point one more:
+
+```csharp
+// Inputs: svICRF (StateVector), coords (Planetodetic)
+var earth = PlanetsAndMoons.EARTH_BODY;
+Planetodetic below = svICRF.ToPlanetodetic();            // in ITRF93, the Earth's body frame, at the state's epoch
+Vector3 position = coords.ToCartesianCoordinates(earth); // body-fixed position, m, as CSPICE georec_c
 ```
 
 ## Summary
@@ -131,4 +152,4 @@ var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadiu
 - All frame transforms pivot through ICRF. Use `ToFrame` to convert between any supported frames.
 - Body-fixed frames (`IAU_EARTH`, `IAU_MOON`, etc.) rotate with the body.
 - GCRF, CIRS, and TIRS frames provide the IAU CIO-based Earth orientation chain.
-- `ToEquatorial` extracts the ICRF RA/Dec whatever the frame of the state; `Planetodetic` represents geodetic surface coordinates.
+- `ToEquatorial` extracts the ICRF RA/Dec whatever the frame of the state; `Planetodetic` represents geodetic surface coordinates, and `ToPlanetodetic()` gives those of a state in one call.

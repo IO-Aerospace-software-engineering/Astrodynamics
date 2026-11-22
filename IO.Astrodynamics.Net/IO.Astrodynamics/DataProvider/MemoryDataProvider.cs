@@ -5,7 +5,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
-using CelestialBody = IO.Astrodynamics.DTO.CelestialBody;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
 
@@ -37,7 +36,7 @@ public class MemoryDataProvider : IDataProvider
 {
     private Dictionary<string, SortedDictionary<Time, StateOrientation>> _stateOrientationsToICRF = new Dictionary<string, SortedDictionary<Time, StateOrientation>>();
     private Dictionary<int, SortedDictionary<Time, StateVector>> _stateVectors = new Dictionary<int, SortedDictionary<Time, StateVector>>();
-    private Dictionary<int, CelestialBody> _celestialBodies = new Dictionary<int, CelestialBody>();
+    private Dictionary<int, CelestialBodyInfo> _celestialBodies = new Dictionary<int, CelestialBodyInfo>();
 
     /// <exception cref="ArgumentException">No orientation of <paramref name="source"/> was ever added, and the provider does not
     /// know it: neither ICRF, GCRF, ECLIPJ2000 (#559), nor TEME, CIRS or TIRS (#656), by name in any case for the last
@@ -172,7 +171,7 @@ public class MemoryDataProvider : IDataProvider
     /// frame of a stored state, is read outside its stored orientations.</exception>
     /// <exception cref="ArgumentException"><paramref name="frame"/>, or the frame of a stored state, is neither stored nor
     /// known to the provider (<see cref="FrameTransformationToICRF"/>).</exception>
-    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
+    public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
     {
         if (aberration != Aberration.None)
         {
@@ -205,7 +204,7 @@ public class MemoryDataProvider : IDataProvider
     /// <see cref="ArgumentException.ParamName"/> <c>naifId</c>: the type and the parameter <see cref="SpiceDataProvider"/>
     /// throws for an identifier SPICE does not name (#672). #680, decided by S. Guillet, 2026-11-14: a bad argument gives
     /// <see cref="ArgumentException"/>; <see cref="System.Collections.Generic.KeyNotFoundException"/> before 11.0.0.</exception>
-    public CelestialBody GetCelestialBodyInfo(int naifId)
+    public CelestialBodyInfo GetCelestialBodyInfo(int naifId)
     {
         if (!_celestialBodies.TryGetValue(naifId, out var info))
         {
@@ -217,11 +216,24 @@ public class MemoryDataProvider : IDataProvider
         return info;
     }
 
-    public void AddCelestialBodyInfo(params CelestialBody[] celestialBody)
+    /// <summary>
+    /// Store the information of celestial bodies, each under its <see cref="CelestialBodyInfo.NaifId"/>, replacing the
+    /// information stored under that identifier.
+    /// </summary>
+    /// <param name="celestialBodyInfos">The records (<see cref="CelestialBodyInfo"/> since 11.0.0, the interop struct
+    /// <c>IO.Astrodynamics.DTO.CelestialBody</c> before).</param>
+    /// <exception cref="ArgumentNullException">The array or one of its records is null; nothing is stored.</exception>
+    public void AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)
     {
-        foreach (var body in celestialBody)
+        ArgumentNullException.ThrowIfNull(celestialBodyInfos);
+        if (Array.IndexOf(celestialBodyInfos, null) >= 0)
         {
-            _celestialBodies[body.Id] = body;
+            throw new ArgumentNullException(nameof(celestialBodyInfos), "A record of the array is null.");
+        }
+
+        foreach (var body in celestialBodyInfos)
+        {
+            _celestialBodies[body.NaifId] = body;
         }
     }
 

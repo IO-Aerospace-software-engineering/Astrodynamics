@@ -6,14 +6,24 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Coordinates
 {
+    /// <summary>
+    /// Equatorial coordinates: a right ascension and a declination, with a distance when it is known, at an epoch.
+    /// </summary>
     public readonly record struct Equatorial
     {
+        /// <summary>The declination, rad.</summary>
         public double Declination { get; }
+
+        /// <summary>The right ascension, rad.</summary>
         public double RightAscension { get; }
+
+        /// <summary>The distance, m; NaN when it is not known.</summary>
         public double Distance { get; }
+
+        /// <summary>The epoch of the coordinates.</summary>
         public Time Epoch { get; }
 
-        public Equatorial(double declination, double rightAscension, double distance, Time epoch)
+        private Equatorial(double rightAscension, double declination, double distance, Time epoch)
         {
             Declination = declination;
             RightAscension = rightAscension;
@@ -21,9 +31,29 @@ namespace IO.Astrodynamics.Coordinates
             Epoch = epoch;
         }
 
-        public Equatorial(double declination, double rightAscension, Time epoch) : this(declination, rightAscension, Double.NaN, epoch)
-        {
-        }
+        /// <summary>
+        /// The coordinates of a right ascension and a declination, in the order of the name, without a distance (NaN). They
+        /// replace the constructor <c>Equatorial(declination, rightAscension, epoch)</c> of 10.x, whose order was the
+        /// reverse of the name of the type's members: swapped, two angles compiled and gave another direction (R20 of #668).
+        /// </summary>
+        /// <param name="rightAscension">The right ascension, rad.</param>
+        /// <param name="declination">The declination, rad.</param>
+        /// <param name="epoch">The epoch of the coordinates.</param>
+        /// <returns>The equatorial coordinates.</returns>
+        public static Equatorial FromRightAscensionDeclination(double rightAscension, double declination, Time epoch) =>
+            new(rightAscension, declination, double.NaN, epoch);
+
+        /// <summary>
+        /// The coordinates of a right ascension, a declination and a distance, in the order of the name. They replace the
+        /// constructor <c>Equatorial(declination, rightAscension, distance, epoch)</c> of 10.x (R20 of #668).
+        /// </summary>
+        /// <param name="rightAscension">The right ascension, rad.</param>
+        /// <param name="declination">The declination, rad.</param>
+        /// <param name="distance">The distance, m.</param>
+        /// <param name="epoch">The epoch of the coordinates.</param>
+        /// <returns>The equatorial coordinates.</returns>
+        public static Equatorial FromRightAscensionDeclination(double rightAscension, double declination, double distance, Time epoch) =>
+            new(rightAscension, declination, distance, epoch);
 
         /// <summary>
         /// The right ascension, declination and distance of the position of <paramref name="stateVector"/> in ICRF,

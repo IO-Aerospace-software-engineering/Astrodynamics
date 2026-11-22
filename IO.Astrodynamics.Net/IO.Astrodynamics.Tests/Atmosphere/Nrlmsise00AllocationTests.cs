@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Collections.Generic;
@@ -116,7 +117,7 @@ public class Nrlmsise00AllocationTests
         // Arrange
         var model = new Nrlmsise00Model(SpaceWeather.Nominal);
         IGeodeticDensityModel geodetic = model;
-        var context = AtmosphericContext.FromPlanetodetic(400e3, 0.5, 1.0, Epoch);
+        var context = AtmosphericContext.FromPlanetodetic(new Planetodetic(1.0, 0.5, 400e3), Epoch);
         _ = model.GetDensity(context);
         _ = geodetic.GetDensity(50e3, 0.5, 1.0, Epoch);
 
@@ -173,8 +174,7 @@ public class Nrlmsise00AllocationTests
                 {
                     // Alternate the ends of the table: 0, 2000 km, 12 km, 1000 km, ...
                     double altitude = k % 2 == 0 ? Altitudes[k / 2] : Altitudes[Altitudes.Length - 1 - k / 2];
-                    yield return AtmosphericContext.FromPlanetodetic(altitude, latitude, longitude,
-                        Epoch.AddHours(3.0 * k));
+                    yield return AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude), Epoch.AddHours(3.0 * k));
                 }
             }
         }

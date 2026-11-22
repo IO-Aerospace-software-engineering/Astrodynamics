@@ -84,8 +84,7 @@ internal static class EphemerisQueriesPage
     {
         #region docs/tutorials/ephemeris-queries.md:3
         // Inputs: earth and sun (CelestialBody), epoch (Time)
-        var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
-            .ToStateVector();
+        var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None);
 
         Console.WriteLine($"Position: {stateVector.Position} m");
         Console.WriteLine($"Velocity: {stateVector.Velocity} m/s");
@@ -103,7 +102,7 @@ internal static class EphemerisQueriesPage
 
         foreach (var sv in states)
         {
-            Console.WriteLine($"{sv.Epoch}  range = {sv.ToStateVector().Position.Magnitude():F0} m");
+            Console.WriteLine($"{sv.Epoch}  range = {sv.Position.Magnitude():F0} m");
         }
         #endregion
     }

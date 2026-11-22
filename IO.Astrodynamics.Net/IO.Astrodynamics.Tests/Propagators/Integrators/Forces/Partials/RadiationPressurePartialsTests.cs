@@ -80,7 +80,7 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
             referenceForce = new SolarRadiationPressure(spacecraft, Array.Empty<CelestialBody>());
             Assert.Equal(referenceForce.Apply(state, context), force.Apply(state, context));
             positionStep = 1e-5 * (state.Position - _cases.Sun.GetEphemeris(state.Epoch, _cases.Earth,
-                Frames.Frame.ICRF, Aberration.None).ToStateVector().Position).Magnitude();
+                Frames.Frame.ICRF, Aberration.None).Position).Magnitude();
         }
 
         var reference = RiddersDerivative.StatePartials(referenceForce, state, context, positionStep, 1.0);

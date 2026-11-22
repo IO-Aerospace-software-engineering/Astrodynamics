@@ -439,9 +439,9 @@ public class LightTimeCorrectionTests
                 foreach (var t in _epochs)
                 {
                     var read = InFrame(_moon.GetEphemeris(t, _site, frame, flag), frame);
-                    var icrf = _moon.GetEphemeris(t, _site, Frames.Frame.ICRF, flag).ToStateVector();
+                    var icrf = _moon.GetEphemeris(t, _site, Frames.Frame.ICRF, flag);
                     var lightTimeOnly = flag == Aberration.XCNS ? Aberration.XCN : flag;
-                    var center = lro.GetEphemeris(t, _site, Frames.Frame.ICRF, lightTimeOnly).ToStateVector();
+                    var center = lro.GetEphemeris(t, _site, Frames.Frame.ICRF, lightTimeOnly);
                     double sign = flag is Aberration.LT or Aberration.CN ? -1.0 : 1.0;
                     var expected = RotatedAtTheCentreEpoch(icrf, center, Itrf93, sign);
                     worstPosition = System.Math.Max(worstPosition, (read.Position - expected.Position).Magnitude());
@@ -518,8 +518,8 @@ public class LightTimeCorrectionTests
             var (lightTimeOnly, sign) = LightTimeOf(flag);
             foreach (var t in _epochs)
             {
-                var icrf = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, flag).ToStateVector();
-                var center = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, lightTimeOnly).ToStateVector();
+                var icrf = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, flag);
+                var center = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, lightTimeOnly);
                 var expected = RotatedAtTheCentreEpoch(icrf, center, frame, sign);
                 var state = read(t, flag);
                 Assert.Equal(frame, state.Frame);
@@ -538,7 +538,7 @@ public class LightTimeCorrectionTests
     [Fact]
     public void EarthFromMoonInItrf93_IsTheClosedFormOfTheCentreRule()
     {
-        var worst = EarthFromMoonAgainstTheCentreRule(Itrf93, (t, a) => _earth.GetEphemeris(t, _moon, Itrf93, a).ToStateVector());
+        var worst = EarthFromMoonAgainstTheCentreRule(Itrf93, (t, a) => _earth.GetEphemeris(t, _moon, Itrf93, a));
         _output.WriteLine($"MEASURE #739 the Earth from the Moon in ITRF93 (spkezr_c) against the closed form: position {worst.Position:E3} m, velocity {worst.Velocity:E3} m/s");
         Assert.True(worst.Position <= Frame739ClosedForm.Position, $"{worst.Position:E3} m");
         Assert.True(worst.Velocity <= Frame739ClosedForm.Velocity, $"{worst.Velocity:E3} m/s");
@@ -564,8 +564,8 @@ public class LightTimeCorrectionTests
     public void EarthFromMoonInAFrameOfTheLibrary_IsRotatedAtTheEpochOfTheEarth(string name)
     {
         var frame = LibraryFrame(name);
-        var byItem = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => _earth.GetEphemeris(t, _moon, frame, a).ToStateVector());
-        var byIdentifiers = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => SpiceAPI.Instance.ReadEphemeris(t, 301, 399, frame, a).ToStateVector());
+        var byItem = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => _earth.GetEphemeris(t, _moon, frame, a));
+        var byIdentifiers = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => SpiceAPI.Instance.ReadEphemeris(t, 301, 399, frame, a));
         var byWindow = EarthFromMoonAgainstTheCentreRule(frame, (t, a) =>
             SpiceAPI.Instance.ReadEphemeris(new Window(t, t.AddSeconds(60.0)), 301, 399, frame, a, System.TimeSpan.FromSeconds(60.0)).First().ToStateVector());
         _output.WriteLine($"MEASURE #739 the Earth from the Moon in {name} against the closed form: item {byItem.Position:E3} m {byItem.Velocity:E3} m/s, " +
@@ -588,13 +588,13 @@ public class LightTimeCorrectionTests
         {
             foreach (var flag in Flags)
             {
-                var read = _moon.GetEphemeris(t, _earth, Frames.Frame.TIRS, flag).ToStateVector();
+                var read = _moon.GetEphemeris(t, _earth, Frames.Frame.TIRS, flag);
                 var expected = _moon.GetEphemeris(t, _earth, Frames.Frame.ICRF, flag).ToFrame(Frames.Frame.TIRS).ToStateVector();
                 Assert.Equal(expected.Position, read.Position);
                 Assert.Equal(expected.Velocity, read.Velocity);
             }
 
-            var geometric = _earth.GetEphemeris(t, _moon, Frames.Frame.TIRS, Aberration.None).ToStateVector();
+            var geometric = _earth.GetEphemeris(t, _moon, Frames.Frame.TIRS, Aberration.None);
             var rotated = _earth.GetEphemeris(t, _moon, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.TIRS).ToStateVector();
             Assert.Equal(rotated.Position, geometric.Position);
             Assert.Equal(rotated.Velocity, geometric.Velocity);
@@ -753,7 +753,7 @@ public class LightTimeCorrectionTests
         double[] Values(Aberration flag, int e)
         {
             var horizontal = _site.GetHorizontalCoordinates(_epochs[e], target, flag);
-            var state = target.GetEphemeris(_epochs[e], _site, Frames.Frame.ICRF, flag).ToStateVector();
+            var state = target.GetEphemeris(_epochs[e], _site, Frames.Frame.ICRF, flag);
             return [horizontal.Range, horizontal.Azimuth, horizontal.Elevation, state.Position.Normalize().Dot(state.Velocity)];
         }
 

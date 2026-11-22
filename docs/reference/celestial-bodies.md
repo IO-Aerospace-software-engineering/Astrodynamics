@@ -61,8 +61,10 @@ identifiers they are objects of the kernels read by their identifier
 
 | Method | Description |
 |--------|-------------|
-| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state at epoch |
-| `GetEphemeris(Window, ILocalizable, Frame, Aberration, TimeSpan)` | Get states over window: every step from the start, in the window's calendar, up to its end (across a leap second the end bounds them, #682) |
+| `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state at epoch, a `StateVector` (11.0.0: typed `OrbitalParameters` before, R20 of #668) |
+| `GetEphemeris(Time, ILocalizable)` | Get state at epoch in ICRF without correction, bit for bit the read with `Frame.ICRF` and `Aberration.None` (11.0.0) |
+| `GetEphemeris(Window, ILocalizable, Frame, Aberration, TimeSpan)` | Get states over window, `StateVector`s: every step from the start, in the window's calendar, up to its end (across a leap second the end bounds them, #682) |
+| `GetEphemeris(Window, ILocalizable, TimeSpan)` | Get states over window in ICRF without correction (11.0.0) |
 | `GetOrientation(Frame, Time)` | Get body orientation |
 | `GeosynchronousOrbit(double, double, Time)` | Compute geosynchronous orbit, of the sidereal rotation period of the body frame at the epoch |
 | `GeosynchronousOrbit(double, double, Time, TimeSpan)` | Compute geosynchronous orbit of a declared period |
@@ -79,7 +81,28 @@ identifiers they are objects of the kernels read by their identifier
 // Inputs: epoch (Time)
 var earth = PlanetsAndMoons.EARTH_BODY;
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
-var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
+var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
+```
+
+### Atmospheric Context
+
+`GetAtmosphere(AtmosphericContext)` reads the atmosphere at a point given as an `AtmosphericContext`
+(`IO.Astrodynamics.Atmosphere`), a record of SI values:
+
+| Member | Description |
+|--------|-------------|
+| `AtmosphericContext.FromAltitude(double)` | A context of the altitude alone (m): the U.S. Standard Atmosphere 1976 of a model-less Earth |
+| `AtmosphericContext.FromPlanetodetic(Planetodetic, Time)` | A full context: the altitude, geodetic latitude and longitude of the `Planetodetic` and the epoch, which NRLMSISE-00 needs (11.0.0, R20 of #668: it replaces `FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`, whose three doubles ran in the order opposite to that of `Planetodetic`) |
+| `AtmosphericContext.Altitude` | Altitude above the reference ellipsoid, m |
+| `AtmosphericContext.GeodeticLatitude` / `AtmosphericContext.GeodeticLongitude` | Geodetic latitude and longitude, rad, null when not given |
+| `AtmosphericContext.Epoch` | The epoch, null when not given |
+
+```csharp
+// Inputs: epoch (Time)
+var earth = PlanetsAndMoons.EARTH_BODY;
+var context = AtmosphericContext.FromPlanetodetic(
+    new Planetodetic(longitude: 2.35 * Constants.Deg2Rad, latitude: 48.85 * Constants.Deg2Rad, altitude: 400e3), epoch);
+double density = earth.GetAirDensity(context); // kg/m³, NRLMSISE-00 at nominal space weather
 ```
 
 ## CelestialItem

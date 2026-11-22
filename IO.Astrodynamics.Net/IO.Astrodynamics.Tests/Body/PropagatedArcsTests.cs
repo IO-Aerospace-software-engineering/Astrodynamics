@@ -550,7 +550,7 @@ public class PropagatedArcsTests
         {
             if (t < run.Window.StartDate || t > end) return;
             var (position, _) = run.StateAt(t);
-            var managed = sc.GetEphemeris(t, center, Frame.ICRF, Aberration.None).ToStateVector();
+            var managed = sc.GetEphemeris(t, center, Frame.ICRF, Aberration.None);
             var spk = run.Kernel.GetGeometricStateRelativeTo(t, center);
             double dm = (managed.Position - position).Magnitude();
             double ds = (spk.Position - position).Magnitude();
@@ -577,18 +577,18 @@ public class PropagatedArcsTests
             // The velocity 1 µs before the impulse, from the earlier arc, and at it, from the later one (the state after)
             var before = tc.AddSeconds(-1e-6);
             var (_, vBefore) = run.StateAt(before);
-            m.VelocityBeforeManaged = System.Math.Max(m.VelocityBeforeManaged, (sc.GetEphemeris(before, center, Frame.ICRF, Aberration.None).ToStateVector().Velocity - vBefore).Magnitude());
+            m.VelocityBeforeManaged = System.Math.Max(m.VelocityBeforeManaged, (sc.GetEphemeris(before, center, Frame.ICRF, Aberration.None).Velocity - vBefore).Magnitude());
             m.VelocityBeforeSpk = System.Math.Max(m.VelocityBeforeSpk, (run.Kernel.GetGeometricStateRelativeTo(before, center).Velocity - vBefore).Magnitude());
             if (run.Ssb)
             {
                 var anchored = run.AnchoredVelocityBefore(Array.IndexOf(run.ImpulseEpochs, tc), before);
                 m.VelocityBeforeManagedAnchored = System.Math.Max(m.VelocityBeforeManagedAnchored,
-                    (sc.GetEphemeris(before, center, Frame.ICRF, Aberration.None).ToStateVector().Velocity - anchored).Magnitude());
+                    (sc.GetEphemeris(before, center, Frame.ICRF, Aberration.None).Velocity - anchored).Magnitude());
                 m.VelocityBeforeSpkAnchored = System.Math.Max(m.VelocityBeforeSpkAnchored, (run.Kernel.GetGeometricStateRelativeTo(before, center).Velocity - anchored).Magnitude());
             }
 
             var (_, vAt) = run.StateAt(tc);
-            m.VelocityAtManaged = System.Math.Max(m.VelocityAtManaged, (sc.GetEphemeris(tc, center, Frame.ICRF, Aberration.None).ToStateVector().Velocity - vAt).Magnitude());
+            m.VelocityAtManaged = System.Math.Max(m.VelocityAtManaged, (sc.GetEphemeris(tc, center, Frame.ICRF, Aberration.None).Velocity - vAt).Magnitude());
             m.VelocityAtSpk = System.Math.Max(m.VelocityAtSpk, (run.Kernel.GetGeometricStateRelativeTo(tc, center).Velocity - vAt).Magnitude());
         }
 
@@ -623,7 +623,7 @@ public class PropagatedArcsTests
             for (int i = 1; i < arc.Length - 1; i++)
             {
                 var (position, _) = run.StateAt(arc[i].Epoch);
-                m.AtOutputs = System.Math.Max(m.AtOutputs, (sc.GetEphemeris(arc[i].Epoch, center, Frame.ICRF, Aberration.None).ToStateVector().Position - position).Magnitude());
+                m.AtOutputs = System.Math.Max(m.AtOutputs, (sc.GetEphemeris(arc[i].Epoch, center, Frame.ICRF, Aberration.None).Position - position).Magnitude());
             }
         }
 
@@ -865,7 +865,7 @@ public class PropagatedArcsTests
 
             if (Ssb)
             {
-                var earth = SpiceAPI.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None).ToStateVector();
+                var earth = SpiceAPI.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None);
                 position -= earth.Position;
                 velocity -= earth.Velocity;
             }
@@ -902,13 +902,13 @@ public class PropagatedArcsTests
             double dt = Solution.TimeArgument.SecondsBetween(baseEpoch, t) - Solution.TimeArgument.SecondsBetween(baseEpoch, tc);
             double gmSun = new CelestialBody(Stars.Sun, Frame.ICRF, tc).GM;
             double gmEarth = ReadCenter.GM;
-            var d = SpiceAPI.Instance.ReadEphemeris(tc, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None).ToStateVector().Position;
+            var d = SpiceAPI.Instance.ReadEphemeris(tc, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None).Position;
             var r = before.Position;
             var rho = r - d;
             double rm = r.Magnitude(), pm = rho.Magnitude(), dm = d.Magnitude();
             var a = r * (-gmSun / (rm * rm * rm)) - (rho * (1.0 / (pm * pm * pm)) + d * (1.0 / (dm * dm * dm))) * gmEarth;
             var velocity = before.Velocity + a * dt;
-            var earth = SpiceAPI.Instance.ReadEphemeris(t, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None).ToStateVector();
+            var earth = SpiceAPI.Instance.ReadEphemeris(t, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None);
             return velocity - earth.Velocity;
         }
 

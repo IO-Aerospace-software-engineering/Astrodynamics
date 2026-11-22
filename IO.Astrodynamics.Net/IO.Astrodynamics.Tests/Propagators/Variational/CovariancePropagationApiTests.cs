@@ -489,7 +489,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         var spacecraft = PartialsTestCases.Spacecraft(Leo);
         spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step);
         var epoch = Start.AddSeconds(3000.0);
-        var before = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var before = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None);
         var states = spacecraft.PropagatedStates;
         var options = covarianceWithoutP0
             ? new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }
@@ -504,7 +504,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
                 spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, options));
 
         // Assert: the previous propagation is untouched (H3 review of step 8: it was reset before the checks)
-        var after = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var after = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None);
         Assert.True(spacecraft.IsPropagated);
         Assert.Equal(states.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)),
             spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)));

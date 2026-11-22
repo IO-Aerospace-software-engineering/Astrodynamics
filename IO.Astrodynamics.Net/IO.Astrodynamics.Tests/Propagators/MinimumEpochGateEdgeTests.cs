@@ -466,7 +466,7 @@ public class MinimumEpochGateEdgeTests
         Assert.True(System.Math.Abs(burnError) <= MinimumEpochGateTests.Rk78Epoch["apsis"], $"impulse {burnError:E3} s from the apogee");
 
         var tca = S.AddSeconds(8000.0);
-        var secondary = ReferenceCase.NewSpacecraft(-7842, AvoidanceFallbackCase.SecondaryNear(protectedCraft.GetEphemeris(tca, earth, Frame.ICRF, Aberration.None).ToStateVector()));
+        var secondary = ReferenceCase.NewSpacecraft(-7842, AvoidanceFallbackCase.SecondaryNear(protectedCraft.GetEphemeris(tca, earth, Frame.ICRF, Aberration.None)));
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary, new Window(S.AddSeconds(6500.0), S.AddSeconds(9500.0)));
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, new AvoidanceSearchOptions
         {

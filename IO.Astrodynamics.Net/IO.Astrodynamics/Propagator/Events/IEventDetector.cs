@@ -53,7 +53,7 @@ public enum EventAction
 /// <summary>
 /// Result of handling a detected event.
 /// </summary>
-public record struct EventResult(
+public readonly record struct EventResult(
     StateVector ModifiedState,
     StateOrientation Orientation,
     EventAction Action,

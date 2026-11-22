@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public readonly struct TLEElements
+internal readonly struct TLEElements
 {
     public double BalisticCoefficient { get; }
     public double SecondDerivativeOfMeanMotion { get; }

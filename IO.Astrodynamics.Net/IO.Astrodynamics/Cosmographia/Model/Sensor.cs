@@ -2,14 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class SensorRootObject
+internal class SensorRootObject
 {
     public string version { get; set; }
     public string name { get; set; }
     public SensorItem[] items { get; set; }
 }
 
-public class SensorItem
+internal class SensorItem
 {
     [JsonPropertyName("class")]
     public string sensorClass { get; set; }
@@ -22,13 +22,13 @@ public class SensorItem
     public SensorGeometry geometry { get; set; }
 }
 
-public class SensorTrajectoryFrame
+internal class SensorTrajectoryFrame
 {
     public string type { get; set; }
     public string body { get; set; }
 }
 
-public class SensorGeometry
+internal class SensorGeometry
 {
     public string type { get; set; }
     public string instrName { get; set; }

@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.DataProvider;
-using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Math;
 using Xunit;
-using CelestialBody = IO.Astrodynamics.DTO.CelestialBody;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
@@ -117,7 +115,7 @@ public class ConfigurationTest
 
         dataProvider.AddStateVector(target.NaifId, date, stateVector);
 
-        var result = dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None).ToStateVector();
+        var result = dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None);
 
         Assert.Equal(Vector3.Zero, result.Position);
         Assert.Equal(Vector3.Zero, result.Velocity);
@@ -169,7 +167,7 @@ public class ConfigurationTest
     public void GetCelestialBodyInfo_ReturnsCelestialBody_WhenNaifIdExists()
     {
         var dataProvider = new MemoryDataProvider();
-        var celestialBody = new CelestialBody(10, 0, 0, "Sun", new Vector3D(150000000, 150000000, 0), 12345698, "IAU_SUN", 0, 2, 3, 4);
+        var celestialBody = new CelestialBodyInfo(10, "Sun", 0, 0, new Vector3(150000000, 150000000, 0), 12345698, "IAU_SUN", 0, 2, 3, 4);
 
         dataProvider.AddCelestialBodyInfo(celestialBody);
 

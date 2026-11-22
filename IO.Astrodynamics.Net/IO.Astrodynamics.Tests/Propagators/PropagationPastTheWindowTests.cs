@@ -152,7 +152,7 @@ public class PropagationPastTheWindowTests
 
         // Assert
         var spice = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
-            Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            Frames.Frame.ICRF, Aberration.None);
         double apart = (position - spice.Position).Magnitude();
         _output.WriteLine($"MEASURE #626 Moon {fromTheGrid} s from the grid: {apart:E3} m from spkezr");
         Assert.Equal(spice.Position, position);

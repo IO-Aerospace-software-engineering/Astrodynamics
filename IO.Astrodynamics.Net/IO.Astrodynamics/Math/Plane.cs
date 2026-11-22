@@ -7,7 +7,7 @@ namespace IO.Astrodynamics.Math;
 /// is, unchecked; <c>default(Plane)</c> and <c>new Plane()</c> have the zero normal, which orients no plane, so the angles
 /// throw for it.
 /// </summary>
-public record struct Plane
+public readonly record struct Plane
 {
     public Vector3 Normal { get; }
     public double Distance { get; }

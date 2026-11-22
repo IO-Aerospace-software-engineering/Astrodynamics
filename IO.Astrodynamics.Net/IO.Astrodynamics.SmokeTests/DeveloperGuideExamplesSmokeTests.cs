@@ -45,9 +45,9 @@ public class DeveloperGuideExamplesSmokeTests
         // Create site with explicit coordinates
         var mySite = new Site(100, "MySite", earth,
             new Planetodetic(
-                Longitude: -117.0 * Constants.Deg2Rad,
-                Latitude: 34.0 * Constants.Deg2Rad,
-                Altitude: 1000.0  // meters
+                longitude: -117.0 * Constants.Deg2Rad,
+                latitude: 34.0 * Constants.Deg2Rad,
+                altitude: 1000.0  // meters
             ));
 
         // Get horizontal coordinates to Moon

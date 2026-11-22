@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public struct Planetodetic
+internal struct Planetodetic
 {
     public double longitude, latitude, altitude;
 

@@ -4,14 +4,14 @@ using System.Text.Json.Serialization;
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class ArcRootObject
+internal class ArcRootObject
 {
     public string version { get; set; }
     public string name { get; set; }
     public ArcItems[] items { get; set; }
 }
 
-public class ArcItems
+internal class ArcItems
 {
     [JsonPropertyName("class")]
     public string arcClass { get; set; }
@@ -23,7 +23,7 @@ public class ArcItems
     public ArcTrajectoryPlot trajectoryPlot { get; set; }
 }
 
-public class Arcs
+internal class Arcs
 {
     public string endTime { get; set; }
     public string center { get; set; }
@@ -31,20 +31,20 @@ public class Arcs
     public ArcBodyFrame bodyFrame { get; set; }
 }
 
-public class ArcTrajectory
+internal class ArcTrajectory
 {
     public string type { get; set; }
     public string target { get; set; }
     public string center { get; set; }
 }
 
-public class ArcBodyFrame
+internal class ArcBodyFrame
 {
     public string type { get; set; }
     public string name { get; set; }
 }
 
-public class ArcGeometry
+internal class ArcGeometry
 {
     public string type { get; set; }
     public int[] meshRotation { get; set; }
@@ -52,12 +52,12 @@ public class ArcGeometry
     public string source { get; set; }
 }
 
-public class ArcLabel
+internal class ArcLabel
 {
     public int[] color { get; set; }
 }
 
-public class ArcTrajectoryPlot
+internal class ArcTrajectoryPlot
 {
     public int[] color { get; set; }
     public string duration { get; set; }

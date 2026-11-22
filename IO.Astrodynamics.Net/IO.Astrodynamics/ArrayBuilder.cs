@@ -2,7 +2,7 @@
 
 namespace IO.Astrodynamics;
 
-public static class ArrayBuilder
+internal static class ArrayBuilder
 {
     public static T[] ArrayOf<T>(int count) where T : new()
     {

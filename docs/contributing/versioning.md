@@ -60,9 +60,14 @@ parsec of 648000/π au, a repeated kernel load, which no longer reloads, with th
 central body without GM refused by a propagation, the scale of a `Time` a required argument, with `Time.Parse` in
 place of `Time(string)`, an immutable `Matrix` with `Vector3.Dot` in place of the operator `*` between vectors, the row
 product vᵀ M of `double[] * Matrix`, and
-`KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters.
+`KeplerianElements.Parabolic` and `FromTrueAnomaly` in place of the constructor's optional parameters, and the data
+provider seam in domain types (`StateVector`, `CelestialBodyInfo`) with the read-only public structs, the ephemeris
+reads typed as the `StateVector` they build, with `ToFrame` and `RelativeTo` typed so on a state vector.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
-`ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3` and six exports of the native library that .NET never called. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+`ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
+public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
+implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
+radius. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -211,6 +216,35 @@ release are listed under **Known limitations**.
   within 1e-6 of e = 1, from its perigee radius, a = q / (1 − e), +Infinity at e = 1;
   `ArgumentOutOfRangeException` (`eccentricity`) outside the band. Both osculating. See
   [Keplerian Elements](../reference/keplerian-elements.md).
+- **`CelestialBodyInfo`** (lot L3 of the ergonomics review, R04 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A of the re-baseline, decided by S.
+  Guillet, 2026-11-19), `IO.Astrodynamics.DataProvider`: the information a data provider gives on a celestial body, a
+  public sealed record of SI values, `CelestialBodyInfo(NaifId, Name, CenterOfMotionId, BarycenterOfMotionId, Radii,
+  GM, FrameName, FrameId = 0, J2 = NaN, J3 = NaN, J4 = NaN)`, `Radii` a `Vector3` in m, equal to another when every
+  value is (NaN equal to NaN). `SpiceAPI.GetCelestialBodyInfo` gives the native record field for field, bit for bit
+  (`CelestialBodyInfoTests`, against the native record and the kernel texts of `gm_de440.tpc` and `pck00011.tpc`). It
+  replaces the public interop struct `IO.Astrodynamics.DTO.CelestialBody` on the provider seam (under **Changed**). See
+  [SpiceAPI & Data Providers](../reference/spice-api.md#the-provider-seam).
+- **The default ephemeris reads and the coordinates in one call** (lot L3 of the ergonomics review, R20 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choices 1 and 3 and section A of the
+  re-baseline, decided by S. Guillet, 2026-11-19). `CelestialItem.GetEphemeris(epoch, observer)` and
+  `GetEphemeris(window, observer, step)`, and the same two on `Site`: the read in ICRF without correction, bit for bit
+  the read with `Frame.ICRF` and `Aberration.None` (`EphemerisDefaultsTests`: a body seen from a body and from the solar
+  system barycentre, a propagated and a kernel spacecraft, a star, a site of the kernels and one of coordinates), not
+  on `ILocalizable`, whose optional parameters would bind the default into the caller. `OrbitalParameters.ToPlanetocentric()`
+  and `ToPlanetodetic()`: the coordinates of the position in the body-fixed frame of the observer at the epoch, on its
+  ellipsoid, the second the two calls `ToPlanetocentric().ToPlanetodetic(body)` in one, bit for bit (against CSPICE
+  `recgeo_c` on the 960 Earth points of `Data/GeodeticReference`: 0 rad in longitude, 6.5e-16 of max(|h|, a) in
+  altitude, 5.6e-16 rad in latitude below 1.5 rad and 7.6e-12 rad 1.75e-5 rad from the poles, the planetocentric
+  latitude asin(z / r) of the two calls: under **Known limitations**); an observer that is not a `CelestialBody` throws `InvalidOperationException`. The coordinate
+  records take the body: `Planetodetic.ToPlanetocentric(body)` and `ToCartesianCoordinates(body)` (CSPICE `georec_c`,
+  4.0e-16 of max(|r|, a)), `Planetocentric.ToPlanetodetic(body)` and `RadiusFromPlanetocentricLatitude(body)`, bit for
+  bit the forms of a flattening and a radius they replace (under **Removed**). `Equatorial.FromRightAscensionDeclination(rightAscension,
+  declination, epoch)` and `(rightAscension, declination, distance, epoch)`, in the order of the name, and
+  `AtmosphericContext.FromPlanetodetic(planetodetic, epoch)`. `GeodeticOneCallTests`. See
+  [Celestial Bodies](../reference/celestial-bodies.md#atmospheric-context) (`AtmosphericContext`),
+  [State Vector](../reference/state-vector.md), [Sites](../reference/sites.md#coordinates) (the coordinate records and
+  `Equatorial`) and [Coordinate Conversions](../tutorials/coordinate-conversions.md#equatorial-coordinates).
 - **`time-converter --to tdb|tt|tai|utc|gps|local --format iso|jd|seconds`** (D3.7 of #668), TDB and ISO by default,
   `-t`, `-u`, `-l`, `-j`, `-e` and `-d` their aliases (an alias and an option that disagree throw); TT, TAI and GPS
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
@@ -4446,6 +4480,62 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `KeplerianElements.Parabolic(q, i, o, w, m, centre, epoch, frame)`, an e of the band as the last argument and its a
   computed; `period:` → nothing (`Period()` computes it); a `perigeeRadius:` beside an ellipse or a hyperbola → nothing
   (`PerigeeRadius()` computes a (1 − e)); `rigthAscendingNode:` → `ascendingNode:`.
+- **Breaking: the data provider seam speaks domain types** (lot L3, R04 with R20 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, so that a
+  custom provider changes once). `IDataProvider.GetEphemeris` returns a `StateVector` (`OrbitalParameters` before,
+  always built as a `StateVector`); `IDataProvider.GetCelestialBodyInfo`, `SpiceAPI.GetCelestialBodyInfo` and
+  `MemoryDataProvider.GetCelestialBodyInfo` return a `CelestialBodyInfo`, and `MemoryDataProvider.AddCelestialBodyInfo`
+  takes `params CelestialBodyInfo[]` (the interop struct `IO.Astrodynamics.DTO.CelestialBody` before, now internal,
+  whose name clashed with `IO.Astrodynamics.Body.CelestialBody`), throwing `ArgumentNullException`
+  (`celestialBodyInfos`) for a null array or record and storing nothing (`NullReferenceException` part way before). The
+  values are the same, bit for bit. The interface documents its exception contract (an unknown name or identifier
+  `ArgumentException`, a known item without data `InvalidOperationException`), unchanged since #680. Migration: a custom
+  provider returns `StateVector` from `GetEphemeris` and `CelestialBodyInfo` from `GetCelestialBodyInfo`; a caller that
+  wrote `.ToStateVector()` after a provider read may drop it; `info.Id` → `info.NaifId`; `new DTO.CelestialBody(id,
+  centerOfMotionId, barycenterOfMotionId, name, new Vector3D(x, y, z), gm, frameName, frameId, j2, j3, j4)` → `new
+  CelestialBodyInfo(id, name, centerOfMotionId, barycenterOfMotionId, new Vector3(x, y, z), gm, frameName, frameId, j2,
+  j3, j4)` (the name second), or named arguments; `using BodyInfo = IO.Astrodynamics.DTO.CelestialBody` → `using
+  IO.Astrodynamics.DataProvider`.
+- **Breaking: `CelestialItem.ExtendedInformation` is private protected** (R04 of #668, section A): a field of the
+  interop struct, protected, so that a subclass outside the library read the body information through it. Migration:
+  read the members of the body (`Name`, `GM`, `Radii`, `Frame`, `J2`, `CenterOfMotionId`, ...), or
+  `Configuration.Instance.DataProvider.GetCelestialBodyInfo(naifId)`.
+- **Breaking: every public struct is read only** (R04 of #668: `IntegrationResult`, `EventInfo` and `EventResult`, the
+  positional record structs of the integrators and the event detectors, had public setters, and `Plane` was not read
+  only), so that a copy taken from a property or a collection cannot be changed in the belief that the original is
+  (`PublicSurfaceScopeTests`). Migration: `result = result with { Action = EventAction.Continue }` in place of
+  `result.Action = EventAction.Continue`.
+- **Breaking: the ephemeris reads are typed as the `StateVector` they build** (lot L3, R20 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 1, decided by S. Guillet,
+  2026-11-19). `ILocalizable.GetEphemeris` returns a `StateVector` at an epoch and an `IEnumerable<StateVector>` over a
+  window, and so do the implementations of `CelestialItem` (its virtual and the overrides of `Spacecraft` and `Star`),
+  `Site`, and `SpiceAPI.ReadEphemeris` (both): `OrbitalParameters` before, every implementation building a
+  `StateVector`. The states are the same objects, bit for bit. Migration: an `ILocalizable` implementation or a
+  `GetEphemeris` override changes its return types; `List<OrbitalParameters> l = x.GetEphemeris(window, ...).ToList()`
+  → `List<StateVector>`, or `IEnumerable<OrbitalParameters> l = x.GetEphemeris(...)` where a sequence of the base type
+  is meant; a `.ToStateVector()` after a read may be dropped.
+- **Breaking: `ToFrame` and `RelativeTo` are virtual, typed as a `StateVector` on a `StateVector`** (R20 of #668): the
+  covariant overrides `StateVector.ToFrame(Frame)` and `StateVector.RelativeTo(ILocalizable, Aberration)`, so that
+  `sv.ToFrame(Frame.ECLIPTIC_J2000).Position` reads without `.ToStateVector()`. The conversions are those of
+  `OrbitalParameters`, bit for bit; on any other orbital parameters they keep their type, the parameters themselves in
+  their own frame or about their own observer (a `TLE` in TEME stays the TLE). Migration: none for a caller; a `var`
+  that held `OrbitalParameters` holds a `StateVector`, and a subclass of `OrbitalParameters` that declared a member
+  `ToFrame` or `RelativeTo` of these signatures overrides it.
+- **Breaking: a geodetic coordinate search from an observer that is not a body throws `InvalidOperationException`**
+  (R20 of #668): the managed coordinate searches of `CelestialItem` and `Site` in `CoordinateSystem.Geodetic` read
+  `ToPlanetodetic()`, whose observer must be a `CelestialBody`; before, the cast threw `InvalidCastException`. The
+  windows of every other search are unchanged, bit for bit (the same two calls). Migration: a
+  `catch (InvalidCastException)` catches `InvalidOperationException`.
+- **Breaking: the coordinate records take camelCase constructor parameters** (lot L3, R20 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), PR R20-b of the first annex,
+  D2 N1): `Planetodetic(longitude, latitude, altitude)`, `Planetocentric(longitude, latitude, radius)` and
+  `Horizontal(azimuth, elevation, range, epoch)`, each with its `Deconstruct` of the same names; before, positional
+  records whose parameters were named as their properties, so the design's `new Planetodetic(longitude: lon, latitude:
+  lat, altitude: 1e3)` did not compile. The properties keep their names and their `init` accessors (`with`), equality,
+  `ToString` and the order of the components are unchanged (`CoordinateConstructorTests`). Migration: a named argument
+  takes the lower-case name, `new Planetodetic(Longitude: lon, Latitude: lat, Altitude: h)` →
+  `new Planetodetic(longitude: lon, latitude: lat, altitude: h)`; positional calls, `with` and deconstruction are
+  unchanged.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -6643,6 +6733,59 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **The operator `*` between two `Vector3`**, the dot product (R26 of #668, section A as amended: no forwarder;
   `System.Numerics.Vector3 * Vector3` is component-wise, so the operator read as a trap). `v1 * v2` no longer compiles,
   so no caller meets another meaning silently. Migration: `v1.Dot(v2)` (Added above), the same expression, bit for bit.
+- **The public interop structs of `IO.Astrodynamics.DTO`** (lot L3, R04 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `AzimuthRange`, `CelestialBody`, `EquinoctialElements`,
+  `FrameTransformation`, `KeplerianElements`, `Launch`, `Planetodetic`, `Quaternion`, `Site`, `StateOrientation`,
+  `StateVector`, `TLEElements`, `Vector3D` and `Window`, the P/Invoke layouts of the native layer, are internal: eleven
+  bore the names of domain types, so that a `using IO.Astrodynamics.DTO` made them ambiguous (CS0104), and only
+  `GetCelestialBodyInfo` reached one. Migration: `CelestialBodyInfo` for the body information (Changed above); the
+  domain types (`IO.Astrodynamics.Math.Vector3`, `Quaternion`, `OrbitalParameters.StateVector`, `TimeSystem.Window`,
+  `Coordinates.Planetodetic`, ...) for the others.
+- **The ten raw conversions of `SpiceAPI`** (lot L3, R04 of #668, choice 1 as amended by section 7 of the re-baseline,
+  decided by S. Guillet, 2026-11-19: removed from the public API outright, no forwarder): `ConvertTleToStateVector(line1,
+  line2, line3, epoch)`, `ConvertStateVectorToConicOrbitalElement(stateVector)` and `(stateVector, gm)`,
+  `ConvertEquinoctialElementsToStateVector(elements)`, `ConvertConicElementsToStateVector(elements)`, `(elements, epoch)`
+  and `(elements, epoch, gm)`, `Propagate2Bodies(stateVector, dt)`, `(stateVector, gm, dt)` and `(stateVector,
+  targetEpoch)`. They twinned the object API through CSPICE; the library keeps them internal, the SPICE references of its
+  tests. Migration, the object API, the library's own computation, which agrees with CSPICE to the tolerances of the
+  tests, not bit for bit: `new TLE(name, line1, line2).ToStateVector(epoch)` (the same `evsgp4_c`);
+  `stateVector.ToKeplerianElements()`; `elements.ToStateVector()` and `elements.ToStateVector(epoch)`;
+  `stateVector.AtEpoch(stateVector.Epoch + dt).ToStateVector()` and `stateVector.AtEpoch(targetEpoch).ToStateVector()`,
+  which count the TT seconds between the instants about the Earth (#508) where `Propagate2Bodies` counted the difference
+  of the labels (the two differ by the change of TDB − TT over the interval, 3.3 ms at most, twice the 1.66 ms
+  amplitude of TDB − TT); an explicit GM through an observer of that GM, a
+  `CelestialBody` built from custom parameters. See [Two-body calls and element
+  conversions](../reference/spice-api.md#two-body-calls-and-element-conversions).
+- **The public helpers of the implementation** (lot L3, R04 of #668): `DictionnaryExtension` (a `GetOrAdd` on
+  `IDictionary`), `Enumeration` (`GetDescription`, `GetValueFromDescription`), `ArrayBuilder`,
+  `Converters.ProfilesConfiguration` (internal members only), `Helpers.Utf8StringWriter`,
+  `Propagator.PropagationEphemerisCache` and `Propagator.PropagationFrameOrientationCache` (the force caches a
+  propagation builds for itself), and the JSON model of the Cosmographia exporter (`Cosmographia.Model`, 50 types), whose
+  files are the exporter's only output. Migration: `ConcurrentDictionary.GetOrAdd` or `CollectionExtensions`;
+  `DescriptionAttribute` read by reflection; `new T[n]` filled by the caller; `StringWriter` with an `Encoding`
+  override; the exporter's files for the Cosmographia model.
+- **The `Equatorial` constructors of two angles** (lot L3, R20 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A of the re-baseline as
+  amended by its section 7, decided by S. Guillet, 2026-11-19: removed outright, no forwarder): `Equatorial(declination,
+  rightAscension, epoch)` and `(declination, rightAscension, distance, epoch)`, whose order was the reverse of the name
+  of the type's members, so that a swap compiled and gave another direction ((0.853, 0.492, 0.174) for (0.853, 0.150,
+  0.500)). `Equatorial(StateVector)` stays. Migration: `new Equatorial(dec, ra, epoch)` →
+  `Equatorial.FromRightAscensionDeclination(ra, dec, epoch)`, and with a distance `(ra, dec, distance, epoch)`. See
+  [Sites](../reference/sites.md#equatorial).
+- **The coordinate conversions taking a flattening and a radius** (R20 of #668, choice 2 of the first annex, the
+  design's recommendation as amended by section 7 of the re-baseline): `Planetodetic.ToPlanetocentric(flattening,
+  equatorialRadius)`, `Planetocentric.ToPlanetodetic(flattening, equatorialRadius)`,
+  `Planetocentric.RadiusFromPlanetocentricLatitude(equatorialRadius, flattening)` and its static form `(latitude,
+  equatorialRadius, flattening)`, in two orders, so that a swapped radius compiled (0.00349 m); internal now, the
+  conformance runner's custom ellipsoids among their callers. Migration: `ToPlanetocentric(body)`, `ToPlanetodetic(body)`,
+  `RadiusFromPlanetocentricLatitude(body)` with the `CelestialBody` of the ellipsoid (the same arithmetic, bit for bit),
+  or `body.RadiusFromPlanetocentricLatitude(latitude)`; `ToPlanetocentric(...).ToCartesianCoordinates()` →
+  `ToCartesianCoordinates(body)`.
+- **`OrbitalParameters.ToPlanetocentric(Aberration)`** (R20 of #668), whose correction was not used. Migration:
+  `ToPlanetocentric()`, the same values, bit for bit; `ToPlanetodetic()` for the geodetic coordinates.
+- **`AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`** (R20 of #668), whose
+  three doubles ran in the order opposite to that of `Planetodetic`. Migration:
+  `AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude), epoch)`.
 
 **Known limitations**
 
@@ -6657,6 +6800,16 @@ not listed.
   (#668, decided by S. Guillet, 2026-11-14): it is left to an additive constructor overload after 11.0.0, in
   [#723](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/723) (decided by S. Guillet,
   2026-11-17; [Stars](../reference/stars.md#limits)).
+- **The planetocentric latitude loses digits at the poles** (found in lot L3 of #668, no issue yet, reported to S.
+  Guillet). `OrbitalParameters.ToPlanetocentric()` (before 11.0.0 `ToPlanetocentric(Aberration)`) and
+  `CelestialItem.SubObserverPoint` take the latitude as asin(z / r), which loses digits where z / r rounds to 1, and
+  `ToPlanetodetic()` and the geodetic coordinate searches go through it: 7.6e-12 rad from CSPICE `recgeo_c` 1.75e-5 rad
+  from the poles of the Earth, 112 m from the axis, and 5.6e-16 rad below 1.5 rad (`GeodeticOneCallTests`).
+  Workaround: atan2(z, √(x² + y²)) of the body-fixed position (`ToFrame(body.Frame).Position`) gives the full precision.
+  The same path differs from `reclat_c` and `recgeo_c` on two degenerate positions: at the centre of the body the
+  latitude is NaN (asin(0/0)), and the altitude too, where `reclat_c` gives (0, 0, 0) and `recgeo_c` (0, π/2, −b); on
+  the polar axis with a negative-zero x (and y), the longitude is ±π (atan2 of signed zeros), where both give 0 (with
+  +0, latitude ±π/2 exactly, longitude 0).
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter

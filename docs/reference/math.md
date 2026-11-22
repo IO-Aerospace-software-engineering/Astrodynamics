@@ -55,7 +55,7 @@ Vector3 turned = Matrix.CreateRotationMatrixZ(Constants.HalfPi) * r;   // (0, 70
 
 `Plane` is a normal and a distance from the origin (`Plane.X`, `Plane.Y`, `Plane.Z`: the planes of unit normals along
 the axes, through the origin). The constructors take the normal as it is; `default(Plane)` and `new Plane()` have the zero
-normal, which orients no plane.
+normal, which orients no plane. It is a `readonly record struct` (11.0.0: not read only before; its properties already had no setter).
 
 | Member | Description |
 |--------|-------------|
@@ -168,7 +168,7 @@ double sigmaX = System.Math.Sqrt(cov[0, 0]);                            // 10 m
 
 ## Lagrange
 
-Lagrange interpolation for polynomial fitting of ephemeris data. Used internally by `PropagationEphemerisCache` for 8-point interpolation of celestial body positions.
+Lagrange interpolation for polynomial fitting of ephemeris data. Used internally by the ephemeris cache of a propagation (internal since 11.0.0) for 8-point interpolation of celestial body positions.
 
 ## Tsiolkovski
 

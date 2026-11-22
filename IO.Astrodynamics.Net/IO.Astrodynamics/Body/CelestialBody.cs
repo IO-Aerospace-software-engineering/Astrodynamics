@@ -308,7 +308,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     private BodyProviderData BodyData => (BodyProviderData)Resolved;
 
     /// <summary>The data of a static body: those of its item and its radii (<c>BODYnnn_RADII</c> on SPICE).</summary>
-    private protected override void RequireKernelData(DTO.CelestialBody information)
+    private protected override void RequireKernelData(CelestialBodyInfo information)
     {
         base.RequireKernelData(information);
         if (!(information.Radii.X > 0.0 && information.Radii.Y > 0.0 && information.Radii.Z > 0.0))
@@ -327,12 +327,12 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// Fills the members of a body from its <paramref name="information"/>, as the natural-body constructor reads them,
     /// and its sphere of influence from its <paramref name="mass"/> and <paramref name="orbit"/>.
     /// </summary>
-    private BodyProviderData ReadBodyData(BodyProviderData data, DTO.CelestialBody information, double mass,
+    private BodyProviderData ReadBodyData(BodyProviderData data, CelestialBodyInfo information, double mass,
         OrbitalParameters.OrbitalParameters orbit)
     {
         data.PolarRadius = information.Radii.Z;
         data.EquatorialRadius = information.Radii.X;
-        data.Radii = new Vector3(information.Radii.X, information.Radii.Y, information.Radii.Z);
+        data.Radii = information.Radii;
         double flattening = (data.EquatorialRadius - data.PolarRadius) / data.EquatorialRadius;
         data.Flattening = double.IsNaN(flattening) ? 0.0 : flattening;
         data.J2 = information.J2;
@@ -348,7 +348,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
 
     // The sphere of influence of a body of the given mass and orbit about the barycentre of its system: +Infinity without
     // an orbit and for the Sun
-    private double ReadSphereOfInfluence(DTO.CelestialBody information, double mass, OrbitalParameters.OrbitalParameters orbit)
+    private double ReadSphereOfInfluence(CelestialBodyInfo information, double mass, OrbitalParameters.OrbitalParameters orbit)
     {
         if (orbit == null || IsSun)
         {
@@ -556,8 +556,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
 
         CelestialBody sun = Stars.SUN_BODY;
         var sideralRotation = SideralRotationPeriod(epoch);
-        var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
-        var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
+        var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPTIC_J2000, Aberration.LT).Position;
+        var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPTIC_J2000, Aberration.LT).Position;
         var angle = eph0.Angle(eph1);
         return sideralRotation + Time.SecondsToSpan(angle / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
@@ -671,7 +671,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             return model.GetDensity(altitude, geodeticLatitude, geodeticLongitude, epoch);
         }
 
-        return GetAirDensity(AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch));
+        return GetAirDensity(AtmosphericContext.FromPlanetodetic(new Coordinates.Planetodetic(geodeticLongitude, geodeticLatitude, altitude), epoch));
     }
 
     /// <summary>

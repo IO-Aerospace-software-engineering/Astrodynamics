@@ -531,7 +531,7 @@ public class PropagatedEphemerisTests
             double worst = 0.0, worstVelocity = 0.0;
             foreach (var (epoch, position, velocity) in expected)
             {
-                var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -5402, Frame.ICRF, Aberration.None).ToStateVector();
+                var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -5402, Frame.ICRF, Aberration.None);
                 worst = System.Math.Max(worst, (read.Position - position).Magnitude());
                 worstVelocity = System.Math.Max(worstVelocity, (read.Velocity - velocity).Magnitude());
             }

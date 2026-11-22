@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public struct EquinoctialElements
+internal struct EquinoctialElements
 {
     public double Epoch;
     public int CenterOfMotionId; 

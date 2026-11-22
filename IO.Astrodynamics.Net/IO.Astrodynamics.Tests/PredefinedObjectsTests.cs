@@ -53,7 +53,7 @@ public class PredefinedObjectsTests
         Assert.Equal(399013, site.NaifId);
         Assert.Equal("DSS-13", site.Name);
         Assert.True(site.IsSpiceBacked);
-        var expected = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 399013, earth.Frame, Aberration.None).ToStateVector();
+        var expected = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 399013, earth.Frame, Aberration.None);
         Assert.Equal(expected.Position, site.InitialOrbitalParameters.ToStateVector().Position);
         Assert.Equal(new Site(13, "DSS-13", earth).Planetodetic, site.Planetodetic);
     }

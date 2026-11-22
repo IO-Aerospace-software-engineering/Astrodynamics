@@ -2,7 +2,7 @@
 
 namespace IO.Astrodynamics.Cosmographia.Model;
 
-public class SpiceRootObject
+internal class SpiceRootObject
 {
     public string version { get; set; }
     public string name { get; set; }
