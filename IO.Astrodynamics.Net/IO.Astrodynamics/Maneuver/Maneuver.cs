@@ -98,8 +98,9 @@ namespace IO.Astrodynamics.Maneuver
         /// <returns>The maneuver hold duration as a TimeSpan.</returns>
         /// <remarks>
         /// Zero or positive: the constructor and <see cref="PhasingManeuver"/> set it through one check, a negative hold
-        /// throwing <see cref="ArgumentOutOfRangeException"/> (R11 and decision 11 of lot L4 of #668: before 11.0.0 a
-        /// protected setter accepted it, and the window it gave the maneuver mid-propagation ended before it started).
+        /// throwing <see cref="ArgumentOutOfRangeException"/> (R11 and decision 11 of lot L4 of #668, the setter
+        /// <c>private protected</c> by decision 16, decided by S. Guillet, 2026-11-22: before 11.0.0 a protected setter
+        /// accepted it, and the window it gave the maneuver mid-propagation ended before it started).
         /// </remarks>
         public TimeSpan ManeuverHoldDuration
         {

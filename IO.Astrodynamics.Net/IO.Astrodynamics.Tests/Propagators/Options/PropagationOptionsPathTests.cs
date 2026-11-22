@@ -100,7 +100,9 @@ public class PropagationOptionsPathTests
     public void AutoCovariance_PropagatesACovarianceAtTheStart_AsTheExplicitMode_TrajectoryUnchanged()
     {
         // D4.3: under Auto, P0 at the window start is propagated in Covariance mode; the steps follow the state only, so
-        // the trajectory is that of the run without covariance, bit for bit
+        // the trajectory is that of the run without covariance, bit for bit. Auto resolves to exactly the options a caller
+        // passes to ask for the covariance, so its run and its cost are those of that request (decision 17 of lot L4 of
+        // #668, decided by S. Guillet, 2026-11-22)
         var auto = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
         var explicitMode = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
         var none = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
@@ -112,7 +114,11 @@ public class PropagationOptionsPathTests
             { CovariancePropagation = CovariancePropagationOptions.None });
 
         Assert.Equal(expected.GetCovariance(OneHour.EndDate), solution.GetCovariance(OneHour.EndDate));
-        Assert.Equal(CovariancePropagationMode.Covariance, solution.Options.CovariancePropagation.Mode);
+        Assert.Equal(new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance },
+            solution.Options.CovariancePropagation);
+        Assert.Equal(expected.Options, solution.Options);
+        Assert.Equal(expected.StateVectors.Select(s => s.Covariance), solution.StateVectors.Select(s => s.Covariance));
+        AssertSameStates(explicitMode.PropagatedStates, auto.PropagatedStates);
         AssertSameStates(none.PropagatedStates, auto.PropagatedStates);
         Assert.Same(CovariancePropagationOptions.None, withoutCovariance.Options.CovariancePropagation);
         Assert.Contains("CovariancePropagationOptions.None",

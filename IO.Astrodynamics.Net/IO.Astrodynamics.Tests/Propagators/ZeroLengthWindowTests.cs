@@ -16,9 +16,11 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Tests.Propagators;
 
 /// <summary>
-/// A numerical propagation over a window of zero length throws <see cref="ArgumentException"/> naming <c>window</c> at the
-/// start of the call, before anything changes (decision 7 of lot L4 of #668, decided by S. Guillet, 2026-11-22). Before,
-/// it ran, re-armed the spacecraft and threw <see cref="InvalidOperationException"/> "Solution contains no segments".
+/// A propagation over a window of zero length throws <see cref="ArgumentException"/> naming <c>window</c> at the start of
+/// the call, before anything changes, on every path (decision 7 of lot L4 of #668, decided by S. Guillet, 2026-11-22;
+/// <see cref="TLEPropagator"/> by decision 15, the same day). Before, a numerical propagation ran, re-armed the spacecraft
+/// and threw <see cref="InvalidOperationException"/> "Solution contains no segments", and <see cref="TLEPropagator"/>
+/// returned one sample at the start.
 /// </summary>
 public class ZeroLengthWindowTests
 {
@@ -62,6 +64,32 @@ public class ZeroLengthWindowTests
 
         // Act
         var exception = Assert.Throws<ArgumentException>(propagate);
+
+        // Assert
+        Assert.Equal("window", exception.ParamName);
+        Assert.False(spacecraft.IsPropagated);
+    }
+
+    /// <summary>
+    /// <see cref="TLEPropagator"/> throws in its constructor, in TDB and in UTC alike, and adds no state to the spacecraft
+    /// (decision 15).
+    /// </summary>
+    [Theory]
+    [InlineData(TimeScale.TDB)]
+    [InlineData(TimeScale.UTC)]
+    public void TLEPropagator_AZeroLengthWindow_Throws_NamingTheWindow(TimeScale scale)
+    {
+        // Arrange
+        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        int id = System.Threading.Interlocked.Decrement(ref _nextId);
+        var spacecraft = new Spacecraft(id, "ZERO" + -id, 100.0, 10000.0, new Clock("zero" + -id, 256), tle);
+        var epoch = scale == TimeScale.UTC ? tle.Epoch.ToUTC() : tle.Epoch.ToTDB();
+        var empty = new Window(epoch, epoch);
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() => new TLEPropagator(empty, spacecraft, TimeSpan.FromSeconds(60.0)));
 
         // Assert
         Assert.Equal("window", exception.ParamName);

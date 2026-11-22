@@ -16,6 +16,18 @@ when it is given at the start of the window and the integrator is RK7(8) ([Activ
 results and cost do not change, even when the initial state carries a covariance
 ([see below](#an-initial-covariance-without-activation)).
 
+!!! warning "The cost of Auto"
+    Auto resolves to exactly `new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }`, the
+    options a caller passes to ask for the covariance: its run and its cost are those of that request, the cost the
+    covariance propagation always had, not a new one. What changes in 11.0.0 is that a covariance given at the window
+    start is propagated without being asked for. Over a LEO day at the RK7(8) defaults it costs 3 to 4 times the run
+    without covariance about a point-mass Earth (3.2 to 4.4 measured), about 10 times with EGM2008 10×10 and drag (8.4 to
+    10.7), and 1.5 times in SSB mode with the Earth, the Moon and the Sun (the MEASURE lines of
+    `DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, lot L4 of #668, Linux, two runs); the trajectory is the same, bit
+    for bit. To propagate the state alone, pass
+    `options with { CovariancePropagation = CovariancePropagationOptions.None }`, or give the initial orbital parameters
+    no covariance (decision 17 of lot L4, decided by S. Guillet, 2026-11-22).
+
 ## Example
 
 ```csharp
@@ -62,11 +74,12 @@ of `CentralBodyPropagator` and overload of `Spacecraft.Propagate`, `PropagationT
   the covariance is given at the start of the window. A covariance at another epoch, under Velocity-Verlet, or none, is
   not propagated, and `GetCovariance` says why in its message. A covariance that is not symmetric and positive
   semi-definite throws `InvalidOperationException` naming `StateVector.WithRemediatedCovariance()` and
-  `CovariancePropagationOptions.None`. Auto leaves the trajectory unchanged, bit for bit (the step control follows the
-  state only; `PropagationOptionsPathTests`), at the cost of the variational equations: over a LEO day at the RK7(8)
-  defaults, 3.2 to 4.4 times the run about a point-mass Earth, 8.4 to 10.7 times with EGM2008 10×10 and drag, 1.5 times in
-  SSB mode with the Earth, the Moon and the Sun (the MEASURE lines of `DefaultIntegratorFiguresTests.CovarianceAuto_Cost`,
-  lot L4 of #668, Linux, two runs; the design's 1.8 times was one case). `PropagationSolution.Options.CovariancePropagation` gives the options the run used.
+  `CovariancePropagationOptions.None`. Auto resolves to exactly the options of an explicit request,
+  `new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }`, and its run is that request's, bit
+  for bit (`PropagationOptionsPathTests`): the trajectory is unchanged (the step control follows the state only), at the
+  cost of the variational equations that the covariance propagation always had (the figures in "The cost of Auto" at the
+  top of this page; the design's 1.8 times underestimated it). `PropagationSolution.Options.CovariancePropagation`
+  gives the options the run used.
 - `CovariancePropagationOptions.None` (mode `CovariancePropagationMode.None`, 11.0.0) turns the propagation off where a
   null value means another rule: Auto here, and in `ConjunctionAnalysisOptions.CovariancePropagation` the covariance of
   the initial state held in RTN (null throws there since 11.0.0). It refuses process noise and consider parameters, and

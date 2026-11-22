@@ -262,6 +262,14 @@ release are listed under **Known limitations**.
   naming both; R12: the point-mass Earth of a TLE counts as without one) and `CovariancePropagation` (null for Auto: the
   covariance of the initial orbital parameters propagated under RK7(8) when it is given at the window start, an
   indefinite one throwing and naming `StateVector.WithRemediatedCovariance()` and `CovariancePropagationOptions.None`).
+  **The cost of Auto is that of an explicit request**: Auto resolves to exactly `new CovariancePropagationOptions { Mode =
+  CovariancePropagationMode.Covariance }`, the options a caller passes to ask for the covariance, so a run of a spacecraft
+  whose initial state carries a covariance at the window start costs what the covariance propagation always cost, not a
+  new cost: over a LEO day at the RK7(8) defaults, 3 to 4 times the run without covariance about a point-mass Earth (3.2
+  to 4.4 measured), about 10 times with EGM2008 10×10 and drag (8.4 to 10.7), 1.5 times in SSB mode with the Earth, the
+  Moon and the Sun (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, Linux, two runs; the design's 1.8 times
+  underestimated it), the trajectory unchanged, bit for bit. To propagate the state alone, pass `CovariancePropagation =
+  CovariancePropagationOptions.None` (decision 17 of lot L4, decided by S. Guillet, 2026-11-22).
   The entry points: `Spacecraft.Propagate(window, options = null)`, `CentralBodyPropagator(window, spacecraft, options =
   null)`, `Scenario.Simulate(options = null)` (synchronous, the stars then each spacecraft in turn; `ThirdBodies` and the
   scenario's bodies one setting, a list that differs from them, the central body aside, throwing before anything runs),
@@ -4637,14 +4645,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ArgumentOutOfRangeException` (`maneuverHoldDuration`) for a hold below zero, which it accepted, the window it gave an
   attitude or an impulse mid-propagation ending before it started; zero is accepted; `ManeuverHoldDuration` is set through
   the same check by a setter no type outside the library reaches (decision 11 of lot L4, decided by S. Guillet,
-  2026-11-22: `private protected`, where it was `protected`; `PhasingManeuver` sets its computed hold through it)
+  2026-11-22; its `private protected` access, where it was `protected`, validated by decision 16 the same day:
+  `PhasingManeuver` computes its hold at execution and sets it through the check)
   (`ManeuverHoldTests`). Migration: a hold of zero or more; a subclass outside the library gives its hold to the
   constructor.
 - **Breaking: a propagation over a window of zero length throws `ArgumentException`** (`window`; decision 7 of lot L4,
   decided by S. Guillet, 2026-11-22) at the start of the call, before anything changes: `Spacecraft.Propagate`, both
   `CentralBodyPropagator` constructors and `Scenario.Simulate` (before its stars, when it holds a spacecraft); a batch task
   reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
-  contains no segments" (`ZeroLengthWindowTests`). Migration: a window with a length.
+  contains no segments". The `TLEPropagator` constructor throws it too, for a window in TDB or in UTC, one rule on every
+  propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start
+  (`ZeroLengthWindowTests`). Migration: a window with a length; for the SGP4 state at one epoch,
+  `tle.ToStateVector(epoch)`.
 - **Breaking: the step of `GetEphemeris` over a window is above zero** (R11 of #668): `CelestialItem.GetEphemeris(window,
   observer, …, stepSize)` (spacecraft, bodies, stars, barycentres) and `Site.GetEphemeris(window, observer, …, stepSize)`
   throw `ArgumentOutOfRangeException` (`stepSize`) for a step of zero or less, where a zero step looped without end on a
@@ -6931,7 +6943,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Migration, the same run bit for bit (decision 2 of lot L4, decided by S. Guillet, 2026-11-22: 1 442 of 1 442 states of
   a LEO day with drag, SRP, the Moon, the Sun and a burn, the removed members on 49cebf0b against the migration on this
   branch, on `Spacecraft.Propagate`, `PropagateAsync`, the `CentralBodyPropagator` of flags, `Scenario.SimulateAsync` and
-  the flags `PropagationTask`, Linux):
+  the flags `PropagationTask`, Linux, measured in a scratch probe; in the repository the tests migrated to this line keep
+  their goldens unchanged, which the CI checks on Linux, Windows and macOS arm64, and no test compares with the base,
+  whose removed members no longer exist: decision 14 of lot L4, decided by S. Guillet, 2026-11-22):
   - a call with no integrator, which stepped Velocity-Verlet at its step: `new PropagationOptions { Integrator = new
     VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies, AtmosphericDrag = drag,
     SolarRadiationPressure = srp }` (the integrator `new VVIntegrator(step)`), or RK7(8) for its accuracy (above). The

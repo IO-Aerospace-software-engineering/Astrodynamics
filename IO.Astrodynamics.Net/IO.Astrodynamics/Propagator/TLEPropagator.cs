@@ -36,11 +36,14 @@ public class TLEPropagator : IPropagator
     /// <paramref name="deltaT"/> and at the window end.
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="spacecraft"/> is null.</exception>
-    /// <exception cref="ArgumentException">The initial orbital parameters of the spacecraft are not a TLE.</exception>
+    /// <exception cref="ArgumentException"><paramref name="window"/> has zero length, one rule on every propagation path
+    /// (decisions 7 and 15 of lot L4 of #668, decided by S. Guillet, 2026-11-22; before 11.0.0, one sample at the start),
+    /// or the initial orbital parameters of the spacecraft are not a TLE.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is zero or less (#598; before 11.0.0, a
     /// step below 1 s threw <see cref="DivideByZeroException"/>), or gives more samples than an array holds.</exception>
     public TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan deltaT)
     {
+        PropagatorBase.RequireWindowLength(window);
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         if (Spacecraft.InitialOrbitalParameters is not TLE)

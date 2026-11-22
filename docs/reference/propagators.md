@@ -57,8 +57,10 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    last integration step move too when the integration step does not divide ΔT, the last step now ending at the window
    end (67.48 m at the output of 3 540 s of a 3 590 s window, Velocity-Verlet at 100 s about the Earth, 60 s outputs).
    A window of zero length throws `ArgumentException` (`window`) at the start of the call, on every path that builds a
-   numerical propagation and in `Scenario.Simulate` before its stars (decision 7 of lot L4; before, it re-armed the
-   spacecraft and threw `InvalidOperationException` "Solution contains no segments").
+   numerical propagation, in `Scenario.Simulate` before its stars and in the `TLEPropagator` constructor, one rule on
+   every propagation path (decisions 7 and 15 of lot L4, decided by S. Guillet, 2026-11-22; before, a numerical
+   propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution contains no segments", and
+   `TLEPropagator` returned one sample at the start).
 
 ### Supported Perturbations
 
@@ -103,6 +105,16 @@ Console.WriteLine($"{solution.Options.ThirdBodies.Count} third bodies, {solution
 | `Geopotential` | null | The geopotential of the central body, a fallback: a body without a model takes it, a body with an equal model runs with it, a body with another model throws `ArgumentException` naming both; null, the body's ([Force Models](force-models.md#geopotential-model-parameters)) |
 | `Atmosphere` | null | The atmosphere of the central body's drag, the same fallback (an Earth without a model counts as not given: the option replaces its NRLMSISE-00 at nominal space weather); about the Sun it throws |
 | `CovariancePropagation` | null (Auto) | The covariance options; Auto propagates the covariance of the initial orbital parameters under RK7(8) when it is given at the window start, and says otherwise why in `GetCovariance`; an indefinite one throws, naming `StateVector.WithRemediatedCovariance()` and `CovariancePropagationOptions.None`, which turns it off ([Covariance Propagation](covariance-propagation.md#activation)) |
+
+!!! warning "Covariance Auto: the cost of an explicit request"
+    With `CovariancePropagation` null (Auto), a covariance that the initial orbital parameters carry at the window start
+    is propagated under RK7(8), with the options `new CovariancePropagationOptions { Mode =
+    CovariancePropagationMode.Covariance }` exactly, so the run costs what asking for the covariance always cost, not a
+    new cost: over a LEO day at the RK7(8) defaults, 3 to 4 times the run without covariance about a point-mass Earth,
+    about 10 times with EGM2008 10×10 and drag, 1.5 times in SSB mode (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`,
+    Linux), the trajectory unchanged bit for bit. Pass `CovariancePropagation = CovariancePropagationOptions.None` to
+    propagate the state alone ([Covariance Propagation](covariance-propagation.md#activation); decision 17 of lot L4 of
+    #668, decided by S. Guillet, 2026-11-22).
 
 The options entry points are `Spacecraft.Propagate(window, options)`, `CentralBodyPropagator(window, spacecraft,
 options)`, `Scenario.Simulate(options)` (synchronous, the spacecraft in turn), `PropagationTask(spacecraft, window,
@@ -205,7 +217,8 @@ The samples follow the rule of the numerical propagation, the window start plus 
 window of length L, the last step shorter when ΔT does not divide L (#598); a grid point closer to the end than ΔT/10
 is dropped, the last step then up to 1.1 ΔT (a window given in UTC is a few ticks longer or shorter in TDB, its
 samples counted on its TDB start and end). A step of zero or less throws
-`ArgumentOutOfRangeException` (`deltaT`). Before 11.0.0 the samples were counted in whole seconds: a step below 1 s
+`ArgumentOutOfRangeException` (`deltaT`), and a window of zero length `ArgumentException` (`window`), as on every
+propagation path (decision 15 of lot L4 of #668; before 11.0.0, one sample at the start). Before 11.0.0 the samples were counted in whole seconds: a step below 1 s
 threw `DivideByZeroException`, a fractional step ran past the window end (1.5 s over 10 s: to +15 s), and a window
 that the step does not divide lost its end (90 s at 60 s: the last sample at +60 s).
 
