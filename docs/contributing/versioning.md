@@ -65,7 +65,8 @@ provider seam in domain types (`StateVector`, `CelestialBodyInfo`) with the read
 reads typed as the `StateVector` they build, with `ToFrame` and `RelativeTo` typed so on a state vector, and the
 geopotential parameters as a value, a null covariance option of the conjunction analysis that throws, the task of a
 batch with a constructor of options, the outputs of a propagation that end at its window end whatever its step, a
-reversed window, a negative hold and a step of zero refused.
+reversed window, a negative hold and a step of zero refused, the token of the methods that run, which stops a running
+batch too, and the propagators no longer `IDisposable`.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -74,7 +75,8 @@ radius, `GeopotentialModelParameters.GeopotentialModelPath`, the public construc
 and `VVIntegrator.DeltaTs`, and the members that propagate without `PropagationOptions` or an integrator that holds its
 forces (the flag overloads of `Spacecraft.Propagate`, `Spacecraft.PropagateAsync`, the three `Scenario.SimulateAsync`,
 the flags constructors of `CentralBodyPropagator` and `PropagationTask`, `CentralBodyPropagatorBuilder`, and the
-factories and flags of `MonteCarloConfiguration`). Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+factories and flags of `MonteCarloConfiguration`), the asynchronous members over synchronous work (`Star`, `BatchPropagator`
+and `MonteCarloPropagator` `PropagateAsync`) and the token and progress of `BatchOptions`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -4657,6 +4659,43 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start
   (`ZeroLengthWindowTests`). Migration: a window with a length; for the SGP4 state at one epoch,
   `tle.ToStateVector(epoch)`.
+- **Breaking: the methods that run take a `CancellationToken`, last** (lot L4, R28 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decisions 4 to 6, C1 and C2 of
+  lot L4, decided by S. Guillet, 2026-11-22): `Spacecraft.Propagate(window, options, cancellationToken)`,
+  `Scenario.Simulate(options, cancellationToken)`, `IPropagator.Propagate(cancellationToken)` (`PropagatorBase`,
+  `CentralBodyPropagator`, `TLEPropagator`), `BatchPropagator.Propagate(tasks, options, cancellationToken)` with
+  `Propagate(tasks, progress, options, cancellationToken)`, and `MonteCarloPropagator.Propagate(config,
+  cancellationToken)` with `Propagate(config, progress, cancellationToken)`, each token optional; no constructor, record
+  or property takes one. A token already cancelled throws before anything changes (before the re-arm of the
+  spacecraft); `VVIntegrator` and `RK78Integrator` read it at each accepted step (an internal hook: the interface
+  `IIntegrator` does not change), never between the rejections of a step, and the propagator before each segment, so an
+  integrator implemented outside the library stops between its segments; it is not read after the last segment, so the
+  outputs, the attitude record and the stored states are written as one block. Every path throws
+  `OperationCanceledException` carrying the caller's token, a batch and a Monte Carlo campaign one, never an
+  `AggregateException`. A stopped run leaves the spacecraft re-armed and partial: no stored state and no attitude record,
+  not `IsPropagated`, nothing kept for the conjunction analysis (a TLE spacecraft reads SGP4 again, any other its initial
+  orbit), its fuel, `ExecutedManeuvers` and standby chain advanced up to the stop; in `Scenario.Simulate` and a batch the
+  earlier spacecraft are complete, `IsSimulated` stays false and no summary or result is returned. A run with a live
+  token is the run without one, bit for bit, every golden unchanged (`CancellationTests`: both integrators, an outer
+  integrator, the covariance, an impulse, the SSB mode, a TLE spacecraft, a batch, a Monte Carlo campaign, a scenario, a
+  task; a stop inside a step makes only the force evaluations left in it, 2 to 4 for RK7(8) about the Earth, 8 in SSB
+  mode, none for Velocity-Verlet, Linux). Binary break; source break for an implementation of `IPropagator`, which takes
+  the parameter. Migration: rebuild; pass a token where a run must stop. See
+  [Propagators](../reference/propagators.md#cancellation).
+- **Breaking: a batch stops its running tasks** (R28 of #668, decision 4 of lot L4): the token of
+  `BatchPropagator.Propagate` reaches the propagation of each running task, which stops at its next accepted step;
+  before, the token of `BatchOptions` was read before each task only, and a running task ran to its end. A stopped task
+  is not reported to the progress. `BatchOptions` holds `MaxDegreeOfParallelism` alone, with the `Default` of every
+  options record (D1), `CancellationToken` and `Progress` being removed (under **Removed**). `Propagate(tasks, null)` is
+  ambiguous between the two overloads (CS0121, accepted by decision 5 of lot L4). Migration: `new BatchOptions {
+  CancellationToken = t, Progress = p }` → `BatchPropagator.Propagate(tasks, p, options, t)`; a configuration's
+  `BatchOptions` of a Monte Carlo campaign likewise → `MonteCarloPropagator.Propagate(config, p, t)`;
+  `Propagate(tasks, null)` → `Propagate(tasks, options: null)`.
+- **Breaking: the propagators are not `IDisposable`** (R28 of #668, choice 3 of the first annex): `IPropagator`,
+  `PropagatorBase` and `TLEPropagator` no longer implement it; their `Dispose` was empty or cleared two fields, and held
+  no resource. A `using` of a propagator does not compile (CS1674; the 53 of the repository removed, 4 in the library
+  and 49 in the tests). Binary break. Migration: `using var propagator = new CentralBodyPropagator(…)` →
+  `var propagator = …`; `using (var p = …) { … }` → the block with `var p = …`.
 - **Breaking: the step of `GetEphemeris` over a window is above zero** (R11 of #668): `CelestialItem.GetEphemeris(window,
   observer, …, stepSize)` (spacecraft, bodies, stars, barycentres) and `Site.GetEphemeris(window, observer, …, stepSize)`
   throw `ArgumentOutOfRangeException` (`stepSize`) for a step of zero or less, where a zero step looped without end on a
@@ -6970,6 +7009,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   In 11.0.0 the SSB mode costs 5.4 ms per propagated hour in RK7(8) at 1e-9 (89 steps over 6 h, the LEO of #544 about
   the solar system barycentre with the Earth, the Moon and the Sun), 217 ms at 1e-12 (29 695 steps), against 1.3 ms for
   Velocity-Verlet at 60 s.
+- **The asynchronous members over synchronous work** (lot L4, R28 of #668, decision 4 of lot L4 and section 7 of the
+  re-baseline, decided by S. Guillet, 2026-11-19 and 2026-11-22: removed outright, no forwarder): `Star.PropagateAsync`,
+  `BatchPropagator.PropagateAsync` and `MonteCarloPropagator.PropagateAsync`, bare `Task.Run` of the synchronous call
+  that took no token (`Spacecraft.PropagateAsync` and `Scenario.SimulateAsync` are removed above). Migration:
+  `star.Propagate(window, step)`; `BatchPropagator.Propagate(tasks, options, token)`;
+  `MonteCarloPropagator.Propagate(config, token)`; a caller that wants a task runs the call in one,
+  `Task.Run(() => BatchPropagator.Propagate(tasks, options, token), token)`.
+- **`BatchOptions.CancellationToken` and `BatchOptions.Progress`** (R28 of #668, D1, decision 4 of lot L4): the token
+  and the progress are parameters of `BatchPropagator.Propagate` and `MonteCarloPropagator.Propagate` (under Changed).
+- **`Dispose` of `PropagatorBase` and `TLEPropagator`, and `IDisposable` on `IPropagator`** (R28 of #668): under Changed.
 - **`OrbitalParameters.ToPlanetocentric(Aberration)`** (R20 of #668), whose correction was not used. Migration:
   `ToPlanetocentric()`, the same values, bit for bit; `ToPlanetodetic()` for the geodetic coordinates.
 - **`AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`** (R20 of #668), whose
