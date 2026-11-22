@@ -614,7 +614,6 @@ public class TimeArgumentTests
         var propagator = options == null
             ? new CentralBodyPropagator(window, spacecraft, integrator, Step)
             : new CentralBodyPropagator(window, spacecraft, integrator, Step, options);
-        integrator.Initialize(spacecraft.InitialOrbitalParameters.ToStateVector());
         return propagator.Propagate();
     }
 

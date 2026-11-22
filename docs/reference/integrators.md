@@ -43,14 +43,14 @@ Between the steps, the states of a propagation depend on the integrator:
 
 ## VVIntegrator
 
-`VVIntegrator` is the default fixed-step symplectic integrator using the Velocity-Verlet scheme.
-`CentralBodyPropagator` creates one with the propagator's `deltaT` as step when no integrator is
-given.
+`VVIntegrator` is the fixed-step symplectic integrator using the Velocity-Verlet scheme. The options path builds one
+per run from `VVIntegratorOptions` (`PropagationOptions.Integrator`); a `CentralBodyPropagator` built without an
+integrator runs RK7(8) at its defaults (`RK78IntegratorOptions.Default`, R07 of #668).
 
 | Constructor | Description |
 |-------------|-------------|
-| `VVIntegrator(TimeSpan deltaT)` | Fixed step; forces are added by the propagator |
-| `VVIntegrator(IEnumerable<ForceBase> forces, TimeSpan deltaT, StateVector initialState)` | Fixed step, forces and initial state given directly |
+| `VVIntegrator(TimeSpan deltaT)` | Fixed step, without forces: no propagator adds forces to an integrator it is given, so add them with `AddForce` first (a propagator given one without forces integrates a straight line) |
+| `VVIntegrator(IEnumerable<ForceBase> forces, TimeSpan deltaT, StateVector initialState)` | Fixed step, forces given directly, initialized at `initialState`; a propagator it is given to initializes it again with the initial state of the propagation at construction and at the start of every run, which replaces `initialState` (#782, decision 23 of lot L4) |
 
 | Property | Description |
 |----------|-------------|

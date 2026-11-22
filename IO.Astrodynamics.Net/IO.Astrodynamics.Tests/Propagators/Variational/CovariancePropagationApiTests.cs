@@ -371,7 +371,6 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         integrator.AddForce(new AtmosphericDrag(spacecraft, _cases.Earth));
         var propagator = new CentralBodyPropagator(Window, spacecraft, integrator, Step,
             new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
-        integrator.Initialize(spacecraft.InitialOrbitalParameters.ToStateVector());
 
         // Act
         var solution = propagator.Propagate();

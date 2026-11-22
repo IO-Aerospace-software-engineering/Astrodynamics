@@ -4469,8 +4469,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and attitude record off; every element of Φ and P off with the covariance asked for, under Auto, and with process
   noise, consider parameters and the step control (136 steps against 135); 2 steps against 13 and 1.5e-4 m in SSB mode at
   1e-12 over 2 days; 3.5e-5 m after a run stopped inside its first segment (a stop past an impulse was fresh by chance,
-  the event having re-initialized the integrator); 1.7e-5 m for a subclass of `PropagatorBase` and for a bare
-  `IIntegrator` wrapping an RK7(8), whose `Initialize` the library never called again. Every library path builds a new
+  the event having re-initialized the integrator); 1.7e-5 m for a subclass of `PropagatorBase` and 38 m for a
+  bare `IIntegrator` wrapping an RK7(8) (its outputs, a cubic Hermite of its steps, on another step grid), whose
+  `Initialize` the library never called again. Every library path builds a new
   propagator per run (`Spacecraft.Propagate`, `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator`, the
   avoidance options and the non-linearity index), so only a propagator a caller ran twice was affected. `Propagate` now
   initializes the integrator with the initial state of the propagation at the start of every run, once the token is read
@@ -6299,7 +6300,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **Breaking: the constructors of `CentralBodyPropagator` that take an integrator with its forces initialize it**
   (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above) with
-  the initial state of the propagation, and `Propagate` again at the start of every run (#782, below). A run that threw
+  the initial state of the propagation, and `Propagate` again at the start of every run (#782, above). A run that threw
   `NullReferenceException` now propagates. An `Initialize` the caller makes with another observer or frame (the
   spacecraft's state about the solar system barycentre in SSB mode, for instance), before or after construction, is
   replaced by the propagator's (after construction it won before #782). Migration: drop the explicit `Initialize`. No
