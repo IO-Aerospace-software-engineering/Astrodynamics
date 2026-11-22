@@ -1642,7 +1642,12 @@ The constructors of flags (bodies, drag, SRP, with or without an integrator) wer
 |--------|-------------|
 | `Propagate(CancellationToken cancellationToken = default)` | Execute propagation with event detection and dense output, returns `PropagationSolution`; the token is read before the re-arm, before each segment and at each accepted step of the library's integrators (R28 of #668) |
 
-**State transition matrix and covariance** (`IO.Astrodynamics.Propagator.Variational`, off by default): with
+**State transition matrix and covariance** (`IO.Astrodynamics.Propagator.Variational`; Auto by default on the options
+entry points: `PropagationOptions.CovariancePropagation` null propagates a covariance the initial state carries at the
+window start under RK7(8), with `new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }`
+exactly, so at the cost of that explicit request, several times the run without it (the measured cost in
+`docs/reference/covariance-propagation.md`); `CovariancePropagationOptions.None` turns it off, decision 17 of lot L4 of
+#668): with
 `CovariancePropagationOptions` (`Mode` `StateTransitionOnly` or `Covariance`, `ProcessNoise` an `RtnProcessNoise`,
 `ConsiderParameters` the σ of Cd and Cr, `IncludeInStepControl`), activated by `PropagationOptions.CovariancePropagation` (on
 every options entry point: `Spacecraft.Propagate`, `CentralBodyPropagator`, `PropagationTask`, `Scenario.Simulate`) or

@@ -315,7 +315,11 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
   and their ephemeris cache) until it is propagated again, about 0.58 MB for one day in LEO with EGM2008 10×10, the Moon,
   the Sun and drag, its solution and its force model together, 0.24 MB and 0.34 MB, at 1e-11 as at the 1e-9 of the
   default (measured again in lot L4 of #668, `DefaultIntegratorFiguresTests.LastPropagation_Memory`, Linux; 0.55 MB in
-  the H3 review of step 10). A propagation by Velocity-Verlet keeps nothing beyond its output
+  the H3 review of step 10). With an initial covariance at the window start, Auto (the default of
+  `PropagationOptions.CovariancePropagation`) propagates it in the run, as an explicit request did, and the solution kept
+  carries a covariance per output state: the same day then keeps about 1.07 MB, 0.72 MB for its solution and 0.35 MB for
+  its force model (the same test, 60 s outputs, Linux), what an explicit request always kept; with
+  `CovariancePropagationOptions.None`, the 0.58 MB above. A propagation by Velocity-Verlet keeps nothing beyond its output
   states.
 - With both covariances, Pc is the Foster 2D probability of the combined covariance: CARA's `Pc2D`, the integral of the
   Gaussian of the encounter plane over the disc of the combined hard-body radius centred on the in-plane miss, each

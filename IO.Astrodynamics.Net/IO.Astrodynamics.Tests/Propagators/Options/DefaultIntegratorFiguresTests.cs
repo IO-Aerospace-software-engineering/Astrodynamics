@@ -222,10 +222,11 @@ public class DefaultIntegratorFiguresTests
                      })
                  })
         {
-            // Act: the best of two runs of each
+            // Act: the best of five runs of each (two left the point-mass ratio between 1.6 and 4.4 over Linux runs of 15 to
+            // 70 ms, the noise of the timer and of the tests running beside it)
             double auto = double.MaxValue, none = double.MaxValue;
             PropagationSolution withCovariance = null, without = null;
-            for (int run = 0; run < 2; run++)
+            for (int run = 0; run < 5; run++)
             {
                 var stopwatch = Stopwatch.StartNew();
                 withCovariance = NewSpacecraft(orbit).Propagate(window, options);
@@ -248,8 +249,18 @@ public class DefaultIntegratorFiguresTests
     /// <summary>
     /// The memory a spacecraft keeps with the solution and the force model of its last RK7(8) propagation (the internal
     /// <c>LastPropagation</c> and <c>LastForceModel</c>, read by the conjunction analysis): a LEO day with EGM2008 10×10,
-    /// the Moon, the Sun and drag, at 1e-11 and at the defaults. Published without a threshold (decision 12 of lot L4).
+    /// the Moon, the Sun and drag, at 1e-11 and at the defaults, and at the defaults with an initial covariance, which Auto
+    /// propagates in the run (decision 17 of lot L4), so that the solution kept carries a covariance per output: the memory
+    /// an explicit request always kept, the case of the replay for the conjunction analysis. Published without a threshold
+    /// (decision 12 of lot L4).
     /// </summary>
+    // Outside the measuring method, so that no reference to the solution or its segments is left in a local or a register of
+    // that method, which kept part of the solution alive across the collections (measured: 0.03 MB instead of 0.72 MB
+    // released with an initial covariance when the steps were read there)
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static int StepsOfLastPropagation(Spacecraft spacecraft) =>
+        spacecraft.LastPropagation.Segments.Sum(segment => segment.Steps.Count);
+
     [Fact]
     public void LastPropagation_Memory()
     {
@@ -258,20 +269,25 @@ public class DefaultIntegratorFiguresTests
         var window = new Window(Start, Start.AddDays(1.0));
         // A first propagation of the process leaves part of its solution held elsewhere (lazy shared data), so a warm-up run
         // comes first and is not printed
-        foreach (var (name, tolerance) in new[] { (null, 1e-9), ("RK7(8) 1e-11", 1e-11), ("RK7(8) 1e-9 (default)", 1e-9) })
+        var covariance = Matrix.Diagonal(100.0, 100.0, 100.0, 1e-4, 1e-4, 1e-4);
+        foreach (var (name, tolerance, initialCovariance) in new (string, double, Matrix?)[]
+                 {
+                     (null, 1e-9, null), ("RK7(8) 1e-11", 1e-11, null), ("RK7(8) 1e-9 (default)", 1e-9, null),
+                     ("RK7(8) 1e-9 (default), initial covariance, Auto", 1e-9, covariance)
+                 })
         {
             // Arrange
-            var spacecraft = NewSpacecraft(TutorialLeo(earth));
+            var spacecraft = NewSpacecraft(TutorialLeo(earth, initialCovariance));
             var options = Options(new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance })
                 with
                 {
                     ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true
                 };
             spacecraft.Propagate(window, options);
+            int steps = StepsOfLastPropagation(spacecraft);
 
             // Act: the memory held with the last propagation, then without it
             long held = GC.GetTotalMemory(true);
-            int steps = spacecraft.LastPropagation.Segments.Sum(segment => segment.Steps.Count);
             spacecraft.LastPropagation = null;
             long withoutSolution = GC.GetTotalMemory(true);
             spacecraft.LastForceModel = null;
@@ -280,6 +296,7 @@ public class DefaultIntegratorFiguresTests
 
             // Assert
             Assert.True(steps > 0);
+            Assert.Equal(initialCovariance.HasValue, spacecraft.PropagatedStates[^1].Covariance.HasValue);
             if (name == null)
             {
                 continue;

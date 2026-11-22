@@ -4656,7 +4656,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CentralBodyPropagator` constructors and `Scenario.Simulate` (before its stars, when it holds a spacecraft); a batch task
   reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
   contains no segments". The `TLEPropagator` constructor throws it too, for a window in TDB or in UTC, one rule on every
-  propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start
+  propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start,
+  and so does `MonteCarloPropagator.Propagate` for a `MonteCarloConfiguration.Window` of zero length, before anything is
+  sampled, where each run failed inside the batch and the campaign returned no statistics and no reason
   (`ZeroLengthWindowTests`). Migration: a window with a length; for the SGP4 state at one epoch,
   `tle.ToStateVector(epoch)`.
 - **Breaking: the methods that run take a `CancellationToken`, last** (lot L4, R28 of
@@ -4672,7 +4674,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   integrator implemented outside the library stops between its segments; it is not read after the last segment, so the
   outputs, the attitude record and the stored states are written as one block. Every path throws
   `OperationCanceledException` carrying the caller's token, a batch and a Monte Carlo campaign one, never an
-  `AggregateException`. A stopped run leaves the spacecraft re-armed and partial: no stored state and no attitude record,
+  `AggregateException`. A stopped run leaves the spacecraft re-armed and partial: no stored state and no attitude record
+  (those added by hand to a spacecraft never propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included),
   not `IsPropagated`, nothing kept for the conjunction analysis (a TLE spacecraft reads SGP4 again, any other its initial
   orbit), its fuel, `ExecutedManeuvers` and standby chain advanced up to the stop; in `Scenario.Simulate` and a batch the
   earlier spacecraft are complete, `IsSimulated` stays false and no summary or result is returned. A run with a live
@@ -7006,9 +7009,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     a factory's integrator as its `IntegratorOptions` (each run or task builds its own); the bodies of
     `CelestialBodiesFactory` as `ThirdBodies`, shared by the runs, as a central body with a geopotential now is (one field
     per propagation).
-  In 11.0.0 the SSB mode costs 5.4 ms per propagated hour in RK7(8) at 1e-9 (89 steps over 6 h, the LEO of #544 about
-  the solar system barycentre with the Earth, the Moon and the Sun), 217 ms at 1e-12 (29 695 steps), against 1.3 ms for
-  Velocity-Verlet at 60 s.
+  In 11.0.0 the SSB mode about the Earth (the LEO of the tutorial, 6 800 km and 7 700 m/s, about the solar system
+  barycentre with the Earth, the Moon and the Sun, over 6 h) costs 7.5 to 13 ms per propagated hour in RK7(8) at 1e-9
+  (111 steps) and 82 to 97 ms at 1e-12 (93 233 steps), against 1.1 to 3.5 ms for Velocity-Verlet at 60 s (360 steps) and
+  1.3 to 2.0 ms at 10 s (the MEASURE lines of `DefaultIntegratorFiguresTests.SsbMode_CostPerPropagatedHour`, four runs on
+  Linux, the best of two propagations each; the step counts do not vary). The 93 233 steps at 1e-12, about 15 500 an
+  hour, are the floor of the step control below 1e-10 in SSB mode described under #576 above, which depends on the orbit
+  and the epoch: the LEO of #544 takes 5 210 steps for its hour at 1e-12 on the same code (`SsbModeThirdBodyTests`).
 - **The asynchronous members over synchronous work** (lot L4, R28 of #668, decision 4 of lot L4 and section 7 of the
   re-baseline, decided by S. Guillet, 2026-11-19 and 2026-11-22: removed outright, no forwarder): `Star.PropagateAsync`,
   `BatchPropagator.PropagateAsync` and `MonteCarloPropagator.PropagateAsync`, bare `Task.Run` of the synchronous call

@@ -19,8 +19,12 @@ references and their tests. The code of this tutorial runs as a smoke test again
 - **The integrator: RK7(8).** The variational equations are integrated with the state by `RK78Integrator` only; any
   other integrator, Velocity-Verlet included, throws `NotSupportedException` at activation. RK7(8) at 1e-9 is the
   default integrator of `PropagationOptions` since 11.0.0; the tolerance is given explicitly here.
-- **The mode.** `StateTransitionOnly` gives Φ and Ψ; `Covariance` gives Φ, Ψ and the covariance P. The covariance
-  propagation is off by default: without it, an initial covariance is not propagated and costs nothing.
+- **The mode.** `StateTransitionOnly` gives Φ and Ψ; `Covariance` gives Φ, Ψ and the covariance P. On the options
+  entry points the covariance propagation is Auto by default (`CovariancePropagation` null): a covariance the initial
+  state carries at the window start is propagated under RK7(8) with `new CovariancePropagationOptions { Mode =
+  CovariancePropagationMode.Covariance }` exactly, at the cost of that explicit request, several times the run without
+  it ([The cost of Auto](../reference/covariance-propagation.md)). `CovariancePropagationOptions.None` turns it
+  off: an initial covariance is then not propagated and costs nothing.
 - **The tolerance.** Φ, Ψ and P come from the stages of the state step, at the accuracy of the integrator.
 - **`IncludeInStepControl` when Ψ_Cr matters.** By default the steps are controlled on the state only, so the trajectory
   is the same with and without the variational equations; Ψ then carries an integration error that the control does

@@ -164,8 +164,10 @@ through `TimeSpan.FromSeconds` may be a tick short of its decimal value; the exa
 `PropagationOptions.OutputStep`): a point-mass LEO day ends 271 m from Kepler at 1 s, 27.1 km at 10 s and 974 km at 60 s.
 These figures are the MEASURE lines of `DefaultIntegratorFiguresTests` (decision 12 of lot L4 of #668: 974.02 km,
 27.12 km, 271.24 m, 1.364 m, and 1.062 mm at 1e-12, on Linux; the CI logs give the other platforms). In SSB mode about the
-Earth (a LEO about the Solar System barycentre with the Earth, the Moon and the Sun), RK7(8) costs 12 ms per propagated
-hour at 1e-9 and 83 ms at 1e-12, which completes since #576 (93 233 steps over 6 h), and Velocity-Verlet 2 to 3 ms.
+Earth (a LEO about the Solar System barycentre with the Earth, the Moon and the Sun), RK7(8) costs 7.5 to 13 ms per
+propagated hour at 1e-9 (111 steps over 6 h) and 82 to 97 ms at 1e-12, which completes since #576 (93 233 steps over
+6 h, the floor of the step control below 1e-10 in SSB mode, which depends on the orbit and the epoch: 5 210 for the hour
+of the LEO of #544), and Velocity-Verlet 1.1 to 3.5 ms (four runs on Linux).
 A value out of range (not finite, zero or negative) throws `ArgumentOutOfRangeException` naming the property, in `init`.
 
 ## Choosing the integrator
