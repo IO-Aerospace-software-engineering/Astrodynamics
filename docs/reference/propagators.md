@@ -197,9 +197,15 @@ for bit a fresh spacecraft and propagator (positions, velocities, steps, stored 
 first segment of a second run from the last step and controller history of the first: 1.7e-5 m on a 2 h point-mass LEO,
 2.0e-5 m with EGM2008 10×10, the Moon, the Sun, drag, SRP and an impulse over 3 h, 1.5e-4 m in SSB mode at 1e-12 over 2
 days (2 steps against 13), every element of Φ and P off; Velocity-Verlet and a fixed-step RK7(8), which keep no step
-state, were already fresh. Each run holds the lock of the forces of the instance, which the evaluations of the solutions
-of all its runs take, so an evaluation of an earlier solution and a later run serialize; the solution of an earlier run
-gives the same values after a later run. A reused instance keeps the initial state, the covariance and the options of
+state, were already fresh. Each run holds the lock of the forces of the instance from its start to its end, the forces
+you added and a bare `IIntegrator` included, and the evaluations of the solutions of all its runs take it, so the runs of
+the instance, two concurrent `Propagate` calls on it and those evaluations serialize (decision 28 of lot L4 of #668,
+decided by S. Guillet, 2026-11-22); the solution of an earlier run gives the same values after a later run. Code a run
+calls (a `ForceBase`, a bare `IIntegrator`) must not evaluate the solution of another propagator that may be running: two
+reused instances whose forces evaluate each other's earlier solutions deadlock (the library evaluates no solution under
+the SPICE lock or the lock of an attitude record, so it cannot deadlock by itself); an evaluation of an earlier solution
+on another thread waits for the end of the run in progress
+([Thread Safety](../guides/thread-safety.md#the-lock-of-a-propagator-instance)). A reused instance keeps the initial state, the covariance and the options of
 its construction: a later `SetInitialOrbitalParameters` on the spacecraft does not reach it
 ([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783)); build a new propagator to
 propagate from another initial orbit.
@@ -420,8 +426,10 @@ Where the token is read:
 | `Scenario.Simulate` | Once the settings are checked, before anything changes; before each star and each spacecraft; inside each propagation |
 | `BatchPropagator.Propagate`, `MonteCarloPropagator.Propagate` | Before anything runs; before each task; inside each running propagation (before 11.0.0 the token of `BatchOptions` was read before each task only, and a running task ran to its end) |
 
-A token already cancelled throws before anything changes. Every path throws `OperationCanceledException` carrying the
-caller's token: a batch and a Monte Carlo campaign throw one, never an `AggregateException`. The bound is one step: a
+A token already cancelled throws before anything changes. A `Propagate` on a propagator instance that is already running
+waits for the lock of the instance, held for the whole run (decision 28 of lot L4 of #668, decided by S. Guillet,
+2026-11-22), and reads its token only once it holds it: a token cancelled while it waits stops it then, before anything
+changes, and not while it waits. Every path throws `OperationCanceledException` carrying the caller's token: a batch and a Monte Carlo campaign throw one, never an `AggregateException`. The bound is one step: a
 propagation stopped inside a step makes only the force evaluations left in it (measured: 2 to 4 for RK7(8) about the
 Earth, 8 in SSB mode, none for Velocity-Verlet, whose one evaluation per step is the one in progress;
 `CancellationTests`).

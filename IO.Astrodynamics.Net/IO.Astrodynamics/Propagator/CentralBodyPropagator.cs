@@ -341,8 +341,8 @@ public class CentralBodyPropagator : PropagatorBase
     /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator is
     /// not an <see cref="RK78Integrator"/>.</exception>
     /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
-    /// parameter without its force; or the integrator was already given to a propagator (#782), naming
-    /// <c>integrator</c>.</exception>
+    /// parameter without its force; or the integrator was already given to a propagator, or to a propagator constructor
+    /// that threw after claiming it (#782), naming <c>integrator</c>.</exception>
     /// <remarks>
     /// The integrator is claimed once the checks of the window, the spacecraft and its maneuvers pass, before anything
     /// changes it, and the claim is never released: a constructor rejected by a later check (the GM of the central body,
@@ -412,8 +412,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
-    /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming <c>integrator</c>
-    /// (#782; before 11.0.0 the last propagator built set its observer, frame and time argument for all).</exception>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, or to a propagator
+    /// constructor that threw after claiming it, naming <c>integrator</c> (#782; before 11.0.0 the last propagator built
+    /// set its observer, frame and time argument for all).</exception>
     /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
     /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
     /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>

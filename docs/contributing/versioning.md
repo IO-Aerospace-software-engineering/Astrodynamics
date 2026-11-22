@@ -4481,7 +4481,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   maneuvers and their windows to the tick, fuel, Φ and P; `RepropagationTests` gains a `SameInstance` path). The solutions
   of the runs of one instance share one lock of their forces, held by each run (decision 25): before, each run took a
   new lock, so an evaluation of an earlier solution could run concurrently with a later run over the same force instances,
-  whose partials are not reentrant (found by reading the code, not measured). Velocity-Verlet and a fixed-step RK7(8) keep
+  whose partials are not reentrant (found by reading the code, not measured). The lock is held for the whole run, the
+  caller's forces included (decision 28 of lot L4 of #668, decided by S. Guillet, 2026-11-22), so the runs of an
+  instance, two concurrent `Propagate` calls on it and the evaluations of its earlier solutions serialize, with three
+  consequences, stated in `docs/guides/thread-safety.md`, both CLAUDE.md files, the remarks of `Propagate` and the
+  cancellation section of `docs/reference/propagators.md`: code a run calls (a `ForceBase`, a bare `IIntegrator`) must
+  not evaluate the solution of another propagator that may be running, since two reused instances whose forces evaluate
+  each other's earlier solutions deadlock (the library evaluates no solution under the SPICE lock or the lock of an
+  attitude record, so it cannot deadlock by itself); an evaluation of an earlier solution on another thread waits for
+  the end of the run of the instance in progress, and then gives the values it gave before
+  (`PropagatorReuseTests.AnEvaluationOfRunOne_WaitsForTheEndOfRunTwo`, red at 1dc77ffc, where it returned while run 2
+  was held inside a force); a `Propagate` waiting for the lock reads its token once it holds it. Velocity-Verlet and a fixed-step RK7(8) keep
   no step state and were already fresh; every first run is bit for bit unchanged (an extra `Initialize` with the initial
   state before a first run is a no-op, measured on 15 configurations), every golden unchanged, except a run whose caller
   re-initialized the integrator with another observer or frame (under **Changed**). A reused instance keeps the initial
@@ -4758,7 +4768,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   The claim is made once the checks of the window, the spacecraft and its maneuvers pass, and is never released, as that
   of an options propagation: a constructor rejected by a later check (a central body of GM 0, covariance options the
   integrator or the initial covariance cannot take) leaves the integrator claimed, and a second propagator given it
-  throws (decision 27 of lot L4 of #668, decided by S. Guillet, 2026-11-22).
+  throws (decision 27 of lot L4 of #668, decided by S. Guillet, 2026-11-22). The message names both cases, an
+  integrator already given to another propagator or to a propagator constructor that threw after claiming it, and says
+  the claim is never released, so a new integrator is built (decision 29 of lot L4 of #668, decided by S. Guillet,
+  2026-11-22).
   Before, a second propagator re-initialized the integrator with its own state and set its time argument and variational
   equations for both: an Earth propagator run after a Moon propagator was built on its integrator was 5.16e7 m off, and
   two covariance propagators sharing one threw from the variational equations of the other (gap analysis of #782). Runs

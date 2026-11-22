@@ -80,9 +80,9 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// The lock of the forces of this propagator (#782, decision 25 of lot L4 of #668, decided by S. Guillet,
-    /// 2026-11-22): one per instance, kept across its runs, held by each run and taken by the evaluations of the solutions
-    /// of all its runs (the dynamics of an RK7(8) solution, the force model of an RK7(8) or Velocity-Verlet one), so they
-    /// serialize; the lock of another propagation whose forces this one shares (an avoidance option, a perturbed
+    /// 2026-11-22): one per instance, kept across its runs, held by each run for the whole run (decision 28) and taken by
+    /// the evaluations of the solutions of all its runs (the dynamics of an RK7(8) solution, the force model of an RK7(8)
+    /// or Velocity-Verlet one), so they serialize; the lock of another propagation whose forces this one shares (an avoidance option, a perturbed
     /// propagation of the non-linearity index), set by its constructor. Before 11.0.0 each run took a new lock.
     /// </summary>
     private protected object DynamicsSyncRoot { get; set; } = new();
@@ -191,8 +191,8 @@ public abstract class PropagatorBase : IPropagator
     /// constructor leaves it claimed, and the caller builds a new one (decision 27).
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
-    /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming
-    /// <c>integrator</c>.</exception>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, or to a propagator
+    /// constructor that threw after claiming it, naming <c>integrator</c>.</exception>
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
         : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)), PropagationTimeArgument.Tdb)
     {
@@ -280,16 +280,17 @@ public abstract class PropagatorBase : IPropagator
     /// body, the covariance options) leaves the integrator claimed (decision 27 of lot L4 of #668, decided by S. Guillet,
     /// 2026-11-22).
     /// </summary>
-    /// <exception cref="ArgumentException">The integrator was already given to a propagator, naming
-    /// <c>integrator</c>.</exception>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, or to a propagator
+    /// constructor that threw after claiming it (decision 29 of lot L4 of #668, decided by S. Guillet, 2026-11-22: the
+    /// message names both cases), naming <c>integrator</c>.</exception>
     private void ClaimIntegrator(IIntegrator integrator)
     {
         if (!IntegratorOwners.TryAdd(integrator, this))
         {
             throw new ArgumentException(
-                "The integrator was already given to another propagator, which initializes it, sets its time argument and " +
-                "its variational equations, and runs it: give each propagator a new integrator (for example " +
-                "new RK78Integrator(...) with its forces).", nameof(integrator));
+                "The integrator was already given to another propagator, or to a propagator constructor that threw after " +
+                "claiming it; in both cases the claim is never released, so build a new integrator for this propagator " +
+                "(for example new RK78Integrator(...) with its forces).", nameof(integrator));
         }
     }
 
@@ -662,8 +663,15 @@ public abstract class PropagatorBase : IPropagator
     /// for bit those of a fresh propagator, and an <see cref="IIntegrator.Initialize"/> that throws changes nothing.
     /// Before, an adaptive <see cref="RK78Integrator"/> started the first segment of a second run from the last step and
     /// controller history of the first (1.7e-5 m on a 2 h point-mass LEO, 1.5e-4 m in SSB mode, Φ and P off). Each run
-    /// holds the lock of the forces of the instance, which the evaluations of the solutions of all its runs take, so they
-    /// serialize. A reused instance keeps the initial state, the covariance and the options of its construction: a later
+    /// holds the lock of the forces of the instance from its start to its end, the forces added by the caller and a bare
+    /// <see cref="IIntegrator"/> included, and the evaluations of the solutions of all its runs take it, so the runs of
+    /// the instance, two concurrent calls of this method on it and those evaluations serialize (decision 28 of lot L4 of
+    /// #668, decided by S. Guillet, 2026-11-22). Code a run calls (a <see cref="ForceBase"/>, a bare
+    /// <see cref="IIntegrator"/>) must not evaluate the solution of another propagator that may be running: two reused
+    /// instances whose forces evaluate each other's earlier solutions deadlock (the library evaluates no solution under
+    /// the SPICE lock or the lock of an attitude record, so it cannot deadlock by itself). An evaluation of an earlier
+    /// solution on another thread waits for the end of the run in progress, and a call waiting for the lock reads
+    /// <paramref name="cancellationToken"/> once it holds it. A reused instance keeps the initial state, the covariance and the options of its construction: a later
     /// <see cref="Spacecraft.SetInitialOrbitalParameters"/> does not reach it (#783; build a new propagator to propagate
     /// from another initial orbit).
     /// </para>
@@ -696,8 +704,9 @@ public abstract class PropagatorBase : IPropagator
         // see each other's cache, and none is left on the shared frame
         var (cacheFrame, cache) = OrientationCache;
         using (Frame.UseOrientationCache(cacheFrame, cache))
-        // The run holds the lock of the forces of the propagator, so that it serializes with the evaluations of the
-        // solutions of its earlier runs, which evaluate the same forces (#782, decision 25 of lot L4 of #668)
+        // The run holds the lock of the forces of the propagator for the whole run, user forces included, so that it
+        // serializes with the evaluations of the solutions of its earlier runs, which evaluate the same forces, and with
+        // another call on the instance (#782, decisions 25 and 28 of lot L4 of #668)
         lock (DynamicsSyncRoot)
         {
             // The token of the run, read by the integrators of the library at each accepted step and reset after the run,

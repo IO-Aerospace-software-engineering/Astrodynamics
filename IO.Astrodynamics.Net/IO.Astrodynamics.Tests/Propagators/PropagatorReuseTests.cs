@@ -683,6 +683,7 @@ public class PropagatorReuseTests
 
         // Assert
         Assert.Equal("integrator", exception.ParamName);
+        AssertClaimMessage(exception);
         Assert.Same(PropagationTimeArgument.Tt, integrator.TimeArgument);
         Assert.Same(integrator, first.Integrator);
         AssertSame($"first propagator after the refusal of {constructor}", expected,
@@ -734,7 +735,17 @@ public class PropagatorReuseTests
 
         // Assert
         Assert.Equal("integrator", exception.ParamName);
+        AssertClaimMessage(exception);
+    }
+
+    // The message of the claim names both cases, a propagator and a constructor that threw after the claim, and says the
+    // claim is never released (decision 29 of lot L4 of #668, decided by S. Guillet, 2026-11-22)
+    private static void AssertClaimMessage(ArgumentException exception)
+    {
         Assert.Contains("already given to another propagator", exception.Message);
+        Assert.Contains("or to a propagator constructor that threw after claiming it", exception.Message);
+        Assert.Contains("the claim is never released", exception.Message);
+        Assert.Contains("build a new integrator", exception.Message);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -826,5 +837,89 @@ public class PropagatorReuseTests
         Assert.True(Same(position, positionAfter) && Same(velocity, velocityAfter));
         Assert.Equal(phi, solution1.GetStateTransitionMatrix(mid));
         Assert.Equal(covariance, solution1.GetCovariance(mid));
+    }
+
+    /// <summary>
+    /// A force of zero that, on the thread it watches, counts its calls and holds the first one until it is released, so
+    /// that a run of the propagator stops inside its dynamics, the lock of the instance held.
+    /// </summary>
+    private sealed class GateForce : ForceBase
+    {
+        private int _watchedThread = -1;
+        private int _callsOnWatchedThread;
+
+        internal ManualResetEventSlim Entered { get; } = new();
+
+        internal ManualResetEventSlim Released { get; } = new();
+
+        internal int CallsOnWatchedThread => Volatile.Read(ref _callsOnWatchedThread);
+
+        internal void WatchCurrentThread() => Volatile.Write(ref _watchedThread, Environment.CurrentManagedThreadId);
+
+        public override Vector3 Apply(StateVector stateVector)
+        {
+            if (Environment.CurrentManagedThreadId == Volatile.Read(ref _watchedThread))
+            {
+                Interlocked.Increment(ref _callsOnWatchedThread);
+                Entered.Set();
+                Released.Wait();
+            }
+
+            return Vector3.Zero;
+        }
+    }
+
+    /// <summary>
+    /// The lock of an instance is held for the whole run, its forces included (decision 28 of lot L4 of #668, decided by
+    /// S. Guillet, 2026-11-22): an evaluation of the solution of run 1 on another thread, asked while run 2 is held inside
+    /// a force, returns only after run 2 has evaluated its last force, and gives the values it gave before run 2. Before
+    /// the fix (1dc77ffc) each run took a new lock, and the evaluation returned while run 2 was held.
+    /// </summary>
+    [Fact]
+    public void AnEvaluationOfRunOne_WaitsForTheEndOfRunTwo()
+    {
+        // Arrange
+        var gate = new GateForce();
+        var propagator = new CentralBodyPropagator(TwoHours, Leo(), CallerRk78(gate), Step);
+        var solution1 = propagator.Propagate();
+        var mid = Epoch.AddMinutes(47.3);
+        var (position, velocity) = solution1.InterpolateAt(mid);
+        var wait = TimeSpan.FromSeconds(60.0);
+
+        // Act
+        var run2 = new Thread(() =>
+        {
+            gate.WatchCurrentThread();
+            propagator.Propagate();
+        });
+        run2.Start();
+        Assert.True(gate.Entered.Wait(wait), "run 2 never reached its forces");
+
+        bool releasedWhenReturned = false;
+        int run2CallsWhenReturned = -1;
+        Vector3 positionDuring = default, velocityDuring = default;
+        var evaluationAsked = new ManualResetEventSlim();
+        var evaluation = new Thread(() =>
+        {
+            evaluationAsked.Set();
+            (positionDuring, velocityDuring) = solution1.InterpolateAt(mid);
+            releasedWhenReturned = gate.Released.IsSet;
+            run2CallsWhenReturned = gate.CallsOnWatchedThread;
+        });
+        evaluation.Start();
+        Assert.True(evaluationAsked.Wait(wait));
+
+        // Long enough for an evaluation that does not wait to return, which takes milliseconds
+        bool returnedWhileHeld = evaluation.Join(TimeSpan.FromSeconds(1.0));
+        gate.Released.Set();
+        Assert.True(run2.Join(wait), "run 2 did not end");
+        Assert.True(evaluation.Join(wait), "the evaluation did not return");
+
+        // Assert
+        Assert.False(returnedWhileHeld);
+        Assert.True(releasedWhenReturned);
+        Assert.True(gate.CallsOnWatchedThread > 1);
+        Assert.Equal(gate.CallsOnWatchedThread, run2CallsWhenReturned);
+        Assert.True(Same(position, positionDuring) && Same(velocity, velocityDuring));
     }
 }
