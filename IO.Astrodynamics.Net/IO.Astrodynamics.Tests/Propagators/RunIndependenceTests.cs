@@ -76,7 +76,7 @@ public class RunIndependenceTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine($"eng{-id}", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(Earth, minimumEpoch, TimeSpan.Zero, 9000000.0, engine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(Earth, minimumEpoch, TimeSpan.Zero, 9000000.0, engine));
     }
 
     private static PropagationOptions Options(string kind) => new()
@@ -405,7 +405,7 @@ public class RunIndependenceTests
         Assert.True(spacecraft.FuelTanks.Single().Quantity < 1000.0);
         Assert.NotEmpty(spacecraft.Frame.GetStateOrientationsToICRF());
         Assert.True(spacecraft.IsPropagated);
-        spacecraft.SetStandbyManeuver(null);
+        spacecraft.SetManeuvers();
 
         // Act
         var solution = new TLEPropagator(new Window(tle.Epoch.AddHours(3.0), tle.Epoch.AddHours(4.0)), spacecraft, Step)

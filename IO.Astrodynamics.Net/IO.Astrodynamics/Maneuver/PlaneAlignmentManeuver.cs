@@ -9,8 +9,18 @@ namespace IO.Astrodynamics.Maneuver
 {
     public class PlaneAlignmentManeuver : ImpulseManeuver
     {
+        /// <summary>
+        /// The node the last run locked, true for the ascending node: the last run's value, cleared by the re-arm of the
+        /// next run with <see cref="EventCrossingDirection"/> (decision 52 of #668, decided by S. Guillet, 2026-11-23); null
+        /// before.
+        /// </summary>
         public bool? IsAscendingNode { get; private set; }
-        public double RelativeInclination { get; private set; }
+
+        /// <summary>
+        /// The relative inclination of the last execution, a side result of the execution. Internal since 11.0.0
+        /// (decision 51 of #668, decided by S. Guillet, 2026-11-23): nothing read it, and the re-arm left it.
+        /// </summary>
+        internal double RelativeInclination { get; private set; }
 
         private CrossingDirection _crossingDirection = CrossingDirection.Any;
 
@@ -30,42 +40,63 @@ namespace IO.Astrodynamics.Maneuver
         /// Zero at both ascending and descending nodes.
         /// CrossingDirection distinguishes which node triggers the maneuver.
         /// </summary>
+        /// <remarks>
+        /// Pure (decision 50 of #668, decided by S. Guillet, 2026-11-23): before 11.0.0 its first call locked the node and
+        /// the crossing direction (#802). A propagation locks them through its detector, by the rule of
+        /// <see cref="NodeAt"/>.
+        /// </remarks>
         public override double ComputeEventValue(StateVector localState)
+        {
+            var targetH = TargetOrbit.SpecificAngularMomentum().NormalizeOrZero();
+            return localState.Position.Dot(targetH);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>On the first evaluation of a run, the node the rule of <see cref="NodeAt"/> gives is locked, with the
+        /// crossing direction.</remarks>
+        internal override double ComputeEventValueInRun(StateVector localState)
+        {
+            if (IsAscendingNode == null)
+            {
+                LockNode(NodeAt(localState));
+            }
+
+            return ComputeEventValue(localState);
+        }
+
+        /// <summary>
+        /// The node a state waits for, true for the ascending node: within the threshold of the target plane, the node of
+        /// the rate of change of g (dg/dt = v · ĥ_target positive: ascending); otherwise the next node, that of the sign of g
+        /// (above the plane, the descending node).
+        /// </summary>
+        private bool NodeAt(StateVector localState)
         {
             var targetH = TargetOrbit.SpecificAngularMomentum().NormalizeOrZero();
             double g = localState.Position.Dot(targetH);
 
-            // On first evaluation, determine which node is closer and lock the direction
-            if (IsAscendingNode == null)
-            {
-                // Ascending node: spacecraft crosses from below to above target plane (g: - → +, NegToPos)
-                // Descending node: spacecraft crosses from above to below target plane (g: + → -, PosToNeg)
-                double threshold = NodeThreshold * localState.Position.Magnitude();
+            // Ascending node: spacecraft crosses from below to above target plane (g: - → +, NegToPos)
+            // Descending node: spacecraft crosses from above to below target plane (g: + → -, PosToNeg)
+            double threshold = NodeThreshold * localState.Position.Magnitude();
 
-                if (System.Math.Abs(g) < threshold)
-                {
-                    // At/near the node: use rate of change dg/dt = v · ĥ_target
-                    // Positive dg/dt → ascending through the plane → ascending node
-                    // Negative dg/dt → descending through the plane → descending node
-                    double dgdt = localState.Velocity.Dot(targetH);
-                    LockNode(dgdt > 0);
-                }
-                else
-                {
-                    // Above target plane: next zero-crossing going negative is descending node
-                    // Below target plane: next zero-crossing going positive is ascending node
-                    LockNode(!(g > 0));
-                }
+            if (System.Math.Abs(g) < threshold)
+            {
+                // At/near the node: use rate of change dg/dt = v · ĥ_target
+                // Positive dg/dt → ascending through the plane → ascending node
+                // Negative dg/dt → descending through the plane → descending node
+                double dgdt = localState.Velocity.Dot(targetH);
+                return dgdt > 0;
             }
 
-            return g;
+            // Above target plane: next zero-crossing going negative is descending node
+            // Below target plane: next zero-crossing going positive is ascending node
+            return !(g > 0);
         }
 
         /// <inheritdoc />
         /// <remarks>
         /// At the start of a search, the state at the minimum epoch (#569), the node is the one the spacecraft moves toward:
         /// within the threshold of a node it moves away from (g · dg/dt &gt; 0), that node is passed, and the search takes
-        /// the next node, that of the sign of g. Otherwise the rule of <see cref="ComputeEventValue"/>, which keeps the node
+        /// the next node, that of the sign of g. Otherwise the rule of <see cref="NodeAt"/>, which keeps the node
         /// by dg/dt within the threshold, as a state handed to the maneuver at its node needs.
         /// </remarks>
         internal override double ComputeEventValueAtSearchStart(StateVector localState)
@@ -81,7 +112,7 @@ namespace IO.Astrodynamics.Maneuver
                 }
             }
 
-            return ComputeEventValue(localState);
+            return ComputeEventValueInRun(localState);
         }
 
         // The node the maneuver waits for, and the direction of its crossing
@@ -93,15 +124,28 @@ namespace IO.Astrodynamics.Maneuver
 
         public override CrossingDirection EventCrossingDirection => _crossingDirection;
 
-        protected override Vector3 Execute(StateVector stateVector)
+        /// <inheritdoc />
+        /// <remarks>Pure (decision 50 of #668): the node of the rule of <see cref="NodeAt"/> at the state, never the node a
+        /// run locked; at the state of its crossing in a run, the two agree.</remarks>
+        protected override Vector3 Execute(StateVector stateVector) => DeltaVAt(stateVector, NodeAt(stateVector)).DeltaV;
+
+        /// <inheritdoc />
+        /// <remarks>The node the run locked, and the relative inclination kept.</remarks>
+        internal override Vector3 ExecuteInRun(StateVector localState)
         {
-            // Determine ascending node direction from angular momentum cross product
-            var an = TargetOrbit.SpecificAngularMomentum().Cross(stateVector.SpecificAngularMomentum()).NormalizeOrZero();
             if (IsAscendingNode is null)
             {
                 throw new InvalidOperationException("Maneuver point undefined");
             }
 
+            var (deltaV, relativeInclination) = DeltaVAt(localState, IsAscendingNode.Value);
+            RelativeInclination = relativeInclination;
+            return deltaV;
+        }
+
+        // The delta-V at a node, and the relative inclination: the pure core of the execution (decision 50 of #668)
+        private (Vector3 DeltaV, double RelativeInclination) DeltaVAt(StateVector stateVector, bool ascendingNode)
+        {
             var vel = stateVector.Velocity;
             var pos = stateVector.Position;
 
@@ -109,19 +153,19 @@ namespace IO.Astrodynamics.Maneuver
             var projectedVector = vel - (pos * (vel.Dot(pos) / pos.Dot(pos)));
 
             //Compute relative inclination
-            RelativeInclination = System.Math.Acos(System.Math.Cos(stateVector.Inclination()) * System.Math.Cos(TargetOrbit.Inclination()) +
-                                                   (System.Math.Sin(stateVector.Inclination()) * System.Math.Sin(TargetOrbit.Inclination())) *
-                                                   System.Math.Cos(TargetOrbit.AscendingNode() - stateVector.AscendingNode()));
+            double relativeInclination = System.Math.Acos(System.Math.Cos(stateVector.Inclination()) * System.Math.Cos(TargetOrbit.Inclination()) +
+                                                          (System.Math.Sin(stateVector.Inclination()) * System.Math.Sin(TargetOrbit.Inclination())) *
+                                                          System.Math.Cos(TargetOrbit.AscendingNode() - stateVector.AscendingNode()));
 
-            double rotationAngle = Constants.HalfPi + RelativeInclination * 0.5;
+            double rotationAngle = Constants.HalfPi + relativeInclination * 0.5;
 
-            if (IsAscendingNode == true)
+            if (ascendingNode)
             {
                 rotationAngle = -rotationAngle;
             }
 
             //Compute deltaV
-            var deltaV = 2.0 * projectedVector.Magnitude() * System.Math.Sin(RelativeInclination * 0.5);
+            var deltaV = 2.0 * projectedVector.Magnitude() * System.Math.Sin(relativeInclination * 0.5);
 
             //Compute the quaternion
             var q = Quaternion.FromAxisAngle(pos.NormalizeOrZero(), rotationAngle);
@@ -130,13 +174,19 @@ namespace IO.Astrodynamics.Maneuver
             var rotateVecor = projectedVector.NormalizeOrZero().Rotate(q);
 
             //Compute delta V vector
-            return rotateVecor * deltaV;
+            return (rotateVecor * deltaV, relativeInclination);
         }
 
+        /// <summary>
+        /// Clears the node the last run locked and its crossing direction, back to <see cref="CrossingDirection.Any"/>
+        /// (#784: before 11.0.0 the direction was left, so a re-armed maneuver waited for the crossing of the last run's
+        /// node), and the relative inclination.
+        /// </summary>
         internal override void Reset()
         {
             IsAscendingNode = null;
-            RelativeInclination = 0.0;  
+            _crossingDirection = CrossingDirection.Any;
+            RelativeInclination = 0.0;
             base.Reset();
         }
     }

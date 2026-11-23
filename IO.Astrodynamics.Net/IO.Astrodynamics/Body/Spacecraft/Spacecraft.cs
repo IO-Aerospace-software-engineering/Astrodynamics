@@ -54,8 +54,29 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         private readonly HashSet<Maneuver.Maneuver> _executedManeuvers = new HashSet<Maneuver.Maneuver>();
         public IReadOnlyCollection<Maneuver.Maneuver> ExecutedManeuvers => _executedManeuvers;
-        public Maneuver.Maneuver StandbyManeuver { get; private set; }
-        public Maneuver.Maneuver InitialManeuver { get; private set; }
+        /// <summary>
+        /// The maneuver of the chain in standby during a run: the head of the plan before it, the next one to fire as it
+        /// runs. Internal since 11.0.0 (decision 45 of #668, decided by S. Guillet, 2026-11-23): it is run state; the plan
+        /// is <see cref="Maneuvers"/>, the maneuvers of the last run <see cref="ExecutedManeuvers"/>.
+        /// </summary>
+        internal Maneuver.Maneuver StandbyManeuver { get; private set; }
+
+        // The plan, in order (SetManeuvers); empty for none
+        private IReadOnlyList<Maneuver.Maneuver> _maneuvers = Array.Empty<Maneuver.Maneuver>();
+
+        /// <summary>
+        /// The maneuver plan of the spacecraft, in the order of <see cref="SetManeuvers"/>, each linked to the next
+        /// (<see cref="Maneuver.Maneuver.NextManeuver"/>): every propagation runs it from its first maneuver. Empty for no
+        /// plan. It is the plan as it was set, whatever a run executed (decision 45 of #668, decided by S. Guillet,
+        /// 2026-11-23).
+        /// </summary>
+        public IReadOnlyList<Maneuver.Maneuver> Maneuvers => _maneuvers;
+
+        /// <summary>The first maneuver of the plan, the head of the chain every run starts from; null for no plan.</summary>
+        internal Maneuver.Maneuver PlanHead => _maneuvers.Count > 0 ? _maneuvers[0] : null;
+
+        // The claims of the plans of every spacecraft, taken atomically (decision 46 of #668)
+        private static readonly object PlanSync = new();
         public Spacecraft Parent { get; private set; }
         public Spacecraft Child { get; private set; }
         public Clock Clock { get; }
@@ -453,27 +474,45 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// its engine's fuel tank is one of the tank instances of the spacecraft and is held by this instance. The engine
         /// itself need not be in <see cref="Engines"/>. Without it, an impulse on a tank of no spacecraft threw a
         /// <see cref="NullReferenceException"/> during the run, one on another spacecraft's tank burnt that spacecraft's
-        /// fuel, and an attitude took the body axes of the other spacecraft, or the static ones.
+        /// fuel, and an attitude took the body axes of the other spacecraft, or the static ones. And that each is in the
+        /// plan of this spacecraft (<see cref="SetManeuvers"/>): the run's re-check of the claim (decision 46 of #668,
+        /// decided by S. Guillet, 2026-11-23).
         /// </summary>
-        /// <exception cref="InvalidOperationException">A maneuver draws on a tank that is not this spacecraft's; nothing
-        /// changes.</exception>
+        /// <exception cref="InvalidOperationException">A maneuver draws on a tank that is not this spacecraft's, or is not in
+        /// its plan; nothing changes.</exception>
         internal void CheckManeuverEngines()
         {
-            foreach (var maneuver in Maneuver.Maneuver.Chain(InitialManeuver).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
+            foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
             {
-                var tank = maneuver.Engine.FuelTank;
-                if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
+                if (EngineError(maneuver) is { } engineError)
                 {
-                    continue;
+                    throw new InvalidOperationException(engineError);
                 }
 
-                string holder = tank.Spacecraft == null
-                    ? "is on no spacecraft"
-                    : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
-                throw new InvalidOperationException(
-                    $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name} (serial number {maneuver.Engine.SerialNumber}), whose fuel tank {tank.Name} (serial number {tank.SerialNumber}) {holder}, not on the spacecraft propagated: " +
-                    $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.");
+                if (!ReferenceEquals(maneuver.PlanOwner, this))
+                {
+                    throw new InvalidOperationException(
+                        $"The {maneuver.GetType().Name} in the maneuver chain of {Name} ({NaifId}) is not in its plan: a plan is linked " +
+                        "by SetManeuvers only. Set the plan with SetManeuvers.");
+                }
             }
+        }
+
+        // Why a maneuver cannot run on this spacecraft: its engine's tank is not one of this spacecraft's (#676, #586); null
+        // otherwise
+        private string EngineError(Maneuver.Maneuver maneuver)
+        {
+            var tank = maneuver.Engine.FuelTank;
+            if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
+            {
+                return null;
+            }
+
+            string holder = tank.Spacecraft == null
+                ? "is on no spacecraft"
+                : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
+            return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name} (serial number {maneuver.Engine.SerialNumber}), whose fuel tank {tank.Name} (serial number {tank.SerialNumber}) {holder}, not on the spacecraft propagated: " +
+                   $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.";
         }
 
         /// <summary>
@@ -555,39 +594,92 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Sets the head of the maneuver chain (<see cref="Maneuver.Maneuver.SetNextManeuver"/>): the maneuver every later
-        /// propagation starts the chain from. <see cref="InitialManeuver"/> and <see cref="StandbyManeuver"/> both become
-        /// <paramref name="maneuver"/>, whatever was set before or left by an earlier propagation, and nothing is added to
-        /// <see cref="ExecutedManeuvers"/>, which lists the maneuvers of the last propagation; null clears the chain, so the
-        /// next propagation fires nothing (#584, decided by S. Guillet, 2026-11-17: before 11.0.0 a second call before a
-        /// propagation, or a call after a propagation whose chain did not finish, left the first head in place, which fired,
-        /// and added it to <see cref="ExecutedManeuvers"/> before it ran).
+        /// Sets the maneuver plan of the spacecraft: <paramref name="maneuvers"/> in order, each linked to the next and the
+        /// last to none (<see cref="Maneuver.Maneuver.NextManeuver"/>), read back by <see cref="Maneuvers"/>; no maneuver
+        /// clears the plan, so the next propagation fires nothing. It is the one way to link a plan (decision 45 of #668,
+        /// decided by S. Guillet, 2026-11-23: before 11.0.0 <c>SetStandbyManeuver</c> set the head of a chain that
+        /// <c>Maneuver.SetNextManeuver</c> linked). Every later propagation runs the plan from its first maneuver, whatever
+        /// an earlier one executed; nothing is added to <see cref="ExecutedManeuvers"/>, which lists the maneuvers of the
+        /// last propagation (#584).
         /// </summary>
-        /// <param name="maneuver">The head of the chain; null for no maneuver.</param>
-        /// <param name="minimumEpoch">Null to keep the minimum epoch the maneuver was given. When later than that minimum
-        /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
-        /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it, and an <see cref="Maneuver.Attitude"/> never
-        /// activates before it (#539). An earlier value changes nothing.</param>
-        /// <exception cref="ArgumentException">The chain from <paramref name="maneuver"/> is a cycle, which a subclass that
-        /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); nothing changes.</exception>
-        public void SetStandbyManeuver(Maneuver.Maneuver maneuver, Time? minimumEpoch = null)
+        /// <param name="maneuvers">The maneuvers of the plan, in order; none to clear it.</param>
+        /// <remarks>
+        /// <para>
+        /// The plan claims each of its maneuvers for this spacecraft (decision 46 of #668, decided by S. Guillet,
+        /// 2026-11-23): a maneuver is in one plan at a time, and the claim is released, its link cleared, when this
+        /// spacecraft sets another plan without it, after which another spacecraft may take it. A maneuver keeps the
+        /// minimum epoch of its constructor: a later one is a new maneuver in a new plan (decision 47; before 11.0.0
+        /// <c>SetStandbyManeuver(maneuver, minimumEpoch)</c> raised it).
+        /// </para>
+        /// <para>
+        /// The checks run here, where the call receives the maneuvers, and again at each run, which throws
+        /// <see cref="InvalidOperationException"/> for what changed since (another initial orbit, whose frame the targets
+        /// no longer share). So the tanks of the engines are added (<see cref="AddFuelTank"/>, and the engines with
+        /// <see cref="AddEngine"/>) and the initial orbit set before the plan.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="maneuvers"/> is null.</exception>
+        /// <exception cref="ArgumentException">Naming <c>maneuvers</c>: a maneuver is null; or appears twice, which would
+        /// make the chain a cycle (a repeated burn is a new maneuver, #585); or is in the plan of another spacecraft; or
+        /// draws on an engine whose fuel tank is not one of this spacecraft's (#676); or, for an impulse, has its target
+        /// orbit in another frame than the one the spacecraft is propagated in (GCRF and ICRF counting as one, #685). Nothing
+        /// changes.</exception>
+        public void SetManeuvers(params Maneuver.Maneuver[] maneuvers)
         {
-            try
+            ArgumentNullException.ThrowIfNull(maneuvers);
+            var plan = (Maneuver.Maneuver[])maneuvers.Clone();
+            var listed = new HashSet<Maneuver.Maneuver>(ReferenceEqualityComparer.Instance);
+            lock (PlanSync)
             {
-                Maneuver.Maneuver.Chain(maneuver);
-            }
-            catch (InvalidOperationException e)
-            {
-                throw new ArgumentException(e.Message, nameof(maneuver), e);
-            }
+                for (int i = 0; i < plan.Length; i++)
+                {
+                    var maneuver = plan[i] ?? throw new ArgumentException($"The maneuver at index {i} of the plan of {Name} is null.", nameof(maneuvers));
+                    if (!listed.Add(maneuver))
+                    {
+                        throw new ArgumentException(
+                            $"The {maneuver.GetType().Name} at index {i} of the plan of {Name} appears in it twice, which would make the maneuver chain a cycle: " +
+                            "a maneuver appears in a plan once; a repeated burn is a new maneuver.", nameof(maneuvers));
+                    }
 
-            if (minimumEpoch.HasValue)
-            {
-                maneuver?.RaiseGivenMinimumEpoch(minimumEpoch.Value);
-            }
+                    if (maneuver.PlanOwner != null && !ReferenceEquals(maneuver.PlanOwner, this))
+                    {
+                        throw new ArgumentException(
+                            $"The {maneuver.GetType().Name} at index {i} of the plan of {Name} is in the plan of the spacecraft {maneuver.PlanOwner.Name} ({maneuver.PlanOwner.NaifId}): " +
+                            "a maneuver is in one plan at a time. Build a new maneuver for this plan, or set the other spacecraft's plan without it first.",
+                            nameof(maneuvers));
+                    }
 
-            InitialManeuver = maneuver;
-            StandbyManeuver = maneuver;
+                    if (EngineError(maneuver) is { } engineError)
+                    {
+                        throw new ArgumentException(engineError, nameof(maneuvers));
+                    }
+                }
+
+                if (InitialOrbitalParameters != null &&
+                    PropagatorBase.TargetOrbitFrameError(this, plan, PropagatorBase.PropagationFrame(InitialOrbitalParameters)) is { } frameError)
+                {
+                    throw new ArgumentException(frameError, nameof(maneuvers));
+                }
+
+                // The claims of the former plan are released for the maneuvers this one does not hold
+                foreach (var former in _maneuvers)
+                {
+                    if (!listed.Contains(former))
+                    {
+                        former.PlanOwner = null;
+                        former.NextManeuver = null;
+                    }
+                }
+
+                for (int i = 0; i < plan.Length; i++)
+                {
+                    plan[i].PlanOwner = this;
+                    plan[i].NextManeuver = i + 1 < plan.Length ? plan[i + 1] : null;
+                }
+
+                _maneuvers = Array.AsReadOnly(plan);
+                StandbyManeuver = PlanHead;
+            }
         }
 
         /// <summary>
@@ -595,8 +687,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// the window of the maneuver that precedes it, for this propagation only: the gate is raised on
         /// <see cref="Maneuver.Maneuver.PropagationGate"/>, which the next <c>Propagate</c> clears, never on the minimum epoch
         /// the maneuver was given (#573). The maneuver in standby until then is added to <see cref="ExecutedManeuvers"/>.
-        /// The library's advances of a chain go through it, never through <see cref="SetStandbyManeuver"/>, which sets the
-        /// head of the chain (#584).
+        /// The library's advances of a chain go through it, never through <see cref="SetManeuvers"/>, which sets the plan
+        /// (#584).
         /// </summary>
         /// <param name="maneuver">The next maneuver of the chain; null at its end.</param>
         /// <param name="gate">The end of the window of the maneuver before it; null for none.</param>
@@ -1161,7 +1253,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// record are dropped, whatever filled them and whatever <see cref="IsPropagated"/> says (decision 38 of #668,
         /// decided by S. Guillet, 2026-11-23: before 11.0.0 they were dropped only after a numerical propagation, so a first
         /// run kept the attitudes added by hand), <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
-        /// the chain from <see cref="InitialManeuver"/> reset (its windows and the gates of the last propagation) and put back
+        /// the chain from the first maneuver of <see cref="Maneuvers"/> reset (its windows, the gates and every other value
+        /// of the last propagation, decision 52 of #668) and put back
         /// in standby. <see cref="PropagatorBase.Propagate"/> calls it once its checks pass, on every path: before 11.0.0
         /// only <c>Spacecraft.Propagate</c> did, so a second run through the builder of 10.x or a
         /// <see cref="CentralBodyPropagator"/> built directly fired no burn and started with the fuel left by the first.
@@ -1179,8 +1272,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 fuelTank.Refuel();
             }
 
-            Maneuver.Maneuver.ResetChain(InitialManeuver);
-            StandbyManeuver = InitialManeuver;
+            Maneuver.Maneuver.ResetChain(PlanHead);
+            StandbyManeuver = PlanHead;
         }
 
         /// <summary>

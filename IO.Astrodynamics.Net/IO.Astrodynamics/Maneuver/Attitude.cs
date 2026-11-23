@@ -21,19 +21,35 @@ namespace IO.Astrodynamics.Maneuver;
 /// </remarks>
 public abstract class Attitude : Maneuver
 {
-    public StateOrientation StateOrientation { get; private set; }
     public Attitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
     {
     }
 
-    protected override Vector3 Execute(StateVector vector)
-    {
-        return Vector3.Zero;
-    }
-
     public abstract Quaternion ComputeOrientation(StateVector stateVector);
 
-    public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
+    /// <summary>
+    /// The attitude of the law at <paramref name="stateVector"/>: the rotation from the spacecraft frame to ICRF, without
+    /// executing the attitude (decision 50 of #668, decided by S. Guillet, 2026-11-23).
+    /// </summary>
+    /// <param name="stateVector">The state, taken about its own observer, never the centre a run used, and rotated to ICRF
+    /// when it is in another frame.</param>
+    /// <returns>The rotation from the spacecraft frame to ICRF (<see cref="ComputeOrientation"/> on the state in ICRF), at
+    /// the epoch of the state, with a zero angular velocity, labelled ICRF.</returns>
+    /// <remarks>
+    /// Pure: it sets no window and moves no chain, so it is the same before and after a run. Before 11.0.0 the preview
+    /// was the public <c>TryExecute</c>, which set the windows of the attitude, could move the standby chain of a finished
+    /// run, and kept its result in <c>StateOrientation</c>, which no re-arm cleared (#802); in a run, the attitude at its
+    /// activation is in the attitude record (<see cref="SpacecraftFrame.GetStateOrientationToICRF"/>).
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+    public StateOrientation ComputeStateOrientation(StateVector stateVector)
+    {
+        ArgumentNullException.ThrowIfNull(stateVector);
+        var icrf = stateVector.Frame != Frames.Frame.ICRF ? stateVector.ToFrame(Frames.Frame.ICRF) : stateVector;
+        return new StateOrientation(ComputeOrientation(icrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF);
+    }
+
+    internal override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
     {
         //Compute maneuver window
         if (!ThrustWindow.HasValue || !ManeuverWindow.HasValue)
@@ -55,9 +71,7 @@ public abstract class Attitude : Maneuver
             localSv = localSv.ToFrame(Frames.Frame.ICRF).ToStateVector();
         }
 
-        StateOrientation = new StateOrientation(ComputeOrientation(localSv), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF);
-        
         //Return state vector and computed state orientation
-        return (stateVector, StateOrientation);
+        return (stateVector, new StateOrientation(ComputeOrientation(localSv), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
     }
 }

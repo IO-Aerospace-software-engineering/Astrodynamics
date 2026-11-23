@@ -106,9 +106,9 @@ public class TLEPropagator : IPropagator
     }
 
     // Why the spacecraft cannot be sampled: a maneuver plan, which SGP4 cannot execute (decision 40 of #668); null otherwise
-    private static string PlanError(Spacecraft spacecraft) => spacecraft.InitialManeuver != null
+    private static string PlanError(Spacecraft spacecraft) => spacecraft.Maneuvers.Count > 0
         ? $"{spacecraft.Name} has a maneuver plan, which SGP4 cannot execute: a TLEPropagator samples a spacecraft without " +
-          "maneuvers. Clear the plan, or propagate the spacecraft numerically (Spacecraft.Propagate)."
+          "maneuvers. Clear the plan (SetManeuvers()), or propagate the spacecraft numerically (Spacecraft.Propagate)."
         : null;
 
     /// <summary>

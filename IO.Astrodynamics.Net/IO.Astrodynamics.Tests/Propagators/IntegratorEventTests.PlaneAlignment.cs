@@ -56,7 +56,7 @@ public partial class IntegratorEventTests
         var (spacecraft, engine) = NewSpacecraft(ascending ? -7911 : -7912, start);
         var target = new KeplerianElements(MinimumEpochGateTests.A0, MinimumEpochGateTests.E0, 0.55, 0.3, System.Math.PI, System.Math.PI, earth, S, Frame.ICRF);
         var maneuver = new PlaneAlignmentManeuver(S.Add(TimeSpan.FromSeconds(-gateBefore)), TimeSpan.Zero, target, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(4000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         // The closed form from the start: the first node at or after it, and its ΔV

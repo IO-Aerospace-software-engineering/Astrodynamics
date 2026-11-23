@@ -349,7 +349,7 @@ public sealed class ReferenceCases
         var engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(maneuver?.Invoke(engine) ?? new ApogeeHeightManeuver(
+        spacecraft.SetManeuvers(maneuver?.Invoke(engine) ?? new ApogeeHeightManeuver(
             (CelestialItem)Eclipsing.InitialState.Observer, Epoch, TimeSpan.Zero, EclipsingApogeeRadius, engine));
         return spacecraft;
     }
@@ -365,7 +365,7 @@ public sealed class ReferenceCases
         var solution = spacecraft.PropagateWithVariational(Eclipsing.Window,
             new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Eclipsing.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true },
             options);
-        return (solution, (ImpulseManeuver)spacecraft.InitialManeuver);
+        return (solution, (ImpulseManeuver)spacecraft.Maneuvers[0]);
     }
 
     /// <summary>

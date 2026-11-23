@@ -666,7 +666,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         {
             ExecutionError = error
         };
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _cases.Earth }, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } });
         Assert.NotNull(maneuver.ThrustWindow);
         return (solution, solution.Segments[1].BaseEpoch);

@@ -166,11 +166,11 @@ public static class MonteCarloPropagator
 
         // The runs are built from the orbit, the dry mass, the area and the coefficients of the template: a plan would be
         // dropped silently, so it throws (decision 41 of #668, decided by S. Guillet, 2026-11-23)
-        if (config.TemplateSpacecraft.InitialManeuver != null)
+        if (config.TemplateSpacecraft.Maneuvers.Count > 0)
             throw new ArgumentException(
                 $"The template spacecraft {config.TemplateSpacecraft.Name} has a maneuver plan, which the runs of a Monte " +
                 "Carlo campaign do not execute: each run propagates a spacecraft built from the template's orbit, dry " +
-                "mass, area and coefficients. Clear the plan of the template.", nameof(config));
+                "mass, area and coefficients. Clear the plan of the template (SetManeuvers()).", nameof(config));
 
         // A window of zero length throws at the start of the call, as on every propagation path (decisions 7 and 15 of
         // lot L4 of #668): before, each run failed inside the batch and the campaign returned no statistics and no reason

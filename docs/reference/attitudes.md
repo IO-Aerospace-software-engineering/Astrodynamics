@@ -9,7 +9,7 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 | Member | Type | Description |
 |--------|------|-------------|
 | `ComputeOrientation(StateVector)` | Method | Compute the orientation quaternion at the given state (abstract, public): the rotation from the spacecraft frame to the frame of the state |
-| `StateOrientation` | Property | The computed spacecraft orientation after execution: the rotation from the spacecraft frame to ICRF, labelled ICRF, whatever the frame of the state |
+| `ComputeStateOrientation(StateVector)` | Method | The preview of the attitude at the state: the rotation from the spacecraft frame to ICRF (`ComputeOrientation` on the state rotated to ICRF, about its own observer), at the epoch of the state, labelled ICRF; pure: it sets no window and moves no chain, so it is the same before and after a run (decision 50 of #668, decided by S. Guillet, 2026-11-23). It replaces the StateOrientation property, removed (decision 52): the orientation the internal execution kept, which no re-arm cleared; in a run, the attitude at an activation is in the attitude record, `spacecraft.Frame.GetStateOrientationToICRF(epoch)`, the same rotation |
 | `ManeuverCenter` | Property | The central body for the maneuver frame |
 | `MinimumEpoch` | Property | Earliest epoch at which the attitude can activate: it activates at the later of this epoch and the end of the window of the previous maneuver of the chain |
 | `ManeuverHoldDuration` | Property | How long the attitude is held before the next maneuver of the chain may start; the law stays in force until the next activation. TT seconds about the Earth (#547); zero or more, a negative hold throwing `ArgumentOutOfRangeException` (`maneuverHoldDuration`) on every maneuver constructor (since 11.0.0, R11 of #668); its setter, which applies the same check, is `private protected` (decision 11 of lot L4, its access validated by decision 16, decided by S. Guillet, 2026-11-22: `PhasingManeuver` computes its hold at execution and sets it through the check; `protected` in 10.x) |
@@ -190,8 +190,8 @@ each in force from its epoch to the next one.
 5. **About the Earth** the holds and the windows count TT seconds from the time argument of the event (#547), as the
    integration and the output grid do (#501); about any other body, SSB mode included, TDB seconds.
 
-Every law is sampled on the solution once the integration is done: at its activation (`Attitude.TryExecute` on the
-state of the solution there, or the law itself when it resumes), at each output epoch of its interval, and once more
+Every law is sampled on the solution once the integration is done: at its activation (the internal execution of the
+attitude on the state of the solution there, or the law itself when it resumes), at each output epoch of its interval, and once more
 1 µs before the change that ends it. No value is a sentinel: an attitude that is exactly the identity is recorded like
 any other rotation, and the identity of ICRF is the attitude before the first activation. The executed attitudes,
 leading, chained and trailing, are in `Spacecraft.ExecutedManeuvers` with the impulses (#570).
@@ -204,8 +204,8 @@ taking over again from the next output; a hold delayed nothing; the impulse's at
 
 **Computed in ICRF.** Every attitude is computed on the state of the spacecraft in ICRF, whatever the inertial frame
 of the initial state, and recorded as the rotation from the spacecraft frame to ICRF
-([Attitude and kernels](spacecraft.md#attitude-and-kernels)); `Attitude.TryExecute` and `ImpulseManeuver.TryExecute`
-return that rotation, labelled ICRF. One orbit therefore gives one attitude in any frame: the roll left free by a
+([Attitude and kernels](spacecraft.md#attitude-and-kernels)); the execution of an attitude and of an impulse, and
+`Attitude.ComputeStateOrientation`, return that rotation, labelled ICRF. One orbit therefore gives one attitude in any frame: the roll left free by a
 single-vector or an impulse attitude is the minimal rotation in ICRF. Before 11.0.0 it was taken in the axes of the
 initial frame, 0.48 to 0.87 rad apart between ICRF and ECLIPJ2000 on the same orbit.
 
@@ -290,7 +290,7 @@ var moonTarget = new CelestialAttitudeTarget(moon, Aberration.LT);
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
 var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
-spacecraft.SetStandbyManeuver(nadir);
+spacecraft.SetManeuvers(nadir);
 ```
 
 ### Instrument pointing
@@ -299,7 +299,7 @@ spacecraft.SetStandbyManeuver(nadir);
 // Inputs: epoch (Time), telescope (Instrument), targetStar (ILocalizable), engine (Engine), spacecraft (Spacecraft)
 var pointing = new InstrumentPointingToAttitude(
     epoch, TimeSpan.FromHours(2), telescope, targetStar, engine);
-spacecraft.SetStandbyManeuver(pointing);
+spacecraft.SetManeuvers(pointing);
 ```
 
 ### TRIAD with orbital directions and celestial target
@@ -311,7 +311,7 @@ var attitude = new TriadAttitude(
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
     Spacecraft.Up, new CelestialAttitudeTarget(sun),
     engine);
-spacecraft.SetStandbyManeuver(attitude);
+spacecraft.SetManeuvers(attitude);
 ```
 
 ### LVLH factory
@@ -319,7 +319,7 @@ spacecraft.SetStandbyManeuver(attitude);
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine), spacecraft (Spacecraft)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
-spacecraft.SetStandbyManeuver(lvlh);
+spacecraft.SetManeuvers(lvlh);
 ```
 
 ## See Also

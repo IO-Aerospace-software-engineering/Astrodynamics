@@ -28,9 +28,10 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="Maneuver.Maneuver.SetNextManeuver"/> throws <see cref="ArgumentException"/> and leaves the chain as it was.
-/// A cycle built through a subclass, which sets the protected <see cref="Maneuver.Maneuver.NextManeuver"/>, is rejected by
-/// <see cref="Spacecraft.SetStandbyManeuver"/> (<see cref="ArgumentException"/>), by the construction of the propagator
+/// <see cref="Spacecraft.SetManeuvers"/> throws <see cref="ArgumentException"/> for a maneuver listed twice and leaves the
+/// plan as it was (decisions 45 and 46 of #668; <c>SetNextManeuver</c> before). A cycle made past the plan through the
+/// internal setter of <see cref="Maneuver.Maneuver.NextManeuver"/>, which only the library and its tests reach, is rejected
+/// by the construction of the propagator
 /// (<c>Spacecraft.Propagate</c>, the builder, the batch: <see cref="InvalidOperationException"/>, before the states of a
 /// previous propagation are cleared) and by <see cref="PropagatorBase.Propagate"/> for a cycle made after the construction.
 /// </para>
@@ -54,14 +55,14 @@ public class ManeuverChainCycleTests
         TestKernels.EnsureSolarSystem();
     }
 
-    /// <summary>A nadir attitude whose next maneuver a test sets past <see cref="Maneuver.Maneuver.SetNextManeuver"/>.</summary>
+    /// <summary>A nadir attitude whose next maneuver a test sets past <see cref="Spacecraft.SetManeuvers"/>, through the internal setter.</summary>
     private sealed class LinkedNadir(CelestialItem center, Time minimumEpoch, TimeSpan hold, Engine engine)
         : NadirAttitude(center, minimumEpoch, hold, engine)
     {
         public void ForceNext(Maneuver.Maneuver next) => NextManeuver = next;
     }
 
-    /// <summary>An apogee height maneuver whose next maneuver a test sets past <see cref="Maneuver.Maneuver.SetNextManeuver"/>.</summary>
+    /// <summary>An apogee height maneuver whose next maneuver a test sets past <see cref="Spacecraft.SetManeuvers"/>, through the internal setter.</summary>
     private sealed class LinkedApogee(CelestialItem center, Time minimumEpoch, TimeSpan hold, double apogee, Engine engine)
         : ApogeeHeightManeuver(center, minimumEpoch, hold, apogee, engine)
     {
@@ -93,7 +94,7 @@ public class ManeuverChainCycleTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // SetNextManeuver
+    // SetManeuvers (decisions 45 and 46 of #668: the one way to link a plan, SetNextManeuver removed)
     // ---------------------------------------------------------------------------------------------------------------------
 
     [Theory]
@@ -102,61 +103,36 @@ public class ManeuverChainCycleTests
     [InlineData("apo>peri>apo")]
     [InlineData("apo>nadir>apo")]
     [InlineData("nadir>apo>peri>nadir")]
-    public void SetNextManeuver_ClosingACycle_Throws_AndLeavesTheChain(string chain)
+    public void SetManeuvers_ARepeatedManeuver_Throws_AndLeavesThePlan(string chain)
     {
         var setup = Create();
         var names = chain.Split('>');
         var made = new Dictionary<string, Maneuver.Maneuver>();
         var maneuvers = names.Select(n => made.TryGetValue(n, out var m)
             ? m
-            : made[n] = n switch { "apo" => setup.Apogee(), "peri" => setup.Perigee(), _ => setup.Nadir() }).ToList();
+            : made[n] = n switch { "apo" => setup.Apogee(), "peri" => setup.Perigee(), _ => setup.Nadir() }).ToArray();
 
-        // Every link but the last, which would close the cycle
-        for (int i = 0; i < maneuvers.Count - 2; i++)
-        {
-            maneuvers[i].SetNextManeuver(maneuvers[i + 1]);
-        }
-
-        var last = maneuvers[^2];
-        var before = last.NextManeuver;
-        var e = Assert.Throws<ArgumentException>(() => last.SetNextManeuver(maneuvers[^1]));
-        Assert.Equal("maneuver", e.ParamName);
+        var e = Assert.Throws<ArgumentException>(() => setup.Spacecraft.SetManeuvers(maneuvers));
+        Assert.Equal("maneuvers", e.ParamName);
         Assert.Contains("cycle", e.Message);
-        Assert.Same(before, last.NextManeuver);
-        // The chain from the head still ends
-        Assert.Equal(maneuvers.Count - 1, Maneuver.Maneuver.Chain(maneuvers[0]).Count);
+        Assert.Empty(setup.Spacecraft.Maneuvers);
+        Assert.All(made.Values, m => Assert.Null(m.NextManeuver));
     }
 
     [Fact]
-    public void SetNextManeuver_OntoAChainThatHoldsACycle_Throws()
-    {
-        var setup = Create();
-        var nadir = setup.Nadir();
-        nadir.ForceNext(nadir);
-        var apo = setup.Apogee();
-        Assert.Throws<ArgumentException>(() => apo.SetNextManeuver(nadir));
-        Assert.Null(apo.NextManeuver);
-    }
-
-    [Fact]
-    public void SetNextManeuver_ValidLinks_AreKept()
+    public void SetManeuvers_ValidLinks_AreKept()
     {
         var setup = Create();
         var apo = setup.Apogee();
         var nadir = setup.Nadir();
         var peri = setup.Perigee();
-        Assert.Same(nadir, apo.SetNextManeuver(nadir));
-        Assert.Same(peri, nadir.SetNextManeuver(peri));
+        setup.Spacecraft.SetManeuvers(apo, nadir, peri);
         Assert.Equal(new Maneuver.Maneuver[] { apo, nadir, peri }, Maneuver.Maneuver.Chain(apo));
 
-        // Two chains may share their tail: no cycle
-        var other = setup.Apogee();
-        other.SetNextManeuver(peri);
-        Assert.Equal(new Maneuver.Maneuver[] { other, peri }, Maneuver.Maneuver.Chain(other));
-
-        // Relinking and ending a chain
-        Assert.Same(peri, apo.SetNextManeuver(peri));
-        Assert.Null(apo.SetNextManeuver(null));
+        // Relinking and ending a plan
+        setup.Spacecraft.SetManeuvers(apo, peri);
+        Assert.Equal(new Maneuver.Maneuver[] { apo, peri }, Maneuver.Maneuver.Chain(apo));
+        setup.Spacecraft.SetManeuvers(apo);
         Assert.Null(apo.NextManeuver);
     }
 
@@ -185,7 +161,7 @@ public class ManeuverChainCycleTests
             {
                 var apo = setup.Apogee();
                 var nadir = setup.Nadir();
-                apo.SetNextManeuver(nadir);
+                apo.ForceNext(nadir);
                 nadir.ForceNext(nadir);
                 return apo;
             }
@@ -193,7 +169,7 @@ public class ManeuverChainCycleTests
             {
                 var apo = setup.Apogee();
                 var nadir = setup.Nadir();
-                apo.SetNextManeuver(nadir);
+                apo.ForceNext(nadir);
                 nadir.ForceNext(apo);
                 return apo;
             }
@@ -202,19 +178,22 @@ public class ManeuverChainCycleTests
         }
     }
 
+    /// <summary>
+    /// A cycle a subclass built before the plan is set is replaced by the links of the plan: <see cref="Spacecraft.SetManeuvers"/>
+    /// links its maneuvers in order and the last to none (decision 45 of #668; before, <c>SetStandbyManeuver</c> threw).
+    /// </summary>
     [Theory]
     [InlineData("nadir>nadir")]
     [InlineData("apo>apo")]
     [InlineData("apo>nadir>nadir")]
     [InlineData("apo>nadir>apo")]
-    public void SetStandbyManeuver_ACycle_Throws(string kind)
+    public void SetManeuvers_ACycleBuiltBefore_IsRelinked(string kind)
     {
         var setup = Create();
         var head = Cycle(setup, kind);
-        var e = Assert.Throws<ArgumentException>(() => setup.Spacecraft.SetStandbyManeuver(head));
-        Assert.Equal("maneuver", e.ParamName);
-        Assert.Null(setup.Spacecraft.StandbyManeuver);
-        Assert.Null(setup.Spacecraft.InitialManeuver);
+        setup.Spacecraft.SetManeuvers(head);
+        Assert.Equal(new[] { head }, setup.Spacecraft.Maneuvers);
+        Assert.Equal(new[] { head }, Maneuver.Maneuver.Chain(head));
     }
 
     private static IntegratorOptions Integrator(string integrator) =>
@@ -229,26 +208,26 @@ public class ManeuverChainCycleTests
         if (kind.StartsWith("nadir"))
         {
             var nadir = setup.Nadir();
-            setup.Spacecraft.SetStandbyManeuver(nadir);
+            setup.Spacecraft.SetManeuvers(nadir);
             nadir.ForceNext(nadir);
             return;
         }
 
         var apo = setup.Apogee();
-        setup.Spacecraft.SetStandbyManeuver(apo);
         switch (kind)
         {
             case "apo>apo":
+                setup.Spacecraft.SetManeuvers(apo);
                 apo.ForceNext(apo);
                 break;
             case "apo>nadir>nadir":
                 var nadirAfter = setup.Nadir();
-                apo.SetNextManeuver(nadirAfter);
+                setup.Spacecraft.SetManeuvers(apo, nadirAfter);
                 nadirAfter.ForceNext(nadirAfter);
                 break;
             case "apo>nadir>apo":
                 var nadirBack = setup.Nadir();
-                apo.SetNextManeuver(nadirBack);
+                setup.Spacecraft.SetManeuvers(apo, nadirBack);
                 nadirBack.ForceNext(apo);
                 break;
             default:
@@ -315,8 +294,9 @@ public class ManeuverChainCycleTests
         var apo = setup.Apogee();
         var nadir = setup.Nadir();
         // The chain is valid when the propagator is built
-        setup.Spacecraft.SetStandbyManeuver(kind.StartsWith("nadir") ? nadir : apo);
-        if (kind != "nadir>nadir" && kind != "apo>apo") apo.SetNextManeuver(nadir);
+        if (kind.StartsWith("nadir")) setup.Spacecraft.SetManeuvers(nadir);
+        else if (kind == "apo>apo") setup.Spacecraft.SetManeuvers(apo);
+        else setup.Spacecraft.SetManeuvers(apo, nadir);
         var propagator = new CentralBodyPropagator(SixHours, setup.Spacecraft, new PropagationOptions { Integrator = Integrator(integrator), OutputStep = Output, CovariancePropagation = CovariancePropagationOptions.None });
 
         switch (kind)
@@ -364,7 +344,9 @@ public class ManeuverChainCycleTests
         var current = (Maneuver.Maneuver)head;
         for (int i = 0; i < 200_000; i++)
         {
-            current = current.SetNextManeuver(new NadirAttitude(setup.Earth, S, TimeSpan.Zero, setup.Engine));
+            var next = new NadirAttitude(setup.Earth, S, TimeSpan.Zero, setup.Engine);
+            current.NextManeuver = next;
+            current = next;
             current.FuelBurned = 1.0;
         }
 

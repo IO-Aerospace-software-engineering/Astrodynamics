@@ -243,7 +243,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         foreach (var option in avoidance.Take(3))
         {
             var reference = WithEngine(-6413, _full.PointMassProtectedStart, out var engine);
-            reference.SetStandbyManeuver(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
+            reference.SetManeuvers(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
                 CdmPropagatedCovarianceCase.Start, option.BurnEpoch, option.DeltaVInertial, engine) { ExecutionError = Gates });
             var solution = _full.Propagate(reference, CdmPropagatedCovarianceCase.Options, pointMass: true, tolerance: AvoidanceTolerance);
 
@@ -273,7 +273,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         // burn after the screening window, so that its mass when the avoidance is evaluated is not its mass at the burns
         // of the options (#415)
         var protectedCraft = WithEngine(-6431, _full.PointMassProtectedStart, out var protectedEngine);
-        protectedCraft.SetStandbyManeuver(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
+        protectedCraft.SetManeuvers(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
             CdmPropagatedCovarianceCase.Start, CdmPropagatedCovarianceCase.Start.AddHours(2.9),
             _full.PointMassProtectedStart.Velocity.Normalize() * 1500.0, protectedEngine));
         var secondaryCraft = ReferenceCase.NewSpacecraft(-6432, _full.PointMassSecondaryStart);
@@ -301,7 +301,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         foreach (var option in avoidance.Take(3))
         {
             var reference = WithEngine(-6433, _full.PointMassProtectedStart, out var engine);
-            reference.SetStandbyManeuver(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
+            reference.SetManeuvers(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
                 CdmPropagatedCovarianceCase.Start, option.BurnEpoch, option.DeltaVInertial, engine));
             var solution = _full.Propagate(reference, CdmPropagatedCovarianceCase.Options, pointMass: true, tolerance: AvoidanceTolerance);
 

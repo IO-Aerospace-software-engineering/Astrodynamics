@@ -504,8 +504,7 @@ public class AttitudeTimelineTests
         // D within a sixth of its orbit: the nadir stays within 1 rad of the identity, where the closed form is conditioned
         if (letter == "D") hours = 0.25;
         if (letter.StartsWith("ClipLast")) hours = 6.0;
-        for (int i = 0; i + 1 < chain.Length; i++) chain[i].SetNextManeuver(chain[i + 1]);
-        spacecraft.SetStandbyManeuver(chain[0]);
+        spacecraft.SetManeuvers(chain);
         return (spacecraft, chain, kinds, hours);
     }
 

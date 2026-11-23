@@ -117,12 +117,10 @@ public class ExporterTests
         var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddMinutes(10.0), TimeSpan.FromHours(1.0), spacecraft.Instruments.First(),
             spacecraft.InitialOrbitalParameters.Observer, spacecraft.Engines.First());
 
-        //Configure the second maneuver and link it to the first maneuver
-        initialManeuver.SetNextManeuver(new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(2.0), TimeSpan.FromHours(1.0), spacecraft.Instruments.First(),
+        //Configure the second maneuver and set the plan, the first maneuver then the second
+        spacecraft.SetManeuvers(initialManeuver,
+            new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(2.0), TimeSpan.FromHours(1.0), spacecraft.Instruments.First(),
             spacecraft.InitialOrbitalParameters.Observer, spacecraft.Engines.First()));
-
-        //Set the first maneuver in standby
-        spacecraft.SetStandbyManeuver(initialManeuver);
 
         //Todo fix why state orientation during maneuver returns Nan
         //Run the simulation
@@ -157,7 +155,7 @@ public class ExporterTests
         scenario.AddSpacecraft(spacecraft);
         var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(7.25), TimeSpan.FromHours(0.5), spacecraft.Instruments.First(), site,
             spacecraft.Engines.First());
-        spacecraft.SetStandbyManeuver(initialManeuver);
+        spacecraft.SetManeuvers(initialManeuver);
         scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
         CosmographiaExporter exporter = new CosmographiaExporter();
@@ -216,14 +214,14 @@ public class ExporterTests
 
         var planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             targetOrbit, spacecraft2.Engines.First());
-        planeAlignmentManeuver.SetNextManeuver(new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero, targetOrbit, spacecraft2.Engines.First()))
-            .SetNextManeuver(new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, 1,
-                spacecraft2.Engines.First()))
-            .SetNextManeuver(new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                spacecraft2.Engines.First()));
 
-        spacecraft2.SetStandbyManeuver(planeAlignmentManeuver);
+        spacecraft2.SetManeuvers(planeAlignmentManeuver,
+            new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero, targetOrbit, spacecraft2.Engines.First()),
+            new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1,
+                spacecraft2.Engines.First()),
+            new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
+                spacecraft2.Engines.First()));
         scenario.AddSpacecraft(spacecraft2);
         var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
         CosmographiaExporter cosmographiaExporter = new CosmographiaExporter();

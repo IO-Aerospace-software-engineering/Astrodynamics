@@ -20,6 +20,11 @@ namespace IO.Astrodynamics.Maneuver
         /// <returns>The target orbital parameters.</returns>
         public OrbitalParameters.OrbitalParameters TargetOrbit { get; protected set; }
 
+        /// <summary>
+        /// The delta-V of the last run that executed this maneuver, in the frame of its propagation: the last run's value,
+        /// cleared by the re-arm of the next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); zero before. The
+        /// preview of a delta-V is <see cref="ComputeDeltaV"/>.
+        /// </summary>
         public Vector3 DeltaV { get; internal set; }
 
         /// <summary>
@@ -39,7 +44,20 @@ namespace IO.Astrodynamics.Maneuver
         /// State is relative to ManeuverCenter (already transformed by ManeuverEventDetector).
         /// Must be continuous, smooth, and stateless — suitable for root-finding.
         /// </summary>
+        /// <remarks>
+        /// Pure on every library maneuver (decision 50 of #668, decided by S. Guillet, 2026-11-23): before 11.0.0 a call
+        /// locked the node of a <see cref="PlaneAlignmentManeuver"/> and wrote the intersection of an
+        /// <see cref="ApsidalAlignmentManeuver"/> (#802). The propagation locks the node through its detector
+        /// (<see cref="ComputeEventValueInRun"/>).
+        /// </remarks>
         public abstract double ComputeEventValue(StateVector localState);
+
+        /// <summary>
+        /// The g-function as the propagation evaluates it, through its <see cref="ManeuverEventDetector"/> and the execution:
+        /// <see cref="ComputeEventValue"/> by default; a maneuver whose first evaluation decides which crossing it waits for
+        /// locks it here (<see cref="PlaneAlignmentManeuver"/>, decision 50 of #668).
+        /// </summary>
+        internal virtual double ComputeEventValueInRun(StateVector localState) => ComputeEventValue(localState);
 
         /// <summary>
         /// Which zero-crossing direction triggers this maneuver.
@@ -55,7 +73,7 @@ namespace IO.Astrodynamics.Maneuver
         /// start, where a crossing just passed does not count (<see cref="PlaneAlignmentManeuver"/>);
         /// <see cref="ComputeEventValue"/> keeps the rule of a state handed to the maneuver at its crossing.
         /// </remarks>
-        internal virtual double ComputeEventValueAtSearchStart(StateVector localState) => ComputeEventValue(localState);
+        internal virtual double ComputeEventValueAtSearchStart(StateVector localState) => ComputeEventValueInRun(localState);
 
         /// <summary>
         /// Optional precondition check at event time (default: true).
@@ -72,6 +90,43 @@ namespace IO.Astrodynamics.Maneuver
         protected ImpulseManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
         {
         }
+
+        /// <summary>
+        /// The delta-V of the impulse at <paramref name="stateVector"/>: what the maneuver adds to its velocity, without
+        /// executing it (decision 50 of #668, decided by S. Guillet, 2026-11-23).
+        /// </summary>
+        /// <param name="stateVector">The state at the impulse, taken about its own observer, as the centre of the maneuver,
+        /// never the centre a run used.</param>
+        /// <returns>The delta-V, in the frame of <paramref name="stateVector"/>.</returns>
+        /// <remarks>
+        /// Pure: it touches no tank, chain, window, gate or node lock, so it is the same before and after a run. Before
+        /// 11.0.0 the preview was the public <c>TryExecute</c>, which burnt the fuel, set the windows and moved the
+        /// standby chain of a finished run (#802). At the state of its event in a run, it is the delta-V the run applies
+        /// (<see cref="DeltaV"/>): a <see cref="PlaneAlignmentManeuver"/> takes the node of the rule of
+        /// <see cref="ComputeEventValue"/> at the state, which is the node the run locked at its crossing.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
+        public Vector3 ComputeDeltaV(StateVector stateVector)
+        {
+            ArgumentNullException.ThrowIfNull(stateVector);
+            return Execute(stateVector);
+        }
+
+        /// <summary>
+        /// The delta-V of the impulse at <paramref name="stateVector"/>, the state relative to the centre of the maneuver;
+        /// pure, as <see cref="ComputeDeltaV"/>, which returns it.
+        /// </summary>
+        /// <remarks>
+        /// On <see cref="ImpulseManeuver"/> since 11.0.0, where it was on <see cref="Maneuver"/> (decision 48 of #668,
+        /// decided by S. Guillet, 2026-11-23); the library maneuvers compute it without writing anything (decision 50).
+        /// </remarks>
+        protected abstract Vector3 Execute(StateVector stateVector);
+
+        /// <summary>
+        /// The delta-V as the propagation executes the impulse, at its event: <see cref="Execute"/> by default; the library
+        /// maneuvers that keep a side result of the execution write it here (decision 50 of #668).
+        /// </summary>
+        internal virtual Vector3 ExecuteInRun(StateVector localState) => Execute(localState);
 
         /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
         /// <exception cref="ArgumentException">The target orbit is defined neither in the frame of the initial orbit of the
@@ -134,17 +189,17 @@ namespace IO.Astrodynamics.Maneuver
         /// was, then started its next propagation from the state after the burn. The values returned are unchanged.
         /// </para>
         /// </remarks>
-        public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
+        internal override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
         {
             var localSv = stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
 
             // Ensure g-function state is initialized (e.g., PlaneAlignmentManeuver.IsAscendingNode).
-            // In the propagator loop, ComputeEventValue is called by the event detector before TryExecute.
+            // In the propagator loop, the event detector evaluates it before TryExecute.
             // This call handles direct invocations (e.g., unit tests).
-            ComputeEventValue(localSv);
+            ComputeEventValueInRun(localSv);
 
             //Compute the deltaV
-            DeltaV = Execute(localSv);
+            DeltaV = ExecuteInRun(localSv);
 
             //Burn required fuel, if not enought fuel an exception will be thrown
             FuelBurned = Engine.Ignite(DeltaV);

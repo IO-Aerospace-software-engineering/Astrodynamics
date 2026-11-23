@@ -576,9 +576,16 @@ public class MinimumEpochGateTests
             var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
             spacecraft.AddEngine(engine);
             var chain = @case.Chain(engine, center, integrator);
-            for (int i = 0; i + 1 < chain.Length; i++)
-                if (chain[i].NextManeuver == null) chain[i].SetNextManeuver(chain[i + 1]);
-            spacecraft.SetStandbyManeuver(chain[0]);
+            // The plan: the maneuvers of the case in order, with the attitudes a case puts between two of them (f5), which it
+            // links through the internal setter, the plan's own links set by SetManeuvers (decision 45 of #668)
+            var plan = new System.Collections.Generic.List<Maneuver.Maneuver>();
+            for (int i = 0; i < chain.Length; i++)
+            {
+                for (var m = (Maneuver.Maneuver)chain[i]; m != null && (i + 1 == chain.Length || m != chain[i + 1]); m = m.NextManeuver)
+                    plan.Add(m);
+            }
+
+            spacecraft.SetManeuvers(plan.ToArray());
 
             var window = new Window(S, S.AddSeconds(@case.Hours * 3600.0));
             var output = TimeSpan.FromSeconds(10.0);
@@ -719,7 +726,7 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
-                    Chain = (e, c, _) => [new PhasingManeuver(GateAtTt(m), TimeSpan.Zero, PhasingTarget(c), 1, e)],
+                    Chain = (e, c, _) => [new PhasingManeuver(GateAtTt(m), PhasingTarget(c), 1, e)],
                     Hours = 3.0,
                     Expected = r =>
                     {
@@ -845,8 +852,8 @@ public class MinimumEpochGateTests
                         var first = new PerigeeHeightManeuver(c, GateAtTt(3500.0), TimeSpan.Zero, 6878137.0, e);
                         var attitude = new NadirAttitude(c, S, TimeSpan.FromSeconds(hold), e);
                         var second = new PerigeeHeightManeuver(c, S, TimeSpan.Zero, 6978137.0, e);
-                        first.SetNextManeuver(attitude);
-                        attitude.SetNextManeuver(second);
+                        first.NextManeuver = attitude;
+                        attitude.NextManeuver = second;
                         return [first, second];
                     },
                     Expected = r =>

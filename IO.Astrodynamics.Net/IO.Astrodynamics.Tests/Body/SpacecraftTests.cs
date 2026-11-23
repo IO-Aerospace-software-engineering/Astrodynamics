@@ -674,7 +674,7 @@ namespace IO.Astrodynamics.Tests.Body
                 unattachedEngine);
 
             var sv = orbitalParams.ToStateVector();
-            detachedManeuver.TryExecute(sv);
+            var detachedManeuverOrientation = detachedManeuver.ComputeStateOrientation(sv);
 
             // Create reference maneuver with spacecraft that has default axes (+Y front)
             var spcDefault = new Spacecraft(-1009, "DefaultAxesSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
@@ -686,11 +686,11 @@ namespace IO.Astrodynamics.Tests.Body
                 TimeSpan.Zero,
                 spcDefault.Engines.First());
 
-            referenceManeuver.TryExecute(sv);
+            var referenceManeuverOrientation2 = referenceManeuver.ComputeStateOrientation(sv);
 
             // Both should use +Y as body front, producing the same quaternion
-            var q1 = detachedManeuver.StateOrientation.Rotation;
-            var q2 = referenceManeuver.StateOrientation.Rotation;
+            var q1 = detachedManeuverOrientation.Rotation;
+            var q2 = referenceManeuverOrientation2.Rotation;
 
             // Account for quaternion double-cover
             double dot = q1.W * q2.W + q1.VectorPart.X * q2.VectorPart.X +
@@ -759,7 +759,7 @@ namespace IO.Astrodynamics.Tests.Body
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             var impulse = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0,
                 spc.Engines.First());
-            spc.SetStandbyManeuver(impulse);
+            spc.SetManeuvers(impulse);
             impulse.TryExecute(sv);
 
             var opm = spc.ToOpm();
@@ -951,7 +951,7 @@ namespace IO.Astrodynamics.Tests.Body
             // Act
             spc.AddEngine(engine);
             var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, engine);
-            spc.SetStandbyManeuver(maneuver);
+            spc.SetManeuvers(maneuver);
             spc.Propagate(new Window(epoch, epoch.AddSeconds(7200.0)), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert: m0 (1 − exp(−Δv / (Isp g0))), g0 = 9.80665 m/s², m0 = 1 000 + 3 000 kg

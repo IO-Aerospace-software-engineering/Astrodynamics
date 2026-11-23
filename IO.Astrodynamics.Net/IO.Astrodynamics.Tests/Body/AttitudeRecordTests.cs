@@ -847,10 +847,10 @@ public class AttitudeRecordTests
                 impulse = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
                 triad = new TriadAttitude(start.AddSeconds(100.0), TimeSpan.FromSeconds(hold), Spacecraft.Front, earth, Spacecraft.Up, sun, engine);
                 prograde = new ProgradeAttitude(earth, start.AddSeconds(3400.0), TimeSpan.Zero, engine);
-                nadir.SetNextManeuver(impulse);
-                impulse.SetNextManeuver(triad);
-                triad.SetNextManeuver(prograde);
-                sc.SetStandbyManeuver(nadir);
+                sc.SetManeuvers(nadir,
+                    impulse,
+                    triad,
+                    prograde);
             }
         };
         // The impulse of the chain needs the orbit below circular: the grid's impulse orbit
@@ -1376,52 +1376,51 @@ public class AttitudeRecordTests
                     case "None":
                         break;
                     case "Nadir":
-                        spacecraft.SetStandbyManeuver(new NadirAttitude(earth, Min, TimeSpan.Zero, engine));
+                        spacecraft.SetManeuvers(new NadirAttitude(earth, Min, TimeSpan.Zero, engine));
                         break;
                     case "Prograde":
-                        spacecraft.SetStandbyManeuver(new ProgradeAttitude(earth, Min, TimeSpan.Zero, engine));
+                        spacecraft.SetManeuvers(new ProgradeAttitude(earth, Min, TimeSpan.Zero, engine));
                         break;
                     case "InstrumentTriad":
                         // The boresight of the instrument at (0.3, 0.5, 0.2) to the Earth, its reference vector toward the Sun
-                        spacecraft.SetStandbyManeuver(new TriadAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), earth, sun, engine));
+                        spacecraft.SetManeuvers(new TriadAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), earth, sun, engine));
                         break;
                     case "InstrumentPointing":
-                        spacecraft.SetStandbyManeuver(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine, Aberration.None));
+                        spacecraft.SetManeuvers(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine, Aberration.None));
                         break;
                     case "ImpulseAlone":
-                        spacecraft.SetStandbyManeuver(Apogee());
+                        spacecraft.SetManeuvers(Apogee());
                         break;
                     case "ImpulseTriad":
                     {
                         var apogee = Apogee();
-                        apogee.SetNextManeuver(TriadAfter());
-                        spacecraft.SetStandbyManeuver(apogee);
+                        spacecraft.SetManeuvers(apogee, TriadAfter());
                         break;
                     }
                     case "NadirImpulseTriad":
                     {
                         var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero, engine);
                         var apogee = Apogee();
-                        nadir.SetNextManeuver(apogee);
-                        apogee.SetNextManeuver(TriadAfter());
-                        spacecraft.SetStandbyManeuver(nadir);
+                        spacecraft.SetManeuvers(nadir,
+                            apogee,
+                            TriadAfter());
                         break;
                     }
                     case "LvlhAxes":
-                        spacecraft.SetStandbyManeuver(TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero, engine));
+                        spacecraft.SetManeuvers(TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero, engine));
                         break;
                     case "ProgradeSunAxes":
-                        spacecraft.SetStandbyManeuver(TriadAttitude.CreateProgradeWithSunTracking(earth, Min, TimeSpan.Zero, sun, engine));
+                        spacecraft.SetManeuvers(TriadAttitude.CreateProgradeWithSunTracking(earth, Min, TimeSpan.Zero, sun, engine));
                         break;
                     case "ImpulseLvlhAxes":
                     case "ImpulseProgradeSunAxes":
                     {
                         // The factory chained after the impulse, as the TRIAD of "ImpulseTriad"
                         var apogee = Apogee();
-                        apogee.SetNextManeuver(law == "ImpulseLvlhAxes"
+                        spacecraft.SetManeuvers(apogee,
+                            law == "ImpulseLvlhAxes"
                             ? TriadAttitude.CreateLVLH(earth, start.AddSeconds(100.0), TimeSpan.Zero, engine)
                             : TriadAttitude.CreateProgradeWithSunTracking(earth, start.AddSeconds(100.0), TimeSpan.Zero, sun, engine));
-                        spacecraft.SetStandbyManeuver(apogee);
                         break;
                     }
                     case "LvlhImpulseAxes":
@@ -1429,8 +1428,7 @@ public class AttitudeRecordTests
                         // The leading LVLH interrupted by the impulse and resumed by the timeline after its maneuver window,
                         // as the nadir of "NadirImpulseTriad" with no attitude chained after the impulse
                         var lvlh = TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero, engine);
-                        lvlh.SetNextManeuver(Apogee());
-                        spacecraft.SetStandbyManeuver(lvlh);
+                        spacecraft.SetManeuvers(lvlh, Apogee());
                         break;
                     }
                     case "Custom":

@@ -11,8 +11,16 @@ namespace IO.Astrodynamics.Maneuver
 {
     public class ApsidalAlignmentManeuver : ImpulseManeuver
     {
-        public bool IntersectsP { get; private set; }
-        public bool IntersectsQ { get; private set; }
+        /// <summary>
+        /// Whether the last execution burnt at the intersection P, a side result of the execution. Internal since 11.0.0
+        /// (decision 51 of #668, decided by S. Guillet, 2026-11-23): nothing read it, and every evaluation of the
+        /// g-function wrote it (#802).
+        /// </summary>
+        internal bool IntersectsP { get; private set; }
+
+        /// <summary>Whether the last execution burnt at the intersection Q; internal since 11.0.0, as
+        /// <see cref="IntersectsP"/>.</summary>
+        internal bool IntersectsQ { get; private set; }
 
         public ApsidalAlignmentManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit,
             Engine engine) : base(minimumEpoch, maneuverHoldDuration, targetOrbit, engine)
@@ -23,16 +31,19 @@ namespace IO.Astrodynamics.Maneuver
         /// g = r · (ĥ × p̂) : perpendicular component in orbital plane relative to intersection point.
         /// Zero when spacecraft passes through the nearest orbit intersection point.
         /// </summary>
+        /// <remarks>Pure (decision 50 of #668, decided by S. Guillet, 2026-11-23): before 11.0.0 each evaluation wrote
+        /// <see cref="IntersectsP"/> and <see cref="IntersectsQ"/> (#802).</remarks>
         public override double ComputeEventValue(StateVector localState)
         {
-            var intersectionDir = DetermineIntersectionDirection(localState);
+            var (intersectionDir, _) = DetermineIntersectionDirection(localState);
             var perpDir = localState.SpecificAngularMomentum().Cross(intersectionDir).NormalizeOrZero();
             return localState.Position.Dot(perpDir);
         }
 
         public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
 
-        private Vector3 DetermineIntersectionDirection(StateVector stateVector)
+        // The direction of the nearest intersection of the orbits, and whether it is P: pure (decision 50 of #668)
+        private (Vector3 Direction, bool IsP) DetermineIntersectionDirection(StateVector stateVector)
         {
             double pv = GetPTrueAnomaly(stateVector);
             double qv = GetQTrueAnomaly(stateVector);
@@ -42,14 +53,10 @@ namespace IO.Astrodynamics.Maneuver
 
             if (vRelativeToP <= vRelativeToQ)
             {
-                IntersectsP = true;
-                IntersectsQ = false;
-                return stateVector.ToStateVector(pv).Position.NormalizeOrZero();
+                return (stateVector.ToStateVector(pv).Position.NormalizeOrZero(), true);
             }
 
-            IntersectsP = false;
-            IntersectsQ = true;
-            return stateVector.ToStateVector(qv).Position.NormalizeOrZero();
+            return (stateVector.ToStateVector(qv).Position.NormalizeOrZero(), false);
         }
 
         private double AngleDifference(double angleA, double angleB)
@@ -63,24 +70,28 @@ namespace IO.Astrodynamics.Maneuver
             return delta;
         }
 
-        protected override Vector3 Execute(StateVector stateVector)
-        {
-            DetermineIntersectionDirection(stateVector);
-            Vector3 resVector;
-            if (IntersectsP)
-            {
-                resVector = TargetOrbit.ToStateVector(GetTargetPTrueAnomaly(stateVector)).Velocity - stateVector.Velocity;
-            }
-            else if (IntersectsQ)
-            {
-                resVector = TargetOrbit.ToStateVector(GetTargetQTrueAnomaly(stateVector)).Velocity - stateVector.Velocity;
-            }
-            else
-            {
-                throw new ArgumentException("To compute orientation, maneuver point must be at orbits intersection");
-            }
+        /// <inheritdoc />
+        /// <remarks>Pure (decision 50 of #668, decided by S. Guillet, 2026-11-23).</remarks>
+        protected override Vector3 Execute(StateVector stateVector) => DeltaVAt(stateVector).DeltaV;
 
-            return resVector;
+        /// <inheritdoc />
+        /// <remarks>The intersection burnt at kept in <see cref="IntersectsP"/> and <see cref="IntersectsQ"/>.</remarks>
+        internal override Vector3 ExecuteInRun(StateVector localState)
+        {
+            var (deltaV, isP) = DeltaVAt(localState);
+            IntersectsP = isP;
+            IntersectsQ = !isP;
+            return deltaV;
+        }
+
+        // The delta-V at the nearest intersection, and whether it is P: the pure core of the execution (decision 50 of #668)
+        private (Vector3 DeltaV, bool IsP) DeltaVAt(StateVector stateVector)
+        {
+            var (_, isP) = DetermineIntersectionDirection(stateVector);
+            var deltaV = isP
+                ? TargetOrbit.ToStateVector(GetTargetPTrueAnomaly(stateVector)).Velocity - stateVector.Velocity
+                : TargetOrbit.ToStateVector(GetTargetQTrueAnomaly(stateVector)).Velocity - stateVector.Velocity;
+            return (deltaV, isP);
         }
 
         private Dictionary<string, double> GetCoefficients(StateVector stateVector)

@@ -134,7 +134,7 @@ particular relative position after a given number of revolutions:
 ```csharp
 // Inputs: epoch (Time), targetOrbit (OrbitalParameters), revolutions (uint), engine (Engine)
 var phasing = new PhasingManeuver(
-    epoch, TimeSpan.Zero, targetOrbit, revolutions, engine);
+    epoch, targetOrbit, revolutions, engine);
 ```
 
 ### Plane alignment
@@ -174,7 +174,7 @@ var combined = new CombinedManeuver(
 
 ## Maneuver chaining
 
-Multiple maneuvers execute in sequence via `SetNextManeuver`. Leading attitudes
+Multiple maneuvers execute in sequence: `Spacecraft.SetManeuvers` sets the plan, in order. Leading attitudes
 activate one after the other from the start, each held for its hold; the first impulse
 maneuver arms an event detector gated by the end of the last hold. After that impulse
 fires, the attitudes chained after it activate at the end of its maneuver window, and the
@@ -187,20 +187,20 @@ var maneuver1 = new PlaneAlignmentManeuver(
     new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
     targetOrbit, engine);
 
-// Each next maneuver takes its own arguments, as in the sections above
-maneuver1
-    .SetNextManeuver(new ApsidalAlignmentManeuver(
-        new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine))
-    .SetNextManeuver(new PhasingManeuver(
-        new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, revolutions, engine))
-    .SetNextManeuver(new ApogeeHeightManeuver(
+// The plan, in order; each maneuver takes its own arguments, as in the sections above
+spacecraft.SetManeuvers(maneuver1,
+    new ApsidalAlignmentManeuver(
+        new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine),
+    new PhasingManeuver(
+        new Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, revolutions, engine),
+    new ApogeeHeightManeuver(
         earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetApogeeRadius, engine));
-
-spacecraft.SetStandbyManeuver(maneuver1);
 ```
 
-`SetNextManeuver` returns the newly added maneuver, so calls chain naturally.
-The spacecraft begins propagation with the first maneuver armed.
+`SetManeuvers` links each maneuver to the next and is the one way to link a plan; every propagation runs the plan
+from its first maneuver. A maneuver is in one plan at a time, so add the tank and the engine before the plan.
+`ComputeDeltaV` previews the delta-V of an impulse at a state, and `ComputeStateOrientation` the attitude of an
+attitude law, without executing them.
 
 ## g-function reference
 
@@ -234,5 +234,5 @@ triggers execution, and the orbital location where it fires.
 - Attitudes orient the spacecraft; impulse maneuvers change the orbit.
 - Every impulse maneuver defines a scalar g-function whose sign change triggers
   the burn.
-- Chain maneuvers with `SetNextManeuver` to build multi-burn sequences.
+- Set the plan with `SetManeuvers` to build multi-burn sequences.
 - Use `TriadAttitude` when you need fully-constrained pointing (no roll ambiguity).

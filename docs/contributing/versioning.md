@@ -322,6 +322,24 @@ release are listed under **Known limitations**.
   samples, the TLE's Earth and `Frame.TEME`, so `GetStateVector` reads it, SGP4 at the samples bit for bit
   (`SolutionWindowTests`; before, it threw `InvalidOperationException`, the observer and frame unknown). No value moves.
 
+- **`Spacecraft.SetManeuvers(params Maneuver[])` and `Spacecraft.Maneuvers`** (lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decisions 45 to 47,
+  decided by S. Guillet, 2026-11-23): the maneuver plan, set in order and read back, each maneuver linked to the next
+  and the last to none, the one way to link a plan; no maneuver clears it, and nothing is added to `ExecutedManeuvers`
+  (#584). It claims each maneuver for its spacecraft and throws `ArgumentException` (`maneuvers`), changing nothing, for
+  a null maneuver, a maneuver listed twice, one in another spacecraft's plan, one whose engine's tank is not one of the
+  spacecraft's or an impulse whose target orbit is in another frame than the one the spacecraft is propagated in; the
+  claim is released, and the maneuver's link cleared, when the owner sets another plan without it. The run checks again
+  (`InvalidOperationException`) what changed since, a maneuver linked past the plan included (`ManeuverPlanTests`: the
+  links, the read-back, the four refusals, the release, concurrent claims, the re-check on every activation path, one
+  plan alike on `Spacecraft.Propagate`, a reused `CentralBodyPropagator`, a scenario and a batch, both integrators).
+  Replaces `SetStandbyManeuver` and `Maneuver.SetNextManeuver` (under **Removed**).
+- **`ImpulseManeuver.ComputeDeltaV(StateVector)` and `Attitude.ComputeStateOrientation(StateVector)`** (lot L5a, R08 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 50, decided by S. Guillet, 2026-11-23; [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): the previews of an impulse and of an attitude law, pure:
+  they touch no tank, chain, window, gate or node lock, so they are the same before and after a run. Each takes the
+  state about its own observer (the centre a maneuver is given comes with lot L5b); `ComputeDeltaV` returns the delta-V
+  in the frame of the state, `ComputeStateOrientation` the rotation from the spacecraft frame to ICRF, the state rotated
+  to ICRF first. At the same state they equal the execution a run makes, bit for bit (`ManeuverPreviewTests`: the seven
+  library impulses, ECLIPJ2000, a state about the Moon; the attitude record at an activation, 0 rad, both integrators).
 **Fixed**
 
 - **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
@@ -4521,6 +4539,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`RunIndependenceTests.TheSolutionsOfTwoRunsOfOneTLEPropagator_ShareNoState`). The samples are those of before, bit
   for bit.
 
+- **A re-armed `PlaneAlignmentManeuver` waited for the crossing of the last run's node** ([#784](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/784), lot L5a, decision 51 of
+  #668): the re-arm cleared `IsAscendingNode` but left `EventCrossingDirection`, so a run that did not reach the
+  maneuver ended with a node of none and the direction of the last run's node. `Reset` now clears both, the direction
+  back to `Any`, as a fresh maneuver's (`ManeuverPreviewTests.PlaneAlignment_TheReArm_ClearsTheCrossingDirection`, red
+  before the change, both integrators). No trajectory moves: the detector locks the node again at its first evaluation.
+- **Calls that look like previews changed a maneuver or a spacecraft outside a run** ([#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802), lot L5a, decisions 49 and
+  50 of #668): the public `TryExecute` of a maneuver burnt the fuel, set the windows and moved the standby chain of a
+  finished run (592.27 kg taken and the `DeltaV` of the run overwritten in the gap analysis of L5), `Engine.Ignite` burnt
+  fuel (60.12 kg after a run) and threw `NullReferenceException` on a tank of no spacecraft, and the public
+  `ComputeEventValue` locked the node of a `PlaneAlignmentManeuver` and wrote the intersection of an
+  `ApsidalAlignmentManeuver`. The first two are internal, `ComputeEventValue` is pure on every library maneuver, and the
+  previews are `ComputeDeltaV` and `ComputeStateOrientation` (under **Added**, **Changed**).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -6982,14 +7012,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   S. Guillet, 2026-11-23): its constructor throws `ArgumentException` (`spacecraft`), and `Propagate`
   `InvalidOperationException` for a plan set after construction, before anything changes; before, the plan was ignored
   silently (measured in the gap analysis: an apogee raise over 3 h executed nothing, the fuel unchanged), and a plan on
-  another spacecraft's tank was accepted. Migration: clear the plan (`SetStandbyManeuver(null)`) or propagate the
+  another spacecraft's tank was accepted. Migration: clear the plan (`SetManeuvers()`) or propagate the
   spacecraft numerically.
 - **Breaking: `MonteCarloPropagator` refuses a template with a maneuver plan** (lot L5a, R08 of #668, decision 41,
   decided by S. Guillet, 2026-11-23): both `Propagate` overloads throw `ArgumentException` (`config`) before anything is
   sampled. Its runs propagate spacecraft built from the template's orbit, dry mass, area and coefficients, so a plan
   was dropped silently (1.0786e7 m from the template's own run after 3 h in the gap analysis), while the docs listed the
   campaign among the paths that run the chain (corrected). The fuel, payloads, axes, hard-body radius and COSPAR id the
-  runs also drop are an issue of their own, fixed after lot L5. Migration: clear the plan of the template.
+  runs also drop are an issue of their own, fixed after lot L5. Migration: clear the plan of the template (`SetManeuvers()`).
 - **Breaking: `Spacecraft.AddPropagatedStates` takes one window per call, and a read in the gap between two windows throws**
   ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
   decisions 42 and 83 to 87, decided by S. Guillet, 2026-11-23): a call whose states span a hull, closed, that meets no
@@ -7013,6 +7043,44 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   returned the state after it unmoved. Migration: add each window in its own call, and the states between two windows
   in one call that spans them to join them; one state per call opens an arc per state, read at its epoch only.
 
+- **Breaking: the maneuver plan is set by `Spacecraft.SetManeuvers`, which claims its maneuvers** (lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decisions 45 to 47, decided by S. Guillet, 2026-11-23): `Maneuver.NextManeuver` keeps its public getter and its setter
+  is internal (protected before, so a subclass could relink a chain), `Spacecraft.StandbyManeuver`, the run's own state,
+  is internal, and a maneuver is in one plan at a time. The checks that ran when the propagator was built now run at
+  `SetManeuvers` too, where the call receives the maneuver, as `ArgumentException` (`maneuvers`): an engine whose tank
+  is not the spacecraft's (`InvalidOperationException` at the run before) and a target orbit in another frame
+  (`ArgumentException` naming `spacecraft` from the propagator constructor before; a TEME target on a TLE spacecraft,
+  which the constructor of the maneuver accepts, included); the run re-checks both with `InvalidOperationException`, and
+  the cycle check stays as a guard of the walks of the chain. No result moves. Migration:
+  `spacecraft.SetManeuvers(m1, m2, m3)` for `spacecraft.SetStandbyManeuver(m1); m1.SetNextManeuver(m2).SetNextManeuver(m3)`,
+  `SetManeuvers()` for `SetStandbyManeuver(null)`, `spacecraft.Maneuvers[0]` for `InitialManeuver`; add the tanks and
+  engines and set the initial orbit before the plan; a maneuver for two spacecraft is two maneuvers.
+- **Breaking: the `Maneuver` hierarchy is closed** (lot L5a, R08 of #668, decisions 48 and 49, decided by S. Guillet,
+  2026-11-23): `Maneuver`'s constructor is `private protected`, so a user maneuver derives from `ImpulseManeuver` or
+  `Attitude`, the two kinds the propagation knows (a direct subclass of `Maneuver` compiled before, and could not be
+  run); `TryExecute` is internal, and the protected `Execute(StateVector)` is on `ImpulseManeuver`, documented pure, its
+  result the preview of `ComputeDeltaV` (it was on `Maneuver`, and `Attitude` returned a zero delta-V); `Engine.Ignite`
+  is internal; the concrete maneuvers stay unsealed. `Engine` stays on `Maneuver` until lot L5b. Migration: a preview of
+  an impulse is `ComputeDeltaV(state)`, of an attitude `ComputeStateOrientation(state)`, the fuel of a delta-V
+  `Tsiolkovski.DeltaM(isp, mass, deltaV)`; a user maneuver keeps its `Execute` override on an `ImpulseManeuver`.
+- **Breaking: `ImpulseManeuver.ComputeEventValue` is pure** (lot L5a, decision 50 of #668, [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): it locks no node and
+  writes no intersection; the node of a `PlaneAlignmentManeuver` is locked by the detector of a run, at its first
+  evaluation, by the rule of before (`ManeuverEventDetector.Evaluate`, public, locks it too). A run is bit for bit that of
+  before. Migration: a caller that read `IsAscendingNode` or `EventCrossingDirection` after a call of
+  `ComputeEventValue` evaluates the maneuver's `ManeuverEventDetector` instead.
+- **Breaking: `PhasingManeuver` takes no hold** (lot L5a, decision 51 of #668, decided by S. Guillet, 2026-11-23,
+  [#784](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/784)): its constructors are `PhasingManeuver(minimumEpoch, targetOrbit, revolutionNumber, engine)` and
+  `PhasingManeuver(maneuverCenter, minimumEpoch, trueLongitude, revolutionNumber, engine)`; the hold, 0.9 N T₂, is set
+  by the run that executes the burn and cleared to 0 by the re-arm of the next run (before, the hold given was replaced
+  at the burn, so it was dead input, and the computed hold was left for good). No result moves. Migration: drop the
+  hold argument.
+- **Breaking: `PlaneAlignmentManeuver.RelativeInclination`, `ApsidalAlignmentManeuver.IntersectsP` and `IntersectsQ`
+  are internal** (lot L5a, decision 51 of #668): side results of the execution that nothing read, which the re-arm
+  left. Migration: none in the library; the relative inclination is that of the two orbits' normals.
+- **The values a run writes on a maneuver are the last run's** (lot L5a, decision 52 of #668, decided by S. Guillet,
+  2026-11-23): `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow`, `MinimumEpoch`, the node of a
+  `PlaneAlignmentManeuver` and the hold of a `PhasingManeuver` hold the values of the last run that executed the
+  maneuver, cleared by the re-arm of the next run, documented in [Impulse Maneuvers](../reference/impulse-maneuvers.md#maneuver-plan).
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -7194,6 +7262,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   three doubles ran in the order opposite to that of `Planetodetic`. Migration:
   `AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude), epoch)`.
 
+- **`Spacecraft.SetStandbyManeuver(Maneuver, Time?)`, `Spacecraft.InitialManeuver` and `Maneuver.SetNextManeuver`**
+  (lot L5a, R08 of #668, decisions 45 and 47, decided by S. Guillet, 2026-11-23): replaced by
+  `Spacecraft.SetManeuvers(params Maneuver[])` and `Spacecraft.Maneuvers` (under **Added**). The minimum epoch the
+  two-argument call raised is the maneuver's own: pass the later of the old constructor value and the old
+  `SetStandbyManeuver` value as the constructor's `minimumEpoch`; raising the minimum epoch of a reused maneuver between
+  two runs has no equivalent: build a new maneuver and set a new plan. Migration: under **Changed**.
+- **`Attitude.StateOrientation`** (lot L5a, decision 52 of #668, decided by S. Guillet, 2026-11-23): the orientation the
+  last execution kept, which no re-arm cleared. Migration: a preview is `attitude.ComputeStateOrientation(state)`; the
+  attitude of a run at an activation is in the attitude record, `spacecraft.Frame.GetStateOrientationToICRF(epoch)`, the
+  same rotation (0 rad, `ManeuverPreviewTests`).
+- **`Attitude.Execute`** (protected, lot L5a, decision 48 of #668): an attitude changes no velocity, and `Execute` is on
+  `ImpulseManeuver`. Migration: none; an `Attitude` subclass overrides `ComputeOrientation`.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is

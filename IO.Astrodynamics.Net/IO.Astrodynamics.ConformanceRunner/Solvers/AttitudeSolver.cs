@@ -82,7 +82,7 @@ public class AttitudeSolver : ICategorySolver
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("ConformanceEngine", "conformance", "0001", 300.0, 1.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(Law(inputs, central, window.StartDate, engine));
+        spacecraft.SetManeuvers(Law(inputs, central, window.StartDate, engine));
 
         TwoBodyTrajectory.Propagate(spacecraft, window, Tolerance, TimeSpan.FromSeconds(inputs.SampleStepS));
 

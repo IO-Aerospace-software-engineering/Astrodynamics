@@ -220,9 +220,9 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var protectedCraft = AvoidanceFallbackCase.WithEngine(-6770, _case.ProtectedStart, out var engine);
         var first = new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
             AvoidanceFallbackCase.Start.AddMinutes(15.0), _case.ProtectedStart.Velocity.Normalize() * 0.02, engine);
-        first.SetNextManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
+        protectedCraft.SetManeuvers(first,
+            new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
             AvoidanceFallbackCase.Start.AddHours(1.5), _case.ProtectedStart.Velocity.Normalize() * 300.0, engine));
-        protectedCraft.SetStandbyManeuver(first);
         _case.Propagate(protectedCraft, true);
         var secondary = Secondary(-6771);
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
@@ -239,9 +239,9 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             var reference = AvoidanceFallbackCase.WithEngine(-6772, _case.ProtectedStart, out var referenceEngine);
             var referenceFirst = new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
                 AvoidanceFallbackCase.Start.AddMinutes(15.0), _case.ProtectedStart.Velocity.Normalize() * 0.02, referenceEngine);
-            referenceFirst.SetNextManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
+            reference.SetManeuvers(referenceFirst,
+                new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
                 option.BurnEpoch, option.DeltaVInertial, referenceEngine));
-            reference.SetStandbyManeuver(referenceFirst);
             var referenceSolution = _case.Propagate(reference, true, tolerance: AvoidanceFallbackCase.ReferenceTolerance);
             AssertOptionIsItsReference(option, reference, referenceSolution, secondary, true);
         }
@@ -634,7 +634,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
     private (Spacecraft, PropagationSolution) BurnPropagatedFromTheStart(AvoidanceOption option, StateVector start, int naifId)
     {
         var reference = AvoidanceFallbackCase.WithEngine(naifId, start, out var engine);
-        reference.SetStandbyManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start, option.BurnEpoch,
+        reference.SetManeuvers(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start, option.BurnEpoch,
             option.DeltaVInertial, engine));
         return (reference, _case.Propagate(reference, true, tolerance: AvoidanceFallbackCase.ReferenceTolerance));
     }

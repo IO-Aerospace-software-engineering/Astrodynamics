@@ -129,7 +129,7 @@ public class PropagatedArcsEdgeTests
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
         var apogee = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error };
-        spacecraft.SetStandbyManeuver(apogee);
+        spacecraft.SetManeuvers(apogee);
         return (spacecraft, apogee);
     }
 
@@ -229,7 +229,7 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new TimedImpulse(earth, Start, engine, Start.AddSeconds(target), 20.0));
+        spacecraft.SetManeuvers(new TimedImpulse(earth, Start, engine, Start.AddSeconds(target), 20.0));
         var window = new Window(Start, Start.AddHours(2.0));
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Equal(2, solution.Segments.Count);
@@ -297,9 +297,9 @@ public class PropagatedArcsEdgeTests
         var first = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, fast);
         var lvlh = TriadAttitude.CreateLVLH(earth, Start, TimeSpan.Zero, engine);
         var second = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 9378137.0, engine);
-        first.SetNextManeuver(lvlh);
-        lvlh.SetNextManeuver(second);
-        spacecraft.SetStandbyManeuver(first);
+        spacecraft.SetManeuvers(first,
+            lvlh,
+            second);
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
         Assert.Equal(2, events.Length);
@@ -373,8 +373,7 @@ public class PropagatedArcsEdgeTests
         var target = Start.AddSeconds(2000.0);
         var trim = new TimedImpulse(earth, Start, engine, target, 1.0e-5);
         var burn = new TimedImpulse(earth, Start, engine, target.AddSeconds(d), 50.0);
-        trim.SetNextManeuver(burn);
-        spacecraft.SetStandbyManeuver(trim);
+        spacecraft.SetManeuvers(trim, burn);
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
         Assert.Equal(2, events.Length);
@@ -476,7 +475,7 @@ public class PropagatedArcsEdgeTests
         ImpulseManeuver impulse = maneuver == "Apogee"
             ? new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error }
             : new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine) { ExecutionError = error };
-        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.SetManeuvers(impulse);
         var window = new Window(Start, Start.AddHours(2.0));
         var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
         PropagationSolution solution;
@@ -615,7 +614,7 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
+        spacecraft.SetManeuvers(new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
         var step = TimeSpan.FromSeconds(60.0);
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = integrator == "RK78" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var arc = spacecraft.PropagatedArcs[0];
@@ -903,7 +902,7 @@ public class PropagatedArcsEdgeTests
         ApogeeHeightManeuver Chain(Spacecraft sc, Engine engine, CelestialBody earth, Time start)
         {
             var apogee = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
-            sc.SetStandbyManeuver(apogee);
+            sc.SetManeuvers(apogee);
             return apogee;
         }
 

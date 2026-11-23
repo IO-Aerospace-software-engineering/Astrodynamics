@@ -51,7 +51,7 @@ public partial class IntegratorEventTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7931, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var window = new Window(S, MinimumEpochGateTests.GateAtTt(length));
         double massBefore = spacecraft.GetTotalMass();
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(outputStep), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -73,7 +73,7 @@ public partial class IntegratorEventTests
         var (spacecraft, engine) = NewSpacecraft(-7932, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var end = MinimumEpochGateTests.GateAtTt(3000.0);
         var impulse = new TimeLikeImpulse(earth, S, engine, end, 1.0);
-        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.SetManeuvers(impulse);
         var window = new Window(S, end);
         double massBefore = spacecraft.GetTotalMass();
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -95,7 +95,7 @@ public partial class IntegratorEventTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7933, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var window = new Window(S, MinimumEpochGateTests.GateAtTt(2964.0));
         double massBefore = spacecraft.GetTotalMass();
         var integrator = new NoStepAtZeroDuration(new VVIntegrator([new GravitationalAcceleration(earth)], TimeSpan.FromSeconds(1.0),

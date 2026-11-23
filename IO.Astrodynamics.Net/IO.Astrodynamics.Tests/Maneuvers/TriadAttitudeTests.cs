@@ -326,14 +326,14 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Get the direction to Moon in ICRF
         var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
         var targetDirection = (moonEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
 
         // Rotate the primary body vector by the computed orientation
-        var pointingVector = maneuver.PrimaryBodyVector.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var pointingVector = maneuver.PrimaryBodyVector.Rotate(maneuverOrientation.Rotation).Normalize();
 
         // The pointing vector should align with target direction (dot product close to 1)
         double alignment = pointingVector.Dot(targetDirection);
@@ -354,7 +354,7 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation2 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Get directions to both targets
         var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
@@ -368,7 +368,7 @@ public class TriadAttitudeTests
         var planeNormal = primaryRefDirection.Cross(secondaryRefDirection).Normalize();
 
         // Rotate the secondary body vector by the computed orientation
-        var secondaryBodyRotated = maneuver.SecondaryBodyVector.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var secondaryBodyRotated = maneuver.SecondaryBodyVector.Rotate(maneuverOrientation2.Rotation).Normalize();
 
         // The rotated secondary vector should be perpendicular to the plane normal (i.e., lie in the plane)
         // Tolerance of 1e-6 accounts for floating-point precision in matrix/quaternion operations
@@ -396,9 +396,9 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation3 = maneuver.ComputeStateOrientation(orbitalParams);
 
-        var q = maneuver.StateOrientation.Rotation;
+        var q = maneuverOrientation3.Rotation;
         double magnitude = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X +
                                             q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
 
@@ -419,9 +419,9 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation4 = maneuver.ComputeStateOrientation(orbitalParams);
 
-        var rotationMatrix = Matrix.FromQuaternion(maneuver.StateOrientation.Rotation);
+        var rotationMatrix = Matrix.FromQuaternion(maneuverOrientation4.Rotation);
         var product = rotationMatrix.Multiply(rotationMatrix.Transpose());
 
         // Check R * R^T = I
@@ -455,8 +455,8 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        triadManeuver.TryExecute(orbitalParams);
-        var triadQ = triadManeuver.StateOrientation.Rotation;
+        var triadManeuverOrientation5 = triadManeuver.ComputeStateOrientation(orbitalParams);
+        var triadQ = triadManeuverOrientation5.Rotation;
 
         // Verify TRIAD points the primary vector at the Moon
         var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
@@ -512,19 +512,19 @@ public class TriadAttitudeTests
             TestHelpers.Sun, // Secondary constraint toward Sun
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation6 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Verify Earth pointing
         var earthEphemeris = TestHelpers.EarthAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
         var earthDirection = (earthEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
-        var cameraPointing = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var cameraPointing = Vector3.VectorZ.Rotate(maneuverOrientation6.Rotation).Normalize();
 
         Assert.True(cameraPointing.Dot(earthDirection) > 0.9999, "Camera should point at Earth");
 
         // Verify Sun-facing tendency
         var sunEphemeris = TestHelpers.Sun.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
         var sunDirection = (sunEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
-        var panelNormal = Vector3.VectorY.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var panelNormal = Vector3.VectorY.Rotate(maneuverOrientation6.Rotation).Normalize();
 
         Assert.True(panelNormal.Dot(sunDirection) > 0.0, "Solar panel should face toward Sun");
     }
@@ -548,19 +548,19 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation7 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Verify Moon pointing
         var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
         var moonDirection = (moonEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
-        var lunarCamPointing = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var lunarCamPointing = Vector3.VectorZ.Rotate(maneuverOrientation7.Rotation).Normalize();
 
         Assert.True(lunarCamPointing.Dot(moonDirection) > 0.9999, "Lunar camera should point at Moon");
 
         // Verify Sun sensor tendency
         var sunEphemeris = TestHelpers.Sun.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
         var sunDirection = (sunEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
-        var sunSensorPointing = Vector3.VectorX.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var sunSensorPointing = Vector3.VectorX.Rotate(maneuverOrientation7.Rotation).Normalize();
 
         Assert.True(sunSensorPointing.Dot(sunDirection) > 0.0, "Sun sensor should be in Sun-facing half-space");
     }
@@ -595,12 +595,12 @@ public class TriadAttitudeTests
                 TestHelpers.Sun,
                 spc.Engines.First());
 
-            maneuver.TryExecute(orbitalParams);
+            var maneuverOrientation8 = maneuver.ComputeStateOrientation(orbitalParams);
 
             // Verify primary pointing at each epoch
             var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
             var targetDirection = (moonEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
-            var pointingVector = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+            var pointingVector = Vector3.VectorZ.Rotate(maneuverOrientation8.Rotation).Normalize();
 
             Assert.True(pointingVector.Dot(targetDirection) > 0.9999,
                 $"Primary vector should point at Moon at epoch {epoch}");
@@ -626,10 +626,10 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation9 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Should produce valid results
-        var q = maneuver.StateOrientation.Rotation;
+        var q = maneuverOrientation9.Rotation;
         double magnitude = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X +
                                             q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
 
@@ -654,8 +654,8 @@ public class TriadAttitudeTests
         var results = new Quaternion[5];
         for (int i = 0; i < 5; i++)
         {
-            maneuver.TryExecute(orbitalParams);
-            results[i] = maneuver.StateOrientation.Rotation;
+            var maneuverOrientation10 = maneuver.ComputeStateOrientation(orbitalParams);
+            results[i] = maneuverOrientation10.Rotation;
         }
 
         // All results should be identical
@@ -710,10 +710,10 @@ public class TriadAttitudeTests
             TestHelpers.Sun,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation11 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Should still produce valid quaternion
-        var q = maneuver.StateOrientation.Rotation;
+        var q = maneuverOrientation11.Rotation;
         double magnitude = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X +
                                             q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
 
@@ -841,10 +841,10 @@ public class TriadAttitudeTests
             new CelestialAttitudeTarget(TestHelpers.Sun),
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation12 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Verify Front aligns with velocity direction
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation12.Rotation).Normalize();
         var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
         var progradeDir = localSv.Velocity.Normalize();
 
@@ -852,7 +852,7 @@ public class TriadAttitudeTests
         Assert.True(alignment > 0.999999, $"Front should align with prograde. Alignment: {alignment}");
 
         // Verify Up is in Sun-facing half-space
-        var rotatedUp = Spacecraft.Up.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedUp = Spacecraft.Up.Rotate(maneuverOrientation12.Rotation).Normalize();
         var sunEphemeris = TestHelpers.Sun.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
         var sunDirection = (sunEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
         Assert.True(rotatedUp.Dot(sunDirection) > 0.0, "Up should be in Sun-facing half-space");
@@ -873,18 +873,18 @@ public class TriadAttitudeTests
             OrbitalDirectionTarget.Prograde,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation13 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Verify Down aligns with nadir
         var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
-        var rotatedDown = Spacecraft.Down.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedDown = Spacecraft.Down.Rotate(maneuverOrientation13.Rotation).Normalize();
         var nadirDir = localSv.Position.Inverse().Normalize();
 
         double nadirAlignment = rotatedDown.Dot(nadirDir);
         Assert.True(nadirAlignment > 0.9999, $"Down should align with nadir. Alignment: {nadirAlignment}");
 
         // Verify Front is in prograde half-space
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation13.Rotation).Normalize();
         var progradeDir = localSv.Velocity.Normalize();
         Assert.True(rotatedFront.Dot(progradeDir) > 0.0, "Front should be in prograde half-space");
     }
@@ -904,18 +904,18 @@ public class TriadAttitudeTests
             OrbitalDirectionTarget.Normal,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation14 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Verify primary pointing (geometric, matching CelestialAttitudeTarget default)
         var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.None);
         var moonDirection = (moonEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
-        var pointingVector = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var pointingVector = Vector3.VectorZ.Rotate(maneuverOrientation14.Rotation).Normalize();
 
         double alignment = pointingVector.Dot(moonDirection);
         Assert.True(alignment > 0.999999, $"Primary should point at Moon. Alignment: {alignment}");
 
         // Verify quaternion is normalized
-        var q = maneuver.StateOrientation.Rotation;
+        var q = maneuverOrientation14.Rotation;
         double magnitude = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X +
                                             q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
         Assert.True(System.Math.Abs(magnitude - 1.0) < 1e-10, "Quaternion should be normalized");
@@ -936,7 +936,7 @@ public class TriadAttitudeTests
             OrbitalDirectionTarget.Zenith,  // Opposite of nadir — collinear!
             spc.Engines.First());
 
-        Assert.Throws<InvalidOperationException>(() => maneuver.TryExecute(orbitalParams));
+        Assert.Throws<InvalidOperationException>(() => maneuver.ComputeStateOrientation(orbitalParams));
     }
 
     [Fact]
@@ -991,11 +991,11 @@ public class TriadAttitudeTests
             new CelestialAttitudeTarget(TestHelpers.Sun),
             spc.Engines.First());
 
-        localizableManeuver.TryExecute(orbitalParams);
-        attitudeTargetManeuver.TryExecute(orbitalParams);
+        var localizableManeuverOrientation15 = localizableManeuver.ComputeStateOrientation(orbitalParams);
+        var attitudeTargetManeuverOrientation16 = attitudeTargetManeuver.ComputeStateOrientation(orbitalParams);
 
-        var q1 = localizableManeuver.StateOrientation.Rotation;
-        var q2 = attitudeTargetManeuver.StateOrientation.Rotation;
+        var q1 = localizableManeuverOrientation15.Rotation;
+        var q2 = attitudeTargetManeuverOrientation16.Rotation;
 
         // Account for quaternion double-cover: q and -q represent the same rotation
         double dot = q1.W * q2.W + q1.VectorPart.X * q2.VectorPart.X +
@@ -1033,10 +1033,10 @@ public class TriadAttitudeTests
         Assert.Equal(Spacecraft.Front, maneuver.SecondaryBodyVector);
 
         // Execute and verify
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation17 = maneuver.ComputeStateOrientation(orbitalParams);
 
         var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
-        var rotatedDown = Spacecraft.Down.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedDown = Spacecraft.Down.Rotate(maneuverOrientation17.Rotation).Normalize();
         var nadirDir = localSv.Position.Inverse().Normalize();
 
         double alignment = rotatedDown.Dot(nadirDir);
@@ -1060,10 +1060,10 @@ public class TriadAttitudeTests
         Assert.Equal(Spacecraft.Up, maneuver.SecondaryBodyVector);
 
         // Execute and verify
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation18 = maneuver.ComputeStateOrientation(orbitalParams);
 
         var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation18.Rotation).Normalize();
         var progradeDir = localSv.Velocity.Normalize();
 
         double alignment = rotatedFront.Dot(progradeDir);
@@ -1113,11 +1113,11 @@ public class TriadAttitudeTests
         Assert.Equal(manualManeuver.SecondaryBodyVector, factoryManeuver.SecondaryBodyVector);
 
         // Execute both on the same state vector and verify identical quaternions
-        factoryManeuver.TryExecute(orbitalParams);
-        manualManeuver.TryExecute(orbitalParams);
+        var factoryManeuverOrientation19 = factoryManeuver.ComputeStateOrientation(orbitalParams);
+        var manualManeuverOrientation20 = manualManeuver.ComputeStateOrientation(orbitalParams);
 
-        var q1 = factoryManeuver.StateOrientation.Rotation;
-        var q2 = manualManeuver.StateOrientation.Rotation;
+        var q1 = factoryManeuverOrientation19.Rotation;
+        var q2 = manualManeuverOrientation20.Rotation;
 
         // Account for quaternion double-cover
         double dot = q1.W * q2.W + q1.VectorPart.X * q2.VectorPart.X +
@@ -1156,7 +1156,7 @@ public class TriadAttitudeTests
             OrbitalDirectionTarget.Normal,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation21 = maneuver.ComputeStateOrientation(orbitalParams);
 
         // Compute local state (same conversion as Attitude.TryExecute line 41)
         var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
@@ -1164,7 +1164,7 @@ public class TriadAttitudeTests
         // Verify primary pointing: body Z should align with geometric Moon direction
         var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(localSv.Epoch, localSv.Observer, localSv.Frame, Aberration.None);
         var moonDirection = (moonEphemeris.ToStateVector().Position - localSv.Position).Normalize();
-        var rotatedZ = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedZ = Vector3.VectorZ.Rotate(maneuverOrientation21.Rotation).Normalize();
 
         double primaryAlignment = rotatedZ.Dot(moonDirection);
         Assert.True(primaryAlignment > 0.9999, $"Primary should point at Moon (geometric). Alignment: {primaryAlignment}");
@@ -1175,7 +1175,7 @@ public class TriadAttitudeTests
         // zero component along t2.
         var orbitalNormal = localSv.Position.Cross(localSv.Velocity).Normalize();
         var t2 = moonDirection.Cross(orbitalNormal).Normalize();
-        var rotatedX = Vector3.VectorX.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedX = Vector3.VectorX.Rotate(maneuverOrientation21.Rotation).Normalize();
 
         double outOfPlane = System.Math.Abs(rotatedX.Dot(t2));
         Assert.True(outOfPlane < 1e-12, $"Secondary body vector should lie in the reference plane. Out-of-plane: {outOfPlane}");
@@ -1199,12 +1199,12 @@ public class TriadAttitudeTests
             OrbitalDirectionTarget.Normal,
             spc.Engines.First());
 
-        maneuver.TryExecute(orbitalParams);
+        var maneuverOrientation22 = maneuver.ComputeStateOrientation(orbitalParams);
 
         var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
         var targetEphemeris = targetSpacecraft.GetEphemeris(localSv.Epoch, localSv.Observer, localSv.Frame, Aberration.None);
         var targetDirection = (targetEphemeris.ToStateVector().Position - localSv.Position).Normalize();
-        var rotatedZ = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedZ = Vector3.VectorZ.Rotate(maneuverOrientation22.Rotation).Normalize();
 
         double primaryAlignment = rotatedZ.Dot(targetDirection);
         Assert.True(primaryAlignment > 0.9999999999,
@@ -1212,7 +1212,7 @@ public class TriadAttitudeTests
 
         var orbitalNormal = localSv.SpecificAngularMomentum().Normalize();
         var t2 = targetDirection.Cross(orbitalNormal).Normalize();
-        var rotatedX = Vector3.VectorX.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedX = Vector3.VectorX.Rotate(maneuverOrientation22.Rotation).Normalize();
 
         double outOfPlane = System.Math.Abs(rotatedX.Dot(t2));
         Assert.True(outOfPlane < 1e-12,
@@ -1246,11 +1246,11 @@ public class TriadAttitudeTests
             OrbitalDirectionTarget.Normal,
             spc.Engines.First());
 
-        maneuverLT.TryExecute(orbitalParams);
-        maneuverNone.TryExecute(orbitalParams);
+        var maneuverLTOrientation23 = maneuverLT.ComputeStateOrientation(orbitalParams);
+        var maneuverNoneOrientation24 = maneuverNone.ComputeStateOrientation(orbitalParams);
 
-        var qLT = maneuverLT.StateOrientation.Rotation;
-        var qNone = maneuverNone.StateOrientation.Rotation;
+        var qLT = maneuverLTOrientation23.Rotation;
+        var qNone = maneuverNoneOrientation24.Rotation;
 
         // Quaternion dot product: 1.0 means identical, < 1.0 means different rotation
         double dot = System.Math.Abs(
@@ -1319,8 +1319,8 @@ public class TriadAttitudeTests
         var (spc, state) = CustomAxesSpacecraft(triad);
         var maneuver = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
-        maneuver.TryExecute(state);
-        var q = maneuver.StateOrientation.Rotation;
+        var maneuverOrientation25 = maneuver.ComputeStateOrientation(state);
+        var q = maneuverOrientation25.Rotation;
         var rHat = state.Position.Normalize();
         var vPerp = (state.Velocity - rHat * state.Velocity.Dot(rHat)).Normalize();
         double up = AttitudeRecordTests.Angle(spc.BodyUp.Rotate(q), rHat);
@@ -1350,8 +1350,8 @@ public class TriadAttitudeTests
         var maneuver = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             TestHelpers.Sun, spc.Engines.First());
 
-        maneuver.TryExecute(state);
-        var q = maneuver.StateOrientation.Rotation;
+        var maneuverOrientation26 = maneuver.ComputeStateOrientation(state);
+        var q = maneuverOrientation26.Rotation;
         var vHat = state.Velocity.Normalize();
         var sun = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 10, Frames.Frame.ICRF, Aberration.None).Position - state.Position;
         var sPerp = (sun - vHat * sun.Dot(vHat)).Normalize();
@@ -1388,10 +1388,10 @@ public class TriadAttitudeTests
         {
             Assert.Equal(explicitForm.PrimaryBodyVector, factory.PrimaryBodyVector);
             Assert.Equal(explicitForm.SecondaryBodyVector, factory.SecondaryBodyVector);
-            factory.TryExecute(orbitalParams);
-            explicitForm.TryExecute(orbitalParams);
-            var a = factory.StateOrientation.Rotation;
-            var b = explicitForm.StateOrientation.Rotation;
+            var factoryOrientation27 = factory.ComputeStateOrientation(orbitalParams);
+            var explicitFormOrientation28 = explicitForm.ComputeStateOrientation(orbitalParams);
+            var a = factoryOrientation27.Rotation;
+            var b = explicitFormOrientation28.Rotation;
             Assert.Equal(b.W, a.W);
             Assert.Equal(b.VectorPart.X, a.VectorPart.X);
             Assert.Equal(b.VectorPart.Y, a.VectorPart.Y);
@@ -1460,7 +1460,14 @@ public class TriadAttitudeTests
         TriadAttitude attitude = factory == "LVLH"
             ? TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromMinutes(10.0), engine)
             : TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromMinutes(10.0), TestHelpers.Sun, engine);
-        spc.SetStandbyManeuver(attitude);
+        // SetManeuvers refuses it (ArgumentException, decision 46 of #668); the run's own re-check is reached by the attitude
+        // linked past the plan, through the internal setter a test reaches
+        var refused = Assert.Throws<ArgumentException>(() => spc.SetManeuvers(attitude));
+        Assert.Equal("maneuvers", refused.ParamName);
+        Assert.Contains(engine.Name, refused.Message);
+        var head = new NadirAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.Zero, spc.Engines.First());
+        spc.SetManeuvers(head);
+        head.NextManeuver = attitude;
 
         var earth = new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH);
         var exception = Record.Exception(() => spc.Propagate(new Window(epoch, epoch.AddSeconds(1200.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth] }));

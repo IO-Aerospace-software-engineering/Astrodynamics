@@ -397,7 +397,7 @@ public class KernelBackedSpacecraftTests
             Spacecraft.AddFuelTank(tank);
             var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);
             Spacecraft.AddEngine(engine);
-            Spacecraft.SetStandbyManeuver(Maneuver.TriadAttitude.CreateLVLH(earth, KSatEpoch, TimeSpan.Zero, engine));
+            Spacecraft.SetManeuvers(Maneuver.TriadAttitude.CreateLVLH(earth, KSatEpoch, TimeSpan.Zero, engine));
             Spacecraft.Propagate(new Window(KSatEpoch, KSatEpoch.AddSeconds(7200.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
             var directory = Constants.OutputPath.CreateSubdirectory("KernelBackedFrame676").CreateSubdirectory(Guid.NewGuid().ToString("N")[..8]);

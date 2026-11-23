@@ -39,7 +39,10 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
 
     /// <summary>
     /// The g-function of the maneuver at <paramref name="state"/>, relative to its <see cref="Maneuver.Maneuver.ManeuverCenter"/>;
-    /// +1 before its <see cref="Maneuver.Maneuver.MinimumEpoch"/>.
+    /// +1 before its <see cref="Maneuver.Maneuver.MinimumEpoch"/>. The first evaluation after the minimum epoch locks the
+    /// node a <see cref="PlaneAlignmentManeuver"/> waits for, which its public
+    /// <see cref="ImpulseManeuver.ComputeEventValue"/> no longer does (decision 50 of #668, decided by S. Guillet,
+    /// 2026-11-23).
     /// </summary>
     /// <remarks>
     /// The +1 before the minimum epoch is kept for callers outside the library, such as a custom
@@ -54,7 +57,9 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
         // Guard: before MinimumEpoch, return positive value (no crossing)
         if (state.Epoch < _maneuver.MinimumEpoch) return 1.0;
 
-        return _maneuver.ComputeEventValue(Local(state));
+        // The g-function of the run: a maneuver whose first evaluation decides which crossing it waits for locks it here
+        // (decision 50 of #668: the public ComputeEventValue is pure)
+        return _maneuver.ComputeEventValueInRun(Local(state));
     }
 
     /// <inheritdoc />

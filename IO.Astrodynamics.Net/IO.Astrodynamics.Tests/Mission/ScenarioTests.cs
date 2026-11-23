@@ -153,15 +153,15 @@ namespace IO.Astrodynamics.Tests.Mission
 
             var planeAlignmentManeuver =
                 new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
-            planeAlignmentManeuver.SetNextManeuver(new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
-                    spacecraft.Engines.First()))
-                .SetNextManeuver(new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, 1, spacecraft.Engines.First()))
-                .SetNextManeuver(new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                    spacecraft.Engines.First()))
-                .SetNextManeuver(new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine))
-                .SetNextManeuver(new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine))
-                .SetNextManeuver(new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
-            spacecraft.SetStandbyManeuver(planeAlignmentManeuver);
+            spacecraft.SetManeuvers(planeAlignmentManeuver,
+                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
+                    spacecraft.Engines.First()),
+                new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
+                new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
+                    spacecraft.Engines.First()),
+                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
+                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
+                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -170,7 +170,7 @@ namespace IO.Astrodynamics.Tests.Mission
             // Read maneuver results. Each thrust window opens f dt before its impulse, f the lead of the centroid of the
             // burn's acceleration, about 0.504 here (#335): 1.32, 2.90, 1.58 and 1.50 s later than with the fixed 0.666 before
             // 11.0.0, the events, ΔV and fuel unchanged (the gates bind none of them)
-            Astrodynamics.Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
+            Astrodynamics.Maneuver.Maneuver maneuver1 = spacecraft.Maneuvers[0];
             Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:36.9196525 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
             Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:45.0548076 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:36.9196525 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
@@ -254,7 +254,7 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddEngine(engine);
 
             var progradeAttitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine);
-            spacecraft.SetStandbyManeuver(progradeAttitude);
+            spacecraft.SetManeuvers(progradeAttitude);
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -369,15 +369,15 @@ namespace IO.Astrodynamics.Tests.Mission
 
             var planeAlignmentManeuver =
                 new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
-            planeAlignmentManeuver.SetNextManeuver(new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
-                    spacecraft.Engines.First()))
-                .SetNextManeuver(new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, 1, spacecraft.Engines.First()))
-                .SetNextManeuver(new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                    spacecraft.Engines.First()))
-                .SetNextManeuver(new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine))
-                .SetNextManeuver(new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine))
-                .SetNextManeuver(new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
-            spacecraft.SetStandbyManeuver(planeAlignmentManeuver);
+            spacecraft.SetManeuvers(planeAlignmentManeuver,
+                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
+                    spacecraft.Engines.First()),
+                new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
+                new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
+                    spacecraft.Engines.First()),
+                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
+                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
+                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -386,7 +386,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
                 // Read maneuver results
                 // The windows of PropagateSpacecraft, the burn's acceleration centred on each impulse (#335)
-                Astrodynamics.Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
+                Astrodynamics.Maneuver.Maneuver maneuver1 = spacecraft.Maneuvers[0];
                 Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:36.9196525 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
                 Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:45.0548076 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
                 Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:36.9196525 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
@@ -442,7 +442,7 @@ namespace IO.Astrodynamics.Tests.Mission
             }
             var summary2 = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
             // Read maneuver results
-            Astrodynamics.Maneuver.Maneuver maneuver2 = spacecraft.InitialManeuver;
+            Astrodynamics.Maneuver.Maneuver maneuver2 = spacecraft.Maneuvers[0];
             Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:36.9196525 TDB"), maneuver2.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
             Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:45.0548076 TDB"), maneuver2.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:36.9196525 TDB"), maneuver2.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
@@ -767,7 +767,15 @@ namespace IO.Astrodynamics.Tests.Mission
             var spacecraft = new Spacecraft(-6855, "Scenario685", 1000.0, 3000.0, new Clock("clk685", 65536), orbit);
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);
-            spacecraft.SetStandbyManeuver(maneuver);
+            // SetManeuvers refuses it, where the call receives the maneuver (decision 46 of #668)
+            var refused = Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(maneuver));
+            Assert.Equal("maneuvers", refused.ParamName);
+            Assert.Contains("ToFrame(Frame.ICRF)", refused.Message);
+
+            // The plan set on an ECLIPJ2000 orbit, the spacecraft then given its ICRF orbit: the simulation rejects it
+            spacecraft.SetInitialOrbitalParameters(orbit.ToFrame(Frames.Frame.ECLIPTIC_J2000));
+            spacecraft.SetManeuvers(maneuver);
+            spacecraft.SetInitialOrbitalParameters(orbit);
             var scenario = new Scenario("scn685", new Astrodynamics.Mission.Mission("mission685"), window);
             scenario.AddSpacecraft(spacecraft);
 

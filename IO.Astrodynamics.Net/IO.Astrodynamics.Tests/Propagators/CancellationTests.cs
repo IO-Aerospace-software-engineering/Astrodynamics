@@ -78,7 +78,7 @@ public class CancellationTests
             spacecraft.AddFuelTank(tank);
             var engine = new Engine($"eng{-id}", "model", "sn", 300.0, 10.0, tank);
             spacecraft.AddEngine(engine);
-            spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, Epoch.AddSeconds(600.0), TimeSpan.Zero,
+            spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, Epoch.AddSeconds(600.0), TimeSpan.Zero,
                 9000000.0, engine));
         }
 
@@ -418,7 +418,7 @@ public class CancellationTests
         AssertLeftAsAStoppedRun(spacecraft);
         Assert.Empty(spacecraft.ExecutedManeuvers);
         Assert.Equal(1000.0, Fuel(spacecraft));
-        Assert.Same(spacecraft.InitialManeuver, spacecraft.StandbyManeuver);
+        Assert.Same(spacecraft.Maneuvers[0], spacecraft.StandbyManeuver);
 
         // Any other spacecraft than a TLE reads its initial orbit again
         var at = Epoch.AddMinutes(10.0);

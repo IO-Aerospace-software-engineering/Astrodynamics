@@ -249,7 +249,7 @@ public abstract class PropagatorBase : IPropagator
         ValidateInertialFrame(spacecraft);
         ValidateOsculatingInitialOrbit(spacecraft);
         // A cycle in the maneuver chain would never end the walks of the chain: rejected before anything runs (#585)
-        var initialChain = Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
+        var initialChain = Maneuver.Maneuver.Chain(spacecraft.PlanHead);
         var standbyChain = Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
         if (TargetOrbitFrameError(spacecraft, initialChain.Concat(standbyChain), PropagationFrame(spacecraft.InitialOrbitalParameters))
             is { } frameError)
@@ -650,7 +650,7 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// Propagates the spacecraft over the window, with its maneuver chain from its head
-    /// (<see cref="Spacecraft.InitialManeuver"/>, set by <see cref="Spacecraft.SetStandbyManeuver"/>).
+    /// (the first maneuver of <see cref="Spacecraft.Maneuvers"/>, set by <see cref="Spacecraft.SetManeuvers"/>).
     /// </summary>
     /// <remarks>
     /// Once its checks pass, the propagation re-arms the spacecraft, on every path (#583, decided by S. Guillet,
@@ -709,13 +709,14 @@ public abstract class PropagatorBase : IPropagator
     /// <returns>The solution.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
     /// carries it.</exception>
-    /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
-    /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
-    /// of the chain has its target orbit in another frame than the frame the propagator integrates in (GCRF and ICRF
-    /// counting as one, third review of #685), a maneuver attached after the propagator was built (#685; the constructor
-    /// throws <see cref="ArgumentException"/> for those it sees); or
-    /// a maneuver draws on a tank that is not the spacecraft's (#676); or the spacecraft holds other initial orbital
-    /// parameters than those the propagator was built from (#783). Nothing runs.</exception>
+    /// <exception cref="InvalidOperationException">The run re-checks what <see cref="Spacecraft.SetManeuvers"/> checks
+    /// (decision 46 of #668, decided by S. Guillet, 2026-11-23): the maneuver chain of the spacecraft is a cycle, a guard
+    /// of its walks (#585); the constructor checks it too. Or an impulse of the chain has its target orbit in another
+    /// frame than the frame the propagator integrates in (GCRF and ICRF counting as one, third review of #685), the
+    /// spacecraft having been given another initial orbit after its plan was set (#685; the constructor throws
+    /// <see cref="ArgumentException"/> for those it sees); or a maneuver draws on a tank that is not the spacecraft's
+    /// (#676), or is not in its plan; or the spacecraft holds other initial orbital parameters than those the propagator
+    /// was built from (#783). Nothing runs.</exception>
     public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
         // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
@@ -797,7 +798,7 @@ public abstract class PropagatorBase : IPropagator
         // The chain run is the one from the head, which the reset puts back in standby (#583)
         // The initial orbit the propagator was built from (#783, decision 37 of #668)
         RequireInitialOrbit(Spacecraft, _initialOrbit);
-        var chain = Maneuver.Maneuver.Chain(Spacecraft.InitialManeuver);
+        var chain = Maneuver.Maneuver.Chain(Spacecraft.PlanHead);
         if (TargetOrbitFrameError(Spacecraft, chain, InitialState.Frame) is { } frameError)
         {
             throw new InvalidOperationException(frameError);
@@ -1504,7 +1505,7 @@ public abstract class PropagatorBase : IPropagator
     /// </summary>
     /// <returns>The message of the first target in another frame than <paramref name="propagationFrame"/>, null when there
     /// is none.</returns>
-    private static string TargetOrbitFrameError(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers,
+    internal static string TargetOrbitFrameError(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers,
         Frame propagationFrame)
     {
         var initial = spacecraft.InitialOrbitalParameters;

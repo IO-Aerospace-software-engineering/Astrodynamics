@@ -62,7 +62,7 @@ public class InstrumentPointingAttitudeTests
         InstrumentPointingToAttitude maneuver =
             new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromSeconds(10.0), spc.Instruments.First(), TestHelpers.MoonAtJ2000, spc.Engines.First());
         Assert.Equal(Aberration.LT, maneuver.Aberration);
-        maneuver.TryExecute(orbitalParams.ToStateVector());
+        var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
         // The closed form: the minimal rotation taking the boresight, in the spacecraft frame by the Euler angles of the frame
         // kernel (Rx(-x) Ry(-y) Rz(-z), Frames Required Reading, written in the test, #524), to the direction of the Moon
@@ -74,12 +74,12 @@ public class InstrumentPointingAttitudeTests
         Assert.Equal(orbitalParams.Position, new Vector3(row.State[0], row.State[1], row.State[2]));
         var toMoon = row.Moon[Aberration.LT];
         var boresight = Body.AttitudeRecordTests.EulerToSpacecraft(new Vector3(x, y, z), Vector3.VectorZ);
-        double angle = Body.AttitudeRecordTests.RotationAngle(Body.AttitudeRecordTests.MinimalRotation(boresight, toMoon), v => v.Rotate(maneuver.StateOrientation.Rotation));
-        double pointing = Body.AttitudeRecordTests.Angle(boresight.Rotate(maneuver.StateOrientation.Rotation), toMoon);
+        double angle = Body.AttitudeRecordTests.RotationAngle(Body.AttitudeRecordTests.MinimalRotation(boresight, toMoon), v => v.Rotate(maneuverOrientation.Rotation));
+        double pointing = Body.AttitudeRecordTests.Angle(boresight.Rotate(maneuverOrientation.Rotation), toMoon);
         _output.WriteLine($"MEASURE InstrumentPointing ({x}, {y}, {z}): attitude - closed form {angle:E3} rad, boresight from the Moon {pointing:E3} rad");
         Assert.True(angle <= InstrumentPointingTolerance, $"attitude {angle:E3} rad from the closed form");
         Assert.True(pointing <= BoresightTolerance, $"boresight {pointing:E3} rad from the Moon");
-        Assert.Equal(Frames.Frame.ICRF, maneuver.StateOrientation.ReferenceFrame);
+        Assert.Equal(Frames.Frame.ICRF, maneuverOrientation.ReferenceFrame);
         Assert.Equal(0.0, maneuver.FuelBurned);
         LabelAssert.Equal(new Window(epoch, TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
         LabelAssert.Equal(new Window(epoch, TimeSpan.Zero), maneuver.ThrustWindow);
@@ -143,7 +143,7 @@ public class InstrumentPointingAttitudeTests
                 var (spc, instrument) = PointingSpacecraft(-5491, state);
                 var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, moon,
                     spc.Engines.First(), flag);
-                var (_, orientation) = attitude.TryExecute(state);
+                var orientation = attitude.ComputeStateOrientation(state);
                 var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
                 worst = System.Math.Max(worst, Body.AttitudeRecordTests.Angle(boresight, expected[flag]));
             }
@@ -181,7 +181,7 @@ public class InstrumentPointingAttitudeTests
                 var (spc, instrument) = PointingSpacecraft(-5492, state);
                 var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, site,
                     spc.Engines.First(), flag);
-                var (_, orientation) = attitude.TryExecute(state);
+                var orientation = attitude.ComputeStateOrientation(state);
                 var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
                 worst = System.Math.Max(worst, Body.AttitudeRecordTests.Angle(boresight, expected));
             }
@@ -217,7 +217,7 @@ public class InstrumentPointingAttitudeTests
             var (spc, instrument) = PointingSpacecraft(-5493, state);
             var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, star,
                 spc.Engines.First(), flag);
-            var (_, orientation) = attitude.TryExecute(state);
+            var orientation = attitude.ComputeStateOrientation(state);
             var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
             var geometric = star.GetEquatorialCoordinates(epoch).ToCartesian() - (state.Position + earth.GetGeometricStateFromICRF(epoch).ToStateVector().Position);
             var expected = flag is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS

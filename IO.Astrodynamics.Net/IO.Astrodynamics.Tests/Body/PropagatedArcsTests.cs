@@ -737,8 +737,7 @@ public class PropagatedArcsTests
                 }
 
                 var chain = Chain(maneuver, engine, center, start);
-                for (int i = 0; i + 1 < chain.Length; i++) chain[i].SetNextManeuver(chain[i + 1]);
-                spacecraft.SetStandbyManeuver(chain[0]);
+                spacecraft.SetManeuvers(chain);
                 return (spacecraft, chain);
             }
 
@@ -830,7 +829,7 @@ public class PropagatedArcsTests
                     return
                     [
                         new PlaneAlignmentManeuver(Min, TimeSpan.Zero, target, engine), new ApsidalAlignmentManeuver(Min, TimeSpan.Zero, target, engine),
-                        new PhasingManeuver(Min, TimeSpan.Zero, target, 1, engine), new ApogeeHeightManeuver(center, Min, TimeSpan.Zero, 15866666.666666666, engine)
+                        new PhasingManeuver(Min, target, 1, engine), new ApogeeHeightManeuver(center, Min, TimeSpan.Zero, 15866666.666666666, engine)
                     ];
                 }
                 case not null when maneuver.StartsWith("Timed"):

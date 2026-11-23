@@ -1372,7 +1372,8 @@ Represents a spacecraft with components.
 | `GetTotalFuel()` | Get total fuel mass |
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
-| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set the head of the maneuver chain, which the next propagation starts from (a second call replaces the first, null clears it, #584); a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
+| `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668) |
+| `Maneuvers` | The plan, as `SetManeuvers` set it |
 | `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
@@ -1448,9 +1449,8 @@ Propulsion engine.
 | `Thrust` | Thrust force (N): ISP × g0 × fuel flow |
 | `FuelTank` | The tank the engine draws on, given to the constructor |
 
-| Method | Description |
-|--------|-------------|
-| `Ignite(in Vector3 deltaV)` | Burn the fuel of a ΔV (Tsiolkovsky, on the total mass of the tank's spacecraft) from its tank; returns the fuel burned (kg) |
+The engine burns its fuel in a run only: `Ignite` is internal since 11.0.0 (decision 49 of #668); the fuel of a ΔV is
+`Tsiolkovski.DeltaM(isp, mass, deltaV)`.
 
 #### FuelTank
 
@@ -1498,12 +1498,12 @@ Launch window computation.
 
 #### Maneuver (Base class)
 
-Base class for orbital maneuvers.
+Base class of the two kinds of maneuver, `ImpulseManeuver` and `Attitude`, the bases of a user maneuver (its constructor is `private protected`, decision 48 of #668).
 
 | Method | Description |
 |--------|-------------|
-| `TryExecute(StateVector stateVector)` | Execute maneuver and return new state + orientation |
-| `SetNextManeuver(Maneuver maneuver)` | Chain maneuvers in sequence |
+| `NextManeuver` | The next maneuver of its plan, set by `Spacecraft.SetManeuvers` only |
+| `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow` | The last run's values, cleared by the re-arm of the next run (decision 52 of #668) |
 
 #### ImpulseManeuver (Abstract)
 
@@ -1514,7 +1514,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 | `ComputeEventValue(StateVector localState)` | Continuous g-function; zero-crossing triggers the maneuver. State is maneuver-center-relative. |
 | `EventCrossingDirection` | Which zero-crossing direction triggers this maneuver (`NegativeToPositive`, `PositiveToNegative`, `Any`) |
 | `CheckPreconditions(StateVector state)` | Optional additional constraints (default: true). Override for maneuvers with extra conditions. |
-| `TryExecute(StateVector stateVector)` | Execute maneuver: compute DeltaV, burn fuel, update state |
+| `ComputeDeltaV(StateVector stateVector)` | The delta-V at the state, about its observer and in its frame, without executing the maneuver: pure (decision 50 of #668) |
 | `DeltaV` | Computed delta-V vector (set after execution) |
 
 #### Attitude maneuvers
@@ -1527,6 +1527,8 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `AntiNormalAttitude`: Orient opposite to orbital normal (−h)
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
+
+The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToICRF(epoch)`) (decisions 50 and 52 of #668).
 
 The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback; both go through `GetBodyAxis(axis, fallback)` of `Maneuver` (`private protected`) (#677).
 
@@ -2470,25 +2472,23 @@ var engine = new Engine("MainEngine", "Model1", "SN001", 450.0, 50.0, fuelTank);
 chaser.AddFuelTank(fuelTank);
 chaser.AddEngine(engine);
 
-// Chain maneuvers: plane alignment -> apsidal alignment -> phasing -> circularization
+// The plan: plane alignment -> apsidal alignment -> phasing -> circularization
 var maneuver1 = new PlaneAlignmentManeuver(
     new Time(DateTime.MinValue, TimeScale.TDB),
     TimeSpan.Zero, targetOrbit, engine
 );
 
-maneuver1
-    .SetNextManeuver(new ApsidalAlignmentManeuver(
+chaser.SetManeuvers(maneuver1,
+    new ApsidalAlignmentManeuver(
         new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit, engine))
-    .SetNextManeuver(new PhasingManeuver(
+        TimeSpan.Zero, targetOrbit, engine),
+    new PhasingManeuver(
         new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit, 1, engine))
-    .SetNextManeuver(new ApogeeHeightManeuver(
+        targetOrbit, 1, engine),
+    new ApogeeHeightManeuver(
         earth, new Time(DateTime.MinValue, TimeScale.TDB),
         TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
 
-// Set the maneuver sequence
-chaser.SetStandbyManeuver(maneuver1);
 scenario.AddSpacecraft(chaser);
 
 // Run the simulation
@@ -2499,7 +2499,7 @@ var summary = scenario.Simulate(new PropagationOptions
 });
 
 // Read maneuver results
-var executedManeuver = chaser.InitialManeuver;
+var executedManeuver = chaser.Maneuvers[0];  // the first maneuver of the plan, its values those of the last run
 Console.WriteLine($"Maneuver 1 start: {executedManeuver.ManeuverWindow?.StartDate}");
 Console.WriteLine($"Maneuver 1 delta-V: {((ImpulseManeuver)executedManeuver).DeltaV.Magnitude():F1} m/s");
 Console.WriteLine($"Fuel burned: {executedManeuver.FuelBurned:F1} kg");
@@ -2973,7 +2973,7 @@ var pointingManeuver = new InstrumentPointingToAttitude(
 );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
                                     // pass Aberration.None as a sixth argument for the geometric direction
 
-spacecraft.SetStandbyManeuver(pointingManeuver);
+spacecraft.SetManeuvers(pointingManeuver);
 
 // Simulate
 scenario.Simulate(new PropagationOptions
@@ -3035,7 +3035,7 @@ var triadManeuver = new TriadAttitude(
     engine
 );
 
-spacecraft.SetStandbyManeuver(triadManeuver);
+spacecraft.SetManeuvers(triadManeuver);
 
 // Simulate with high time resolution for attitude dynamics
 scenario.Simulate(new PropagationOptions

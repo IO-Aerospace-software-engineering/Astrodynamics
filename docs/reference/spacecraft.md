@@ -112,7 +112,8 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddFuelTank(FuelTank)` | Add fuel tank (a burn that needs more fuel than its tank holds throws `InsufficientFuelException`, an `InvalidOperationException` since 11.0.0, with `RequiredMass` and `AvailableMass` in kg); a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
-| `SetStandbyManeuver(Maneuver, Time?)` | Set the head of the maneuver chain, the maneuver the next propagation starts from: a second call replaces the first, null clears the chain, and nothing is added to `ExecutedManeuvers` (#584; before 11.0.0 a second call before a propagation was ignored); a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
+| `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an engine whose tank is not the spacecraft's or a target orbit in another frame, so the tanks, engines and initial orbit come first; the run checks again (`InvalidOperationException`) ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed) |
+| `Maneuvers` | The plan, as `SetManeuvers` set it, whatever a run executed; empty for none |
 | `Propagate(Window, PropagationOptions)` | Propagate the orbit with the settings of the options, RK7(8) at 1e-9 about the central body alone every 60 s by default ([Propagation Options](propagators.md#propagation-options); 11.0.0, R06 of #668) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
@@ -125,7 +126,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator` and a `CentralBodyPropagator`
 built directly), starts the maneuver chain again from its
-head, the maneuver `SetStandbyManeuver` set: it refuels the tanks, clears `ExecutedManeuvers`, the stored states, the
+head, the first maneuver of the plan `SetManeuvers` set: it refuels the tanks, clears `ExecutedManeuvers`, the stored states, the
 attitude record (whatever `IsPropagated` says, those added by hand included, decision 38 of #668), the windows of the
 maneuvers and the gates of the previous propagation (#573), and the spacecraft is then `IsPropagated`.
 `MonteCarloPropagator` runs no plan: it propagates spacecraft built from the template's orbit, dry mass, area and
