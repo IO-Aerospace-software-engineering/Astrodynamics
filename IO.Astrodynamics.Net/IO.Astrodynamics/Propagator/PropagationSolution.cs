@@ -78,6 +78,20 @@ public sealed class PropagationSolution
         }
     }
 
+    /// <summary>
+    /// The propagated window, to one tick: from the base of the first segment, the TDB label of the start of the
+    /// propagation, to the end of the propagation (the end of its window, one tick off at most when the window was not
+    /// given in TDB), in TDB labels. The reads of the solution (<see cref="GetStateVector"/>,
+    /// <see cref="GetStateTransitionMatrix"/>, <see cref="GetParameterSensitivity"/>, <see cref="GetCovariance"/>,
+    /// <see cref="GetExtendedCovariance"/>) accept an epoch of any scale within it, as the seconds of the time argument
+    /// read it, one tick allowed at each end, and throw <see cref="ArgumentOutOfRangeException"/> naming it outside
+    /// (decision 53 of #668, decided by S. Guillet, 2026-11-23; choice 8 of the re-baseline of #668).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The solution holds no segment.</exception>
+    public Window Window => new(_segments.Count > 0
+        ? _segments[0].BaseEpoch
+        : throw new InvalidOperationException("Solution contains no segments."), End.ToTDB());
+
     private PropagationSegment LastSegment =>
         _segments.Count > 0 ? _segments[^1] : throw new InvalidOperationException("Solution contains no segments.");
 
@@ -146,11 +160,20 @@ public sealed class PropagationSolution
         return _segments[0];
     }
 
-    /// <summary>Observer of the propagated states, set by the propagator; null for a solution built by hand.</summary>
-    internal ILocalizable Observer { get; set; }
+    /// <summary>
+    /// The observer of the states of the solution, its central body (the Sun when the initial orbital parameters are
+    /// relative to a star or a barycenter), set by the propagator: the TLE's Earth for a <see cref="TLEPropagator"/>
+    /// solution; null for a solution built by hand (decision 53 of #668, decided by S. Guillet, 2026-11-23; internal
+    /// before 11.0.0).
+    /// </summary>
+    public ILocalizable Observer { get; internal set; }
 
-    /// <summary>Frame of the propagated states, set by the propagator; null for a solution built by hand.</summary>
-    internal Frame Frame { get; set; }
+    /// <summary>
+    /// The frame of the states of the solution, the inertial frame of the propagation, set by the propagator:
+    /// <see cref="Frames.Frame.TEME"/> for a <see cref="TLEPropagator"/> solution; null for a solution built by hand
+    /// (decision 53 of #668, decided by S. Guillet, 2026-11-23; internal before 11.0.0).
+    /// </summary>
+    public Frame Frame { get; internal set; }
 
     /// <summary>
     /// The options of the propagation of the state transition matrix and of the covariance; null when the propagation
@@ -270,7 +293,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the state transition matrix
     /// (<see cref="CovariancePropagationOptions"/>).</exception>
     public Matrix GetStateTransitionMatrix(Time epoch)
@@ -299,7 +322,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the state transition matrix, or
     /// has no force with a parameter (no drag, no radiation force).</exception>
     public Matrix GetParameterSensitivity(Time epoch)
@@ -335,7 +358,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance
     /// (<see cref="CovariancePropagationMode.Covariance"/>).</exception>
     public Matrix GetCovariance(Time epoch)
@@ -358,7 +381,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance, or has no consider
     /// parameter.</exception>
     public Matrix GetExtendedCovariance(Time epoch)
@@ -390,9 +413,9 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The solution was not built by a propagator: it has no observer and
-    /// frame.</exception>
+    /// frame (a <see cref="TLEPropagator"/> solution has them since 11.0.0, decision 53 of #668).</exception>
     public StateVector GetStateVector(Time epoch)
     {
         CheckWithin(epoch);
@@ -561,8 +584,11 @@ public sealed class PropagationSolution
             throw new InvalidOperationException("Solution contains no segments.");
 
         if (!Covers(epoch, EpochTick))
+        {
+            var window = Window;
             throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
-                "The epoch is outside the propagation.");
+                $"The epoch is outside the window of the solution, [{window.StartDate}, {window.EndDate}].");
+        }
     }
 
     // The segment containing the epoch, the later one at boundaries (post-maneuver state), and the time from its start

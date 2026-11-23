@@ -119,7 +119,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         // Whether the stored states are those of a numerical propagation, by any path: a TLE spacecraft then reads them, SGP4
         // otherwise (#675).
-        // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator) leaves it
+        // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator's samples
+        // included) leaves it
         private bool _holdsPropagatedStates;
 
         /// <summary>
@@ -989,9 +990,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <summary>
         /// Adds states to the stored states, each to the arc that holds its epoch (the later one at an impulse of the last
         /// propagation), replacing a stored state of that arc at the same epoch; without stored states they make one arc.
-        /// They are kept in ICRF, the frame of the readers (#535). A propagation by <c>Propagate</c>
-        /// or <c>Scenario.Simulate</c> replaces every stored state, those added before it included (11.0.0, #540: they
-        /// were merged with the propagated ones before); <see cref="TLEPropagator"/> adds its states through this method.
+        /// They are kept in ICRF, the frame of the readers (#535). Every propagation replaces every stored state, those
+        /// added before it included, on every path (11.0.0, #540: they were merged with the propagated ones before), and so
+        /// does a <see cref="TLEPropagator"/> run, which re-arms the spacecraft and stores its samples alone (decision 38 of
+        /// #668, decided by S. Guillet, 2026-11-23: before 11.0.0 it added them to the stored states).
         /// </summary>
         /// <param name="stateVectors">The states, relative to one central body.</param>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
@@ -1152,20 +1154,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Re-arms the spacecraft for a propagation (#583): the solution, the force model, the stored states and the attitude
-        /// record of the previous propagation are dropped, <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
+        /// record are dropped, whatever filled them and whatever <see cref="IsPropagated"/> says (decision 38 of #668,
+        /// decided by S. Guillet, 2026-11-23: before 11.0.0 they were dropped only after a numerical propagation, so a first
+        /// run kept the attitudes added by hand), <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
         /// the chain from <see cref="InitialManeuver"/> reset (its windows and the gates of the last propagation) and put back
         /// in standby. <see cref="PropagatorBase.Propagate"/> calls it once its checks pass, on every path: before 11.0.0
         /// only <c>Spacecraft.Propagate</c> did, so a second run through the builder of 10.x or a
         /// <see cref="CentralBodyPropagator"/> built directly fired no burn and started with the fuel left by the first.
+        /// <see cref="TLEPropagator"/> calls it too, once every sample is computed, before it stores them.
         /// </summary>
         internal void ResetPropagation()
         {
             LastPropagation = null;
             LastForceModel = null;
-            if (IsPropagated)
-            {
-                DropStoredStatesAndAttitudes();
-            }
+            DropStoredStatesAndAttitudes();
 
             _executedManeuvers.Clear();
             foreach (var fuelTank in FuelTanks)
@@ -1179,9 +1181,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Drops the stored states and the attitude record, whatever filled them (a propagation, <see cref="AddPropagatedStates"/>,
-        /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), and marks the spacecraft not propagated: the re-arm of a
-        /// propagated spacecraft, and a run stopped after the re-arm (C2 of lot L4 of #668), so that a TLE spacecraft reads
-        /// SGP4 again and any other its initial orbit.
+        /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), and marks the spacecraft not propagated: the re-arm of
+        /// every run (decision 38 of #668), and a run stopped after the re-arm (C2 of lot L4 of #668), so that a TLE
+        /// spacecraft reads SGP4 again and any other its initial orbit.
         /// </summary>
         internal void DropStoredStatesAndAttitudes()
         {

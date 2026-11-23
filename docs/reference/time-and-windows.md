@@ -197,7 +197,7 @@ equality stays transitive. A UTC time is never equal to a TAI time in an inserte
 To tell two labels of one instant apart, use `EqualsExact` (the calendar and the scale), or `Time.ExactComparer` for a
 `Dictionary` or a `HashSet`. Within TDB, `-` still counts the ticks of the calendars, so two equal consecutive TDB ticks
 differ by one tick. The library's caches whose values carry their key as a label (the orientation a frame keeps from
-its last read, #541, the orientations of `TLEPropagator`, the range rates of the conjunction search) are keyed by label,
+its last read, #541, the range rates of the conjunction search) are keyed by label,
 an epoch in another scale read again, bit for bit as before. Before 11.0.0 equality was the record's, on the calendar
 and the frame, while `CompareTo` compared through TAI across frames: the same instant in two frames compared to 0 and
 was not equal.

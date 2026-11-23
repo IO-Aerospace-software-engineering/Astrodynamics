@@ -251,11 +251,12 @@ public class CancellationTests
     }
 
     /// <summary>
-    /// A stop in the middle of a <see cref="TLEPropagator"/> run adds nothing and leaves the spacecraft as it was (decision
-    /// 19 of lot L4, decided by S. Guillet, 2026-11-22: the exception to C2, since <see cref="TLEPropagator"/> adds its
-    /// samples instead of replacing the stored states; revisited in L5 with R08): the stored states of an earlier run,
-    /// before and after, are the same, and the exception carries the caller's token. The token is cancelled from inside
-    /// the tenth SGP4 sample of the run (<see cref="CancellingTle"/>), of 61.
+    /// A stop in the middle of a <see cref="TLEPropagator"/> run changes nothing and leaves the spacecraft as it was
+    /// (decision 19 of lot L4, decided by S. Guillet, 2026-11-22, the exception to C2 then; the rule since decision 38 of
+    /// #668, decided by S. Guillet, 2026-11-23: a run re-arms the spacecraft and replaces its stored states by its samples
+    /// in one block, once every sample is computed): the stored states of an earlier run, before and after, are the same,
+    /// and the exception carries the caller's token. The token is cancelled from inside the tenth SGP4 sample of the run
+    /// (<see cref="CancellingTle"/>), of 61.
     /// </summary>
     [Fact]
     public void AStopInTheMiddleOfATLEPropagatorRun_AddsNothing_TheSpacecraftAsItWas()

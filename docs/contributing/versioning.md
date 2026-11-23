@@ -313,6 +313,14 @@ release are listed under **Known limitations**.
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
   written `n JD TAG` and seconds `s TAG`, the tag of the target scale, so the command reads its output back as the same
   instant (under **Changed**).
+- **`PropagationSolution.Window`, `Observer` and `Frame`** (lot L5a, R09 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 53, decided by
+  S. Guillet, 2026-11-23): `Window` is the propagated window, to one tick, [first segment base, end of the propagation]
+  in TDB labels, the span the reads accept (the check of before, unchanged: an epoch of any scale, read in the seconds
+  of the time argument, one tick allowed at each end), and a read outside it throws `ArgumentOutOfRangeException` naming
+  it (its message said "The epoch is outside the propagation." before); `Observer` and `Frame`, the observer and frame
+  of the states, internal before, are public and get-only, and a `TLEPropagator` solution sets them to those of its
+  samples, the TLE's Earth and `Frame.TEME`, so `GetStateVector` reads it, SGP4 at the samples bit for bit
+  (`SolutionWindowTests`; before, it threw `InvalidOperationException`, the observer and frame unknown). No value moves.
 
 **Fixed**
 
@@ -4497,9 +4505,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   no step state and were already fresh; every first run is bit for bit unchanged (an extra `Initialize` with the initial
   state before a first run is a no-op, measured on 15 configurations), every golden unchanged, except a run whose caller
   re-initialized the integrator with another observer or frame (under **Changed**). A reused instance keeps the initial
-  state, covariance and options of its construction: a later `SetInitialOrbitalParameters` does not reach it, now stated
-  in the remarks of `Propagate` ([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783),
-  lot L5).
+  state, covariance and options of its construction, and since lot L5 throws once the spacecraft holds another initial
+  orbit (#783, under **Changed**).
+- **A first run after states and attitudes added by hand is a fresh run** (lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 38,
+  decided by S. Guillet, 2026-11-23): the re-arm of a propagation (`Spacecraft.ResetPropagation`) dropped the stored
+  states and the attitude record only when `IsPropagated` was true, so the first run of a spacecraft kept the attitudes
+  added by `AddStateOrientationToICRF` (the stored states were replaced): measured in the gap analysis of L5, a record of
+  4 entries against 2 for a fresh spacecraft, a quarter turn off it from mid-window to the end and outside the window,
+  while a second run gave the fresh record. It now drops them whatever `IsPropagated` says, on every path
+  (`Spacecraft.Propagate`, a `CentralBodyPropagator`, a batch, a scenario, both integrators, a TLE spacecraft sampled by
+  `TLEPropagator` before; `RunIndependenceTests`). Runs on a spacecraft without such entries are unchanged, bit for bit.
+- **The solutions of the runs of one `TLEPropagator` share no state** ([#785](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/785), decision 39 of #668): each run samples
+  into arrays of its own, its first sample included; before, every solution of an instance held the propagator's one
+  array, whose first state was built once at construction, so a later run rewrote the states of an earlier solution
+  (`RunIndependenceTests.TheSolutionsOfTwoRunsOfOneTLEPropagator_ShareNoState`). The samples are those of before, bit
+  for bit.
 
 **Changed**
 
@@ -4726,8 +4746,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   not `IsPropagated`, nothing kept for the conjunction analysis (a TLE spacecraft reads SGP4 again, any other its initial
   orbit), its fuel, `ExecutedManeuvers` and standby chain advanced up to the stop; in `Scenario.Simulate` and a batch the
   earlier spacecraft are complete, `IsSimulated` stays false and no summary or result is returned. One exception: a
-  stopped `TLEPropagator` run adds nothing and leaves the spacecraft as it was, since it adds its samples instead of
-  replacing the stored states (decision 19 of lot L4, decided by S. Guillet, 2026-11-22; revisited in L5 with R08). A
+  stopped `TLEPropagator` run changes nothing and leaves the spacecraft as it was (decision 19 of lot L4, decided by
+  S. Guillet, 2026-11-22; since lot L5 the rule of its runs, which re-arm and store their samples in one block, under
+  **Changed**). A
   run with a live token is the run without one, bit for bit, every golden unchanged (`CancellationTests`: both integrators, an outer
   integrator, the covariance, an impulse, the SSB mode, a TLE spacecraft, a batch, a Monte Carlo campaign, a scenario, a
   task; a stop inside a step makes only the force evaluations left in it, 2 to 4 for RK7(8) about the Earth, 8 in SSB
@@ -6934,6 +6955,41 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   product, the inverse, the copy, both Jacobian overloads and both covariance matrices: a write to a result reaches
   neither its source nor the next result).
   Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
+- **Breaking: a propagator refuses a spacecraft whose initial orbit changed** ([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decision 37, decided by S. Guillet, 2026-11-23): `PropagatorBase.Propagate` (`CentralBodyPropagator`, both
+  constructors, and a subclass) and `TLEPropagator.Propagate` throw `InvalidOperationException`, with the other checks of
+  the run and before the token, so before anything changes, once the spacecraft holds other `InitialOrbitalParameters`
+  than those the propagator was built from, compared by reference: an orbit replaced by an equal but distinct object
+  throws too, the same object set again does not. Before, a reused `CentralBodyPropagator` ran from the orbit of its
+  construction while the spacecraft reported another (6 930 000 m against a semi-major axis of 7 500 000 m in the
+  probes of R08), and a `TLEPropagator` took its first sample from the TLE of its construction and the others from the
+  spacecraft's orbit (a 668 860 m jump between samples 0 and 1). The guard covers the orbit only: the maneuver chain,
+  the tanks and the coefficients are read at each run. `Spacecraft.Propagate`, `Scenario.Simulate`, `BatchPropagator`
+  and `MonteCarloPropagator` build a propagator per call and are not concerned (`RunIndependenceTests`: both integrators,
+  both constructors, ICRF, ECLIPJ2000, SSB mode, a TLE). Migration: build a new propagator after
+  `SetInitialOrbitalParameters`.
+- **Breaking: a `TLEPropagator` run re-arms the spacecraft and replaces its stored states** (lot L5a, R08 of #668,
+  decision 38, decided by S. Guillet, 2026-11-23): a run computes every sample and acceleration, then, in one block,
+  re-arms the spacecraft as a numerical propagation does (stored states, attitude record and last solution dropped,
+  `ExecutedManeuvers` cleared, tanks refuelled) and stores its samples alone, in one arc; a stop or an SGP4 failure
+  changes nothing, so decision 19 of lot L4 is the rule. Before, a run added its samples to the stored states (two runs
+  of one hour at 60 s gave one arc of 122 states, read across the gap between them) and kept the attitude record, the
+  solution and the executed maneuvers of an earlier numerical run beside SGP4 states. After a run the spacecraft is not
+  `IsPropagated` and reads SGP4 outside the samples, as a spacecraft only sampled did before. The unused orientations
+  the propagator kept (an internal dictionary keyed by label) are gone. Migration: none for a single run; to keep the
+  states of several windows, sample one window that holds them.
+- **Breaking: `TLEPropagator` refuses a spacecraft with a maneuver plan** (lot L5a, R08 of #668, decision 40, decided by
+  S. Guillet, 2026-11-23): its constructor throws `ArgumentException` (`spacecraft`), and `Propagate`
+  `InvalidOperationException` for a plan set after construction, before anything changes; before, the plan was ignored
+  silently (measured in the gap analysis: an apogee raise over 3 h executed nothing, the fuel unchanged), and a plan on
+  another spacecraft's tank was accepted. Migration: clear the plan (`SetStandbyManeuver(null)`) or propagate the
+  spacecraft numerically.
+- **Breaking: `MonteCarloPropagator` refuses a template with a maneuver plan** (lot L5a, R08 of #668, decision 41,
+  decided by S. Guillet, 2026-11-23): both `Propagate` overloads throw `ArgumentException` (`config`) before anything is
+  sampled. Its runs propagate spacecraft built from the template's orbit, dry mass, area and coefficients, so a plan
+  was dropped silently (1.0786e7 m from the template's own run after 3 h in the gap analysis), while the docs listed the
+  campaign among the paths that run the chain (corrected). The fuel, payloads, axes, hard-body radius and COSPAR id the
+  runs also drop are an issue of their own, fixed after lot L5. Migration: clear the plan of the template.
 
 **Removed**
 

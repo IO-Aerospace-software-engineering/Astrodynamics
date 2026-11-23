@@ -123,11 +123,15 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
-Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator` and a
-`CentralBodyPropagator` built directly), starts the maneuver chain again from its
+Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator` and a `CentralBodyPropagator`
+built directly), starts the maneuver chain again from its
 head, the maneuver `SetStandbyManeuver` set: it refuels the tanks, clears `ExecutedManeuvers`, the stored states, the
-attitude record, the windows of the maneuvers and the gates of the previous propagation (#573), and the spacecraft is
-then `IsPropagated`. The reset belongs to `PropagatorBase.Propagate`, once its checks pass (#583, decided by S. Guillet,
+attitude record (whatever `IsPropagated` says, those added by hand included, decision 38 of #668), the windows of the
+maneuvers and the gates of the previous propagation (#573), and the spacecraft is then `IsPropagated`.
+`MonteCarloPropagator` runs no plan: it propagates spacecraft built from the template's orbit, dry mass, area and
+coefficients, and throws `ArgumentException` (`config`) for a template with a maneuver plan (decision 41 of #668,
+decided by S. Guillet, 2026-11-23; before 11.0.0 the plan was dropped silently), and so does `TLEPropagator`, which
+SGP4 samples, for a spacecraft with one (decision 40). The reset belongs to `PropagatorBase.Propagate`, once its checks pass (#583, decided by S. Guillet,
 2026-11-17: before 11.0.0 only `Spacecraft.Propagate` reset the spacecraft, so a second run through the builder of 10.x or a
 propagator built directly fired no burn and started with the fuel left by the first). The inputs of a propagation are
 checked when its propagator is built, and its chain again when it runs, before anything is reset: a propagation
@@ -205,12 +209,13 @@ across the jump:
   event, the state after it the covariance after the burn, the covariance of its execution error added
   (`ImpulseManeuver.ExecutionError`), a filled state that of its epoch.
 - **`AddPropagatedStates`** puts each state in the arc that holds its epoch (the later one at an impulse), replacing a
-  stored state of that arc at the same epoch; without stored states, they make one arc. A propagation by
-  `Spacecraft.Propagate` or `Scenario.Simulate` replaces every stored state, those added before it included: before
-  11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
+  stored state of that arc at the same epoch; without stored states, they make one arc. A propagation, by every path,
+  replaces every stored state, those added before it included: before 11.0.0 they were merged with the propagated ones.
+  `TLEPropagator.Propagate` re-arms the spacecraft and stores its samples alone, in one arc (decision 38 of #668,
+  decided by S. Guillet, 2026-11-23: before 11.0.0 it added them to the stored states).
 - **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, a
   `CentralBodyPropagator` built directly included (which make it `IsPropagated` since #583, false before), and SGP4 otherwise: unpropagated,
-  or sampled by `TLEPropagator`, whose `AddPropagatedStates` does not change the rule (#675; before 11.0.0 it read SGP4
+  or sampled by `TLEPropagator`, whose samples do not change the rule (#675; before 11.0.0 it read SGP4
   whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
   `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
   without aberration reads them directly, whatever the initial orbit, so after `TLEPropagator` it interpolates its

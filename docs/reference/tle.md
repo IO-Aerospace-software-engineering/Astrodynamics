@@ -141,7 +141,7 @@ the U.S. Standard Atmosphere 1976 with `-a`); its centre of motion must be the E
 
 A TLE spacecraft reads its stored states after a numerical propagation by any path (`GetEphemeris`, `WriteEphemeris`,
 the window searches, the conjunction analysis with the check of #527, the avoidance options on its force model), and
-SGP4 otherwise: unpropagated, or sampled by `TLEPropagator`, which adds its states without changing the rule. One read
+SGP4 otherwise: unpropagated, or sampled by `TLEPropagator`, whose samples replace the stored states without changing the rule. One read
 of a sampled spacecraft is not SGP4 at the instant: `GetEphemeris` from its Earth without aberration interpolates the
 samples of `TLEPropagator`, as before (SGP4 at the samples, 9.1e-4 m from it between them for the ISS at 60 s over one UTC hour, 7.6e-4 m before #598 moved the last sample to the window end), and
 reads SGP4 outside them (#527; it extrapolated them before, 20.7 m 6 min before the first sample); its geometric state,

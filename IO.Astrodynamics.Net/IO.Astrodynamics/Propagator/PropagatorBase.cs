@@ -24,6 +24,11 @@ namespace IO.Astrodynamics.Propagator;
 public abstract class PropagatorBase : IPropagator
 {
     protected readonly CelestialItem OriginalObserver;
+
+    // The initial orbital parameters the propagator was built from, by reference (#783, decision 37 of #668): a run
+    // refuses a spacecraft that holds another
+    private readonly OrbitalParameters.OrbitalParameters _initialOrbit;
+
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public IIntegrator Integrator { get; }
@@ -256,6 +261,7 @@ public abstract class PropagatorBase : IPropagator
         // Spacecraft.Propagate, which leaves the previous propagation as it was
         spacecraft.CheckManeuverEngines();
 
+        _initialOrbit = spacecraft.InitialOrbitalParameters;
         OriginalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         DeltaT = deltaT;
@@ -671,9 +677,20 @@ public abstract class PropagatorBase : IPropagator
     /// instances whose forces evaluate each other's earlier solutions deadlock (the library evaluates no solution under
     /// the SPICE lock or the lock of an attitude record, so it cannot deadlock by itself). An evaluation of an earlier
     /// solution on another thread waits for the end of the run in progress, and a call waiting for the lock reads
-    /// <paramref name="cancellationToken"/> once it holds it. A reused instance keeps the initial state, the covariance and the options of its construction: a later
-    /// <see cref="Spacecraft.SetInitialOrbitalParameters"/> does not reach it (#783; build a new propagator to propagate
-    /// from another initial orbit).
+    /// <paramref name="cancellationToken"/> once it holds it. A reused instance keeps the initial state, the covariance and
+    /// the options of its construction, and refuses to run once the spacecraft holds other initial orbital parameters than
+    /// those it was built from, compared by reference, so an equal orbit given anew is another orbit
+    /// (<see cref="InvalidOperationException"/>; #783, decision 37 of #668, decided by S. Guillet, 2026-11-23: before
+    /// 11.0.0, a later <see cref="Spacecraft.SetInitialOrbitalParameters"/> did not reach it and the run started from the
+    /// former orbit); build a new propagator to propagate from another initial orbit. The guard covers the orbit only: the
+    /// maneuver chain, the tanks and the coefficients of the spacecraft are read at each run.
+    /// </para>
+    /// <para>
+    /// The re-arm drops the stored states and the attitude record of the spacecraft whatever
+    /// <see cref="Spacecraft.IsPropagated"/> says, those added by hand included (decision 38 of #668, decided by S.
+    /// Guillet, 2026-11-23: before 11.0.0 a first run kept the attitudes added by
+    /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, a quarter turn off a fresh run over half its window in
+    /// the gap analysis of L5), so every run, the first included, is a fresh run.
     /// </para>
     /// <para>
     /// Cancellation (R28 of #668): <paramref name="cancellationToken"/> is read once the checks pass, before the re-arm,
@@ -697,7 +714,8 @@ public abstract class PropagatorBase : IPropagator
     /// of the chain has its target orbit in another frame than the frame the propagator integrates in (GCRF and ICRF
     /// counting as one, third review of #685), a maneuver attached after the propagator was built (#685; the constructor
     /// throws <see cref="ArgumentException"/> for those it sees); or
-    /// a maneuver draws on a tank that is not the spacecraft's (#676). Nothing runs.</exception>
+    /// a maneuver draws on a tank that is not the spacecraft's (#676); or the spacecraft holds other initial orbital
+    /// parameters than those the propagator was built from (#783). Nothing runs.</exception>
     public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
         // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
@@ -724,8 +742,9 @@ public abstract class PropagatorBase : IPropagator
             }
             catch (OperationCanceledException) when (reArmed)
             {
-                // A run stopped after the re-arm leaves no stored state and no attitude record, those added by hand to a
-                // spacecraft never propagated included, which the re-arm keeps (C2 of lot L4 of #668)
+                // A run stopped after the re-arm leaves no stored state and no attitude record (C2 of lot L4 of #668). The
+                // re-arm drops them on every path since decision 38 of #668; this drop covers what code the run called
+                // may have added before the stop
                 Spacecraft.DropStoredStatesAndAttitudes();
                 throw;
             }
@@ -736,6 +755,23 @@ public abstract class PropagatorBase : IPropagator
                     hooked.Cancellation = default;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Throws <see cref="InvalidOperationException"/> when <paramref name="spacecraft"/> no longer holds
+    /// <paramref name="initialOrbit"/>, the initial orbital parameters a propagator was built from, compared by reference
+    /// (#783, decision 37 of #668, decided by S. Guillet, 2026-11-23): a propagator keeps the orbit of its construction,
+    /// so a run after <see cref="Spacecraft.SetInitialOrbitalParameters"/> would match no fresh propagator.
+    /// </summary>
+    internal static void RequireInitialOrbit(Spacecraft spacecraft, OrbitalParameters.OrbitalParameters initialOrbit)
+    {
+        if (!ReferenceEquals(spacecraft.InitialOrbitalParameters, initialOrbit))
+        {
+            throw new InvalidOperationException(
+                $"The initial orbit of {spacecraft.Name} changed since this propagator was built " +
+                "(SetInitialOrbitalParameters): a propagator keeps the initial orbit it was built from. Build a new " +
+                "propagator to propagate from the new one.");
         }
     }
 
@@ -759,6 +795,8 @@ public abstract class PropagatorBase : IPropagator
         // and whose target orbits are in the frame of the integration: a maneuver attached after the propagator was built
         // escaped the check of the constructor (#685)
         // The chain run is the one from the head, which the reset puts back in standby (#583)
+        // The initial orbit the propagator was built from (#783, decision 37 of #668)
+        RequireInitialOrbit(Spacecraft, _initialOrbit);
         var chain = Maneuver.Maneuver.Chain(Spacecraft.InitialManeuver);
         if (TargetOrbitFrameError(Spacecraft, chain, InitialState.Frame) is { } frameError)
         {

@@ -29,7 +29,9 @@ public static class MonteCarloPropagator
     /// 2.</exception>
     /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance, or,
     /// before anything is sampled, when <see cref="MonteCarloConfiguration.Window"/> has zero length, naming <c>window</c>
-    /// (decisions 7 and 15 of lot L4 of #668).</exception>
+    /// (decisions 7 and 15 of lot L4 of #668), or when the template spacecraft has a maneuver plan, which the runs do not
+    /// execute, naming <c>config</c> (decision 41 of #668, decided by S. Guillet, 2026-11-23; before 11.0.0 it was
+    /// dropped silently).</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown, before any run is propagated, when the NAIF ID of a run,
     /// <see cref="MonteCarloConfiguration.BaseNaifId"/> − i, is not in [-2147483, -1] (#676).</exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
@@ -59,7 +61,9 @@ public static class MonteCarloPropagator
     /// 2, or, before any run is propagated, when the NAIF ID of a run is not in [-2147483, -1] (#676).</exception>
     /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance, or,
     /// before anything is sampled, when <see cref="MonteCarloConfiguration.Window"/> has zero length, naming <c>window</c>
-    /// (decisions 7 and 15 of lot L4 of #668).</exception>
+    /// (decisions 7 and 15 of lot L4 of #668), or when the template spacecraft has a maneuver plan, which the runs do not
+    /// execute, naming <c>config</c> (decision 41 of #668, decided by S. Guillet, 2026-11-23; before 11.0.0 it was
+    /// dropped silently).</exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
     /// carries it.</exception>
     public static MonteCarloResult Propagate(MonteCarloConfiguration config, IProgress<BatchProgress> progress,
@@ -159,6 +163,14 @@ public static class MonteCarloPropagator
         if (config.RunCount < 2)
             throw new ArgumentOutOfRangeException(nameof(config.RunCount), "RunCount must be at least 2.");
         ArgumentNullException.ThrowIfNull(config.TemplateSpacecraft);
+
+        // The runs are built from the orbit, the dry mass, the area and the coefficients of the template: a plan would be
+        // dropped silently, so it throws (decision 41 of #668, decided by S. Guillet, 2026-11-23)
+        if (config.TemplateSpacecraft.InitialManeuver != null)
+            throw new ArgumentException(
+                $"The template spacecraft {config.TemplateSpacecraft.Name} has a maneuver plan, which the runs of a Monte " +
+                "Carlo campaign do not execute: each run propagates a spacecraft built from the template's orbit, dry " +
+                "mass, area and coefficients. Clear the plan of the template.", nameof(config));
 
         // A window of zero length throws at the start of the call, as on every propagation path (decisions 7 and 15 of
         // lot L4 of #668): before, each run failed inside the batch and the campaign returned no statistics and no reason

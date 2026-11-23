@@ -29,7 +29,8 @@ the integrated state, so the target is given in the frame the spacecraft is prop
 orbit, or ICRF for a spacecraft whose initial orbit is a TLE or an osculating TEME state, which is propagated in ICRF
 ([Propagation Frame](propagators.md#propagation-frame)). The propagation checks every target of the chain, leading and
 chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate`, `Scenario.Simulate`,
-`BatchPropagator`, `MonteCarloPropagator`, the constructors and the avoidance propagations of the conjunction analysis): a target in another frame throws `ArgumentException` (parameter
+`BatchPropagator`, the constructors and the avoidance propagations of the conjunction analysis; `MonteCarloPropagator`
+refuses a template with a plan, decision 41 of #668): a target in another frame throws `ArgumentException` (parameter
 `spacecraft`) naming the maneuver, the two frames and the fix, `targetOrbit.ToFrame(Frame.ICRF)` for ICRF, before it
 changes anything, and again when the propagator propagates (`PropagatorBase.Propagate`, which reads the chain of the
 spacecraft again), against the frame it integrates in: a maneuver attached after the propagator was built and whose
@@ -202,7 +203,7 @@ keeps one record (its windows, `DeltaV`, `FuelBurned`), so a maneuver met twice 
 rejected where it is made: `SetNextManeuver` throws `ArgumentException` when the chain from the next maneuver comes back
 to the maneuver itself or already holds a cycle, and leaves the chain as it was. A cycle built past it, by a subclass
 that sets the protected `NextManeuver`, is rejected by `Spacecraft.SetStandbyManeuver` (`ArgumentException`), by the
-construction of the propagator (`Spacecraft.Propagate` and so the scenario, the batch and the Monte Carlo propagators, a
+construction of the propagator (`Spacecraft.Propagate` and so the scenario and the batch, a
 `CentralBodyPropagator` built directly: `InvalidOperationException`, before the states of an earlier
 propagation are cleared) and by `Propagate` (`InvalidOperationException`). Before 11.0.0 a cycle ended the process with
 a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder of 10.x.
