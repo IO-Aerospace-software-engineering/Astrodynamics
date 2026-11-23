@@ -394,7 +394,7 @@ records, or threw `NullReferenceException` at the burn).
 |----------|------|-------------|
 | `RunCount` | `int` | Number of runs (minimum 2) |
 | `Seed` | `int` | Random seed for reproducibility |
-| `TemplateSpacecraft` | `Spacecraft` | Nominal spacecraft with 6x6 covariance |
+| `TemplateSpacecraft` | `Spacecraft` | Nominal spacecraft with 6x6 covariance. Each run propagates a spacecraft built from its dry mass, maximum mass, area and drag and radiation coefficients, so a template with a maneuver plan throws `ArgumentException` (`config`) (decision 41 of #668); its fuel, payloads, body axes, hard-body radius and COSPAR id are not carried to the runs ([#795](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/795), fixed after lot L5) |
 | `Window` | `Window` | Propagation time window |
 | `Propagation` | `PropagationOptions` | The settings of every run ([Propagation Options](#propagation-options)); null for `PropagationOptions.Default`. The runs share their bodies, a geopotential included (11.0.0: `CelestialBodiesFactory`, `DeltaT`, `IncludeAtmosphericDrag`, `IncludeSolarRadiationPressure` and `IntegratorFactory` removed, R07 of #668) |
 | `BaseNaifId` | `int` | Base NAIF ID (default -100000) |
@@ -505,9 +505,12 @@ What a stopped run leaves (C2 of lot L4):
   for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
 - its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
   its fuel, and `ExecutedManeuvers` lists the maneuvers executed up to the stop (decision 58 of #668); until the fix of
-  [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794) (decision 44, after lot L5) that
-  list, the standby chain and the windows also hold an attitude chained before the stop whose activation the run never
-  reached (a stopped run returns no solution, so no `ExecutedManeuver` record lists it); the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated,
+  [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794) (decision 44 of #668, after
+  lot L5), an attitude the run scheduled before the stop (at its start, or at the event of the impulse before it) whose
+  activation it never reached is in that list too, with its `ThrustWindow` and `ManeuverWindow` set and the chain
+  advanced past it (measured on the code before lot L5: a `NadirAttitude` at 3600 s listed after a stop near 300 s); a
+  stopped run returns no solution, so no `ExecutedManeuver` record lists it, and a completed run reaches every attitude
+  it schedules; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated,
   a next run of the same propagator instance included (#782);
 - in `Scenario.Simulate` and a batch, the stars and spacecraft completed before the stop are complete, the later ones
   untouched; `IsSimulated` stays false, and no summary or result is returned.

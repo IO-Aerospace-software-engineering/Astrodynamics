@@ -66,7 +66,11 @@ reads typed as the `StateVector` they build, with `ToFrame` and `RelativeTo` typ
 geopotential parameters as a value, a null covariance option of the conjunction analysis that throws, the task of a
 batch with a constructor of options, the outputs of a propagation that end at its window end whatever its step, a
 reversed window, a negative hold and a step of zero refused, the token of the methods that run, which stops a running
-batch too, and the propagators no longer `IDisposable`.
+batch too, the propagators no longer `IDisposable`, a reused propagator that refuses a spacecraft whose initial orbit
+changed, a `TLEPropagator` run that re-arms the spacecraft and replaces its stored states, `AddPropagatedStates` one
+window per call, the maneuver plan of `SetManeuvers` with a closed `Maneuver` hierarchy and pure previews, and the
+results of a run, read through `GetStateVector` and the records of `PropagationSolution.Maneuvers`, immutable from
+outside.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -76,7 +80,8 @@ and `VVIntegrator.DeltaTs`, and the members that propagate without `PropagationO
 forces (the flag overloads of `Spacecraft.Propagate`, `Spacecraft.PropagateAsync`, the three `Scenario.SimulateAsync`,
 the flags constructors of `CentralBodyPropagator` and `PropagationTask`, `CentralBodyPropagatorBuilder`, and the
 factories and flags of `MonteCarloConfiguration`), the asynchronous members over synchronous work (`Star`, `BatchPropagator`
-and `MonteCarloPropagator` `PropagateAsync`) and the token and progress of `BatchOptions`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOptions`, `Spacecraft.SetStandbyManeuver`,
+`InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation` and `Spacecraft.GetTotalFuel`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -320,7 +325,8 @@ release are listed under **Known limitations**.
   it (its message said "The epoch is outside the propagation." before); `Observer` and `Frame`, the observer and frame
   of the states, internal before, are public and get-only, and a `TLEPropagator` solution sets them to those of its
   samples, the TLE's Earth and `Frame.TEME`, so `GetStateVector` reads it, SGP4 at the samples bit for bit
-  (`SolutionWindowTests`; before, it threw `InvalidOperationException`, the observer and frame unknown). No value moves.
+  (`SolutionWindowTests`; before, it threw `InvalidOperationException`, the observer and frame unknown, [#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803)
+  (c)). No value moves.
 
 - **`Spacecraft.SetManeuvers(params Maneuver[])` and `Spacecraft.Maneuvers`** (lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decisions 45 to 47,
   decided by S. Guillet, 2026-11-23): the maneuver plan, set in order and read back, each maneuver linked to the next
@@ -4540,7 +4546,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   re-initialized the integrator with another observer or frame (under **Changed**). A reused instance keeps the initial
   state, covariance and options of its construction, and since lot L5 throws once the spacecraft holds another initial
   orbit (#783, under **Changed**).
-- **A first run after states and attitudes added by hand is a fresh run** (lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 38,
+- **A first run after states and attitudes added by hand is a fresh run** ([#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803) (b), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 38,
   decided by S. Guillet, 2026-11-23): the re-arm of a propagation (`Spacecraft.ResetPropagation`) dropped the stored
   states and the attitude record only when `IsPropagated` was true, so the first run of a spacecraft kept the attitudes
   added by `AddStateOrientationToICRF` (the stored states were replaced): measured in the gap analysis of L5, a record of
@@ -4579,7 +4585,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its trial mass; every engine now counts (`RunResultsSurfaceTests.GetTotalISP_IsFinite_WhenNoEngineHasFuel`, red
   before the change). A tank of a positive quantity, the only one the constructor accepted otherwise, was never left
   out, so no other value moves. The avoidance trial spacecraft lighter than its dry mass, which an empty tank makes
-  routine, is fixed after lot L5 (its own issue).
+  routine, is the second part of #801, fixed after lot L5 (under **Known limitations**).
 - **A list of executed maneuvers or a scenario summary held by a caller changed with the next run** (lot L5a,
   decisions 58 and 59 of #668): `Spacecraft.ExecutedManeuvers` was a live set the next run emptied (measured 1 to 0 in
   the gap analysis of L5), and `SpacecraftSummary.Maneuvers` held the definitions, whose `DeltaV`, `FuelBurned` and
@@ -7033,8 +7039,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `MonteCarloPropagator` build a propagator per call and are not concerned (`RunIndependenceTests`: both integrators,
   both constructors, ICRF, ECLIPJ2000, SSB mode, a TLE). Migration: build a new propagator after
   `SetInitialOrbitalParameters`.
-- **Breaking: a `TLEPropagator` run re-arms the spacecraft and replaces its stored states** (lot L5a, R08 of #668,
-  decision 38, decided by S. Guillet, 2026-11-23): a run computes every sample and acceleration, then, in one block,
+- **Breaking: a `TLEPropagator` run re-arms the spacecraft and replaces its stored states** ([#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803) (a), lot L5a,
+  R08 of #668, decision 38, decided by S. Guillet, 2026-11-23): a run computes every sample and acceleration, then, in one block,
   re-arms the spacecraft as a numerical propagation does (stored states, attitude record and last solution dropped,
   `ExecutedManeuvers` cleared, tanks refuelled) and stores its samples alone, in one arc; a stop or an SGP4 failure
   changes nothing, so decision 19 of lot L4 is the rule. Before, a run added its samples to the stored states (two runs
@@ -7088,8 +7094,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   which the constructor of the maneuver accepts, included); the run re-checks both with `InvalidOperationException`, and
   the cycle check stays as a guard of the walks of the chain. No result moves. Migration:
   `spacecraft.SetManeuvers(m1, m2, m3)` for `spacecraft.SetStandbyManeuver(m1); m1.SetNextManeuver(m2).SetNextManeuver(m3)`,
-  `SetManeuvers()` for `SetStandbyManeuver(null)`, `spacecraft.Maneuvers[0]` for `InitialManeuver`; add the tanks and
-  engines and set the initial orbit before the plan; a maneuver for two spacecraft is two maneuvers.
+  `SetManeuvers()` for `SetStandbyManeuver(null)`, `spacecraft.Maneuvers[0]` for `InitialManeuver`; for
+  `StandbyManeuver` read after a run, the first maneuver of the plan the run did not execute, `spacecraft.Maneuvers[n]` with
+  n = `spacecraft.ExecutedManeuvers.Count` when n is below `spacecraft.Maneuvers.Count`, none otherwise (a run executes
+  the plan in its order); add the tanks and engines and set the initial orbit before the plan; a maneuver for two
+  spacecraft is two maneuvers.
 - **Breaking: the `Maneuver` hierarchy is closed** (lot L5a, R08 of #668, decisions 48 and 49, decided by S. Guillet,
   2026-11-23): `Maneuver`'s constructor is `private protected`, so a user maneuver derives from `ImpulseManeuver` or
   `Attitude`, the two kinds the propagation knows (a direct subclass of `Maneuver` compiled before, and could not be
@@ -7474,8 +7483,25 @@ not listed.
   `ArgumentException` (bodies of one identifier must have the same models, [#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)); give a TEME state on an Earth that
   carries the models
   ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
-  as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
-  a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
+  as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth.
+- **Runs on one spacecraft** ([#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794)). A spacecraft takes one run at a
+  time (decision 43 of #668), and nothing checks it yet: two runs on one spacecraft at the same time, through two
+  propagators, `Spacecraft.Propagate`, a `TLEPropagator`, a scenario or a batch beside a direct run, interleave with no
+  exception, and can charge a burn twice (a tank left at 841.263915 kg against 917.541305 kg in 1 trial of 12 in the gap
+  analysis of lot L5); a guard that refuses the second run comes after lot L5 (#793;
+  [Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)). A run stopped by its token lists in
+  `ExecutedManeuvers` an attitude it scheduled before the stop whose activation it never reached, with its windows set
+  and the chain advanced past it (decision 44 of #668, fixed after lot L5 in #794); the records of a run are not
+  affected (a stopped run returns none), and the next run re-arms the spacecraft.
+- **Monte Carlo runs** ([#795](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/795)). Each run of `MonteCarloPropagator` propagates a spacecraft built from the
+  template's dry mass, maximum mass, area and drag and radiation coefficients only: its drag and SRP act on the dry
+  mass, without the fuel and payloads, and its tanks, engines, payloads, instruments, body axes, hard-body radius and
+  COSPAR id are dropped (a template with a maneuver plan throws since lot L5a, decision 41 of #668). Fixed after lot
+  L5 with the long validation; meanwhile give the template the mass to propagate as its dry mass.
+- **The mass of an avoidance trial** (second part of [#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801)). The trial spacecraft of an avoidance
+  option takes the mass before the burn less the fuel the delta-V needs (Tsiolkovsky), not limited by the fuel on
+  board, so it can be lighter than the dry mass, and `AvoidanceOption` does not say that the burn cannot be made; fixed
+  after lot L5 (the mass limited by the fuel on board, the shortfall reported).
 - **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
   leap second throws `CdmParseException`.
 - **Angles brought into [0, 2π)**

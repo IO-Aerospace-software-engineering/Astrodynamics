@@ -65,8 +65,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// a stopped run leaves those executed up to the stop (C2 of lot L4). It lists the definitions, whose values
         /// (<c>DeltaV</c>, <c>FuelBurned</c>, the windows) are those of their last run, reset by the next one (decision 52):
         /// the stable values of a run are its records, <see cref="PropagationSolution.Maneuvers"/>. Before 11.0.0 it was a
-        /// live set that the next run emptied. Until the fix of #794, a stopped run lists an attitude chained before the stop
-        /// whose activation it never reached.
+        /// live set that the next run emptied. Until the fix of #794 (decision 44 of #668, decided by S. Guillet, 2026-11-23,
+        /// after lot L5), a stopped run also lists an attitude it scheduled before the stop (at its start, or at the event
+        /// of the impulse before it) whose activation it never reached, that attitude's <c>ThrustWindow</c> and
+        /// <c>ManeuverWindow</c> set and the chain advanced past it; a completed run reaches every attitude it schedules.
         /// </summary>
         public IReadOnlyList<Maneuver.Maneuver> ExecutedManeuvers => Volatile.Read(ref _executedManeuvers);
         /// <summary>
