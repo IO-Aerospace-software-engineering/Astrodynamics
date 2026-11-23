@@ -113,9 +113,10 @@ Console.WriteLine($"{solution.Options.ThirdBodies.Count} third bodies, {solution
     With `CovariancePropagation` null (Auto), a covariance that the initial orbital parameters carry at the window start
     is propagated under RK7(8), with the options `new CovariancePropagationOptions { Mode =
     CovariancePropagationMode.Covariance }` exactly, so the run costs what asking for the covariance always cost, not a
-    new cost: over a LEO day at the RK7(8) defaults, about 2.5 times the run without covariance about a point-mass Earth,
-    about 8 times with EGM2008 10×10 and drag, 1.5 times in SSB mode (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`,
-    best of five, Linux; decision 20 of lot L4), the trajectory unchanged bit for bit. Pass `CovariancePropagation = CovariancePropagationOptions.None` to
+    new cost: over a LEO day at the RK7(8) defaults, 1.4 to 1.5 times the run without covariance about a point-mass
+    Earth, 7.5 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode
+    (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, best of five, measured alone in the CI of #789 at aefd6c2b on
+    Linux x64, Windows x64 and macOS arm64, no threshold; decision 30 of lot L4), the trajectory unchanged bit for bit. Pass `CovariancePropagation = CovariancePropagationOptions.None` to
     propagate the state alone ([Covariance Propagation](covariance-propagation.md#activation); decision 17 of lot L4 of
     #668, decided by S. Guillet, 2026-11-22).
 

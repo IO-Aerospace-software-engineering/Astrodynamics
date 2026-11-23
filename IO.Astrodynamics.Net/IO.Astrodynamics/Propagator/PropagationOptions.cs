@@ -148,9 +148,10 @@ public sealed record PropagationOptions
     /// </summary>
     /// <remarks>
     /// Auto leaves the trajectory unchanged (the steps are controlled on the state only) and costs the integration of the
-    /// variational equations: over a LEO day at the RK7(8) defaults, about 2.5 times the run about a point-mass Earth,
-    /// about 8 times with EGM2008 10×10 and drag, 1.5 times in SSB mode (R06 of #668, measured in lot L4, best of five,
-    /// Linux, <c>DefaultIntegratorFiguresTests</c>; decision 20 of lot L4).
+    /// variational equations: over a LEO day at the RK7(8) defaults, 1.4 to 1.5 times the run about a point-mass Earth,
+    /// 7.5 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode (R06 of #668, best of five, measured
+    /// alone in the CI of #789 at aefd6c2b on Linux x64, Windows x64 and macOS arm64, <c>DefaultIntegratorFiguresTests</c>,
+    /// no threshold; decision 30 of lot L4).
     /// </remarks>
     public CovariancePropagationOptions CovariancePropagation { get; init; }
 

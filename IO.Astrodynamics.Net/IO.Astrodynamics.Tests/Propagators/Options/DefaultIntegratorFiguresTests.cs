@@ -25,10 +25,14 @@ namespace IO.Astrodynamics.Tests.Propagators.Options;
 /// 1e-9 and 1e-12), the Hohmann transfer to GEO against its closed form, the cost of the SSB mode at 1e-9 and 1e-12, the
 /// cost of the covariance under Auto, and the memory a spacecraft keeps with its last propagation. The docs publish them;
 /// each test asserts only what the mathematics fixes (the order of the errors, the closed-form Δv to the accuracy of the
-/// integrator, an unchanged trajectory), no threshold on a figure until the three platforms are read, none ever on the
-/// memory. The class runs alone, after the test classes that run in parallel (<see cref="DefaultIntegratorFiguresCollection"/>,
-/// decision 30 of lot L4, decided by S. Guillet, 2026-11-23): beside them its timings and its GC.GetTotalMemory readings
-/// counted their work too (CI of #789 at 84c38667: covariance Auto 0.96 to 6.7 times, memory 0.87 to 5.0 MB).
+/// integrator, an unchanged trajectory), no threshold on any figure. The class runs alone, after the test classes that
+/// run in parallel (<see cref="DefaultIntegratorFiguresCollection"/>, decision 30 of lot L4, decided by S. Guillet,
+/// 2026-11-23): beside them its timings and its GC.GetTotalMemory readings counted their work too (CI of #789 at
+/// 84c38667: covariance Auto 0.96 to 6.7 times, memory 0.87 to 5.0 MB). Measured alone in the CI of #789 at aefd6c2b on
+/// Linux x64, Windows x64 and macOS arm64, the published ranges: covariance Auto 1.4 to 1.5 times about the point-mass
+/// Earth, 7.5 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode; 0.58 MB kept per LEO day at the
+/// defaults, 1.04 to 1.07 MB with an initial covariance under Auto; the SSB mode about 1 ms per propagated hour at 1e-9,
+/// 64 to 76 ms at 1e-12, 0.6 to 0.9 ms for Velocity-Verlet.
 /// </summary>
 [Collection(nameof(DefaultIntegratorFiguresCollection))]
 public class DefaultIntegratorFiguresTests
@@ -225,8 +229,9 @@ public class DefaultIntegratorFiguresTests
                      })
                  })
         {
-            // Act: the best of five runs of each (two left the point-mass ratio between 1.6 and 4.4 over Linux runs of 15 to
-            // 70 ms, the noise of the timer and of the tests running beside it)
+            // Act: the best of five runs of each (two, beside the other test classes, left the point-mass ratio between 1.6
+            // and 4.4 over Linux runs of 15 to 70 ms; five, alone, 1.37 to 1.49 in the CI of #789 at aefd6c2b on Linux x64,
+            // Windows x64 and macOS arm64)
             double auto = double.MaxValue, none = double.MaxValue;
             PropagationSolution withCovariance = null, without = null;
             for (int run = 0; run < 5; run++)

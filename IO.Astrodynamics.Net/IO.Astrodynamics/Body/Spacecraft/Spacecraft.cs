@@ -968,10 +968,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// propagation; null before any propagation, after a reset and after a propagation by another integrator, which
         /// leaves nothing to replay. The conjunction analysis reads the covariance at the TCA from it, or replays its
         /// variational equations (step 10, E2). It keeps the accepted steps, the forces of the propagation and their
-        /// ephemeris cache alive until the next propagation (with <see cref="LastForceModel"/> about 0.58 MB for one day in
-        /// LEO with EGM2008 10×10, the Moon, the Sun and drag, RK7(8) at 1e-11 or 1e-9, and about 1.07 MB with an initial
-        /// covariance propagated in the run, a covariance per output state; lot L4 of #668,
-        /// <c>DefaultIntegratorFiguresTests</c>).
+        /// ephemeris cache alive until the next propagation (with <see cref="LastForceModel"/> 0.58 MB for one day in LEO
+        /// with EGM2008 10×10, the Moon, the Sun and drag, RK7(8) at 1e-9, and at 1e-11 on Linux and Windows (1.11 MB on
+        /// macOS arm64), and 1.04 to 1.07 MB with an initial covariance propagated in the run, a covariance per output
+        /// state; measured alone in the CI of #789 at aefd6c2b on Linux x64, Windows x64 and macOS arm64, lot L4 of #668,
+        /// <c>DefaultIntegratorFiguresTests</c>, no threshold).
         /// </summary>
         internal PropagationSolution LastPropagation { get; set; }
 
@@ -979,8 +980,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// The force model of the last propagation by RK7(8) or Velocity-Verlet (forces with their ephemeris cache,
         /// integrator settings, orientation cache, mass and coefficients of each segment), without its steps, for the
         /// avoidance options of the conjunction assessment (#402); null after another integrator or none. About 0.34 MB for
-        /// one day in LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun, kept until the next propagation (lot L4
-        /// of #668, <c>DefaultIntegratorFiguresTests</c>).
+        /// one day in LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun, kept until the next propagation (0.35 MB
+        /// with a covariance propagated; measured alone in the CI of #789 at aefd6c2b on Linux x64, Windows x64 and macOS
+        /// arm64, lot L4 of #668, <c>DefaultIntegratorFiguresTests</c>).
         /// </summary>
         internal PropagationForceModel LastForceModel { get; set; }
 

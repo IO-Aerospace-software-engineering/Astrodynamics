@@ -267,10 +267,11 @@ release are listed under **Known limitations**.
   **The cost of Auto is that of an explicit request**: Auto resolves to exactly `new CovariancePropagationOptions { Mode =
   CovariancePropagationMode.Covariance }`, the options a caller passes to ask for the covariance, so a run of a spacecraft
   whose initial state carries a covariance at the window start costs what the covariance propagation always cost, not a
-  new cost: over a LEO day at the RK7(8) defaults, about 2.5 times the run without covariance about a point-mass Earth,
-  about 8 times with EGM2008 10×10 and drag, 1.5 times in SSB mode with the Earth, the Moon and the Sun
-  (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, best of five, Linux; decision 20 of lot L4, decided by
-  S. Guillet, 2026-11-22; the design's 1.8 times underestimated it), the trajectory unchanged, bit for bit. To propagate the state alone, pass `CovariancePropagation =
+  new cost: over a LEO day at the RK7(8) defaults, 1.4 to 1.5 times the run without covariance about a point-mass Earth,
+  7.5 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode with the Earth, the Moon and the Sun
+  (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, best of five, measured alone in the CI of #789 at aefd6c2b on
+  Linux x64, Windows x64 and macOS arm64, no threshold; decision 30 of lot L4, decided by S. Guillet, 2026-11-23; the
+  design's 1.8 times underestimated it), the trajectory unchanged, bit for bit. To propagate the state alone, pass `CovariancePropagation =
   CovariancePropagationOptions.None` (decision 17 of lot L4, decided by S. Guillet, 2026-11-22).
   The entry points: `Spacecraft.Propagate(window, options = null)`, `CentralBodyPropagator(window, spacecraft, options =
   null)`, `Scenario.Simulate(options = null)` (synchronous, the stars then each spacecraft in turn; `ThirdBodies` and the
@@ -7046,9 +7047,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   by section 7 of the re-baseline, decided by S. Guillet, 2026-11-19: removed outright, no forwarder): the members of
   flags, and with them those that propagated with no integrator, Velocity-Verlet at the output step: 974 km from the
   two-body closed form after a day in a 6 800 km LEO at 60 s (27.1 km at 10 s, 271 m at 1 s, 1.36 m for RK7(8) at the
-  1e-9 of `RK78IntegratorOptions.Default`, 1.06 mm at 1e-12; the MEASURE lines of
-  `DefaultIntegratorFiguresTests.PointMassLeoDay_AgainstKepler`, decision 12 of lot L4: 974.02 km, 27.12 km, 271.24 m,
-  1.364 m and 1.062 mm on Linux, the other platforms read from the CI logs). Removed:
+  1e-9 of `RK78IntegratorOptions.Default`, 1.06 to 1.07 mm at 1e-12; the MEASURE lines of
+  `DefaultIntegratorFiguresTests.PointMassLeoDay_AgainstKepler`, decision 12 of lot L4: 974.02 km, 27.12 km, 271.24 m
+  and 1.364 m on Linux x64, Windows x64 and macOS arm64, 1.062 mm on Linux and 1.067 mm on Windows and macOS arm64, in
+  the CI of #789 at aefd6c2b). Removed:
   `Spacecraft.Propagate(window, bodies, drag, srp, step)`, `Spacecraft.PropagateAsync(window, bodies, drag, srp, step)`,
   `Spacecraft.Propagate(window, bodies, integrator, drag, srp, step)` and its form with covariance options; the
   `CentralBodyPropagator` constructors of flags (`(window, spacecraft, bodies, drag, srp, deltaT)`, with no integrator, and
@@ -7071,7 +7073,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     SolarRadiationPressure = srp }` (the integrator `new VVIntegrator(step)`), or RK7(8) for its accuracy (above). The
     Hohmann transfer of the tutorial (6 678 → 42 164 km) at Velocity-Verlet 60 s burns its second impulse 209.9 s late,
     3.6 m/s short of the closed form (1 466.824 m/s), and ends at e = 3.9e-3; RK7(8) at 1e-9 gives both Δv of the closed
-    form to the mm/s, e = 5.0e-11 (`DefaultIntegratorFiguresTests.HohmannToGeo_AgainstTheClosedForm`, Linux);
+    form to the mm/s, e = 5.0e-11 (`DefaultIntegratorFiguresTests.HohmannToGeo_AgainstTheClosedForm`, the same on Linux
+    x64, Windows x64 and macOS arm64 in the CI of #789 at aefd6c2b);
   - a call with an integrator: `Integrator = new RK78IntegratorOptions { AbsoluteTolerance = …, RelativeTolerance = …,
     InitialStep = …, MinStep = …, MaxStep = … }` (or `FixedStep`), the covariance options in `CovariancePropagation`, a
     call that gave none `CovariancePropagation = CovariancePropagationOptions.None` (null is Auto, which propagates a
@@ -7088,11 +7091,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     `CelestialBodiesFactory` as `ThirdBodies`, shared by the runs, as a central body with a geopotential now is (one field
     per propagation).
   In 11.0.0 the SSB mode about the Earth (the LEO of the tutorial, 6 800 km and 7 700 m/s, about the solar system
-  barycentre with the Earth, the Moon and the Sun, over 6 h) costs 7.5 to 13 ms per propagated hour in RK7(8) at 1e-9
-  (111 steps) and 82 to 97 ms at 1e-12 (93 233 steps), against 1.1 to 3.5 ms for Velocity-Verlet at 60 s (360 steps) and
-  1.3 to 2.0 ms at 10 s (the MEASURE lines of `DefaultIntegratorFiguresTests.SsbMode_CostPerPropagatedHour`, four runs on
-  Linux, the best of two propagations each; the step counts do not vary). The 93 233 steps at 1e-12, about 15 500 an
-  hour, are the floor of the step control below 1e-10 in SSB mode described under #576 above, which depends on the orbit
+  barycentre with the Earth, the Moon and the Sun, over 6 h) costs about 1 ms per propagated hour in RK7(8) at 1e-9
+  (1.0 to 1.1 ms, 111 steps) and 64 to 76 ms at 1e-12 (92 907 to 93 267 steps, the count differs by platform), against
+  0.6 to 0.8 ms for Velocity-Verlet at 60 s (360 steps) and 0.8 to 0.9 ms at 10 s (2 160 steps) (the MEASURE lines of
+  `DefaultIntegratorFiguresTests.SsbMode_CostPerPropagatedHour`, the best of two propagations, measured alone in the CI
+  of #789 at aefd6c2b on Linux x64, Windows x64 and macOS arm64, no threshold; decision 30 of lot L4). The 92 907 to
+  93 267 steps at 1e-12, about 15 500 an hour, are the floor of the step control below 1e-10 in SSB mode described under #576 above, which depends on the orbit
   and the epoch: the LEO of #544 takes 5 210 steps for its hour at 1e-12 on the same code (`SsbModeThirdBodyTests`).
 - **The asynchronous members over synchronous work** (lot L4, R28 of #668, decision 4 of lot L4 and section 7 of the
   re-baseline, decided by S. Guillet, 2026-11-19 and 2026-11-22: removed outright, no forwarder): `Star.PropagateAsync`,

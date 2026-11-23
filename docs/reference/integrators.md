@@ -163,11 +163,14 @@ through `TimeSpan.FromSeconds` may be a tick short of its decimal value; the exa
 `VVIntegratorOptions.Step` is 1 s by default, the integration step only (the output step is
 `PropagationOptions.OutputStep`): a point-mass LEO day ends 271 m from Kepler at 1 s, 27.1 km at 10 s and 974 km at 60 s.
 These figures are the MEASURE lines of `DefaultIntegratorFiguresTests` (decision 12 of lot L4 of #668: 974.02 km,
-27.12 km, 271.24 m, 1.364 m, and 1.062 mm at 1e-12, on Linux; the CI logs give the other platforms). In SSB mode about the
-Earth (a LEO about the Solar System barycentre with the Earth, the Moon and the Sun), RK7(8) costs 7.5 to 13 ms per
-propagated hour at 1e-9 (111 steps over 6 h) and 82 to 97 ms at 1e-12, which completes since #576 (93 233 steps over
-6 h, the floor of the step control below 1e-10 in SSB mode, which depends on the orbit and the epoch: 5 210 for the hour
-of the LEO of #544), and Velocity-Verlet 1.1 to 3.5 ms (four runs on Linux).
+27.12 km, 271.24 m and 1.364 m on Linux x64, Windows x64 and macOS arm64, and at 1e-12 1.062 mm on Linux and 1.067 mm on
+Windows and macOS arm64, in the CI of #789 at aefd6c2b). In SSB mode about the Earth (a LEO about the Solar System
+barycentre with the Earth, the Moon and the Sun), RK7(8) costs about 1 ms per propagated hour at 1e-9 (1.0 to 1.1 ms,
+111 steps over 6 h) and 64 to 76 ms at 1e-12, which completes since #576 (92 907 to 93 267 steps over 6 h, the count
+differs by platform, the floor of the step control below 1e-10 in SSB mode, which depends on the orbit and the epoch:
+5 210 for the hour of the LEO of #544), and Velocity-Verlet 0.6 to 0.8 ms at 60 s (360 steps) and 0.8 to 0.9 ms at 10 s
+(2 160 steps) (the best of two propagations, measured alone in the CI of #789 at aefd6c2b on Linux x64, Windows x64 and
+macOS arm64, no threshold; decision 30 of lot L4).
 A value out of range (not finite, zero or negative) throws `ArgumentOutOfRangeException` naming the property, in `init`.
 
 ## Choosing the integrator

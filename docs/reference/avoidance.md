@@ -62,7 +62,8 @@ The propagation of the participant is the `PropagationSolution` passed to the an
 an `ILocalizable`, its last propagation: a spacecraft keeps the force model of its last propagation by RK7(8) or
 Velocity-Verlet (its forces with their ephemeris cache, the integrator settings, the orientation cache, the mass and
 coefficients of each segment, without the steps; about 0.34 MB for one day in LEO with EGM2008 10×10, NRLMSISE-00, the
-Moon and the Sun, measured in lot L4 of #668, `DefaultIntegratorFiguresTests`, Linux) until it is propagated again. The burn state is the state of that trajectory, after the maneuvers
+Moon and the Sun, measured in lot L4 of #668, `DefaultIntegratorFiguresTests`, alone in the CI of #789 at aefd6c2b on
+Linux x64, Windows x64 and macOS arm64) until it is propagated again. The burn state is the state of that trajectory, after the maneuvers
 before the burn; the mass of the option is the mass of the trajectory at the burn less its fuel. A maneuver of the
 participant after the burn is not part of the option: each option is one burn on the trajectory, the open-loop model.
 The options end at the end of the screening window or of the propagation, whichever comes first; a burn outside the
