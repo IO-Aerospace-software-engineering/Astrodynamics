@@ -5630,7 +5630,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     every propagation about another body, and SSB mode, but for the attitudes, the windows and the gates the rules above
     move.
   - See [Attitudes](../reference/attitudes.md#the-attitude-timeline) and
-    [Impulse Maneuvers](../reference/impulse-maneuvers.md#maneuver-chain).
+    [Impulse Maneuvers](../reference/impulse-maneuvers.md#the-chain-of-a-run).
   - **Migration:** let `Spacecraft.Propagate`, `Scenario.SimulateAsync` or a propagator advance the chain; code that
     took the next detector from `HandleEvent` takes the next maneuver from `Maneuver.NextManeuver`. Give
     `SetStandbyManeuver(attitude, epoch)` a minimum epoch only when the attitude must wait for it, and shorten a hold
