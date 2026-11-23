@@ -271,7 +271,8 @@ release are listed under **Known limitations**.
   7.5 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode with the Earth, the Moon and the Sun
   (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, best of five, measured alone in the CI of #789 at aefd6c2b on
   Linux x64, Windows x64 and macOS arm64, no threshold; decision 30 of lot L4, decided by S. Guillet, 2026-11-23; the
-  design's 1.8 times underestimated it), the trajectory unchanged, bit for bit. To propagate the state alone, pass `CovariancePropagation =
+  design's 1.8 times holds about a point-mass Earth and underestimates the cost with EGM2008 10×10 and drag, decision 33
+  of lot L4, decided by S. Guillet, 2026-11-23), the trajectory unchanged, bit for bit. To propagate the state alone, pass `CovariancePropagation =
   CovariancePropagationOptions.None` (decision 17 of lot L4, decided by S. Guillet, 2026-11-22).
   The entry points: `Spacecraft.Propagate(window, options = null)`, `CentralBodyPropagator(window, spacecraft, options =
   null)`, `Scenario.Simulate(options = null)` (synchronous, the stars then each spacecraft in turn; `ThirdBodies` and the
@@ -4730,7 +4731,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   run with a live token is the run without one, bit for bit, every golden unchanged (`CancellationTests`: both integrators, an outer
   integrator, the covariance, an impulse, the SSB mode, a TLE spacecraft, a batch, a Monte Carlo campaign, a scenario, a
   task; a stop inside a step makes only the force evaluations left in it, 2 to 4 for RK7(8) about the Earth, 8 in SSB
-  mode, none for Velocity-Verlet, Linux). Binary break; source break for an implementation of `IPropagator`, which takes
+  mode, none for Velocity-Verlet, the same on Linux x64, Windows x64 and macOS arm64 in the CI of #789, run
+  45145382114). Binary break; source break for an implementation of `IPropagator`, which takes
   the parameter. Migration: rebuild; pass a token where a run must stop. See
   [Propagators](../reference/propagators.md#cancellation).
 - **Breaking: a batch stops its running tasks** (R28 of #668, decision 4 of lot L4): the token of

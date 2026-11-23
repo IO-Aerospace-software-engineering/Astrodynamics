@@ -1645,8 +1645,8 @@ The constructors of flags (bodies, drag, SRP, with or without an integrator) wer
 **State transition matrix and covariance** (`IO.Astrodynamics.Propagator.Variational`; Auto by default on the options
 entry points: `PropagationOptions.CovariancePropagation` null propagates a covariance the initial state carries at the
 window start under RK7(8), with `new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }`
-exactly, so at the cost of that explicit request, several times the run without it (the measured cost in
-`docs/reference/covariance-propagation.md`); `CovariancePropagationOptions.None` turns it off, decision 17 of lot L4 of
+exactly, so at the cost of that explicit request, from about 1.5 times (point mass) to about 8 times (EGM2008 10x10 and drag) the run without it (the measured cost in
+[docs/reference/covariance-propagation.md](docs/reference/covariance-propagation.md)); `CovariancePropagationOptions.None` turns it off, decision 17 of lot L4 of
 #668): with
 `CovariancePropagationOptions` (`Mode` `StateTransitionOnly` or `Covariance`, `ProcessNoise` an `RtnProcessNoise`,
 `ConsiderParameters` the σ of Cd and Cr, `IncludeInStepControl`), activated by `PropagationOptions.CovariancePropagation` (on

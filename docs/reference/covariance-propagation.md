@@ -79,8 +79,9 @@ of `CentralBodyPropagator` and overload of `Spacecraft.Propagate`, `PropagationT
   `new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }`, and its run is that request's, bit
   for bit (`PropagationOptionsPathTests`): the trajectory is unchanged (the step control follows the state only), at the
   cost of the variational equations that the covariance propagation always had (the figures in "The cost of Auto" at the
-  top of this page; the design's 1.8 times underestimated it). `PropagationSolution.Options.CovariancePropagation`
-  gives the options the run used.
+  top of this page; the design's 1.8 times holds about a point-mass Earth, 1.4 to 1.5 times measured, and
+  underestimates it with EGM2008 10×10 and drag, 7.5 to 8.7 times; decision 33 of lot L4, decided by S. Guillet,
+  2026-11-23). `PropagationSolution.Options.CovariancePropagation` gives the options the run used.
 - `CovariancePropagationOptions.None` (mode `CovariancePropagationMode.None`, 11.0.0) turns the propagation off where a
   null value means another rule: Auto here, and in `ConjunctionAnalysisOptions.CovariancePropagation` the covariance of
   the initial state held in RTN (null throws there since 11.0.0). It refuses process noise and consider parameters, and

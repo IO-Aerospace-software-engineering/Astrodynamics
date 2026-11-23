@@ -432,8 +432,8 @@ waits for the lock of the instance, held for the whole run (decision 28 of lot L
 2026-11-22), and reads its token only once it holds it: a token cancelled while it waits stops it then, before anything
 changes, and not while it waits. Every path throws `OperationCanceledException` carrying the caller's token: a batch and a Monte Carlo campaign throw one, never an `AggregateException`. The bound is one step: a
 propagation stopped inside a step makes only the force evaluations left in it (measured: 2 to 4 for RK7(8) about the
-Earth, 8 in SSB mode, none for Velocity-Verlet, whose one evaluation per step is the one in progress;
-`CancellationTests`).
+Earth, 8 in SSB mode, none for Velocity-Verlet, whose one evaluation per step is the one in progress, the same on
+Linux x64, Windows x64 and macOS arm64 in the CI of #789, run 45145382114; `CancellationTests`).
 
 What a stopped run leaves (C2 of lot L4):
 

@@ -407,7 +407,8 @@ public class CancellationTests
             spacecraft.Propagate(TwoHours, Options(kind, atmosphere), cts.Token));
 
         // Assert: within the step in progress (RK7(8): its remaining stages, at most 12 of 13 when the step in progress is
-        // accepted, as measured: 2 and 4 about the Earth, 8 in SSB mode, Linux, 2026-11-22; a rejection would add one
+        // accepted, as measured: 2 and 4 about the Earth, 8 in SSB mode, the same on Linux x64, Windows x64 and macOS
+        // arm64, CI of #789, run 45145382114; a rejection would add one
         // attempt, at most 101 in all, C1 of lot L4; Velocity-Verlet: none, the one evaluation of the step being the one
         // that cancels), the spacecraft re-armed, its impulse not fired
         _output.WriteLine($"MEASURE {kind} density evaluations after the cancellation: {atmosphere.CallsAfterCancel}");
