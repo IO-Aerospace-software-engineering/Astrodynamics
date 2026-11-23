@@ -28,14 +28,17 @@ commanded ΔV (open loop).
 `PlaneAlignmentManeuver`, `ApsidalAlignmentManeuver` and the target-orbit `PhasingManeuver` compare their target with
 the integrated state, so the target is given in the frame the spacecraft is propagated in: the frame of its initial
 orbit, or ICRF for a spacecraft whose initial orbit is a TLE or an osculating TEME state, which is propagated in ICRF
-([Propagation Frame](propagators.md#propagation-frame)). The propagation checks every target of the chain, leading and
-chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate`, `Scenario.Simulate`,
+([Propagation Frame](propagators.md#propagation-frame)). `Spacecraft.SetManeuvers` checks every target of the plan
+against that frame, `ArgumentException` (parameter `maneuvers`) for one in another frame (decision 46 of #668). The
+propagation checks every target of the chain, leading and chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate`, `Scenario.Simulate`,
 `BatchPropagator`, the constructors and the avoidance propagations of the conjunction analysis; `MonteCarloPropagator`
 refuses a template with a plan, decision 41 of #668): a target in another frame throws `ArgumentException` (parameter
 `spacecraft`) naming the maneuver, the two frames and the fix, `targetOrbit.ToFrame(Frame.ICRF)` for ICRF, before it
-changes anything, and again when the propagator propagates (`PropagatorBase.Propagate`, which reads the chain of the
-spacecraft again), against the frame it integrates in: a maneuver attached after the propagator was built and whose
-target is in another frame throws `InvalidOperationException`, the state of the spacecraft (#685; before 11.0.0 only a
+changes anything (the case of a spacecraft whose initial orbit's frame changed after `SetManeuvers`: the constructor
+keeps its `ArgumentException`, the call receiving the faulty object, decision 94 of #668, decided by S. Guillet,
+2026-11-23), and again when the propagator propagates (`PropagatorBase.Propagate`, which reads the chain of the
+spacecraft again), against the frame it integrates in, the only check that throws `InvalidOperationException`, the
+state of the spacecraft (#685; before 11.0.0 only a
 TLE or TEME spacecraft was checked there, #675, and on another spacecraft the components of the target were read as if
 they were in the integration frame: a plane change of 2° from an ECLIPJ2000 target on an ICRF spacecraft burned
 2807 m/s for 263 m/s). The constructor checks the target too, when the

@@ -129,11 +129,22 @@ namespace IO.Astrodynamics.Maneuver
 
         private TimeSpan _maneuverHoldDuration;
 
+        /// <summary>
+        /// The engine of the maneuver, whose fuel tank's spacecraft gives the body axes of its attitude.
+        /// </summary>
+        /// <remarks>
+        /// Decision 48 of #668 is split (decision 93 of #668, decided by S. Guillet, 2026-11-23): the closed hierarchy, the
+        /// internal <c>TryExecute</c>, the <c>private protected</c> constructor and <c>Execute</c> on
+        /// <see cref="ImpulseManeuver"/> land in lot L5a; <see cref="Engine"/> moves to <see cref="ImpulseManeuver"/> and a
+        /// protected <c>GetBodyAxis(BodyAxis)</c> replaces <see cref="GetBodyFront"/> in lot L5b, with R13 and
+        /// <c>BodyAxis</c> (decision 69).
+        /// </remarks>
         public Engine Engine { get; }
 
         /// <summary>
         /// Gets the body front vector from the spacecraft instance (if available),
-        /// falling back to the static Spacecraft.Front default.
+        /// falling back to the static Spacecraft.Front default. Replaced by a protected <c>GetBodyAxis(BodyAxis)</c> in lot
+        /// L5b (decisions 48, 69 and 93 of #668).
         /// </summary>
         protected Vector3 GetBodyFront() => GetBodyAxis(static s => s.BodyFront, Spacecraft.Front);
 

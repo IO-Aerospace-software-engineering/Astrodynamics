@@ -336,8 +336,9 @@ release are listed under **Known limitations**.
   spacecraft's `Engines` (added with `AddEngine`, by reference; decision 92, decided by S. Guillet, 2026-11-23) or whose
   engine's tank is not one of the spacecraft's, or an impulse whose target orbit is in another frame than the one the
   spacecraft is propagated in; the
-  claim is released, and the maneuver's link cleared, when the owner sets another plan without it. The run checks again
-  (`InvalidOperationException`) what changed since, a maneuver linked past the plan included (`ManeuverPlanTests`: the
+  claim is released, and the maneuver's link cleared, when the owner sets another plan without it. A propagator built
+  after the initial orbit's frame changed throws `ArgumentException` (`spacecraft`) for a target that no longer shares
+  it, as before (decision 94); the run checks again (`InvalidOperationException`) what changed since, a maneuver linked past the plan included (`ManeuverPlanTests`: the
   links, the read-back, the four refusals, the release, concurrent claims, the re-check on every activation path, one
   plan alike on `Spacecraft.Propagate`, a reused `CentralBodyPropagator`, a scenario and a batch, both integrators).
   Replaces `SetStandbyManeuver` and `Maneuver.SetNextManeuver` (under **Removed**).
@@ -7100,11 +7101,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SetManeuvers` too, where the call receives the maneuver, as `ArgumentException` (`maneuvers`): an engine that is not
   one of the spacecraft's `Engines`, added with `AddEngine` and compared by reference (decision 92: an engine built on
   the spacecraft's tank and never added ran before, the tank alone checked; a twin of an added engine, equal by value,
-  is another engine), an engine whose tank is not the spacecraft's (`InvalidOperationException` at the run before) and
-  a target orbit in another frame
-  (`ArgumentException` naming `spacecraft` from the propagator constructor before; a TEME target on a TLE spacecraft,
-  which the constructor of the maneuver accepts, included); the run re-checks both with `InvalidOperationException`, and
-  the cycle check stays as a guard of the walks of the chain. No result moves. Migration:
+  is another engine), an engine whose tank is not the spacecraft's (`InvalidOperationException` when the propagator
+  was built and at the run before, as still after the plan) and a target orbit in another frame than the one the
+  spacecraft is propagated in (a TEME target on a TLE spacecraft, which the constructor of the maneuver accepts,
+  included). The frame check of the propagator constructor stays as it was: a propagator built after the initial orbit's
+  frame changed, so that a target set by `SetManeuvers` no longer shares it, throws `ArgumentException` naming
+  `spacecraft`, the call receiving the faulty object; only `Propagate` re-checks the frames, with
+  `InvalidOperationException` (decision 94 of #668, decided by S. Guillet, 2026-11-23). The cycle check stays as a guard
+  of the walks of the chain. No result moves. Migration:
   `spacecraft.SetManeuvers(m1, m2, m3)` for `spacecraft.SetStandbyManeuver(m1); m1.SetNextManeuver(m2).SetNextManeuver(m3)`,
   `SetManeuvers()` for `SetStandbyManeuver(null)`, `spacecraft.Maneuvers[0]` for `InitialManeuver`; for
   `StandbyManeuver` read after a run, the first maneuver of the plan the run did not execute, `spacecraft.Maneuvers[n]` with
@@ -7116,7 +7120,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Attitude`, the two kinds the propagation knows (a direct subclass of `Maneuver` compiled before, and could not be
   run); `TryExecute` is internal, and the protected `Execute(StateVector)` is on `ImpulseManeuver`, documented pure, its
   result the preview of `ComputeDeltaV` (it was on `Maneuver`, and `Attitude` returned a zero delta-V); `Engine.Ignite`
-  is internal; the concrete maneuvers stay unsealed. `Engine` stays on `Maneuver` until lot L5b. Migration: a preview of
+  is internal; the concrete maneuvers stay unsealed. Decision 48 is split (decision 93 of #668, decided by S. Guillet,
+  2026-11-23): `Engine` moves to `ImpulseManeuver` and a protected `GetBodyAxis(BodyAxis)` replaces `GetBodyFront` in
+  lot L5b, with R13 and `BodyAxis` (decision 69); until then `Engine` stays on `Maneuver` and `GetBodyFront` protected.
+  Migration: a preview of
   an impulse is `ComputeDeltaV(state)`, of an attitude `ComputeStateOrientation(state)`, the fuel of a delta-V
   `Tsiolkovski.DeltaM(isp, mass, deltaV)`; a user maneuver keeps its `Execute` override on an `ImpulseManeuver`.
 - **Breaking: `ImpulseManeuver.ComputeEventValue` is pure** (lot L5a, decision 50 of #668, [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): it locks no node and
