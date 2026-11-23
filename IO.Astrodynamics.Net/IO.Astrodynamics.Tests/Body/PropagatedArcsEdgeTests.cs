@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Cosmographia;
+using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
@@ -202,6 +203,78 @@ public class PropagatedArcsEdgeTests
 
             Assert.True(spkVelocity <= SpkVelocityAtTheEnd, $"SPK at the end {spkVelocity:E3} m/s");
             Assert.True(spkPosition <= SpkAtTheEnd, $"SPK at the end {spkPosition:E3} m");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            spk.Delete();
+        }
+    }
+
+    /// <summary>
+    /// An impulse at the end of the propagation, then a later window given to <c>AddPropagatedStates</c> after a gap: the
+    /// arc of one state that the impulse opens (#575), touching the arc before it, is no longer the last arc, and the SPK
+    /// still leaves it out (decision 90 of #668, decided by S. Guillet, 2026-11-23: decision 87 applies to arcs separated by
+    /// a gap; before the second review of lot L5a <c>WriteEphemeris</c> threw "Arc 1 holds fewer than two states", where
+    /// 8436db52 wrote the file). SPICE reads the state before the impulse at the end, the added states over their window
+    /// (the stored states, two-body from the state after the impulse) and no state in the gap (SPKINSUFFDATA); the managed
+    /// reads the state after the impulse at the end.
+    /// </summary>
+    [Theory]
+    [InlineData(4.0, -5515)]
+    [InlineData(10.0, -5516)]
+    public void ImpulseAtTheEnd_ThenALaterWindow_TheSpkLeavesOutTheArcOfOneState(double step, int naifId)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var (sc, apogee) = Apogee(naifId, Leo(earth), earth);
+        var window = new Window(Start, Start.AddSeconds(2964.0));
+        var outputStep = TimeSpan.FromSeconds(step);
+        var solution = sc.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = outputStep }, OutputStep = outputStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
+        Assert.True(apogee.ThrustWindow.HasValue);
+        Assert.Equal(0.0, solution.Segments[^1].Duration);
+        var end = window.EndDate;
+        var after = Assert.Single(sc.PropagatedArcs[^1]);
+        var before = solution.Segments[0].Steps[^1];
+
+        // A later window, 600 s to 1 200 s after the end, every 60 s: an arc of its own after a gap (decision 83)
+        var added = Enumerable.Range(0, 11).Select(i => after.AtEpoch(end.AddSeconds(600.0 + 60.0 * i)).ToStateVector()).ToArray();
+        sc.AddPropagatedStates(added);
+        var arcs = sc.PropagatedArcs;
+        Assert.Equal(3, arcs.Count);
+        Assert.Single(arcs[1]);
+        Assert.Equal(added.Length, arcs[2].Length);
+
+        var spk = NewSpk(sc.Name.ToLowerInvariant() + "added");
+        sc.WriteEphemeris(spk);
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
+            // At the end: the state before the impulse, where the managed read gives the state after it
+            var atEnd = kernel.GetGeometricStateRelativeTo(end, earth);
+            double endPosition = (atEnd.Position - before.EndPosition).Magnitude(), endVelocity = (atEnd.Velocity - before.EndVelocity).Magnitude();
+            var managedAtEnd = sc.GetGeometricStateRelativeTo(end, earth);
+            Assert.Equal(after.Velocity, managedAtEnd.Velocity);
+
+            // Over the added window: the managed reads, at the stored epochs and between them
+            double addedPosition = 0.0;
+            for (int i = 0; i < 2 * added.Length - 1; i++)
+            {
+                var epoch = added[0].Epoch.AddSeconds(30.0 * i);
+                addedPosition = System.Math.Max(addedPosition, (kernel.GetGeometricStateRelativeTo(epoch, earth).Position - sc.GetGeometricStateRelativeTo(epoch, earth).Position).Magnitude());
+            }
+
+            _output.WriteLine($"MEASURE decision 90 SPK after an added window, VV {step} s: arcs [{string.Join(",", arcs.Select(a => a.Length))}], at the end against the state before the impulse {endPosition:E2} m {endVelocity:E2} m/s, " +
+                              $"added window against the managed reads {addedPosition:E2} m");
+            Assert.True(endPosition <= SpkAtTheEnd, $"SPK at the end {endPosition:E3} m");
+            Assert.True(endVelocity <= SpkVelocityAtTheEnd, $"SPK at the end {endVelocity:E3} m/s");
+            Assert.True(addedPosition <= PropagatedArcsTests.SpkAgainstManaged, $"SPK over the added window {addedPosition:E3} m");
+
+            // The gap: no state in the SPK, none in the managed reads
+            var inGap = end.AddSeconds(300.0);
+            var spiceError = Assert.Throws<SpiceException>(() => kernel.GetGeometricStateRelativeTo(inGap, earth));
+            Assert.Equal("SPICE(SPKINSUFFDATA)", spiceError.ShortMessage);
+            Assert.Throws<InvalidOperationException>(() => sc.GetGeometricStateRelativeTo(inGap, earth));
         }
         finally
         {

@@ -357,7 +357,18 @@ public class ManeuverEngineBindingTests
             var refused = Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(refusedManeuver));
             Assert.Equal("maneuvers", refused.ParamName);
             Assert.Contains(engine.Name, refused.Message);
-            Assert.Contains("AddEngine", refused.Message);
+            // The advice the caller can follow: for a twin, which AddEngine refuses, the engine instance of Engines; for an
+            // engine not added, AddEngine (second review of lot L5a)
+            if (engineKind == "Twin")
+            {
+                Assert.Contains("Engines", refused.Message);
+                Assert.DoesNotContain("with AddEngine before the plan", refused.Message);
+            }
+            else
+            {
+                Assert.Contains("with AddEngine before the plan", refused.Message);
+            }
+
             Assert.Empty(spacecraft.Maneuvers);
             Assert.Null(refusedManeuver.PlanOwner);
         }

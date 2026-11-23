@@ -205,7 +205,10 @@ compared by reference: an engine built on the spacecraft's tank and never added,
 refused; decision 92, decided by S. Guillet, 2026-11-23), an engine whose fuel tank is not one of the spacecraft's, or
 a target orbit in another frame than the one the spacecraft is propagated in (below). The claim is released, and the link cleared, when the
 owner sets another plan without the maneuver. So the tanks and engines are added (`AddFuelTank`, `AddEngine`) and the
-initial orbit set before the plan; the run checks again and throws `InvalidOperationException` for what changed since.
+initial orbit set before the plan. What changes after it is checked again: a propagator built after the initial
+orbit's frame changed throws `ArgumentException` (`spacecraft`), the case of `Spacecraft.Propagate`, a scenario and a
+batch, which build theirs (decision 94); a propagator built before the change throws `InvalidOperationException` at
+`Propagate`, through the initial-orbit guard (#783) or the re-check of the chain.
 
 The `Maneuver` hierarchy is closed (decision 48): its constructor is `private protected`, so a user maneuver derives
 from `ImpulseManeuver` (its delta-V in the protected `Execute`, its g-function, crossing direction and preconditions) or

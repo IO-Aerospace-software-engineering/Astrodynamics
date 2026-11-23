@@ -534,9 +534,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     return null;
                 }
 
-                return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name} (serial number {engine.SerialNumber}), which is not one of the engines of {Name}: " +
-                       $"an engine of a plan is an engine instance added with AddEngine (an engine equal to one of them by name, model and serial number is another engine). " +
-                       $"Add the engine to {Name} with AddEngine before the plan, or build the maneuver on an engine of {Name}.";
+                string notOneOf = $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name} (serial number {engine.SerialNumber}), which is not one of the engines of {Name}: " +
+                                  $"an engine of a plan is an engine instance added with AddEngine (an engine equal to one of them by name, model and serial number is another engine). ";
+                // A twin of an added engine cannot be added (AddEngine refuses it as already added): the advice is the
+                // instance of Engines (second review of lot L5a)
+                return _engines.Contains(engine)
+                    ? notOneOf + $"An engine equal to it is already one of the engines of {Name}: build the maneuver on that engine instance (Engines of {Name})."
+                    : notOneOf + $"Add the engine to {Name} with AddEngine before the plan, or build the maneuver on an engine of {Name}.";
             }
 
             string holder = tank.Spacecraft == null
@@ -655,9 +659,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <c>SetStandbyManeuver(maneuver, minimumEpoch)</c> raised it).
         /// </para>
         /// <para>
-        /// The checks run here, where the call receives the maneuvers, and again at each run, which throws
-        /// <see cref="InvalidOperationException"/> for what changed since (another initial orbit, whose frame the targets
-        /// no longer share). So the tanks of the engines are added (<see cref="AddFuelTank"/>, and the engines with
+        /// The checks run here, where the call receives the maneuvers, and again for what changed since (another initial
+        /// orbit, whose frame the targets no longer share): a propagator built after the change throws
+        /// <see cref="ArgumentException"/> (<c>spacecraft</c>), the case of <see cref="Propagate(Window, PropagationOptions, CancellationToken)"/>, a scenario and a batch,
+        /// which build theirs (decision 94 of #668, decided by S. Guillet, 2026-11-23); a propagator built before it throws
+        /// <see cref="InvalidOperationException"/> at its <c>Propagate</c>, through the initial-orbit guard (#783) or the
+        /// re-check of the chain. So the tanks of the engines are added (<see cref="AddFuelTank"/>, and the engines with
         /// <see cref="AddEngine"/>) and the initial orbit set before the plan.
         /// </para>
         /// </remarks>
@@ -975,15 +982,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// carried one (<see cref="CovariancePropagationMode.Covariance"/>), is not written. It is read from the
         /// <see cref="PropagationSolution"/> (<see cref="PropagationSolution.GetCovariance"/>) or from the output states.
         /// Before 11.0.0 the native writer wrote one segment of degree 15 across every impulse, of type 8 for equal steps.
-        /// An impulse at the end of the propagation opens a last arc of one state, the state after it (#575), which a segment
-        /// cannot hold: the SPK ends with the arc before it, and SPICE reads the state before the impulse at the last epoch,
-        /// where <c>GetEphemeris</c> reads the state after it.
+        /// An impulse at the end of a propagation opens an arc of one state, the state after it (#575), touching the arc before
+        /// it, which a segment cannot hold: the SPK leaves it out, whether it is the last arc or a window added after a gap by
+        /// <see cref="AddPropagatedStates"/> follows it (decision 90 of #668, decided by S. Guillet, 2026-11-23), so that its run
+        /// of arcs ends with the arc before it, and SPICE reads the state before the impulse at its epoch, where
+        /// <c>GetEphemeris</c> reads the state after it.
         /// </remarks>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
         /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state: a state given alone to
-        /// <see cref="AddPropagatedStates"/> apart from every arc (decision 87 of #668), the last arc of one state after an
-        /// impulse at the end of a propagation aside.</exception>
+        /// <see cref="AddPropagatedStates"/> apart from every arc (decision 87 of #668), the arc of one state after an impulse
+        /// at the end of a propagation, which touches the arc before it, aside (decision 90).</exception>
         /// <exception cref="InvalidOperationException">SPICE failed to unload the file it replaces (the reopening of the other
         /// loaded SPKs, on a deleted one SPICE holds under a relative name): the message is SPICE's, and the file is left on
         /// disk as it was, nothing written (#706: before, the failure was ignored and the file replaced).</exception>
@@ -993,17 +1002,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
             SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, SpkArcs(_propagatedStates.Arcs));
         }
 
-        // The arcs an SPK holds: an impulse at the end of the propagation opens a last arc of one state at the epoch where
-        // the previous arc ends (#575), which no segment can hold (type 9 needs two epochs at least): it is not written, and
-        // SPICE reads the state before the impulse there
+        // The arcs an SPK holds: an impulse at the end of a propagation opens an arc of one state at the epoch where the arc
+        // before it ends (#575), which no segment can hold (type 9 needs two epochs at least): it is not written, whether it
+        // is the last arc or a window added after a gap follows it (decision 90 of #668), and SPICE reads the state before
+        // the impulse there; an arc of one state apart from the others is passed on, and refused (decision 87)
         private static IReadOnlyList<StateVector[]> SpkArcs(IReadOnlyList<StateVector[]> arcs)
         {
-            if (arcs.Count > 1 && arcs[^1].Length == 1 && arcs[^1][0].Epoch == arcs[^2][^1].Epoch)
+            var written = new List<StateVector[]>(arcs.Count);
+            for (int i = 0; i < arcs.Count; i++)
             {
-                return arcs.Take(arcs.Count - 1).ToArray();
+                if (i > 0 && arcs[i].Length == 1 && arcs[i][0].Epoch == arcs[i - 1][^1].Epoch)
+                {
+                    continue;
+                }
+
+                written.Add(arcs[i]);
             }
 
-            return arcs;
+            return written.Count == arcs.Count ? arcs : written;
         }
 
         /// <summary>

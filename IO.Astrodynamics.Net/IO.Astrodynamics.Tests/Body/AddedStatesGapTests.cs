@@ -31,7 +31,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// <remarks>
 /// The references are the two-body orbit the states are taken from, and, to the bit, a spacecraft that holds the window
 /// read alone (the decided rule: a read inside a window is the read of that window). Before the change the windows made
-/// one arc, read across the gap without an error: 9.28e9 m off the two-body orbit 2 h 56 min into a gap of 4 h (the probe
+/// one arc, read across the gap without an error: 9.28e9 m off the two-body orbit 1 h 56 min into a gap of 4 h (the probe
 /// of the first attempt of this stage, two calls of one hour at 60 s).
 /// </remarks>
 public class AddedStatesGapTests

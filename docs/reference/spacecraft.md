@@ -116,7 +116,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks, the sum of their quantities: what the last run left |
 | `GetTotalISP()`, `GetTotalFuelFlow()` | The specific impulse of the engines fired together (Σ thrust / g0 / Σ fuel flow) and their total fuel flow, over the engines whose tank holds fuel at the start of a run (an initial quantity above 0); every engine from lot L5b, once the tanks refuse a non-finite quantity ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801), decision 60) |
 | `ExecutedManeuvers` | The maneuvers the last run executed, attitudes included, in execution order: a new read-only list at each run, empty at the re-arm and replaced by a new list at each maneuver the run executes, so a list once read never changes (decision 58 of #668); the definitions, whose values are those of their last run: the stable values of a run are its records, `PropagationSolution.Maneuvers` |
-| `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an engine that is not one of its `Engines` (added with `AddEngine`, by reference, decision 92), an engine whose tank is not the spacecraft's or a target orbit in another frame, so the tanks, engines and initial orbit come first; the run checks again (`InvalidOperationException`) ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed) |
+| `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an engine that is not one of its `Engines` (added with `AddEngine`, by reference, decision 92), an engine whose tank is not the spacecraft's or a target orbit in another frame, so the tanks, engines and initial orbit come first; a frame changed after it throws `ArgumentException` (`spacecraft`) from a propagator built after the change (`Propagate`, a scenario, a batch; decision 94) and `InvalidOperationException` at the `Propagate` of one built before it ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it, whatever a run executed; empty for none |
 | `Propagate(Window, PropagationOptions)` | Propagate the orbit with the settings of the options, RK7(8) at 1e-9 about the central body alone every 60 s by default ([Propagation Options](propagators.md#propagation-options); 11.0.0, R06 of #668) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
@@ -196,7 +196,9 @@ across the jump:
   a root at the end of the window) is carried by a last segment of zero length (#575): it opens a last arc of one state,
   the state after it, so the reads at the end give the state after it, as the solution does, and so do the corrected
   reads within the light time past the end (decision 90 of #668, as before). An SPK segment needs two
-  epochs: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the impulse at that last epoch.
+  epochs: `WriteEphemeris` leaves that arc out, whether it is the last arc or a window added after a gap by
+  `AddPropagatedStates` follows it (decision 90; before the second review of lot L5a an added window made it throw), so
+  that the run of arcs ends with the arc before it, and SPICE reads the state before the impulse at that epoch.
 - **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
   so that at an impulse it gives the state after it, as `PropagationSolution.GetStateVector`, SPICE (the later segment of
@@ -235,8 +237,9 @@ across the jump:
   11.0.0 it read the two-body orbit of its initial orbital parameters, at every epoch, its own one included). Only a
   spacecraft that stores no state reads the two-body orbit. Decisions 85 and 87 apply to arcs separated by a gap: the
   last arc of one state that an impulse at the end of a propagation opens (#575), touching the arc before it, is also
-  read within the light time past the end, the state after the impulse (decision 90). Before 11.0.0 the states of every call joined the arc of their epoch, so the windows of two calls
-  made one arc read across the gap between them without an error (9.28e9 m off the two-body orbit 2 h 56 min into a gap
+  read within the light time past the end, the state after the impulse, and left out of the SPK, a window added after
+  it or not (decision 90). Before 11.0.0 the states of every call joined the arc of their epoch, so the windows of two calls
+  made one arc read across the gap between them without an error (9.28e9 m off the two-body orbit 1 h 56 min into a gap
   of 4 h between two windows of one hour at 60 s). A propagation, by every path,
   replaces every stored state, those added before it included: before 11.0.0 they were merged with the propagated ones.
   `TLEPropagator.Propagate` re-arms the spacecraft and stores its samples alone, in one arc (decision 38 of #668,

@@ -7081,7 +7081,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   of zero length refusing any wider window argument, where the two-body orbit of its initial orbital parameters
   answered before at every epoch, its own one included (1.408e7 m off the stored state in the probe of the review); a
   spacecraft that stores none keeps the two-body orbit. Before, every state joined the arc of its epoch, so the windows of several calls made one
-  arc, read across the gaps without an error: 9.28e9 m off the two-body orbit 2 h 56 min into a gap of 4 h between two
+  arc, read across the gaps without an error: 9.28e9 m off the two-body orbit 1 h 56 min into a gap of 4 h between two
   windows of one hour at 60 s (`AddedStatesGapTests`, with the reads of each window, to the bit those of a spacecraft
   holding it alone, and within 3.4e-4 m of the two-body orbit, Linux x64, a provisional figure until the CI logs of the
   three platforms set it), and a TLE spacecraft sampled by
@@ -7090,7 +7090,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   stored states, and a corrected read past the end of a propagation that ends with an impulse, within the light time
   after the end, still reads the last arc of one state that impulse opens (#575), touching the arc before it at the
   impulse: the state after the impulse, as before (decision 90; decisions 85 and 87 apply to arcs separated by a
-  gap). Migration: add each window in its own call, and the states between two windows
+  gap), and `WriteEphemeris` leaves that arc out, a window added after it following a gap or not, its SPK ending that
+  run of arcs with the arc before the impulse (8436db52 wrote the file, the added window joined to that arc across the
+  gap; before the second review of lot L5a an added window made it throw "Arc 1 holds fewer than two states").
+  Migration: add each window in its own call, and the states between two windows
   in one call that spans them to join them; one state per call opens an arc per state, read at its epoch only; a
   spacecraft given one state to stand for an orbit is given no state, its initial orbital parameters then read in
   two-body motion, or a window of states.

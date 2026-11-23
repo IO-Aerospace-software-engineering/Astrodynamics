@@ -121,7 +121,9 @@ public class ManeuverSolver : ICategorySolver
 
             mass -= maneuver.FuelBurned;
             var segment = BurnSegment(solution, maneuver.ThrustWindow.Value.StartDate);
-            var position = segment.InterpolateAt(0.0).position;
+            // The state after the burn, the start of the first step of its segment (the public steps of a segment;
+            // InterpolateAt is internal since decision 55 of #668, and at 0 it read that start)
+            var position = segment.Steps[0].StartPosition;
             Add(outputs, label, "elapsed_s", TerrestrialSeconds.Between(start, segment.BaseEpoch));
             Add(outputs, label, "position_km", Kilometres(position));
             Add(outputs, label, "delta_v_km_s", Kilometres(maneuver.DeltaV));
