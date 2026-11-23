@@ -167,27 +167,42 @@ public class ManeuverPreviewTests
     }
 
     /// <summary>
-    /// The preview takes the state about its own observer, in its frame (decision 50; the given centre comes with lot L5b):
-    /// a state in ECLIPJ2000 gives the delta-V of the execution at that state, in ECLIPJ2000; a state about the Moon gives
-    /// the delta-V of a twin maneuver whose centre is the Moon.
+    /// The preview takes the state about the centre the maneuver is given, as the execution does (decision 50: the given
+    /// centre, or the state's observer when none is given), and returns the delta-V in the frame of the state: the test
+    /// orbit about the Earth re-expressed about the Sun (an SSB-mode solution's states are about the Sun) and about the
+    /// Moon, in ICRF and in ECLIPJ2000, gives the delta-V of the execution at that state, bit for bit, and the delta-V of
+    /// the same orbit given about the Earth, to the rounding of the change of centre.
     /// </summary>
-    [Fact]
-    public void ComputeDeltaV_TheStatesObserverAndFrame()
+    [Theory]
+    [InlineData("Sun", "ICRF")]
+    [InlineData("Sun", "ECLIPJ2000")]
+    [InlineData("Moon", "ICRF")]
+    [InlineData("Earth", "ECLIPJ2000")]
+    public void ComputeDeltaV_TakesTheStateAboutTheGivenCentre(string observer, string frame)
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, S);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var apogee = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+        var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
+        CelestialItem other = observer switch
+        {
+            "Sun" => Stars.SUN_BODY,
+            "Moon" => new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, S),
+            _ => earth
+        };
+        var state = aboutTheEarth.RelativeTo(other, Aberration.None);
+        Assert.Equal(other.NaifId, state.Observer.NaifId);
 
-        var ecliptic = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(Frames.Frame.ECLIPTIC_J2000);
+        var deltaV = apogee.ComputeDeltaV(state);
+
         var twin = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
-        twin.TryExecute(ecliptic);
-        Assert.Equal(twin.DeltaV, apogee.ComputeDeltaV(ecliptic));
-
-        var aboutTheMoon = new StateVector(new Vector3(2000e3, 0.0, 0.0), new Vector3(0.0, 1600.0, 100.0), moon, S, Frames.Frame.ICRF);
-        var lunar = new ApogeeHeightManeuver(moon, S, TimeSpan.Zero, 8000e3, engine);
-        lunar.TryExecute(aboutTheMoon);
-        Assert.Equal(lunar.DeltaV, apogee.ComputeDeltaV(aboutTheMoon));
+        twin.TryExecute(state);
+        Assert.Equal(twin.DeltaV, deltaV);
+        var reference = apogee.ComputeDeltaV(aboutTheEarth);
+        double difference = (deltaV - reference).Magnitude();
+        _output.WriteLine($"MEASURE ComputeDeltaV about {observer} in {frame} against about the Earth: {difference:E3} m/s of {reference.Magnitude():F6} m/s");
+        Assert.True(difference < 1e-9, $"{difference:E3} m/s");
     }
 
     [Fact]
@@ -361,6 +376,38 @@ public class ManeuverPreviewTests
         _output.WriteLine($"MEASURE ComputeStateOrientation ECLIPJ2000 against ICRF: {angle:E3} rad");
         Assert.True(angle < 1e-12, $"{angle:E3} rad");
         Assert.Equal("stateVector", Assert.Throws<ArgumentNullException>(() => nadir.ComputeStateOrientation(null)).ParamName);
+    }
+
+    /// <summary>
+    /// The attitude preview takes the state about the centre the maneuver is given, as the execution does (decision 50),
+    /// then in ICRF: a nadir attitude about the Earth at the test orbit re-expressed about the Sun or the Moon, in ICRF or
+    /// ECLIPJ2000, is the orientation of the execution at that state, bit for bit, and the nadir of the orbit given about the
+    /// Earth, to the rounding of the change of centre.
+    /// </summary>
+    [Theory]
+    [InlineData("Sun", "ICRF")]
+    [InlineData("Sun", "ECLIPJ2000")]
+    [InlineData("Moon", "ICRF")]
+    public void ComputeStateOrientation_TakesTheStateAboutTheGivenCentre(string observer, string frame)
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out var engine);
+        var nadir = new NadirAttitude(earth, S, TimeSpan.Zero, engine);
+        spacecraft.SetManeuvers(nadir);
+        var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+        var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
+        CelestialItem other = observer == "Sun" ? Stars.SUN_BODY : new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, S);
+        var state = aboutTheEarth.RelativeTo(other, Aberration.None);
+
+        var orientation = nadir.ComputeStateOrientation(state);
+
+        var twin = new NadirAttitude(earth, S, TimeSpan.Zero, engine);
+        var (_, executed) = twin.TryExecute(state);
+        Assert.Equal(executed.Rotation, orientation.Rotation);
+        Assert.Equal(Frames.Frame.ICRF, orientation.ReferenceFrame);
+        double angle = Body.AttitudeRecordTests.RotationAngle(orientation.Rotation, nadir.ComputeStateOrientation(aboutTheEarth).Rotation);
+        _output.WriteLine($"MEASURE ComputeStateOrientation about {observer} in {frame} against about the Earth: {angle:E3} rad");
+        Assert.True(angle < 1e-9, $"{angle:E3} rad");
     }
 
     /// <summary>

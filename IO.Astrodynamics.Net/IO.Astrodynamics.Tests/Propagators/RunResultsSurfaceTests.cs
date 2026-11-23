@@ -289,7 +289,8 @@ public class RunResultsSurfaceTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // Decision 60: the fuel accessors (#801)
+    // Decision 60: the fuel accessors (the drop of the filter of GetTotalISP and GetTotalFuelFlow lands with lot L5b,
+    // after the tanks refuse a non-finite quantity: L5-20 as amended, #801)
     // ---------------------------------------------------------------------------------------------------------------------
 
     [Fact]
@@ -299,51 +300,5 @@ public class RunResultsSurfaceTests
         Assert.Null(type.GetMethod("GetTotalFuel", Everything));
         Assert.Equal(typeof(double), type.GetMethod("GetInitialFuel", Type.EmptyTypes)?.ReturnType);
         Assert.Equal(typeof(double), type.GetMethod("GetRemainingFuel", Type.EmptyTypes)?.ReturnType);
-    }
-
-    // The tank emptied from the start, as an empty tank of lot L5b will be, by its initial quantity
-    private static void Empty(FuelTank tank)
-    {
-        var field = typeof(FuelTank).GetField("<InitialQuantity>k__BackingField", Everything)!;
-        field.SetValue(tank, 0.0);
-        typeof(FuelTank).GetProperty(nameof(FuelTank.Quantity))!.SetValue(tank, 0.0);
-    }
-
-    /// <summary>
-    /// #801: with no engine on a tank holding fuel at the start, GetTotalISP was 0/0 = NaN, which made the fuel cost of an
-    /// avoidance option and its trial mass NaN. Every engine counts: Σ thrust / g0 / Σ flow.
-    /// </summary>
-    [Fact]
-    public void GetTotalISP_IsFinite_WhenNoEngineHasFuel()
-    {
-        var earth = Earth();
-        var spacecraft = NewSpacecraft(earth, out var engine);
-        Empty(engine.FuelTank);
-
-        double isp = spacecraft.GetTotalISP();
-
-        Assert.False(double.IsNaN(isp));
-        Assert.Equal(engine.Thrust / IO.Astrodynamics.Constants.g0 / engine.FuelFlow, isp);
-        Assert.Equal(engine.FuelFlow, spacecraft.GetTotalFuelFlow());
-    }
-
-    /// <summary>
-    /// Decision 60: every engine counts, whatever its tank holds; on a spacecraft mixing an empty tank and a full one the
-    /// mean is over both engines (engines of 300 s at 10 kg/s and 200 s at 30 kg/s: 225 s, where the filter gave 300 s).
-    /// </summary>
-    [Fact]
-    public void GetTotalISPAndGetTotalFuelFlow_CountEveryEngine()
-    {
-        var earth = Earth();
-        var spacecraft = NewSpacecraft(earth, out var first);
-        var tank = new FuelTank("second", "m", "sn-second", 1000.0, 500.0);
-        spacecraft.AddFuelTank(tank);
-        var second = new Engine("second", "m", "sn-second", 200.0, 30.0, tank);
-        spacecraft.AddEngine(second);
-        Empty(tank);
-
-        Assert.Equal((first.Thrust + second.Thrust) / IO.Astrodynamics.Constants.g0 / (first.FuelFlow + second.FuelFlow), spacecraft.GetTotalISP());
-        Assert.Equal(225.0, spacecraft.GetTotalISP(), 12);
-        Assert.Equal(40.0, spacecraft.GetTotalFuelFlow());
     }
 }

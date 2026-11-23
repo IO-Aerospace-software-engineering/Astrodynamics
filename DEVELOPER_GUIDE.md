@@ -1371,8 +1371,8 @@ Represents a spacecraft with components.
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run (`GetTotalFuel` before 11.0.0, decision 60 of #668) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
-| `GetTotalISP()` | Get combined specific impulse, every engine counted (#801) |
-| `GetTotalFuelFlow()` | Get combined fuel flow rate, every engine counted |
+| `GetTotalISP()` | Get combined specific impulse |
+| `GetTotalFuelFlow()` | Get combined fuel flow rate |
 | `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it |
 | `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
@@ -1515,7 +1515,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 | `ComputeEventValue(StateVector localState)` | Continuous g-function; zero-crossing triggers the maneuver. State is maneuver-center-relative. |
 | `EventCrossingDirection` | Which zero-crossing direction triggers this maneuver (`NegativeToPositive`, `PositiveToNegative`, `Any`) |
 | `CheckPreconditions(StateVector state)` | Optional additional constraints (default: true). Override for maneuvers with extra conditions. |
-| `ComputeDeltaV(StateVector stateVector)` | The delta-V at the state, about its observer and in its frame, without executing the maneuver: pure (decision 50 of #668) |
+| `ComputeDeltaV(StateVector stateVector)` | The delta-V at the state, in its frame, without executing the maneuver: the state taken about the maneuver's centre, as the execution takes it; pure (decision 50 of #668) |
 | `DeltaV` | Computed delta-V vector (set after execution) |
 
 #### Attitude maneuvers

@@ -342,10 +342,13 @@ release are listed under **Known limitations**.
 - **`ImpulseManeuver.ComputeDeltaV(StateVector)` and `Attitude.ComputeStateOrientation(StateVector)`** (lot L5a, R08 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 50, decided by S. Guillet, 2026-11-23; [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): the previews of an impulse and of an attitude law, pure:
   they touch no tank, chain, window, gate or node lock, so they are the same before and after a run. Each takes the
-  state about its own observer (the centre a maneuver is given comes with lot L5b); `ComputeDeltaV` returns the delta-V
-  in the frame of the state, `ComputeStateOrientation` the rotation from the spacecraft frame to ICRF, the state rotated
-  to ICRF first. At the same state they equal the execution a run makes, bit for bit (`ManeuverPreviewTests`: the seven
-  library impulses, ECLIPJ2000, a state about the Moon; the attitude record at an activation, 0 rad, both integrators).
+  state about the centre of the maneuver, as the execution takes it, whatever the observer of the state (an SSB-mode
+  solution's states are about the Sun), or about its own observer for a maneuver without a centre; `ComputeDeltaV`
+  returns the delta-V in the frame of the state, `ComputeStateOrientation` the rotation from the spacecraft frame to
+  ICRF, the state rotated to ICRF after its change of centre. At the same state they equal the execution a run makes,
+  bit for bit (`ManeuverPreviewTests`: the seven library impulses, ECLIPJ2000, states about the Sun and the Moon of an
+  orbit about the Earth, the delta-V of the orbit given about the Earth to 2.7e-12 m/s of 229.24 m/s and the attitude
+  to 0 rad; the attitude record at an activation, 0 rad, both integrators).
 - **`PropagationSolution.Maneuvers` and `ExecutedManeuver`** (lot L5a, R09 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 57, decided by S. Guillet,
   2026-11-23): one sealed record per maneuver the run executed, attitudes included, in execution order: `Definition`,
   `Epoch` (the TDB label of the event of an impulse, or the activation of an attitude), the unclipped `ThrustWindow`,
@@ -4579,13 +4582,6 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   accepted where it threw), or replace an output state through a cast; `Integrator.UpdateStateVector` let a subclass
   rewrite any state in place. They are internal and the collections read-only views, allocated once (under
   **Changed**; `RunResultsSurfaceTests`).
-- **`Spacecraft.GetTotalISP()` was NaN when no engine had fuel at the start** ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801), lot L5a, decision 60 of #668):
-  the engines of a tank whose initial quantity was not above 0 (an initial quantity of NaN, which the tank accepted
-  until lot L5b) were left out, so a spacecraft with none left had 0 / 0, and so the fuel cost of an avoidance option and
-  its trial mass; every engine now counts (`RunResultsSurfaceTests.GetTotalISP_IsFinite_WhenNoEngineHasFuel`, red
-  before the change). A tank of a positive quantity, the only one the constructor accepted otherwise, was never left
-  out, so no other value moves. The avoidance trial spacecraft lighter than its dry mass, which an empty tank makes
-  routine, is the second part of #801, fixed after lot L5 (under **Known limitations**).
 - **A list of executed maneuvers or a scenario summary held by a caller changed with the next run** (lot L5a,
   decisions 58 and 59 of #668): `Spacecraft.ExecutedManeuvers` was a live set the next run emptied (measured 1 to 0 in
   the gap analysis of L5), and `SpacecraftSummary.Maneuvers` held the definitions, whose `DeltaV`, `FuelBurned` and
@@ -7177,11 +7173,6 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ScenarioSummary.SpacecraftSummaries` is an `IReadOnlyList<SpacecraftSummary>` in scenario order (an
   `IReadOnlyCollection` of a set before). Migration: `summary.Maneuvers[i].Definition` for the maneuver, and the record's
   own `DeltaV`, `FuelBurned` and windows for the values of the run; index `SpacecraftSummaries`.
-- **Breaking: `Spacecraft.GetTotalISP()` and `GetTotalFuelFlow()` count every engine** (lot L5a, R09 of #668, decision
-  60, decided by S. Guillet, 2026-11-23, [#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801)): before, the engines of a tank whose initial quantity was not above 0
-  were left out. On a spacecraft that mixes an empty tank (lot L5b) and a full one the mean takes in the engines that
-  cannot fire (engines of 300 s at 10 kg/s and 200 s at 30 kg/s: 225 s, where the filter gave 300 s), so the fuel cost
-  of an avoidance option rises with it. Migration: none; a tank of a positive quantity was never left out.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

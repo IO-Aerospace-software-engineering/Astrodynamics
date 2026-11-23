@@ -12,7 +12,9 @@ namespace IO.Astrodynamics.Maneuver
     {
         public CelestialItem ManeuverCenter { get; }
         /// <summary>
-        /// Gets or sets the ThrustWindow instance.
+        /// The thrust window of the last run that executed this maneuver: the last run's value, cleared by the re-arm of the
+        /// next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); null before any run, and after the re-arm until
+        /// the run executes it. The stable value of a run is its record, <see cref="Propagator.ExecutedManeuver.ThrustWindow"/>.
         /// For an <see cref="ImpulseManeuver"/>, this is the window of the equivalent constant-thrust burn: it lasts the burn
         /// duration dt given by the rocket equation, and the impulse epoch t is the centroid of its acceleration,
         /// <c>[t - f dt, t + (1 - f) dt]</c> with f = 1/x + 1/ln(1 - x) for the mass fraction burned x (1/2 for a small burn,
@@ -30,7 +32,10 @@ namespace IO.Astrodynamics.Maneuver
         public Window? ThrustWindow { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the ManeuverWindow object that represents the window for controlling maneuvering tasks.
+        /// The maneuver window of the last run that executed this maneuver: the last run's value, cleared by the re-arm of
+        /// the next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); null before any run, and after the re-arm
+        /// until the run executes it. The stable value of a run is its record,
+        /// <see cref="Propagator.ExecutedManeuver.ManeuverWindow"/>.
         /// For an <see cref="ImpulseManeuver"/>, from the start of <see cref="ThrustWindow"/> to the later of the end of its
         /// hold and the end of the thrust window; for an <see cref="Attitude"/>, from its activation to the end of its hold.
         /// Its end is the gate of the next maneuver of the chain. In a propagation about the Earth, its hold counts TT
@@ -103,6 +108,9 @@ namespace IO.Astrodynamics.Maneuver
         /// throwing <see cref="ArgumentOutOfRangeException"/> (R11 and decision 11 of lot L4 of #668, the setter
         /// <c>private protected</c> by decision 16, decided by S. Guillet, 2026-11-22: before 11.0.0 a protected setter
         /// accepted it, and the window it gave the maneuver mid-propagation ended before it started).
+        /// A <see cref="PhasingManeuver"/> takes no hold: a run that executes it sets its hold to 0.9 N T₂, the last run's
+        /// value, which the re-arm of the next run restores to 0 (decision 51 of #668, decided by S. Guillet, 2026-11-23,
+        /// #784).
         /// </remarks>
         public TimeSpan ManeuverHoldDuration
         {
@@ -160,7 +168,10 @@ namespace IO.Astrodynamics.Maneuver
 
 
         /// <summary>
-        /// Gets or sets the amount of fuel burned.
+        /// The fuel the last run that executed this maneuver burned for it, kg: the last run's value, cleared by the re-arm of
+        /// the next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); 0 before any run, and after the re-arm until
+        /// the run executes it, and 0 for an <see cref="Attitude"/>. The stable value of a run is its record,
+        /// <see cref="Propagator.ExecutedManeuver.FuelBurned"/>.
         /// </summary>
         public double FuelBurned { get; internal set; }
 
@@ -187,6 +198,17 @@ namespace IO.Astrodynamics.Maneuver
             GivenMinimumEpoch = minimumEpoch;
             ManeuverHoldDuration = maneuverHoldDuration;
             Engine = engine ?? throw new ArgumentNullException(nameof(engine));
+        }
+
+        /// <summary>
+        /// The state a preview reads (<see cref="ImpulseManeuver.ComputeDeltaV"/>, <see cref="Attitude.ComputeStateOrientation"/>):
+        /// <paramref name="stateVector"/> about <see cref="ManeuverCenter"/>, as the execution takes it, in its own frame,
+        /// or about its own observer when the maneuver has no centre (decision 50 of #668, decided by S. Guillet,
+        /// 2026-11-23: the given centre, or the state's observer, never the last run's).
+        /// </summary>
+        private protected StateVector PreviewState(StateVector stateVector)
+        {
+            return ManeuverCenter is null ? stateVector : stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
         }
 
         /// <summary>

@@ -583,24 +583,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of their thrusts over g0 and over
-        /// the sum of their fuel flows (<see cref="GetTotalFuelFlow"/>), every engine counted whatever its tank holds
-        /// (decision 60 of #668, decided by S. Guillet, 2026-11-23, #801: before 11.0.0 the engines of a tank with no fuel at
-        /// the start were left out, so a spacecraft whose tanks were all empty had 0 / 0, NaN). On a spacecraft that mixes
-        /// an empty tank and a full one the mean takes in the engines that cannot fire. NaN without an engine.
+        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of the thrusts of the engines
+        /// whose tank holds fuel at the start of a run (an initial quantity above 0) over g0 and over their fuel flows
+        /// (<see cref="GetTotalFuelFlow"/>). Every engine counts from lot L5b, once the tanks refuse a non-finite quantity
+        /// (decision 60 of #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23; #801).
         /// </summary>
         public double GetTotalISP()
         {
-            return (Engines.Sum(x => x.Thrust) / Constants.g0) / GetTotalFuelFlow();
+            return (Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.Thrust) / Constants.g0) /
+                   GetTotalFuelFlow();
         }
 
         /// <summary>
-        /// The sum of the fuel flows of the engines of the spacecraft, kg/s, every engine counted whatever its tank holds
-        /// (decision 60 of #668, #801).
+        /// The sum of the fuel flows of the engines of the spacecraft whose tank holds fuel at the start of a run, kg/s; every
+        /// engine from lot L5b (decision 60 of #668, #801).
         /// </summary>
         public double GetTotalFuelFlow()
         {
-            return Engines.Sum(x => x.FuelFlow);
+            return Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.FuelFlow);
         }
 
         /// <summary>

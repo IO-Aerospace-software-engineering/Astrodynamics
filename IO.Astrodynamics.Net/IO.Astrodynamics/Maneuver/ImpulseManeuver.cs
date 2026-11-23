@@ -95,21 +95,23 @@ namespace IO.Astrodynamics.Maneuver
         /// The delta-V of the impulse at <paramref name="stateVector"/>: what the maneuver adds to its velocity, without
         /// executing it (decision 50 of #668, decided by S. Guillet, 2026-11-23).
         /// </summary>
-        /// <param name="stateVector">The state at the impulse, taken about its own observer, as the centre of the maneuver,
-        /// never the centre a run used.</param>
+        /// <param name="stateVector">The state at the impulse, in any frame and about any observer: it is taken about the
+        /// centre of the maneuver (<see cref="Maneuver.ManeuverCenter"/>), as the execution takes it, or about its own
+        /// observer when the maneuver has no centre, never about the centre of a run.</param>
         /// <returns>The delta-V, in the frame of <paramref name="stateVector"/>.</returns>
         /// <remarks>
         /// Pure: it touches no tank, chain, window, gate or node lock, so it is the same before and after a run. Before
         /// 11.0.0 the preview was the public <c>TryExecute</c>, which burnt the fuel, set the windows and moved the
         /// standby chain of a finished run (#802). At the state of its event in a run, it is the delta-V the run applies
-        /// (<see cref="DeltaV"/>): a <see cref="PlaneAlignmentManeuver"/> takes the node of the rule of
-        /// <see cref="ComputeEventValue"/> at the state, which is the node the run locked at its crossing.
+        /// (<see cref="DeltaV"/>), whatever the observer of the state (an SSB-mode solution's states are about the Sun): a
+        /// <see cref="PlaneAlignmentManeuver"/> takes the node of the rule of <see cref="ComputeEventValue"/> at the state,
+        /// which is the node the run locked at its crossing.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
         public Vector3 ComputeDeltaV(StateVector stateVector)
         {
             ArgumentNullException.ThrowIfNull(stateVector);
-            return Execute(stateVector);
+            return Execute(PreviewState(stateVector));
         }
 
         /// <summary>
