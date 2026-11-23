@@ -1,10 +1,5 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator.MonteCarlo;
@@ -32,26 +27,18 @@ public sealed record MonteCarloConfiguration
     public required Window Window { get; init; }
 
     /// <summary>
-    /// Factory that produces a fresh set of celestial bodies for each run.
-    /// A factory is required because SPICE-backed objects are not thread-safe and each
-    /// parallel propagation needs its own instances.
+    /// The settings of every run (R06 of #668); null for <see cref="PropagationOptions.Default"/>, RK7(8) at 1e-9 every
+    /// 60 s about the template's central body alone. Each run builds its own integrator, forces and geopotential field,
+    /// so the runs share their bodies (<see cref="PropagationOptions.ThirdBodies"/> and the template's central body), a
+    /// geopotential included; each run starts from its sampled state about the template's observer.
     /// </summary>
-    public required Func<IEnumerable<CelestialItem>> CelestialBodiesFactory { get; init; }
-
-    /// <summary>Whether to include atmospheric drag in the force model.</summary>
-    public bool IncludeAtmosphericDrag { get; init; }
-
-    /// <summary>Whether to include solar radiation pressure in the force model.</summary>
-    public bool IncludeSolarRadiationPressure { get; init; }
-
-    /// <summary>Output time step for the propagation dense output.</summary>
-    public required TimeSpan DeltaT { get; init; }
-
-    /// <summary>
-    /// Optional factory that creates an integrator for each run. When <c>null</c>, the
-    /// default integrator is used.
-    /// </summary>
-    public Func<Integrator> IntegratorFactory { get; init; }
+    /// <remarks>The members of the flags configuration of 10.x (<c>CelestialBodiesFactory</c>,
+    /// <c>IncludeAtmosphericDrag</c>, <c>IncludeSolarRadiationPressure</c>, <c>DeltaT</c>, <c>IntegratorFactory</c>)
+    /// were removed in 11.0.0 (R07 of #668): their settings are those of this property, a configuration without an
+    /// integrator factory <see cref="Integrators.VVIntegratorOptions"/> at its <c>DeltaT</c>, the bodies of the factory
+    /// given once in <see cref="PropagationOptions.ThirdBodies"/> (a geopotential central body as the template's
+    /// observer, or in <see cref="PropagationOptions.Geopotential"/>).</remarks>
+    public PropagationOptions Propagation { get; init; }
 
     /// <summary>
     /// Base NAIF ID for generated spacecraft. Run <c>i</c> gets ID <c>BaseNaifId - i</c>, which must stay in
@@ -61,8 +48,9 @@ public sealed record MonteCarloConfiguration
     public int BaseNaifId { get; init; } = -100_000;
 
     /// <summary>
-    /// Optional batch propagation options (parallelism, error handling).
-    /// When <c>null</c>, defaults from <see cref="BatchPropagator"/> are used.
+    /// Optional batch propagation options (the parallelism of the runs); null for <see cref="Propagator.BatchOptions.Default"/>.
+    /// The token and the progress of a campaign are parameters of <see cref="MonteCarloPropagator.Propagate(MonteCarloConfiguration, System.IProgress{BatchProgress}, System.Threading.CancellationToken)"/>
+    /// since 11.0.0 (R28 of #668).
     /// </summary>
     public BatchOptions BatchOptions { get; init; }
 }

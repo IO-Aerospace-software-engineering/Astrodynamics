@@ -97,7 +97,7 @@ public class KernelPathLengthTests : IDisposable
                 break;
             case NativeWriter.StarEphemeris:
                 var star = new Star(673, "star673", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, Start), 0.1, 0.1, 0, 0, 0, 0, Start);
-                star.PropagateAsync(window, TimeSpan.FromMinutes(20.0)).GetAwaiter().GetResult();
+                star.Propagate(window, TimeSpan.FromMinutes(20.0));
                 star.WriteEphemeris(file);
                 break;
             case NativeWriter.SpacecraftOrientation:

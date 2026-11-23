@@ -11,6 +11,8 @@ using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Body
@@ -102,7 +104,7 @@ namespace IO.Astrodynamics.Tests.Body
             scenario.AddSpacecraft(spacecraft);
 
             //Execute scenario
-            await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+            scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
             // The reference: SPICE gftfov on the kernels that the library writes from the same propagation, the SPK of
             // the spacecraft, its clock, frame and orientation, and the frame and the kernel of the instrument; written

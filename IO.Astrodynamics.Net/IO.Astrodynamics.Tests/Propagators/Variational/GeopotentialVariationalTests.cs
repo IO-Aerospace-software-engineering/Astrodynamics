@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Body;
@@ -40,7 +41,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     public void EnableVariationalEquations_DegreeBelowTwo_Throws(int degree)
     {
         // Arrange
-        using var propagator = Propagator(_bodies.Earths[10], new RK78Integrator());
+        var propagator = Propagator(_bodies.Earths[10]);
 
         // Act
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -56,8 +57,8 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     {
         // Arrange
         var earth = _bodies.Earths[GeopotentialGravitationalField.MaxPartialsDegree + 10];
-        var integrator = new RK78Integrator();
-        using var propagator = Propagator(earth, integrator);
+        var propagator = Propagator(earth);
+        var integrator = (RK78Integrator)propagator.Integrator;
 
         // Act and assert: the failure comes before the propagation, and leaves the forces as they were
         var exception = Assert.Throws<NotSupportedException>(() =>
@@ -73,11 +74,11 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     public void EnableVariationalEquations_GivesTheDegreeToTheGravityForce_AndIgnoresItWithoutGeopotential()
     {
         // Arrange
-        var withGeopotential = new RK78Integrator();
-        var pointMass = new RK78Integrator();
         var pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        using var first = Propagator(_bodies.Earths[10], withGeopotential);
-        using var second = Propagator(pointMassEarth, pointMass);
+        var first = Propagator(_bodies.Earths[10]);
+        var second = Propagator(pointMassEarth);
+        var withGeopotential = (RK78Integrator)first.Integrator;
+        var pointMass = (RK78Integrator)second.Integrator;
 
         // Act
         first.EnableVariationalEquations(new VariationalOptions(GeopotentialPartialsDegree: 4));
@@ -160,14 +161,13 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
             { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
         var start = Leo(earth);
         var window = new TimeSystem.Window(Start, Start.AddHours(6.0));
-        var solution = PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(window, bodies,
-            new RK78Integrator(1e-13, 1e-13), false, false, TimeSpan.FromSeconds(600.0), new VariationalOptions());
+        var solution = PartialsTestCases.Spacecraft(start).PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = bodies },
+            new VariationalOptions());
         var epochs = Enumerable.Range(1, 6).Select(h => Start.AddHours(h)).ToArray();
 
         // Act
-        var expected = WholePropagationDifferences.Phi(state => new CentralBodyPropagator(window,
-                PartialsTestCases.Spacecraft(state), new RK78Integrator(1e-14, 1e-14), bodies, false, false,
-                TimeSpan.FromSeconds(600.0)).Propagate(), start, 10.0, 1e-2, epochs);
+        var expected = WholePropagationDifferences.Phi(state => new CentralBodyPropagator(window, PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-14, RelativeTolerance = 1e-14 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }).Propagate(), start, 10.0, 1e-2, epochs);
         var errors = epochs.Select((t, k) =>
             StmMeasures.BlockErrors(StmMeasures.Phi(StmMeasures.Y(solution, t)), expected[k])).ToArray();
 
@@ -185,12 +185,11 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
 
     private static StateVector Leo(CelestialBody earth) => PartialsTestCases.State(PartialsTestCases.Leo400, earth);
 
-    private CentralBodyPropagator Propagator(CelestialBody earth, RK78Integrator integrator)
+    // RK7(8) at its defaults, the integrator of the propagator read back by the tests
+    private CentralBodyPropagator Propagator(CelestialBody earth)
     {
         var state = Leo(earth);
-        return new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)),
-            PartialsTestCases.Spacecraft(state), integrator, new CelestialItem[] { earth }, false, false,
-            TimeSpan.FromSeconds(60.0));
+        return new CentralBodyPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)), PartialsTestCases.Spacecraft(state), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
     }
 
     private static GravitationalAcceleration Gravity(RK78Integrator integrator) =>
@@ -201,16 +200,16 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     {
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
-        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
-            new CelestialItem[] { earth, moon, sun }, new RK78Integrator(tolerance, tolerance), false, false,
-            TimeSpan.FromSeconds(600.0), options);
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariational(new TimeSystem.Window(Start, end),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { earth, moon, sun } },
+            options);
     }
 
     private static PropagationSolution PropagateFixedStep(CelestialBody earth, StateVector start, TimeSystem.Time end,
         VariationalOptions options)
     {
-        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
-            new CelestialItem[] { earth }, new RK78Integrator(30.0), false, false, TimeSpan.FromSeconds(60.0),
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariational(new TimeSystem.Window(Start, end),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth } },
             options);
     }
 }

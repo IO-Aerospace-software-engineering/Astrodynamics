@@ -5,6 +5,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -153,10 +154,8 @@ public class SolarRadiationPressureTests
         var (earth, spacecraft, state) = SunlitLeo();
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, SunlitEpoch);
         var sun = new CelestialBody(Stars.Sun);
-        var integrator = new RK78Integrator(1e-10, 1e-10);
-        _ = new CentralBodyPropagator(new Window(SunlitEpoch, SunlitEpoch.AddHours(1.0)), spacecraft, integrator,
-            new CelestialItem[] { earth, moon, sun }, false, true, TimeSpan.FromSeconds(60.0));
-        var built = integrator.Forces.OfType<SolarRadiationPressure>().Single();
+        var propagator = new CentralBodyPropagator(new Window(SunlitEpoch, SunlitEpoch.AddHours(1.0)), spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth, moon, sun }, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
+        var built = ((Integrator)propagator.Integrator).Forces.OfType<SolarRadiationPressure>().Single();
         var expected = new SolarRadiationPressure(spacecraft, [earth, moon]);
 
         // Act
@@ -179,9 +178,7 @@ public class SolarRadiationPressureTests
             var (earth, spacecraft, _) = SunlitLeo();
             var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, SunlitEpoch);
             var sun = new CelestialBody(Stars.Sun);
-            var solution = spacecraft.Propagate(new Window(SunlitEpoch, SunlitEpoch.AddHours(3.0)),
-                new CelestialItem[] { earth, moon, sun }, new RK78Integrator(1e-11, 1e-11), false,
-                includeSolarRadiationPressure, TimeSpan.FromSeconds(60.0));
+            var solution = spacecraft.Propagate(new Window(SunlitEpoch, SunlitEpoch.AddHours(3.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth, moon, sun }, SolarRadiationPressure = includeSolarRadiationPressure, CovariancePropagation = CovariancePropagationOptions.None });
             return solution.StateVectors.Last().Position;
         }
 

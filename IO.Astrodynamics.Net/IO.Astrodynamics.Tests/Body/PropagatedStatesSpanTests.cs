@@ -8,6 +8,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -62,8 +63,8 @@ public class PropagatedStatesSpanTests
         var icrf = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var initial = frame == "ICRF" ? icrf : icrf.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
         var spacecraft = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536), initial);
-        Integrator integratorInstance = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-        spacecraft.Propagate(new Window(S, S.AddHours(2.0)), [earth], integratorInstance, false, false, Output);
+        IntegratorOptions integratorInstance = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+        spacecraft.Propagate(new Window(S, S.AddHours(2.0)), new PropagationOptions { Integrator = integratorInstance, OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         return spacecraft;
     }
 
@@ -273,8 +274,8 @@ public class PropagatedStatesSpanTests
         var window = new Window(S, S.AddHours(1.0));
         foreach (var spacecraft in new[] { observer, target })
         {
-            Integrator integratorInstance = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-            spacecraft.Propagate(window, [earth], integratorInstance, false, false, Output);
+            IntegratorOptions integratorInstance = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+            spacecraft.Propagate(window, new PropagationOptions { Integrator = integratorInstance, OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         }
 
         return (observer, target, earth);

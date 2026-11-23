@@ -81,7 +81,23 @@ internal static class TlePage
         var sgp4 = tle.ToStateVector(start);
         var spacecraft = new Spacecraft(-1001, "ISS", 420000.0, 450000.0, new Clock("iss", 65536),
             new StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frame.TEME), 1600.0, 2.2);
-        spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, true, TimeSpan.FromSeconds(60.0));
+        spacecraft.Propagate(window, new PropagationOptions { AtmosphericDrag = true, SolarRadiationPressure = true });
+        #endregion
+    }
+
+    // docs/reference/tle.md, "Numerical propagation of a TLE", the options
+    internal static void Block03(Window window, TLE tle)
+    {
+        #region docs/reference/tle.md:3
+        // Inputs: window (Window), tle (TLE)
+        var spacecraft = new Spacecraft(-1002, "ISS", 420000.0, 450000.0, new Clock("iss2", 65536), tle, 1600.0, 2.2);
+        spacecraft.Propagate(window, PropagationOptions.Default with
+        {
+            Geopotential = GeopotentialModelParameters.Egm2008(10),
+            Atmosphere = new Nrlmsise00Model(SpaceWeather.Nominal),
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true
+        });
         #endregion
     }
 }

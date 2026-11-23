@@ -4,11 +4,13 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.Tests.SSA;
 
@@ -47,7 +49,7 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         var watch = Stopwatch.StartNew();
         foreach (var craft in new[] { protectedCraft, secondaryCraft })
         {
-            craft.Propagate(r2.Window, r2.Bodies, new RK78Integrator(1e-11, 1e-11), true, false, TimeSpan.FromSeconds(60.0), null);
+            craft.Propagate(r2.Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = r2.Bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
         }
 
         double propagation = watch.Elapsed.TotalMilliseconds / 2.0;
@@ -56,7 +58,7 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
 
         // Act: the analysis without the propagated covariance, with the replay only, and with the index
         double held = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
-            new ConjunctionAnalysisOptions { CovariancePropagation = null }));
+            new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None }));
         double replay = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window));
         double withIndex = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = true }), 3);
@@ -99,13 +101,13 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
         var protectedCraft = ReferenceCase.NewSpacecraft(rk78 ? -6811 : -6812, ConjunctionCovarianceCase.WithRtnCovariance(r2.InitialState, sigma));
         if (rk78)
-            protectedCraft.Propagate(propagation, r2.Bodies, new RK78Integrator(1e-11, 1e-11), true, false, TimeSpan.FromSeconds(60.0), null);
+            protectedCraft.Propagate(propagation, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = r2.Bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
         else
-            protectedCraft.Propagate(propagation, r2.Bodies, true, false, TimeSpan.FromSeconds(1.0));
+            protectedCraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = r2.Bodies, AtmosphericDrag = true });
         var secondaryCraft = ReferenceCase.NewSpacecraft(rk78 ? -6813 : -6814, AvoidanceFallbackCase.SecondaryNear(
             protectedCraft.GetEphemeris(tca, r2.InitialState.Observer, r2.InitialState.Frame, Aberration.None)));
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            new TimeSystem.Window(start, start.AddHours(7.0)), new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            new TimeSystem.Window(start, start.AddHours(7.0)), new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act: the default grid (lead times 1 h, 3 h and 6 h; 0.05, 0.10 and 0.25 m/s; six directions)
         var watch = Stopwatch.StartNew();

@@ -65,6 +65,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <!-- EGM2008 to degree 70, tide free, the model of GeopotentialModelParameters.Egm2008 (R06 of #668) -->
+      <EmbeddedResource Include="Physics\Models\EGM2008_to70_TideFree" LogicalName="IO.Astrodynamics.Physics.Models.EGM2008_to70_TideFree" />
       <EmbeddedResource Include="Templates\InstrumentFrameTemplate.tf" />
       <EmbeddedResource Include="Templates\InstrumentKernelCircularTemplate.ti" />
       <EmbeddedResource Include="Templates\InstrumentKernelEllipticalTemplate.ti" />

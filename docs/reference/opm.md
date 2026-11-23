@@ -207,7 +207,7 @@ format the spacecraft at `epoch`, the epoch of its initial orbital parameters by
 maneuvers at that instant ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided
 by S. Guillet, 2026-11-17).
 
-- A spacecraft that holds propagated states (after `Propagate`, `Scenario.SimulateAsync`, the builder, a
+- A spacecraft that holds propagated states (after `Propagate`, `Scenario.Simulate`, a
   `CentralBodyPropagator` built directly, or `AddPropagatedStates`) writes the state read from them,
   `GetEphemeris(epoch, observer, frame, Aberration.None)` with the observer and the frame of its initial orbital
   parameters (TEME for a TLE), with the mass and the impulses ignited by then: its mass after the propagation plus the

@@ -26,7 +26,7 @@ Ground-based observation or tracking site.
 | Method | Description |
 |--------|-------------|
 | `GetHorizontalCoordinates(Time, ILocalizable, Aberration)` | Get azimuth, elevation, range |
-| `GetEphemeris(Time, ILocalizable)` | Get site state relative to observer in ICRF without correction, bit for bit the read with `Frame.ICRF` and `Aberration.None`; `GetEphemeris(Window, ILocalizable, TimeSpan)` over a window (11.0.0, R20 of #668) |
+| `GetEphemeris(Time, ILocalizable)` | Get site state relative to observer in ICRF without correction, bit for bit the read with `Frame.ICRF` and `Aberration.None`; `GetEphemeris(Window, ILocalizable, TimeSpan)` over a window (11.0.0, R20 of #668), its step above zero or `ArgumentOutOfRangeException` (`stepSize`; R11 of #668) |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer, a `StateVector` (11.0.0): a site of the kernels seen from a body, a barycenter or a kernel spacecraft by `spkezr_c`; a site given by its coordinates corrected as `spkcpt_c` corrects it, the site itself at t ∓ lt ([Light time of a site](#light-time-of-a-site)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |

@@ -11,6 +11,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -305,7 +306,7 @@ public class AttitudeTimelineEdgeTests
     /// after it, B, C, E2, F3, L: indices {0, 2}); <c>ToOpm</c> writes the impulses, their ignition the opening of their
     /// thrust window and their mass the fuel of the rocket equation; the summary of a scenario merges their windows and sums
     /// their fuel. Against the chain and the rules, never a recorded value. Both integrators, <c>Spacecraft.Propagate</c> and
-    /// <c>Scenario.SimulateAsync</c>.
+    /// <c>Scenario.Simulate</c>.
     /// </summary>
     [Theory]
     [InlineData("E2|RK|Propagate|ICRF|10")]
@@ -386,8 +387,8 @@ public class AttitudeTimelineEdgeTests
         var lvlh = TriadAttitude.CreateLVLH(earth, S, TimeSpan.Zero, engine);
         impulse.SetNextManeuver(lvlh);
         spacecraft.SetStandbyManeuver(impulse);
-        Integrator propagator = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-        var solution = spacecraft.Propagate(new Window(S, S.AddHours(2.0)), [earth], propagator, false, false, TimeSpan.FromSeconds(10.0));
+        IntegratorOptions propagator = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+        var solution = spacecraft.Propagate(new Window(S, S.AddHours(2.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var tc = solution.Segments[1].BaseEpoch;
         double dt = TimelineRules.BurnDuration(2000.0, impulse.DeltaV.Magnitude(), 300.0, 10.0);
         var end = TimelineRules.ManeuverEnd(tc, dt, TimelineRules.ThrustLead(impulse.DeltaV.Magnitude(), 300.0), 0.0, true);
@@ -479,8 +480,8 @@ public class AttitudeTimelineEdgeTests
         {
             var minimum = S.AddSeconds(300.0 + k * 1.3e-8 + 7e-8);
             var (spacecraft, prograde, nadir) = ProgradeThenNadir(earth, S, minimum, 0.0, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
-            Integrator propagator = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-            spacecraft.Propagate(new Window(S, S.AddSeconds(600.0)), [earth], propagator, false, false, TimeSpan.FromSeconds(10.0));
+            IntegratorOptions propagator = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+            spacecraft.Propagate(new Window(S, S.AddSeconds(600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
             // The epoch of its TT seconds from S, the nearest tick: the minimum epoch itself (#625)
             if (PropagationTimeArgument.Tt.EpochAt(S, PropagationTimeArgument.Tt.SecondsBetween(S, minimum)) != minimum) off++;
             LabelAssert.Equal(minimum, prograde.ThrustWindow!.Value.StartDate);
@@ -518,8 +519,8 @@ public class AttitudeTimelineEdgeTests
         double rp = centre == "Moon" ? MoonRadius + 100000.0 : 6778137.0;
         var orbit = new KeplerianElements((ra + rp) / 2.0, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, body, start, Frame.ICRF);
         var (spacecraft, prograde, nadir) = ProgradeThenNadir(body, start, minimum, 60.0, orbit);
-        Integrator propagator = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-        spacecraft.Propagate(new Window(start, start.AddSeconds(600.0)), [body], propagator, false, false, TimeSpan.FromSeconds(10.0));
+        IntegratorOptions propagator = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+        spacecraft.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [body], CovariancePropagation = CovariancePropagationOptions.None });
 
         var activation = prograde.ThrustWindow!.Value.StartDate;
         var end = prograde.ManeuverWindow!.Value.EndDate;

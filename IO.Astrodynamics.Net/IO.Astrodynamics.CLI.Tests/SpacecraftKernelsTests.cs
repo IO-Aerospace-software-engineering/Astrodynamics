@@ -12,6 +12,8 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using Frame = IO.Astrodynamics.Frames.Frame;
 
 namespace IO.Astrodynamics.CLI.Tests;
@@ -72,7 +74,12 @@ public class SpacecraftKernelsTests
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
         spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
-        spacecraft.Propagate(new Window(Start, End), [earth, sun, moon], false, false, TimeSpan.FromSeconds(10.0));
+        spacecraft.Propagate(new Window(Start, End), new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
+            OutputStep = TimeSpan.FromSeconds(10.0),
+            ThirdBodies = [earth, sun, moon]
+        });
 
         // A relative path out of Data, which the other tests load: the native writers take a bounded file name
         const string directory = "Cli542";

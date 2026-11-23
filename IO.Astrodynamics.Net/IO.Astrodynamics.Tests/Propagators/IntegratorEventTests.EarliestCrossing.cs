@@ -53,7 +53,7 @@ public partial class IntegratorEventTests
         var timed = new Detector { Direction = CrossingDirection.NegativeToPositive, G = s => (s.Epoch - timeRoot).TotalSeconds };
         foreach (bool timeFirst in new[] { true, false })
         {
-            var integrator = NewIntegrator(integratorName);
+            var integrator = NewIntegrator(integratorName).CreateIntegrator();
             integrator.AddForce(new GravitationalAcceleration(earth));
             integrator.Initialize(sv);
             IEventDetector[] detectors = timeFirst ? [timed, apsis] : [apsis, timed];

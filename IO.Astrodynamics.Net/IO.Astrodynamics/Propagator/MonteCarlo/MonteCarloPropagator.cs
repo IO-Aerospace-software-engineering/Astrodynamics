@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
@@ -21,16 +21,52 @@ public static class MonteCarloPropagator
     /// Executes a Monte Carlo propagation campaign synchronously.
     /// </summary>
     /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
+    /// <param name="cancellationToken">Stops the campaign (see
+    /// <see cref="Propagate(MonteCarloConfiguration, IProgress{BatchProgress}, CancellationToken)"/>).</param>
     /// <returns>Aggregated statistics across all successful runs.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than 2,
-    /// or <see cref="MonteCarloConfiguration.DeltaT"/> is not positive.</exception>
-    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than
+    /// 2.</exception>
+    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance, or,
+    /// before anything is sampled, when <see cref="MonteCarloConfiguration.Window"/> has zero length, naming <c>window</c>
+    /// (decisions 7 and 15 of lot L4 of #668).</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown, before any run is propagated, when the NAIF ID of a run,
     /// <see cref="MonteCarloConfiguration.BaseNaifId"/> − i, is not in [-2147483, -1] (#676).</exception>
-    public static MonteCarloResult Propagate(MonteCarloConfiguration config)
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public static MonteCarloResult Propagate(MonteCarloConfiguration config, CancellationToken cancellationToken = default)
+    {
+        return Propagate(config, progress: null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a Monte Carlo propagation campaign synchronously, reporting the number of completed runs after each one.
+    /// </summary>
+    /// <remarks>
+    /// Cancellation (R28 of #668): the token is read before anything is sampled, so that a token already cancelled
+    /// changes nothing, then by the batch of the runs, the running ones included (see
+    /// <see cref="BatchPropagator.Propagate(IReadOnlyList{PropagationTask}, IProgress{BatchProgress}, BatchOptions, CancellationToken)"/>).
+    /// A campaign stopped throws one <see cref="OperationCanceledException"/> carrying the token and returns no
+    /// statistics. It replaces <c>PropagateAsync</c> and the progress of <see cref="MonteCarloConfiguration.BatchOptions"/>,
+    /// removed in 11.0.0 (decision 4 of lot L4).
+    /// </remarks>
+    /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
+    /// <param name="progress">Receives the number of completed runs after each one, propagated or failed; null for none.</param>
+    /// <param name="cancellationToken">Stops the campaign, the running runs included.</param>
+    /// <returns>Aggregated statistics across all successful runs.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than
+    /// 2, or, before any run is propagated, when the NAIF ID of a run is not in [-2147483, -1] (#676).</exception>
+    /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance, or,
+    /// before anything is sampled, when <see cref="MonteCarloConfiguration.Window"/> has zero length, naming <c>window</c>
+    /// (decisions 7 and 15 of lot L4 of #668).</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public static MonteCarloResult Propagate(MonteCarloConfiguration config, IProgress<BatchProgress> progress,
+        CancellationToken cancellationToken = default)
     {
         Validate(config);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -40,7 +76,8 @@ public static class MonteCarloPropagator
 
         var perturbedStates = StateSampler.Sample(nominalSv, config.RunCount, config.Seed);
 
-        var batchResult = PropagateRuns(config, nominalSv, perturbedStates, 0);
+        var batchResult = PropagateRuns(config, nominalSv, perturbedStates, 0, progress: progress,
+            cancellationToken: cancellationToken);
 
         var successful = batchResult.Results
             .Where(r => r.Succeeded)
@@ -73,25 +110,22 @@ public static class MonteCarloPropagator
 
     /// <summary>
     /// Propagates the runs <paramref name="firstRun"/> to <paramref name="firstRun"/> + n − 1 of a campaign, from their
-    /// initial states, each with a clone of the template spacecraft (NAIF ID <c>BaseNaifId − run</c>) and a fresh set of
-    /// celestial bodies; the coefficients, when given, replace the drag and reflectivity coefficients of the template,
-    /// run by run. The runs of <see cref="Propagate"/>, exposed internally so that the validation of the propagated
+    /// initial states, each with a clone of the template spacecraft (NAIF ID <c>BaseNaifId − run</c>) and the settings of
+    /// <see cref="MonteCarloConfiguration.Propagation"/>; the coefficients, when given, replace the drag and reflectivity coefficients of the template,
+    /// run by run. The runs of <see cref="Propagate(MonteCarloConfiguration, IProgress{BatchProgress}, CancellationToken)"/>, exposed internally so that the validation of the propagated
     /// covariance can read the state of every run at any epoch, in batches.
     /// </summary>
     internal static BatchResult PropagateRuns(MonteCarloConfiguration config, StateVector nominal,
         IReadOnlyList<StateVector> initialStates, int firstRun,
-        IReadOnlyList<(double DragCoefficient, double ReflectivityCoefficient)> coefficients = null)
+        IReadOnlyList<(double DragCoefficient, double ReflectivityCoefficient)> coefficients = null,
+        IProgress<BatchProgress> progress = null, CancellationToken cancellationToken = default)
     {
         var template = config.TemplateSpacecraft;
         var tasks = new PropagationTask[initialStates.Count];
         for (int k = 0; k < initialStates.Count; k++)
         {
             int i = firstRun + k;
-            var bodies = config.CelestialBodiesFactory();
-            var bodiesList = bodies as IList<CelestialItem> ?? bodies.ToList();
-
-            // Find matching observer by NAIF ID in factory output
-            var runObserver = bodiesList.FirstOrDefault(b => b.NaifId == nominal.Observer.NaifId) ?? nominal.Observer;
+            var runObserver = nominal.Observer;
 
             var runState = new StateVector(
                 initialStates[k].Position,
@@ -113,28 +147,10 @@ public static class MonteCarloPropagator
                 coefficients?[k].DragCoefficient ?? template.DragCoefficient,
                 solarRadiationCoeff: coefficients?[k].ReflectivityCoefficient ?? template.SolarRadiationCoeff);
 
-            tasks[k] = new PropagationTask(
-                sc,
-                config.Window,
-                bodiesList,
-                config.IncludeAtmosphericDrag,
-                config.IncludeSolarRadiationPressure,
-                config.DeltaT,
-                config.IntegratorFactory);
+            tasks[k] = new PropagationTask(sc, config.Window, config.Propagation);
         }
 
-        return BatchPropagator.Propagate(tasks, config.BatchOptions);
-    }
-
-    /// <summary>
-    /// Executes a Monte Carlo propagation campaign asynchronously on a thread-pool thread.
-    /// </summary>
-    /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
-    /// <returns>A task that completes with the aggregated statistics across all successful runs, or faults with the
-    /// exceptions of <see cref="Propagate"/>, a NAIF ID of a run out of [-2147483, -1] included (#676).</returns>
-    public static Task<MonteCarloResult> PropagateAsync(MonteCarloConfiguration config)
-    {
-        return Task.Run(() => Propagate(config));
+        return BatchPropagator.Propagate(tasks, progress, config.BatchOptions, cancellationToken);
     }
 
     private static void Validate(MonteCarloConfiguration config)
@@ -143,8 +159,9 @@ public static class MonteCarloPropagator
         if (config.RunCount < 2)
             throw new ArgumentOutOfRangeException(nameof(config.RunCount), "RunCount must be at least 2.");
         ArgumentNullException.ThrowIfNull(config.TemplateSpacecraft);
-        ArgumentNullException.ThrowIfNull(config.CelestialBodiesFactory);
-        // Before any run: through the batch, a bad step would fail every run without an exception (#674)
-        PropagatorBase.RequirePositiveStep(config.DeltaT, nameof(config.DeltaT));
+
+        // A window of zero length throws at the start of the call, as on every propagation path (decisions 7 and 15 of
+        // lot L4 of #668): before, each run failed inside the batch and the campaign returned no statistics and no reason
+        PropagatorBase.RequireWindowLength(config.Window);
     }
 }

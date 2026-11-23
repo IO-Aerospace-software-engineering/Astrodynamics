@@ -58,7 +58,9 @@ public class PropagationTypesSmokeTests
     [Fact]
     public void PropagationAndAnalysisTypes_AreAccessible()
     {
-        Assert.NotNull(typeof(CentralBodyPropagatorBuilder));
+        Assert.NotNull(typeof(PropagationOptions));
+        Assert.NotNull(typeof(RK78IntegratorOptions));
+        Assert.NotNull(typeof(VVIntegratorOptions));
         Assert.NotNull(typeof(BatchPropagator));
         Assert.NotNull(typeof(MonteCarloPropagator));
         Assert.NotNull(typeof(ConjunctionAssessment));

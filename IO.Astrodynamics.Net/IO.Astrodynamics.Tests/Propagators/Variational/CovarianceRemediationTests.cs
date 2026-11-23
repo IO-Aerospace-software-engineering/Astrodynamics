@@ -112,30 +112,26 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
         const string reason = "positive semi-definite; the smallest eigenvalue of its correlation matrix";
 
         // Act, assert: Spacecraft.Propagate, both CentralBodyPropagator constructors, the builder, a batch task and
-        // Scenario.SimulateAsync reject it; the propagator does not remediate it (#405)
-        var exception = Assert.Throws<InvalidOperationException>(() => NewSpacecraft(-4051, state).Propagate(Window, Bodies,
-            new RK78Integrator(), false, false, Step, Covariance));
+        // Scenario.Simulate reject it; the propagator does not remediate it (#405)
+        var exception = Assert.Throws<InvalidOperationException>(() => NewSpacecraft(-4051, state).Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance }));
         Assert.Contains(reason, exception.Message);
-        exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window,
-            NewSpacecraft(-4052, state), new RK78Integrator(), Bodies, false, false, Step, Covariance));
+        exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window, NewSpacecraft(-4052, state), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance }));
         Assert.Contains(reason, exception.Message);
         exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window,
             NewSpacecraft(-4053, state), new RK78Integrator(), Step, Covariance));
         Assert.Contains(reason, exception.Message);
-        exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagatorBuilder(Window,
-            NewSpacecraft(-4054, state), new RK78Integrator(), Step).WithCovariancePropagation(Covariance).Build());
+        exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window, NewSpacecraft(-4054, state), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, CovariancePropagation = Covariance }));
         Assert.Contains(reason, exception.Message);
         var batch = BatchPropagator.Propagate(new[]
         {
-            new PropagationTask(NewSpacecraft(-4055, state), Window, Bodies, false, false, Step, () => new RK78Integrator())
-                { CovariancePropagation = Covariance }
+            new PropagationTask(NewSpacecraft(-4055, state), Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance })
         });
         Assert.IsType<InvalidOperationException>(batch.Results[0].Error);
         Assert.Contains(reason, batch.Results[0].Error.Message);
         var scenario = new Scenario("remediation", new Astrodynamics.Mission.Mission("remediation"), Window);
         scenario.AddSpacecraft(NewSpacecraft(-4056, state));
         exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            scenario.SimulateAsync(false, false, Step, () => new RK78Integrator(), Covariance));
+            Task.FromResult(scenario.Simulate(new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, CovariancePropagation = Covariance })));
         Assert.Contains(reason, exception.Message);
     }
 
@@ -282,8 +278,7 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
         var remediated = Indefinite.WithRemediatedCovariance().State;
         var reference = WithCovariance(Indefinite, ConjunctionCovarianceEdgeTests.ClipCorrelation(Indefinite.Covariance.Value));
         var end = Window.EndDate;
-        var expected = NewSpacecraft(-4060, reference).Propagate(Window, Bodies, new RK78Integrator(), false, false, Step,
-            Covariance).GetCovariance(end);
+        var expected = NewSpacecraft(-4060, reference).Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance }).GetCovariance(end);
         // An integrator that already has its forces, initialized by its user
         RK78Integrator WithGravity(StateVector start)
         {
@@ -299,16 +294,13 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
         // Act: every explicit propagation of the covariance
         var covariances = new[]
         {
-            NewSpacecraft(-4062, remediated).Propagate(Window, Bodies, new RK78Integrator(), false, false, Step, Covariance)
+            NewSpacecraft(-4062, remediated).Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance })
                 .GetCovariance(end),
-            new CentralBodyPropagator(Window, NewSpacecraft(-4063, remediated), new RK78Integrator(), Bodies, false, false,
-                Step, Covariance).Propagate().GetCovariance(end),
-            new CentralBodyPropagatorBuilder(Window, NewSpacecraft(-4064, remediated), new RK78Integrator(), Step)
-                .WithPerturbingBodies(Bodies).WithCovariancePropagation(Covariance).Build().Propagate().GetCovariance(end),
+            new CentralBodyPropagator(Window, NewSpacecraft(-4063, remediated), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance }).Propagate().GetCovariance(end),
+            new CentralBodyPropagator(Window, NewSpacecraft(-4064, remediated), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance }).Propagate().GetCovariance(end),
             BatchPropagator.Propagate(new[]
             {
-                new PropagationTask(NewSpacecraft(-4065, remediated), Window, Bodies, false, false, Step,
-                    () => new RK78Integrator()) { CovariancePropagation = Covariance }
+                new PropagationTask(NewSpacecraft(-4065, remediated), Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = Covariance })
             }).Results[0].Solution.GetCovariance(end)
         };
         var withItsForces = new CentralBodyPropagator(Window, NewSpacecraft(-4066, remediated), WithGravity(remediated), Step,
@@ -316,9 +308,8 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
         var scenario = new Scenario("remediated", new Astrodynamics.Mission.Mission("remediated"), Window);
         var spacecraft = NewSpacecraft(-4067, remediated);
         scenario.AddSpacecraft(spacecraft);
-        await scenario.SimulateAsync(false, false, Step, () => new RK78Integrator(), Covariance);
-        var stateTransitionOnly = NewSpacecraft(-4068, remediated).Propagate(Window, Bodies, new RK78Integrator(), false,
-            false, Step, new CovariancePropagationOptions());
+        scenario.Simulate(new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, CovariancePropagation = Covariance });
+        var stateTransitionOnly = NewSpacecraft(-4068, remediated).Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = new CovariancePropagationOptions() });
 
         // Assert: P at the end of the window from the remediated P0, as from the independent clipping
         foreach (var covariance in covariances)

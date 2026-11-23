@@ -331,7 +331,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         _twoBody.Propagate(protectedCraft);
         _twoBody.Propagate(secondaryCraft);
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            AvoidanceWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            AvoidanceWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         var options = new AvoidanceSearchOptions
             { LeadTimes = new[] { TimeSpan.FromHours(1.0) }, DeltaVMagnitudesMetersPerSecond = new[] { 0.1 } };
 

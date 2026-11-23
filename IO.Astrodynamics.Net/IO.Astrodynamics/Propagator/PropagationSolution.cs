@@ -159,6 +159,36 @@ public sealed class PropagationSolution
     public CovariancePropagationOptions CovariancePropagation { get; internal set; }
 
     /// <summary>
+    /// The resolved settings of a propagation built from <see cref="PropagationOptions"/> (R06 of #668, D1 rule 10), with
+    /// no null left where a value applies: the integrator, the output step, the third bodies of the run (the central body
+    /// aside), the forces, the geopotential of the central body (null for a point mass), the atmosphere of its drag (its
+    /// model, NRLMSISE-00 at nominal space weather for an Earth without one, or null for a body without one;
+    /// <see cref="Body.CelestialBody.Atmosphere"/>), and the covariance options it ran with
+    /// (<see cref="CovariancePropagationOptions.None"/> when it propagated none). Passed back to the same entry point,
+    /// they repeat the run. Null for a propagation built otherwise (the constructors that take an integrator, the
+    /// builder, <see cref="TLEPropagator"/>).
+    /// </summary>
+    public PropagationOptions Options { get; internal set; }
+
+    /// <summary>Why the propagation did not propagate the covariance, for the message of <see cref="GetCovariance"/>.</summary>
+    internal string CovarianceAbsence { get; set; }
+
+    // The InvalidOperationException of a covariance read on a solution that holds none, saying why (R06 of #668)
+    private void RequireCovariance()
+    {
+        if (Dynamics?.Covariance == null)
+        {
+            throw new InvalidOperationException(
+                "The solution holds no covariance: the propagation did not propagate the covariance, " +
+                (CovarianceAbsence != null
+                    ? "because " + CovarianceAbsence
+                    : "which needs the RK7(8) integrator, CovariancePropagationOptions in Covariance mode (or, through " +
+                      "PropagationOptions, Auto) and a covariance on the initial orbital parameters at the start of the " +
+                      "window."));
+        }
+    }
+
+    /// <summary>
     /// The force parameters of the columns of the sensitivity Ψ (<see cref="GetParameterSensitivity"/>), in their order:
     /// Cd with atmospheric drag, then Cr with a radiation force. Empty when the propagation did not integrate the
     /// variational equations, or has none of these forces.
@@ -199,9 +229,8 @@ public sealed class PropagationSolution
     /// <para>
     /// For an RK7(8) propagation, the state is computed by a shortened RK7(8) step from the start of the accepted step
     /// that contains the epoch, so it has the accuracy of the integrator; at a step boundary, the stored state is
-    /// returned. Inside a step this costs 13 evaluations of the forces, which run under a lock of the solution: like the
-    /// propagation itself, it must not run concurrently with another propagation or solution that shares a
-    /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> with a geopotential.
+    /// returned. Inside a step this costs 13 evaluations of the forces, which run under the lock of the forces of the
+    /// propagator, one per instance, shared by the solutions of all its runs and held by each run (#782).
     /// </para>
     /// <para>
     /// For another integrator, the state is the cubic Hermite interpolation of the accepted step
@@ -235,9 +264,8 @@ public sealed class PropagationSolution
     /// <para>
     /// Inside an integration step, the value comes from a shortened RK7(8) step from the start of that step, at the
     /// accuracy of the integrator; at a step boundary, the stored value. At a maneuver, the value after it: the maneuver is
-    /// open loop, so Φ is continuous there. The evaluation runs under the lock of the solution; it evaluates the forces,
-    /// so it must not run concurrently with a propagation or an evaluation sharing a
-    /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> with a geopotential.
+    /// open loop, so Φ is continuous there. The evaluation evaluates the forces under the lock of the forces of the
+    /// propagator, one per instance, shared by the solutions of all its runs and held by each run (#782).
     /// </para>
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
@@ -312,6 +340,8 @@ public sealed class PropagationSolution
     /// (<see cref="CovariancePropagationMode.Covariance"/>).</exception>
     public Matrix GetCovariance(Time epoch)
     {
+        CheckWithin(epoch);
+        RequireCovariance();
         var covariance = new double[VariationalEquations.StateDimension * VariationalEquations.StateDimension];
         EvaluateCovariance(epoch, covariance);
         return new Matrix(VariationalEquations.StateDimension, VariationalEquations.StateDimension, covariance);
@@ -334,6 +364,7 @@ public sealed class PropagationSolution
     public Matrix GetExtendedCovariance(Time epoch)
     {
         CheckWithin(epoch);
+        RequireCovariance();
         var model = Dynamics?.Covariance;
         if (model != null && model.ConsiderCount == 0)
             throw new InvalidOperationException(

@@ -18,6 +18,7 @@ using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
+using System.Threading.Tasks;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Propagators;
@@ -67,7 +68,7 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// the burn, within #577's bounds; the number of burns too: the first impulse the rules reach without a burn has its
 /// closed-form apsis past the end of the window (less those bounds), every impulse of the SSB rows fires.
 /// <c>ExecutedManeuvers</c> (#570) against the activations of the rules, the fuel against
-/// the rocket equation. The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: its reference is the
+/// the rocket equation. The Velocity-Verlet path of <c>Scenario.Simulate</c> keeps no solution: its reference is the
 /// solution of a twin propagated by <c>Spacecraft.Propagate</c>, whose stored states equal the scenario's to the bit.
 /// </para>
 /// <para>
@@ -138,7 +139,6 @@ public class AttitudeTimelineTests
         foreach (var letter in new[] { "B", "C" })
         {
             rows.Add($"{letter}|VV1|Default|ICRF|1");
-            rows.Add($"{letter}|VV1|Async|ICRF|1");
             rows.Add($"{letter}|RK|PropagateCov|ICRF|10");
             rows.Add($"{letter}|RK|PropagateCovStep|ICRF|10");
             rows.Add($"{letter}|VV1|Scenario|ICRF|10");
@@ -150,8 +150,6 @@ public class AttitudeTimelineTests
             rows.Add($"{letter}|RK|Batch|ICRF|10");
             rows.Add($"{letter}|RK|BatchCov|ICRF|10");
             rows.Add($"{letter}|RK|BatchCovStep|ICRF|10");
-            rows.Add($"{letter}|VV1|Builder|ICRF|10");
-            rows.Add($"{letter}|RK|Builder|ICRF|10");
             rows.Add($"{letter}|VV1|Direct|ICRF|10");
             rows.Add($"{letter}|RK|Direct|ICRF|10");
         }
@@ -313,31 +311,27 @@ public class AttitudeTimelineTests
             var given = chain.Select(x => x.MinimumEpoch).ToArray();
             var window = new Window(S, S.AddSeconds(hours * 3600.0));
             var step = TimeSpan.FromSeconds(output);
-            Integrator NewIntegrator() => integrator switch
+            IntegratorOptions NewIntegrator() => integrator switch
             {
-                "VV1" => new VVIntegrator(TimeSpan.FromSeconds(1.0)),
-                "RKf60" => new RK78Integrator(60.0),
-                _ => ssb ? new RK78Integrator(AttitudeRecordTests.SsbRk78Tolerance, AttitudeRecordTests.SsbRk78Tolerance) : new RK78Integrator(1e-12, 1e-12)
+                "VV1" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+                "RKf60" => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(60.0) },
+                _ => ssb ? new RK78IntegratorOptions { AbsoluteTolerance = AttitudeRecordTests.SsbRk78Tolerance, RelativeTolerance = AttitudeRecordTests.SsbRk78Tolerance } : new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }
             };
-            var options = covariance ? new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = path.EndsWith("Step") } : null;
+            var options = covariance ? new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = path.EndsWith("Step") } : CovariancePropagationOptions.None;
 
             PropagationSolution solution;
             switch (path)
             {
                 case "Propagate":
-                    solution = spacecraft.Propagate(window, bodies, NewIntegrator(), false, false, step);
+                    solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                     break;
                 case "Default":
                     Assert.Equal("VV1", integrator);
-                    solution = spacecraft.Propagate(window, bodies, false, false, step);
-                    break;
-                case "Async":
-                    Assert.Equal("VV1", integrator);
-                    solution = spacecraft.PropagateAsync(window, bodies, false, false, step).GetAwaiter().GetResult();
+                    solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies });
                     break;
                 case "PropagateCov":
                 case "PropagateCovStep":
-                    solution = spacecraft.Propagate(window, bodies, NewIntegrator(), false, false, step, options);
+                    solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = options ?? CovariancePropagationOptions.None });
                     break;
                 case "Scenario":
                 case "ScenarioDefault":
@@ -347,13 +341,12 @@ public class AttitudeTimelineTests
                     var scenario = new Scenario($"STL{-naifId}", new IO.Astrodynamics.Mission.Mission($"mTL{-naifId}"), window);
                     foreach (var body in bodies) scenario.AddCelestialItem(body);
                     scenario.AddSpacecraft(spacecraft);
-                    var simulation = path switch
+                    scenario.Simulate(path switch
                     {
-                        "ScenarioDefault" => scenario.SimulateAsync(false, false, step),
-                        "Scenario" => scenario.SimulateAsync(false, false, step, NewIntegrator),
-                        _ => scenario.SimulateAsync(false, false, step, NewIntegrator, options)
-                    };
-                    simulation.GetAwaiter().GetResult();
+                        "ScenarioDefault" => new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step },
+                        "Scenario" => new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, CovariancePropagation = CovariancePropagationOptions.None },
+                        _ => new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, CovariancePropagation = options ?? CovariancePropagationOptions.None }
+                    });
                     solution = spacecraft.LastPropagation;
                     break;
                 }
@@ -361,22 +354,15 @@ public class AttitudeTimelineTests
                 case "BatchCov":
                 case "BatchCovStep":
                 {
-                    var task = new PropagationTask(spacecraft, window, bodies, false, false, step, NewIntegrator) { CovariancePropagation = options };
+                    var task = new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = options ?? CovariancePropagationOptions.None });
                     var result = BatchPropagator.Propagate([task]).Results[0];
                     Assert.Null(result.Error);
                     solution = result.Solution;
                     break;
                 }
-                case "Builder":
-                {
-                    // A first run only: the builder never resets the spacecraft (#583)
-                    using var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, NewIntegrator(), step).WithPerturbingBodies(bodies).Build();
-                    solution = propagator.Propagate();
-                    break;
-                }
                 case "Direct":
                 {
-                    using var propagator = new CentralBodyPropagator(window, spacecraft, NewIntegrator(), bodies, false, false, step);
+                    var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                     solution = propagator.Propagate();
                     break;
                 }
@@ -389,7 +375,7 @@ public class AttitudeTimelineTests
                 // The scenario's Velocity-Verlet path keeps no solution: a twin through Spacecraft.Propagate, whose stored
                 // states are the scenario's to the bit
                 var (twin, _, _, _) = Build(naifId - 100000, letter, orbit, center);
-                solution = twin.Propagate(window, bodies, NewIntegrator(), false, false, step);
+                solution = twin.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                 Assert.Equal(twin.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Scale, x.Position, x.Velocity)), spacecraft.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Scale, x.Position, x.Velocity)));
             }
 

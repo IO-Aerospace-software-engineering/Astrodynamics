@@ -86,10 +86,8 @@ public class MarsDragTests
         var bodies = new CelestialItem[] { body };
 
         // Act
-        var withDrag = NewSpacecraft(Circular(body, altitude), -4221).Propagate(window, bodies, true, false,
-            TimeSpan.FromSeconds(1.0)).StateVectors.Last();
-        var withoutDrag = NewSpacecraft(Circular(body, altitude), -4222).Propagate(window, bodies, false, false,
-            TimeSpan.FromSeconds(1.0)).StateVectors.Last();
+        var withDrag = NewSpacecraft(Circular(body, altitude), -4221).Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = bodies, AtmosphericDrag = true }).StateVectors.Last();
+        var withoutDrag = NewSpacecraft(Circular(body, altitude), -4222).Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = bodies }).StateVectors.Last();
 
         // Assert
         double decay = withDrag.SemiMajorAxis() - withoutDrag.SemiMajorAxis();
@@ -99,7 +97,7 @@ public class MarsDragTests
 
     public static TheoryData<string> Paths => new()
     {
-        "Velocity-Verlet", "RK7(8)", "RK7(8), state transition matrix", "RK7(8), IncludeInStepControl", "builder",
+        "Velocity-Verlet", "RK7(8)", "RK7(8), state transition matrix", "RK7(8), IncludeInStepControl", "constructor",
         "scenario"
     };
 
@@ -119,19 +117,13 @@ public class MarsDragTests
         // Act: the same path without drag as the reference
         StateVector Final(Spacecraft s, bool drag) => path switch
         {
-            "Velocity-Verlet" => s.Propagate(window, bodies, drag, false, step).StateVectors.Last(),
-            "RK7(8)" => s.Propagate(window, bodies, new RK78Integrator(1e-12, 1e-12), drag, false, window.Length)
+            "Velocity-Verlet" => s.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies, AtmosphericDrag = drag }).StateVectors.Last(),
+            "RK7(8)" => s.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = window.Length, ThirdBodies = bodies, AtmosphericDrag = drag, CovariancePropagation = CovariancePropagationOptions.None })
                 .GetStateVector(window.EndDate),
-            "RK7(8), state transition matrix" => s.Propagate(window, bodies, new RK78Integrator(1e-12, 1e-12), drag,
-                false, window.Length, options).GetStateVector(window.EndDate),
-            "RK7(8), IncludeInStepControl" => s.Propagate(window, bodies, new RK78Integrator(1e-12, 1e-12), drag, false,
-                window.Length, options with { IncludeInStepControl = true }).GetStateVector(window.EndDate),
-            "builder" => (drag
-                    ? new CentralBodyPropagatorBuilder(window, s, new RK78Integrator(1e-12, 1e-12), window.Length)
-                        .WithPerturbingBodies(bodies).IncludeAtmosphericDrag()
-                    : new CentralBodyPropagatorBuilder(window, s, new RK78Integrator(1e-12, 1e-12), window.Length)
-                        .WithPerturbingBodies(bodies))
-                .Build().Propagate().GetStateVector(window.EndDate),
+            "RK7(8), state transition matrix" => s.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = window.Length, ThirdBodies = bodies, AtmosphericDrag = drag, CovariancePropagation = options ?? CovariancePropagationOptions.None }).GetStateVector(window.EndDate),
+            "RK7(8), IncludeInStepControl" => s.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = window.Length, ThirdBodies = bodies, AtmosphericDrag = drag, CovariancePropagation = options with { IncludeInStepControl = true } }).GetStateVector(window.EndDate),
+            "constructor" => new CentralBodyPropagator(window, s, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = window.Length, ThirdBodies = bodies, AtmosphericDrag = drag, CovariancePropagation = CovariancePropagationOptions.None })
+                .Propagate().GetStateVector(window.EndDate),
             _ => null
         };
 
@@ -161,7 +153,7 @@ public class MarsDragTests
             window);
         scenario.AddCelestialItem(body);
         scenario.AddSpacecraft(spacecraft);
-        await scenario.SimulateAsync(drag, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), AtmosphericDrag = drag });
         return spacecraft.GetEphemeris(window.EndDate, body, Frames.Frame.ICRF, Aberration.None);
     }
 
@@ -189,8 +181,7 @@ public class MarsDragTests
         var options = new CovariancePropagationOptions { IncludeInStepControl = true };
 
         // Act
-        var solution = spacecraft.Propagate(window, new CelestialItem[] { body },
-            new RK78Integrator(tolerance, tolerance), true, false, window.Length, options);
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
 
         // Assert: the trajectory crosses the base of the layer, and the propagation reaches the end of its window
         var drag = new AtmosphericDrag(spacecraft, body);

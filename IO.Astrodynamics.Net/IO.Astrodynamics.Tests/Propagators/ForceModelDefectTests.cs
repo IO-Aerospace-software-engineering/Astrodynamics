@@ -59,7 +59,8 @@ public class ForceModelDefectTests
 
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static RK78Integrator NewRk78() => new(1e-10, 1e-10);
+    private static IntegratorOptions NewRk78() =>
+        new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 };
 
     // r = 6700 km, A = 10 m², m = 100 kg, Cd 2.2: drag of a few hundred metres per hour about the Earth
     private static Spacecraft NewSpacecraft(ILocalizable observer, Frames.Frame frame = null)
@@ -121,8 +122,8 @@ public class ForceModelDefectTests
 
     public static readonly string[] AllPaths =
     {
-        "RK78 constructor", "RK78 covariance constructor", "VV constructor", "VV default constructor", "builder",
-        "Propagate", "Propagate RK78", "Propagate RK78 covariance", "PropagateAsync", "Scenario", "Scenario RK78",
+        "RK78 constructor", "RK78 covariance constructor", "VV constructor",
+        "Propagate", "Propagate RK78", "Propagate RK78 covariance", "Scenario", "Scenario RK78",
         "Scenario RK78 covariance", "Batch", "Batch RK78"
     };
 
@@ -146,49 +147,30 @@ public class ForceModelDefectTests
         {
             case "RK78 constructor":
             {
-                using var p = new CentralBodyPropagator(w, spacecraft, NewRk78(), bodies, drag, srp, dt);
+                var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
                 p.Propagate();
                 break;
             }
             case "RK78 covariance constructor":
             {
-                using var p = new CentralBodyPropagator(w, spacecraft, NewRk78(), bodies, drag, srp, dt, Stm);
+                var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = Stm });
                 p.Propagate();
                 break;
             }
             case "VV constructor":
             {
-                using var p = new CentralBodyPropagator(w, spacecraft, new VVIntegrator(dt), bodies, drag, srp, dt);
-                p.Propagate();
-                break;
-            }
-            case "VV default constructor":
-            {
-                using var p = new CentralBodyPropagator(w, spacecraft, bodies, drag, srp, dt);
-                p.Propagate();
-                break;
-            }
-            case "builder":
-            {
-                var builder = new CentralBodyPropagatorBuilder(w, spacecraft, NewRk78(), dt)
-                    .WithPerturbingBodies(bodies ?? Array.Empty<CelestialItem>());
-                if (drag) builder.IncludeAtmosphericDrag();
-                if (srp) builder.IncludeSolarRadiationPressure();
-                using var p = builder.Build();
+                var p = new CentralBodyPropagator(w, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = dt }, OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp });
                 p.Propagate();
                 break;
             }
             case "Propagate":
-                spacecraft.Propagate(w, bodies, drag, srp, dt);
+                spacecraft.Propagate(w, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = dt }, OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp });
                 break;
             case "Propagate RK78":
-                spacecraft.Propagate(w, bodies, NewRk78(), drag, srp, dt);
+                spacecraft.Propagate(w, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None });
                 break;
             case "Propagate RK78 covariance":
-                spacecraft.Propagate(w, bodies, NewRk78(), drag, srp, dt, Stm);
-                break;
-            case "PropagateAsync":
-                spacecraft.PropagateAsync(w, bodies, drag, srp, dt).GetAwaiter().GetResult();
+                spacecraft.Propagate(w, new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = Stm });
                 break;
             case "Scenario":
             case "Scenario RK78":
@@ -197,13 +179,12 @@ public class ForceModelDefectTests
                 var scenario = new Scenario("FM", new MissionOf("FM"), w);
                 scenario.AddSpacecraft(spacecraft);
                 foreach (var body in bodies ?? Array.Empty<CelestialItem>()) scenario.AddCelestialItem(body);
-                var task = path switch
+                scenario.Simulate(path switch
                 {
-                    "Scenario" => scenario.SimulateAsync(drag, srp, dt),
-                    "Scenario RK78" => scenario.SimulateAsync(drag, srp, dt, NewRk78),
-                    _ => scenario.SimulateAsync(drag, srp, dt, NewRk78, Stm)
-                };
-                task.GetAwaiter().GetResult();
+                    "Scenario" => new PropagationOptions { Integrator = new VVIntegratorOptions { Step = dt }, OutputStep = dt, AtmosphericDrag = drag, SolarRadiationPressure = srp },
+                    "Scenario RK78" => new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None },
+                    _ => new PropagationOptions { Integrator = NewRk78(), OutputStep = dt, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = Stm }
+                });
                 break;
             }
             case "Batch":
@@ -211,7 +192,7 @@ public class ForceModelDefectTests
             {
                 var result = BatchPropagator.Propagate(new[]
                 {
-                    new PropagationTask(spacecraft, w, bodies, drag, srp, dt, path == "Batch" ? null : NewRk78)
+                    new PropagationTask(spacecraft, w, new PropagationOptions { Integrator = path == "Batch" ? new VVIntegratorOptions { Step = dt } : NewRk78(), OutputStep = dt, ThirdBodies = bodies, AtmosphericDrag = drag, SolarRadiationPressure = srp, CovariancePropagation = CovariancePropagationOptions.None })
                 });
                 if (!result.Results[0].Succeeded) throw result.Results[0].Error;
                 break;
@@ -289,12 +270,10 @@ public class ForceModelDefectTests
         var expected = serial.Select(sc => Run("Propagate RK78", sc, bodies, true, false)).ToArray();
         var watch = Stopwatch.StartNew();
         var result = BatchPropagator.Propagate(parallel
-            .Select(sc => new PropagationTask(sc, OneHour, bodies, true, false, Step, NewRk78)).ToArray(), options);
+            .Select(sc => new PropagationTask(sc, OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None })).ToArray(), options);
         double defaultMs = watch.Elapsed.TotalMilliseconds;
         watch.Restart();
-        var reference = BatchPropagator.Propagate(configured.Select((sc, i) => new PropagationTask(sc, OneHour,
-            new CelestialItem[] { ownModels[i], Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, true, false, Step,
-            NewRk78)).ToArray(), options);
+        var reference = BatchPropagator.Propagate(configured.Select((sc, i) => new PropagationTask(sc, OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = new CelestialItem[] { ownModels[i], Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None })).ToArray(), options);
         double ownMs = watch.Elapsed.TotalMilliseconds;
 
         // Assert
@@ -311,7 +290,7 @@ public class ForceModelDefectTests
 
     public static TheoryData<string> MoonPaths() => new()
     {
-        "Propagate", "Propagate RK78", "VV default constructor", "RK78 constructor", "builder", "Scenario RK78"
+        "Propagate", "Propagate RK78", "VV constructor", "RK78 constructor", "Scenario RK78"
     };
 
     [Theory]
@@ -320,7 +299,7 @@ public class ForceModelDefectTests
     {
         // Arrange: a Moon-centred spacecraft propagated once, without drag
         var spacecraft = NewMoonSpacecraft();
-        spacecraft.Propagate(OneHour, new CelestialItem[] { PlanetsAndMoons.MOON_BODY }, false, false, Step);
+        spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY } });
         var before = spacecraft.PropagatedStates;
         int maneuvers = spacecraft.ExecutedManeuvers.Count;
         var atmosphericEarth = EarthWith(new EarthStandardAtmosphere());
@@ -344,7 +323,7 @@ public class ForceModelDefectTests
 
     public static TheoryData<string> ListedEarthPaths() => new()
     {
-        "Propagate", "Propagate RK78", "VV default constructor", "RK78 constructor", "builder", "Scenario",
+        "Propagate", "Propagate RK78", "VV constructor", "RK78 constructor", "Scenario",
         "Scenario RK78", "Batch", "Batch RK78"
     };
 
@@ -446,8 +425,7 @@ public class ForceModelDefectTests
         var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
 
         // Act
-        var solution = spacecraft.Propagate(OneHour, new CelestialItem[] { PlanetsAndMoons.EARTH_BODY }, NewRk78(), true,
-            false, Step, Stm);
+        var solution = spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY }, AtmosphericDrag = true, CovariancePropagation = Stm });
 
         // Assert: the keyword names the model the force used (CCSDS 508.0-B-1, ATMOSPHERIC_MODEL)
         Assert.Equal("NRLMSISE-00", CdmForceModel.From(solution.Dynamics).AtmosphericModel);
@@ -499,7 +477,7 @@ public class ForceModelDefectTests
     public static TheoryData<string, string, string, string> UnlistedCases()
     {
         var data = new TheoryData<string, string, string, string>();
-        foreach (var path in new[] { "RK78 constructor", "VV default constructor", "Propagate", "Propagate RK78", "Batch", "Scenario" })
+        foreach (var path in new[] { "RK78 constructor", "VV constructor", "Propagate", "Propagate RK78", "Batch", "Scenario" })
         {
             foreach (var forces in new[] { "drag+SRP", "SRP", "none" })
             {
@@ -508,13 +486,13 @@ public class ForceModelDefectTests
         }
 
         data.Add("RK78 constructor", "drag+SRP", "ECLIPJ2000", "Sun, Moon");
-        data.Add("VV default constructor", "drag+SRP", "ECLIPJ2000", "Sun, Moon");
+        data.Add("VV constructor", "drag+SRP", "ECLIPJ2000", "Sun, Moon");
         data.Add("RK78 constructor", "drag+SRP", "ICRF", "empty");
-        data.Add("VV default constructor", "drag+SRP", "ICRF", "empty");
+        data.Add("VV constructor", "drag+SRP", "ICRF", "empty");
         data.Add("RK78 constructor", "none", "ICRF", "null");
         data.Add("Propagate", "drag+SRP", "ICRF", "null");
         data.Add("Propagate", "drag+SRP", "SSB", "Earth, Moon");
-        data.Add("VV default constructor", "SRP", "SSB", "Earth, Moon");
+        data.Add("VV constructor", "SRP", "SSB", "Earth, Moon");
         data.Add("Batch", "none", "SSB", "Earth, Moon");
         return data;
     }
@@ -553,12 +531,10 @@ public class ForceModelDefectTests
     public static TheoryData<string, string> TwinCases()
     {
         var data = new TheoryData<string, string>();
-        foreach (var path in new[] { "RK78 constructor", "builder", "Propagate", "Propagate RK78", "Batch", "Scenario RK78" })
+        foreach (var path in new[] { "RK78 constructor", "Propagate", "Propagate RK78", "Batch", "Scenario RK78" })
         {
             foreach (var twin in new[] { "geopotential", "NRLMSISE-00", "space weather", "switch", "GM", "two listed" })
             {
-                // The builder rejects a second body of one NAIF identifier when it is given (WithPerturbingBody)
-                if (path == "builder" && twin == "two listed") continue;
                 data.Add(path, twin);
             }
         }
@@ -572,7 +548,7 @@ public class ForceModelDefectTests
     {
         // Arrange: the orbit on EARTH_BODY, propagated once; a listed Earth with another model
         var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
-        spacecraft.Propagate(OneHour, new CelestialItem[] { PlanetsAndMoons.EARTH_BODY }, false, false, Step);
+        spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY } });
         var before = spacecraft.PropagatedStates;
         var flags = NrlmsiseFlags.CreateStandard();
         flags.Switches[9] = 0;
@@ -672,181 +648,27 @@ public class ForceModelDefectTests
 
     #endregion
 
-    #region #17 An integrator reused by a force-building path
+    #region #17 An integrator given its forces by the caller
 
-    public static TheoryData<string, string> ReuseCases()
-    {
-        var data = new TheoryData<string, string>();
-        foreach (var integrator in new[] { "RK78", "VV" })
-        {
-            foreach (var path in new[] { "Propagate", "constructor", "builder twice", "builder pre-loaded" })
-            {
-                data.Add(integrator, path);
-            }
-        }
-
-        data.Add("RK78", "Propagate covariance");
-        data.Add("RK78", "covariance constructor");
-        return data;
-    }
-
-    [Theory]
-    [MemberData(nameof(ReuseCases))]
-    public void ReusedIntegrator_Throws_OnEveryForceBuildingPath(string kind, string path)
-    {
-        // Arrange
-        Integrator NewIntegrator() => kind == "RK78" ? NewRk78() : new VVIntegrator(Step);
-        var bodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY };
-        var integrator = NewIntegrator();
-        var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
-        var fresh = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
-        CentralBodyPropagatorBuilder builder = null;
-
-        void Use(Integrator given, Spacecraft sc)
-        {
-            switch (path)
-            {
-                case "Propagate":
-                    sc.Propagate(OneHour, bodies, given, false, true, Step);
-                    break;
-                case "Propagate covariance":
-                    sc.Propagate(OneHour, bodies, given, false, true, Step, Stm);
-                    break;
-                case "constructor":
-                {
-                    using var p = new CentralBodyPropagator(OneHour, sc, given, bodies, false, true, Step);
-                    p.Propagate();
-                    break;
-                }
-                case "covariance constructor":
-                {
-                    using var p = new CentralBodyPropagator(OneHour, sc, given, bodies, false, true, Step, Stm);
-                    p.Propagate();
-                    break;
-                }
-                default:
-                {
-                    if (ReferenceEquals(given, integrator) && builder != null)
-                    {
-                        // The second Build of the same builder
-                        using var again = builder.Build();
-                        again.Propagate();
-                        break;
-                    }
-
-                    var b = new CentralBodyPropagatorBuilder(OneHour, sc, given, Step).WithPerturbingBody(Stars.SUN_BODY)
-                        .IncludeSolarRadiationPressure();
-                    if (ReferenceEquals(given, integrator)) builder = b;
-                    using var p = b.Build();
-                    p.Propagate();
-                    break;
-                }
-            }
-        }
-
-        // Act: a first use, and a run with a fresh instance
-        if (path == "builder pre-loaded")
-        {
-            integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
-            builder = new CentralBodyPropagatorBuilder(OneHour, spacecraft, integrator, Step);
-        }
-        else
-        {
-            Use(integrator, spacecraft);
-        }
-
-        Use(NewIntegrator(), fresh);
-        var firstStates = spacecraft.PropagatedStates;
-        int forces = integrator.Forces.Count;
-
-        // Assert: the second use throws, before anything changes
-        var exception = Assert.Throws<ArgumentException>(() => Use(integrator, spacecraft));
-        _output.WriteLine(exception.Message);
-        Assert.Equal("integrator", exception.ParamName);
-        Assert.Equal(forces, integrator.Forces.Count);
-        AssertSameStates(firstStates, spacecraft.PropagatedStates, "after the rejected use");
-        if (path != "builder pre-loaded")
-        {
-            AssertSameStates(fresh.PropagatedStates, spacecraft.PropagatedStates, "first use against a fresh instance");
-        }
-    }
-
-    [Fact]
-    public void SharedIntegratorFactory_InBatchAndMonteCarlo_OneRunOnly()
-    {
-        var bodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY };
-        var window = new Window(Epoch, Epoch.AddMinutes(30.0));
-        var reference = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
-        reference.Propagate(window, bodies, new VVIntegrator(Step), false, false, Step);
-        int referenceForces = 1;
-
-        for (int repetition = 0; repetition < 20; repetition++)
-        {
-            // Arrange: eight tasks whose factory returns one instance
-            var shared = new VVIntegrator(Step);
-            var spacecraft = Enumerable.Range(0, 8).Select(_ => NewSpacecraft(PlanetsAndMoons.EARTH_BODY)).ToArray();
-            var tasks = spacecraft.Select(sc => new PropagationTask(sc, window, bodies, false, false, Step, () => shared))
-                .ToArray();
-
-            // Act
-            var result = BatchPropagator.Propagate(tasks, new BatchOptions { MaxDegreeOfParallelism = 4 });
-
-            // Assert: one task runs, as with a fresh instance; the others are rejected
-            var succeeded = result.Results.Where(r => r.Succeeded).ToArray();
-            Assert.Single(succeeded);
-            AssertSameState(reference.PropagatedStates[^1], succeeded[0].Spacecraft.PropagatedStates[^1],
-                $"repetition {repetition}");
-            foreach (var failed in result.Results.Where(r => !r.Succeeded))
-            {
-                var error = Assert.IsType<ArgumentException>(failed.Error);
-                Assert.Equal("integrator", error.ParamName);
-            }
-
-            Assert.Equal(referenceForces, shared.Forces.Count);
-        }
-
-        // Monte Carlo: a factory returning one instance gives one run and RunCount − 1 failures
-        var covTerms = new double[6, 6];
-        for (int i = 0; i < 3; i++)
-        {
-            covTerms[i, i] = 100.0;
-            covTerms[i + 3, i + 3] = 0.01;
-        }
-        var cov = new Matrix(covTerms);
-
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        int id = NextId();
-        var template = new Spacecraft(id, $"FM{-id}", 100.0, 10000.0, new Clock($"fmclk{-id}", 256),
-            new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, System.Math.Sqrt(earth.GM / 6800000.0), 0), earth,
-                Epoch, Frames.Frame.ICRF, cov));
-        var single = new VVIntegrator(Step);
-        var campaign = MonteCarloPropagator.Propagate(new MonteCarloConfiguration
-        {
-            RunCount = 5, Seed = 42, TemplateSpacecraft = template, Window = window,
-            CelestialBodiesFactory = () => new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH) },
-            DeltaT = Step, IntegratorFactory = () => single
-        });
-        Assert.Equal(4, campaign.FailureCount);
-    }
+    // The force-building paths that took the caller's integrator were removed in 11.0.0 (R07 of #668): each options entry
+    // point builds a new integrator per run, so the reuse of #17 cannot happen; the constructor of an integrator that holds
+    // its forces is unaffected
 
     [Fact]
     public void UserBuiltForceList_IIntegratorConstructor_Unaffected()
     {
         // Arrange: an integrator given its forces by the caller, and the force-building constructor
         var earth = PlanetsAndMoons.EARTH_BODY;
-        var user = NewRk78();
+        var user = new RK78Integrator(1e-10, 1e-10);
         user.AddForce(new GravitationalAcceleration(earth));
         var userSpacecraft = NewSpacecraft(earth);
         var builtSpacecraft = NewSpacecraft(earth);
-        // The constructor without forces uses the integrator's forces as given and initializes it with its initial state;
-        // an Initialize by the caller before construction, as here, is replaced by it, with the same observer and frame
+        // The constructor without forces uses the integrator's forces as given and initializes it with its initial state,
+        // at construction and at the start of every run (#782): an Initialize by the caller, as here, has no effect
         user.Initialize((StateVector)userSpacecraft.InitialOrbitalParameters);
 
         // Act
-        using (var p = new CentralBodyPropagator(OneHour, userSpacecraft, user, Step))
-        {
-            p.Propagate();
-        }
+        new CentralBodyPropagator(OneHour, userSpacecraft, user, Step).Propagate();
 
         Run("RK78 constructor", builtSpacecraft, new CelestialItem[] { earth }, false, false);
 
@@ -864,10 +686,9 @@ public class ForceModelDefectTests
         var data = new TheoryData<string, long>();
         foreach (var entry in new[]
                  {
-                     "Propagate", "Propagate integrator", "Propagate covariance", "PropagateAsync", "constructor",
+                     "Propagate", "Propagate integrator", "Propagate covariance", "constructor",
                      "covariance constructor", "IIntegrator constructor", "IIntegrator covariance constructor",
-                     "VV default constructor", "builder", "Scenario", "Scenario factory", "Scenario covariance", "Batch",
-                     "Monte Carlo", "PropagatorBase"
+                     "Scenario", "Scenario factory", "Scenario covariance", "Batch", "Monte Carlo", "PropagatorBase"
                  })
         {
             foreach (long ticks in new[] { 0L, TimeSpan.FromSeconds(-60.0).Ticks, -1L })
@@ -888,16 +709,18 @@ public class ForceModelDefectTests
         var bodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY };
         var window = new Window(Epoch, Epoch.AddMinutes(30.0));
         var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
-        spacecraft.Propagate(window, bodies, false, false, Step);
+        spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies });
         var before = spacecraft.PropagatedStates;
-        var integrator = NewRk78();
+        var integratorOptions = NewRk78();
+        var integrator = new RK78Integrator(1e-10, 1e-10);
         var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, Epoch), 0.1, 0.1, 0, 0, 0, 0, Epoch);
+        // The options entry points refuse the step when their settings are built (R06 and R07 of #668): the Velocity-Verlet
+        // step first, then the output step
         string expectedName = entry switch
         {
-            "Propagate" or "Propagate integrator" or "Propagate covariance" or "PropagateAsync" or "Scenario"
-                or "Scenario factory" or "Scenario covariance" or "Batch" => "propagatorStepSize",
-            "Monte Carlo" => "DeltaT",
-            _ => "deltaT"
+            "Propagate" or "Scenario" or "Batch" => "Step",
+            "IIntegrator constructor" or "IIntegrator covariance constructor" or "PropagatorBase" => "deltaT",
+            _ => "OutputStep"
         };
 
         Scenario NewScenario()
@@ -913,22 +736,19 @@ public class ForceModelDefectTests
         {
             switch (entry)
             {
-                case "Propagate": spacecraft.Propagate(window, bodies, false, false, step); break;
-                case "Propagate integrator": spacecraft.Propagate(window, bodies, integrator, false, false, step); break;
-                case "Propagate covariance": spacecraft.Propagate(window, bodies, integrator, false, false, step, Stm); break;
-                case "PropagateAsync": _ = spacecraft.PropagateAsync(window, bodies, false, false, step); break;
-                case "constructor": new CentralBodyPropagator(window, spacecraft, integrator, bodies, false, false, step).Propagate(); break;
-                case "covariance constructor": new CentralBodyPropagator(window, spacecraft, integrator, bodies, false, false, step, Stm).Propagate(); break;
+                case "Propagate": spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies }); break;
+                case "Propagate integrator": spacecraft.Propagate(window, new PropagationOptions { Integrator = integratorOptions, OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }); break;
+                case "Propagate covariance": spacecraft.Propagate(window, new PropagationOptions { Integrator = integratorOptions, OutputStep = step, ThirdBodies = bodies, CovariancePropagation = Stm }); break;
+                case "constructor": new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = integratorOptions, OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }).Propagate(); break;
+                case "covariance constructor": new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = integratorOptions, OutputStep = step, ThirdBodies = bodies, CovariancePropagation = Stm }).Propagate(); break;
                 case "IIntegrator constructor": new CentralBodyPropagator(window, spacecraft, integrator, step).Propagate(); break;
                 case "IIntegrator covariance constructor": new CentralBodyPropagator(window, spacecraft, integrator, step, Stm).Propagate(); break;
-                case "VV default constructor": new CentralBodyPropagator(window, spacecraft, bodies, false, false, step).Propagate(); break;
-                case "builder": new CentralBodyPropagatorBuilder(window, spacecraft, integrator, step).Build().Propagate(); break;
-                case "Scenario": NewScenario().SimulateAsync(false, false, step).GetAwaiter().GetResult(); break;
-                case "Scenario factory": NewScenario().SimulateAsync(false, false, step, NewRk78).GetAwaiter().GetResult(); break;
-                case "Scenario covariance": NewScenario().SimulateAsync(false, false, step, NewRk78, Stm).GetAwaiter().GetResult(); break;
+                case "Scenario": NewScenario().Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step }); break;
+                case "Scenario factory": NewScenario().Simulate(new PropagationOptions { Integrator = NewRk78(), OutputStep = step, CovariancePropagation = CovariancePropagationOptions.None }); break;
+                case "Scenario covariance": NewScenario().Simulate(new PropagationOptions { Integrator = NewRk78(), OutputStep = step, CovariancePropagation = Stm }); break;
                 case "Batch":
                 {
-                    var result = BatchPropagator.Propagate(new[] { new PropagationTask(spacecraft, window, bodies, false, false, step) });
+                    var result = BatchPropagator.Propagate(new[] { new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies }) });
                     Assert.False(result.Results[0].Succeeded, "the task with a step <= 0 succeeded");
                     throw result.Results[0].Error;
                 }
@@ -945,7 +765,7 @@ public class ForceModelDefectTests
                     MonteCarloPropagator.Propagate(new MonteCarloConfiguration
                     {
                         RunCount = 3, Seed = 1, TemplateSpacecraft = withCovariance, Window = window,
-                        CelestialBodiesFactory = () => bodies, DeltaT = step
+                        Propagation = new PropagationOptions { Integrator = integratorOptions, OutputStep = step, ThirdBodies = bodies }
                     });
                     break;
                 }
@@ -963,9 +783,6 @@ public class ForceModelDefectTests
         var starStates = (System.Collections.ICollection)typeof(Star)
             .GetField("_propagatedStates", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(star);
         Assert.Empty(starStates!);
-
-        // The integrator given with the rejected step is not consumed
-        spacecraft.Propagate(window, bodies, integrator, false, false, Step);
     }
 
     [Fact]
@@ -1003,19 +820,6 @@ public class ForceModelDefectTests
         Assert.Contains("BODY507_GM", error.Message);
         Assert.Contains("gm_de440.tpc", error.Message);
         Assert.Empty(spacecraft.PropagatedStates);
-    }
-
-    // The refusal comes before the integrator is claimed (#674): the integrator propagates about the Earth afterwards
-    [Fact]
-    public void ACentralBodyWithoutGm_LeavesTheIntegratorUnclaimed()
-    {
-        var integrator = NewRk78();
-        Assert.Throws<ArgumentException>(() =>
-            new CentralBodyPropagator(OneHour, NewSpacecraft(new CelestialBody(507)), integrator, Array.Empty<CelestialItem>(), false, false, Step));
-
-        using var propagator = new CentralBodyPropagator(OneHour, NewSpacecraft(PlanetsAndMoons.EARTH_BODY), integrator,
-            Array.Empty<CelestialItem>(), false, false, Step);
-        propagator.Propagate();
     }
 
     #endregion

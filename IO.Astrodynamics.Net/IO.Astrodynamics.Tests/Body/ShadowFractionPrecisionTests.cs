@@ -9,6 +9,7 @@ using System.Text.Json;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
@@ -118,9 +119,7 @@ public class ShadowFractionPrecisionTests : IClassFixture<ReferenceCases>, IClas
         // per revolution
         var r3 = _cases.R3;
         var start = r3.InitialState;
-        var solution = new CentralBodyPropagator(new TimeSystem.Window(start.Epoch, start.Epoch.AddHours(3.0)),
-            ReferenceCase.NewSpacecraft(-1434, start), new RK78Integrator(ReferenceCases.Tolerance,
-                ReferenceCases.Tolerance), r3.Bodies, false, true, TimeSpan.FromSeconds(600.0)).Propagate();
+        var solution = new CentralBodyPropagator(new TimeSystem.Window(start.Epoch, start.Epoch.AddHours(3.0)), ReferenceCase.NewSpacecraft(-1434, start), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = ReferenceCases.Tolerance, RelativeTolerance = ReferenceCases.Tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None }).Propagate();
         var earth = (CelestialBody)start.Observer;
         var sun = r3.Bodies.OfType<CelestialBody>().First(body => body.NaifId == 10);
 

@@ -14,6 +14,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -44,16 +45,9 @@ public class BatchPropagatorTests
     private static Window DefaultWindow =>
         new(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1));
 
-    private static PropagationTask CreateTask(Spacecraft sc, Func<Integrator>? integratorFactory = null)
+    private static PropagationTask CreateTask(Spacecraft sc)
     {
-        return new PropagationTask(
-            sc,
-            DefaultWindow,
-            new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            IncludeAtmosphericDrag: false,
-            IncludeSolarRadiationPressure: false,
-            DeltaT: TimeSpan.FromSeconds(60),
-            IntegratorFactory: integratorFactory);
+        return new PropagationTask(sc, DefaultWindow, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY } });
     }
 
     #endregion
@@ -68,7 +62,7 @@ public class BatchPropagatorTests
         var bodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY };
 
         // Direct propagation
-        var directSolution = sc1.Propagate(window, bodies, false, false, TimeSpan.FromSeconds(60));
+        var directSolution = sc1.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = bodies });
 
         // Batch propagation
         var batchResult = BatchPropagator.Propagate(new[] { CreateTask(sc2) });
@@ -129,8 +123,8 @@ public class BatchPropagatorTests
         var bodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY };
 
         // Sequential
-        var sol1 = sc1.Propagate(window, bodies, false, false, TimeSpan.FromSeconds(60));
-        var sol2 = sc2.Propagate(window, bodies, false, false, TimeSpan.FromSeconds(60));
+        var sol1 = sc1.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = bodies });
+        var sol2 = sc2.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = bodies });
 
         // Parallel batch
         var batchResult = BatchPropagator.Propagate(new[]
@@ -162,12 +156,16 @@ public class BatchPropagatorTests
     public void FailedTaskDoesNotAffectOthers()
     {
         var goodSc = CreateSpacecraft(-5001, "Good");
-        var badSc = CreateSpacecraft(-5002, "Bad");
+        // Drag about the Moon, which has no atmosphere: the task fails with InvalidOperationException (#674)
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var badSc = new Spacecraft(-5002, "Bad", 100.0, 10000.0, new Clock("clk", 256),
+            new StateVector(new Vector3(2.0e6, 0, 0), new Vector3(0, System.Math.Sqrt(moon.GM / 2.0e6), 0), moon,
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
 
         var tasks = new List<PropagationTask>
         {
             CreateTask(goodSc),
-            CreateTask(badSc, integratorFactory: () => throw new InvalidOperationException("Intentional test failure"))
+            new PropagationTask(badSc, DefaultWindow, new PropagationOptions { AtmosphericDrag = true })
         };
 
         var result = BatchPropagator.Propagate(tasks);
@@ -183,7 +181,7 @@ public class BatchPropagatorTests
         Assert.False(result.Results[1].Succeeded);
         Assert.Null(result.Results[1].Solution);
         Assert.IsType<InvalidOperationException>(result.Results[1].Error);
-        Assert.Contains("Intentional test failure", result.Results[1].Error.Message);
+        Assert.Contains("MOON", result.Results[1].Error.Message);
     }
 
     [Fact]
@@ -197,10 +195,10 @@ public class BatchPropagatorTests
             CreateTask(CreateSpacecraft(-6001, "Cancelled"))
         };
 
-        var options = new BatchOptions { CancellationToken = cts.Token };
-
-        Assert.Throws<OperationCanceledException>(() =>
-            BatchPropagator.Propagate(tasks, options));
+        // The token is a parameter since 11.0.0 (decision 4 of lot L4 of #668), carried by the exception
+        var exception = Assert.Throws<OperationCanceledException>(() =>
+            BatchPropagator.Propagate(tasks, cancellationToken: cts.Token));
+        Assert.Equal(cts.Token, exception.CancellationToken);
     }
 
     [Fact]
@@ -219,11 +217,11 @@ public class BatchPropagatorTests
         // Force sequential to get deterministic progress ordering
         var options = new BatchOptions
         {
-            MaxDegreeOfParallelism = 1,
-            Progress = progress
+            MaxDegreeOfParallelism = 1
         };
 
-        var result = BatchPropagator.Propagate(tasks, options);
+        // The progress is a parameter since 11.0.0 (decision 4 of lot L4 of #668)
+        var result = BatchPropagator.Propagate(tasks, progress, options);
 
         Assert.True(result.AllSucceeded);
 
@@ -246,14 +244,19 @@ public class BatchPropagatorTests
     }
 
     [Fact]
-    public void CustomRK78IntegratorFactoryWorks()
+    public void CustomRK78IntegratorOptionsWork()
     {
         var sc = CreateSpacecraft(-8001, "RK78Sat");
 
-        var task = CreateTask(sc, integratorFactory: () => new RK78Integrator(
-            absoluteTolerance: 1e-10,
-            relativeTolerance: 1e-10,
-            initialStepSize: 30.0));
+        var task = new PropagationTask(sc, DefaultWindow, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            CovariancePropagation = CovariancePropagationOptions.None
+        });
 
         var result = BatchPropagator.Propagate(new[] { task });
 
@@ -330,16 +333,7 @@ public class BatchPropagatorTests
             var sc = new Spacecraft(-(11001 + i), $"GeoSat{i}", 100.0, 10000.0,
                 new Clock($"clk{i}", 256), orbit);
 
-            tasks.Add(new PropagationTask(
-                sc, DefaultWindow,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false,
-                IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(
-                    absoluteTolerance: 1e-10,
-                    relativeTolerance: 1e-10,
-                    initialStepSize: 30.0)));
+            tasks.Add(new PropagationTask(sc, DefaultWindow, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None }));
         }
 
         var result = BatchPropagator.Propagate(tasks);

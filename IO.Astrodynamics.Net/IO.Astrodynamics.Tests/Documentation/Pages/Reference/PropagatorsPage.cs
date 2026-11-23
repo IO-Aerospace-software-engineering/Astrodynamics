@@ -60,10 +60,29 @@ namespace DocumentationPageSamples.Reference;
 /// <summary>The C# examples of docs/reference/propagators.md, one method per block (#705).</summary>
 internal static class PropagatorsPage
 {
-    // docs/reference/propagators.md, "TLEPropagator"
-    internal static void Block01(Window window, Spacecraft spacecraft, TimeSpan deltaT)
+    // docs/reference/propagators.md, "Propagation Options"
+    internal static void Block01(Spacecraft spacecraft, Window window)
     {
         #region docs/reference/propagators.md:1
+        // Inputs: spacecraft (Spacecraft), window (Window)
+        var rk = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 };
+        var options = PropagationOptions.Default with
+        {
+            Integrator = rk,
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true,
+            Geopotential = GeopotentialModelParameters.Egm2008(10)
+        };
+        var solution = spacecraft.Propagate(window, options);
+        Console.WriteLine($"{solution.Options.ThirdBodies.Count} third bodies, {solution.Options.Atmosphere.GetType().Name}");
+        #endregion
+    }
+
+    // docs/reference/propagators.md, "TLEPropagator"
+    internal static void Block02(Window window, Spacecraft spacecraft, TimeSpan deltaT)
+    {
+        #region docs/reference/propagators.md:2
         // Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
         var propagator = new TLEPropagator(window, spacecraft, deltaT);
         var solution = propagator.Propagate();
@@ -71,22 +90,22 @@ internal static class PropagatorsPage
     }
 
     // docs/reference/propagators.md, "BatchPropagator"
-    internal static void Block02(Spacecraft spacecraft1, Window window, CelestialBody earth, Spacecraft spacecraft2)
+    internal static void Block03(Spacecraft spacecraft1, Window window, Spacecraft spacecraft2)
     {
-        #region docs/reference/propagators.md:2
-        // Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
+        #region docs/reference/propagators.md:3
+        // Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window)
+        var options = new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        };
         var tasks = new List<PropagationTask>
         {
-            new PropagationTask(spacecraft1, window,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
-            new PropagationTask(spacecraft2, window,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0))
+            new PropagationTask(spacecraft1, window, options),
+            new PropagationTask(spacecraft2, window, options)
         };
 
         var result = BatchPropagator.Propagate(tasks, new BatchOptions
@@ -105,9 +124,9 @@ internal static class PropagatorsPage
     }
 
     // docs/reference/propagators.md, "Example"
-    internal static void Block03(Spacecraft spacecraft)
+    internal static void Block04(Spacecraft spacecraft)
     {
-        #region docs/reference/propagators.md:3
+        #region docs/reference/propagators.md:4
         // Inputs: spacecraft (Spacecraft)
         var config = new MonteCarloConfiguration
         {
@@ -115,14 +134,14 @@ internal static class PropagatorsPage
             Seed = 42,
             TemplateSpacecraft = spacecraft,
             Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
-            CelestialBodiesFactory = () =>
-            [
-                new CelestialBody(PlanetsAndMoons.EARTH),
-                Stars.SUN_BODY,
-                PlanetsAndMoons.MOON_BODY
-            ],
-            DeltaT = TimeSpan.FromSeconds(60),
-            IntegratorFactory = () => new RK78Integrator(1e-10, 1e-10, 30.0),
+            Propagation = new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions
+                {
+                    AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+                },
+                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            }
         };
 
         var result = MonteCarloPropagator.Propagate(config);
@@ -130,6 +149,26 @@ internal static class PropagatorsPage
         Console.WriteLine($"Success: {result.SuccessCount}/{result.TotalCount}");
         var last = result.EpochStatistics[^1];
         Console.WriteLine($"Position 95th percentile RSS: {last.RssPositionPercentiles.P95:F1} m");
+        #endregion
+    }
+
+    // docs/reference/propagators.md, "Cancellation"
+    internal static void Block05(Spacecraft spacecraft, Window window)
+    {
+        #region docs/reference/propagators.md:5
+        // Inputs: spacecraft (Spacecraft), window (Window)
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        try
+        {
+            var solution = spacecraft.Propagate(window, PropagationOptions.Default, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Not propagated: no stored state, and the next Propagate re-arms the spacecraft
+        }
+
+        // A task of the synchronous call, cancelled with the token
+        var task = Task.Run(() => spacecraft.Propagate(window, cancellationToken: cts.Token), cts.Token);
         #endregion
     }
 }

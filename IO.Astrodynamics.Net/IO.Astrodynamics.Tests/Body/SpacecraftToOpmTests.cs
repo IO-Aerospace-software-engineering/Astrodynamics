@@ -9,6 +9,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -67,8 +68,8 @@ public class SpacecraftToOpmTests
         spacecraft.AddEngine(engine);
         var burn = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, ra + 500000.0, engine);
         spacecraft.SetStandbyManeuver(burn);
-        Integrator instance = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-        var solution = spacecraft.Propagate(new Window(S, S.AddSeconds(6000.0)), [earth], instance, false, false, TimeSpan.FromSeconds(10.0));
+        IntegratorOptions instance = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+        var solution = spacecraft.Propagate(new Window(S, S.AddSeconds(6000.0)), new PropagationOptions { Integrator = instance, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         return (spacecraft, burn, solution);
     }
 
@@ -170,7 +171,7 @@ public class SpacecraftToOpmTests
         var sgp4 = tle.ToStateVector(end);
 
         var propagated = new Spacecraft(-6585, "OPM6585", 1000.0, 3000.0, new Clock("OPM6585_CLK", 65536), tle, cosparId: "1998-067A");
-        propagated.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(60.0));
+        propagated.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var opm = propagated.ToOpm(epoch: end);
         var read = propagated.GetEphemeris(end, earth, Frame.TEME, Aberration.None);
         var written = new Vector3(opm.Data.StateVector.X, opm.Data.StateVector.Y, opm.Data.StateVector.Z) * 1000.0;

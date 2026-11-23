@@ -92,12 +92,15 @@ internal static class IntegratorsPage
     }
 
     // docs/reference/integrators.md, "Choosing the integrator"
-    internal static async Task Block04(Scenario scenario)
+    internal static void Block04(Scenario scenario)
     {
         #region docs/reference/integrators.md:4
         // Inputs: scenario (Scenario)
-        var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0),
-            () => new RK78Integrator(absoluteTolerance: 1e-11, relativeTolerance: 1e-11));
+        var summary = scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(10.0)
+        });
         #endregion
     }
 }

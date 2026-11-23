@@ -129,8 +129,8 @@ public class GcrfPropagationTests
                 spacecraft.SetStandbyManeuver(apogee);
             }
 
-            Integrator integrator = variant == "RK78" ? new RK78Integrator() : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-            var solution = spacecraft.Propagate(Window, Bodies(earth), integrator, true, true, TimeSpan.FromSeconds(60.0));
+            IntegratorOptions integrator = variant == "RK78" ? RK78IntegratorOptions.Default : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+            var solution = spacecraft.Propagate(Window, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies(earth), AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
             return (solution, spacecraft);
         }
 
@@ -193,11 +193,7 @@ public class GcrfPropagationTests
         {
             var earth = Earth();
             var spacecraft = new Spacecraft(id, $"GCRFC{-id}", 1000.0, 3000.0, new Clock($"gcrfc{-id}", 65536), State(earth, frame, p0), 10.0);
-            return new CentralBodyPropagatorBuilder(Window, spacecraft, new RK78Integrator(), TimeSpan.FromSeconds(60.0))
-                .WithPerturbingBodies(Bodies(earth))
-                .IncludeAtmosphericDrag()
-                .WithCovariancePropagation(options)
-                .Build()
+            return new CentralBodyPropagator(Window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies(earth), AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None })
                 .Propagate();
         }
 

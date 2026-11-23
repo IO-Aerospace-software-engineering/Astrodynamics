@@ -4,6 +4,8 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -304,8 +306,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                     PlaneChangeStart, Frames.Frame.ICRF)
                 : CircularOrbit(earth, 32.0);
 
-        private static Integrator PlaneChangeIntegrator(string integrator) =>
-            integrator == "VV" ? new VVIntegrator(PlaneChangeStep) : new RK78Integrator();
+        private static IntegratorOptions PlaneChangeIntegrator(string integrator) =>
+            integrator == "VV" ? new VVIntegratorOptions { Step = PlaneChangeStep } : RK78IntegratorOptions.Default;
 
         private static Spacecraft PlaneChangeSpacecraft(int id, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit) =>
             new(id, $"PlaneChange{-id}", 1000.0, 3000.0, new Clock($"PlaneChangeClk{-id}", 65536), orbit);
@@ -383,7 +385,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             StateVector[] previousStates = null;
             if (previous)
             {
-                spacecraft.Propagate(PlaneChangeWindow, [earth], PlaneChangeIntegrator(integrator), false, false, PlaneChangeStep);
+                spacecraft.Propagate(PlaneChangeWindow, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
                 leadingThrust = leading.ThrustWindow;
                 rejectedThrust = rejected.ThrustWindow;
                 previousStates = spacecraft.PropagatedStates.ToArray();
@@ -392,7 +394,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             // Act
             var exception = Assert.Throws<ArgumentException>(() =>
-                spacecraft.Propagate(PlaneChangeWindow, [earth], PlaneChangeIntegrator(integrator), false, false, PlaneChangeStep));
+                spacecraft.Propagate(PlaneChangeWindow, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None }));
 
             // Assert: the frames and the fix named; nothing ran
             Assert.Equal("spacecraft", exception.ParamName);
@@ -419,25 +421,19 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         /// is rejected when the propagator propagates (#685, second review): <see cref="Propagator.PropagatorBase.Propagate"/>
         /// reads the chain of the spacecraft again, and the propagation read the components of the ECLIPJ2000 target as if
         /// they were in ICRF (2807.185 m/s for a plane change of 2°, whose ΔV is 263.394 m/s). The state of the spacecraft,
-        /// not an argument, so an <see cref="InvalidOperationException"/>, as for its engines (#676). Public constructor and
-        /// builder, both integrators; nothing runs.
+        /// not an argument, so an <see cref="InvalidOperationException"/>, as for its engines (#676). The public options
+        /// constructor, both integrators; nothing runs.
         /// </summary>
         [Theory]
         [InlineData("constructor", "VV")]
         [InlineData("constructor", "RK78")]
-        [InlineData("builder", "VV")]
-        [InlineData("builder", "RK78")]
         public void TargetOrbitInAnotherFrame_AttachedAfterThePropagatorIsBuilt_IsRejectedWhenItPropagates(string path, string integrator)
         {
             // Arrange: the propagator of a spacecraft in ICRF without maneuver, then a plane change on an ECLIPJ2000 target,
             // built before its tank is on the spacecraft (no check at construction)
             var earth = TestHelpers.EarthAtJ2000;
-            var spacecraft = PlaneChangeSpacecraft(path == "builder" ? -6855 : -6856, CircularOrbit(earth, 30.0));
-            using var propagator = path == "builder"
-                ? new Propagator.CentralBodyPropagatorBuilder(PlaneChangeWindow, spacecraft, PlaneChangeIntegrator(integrator), PlaneChangeStep)
-                    .WithPerturbingBody(earth).Build()
-                : new Propagator.CentralBodyPropagator(PlaneChangeWindow, spacecraft, PlaneChangeIntegrator(integrator), [earth], false, false,
-                    PlaneChangeStep);
+            var spacecraft = PlaneChangeSpacecraft(integrator == "VV" ? -6855 : -6856, CircularOrbit(earth, 30.0));
+            var propagator = new Propagator.CentralBodyPropagator(PlaneChangeWindow, spacecraft, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
             var tank = new FuelTank("ft685", "ftA", "sn6855", 1000.0, 900.0);
             var engine = new Engine("eng685", "engmk1", "sn6855", 450, 50, tank);
             var rejected = CreateAt(nameof(PlaneAlignmentManeuver), CircularOrbit(earth, 32.0).ToFrame(Frames.Frame.ECLIPTIC_J2000), engine);
@@ -466,7 +462,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         // The plane change of 2° from the orbit at 30° in initialFrame to the orbit at 32° in targetFrame, the maneuver
         // leading, over 2 h, or chained after an apogee raise, over 6 h, attached in the order given: "tank before" (the constructor checks the
         // frame of the target), "tank after" (the propagator, when it is built), or after a propagator built by its
-        // "constructor" or its "builder" (the propagator, when it propagates). Returns the maneuver and the final state
+        // "constructor" (the propagator, when it propagates). Returns the maneuver and the final state
         private (PlaneAlignmentManeuver Maneuver, StateVector Final) RunPlaneChange(int id, Frames.Frame initialFrame, Frames.Frame targetFrame,
             string order, bool chained, string integrator)
         {
@@ -493,11 +489,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 spacecraft = PlaneChangeSpacecraft(id, orbit);
                 if (order != "tank after")
                 {
-                    propagator = order == "builder"
-                        ? new Propagator.CentralBodyPropagatorBuilder(window, spacecraft, PlaneChangeIntegrator(integrator), PlaneChangeStep)
-                            .WithPerturbingBody(earth).Build()
-                        : new Propagator.CentralBodyPropagator(window, spacecraft, PlaneChangeIntegrator(integrator), [earth], false, false,
-                            PlaneChangeStep);
+                    propagator = new Propagator.CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
                 }
 
                 spacecraft.AddFuelTank(tank);
@@ -514,14 +506,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spacecraft.SetStandbyManeuver(leading);
             if (propagator != null)
             {
-                using (propagator)
-                {
-                    var solution = propagator.Propagate();
-                    return (maneuver, solution.StateVectors[^1]);
-                }
+                var solution = propagator.Propagate();
+                return (maneuver, solution.StateVectors[^1]);
             }
 
-            spacecraft.Propagate(window, [earth], PlaneChangeIntegrator(integrator), false, false, PlaneChangeStep);
+            spacecraft.Propagate(window, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
             return (maneuver, spacecraft.PropagatedStates.Last());
         }
 
@@ -561,8 +550,6 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [InlineData("tank after", true, "VV")]
         [InlineData("constructor", false, "RK78")]
         [InlineData("constructor", true, "VV")]
-        [InlineData("builder", false, "VV")]
-        [InlineData("builder", true, "RK78")]
         public void TargetOrbitInGcrf_OnAnIcrfSpacecraft_BurnsAsInIcrf(string order, bool chained, string integrator)
         {
             // Act
@@ -644,8 +631,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                     0.0, 0.0, tle.Observer, start, frame);
                 var plane = new PlaneAlignmentManeuver(start, TimeSpan.Zero, target, spacecraft.Engines.First());
                 spacecraft.SetStandbyManeuver(plane);
-                var solution = spacecraft.Propagate(window, Array.Empty<IO.Astrodynamics.Body.CelestialItem>(), new RK78Integrator(), false, false,
-                    TimeSpan.FromSeconds(60.0));
+                var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Array.Empty<IO.Astrodynamics.Body.CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
                 return (plane, solution.StateVectors[^1]);
             }
 
@@ -682,7 +668,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spacecraft.SetStandbyManeuver(maneuver);
 
             // Act
-            spacecraft.Propagate(PlaneChangeWindow, [earth], new RK78Integrator(), false, false, PlaneChangeStep);
+            spacecraft.Propagate(PlaneChangeWindow, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert: the closed form, and the final plane that of the target
             double expected = 2.0 * System.Math.Sqrt(earth.GM / 7000000.0) * System.Math.Sin(1.0 * IO.Astrodynamics.Constants.Deg2Rad);

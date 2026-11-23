@@ -7,6 +7,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -79,8 +80,8 @@ public class PropagationToTheWindowEndTests
         var central = (CelestialItem)spacecraft.InitialOrbitalParameters.Observer;
         var outputStep = TimeSpan.FromSeconds(step);
         return integrator == "RK"
-            ? spacecraft.Propagate(window, new[] { central }, new RK78Integrator(1e-12, 1e-12), false, false, outputStep)
-            : spacecraft.Propagate(window, new[] { central }, false, false, outputStep);
+            ? spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = outputStep, ThirdBodies = new[] { central }, CovariancePropagation = CovariancePropagationOptions.None })
+            : spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = outputStep }, OutputStep = outputStep, ThirdBodies = new[] { central } });
     }
 
     /// <summary>
@@ -143,8 +144,9 @@ public class PropagationToTheWindowEndTests
     /// <summary>
     /// A window of 3 603 s at 60 s: the last grid point, 3 s before the end, lies within ΔT/10 of it and is replaced by the
     /// window end, 61 states, no two of them closer than ΔT/10 (the rule of #598 and #540). A window of 20 s at 60 s,
-    /// whose grid held the start alone: the start and the end. A window the step divides, and one it rounds up past the
-    /// end, keep their grid (the latter to 3 600 s, half a step past the window, #626).
+    /// whose grid held the start alone: the start and the end. A window the step divides keeps its grid; one it rounds up
+    /// ends at the window end (since 11.0.0, R11 of #668, choice 6: before, its grid ran to round(L/ΔT)·ΔT, up to half a
+    /// step past the window, #626; see <see cref="OutputGridTests"/>).
     /// </summary>
     [Theory]
     [InlineData(3603.0, 61, -7421)]
@@ -169,16 +171,9 @@ public class PropagationToTheWindowEndTests
         _output.WriteLine($"MEASURE #741 {length} s / 60 s: {states.Length} states, the last three at " +
                           string.Join(", ", seconds.TakeLast(3).Select(s => s.ToString("F7"))) + " s");
         Assert.Equal(count, states.Length);
-        double lastOutput = System.Math.Round(length / 60.0, MidpointRounding.AwayFromZero) * 60.0;
-        if (lastOutput <= length)
-        {
-            // The window end; in TT, a window of 3 600 TDB seconds is 0.6 µs shorter, its last output labelled with the end
-            LabelAssert.Equal(window.EndDate, states[^1].Epoch);
-        }
-        else
-        {
-            Assert.Equal(lastOutput, seconds[^1], 6);
-        }
+        // The window end, whether the grid rounds the window down or up; in TT, a window of 3 600 TDB seconds is 0.6 µs
+        // shorter, its last output labelled with the end
+        LabelAssert.Equal(window.EndDate, states[^1].Epoch);
 
         for (int i = 1; i < seconds.Length; i++)
         {

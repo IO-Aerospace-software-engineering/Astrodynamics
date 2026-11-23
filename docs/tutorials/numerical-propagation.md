@@ -1,10 +1,10 @@
 # Numerical Propagation
 
-This tutorial covers high-fidelity orbit propagation with configurable force models. You will start with the fixed-step Velocity-Verlet integrator, then move to the adaptive RK7(8) integrator, and learn how to select force models, configure geopotential gravity, and extract dense output.
+This tutorial covers high-fidelity orbit propagation with configurable force models. You will start with the default settings (the adaptive RK7(8) integrator), then tune the integrator, and learn how to select force models, configure geopotential gravity, and extract dense output. Every setting of a propagation is a value of `PropagationOptions` ([Propagation Options](../reference/propagators.md#propagation-options)).
 
 ## Basic Propagation
 
-The simplest way to propagate uses `Spacecraft.Propagate`, which sets up the integrator and force models automatically:
+The simplest way to propagate uses `Spacecraft.Propagate`, which builds the integrator and the force models from its options:
 
 ```csharp
 using IO.Astrodynamics;
@@ -33,13 +33,10 @@ var spacecraft = new Spacecraft(-1001, "DemoSat", 100.0, 10000.0, clock, orbit);
 
 var solution = spacecraft.Propagate(
     new Window(epoch, epoch.AddDays(1)),
-    new[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-    includeAtmosphericDrag: false,
-    includeSolarRadiationPressure: false,
-    TimeSpan.FromSeconds(60));
+    new PropagationOptions { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY } });
 ```
 
-This uses the fixed-step Velocity-Verlet integrator with central body gravity, solar and lunar third-body perturbations. The output is sampled at 60-second intervals.
+This uses the adaptive RK7(8) integrator at its defaults (tolerances of 1e-9) with central body gravity, solar and lunar third-body perturbations. The output is sampled at 60-second intervals, the default `OutputStep`; `spacecraft.Propagate(window)` alone propagates about the central body only.
 
 ## Adaptive RK7(8) Integrator
 
@@ -49,23 +46,30 @@ This uses the fixed-step Velocity-Verlet integrator with central body gravity, s
 Configure the integrator with tolerance and step-size bounds:
 
 ```csharp
-var integrator = new RK78Integrator(
-    absoluteTolerance: 1e-10,
-    relativeTolerance: 1e-10,
-    initialStepSize: 30.0,
-    minStepSize: 1e-3,
-    maxStepSize: 300.0);
+var integrator = new RK78IntegratorOptions
+{
+    AbsoluteTolerance = 1e-10,
+    RelativeTolerance = 1e-10,
+    InitialStep = TimeSpan.FromSeconds(30.0),
+    MinStep = TimeSpan.FromMilliseconds(1.0),
+    MaxStep = TimeSpan.FromSeconds(300.0)
+};
 ```
 
-| Parameter | Description |
+| Property | Description |
 |-----------|-------------|
-| `absoluteTolerance` | Absolute error threshold per step (m, m/s) |
-| `relativeTolerance` | Relative error threshold per step |
-| `initialStepSize` | Starting step size in seconds |
-| `minStepSize` | Minimum allowed step size in seconds |
-| `maxStepSize` | Maximum allowed step size in seconds |
+| `AbsoluteTolerance` | Absolute error threshold per step (m, m/s); 1e-9 by default |
+| `RelativeTolerance` | Relative error threshold per step; 1e-9 by default |
+| `InitialStep` | Starting step size; 60 s by default |
+| `MinStep` | Minimum allowed step size; 10 ticks (1 µs) by default |
+| `MaxStep` | Maximum allowed step size; one day by default |
 
-Tighter tolerances produce more accurate results at the cost of smaller (more numerous) steps. For typical LEO propagation, tolerances of `1e-10` with a max step of 300 seconds work well.
+Tighter tolerances produce more accurate results at the cost of smaller (more numerous) steps. For typical LEO propagation, tolerances of `1e-10` with a max step of 300 seconds work well. A point-mass LEO day ends 1.36 m from the Keplerian closed form at the defaults.
+
+!!! warning "Velocity-Verlet"
+    The fixed-step Velocity-Verlet integrator is `new VVIntegratorOptions { Step = ... }`, 1 s by default. Its error
+    grows as the square of its step: the same LEO day ends 271 m from Kepler at 1 s, 27.1 km at 10 s and 974 km at 60 s.
+    Before 11.0.0, the members that took no integrator stepped Velocity-Verlet at the output step.
 
 ## Direct Propagator Construction
 
@@ -73,20 +77,19 @@ Tighter tolerances produce more accurate results at the cost of smaller (more nu
     Use `CentralBodyPropagator` directly for full control over integrator selection and output cadence.
 
 ```csharp
-// Inputs: epoch (Time), spacecraft (Spacecraft), integrator (Integrator), earth (CelestialBody)
-using var propagator = new CentralBodyPropagator(
-    new Window(epoch, epoch.AddHours(2)),
-    spacecraft,
-    integrator,
-    new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-    includeAtmosphericDrag: false,
-    includeSolarRadiationPressure: false,
-    deltaT: TimeSpan.FromSeconds(10.0));
+// Inputs: epoch (Time), spacecraft (Spacecraft), integrator (RK78IntegratorOptions)
+var options = new PropagationOptions
+{
+    Integrator = integrator,
+    OutputStep = TimeSpan.FromSeconds(10.0),
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+};
 
+var propagator = new CentralBodyPropagator(new Window(epoch, epoch.AddHours(2)), spacecraft, options);
 var solution = propagator.Propagate();
 ```
 
-The `deltaT` parameter controls the output interval. The integrator steps adaptively regardless of this value — dense output interpolation fills in the requested epochs.
+The `OutputStep` setting controls the output interval. The integrator steps adaptively regardless of this value — dense output interpolation fills in the requested epochs, every `OutputStep` from the start of the window and the window end last.
 
 ## Force Models
 
@@ -96,7 +99,7 @@ Always included. Uses the observer's gravitational parameter for two-body accele
 
 ### Third-Body Perturbations
 
-Pass perturbing bodies in the `CelestialItem[]` array. The framework uses Battin's numerically stable formulation to avoid catastrophic cancellation:
+Pass perturbing bodies in `ThirdBodies`. The framework uses Battin's numerically stable formulation to avoid catastrophic cancellation:
 
 ```csharp
 // Inputs: earth (CelestialBody)
@@ -118,16 +121,18 @@ The second argument to `GeopotentialModelParameters` is the maximum degree of th
 
 ### Atmospheric Drag and Solar Radiation Pressure
 
-Enable drag and SRP with the boolean flags:
+Enable drag and SRP in the options:
 
 ```csharp
-// Inputs: window (Window), spacecraft (Spacecraft), integrator (Integrator), earth (CelestialBody)
-using var propagator = new CentralBodyPropagator(
-    window, spacecraft, integrator,
-    new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-    includeAtmosphericDrag: true,
-    includeSolarRadiationPressure: true,
-    deltaT: TimeSpan.FromSeconds(10.0));
+// Inputs: window (Window), spacecraft (Spacecraft), integrator (RK78IntegratorOptions)
+var solution = spacecraft.Propagate(window, new PropagationOptions
+{
+    Integrator = integrator,
+    OutputStep = TimeSpan.FromSeconds(10.0),
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    AtmosphericDrag = true,
+    SolarRadiationPressure = true
+});
 ```
 
 Drag uses the atmosphere of the central body with default Cd = 2.2: its atmospheric model, or NRLMSISE-00 at nominal
@@ -137,32 +142,33 @@ atmosphere give the drag, an Earth always having one; a listed Earth adds its dr
 body of its NAIF identifier must have the same models (`ArgumentException` otherwise). SRP uses a cannonball model with
 continuous shadow fraction computation, the central body among the occulting bodies.
 
-## Fluent Builder with Additional Force Models
+## Albedo and Thermal Radiation Pressure
 
-!!! tip "Fluent configuration"
-    The `CentralBodyPropagatorBuilder` provides a fluent API for constructing propagators with advanced force models including albedo and thermal radiation pressure.
+!!! tip "Radiation of the central body"
+    `AlbedoRadiationPressure` and `ThermalRadiationPressure` act on the central body, which carries the coefficients:
+    build the orbit on a body given them. (The fluent `CentralBodyPropagatorBuilder` of 10.x was removed in 11.0.0.)
 
 ```csharp
-// Inputs: epoch (Time), spacecraft (Spacecraft), integrator (Integrator)
+// Inputs: epoch (Time), integrator (RK78IntegratorOptions)
 var earth = new CelestialBody(PlanetsAndMoons.EARTH,
     albedo: 0.306,
     thermalEffectiveTemperature: 254.0,
     thermalEmissivity: 0.95);
+var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7700.0, 0.0), earth, epoch, Frame.ICRF);
+var spacecraft = new Spacecraft(-1002, "RadiationSat", 100.0, 10000.0, new Clock("RadiationClock", 65536), orbit);
 
-using var propagator = new CentralBodyPropagatorBuilder(
-        new Window(epoch, epoch.AddHours(2)), spacecraft, integrator,
-        TimeSpan.FromSeconds(10))
-    .WithPerturbingBody(Stars.SUN_BODY)
-    .WithPerturbingBody(PlanetsAndMoons.MOON_BODY)
-    .IncludeAlbedo(earth)
-    .IncludeThermalRadiation(earth)
-    .Build();
-
-var solution = propagator.Propagate();
+var solution = spacecraft.Propagate(new Window(epoch, epoch.AddHours(2)), new PropagationOptions
+{
+    Integrator = integrator,
+    OutputStep = TimeSpan.FromSeconds(10),
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    AlbedoRadiationPressure = true,
+    ThermalRadiationPressure = true
+});
 ```
 
-- **Albedo radiation pressure**: Models reflected sunlight from the central body (Lambertian sphere). Requires `albedo > 0`.
-- **Thermal radiation pressure**: Models infrared emission from the central body (isotropic emitter). Requires `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of eclipse state.
+- **Albedo radiation pressure**: Models reflected sunlight from the central body (Lambertian sphere). Requires `albedo > 0` (`ArgumentException` otherwise).
+- **Thermal radiation pressure**: Models infrared emission from the central body (isotropic emitter). Requires `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0` (`ArgumentException` otherwise). Always present regardless of eclipse state.
 
 ## Dense Output
 
@@ -180,8 +186,7 @@ Interpolation uses cubic Hermite polynomials constructed from the position, velo
 
 ## Summary
 
-- `Spacecraft.Propagate` is the quickest way to run a propagation with default settings.
-- The RK7(8) integrator provides adaptive step control and 8th-order accuracy.
+- `Spacecraft.Propagate` is the quickest way to run a propagation; `PropagationOptions` holds every setting, RK7(8) at 1e-9 every 60 s by default.
+- The RK7(8) integrator provides adaptive step control and 8th-order accuracy; Velocity-Verlet takes its own step.
 - Force models include two-body gravity, geopotential harmonics, third-body perturbations, drag, SRP, albedo, and thermal radiation.
-- The fluent builder enables concise configuration of advanced force model combinations.
 - Dense output via `InterpolateAt` provides states at arbitrary times without re-propagation.

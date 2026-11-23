@@ -101,15 +101,9 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     public void Builder_Covariance_GivesTheValuesOfTheInternalPath_BitForBit()
     {
         // Arrange: the same propagation activated through the builder and through the internal options
-        var publicSolution = new CentralBodyPropagatorBuilder(Window, Spacecraft(), new RK78Integrator(), Step)
-            .WithPerturbingBodies(Bodies)
-            .IncludeAtmosphericDrag()
-            .IncludeSolarRadiationPressure()
-            .WithCovariancePropagation(Full)
-            .Build()
+        var publicSolution = new CentralBodyPropagator(Window, Spacecraft(), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Full })
             .Propagate();
-        var internalPropagator = new CentralBodyPropagator(Window, Spacecraft(), new RK78Integrator(), Bodies, true,
-            true, Step);
+        var internalPropagator = new CentralBodyPropagator(Window, Spacecraft(), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
         internalPropagator.EnableVariationalEquations(new VariationalOptions(
             ForceParameters.DragCoefficient | ForceParameters.ReflectivityCoefficient, Full.ProcessNoise, false, null,
             true, Full.ConsiderParameters));
@@ -166,7 +160,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     {
         // Arrange
         var spacecraft = Spacecraft();
-        var solution = spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, Full);
+        var solution = spacecraft.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Full });
         var p0 = spacecraft.InitialOrbitalParameters.ToStateVector().Covariance!.Value;
 
         // Act
@@ -193,9 +187,9 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     {
         // Arrange
         var spacecraft = Spacecraft();
-        var withCovariance = spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, Full);
+        var withCovariance = spacecraft.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Full });
         var stored = spacecraft.PropagatedStates;
-        var without = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, true, Step);
+        var without = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the same states bit for bit, each with the covariance of its epoch; the spacecraft stores them
         Assert.Equal(without.StateVectors.Count, withCovariance.StateVectors.Count);
@@ -217,12 +211,13 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     }
 
     [Fact]
-    public void Covariance_AnOutputGridBeyondTheWindow_EndsOnTheLastState()
+    public void Covariance_AnOutputGridThatRoundsTheWindowUp_EndsOnTheLastState()
     {
-        // Arrange: 420 s does not divide the hour, so the output grid ends at 3780 s, past the window
+        // Arrange: 420 s does not divide the hour and rounds it up, so the output grid ends at the window end, in place of
+        // 3780 s (choice 6 of #668; before 11.0.0 past the window)
         var step = TimeSpan.FromSeconds(420.0);
-        var withCovariance = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, true, step, Full);
-        var without = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, true, step);
+        var withCovariance = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Full });
+        var without = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         Assert.Equal(10, withCovariance.StateVectors.Count);
@@ -236,8 +231,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     {
         // Arrange
         var spacecraft = Spacecraft();
-        var solution = spacecraft.Propagate(Window, Bodies, new RK78Integrator(), false, true, Step,
-            new CovariancePropagationOptions());
+        var solution = spacecraft.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, SolarRadiationPressure = true, CovariancePropagation = new CovariancePropagationOptions() });
 
         // Assert
         Assert.Equal(new[] { ForceParameter.ReflectivityCoefficient }, solution.SensitivityParameters);
@@ -251,15 +245,14 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         Assert.Throws<InvalidOperationException>(() => solution.GetExtendedCovariance(Start));
         Assert.Throws<InvalidOperationException>(() => solution.StateAndCovarianceAt(Start));
         Assert.Throws<InvalidOperationException>(() =>
-            Spacecraft().Propagate(Window, Bodies, false, false, Step).StateAndCovarianceAt(Start));
+            Spacecraft().Propagate(Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = Bodies }).StateAndCovarianceAt(Start));
     }
 
     [Fact]
     public void WithoutParametersOrConsiderParameters_TheirGettersThrow()
     {
         // Arrange: two-body, no drag and no radiation force; covariance without consider parameters
-        var solution = Spacecraft().Propagate(Window, new CelestialItem[] { _cases.Earth }, new RK78Integrator(),
-            false, false, Step, new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var solution = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = new CelestialItem[] { _cases.Earth }, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } });
 
         // Assert
         Assert.Empty(solution.SensitivityParameters);
@@ -274,7 +267,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     public void OutsideThePropagation_EveryGetterThrows()
     {
         // Arrange
-        var solution = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, Full);
+        var solution = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Full });
         var before = Start.AddSeconds(-1.0);
         var after = Start.AddHours(2.0);
 
@@ -293,8 +286,8 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     public void WithoutActivation_EveryGetterThrows_ButTheStateIsGiven()
     {
         // Arrange: RK7(8) and Velocity-Verlet without activation, and a solution built by hand
-        var rk78 = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), false, false, Step);
-        var vv = Spacecraft().Propagate(Window, Bodies, false, false, Step);
+        var rk78 = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = CovariancePropagationOptions.None });
+        var vv = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = Bodies });
         var byHand = new PropagationSolution();
         var epoch = Start.AddSeconds(500.0);
 
@@ -329,51 +322,38 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     {
         // Velocity-Verlet: every entry point
         var vvOptions = new CovariancePropagationOptions();
-        Assert.Throws<NotSupportedException>(() => new CentralBodyPropagator(Window, Spacecraft(),
-            new VVIntegrator(Step), Bodies, false, false, Step, vvOptions));
+        Assert.Throws<NotSupportedException>(() => new CentralBodyPropagator(Window, Spacecraft(), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = vvOptions ?? CovariancePropagationOptions.None }));
         var spacecraft = Spacecraft();
         var forces = new ForceBase[] { new GravitationalAcceleration(_cases.Earth) };
         Assert.Throws<NotSupportedException>(() => new CentralBodyPropagator(Window, spacecraft,
             new VVIntegrator(forces, Step, spacecraft.InitialOrbitalParameters.ToStateVector()), Step, vvOptions));
         Assert.Throws<NotSupportedException>(() =>
-            new CentralBodyPropagatorBuilder(Window, Spacecraft(), new VVIntegrator(Step), Step)
-                .WithCovariancePropagation(vvOptions).Build());
+            new CentralBodyPropagator(Window, Spacecraft(), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, CovariancePropagation = vvOptions ?? CovariancePropagationOptions.None }));
         Assert.Throws<NotSupportedException>(() =>
-            Spacecraft().Propagate(Window, Bodies, new VVIntegrator(Step), false, false, Step, vvOptions));
+            Spacecraft().Propagate(Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = Bodies, CovariancePropagation = vvOptions ?? CovariancePropagationOptions.None }));
 
         // Noise or consider parameters without the covariance
         Assert.Contains("act on the covariance only", Assert.Throws<ArgumentException>(() =>
-            Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, false, Step,
-                new CovariancePropagationOptions { ProcessNoise = new RtnProcessNoise(0.0, 1e-12, 0.0) })).Message);
+            Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions { ProcessNoise = new RtnProcessNoise(0.0, 1e-12, 0.0) } })).Message);
         Assert.Throws<ArgumentException>(() =>
-            Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, false, Step,
-                new CovariancePropagationOptions { ConsiderParameters = new ConsiderParameters(0.1) }));
+            Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions { ConsiderParameters = new ConsiderParameters(0.1) } }));
 
         // A consider parameter without its force: Cr without a radiation force
         Assert.Contains("needs its force", Assert.Throws<ArgumentException>(() =>
-            Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, false, Step,
-                Full with { ConsiderParameters = new ConsiderParameters(null, 0.1) })).Message);
+            Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = Full with { ConsiderParameters = new ConsiderParameters(null, 0.1) } })).Message);
 
         // The covariance without P0
         var withoutP0 = PartialsTestCases.Spacecraft(Leo);
         Assert.Contains("carry none", Assert.Throws<InvalidOperationException>(() =>
-            withoutP0.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, Full)).Message);
+            withoutP0.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Full })).Message);
 
-        // The builder
-        var builder = new CentralBodyPropagatorBuilder(Window, Spacecraft(), new RK78Integrator(), Step);
-        Assert.Throws<ArgumentNullException>(() => builder.WithCovariancePropagation(null));
-        builder.WithCovariancePropagation(vvOptions);
-        Assert.Throws<InvalidOperationException>(() => builder.WithCovariancePropagation(vvOptions));
     }
 
     [Fact]
-    public void Builder_PsiFollowsTheAlbedoAndThermalForces()
+    public void AlbedoOption_PsiFollowsTheRadiationForce()
     {
-        // Arrange: albedo alone is a radiation force, added by Build after the propagator
-        var solution = new CentralBodyPropagatorBuilder(Window, Spacecraft(), new RK78Integrator(), Step)
-            .IncludeAlbedo(_cases.Earth)
-            .WithCovariancePropagation(new CovariancePropagationOptions())
-            .Build()
+        // Arrange: albedo of the central body alone is a radiation force
+        var solution = new CentralBodyPropagator(Window, Spacecraft(), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, AlbedoRadiationPressure = true, CovariancePropagation = new CovariancePropagationOptions() })
             .Propagate();
 
         // Assert
@@ -391,7 +371,6 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         integrator.AddForce(new AtmosphericDrag(spacecraft, _cases.Earth));
         var propagator = new CentralBodyPropagator(Window, spacecraft, integrator, Step,
             new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
-        integrator.Initialize(spacecraft.InitialOrbitalParameters.ToStateVector());
 
         // Act
         var solution = propagator.Propagate();
@@ -401,13 +380,26 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         Assert.All(solution.StateVectors, s => Assert.NotNull(s.Covariance));
     }
 
+    /// <summary>
+    /// On the constructor of an integrator that holds its forces, the one path that takes covariance options alone, null
+    /// is off, as <see cref="CovariancePropagationOptions.None"/> (on the options entry points null is Auto, choice 3 of
+    /// #668; the flags overload of this test was removed in 11.0.0, R07).
+    /// </summary>
     [Fact]
     public void NullOptions_AreOff()
     {
+        // Arrange
+        PropagationSolution Run(CovariancePropagationOptions covariance)
+        {
+            var spacecraft = Spacecraft();
+            var integrator = new RK78Integrator();
+            integrator.AddForce(new GravitationalAcceleration(_cases.Earth));
+            return new CentralBodyPropagator(Window, spacecraft, integrator, Step, covariance).Propagate();
+        }
+
         // Act
-        var solution = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), false, false, Step,
-            (CovariancePropagationOptions)null);
-        var reference = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), false, false, Step);
+        var solution = Run(null);
+        var reference = Run(CovariancePropagationOptions.None);
 
         // Assert
         Assert.Null(solution.CovariancePropagation);
@@ -421,11 +413,9 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         // Arrange
         var tasks = new[]
         {
-            new PropagationTask(Spacecraft(-2101), Window, Bodies, true, false, Step, () => new RK78Integrator())
-                { CovariancePropagation = Full with { ConsiderParameters = new ConsiderParameters(0.1) } },
-            new PropagationTask(Spacecraft(-2102), Window, Bodies, true, false, Step, () => new RK78Integrator()),
-            new PropagationTask(Spacecraft(-2103), Window, Bodies, true, false, Step)
-                { CovariancePropagation = new CovariancePropagationOptions() }
+            new PropagationTask(Spacecraft(-2101), Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = Full with { ConsiderParameters = new ConsiderParameters(0.1) } }),
+            new PropagationTask(Spacecraft(-2102), Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None }),
+            new PropagationTask(Spacecraft(-2103), Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions() })
         };
 
         // Act
@@ -437,7 +427,6 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         Assert.Null(result.Results[1].Error);
         Assert.Null(result.Results[1].Solution.CovariancePropagation);
         Assert.IsType<NotSupportedException>(result.Results[2].Error);
-        Assert.Null(tasks[1].CovariancePropagation);
     }
 
     [Fact]
@@ -453,9 +442,9 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
 
         // Act
-        await scenario.SimulateAsync(false, false, Step, () => new RK78Integrator(), options);
+        scenario.Simulate(new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, CovariancePropagation = options ?? CovariancePropagationOptions.None });
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            failing.SimulateAsync(false, false, Step, () => new RK78Integrator(), options));
+            Task.FromResult(failing.Simulate(new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, CovariancePropagation = options ?? CovariancePropagationOptions.None })));
 
         // Assert
         Assert.True(scenario.IsSimulated);
@@ -472,8 +461,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         scenario.AddSpacecraft(Spacecraft(-2113));
 
         // Act
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => scenario.SimulateAsync(false, false,
-            Step, () => new RK78Integrator(1e-30, 1e-30, minStepSize: 1e-3), new CovariancePropagationOptions()));
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => Task.FromResult(scenario.Simulate(new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-30, RelativeTolerance = 1e-30, MinStep = TimeSpan.FromSeconds(1e-3) }, OutputStep = Step, CovariancePropagation = new CovariancePropagationOptions() })));
 
         // Assert: the failure of the integrator, not presented as one of the covariance (H3 review of step 8)
         Assert.StartsWith("RK78 adaptive step failed", exception.Message);
@@ -487,7 +475,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     {
         // Arrange: a spacecraft without P0, propagated once
         var spacecraft = PartialsTestCases.Spacecraft(Leo);
-        spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step);
+        spacecraft.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
         var epoch = Start.AddSeconds(3000.0);
         var before = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None);
         var states = spacecraft.PropagatedStates;
@@ -498,10 +486,10 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         // Act: a second propagation whose activation is rejected (no P0; process noise without the covariance)
         if (covarianceWithoutP0)
             Assert.Throws<InvalidOperationException>(() =>
-                spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, options));
+                spacecraft.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = options ?? CovariancePropagationOptions.None }));
         else
             Assert.Throws<ArgumentException>(() =>
-                spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, options));
+                spacecraft.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = options ?? CovariancePropagationOptions.None }));
 
         // Assert: the previous propagation is untouched (H3 review of step 8: it was reset before the checks)
         var after = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None);
@@ -542,10 +530,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     public void EvaluateVariational_WrongBufferLengths_Throw()
     {
         // Arrange: Cd column and Q carried, so Y holds 42 values and Q 21
-        var solution = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, false, Step, Full with
-        {
-            ConsiderParameters = new ConsiderParameters(0.1)
-        });
+        var solution = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = Full with { ConsiderParameters = new ConsiderParameters(0.1) } });
 
         // Assert
         Assert.Throws<ArgumentException>(() => solution.EvaluateVariational(Start, new double[36], new double[21]));
@@ -619,7 +604,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     public void Covariance_AnOutputStateAllocatesItsResultsOnly()
     {
         // Arrange: a state inside a step, and the same evaluations without the covariance, warmed up
-        var solution = Spacecraft().Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, Full);
+        var solution = Spacecraft().Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Full });
         var epoch = Start.AddSeconds(1234.5);
         solution.StateAndCovarianceAt(epoch);
         solution.InterpolateAt(epoch);
@@ -663,8 +648,8 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     private CentralBodyPropagator Propagator(Spacecraft spacecraft, bool rk78, TimeSystem.Window window)
     {
         return rk78
-            ? new CentralBodyPropagator(window, spacecraft, new RK78Integrator(), Bodies, true, true, Step)
-            : new CentralBodyPropagator(window, spacecraft, Bodies, true, true, TimeSpan.FromSeconds(10.0));
+            ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Step, ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None })
+            : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true });
     }
 
     private (PropagationSolution Solution, TimeSystem.Time BurnEpoch) PropagateWithManeuver(int naifId,
@@ -682,9 +667,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
             ExecutionError = error
         };
         spacecraft.SetStandbyManeuver(maneuver);
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)),
-            new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-11, 1e-11), false, false, Step,
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _cases.Earth }, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } });
         Assert.NotNull(maneuver.ThrustWindow);
         return (solution, solution.Segments[1].BaseEpoch);
     }

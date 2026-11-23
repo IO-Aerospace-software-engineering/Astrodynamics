@@ -33,7 +33,7 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// An impulse gated by its minimum epoch fires at the first crossing of its g-function in its direction at or after it,
 /// searched from the integrated state there (#569, PR 2 of #554): every impulse maneuver, both integrators, RK7(8)
 /// adaptive and fixed-step, covariance mode with and without the step control, <c>Spacecraft.Propagate</c> and
-/// <c>Scenario.SimulateAsync</c>, ICRF and ECLIPJ2000, SSB mode, the Moon.
+/// <c>Scenario.Simulate</c>, ICRF and ECLIPJ2000, SSB mode, the Moon.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -199,8 +199,8 @@ public class MinimumEpochGateTests
         // overload, the batch task
         foreach (var p in new[] { "perigee/m1000", "apogee/peri-3" })
         {
-            foreach (var path in new[] { "CovBuilder", "CovScenario", "CovTask" }) Add(p, ["RK", "RKf60"], path);
-            foreach (var path in new[] { "CovBuilderStep", "CovScenarioStep", "CovTaskStep" }) Add(p, ["RK"], path);
+            foreach (var path in new[] { "CovConstructor", "CovScenario", "CovTask" }) Add(p, ["RK", "RKf60"], path);
+            foreach (var path in new[] { "CovConstructorStep", "CovScenarioStep", "CovTaskStep" }) Add(p, ["RK"], path);
         }
 
         foreach (var p in paths) Add(p, ["VV1", "VV10", "RK"], frame: "SSB");
@@ -582,12 +582,12 @@ public class MinimumEpochGateTests
 
             var window = new Window(S, S.AddSeconds(@case.Hours * 3600.0));
             var output = TimeSpan.FromSeconds(10.0);
-            Integrator NewIntegrator() => integrator switch
+            IntegratorOptions NewIntegrator() => integrator switch
             {
-                "VV1" => new VVIntegrator(TimeSpan.FromSeconds(1.0)),
-                "VV10" => new VVIntegrator(TimeSpan.FromSeconds(10.0)),
-                "RKf60" => new RK78Integrator(60.0),
-                _ => frameName == "SSB" ? new RK78Integrator(AttitudeRecordTests.SsbRk78Tolerance, AttitudeRecordTests.SsbRk78Tolerance) : new RK78Integrator(1e-12, 1e-12)
+                "VV1" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+                "VV10" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
+                "RKf60" => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(60.0) },
+                _ => frameName == "SSB" ? new RK78IntegratorOptions { AbsoluteTolerance = AttitudeRecordTests.SsbRk78Tolerance, RelativeTolerance = AttitudeRecordTests.SsbRk78Tolerance } : new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }
             };
 
             PropagationSolution solution;
@@ -599,32 +599,24 @@ public class MinimumEpochGateTests
                 var scenario = new Scenario($"SGT{-naifId}", new IO.Astrodynamics.Mission.Mission($"mGT{-naifId}"), window);
                 foreach (var body in bodies) scenario.AddCelestialItem(body);
                 scenario.AddSpacecraft(spacecraft);
-                var simulation = covariance == null
-                    ? scenario.SimulateAsync(false, false, output, NewIntegrator)
-                    : scenario.SimulateAsync(false, false, output, NewIntegrator, covariance);
-                simulation.GetAwaiter().GetResult();
+                scenario.Simulate(new PropagationOptions { Integrator = NewIntegrator(), OutputStep = output, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 solution = spacecraft.LastPropagation;
             }
-            else if (path.StartsWith("CovBuilder"))
+            else if (path.StartsWith("CovConstructor"))
             {
-                using var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, NewIntegrator(), output)
-                    .WithPerturbingBodies(bodies).WithCovariancePropagation(covariance).Build();
+                var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = output, ThirdBodies = bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 solution = propagator.Propagate();
             }
             else if (path.StartsWith("CovTask"))
             {
-                var task = new PropagationTask(spacecraft, window, bodies, false, false, output, NewIntegrator) { CovariancePropagation = covariance };
+                var task = new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = output, ThirdBodies = bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 var result = BatchPropagator.Propagate([task]).Results[0];
                 Assert.Null(result.Error);
                 solution = result.Solution;
             }
-            else if (covariance != null)
-            {
-                solution = spacecraft.Propagate(window, bodies, NewIntegrator(), false, false, output, covariance);
-            }
             else
             {
-                solution = spacecraft.Propagate(window, bodies, NewIntegrator(), false, false, output);
+                solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = output, ThirdBodies = bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
             }
 
             var executed = chain.Where(x => x.ThrustWindow.HasValue).ToArray();
@@ -986,14 +978,14 @@ public class MinimumEpochGateTests
     {
         var orbit = Orbit(center, System.Math.PI);
         var spacecraft = new Spacecraft(-7999, "GTSTEPS", 1000.0, 3000.0, new Clock("GTSTEPS_CLK", 65536), orbit);
-        Integrator propagator = integrator switch
+        IntegratorOptions propagator = integrator switch
         {
-            "VV1" => new VVIntegrator(TimeSpan.FromSeconds(1.0)),
-            "VV10" => new VVIntegrator(TimeSpan.FromSeconds(10.0)),
-            "RKf60" => new RK78Integrator(60.0),
-            _ => new RK78Integrator(1e-12, 1e-12)
+            "VV1" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+            "VV10" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
+            "RKf60" => new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(60.0) },
+            _ => new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }
         };
-        var solution = spacecraft.Propagate(new Window(S, S.AddSeconds(4.0 * 3600.0)), [center], propagator, false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(new Window(S, S.AddSeconds(4.0 * 3600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [center], CovariancePropagation = CovariancePropagationOptions.None });
         double perigee = ClosedFormOf(center, orbit).T / 2.0;
         var step = solution.Segments[0].Steps.First(x => x.CumulativeTime + x.StepSize >= perigee);
         var start = PropagationTimeArgument.Tt.EpochAt(S, step.CumulativeTime);

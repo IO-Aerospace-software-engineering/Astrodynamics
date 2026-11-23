@@ -93,8 +93,7 @@ public sealed class ConjunctionCovarianceCase
     /// <summary>The participant propagated by RK7(8), two-body, with the covariance options given (none when null).</summary>
     internal PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options = null)
     {
-        return spacecraft.Propagate(PropagationWindow, new CelestialItem[] { Earth }, new RK78Integrator(1e-12, 1e-12),
-            false, false, TimeSpan.FromSeconds(60.0), options);
+        return spacecraft.Propagate(PropagationWindow, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { Earth }, CovariancePropagation = options ?? CovariancePropagationOptions.None });
     }
 }
 
@@ -130,7 +129,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the same TCA and miss distance; the covariance used is that of the propagation with the covariance at
         // the TCA (E1, 1e-12), propagated for both participants, age zero, no process noise, never stale
@@ -179,9 +178,9 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
 
         // Act: with the process noise of the analysis, then the former behaviour
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = noisy });
+            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = noisy ?? CovariancePropagationOptions.None });
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the stored Φ are not read; the replay applies the options of the analysis, the process noise included,
         // and gives the covariance of the propagation with the covariance at the TCA, bit for bit
@@ -320,12 +319,10 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         // Arrange: Velocity-Verlet, not propagated (two-body ephemeris), and an RK7(8) propagation whose window starts
         // after the epoch of the initial covariance
         var vv = ConjunctionCovarianceCase.NewSpacecraft(-6251, _case.ProtectedStart);
-        vv.Propagate(ConjunctionCovarianceCase.PropagationWindow, new CelestialItem[] { _case.Earth }, false, false,
-            TimeSpan.FromSeconds(60.0));
+        vv.Propagate(ConjunctionCovarianceCase.PropagationWindow, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _case.Earth } });
         var notPropagated = ConjunctionCovarianceCase.NewSpacecraft(-6252, _case.SecondaryStart);
         var later = ConjunctionCovarianceCase.NewSpacecraft(-6253, _case.SecondaryStart);
-        later.Propagate(new Window(ConjunctionCovarianceCase.Start.AddHours(1.0), ConjunctionCovarianceCase.Start.AddHours(26.0)),
-            new CelestialItem[] { _case.Earth }, new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(60.0), null);
+        later.Propagate(new Window(ConjunctionCovarianceCase.Start.AddHours(1.0), ConjunctionCovarianceCase.Start.AddHours(26.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _case.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         foreach (var secondary in new[] { notPropagated, later })
         {
@@ -333,7 +330,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
             var withDefaults = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(vv), secondary,
                 ConjunctionCovarianceCase.AnalysisWindow);
             var withoutPropagation = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(vv), secondary,
-                ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+                ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert: the fallback, the same results bit for bit as without the propagation of the covariance
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, withDefaults.EncounterState.ProtectedCovariance.Source);

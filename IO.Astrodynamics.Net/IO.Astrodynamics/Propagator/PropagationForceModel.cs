@@ -20,10 +20,12 @@ namespace IO.Astrodynamics.Propagator;
 /// </summary>
 /// <remarks>
 /// Kept by the <see cref="PropagationSolution"/> of an RK7(8) or Velocity-Verlet propagation and by its spacecraft
-/// until its next propagation (<see cref="Spacecraft.LastForceModel"/>), without the steps: about 0.2 MB for one day in
-/// LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun. The forces are not reentrant (their buffers and those of
-/// the geopotential): every propagation with them runs under <see cref="SyncRoot"/>, the lock of the dynamics of an
-/// RK7(8) solution.
+/// until its next propagation (<see cref="Spacecraft.LastForceModel"/>), without the steps: about 0.34 MB for one day
+/// in LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun (measured alone in the CI of #789 at aefd6c2b on Linux x64,
+/// Windows x64 and macOS arm64, lot L4 of #668, <c>DefaultIntegratorFiguresTests</c>). The forces are not reentrant (their buffers and those of
+/// the geopotential): every propagation with them runs under <see cref="SyncRoot"/>, the lock of the forces of the
+/// propagator instance (<c>PropagatorBase.DynamicsSyncRoot</c>), shared by its runs and by the dynamics of its
+/// RK7(8) solutions (#782, decision 25 of lot L4 of #668).
 /// </remarks>
 internal sealed class PropagationForceModel
 {
@@ -72,7 +74,7 @@ internal sealed class PropagationForceModel
     /// <param name="solution">Its solution, whose segments carry their mass and coefficients.</param>
     /// <param name="initialState">The integrated initial state: its observer and frame.</param>
     /// <param name="orientationCache">The orientation cache of the propagation, or null.</param>
-    /// <param name="syncRoot">The lock of the dynamics of the solution, or null for a new one.</param>
+    /// <param name="syncRoot">The lock of the forces of the propagator instance, <c>PropagatorBase.DynamicsSyncRoot</c>.</param>
     internal static PropagationForceModel TryCreate(IIntegrator integrator, PropagationSolution solution,
         StateVector initialState, PropagationFrameOrientationCache orientationCache, object syncRoot)
     {
@@ -90,7 +92,7 @@ internal sealed class PropagationForceModel
         }
 
         return new PropagationForceModel((Integrator)integrator, initialState.Observer, initialState.Frame, orientationCache,
-            syncRoot ?? new object(), epochs, contexts, solution.End);
+            syncRoot, epochs, contexts, solution.End);
     }
 
     /// <summary>Whether the propagation covers <paramref name="epoch"/>, its end excluded.</summary>

@@ -174,7 +174,7 @@ public class ForceModelComparisonTests
 
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
-            spacecraft.Propagate(window, moons, false, false, TimeSpan.FromSeconds(60.0)));
+            spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = moons }));
 
         // Assert
         Assert.Equal("celestialBodies", exception.ParamName);

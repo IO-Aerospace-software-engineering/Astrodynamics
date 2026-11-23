@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,9 +154,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // Φ_kep P0 Φ_kepᵀ, with the closed-form Keplerian STM (universal variables, automatic differentiation).
         var state = WithCovariance(Leo);
         var end = Start.AddHours(6.0);
-        var solution = PartialsTestCases.Spacecraft(state).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
-            new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-12, 1e-12), false, false,
-            TimeSpan.FromHours(1.0), Covariance);
+        var solution = PartialsTestCases.Spacecraft(state).PropagateWithVariational(new TimeSystem.Window(Start, end),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromHours(1.0), ThirdBodies = new CelestialItem[] { _cases.Earth } },
+            Covariance);
         var p0 = CovarianceAssert.ToMathNet(Symmetrized(state.Covariance.Value), 6);
 
         foreach (double seconds in new[] { 1234.5, 7200.0, 15000.25, 21600.0 })
@@ -353,8 +354,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var (spacecraft, maneuver) = ManeuverCase(execution);
 
         // Act
-        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(2.0)), new CelestialItem[]
-            { _cases.Earth }, new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(600.0), options);
+        var solution = spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, Start.AddHours(2.0)),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { _cases.Earth } },
+            options);
 
         // Assert: P(after) − P(before) = B L_e Bᵀ at the burn (C5), L_e of the executed ΔV
         Assert.Equal(2, solution.Segments.Count);
@@ -402,11 +404,13 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var execution = new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
         var window = new TimeSystem.Window(Start, Start.AddHours(2.0));
         var (withError, maneuver) = ManeuverCase(execution);
-        var solution = withError.PropagateWithVariationalEquations(window, new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-11, 1e-11),
-            false, false, TimeSpan.FromSeconds(600.0), options);
+        var solution = withError.PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { _cases.Earth } },
+            options);
         var (withoutError, _) = ManeuverCase(null, -1963);
-        var reference = withoutError.PropagateWithVariationalEquations(window, new CelestialItem[] { _cases.Earth },
-            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(600.0), options);
+        var reference = withoutError.PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { _cases.Earth } },
+            options);
         var after = solution.Segments[1];
         Assert.Equal(after.Steps[^1].EndPosition, reference.Segments[1].Steps[^1].EndPosition);
         var executionCovariance = new double[9];
@@ -439,9 +443,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var (spacecraft, maneuver) = ManeuverCase(new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 });
 
         // Act
-        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(2.0)),
-            new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-11, 1e-11), false, false,
-            TimeSpan.FromSeconds(600.0), new VariationalOptions());
+        var solution = spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, Start.AddHours(2.0)),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { _cases.Earth } },
+            new VariationalOptions());
 
         // Assert
         var after = solution.Segments[1].Variational;
@@ -469,10 +473,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var state = Leo;
         var solution = PartialsTestCases.Spacecraft(WithCovariance(new StateVector(state.Position, state.Velocity,
                 state.Observer, start.ToTDB(), state.Frame)))
-            .PropagateWithVariationalEquations(window, Bodies, new RK78Integrator(1e-9, 1e-9), true, true,
-                TimeSpan.FromSeconds(600.0), new VariationalOptions(ForceParameters.DragCoefficient,
-                    new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true,
-                    ConsiderParameters: new ConsiderParameters(0.1)));
+            .PropagateWithVariational(window,
+                new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-9, RelativeTolerance = 1e-9 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true },
+                new VariationalOptions(ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true, ConsiderParameters: new ConsiderParameters(0.1)));
         var endLabel = window.EndDate.ToTDB();
 
         // Act and assert: the end label is past the last step, by less than a tick, and reads the values at the end of
@@ -499,10 +502,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var orbit = new KeplerianElements(1837400.0, 0.001, 0.5, 0.2, 0.3, 0.0, moon, Start, Frames.Frame.ICRF)
             .ToStateVector();
         var window = new TimeSystem.Window(Start, Start.AddSeconds(21600.3));
-        var solution = PartialsTestCases.Spacecraft(WithCovariance(orbit)).PropagateWithVariationalEquations(window,
-            new CelestialItem[] { moon, _cases.Earth, _cases.Sun }, new RK78Integrator(1e-9, 1e-9), false, false,
-            TimeSpan.FromSeconds(600.0), new VariationalOptions(ForceParameters.None,
-                new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true));
+        var solution = PartialsTestCases.Spacecraft(WithCovariance(orbit)).PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-9, RelativeTolerance = 1e-9 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { moon, _cases.Earth, _cases.Sun } },
+            new VariationalOptions(ForceParameters.None, new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true));
         var last = solution.Segments[^1];
         var tickPast = window.EndDate.AddTicks(1);
 
@@ -681,8 +683,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var eclipsing = _referenceCases.Eclipsing;
         var orbit = (StateVector)eclipsing.InitialState.ToFrame(frame);
         var spacecraft = _referenceCases.EclipsingSpacecraft(naifId, orbit);
-        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.Add(eclipsing.Duration)),
-            eclipsing.Bodies, new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
+        var solution = spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, Start.Add(eclipsing.Duration)),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = eclipsing.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true },
+            options);
         Assert.Equal(2, solution.Segments.Count);
         return solution;
     }
@@ -733,15 +736,15 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
 
     private CentralBodyPropagator Propagator(Spacecraft spacecraft, TimeSystem.Time start, TimeSystem.Time end)
     {
-        return new CentralBodyPropagator(new TimeSystem.Window(start, end), spacecraft, new RK78Integrator(), Bodies,
-            false, false, TimeSpan.FromSeconds(600.0));
+        return new CentralBodyPropagator(new TimeSystem.Window(start, end), spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Bodies, CovariancePropagation = CovariancePropagationOptions.None });
     }
 
     private PropagationSolution Propagate(StateVector state, TimeSystem.Time end, VariationalOptions options,
         bool dragAndSrp)
     {
-        return PartialsTestCases.Spacecraft(state).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end), Bodies,
-            new RK78Integrator(1e-9, 1e-9), dragAndSrp, dragAndSrp, TimeSpan.FromSeconds(600.0), options);
+        return PartialsTestCases.Spacecraft(state).PropagateWithVariational(new TimeSystem.Window(Start, end),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-9, RelativeTolerance = 1e-9 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Bodies, AtmosphericDrag = dragAndSrp, SolarRadiationPressure = dragAndSrp },
+            options);
     }
 
     /// <summary>

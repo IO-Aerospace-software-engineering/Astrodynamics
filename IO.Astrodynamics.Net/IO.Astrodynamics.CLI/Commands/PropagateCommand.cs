@@ -10,6 +10,8 @@ using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.Cosmographia;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
@@ -77,7 +79,14 @@ public class PropagateCommand
         //Simulate
         var qualifiedOutputDirectory = new DirectoryInfo(outputDirectory);
         Console.WriteLine("Orbit propagation in progress. This operation could take a long time. Duration expected for one orbit 7000km x 7000km on mid range computer with geopotential N=30 = 600ms");
-        await scenario.SimulateAsync(useAtmosphericDrag, useSolarRadiationPressure,TimeSpan.FromSeconds(1.0));
+        // Velocity-Verlet at 1 s, outputs every second, the scenario's bodies: the CLI's own settings
+        scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+            OutputStep = TimeSpan.FromSeconds(1.0),
+            AtmosphericDrag = useAtmosphericDrag,
+            SolarRadiationPressure = useSolarRadiationPressure
+        });
 
         //Export to cosmographia
         CosmographiaExporter cosmographiaExporter = new CosmographiaExporter();

@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,8 +55,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var spacecraft = PartialsTestCases.Spacecraft(Leo);
 
         // Act
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(1.0)), Bodies,
-            new RK78Integrator(), true, true, TimeSpan.FromSeconds(600.0), null);
+        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(1.0)), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         Assert.NotNull(solution.Dynamics);
@@ -75,8 +75,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     public void WithVelocityVerlet_TheSolutionKeepsNoDynamics()
     {
         // Act
-        var solution = PartialsTestCases.Spacecraft(Leo).Propagate(new TimeSystem.Window(Start, Start.AddHours(0.5)),
-            Bodies, false, false, TimeSpan.FromSeconds(60.0));
+        var solution = PartialsTestCases.Spacecraft(Leo).Propagate(new TimeSystem.Window(Start, Start.AddHours(0.5)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies });
 
         // Assert: no dynamics; the segments carry their mass and coefficients, for the force model the solution keeps for
         // the avoidance options (#402)
@@ -267,8 +266,9 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var first = PropagateLeo(t1, options, false, TimeSpan.FromHours(1.0), 1e-13);
         var lastStep = first.Segments.Single().Steps[^1];
         var middle = new StateVector(lastStep.EndPosition, lastStep.EndVelocity, _cases.Earth, t1, Frames.Frame.ICRF);
-        var second = PartialsTestCases.Spacecraft(middle).PropagateWithVariationalEquations(new TimeSystem.Window(t1, t2), Bodies,
-            new RK78Integrator(1e-13, 1e-13), false, false, TimeSpan.FromHours(1.0), options);
+        var second = PartialsTestCases.Spacecraft(middle).PropagateWithVariational(new TimeSystem.Window(t1, t2),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromHours(1.0), ThirdBodies = Bodies },
+            options);
 
         // Act
         var (phi20, q20) = Evaluate(whole, t2, 6);
@@ -293,8 +293,9 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         double initialMass = spacecraft.GetTotalMass();
 
         // Act
-        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(2.0)), Bodies,
-            new RK78Integrator(1e-11, 1e-11), true, false, TimeSpan.FromSeconds(60.0), FullOptions);
+        var solution = spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, Start.AddHours(2.0)),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies, AtmosphericDrag = true },
+            FullOptions);
 
         // Assert: two segments, the burn recorded at the start of the second
         Assert.Equal(2, solution.Segments.Count);
@@ -344,8 +345,9 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var options = new VariationalOptions(ForceParameters.DragCoefficient);
         var (spacecraft, _) = ManeuverCase();
         var t2 = Start.AddHours(2.0);
-        var whole = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, t2), Bodies, new RK78Integrator(1e-13, 1e-13), true,
-            false, TimeSpan.FromSeconds(60.0), options);
+        var whole = spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, t2),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies, AtmosphericDrag = true },
+            options);
         Assert.Equal(2, whole.Segments.Count);
         var after = whole.Segments[1];
         var te = after.BaseEpoch;
@@ -357,8 +359,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         // that rounding changed the step sequence from the second step on, so the two Ψ composed to 5.8e-9 only (Φ to
         // 1.3e-13): the integration error of Ψ, which is not in the step control (A2), not its partials. From the exact
         // state, the steps are the same, and the test checks the composition itself.
-        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(te, t2), independent,
-            new RK78Integrator(1e-13, 1e-13), Bodies, true, false, TimeSpan.FromSeconds(60.0));
+        var propagator = new CentralBodyPropagator(new TimeSystem.Window(te, t2), independent, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
         propagator.EnableVariationalEquations(options);
         var second = propagator.Propagate();
         AssertSameBits(postBurn.Position, second.Segments[0].Steps[0].StartPosition, "start position");
@@ -596,15 +597,15 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     private PropagationSolution PropagateLeo(TimeSystem.Time end, VariationalOptions options, bool dragAndSrp,
         TimeSpan? outputStep = null, double tolerance = 1e-9)
     {
-        return PartialsTestCases.Spacecraft(Leo).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end), Bodies,
-            new RK78Integrator(tolerance, tolerance), dragAndSrp, dragAndSrp, outputStep ?? TimeSpan.FromSeconds(600.0),
+        return PartialsTestCases.Spacecraft(Leo).PropagateWithVariational(new TimeSystem.Window(Start, end),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = outputStep ?? TimeSpan.FromSeconds(600.0), ThirdBodies = Bodies, AtmosphericDrag = dragAndSrp, SolarRadiationPressure = dragAndSrp },
             options);
     }
 
     private PropagationSolution PropagateTwoBody(StateVector start, TimeSystem.Time end, VariationalOptions options)
     {
-        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
-            new CelestialItem[] { _cases.Earth }, new RK78Integrator(60.0), false, false, TimeSpan.FromSeconds(60.0),
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariational(new TimeSystem.Window(Start, end),
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _cases.Earth } },
             options);
     }
 

@@ -99,32 +99,34 @@ scenario.AddCelestialItem(moon);
 scenario.AddSpacecraft(spacecraft);
 
 // Run simulation
-var summary = await scenario.SimulateAsync(
-    includeAtmosphericDrag: false,
-    includeSolarRadiationPressure: false,
-    TimeSpan.FromSeconds(1.0));
+var summary = scenario.Simulate();
 ```
 
-`SimulateAsync` propagates all spacecraft in the scenario, applies maneuvers,
-and returns a summary with ephemeris data.
+`Simulate` propagates all spacecraft in the scenario, in turn, applies maneuvers,
+and returns a summary with ephemeris data. Without settings it runs the defaults
+of `PropagationOptions`: RK7(8) at 1e-9, an output every 60 s, the bodies of the
+scenario as the third bodies of each spacecraft.
+`Simulate(options, cancellationToken)` stops at the token: no summary, `IsSimulated` false, the spacecraft
+propagated before the stop complete ([Propagators](../reference/propagators.md#cancellation)).
 
 ### Choosing the integrator
 
-By default, `SimulateAsync` integrates with Velocity-Verlet, using `propagatorStepSize` as step. Pass a factory to
-use another integrator, for example the adaptive RK7(8):
+`PropagationOptions.Integrator` chooses the integrator of every spacecraft, for example the adaptive RK7(8) at tighter
+tolerances, or Velocity-Verlet at its own step:
 
 ```csharp
 // Inputs: scenario (Scenario)
-var summary = await scenario.SimulateAsync(
-    includeAtmosphericDrag: false,
-    includeSolarRadiationPressure: false,
-    TimeSpan.FromSeconds(10.0),
-    () => new RK78Integrator(absoluteTolerance: 1e-11, relativeTolerance: 1e-11));
+var summary = scenario.Simulate(new PropagationOptions
+{
+    Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+    OutputStep = TimeSpan.FromSeconds(10.0)
+});
 ```
 
-The factory is called once per spacecraft and must return a new instance each time, because the propagator adds
-the force model of each spacecraft to its integrator. `propagatorStepSize` remains the step of the propagated
-states. See [Integrators](../reference/integrators.md#choosing-the-integrator).
+Each spacecraft's propagation builds its own integrator from the options, so one value serves them all. `OutputStep`
+is the step of the propagated states only. See [Integrators](../reference/integrators.md#choosing-the-integrator).
+(The asynchronous `SimulateAsync` of 10.x, which stepped Velocity-Verlet at the output step, was removed in 11.0.0:
+`new VVIntegratorOptions { Step = step }` with `OutputStep = step` keeps its results bit for bit.)
 
 ### Multiple scenarios
 
@@ -141,8 +143,9 @@ var backupScenario = new Scenario("Backup", mission, backupWindow);
 backupScenario.AddSpacecraft(spacecraftBackup);
 
 // Simulate each independently
-var nominalResult = await nominalScenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10));
-var backupResult = await backupScenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10));
+var options = new PropagationOptions { OutputStep = TimeSpan.FromSeconds(10) };
+var nominalResult = nominalScenario.Simulate(options);
+var backupResult = backupScenario.Simulate(options);
 ```
 
 ## Spacecraft rendezvous
@@ -177,7 +180,7 @@ spacecraft.SetStandbyManeuver(maneuver1);
 var scenario = new Scenario("Rendezvous", mission, window);
 scenario.AddCelestialItem(earth);
 scenario.AddSpacecraft(spacecraft);
-var result = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1));
+var result = scenario.Simulate(new PropagationOptions { OutputStep = TimeSpan.FromSeconds(1) });
 ```
 
 Each maneuver in the chain fires at the correct orbital location determined by

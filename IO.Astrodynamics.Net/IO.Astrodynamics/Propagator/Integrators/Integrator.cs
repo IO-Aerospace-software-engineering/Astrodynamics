@@ -38,6 +38,15 @@ public abstract class Integrator : IIntegrator
     /// </summary>
     internal virtual PropagationTimeArgument TimeArgument { get; set; } = PropagationTimeArgument.Tdb;
 
+    /// <summary>
+    /// The cancellation token of the propagation that runs this integrator (R28 of #668, the internal per-step hook):
+    /// set by <see cref="PropagatorBase.Propagate"/> for its run and reset after it, read by <see cref="VVIntegrator"/>
+    /// and <see cref="RK78Integrator"/> at each accepted step (never between rejections, C1 of lot L4). None by default,
+    /// so the replays and the propagations of the library that are not a run of a caller never stop. A subclass outside
+    /// the library does not read it: the propagator checks the token between its segments.
+    /// </summary>
+    internal CancellationToken Cancellation { get; set; }
+
     public Integrator(IEnumerable<ForceBase> forces)
     {
         _forces = new List<ForceBase>(forces);
@@ -60,9 +69,12 @@ public abstract class Integrator : IIntegrator
     private int _claimed;
 
     /// <summary>
-    /// Takes this integrator for a propagation that builds its forces (the constructors of
-    /// <see cref="CentralBodyPropagator"/> with celestial bodies, the builder, <c>Spacecraft.Propagate</c>, the batch, Monte
-    /// Carlo and scenario paths), atomically: two threads given one instance cannot both take it (#674).
+    /// Takes this integrator for a propagation that builds its forces (the options constructors of
+    /// <see cref="CentralBodyPropagator"/>, and so every options entry point, each building a new integrator per run),
+    /// atomically: two threads given one instance cannot both take it (#674). The claim is never released. Since 11.0.0 no
+    /// public member hands a caller's integrator to a path that builds its forces (R07 of #668: the constructors of flags
+    /// were removed), and a caller's integrator is claimed by the propagator it is given to instead (#782, decision 24 of
+    /// lot L4 of #668).
     /// </summary>
     /// <exception cref="ArgumentException">The integrator already holds forces, or a propagation already took it.</exception>
     internal void ClaimForForces()
@@ -80,7 +92,8 @@ public abstract class Integrator : IIntegrator
     /// <summary>
     /// Initialize the integrator with the initial state.
     /// Sets the observer and frame used for constructing intermediate StateVectors.
-    /// Called by the propagator at construction, once the forces are added, and after each event.
+    /// Called by the propagator at construction, once the forces are added, at the start of every run and after each
+    /// event (#782); an override resets every state a run depends on (<see cref="IIntegrator.Initialize"/>).
     /// </summary>
     public virtual void Initialize(StateVector initialState)
     {

@@ -10,6 +10,8 @@ using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
 
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 namespace IO.Astrodynamics.Tests.Body;
 
 /// <summary>
@@ -548,7 +550,7 @@ public class StarVelocityTests
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-731005, "AboutBarnard", 1000.0, 10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("clk731", 256), aboutStar);
 
         // Act
-        spacecraft.Propagate(new Window(epoch, epoch.AddHours(6.0)), [sun], false, false, TimeSpan.FromSeconds(60.0));
+        spacecraft.Propagate(new Window(epoch, epoch.AddHours(6.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [sun] });
         var start = spacecraft.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None);
 
         // Assert

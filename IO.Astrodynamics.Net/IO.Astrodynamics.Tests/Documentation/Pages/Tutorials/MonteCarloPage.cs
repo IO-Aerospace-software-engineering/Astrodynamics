@@ -87,35 +87,23 @@ internal static class MonteCarloPage
             Seed = 42,
             TemplateSpacecraft = spacecraft,
             Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
-            CelestialBodiesFactory = () => [
-                new CelestialBody(PlanetsAndMoons.EARTH),
-                Stars.SUN_BODY,
-                PlanetsAndMoons.MOON_BODY
-            ],
-            DeltaT = TimeSpan.FromSeconds(60),
-            IntegratorFactory = () => new RK78Integrator(1e-10, 1e-10, 30.0),
+            Propagation = new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions
+                {
+                    AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+                },
+                OutputStep = TimeSpan.FromSeconds(60),
+                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            }
         };
         #endregion
     }
 
-    // docs/tutorials/monte-carlo.md, "Thread safety with CelestialBodiesFactory"
-    internal static void Block03()
+    // docs/tutorials/monte-carlo.md, "Running the campaign"
+    internal static void Block03(MonteCarloConfiguration config)
     {
         #region docs/tutorials/monte-carlo.md:3
-        // The configuration's factory, as a variable: CelestialBodiesFactory = celestialBodiesFactory
-        Func<IEnumerable<CelestialItem>> celestialBodiesFactory = () =>
-        [
-            new CelestialBody(PlanetsAndMoons.EARTH),   // fresh Earth per thread
-            Stars.SUN_BODY,
-            PlanetsAndMoons.MOON_BODY
-        ];
-        #endregion
-    }
-
-    // docs/tutorials/monte-carlo.md, "Running the campaign"
-    internal static void Block04(MonteCarloConfiguration config)
-    {
-        #region docs/tutorials/monte-carlo.md:4
         // Inputs: config (MonteCarloConfiguration)
         var result = MonteCarloPropagator.Propagate(config);
 
@@ -125,9 +113,9 @@ internal static class MonteCarloPage
     }
 
     // docs/tutorials/monte-carlo.md, "Per-epoch statistics"
-    internal static void Block05(MonteCarloResult result)
+    internal static void Block04(MonteCarloResult result)
     {
-        #region docs/tutorials/monte-carlo.md:5
+        #region docs/tutorials/monte-carlo.md:4
         // Inputs: result (MonteCarloResult)
         // Statistics at the final epoch
         var last = result.EpochStatistics[^1];
@@ -141,9 +129,9 @@ internal static class MonteCarloPage
     }
 
     // docs/tutorials/monte-carlo.md, "Dispersion growth over time"
-    internal static void Block06(MonteCarloResult result)
+    internal static void Block05(MonteCarloResult result)
     {
-        #region docs/tutorials/monte-carlo.md:6
+        #region docs/tutorials/monte-carlo.md:5
         // Inputs: result (MonteCarloResult)
         foreach (var stat in result.EpochStatistics)
         {

@@ -7,6 +7,7 @@ using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -163,11 +164,8 @@ public class GmatConformancePropagatorTests
         var spacecraft = new Spacecraft(-1001, "GMAT_CONFORMANCE", 1000.0, 10000.0, new Clock("clock", 256), orbit);
         var window = new Window(gmatCase.Epoch, gmatCase.Epoch.AddDays(1));
         var propagator = verlet
-            ? new CentralBodyPropagator(window, spacecraft, gmatCase.ThirdBodies(), false, false,
-                TimeSpan.FromSeconds(1.0))
-            : new CentralBodyPropagator(window, spacecraft, new RK78Integrator(absoluteTolerance: 1e-11,
-                    relativeTolerance: 1e-11, initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0),
-                gmatCase.ThirdBodies(), false, false, TimeSpan.FromSeconds(10.0));
+            ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = gmatCase.ThirdBodies() })
+            : new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(300.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = gmatCase.ThirdBodies(), CovariancePropagation = CovariancePropagationOptions.None });
         var (position, velocity) = propagator.Propagate().InterpolateAt(window.EndDate);
         return new[] { position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z };
     }

@@ -93,8 +93,8 @@ convention of the 18th Space Defense Squadron, which replaces the first digit wi
 
 ## Numerical propagation of a TLE
 
-A spacecraft whose initial orbit is a TLE is propagated numerically by `Spacecraft.Propagate`, `PropagateAsync`,
-`Scenario.SimulateAsync`, `BatchPropagator`, `CentralBodyPropagator` and the builder, as any spacecraft (#675; before
+A spacecraft whose initial orbit is a TLE is propagated numerically by `Spacecraft.Propagate`, `Scenario.Simulate`,
+`BatchPropagator`, `MonteCarloPropagator` and `CentralBodyPropagator`, as any spacecraft (#675; before
 11.0.0 every path threw "must be defined in inertial frame"). Its start is the SGP4 state at the start of the window,
 rotated once to ICRF, on the Earth of the TLE; the propagation runs in ICRF and its states are in ICRF
 ([Propagation Frame](propagators.md#propagation-frame)). The TLE is not SGP4 then: the central body is the Earth of
@@ -114,7 +114,25 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
 var sgp4 = tle.ToStateVector(start);
 var spacecraft = new Spacecraft(-1001, "ISS", 420000.0, 450000.0, new Clock("iss", 65536),
     new StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frame.TEME), 1600.0, 2.2);
-spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, true, TimeSpan.FromSeconds(60.0));
+spacecraft.Propagate(window, new PropagationOptions { AtmosphericDrag = true, SolarRadiationPressure = true });
+```
+
+The options of a propagation do it in one line (R12 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0): the point-mass Earth of the
+TLE has no model, which counts as not given, so `PropagationOptions.Geopotential` and `PropagationOptions.Atmosphere`
+fill it ([Propagation Options](propagators.md#propagation-options)), bit for bit the run of the TEME twin on an Earth
+built with that model (`GeopotentialOptionsTests`):
+
+```csharp
+// Inputs: window (Window), tle (TLE)
+var spacecraft = new Spacecraft(-1002, "ISS", 420000.0, 450000.0, new Clock("iss2", 65536), tle, 1600.0, 2.2);
+spacecraft.Propagate(window, PropagationOptions.Default with
+{
+    Geopotential = GeopotentialModelParameters.Egm2008(10),
+    Atmosphere = new Nrlmsise00Model(SpaceWeather.Nominal),
+    AtmosphericDrag = true,
+    SolarRadiationPressure = true
+});
 ```
 
 With EGM2008 at degree 10 and no drag, the same ISS is 0.555 km, 0.788 km and 7.217 km from SGP4 after 1 h, 6 h and

@@ -195,8 +195,8 @@ public class Star : CelestialBody
     public double DeclinationSigmaProperMotion { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the star holds propagated states: true once <see cref="Propagate"/>,
-    /// <see cref="PropagateAsync"/> or <c>Scenario.SimulateAsync</c> stored them.
+    /// Gets a value indicating whether the star holds propagated states: true once <see cref="Propagate"/> or
+    /// <c>Scenario.Simulate</c> stored them.
     /// </summary>
     /// <remarks>
     /// Before 11.0.0 it read <c>PropagationOutput</c>, which no code set, and was always false; that property, always null,
@@ -422,25 +422,6 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Propagates the star asynchronously.
-    /// </summary>
-    /// <param name="timeWindow">The time window for propagation.</param>
-    /// <param name="stepSize">The step size for propagation, positive.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    /// <remarks>The states of the propagation replace those the star held, see <see cref="Propagate"/>.</remarks>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative: thrown by the call
-    /// itself, before any task is created, and nothing is stored. Before 11.0.0 the task never ended (a negative step also
-    /// stored states without bound).</exception>
-    public Task PropagateAsync(Window timeWindow, TimeSpan stepSize)
-    {
-        PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
-        return Task.Run(() =>
-        {
-            Propagate(timeWindow, stepSize);
-        });
-    }
-
-    /// <summary>
     /// Propagates the star.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
@@ -451,7 +432,8 @@ public class Star : CelestialBody
     /// when they are all computed, each the position of <see cref="GetEquatorialCoordinates"/> and the space velocity of
     /// <see cref="GetGeometricStateRelativeTo"/> (before 11.0.0 a zero velocity, #731). Before 11.0.0 each propagation added its states to those of the previous ones (the
     /// first state of an epoch kept), so that <see cref="WriteEphemeris"/> wrote every window ever propagated, the gaps
-    /// between them interpolated.
+    /// between them interpolated. Synchronous: <c>PropagateAsync</c>, a bare <c>Task.Run</c> of this method, is removed
+    /// in 11.0.0 (R28 of #668).
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative, the rule of every
     /// step of the library (#674); nothing is stored. Before 11.0.0 the call never returned (a negative step also stored

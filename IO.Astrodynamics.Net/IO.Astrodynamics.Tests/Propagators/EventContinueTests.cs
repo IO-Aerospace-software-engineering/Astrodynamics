@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
@@ -57,9 +58,7 @@ public class EventContinueTests
         var window = new TimeSystem.Window(Start, Start.AddHours(12.0));
 
         // Act: bounded, so that a regression fails instead of hanging
-        var propagation = Task.Run(() => spacecraft.Propagate(window, new CelestialItem[] { _earth },
-            rk78 ? new RK78Integrator(1e-11, 1e-11) : new VVIntegrator(TimeSpan.FromSeconds(10.0)), false, false,
-            TimeSpan.FromSeconds(60.0)));
+        var propagation = Task.Run(() => spacecraft.Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None }));
         Assert.True(propagation.Wait(TimeSpan.FromMinutes(2)), "The propagation did not end.");
         var solution = propagation.Result;
 
@@ -95,10 +94,8 @@ public class EventContinueTests
         armed.SetStandbyManeuver(armedManeuver);
 
         // Act
-        var skipped = skipping.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
-            false, false, TimeSpan.FromSeconds(60.0));
-        var reference = armed.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
-            false, false, TimeSpan.FromSeconds(60.0));
+        var skipped = skipping.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
+        var reference = armed.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         double thirdApogee = ApogeesWithin(window)[2];
@@ -141,10 +138,12 @@ public class EventContinueTests
         var expected = new double[36];
 
         // Act
-        var skipped = skipping.PropagateWithVariationalEquations(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
-            false, false, TimeSpan.FromSeconds(60.0), new VariationalOptions());
-        var reference = free.PropagateWithVariationalEquations(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
-            false, false, TimeSpan.FromSeconds(60.0), new VariationalOptions());
+        var skipped = skipping.PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth } },
+            new VariationalOptions());
+        var reference = free.PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth } },
+            new VariationalOptions());
         skipped.EvaluateVariational(window.EndDate, phi, Array.Empty<double>());
         reference.EvaluateVariational(window.EndDate, expected, Array.Empty<double>());
 

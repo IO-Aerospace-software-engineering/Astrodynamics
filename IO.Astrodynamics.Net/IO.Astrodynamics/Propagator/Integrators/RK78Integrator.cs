@@ -142,8 +142,10 @@ public sealed class RK78Integrator : Integrator
 
     /// <summary>
     /// Initialize the integrator with the initial state.
-    /// Sets the observer and frame, allocates the stage pool, and resets the PI controller.
-    /// Called by the propagator after forces have been added and at segment boundaries.
+    /// Sets the observer and frame, allocates the stage pool, and resets the step and the PI controller.
+    /// Called by the propagator once the forces are added, at the start of every run and after each event (#782: before
+    /// 11.0.0 not at the start of a run, so the first segment of a second run of one propagator started from the last
+    /// step and controller history of the first).
     /// </summary>
     public override void Initialize(StateVector initialState)
     {
@@ -159,6 +161,20 @@ public sealed class RK78Integrator : Integrator
         _currentH = _initialH;
         _controller?.Reset();
     }
+
+    /// <summary>
+    /// The settings of this integrator as options (<see cref="RK78IntegratorOptions"/>), the steps rounded to the nearest
+    /// tick: the integrator of a propagation reported by <see cref="PropagationSolution.Options"/>.
+    /// </summary>
+    internal RK78IntegratorOptions Settings => AdaptiveMode
+        ? new RK78IntegratorOptions
+        {
+            AbsoluteTolerance = AbsoluteTolerance, RelativeTolerance = RelativeTolerance,
+            InitialStep = Time.SecondsToSpan(_initialH), MinStep = Time.SecondsToSpan(_controller.MinStepSize),
+            MaxStep = Time.SecondsToSpan(_controller.MaxStepSize), SafetyFactor = _controller.SafetyFactor,
+            MinFactor = _controller.MinFactor, MaxFactor = _controller.MaxFactor
+        }
+        : new RK78IntegratorOptions { FixedStep = Time.SecondsToSpan(_initialH) };
 
     /// <summary>
     /// A new integrator with the settings of this one (tolerances, step sizes and controller, or the fixed step), without
@@ -342,6 +358,9 @@ public sealed class RK78Integrator : Integrator
                     CommitVariational(variational);
                 }
 
+                // The token of the run, at each accepted step, never between rejections (R28 of #668, C1 of lot L4)
+                Cancellation.ThrowIfCancellationRequested();
+
                 t += h;
                 pos = posNew;
                 vel = velNew;
@@ -391,6 +410,9 @@ public sealed class RK78Integrator : Integrator
                     AdvanceVariational(h);
                     CommitVariational(variational);
                 }
+
+                // The token of the run, at each accepted step (R28 of #668)
+                Cancellation.ThrowIfCancellationRequested();
 
                 t += h;
                 pos = posNew;

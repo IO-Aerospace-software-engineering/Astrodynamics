@@ -161,7 +161,7 @@ internal sealed class NonlinearityIndex
             integrator.AddForce(force);
         }
 
-        using var propagator = new CentralBodyPropagator(window, spacecraft, integrator, window.Length, options,
+        var propagator = new CentralBodyPropagator(window, spacecraft, integrator, window.Length, options,
             dynamics.OrientationCache, dynamics.SyncRoot);
         return propagator.Propagate();
     }

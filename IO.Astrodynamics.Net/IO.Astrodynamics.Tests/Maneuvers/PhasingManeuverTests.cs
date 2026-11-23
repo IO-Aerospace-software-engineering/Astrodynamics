@@ -6,6 +6,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Tests.Propagators;
 using IO.Astrodynamics.TimeSystem;
@@ -218,8 +219,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var maneuver = new PhasingManeuver(center, start, TimeSpan.Zero, PerigeeLongitude("eccentric") + deltaTheta, revolutions, spc.Engines.First());
             spc.SetStandbyManeuver(maneuver);
             var window = new Window(start, PropagationTimeArgument.Tt.EpochAt(start, tArrival + 600.0));
-            Integrator NewIntegrator() => integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-            var solution = spc.Propagate(window, [center], NewIntegrator(), false, false, TimeSpan.FromSeconds(60.0));
+            IntegratorOptions NewIntegrator() => integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+            var solution = spc.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(), OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [center], CovariancePropagation = CovariancePropagationOptions.None });
 
             Assert.Equal(2, solution.Segments.Count);
             double burnError = PropagationTimeArgument.Tt.SecondsBetween(start, solution.Segments[1].BaseEpoch) - tBurn;

@@ -11,12 +11,14 @@ using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
+using System.Threading.Tasks;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Propagators;
@@ -79,34 +81,30 @@ public class ManeuverEngineBindingTests
         return spacecraft;
     }
 
-    private static Func<Integrator> IntegratorOf(string name) => name switch
+    private static Func<IntegratorOptions> IntegratorOf(string name) => name switch
     {
-        "RK78" => () => new RK78Integrator(),
-        "VV" => () => new VVIntegrator(TimeSpan.FromSeconds(10.0)),
+        "RK78" => () => RK78IntegratorOptions.Default,
+        "VV" => () => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
         _ => throw new ArgumentOutOfRangeException(nameof(name))
     };
 
     // The activation paths: the call that must throw, or, for the batch, the error of its task
-    private static Exception Activate(string path, Spacecraft spacecraft, CelestialBody earth, Func<Integrator> integrator) =>
+    private static Exception Activate(string path, Spacecraft spacecraft, CelestialBody earth, Func<IntegratorOptions> integrator) =>
         Activate(path, spacecraft, earth, integrator, Window);
 
-    private static Exception Activate(string path, Spacecraft spacecraft, CelestialBody earth, Func<Integrator> integrator, Window window)
+    private static Exception Activate(string path, Spacecraft spacecraft, CelestialBody earth, Func<IntegratorOptions> integrator, Window window)
     {
         CelestialItem[] bodies = [earth];
         switch (path)
         {
             case "Propagate":
-                return Record.Exception(() => spacecraft.Propagate(window, bodies, integrator(), false, false, Output));
+                return Record.Exception(() => spacecraft.Propagate(window, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }));
             case "PropagateDefault":
-                return Record.Exception(() => spacecraft.Propagate(window, bodies, false, false, Output));
-            case "PropagateAsync":
-                return Record.Exception(() => spacecraft.PropagateAsync(window, bodies, false, false, Output).GetAwaiter().GetResult());
-            case "Builder":
-                return Record.Exception(() => new CentralBodyPropagatorBuilder(window, spacecraft, integrator(), Output).Build().Propagate());
+                return Record.Exception(() => spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Output }, OutputStep = Output, ThirdBodies = bodies }));
             case "Constructor":
                 return Record.Exception(() =>
                 {
-                    using var propagator = new CentralBodyPropagator(window, spacecraft, integrator(), bodies, false, false, Output);
+                    var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                     propagator.Propagate();
                 });
             case "Scenario":
@@ -115,14 +113,14 @@ public class ManeuverEngineBindingTests
                 var scenario = new Scenario("BIND", new IO.Astrodynamics.Mission.Mission("BIND"), window);
                 scenario.AddCelestialItem(earth);
                 scenario.AddSpacecraft(spacecraft);
-                return Record.Exception(() => (path == "Scenario"
-                    ? scenario.SimulateAsync(false, false, Output, integrator)
-                    : scenario.SimulateAsync(false, false, Output)).GetAwaiter().GetResult());
+                return Record.Exception(() => scenario.Simulate(path == "Scenario"
+                    ? new PropagationOptions { Integrator = integrator(), OutputStep = Output, CovariancePropagation = CovariancePropagationOptions.None }
+                    : new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Output }, OutputStep = Output }));
             }
             case "Batch":
             case "BatchDefault":
             {
-                var task = new PropagationTask(spacecraft, window, bodies, false, false, Output, path == "Batch" ? integrator : null);
+                var task = new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = path == "Batch" ? integrator() : new VVIntegratorOptions { Step = Output }, OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
                 var result = BatchPropagator.Propagate([task]).Results.Single();
                 Assert.False(result.Succeeded);
                 Assert.Null(result.Solution);
@@ -147,10 +145,10 @@ public class ManeuverEngineBindingTests
     // The activation paths and their integrators
     private static readonly (string Path, string[] Integrators)[] Paths =
     [
-        ("Propagate", ["RK78", "VV"]), ("Builder", ["RK78", "VV"]), ("Constructor", ["RK78", "VV"]),
+        ("Propagate", ["RK78", "VV"]), ("Constructor", ["RK78", "VV"]),
         ("Scenario", ["RK78", "VV"]), ("Batch", ["RK78", "VV"]),
-        // The paths of the default integrator, Velocity-Verlet
-        ("PropagateDefault", ["VV"]), ("PropagateAsync", ["VV"]), ("ScenarioDefault", ["VV"]), ("BatchDefault", ["VV"])
+        // Velocity-Verlet at the output step, the integrator of the members without one before 11.0.0
+        ("PropagateDefault", ["VV"]), ("ScenarioDefault", ["VV"]), ("BatchDefault", ["VV"])
     ];
 
     public static IEnumerable<object[]> TleOrTemeCases()
@@ -193,7 +191,7 @@ public class ManeuverEngineBindingTests
 
         var spacecraft = NewSpacecraft(earth, out var ownEngine, orbit: orbit);
         spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, ownEngine));
-        spacecraft.Propagate(window, [earth], integrator(), false, false, Output);
+        spacecraft.Propagate(window, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Single(spacecraft.ExecutedManeuvers);
 
         var other = NewSpacecraft(earth, out var otherEngine);
@@ -243,7 +241,7 @@ public class ManeuverEngineBindingTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var ownEngine);
         spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, ownEngine));
-        spacecraft.Propagate(Window, [earth], integrator(), false, false, Output);
+        spacecraft.Propagate(Window, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Single(spacecraft.ExecutedManeuvers);
 
         var other = NewSpacecraft(earth, out var otherEngine);
@@ -347,7 +345,7 @@ public class ManeuverEngineBindingTests
         double m0 = spacecraft.DryOperatingMass + Fuel;
 
         // Act
-        spacecraft.Propagate(Window, [earth], IntegratorOf(integratorName)(), false, false, Output);
+        spacecraft.Propagate(Window, new PropagationOptions { Integrator = IntegratorOf(integratorName)(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: Tsiolkovsky's closed form, m0 (1 − exp(−Δv / (Isp g0))), g0 = 9.80665 m/s²
         double dv = maneuver.DeltaV.Magnitude();
@@ -370,7 +368,7 @@ public class ManeuverEngineBindingTests
         spacecraft.SetStandbyManeuver(new ProgradeAttitude(earth, Epoch, TimeSpan.FromMinutes(30.0), engine));
 
         // Act
-        spacecraft.Propagate(Window, [earth], IntegratorOf(integratorName)(), false, false, Output);
+        spacecraft.Propagate(Window, new PropagationOptions { Integrator = IntegratorOf(integratorName)(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the front of the record along the unit velocity at the outputs
         double worst = 0.0;

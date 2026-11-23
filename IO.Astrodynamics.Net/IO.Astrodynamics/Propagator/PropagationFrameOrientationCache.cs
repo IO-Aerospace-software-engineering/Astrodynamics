@@ -34,10 +34,11 @@ namespace IO.Astrodynamics.Propagator;
 /// </para>
 /// <para>
 /// A read before the first grid point or after the last reads the frame's orientation at its epoch the same way. Before
-/// 11.0.0 it was held at the nearest end of the grid: a propagation whose output step does not divide its window runs up
-/// to half a step past it, and the propagator built its cache over the window, so past window end + 120 s the central
-/// body stopped turning (4.4e-3 rad 60 s past the grid, 4.4e-2 rad 600 s past; #626). The propagator now builds it over the
-/// span it integrates, so that no propagation reads past the grid.
+/// 11.0.0 it was held at the nearest end of the grid: a propagation whose output step rounded its window up ran up to
+/// half a step past it, and the propagator built its cache over the window, so past window end + 120 s the central body
+/// stopped turning (4.4e-3 rad 60 s past the grid, 4.4e-2 rad 600 s past; #626). The propagator builds it over the span it
+/// integrates, so that no propagation reads past the grid; since 11.0.0 that span ends at the window end (choice 6 of
+/// #668).
 /// </para>
 /// </remarks>
 internal sealed class PropagationFrameOrientationCache

@@ -13,6 +13,10 @@ using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
 using Xunit;
 
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
+using System.Threading.Tasks;
 namespace IO.Astrodynamics.Tests.Body;
 
 public class KernelBackedSpacecraftTests
@@ -207,33 +211,7 @@ public class KernelBackedSpacecraftTests
 
             var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.Add(TimeSpan.FromHours(1)));
             Assert.Throws<InvalidOperationException>(() =>
-                sc.Propagate(window, [TestHelpers.EarthAtJ2000], false, false, TimeSpan.FromSeconds(1)));
-        }
-        finally
-        {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
-        }
-    }
-
-    [Fact]
-    public void KernelBackedSpacecraftPropagateAsyncThrows()
-    {
-        var spkFile = CreateTestSpk(-9906, "KernelSC_PropAsyncThrow");
-
-        try
-        {
-            SpiceAPI.Instance.LoadKernels(spkFile);
-
-            var sc = new Spacecraft(-9906, "KernelSC_PropAsyncThrow",
-                epoch: TimeSystem.Time.J2000TDB);
-
-            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.Add(TimeSpan.FromHours(1)));
-            // PropagateAsync throws synchronously before creating the Task
-            var ex = Assert.Throws<InvalidOperationException>(() =>
-            {
-                _ = sc.PropagateAsync(window, [TestHelpers.EarthAtJ2000], false, false, TimeSpan.FromSeconds(1));
-            });
-            Assert.Contains("kernel-backed", ex.Message);
+                sc.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1) }, OutputStep = TimeSpan.FromSeconds(1), ThirdBodies = [TestHelpers.EarthAtJ2000] }));
         }
         finally
         {
@@ -420,8 +398,7 @@ public class KernelBackedSpacecraftTests
             var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);
             Spacecraft.AddEngine(engine);
             Spacecraft.SetStandbyManeuver(Maneuver.TriadAttitude.CreateLVLH(earth, KSatEpoch, TimeSpan.Zero, engine));
-            Spacecraft.Propagate(new Window(KSatEpoch, KSatEpoch.AddSeconds(7200.0)), [earth],
-                new Propagator.Integrators.RK78Integrator(1e-10, 1e-10), false, false, TimeSpan.FromSeconds(60.0));
+            Spacecraft.Propagate(new Window(KSatEpoch, KSatEpoch.AddSeconds(7200.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
             var directory = Constants.OutputPath.CreateSubdirectory("KernelBackedFrame676").CreateSubdirectory(Guid.NewGuid().ToString("N")[..8]);
             Clock = new FileInfo(Path.Combine(directory.FullName, "ksat.tsc"));

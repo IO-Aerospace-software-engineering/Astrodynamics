@@ -2724,11 +2724,34 @@ public class SpiceAPI
         return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF, paramName, null);
     }
 
+    /// <summary>
+    /// The orientations of <paramref name="fromFrame"/> to <paramref name="toFrame"/> at start + i·<paramref name="stepSize"/>
+    /// while before the end of <paramref name="window"/>, read lazily as <see cref="TransformFrame(Time, Frame, Frame)"/>.
+    /// </summary>
+    /// <param name="window">The window of the reads.</param>
+    /// <param name="fromFrame">The frame from which the orientation is read.</param>
+    /// <param name="toFrame">The frame to which it is read.</param>
+    /// <param name="stepSize">The step between two reads, positive.</param>
+    /// <returns>The orientations; the end of the window is not read, even on the grid (#781, lot L6 of #668).</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative, at the call (decision
+    /// 10 of lot L4 of #668: before 11.0.0 a zero step enumerated without end).</exception>
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)
     {
-        for (Time i = window.StartDate; i < window.EndDate; i += stepSize)
+        // Checked at the call, not at the enumeration (decision 10 of lot L4 of #668: before 11.0.0 a zero step enumerated
+        // without end)
+        if (stepSize <= TimeSpan.Zero)
         {
-            yield return TransformFrame(i, fromFrame, toFrame);
+            throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a frame read must be positive.");
+        }
+
+        return Read();
+
+        IEnumerable<OrbitalParameters.StateOrientation> Read()
+        {
+            for (Time i = window.StartDate; i < window.EndDate; i += stepSize)
+            {
+                yield return TransformFrame(i, fromFrame, toFrame);
+            }
         }
     }
 

@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -27,6 +29,11 @@ public abstract class PropagatorBase : IPropagator
     public IIntegrator Integrator { get; }
     public TimeSpan DeltaT { get; }
 
+    /// <summary>
+    /// The initial state of the propagation, about its central body in its inertial frame at the start of the window. A
+    /// subclass sets it in its constructor, before <see cref="Propagate"/>: the base initializes the integrator with it at
+    /// the start of every run (#782, decision 23 of lot L4 of #668).
+    /// </summary>
     protected StateVector InitialState { get; set; }
 
     // The attitude timeline of the propagation (#539): the activations of its maneuver chain, sampled on the solution once
@@ -60,10 +67,29 @@ public abstract class PropagatorBase : IPropagator
     private CovariancePropagationOptions _covariancePropagation;
 
     /// <summary>
-    /// In RK7(8), the lock of the dynamics of the solution: null for a lock of its own; the lock of another propagation
-    /// whose forces this one shares (an avoidance option, a perturbed propagation of the non-linearity index).
+    /// The resolved settings of a propagator built from <see cref="PropagationOptions"/>, reported by
+    /// <see cref="PropagationSolution.Options"/>; null for the other constructors.
     /// </summary>
-    private protected object DynamicsSyncRoot { get; set; }
+    private protected PropagationOptions ResolvedOptions { get; set; }
+
+    /// <summary>
+    /// Why the covariance is not propagated, for the message of <see cref="PropagationSolution.GetCovariance"/>; null when
+    /// it is, or on a path that does not say (R06 of #668).
+    /// </summary>
+    private protected string CovarianceAbsence { get; set; }
+
+    /// <summary>
+    /// The lock of the forces of this propagator (#782, decision 25 of lot L4 of #668, decided by S. Guillet,
+    /// 2026-11-22): one per instance, kept across its runs, held by each run for the whole run (decision 28) and taken by
+    /// the evaluations of the solutions of all its runs (the dynamics of an RK7(8) solution, the force model of an RK7(8)
+    /// or Velocity-Verlet one), so they serialize; the lock of another propagation whose forces this one shares (an avoidance option, a perturbed
+    /// propagation of the non-linearity index), set by its constructor. Before 11.0.0 each run took a new lock.
+    /// </summary>
+    private protected object DynamicsSyncRoot { get; set; } = new();
+
+    // The propagator each integrator was given to (#782, decision 24 of lot L4 of #668): an integrator belongs to one
+    // propagator. Held weakly by the integrator, as the propagator holds it
+    private static readonly ConditionalWeakTable<IIntegrator, PropagatorBase> IntegratorOwners = new();
 
     /// <summary>
     /// The time argument of the propagation (#501): TT about the Earth and TDB about any other central body for a
@@ -77,9 +103,10 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// The span a propagation integrates (#626): its output count, its length in seconds of the time argument and the TDB
-    /// label of its end, which lies up to half an output step past the end of the window when the step rounds the window
-    /// up, and whether its last output is labelled with the end of the window (a grid that ends before the window, #741,
-    /// or, in TT, one that misses its end by the drift between TT and the labels).
+    /// label of its end, the end of the window since 11.0.0 (choice 6 of #668; before, up to half an output step past it
+    /// when the step rounded the window up), and whether its last output is labelled with the end of the window (a grid
+    /// that does not reach the window end exactly, #741 and choice 6, or, in TT, one that misses its end by the drift
+    /// between TT and the labels).
     /// </summary>
     internal readonly record struct PropagationSpan(uint OutputCount, double Duration, Time End, bool EndsAtWindowEnd)
     {
@@ -95,14 +122,19 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// The span of a propagation over <paramref name="tdbWindow"/>, of <paramref name="windowLength"/> seconds of
-    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/> on the grid of round(L/ΔT) + 1
-    /// outputs. A grid that reaches the window end, or rounds it up, is kept: the propagation runs to its last output,
-    /// round(L/ΔT)·ΔT, up to ΔT/2 past the window. A grid that ends before the window gains the window end as its last
-    /// output, in place of its last point when that lies within ΔT/10 of the end (the rule of #598 and #540, so that no
-    /// two outputs are near-coincident), and the propagation runs to the window end (#741, decided by S. Guillet,
-    /// 2026-11-18: before 11.0.0 its outputs, and so the stored states, ended up to ΔT/2 before the window, where a read
-    /// threw). In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the window,
-    /// its last output labelled with the end of the window.
+    /// <paramref name="timeArgument"/>, with an output every <paramref name="deltaT"/>: start + i·ΔT inside the window,
+    /// then the window end, in place of the last grid point when that lies within ΔT/10 of the end (the rule of #598 and
+    /// #540, so that no two outputs are near-coincident), the propagation running to the window end. A grid that ends
+    /// before the window gained its end in #741 (decided by S. Guillet, 2026-11-18); a grid that rounds the window up,
+    /// round(L/ΔT)·ΔT past it, ends at the window end since 11.0.0 too (R11 of #668, structuring choice 6, decided by
+    /// S. Guillet, 2026-11-19: before, the propagation ran to that last output, up to ΔT/2 past the window, #626), the
+    /// rule of <see cref="TLEPropagator"/>. In both cases the outputs number round(L/ΔT) + 1, the window end replacing a
+    /// grid point within ΔT/10 of it. Against a grid that rounds the window up, the last output moves in RK7(8), every other
+    /// output bit for bit; in Velocity-Verlet, or an integrator without dynamics, the outputs inside the last integration
+    /// step move too when the step does not divide ΔT (67 m at one output, step 100 s, about the Earth; decision 8 of lot
+    /// L4 of #668). In TT, a grid that
+    /// misses the end of the window by the drift between TT and the labels ends at the window, its last output labelled
+    /// with the end of the window.
     /// </summary>
     internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, double windowLength,
         in Window tdbWindow, TimeSpan deltaT)
@@ -115,10 +147,17 @@ public abstract class PropagatorBase : IPropagator
             return new PropagationSpan(gridCount, windowLength, tdbWindow.EndDate, true);
         }
 
-        if (gridDuration >= windowLength)
+        if (gridDuration == windowLength)
         {
             return new PropagationSpan(gridCount, gridDuration, timeArgument.EpochAt(tdbWindow.StartDate, gridDuration),
                 false);
+        }
+
+        if (gridDuration > windowLength)
+        {
+            // The grid rounds the window up (choice 6 of #668): its last point, at least ΔT/2 past the end of the
+            // window, becomes the window end, the points before it, at least ΔT/2 before the end, kept
+            return new PropagationSpan(gridCount, windowLength, tdbWindow.EndDate, true);
         }
 
         // The grid ends before the window (#741): the window end replaces its last point within ΔT/10 of it, never the
@@ -143,10 +182,36 @@ public abstract class PropagatorBase : IPropagator
     /// <summary>
     /// A propagator over TDB seconds, with output states every <paramref name="deltaT"/>.
     /// </summary>
+    /// <remarks>
+    /// The subclass sets <see cref="InitialState"/> in its constructor: <see cref="Propagate"/> initializes
+    /// <paramref name="integrator"/> with it at the start of every run, replacing any initialization by the subclass or
+    /// the caller (#782, decision 23 of lot L4 of #668, decided by S. Guillet, 2026-11-22). The integrator belongs to this
+    /// propagator (decision 24): it is claimed once the checks of the window, the spacecraft and its maneuvers pass, before
+    /// anything changes it, and the claim is never released, so a subclass constructor that throws after the base
+    /// constructor leaves it claimed, and the caller builds a new one (decision 27).
+    /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, or to a propagator
+    /// constructor that threw after claiming it, naming <c>integrator</c>.</exception>
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
         : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)), PropagationTimeArgument.Tdb)
     {
+    }
+
+    /// <summary>
+    /// Checks that <paramref name="window"/>, the window of a numerical propagation, has a length (decision 7 of lot L4 of
+    /// #668, decided by S. Guillet, 2026-11-22: before 11.0.0 a window of zero length ran, re-armed the spacecraft and threw
+    /// <see cref="InvalidOperationException"/> "Solution contains no segments").
+    /// </summary>
+    /// <exception cref="ArgumentException">The window has zero length, naming <c>window</c>.</exception>
+    internal static void RequireWindowLength(in Window window)
+    {
+        if (window.Length == TimeSpan.Zero)
+        {
+            throw new ArgumentException(
+                $"The window of the propagation, from {window.StartDate} to {window.EndDate}, has zero length: give an end " +
+                "after its start.", nameof(window));
+        }
     }
 
     /// <summary>
@@ -173,6 +238,7 @@ public abstract class PropagatorBase : IPropagator
     private protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
         PropagationTimeArgument timeArgument)
     {
+        RequireWindowLength(window);
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
         ValidateInertialFrame(spacecraft);
@@ -195,9 +261,36 @@ public abstract class PropagatorBase : IPropagator
         DeltaT = deltaT;
         TimeArgument = timeArgument ?? throw new ArgumentNullException(nameof(timeArgument));
         _windowLength = TimeArgument.Length(window, Window);
+
+        // The integrator is this propagator's, before anything changes it (#782, decision 24 of lot L4 of #668)
+        ClaimIntegrator(integrator);
         if (integrator is Integrator integratorWithForces)
         {
             integratorWithForces.TimeArgument = TimeArgument;
+        }
+    }
+
+    /// <summary>
+    /// Takes <paramref name="integrator"/> for this propagator, atomically: an integrator belongs to one propagator (#782,
+    /// decision 24 of lot L4 of #668, decided by S. Guillet, 2026-11-22), which initializes it at construction, at the
+    /// start of every run and after each event, and sets its time argument and its variational equations. Before 11.0.0
+    /// one integrator could be given to several propagators, the last one built setting its observer, frame, time
+    /// argument and variational equations for all. The claim is never released, as
+    /// <see cref="Integrators.Integrator.ClaimForForces"/>: a constructor rejected by a later check (the GM of the central
+    /// body, the covariance options) leaves the integrator claimed (decision 27 of lot L4 of #668, decided by S. Guillet,
+    /// 2026-11-22).
+    /// </summary>
+    /// <exception cref="ArgumentException">The integrator was already given to a propagator, or to a propagator
+    /// constructor that threw after claiming it (decision 29 of lot L4 of #668, decided by S. Guillet, 2026-11-22: the
+    /// message names both cases), naming <c>integrator</c>.</exception>
+    private void ClaimIntegrator(IIntegrator integrator)
+    {
+        if (!IntegratorOwners.TryAdd(integrator, this))
+        {
+            throw new ArgumentException(
+                "The integrator was already given to another propagator, or to a propagator constructor that threw after " +
+                "claiming it; in both cases the claim is never released, so build a new integrator for this propagator " +
+                "(for example new RK78Integrator(...) with its forces).", nameof(integrator));
         }
     }
 
@@ -238,7 +331,7 @@ public abstract class PropagatorBase : IPropagator
         var gravities = rk78.ForceList.OfType<GravitationalAcceleration>().ToArray();
         foreach (var gravity in gravities)
         {
-            gravity.CelestialItem.ValidateGravitationalPartialsDegree(options.GeopotentialPartialsDegree);
+            gravity.ValidatePartialsDegree(options.GeopotentialPartialsDegree);
         }
 
         foreach (var gravity in gravities)
@@ -255,7 +348,8 @@ public abstract class PropagatorBase : IPropagator
     /// <summary>
     /// Propagate the state transition matrix, and the covariance in
     /// <see cref="CovariancePropagationMode.Covariance"/>, with the state: the public activation of the variational
-    /// equations (D2). Null leaves them off. Called once the forces of the integrator are final, since the columns of Ψ
+    /// equations (D2). Null and <see cref="CovariancePropagationOptions.None"/> leave them off. Called once the forces of
+    /// the integrator are final, since the columns of Ψ
     /// follow them.
     /// </summary>
     /// <param name="options">The options, or null for none.</param>
@@ -267,7 +361,7 @@ public abstract class PropagatorBase : IPropagator
     /// semi-definite.</exception>
     internal void EnableCovariancePropagation(CovariancePropagationOptions options)
     {
-        if (options == null)
+        if (options is not { IsActive: true })
         {
             return;
         }
@@ -556,38 +650,102 @@ public abstract class PropagatorBase : IPropagator
     /// Once its checks pass, the propagation re-arms the spacecraft, on every path (#583, decided by S. Guillet,
     /// 2026-11-17): the solution, the stored states and the attitude record of the previous propagation are dropped,
     /// <see cref="Spacecraft.ExecutedManeuvers"/> is cleared, the tanks are refuelled and the chain is reset and put back
-    /// in standby, so that a spacecraft propagated again, through <see cref="CentralBodyPropagatorBuilder"/>, a
-    /// <see cref="CentralBodyPropagator"/> built directly or <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
+    /// in standby, so that a spacecraft propagated again, through a <see cref="CentralBodyPropagator"/> built directly or
+    /// <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
     /// never propagated; a propagator built and never run, or rejected by its constructor, changes nothing. Before
-    /// 11.0.0 only <c>Spacecraft.Propagate</c> re-armed it: a second run through the builder or a propagator built
+    /// 11.0.0 only <c>Spacecraft.Propagate</c> re-armed it: a second run through the builder of 10.x or a propagator built
     /// directly fired no burn and started with the fuel left by the first. The spacecraft is then
     /// <see cref="Spacecraft.IsPropagated"/>, whatever the path.
+    /// <para>
+    /// Every run is a fresh run (#782, decisions 22 to 25 of lot L4 of #668, decided by S. Guillet, 2026-11-22): once the
+    /// token is read and before the re-arm, the run initializes the integrator with the initial state of the propagation
+    /// (<see cref="IIntegrator.Initialize"/>), so the runs of one instance, after a completed or a stopped run, are bit
+    /// for bit those of a fresh propagator, and an <see cref="IIntegrator.Initialize"/> that throws changes nothing.
+    /// Before, an adaptive <see cref="RK78Integrator"/> started the first segment of a second run from the last step and
+    /// controller history of the first (1.7e-5 m on a 2 h point-mass LEO, 1.5e-4 m in SSB mode, Φ and P off). Each run
+    /// holds the lock of the forces of the instance from its start to its end, the forces added by the caller and a bare
+    /// <see cref="IIntegrator"/> included, and the evaluations of the solutions of all its runs take it, so the runs of
+    /// the instance, two concurrent calls of this method on it and those evaluations serialize (decision 28 of lot L4 of
+    /// #668, decided by S. Guillet, 2026-11-22). Code a run calls (a <see cref="ForceBase"/>, a bare
+    /// <see cref="IIntegrator"/>) must not evaluate the solution of another propagator that may be running: two reused
+    /// instances whose forces evaluate each other's earlier solutions deadlock (the library evaluates no solution under
+    /// the SPICE lock or the lock of an attitude record, so it cannot deadlock by itself). An evaluation of an earlier
+    /// solution on another thread waits for the end of the run in progress, and a call waiting for the lock reads
+    /// <paramref name="cancellationToken"/> once it holds it. A reused instance keeps the initial state, the covariance and the options of its construction: a later
+    /// <see cref="Spacecraft.SetInitialOrbitalParameters"/> does not reach it (#783; build a new propagator to propagate
+    /// from another initial orbit).
+    /// </para>
+    /// <para>
+    /// Cancellation (R28 of #668): <paramref name="cancellationToken"/> is read once the checks pass, before the re-arm,
+    /// so that a token already cancelled changes nothing; then before each segment, and by <see cref="VVIntegrator"/>
+    /// and <see cref="RK78Integrator"/> at each accepted step (never between the rejections of a step, at most 101); an
+    /// integrator implemented outside the library is stopped between its segments only. It is not read after the last
+    /// segment, so the outputs, the attitude record and the stored states are written as one block. A run stopped leaves
+    /// the spacecraft re-armed and partial: no stored state and no attitude record, not
+    /// <see cref="Spacecraft.IsPropagated"/>, no solution or force model kept for the conjunction analysis (internal
+    /// <c>LastPropagation</c>, <c>LastForceModel</c>; a TLE spacecraft reads SGP4 again, any other its initial orbit), its
+    /// fuel, <see cref="Spacecraft.ExecutedManeuvers"/> and standby chain advanced up to the stop; the next propagation
+    /// re-arms it (C2 of lot L4).
+    /// </para>
     /// </remarks>
+    /// <param name="cancellationToken">The token that stops the run; none by default, bit for bit the run without it.</param>
     /// <returns>The solution.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
     /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
     /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
     /// of the chain has its target orbit in another frame than the frame the propagator integrates in (GCRF and ICRF
     /// counting as one, third review of #685), a maneuver attached after the propagator was built (#685; the constructor
     /// throws <see cref="ArgumentException"/> for those it sees); or
     /// a maneuver draws on a tank that is not the spacecraft's (#676). Nothing runs.</exception>
-    public PropagationSolution Propagate()
+    public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
         // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
         // see each other's cache, and none is left on the shared frame
         var (cacheFrame, cache) = OrientationCache;
         using (Frame.UseOrientationCache(cacheFrame, cache))
+        // The run holds the lock of the forces of the propagator for the whole run, user forces included, so that it
+        // serializes with the evaluations of the solutions of its earlier runs, which evaluate the same forces, and with
+        // another call on the instance (#782, decisions 25 and 28 of lot L4 of #668)
+        lock (DynamicsSyncRoot)
         {
-            return PropagateWithOrientationCache(cacheFrame, cache);
+            // The token of the run, read by the integrators of the library at each accepted step and reset after the run,
+            // so that the forces kept by the solution never stop on it (R28 of #668)
+            var hooked = Integrator as Integrators.Integrator;
+            if (hooked != null)
+            {
+                hooked.Cancellation = cancellationToken;
+            }
+
+            bool reArmed = false;
+            try
+            {
+                return PropagateWithOrientationCache(cacheFrame, cache, cancellationToken, ref reArmed);
+            }
+            catch (OperationCanceledException) when (reArmed)
+            {
+                // A run stopped after the re-arm leaves no stored state and no attitude record, those added by hand to a
+                // spacecraft never propagated included, which the re-arm keeps (C2 of lot L4 of #668)
+                Spacecraft.DropStoredStatesAndAttitudes();
+                throw;
+            }
+            finally
+            {
+                if (hooked != null)
+                {
+                    hooked.Cancellation = default;
+                }
+            }
         }
     }
 
-    private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache)
+    private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache,
+        CancellationToken cancellationToken, ref bool reArmed)
     {
-        // 1. The length of the propagation (may exceed the window by up to half a step when the step rounds it up), in
-        // seconds of the time argument. A grid that ends before the window ends with the window end (#741), and in TT a
-        // grid that misses the end of the window by the drift between TT and the labels ends at the window: the last
-        // output labelled with the end of the window as the caller gave it. The caches of the forces cover the same span
-        // (#626)
+        // 1. The length of the propagation, in seconds of the time argument: that of the window (choice 6 of #668). A
+        // grid that does not reach the window end exactly ends with it (#741, choice 6), and in TT a grid that misses the
+        // end of the window by the drift between TT and the labels ends at the window: the last output labelled with the
+        // end of the window as the caller gave it. The caches of the forces cover the same span (#626)
         var span = Span;
         uint outputCount = span.OutputCount;
         double propagationDuration = span.Duration;
@@ -609,8 +767,18 @@ public abstract class PropagatorBase : IPropagator
 
         Spacecraft.CheckManeuverEngines();
 
+        // Before the re-arm, so that a token already cancelled changes nothing (decision 6 of lot L4 of #668)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Every run starts its integrator from the initial state of the propagation, so that each run of this instance is
+        // a fresh run (#782, decision 22 of lot L4 of #668, decided by S. Guillet, 2026-11-22: an adaptive RK7(8) reset its
+        // step and the history of its controller only here); after the token, so that a token already cancelled changes
+        // nothing, and before the re-arm, so that an Initialize that throws changes nothing either
+        Integrator.Initialize(InitialState);
+
         // Every check passed: the spacecraft is re-armed, on every path (#583)
         Spacecraft.ResetPropagation();
+        reArmed = true;
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
         var eventDetectors = BuildEventDetectors();
@@ -629,7 +797,7 @@ public abstract class PropagatorBase : IPropagator
         {
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
                 InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations,
-                _covarianceModel, DynamicsSyncRoot ?? new object()) { Integrator = rk78, TimeArgument = TimeArgument };
+                _covarianceModel, DynamicsSyncRoot) { Integrator = rk78, TimeArgument = TimeArgument };
         }
 
         var variational = _variationalOptions != null ? rk78.VariationalEquations : null;
@@ -660,6 +828,11 @@ public abstract class PropagatorBase : IPropagator
             double remaining = TimeArgument.Remaining(Window.StartDate, propagationDuration, propagationEnd, currentEpoch);
             bool lastAfterImpulse = remaining <= 0.0;
             if (lastAfterImpulse && !afterImpulse) break;
+
+            // Before each segment, so between the segments of an integrator that does not read the token, and never after
+            // the last one: the outputs, the attitude record and the stored states are written as one block (decision 6
+            // of lot L4 of #668)
+            cancellationToken.ThrowIfCancellationRequested();
 
             // a. Integrate segment, with the mass and coefficients of the segment, recorded for the force model of the
             // propagation (#402) and, in RK7(8), for the evaluations of its solution
@@ -804,11 +977,12 @@ public abstract class PropagatorBase : IPropagator
         }
 
         solution.Dynamics = dynamics;
-        solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache,
-            dynamics?.SyncRoot ?? DynamicsSyncRoot);
+        solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache, DynamicsSyncRoot);
         solution.Observer = InitialState.Observer;
         solution.Frame = InitialState.Frame;
         solution.CovariancePropagation = _covariancePropagation;
+        solution.Options = ResolvedOptions;
+        solution.CovarianceAbsence = CovarianceAbsence;
         var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
         // 5b. The attitude record, from the timeline, on the solution (#539)
@@ -1050,8 +1224,9 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// Generate output StateVectors at DeltaT intervals with <see cref="PropagationSolution.InterpolateAt"/>.
-    /// Output may extend up to half a step past the window end when the step rounds the window up; a grid that ends
-    /// before the window ends with the window end (<see cref="SpanOf(PropagationTimeArgument, double, in Window, TimeSpan)"/>, #741).
+    /// A grid that does not reach the window end exactly ends with it, whether it ends before the window (#741) or
+    /// rounds it up (choice 6 of #668; before 11.0.0 up to half a step past the window end)
+    /// (<see cref="SpanOf(PropagationTimeArgument, double, in Window, TimeSpan)"/>).
     /// </summary>
     /// <remarks>
     /// The outputs are uniform in the time argument and labelled TDB (<see cref="PropagationTimeArgument.OutputEpoch"/>);
@@ -1325,7 +1500,4 @@ public abstract class PropagatorBase : IPropagator
         return null;
     }
 
-    public void Dispose()
-    {
-    }
 }

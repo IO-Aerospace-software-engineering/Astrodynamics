@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// <summary>
 /// The <c>maneuver</c> category (spec.md section 13.1): a chain of impulsive maneuvers executed by the framework's
 /// maneuvers during the propagation of the <c>propagator</c> category (<see cref="PropagationCase"/>,
-/// <see cref="PropagatorSolver.CreateIntegrator"/>), each burn's epoch, position, Δv and mass after it, and the final
+/// <see cref="PropagatorSolver.Integrator"/>), each burn's epoch, position, Δv and mass after it, and the final
 /// state.
 /// </summary>
 /// <remarks>
@@ -102,8 +102,8 @@ public class ManeuverSolver : ICategorySolver
             maneuvers.Add(maneuver);
         }
 
-        var solution = spacecraft.Propagate(propagationCase.Window, propagationCase.Bodies, PropagatorSolver.CreateIntegrator(),
-            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.OutputStep);
+        var solution = spacecraft.Propagate(propagationCase.Window,
+            PropagatorSolver.Options(propagationCase, propagationCase.OutputStep));
 
         var outputs = new Dictionary<string, object>();
         double mass = initialMass;

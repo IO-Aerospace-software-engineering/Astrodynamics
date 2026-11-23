@@ -141,9 +141,7 @@ public class PropagationFrameTests
             var initial = LeoState(earth).ToFrame(initialFrame).ToStateVector();
             var spacecraft = new Spacecraft(-1972, "FRAMES2", 100.0, 1000.0, new Clock("frames2", 65536), initial,
                 10.0, 2.2, null, 1.5);
-            var solution = spacecraft.Propagate(new Window(Epoch, Epoch.AddDays(1.0)),
-                new CelestialItem[] { earth, moon, sun }, new VVIntegrator(TimeSpan.FromSeconds(1.0)), true, true,
-                TimeSpan.FromSeconds(600.0));
+            var solution = spacecraft.Propagate(new Window(Epoch, Epoch.AddDays(1.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { earth, moon, sun }, AtmosphericDrag = true, SolarRadiationPressure = true });
             var final = solution.StateVectors.Last();
             Assert.Equal(initialFrame, final.Frame);
             return final.ToFrame(Frames.Frame.ICRF).ToStateVector();

@@ -6,6 +6,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -82,10 +83,10 @@ public class SsbModeThirdBodyTests
 
         // Act
         var first = NewSpacecraft(SsbState(Frames.Frame.ICRF), -5761)
-            .Propagate(Window, bodies, new RK78Integrator(tolerance, tolerance), false, false, Output);
+            .Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
         double nudged = System.Math.BitIncrement(tolerance);
         var second = NewSpacecraft(SsbState(Frames.Frame.ICRF), -5762)
-            .Propagate(Window, bodies, new RK78Integrator(nudged, nudged), false, false, Output);
+            .Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = nudged, RelativeTolerance = nudged }, OutputStep = Output, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         int steps = Steps(first);
@@ -122,7 +123,7 @@ public class SsbModeThirdBodyTests
     {
         // Act
         var solution = NewSpacecraft(SsbState(Frames.Frame.ICRF), -5771)
-            .Propagate(Window, Bodies(), new RK78Integrator(1e-12, 1e-12), false, false, Output);
+            .Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = Output, ThirdBodies = Bodies(), CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert
         int steps = Steps(solution);
@@ -151,9 +152,8 @@ public class SsbModeThirdBodyTests
         if (integrator == "RK") id -= 10;
 
         PropagationSolution Propagate(Frames.Frame f, int naifId) => integrator == "VV"
-            ? NewSpacecraft(SsbState(f), naifId).Propagate(Window, Bodies(), false, false, Output)
-            : NewSpacecraft(SsbState(f), naifId).Propagate(Window, Bodies(), new RK78Integrator(1e-10, 1e-10), false,
-                false, Output);
+            ? NewSpacecraft(SsbState(f), naifId).Propagate(Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Output }, OutputStep = Output, ThirdBodies = Bodies() })
+            : NewSpacecraft(SsbState(f), naifId).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = Output, ThirdBodies = Bodies(), CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
         var twin = Propagate(frame, id);

@@ -57,9 +57,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var model = new CovarianceModel(Enumerable.Range(0, 36).Select(i => i % 7 == 0 ? 1.0 : 0.0).ToArray(),
             new VariationalOptions(ForceParameters.DragCoefficient, PropagateCovariance: true,
                 ConsiderParameters: new ConsiderParameters(0.1)));
-        using var propagator = new CentralBodyPropagator(ConjunctionCovarianceCase.PropagationWindow,
-            ConjunctionCovarianceCase.NewSpacecraft(-6901, _case.ProtectedStart), new RK78Integrator(1e-10, 1e-10),
-            new CelestialItem[] { _case.Earth }, false, false, TimeSpan.FromSeconds(60.0));
+        var propagator = new CentralBodyPropagator(ConjunctionCovarianceCase.PropagationWindow, ConjunctionCovarianceCase.NewSpacecraft(-6901, _case.ProtectedStart), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _case.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act, assert: 6 × 1 values, finite; a propagator without the covariance has no consider covariance to set
         Assert.Throws<ArgumentException>(() => model.SetInitialCrossCovariance(new double[5]));
@@ -336,8 +334,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     private WeakReference PropagateWithVelocityVerlet(IO.Astrodynamics.Body.Spacecraft.Spacecraft spacecraft)
     {
-        var solution = spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new CelestialItem[] { _case.Earth },
-            false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _case.Earth } });
         return new WeakReference(solution);
     }
 
@@ -405,8 +402,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var twinVv = ConjunctionCovarianceCase.NewSpacecraft(-6945, icrf);
         foreach (var spacecraft in new[] { temeVv, twinVv })
         {
-            spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new CelestialItem[] { _case.Earth }, false, false,
-                TimeSpan.FromSeconds(60.0));
+            spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _case.Earth } });
         }
 
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(temeVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
@@ -507,8 +503,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     {
         // Arrange: the eclipsing case and its apogee raise, two segments
         var spacecraft = _cases.EclipsingSpacecraft(-6931, CovariancePropagationTests.WithCovariance(_cases.Eclipsing.InitialState));
-        var solution = spacecraft.Propagate(_cases.Eclipsing.Window, _cases.Eclipsing.Bodies, new RK78Integrator(1e-10, 1e-10),
-            true, true, TimeSpan.FromSeconds(600.0), Covariance);
+        var solution = spacecraft.Propagate(_cases.Eclipsing.Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = _cases.Eclipsing.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = Covariance });
 
         // Act, assert
         Assert.Equal(2, solution.Segments.Count);

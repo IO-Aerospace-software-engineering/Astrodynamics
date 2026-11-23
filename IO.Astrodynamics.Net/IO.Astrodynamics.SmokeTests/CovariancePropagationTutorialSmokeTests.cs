@@ -80,9 +80,15 @@ public class CovariancePropagationTutorialSmokeTests
         var t = epoch.AddHours(6.0);
 
         // Section "The state transition matrix only"
-        var stm = spacecraft.Propagate(window, bodies, new RK78Integrator(1e-11, 1e-11), true, true,
-            TimeSpan.FromSeconds(600.0),
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly });
+        var stm = spacecraft.Propagate(window, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(600.0),
+            ThirdBodies = bodies,
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true,
+            CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly }
+        });
 
         Matrix phi = stm.GetStateTransitionMatrix(t);        // Φ(t, t0), 6×6
         Matrix psi = stm.GetParameterSensitivity(t);         // Ψ(t), 6×2: ∂x/∂Cd, ∂x/∂Cr
@@ -102,8 +108,15 @@ public class CovariancePropagationTutorialSmokeTests
             ConsiderParameters = new ConsiderParameters(dragCoefficientSigma: 0.1, reflectivityCoefficientSigma: 0.05),
             IncludeInStepControl = true   // Ψ_Cr through the shadow crossings
         };
-        var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(1e-11, 1e-11), true, true,
-            TimeSpan.FromSeconds(600.0), options);
+        var solution = spacecraft.Propagate(window, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(600.0),
+            ThirdBodies = bodies,
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true,
+            CovariancePropagation = options
+        });
 
         Matrix p = solution.GetCovariance(t);                 // 6×6, m², m²/s, m²/s²
         StateVector state = solution.GetStateVector(t);       // the state, with P in state.Covariance
@@ -135,8 +148,15 @@ public class CovariancePropagationTutorialSmokeTests
         };
         maneuvering.SetStandbyManeuver(raise);
 
-        var withBurn = maneuvering.Propagate(window, bodies, new RK78Integrator(1e-11, 1e-11), true, true,
-            TimeSpan.FromSeconds(600.0), new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var withBurn = maneuvering.Propagate(window, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(600.0),
+            ThirdBodies = bodies,
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true,
+            CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }
+        });
 
         Time burn = raise.ThrustWindow.Value.StartDate;
         Matrix before = withBurn.GetCovariance(burn.AddSeconds(-1.0));
@@ -164,16 +184,27 @@ public class CovariancePropagationTutorialSmokeTests
             Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
         var remediated = new Spacecraft(-1003, "SAT3", 100.0, 1000.0, new Clock("SAT3_CLK", 65536), remediation.State,
             sectionalArea: 10.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
-        var fromRemediated = remediated.Propagate(window, bodies, new RK78Integrator(1e-11, 1e-11), true, true,
-            TimeSpan.FromSeconds(600.0), new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var fromRemediated = remediated.Propagate(window, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(600.0),
+            ThirdBodies = bodies,
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true,
+            CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }
+        });
 
         Assert.True(remediation.Remediated);
         Assert.True(remediation.SmallestCorrelationEigenvalue < 0.0);
         Assert.Equal(6, fromRemediated.GetCovariance(t).Rows);
         var rejected = new Spacecraft(-1004, "SAT4", 100.0, 1000.0, new Clock("SAT4_CLK", 65536), indefinite);
-        Assert.Throws<InvalidOperationException>(() => rejected.Propagate(window, bodies, new RK78Integrator(1e-11, 1e-11),
-            false, false, TimeSpan.FromSeconds(600.0),
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }));
+        Assert.Throws<InvalidOperationException>(() => rejected.Propagate(window, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+            OutputStep = TimeSpan.FromSeconds(600.0),
+            ThirdBodies = bodies,
+            CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }
+        }));
     }
 
     [Fact]
@@ -206,15 +237,20 @@ public class CovariancePropagationTutorialSmokeTests
         var propagation = new Window(start, start.AddHours(26.0));
         foreach (var craft in new[] { protectedCraft, secondaryCraft })
         {
-            craft.Propagate(propagation, new CelestialItem[] { earth }, new RK78Integrator(1e-12, 1e-12), false, false,
-                TimeSpan.FromSeconds(60.0));
+            craft.Propagate(propagation, new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 },
+                OutputStep = TimeSpan.FromSeconds(60.0),
+                ThirdBodies = new CelestialItem[] { earth },
+                CovariancePropagation = CovariancePropagationOptions.None
+            });
         }
 
         var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var window = new Window(tca.AddHours(-1.0), tca.AddHours(1.0));
         var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, window);
         var held = ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
-            new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         var source = encounter.EncounterState.ProtectedCovariance.Source;   // CovarianceSource.Propagated
         Console.WriteLine($"Miss {encounter.EncounterState.MissDistanceMeters:F1} m, source {source}, " +

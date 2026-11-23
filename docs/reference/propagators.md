@@ -22,8 +22,8 @@ inertial frame"), and rotated once to ICRF, where the propagation runs and its s
 state at the start of the window, on the Earth of the TLE (its observer); a TEME state from itself at its epoch, its
 covariance through the Jacobian (TEME is quasi-inertial: v' = R v, P' = diag(R, R) P diag(R, R)ᵀ,
 [TEME](frames.md#teme)). The run is bit for bit that of its ICRF twin, `start.ToFrame(Frame.ICRF)` on the same
-observer, on every path: `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
-`MonteCarloPropagator`, the constructors and the builder. The target orbit of an impulse of such a spacecraft is given
+observer, on every path: `Spacecraft.Propagate`, `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator` and
+the constructors. The target orbit of an impulse of such a spacecraft is given
 in ICRF: a target in another frame, TEME included, is rejected when the propagation is built. On every spacecraft the
 target orbits of the impulses are given in the frame of the propagation (GCRF and ICRF, which share their axes, counting
 as one), and any other frame is rejected when the
@@ -41,16 +41,29 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    the attitude timeline, from the end of its maneuver window, and build the detector of the next impulse. An impulse
    executed at the end of the window opens a last segment of zero length, so the solution ends with the state after it
    (#575).
-4. Compute output states on the requested `DeltaT` cadence with `PropagationSolution.InterpolateAt`, then the attitude
+4. Compute output states on the requested output step with `PropagationSolution.InterpolateAt`, then the attitude
    record from the timeline on the solution ([Attitudes](attitudes.md#the-attitude-timeline)). The outputs are the
-   window start plus i·ΔT, round(L/ΔT) + 1 of them over a window of length L. When ΔT rounds the window up, the
-   propagation runs to the last output, up to ΔT/2 past the window end (#626). When it rounds the window down, the
-   window end is the last output, in place of the last grid point when that lies within ΔT/10 of the end, and the
-   propagation runs to the window end, so that the stored states, the reads of the spacecraft and its SPK cover the
-   whole window ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by
-   S. Guillet, 2026-11-18): a window of 3 610 s at 60 s holds 62 outputs, to 3 600 s then 3 610 s, one of 3 603 s 61,
-   the last at 3 603 s. Before 11.0.0 the outputs stopped at the last grid point, up to ΔT/2 before the window end,
-   where a read of the spacecraft throws (#527).
+   window start plus i·ΔT inside the window, then the window end, in place of the last grid point when that lies within
+   ΔT/10 of the end: round(L/ΔT) + 1 of them over a window of length L, and the propagation runs to the window end, on
+   every path (`TLEPropagator` included, one rule), so that the stored states, the reads of the spacecraft and its SPK
+   cover the whole window and nothing is read past it: a window of 3 610 s at 60 s holds 62 outputs, to 3 600 s then
+   3 610 s, one of 3 603 s 61, the last at 3 603 s, one of 3 590 s 61, to 3 540 s then 3 590 s. A grid that ended
+   before the window gained its end in 11.0.0
+   ([#741](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/741), decided by S. Guillet,
+   2026-11-18; before, the outputs stopped up to ΔT/2 before the window end, where a read of the spacecraft throws,
+   #527), and so did a grid that rounds the window up (R11 of #668, structuring choice 6, decided by S. Guillet,
+   2026-11-19; before, the propagation ran to its last output, up to ΔT/2 past the window end, #626). Against the former
+   grid (decision 8 of lot L4 of #668): in RK7(8) only the last output moves; in Velocity-Verlet the outputs inside the
+   last integration step move too when the integration step does not divide ΔT, the last step now ending at the window
+   end (67.48 m at the output of 3 540 s of a 3 590 s window, Velocity-Verlet at 100 s about the Earth, 60 s outputs).
+   A window of zero length throws `ArgumentException` (`window`) at the start of the call, on every path that builds a
+   numerical propagation, in `Scenario.Simulate` before its stars, whatever the scenario holds (a scenario of stars alone
+   included, its stars not propagated and `IsSimulated` unchanged), in `MonteCarloPropagator.Propagate` before anything
+   is sampled and in the `TLEPropagator` constructor, one rule on every propagation path (decisions 7, 15 and 18 of lot
+   L4, decided by S. Guillet, 2026-11-22; before, a numerical propagation re-armed the spacecraft and threw
+   `InvalidOperationException` "Solution contains no segments", `TLEPropagator` returned one sample at the start, and a
+   scenario of stars alone propagated them and reported itself simulated). `Star.Propagate` itself is unchanged in
+   11.0.0: its grid is unified with the propagation outputs in a later lot.
 
 ### Supported Perturbations
 
@@ -62,38 +75,141 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
 - Albedo radiation pressure
 - Thermal radiation pressure
 
+### Propagation Options
+
+`PropagationOptions` (R06 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot
+L4, 11.0.0) holds every setting of a numerical propagation, as values: each run builds its own integrator, forces and
+geopotential field from them, so one value serves any number of propagations, on any thread. A variant is
+`PropagationOptions.Default with { … }`; a one-property check runs in `init`, and so again in a `with`; the rules between
+the settings and the inputs run at the start of the call, before anything changes.
+
+```csharp
+// Inputs: spacecraft (Spacecraft), window (Window)
+var rk = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 };
+var options = PropagationOptions.Default with
+{
+    Integrator = rk,
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    AtmosphericDrag = true,
+    SolarRadiationPressure = true,
+    Geopotential = GeopotentialModelParameters.Egm2008(10)
+};
+var solution = spacecraft.Propagate(window, options);
+Console.WriteLine($"{solution.Options.ThirdBodies.Count} third bodies, {solution.Options.Atmosphere.GetType().Name}");
+```
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `Integrator` | `RK78IntegratorOptions.Default` | The integrator: `RK78IntegratorOptions` (RK7(8), the tolerances of 1e-9 of `new RK78Integrator()`, `FixedStep` for the fixed-step mode) or `VVIntegratorOptions` (Velocity-Verlet, `Step` 1 s); see [Integrators](integrators.md#integrator-options). Null throws |
+| `OutputStep` | 60 s | The step of the output states, an output step only: the integrator takes its own steps |
+| `ThirdBodies` | null | The bodies other than the central body: none on `Spacecraft.Propagate`, `CentralBodyPropagator`, `PropagationTask` and `MonteCarloConfiguration.Propagation`; the bodies of the scenario on `Scenario.Simulate`, where a list that differs from them throws. Held as a copy, compared by value |
+| `AtmosphericDrag`, `SolarRadiationPressure` | false | The forces of the flags of the constructors |
+| `AlbedoRadiationPressure`, `ThermalRadiationPressure` | false | The albedo and thermal radiation pressure of the central body, which needs the coefficients of its `CelestialBody` constructor: a coefficient of 0, the value of every predefined body, throws `ArgumentException`. Another body's goes through the constructor that takes an integrator with its forces |
+| `Geopotential` | null | The geopotential of the central body, a fallback: a body without a model takes it, a body with an equal model runs with it, a body with another model throws `ArgumentException` naming both; null, the body's ([Force Models](force-models.md#geopotential-model-parameters)) |
+| `Atmosphere` | null | The atmosphere of the central body's drag, the same fallback (an Earth without a model counts as not given: the option replaces its NRLMSISE-00 at nominal space weather); about the Sun it throws |
+| `CovariancePropagation` | null (Auto) | The covariance options; Auto propagates the covariance of the initial orbital parameters under RK7(8) when it is given at the window start, and says otherwise why in `GetCovariance`; an indefinite one throws, naming `StateVector.WithRemediatedCovariance()` and `CovariancePropagationOptions.None`, which turns it off ([Covariance Propagation](covariance-propagation.md#activation)) |
+
+!!! warning "Covariance Auto: the cost of an explicit request"
+    With `CovariancePropagation` null (Auto), a covariance that the initial orbital parameters carry at the window start
+    is propagated under RK7(8), with the options `new CovariancePropagationOptions { Mode =
+    CovariancePropagationMode.Covariance }` exactly, so the run costs what asking for the covariance always cost, not a
+    new cost: over a LEO day at the RK7(8) defaults, 1.4 to 1.5 times the run without covariance about a point-mass
+    Earth, 7.4 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode
+    (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, best of five, measured alone in the CI of #789 at aefd6c2b on
+    Linux x64, Windows x64 and macOS arm64, no threshold; decision 30 of lot L4), the trajectory unchanged bit for bit. Pass `CovariancePropagation = CovariancePropagationOptions.None` to
+    propagate the state alone ([Covariance Propagation](covariance-propagation.md#activation); decision 17 of lot L4 of
+    #668, decided by S. Guillet, 2026-11-22).
+
+The options entry points are `Spacecraft.Propagate(window, options)`, `CentralBodyPropagator(window, spacecraft,
+options)`, `Scenario.Simulate(options)` (synchronous, the spacecraft in turn), `PropagationTask(spacecraft, window,
+options)` with `BatchPropagator.Propagate`, and `MonteCarloConfiguration.Propagation`; no async overload takes them
+(resolution C2 of the design). Each default equals its explicit settings (`IntegratorDefaultsTests`): on every entry
+point a run without settings is the run of `new RK78Integrator()` about the central body alone, every 60 s, and
+`VVIntegratorOptions.Default` is `new VVIntegrator(TimeSpan.FromSeconds(1))`.
+
+The members that took the settings as arguments were removed in 11.0.0 (R07 of #668, section 7 of the re-baseline: no
+forwarder): the flag overloads of `Spacecraft.Propagate`, `PropagateAsync`, the flag constructors of
+`CentralBodyPropagator`, the three `Scenario.SimulateAsync`, the `CentralBodyPropagatorBuilder`, the flags constructor of
+`PropagationTask` and the factories of `MonteCarloConfiguration`. Their runs are those of the options naming the same
+integrator, bodies and flags, bit for bit (lot L4, step 1). The members without an integrator stepped Velocity-Verlet
+at the output step: pass `new VVIntegratorOptions { Step = step }` with `OutputStep = step` to keep their results bit for
+bit (1 442 of 1 442 states over a LEO day at 60 s with the Moon, the Sun, drag, SRP and a burn, on every path), or keep
+the default RK7(8): the tutorial's point-mass LEO day ends 974 km from the Keplerian closed form with Velocity-Verlet at
+60 s, 1.36 m with RK7(8) at 1e-9.
+
+`PropagationSolution.Options` holds the resolved settings of a run of these entry points, with no null left where a
+value applies: the third bodies of the run (the central body aside), the geopotential of the central body (null for a
+point mass), the atmosphere of its drag (`CelestialBody.Atmosphere`: its model, NRLMSISE-00 at nominal space weather for
+an Earth without one, or null), and the covariance options the run used (`CovariancePropagationOptions.None` when it
+propagated none). Passed back to the same entry point, they repeat the run. A run of the other constructors has none.
+
+Each run builds the geopotential field of the central body from its model, over the coefficients the model reads once:
+propagations, a batch, a scenario and a Monte Carlo campaign may share one `CelestialBody` with a geopotential, on any
+thread, bit for bit the runs of separate bodies (section A of the re-baseline of #668, decided by S. Guillet, 2026-11-19;
+before 11.0.0 a propagation evaluated the field of the body, whose buffers are not thread-safe). The body's own
+`EvaluateGravitationalAcceleration` still evaluates its field, on one thread at a time.
+
 ### CentralBodyPropagator Constructors
 
 | Constructor | Description |
 |-------------|-------------|
-| `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT)` | Full control: specify integrator, bodies, and perturbation flags |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state |
-| `CentralBodyPropagator(window, spacecraft, celestialBodies, drag, srp, deltaT)` | Auto-creates a default VVIntegrator with specified forces |
-| `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT, covariancePropagation)` | As the first, and propagates the state transition matrix and, in covariance mode, the covariance ([Covariance Propagation](covariance-propagation.md)); null options for none |
+| `CentralBodyPropagator(window, spacecraft, options)` | The settings of a `PropagationOptions` value, null for `PropagationOptions.Default` (above): the propagator builds its integrator and forces |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state: the path of a force list of your own (albedo or thermal radiation of a body other than the central body, a force of your own) |
 | `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second (the integrator initialized by the propagator), with the covariance propagation; the columns of Ψ follow the forces of the integrator |
 
-On every constructor that builds the forces the central body takes part with the models of the observer: it is inserted
-first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a listed body of its
-identifier, or two listed bodies of one identifier, must have the same GM, radii, gravitational field and atmospheric
-model (`ArgumentException` otherwise). Drag is that of the central body's atmosphere, NRLMSISE-00 at nominal space
-weather for an Earth without a model, and of each other listed body with an atmosphere, an Earth always having one
-([Force Models](force-models.md#atmosphericdrag)). The integrator of a constructor
-that builds the forces must be a new instance: one that holds forces or was used by such a constructor throws
-`ArgumentException` (`integrator`); a central body whose GM is not above 0, a body of the kernels whose
+When the propagator builds the forces (the options constructor) the central body takes part with the models of the
+observer: it is inserted first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a
+listed body of its identifier, or two listed bodies of one identifier, must have the same GM, radii, gravitational field
+and atmospheric model (`ArgumentException` otherwise). Drag is that of the central body's atmosphere, NRLMSISE-00 at
+nominal space weather for an Earth without a model, and of each other listed body with an atmosphere, an Earth always
+having one ([Force Models](force-models.md#atmosphericdrag)). A central body whose GM is not above 0, a body of the kernels whose
 `BODYnnn_GM` the kernel pool lacks (no GM kernel such as NAIF's `gm_de440.tpc`), throws `ArgumentException`
-(`spacecraft`) naming it, on every constructor and so on every propagation path, before the integrator is claimed (11.0.0,
+(`spacecraft`) naming it, on every constructor and so on every propagation path, before the integrator of an options
+constructor is built and claimed, after the claim of an integrator given to the constructor (decision 27, below) (11.0.0,
 R03 of #668: before, the propagation ran without central gravity, on a straight line; `new CelestialBody(id)` still accepts
 the GM of 0); the constructors without celestial bodies use the integrator and its forces as
 given and initialize it with the initial state of the propagation: about the central body (the Sun in SSB mode), in the
-inertial frame of the propagation, at the TDB start of the window; a later `Initialize` by the caller replaces it. Before
-11.0.0 they used it as given, and one its caller had not initialized threw `NullReferenceException` at the first step. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
-constructor (#674).
+inertial frame of the propagation, at the TDB start of the window; at construction, at the start of every run and after
+each event, so an `Initialize` by the caller between construction and `Propagate` has no effect on the run, under both
+integrators (#782, decision 23 of lot L4 of #668, decided by S. Guillet, 2026-11-22: before, a later one replaced it for
+the first segment, and with another frame or observer changed the run, 2.9e4 m over 2 h in ECLIPJ2000 about an EGM2008
+10×10 Earth, 1.3e6 m over 2 days with an SSB-centred state). Before 11.0.0 they used it as given, and one its caller had
+not initialized threw `NullReferenceException` at the first step. An integrator belongs to one propagator: a constructor
+given an integrator already given to another propagator throws `ArgumentException` (`integrator`) before it changes it
+(decision 24; before, the last propagator built set the observer, frame, time argument and variational equations of the
+integrator for all). The claim is made once the checks of the window, the spacecraft and its maneuvers pass, before
+anything changes the integrator, and is never released: a constructor rejected by a later check (a central body of GM 0,
+covariance options the integrator or the initial covariance cannot take) leaves the integrator claimed, and the caller
+builds a new one (decision 27 of lot L4 of #668, decided by S. Guillet, 2026-11-22). A subclass of `PropagatorBase` sets `InitialState` in its constructor: `Propagate` initializes the
+integrator with it at every run. A step of zero or less throws `ArgumentOutOfRangeException`: `deltaT` on the
+constructors that take an integrator, `OutputStep` (or the integrator's `Step`) where the options are built (#674).
 
 A constructor changes nothing on the spacecraft. `Propagate` re-arms it once its checks pass, on every path, as
 `Spacecraft.Propagate` does: the tanks refuelled, `ExecutedManeuvers`, the stored states and the attitude record of the
 previous propagation cleared, the maneuver chain started again from its head, and the spacecraft `IsPropagated` after
 the run (#583, decided by S. Guillet, 2026-11-17; before 11.0.0 a second run through a propagator built directly fired no
 burn and started with the fuel the first left).
+
+Every run of one propagator instance is a fresh run (#782, decisions 22 to 25 of lot L4 of #668, decided by S. Guillet,
+2026-11-22): once its checks pass and its token is read, and before the re-arm, `Propagate` initializes the integrator
+with the initial state of the propagation, so runs 2 and 3 of an instance, after a completed or a stopped run, are bit
+for bit a fresh spacecraft and propagator (positions, velocities, steps, stored states, attitude record, maneuvers, fuel,
+Φ and P; `PropagatorReuseTests`), and an `Initialize` that throws changes nothing. Before, an adaptive RK7(8) started the
+first segment of a second run from the last step and controller history of the first: 1.7e-5 m on a 2 h point-mass LEO,
+2.0e-5 m with EGM2008 10×10, the Moon, the Sun, drag, SRP and an impulse over 3 h, 1.5e-4 m in SSB mode at 1e-12 over 2
+days (2 steps against 13), every element of Φ and P off; Velocity-Verlet and a fixed-step RK7(8), which keep no step
+state, were already fresh. Each run holds the lock of the forces of the instance from its start to its end, the forces
+you added and a bare `IIntegrator` included, and the evaluations of the solutions of all its runs take it, so the runs of
+the instance, two concurrent `Propagate` calls on it and those evaluations serialize (decision 28 of lot L4 of #668,
+decided by S. Guillet, 2026-11-22); the solution of an earlier run gives the same values after a later run. Code a run
+calls (a `ForceBase`, a bare `IIntegrator`) must not evaluate the solution of another propagator that may be running: two
+reused instances whose forces evaluate each other's earlier solutions deadlock (the library evaluates no solution under
+the SPICE lock or the lock of an attitude record, so it cannot deadlock by itself); an evaluation of an earlier solution
+on another thread waits for the end of the run in progress
+([Thread Safety](../guides/thread-safety.md#the-lock-of-a-propagator-instance)). A reused instance keeps the initial state, the covariance and the options of
+its construction: a later `SetInitialOrbitalParameters` on the spacecraft does not reach it
+([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783)); build a new propagator to
+propagate from another initial orbit.
 
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
 initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
@@ -109,6 +225,7 @@ derivative is evaluated.
 | `StateVectors` | Output state vectors at the requested cadence |
 | `InterpolateAt(Time epoch)` | State at any epoch within the solution window; returns `(Vector3 position, Vector3 velocity)`. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it |
 | `GetStateVector(Time epoch)` | The state of `InterpolateAt` as a `StateVector`, with its covariance when the propagation propagated it; throws outside the propagation |
+| `Options` | The resolved settings of a run of `PropagationOptions` (above); null for the constructors that take an integrator |
 | `CovariancePropagation`, `SensitivityParameters`, `ExtendedCovarianceParameters` | The options of the covariance propagation (null when off), the columns of Ψ, the consider parameters of the extended covariance |
 | `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance` | Φ, Ψ, P and the extended covariance at any epoch; see [Covariance Propagation](covariance-propagation.md#results) |
 
@@ -133,11 +250,12 @@ var solution = propagator.Propagate();
 | `Spacecraft` | The spacecraft being propagated |
 | `DeltaT` | Output time step |
 
-The samples are the window start plus i·`DeltaT`, counted in ticks, then the window end: ceil(L/ΔT) + 1 samples for a
+The samples follow the rule of the numerical propagation, the window start plus i·`DeltaT`, counted in ticks, then the window end: ceil(L/ΔT) + 1 samples for a
 window of length L, the last step shorter when ΔT does not divide L (#598); a grid point closer to the end than ΔT/10
 is dropped, the last step then up to 1.1 ΔT (a window given in UTC is a few ticks longer or shorter in TDB, its
 samples counted on its TDB start and end). A step of zero or less throws
-`ArgumentOutOfRangeException` (`deltaT`). Before 11.0.0 the samples were counted in whole seconds: a step below 1 s
+`ArgumentOutOfRangeException` (`deltaT`), and a window of zero length `ArgumentException` (`window`), as on every
+propagation path (decision 15 of lot L4 of #668; before 11.0.0, one sample at the start). Before 11.0.0 the samples were counted in whole seconds: a step below 1 s
 threw `DivideByZeroException`, a fractional step ran past the window end (1.5 s over 10 s: to +15 s), and a window
 that the step does not divide lost its end (90 s at 60 s: the last sample at +60 s).
 
@@ -151,21 +269,24 @@ SGP4 fails within 1 s of an end of the window throws, before the spacecraft rece
 ## BatchPropagator
 
 `BatchPropagator` propagates multiple spacecraft in parallel with fault isolation, cancellation support, and progress reporting.
+A task is `new PropagationTask(spacecraft, window, options)`, the settings of a [Propagation Options](#propagation-options)
+value that every task may share (since 11.0.0 `PropagationTask` is not a positional record, has no `Deconstruct`, and
+its constructor of flags and an integrator factory was removed, R07 of #668).
 
 ```csharp
-// Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
+// Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window)
+var options = new PropagationOptions
+{
+    Integrator = new RK78IntegratorOptions
+    {
+        AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+    },
+    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+};
 var tasks = new List<PropagationTask>
 {
-    new PropagationTask(spacecraft1, window,
-        new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-        DeltaT: TimeSpan.FromSeconds(60),
-        IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
-    new PropagationTask(spacecraft2, window,
-        new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-        IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false,
-        DeltaT: TimeSpan.FromSeconds(60),
-        IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0))
+    new PropagationTask(spacecraft1, window, options),
+    new PropagationTask(spacecraft2, window, options)
 };
 
 var result = BatchPropagator.Propagate(tasks, new BatchOptions
@@ -189,11 +310,10 @@ foreach (var r in result.Results)
 | `ElapsedTime` | Wall-clock time for the batch |
 | `Results` | Per-task results with `Succeeded`, `Solution`, and `Error` |
 
-`PropagationTask.CovariancePropagation { get; init; }` propagates the state transition matrix and the covariance of a
-task; it needs an `IntegratorFactory` that creates an `RK78Integrator`, otherwise the task fails with a
-`NotSupportedException` in its result.
+`PropagationOptions.CovariancePropagation` propagates the state transition matrix and the covariance of a task; it needs
+`RK78IntegratorOptions`, otherwise the task fails with a `NotSupportedException` in its result.
 
-Key features: fault isolation (a failed task does not corrupt others), `CancellationToken` via `BatchOptions`, `IProgress<BatchProgress>` for tracking, duplicate `Spacecraft` detection.
+Key features: fault isolation (a failed task does not corrupt others), a `CancellationToken` that stops the running tasks too ([Cancellation](#cancellation)), an `IProgress<BatchProgress>` for tracking, duplicate `Spacecraft` detection. The token and the progress are parameters, `Propagate(tasks, options, cancellationToken)` and `Propagate(tasks, progress, options, cancellationToken)`; `BatchOptions` holds the parallelism alone, and `PropagateAsync` is removed (11.0.0, R28 of #668). `Propagate(tasks, null)` is ambiguous between the two overloads (CS0121): write `Propagate(tasks, options: null)`.
 
 Each maneuver draws on a fuel tank of the spacecraft of its task, and a tank belongs to one spacecraft
 (`Spacecraft.AddFuelTank` rejects a tank held by another): distinct spacecraft imply distinct maneuvers and engines. A
@@ -213,13 +333,9 @@ records, or threw `NullReferenceException` at the burn).
 | `Seed` | `int` | Random seed for reproducibility |
 | `TemplateSpacecraft` | `Spacecraft` | Nominal spacecraft with 6x6 covariance |
 | `Window` | `Window` | Propagation time window |
-| `CelestialBodiesFactory` | `Func<IEnumerable<CelestialItem>>` | Factory for thread-safe body creation |
-| `DeltaT` | `TimeSpan` | Output time step |
-| `IncludeAtmosphericDrag` | `bool` | Enable drag |
-| `IncludeSolarRadiationPressure` | `bool` | Enable SRP |
-| `IntegratorFactory` | `Func<Integrator>` | Optional per-run integrator factory |
+| `Propagation` | `PropagationOptions` | The settings of every run ([Propagation Options](#propagation-options)); null for `PropagationOptions.Default`. The runs share their bodies, a geopotential included (11.0.0: `CelestialBodiesFactory`, `DeltaT`, `IncludeAtmosphericDrag`, `IncludeSolarRadiationPressure` and `IntegratorFactory` removed, R07 of #668) |
 | `BaseNaifId` | `int` | Base NAIF ID (default -100000) |
-| `BatchOptions` | `BatchOptions` | Parallelism and cancellation options |
+| `BatchOptions` | `BatchOptions` | The parallelism of the runs; null for `BatchOptions.Default` (the token and the progress are parameters of `MonteCarloPropagator.Propagate` since 11.0.0) |
 
 ### MonteCarloResult
 
@@ -257,14 +373,14 @@ var config = new MonteCarloConfiguration
     Seed = 42,
     TemplateSpacecraft = spacecraft,
     Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
-    CelestialBodiesFactory = () =>
-    [
-        new CelestialBody(PlanetsAndMoons.EARTH),
-        Stars.SUN_BODY,
-        PlanetsAndMoons.MOON_BODY
-    ],
-    DeltaT = TimeSpan.FromSeconds(60),
-    IntegratorFactory = () => new RK78Integrator(1e-10, 1e-10, 30.0),
+    Propagation = new PropagationOptions
+    {
+        Integrator = new RK78IntegratorOptions
+        {
+            AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+        },
+        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    }
 };
 
 var result = MonteCarloPropagator.Propagate(config);
@@ -274,9 +390,74 @@ var last = result.EpochStatistics[^1];
 Console.WriteLine($"Position 95th percentile RSS: {last.RssPositionPercentiles.P95:F1} m");
 ```
 
+## Cancellation
+
+The methods that run take a `CancellationToken` as their last parameter (R28 of #668, decision 4 of lot L4, decided by
+S. Guillet, 2026-11-22): `Spacecraft.Propagate(window, options, cancellationToken)`,
+`Scenario.Simulate(options, cancellationToken)`, `IPropagator.Propagate(cancellationToken)` (`CentralBodyPropagator`
+and `TLEPropagator`), `BatchPropagator.Propagate(…, cancellationToken)` and
+`MonteCarloPropagator.Propagate(config, [progress,] cancellationToken)`. No constructor, record or property holds a
+token. The work is synchronous: the asynchronous members over it (`Spacecraft.PropagateAsync`, `Star.PropagateAsync`,
+`Scenario.SimulateAsync`, `BatchPropagator.PropagateAsync`, `MonteCarloPropagator.PropagateAsync`) are removed in
+11.0.0, and a caller that wants a task runs the call in one.
+
+```csharp
+// Inputs: spacecraft (Spacecraft), window (Window)
+using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+try
+{
+    var solution = spacecraft.Propagate(window, PropagationOptions.Default, cts.Token);
+}
+catch (OperationCanceledException)
+{
+    // Not propagated: no stored state, and the next Propagate re-arms the spacecraft
+}
+
+// A task of the synchronous call, cancelled with the token
+var task = Task.Run(() => spacecraft.Propagate(window, cancellationToken: cts.Token), cts.Token);
+```
+
+Where the token is read:
+
+| Path | Read |
+|------|------|
+| `Spacecraft.Propagate`, `CentralBodyPropagator.Propagate` | Once the checks pass, before the spacecraft is re-armed; before each segment; by `VVIntegrator` and `RK78Integrator` at each accepted step, never between the rejections of a step (at most 101). Not after the last segment, so the outputs, the attitude record and the stored states are written as one block |
+| An `IIntegrator` implemented outside the library | Between its segments only (the interface does not change) |
+| `TLEPropagator.Propagate` | Before the first sample and at each sample; a stopped run adds nothing to the spacecraft |
+| `Scenario.Simulate` | Once the settings are checked, before anything changes; before each star and each spacecraft; inside each propagation |
+| `BatchPropagator.Propagate`, `MonteCarloPropagator.Propagate` | Before anything runs; before each task; inside each running propagation (before 11.0.0 the token of `BatchOptions` was read before each task only, and a running task ran to its end) |
+
+A token already cancelled throws before anything changes. A `Propagate` on a propagator instance that is already running
+waits for the lock of the instance, held for the whole run (decision 28 of lot L4 of #668, decided by S. Guillet,
+2026-11-22), and reads its token only once it holds it: a token cancelled while it waits stops it then, before anything
+changes, and not while it waits. Every path throws `OperationCanceledException` carrying the caller's token: a batch and a Monte Carlo campaign throw one, never an `AggregateException`. The bound is one step: a
+propagation stopped inside a step makes only the force evaluations left in it (measured: 2 to 4 for RK7(8) about the
+Earth, 8 in SSB mode, none for Velocity-Verlet, whose one evaluation per step is the one in progress, the same on
+Linux x64, Windows x64 and macOS arm64 in the CI of #789, run 45145382114; `CancellationTests`).
+
+What a stopped run leaves (C2 of lot L4):
+
+- the spacecraft it stopped in holds no stored state and no attitude record (those added by hand to a spacecraft never
+  propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included), is not `IsPropagated`, and keeps nothing
+  for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
+- its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
+  its fuel; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated,
+  a next run of the same propagator instance included (#782);
+- in `Scenario.Simulate` and a batch, the stars and spacecraft completed before the stop are complete, the later ones
+  untouched; `IsSimulated` stays false, and no summary or result is returned.
+
+One exception: a stopped `TLEPropagator` run adds nothing and leaves the spacecraft as it was, its stored states,
+attitude record and `IsPropagated` those it had before the run (decision 19 of lot L4, decided by S. Guillet,
+2026-11-22). `TLEPropagator` adds its samples to the stored states instead of replacing them, so a run it never
+completed has nothing to replace; this is revisited with R08 in lot L5 (`CancellationTests`, a stop in the middle of a
+run).
+
+The propagators hold no resource: `IPropagator`, `PropagatorBase` and `TLEPropagator` no longer implement
+`IDisposable` (their `Dispose` was empty, or cleared two fields), so `using var propagator = new CentralBodyPropagator(…)`
+does not compile (CS1674) and becomes `var propagator = …` (a binary break: a compiled caller is rebuilt).
+
 ## See Also
 
 - [Integrators](integrators.md)
 - [Force Models](force-models.md)
-- [Propagator Builder](propagator-builder.md)
 - [Conjunction Assessment](conjunction-assessment.md)

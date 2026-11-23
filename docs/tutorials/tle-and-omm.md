@@ -49,7 +49,7 @@ var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0, TimeScale.TDB))
 - `ToMeanKeplerianElements()` returns the raw mean elements for inspection.
 
 Mean elements stay mean through `AtEpoch(t)` and `ToKeplerianElements(t)` (#463), so their `ToStateVector()` throws
-there too, and a numerical propagation (`CentralBodyPropagator`, `Spacecraft.Propagate`, `Scenario.SimulateAsync`)
+there too, and a numerical propagation (`CentralBodyPropagator`, `Spacecraft.Propagate`, `Scenario.Simulate`)
 refuses a spacecraft whose initial orbit is a set of mean elements other than a TLE, with an `ArgumentException` that
 points to `TLEPropagator` and `TLE.ToOsculating()`. `AtEpoch` of mean elements advances the mean anomaly at the two-body
 mean motion only, without the secular rates of the node and of the periapsis of SGP4: a TLE's own `AtEpoch` is SGP4.
@@ -100,8 +100,7 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
 var sgp4AtStart = tle.ToStateVector(start);
 var numerical = new Spacecraft(-1001, "ISS-NUM", 420000.0, 450000.0, new Clock("issnum", 65536),
     new StateVector(sgp4AtStart.Position, sgp4AtStart.Velocity, earth, start, Frame.TEME), 1600.0, 2.2);
-var solution = numerical.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, false,
-    TimeSpan.FromSeconds(60.0));
+var solution = numerical.Propagate(window, new PropagationOptions { AtmosphericDrag = true });
 
 var sampled = new Spacecraft(-1002, "ISS-SGP4", 420000.0, 450000.0, new Clock("issgp4", 65536), tle);
 new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();

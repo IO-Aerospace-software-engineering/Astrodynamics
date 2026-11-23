@@ -14,6 +14,8 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
@@ -88,7 +90,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddSite(site);
 
             //Propagate site
-            await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+            scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
             var res = site.GetEphemeris(window, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1));
             var orbitalParametersEnumerable = res as Astrodynamics.OrbitalParameters.OrbitalParameters[] ?? res.ToArray();
             Assert.Equal(new Vector3(4054782.9682010966, -4799280.7492771307, 1100392.3676426695), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
@@ -163,7 +165,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
             scenario.AddSpacecraft(spacecraft);
 
-            var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+            var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
             // Read maneuver results. Each thrust window opens f dt before its impulse, f the lead of the centroid of the
             // burn's acceleration, about 0.504 here (#335): 1.32, 2.90, 1.58 and 1.50 s later than with the fixed 0.666 before
@@ -256,7 +258,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
             scenario.AddSpacecraft(spacecraft);
 
-            var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+            var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
             // Read maneuver results
             Assert.Equal(TimeSystem.Time.Parse("2024-07-30T13:49:39.1833013 TDB"), progradeAttitude.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
@@ -380,7 +382,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddSpacecraft(spacecraft);
 
             {
-                var summary1 = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+                var summary1 = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
                 // Read maneuver results
                 // The windows of PropagateSpacecraft, the burn's acceleration centred on each impulse (#335)
@@ -438,7 +440,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
                 Assert.Equal(2281.5771732185044, summary1.SpacecraftSummaries.First().FuelConsumption, 2);
             }
-            var summary2 = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+            var summary2 = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
             // Read maneuver results
             Astrodynamics.Maneuver.Maneuver maneuver2 = spacecraft.InitialManeuver;
             Assert.Equal(TimeSystem.Time.Parse("2021-03-04T00:34:36.9196525 TDB"), maneuver2.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
@@ -524,7 +526,7 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddCircularInstrument(-1785601, "CAM601", "mod1", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
 
             scenario.AddSpacecraft(spacecraft);
-            var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+            var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
             LabelAssert.Equal(scenario.Window, summary.Window);
             Assert.Single(summary.SpacecraftSummaries);
@@ -551,7 +553,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Scenario scenario = new Scenario("scn100", mission, new Window(start, end));
             scenario.AddStar(star);
 
-            var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromDays(365.0));
+            var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromDays(365.0) }, OutputStep = TimeSpan.FromDays(365.0) });
 
             LabelAssert.Equal(scenario.Window, summary.Window);
 
@@ -569,7 +571,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
 
         [Fact]
-        public async Task SimulateAsync_PropagatesTheStar_IsPropagated()
+        public async Task Simulate_PropagatesTheStar_IsPropagated()
         {
             // Arrange: IsPropagated was always false before (it read an output directory no code set); the SPK of the star
             // against CSPICE is the Validation test below
@@ -582,14 +584,14 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.False(star.IsPropagated);
 
             // Act
-            await scenario.SimulateAsync(false, false, TimeSpan.FromDays(365.0));
+            scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromDays(365.0) }, OutputStep = TimeSpan.FromDays(365.0) });
 
             // Assert
             Assert.True(star.IsPropagated);
         }
 
         [Fact]
-        public async Task SimulateAsync_OfAStarPropagatedBefore_ReplacesItsStates()
+        public async Task Simulate_OfAStarPropagatedBefore_ReplacesItsStates()
         {
             // Arrange: one star in two scenarios over different windows, their steps different; before, the second
             // simulation added its states to the first's, so that the SPK of the star covered both windows and the gap
@@ -602,15 +604,15 @@ namespace IO.Astrodynamics.Tests.Mission
             second.AddStar(star);
 
             // Act: the star's step is the propagator's step here (the window over 1000 is shorter)
-            await first.SimulateAsync(false, false, TimeSpan.FromDays(1.0));
-            await second.SimulateAsync(false, false, TimeSpan.FromHours(12.0));
+            first.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromDays(1.0) }, OutputStep = TimeSpan.FromDays(1.0) });
+            second.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromHours(12.0) }, OutputStep = TimeSpan.FromHours(12.0) });
 
             // Assert: the second simulation's states alone, as Spacecraft.Propagate replaces its states
             var replaced = IO.Astrodynamics.Tests.Body.StarTests.Grid(firstWindow, TimeSpan.FromDays(1.0))
                 .Append(new TimeSystem.Time(2001, 2, 1, TimeScale.TDB));
             var kept = IO.Astrodynamics.Tests.Body.StarTests.Grid(secondWindow, TimeSpan.FromHours(12.0));
             double worst = IO.Astrodynamics.Tests.Body.StarTests.CheckSpkHoldsOnly(star, kept, replaced,
-                "ScenarioTests.SimulateAsync_OfAStarPropagatedBefore", _output);
+                "ScenarioTests.Simulate_OfAStarPropagatedBefore", _output);
             double bound = IO.Astrodynamics.Tests.Body.StarTests.CatalogMotionInOneMicrosecond(star, kept);
             Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
         }
@@ -618,7 +620,7 @@ namespace IO.Astrodynamics.Tests.Mission
         // The reference position is CSPICE's latrec_c through CspiceDirect, which the Windows DLL does not export (Linux, Validation)
         [Fact]
         [Trait("Category", "Validation")]
-        public async Task SimulateAsync_PropagatesTheStar_AndItsSpkHoldsTheCatalogPositionWithProperMotion()
+        public async Task Simulate_PropagatesTheStar_AndItsSpkHoldsTheCatalogPositionWithProperMotion()
         {
             // Arrange: IsPropagated was always false before (it read an output directory no code set)
             var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
@@ -631,7 +633,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.False(star.IsPropagated);
 
             // Act
-            await scenario.SimulateAsync(false, false, step);
+            scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step });
 
             // Assert: the stored states exist, and SPICE reads them back from the SPK the star writes, against the catalog
             // position moved along its straight line (#718): after k steps of 365 days, dt = 365 k / 365.25 Julian years,
@@ -651,7 +653,7 @@ namespace IO.Astrodynamics.Tests.Mission
                     var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                     var catalog = IO.Astrodynamics.Tests.Body.StarTests.SpiceStraightLinePosition(star, 365m * k / 365.25m);
                     double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
-                    _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: step {k}, relative position {relative:E3}");
+                    _output.WriteLine($"MEASURE ScenarioTests.Simulate_PropagatesTheStar: step {k}, relative position {relative:E3}");
                     worst = System.Math.Max(worst, relative);
                 }
 
@@ -661,7 +663,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 // (Validation category, Linux only): 2.182e-16 (CI run 43974478027, 2026-11-16; 1.982e-16 for the linear angles
                 // before #718, CI run 43773937161). The distance is the star's own
                 // (Distance, from its parallax): the parsec of the library is not what this test measures
-                _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: worst relative position {worst:E3}");
+                _output.WriteLine($"MEASURE ScenarioTests.Simulate_PropagatesTheStar: worst relative position {worst:E3}");
                 Assert.True(worst <= 4.4e-16, $"{worst:E3}");
             }
             finally
@@ -693,7 +695,7 @@ namespace IO.Astrodynamics.Tests.Mission
         }
 
         [Fact]
-        public async Task SimulateAsync_WithIntegratorFactory_MatchesDirectPropagationWithThatIntegrator()
+        public async Task Simulate_WithAnIntegrator_MatchesDirectPropagationWithThatIntegrator()
         {
             // Arrange
             var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, 14, 0, 0, TimeScale.TDB));
@@ -705,9 +707,9 @@ namespace IO.Astrodynamics.Tests.Mission
             var velocityVerlet = CreateLeoSpacecraft(-1811, "VVC", window.StartDate);
 
             // Act
-            await scenario.SimulateAsync(false, false, step, () => new RK78Integrator());
-            reference.Propagate(window, scenario.CelestialBodies, new RK78Integrator(), false, false, step);
-            velocityVerlet.Propagate(window, scenario.CelestialBodies, false, false, step);
+            scenario.Simulate(new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = step, CovariancePropagation = CovariancePropagationOptions.None });
+            reference.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = step, ThirdBodies = scenario.CelestialBodies.ToArray(), CovariancePropagation = CovariancePropagationOptions.None });
+            velocityVerlet.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = scenario.CelestialBodies.ToArray() });
 
             // Assert: the same integrator gives bit-identical states, the default one does not.
             Assert.True(simulated.IsPropagated);
@@ -715,102 +717,6 @@ namespace IO.Astrodynamics.Tests.Mission
             var earth = TestHelpers.EarthAtJ2000;
             Assert.NotEqual(velocityVerlet.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).Position,
                 simulated.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).Position);
-        }
-
-        [Fact]
-        public async Task SimulateAsync_WithVelocityVerletFactory_MatchesDefaultOverload()
-        {
-            // Arrange: the default overload integrates with Velocity-Verlet at the propagator step.
-            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, 14, 0, 0, TimeScale.TDB));
-            var step = TimeSpan.FromSeconds(10.0);
-            var withFactory = CreateIntegratorScenario(window);
-            var simulated = CreateLeoSpacecraft(-1803, "VVA", window.StartDate);
-            withFactory.AddSpacecraft(simulated);
-            var byDefault = CreateIntegratorScenario(window);
-            var reference = CreateLeoSpacecraft(-1804, "VVB", window.StartDate);
-            byDefault.AddSpacecraft(reference);
-
-            // Act
-            await withFactory.SimulateAsync(false, false, step, () => new VVIntegrator(step));
-            await byDefault.SimulateAsync(false, false, step);
-
-            // Assert
-            Assert.True(simulated.IsPropagated);
-            AssertSameEphemeris(reference, simulated, window);
-            Assert.True(withFactory.IsSimulated);
-        }
-
-        [Fact]
-        public async Task SimulateAsync_WithIntegratorFactory_CreatesOneIntegratorPerSpacecraft()
-        {
-            // Arrange
-            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, 13, 0, 0, TimeScale.TDB));
-            var scenario = CreateIntegratorScenario(window);
-            scenario.AddSpacecraft(CreateLeoSpacecraft(-1805, "SC5", window.StartDate));
-            scenario.AddSpacecraft(CreateLeoSpacecraft(-1806, "SC6", window.StartDate));
-            var created = new System.Collections.Generic.List<RK78Integrator>();
-
-            // Act
-            var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), () =>
-            {
-                var integrator = new RK78Integrator();
-                created.Add(integrator);
-                return integrator;
-            });
-
-            // Assert: one integrator per spacecraft, each given its force model by the propagator.
-            Assert.Equal(2, created.Count);
-            Assert.NotSame(created[0], created[1]);
-            Assert.All(created, integrator => Assert.NotEmpty(integrator.Forces));
-            Assert.Equal(2, summary.SpacecraftSummaries.Count);
-        }
-
-        [Fact]
-        public async Task SimulateAsync_NullIntegratorFactory_Throws()
-        {
-            // Arrange
-            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, 13, 0, 0, TimeScale.TDB));
-            var scenario = CreateIntegratorScenario(window);
-            scenario.AddSpacecraft(CreateLeoSpacecraft(-1807, "SC7", window.StartDate));
-
-            // Act and assert
-            await Assert.ThrowsAsync<ArgumentNullException>(() => scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), null));
-            Assert.False(scenario.IsSimulated);
-        }
-
-        [Fact]
-        public async Task SimulateAsync_IntegratorFactoryReturningTheSameInstance_Throws()
-        {
-            // Arrange: a shared integrator would accumulate the forces of both spacecraft.
-            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, 13, 0, 0, TimeScale.TDB));
-            var scenario = CreateIntegratorScenario(window);
-            scenario.AddSpacecraft(CreateLeoSpacecraft(-1808, "SC8", window.StartDate));
-            scenario.AddSpacecraft(CreateLeoSpacecraft(-1809, "SC9", window.StartDate));
-            var shared = new RK78Integrator();
-
-            // Act
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), () => shared));
-
-            // Assert
-            Assert.Contains("new instance", exception.Message);
-            Assert.False(scenario.IsSimulated);
-        }
-
-        [Fact]
-        public async Task SimulateAsync_IntegratorFactoryReturningNull_Throws()
-        {
-            // Arrange
-            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, 13, 0, 0, TimeScale.TDB));
-            var scenario = CreateIntegratorScenario(window);
-            scenario.AddSpacecraft(CreateLeoSpacecraft(-1810, "SC10", window.StartDate));
-
-            // Act
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), () => null));
-
-            // Assert
-            Assert.Contains("returned null", exception.Message);
         }
 
         private static Scenario CreateIntegratorScenario(Window window)
@@ -842,11 +748,11 @@ namespace IO.Astrodynamics.Tests.Mission
 
         /// <summary>
         /// A plane alignment whose target is in ECLIPJ2000, built before its tank is on a spacecraft propagated in ICRF, is
-        /// rejected when the simulation builds the propagation of that spacecraft, as by <see cref="Spacecraft.Propagate(Window, System.Collections.Generic.IEnumerable{CelestialItem}, bool, bool, TimeSpan)"/> (#685):
+        /// rejected when the simulation builds the propagation of that spacecraft, as by <see cref="Spacecraft.Propagate(Window, PropagationOptions)"/> (#685):
         /// it burned 2807 m/s for a plane change of 2° (263 m/s), the target's components read in ICRF.
         /// </summary>
         [Fact]
-        public async Task SimulateAsync_TargetOrbitInAnotherFrame_IsRejected()
+        public async Task Simulate_TargetOrbitInAnotherFrame_IsRejected()
         {
             // Arrange
             var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2.0));
@@ -866,7 +772,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddSpacecraft(spacecraft);
 
             // Act
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0)));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => Task.FromResult(scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0) })));
 
             // Assert
             Assert.Equal("spacecraft", exception.ParamName);
@@ -884,7 +790,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission04");
             Scenario scenario = new Scenario("scn1", mission, new Window(startPropagator, end));
             Assert.Throws<ArgumentNullException>(() => scenario.AddSpacecraft(null));
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0)));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) }));
         }
 
         [Fact]
@@ -913,7 +819,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddCelestialItem(new Barycenter(6));
             scenario.AddCelestialItem(new Barycenter(7));
             scenario.AddCelestialItem(new Barycenter(8));
-            var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(100.0));
+            var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(100.0) }, OutputStep = TimeSpan.FromSeconds(100.0) });
 
             var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
             var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
@@ -964,7 +870,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 scenario.AddCelestialItem(new Barycenter(6));
                 scenario.AddCelestialItem(new Barycenter(7));
                 scenario.AddCelestialItem(new Barycenter(8));
-                var summary = await scenario.SimulateAsync( false, false, step);
+                var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step });
 
                 var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
 
@@ -1045,7 +951,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 scenario.AddCelestialItem(new Barycenter(6));
                 scenario.AddCelestialItem(new Barycenter(7));
                 scenario.AddCelestialItem(new Barycenter(8));
-                var summary = await scenario.SimulateAsync( false, false, step);
+                var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step });
 
                 var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
 
@@ -1119,7 +1025,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 scenario10s.AddCelestialItem(new Barycenter(5));
                 scenario10s.AddCelestialItem(new Barycenter(6));
                 var step = TimeSpan.FromSeconds(stepSize);
-                var summary2 = await scenario10s.SimulateAsync( false, false, step);
+                var summary2 = scenario10s.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step });
 
                 var spc10SV = spc10s.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
 

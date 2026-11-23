@@ -6,6 +6,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -17,11 +18,12 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Tests.Propagators;
 
 /// <summary>
-/// A propagation whose output step does not divide its window runs to its last output, round(L/ΔT)·ΔT, up to ΔT/2 past
+/// A propagation whose output step does not divide its window ran to its last output, round(L/ΔT)·ΔT, up to ΔT/2 past
 /// the window (#626). Its caches ended with the window (the orientation of the central body 120 s after it, the bodies
 /// 240 s after it), and a read past their last grid point was held there (the Earth stopped turning) or extrapolated (the
-/// bodies). The case of #626: a LEO, r = 6878.137 km, v = (0, 5.3829, 5.3829) km/s in ICRF, EGM2008 10×10, 7.0e8 s TT
-/// after J2000.
+/// bodies). Since 11.0.0 the propagation ends at the window end whatever its step (R11 of #668, choice 6), and the reads
+/// past the last grid point of a cache still read the frame at their epoch. The case of #626: a LEO, r = 6878.137 km,
+/// v = (0, 5.3829, 5.3829) km/s in ICRF, EGM2008 10×10, 7.0e8 s TT after J2000.
 /// </summary>
 public class PropagationPastTheWindowTests
 {
@@ -51,38 +53,38 @@ public class PropagationPastTheWindowTests
     }
 
     /// <summary>
-    /// A propagation over a window of 3 900 s with outputs every 600 s (A) integrates the 4 200 s of a propagation over
-    /// a window of 4 200 s (B): the same accepted steps, bit for bit, both paths that build the forces (RK7(8) and the
-    /// default Velocity-Verlet), with the Moon and the Sun. On a85098d A's grid ended 180 s before its end, where the Earth
-    /// was held 8.75e-3 rad off: its final state was 6.9 mm from B's (#626, row 1).
+    /// A propagation over a window of 3 900 s with outputs every 600 s (A) integrates its window, to its end: the accepted
+    /// steps of the propagation of the same window with one output step (B), bit for bit, both paths that build the forces
+    /// (RK7(8) at 1e-12 and Velocity-Verlet at the step), with the Moon and the Sun, the steps summing to the window. On
+    /// a85098d A's grid ended 180 s before its end, where the Earth was held 8.75e-3 rad off: its final state was 6.9 mm
+    /// from that of a propagation of 4 200 s (#626, row 1); from #626 to 11.0.0 A integrated those 4 200 s, 300 s past its
+    /// window.
     /// </summary>
     [Theory]
     [InlineData("RK", 3900.0, 600.0)]
     [InlineData("VV", 3900.0, 600.0)]
     [InlineData("RK", 88200.0, 3600.0)]
-    public void ToItsLastOutput_IsThePropagationOfThatSpan(string integrator, double length, double step)
+    public void ToTheWindowEnd_IsThePropagationOfTheWindow(string integrator, double length, double step)
     {
         // Arrange
-        double span = System.Math.Round(length / step, MidpointRounding.AwayFromZero) * step;
-        PropagationSolution Propagate(double windowLength, int naifId)
+        PropagationSolution Propagate(double outputStep, int naifId)
         {
             var earth = Earth();
             var bodies = new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY };
             var spacecraft = NewSpacecraft(earth, naifId);
-            var window = new Window(Start, Start.AddSeconds(windowLength));
+            var window = new Window(Start, Start.AddSeconds(length));
             return integrator == "RK"
-                ? spacecraft.Propagate(window, bodies, new RK78Integrator(1e-12, 1e-12), false, false,
-                    TimeSpan.FromSeconds(step))
-                : spacecraft.Propagate(window, bodies, false, false, TimeSpan.FromSeconds(step));
+                ? spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(outputStep), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
+                : spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(step) }, OutputStep = TimeSpan.FromSeconds(outputStep), ThirdBodies = bodies });
         }
 
         int id = integrator == "RK" ? (length < 10000.0 ? -6261 : -6263) : -6265;
 
         // Act
-        var a = Propagate(length, id);
-        var b = Propagate(span, id - 1);
+        var a = Propagate(step, id);
+        var b = Propagate(length, id - 1);
 
-        // Assert: the same accepted steps, the last of each ending at the span's end
+        // Assert: the same accepted steps, the last of each ending at the window end
         var stepsA = a.Segments.SelectMany(s => s.Steps).ToArray();
         var stepsB = b.Segments.SelectMany(s => s.Steps).ToArray();
         var lastA = stepsA[^1];
@@ -91,7 +93,7 @@ public class PropagationPastTheWindowTests
         double apartVelocity = (lastA.EndVelocity - lastB.EndVelocity).Magnitude();
         _output.WriteLine($"MEASURE #626 {integrator} L {length} s, step {step} s: {stepsA.Length} and {stepsB.Length} steps, " +
                           $"final state of A - B {apart:E3} m, {apartVelocity:E3} m/s");
-        Assert.Equal(span, stepsA.Sum(s => s.StepSize), 9);
+        Assert.Equal(PropagationTimeArgument.Tt.SecondsBetween(Start, Start.AddSeconds(length)), stepsA.Sum(s => s.StepSize), 9);
         Assert.Equal(stepsB.Length, stepsA.Length);
         for (int k = 0; k < stepsA.Length; k++)
         {

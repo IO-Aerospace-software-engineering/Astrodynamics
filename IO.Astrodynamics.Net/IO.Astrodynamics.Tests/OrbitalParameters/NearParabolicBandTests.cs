@@ -8,6 +8,9 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
@@ -1062,12 +1065,9 @@ public class NearParabolicBandTests
         var bodies = new CelestialItem[] { _earth };
 
         // Act (before: ArgumentException from the constructor of the propagator)
-        using var propagator = rk78
-            ? new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft,
-                new IO.Astrodynamics.Propagator.Integrators.RK78Integrator(1e-12, 1e-12), bodies, false, false,
-                TimeSpan.FromSeconds(60.0))
-            : new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft, bodies, false, false,
-                TimeSpan.FromSeconds(10.0));
+        var propagator = rk78
+            ? new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None })
+            : new IO.Astrodynamics.Propagator.CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = bodies });
         var first = propagator.Propagate().Segments[0].Steps[0];
 
         // Assert: the state of the elements at the start

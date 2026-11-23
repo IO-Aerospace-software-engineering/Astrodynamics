@@ -15,6 +15,8 @@ using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 namespace IO.Astrodynamics.Tests.Body;
 
 /// <summary>
@@ -87,7 +89,7 @@ public class EphemerisDefaultsTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = new Spacecraft(-2001, "R20Defaults", 100.0, 1000.0, new Clock("R20DefaultsClk", 65536),
             new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 1000.0), earth, Epoch, Frames.Frame.ICRF));
-        spacecraft.Propagate(new Window(Epoch, Epoch.AddSeconds(600.0)), [earth], false, false, TimeSpan.FromSeconds(10.0));
+        spacecraft.Propagate(new Window(Epoch, Epoch.AddSeconds(600.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth] });
 
         // From its central body (the short cut on the stored states) and from the Moon (the reference-body path)
         AssertDefaultsOfItem(spacecraft, earth, Epoch.AddSeconds(100.0));

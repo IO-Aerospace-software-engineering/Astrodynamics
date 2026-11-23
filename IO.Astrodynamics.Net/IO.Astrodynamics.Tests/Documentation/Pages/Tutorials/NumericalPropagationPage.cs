@@ -79,10 +79,7 @@ internal static class NumericalPropagationPage
 
         var solution = spacecraft.Propagate(
             new Window(epoch, epoch.AddDays(1)),
-            new[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            TimeSpan.FromSeconds(60));
+            new PropagationOptions { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY } });
         #endregion
     }
 
@@ -90,29 +87,30 @@ internal static class NumericalPropagationPage
     internal static void Block02()
     {
         #region docs/tutorials/numerical-propagation.md:2
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-10,
-            relativeTolerance: 1e-10,
-            initialStepSize: 30.0,
-            minStepSize: 1e-3,
-            maxStepSize: 300.0);
+        var integrator = new RK78IntegratorOptions
+        {
+            AbsoluteTolerance = 1e-10,
+            RelativeTolerance = 1e-10,
+            InitialStep = TimeSpan.FromSeconds(30.0),
+            MinStep = TimeSpan.FromMilliseconds(1.0),
+            MaxStep = TimeSpan.FromSeconds(300.0)
+        };
         #endregion
     }
 
     // docs/tutorials/numerical-propagation.md, "Direct Propagator Construction"
-    internal static void Block03(Time epoch, Spacecraft spacecraft, Integrator integrator, CelestialBody earth)
+    internal static void Block03(Time epoch, Spacecraft spacecraft, RK78IntegratorOptions integrator)
     {
         #region docs/tutorials/numerical-propagation.md:3
-        // Inputs: epoch (Time), spacecraft (Spacecraft), integrator (Integrator), earth (CelestialBody)
-        using var propagator = new CentralBodyPropagator(
-            new Window(epoch, epoch.AddHours(2)),
-            spacecraft,
-            integrator,
-            new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            deltaT: TimeSpan.FromSeconds(10.0));
+        // Inputs: epoch (Time), spacecraft (Spacecraft), integrator (RK78IntegratorOptions)
+        var options = new PropagationOptions
+        {
+            Integrator = integrator,
+            OutputStep = TimeSpan.FromSeconds(10.0),
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        };
 
+        var propagator = new CentralBodyPropagator(new Window(epoch, epoch.AddHours(2)), spacecraft, options);
         var solution = propagator.Propagate();
         #endregion
     }
@@ -138,39 +136,41 @@ internal static class NumericalPropagationPage
     }
 
     // docs/tutorials/numerical-propagation.md, "Atmospheric Drag and Solar Radiation Pressure"
-    internal static void Block06(Window window, Spacecraft spacecraft, Integrator integrator, CelestialBody earth)
+    internal static void Block06(Window window, Spacecraft spacecraft, RK78IntegratorOptions integrator)
     {
         #region docs/tutorials/numerical-propagation.md:6
-        // Inputs: window (Window), spacecraft (Spacecraft), integrator (Integrator), earth (CelestialBody)
-        using var propagator = new CentralBodyPropagator(
-            window, spacecraft, integrator,
-            new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            includeAtmosphericDrag: true,
-            includeSolarRadiationPressure: true,
-            deltaT: TimeSpan.FromSeconds(10.0));
+        // Inputs: window (Window), spacecraft (Spacecraft), integrator (RK78IntegratorOptions)
+        var solution = spacecraft.Propagate(window, new PropagationOptions
+        {
+            Integrator = integrator,
+            OutputStep = TimeSpan.FromSeconds(10.0),
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true
+        });
         #endregion
     }
 
-    // docs/tutorials/numerical-propagation.md, "Fluent Builder with Additional Force Models"
-    internal static void Block07(Time epoch, Spacecraft spacecraft, Integrator integrator)
+    // docs/tutorials/numerical-propagation.md, "Albedo and Thermal Radiation Pressure"
+    internal static void Block07(Time epoch, RK78IntegratorOptions integrator)
     {
         #region docs/tutorials/numerical-propagation.md:7
-        // Inputs: epoch (Time), spacecraft (Spacecraft), integrator (Integrator)
+        // Inputs: epoch (Time), integrator (RK78IntegratorOptions)
         var earth = new CelestialBody(PlanetsAndMoons.EARTH,
             albedo: 0.306,
             thermalEffectiveTemperature: 254.0,
             thermalEmissivity: 0.95);
+        var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7700.0, 0.0), earth, epoch, Frame.ICRF);
+        var spacecraft = new Spacecraft(-1002, "RadiationSat", 100.0, 10000.0, new Clock("RadiationClock", 65536), orbit);
 
-        using var propagator = new CentralBodyPropagatorBuilder(
-                new Window(epoch, epoch.AddHours(2)), spacecraft, integrator,
-                TimeSpan.FromSeconds(10))
-            .WithPerturbingBody(Stars.SUN_BODY)
-            .WithPerturbingBody(PlanetsAndMoons.MOON_BODY)
-            .IncludeAlbedo(earth)
-            .IncludeThermalRadiation(earth)
-            .Build();
-
-        var solution = propagator.Propagate();
+        var solution = spacecraft.Propagate(new Window(epoch, epoch.AddHours(2)), new PropagationOptions
+        {
+            Integrator = integrator,
+            OutputStep = TimeSpan.FromSeconds(10),
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            AlbedoRadiationPressure = true,
+            ThermalRadiationPressure = true
+        });
         #endregion
     }
 

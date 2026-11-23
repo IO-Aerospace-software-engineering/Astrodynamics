@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// The propagation is the <c>propagator</c> category's (spec.md section 16.4, lot 6 of #457: the cases of
 /// conformance-tests#10 regenerated on the suite's Earth): the field of the suite's <c>data/</c>, the files of
 /// <c>data/</c> the case lists (<see cref="CaseKernels"/>) and the RK7(8) integrator at 1e-13
-/// (<see cref="PropagatorSolver.CreateIntegrator"/>), the tolerance of the validation of the matrix against central
+/// (<see cref="PropagatorSolver.Integrator"/>), the tolerance of the validation of the matrix against central
 /// differences of whole propagations (F1). Φ comes from the variational equations integrated with the state. Φ and the
 /// final state are read at the end of the window as the case tags it, the instant of the end (#501). Φ is the same in km
 /// and km/s as in m and m/s (its rv block in s, its vr block in 1/s).
@@ -38,11 +38,9 @@ public class StmSolver : ICategorySolver
     {
         using var kernels = new CaseKernels(_conformanceTestsPath, InputParser.ParseKernels(caseInput.Inputs));
         var propagationCase = PropagationCase.Build(caseInput, _dataPath);
-        var integrator = PropagatorSolver.CreateIntegrator();
-        var propagator = new CentralBodyPropagator(
-            propagationCase.Window, propagationCase.Spacecraft, integrator, propagationCase.Bodies,
-            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.OutputStep,
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly });
+        var propagator = new CentralBodyPropagator(propagationCase.Window, propagationCase.Spacecraft,
+            PropagatorSolver.Options(propagationCase, propagationCase.OutputStep,
+                new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly }));
         var solution = propagator.Propagate();
 
         var end = propagationCase.Window.EndDate;

@@ -102,7 +102,7 @@ a = −GM_kernel r / r³ + ∇[(GM_model / r) Σ_(n≥2) (a_model / r)ⁿ Σ_m P
 
 | Body | `GeopotentialModelParameters` | GM_model, a_model |
 |------|-------------------------------|-------------------|
-| Earth (NAIF 399) | `(path, degree)` or `(stream, degree)` | EGM2008: 3.986004415e14 m³/s², 6378136.3 m (Pavlis et al., 2012) |
+| Earth (NAIF 399) | `Egm2008(degree)`, `(path, degree)` or `(stream, degree)` | EGM2008: 3.986004415e14 m³/s², 6378136.3 m (Pavlis et al., 2012) |
 | Any other body | `(path, degree)` or `(stream, degree)` | the GM and the equatorial radius of its kernels |
 | Any body | `(path, degree, gravitationalParameter, referenceRadius)` or the same with a stream | the given ones |
 
@@ -134,8 +134,29 @@ var mars = new CelestialBody(PlanetsAndMoons.MARS, Frame.ICRF, epoch,
 | 20-30 | Higher-fidelity geodesy and mission analysis |
 | 70 | Maximum supported EGM2008 fidelity |
 
+#### Geopotential model parameters
+
+`GeopotentialModelParameters` is a value (R06 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+lot L4, 11.0.0): a sealed record of its source, an `int` degree (`GeopotentialDegree`, 0 or more), its constants and
+`CentralTerm`, equal to another of the same source (the full path of a model file, EGM2008 embedded, or streams of the
+same bytes), degree, constants and central term. `GeopotentialModelParameters.Egm2008(degree)` is EGM2008, tide free,
+embedded in the library to degree 70 (`Egm2008MaximumDegree`): the coefficients of `EGM2008_to70_TideFree`, the file of
+the tests, byte for byte, so its field is that file's at every degree (`GeopotentialOptionsTests`, degrees 2, 10 and 70,
+bit for bit), with no file to ship. A stream is read when the parameters are built and left open; a path is checked
+then (`FileNotFoundException`) and read at the first body or propagation. Before 11.0.0 the parameters were a class
+compared by reference, holding the `StreamReader` of their file (`GeopotentialModelPath`), with a `ushort` degree.
+
+A propagation takes the geopotential of its central body, or `PropagationOptions.Geopotential` as a fallback for a body
+without one, an equal model, or one of the same coefficients from another source, accepted, another throwing
+([Propagation Options](propagators.md#propagation-options)). Each run builds its own field from the model, over the
+coefficients the model reads once, so propagations sharing a body never share a field.
+
 !!! warning "Thread Safety"
-    `GeopotentialGravitationalField` is **not** thread-safe. Create one `CelestialBody` with geopotential per propagation task.
+    `GeopotentialGravitationalField` is **not** thread-safe: a body's own field, which its
+    `EvaluateGravitationalAcceleration` evaluates, serves one thread at a time. A propagation builds its own field from
+    the body's model (11.0.0, R06 of #668), so one `CelestialBody` with a geopotential may serve any number of
+    propagations, on any thread. The field has no public constructor since 11.0.0: it is built from
+    `GeopotentialModelParameters` by a body or a propagation.
 
 #### The central term with the GM of the model
 
@@ -192,7 +213,7 @@ Where `f(phi) = (pi - phi) * cos(phi) + sin(phi)` is the Lambertian visibility f
 new AlbedoRadiationPressure(spacecraft, reflectingBody)
 ```
 
-**Configuration**: Set `albedo` on the `CelestialBody` constructor, then call `IncludeAlbedo()` on the builder.
+**Configuration**: Set `albedo` on the `CelestialBody` constructor of the central body, then set `PropagationOptions.AlbedoRadiationPressure` ([Propagation Options](propagators.md#propagation-options)); a body other than the central body goes through a force list of your own (`new AlbedoRadiationPressure(spacecraft, body)` added to an integrator given to the `CentralBodyPropagator` constructor that takes one).
 
 | Body | Bond Albedo |
 |------|-------------|
@@ -213,7 +234,7 @@ a = Cr * (A/m) * epsilon * sigma * T_eff^4 * R^2 / (c * r^2)
 new ThermalRadiationPressure(spacecraft, emittingBody)
 ```
 
-**Configuration**: Set `thermalEffectiveTemperature` (Kelvin) and `thermalEmissivity` on the `CelestialBody` constructor, then call `IncludeThermalRadiation()` on the builder.
+**Configuration**: Set `thermalEffectiveTemperature` (Kelvin) and `thermalEmissivity` on the `CelestialBody` constructor of the central body, then set `PropagationOptions.ThermalRadiationPressure`; a body other than the central body goes through a force list of your own, as for the albedo.
 
 | Body | T_eff (K) | Emissivity |
 |------|-----------|------------|
@@ -260,6 +281,5 @@ the finite-difference steps and the measured accuracy are in the
 
 ## See Also
 
-- [Propagator Builder](propagator-builder.md)
 - [Propagators](propagators.md)
 - [Integrators](integrators.md)

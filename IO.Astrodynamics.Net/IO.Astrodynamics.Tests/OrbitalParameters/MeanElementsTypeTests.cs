@@ -8,6 +8,7 @@ using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -170,14 +171,10 @@ public class MeanElementsTypeTests
                 // the mean numbers, 11.75 km from SGP4 at t0 for the ISS, 468 km after a day)
                 var paths = new (string Name, Func<Task> Run)[]
                 {
-                    ("CentralBodyPropagator", () => Task.FromResult(new CentralBodyPropagator(window, spacecraft, bodies, false, false, step))),
-                    ("CentralBodyPropagator RK7(8)", () => Task.FromResult(new CentralBodyPropagator(window, spacecraft,
-                        new RK78Integrator(1e-12, 1e-12), bodies, false, false, step))),
-                    ("Propagate", () => Task.FromResult(spacecraft.Propagate(window, bodies, false, false, step))),
-                    ("Propagate RK7(8)", () => Task.FromResult(spacecraft.Propagate(window, bodies, new RK78Integrator(1e-12, 1e-12),
-                        false, false, step))),
-                    ("PropagateAsync", () => spacecraft.PropagateAsync(window, bodies, false, false, step)),
-                    ("builder", () => Task.FromResult(new CentralBodyPropagatorBuilder(window, spacecraft, new VVIntegrator(step), step).Build())),
+                    ("CentralBodyPropagator", () => Task.FromResult(new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies }))),
+                    ("CentralBodyPropagator RK7(8)", () => Task.FromResult(new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }))),
+                    ("Propagate", () => Task.FromResult(spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = bodies }))),
+                    ("Propagate RK7(8)", () => Task.FromResult(spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None }))),
                     ("scenario", () => SimulateScenario(window, spacecraft, step)),
                 };
                 foreach (var (name, run) in paths)
@@ -201,7 +198,7 @@ public class MeanElementsTypeTests
         var scenario = new Scenario("MEAN463", new IO.Astrodynamics.Mission.Mission("MEAN463"), window);
         scenario.AddCelestialItem(_earth);
         scenario.AddSpacecraft(spacecraft);
-        await scenario.SimulateAsync(false, false, step);
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step });
         return null;
     }
 }

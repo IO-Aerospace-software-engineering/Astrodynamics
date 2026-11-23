@@ -12,6 +12,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -473,13 +474,9 @@ public class RK78IntegratorTests
 
         var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
 
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 30.0);
+        IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) };
 
-        var propagator = new CentralBodyPropagator(propWindow, spc, integrator,
-            new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            false, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
         var res=propagator.Propagate();
 
         Assert.True(res.StateVectors.Count > 0);
@@ -511,13 +508,9 @@ public class RK78IntegratorTests
 
         var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
 
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 30.0);
+        IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) };
 
-        var propagator = new CentralBodyPropagator(propWindow, spc, integrator,
-            new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            false, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
         var res=propagator.Propagate();
 
         Assert.True(res.StateVectors.Count > 0);
@@ -551,16 +544,19 @@ public class RK78IntegratorTests
 
         var propWindow = new Window(epoch, epoch.AddHours(2));
 
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 30.0);
+        var options = new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            OutputStep = TimeSpan.FromSeconds(30.0),
+            ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None
+        };
 
-        // Earth must be in the body list for atmospheric drag (BuildCentralBodyForces checks the list)
-        var propagator = new CentralBodyPropagator(
-            propWindow, spc, integrator,
-            new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            includeAtmosphericDrag: true, includeSolarRadiationPressure: true,
-            TimeSpan.FromSeconds(30.0));
+        var propagator = new CentralBodyPropagator(propWindow, spc, options);
+        var integrator = (RK78Integrator)propagator.Integrator;
 
         var res=propagator.Propagate();
 
@@ -604,14 +600,9 @@ public class RK78IntegratorTests
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
+        IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(300.0) };
 
-        var propagator = new CentralBodyPropagator(
-            propWindow, spc, integrator,
-            new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            false, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
 
         var res = propagator.Propagate();
 
@@ -659,26 +650,9 @@ public class RK78IntegratorTests
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
+        IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(300.0) };
 
-        var propagator = new CentralBodyPropagator(
-            propWindow, spc, integrator,
-            new CelestialItem[]
-            {
-                PlanetsAndMoons.MOON_BODY,
-                Stars.SUN_BODY,
-                Barycenters.MERCURY_BARYCENTER,
-                Barycenters.VENUS_BARYCENTER,
-                Barycenters.MARS_BARYCENTER,
-                Barycenters.JUPITER_BARYCENTER,
-                Barycenters.SATURN_BARYCENTER,
-                Barycenters.URANUS_BARYCENTER,
-                Barycenters.NEPTUNE_BARYCENTER,
-                Barycenters.PLUTO_BARYCENTER
-            },
-            false, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY, Barycenters.MERCURY_BARYCENTER, Barycenters.VENUS_BARYCENTER, Barycenters.MARS_BARYCENTER, Barycenters.JUPITER_BARYCENTER, Barycenters.SATURN_BARYCENTER, Barycenters.URANUS_BARYCENTER, Barycenters.NEPTUNE_BARYCENTER, Barycenters.PLUTO_BARYCENTER }, CovariancePropagation = CovariancePropagationOptions.None });
 
         var res= propagator.Propagate();
 
@@ -724,14 +698,9 @@ public class RK78IntegratorTests
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
+        IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(300.0) };
 
-        var propagator = new CentralBodyPropagator(
-            propWindow, spc, integrator,
-            new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            false, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
 
         var res=propagator.Propagate();
 

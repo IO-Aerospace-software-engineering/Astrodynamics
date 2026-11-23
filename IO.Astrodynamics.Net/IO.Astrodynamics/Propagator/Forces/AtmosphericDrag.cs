@@ -67,19 +67,38 @@ public class AtmosphericDrag : ForceBase
     /// <summary>The body whose atmosphere slows the spacecraft.</summary>
     internal CelestialBody CelestialBody => _celestialBody;
 
-    public AtmosphericDrag(Spacecraft spacecraft, CelestialBody celestialBody)
+    public AtmosphericDrag(Spacecraft spacecraft, CelestialBody celestialBody) : this(spacecraft, celestialBody, null)
+    {
+    }
+
+    /// <summary>
+    /// The drag of the atmosphere <paramref name="atmosphere"/> about <paramref name="celestialBody"/>, in place of the
+    /// body's: the atmosphere of a propagation's options that fills a body without a model (R06 of #668); null for the
+    /// atmosphere of the body.
+    /// </summary>
+    internal AtmosphericDrag(Spacecraft spacecraft, CelestialBody celestialBody, IAtmosphericModel atmosphere)
     {
         _spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         _celestialBody = celestialBody ?? throw new ArgumentNullException(nameof(celestialBody));
+        _atmosphere = atmosphere;
         // Its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth without one (#674)
-        if (_celestialBody.Atmosphere == null)
+        if (Atmosphere == null)
         {
             throw new ArgumentException($"The celestial body {_celestialBody.Name} does not have an atmospheric model.");
         }
 
-        _discontinuities = _celestialBody.Atmosphere as IDensityDiscontinuities;
-        _altitudeDerivative = _celestialBody.Atmosphere as IAltitudeDensityDerivative;
+        _discontinuities = Atmosphere as IDensityDiscontinuities;
+        _altitudeDerivative = Atmosphere as IAltitudeDensityDerivative;
     }
+
+    // The atmosphere given in place of the body's, null for the body's
+    private readonly IAtmosphericModel _atmosphere;
+
+    /// <summary>
+    /// The atmosphere of this drag: the one given in place of the body's, or the body's
+    /// (<see cref="CelestialBody.Atmosphere"/>).
+    /// </summary>
+    internal IAtmosphericModel Atmosphere => _atmosphere ?? _celestialBody.Atmosphere;
 
     public override Vector3 Apply(StateVector stateVector)
     {
@@ -509,7 +528,10 @@ public class AtmosphericDrag : ForceBase
     // (NRLMSISE-00)
     private double Density(in Planetodetic coordinates, in Time epoch)
     {
-        return _celestialBody.GetAirDensity(coordinates.Altitude, coordinates.Latitude, coordinates.Longitude, epoch);
+        return _atmosphere == null
+            ? _celestialBody.GetAirDensity(coordinates.Altitude, coordinates.Latitude, coordinates.Longitude, epoch)
+            : CelestialBody.AirDensity(_atmosphere, coordinates.Altitude, coordinates.Latitude, coordinates.Longitude,
+                epoch);
     }
 
     /// <summary>

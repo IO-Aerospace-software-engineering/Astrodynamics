@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
@@ -24,9 +25,9 @@ namespace IO.Astrodynamics.Propagator;
 public class TLEPropagator : IPropagator
 {
     private readonly Time[] _sampleEpochs;
-    private StateVector[] _svCache;
+    private readonly StateVector[] _svCache;
     // Keyed by label (#512), as the orientations of a frame
-    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.ExactComparer);
+    private readonly Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.ExactComparer);
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }
@@ -36,11 +37,14 @@ public class TLEPropagator : IPropagator
     /// <paramref name="deltaT"/> and at the window end.
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="spacecraft"/> is null.</exception>
-    /// <exception cref="ArgumentException">The initial orbital parameters of the spacecraft are not a TLE.</exception>
+    /// <exception cref="ArgumentException"><paramref name="window"/> has zero length, one rule on every propagation path
+    /// (decisions 7 and 15 of lot L4 of #668, decided by S. Guillet, 2026-11-22; before 11.0.0, one sample at the start),
+    /// or the initial orbital parameters of the spacecraft are not a TLE.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is zero or less (#598; before 11.0.0, a
     /// step below 1 s threw <see cref="DivideByZeroException"/>), or gives more samples than an array holds.</exception>
     public TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan deltaT)
     {
+        PropagatorBase.RequireWindowLength(window);
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         if (Spacecraft.InitialOrbitalParameters is not TLE)
@@ -86,12 +90,24 @@ public class TLEPropagator : IPropagator
         _svCache[0] = initialState;
     }
 
-    public PropagationSolution Propagate()
+    /// <summary>
+    /// Samples the SGP4 state at the epochs of the grid, adds the samples to the spacecraft's stored states and returns
+    /// them as a solution.
+    /// </summary>
+    /// <param name="cancellationToken">Read before the first sample and at each sample (R28 of #668): a run stopped adds
+    /// nothing to the spacecraft, which is left as it was, its stored states those it had before the run (decision 19 of
+    /// lot L4: the exception to C2, since this propagator adds its samples instead of replacing the stored states).</param>
+    /// <returns>The solution.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
+    /// carries it.</exception>
+    public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.StartDate, Frame.ICRF);
         int sampleCount = _sampleEpochs.Length;
         for (int i = 1; i < sampleCount; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             _svCache[i] = Spacecraft.InitialOrbitalParameters.ToStateVector(_sampleEpochs[i]);
         }
 
@@ -103,6 +119,7 @@ public class TLEPropagator : IPropagator
         var accelerations = new Vector3[sampleCount];
         for (int i = 0; i < sampleCount; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             accelerations[i] = Sgp4Acceleration(_sampleEpochs[i]);
         }
 
@@ -145,9 +162,4 @@ public class TLEPropagator : IPropagator
         return (after - before) / (2.0 * Sgp4DifferenceStep);
     }
 
-    public void Dispose()
-    {
-        _svCache = null;
-        _stateOrientation = null;
-    }
 }

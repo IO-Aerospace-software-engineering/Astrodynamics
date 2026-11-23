@@ -131,10 +131,10 @@ internal static class GetStartedPage
     }
 
     // docs/get-started.md, "Propagate An Orbit"
-    internal static void Block06(StateVector orbit, Time epoch, CelestialBody earth)
+    internal static void Block06(StateVector orbit, Time epoch)
     {
         #region docs/get-started.md:6
-        // Inputs: orbit (StateVector), epoch (Time), earth (CelestialBody)
+        // Inputs: orbit (StateVector), epoch (Time)
         var spacecraft = new Spacecraft(
             -1001,                         // NAIF id
             "MySat",
@@ -145,16 +145,14 @@ internal static class GetStartedPage
 
         var window = new Window(epoch, epoch.AddHours(2));
 
-        using var propagator = new CentralBodyPropagator(
-            window,
-            spacecraft,
-            new VVIntegrator(TimeSpan.FromSeconds(10.0)),
-            new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-            includeAtmosphericDrag: false,
-            includeSolarRadiationPressure: false,
-            deltaT: TimeSpan.FromSeconds(60.0));
+        var solution = spacecraft.Propagate(window, new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            AtmosphericDrag = true,
+            SolarRadiationPressure = true
+        });
 
-        var solution = propagator.Propagate();
         var (position, velocity) = solution.InterpolateAt(window.EndDate);
         #endregion
     }
@@ -164,22 +162,15 @@ internal static class GetStartedPage
     {
         #region docs/get-started.md:7
         // Inputs: epoch (Time), spacecraft (Spacecraft)
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-10,
-            relativeTolerance: 1e-10,
-            initialStepSize: 30.0);
-
         var window = new Window(epoch, epoch.AddHours(2));
 
-        using var propagator = new CentralBodyPropagatorBuilder(
-                window, spacecraft, integrator, TimeSpan.FromSeconds(60.0))
-            .WithPerturbingBody(Stars.SUN_BODY)
-            .WithPerturbingBody(PlanetsAndMoons.MOON_BODY)
-            .IncludeAtmosphericDrag()
-            .IncludeSolarRadiationPressure()
-            .Build();
+        var solution = spacecraft.Propagate(window, new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
+            OutputStep = TimeSpan.FromSeconds(60.0),
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        });
 
-        var solution = propagator.Propagate();
         var (position, velocity) = solution.InterpolateAt(window.EndDate);
         #endregion
     }

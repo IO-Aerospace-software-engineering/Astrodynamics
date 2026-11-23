@@ -17,6 +17,8 @@ using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Body;
@@ -160,7 +162,7 @@ public sealed class PropagatedFieldOfViewCase
             new Vector3(7546.0 * System.Math.Sin(0.6), 7546.0 * System.Math.Cos(-0.6), 0.0), Earth, Start, Frames.Frame.ICRF);
         PropagatedTarget = new Spacecraft(TargetId, "FOV5152", 1000.0, 3000.0, new Clock("FOV5152_CLK", 65536), targetOrbit);
         scenario.AddSpacecraft(PropagatedTarget);
-        scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0)).GetAwaiter().GetResult();
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
         FieldOfViewKernels.WriteAndLoad(KernelDirectory, Propagated, [PropagatedTarget], [CoordinateSite], new Window(Start.AddSeconds(-600.0), End.AddSeconds(600.0)));
         var starSpk = new FileInfo(Path.Combine(KernelDirectory, "fovstar515.bsp"));
@@ -718,9 +720,9 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(-60.0)));
             Assert.Throws<ArgumentException>(() =>
                 instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, spacecraft, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
-            // A search window that ends before it starts, which the constructor from a length allows
-            Assert.Throws<ArgumentException>(() => instrument.FindWindowsInFieldOfViewConstraint(new Window(window.EndDate, TimeSpan.FromSeconds(-60.0)), spacecraft, earth,
-                Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
+            // A search window that ends before it starts, which the constructor from a length allowed before 11.0.0: it
+            // throws there now (R11 of #668), before any search
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Window(window.EndDate, TimeSpan.FromSeconds(-60.0)));
             foreach (ILocalizable target in new ILocalizable[] { _case.Dss13, _case.CoordinateSite, other, new Barycenter(3), new LagrangePoint(LagrangePoints.L1), star })
             {
                 Assert.Throws<ArgumentException>(() =>
@@ -999,7 +1001,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 number = 795;
             }
 
-            spacecraft.Propagate(propagation, bodies, false, false, TimeSpan.FromSeconds(1.0));
+            spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = bodies });
             var inst = spacecraft.Instruments.First(x => x.NaifId == id * 1000 - number);
             return (spacecraft, () => inst.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, itrf, targetShape, Aberration.LTS, Step).ToArray());
         }

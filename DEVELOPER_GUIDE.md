@@ -1373,8 +1373,7 @@ Represents a spacecraft with components.
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
 | `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set the head of the maneuver chain, which the next propagation starts from (a second call replaces the first, null clears it, #584); a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
-| `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit, returns `PropagationSolution` |
-| `PropagateAsync(...)` | Propagate orbit asynchronously, returns `PropagationSolution` |
+| `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
 | `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
@@ -1408,14 +1407,16 @@ spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
     new Vector3(0, 0, 0)                 // Orientation
 );
 
-// Propagate (returns PropagationSolution for dense output). The default integrator, Velocity-Verlet, is of the second
-// order: its error grows as the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s)
+// Propagate (returns PropagationSolution for dense output). Velocity-Verlet is of the second order: its error grows as
+// the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s); without an integrator the
+// options run RK7(8) at 1e-9
 var solution = spacecraft.Propagate(
     new Window(epoch, epoch.AddDays(1)),
-    new[] { earth },
-    includeAtmosphericDrag: false,
-    includeSolarRadiationPressure: false,
-    TimeSpan.FromSeconds(1)
+    new PropagationOptions
+    {
+        Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1) },
+        OutputStep = TimeSpan.FromSeconds(1)
+    }
 );
 
 // Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
@@ -1631,20 +1632,26 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 
 | Constructor | Description |
 |------------|-------------|
-| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator with auto force-building and default VV integrator |
+| `CentralBodyPropagator(Window window, Spacecraft spacecraft, PropagationOptions options = null)` | Create propagator with auto force-building from the settings of `options` (RK7(8) at 1e-9 when given none; R06 and R07 of #668) |
 | `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step)` | Create propagator with custom integrator (forces pre-configured) |
-| `CentralBodyPropagator(Window window, Spacecraft spacecraft, Integrator integrator, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator with custom integrator and auto force-building |
-| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step, CovariancePropagationOptions covariancePropagation)` and `CentralBodyPropagator(Window window, Spacecraft spacecraft, Integrator integrator, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step, CovariancePropagationOptions covariancePropagation)` | The same, with the state transition matrix, the sensitivity to Cd and Cr and the covariance propagated with the state (RK7(8) only; null for off) |
+| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step, CovariancePropagationOptions covariancePropagation)` | The same, with the state transition matrix, the sensitivity to Cd and Cr and the covariance propagated with the state (RK7(8) only; null for off) |
+
+The constructors of flags (bodies, drag, SRP, with or without an integrator) were removed in 11.0.0 (R07 of #668): their settings are those of `PropagationOptions`, a call without an integrator `new VVIntegratorOptions { Step = step }` with `OutputStep = step`, bit for bit.
 
 | Method | Description |
 |--------|-------------|
-| `Propagate()` | Execute propagation with event detection and dense output, returns `PropagationSolution` |
+| `Propagate(CancellationToken cancellationToken = default)` | Execute propagation with event detection and dense output, returns `PropagationSolution`; the token is read before the re-arm, before each segment and at each accepted step of the library's integrators (R28 of #668) |
 
-**State transition matrix and covariance** (`IO.Astrodynamics.Propagator.Variational`, off by default): with
+**State transition matrix and covariance** (`IO.Astrodynamics.Propagator.Variational`; Auto by default on the options
+entry points: `PropagationOptions.CovariancePropagation` null propagates a covariance the initial state carries at the
+window start under RK7(8), with `new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }`
+exactly, so at the cost of that explicit request, from about 1.5 times (point mass) to about 8 times (EGM2008 10x10 and drag) the run without it (the measured cost in
+[docs/reference/covariance-propagation.md](docs/reference/covariance-propagation.md)); `CovariancePropagationOptions.None` turns it off, decision 17 of lot L4 of
+#668): with
 `CovariancePropagationOptions` (`Mode` `StateTransitionOnly` or `Covariance`, `ProcessNoise` an `RtnProcessNoise`,
-`ConsiderParameters` the σ of Cd and Cr, `IncludeInStepControl`), activated by the constructors above,
-`CentralBodyPropagatorBuilder.WithCovariancePropagation`, `Spacecraft.Propagate`, `PropagationTask.CovariancePropagation`
-or `Scenario.SimulateAsync`, an `RK78Integrator` propagates Φ, Ψ and P with the state. They are read from the solution
+`ConsiderParameters` the σ of Cd and Cr, `IncludeInStepControl`), activated by `PropagationOptions.CovariancePropagation` (on
+every options entry point: `Spacecraft.Propagate`, `CentralBodyPropagator`, `PropagationTask`, `Scenario.Simulate`) or
+the constructor of an integrator that holds its forces, an `RK78Integrator` propagates Φ, Ψ and P with the state. They are read from the solution
 at any epoch: `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`,
 `GetStateVector`. `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, namespace `IO.Astrodynamics.Maneuver`)
 adds the execution error of a burn, `StateVector.WithRemediatedCovariance()` remediates an initial covariance that
@@ -1656,7 +1663,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Propagation Architecture:**
 1. **Build event detectors** from the spacecraft's maneuver chain: the leading attitudes on the attitude timeline, each at the later of its minimum epoch and the end of the previous hold, the last hold gating the first impulse (#539)
 2. **Segment loop**: Integrator advances with event detection; on event → the detector executes the impulse only, the propagation counts its windows in TT seconds about the Earth (#547), lays its attitude and the attitudes chained after it on the timeline and builds the next detector, reinitialize
-3. **Output**: Evaluate `PropagationSolution.InterpolateAt` at fixed `DeltaT` epochs, round(L/ΔT) + 1 of them, the window end last when the grid ends before it (in place of a grid point within ΔT/10 of it; #741, decided by S. Guillet, 2026-11-18): a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
+3. **Output**: Evaluate `PropagationSolution.InterpolateAt` every output step from the window start inside the window, then at the window end (in place of a grid point within ΔT/10 of it; #741, decided by S. Guillet, 2026-11-18), whether round(L/ΔT) rounds the window down or up (since 11.0.0: before, a grid that rounded up ran to round(L/ΔT)·ΔT, up to ΔT/2 past the window; R11 of #668, choice 6): a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
 4. **Attitude record**: from the timeline, on the solution: each law at its activation, at each output epoch of its interval and 1 µs before the change that ends it; the impulse's attitude over its window (`docs/reference/attitudes.md#the-attitude-timeline`)
 
 **Key Supporting Types:**
@@ -1666,9 +1673,10 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)
 
 **Integrator Interface (`IIntegrator`):**
-- `Initialize(StateVector initialState)` — set observer, frame, workspace; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), and after each event
+- `Initialize(StateVector initialState)` — set observer, frame, workspace and reset every state a run depends on; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), at the start of every run of `Propagate` (so each run of one propagator instance is a fresh run, and an `Initialize` by the caller between construction and the run has no effect on it, #782) and after each event; an integrator belongs to one propagator, a second one given it throwing `ArgumentException` (`integrator`)
 - `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`: one event per call, the earliest crossing of the step, ties in list order (#578); a g exactly zero at a step end after a non-zero one is a crossing there (#580)
-- Default: `VVIntegrator` (Velocity-Verlet, fixed-step, second order with drag too (#439), event detection at step boundaries, the step of an event integrated again to the tick of its label, #572)
+- Default of the options entry points: `RK78Integrator` at `RK78IntegratorOptions.Default` (1e-9, 1e-9; since 11.0.0)
+- `VVIntegrator` (Velocity-Verlet, fixed-step, 1 s by default in `VVIntegratorOptions`, second order with drag too (#439), event detection at step boundaries, the step of an event integrated again to the tick of its label, #572)
 - `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)
 
 **Event Detection (`IEventDetector`):**
@@ -1678,14 +1686,14 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - `ManeuverEventDetector` wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`
 
 **Force Models:**
-- **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
+- **Gravitational acceleration** from the central body and each body of `PropagationOptions.ThirdBodies`. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
 - **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body, the direct difference within half the distance of the perturbing body to the central body (SSB mode near the Earth, #576).
-- **Atmospheric drag** (when `drag` is true): uses the central body's atmosphere with atmosphere-relative velocity (accounts for body co-rotation): its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth built without one; another central body without a model throws `InvalidOperationException`; the other listed bodies with an atmosphere add their drag, and about the Sun (a star or barycentre observer) they give it, an Earth always having one (#674). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
+- **Atmospheric drag** (when `PropagationOptions.AtmosphericDrag` is true): uses the central body's atmosphere with atmosphere-relative velocity (accounts for body co-rotation): its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth built without one; another central body without a model throws `InvalidOperationException`; the other listed bodies with an atmosphere add their drag, and about the Sun (a star or barycentre observer) they give it, an Earth always having one (#674). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
 - **The central body** takes part whether or not it is listed, with the observer's models; listed bodies of one NAIF identifier, the observer's included, must have the same models (`ArgumentException` otherwise). The integrator of a force-building path must be a new instance, and the step positive (#674).
-- **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
-- **Albedo radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeAlbedo()`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
-- **Thermal radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeThermalRadiation()`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
-- **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration; with the orientation cache of the central body (exact SLERP, #561) it covers the span the propagation integrates, up to half an output step past the window when the step does not divide it, and a read outside its grid reads the data provider (#626).
+- **Solar radiation pressure** (when `PropagationOptions.SolarRadiationPressure` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
+- **Albedo radiation pressure** (via `PropagationOptions.AlbedoRadiationPressure`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
+- **Thermal radiation pressure** (via `PropagationOptions.ThermalRadiationPressure`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
+- **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration; with the orientation cache of the central body (exact SLERP, #561) it covers the span the propagation integrates, the window, and a read outside its grid reads the data provider (#626).
 
 **Geopotential usage:**
 
@@ -1709,8 +1717,12 @@ var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
 var propagator = new CentralBodyPropagator(
     new Window(epoch, epoch.AddDays(1)),
     spacecraft,
-    [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-    false, false, TimeSpan.FromSeconds(1.0));
+    new PropagationOptions
+    {
+        Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+        OutputStep = TimeSpan.FromSeconds(1.0),
+        ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+    });
 var solution = propagator.Propagate();
 
 // Use dense output for sub-step interpolation
@@ -1729,7 +1741,7 @@ SGP4/SDP4 propagator for TLE elements.
 
 | Method | Description |
 |--------|-------------|
-| `Propagate()` | Execute propagation, returns `PropagationSolution` |
+| `Propagate(CancellationToken cancellationToken = default)` | Execute propagation, returns `PropagationSolution`; the token is read before the first sample and at each sample (R28 of #668) |
 
 ---
 
@@ -1743,14 +1755,17 @@ Configuration for enabling geopotential gravity on a `CelestialBody`.
 
 | Constructor | Description |
 |------------|-------------|
-| `GeopotentialModelParameters(string path, ushort degree = 60)` | Load model from file path |
-| `GeopotentialModelParameters(Stream stream, ushort degree = 60)` | Load model from stream |
-| `GeopotentialModelParameters(string path, ushort degree, double gravitationalParameter, double referenceRadius)` and its `Stream` form | Load a model whose harmonics take the given GM (m³/s²) and reference radius (m) |
+| `GeopotentialModelParameters(string path, int degree = 60)` | Load model from file path, checked here, read once by the first body or propagation |
+| `GeopotentialModelParameters(Stream stream, int degree = 60)` | Load model from stream, read to its end here |
+| `GeopotentialModelParameters(string path, int degree, double gravitationalParameter, double referenceRadius)` and its `Stream` form | Load a model whose harmonics take the given GM (m³/s²) and reference radius (m) |
+| `GeopotentialModelParameters.Egm2008(int degree)` | EGM2008, tide free, embedded in the library to degree 70 (11.0.0, R06 of #668) |
+
+A value since 11.0.0 (R06 of #668): a sealed record equal to another of the same source, degree, constants and central
+term; every body and every propagation built from it shares its coefficients, each with its own field (#674).
 
 | Property | Description |
 |----------|-------------|
-| `GeopotentialModelPath` | Stream reader for the model file, read once by the first body built from the parameters; every body shares its coefficients (#674) |
-| `GeopotentialDegree` | Maximum degree/order to use |
+| `GeopotentialDegree` | Maximum degree/order to use (an `int`) |
 | `GravitationalParameter`, `ReferenceRadius` | The constants given to the four-argument constructors; null otherwise. The harmonics then take EGM2008's GM (3.986004415e14 m³/s²) and radius (6378136.3 m) for the Earth, the kernel GM and equatorial radius for another body; the central term always takes the kernel GM (#410) |
 
 #### GeopotentialGravitationalField
@@ -2477,11 +2492,11 @@ chaser.SetStandbyManeuver(maneuver1);
 scenario.AddSpacecraft(chaser);
 
 // Run the simulation
-var summary = await scenario.SimulateAsync(
-    includeAtmosphericDrag: false,
-    includeSolarRadiationPressure: false,
-    TimeSpan.FromSeconds(1.0)
-);
+var summary = scenario.Simulate(new PropagationOptions
+{
+    Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+    OutputStep = TimeSpan.FromSeconds(1.0)
+});
 
 // Read maneuver results
 var executedManeuver = chaser.InitialManeuver;
@@ -2693,7 +2708,11 @@ spacecraft.AddCircularInstrument(
 scenario.AddSpacecraft(spacecraft);
 
 // Simulate
-await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+scenario.Simulate(new PropagationOptions
+{
+    Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+    OutputStep = TimeSpan.FromSeconds(1.0)
+});
 
 // Find windows when Earth is in the camera's field of view: any part of its ellipsoid, oriented by its frame, with the light time.
 // The spacecraft is propagated, so the library searches; the windows are those of CSPICE's gftfov, in TDB, to 1 µs
@@ -2733,7 +2752,11 @@ using IO.Astrodynamics.Cosmographia;
 var mission = new Mission("Visualization");
 var scenario = new Scenario("Demo", mission, new Window(start, end));
 // ... add celestial items, spacecraft, run simulation ...
-await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+scenario.Simulate(new PropagationOptions
+{
+    Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+    OutputStep = TimeSpan.FromSeconds(1.0)
+});
 
 // Export to Cosmographia
 var exporter = new CosmographiaExporter();
@@ -2836,13 +2859,13 @@ scenario.AddCelestialItem(earth);
 scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
 scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
 
-// Propagate at a 5-minute step. Velocity-Verlet, the default integrator, is of the second order: it ends about 470 m
-// from an exact integration of these forces after 25 days
-var summary = await scenario.SimulateAsync(
-    includeAtmosphericDrag: false,
-    includeSolarRadiationPressure: false,
-    TimeSpan.FromMinutes(5)
-);
+// Propagate at a 5-minute step. Velocity-Verlet is of the second order: it ends about 470 m from an exact integration of
+// these forces after 25 days
+var summary = scenario.Simulate(new PropagationOptions
+{
+    Integrator = new VVIntegratorOptions { Step = TimeSpan.FromMinutes(5) },
+    OutputStep = TimeSpan.FromMinutes(5)
+});
 
 // Compare the propagated Moon with the Moon of the ephemeris (DE440)
 var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
@@ -2884,9 +2907,12 @@ var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
 var propagator = new CentralBodyPropagator(
     new Window(epoch, epoch.AddDays(1)),
     spacecraft,
-    [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-    false, false,
-    TimeSpan.FromSeconds(1.0));
+    new PropagationOptions
+    {
+        Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+        OutputStep = TimeSpan.FromSeconds(1.0),
+        ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+    });
 
 var solution = propagator.Propagate();
 
@@ -2950,7 +2976,11 @@ var pointingManeuver = new InstrumentPointingToAttitude(
 spacecraft.SetStandbyManeuver(pointingManeuver);
 
 // Simulate
-await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+scenario.Simulate(new PropagationOptions
+{
+    Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+    OutputStep = TimeSpan.FromSeconds(1.0)
+});
 
 Console.WriteLine($"Pointing maneuver executed at: {pointingManeuver.ManeuverWindow?.StartDate}");
 ```
@@ -3008,7 +3038,11 @@ var triadManeuver = new TriadAttitude(
 spacecraft.SetStandbyManeuver(triadManeuver);
 
 // Simulate with high time resolution for attitude dynamics
-await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+scenario.Simulate(new PropagationOptions
+{
+    Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
+    OutputStep = TimeSpan.FromSeconds(1.0)
+});
 
 Console.WriteLine($"TRIAD maneuver executed at: {triadManeuver.ManeuverWindow?.StartDate}");
 Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained toward Sun");
@@ -3108,7 +3142,7 @@ The propagator and maneuver systems have been redesigned:
 - **New event detection system**: `IEventDetector`, `ManeuverEventDetector`, `CrossingDirection` in `IO.Astrodynamics.Propagator.Events`.
 - **Segment-based propagation**: `PropagationSolution`, `PropagationSegment`, `AcceptedStep` enable cubic Hermite dense output for all integrators.
 - **`Spacecraft.Propagate()` simplified**: Always uses `CentralBodyPropagator` — no auto-routing between different propagator types.
-- **`Propagate()` returns `PropagationSolution`**: `PropagatorBase.Propagate()`, `CentralBodyPropagator.Propagate()`, `TLEPropagator.Propagate()`, and `Spacecraft.Propagate()` / `PropagateAsync()` now return a `PropagationSolution` for dense output via `InterpolateAt(epoch)`. Previously callers had to access `StateVectorsRelativeToICRF` directly.
+- **`Propagate()` returns `PropagationSolution`**: `PropagatorBase.Propagate()`, `CentralBodyPropagator.Propagate()`, `TLEPropagator.Propagate()`, and `Spacecraft.Propagate()` now return a `PropagationSolution` for dense output via `InterpolateAt(epoch)`. Previously callers had to access `StateVectorsRelativeToICRF` directly.
 - **SSB-specific methods removed from public API**: `GetGeometricStateFromICRF` removed from `ILocalizable` interface and changed to `internal` on `CelestialItem`, `Spacecraft`, `Star`, and `Site`. `GetEphemerisFromICRF` removed from `IDataProvider` interface and `SpiceDataProvider`. Use `GetEphemeris(epoch, target, observer, frame, aberration)` with SSB as observer for equivalent functionality. SSB-relative states are now an internal implementation detail used only for aberration correction and star positions.
 - **`Spacecraft.WriteEphemeris()` writes CB-relative states**: SPK files now contain states relative to the central body instead of SSB. SPICE handles ephemeris chaining automatically via the center body ID in the SPK segment.
 

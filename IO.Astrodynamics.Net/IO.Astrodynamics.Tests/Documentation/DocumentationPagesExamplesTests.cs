@@ -15,6 +15,8 @@ using IO.Astrodynamics.Maneuver.Lambert;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Microsoft.CodeAnalysis;
@@ -384,7 +386,7 @@ public class DocumentationPagesExamplesTests
                 ("docs/reference/spacecraft.md", 4), ("docs/reference/spacecraft.md", 6), ("docs/reference/stars.md", 1),
                 ("docs/reference/time-and-windows.md", 1), ("docs/reference/time-and-windows.md", 2), ("docs/reference/tle.md", 1),
                 ("docs/tutorials/coordinate-conversions.md", 1), ("docs/tutorials/coordinate-conversions.md", 5),
-                ("docs/tutorials/ephemeris-queries.md", 2), ("docs/tutorials/monte-carlo.md", 3),
+                ("docs/tutorials/ephemeris-queries.md", 2),
                 ("docs/tutorials/numerical-propagation.md", 2), ("docs/tutorials/orbit-creation.md", 1),
             }
             .Select(b => new object[] { b.Page, b.Block });
@@ -615,12 +617,11 @@ public class DocumentationPagesExamplesTests
     [Fact]
     public void BatchTutorial_Blocks_Run()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
         var window = new Window(Epoch, Epoch.AddHours(1.0));
         var spacecraft1 = new Spacecraft(-7051, "BATCH1", 100.0, 1000.0, new Clock("BATCH1_CLK", 256), Leo(6800000.0, 0.9, Epoch));
         var spacecraft2 = new Spacecraft(-7052, "BATCH2", 100.0, 1000.0, new Clock("BATCH2_CLK", 256), Leo(7000000.0, 0.3, Epoch));
 
-        var tasks = (List<PropagationTask>)Block("docs/tutorials/batch-propagation.md", 1).Invoke(null, new object[] { spacecraft1, window, earth, spacecraft2 })!;
+        var tasks = (List<PropagationTask>)Block("docs/tutorials/batch-propagation.md", 1).Invoke(null, new object[] { spacecraft1, window, spacecraft2 })!;
         var result = (BatchResult)Block("docs/tutorials/batch-propagation.md", 2).Invoke(null, new object[] { tasks })!;
         Block("docs/tutorials/batch-propagation.md", 3).Invoke(null, new object[] { result });
 
@@ -657,9 +658,7 @@ public class DocumentationPagesExamplesTests
         {
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
             var spacecraft = new Spacecraft(-(7061 + i), $"SHARED{i}", 100.0, 10000.0, new Clock($"SHARED{i}_CLK", 256), orbit);
-            tasks.Add(new PropagationTask(spacecraft, window, new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false, IncludeSolarRadiationPressure: false, DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new IO.Astrodynamics.Propagator.Integrators.RK78Integrator(1e-10, 1e-10, 30.0)));
+            tasks.Add(new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None }));
         }
 
         var result = BatchPropagator.Propagate(tasks);

@@ -1,36 +1,27 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
-using System.Collections.Generic;
-using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.Propagator.Integrators;
-using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
-/// Defines a single spacecraft propagation to be executed as part of a batch.
+/// Defines a single spacecraft propagation to be executed as part of a batch (<see cref="BatchPropagator"/>): the
+/// spacecraft, its window and the settings of its propagation (<see cref="PropagationOptions"/>, R06 of #668).
 /// </summary>
-/// <param name="Spacecraft">The spacecraft to propagate. Must be a distinct instance per task.</param>
-/// <param name="Window">Propagation time window.</param>
-/// <param name="CelestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP.</param>
-/// <param name="IncludeAtmosphericDrag">Whether to include atmospheric drag.</param>
-/// <param name="IncludeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
-/// <param name="DeltaT">Output step size for ephemeris sampling.</param>
-/// <param name="IntegratorFactory">
-/// Optional factory that creates a fresh <see cref="Integrator"/> for this task.
-/// Each invocation must return a new instance (integrators are not thread-safe).
-/// When null, the default Velocity-Verlet integrator is used.
-/// </param>
 /// <remarks>
-/// <b>Thread safety:</b> The <paramref name="Spacecraft"/> and its central body
-/// (<c>InitialOrbitalParameters.Observer</c>) must not be shared with other concurrent tasks.
-/// When the central body is a <see cref="CelestialBody"/> constructed with
-/// <c>GeopotentialModelParameters</c>, each task must use its own <see cref="CelestialBody"/>
-/// instance because the geopotential field's internal buffers are not thread-safe.
-/// See <see cref="BatchPropagator"/> for full thread-safety guidance.
+/// The task of flags and an integrator factory of 10.x, with its properties (<c>CelestialBodies</c>,
+/// <c>IncludeAtmosphericDrag</c>, <c>IncludeSolarRadiationPressure</c>, <c>DeltaT</c>, <c>IntegratorFactory</c>,
+/// <c>CovariancePropagation</c>), was removed in 11.0.0 (R07 of #668): its settings are those of
+/// <see cref="PropagationOptions"/>, a task without a factory <see cref="Integrators.VVIntegratorOptions"/> at its step.
+/// </remarks>
+/// <remarks>
+/// <para>
+/// <b>Thread safety:</b> the spacecraft must not be shared with other concurrent tasks. Its central body may be: each
+/// propagation builds its own geopotential field (R06 of #668). See <see cref="BatchPropagator"/> for full thread-safety
+/// guidance.
+/// </para>
 /// <para>
 /// <b>Maneuvers:</b> each maneuver of the spacecraft draws on one of its own fuel tanks, which belongs to it alone: the
 /// propagation rejects a maneuver whose engine's tank is not the spacecraft's with an
@@ -38,19 +29,31 @@ namespace IO.Astrodynamics.Propagator;
 /// therefore imply distinct maneuvers and engines, built on each spacecraft's tanks.
 /// </para>
 /// </remarks>
-public sealed record PropagationTask(
-    Spacecraft Spacecraft,
-    Window Window,
-    IEnumerable<CelestialItem> CelestialBodies,
-    bool IncludeAtmosphericDrag,
-    bool IncludeSolarRadiationPressure,
-    TimeSpan DeltaT,
-    Func<Integrator> IntegratorFactory = null)
+public sealed record PropagationTask
 {
     /// <summary>
-    /// The propagation of the state transition matrix and of the covariance; null (the default) for none. It needs an
-    /// <see cref="RK78Integrator"/> from <see cref="IntegratorFactory"/>: with the default Velocity-Verlet integrator,
-    /// the task fails with a <see cref="NotSupportedException"/> in its <see cref="PropagationResult.Error"/>.
+    /// The task of propagating <paramref name="spacecraft"/> over <paramref name="window"/> with the settings of
+    /// <paramref name="options"/>.
     /// </summary>
-    public CovariancePropagationOptions CovariancePropagation { get; init; }
+    /// <param name="spacecraft">The spacecraft to propagate. Must be a distinct instance per task.</param>
+    /// <param name="window">Propagation time window.</param>
+    /// <param name="options">The settings of the propagation; null for <see cref="PropagationOptions.Default"/>. Each
+    /// task builds its own integrator, forces and geopotential field from them, so one value serves every task, and the
+    /// tasks may share their bodies, a central body with a geopotential included (section A of the re-baseline of
+    /// #668).</param>
+    public PropagationTask(Spacecraft spacecraft, Window window, PropagationOptions options = null)
+    {
+        Spacecraft = spacecraft;
+        Window = window;
+        Options = options;
+    }
+
+    /// <summary>The spacecraft to propagate, a distinct instance per task.</summary>
+    public Spacecraft Spacecraft { get; init; }
+
+    /// <summary>The propagation window.</summary>
+    public Window Window { get; init; }
+
+    /// <summary>The settings of the propagation; null for <see cref="PropagationOptions.Default"/>.</summary>
+    public PropagationOptions Options { get; init; }
 }

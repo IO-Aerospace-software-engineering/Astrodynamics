@@ -61,26 +61,22 @@ namespace DocumentationPageSamples.Tutorials;
 internal static class BatchPropagationPage
 {
     // docs/tutorials/batch-propagation.md, "Setting up propagation tasks"
-    internal static List<PropagationTask> Block01(Spacecraft spacecraft1, Window window, CelestialBody earth, Spacecraft spacecraft2)
+    internal static List<PropagationTask> Block01(Spacecraft spacecraft1, Window window, Spacecraft spacecraft2)
     {
         #region docs/tutorials/batch-propagation.md:1
-        // Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window), earth (CelestialBody)
+        // Inputs: spacecraft1 and spacecraft2 (Spacecraft), window (Window)
+        var gravity = new PropagationOptions
+        {
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        };
         var tasks = new List<PropagationTask>
         {
-            new PropagationTask(
-                spacecraft1, window,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false,
-                IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
-            new PropagationTask(
-                spacecraft2, window,
-                new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: true,
-                IncludeSolarRadiationPressure: true,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0)),
+            new PropagationTask(spacecraft1, window, gravity),
+            new PropagationTask(spacecraft2, window, gravity with { AtmosphericDrag = true, SolarRadiationPressure = true }),
         };
         #endregion
         return tasks;
@@ -126,14 +122,11 @@ internal static class BatchPropagationPage
     {
         #region docs/tutorials/batch-propagation.md:4
         // Inputs: tasks (List<PropagationTask>)
-        var result = BatchPropagator.Propagate(tasks, new BatchOptions
+        var progress = new Progress<BatchProgress>(p =>
         {
-            MaxDegreeOfParallelism = 4,
-            Progress = new Progress<BatchProgress>(p =>
-            {
-                Console.WriteLine($"Progress: {p.Completed}/{p.Total}");
-            })
+            Console.WriteLine($"Progress: {p.Completed}/{p.Total}");
         });
+        var result = BatchPropagator.Propagate(tasks, progress, new BatchOptions { MaxDegreeOfParallelism = 4 });
         #endregion
     }
 
@@ -147,11 +140,7 @@ internal static class BatchPropagationPage
         // Cancel after 30 seconds
         cts.CancelAfter(TimeSpan.FromSeconds(30));
 
-        var result = BatchPropagator.Propagate(tasks, new BatchOptions
-        {
-            MaxDegreeOfParallelism = 4,
-            CancellationToken = cts.Token
-        });
+        var result = BatchPropagator.Propagate(tasks, new BatchOptions { MaxDegreeOfParallelism = 4 }, cts.Token);
         #endregion
     }
 
@@ -160,19 +149,15 @@ internal static class BatchPropagationPage
     {
         #region docs/tutorials/batch-propagation.md:6
         // Inputs: spacecraftList (List<Spacecraft>), window (Window)
-        var tasks = Enumerable.Range(0, spacecraftList.Count).Select(i =>
+        var options = new PropagationOptions
         {
-            // Fresh CelestialBody per task
-            var taskEarth = new CelestialBody(PlanetsAndMoons.EARTH);
-
-            return new PropagationTask(
-                spacecraftList[i], window,
-                new CelestialItem[] { taskEarth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
-                IncludeAtmosphericDrag: false,
-                IncludeSolarRadiationPressure: false,
-                DeltaT: TimeSpan.FromSeconds(60),
-                IntegratorFactory: () => new RK78Integrator(1e-10, 1e-10, 30.0));
-        }).ToList();
+            Integrator = new RK78IntegratorOptions
+            {
+                AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
+            },
+            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        };
+        var tasks = spacecraftList.Select(spacecraft => new PropagationTask(spacecraft, window, options)).ToList();
         #endregion
     }
 }

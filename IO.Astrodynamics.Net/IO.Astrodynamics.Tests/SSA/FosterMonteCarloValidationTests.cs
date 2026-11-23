@@ -12,6 +12,8 @@ using MathNet.Numerics.Distributions;
 using MathNet.Numerics.LinearAlgebra;
 using Xunit;
 using Xunit.Abstractions;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Tests.SSA;
@@ -78,9 +80,7 @@ public class FosterMonteCarloValidationTests : IClassFixture<ConjunctionCovarian
         var window = new TimeSystem.Window(start, tca.AddHours(1.0));
         foreach (var craft in new[] { protectedCraft, secondaryCraft })
         {
-            craft.Propagate(window, new CelestialItem[] { _case.Earth },
-                new IO.Astrodynamics.Propagator.Integrators.RK78Integrator(1e-12, 1e-12), false, false,
-                TimeSpan.FromSeconds(600.0), null);
+            craft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { _case.Earth }, CovariancePropagation = CovariancePropagationOptions.None });
         }
 
         // Act: Foster with the propagated covariance; the Monte Carlo at its TCA

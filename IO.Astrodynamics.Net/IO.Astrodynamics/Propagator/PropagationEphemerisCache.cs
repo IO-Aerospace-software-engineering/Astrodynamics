@@ -119,8 +119,9 @@ internal sealed class PropagationEphemerisCache : IDisposable
     /// <remarks>
     /// Outside the grid (before its first point or after its last) the body's ephemeris is read at the epoch from the
     /// data provider. Before 11.0.0 the 8-point polynomial of the last points was extrapolated there: a propagation whose
-    /// output step does not divide its window runs up to half a step past it, past the grid the propagator built over the
-    /// window (25 m off for the Moon 1 680 s past the grid, #626); the propagator now builds it over the span it integrates.
+    /// output step rounded its window up ran up to half a step past it, past the grid the propagator built over the
+    /// window (25 m off for the Moon 1 680 s past the grid, #626); the propagator builds it over the span it integrates,
+    /// which since 11.0.0 ends at the window end (choice 6 of #668).
     /// </remarks>
     public Vector3 GetPosition(int bodyNaifId, Aberration aberration, in Time epoch)
     {

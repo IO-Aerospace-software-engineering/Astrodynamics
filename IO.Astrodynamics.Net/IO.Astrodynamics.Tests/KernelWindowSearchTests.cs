@@ -9,6 +9,8 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
@@ -363,8 +365,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         // #678: no pass and no range window at a 10 min step. The LEO propagated about a point-mass Earth over exactly the
         // search window (no state read past it, #527); RK7(8) at 1e-12 within its integration error, Velocity-Verlet the count
         var leo = ManagedLeo;
-        Integrator integrator = rk78 ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-        leo.Propagate(LeoWindow, [Earth], integrator, false, false, TimeSpan.FromSeconds(60.0));
+        IntegratorOptions integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
+        leo.Propagate(LeoWindow, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [Earth], CovariancePropagation = CovariancePropagationOptions.None });
         var step = TimeSpan.FromMinutes(10.0);
         if (rk78)
         {

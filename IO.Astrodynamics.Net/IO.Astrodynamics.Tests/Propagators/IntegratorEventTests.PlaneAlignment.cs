@@ -9,6 +9,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -56,7 +57,7 @@ public partial class IntegratorEventTests
         var target = new KeplerianElements(MinimumEpochGateTests.A0, MinimumEpochGateTests.E0, 0.55, 0.3, System.Math.PI, System.Math.PI, earth, S, Frame.ICRF);
         var maneuver = new PlaneAlignmentManeuver(S.Add(TimeSpan.FromSeconds(-gateBefore)), TimeSpan.Zero, target, engine);
         spacecraft.SetStandbyManeuver(maneuver);
-        var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(4000.0)), [earth], NewIntegrator(integratorName), false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(4000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         // The closed form from the start: the first node at or after it, and its ΔV
         var k = new KeplerClosedForm(earth.GM, r0, v0, 0.0);

@@ -5,6 +5,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -62,9 +63,7 @@ public class DragPropagationTests
             sectionalArea: 10.0);
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1));
-        var propagator = new Propagator.CentralBodyPropagator(window, spc,
-            new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            true, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new Propagator.CentralBodyPropagator(window, spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
         var solution = propagator.Propagate();
 
         double initialSma = orbit.SemiMajorAxis();
@@ -94,9 +93,7 @@ public class DragPropagationTests
             sectionalArea: 10.0);
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1));
-        var propagator = new Propagator.CentralBodyPropagator(window, spc,
-            new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            true, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new Propagator.CentralBodyPropagator(window, spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
         var solution = propagator.Propagate();
 
         double initialSma = orbit.SemiMajorAxis();
@@ -134,10 +131,8 @@ public class DragPropagationTests
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1));
 
-        var prop1 = new Propagator.CentralBodyPropagator(window, spc1,
-            new CelestialItem[] { earth1, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(10.0));
-        var prop2 = new Propagator.CentralBodyPropagator(window, spc2,
-            new CelestialItem[] { earth2, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(10.0));
+        var prop1 = new Propagator.CentralBodyPropagator(window, spc1, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth1, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
+        var prop2 = new Propagator.CentralBodyPropagator(window, spc2, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth2, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
 
         var solution1 = prop1.Propagate();
         var solution2 = prop2.Propagate();
@@ -181,10 +176,8 @@ public class DragPropagationTests
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1));
 
-        var prop1 = new Propagator.CentralBodyPropagator(window, spc1,
-            new CelestialItem[] { earth1, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(10.0));
-        var prop2 = new Propagator.CentralBodyPropagator(window, spc2,
-            new CelestialItem[] { earth2, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(10.0));
+        var prop1 = new Propagator.CentralBodyPropagator(window, spc1, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth1, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
+        var prop2 = new Propagator.CentralBodyPropagator(window, spc2, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth2, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
 
         var solution1 = prop1.Propagate();
         var solution2 = prop2.Propagate();
@@ -228,10 +221,8 @@ public class DragPropagationTests
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1));
 
-        var prop1 = new Propagator.CentralBodyPropagator(window, spc1,
-            new CelestialItem[] { earthDragOn, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(60.0));
-        var prop2 = new Propagator.CentralBodyPropagator(window, spc2,
-            new CelestialItem[] { earthDragOff, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, false, false, TimeSpan.FromSeconds(60.0));
+        var prop1 = new Propagator.CentralBodyPropagator(window, spc1, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earthDragOn, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
+        var prop2 = new Propagator.CentralBodyPropagator(window, spc2, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earthDragOff, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY } });
 
         var solution1 = prop1.Propagate();
         var solution2 = prop2.Propagate();
@@ -263,9 +254,7 @@ public class DragPropagationTests
             sectionalArea: 20.0);
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
-        var propagator = new Propagator.CentralBodyPropagator(window, spc,
-            new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            true, false, TimeSpan.FromSeconds(10.0));
+        var propagator = new Propagator.CentralBodyPropagator(window, spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
         var solution = propagator.Propagate();
 
         double initialSma = orbit.SemiMajorAxis();
@@ -312,10 +301,8 @@ public class DragPropagationTests
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(12));
 
-        var prop1 = new Propagator.CentralBodyPropagator(window, spc1,
-            new CelestialItem[] { earthSolarMin, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(10.0));
-        var prop2 = new Propagator.CentralBodyPropagator(window, spc2,
-            new CelestialItem[] { earthSolarMax, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(10.0));
+        var prop1 = new Propagator.CentralBodyPropagator(window, spc1, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earthSolarMin, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
+        var prop2 = new Propagator.CentralBodyPropagator(window, spc2, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earthSolarMax, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
 
         var solution1 = prop1.Propagate();
         var solution2 = prop2.Propagate();
@@ -359,10 +346,8 @@ public class DragPropagationTests
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1));
 
-        var prop1 = new Propagator.CentralBodyPropagator(window, spc1,
-            new CelestialItem[] { earth1, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, TimeSpan.FromSeconds(10.0));
-        var prop2 = new Propagator.CentralBodyPropagator(window, spc2,
-            new CelestialItem[] { earth2, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, false, false, TimeSpan.FromSeconds(10.0));
+        var prop1 = new Propagator.CentralBodyPropagator(window, spc1, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth1, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true });
+        var prop2 = new Propagator.CentralBodyPropagator(window, spc2, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth2, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY } });
 
         var solution1 = prop1.Propagate();
         var solution2 = prop2.Propagate();

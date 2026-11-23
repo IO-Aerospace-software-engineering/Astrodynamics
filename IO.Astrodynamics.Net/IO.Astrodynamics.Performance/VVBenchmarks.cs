@@ -12,6 +12,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Propagator.Integrators;
 
 namespace IO.Astrodynamics.Performance;
 
@@ -51,9 +52,12 @@ public class VVBenchmarks
             _earthLeo, LeoEpoch, Frame.ICRF);
         var spc = new Spacecraft(-1001, "LEO_Bench_VV", 100.0, 10000.0, clk, orbit);
         var window = new Window(LeoEpoch, orbit.Period());
-        _leoPropagator = new CentralBodyPropagator(window, spc,
-            new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
-            false, false, TimeSpan.FromSeconds(StepSeconds));
+        _leoPropagator = new CentralBodyPropagator(window, spc, new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(StepSeconds) },
+            OutputStep = TimeSpan.FromSeconds(StepSeconds),
+            ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }
+        });
     }
 
     /// <summary>

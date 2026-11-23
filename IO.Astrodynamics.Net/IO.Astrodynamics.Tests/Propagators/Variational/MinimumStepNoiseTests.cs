@@ -52,8 +52,7 @@ public class MinimumStepNoiseTests
         CovariancePropagationOptions options)
     {
         return new Spacecraft(-4360, "MINSTEP4360", 1000.0, 1000.0, new Clock("minstep4360", 65536), start, 1.0, 2.2,
-            null, 1.0).Propagate(Window, new CelestialItem[] { body }, new RK78Integrator(tolerance, tolerance), true,
-            false, Window.Length, options);
+            null, 1.0).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
     }
 
     /// <summary>
@@ -142,9 +141,7 @@ public class MinimumStepNoiseTests
 
         // Act
         var solution = new Spacecraft(-4363, "MINSTEP4363", 1000.0, 1000.0, new Clock("minstep4363", 65536),
-            StandardAtmosphereBoundaryTests.StateThatStoppedAtTheMinimumStep(body), 1.0, 2.2, null, 1.0).Propagate(window,
-            new CelestialItem[] { body }, new RK78Integrator(ReferenceTolerance, ReferenceTolerance, 9.5e-7), true, false,
-            window.Length, new CovariancePropagationOptions { IncludeInStepControl = true });
+            StandardAtmosphereBoundaryTests.StateThatStoppedAtTheMinimumStep(body), 1.0, 2.2, null, 1.0).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = ReferenceTolerance, RelativeTolerance = ReferenceTolerance, InitialStep = TimeSpan.FromSeconds(9.5e-7) }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions { IncludeInStepControl = true } });
 
         // Assert: the first step is the minimum step size, and the propagation reaches the end of its window
         var steps = solution.Segments.SelectMany(s => s.Steps).ToArray();
@@ -185,9 +182,7 @@ public class MinimumStepNoiseTests
         // 0.05 s put at least two step ends in the excursion whatever the platform; the first steps after the burn, in
         // the dense air, are below 1e-2 s on every platform (CI run 44395076184), under that bound, so the segment still
         // starts in the regime of the issue
-        var solution = spacecraft.Propagate(Window, new CelestialItem[] { body },
-            new RK78Integrator(Tolerance, Tolerance, maxStepSize: MaximumStepAcrossTheNode), true, false, Window.Length,
-            new CovariancePropagationOptions { IncludeInStepControl = true });
+        var solution = spacecraft.Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = Tolerance, RelativeTolerance = Tolerance, MaxStep = TimeSpan.FromSeconds(MaximumStepAcrossTheNode) }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions { IncludeInStepControl = true } });
 
         // Assert: the burn splits the propagation in two segments, the second reaches the end of the window, and Φ runs
         // through the burn

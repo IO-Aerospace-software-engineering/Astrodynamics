@@ -104,10 +104,7 @@ internal static class CovarianceMonteCarlo
         var consider = dragCoefficientSigma.HasValue || reflectivityCoefficientSigma.HasValue
             ? new ConsiderParameters(dragCoefficientSigma, reflectivityCoefficientSigma)
             : null;
-        var nominal = ReferenceCase.NewSpacecraft(naifId - 1, start).Propagate(window, referenceCase.NewBodies(),
-            new RK78Integrator(Tolerance, Tolerance), referenceCase.AtmosphericDrag,
-            referenceCase.SolarRadiationPressure, config.DeltaT,
-            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance, ConsiderParameters = consider });
+        var nominal = ReferenceCase.NewSpacecraft(naifId - 1, start).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = Tolerance, RelativeTolerance = Tolerance }, OutputStep = config.Propagation.OutputStep, ThirdBodies = referenceCase.NewBodies(), AtmosphericDrag = referenceCase.AtmosphericDrag, SolarRadiationPressure = referenceCase.SolarRadiationPressure, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance, ConsiderParameters = consider } });
 
         // The runs, in batches, keeping their states at the epochs
         var states = SampledStates(config, start, dragCoefficientSigma, reflectivityCoefficientSigma, epochs);
@@ -125,11 +122,13 @@ internal static class CovarianceMonteCarlo
             Seed = seed,
             TemplateSpacecraft = template,
             Window = window,
-            CelestialBodiesFactory = referenceCase.NewBodies,
-            IncludeAtmosphericDrag = referenceCase.AtmosphericDrag,
-            IncludeSolarRadiationPressure = referenceCase.SolarRadiationPressure,
-            DeltaT = TimeSpan.FromHours(6.0),
-            IntegratorFactory = () => new RK78Integrator(Tolerance, Tolerance)
+            Propagation = new PropagationOptions
+            {
+                Integrator = new RK78IntegratorOptions { AbsoluteTolerance = Tolerance, RelativeTolerance = Tolerance },
+                OutputStep = TimeSpan.FromHours(6.0), ThirdBodies = referenceCase.NewBodies(),
+                AtmosphericDrag = referenceCase.AtmosphericDrag, SolarRadiationPressure = referenceCase.SolarRadiationPressure,
+                CovariancePropagation = CovariancePropagationOptions.None
+            }
         };
     }
 

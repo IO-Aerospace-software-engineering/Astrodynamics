@@ -15,6 +15,8 @@ using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
 
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 namespace IO.Astrodynamics.Tests.Cosmographia;
 
 public class ExporterTests
@@ -38,7 +40,7 @@ public class ExporterTests
         Spacecraft spacecraft = new Spacecraft(-333, "spc1", 1000.0, 2000.0, new Clock("clockspc1", 256),
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         scenario.AddSpacecraft(spacecraft);
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
@@ -57,7 +59,7 @@ public class ExporterTests
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
 
-        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
@@ -77,7 +79,7 @@ public class ExporterTests
         var b = a.RelativeTo(TestHelpers.Sun, Aberration.None);
         scenario.AddSpacecraft(spacecraft);
 
-        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
@@ -124,7 +126,7 @@ public class ExporterTests
 
         //Todo fix why state orientation during maneuver returns Nan
         //Run the simulation
-        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
         //Export scenario to Cosmographia
         CosmographiaExporter exporter = new CosmographiaExporter();
@@ -156,7 +158,7 @@ public class ExporterTests
         var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(7.25), TimeSpan.FromHours(0.5), spacecraft.Instruments.First(), site,
             spacecraft.Engines.First());
         spacecraft.SetStandbyManeuver(initialManeuver);
-        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
@@ -223,7 +225,7 @@ public class ExporterTests
 
         spacecraft2.SetStandbyManeuver(planeAlignmentManeuver);
         scenario.AddSpacecraft(spacecraft2);
-        var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+        var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
         CosmographiaExporter cosmographiaExporter = new CosmographiaExporter();
         await cosmographiaExporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
     }
@@ -248,7 +250,7 @@ public class ExporterTests
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddStar(new Astrodynamics.Body.Star(674, "star674", 1E+30, "spec", 2, 0.3792, Astrodynamics.Coordinates.Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start));
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
         return scenario;
     }
 

@@ -6,7 +6,7 @@ Integrators advance spacecraft state through time under configured force models.
 
 | Method | Description |
 |--------|-------------|
-| `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations; called by every `CentralBodyPropagator` constructor and after each event |
+| `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations, and reset every state a run depends on (step, step-control history, event bookkeeping); called by every `CentralBodyPropagator` constructor, at the start of every run and after each event |
 | `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` | Advance state, returning `IntegrationResult` |
 
 `IntegrationResult` contains the completed `PropagationSegment` and optional event information (`EventInfo`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
@@ -27,6 +27,11 @@ returns no step for it gets that step from the propagator, with the acceleration
 `Integrator`, the end acceleration of the previous segment for a bare `IIntegrator` (a step of zero length is never
 interpolated).
 
+The cancellation token of a propagation ([Propagators](propagators.md#cancellation)) is read by `VVIntegrator` and
+`RK78Integrator` at each accepted step, through an internal hook the propagator sets for its run, so the interface does
+not change (R28 of #668); a custom integrator, a bare `IIntegrator` or a subclass of `Integrator`, is stopped by the
+propagator between its segments, never inside one.
+
 ## AcceptedStep
 
 Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (`PropagationSegment.InterpolateAt`), which is exact at the step ends only.
@@ -38,19 +43,18 @@ Between the steps, the states of a propagation depend on the integrator:
 
 ## VVIntegrator
 
-`VVIntegrator` is the default fixed-step symplectic integrator using the Velocity-Verlet scheme.
-`CentralBodyPropagator` creates one with the propagator's `deltaT` as step when no integrator is
-given.
+`VVIntegrator` is the fixed-step symplectic integrator using the Velocity-Verlet scheme. The options path builds one
+per run from `VVIntegratorOptions` (`PropagationOptions.Integrator`); a `CentralBodyPropagator` built without an
+integrator runs RK7(8) at its defaults (`RK78IntegratorOptions.Default`, R07 of #668).
 
 | Constructor | Description |
 |-------------|-------------|
-| `VVIntegrator(TimeSpan deltaT)` | Fixed step; forces are added by the propagator |
-| `VVIntegrator(IEnumerable<ForceBase> forces, TimeSpan deltaT, StateVector initialState)` | Fixed step, forces and initial state given directly |
+| `VVIntegrator(TimeSpan deltaT)` | Fixed step, without forces: no propagator adds forces to an integrator it is given, so add them with `AddForce` first (a propagator given one without forces integrates a straight line) |
+| `VVIntegrator(IEnumerable<ForceBase> forces, TimeSpan deltaT, StateVector initialState)` | Fixed step, forces given directly, initialized at `initialState`; a propagator it is given to initializes it again with the initial state of the propagation at construction and at the start of every run, which replaces `initialState` (#782, decision 23 of lot L4) |
 
 | Property | Description |
 |----------|-------------|
-| `DeltaT` | The configured step (`TimeSpan`) |
-| `DeltaTs` | The step in seconds |
+| `DeltaT` | The configured step (`TimeSpan`); its seconds and their half, the internal `DeltaTs` and `HalfDeltaTs`, public before 11.0.0 (R06 of #668) |
 
 - Symplectic: conserves energy over long durations for conservative systems.
 - Second order: the global error grows with the square of the step (see below), with drag too: the acceleration at the
@@ -132,34 +136,70 @@ var integrator = new RK78Integrator(
 var fixedIntegrator = new RK78Integrator(fixedStepSize: 10.0);
 ```
 
+## Integrator options
+
+The options entry points take the integrator as values (`PropagationOptions.Integrator`, R06 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0), from which each run builds
+its own integrator: the closed hierarchy `IntegratorOptions` (a record no type outside the library derives from), with
+two sealed records. To change one setting of an options record's integrator, go through a typed local: `with` on the
+abstract property does not compile (CS0117).
+
+| `RK78IntegratorOptions` | Type | Default | `RK78Integrator` parameter |
+|-------------------------|------|---------|----------------------------|
+| `AbsoluteTolerance` | `double` | `1e-9` | `absoluteTolerance` |
+| `RelativeTolerance` | `double` | `1e-9` | `relativeTolerance` |
+| `InitialStep` | `TimeSpan` | 60 s | `initialStepSize` |
+| `MinStep` | `TimeSpan` | 1 µs | `minStepSize` |
+| `MaxStep` | `TimeSpan` | 1 day | `maxStepSize` |
+| `SafetyFactor` | `double` | `0.9` | `safetyFactor` |
+| `MinFactor` | `double` | `0.2` | `minFactor` |
+| `MaxFactor` | `double` | `5.0` | `maxFactor` |
+| `FixedStep` | `TimeSpan?` | null | `fixedStepSize`: the fixed-step mode; with another setting than its default, `ArgumentException` at the start of the call |
+
+`RK78IntegratorOptions.Default` equals `new()` and builds the integrator of `new RK78Integrator()`, bit for bit: the
+steps are exact (60 s, 10 ticks, 86400 s), and an entry point that takes no integrator runs RK7(8) at these tolerances
+(a point-mass LEO day 1.36 m from Kepler; structuring choice 5 of #668, decided by S. Guillet, 2026-11-19). A step given
+through `TimeSpan.FromSeconds` may be a tick short of its decimal value; the exact factories avoid it.
+`VVIntegratorOptions.Step` is 1 s by default, the integration step only (the output step is
+`PropagationOptions.OutputStep`): a point-mass LEO day ends 271 m from Kepler at 1 s, 27.1 km at 10 s and 974 km at 60 s.
+These figures are the MEASURE lines of `DefaultIntegratorFiguresTests` (decision 12 of lot L4 of #668: 974.02 km,
+27.12 km, 271.24 m and 1.364 m on Linux x64, Windows x64 and macOS arm64, and at 1e-12 1.062 mm on Linux and 1.067 mm on
+Windows and macOS arm64, in the CI of #789 at aefd6c2b). In SSB mode about the Earth (a LEO about the Solar System
+barycentre with the Earth, the Moon and the Sun), RK7(8) costs about 1 ms per propagated hour at 1e-9 (1.0 to 1.1 ms,
+111 steps over 6 h) and 64 to 76 ms at 1e-12, which completes since #576 (92 907 to 93 267 steps over 6 h, the count
+differs by platform, the floor of the step control below 1e-10 in SSB mode, which depends on the orbit and the epoch:
+5 210 for the hour of the LEO of #544), and Velocity-Verlet 0.6 to 0.8 ms at 60 s (360 steps) and 0.8 to 0.9 ms at 10 s
+(2 160 steps) (the best of two propagations, measured alone in the CI of #789 at aefd6c2b on Linux x64, Windows x64 and
+macOS arm64, no threshold; decision 30 of lot L4).
+A value out of range (not finite, zero or negative) throws `ArgumentOutOfRangeException` naming the property, in `init`.
+
 ## Choosing the integrator
 
-Velocity-Verlet is the default everywhere, with the step given to the propagator. Each entry point that propagates a
-spacecraft can take another integrator:
+RK7(8) at the tolerances of 1e-9 is the default of every options entry point (`Spacecraft.Propagate`,
+`CentralBodyPropagator(window, spacecraft, options)`, `Scenario.Simulate`, `PropagationTask` and
+`MonteCarloConfiguration.Propagation`; structuring choice 5 of #668): `PropagationOptions.Integrator` takes another
+one, as a value, and each run builds its own integrator from it, so one value serves every spacecraft of a scenario, a
+batch or a campaign.
 
 | Entry point | How to choose the integrator |
 |-------------|------------------------------|
-| `CentralBodyPropagator` | Constructor taking an `Integrator` (the propagator adds the forces) or an `IIntegrator` already configured |
-| `CentralBodyPropagatorBuilder` | `integrator` argument of the constructor |
-| `Spacecraft.Propagate` | Overload `Propagate(window, celestialBodies, integrator, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize)` |
-| `BatchPropagator` | `PropagationTask.IntegratorFactory` |
-| `MonteCarloPropagator` | `MonteCarloConfiguration.IntegratorFactory` |
-| `Scenario.SimulateAsync` | Overload `SimulateAsync(includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, integratorFactory)` |
+| Every options entry point | `PropagationOptions.Integrator`: `RK78IntegratorOptions` or `VVIntegratorOptions` |
+| `CentralBodyPropagator` | The constructor taking an `IIntegrator` already configured with its forces and given to no other propagator, which it initializes with the initial state of the propagation at construction, at the start of every run and after each event (an `Initialize` by the caller has no effect on the run, #782); the integrator is claimed by the first constructor it is given to, and stays claimed when a later check rejects that constructor (a central body of GM 0, covariance options): build a new one (decision 27 of lot L4 of #668) |
 
-An integrator receives the forces of the spacecraft it propagates, so it must not be shared between spacecraft:
-the batch, Monte Carlo and scenario entry points take a factory that returns a new instance for each spacecraft.
-`Scenario.SimulateAsync` refuses a factory that returns the same instance twice. Every entry point that builds the
-forces takes its integrator atomically and throws `ArgumentException` (`integrator`) for one that already holds forces
-or was already used by such an entry point, a second `CentralBodyPropagatorBuilder.Build()` included; in a batch or a
-Monte Carlo campaign whose factory returns one instance, one task runs and the others fail with that exception (#674).
-An integrator whose forces the caller added goes to the `CentralBodyPropagator` constructor without celestial bodies,
-which initializes it with the initial state of the propagation (a later `Initialize` by the caller replaces it). The step of `VVIntegrator` and of every entry point must be positive
-(`ArgumentOutOfRangeException` otherwise).
+The members that took an integrator instance, a factory or no integrator at all were removed in 11.0.0 (R07 of #668:
+the flag overloads of `Spacecraft.Propagate`, the flag constructors of `CentralBodyPropagator`, the builder,
+`Scenario.SimulateAsync`, `PropagationTask.IntegratorFactory`, `MonteCarloConfiguration.IntegratorFactory`): with no
+integrator they stepped Velocity-Verlet at the output step, 974 km from Kepler after a LEO day at 60 s; `new
+VVIntegratorOptions { Step = step }` with `OutputStep = step` keeps their results bit for bit. The step of
+`VVIntegrator` and every step of the options must be positive (`ArgumentOutOfRangeException` otherwise).
 
 ```csharp
 // Inputs: scenario (Scenario)
-var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0),
-    () => new RK78Integrator(absoluteTolerance: 1e-11, relativeTolerance: 1e-11));
+var summary = scenario.Simulate(new PropagationOptions
+{
+    Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
+    OutputStep = TimeSpan.FromSeconds(10.0)
+});
 ```
 
 ## Accuracy And Cost
@@ -177,7 +217,7 @@ Velocity-Verlet is second order: halving the step divides the global error by fo
 Sources: errors from `VVIntegratorTests.GlobalErrorIsSecondOrderInTheStep`, against the analytic
 Keplerian solution; times from `VVBenchmarks` and `RK78Benchmarks.LeoOneOrbit_EGM10_SunMoon`
 (BenchmarkDotNet 0.14.0, medium run, AMD Ryzen 7 5800X, Fedora Linux 44, .NET 10). The step of
-`VVIntegrator` is also the output cadence of the propagator; RK7(8) outputs every 10 s here.
+`VVIntegrator` is also the output step of the benchmark; RK7(8) outputs every 10 s here.
 
 With drag the order holds: on a dense perigee pass (perigee 20 km and apogee 400 km above the equatorial radius, 45°,
 10 min from 300 s before the perigee, 1 000 kg, 1e-4 m², Cd 2.2, the U.S. Standard Atmosphere 1976) the position error

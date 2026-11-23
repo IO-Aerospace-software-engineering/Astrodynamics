@@ -79,8 +79,7 @@ public sealed class CdmPropagatedCovarianceCase
     internal PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options = null,
         bool pointMass = false, double tolerance = 1e-11)
     {
-        return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), pointMass ? PointMassBodies : Bodies,
-            new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(60.0), options);
+        return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = pointMass ? PointMassBodies : Bodies, AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
     }
 }
 
@@ -233,7 +232,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
 
         // The former behaviour still refuses a stale covariance by default
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Throws<InvalidOperationException>(() => held.ToCdm());
         var heldCdm = held.ToCdm(new CdmExportOptions { AllowStaleCovariance = true });
         Assert.Null(heldCdm.Segments[0].Metadata.GravityModel);
@@ -257,12 +256,11 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         {
             if (integrator == "RK7(8)")
             {
-                craft.Propagate(window, _case.PointMassBodies, new RK78Integrator(1e-11, 1e-11), true, false,
-                    TimeSpan.FromSeconds(60.0));
+                craft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = _case.PointMassBodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None });
             }
             else
             {
-                craft.Propagate(window, _case.PointMassBodies, true, false, TimeSpan.FromSeconds(1.0));
+                craft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = _case.PointMassBodies, AtmosphericDrag = true });
             }
         }
 
@@ -291,7 +289,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
 
         // The covariance held in RTN was not propagated: omitted, as the other force-model keywords (YES from Cr before)
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
-            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+            CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         AssertOmitted(held.ToCdm(export));
 
         static void AssertOmitted(Cdm cdm)

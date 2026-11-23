@@ -110,8 +110,7 @@ public class StandardAtmosphereBoundaryTests
         var options = includeInStepControl ? new CovariancePropagationOptions { IncludeInStepControl = true } : null;
 
         // Act
-        var solution = spacecraft.Propagate(Window, new CelestialItem[] { body },
-            new RK78Integrator(tolerance, tolerance), true, false, Window.Length, options);
+        var solution = spacecraft.Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
 
         // Assert: the trajectory goes below the lowest boundary of the model (7 km for Mars, 11 km for the Earth), so it
         // crosses every boundary, and the propagation reaches the end of its window
@@ -136,7 +135,7 @@ public class StandardAtmosphereBoundaryTests
             foreach (string path in new[]
                      {
                          "Velocity-Verlet", "RK7(8)", "RK7(8), state transition matrix", "RK7(8), IncludeInStepControl",
-                         "builder", "batch", "scenario"
+                         "constructor", "batch", "scenario"
                      })
             {
                 data.Add(model, path);
@@ -158,7 +157,7 @@ public class StandardAtmosphereBoundaryTests
             ? NewSpacecraft(body, 20e3, 1e-4, -4340)
             : NewSpacecraft(body, 10e3, 0.01, -4341);
         var options = new CovariancePropagationOptions();
-        RK78Integrator Integrator() => new(1e-12, 1e-12);
+        IntegratorOptions Integrator() => new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 };
 
         // Act
         Func<TimeSystem.Time, StateVector> state;
@@ -166,7 +165,7 @@ public class StandardAtmosphereBoundaryTests
         {
             case "Velocity-Verlet":
             {
-                var states = spacecraft.Propagate(Window, bodies, true, false, TimeSpan.FromSeconds(1.0)).StateVectors;
+                var states = spacecraft.Propagate(Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = bodies, AtmosphericDrag = true }).StateVectors;
                 state = epoch => states.First(s => s.Epoch >= epoch);
                 break;
             }
@@ -176,7 +175,7 @@ public class StandardAtmosphereBoundaryTests
                     Window);
                 scenario.AddCelestialItem(body);
                 scenario.AddSpacecraft(spacecraft);
-                await scenario.SimulateAsync(true, false, TimeSpan.FromSeconds(1.0));
+                scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), AtmosphericDrag = true });
                 state = epoch => spacecraft.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None);
                 break;
             }
@@ -184,18 +183,13 @@ public class StandardAtmosphereBoundaryTests
             {
                 var solution = path switch
                 {
-                    "RK7(8)" => spacecraft.Propagate(Window, bodies, Integrator(), true, false, Window.Length),
-                    "RK7(8), state transition matrix" => spacecraft.Propagate(Window, bodies, Integrator(), true, false,
-                        Window.Length, options),
-                    "RK7(8), IncludeInStepControl" => spacecraft.Propagate(Window, bodies, Integrator(), true, false,
-                        Window.Length, options with { IncludeInStepControl = true }),
-                    "builder" => new CentralBodyPropagatorBuilder(Window, spacecraft, Integrator(), Window.Length)
-                        .WithPerturbingBodies(bodies).IncludeAtmosphericDrag()
-                        .WithCovariancePropagation(options with { IncludeInStepControl = true }).Build().Propagate(),
+                    "RK7(8)" => spacecraft.Propagate(Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None }),
+                    "RK7(8), state transition matrix" => spacecraft.Propagate(Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None }),
+                    "RK7(8), IncludeInStepControl" => spacecraft.Propagate(Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None with { IncludeInStepControl = true } }),
+                    "constructor" => new CentralBodyPropagator(Window, spacecraft, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None with { IncludeInStepControl = true } }).Propagate(),
                     _ => BatchPropagator.Propagate(new[]
                     {
-                        new PropagationTask(spacecraft, Window, bodies, true, false, Window.Length, () => Integrator())
-                            { CovariancePropagation = options with { IncludeInStepControl = true } }
+                        new PropagationTask(spacecraft, Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None with { IncludeInStepControl = true } })
                     }).Results[0].Solution
                 };
                 state = solution.GetStateVector;
@@ -258,8 +252,7 @@ public class StandardAtmosphereBoundaryTests
 
             try
             {
-                var solution = NewSpacecraft(body, 8e3, 1.0, -4330).Propagate(Window, new CelestialItem[] { body },
-                    new RK78Integrator(1e-13, 1e-13, initialStep), true, false, Window.Length, options);
+                var solution = NewSpacecraft(body, 8e3, 1.0, -4330).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13, InitialStep = TimeSpan.FromSeconds(initialStep) }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
                 if (!WindowEndAssert.Reaches(Window, solution))
                 {
                     failures.Add($"k = {k}: ends at {solution.End}, " +
@@ -288,7 +281,7 @@ public class StandardAtmosphereBoundaryTests
         return new TheoryData<string>
         {
             "Velocity-Verlet", "RK7(8)", "RK7(8), state transition matrix", "RK7(8), IncludeInStepControl",
-            "covariance, IncludeInStepControl", "IncludeInStepControl, ECLIPJ2000", "constructor", "builder", "batch",
+            "covariance, IncludeInStepControl", "IncludeInStepControl, ECLIPJ2000", "constructor", "batch",
             "scenario"
         };
     }
@@ -307,7 +300,7 @@ public class StandardAtmosphereBoundaryTests
             new Clock("boundary4350", 65536), state, 1.0, 2.2, null, 1.0);
         var spacecraft = NewFromTheState(start);
         var options = new CovariancePropagationOptions { IncludeInStepControl = true };
-        RK78Integrator Integrator() => new(1e-13, 1e-13);
+        IntegratorOptions Integrator() => new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 };
         static PropagationSolution SolutionOf(PropagationResult result)
         {
             if (result.Error != null)
@@ -325,7 +318,7 @@ public class StandardAtmosphereBoundaryTests
         {
             case "Velocity-Verlet":
             {
-                var states = spacecraft.Propagate(Window, bodies, true, false, TimeSpan.FromSeconds(1.0)).StateVectors;
+                var states = spacecraft.Propagate(Window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = bodies, AtmosphericDrag = true }).StateVectors;
                 state = epoch => states.First(s => s.Epoch >= epoch);
                 break;
             }
@@ -334,7 +327,7 @@ public class StandardAtmosphereBoundaryTests
                 var scenario = new Scenario("boundary468", new IO.Astrodynamics.Mission.Mission("boundary468"), Window);
                 scenario.AddCelestialItem(body);
                 scenario.AddSpacecraft(spacecraft);
-                await scenario.SimulateAsync(true, false, TimeSpan.FromSeconds(1.0), () => Integrator(), options);
+                scenario.Simulate(new PropagationOptions { Integrator = Integrator(), OutputStep = TimeSpan.FromSeconds(1.0), AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
                 state = epoch => spacecraft.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None);
                 break;
             }
@@ -342,24 +335,20 @@ public class StandardAtmosphereBoundaryTests
             {
                 solution = path switch
                 {
-                    "RK7(8)" => spacecraft.Propagate(Window, bodies, Integrator(), true, false, Window.Length),
-                    "RK7(8), state transition matrix" => spacecraft.Propagate(Window, bodies, Integrator(), true, false,
-                        Window.Length, new CovariancePropagationOptions()),
-                    "RK7(8), IncludeInStepControl" or "IncludeInStepControl, ECLIPJ2000" => spacecraft.Propagate(Window,
-                        bodies, Integrator(), true, false, Window.Length, options),
+                    "RK7(8)" => spacecraft.Propagate(Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None }),
+                    "RK7(8), state transition matrix" => spacecraft.Propagate(Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions() }),
+                    "RK7(8), IncludeInStepControl" or "IncludeInStepControl, ECLIPJ2000" => spacecraft.Propagate(Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None }),
                     "covariance, IncludeInStepControl" => NewFromTheState(
                         Propagators.Variational.CovariancePropagationTests.WithCovariance(start)).Propagate(Window,
-                        bodies, Integrator(), true, false, Window.Length,
-                        options with { Mode = CovariancePropagationMode.Covariance }),
-                    "constructor" => new CentralBodyPropagator(Window, spacecraft, Integrator(), bodies, true, false,
-                        Window.Length, options).Propagate(),
-                    "builder" => new CentralBodyPropagatorBuilder(Window, spacecraft, Integrator(), Window.Length)
-                        .WithPerturbingBodies(bodies).IncludeAtmosphericDrag().WithCovariancePropagation(options).Build()
-                        .Propagate(),
+                        new PropagationOptions
+                        {
+                            Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true,
+                            CovariancePropagation = options with { Mode = CovariancePropagationMode.Covariance }
+                        }),
+                    "constructor" => new CentralBodyPropagator(Window, spacecraft, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None }).Propagate(),
                     _ => SolutionOf(BatchPropagator.Propagate(new[]
                     {
-                        new PropagationTask(spacecraft, Window, bodies, true, false, Window.Length, () => Integrator())
-                            { CovariancePropagation = options }
+                        new PropagationTask(spacecraft, Window, new PropagationOptions { Integrator = Integrator(), OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None })
                     }).Results[0])
                 };
                 state = solution.GetStateVector;
@@ -396,8 +385,7 @@ public class StandardAtmosphereBoundaryTests
         var start = StateThatStoppedAtTheMinimumStep(body);
         PropagationSolution Propagate(CovariancePropagationOptions options) =>
             new Spacecraft(-4351, "BOUNDARY4351", 1000.0, 1000.0, new Clock("boundary4351", 65536), start, 1.0, 2.2,
-                null, 1.0).Propagate(Window, new CelestialItem[] { body }, new RK78Integrator(1e-13, 1e-13), true, false,
-                Window.Length, options);
+                null, 1.0).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
 
         // Act
         var stateAlone = Propagate(null);

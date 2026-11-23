@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
@@ -303,8 +304,8 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         var window = new TimeSystem.Window(epoch, epoch.AddHours(1.0));
 
         // Act
-        var solution = spacecraft.PropagateWithVariationalEquations(window, new CelestialItem[] { _cases.Earth },
-            new RK78Integrator(1e-14, 1e-14), true, false, TimeSpan.FromSeconds(600.0),
+        var solution = spacecraft.PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-14, RelativeTolerance = 1e-14 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { _cases.Earth }, AtmosphericDrag = true },
             new VariationalOptions(ForceParameters.DragCoefficient, IncludeInStepControl: true));
 
         // Assert: the propagation reaches the end of its window, across the cutoffs

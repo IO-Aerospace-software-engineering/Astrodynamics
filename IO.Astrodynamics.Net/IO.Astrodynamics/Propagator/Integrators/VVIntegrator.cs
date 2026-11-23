@@ -33,8 +33,9 @@ namespace IO.Astrodynamics.Propagator.Integrators;
 public sealed class VVIntegrator : Integrator
 {
     public TimeSpan DeltaT { get; }
-    public double DeltaTs { get; }
-    public double HalfDeltaTs { get; }
+    // The step in seconds, and its half (internal since 11.0.0, R06 of #668: DeltaT is the step)
+    internal double DeltaTs { get; }
+    internal double HalfDeltaTs { get; }
 
     /// <summary>
     /// A Velocity-Verlet integrator with its forces, initialized at <paramref name="initialState"/>.
@@ -118,6 +119,9 @@ public sealed class VVIntegrator : Integrator
             // Store accepted step
             var accepted = new AcceptedStep(t, h, pos, vel, newPos, newVel, startAccel, accel);
             segment.AddStep(accepted);
+
+            // The token of the run, at each accepted step (R28 of #668)
+            Cancellation.ThrowIfCancellationRequested();
 
             t += h;
             pos = newPos;

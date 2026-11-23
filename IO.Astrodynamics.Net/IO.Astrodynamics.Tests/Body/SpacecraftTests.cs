@@ -13,6 +13,9 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 namespace IO.Astrodynamics.Tests.Body
 {
     public class SpacecraftTests
@@ -126,7 +129,7 @@ namespace IO.Astrodynamics.Tests.Body
             var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name);
 
             //Execute scenario
-            await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+            scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
             var orientation = spacecraft.GetOrientation(Frames.Frame.ICRF, start);
             Vector3.VectorY.Rotate(orientation.Rotation);
@@ -949,7 +952,7 @@ namespace IO.Astrodynamics.Tests.Body
             spc.AddEngine(engine);
             var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, engine);
             spc.SetStandbyManeuver(maneuver);
-            spc.Propagate(new Window(epoch, epoch.AddSeconds(7200.0)), [earth], new Propagator.Integrators.RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0));
+            spc.Propagate(new Window(epoch, epoch.AddSeconds(7200.0)), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert: m0 (1 − exp(−Δv / (Isp g0))), g0 = 9.80665 m/s², m0 = 1 000 + 3 000 kg
             Assert.Same(engine, spc.Engines.Single());

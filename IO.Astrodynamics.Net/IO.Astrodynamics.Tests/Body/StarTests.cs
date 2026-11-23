@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
@@ -204,12 +203,12 @@ public class StarTests
     }
 
     [Fact]
-    public async Task Propagate()
+    public void Propagate()
     {
         var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeScale.TDB);
         var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
-        await star.PropagateAsync(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
+        star.Propagate(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
         // The straight line (#718) at 0, 365 and 730 days: before, the angles 1, 1.1 and 1.2 rad (to 3 decimals) at the
         // catalog distance
         foreach (var at in new[] { epoch, epoch.Add(TimeSpan.FromDays(365)), epoch.Add(TimeSpan.FromDays(365 + 365)) })
@@ -247,42 +246,18 @@ public class StarTests
         Assert.Throws<ArgumentException>(() => star.WriteEphemeris(new System.IO.FileInfo("star668001.bsp")));
     }
 
-    [Theory]
-    [MemberData(nameof(NonPositiveSteps))]
-    public void PropagateAsync_AStepOfZeroOrLess_ThrowsOnTheCall(long stepTicks)
-    {
-        // Arrange
-        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
-        var star = NewStar(668002, epoch);
-        var window = new Window(epoch, epoch.AddHours(1.0));
-
-        // Act: thrown by the call itself, before any task is created
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            _ = star.PropagateAsync(window, TimeSpan.FromTicks(stepTicks));
-        });
-
-        // Assert
-        Assert.Equal("stepSize", exception.ParamName);
-        Assert.False(star.IsPropagated);
-    }
-
     [Fact]
-    public async Task IsPropagated_IsTrueOnceTheStatesAreStored()
+    public void IsPropagated_IsTrueOnceTheStatesAreStored()
     {
         // Arrange
         var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var window = new Window(epoch, epoch.AddHours(1.0));
         var bySync = NewStar(668003, epoch);
-        var byAsync = NewStar(668004, epoch);
 
-        // Act and assert: false before, true after either path
+        // Act and assert: false before, true after
         Assert.False(bySync.IsPropagated);
-        Assert.False(byAsync.IsPropagated);
         bySync.Propagate(window, TimeSpan.FromMinutes(10.0));
-        await byAsync.PropagateAsync(window, TimeSpan.FromMinutes(10.0));
         Assert.True(bySync.IsPropagated);
-        Assert.True(byAsync.IsPropagated);
     }
 
     [Fact]
@@ -377,7 +352,7 @@ public class StarTests
     // The noise-level record of the SPK read against the catalog position written in the test (its straight line, #718):
     // twice the worst on Linux x64, rounded up at the second digit (2.780e-16,
     // StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone, Validation category, Linux only, CI run 43974478027, 2026-11-16;
-    // StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore the same on Linux x64, 2.780e-16 and
+    // StarTests.Propagate_Twice and ScenarioTests.Simulate_OfAStarPropagatedBefore the same on Linux x64, 2.780e-16 and
     // 1.966e-16 on Windows x64, 1.966e-16 on macOS arm64; 1.390e-16 for the linear angles before #718, CI run
     // 43773937161), asserted by the Validation test alone (the epochs are whole half
     // days from the catalog epoch, whose Julian dates, which the star differences, are exact). The tests of every platform
@@ -425,7 +400,7 @@ public class StarTests
     }
 
     [Fact]
-    public async Task PropagateAsync_AfterPropagate_ReplacesTheStates()
+    public void Propagate_AnEarlierWindowAtAnotherStep_ReplacesTheStates()
     {
         // Arrange
         var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
@@ -433,14 +408,15 @@ public class StarTests
         var first = new Window(new TimeSystem.Time(2001, 3, 1, TimeScale.TDB), new TimeSystem.Time(2001, 3, 1, 6, 0, 0, TimeScale.TDB));
         var second = new Window(epoch, epoch.AddDays(2.0));
 
-        // Act: the later window first, then an earlier one at another step, through the asynchronous path
+        // Act: the later window first, then an earlier one at another step (through PropagateAsync before 11.0.0, a bare
+        // Task.Run of Propagate removed by R28 of #668)
         star.Propagate(first, TimeSpan.FromHours(1.0));
-        await star.PropagateAsync(second, TimeSpan.FromHours(12.0));
+        star.Propagate(second, TimeSpan.FromHours(12.0));
 
         // Assert
         var kept = Grid(second, TimeSpan.FromHours(12.0));
         double worst = CheckSpkHoldsOnly(star, kept, Grid(first, TimeSpan.FromHours(1.0)).Append(new TimeSystem.Time(2001, 2, 1, TimeScale.TDB)),
-            "StarTests.PropagateAsync_AfterPropagate", _output);
+            "StarTests.Propagate_AnEarlierWindowAtAnotherStep", _output);
         double bound = CatalogMotionInOneMicrosecond(star, kept);
         Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
     }

@@ -19,8 +19,17 @@ public interface IIntegrator
     /// Initialize the integrator with the initial state.
     /// Sets the observer and frame used for constructing intermediate StateVectors.
     /// Called by the propagator: by every constructor of <see cref="CentralBodyPropagator"/>, once the forces are added
-    /// (with an integrator that already has its forces, at construction too), and after each event.
+    /// (with an integrator that already has its forces, at construction too), at the start of every run of
+    /// <see cref="PropagatorBase.Propagate"/> with the initial state of the propagation, and after each event.
     /// </summary>
+    /// <remarks>
+    /// An implementation resets here every state a run depends on (its step, the history of its step control, its event
+    /// bookkeeping): the propagator calls it at the start of every run so that each run of one propagator instance is a
+    /// fresh run (#782, decisions 22 and 23 of lot L4 of #668, decided by S. Guillet, 2026-11-22), and cannot reset what an
+    /// implementation keeps elsewhere. A call by the caller between the construction of the propagator and its run has no
+    /// effect on the run. An integrator belongs to one propagator: a second propagator given it throws
+    /// <see cref="System.ArgumentException"/>.
+    /// </remarks>
     void Initialize(StateVector initialState);
 
     /// <summary>

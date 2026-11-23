@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
@@ -71,8 +72,8 @@ public class DenseAirStepControlTests
         bool includeInStepControl, bool srp = false)
     {
         var parameters = ForceParameters.DragCoefficient | (srp ? ForceParameters.ReflectivityCoefficient : 0);
-        return NewSpacecraft(body, altitude).PropagateWithVariationalEquations(Window, new CelestialItem[] { body },
-            new RK78Integrator(tolerance, tolerance), true, srp, Window.Length,
+        return NewSpacecraft(body, altitude).PropagateWithVariational(Window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, SolarRadiationPressure = srp },
             new VariationalOptions(parameters, IncludeInStepControl: includeInStepControl));
     }
 
@@ -143,20 +144,13 @@ public class DenseAirStepControlTests
         var reference = Propagate(body, 200e3, 1e-12, true);
         var solutions = new (string Path, PropagationSolution Solution)[]
         {
-            ("builder, state transition only", new CentralBodyPropagatorBuilder(Window, NewSpacecraft(body, 200e3, -1431),
-                    new RK78Integrator(1e-12, 1e-12), Window.Length).WithPerturbingBodies(bodies).IncludeAtmosphericDrag()
-                .WithCovariancePropagation(stateTransition).Build().Propagate()),
-            ("builder, covariance", new CentralBodyPropagatorBuilder(Window, WithP0(-1432),
-                    new RK78Integrator(1e-12, 1e-12), Window.Length).WithPerturbingBodies(bodies).IncludeAtmosphericDrag()
-                .WithCovariancePropagation(covariance).Build().Propagate()),
-            ("constructor", new CentralBodyPropagator(Window, NewSpacecraft(body, 200e3, -1433),
-                new RK78Integrator(1e-12, 1e-12), bodies, true, false, Window.Length, stateTransition).Propagate()),
-            ("spacecraft", NewSpacecraft(body, 200e3, -1434).Propagate(Window, bodies, new RK78Integrator(1e-12, 1e-12),
-                true, false, Window.Length, covariance with { Mode = CovariancePropagationMode.StateTransitionOnly })),
+            ("builder, state transition only", new CentralBodyPropagator(Window, NewSpacecraft(body, 200e3, -1431), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = stateTransition ?? CovariancePropagationOptions.None }).Propagate()),
+            ("builder, covariance", new CentralBodyPropagator(Window, WithP0(-1432), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = covariance ?? CovariancePropagationOptions.None }).Propagate()),
+            ("constructor", new CentralBodyPropagator(Window, NewSpacecraft(body, 200e3, -1433), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = stateTransition ?? CovariancePropagationOptions.None }).Propagate()),
+            ("spacecraft", NewSpacecraft(body, 200e3, -1434).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = covariance with { Mode = CovariancePropagationMode.StateTransitionOnly } })),
             ("batch", BatchPropagator.Propagate(new[]
             {
-                new PropagationTask(NewSpacecraft(body, 200e3, -1435), Window, bodies, true, false, Window.Length,
-                    () => new RK78Integrator(1e-12, 1e-12)) { CovariancePropagation = stateTransition }
+                new PropagationTask(NewSpacecraft(body, 200e3, -1435), Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = stateTransition ?? CovariancePropagationOptions.None })
             }).Results[0].Solution)
         };
 
@@ -188,11 +182,9 @@ public class DenseAirStepControlTests
         var window = new TimeSystem.Window(Epoch, Epoch.AddHours(1.0));
 
         // Act
-        var solution = spacecraft.PropagateWithVariationalEquations(window,
-            new CelestialItem[] { body, SolarSystemObjects.Stars.SUN_BODY }, new RK78Integrator(1e-12, 1e-12), true,
-            true, window.Length, new VariationalOptions(ForceParameters.DragCoefficient |
-                                                         ForceParameters.ReflectivityCoefficient,
-                IncludeInStepControl: true));
+        var solution = spacecraft.PropagateWithVariational(window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { body, SolarSystemObjects.Stars.SUN_BODY }, AtmosphericDrag = true, SolarRadiationPressure = true },
+            new VariationalOptions(ForceParameters.DragCoefficient | ForceParameters.ReflectivityCoefficient, IncludeInStepControl: true));
         int shadowed = Enumerable.Range(1, 59).Count(minute =>
         {
             var state = solution.GetStateVector(Epoch.AddMinutes(minute));
@@ -229,8 +221,8 @@ public class DenseAirStepControlTests
         var bodies = new CelestialItem[] { body, SolarSystemObjects.Stars.SUN_BODY };
 
         // Act
-        var exception = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariationalEquations(Window,
-            bodies, new RK78Integrator(1e-9, 1e-9), true, false, Window.Length,
+        var exception = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariational(Window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-9, RelativeTolerance = 1e-9 }, OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true },
             new VariationalOptions(ForceParameters.DragCoefficient, IncludeInStepControl: true)));
 
         // Assert
@@ -242,8 +234,8 @@ public class DenseAirStepControlTests
         // accepted there on the error of the state (#468), and the collapse guard stops it, its message naming Y (error
         // of Y 35.8, of the state 3.9e-4 at the last step; 2026-10-26, Linux). Before #468 the 100 rejections stopped it
         // at the start (error of Y 15.45 at 1e-6 s)
-        var collapse = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariationalEquations(Window,
-            bodies, new RK78Integrator(1e-11, 1e-11), true, false, Window.Length,
+        var collapse = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariational(Window,
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Window.Length, ThirdBodies = bodies, AtmosphericDrag = true },
             new VariationalOptions(ForceParameters.DragCoefficient, IncludeInStepControl: true)));
         _output.WriteLine(collapse.Message);
         Assert.StartsWith("RK7(8) with the variational equations in the step control (IncludeInStepControl): 10000 " +
@@ -286,9 +278,7 @@ public class DenseAirStepControlTests
         // not what stops it
         var body = Body("US 1976");
         InvalidOperationException Propagate(bool includeInStepControl) => Assert.Throws<InvalidOperationException>(
-            () => NewSpacecraft(body, 400e3).Propagate(Window, new CelestialItem[] { body },
-                new RK78Integrator(1e-20, 1e-20), false, false, Window.Length,
-                new CovariancePropagationOptions { IncludeInStepControl = includeInStepControl }));
+            () => NewSpacecraft(body, 400e3).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-20, RelativeTolerance = 1e-20 }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, CovariancePropagation = new CovariancePropagationOptions { IncludeInStepControl = includeInStepControl } }));
         static string Error(Exception exception) =>
             exception.Message.Split(' ').Single(word => word.StartsWith("Error=")).TrimEnd(',');
 
@@ -324,8 +314,8 @@ public class DenseAirStepControlTests
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => NewSpacecraft(body, 200e3)
-            .PropagateWithVariationalEquations(Window, new CelestialItem[] { body },
-                new RK78Integrator(1e-12, 1e-12, minStepSize: minStepSize), true, false, Window.Length,
+            .PropagateWithVariational(Window,
+                new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12, MinStep = TimeSpan.FromSeconds(minStepSize) }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true },
                 new VariationalOptions(ForceParameters.DragCoefficient, IncludeInStepControl: true)));
 
         // Assert

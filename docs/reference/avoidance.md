@@ -46,7 +46,7 @@ against a retargeted burn, Φ after the burn was off by 0.23 to 0.48 in the vali
 ([#397](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/397)).
 
 Otherwise (the covariance of the protected participant held in RTN, given at TCA, or none: a participant propagated
-by Velocity-Verlet or without an initial covariance, `ConjunctionAnalysisOptions.CovariancePropagation = null`, a
+by Velocity-Verlet or without an initial covariance, `ConjunctionAnalysisOptions.CovariancePropagation = CovariancePropagationOptions.None`, a
 participant not propagated), each option is propagated from the state after its burn with the **force model of the
 protected participant's own propagation**, when there is one
 ([#402](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/402)):
@@ -61,8 +61,9 @@ protected participant's own propagation**, when there is one
 The propagation of the participant is the `PropagationSolution` passed to the analysis or, for a `Spacecraft` passed as
 an `ILocalizable`, its last propagation: a spacecraft keeps the force model of its last propagation by RK7(8) or
 Velocity-Verlet (its forces with their ephemeris cache, the integrator settings, the orientation cache, the mass and
-coefficients of each segment, without the steps; about 0.2 MB for one day in LEO with EGM2008 10×10, NRLMSISE-00, the
-Moon and the Sun) until it is propagated again. The burn state is the state of that trajectory, after the maneuvers
+coefficients of each segment, without the steps; about 0.34 MB for one day in LEO with EGM2008 10×10, NRLMSISE-00, the
+Moon and the Sun, measured in lot L4 of #668, `DefaultIntegratorFiguresTests`, alone in the CI of #789 at aefd6c2b on
+Linux x64, Windows x64 and macOS arm64) until it is propagated again. The burn state is the state of that trajectory, after the maneuvers
 before the burn; the mass of the option is the mass of the trajectory at the burn less its fuel. A maneuver of the
 participant after the burn is not part of the option: each option is one burn on the trajectory, the open-loop model.
 The options end at the end of the screening window or of the propagation, whichever comes first; a burn outside the

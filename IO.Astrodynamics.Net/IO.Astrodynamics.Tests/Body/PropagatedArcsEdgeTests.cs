@@ -157,7 +157,7 @@ public class PropagatedArcsEdgeTests
         var (sc, apogee) = Apogee(naifId, Leo(earth), earth);
         var window = new Window(Start, Start.AddSeconds(length));
         var outputStep = TimeSpan.FromSeconds(step);
-        var solution = sc.Propagate(window, [earth], integrator == "VVd" ? new VVIntegrator(outputStep) : new RK78Integrator(1e-12, 1e-12), false, false, outputStep);
+        var solution = sc.Propagate(window, new PropagationOptions { Integrator = integrator == "VVd" ? new VVIntegratorOptions { Step = outputStep } : new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = outputStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var arcs = sc.PropagatedArcs;
         var spk = NewSpk(sc.Name.ToLowerInvariant());
         sc.WriteEphemeris(spk);
@@ -231,7 +231,7 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddEngine(engine);
         spacecraft.SetStandbyManeuver(new TimedImpulse(earth, Start, engine, Start.AddSeconds(target), 20.0));
         var window = new Window(Start, Start.AddHours(2.0));
-        var solution = spacecraft.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Equal(2, solution.Segments.Count);
         var tc = solution.Segments[1].BaseEpoch;
         var arcs = spacecraft.PropagatedArcs;
@@ -300,7 +300,7 @@ public class PropagatedArcsEdgeTests
         first.SetNextManeuver(lvlh);
         lvlh.SetNextManeuver(second);
         spacecraft.SetStandbyManeuver(first);
-        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
         Assert.Equal(2, events.Length);
         LabelAssert.Equal(events[0], events[1]);
@@ -375,7 +375,7 @@ public class PropagatedArcsEdgeTests
         var burn = new TimedImpulse(earth, Start, engine, target.AddSeconds(d), 50.0);
         trim.SetNextManeuver(burn);
         spacecraft.SetStandbyManeuver(trim);
-        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(10.0));
+        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
         Assert.Equal(2, events.Length);
         var (t1, t2) = (events[0], events[1]);
@@ -449,7 +449,7 @@ public class PropagatedArcsEdgeTests
     /// <c>pxform</c>, when the propagation starts from ECLIPJ2000. The jump of the velocity block at the impulse against the
     /// covariance of the execution error, written here from the four terms of Gates (JPL TR 32-504, 1963, section III) on the
     /// velocity jump of the stored states: σ_s² v vᵀ + σ_r² u uᵀ + σ_p² (V² I − v vᵀ) + σ_a² (I − u uᵀ). Through
-    /// <c>Spacecraft.Propagate</c> and <c>Scenario.SimulateAsync</c>. On the prototype the two states at the impulse carried
+    /// <c>Spacecraft.Propagate</c> and <c>Scenario.Simulate</c>. On the prototype the two states at the impulse carried
     /// none (review probe E2).
     /// </summary>
     [Theory]
@@ -485,12 +485,12 @@ public class PropagatedArcsEdgeTests
             var scenario = new Scenario($"SPE{-naifId}", new IO.Astrodynamics.Mission.Mission($"mPE{-naifId}"), window);
             scenario.AddCelestialItem(earth);
             scenario.AddSpacecraft(spacecraft);
-            scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(step), () => new RK78Integrator(1e-12, 1e-12), options).GetAwaiter().GetResult();
+            scenario.Simulate(new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(step), CovariancePropagation = options ?? CovariancePropagationOptions.None });
             solution = spacecraft.LastPropagation;
         }
         else
         {
-            solution = spacecraft.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(step), options);
+            solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(step), ThirdBodies = [earth], CovariancePropagation = options ?? CovariancePropagationOptions.None });
         }
 
         var stored = spacecraft.PropagatedStates;
@@ -617,8 +617,7 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddEngine(engine);
         spacecraft.SetStandbyManeuver(new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
         var step = TimeSpan.FromSeconds(60.0);
-        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], integrator == "RK78" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(step),
-            false, false, step);
+        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = integrator == "RK78" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var arc = spacecraft.PropagatedArcs[0];
         var tc = solution.Segments[1].BaseEpoch;
         Assert.Equal(PropagatedEphemeris.FilledArcStates, arc.Length);
@@ -698,7 +697,7 @@ public class PropagatedArcsEdgeTests
         var (source, _) = Apogee(-5541, Leo(earth), earth);
         var window = new Window(Start, Start.AddHours(2.0));
         var step = TimeSpan.FromSeconds(10.0);
-        var sourceSolution = source.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, step);
+        var sourceSolution = source.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var outputs = sourceSolution.StateVectors.Take(200).ToArray();
 
         // Without a propagation: one arc, the former read
@@ -737,7 +736,7 @@ public class PropagatedArcsEdgeTests
         // After a propagation: the arc of each epoch
         var (propagated, _) = Apogee(-5543, Leo(earth), earth);
         propagated.AddPropagatedStates(new StateVector(Leo(earth).Position, Leo(earth).Velocity, earth, Start.AddSeconds(3.3), Frame.ICRF));
-        var solution = propagated.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, step);
+        var solution = propagated.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         // The propagation replaced the state added before it
         Assert.DoesNotContain(propagated.PropagatedStates, x => x.Epoch == Start.AddSeconds(3.3));
         var tc = solution.Segments[1].BaseEpoch;
@@ -779,7 +778,7 @@ public class PropagatedArcsEdgeTests
         var scenario = new Scenario("PA540Cosmo", new IO.Astrodynamics.Mission.Mission("PA540CosmoMission"), new Window(Start, Start.AddHours(2.0)));
         scenario.AddCelestialItem(earth);
         scenario.AddSpacecraft(sc);
-        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), () => new RK78Integrator(1e-12, 1e-12));
+        scenario.Simulate(new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), CovariancePropagation = CovariancePropagationOptions.None });
         var solution = sc.LastPropagation;
         var tc = solution.Segments[1].BaseEpoch;
         var directory = new DirectoryInfo("CosmographiaExport540");
@@ -821,7 +820,7 @@ public class PropagatedArcsEdgeTests
         var window = new Window(Start, Start.AddHours(2.0));
         var step = TimeSpan.FromSeconds(10.0);
         var (secondary, _) = Apogee(-5561, Leo(earth), earth);
-        var secondarySolution = secondary.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, step);
+        var secondarySolution = secondary.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var tc = secondarySolution.Segments[1].BaseEpoch;
         var tca = tc.AddSeconds(60.0);
         var (r, v) = secondarySolution.InterpolateAt(tca);
@@ -834,7 +833,7 @@ public class PropagatedArcsEdgeTests
         var initial = SpiceAPI.Instance.Propagate2Bodies(atTca, earth.GM, TimeSpan.FromTicks(ticks));
         initial = new StateVector(initial.Position, initial.Velocity, earth, Start, Frame.ICRF);
         var protectedCraft = new Spacecraft(-5562, "PE5562", 1000.0, 3000.0, new Clock("PE5562_CLK", 65536), initial);
-        var protectedSolution = protectedCraft.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, step);
+        var protectedSolution = protectedCraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         var search = new Window(tc.AddSeconds(-100.0), tc.AddSeconds(300.0));
         var profile = new ProtectedSpacecraftProfile(protectedCraft);

@@ -8,6 +8,8 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
@@ -63,9 +65,15 @@ internal sealed class TwoBodyTrajectory
             });
     }
 
-    /// <summary>The RK7(8) integrator of the trajectory: tolerances <paramref name="tolerance"/>, steps from 1 ms to 300 s.</summary>
-    public static RK78Integrator Integrator(double tolerance) => new(
-        absoluteTolerance: tolerance, relativeTolerance: tolerance, initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
+    /// <summary>
+    /// The RK7(8) integrator of the trajectory: tolerances <paramref name="tolerance"/>, a first step of 60 s, steps from
+    /// 1 ms to 300 s, the other settings those of <c>new RK78Integrator()</c>.
+    /// </summary>
+    public static RK78IntegratorOptions Integrator(double tolerance) => new()
+    {
+        AbsoluteTolerance = tolerance, RelativeTolerance = tolerance, InitialStep = TimeSpan.FromSeconds(60.0),
+        MinStep = TimeSpan.FromMilliseconds(1.0), MaxStep = TimeSpan.FromSeconds(300.0)
+    };
 
     /// <summary>
     /// A spacecraft at <paramref name="initialState"/>, propagated over <paramref name="window"/> about the central
@@ -78,7 +86,11 @@ internal sealed class TwoBodyTrajectory
     public static void Propagate(Spacecraft spacecraft, Window window, double tolerance, TimeSpan outputStep)
     {
         var central = (CelestialBody)spacecraft.InitialOrbitalParameters.Observer;
-        spacecraft.Propagate(window, [central], Integrator(tolerance), false, false, outputStep);
+        spacecraft.Propagate(window, new PropagationOptions
+        {
+            Integrator = Integrator(tolerance), OutputStep = outputStep, ThirdBodies = [central],
+            CovariancePropagation = CovariancePropagationOptions.None
+        });
     }
 
     /// <summary>

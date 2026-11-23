@@ -129,11 +129,13 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public bool HasAtmosphericModel => AtmosphericModel != null;
 
     /// <summary>
-    /// The atmosphere of the body: its atmospheric model, or for an Earth without one NRLMSISE-00 at nominal space weather
-    /// (one instance per thread, <see cref="EarthDefaultAtmosphere"/>); null for another body without a model. Read by
-    /// <see cref="Propagator.Forces.AtmosphericDrag"/> and the description of a force model (CDM export) (#674).
+    /// The atmosphere of the body, the one its drag reads: its atmospheric model, or for an Earth without one NRLMSISE-00
+    /// at nominal space weather (one instance per thread); null for another body without a model. Read by
+    /// <see cref="Propagator.Forces.AtmosphericDrag"/> and the description of a force model (CDM export) (#674), and
+    /// reported by <see cref="Propagator.PropagationSolution.Options"/> (public since 11.0.0, R06 of #668, amendment of D4
+    /// decided by S. Guillet, 2026-11-19).
     /// </summary>
-    internal IAtmosphericModel Atmosphere => AtmosphericModel ?? (NaifId == EarthNaifId ? EarthDefaultAtmosphere.Model : null);
+    public IAtmosphericModel Atmosphere => AtmosphericModel ?? (NaifId == EarthNaifId ? EarthDefaultAtmosphere.Model : null);
 
     /// <summary>
     /// The model that answers <paramref name="context"/>: the atmospheric model of the body; for an Earth without one,
@@ -672,6 +674,20 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         }
 
         return GetAirDensity(AtmosphericContext.FromPlanetodetic(new Coordinates.Planetodetic(geodeticLongitude, geodeticLatitude, altitude), epoch));
+    }
+
+    /// <summary>
+    /// The density of <paramref name="model"/> at a geodetic position and an epoch, as
+    /// <see cref="GetAirDensity(double, double, double, in Time)"/> reads the atmosphere of a body: the atmosphere of a
+    /// propagation's options in place of the body's (R06 of #668).
+    /// </summary>
+    internal static double AirDensity(IAtmosphericModel model, double altitude, double geodeticLatitude,
+        double geodeticLongitude, in Time epoch)
+    {
+        return model is IGeodeticDensityModel geodetic
+            ? geodetic.GetDensity(altitude, geodeticLatitude, geodeticLongitude, epoch)
+            : model.GetDensity(AtmosphericContext.FromPlanetodetic(
+                new Coordinates.Planetodetic(geodeticLongitude, geodeticLatitude, altitude), epoch));
     }
 
     /// <summary>

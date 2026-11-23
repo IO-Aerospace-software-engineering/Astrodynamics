@@ -108,20 +108,13 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
         var reference = r3.Propagate(-1425, tolerance, new VariationalOptions(r3.Parameters, IncludeInStepControl: true));
         var solutions = new (string Path, PropagationSolution Solution)[]
         {
-            ("builder, state transition only", new CentralBodyPropagatorBuilder(r3.Window, New(-1426),
-                    new RK78Integrator(tolerance, tolerance), deltaT).WithPerturbingBodies(r3.Bodies)
-                .IncludeSolarRadiationPressure().WithCovariancePropagation(stateTransition).Build().Propagate()),
-            ("builder, covariance", new CentralBodyPropagatorBuilder(r3.Window, WithP0(-1427),
-                    new RK78Integrator(tolerance, tolerance), deltaT).WithPerturbingBodies(r3.Bodies)
-                .IncludeSolarRadiationPressure().WithCovariancePropagation(covariance).Build().Propagate()),
-            ("constructor", new CentralBodyPropagator(r3.Window, New(-1428), new RK78Integrator(tolerance, tolerance),
-                r3.Bodies, false, true, deltaT, stateTransition).Propagate()),
-            ("spacecraft", New(-1429).Propagate(r3.Window, r3.Bodies, new RK78Integrator(tolerance, tolerance), false,
-                true, deltaT, stateTransition)),
+            ("builder, state transition only", new CentralBodyPropagator(r3.Window, New(-1426), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = deltaT, ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = stateTransition ?? CovariancePropagationOptions.None }).Propagate()),
+            ("builder, covariance", new CentralBodyPropagator(r3.Window, WithP0(-1427), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = deltaT, ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = covariance ?? CovariancePropagationOptions.None }).Propagate()),
+            ("constructor", new CentralBodyPropagator(r3.Window, New(-1428), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = deltaT, ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = stateTransition ?? CovariancePropagationOptions.None }).Propagate()),
+            ("spacecraft", New(-1429).Propagate(r3.Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = deltaT, ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = stateTransition ?? CovariancePropagationOptions.None })),
             ("batch", BatchPropagator.Propagate(new[]
             {
-                new PropagationTask(New(-1430), r3.Window, r3.Bodies, false, true, deltaT,
-                    () => new RK78Integrator(tolerance, tolerance)) { CovariancePropagation = stateTransition }
+                new PropagationTask(New(-1430), r3.Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = deltaT, ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = stateTransition ?? CovariancePropagationOptions.None })
             }).Results[0].Solution)
         };
 

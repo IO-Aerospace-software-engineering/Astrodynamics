@@ -18,6 +18,7 @@ using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
+using System.Threading.Tasks;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Propagators;
@@ -185,10 +186,10 @@ public class RepropagationTests
             return Orbit(2.0 * System.Math.PI - n * lead, epoch);
         }
 
-        public Integrator NewIntegrator(string name) => name switch
+        public IntegratorOptions NewIntegrator(string name) => name switch
         {
-            "VV1" => new VVIntegrator(VvStep),
-            "RK" => Ssb ? new RK78Integrator(AttitudeRecordTests.SsbRk78Tolerance, AttitudeRecordTests.SsbRk78Tolerance) : new RK78Integrator(1e-12, 1e-12),
+            "VV1" => new VVIntegratorOptions { Step = VvStep },
+            "RK" => Ssb ? new RK78IntegratorOptions { AbsoluteTolerance = AttitudeRecordTests.SsbRk78Tolerance, RelativeTolerance = AttitudeRecordTests.SsbRk78Tolerance } : new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 },
             _ => throw new ArgumentException(name)
         };
     }
@@ -200,6 +201,9 @@ public class RepropagationTests
         public Spacecraft Spacecraft { get; init; }
         public Maneuver.Maneuver[] Chain { get; init; }
         public Time[] Given { get; init; }
+
+        // The propagator of the SameInstance path, built at its first run and run again by the next (#782)
+        public CentralBodyPropagator Propagator { get; set; }
     }
 
     private static Sc Build(Env env, OrbitalParams orbit, string chain, Time? userGate = null)
@@ -299,40 +303,36 @@ public class RepropagationTests
         {
             case "Propagate":
                 Assert.Null(covariance);
-                solution = spacecraft.Propagate(window, env.Bodies, env.NewIntegrator(integrator), false, false, Output);
+                solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = CovariancePropagationOptions.None });
                 break;
             case "PropagateOptions":
-                solution = spacecraft.Propagate(window, env.Bodies, env.NewIntegrator(integrator), false, false, Output, covariance);
+                solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 break;
             case "Default":
                 // The default Velocity-Verlet integrator, at the step of the output
                 Assert.Equal("VV1", integrator);
-                solution = spacecraft.Propagate(window, env.Bodies, false, false, VvStep);
+                solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = VvStep }, OutputStep = VvStep, ThirdBodies = env.Bodies });
                 break;
-            case "Async":
-                Assert.Equal("VV1", integrator);
-                solution = spacecraft.PropagateAsync(window, env.Bodies, false, false, VvStep).GetAwaiter().GetResult();
-                break;
-            case "Builder":
-            {
-                // CentralBodyPropagatorBuilder, the covariance by WithCovariancePropagation (#583)
-                var builder = new CentralBodyPropagatorBuilder(window, spacecraft, env.NewIntegrator(integrator), Output).WithPerturbingBodies(env.Bodies);
-                if (covariance != null) builder.WithCovariancePropagation(covariance);
-                using var propagator = builder.Build();
-                solution = propagator.Propagate();
-                break;
-            }
             case "Direct":
             {
                 // A CentralBodyPropagator built directly, the covariance by its constructor (#583)
-                using var propagator = new CentralBodyPropagator(window, spacecraft, env.NewIntegrator(integrator), env.Bodies, false, false, Output, covariance);
+                var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 solution = propagator.Propagate();
+                break;
+            }
+            case "SameInstance":
+            {
+                // One CentralBodyPropagator built at the first run of the spacecraft and run again by each later run on
+                // the same window (#782)
+                Assert.Null(covariance);
+                sc.Propagator ??= new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = CovariancePropagationOptions.None });
+                Assert.Equal(window, sc.Propagator.Window);
+                solution = sc.Propagator.Propagate();
                 break;
             }
             case "Batch":
             {
-                var task = new PropagationTask(spacecraft, window, env.Bodies, false, false, Output, () => env.NewIntegrator(integrator))
-                    { CovariancePropagation = covariance };
+                var task = new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = covariance ?? CovariancePropagationOptions.None });
                 var result = BatchPropagator.Propagate([task]).Results[0];
                 Assert.Null(result.Error);
                 solution = result.Solution;
@@ -354,7 +354,7 @@ public class RepropagationTests
         return scenario;
     }
 
-    /// <summary>A simulation of the scenario by one of the three overloads of <c>Scenario.SimulateAsync</c>.</summary>
+    /// <summary>A simulation of the scenario with the settings of one of the three former overloads of <c>Scenario.SimulateAsync</c> (removed in 11.0.0), as <see cref="PropagationOptions"/>.</summary>
     private static Run Simulate(Scenario scenario, Sc sc, Window window, string integrator, string overload)
     {
         var env = sc.Env;
@@ -363,9 +363,9 @@ public class RepropagationTests
             : null;
         var summary = overload switch
         {
-            "Default" => scenario.SimulateAsync(false, false, VvStep),
-            "Factory" => scenario.SimulateAsync(false, false, Output, () => env.NewIntegrator(integrator)),
-            _ => scenario.SimulateAsync(false, false, Output, () => env.NewIntegrator(integrator), covariance)
+            "Default" => Task.FromResult(scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = VvStep }, OutputStep = VvStep })),
+            "Factory" => Task.FromResult(scenario.Simulate(new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, CovariancePropagation = CovariancePropagationOptions.None })),
+            _ => Task.FromResult(scenario.Simulate(new PropagationOptions { Integrator = env.NewIntegrator(integrator), OutputStep = Output, CovariancePropagation = covariance ?? CovariancePropagationOptions.None }))
         };
         if (overload == "Default") Assert.Equal("VV1", integrator);
         var s = summary.GetAwaiter().GetResult();
@@ -574,28 +574,23 @@ public class RepropagationTests
 
     /// <summary>
     /// #573's case: after a run from the apogee at S, a run from the perigee at S + 500 fires as a fresh spacecraft, on every
-    /// activation path of <c>Spacecraft.Propagate</c> and <c>BatchPropagator</c>, and through
-    /// <see cref="CentralBodyPropagatorBuilder"/> and a <see cref="CentralBodyPropagator"/> built directly, which did not
-    /// re-arm the spacecraft before #583 (run 2 fired no burn and kept run 1's fuel), both integrators.
+    /// activation path of <c>Spacecraft.Propagate</c> and <c>BatchPropagator</c>, and through a
+    /// <see cref="CentralBodyPropagator"/> built directly, which did not re-arm the spacecraft before #583 (run 2 fired no burn and kept run 1's fuel), both integrators.
     /// </summary>
     [Theory]
     [InlineData("apo-apo", "RK", "Propagate")]
     [InlineData("apo-apo", "VV1", "Propagate")]
     [InlineData("apo-apo", "RK", "PropagateOptions")]
     [InlineData("apo-apo", "VV1", "Default")]
-    [InlineData("apo-apo", "VV1", "Async")]
     [InlineData("apo-apo", "RK", "Batch")]
-    [InlineData("apo-apo", "RK", "Builder")]
-    [InlineData("apo-apo", "VV1", "Builder")]
     [InlineData("apo-apo", "RK", "Direct")]
     [InlineData("apo-apo", "VV1", "Direct")]
-    [InlineData("att1000", "RK", "Builder")]
+    [InlineData("att1000", "RK", "Direct")]
     [InlineData("att1000", "VV1", "Direct")]
     [InlineData("apo-apo", "VV1", "Batch")]
     [InlineData("att1000", "RK", "Propagate")]
     [InlineData("att1000", "VV1", "Propagate")]
     [InlineData("att1000", "VV1", "Default")]
-    [InlineData("att1000", "VV1", "Async")]
     [InlineData("att1000", "RK", "Batch")]
     [InlineData("att1000", "VV1", "Batch")]
     public void AnotherState_FiresAsAFreshSpacecraft(string chain, string integrator, string path)
@@ -717,7 +712,6 @@ public class RepropagationTests
     [InlineData("lead1000", "VV1", "Propagate")]
     [InlineData("lead1000", "RK", "PropagateOptions")]
     [InlineData("lead1000", "VV1", "Default")]
-    [InlineData("lead1000", "VV1", "Async")]
     [InlineData("lead1000", "RK", "Batch")]
     [InlineData("lead2", "RK", "Propagate")]
     [InlineData("lead2", "VV1", "Propagate")]
@@ -768,7 +762,7 @@ public class RepropagationTests
     }
 
     /// <summary>
-    /// A control: the leading hold through <c>Scenario.SimulateAsync</c>, its three overloads, the covariance one with and
+    /// A control: the leading hold through <c>Scenario.Simulate</c>, the settings of the three former overloads, the covariance one with and
     /// without <c>IncludeInStepControl</c>. The window of a scenario is fixed, so the leading nadir activates at S in every
     /// simulation and raises the same gate (S + 1 000): runs 1 and 2 from an orbit whose perigee is at S + 3 000, run 3 from
     /// one whose perigee is at S + 1 500, each a fresh scenario's, summary included.
@@ -928,13 +922,13 @@ public class RepropagationTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // Scenario.SimulateAsync, its three overloads, twice and three times
+    // Scenario.Simulate, the settings of the three former overloads, twice and three times
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
     /// A scenario simulated twice is bit for bit, and a third time after <c>SetInitialOrbitalParameters</c> (the perigee at
-    /// S: the window of a scenario is fixed) fires as a fresh scenario, summary included: the three overloads of
-    /// <c>Scenario.SimulateAsync</c>, the covariance one with and without <c>IncludeInStepControl</c>.
+    /// S: the window of a scenario is fixed) fires as a fresh scenario, summary included: the settings of the three former overloads of
+    /// <c>Scenario.Simulate</c>, the covariance one with and without <c>IncludeInStepControl</c>.
     /// </summary>
     [Theory]
     [InlineData("apo-apo", "VV1", "Default")]
@@ -976,8 +970,7 @@ public class RepropagationTests
 
     /// <summary>
     /// Covariance mode, P0 = diag(100 m², 1e-4 m²/s²), through <c>Spacecraft.Propagate</c>,
-    /// <c>PropagationTask.CovariancePropagation</c>, <c>CentralBodyPropagatorBuilder.WithCovariancePropagation</c> and the
-    /// constructor of <see cref="CentralBodyPropagator"/> (#583), with and without <c>IncludeInStepControl</c>: run 2 from another state
+    /// a batch task and the options constructor of <see cref="CentralBodyPropagator"/> (#583), with and without <c>IncludeInStepControl</c>: run 2 from another state
     /// is a fresh spacecraft's, burns, state and P.
     /// </summary>
     [Theory]
@@ -985,9 +978,8 @@ public class RepropagationTests
     [InlineData("apo-apo", "PropagateOptions", true)]
     [InlineData("apo-apo", "Batch", false)]
     [InlineData("apo-apo", "Batch", true)]
-    [InlineData("apo-apo", "Builder", false)]
-    [InlineData("apo-apo", "Builder", true)]
     [InlineData("apo-apo", "Direct", false)]
+    [InlineData("apo-apo", "Direct", true)]
     [InlineData("att1000", "Direct", true)]
     [InlineData("att1000", "PropagateOptions", false)]
     public void Covariance_AnotherState_FiresAsAFreshSpacecraft(string chain, string path, bool includeInStepControl)
@@ -1120,10 +1112,8 @@ public class RepropagationTests
         // Act
         Exception error = rejection switch
         {
-            "CovarianceWithoutP0" => Assert.Throws<InvalidOperationException>(() => reused.Spacecraft.Propagate(Win(S), env.Bodies, env.NewIntegrator("RK"), false,
-                false, Output, new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance })),
-            "ProcessNoiseWithoutCovariance" => Assert.Throws<ArgumentException>(() => reused.Spacecraft.Propagate(Win(S), env.Bodies, env.NewIntegrator("RK"), false,
-                false, Output, new CovariancePropagationOptions { ProcessNoise = new RtnProcessNoise(1e-12, 1e-12, 1e-12) })),
+            "CovarianceWithoutP0" => Assert.Throws<InvalidOperationException>(() => reused.Spacecraft.Propagate(Win(S), new PropagationOptions { Integrator = env.NewIntegrator("RK"), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } })),
+            "ProcessNoiseWithoutCovariance" => Assert.Throws<ArgumentException>(() => reused.Spacecraft.Propagate(Win(S), new PropagationOptions { Integrator = env.NewIntegrator("RK"), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = new CovariancePropagationOptions { ProcessNoise = new RtnProcessNoise(1e-12, 1e-12, 1e-12) } })),
             _ => RejectNonInertial(reused, env, s2)
         };
 
@@ -1146,26 +1136,28 @@ public class RepropagationTests
     {
         var sv = env.PerigeeAt(epoch).ToStateVector();
         sc.Spacecraft.SetInitialOrbitalParameters(new StateVector(sv.Position, sv.Velocity, env.Center, epoch, new Frame("ITRF93")));
-        return Assert.Throws<ArgumentException>(() => sc.Spacecraft.Propagate(Win(epoch), env.Bodies, env.NewIntegrator("RK"), false, false, Output));
+        return Assert.Throws<ArgumentException>(() => sc.Spacecraft.Propagate(Win(epoch), new PropagationOptions { Integrator = env.NewIntegrator("RK"), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = CovariancePropagationOptions.None }));
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // #583: CentralBodyPropagatorBuilder and a CentralBodyPropagator built directly re-arm the spacecraft
+    // #583: a CentralBodyPropagator built directly re-arms the spacecraft (the builder of 10.x did too)
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// An identical second run through <see cref="CentralBodyPropagatorBuilder"/> or a <see cref="CentralBodyPropagator"/>
-    /// built directly is a fresh spacecraft's (#583): before the fix run 2 fired no burn, started with the fuel left by
+    /// An identical second run through a <see cref="CentralBodyPropagator"/> built directly is a fresh spacecraft's (#583): before the fix run 2 fired no burn, started with the fuel left by
     /// run 1 and kept run 1's <c>ExecutedManeuvers</c> (7.247e6 m off on the issue's case). The reference, a spacecraft
     /// built identically and never propagated, run once on the same path, is checked against the Keplerian closed form.
+    /// <c>SameInstance</c> runs the same propagator instance twice (#782): before its fix, run 2 of an adaptive RK7(8)
+    /// started from the last step and PI history of run 1; Velocity-Verlet, which keeps no step state, is a guard.
     /// </summary>
     [Theory]
-    [InlineData("apo-apo", "RK", "Builder")]
-    [InlineData("apo-apo", "VV1", "Builder")]
     [InlineData("apo-apo", "RK", "Direct")]
     [InlineData("apo-apo", "VV1", "Direct")]
-    [InlineData("att1000", "RK", "Builder")]
+    [InlineData("att1000", "RK", "Direct")]
     [InlineData("att1000", "VV1", "Direct")]
+    [InlineData("apo-apo", "RK", "SameInstance")]
+    [InlineData("apo-apo", "VV1", "SameInstance")]
+    [InlineData("att1000", "RK", "SameInstance")]
     public void PropagatorPaths_IdenticalRun_IsAFreshSpacecrafts(string chain, string integrator, string path)
     {
         // Arrange
@@ -1189,9 +1181,9 @@ public class RepropagationTests
     /// Run 1 through one path and run 2 through another: the reset belongs to the propagation, whatever built it (#583).
     /// </summary>
     [Theory]
-    [InlineData("Propagate", "Builder", "RK")]
-    [InlineData("Builder", "Propagate", "VV1")]
-    [InlineData("Direct", "Builder", "RK")]
+    [InlineData("Propagate", "Direct", "RK")]
+    [InlineData("Direct", "Propagate", "VV1")]
+    [InlineData("Direct", "Batch", "RK")]
     public void PropagatorPaths_MixedRuns_AreAFreshSpacecrafts(string first, string second, string integrator)
     {
         string tag = $"#583 mixed {first} then {second} {integrator}";
@@ -1210,13 +1202,11 @@ public class RepropagationTests
     }
 
     /// <summary>
-    /// A propagator built after run 1 and never run, or whose <see cref="CentralBodyPropagatorBuilder.Build"/> rejects the
-    /// covariance asked for without P0, leaves run 1 as it was: the reset belongs to <see cref="PropagatorBase.Propagate"/>,
+    /// A propagator built after run 1 and never run, or whose constructor rejects the covariance asked for without P0, leaves run 1 as it was: the reset belongs to <see cref="PropagatorBase.Propagate"/>,
     /// after its checks (#583). A valid run after it is a fresh spacecraft's.
     /// </summary>
     [Theory]
     [InlineData("BuiltNotRun")]
-    [InlineData("BuilderCovarianceWithoutP0")]
     [InlineData("DirectCovarianceWithoutP0")]
     public void PropagatorPaths_NoRun_LeavesTheFirstAsItWas(string rejection)
     {
@@ -1224,7 +1214,7 @@ public class RepropagationTests
         string tag = $"#583 no run ({rejection})";
         var env = Env.Of();
         var reused = Build(env, env.Apogee(), "apo-apo");
-        var r1 = Propagate(reused, Win(S), "RK", "Builder");
+        var r1 = Propagate(reused, Win(S), "RK", "Direct");
         var solution = reused.Spacecraft.LastPropagation;
         var states = reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)).ToArray();
         var windows = reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray();
@@ -1236,16 +1226,11 @@ public class RepropagationTests
         {
             case "BuiltNotRun":
             {
-                using var unused = new CentralBodyPropagatorBuilder(Win(S), reused.Spacecraft, env.NewIntegrator("RK"), Output).WithPerturbingBodies(env.Bodies).Build();
+                var unused = new CentralBodyPropagator(Win(S), reused.Spacecraft, new PropagationOptions { Integrator = env.NewIntegrator("RK"), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = CovariancePropagationOptions.None });
                 break;
             }
-            case "BuilderCovarianceWithoutP0":
-                Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagatorBuilder(Win(S), reused.Spacecraft, env.NewIntegrator("RK"), Output)
-                    .WithPerturbingBodies(env.Bodies).WithCovariancePropagation(options).Build());
-                break;
             default:
-                Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Win(S), reused.Spacecraft, env.NewIntegrator("RK"), env.Bodies, false, false,
-                    Output, options));
+                Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Win(S), reused.Spacecraft, new PropagationOptions { Integrator = env.NewIntegrator("RK"), OutputStep = Output, ThirdBodies = env.Bodies, CovariancePropagation = options ?? CovariancePropagationOptions.None }));
                 break;
         }
 
@@ -1256,7 +1241,7 @@ public class RepropagationTests
         Assert.Equal(fuel, reused.Spacecraft.FuelTanks.Single().Quantity);
         var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);
         AssertSame(tag + " run 1 after", after, r1);
-        var r2 = Propagate(reused, Win(S), "RK", "Builder");
+        var r2 = Propagate(reused, Win(S), "RK", "Direct");
         AssertSame(tag + " run 2 against run 1", r2, r1);
     }
 
@@ -1292,7 +1277,7 @@ public class RepropagationTests
     [Theory]
     [InlineData("m2", "RK", "Propagate")]
     [InlineData("m2", "VV1", "Propagate")]
-    [InlineData("m2", "RK", "Builder")]
+    [InlineData("m2", "RK", "Direct")]
     [InlineData("chain", "RK", "Propagate")]
     [InlineData("chain", "VV1", "Propagate")]
     [InlineData("none", "RK", "Propagate")]
