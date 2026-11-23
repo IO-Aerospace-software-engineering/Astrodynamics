@@ -26,8 +26,11 @@ namespace IO.Astrodynamics.Tests.Propagators.Options;
 /// cost of the covariance under Auto, and the memory a spacecraft keeps with its last propagation. The docs publish them;
 /// each test asserts only what the mathematics fixes (the order of the errors, the closed-form Δv to the accuracy of the
 /// integrator, an unchanged trajectory), no threshold on a figure until the three platforms are read, none ever on the
-/// memory.
+/// memory. The class runs alone, after the test classes that run in parallel (<see cref="DefaultIntegratorFiguresCollection"/>,
+/// decision 30 of lot L4, decided by S. Guillet, 2026-11-23): beside them its timings and its GC.GetTotalMemory readings
+/// counted their work too (CI of #789 at 84c38667: covariance Auto 0.96 to 6.7 times, memory 0.87 to 5.0 MB).
 /// </summary>
+[Collection(nameof(DefaultIntegratorFiguresCollection))]
 public class DefaultIntegratorFiguresTests
 {
     private static readonly TimeSystem.Time Start = new(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
@@ -309,3 +312,10 @@ public class DefaultIntegratorFiguresTests
         }
     }
 }
+
+/// <summary>
+/// The collection of <see cref="DefaultIntegratorFiguresTests"/>, run alone after the test classes that run in parallel, so
+/// that its timings and memory readings measure its own propagations only.
+/// </summary>
+[CollectionDefinition(nameof(DefaultIntegratorFiguresCollection), DisableParallelization = true)]
+public class DefaultIntegratorFiguresCollection;
