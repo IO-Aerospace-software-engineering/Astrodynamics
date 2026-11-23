@@ -118,8 +118,8 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
 | `GetOrientation(Frame, Time)` | The rotation from the frame to the spacecraft frame (the C-matrix of a CK), with the angular velocity of the spacecraft relative to the frame, in the frame ([Attitude and kernels](#attitude-and-kernels)) |
-| `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc between impulses ([The stored states across an impulse](#the-stored-states-across-an-impulse)); positions and velocities only, never the covariance |
-| `AddPropagatedStates(params StateVector[])` | Add states to the stored states, each to the arc of its epoch, in ICRF; a propagation replaces them |
+| `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc, between impulses and between the windows given to `AddPropagatedStates` ([The stored states across an impulse](#the-stored-states-across-an-impulse)), an arc of one state refused (`ArgumentException`); positions and velocities only, never the covariance |
+| `AddPropagatedStates(params StateVector[])` | Add the states of one window to the stored states, in ICRF: one window per call, a new arc when it meets no stored arc, a read in the gap between two windows throwing ([The stored states across an impulse](#the-stored-states-across-an-impulse)); a propagation replaces them |
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
@@ -194,7 +194,8 @@ across the jump:
   an SPK) and GMAT's ephemeris give it. It interpolates the 8 states of that arc nearest to its epoch (Lagrange), in the
   order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. A read
   stays within the stored states: an epoch before the first or after the last throws `InvalidOperationException`, as a
-  read past the coverage of SPICE, where the 8-point polynomial was extrapolated without an error before 11.0.0 (567 km
+  read past the coverage of SPICE, and so does a read in a gap between the windows given to `AddPropagatedStates`
+  (#792, below), where the 8-point polynomial was extrapolated without an error before 11.0.0 (567 km
   off 6 min before the first state, 8 282 km 6 min after the last in LEO;
   [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
   2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light time, may lie up to
@@ -208,8 +209,21 @@ across the jump:
 - **In covariance mode** every stored state carries its covariance: the state before an impulse the covariance at its
   event, the state after it the covariance after the burn, the covariance of its execution error added
   (`ImpulseManeuver.ExecutionError`), a filled state that of its epoch.
-- **`AddPropagatedStates`** puts each state in the arc that holds its epoch (the later one at an impulse), replacing a
-  stored state of that arc at the same epoch; without stored states, they make one arc. A propagation, by every path,
+- **`AddPropagatedStates`** takes one window per call ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792),
+  decisions 42 and 83 to 87 of #668, decided by S. Guillet, 2026-11-23). When the hull of the epochs of a call, closed,
+  meets no stored arc (touching counts as meeting), its states make a new arc, inserted in time order; otherwise the arcs
+  it meets are merged where a gap separates them, so a call over the gap between two windows joins them (arcs that touch
+  at an impulse stay apart), and each state goes to the arc of its epoch among them (the later one at an impulse),
+  replacing a stored state of that arc at the same epoch. A gap inside the states of one call is not detected: give each
+  window its own call. The reads hold at every arc end the rule of the ends of the stored states: a read in a gap between
+  two windows throws `InvalidOperationException`, as a read outside them, the light time of a corrected read allowed
+  outside each arc (a corrected epoch in a gap within the light time of the arc after it reads that arc), and a window
+  argument that meets a gap (a field-of-view search, the `ILocalizable` overloads of the conjunction analysis) is refused
+  up front with `ArgumentException`. An arc of one state (a call of one state apart from every arc) is read at its exact
+  epoch only, any other read throwing as in a gap, and `WriteEphemeris` refuses it with `ArgumentException` (a segment
+  needs two epochs). Before 11.0.0 the states of every call joined the arc of their epoch, so the windows of two calls
+  made one arc read across the gap between them without an error (9.28e9 m off the two-body orbit 2 h 56 min into a gap
+  of 4 h between two windows of one hour at 60 s). A propagation, by every path,
   replaces every stored state, those added before it included: before 11.0.0 they were merged with the propagated ones.
   `TLEPropagator.Propagate` re-arms the spacecraft and stores its samples alone, in one arc (decision 38 of #668,
   decided by S. Guillet, 2026-11-23: before 11.0.0 it added them to the stored states).
@@ -572,7 +586,8 @@ search for a `+S` correction.
   built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), [Instrument](#instrument)).
 
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
-instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
+instrument's spacecraft or of a spacecraft target, which would be extrapolated, or meets a gap between the windows given
+to `AddPropagatedStates` ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792)) (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
 milliseconds about the Earth, which its propagated states allow, as for `GetEphemeris`:
 [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,

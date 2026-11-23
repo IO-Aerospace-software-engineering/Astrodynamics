@@ -141,7 +141,8 @@ internal static class FieldOfViewSearch
     /// after its end (transmission, XLT and XCN), which its propagated states allow (#527, decided by S. Guillet,
     /// 2026-11-17).
     /// </summary>
-    /// <exception cref="ArgumentException">The search window leaves the propagated states.</exception>
+    /// <exception cref="ArgumentException">The search window leaves the propagated states, or meets a gap between the
+    /// windows given to <see cref="Spacecraft.AddPropagatedStates"/> (#792).</exception>
     internal static void CheckCoverage(Spacecraft spacecraft, in Window searchWindow)
     {
         spacecraft.CheckInterpolatedStatesCover(searchWindow, "search window", nameof(searchWindow));

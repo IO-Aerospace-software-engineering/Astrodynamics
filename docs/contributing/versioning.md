@@ -6990,6 +6990,28 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   was dropped silently (1.0786e7 m from the template's own run after 3 h in the gap analysis), while the docs listed the
   campaign among the paths that run the chain (corrected). The fuel, payloads, axes, hard-body radius and COSPAR id the
   runs also drop are an issue of their own, fixed after lot L5. Migration: clear the plan of the template.
+- **Breaking: `Spacecraft.AddPropagatedStates` takes one window per call, and a read in the gap between two windows throws**
+  ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decisions 42 and 83 to 87, decided by S. Guillet, 2026-11-23): a call whose states span a hull, closed, that meets no
+  stored arc (touching counts as meeting) opens a new arc, inserted in time order; otherwise its states join the arcs
+  the hull meets, merged where a gap separates them (a call over the gap between two windows joins them; arcs that touch
+  at an impulse stay apart), each state the arc of its epoch among them, as before. A gap inside the states of one call
+  is not detected. `GetGeometricStateRelativeTo`, the short-circuit of `GetEphemeris` and every read through them throw
+  `InvalidOperationException` in a gap between two windows, as outside the stored states (#527), the light time of a
+  corrected read allowed outside each arc (a corrected epoch in a gap within the light time of the arc after it reads
+  that arc), and the window arguments of the field-of-view search and of the `ILocalizable` overloads of the
+  conjunction analysis throw `ArgumentException` when they meet a gap, as when they leave the states; an arc of one
+  state (a call of one state apart from every arc) is read at its exact epoch only, and `WriteEphemeris` keeps refusing
+  it with `ArgumentException`. Before, every state joined the arc of its epoch, so the windows of several calls made one
+  arc, read across the gaps without an error: 9.28e9 m off the two-body orbit 2 h 56 min into a gap of 4 h between two
+  windows of one hour at 60 s (`AddedStatesGapTests`, with the reads of each window, to the bit those of a spacecraft
+  holding it alone, and within 3.4e-4 m of the two-body orbit, Linux x64), and a TLE spacecraft sampled by
+  `TLEPropagator` and given later states interpolated across the gap where it now reads SGP4. A call within or touching
+  the stored states, a propagation and a `TLEPropagator` run are unchanged, bit for bit, as is every read inside the
+  stored states; one more read moves: a corrected read past the end of a propagation whose last impulse closes it
+  (the last arc of one state, #575), within the light time after the end, reads the arc before that impulse where it
+  returned the state after it unmoved. Migration: add each window in its own call, and the states between two windows
+  in one call that spans them to join them; one state per call opens an arc per state, read at its epoch only.
 
 **Removed**
 

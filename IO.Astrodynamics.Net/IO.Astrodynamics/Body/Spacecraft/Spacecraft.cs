@@ -740,7 +740,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// epoch itself being read within them.
         /// </remarks>
         /// <exception cref="InvalidOperationException">The spacecraft holds propagated states and <paramref name="epoch"/>
-        /// lies outside them, as a read past the coverage of SPICE.</exception>
+        /// lies outside them, as a read past the coverage of SPICE, or in a gap between the windows given to
+        /// <see cref="AddPropagatedStates"/> (#792), or beside an arc of one state.</exception>
         public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
         {
             return GetGeometricStateRelativeTo(epoch, referenceBody, 0.0);
@@ -768,10 +769,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Interpolate the arc of the epoch (#540), within the propagated states (#527)
-            CheckInsidePropagatedStates(epoch, margin);
+            // Interpolate the arc of the epoch (#540), within the propagated states (#527), never in a gap between added
+            // windows (#792)
+            var interpolated = _propagatedStates.InterpolateWithin(epoch, margin) ?? throw OutsidePropagatedStates(epoch, margin);
             var cb = (CelestialItem)_propagatedStates.First.Observer;
-            var interpolated = _propagatedStates.Interpolate(epoch);
 
             if (cb.NaifId == referenceBody.NaifId)
                 return new StateVector(interpolated.Position, interpolated.Velocity,
@@ -807,12 +808,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
 
             // Short-circuit: observer IS the CB, no aberration, have cached states, the epoch within them (#527: outside,
-            // the reference-body path throws for propagated states, and a TLE spacecraft sampled by TLEPropagator reads SGP4)
+            // or in a gap between added windows (#792), the reference-body path throws for propagated states, and a TLE
+            // spacecraft sampled by TLEPropagator reads SGP4)
             if (aberration == Aberration.None && _propagatedStates.Count >= 2
                                               && cb.NaifId == observer.NaifId && cb.NaifId != 0
-                                              && IsInside(_propagatedStates.Span, epoch, 0.0))
+                                              && _propagatedStates.InterpolateWithin(epoch, 0.0) is { } read)
             {
-                return _propagatedStates.Interpolate(epoch).ToFrame(frame);
+                return read.ToFrame(frame);
             }
 
             // Reference-body approach, a non-inertial frame at the epoch of its centre (#593)
@@ -841,7 +843,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </remarks>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
-        /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state.</exception>
+        /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state: a state given alone to
+        /// <see cref="AddPropagatedStates"/> apart from every arc (decision 87 of #668), the last arc of one state after an
+        /// impulse at the end of a propagation aside.</exception>
         /// <exception cref="InvalidOperationException">SPICE failed to unload the file it replaces (the reopening of the other
         /// loaded SPKs, on a deleted one SPICE holds under a relative name): the message is SPICE's, and the file is left on
         /// disk as it was, nothing written (#706: before, the failure was ignored and the file replaced).</exception>
@@ -888,7 +892,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates, from the first
-        /// to the last; null when it reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
+        /// to the last, the gaps between the windows given to <see cref="AddPropagatedStates"/> included (#792); null when it
+        /// reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
         /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or fewer than two states
         /// (the initial orbital parameters are then propagated in two-body motion to the epoch).
         /// </summary>
@@ -905,28 +910,19 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
         }
 
-        // Whether an epoch lies within a span of stored states, widened by margin seconds on each side and by one tick, the
-        // resolution of a Time a corrected epoch is rounded to
-        private static bool IsInside(Window? span, in Time epoch, double margin)
+        // The exception of a read outside the propagated states the spacecraft interpolates, widened by margin seconds (#527),
+        // or in a gap between them (#792)
+        private InvalidOperationException OutsidePropagatedStates(in Time epoch, double margin)
         {
-            if (span is not { } window) return false;
-            long slack = (long)System.Math.Ceiling(margin * TimeSpan.TicksPerSecond) + (margin > 0.0 ? 1 : 0);
-            var t = epoch.ToTDB();
-            return (t - window.StartDate.ToTDB()).Ticks >= -slack && (window.EndDate.ToTDB() - t).Ticks >= -slack;
+            return new InvalidOperationException(
+                $"The epoch {epoch.ToTDB()} lies outside the propagated states of {Name}, {DescribeStoredWindows()}" +
+                (margin > 0.0 ? $" widened by the light time, {margin:R} s" : "") +
+                ": they would be extrapolated. Read the spacecraft within its propagation window, or propagate it over the epochs read.");
         }
 
-        // Throws for an epoch outside the propagated states the spacecraft interpolates, widened by margin seconds (#527)
-        private void CheckInsidePropagatedStates(in Time epoch, double margin)
-        {
-            var span = _propagatedStates.Span;
-            if (!IsInside(span, epoch, margin))
-            {
-                throw new InvalidOperationException(
-                    $"The epoch {epoch.ToTDB()} lies outside the propagated states of {Name}, [{span?.StartDate.ToTDB()}, {span?.EndDate.ToTDB()}]" +
-                    (margin > 0.0 ? $" widened by the light time, {margin:R} s" : "") +
-                    ": they would be extrapolated. Read the spacecraft within its propagation window, or propagate it over the epochs read.");
-            }
-        }
+        // The windows of the stored states, as [start, end] in TDB, separated by commas
+        private string DescribeStoredWindows() =>
+            string.Join(", ", _propagatedStates.Windows.Select(w => $"[{w.StartDate.ToTDB()}, {w.EndDate.ToTDB()}]"));
 
         // The initial state of a kernel-backed spacecraft relative to its centre of motion, the Earth by default (#620); the
         // identifier and the clock checked before the read (#676)
@@ -941,25 +937,25 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Throws when a window leaves the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates,
-        /// which would be extrapolated (#527); nothing to check without such states (<see cref="InterpolatedStatesWindow"/>).
+        /// which would be extrapolated (#527), or meets a gap between the windows given to <see cref="AddPropagatedStates"/>
+        /// (decision 86 of #668, #792, decided by S. Guillet, 2026-11-23): the window must lie within one run of arcs that
+        /// touch; nothing to check without such states (<see cref="InterpolatedStatesWindow"/>).
         /// </summary>
         /// <param name="window">The window read.</param>
         /// <param name="description">What the window is, for the message.</param>
         /// <param name="paramName">The parameter of the window.</param>
-        /// <exception cref="ArgumentException">The window leaves the propagated states.</exception>
+        /// <exception cref="ArgumentException">The window leaves the propagated states or meets a gap between them.</exception>
         internal void CheckInterpolatedStatesCover(in Window window, string description, string paramName)
         {
-            if (InterpolatedStatesWindow is not { } states)
+            if (InterpolatedStatesWindow is null)
             {
                 return;
             }
 
-            var start = window.StartDate.ToTDB();
-            var end = window.EndDate.ToTDB();
-            if ((start - states.StartDate.ToTDB()).Ticks < 0 || (states.EndDate.ToTDB() - end).Ticks < 0)
+            if (!_propagatedStates.Covers(window))
             {
                 throw new ArgumentException(
-                    $"The {description} [{start}, {end}] leaves the propagated states of {Name}, [{states.StartDate.ToTDB()}, {states.EndDate.ToTDB()}]: they would be extrapolated.",
+                    $"The {description} [{window.StartDate.ToTDB()}, {window.EndDate.ToTDB()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.",
                     paramName);
             }
         }
@@ -988,8 +984,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         internal PropagationForceModel LastForceModel { get; set; }
 
         /// <summary>
-        /// Adds states to the stored states, each to the arc that holds its epoch (the later one at an impulse of the last
-        /// propagation), replacing a stored state of that arc at the same epoch; without stored states they make one arc.
+        /// Adds the states of one window to the stored states: one window per call (decisions 42 and 83 to 87 of #668, #792,
+        /// decided by S. Guillet, 2026-11-23). When the hull of their epochs, closed, meets no stored arc (touching counts as
+        /// meeting), they make a new arc, inserted in time order; otherwise the arcs it meets are merged where a gap separates
+        /// them, so a call over the gap between two windows joins them (arcs that touch at an impulse stay apart), and each
+        /// state joins the arc of its epoch among them (the later one at an impulse), replacing a stored state of that arc at
+        /// the same epoch. A gap inside the states of one call is not detected: give each window its own call. A read in a
+        /// gap between two windows throws as a read outside the stored states (<see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/>),
+        /// the light time of a corrected read allowed outside each arc, and a window argument that meets a gap is refused;
+        /// an arc of one state reads at its exact epoch only, and <see cref="WriteEphemeris"/> refuses it. Before 11.0.0
+        /// every state joined the arc of its epoch, so two windows made one arc read across the gap between them.
         /// They are kept in ICRF, the frame of the readers (#535). Every propagation replaces every stored state, those
         /// added before it included, on every path (11.0.0, #540: they were merged with the propagated ones before), and so
         /// does a <see cref="TLEPropagator"/> run, which re-arms the spacecraft and stores its samples alone (decision 38 of

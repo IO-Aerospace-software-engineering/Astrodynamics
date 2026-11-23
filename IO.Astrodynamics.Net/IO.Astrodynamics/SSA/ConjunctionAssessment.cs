@@ -202,7 +202,8 @@ public static class ConjunctionAssessment
     /// <see cref="EncounterQualityFlags.TcaAtWindowEnd"/> (#621: the window midpoint before 11.0.0).
     /// </returns>
     /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
-    /// propagated secondary spacecraft, which would be extrapolated (#527); the secondary object has the NAIF identifier of
+    /// propagated secondary spacecraft, which would be extrapolated (#527), or meets a gap between the windows given to its
+    /// <see cref="Spacecraft.AddPropagatedStates"/> (#792); the secondary object has the NAIF identifier of
     /// the protected spacecraft, or <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> differs from the
     /// hard-body radius the secondary spacecraft gives (#683).</exception>
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
@@ -293,7 +294,8 @@ public static class ConjunctionAssessment
     /// none (#621: a single encounter at the window midpoint before 11.0.0).
     /// </returns>
     /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
-    /// propagated secondary spacecraft, which would be extrapolated (#527); the secondary object has the NAIF identifier of
+    /// propagated secondary spacecraft, which would be extrapolated (#527), or meets a gap between the windows given to its
+    /// <see cref="Spacecraft.AddPropagatedStates"/> (#792); the secondary object has the NAIF identifier of
     /// the protected spacecraft, or <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> differs from the
     /// hard-body radius the secondary spacecraft gives (#683).</exception>
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
