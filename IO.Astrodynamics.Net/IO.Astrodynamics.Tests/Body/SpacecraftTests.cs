@@ -348,7 +348,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             Assert.Equal(327.77777777777777, spc.GetTotalISP());
             Assert.Equal(90.0, spc.GetTotalFuelFlow());
-            Assert.Equal(8000.0, spc.GetTotalFuel());
+            Assert.Equal(8000.0, spc.GetInitialFuel());
         }
 
         [Fact]

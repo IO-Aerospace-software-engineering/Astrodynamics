@@ -228,7 +228,11 @@ The maneuvers of the plan run as a chain:
    of the propagation is not executed, and the chain stops there.
 
 Every executed maneuver, attitudes included, is in `Spacecraft.ExecutedManeuvers`, once, in the order of the chain
-(#570).
+(#570): a new read-only list at each run, replaced by a new list at each execution (decision 58 of #668), so a list held from an
+earlier run keeps its members; their values (`DeltaV`, `FuelBurned`, the windows) are those of the last run. The record
+of each, with the values of its run, is on the solution, `PropagationSolution.Maneuvers`, one sealed `ExecutedManeuver`
+per executed maneuver (decision 57, [Propagators](propagators.md#the-executed-maneuvers)), and a scenario's
+`SpacecraftSummary` is built from them (decision 59).
 
 A chain is a list: a maneuver appears in it once, and a repeated burn is a new maneuver object (#585). Each maneuver
 keeps one record (its windows, `DeltaV`, `FuelBurned`), so a maneuver met twice would lose the first. A cycle is

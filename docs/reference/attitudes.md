@@ -194,7 +194,9 @@ Every law is sampled on the solution once the integration is done: at its activa
 attitude on the state of the solution there, or the law itself when it resumes), at each output epoch of its interval, and once more
 1 µs before the change that ends it. No value is a sentinel: an attitude that is exactly the identity is recorded like
 any other rotation, and the identity of ICRF is the attitude before the first activation. The executed attitudes,
-leading, chained and trailing, are in `Spacecraft.ExecutedManeuvers` with the impulses (#570).
+leading, chained and trailing, are in `Spacecraft.ExecutedManeuvers` with the impulses (#570), and each has its record
+on the solution, `PropagationSolution.Maneuvers`: its activation as `Epoch`, a thrust window of zero length there, its
+maneuver window, no delta-V and no fuel, the mass unchanged (decision 57 of #668).
 
 Before 11.0.0 the leading attitudes all executed on the initial state, the last one sampled at every output; an
 attitude chained after an impulse was computed once on the state of the event and held inertially, the leading attitude

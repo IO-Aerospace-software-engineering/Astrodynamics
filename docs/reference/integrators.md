@@ -11,6 +11,14 @@ Integrators advance spacecraft state through time under configured force models.
 
 `IntegrationResult` contains the completed `PropagationSegment` and optional event information (`EventInfo`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
 
+A custom integrator collects the `AcceptedStep` values of its segment and builds the segment once, with
+`new PropagationSegment(baseEpoch, steps)`, which copies them, or `new PropagationSegment(baseEpoch)` for a segment of no
+step (decision 55 of #668, decided by S. Guillet, 2026-11-23,
+[#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796)): a segment cannot be changed from
+outside the library, its `AddStep`, its constructor with a step count, its Hermite interpolation and the
+`UpdateStateVector` of `Integrator` being internal since 11.0.0, so a published solution cannot be changed. Before, an
+integrator filled the segment with the public `AddStep`, which also extended a published solution.
+
 The `duration` of `IntegrateSegment`, `PropagationSegment.Duration`, the `CumulativeTime` and `StepSize` of an
 `AcceptedStep` and the time of an event count the seconds of the time argument of the propagation: TT about the Earth,
 TDB about any other central body ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501),
@@ -34,12 +42,12 @@ propagator between its segments, never inside one.
 
 ## AcceptedStep
 
-Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (`PropagationSegment.InterpolateAt`), which is exact at the step ends only.
+Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (internal since 11.0.0), which is exact at the step ends only.
 
 Between the steps, the states of a propagation depend on the integrator:
 
 - **Velocity-Verlet**: cubic Hermite interpolation of the accepted step.
-- **RK7(8)**: a shortened RK7(8) step from the start of the accepted step that contains the epoch, with the accuracy of the integrator. The cubic Hermite interpolation is off by up to about 100 m in LEO at the default tolerance, because its error grows as the fourth power of the step size (#363). The output states, `PropagationSolution.InterpolateAt`, the location of the events and the state the propagation restarts from after a maneuver all use the shortened step.
+- **RK7(8)**: a shortened RK7(8) step from the start of the accepted step that contains the epoch, with the accuracy of the integrator. The cubic Hermite interpolation is off by up to about 100 m in LEO at the default tolerance, because its error grows as the fourth power of the step size (#363). The output states, `PropagationSolution.GetStateVector`, the location of the events and the state the propagation restarts from after a maneuver all use the shortened step.
 
 ## VVIntegrator
 

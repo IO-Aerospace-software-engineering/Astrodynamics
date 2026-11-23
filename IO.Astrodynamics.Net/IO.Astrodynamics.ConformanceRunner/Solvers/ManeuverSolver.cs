@@ -128,7 +128,9 @@ public class ManeuverSolver : ICategorySolver
             Add(outputs, label, "mass_after_kg", mass);
         }
 
-        var (finalPos, finalVel) = solution.InterpolateAt(propagationCase.Window.EndDate);
+        // The public reader of a solution (decision 54 of #668: InterpolateAt is internal; the same state, bit for bit)
+        var final = solution.GetStateVector(propagationCase.Window.EndDate);
+        var (finalPos, finalVel) = (final.Position, final.Velocity);
         outputs["final_x_km"] = UnitConversion.MToKm(finalPos.X);
         outputs["final_y_km"] = UnitConversion.MToKm(finalPos.Y);
         outputs["final_z_km"] = UnitConversion.MToKm(finalPos.Z);

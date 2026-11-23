@@ -112,6 +112,10 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddFuelTank(FuelTank)` | Add fuel tank (a burn that needs more fuel than its tank holds throws `InsufficientFuelException`, an `InvalidOperationException` since 11.0.0, with `RequiredMass` and `AvailableMass` in kg); a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
+| `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run, the sum of their initial quantities, the child's tanks aside (decision 60 of #668, decided by S. Guillet, 2026-11-23; `GetTotalFuel` before 11.0.0, the same value) |
+| `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks, the sum of their quantities: what the last run left |
+| `GetTotalISP()`, `GetTotalFuelFlow()` | The specific impulse of the engines fired together (Σ thrust / g0 / Σ fuel flow) and their total fuel flow, every engine counted whatever its tank holds ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801), decision 60: before 11.0.0 the engines of a tank empty at the start were left out, so a spacecraft whose tanks were all empty had a NaN specific impulse) |
+| `ExecutedManeuvers` | The maneuvers the last run executed, attitudes included, in execution order: a new read-only list at each run, empty at the re-arm and replaced by a new list at each maneuver the run executes, so a list once read never changes (decision 58 of #668); the definitions, whose values are those of their last run: the stable values of a run are its records, `PropagationSolution.Maneuvers` |
 | `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an engine whose tank is not the spacecraft's or a target orbit in another frame, so the tanks, engines and initial orbit come first; the run checks again (`InvalidOperationException`) ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it, whatever a run executed; empty for none |
 | `Propagate(Window, PropagationOptions)` | Propagate the orbit with the settings of the options, RK7(8) at 1e-9 about the central body alone every 60 s by default ([Propagation Options](propagators.md#propagation-options); 11.0.0, R06 of #668) |
@@ -126,7 +130,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator` and a `CentralBodyPropagator`
 built directly), starts the maneuver chain again from its
-head, the first maneuver of the plan `SetManeuvers` set: it refuels the tanks, clears `ExecutedManeuvers`, the stored states, the
+head, the first maneuver of the plan `SetManeuvers` set: it refuels the tanks, swaps in an empty `ExecutedManeuvers` (the run's own list swapped in when it ends, decision 58 of #668), drops the stored states, the
 attitude record (whatever `IsPropagated` says, those added by hand included, decision 38 of #668), the windows of the
 maneuvers and the gates of the previous propagation (#573), and the spacecraft is then `IsPropagated`.
 `MonteCarloPropagator` runs no plan: it propagates spacecraft built from the template's orbit, dry mass, area and
@@ -191,7 +195,7 @@ across the jump:
   epochs: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the impulse at that last epoch.
 - **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
-  so that at an impulse it gives the state after it, as `PropagationSolution.InterpolateAt`, SPICE (the later segment of
+  so that at an impulse it gives the state after it, as `PropagationSolution.GetStateVector`, SPICE (the later segment of
   an SPK) and GMAT's ephemeris give it. It interpolates the 8 states of that arc nearest to its epoch (Lagrange), in the
   order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. A read
   stays within the stored states: an epoch before the first or after the last throws `InvalidOperationException`, as a

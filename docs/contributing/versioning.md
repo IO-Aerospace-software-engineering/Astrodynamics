@@ -340,6 +340,21 @@ release are listed under **Known limitations**.
   in the frame of the state, `ComputeStateOrientation` the rotation from the spacecraft frame to ICRF, the state rotated
   to ICRF first. At the same state they equal the execution a run makes, bit for bit (`ManeuverPreviewTests`: the seven
   library impulses, ECLIPJ2000, a state about the Moon; the attitude record at an activation, 0 rad, both integrators).
+- **`PropagationSolution.Maneuvers` and `ExecutedManeuver`** (lot L5a, R09 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 57, decided by S. Guillet,
+  2026-11-23): one sealed record per maneuver the run executed, attitudes included, in execution order: `Definition`,
+  `Epoch` (the TDB label of the event of an impulse, or the activation of an attitude), the unclipped `ThrustWindow`,
+  `ManeuverWindow`, `DeltaV` in the frame of the solution (zero for an attitude), `FuelBurned`, `MassBefore` and
+  `MassAfter` (`GetTotalMass`, the child included), built by the propagation only. They keep the values of their run,
+  where the definitions hold those of their last run only, reset by the next run's re-arm; empty for a `TLEPropagator`
+  solution (`ExecutedManeuverRecordTests`: the definitions as the run left them, the segment an impulse opens at its
+  epoch with its delta-V, the rocket equation of the mass before, on `Spacecraft.Propagate`, a reused
+  `CentralBodyPropagator`, a batch and a scenario, both integrators, ICRF, ECLIPJ2000 and SSB mode, values unchanged by
+  a later run). No value of a run moves.
+- **`Spacecraft.GetInitialFuel()` and `GetRemainingFuel()`** (lot L5a, R09 of #668, decision 60): the fuel of the
+  spacecraft's own tanks at the start of a run, the value of `GetTotalFuel` (under **Removed**), and the fuel the last
+  run left in them, the child's tanks aside.
+- **`PropagationSegment(Time, IEnumerable<AcceptedStep>)`** (lot L5a, decision 55 of #668): the segment of an integrator
+  implemented outside the library, built once from its steps, which it copies (under **Changed**).
 **Fixed**
 
 - **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
@@ -4551,6 +4566,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ComputeEventValue` locked the node of a `PlaneAlignmentManeuver` and wrote the intersection of an
   `ApsidalAlignmentManeuver`. The first two are internal, `ComputeEventValue` is pure on every library maneuver, and the
   previews are `ComputeDeltaV` and `ComputeStateOrientation` (under **Added**, **Changed**).
+- **A published propagation solution could be changed from outside the library** ([#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796), lot L5a, decision 55 of
+  #668): `PropagationSegment.AddStep`, `PropagationSolution.AddSegment` and `SetOutputStates` were public, and
+  `Segments`, `StateVectors` and `Steps` returned the inner list or array, so a caller could add a step to a solution the
+  spacecraft keeps for the conjunction analysis (`LastPropagation`), widening its window (a read at its end + 5000 s
+  accepted where it threw), or replace an output state through a cast; `Integrator.UpdateStateVector` let a subclass
+  rewrite any state in place. They are internal and the collections read-only views, allocated once (under
+  **Changed**; `RunResultsSurfaceTests`).
+- **`Spacecraft.GetTotalISP()` was NaN when no engine had fuel at the start** ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801), lot L5a, decision 60 of #668):
+  the engines of a tank whose initial quantity was not above 0 (an initial quantity of NaN, which the tank accepted
+  until lot L5b) were left out, so a spacecraft with none left had 0 / 0, and so the fuel cost of an avoidance option and
+  its trial mass; every engine now counts (`RunResultsSurfaceTests.GetTotalISP_IsFinite_WhenNoEngineHasFuel`, red
+  before the change). A tank of a positive quantity, the only one the constructor accepted otherwise, was never left
+  out, so no other value moves. The avoidance trial spacecraft lighter than its dry mass, which an empty tank makes
+  routine, is fixed after lot L5 (its own issue).
+- **A list of executed maneuvers or a scenario summary held by a caller changed with the next run** (lot L5a,
+  decisions 58 and 59 of #668): `Spacecraft.ExecutedManeuvers` was a live set the next run emptied (measured 1 to 0 in
+  the gap analysis of L5), and `SpacecraftSummary.Maneuvers` held the definitions, whose `DeltaV`, `FuelBurned` and
+  windows the next run reset (258.818 m/s and 92.637 kg read 0 after a run that reached no burn). A run now swaps in
+  new lists, and the summary holds the records of its run (under **Changed**; `RunResultsSurfaceTests`,
+  `ExecutedManeuverRecordTests`).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -7081,6 +7116,63 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2026-11-23): `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow`, `MinimumEpoch`, the node of a
   `PlaneAlignmentManeuver` and the hold of a `PhasingManeuver` hold the values of the last run that executed the
   maneuver, cleared by the re-arm of the next run, documented in [Impulse Maneuvers](../reference/impulse-maneuvers.md#maneuver-plan).
+- **Breaking: `PropagationSolution.InterpolateAt` is internal** (lot L5a, R09 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 54, decided by S.
+  Guillet, 2026-11-23; choice 8 of the re-baseline): the one public reader of a solution is `GetStateVector`, which
+  returns a `StateVector` about `Observer` in `Frame` and throws `ArgumentOutOfRangeException` outside `Window`, where
+  `InterpolateAt` returned an unnamed tuple and clamped to the first or last state. Inside the window the state is that
+  of `InterpolateAt`, bit for bit; in covariance mode `GetStateVector` also computes the covariance, about 4 times the
+  cost of the state alone. The library's readers that rely on the clamp (the outputs, the attitude samples, the
+  conjunction analysis) keep the internal method; the conformance runner reads `GetStateVector`, its report bit for
+  bit that of before (201 of 201 cases, every delta equal). Migration:
+  `var s = solution.GetStateVector(epoch); var (position, velocity) = (s.Position, s.Velocity);` for
+  `var (position, velocity) = solution.InterpolateAt(epoch);`, with an epoch inside `solution.Window`.
+- **Breaking: a `PropagationSegment` cannot be changed from outside the library** (lot L5a, decision 55 of #668, option
+  D, [#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796)): its constructors are `PropagationSegment(Time baseEpoch)` and `PropagationSegment(Time baseEpoch,
+  IEnumerable<AcceptedStep> steps)`, which copies the steps; `AddStep`, the constructor with a step count,
+  `InterpolateAt(double)` and `HermiteInterpolate` are internal, and `Steps` is a read-only view (a cast to
+  `List<AcceptedStep>` fails, and its `IList` indexer and `Add` throw `NotSupportedException`). `IIntegrator` stays an
+  extension point. Migration: an integrator implemented outside the library collects its `AcceptedStep` values and
+  returns `new PropagationSegment(baseEpoch, steps)` in its `IntegrationResult`; the state of a solution between steps
+  is `GetStateVector`.
+- **Breaking: the constructor and mutators of `PropagationSolution` are internal** (lot L5a, R09 of #668, decision 55
+  and section A of the re-baseline, choice 5): `new PropagationSolution()`, `AddSegment` and `SetOutputStates`;
+  `Segments` and `StateVectors` are read-only views (`StateVectors` was the array itself), and so is the new
+  `Maneuvers`. `IPropagator` stays public, documented as implemented by the library and by `PropagatorBase` subclasses,
+  which build their own solution. Migration: an `IPropagator` implemented outside the library subclasses
+  `PropagatorBase`, or returns the solution of a library propagator it delegates to; a solution built by hand (a straight
+  line for the conjunction analysis) has no public equivalent in 11.0.0.
+- **Breaking: `Integrator.UpdateStateVector` is internal** (lot L5a, decision 55 of #668, [#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796)): it was
+  `protected internal static` on a class a caller can derive from, the one way outside the library to rewrite a
+  `StateVector` in place, a published solution's or the stored states included. Migration: none in the library's
+  integrators; a subclass builds new states.
+- **Breaking: `PropagationSolution.CovariancePropagation` is `CovariancePropagationOptions.None` when the propagation
+  propagated neither Φ nor the covariance** (lot L5a, R09 of #668, decision 56, decided by S. Guillet, 2026-11-23), on
+  every path, a `TLEPropagator` solution included; it was null, while `Options.CovariancePropagation` was `None`. A
+  caller's `solution.CovariancePropagation == null` still compiles but is now always false, which the compiler does not
+  catch. Migration: test `solution.CovariancePropagation.Mode == CovariancePropagationMode.None`.
+- **Breaking: `Spacecraft.ExecutedManeuvers` is an `IReadOnlyList<Maneuver>`, a new list at each run** (lot L5a, R09 of
+  #668, decision 58, decided by S. Guillet, 2026-11-23): an `IReadOnlyCollection` before, a live set that the next run
+  emptied. The re-arm of a run swaps in an empty list, and each maneuver the run executes swaps in a new list that adds
+  it, in execution order, so a list once read never changes (a read-only view; a cast cannot write it): a list held
+  from an earlier run keeps its members, a reader on another thread during a run sees the maneuvers executed so far,
+  and a stopped run leaves those executed up to the stop (C2 of lot L4). It holds the definitions, whose values are those of their last run: the stable values of a run are its
+  records, `PropagationSolution.Maneuvers`. Until the fix of
+  [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794) (decision 44, after lot L5), a
+  stopped run's list also holds an attitude chained before the stop whose activation the run never reached. Migration:
+  a binary break only (recompile); index the list for the order of execution.
+- **Breaking: `SpacecraftSummary` is sealed, built from the records of the run** (lot L5a, R09 of #668, decision 59,
+  decided by S. Guillet, 2026-11-23): its constructor is internal (`Scenario.Simulate` builds it from the solution of each
+  spacecraft), `Maneuvers` is an `IReadOnlyList<ExecutedManeuver>` (the definitions, an `IEnumerable<Maneuver>`,
+  before), and `FuelConsumption` and `ManeuverWindow` are the sum and the hull of the records, bit for bit those of
+  before (the hull computed directly, with the tie-break of `Window.Merge`); its file is `SpacecraftSummary.cs`.
+  `ScenarioSummary.SpacecraftSummaries` is an `IReadOnlyList<SpacecraftSummary>` in scenario order (an
+  `IReadOnlyCollection` of a set before). Migration: `summary.Maneuvers[i].Definition` for the maneuver, and the record's
+  own `DeltaV`, `FuelBurned` and windows for the values of the run; index `SpacecraftSummaries`.
+- **Breaking: `Spacecraft.GetTotalISP()` and `GetTotalFuelFlow()` count every engine** (lot L5a, R09 of #668, decision
+  60, decided by S. Guillet, 2026-11-23, [#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801)): before, the engines of a tank whose initial quantity was not above 0
+  were left out. On a spacecraft that mixes an empty tank (lot L5b) and a full one the mean takes in the engines that
+  cannot fire (engines of 300 s at 10 kg/s and 200 s at 30 kg/s: 225 s, where the filter gave 300 s), so the fuel cost
+  of an avoidance option rises with it. Migration: none; a tank of a positive quantity was never left out.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -7274,6 +7366,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   same rotation (0 rad, `ManeuverPreviewTests`).
 - **`Attitude.Execute`** (protected, lot L5a, decision 48 of #668): an attitude changes no velocity, and `Execute` is on
   `ImpulseManeuver`. Migration: none; an `Attitude` subclass overrides `ComputeOrientation`.
+- **`Spacecraft.GetTotalFuel()`** (lot L5a, R09 of #668, decision 60, decided by S. Guillet, 2026-11-23): it returned
+  the initial fuel whatever a run burnt. Migration: `GetInitialFuel()`, the same value, or `GetRemainingFuel()` for the
+  fuel left.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is

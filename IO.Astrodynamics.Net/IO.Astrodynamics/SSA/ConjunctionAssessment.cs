@@ -508,7 +508,9 @@ public static class ConjunctionAssessment
 
             _secondarySource = CreateLocalizableStateSource(encounterCase.SecondaryObject, observer);
             var secondary = encounterCase.SecondaryCovariance;
-            var secondaryPropagation = secondary?.Source == CovarianceSource.Propagated ? secondary.Solution.CovariancePropagation : null;
+            var secondaryPropagation = secondary?.Source == CovarianceSource.Propagated && secondary.Solution.CovariancePropagation.IsActive
+                ? secondary.Solution.CovariancePropagation
+                : null;
             _secondaryResolver = new EncounterCovarianceResolver(encounterCase.SecondaryObject, _secondarySource.Solution,
                 secondaryPropagation, _end);
         }
@@ -661,7 +663,7 @@ public static class ConjunctionAssessment
         {
             var covariance = encounterCase.ProtectedCovariance;
             if (covariance?.Source != CovarianceSource.Propagated || covariance.Solution?.Dynamics?.Integrator == null ||
-                covariance.Solution.CovariancePropagation == null)
+                !covariance.Solution.CovariancePropagation.IsActive)
             {
                 return null;
             }

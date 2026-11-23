@@ -347,7 +347,7 @@ public class AttitudeTimelineEdgeTests
         }
 
         // The summary: the merged windows and the fuel of the rules
-        var summary = run.Spacecraft.GetSummary();
+        var summary = run.Summary;
         var windows = m.Expected.Executed.Select(x => m.Expected.Windows[x].Maneuver).ToArray();
         var start = windows.Min(x => x.StartDate);
         var end = windows.Max(x => x.EndDate);
@@ -482,7 +482,7 @@ public class AttitudeTimelineEdgeTests
         var orbit = new KeplerianElements((ra + rp) / 2.0, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, body, start, Frame.ICRF);
         var (spacecraft, prograde, nadir) = ProgradeThenNadir(body, start, minimum, 60.0, orbit);
         IntegratorOptions propagator = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
-        spacecraft.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [body], CovariancePropagation = CovariancePropagationOptions.None });
+        var solution = spacecraft.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [body], CovariancePropagation = CovariancePropagationOptions.None });
 
         var activation = prograde.ThrustWindow!.Value.StartDate;
         var end = prograde.ManeuverWindow!.Value.EndDate;
@@ -497,7 +497,7 @@ public class AttitudeTimelineEdgeTests
         LabelAssert.Equal(end, nadir.ThrustWindow.Value.StartDate);
         Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, nadir.ThrustWindow.Value.StartDate.Scale);
         Assert.True(System.Math.Abs(hold - 60.0) <= TimelineRules.RuleBound, $"hold {hold:R} s");
-        var summary = spacecraft.GetSummary();
+        var summary = new SpacecraftSummary(spacecraft, solution.Maneuvers);
         LabelAssert.Equal(activation, summary.ManeuverWindow!.Value.StartDate);
     }
 

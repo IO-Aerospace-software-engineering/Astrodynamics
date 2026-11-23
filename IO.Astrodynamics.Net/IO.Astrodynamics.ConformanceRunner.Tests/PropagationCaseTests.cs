@@ -155,9 +155,10 @@ public class PropagationCaseTests
         // step of the case (30 s), as the solver did before #426
         CaseInput Case() => Parse(KeplerianOrbit, Geopotential10, "[\"Moon\", \"Sun\"]", NoForces);
         var reference = PropagationCase.Build(Case(), KernelsPath);
-        var (position, velocity) = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
+        var final = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
                 PropagatorSolver.Options(reference, reference.StepSize))
-            .Propagate().InterpolateAt(reference.Window.EndDate);
+            .Propagate().GetStateVector(reference.Window.EndDate);
+        var (position, velocity) = (final.Position, final.Velocity);
 
         // Act
         var computed = new PropagatorSolver(null, KernelsPath).Solve(Case());

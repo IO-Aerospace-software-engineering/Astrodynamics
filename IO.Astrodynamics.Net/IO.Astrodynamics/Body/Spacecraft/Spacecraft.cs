@@ -52,8 +52,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Vector3 BodyLeft => BodyRight.Inverse();
         public Vector3 BodyDown => BodyUp.Inverse();
 
-        private readonly HashSet<Maneuver.Maneuver> _executedManeuvers = new HashSet<Maneuver.Maneuver>();
-        public IReadOnlyCollection<Maneuver.Maneuver> ExecutedManeuvers => _executedManeuvers;
+        private static readonly IReadOnlyList<Maneuver.Maneuver> NoManeuver = Array.AsReadOnly(Array.Empty<Maneuver.Maneuver>());
+
+        // The maneuvers the last run executed, in execution order: never changed once published, replaced as a whole
+        private IReadOnlyList<Maneuver.Maneuver> _executedManeuvers = NoManeuver;
+
+        /// <summary>
+        /// The maneuvers the last run executed, attitudes included, in execution order: a new read-only list at each run
+        /// (decision 58 of #668, decided by S. Guillet, 2026-11-23). The re-arm of a run swaps in an empty list, and each
+        /// maneuver the run executes swaps in a new list that adds it, so a list once read never changes: a list held from
+        /// an earlier run keeps its members, a reader on another thread during a run sees the maneuvers executed so far, and
+        /// a stopped run leaves those executed up to the stop (C2 of lot L4). It lists the definitions, whose values
+        /// (<c>DeltaV</c>, <c>FuelBurned</c>, the windows) are those of their last run, reset by the next one (decision 52):
+        /// the stable values of a run are its records, <see cref="PropagationSolution.Maneuvers"/>. Before 11.0.0 it was a
+        /// live set that the next run emptied. Until the fix of #794, a stopped run lists an attitude chained before the stop
+        /// whose activation it never reached.
+        /// </summary>
+        public IReadOnlyList<Maneuver.Maneuver> ExecutedManeuvers => Volatile.Read(ref _executedManeuvers);
         /// <summary>
         /// The maneuver of the chain in standby during a run: the head of the plan before it, the next one to fire as it
         /// runs. Internal since 11.0.0 (decision 45 of #668, decided by S. Guillet, 2026-11-23): it is run state; the plan
@@ -566,31 +581,43 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Get total ISP of this spacecraft
+        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of their thrusts over g0 and over
+        /// the sum of their fuel flows (<see cref="GetTotalFuelFlow"/>), every engine counted whatever its tank holds
+        /// (decision 60 of #668, decided by S. Guillet, 2026-11-23, #801: before 11.0.0 the engines of a tank with no fuel at
+        /// the start were left out, so a spacecraft whose tanks were all empty had 0 / 0, NaN). On a spacecraft that mixes
+        /// an empty tank and a full one the mean takes in the engines that cannot fire. NaN without an engine.
         /// </summary>
-        /// <returns></returns>
         public double GetTotalISP()
         {
-            return (Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.Thrust) / Constants.g0) /
-                   GetTotalFuelFlow();
+            return (Engines.Sum(x => x.Thrust) / Constants.g0) / GetTotalFuelFlow();
         }
 
         /// <summary>
-        /// Get total fuel flow of this spacecraft
+        /// The sum of the fuel flows of the engines of the spacecraft, kg/s, every engine counted whatever its tank holds
+        /// (decision 60 of #668, #801).
         /// </summary>
-        /// <returns></returns>
         public double GetTotalFuelFlow()
         {
-            return Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.FuelFlow);
+            return Engines.Sum(x => x.FuelFlow);
         }
 
         /// <summary>
-        /// Get total fuel of this spacecraft
+        /// The fuel of the spacecraft's own tanks at the start of a run, kg: the sum of their initial quantities, the child
+        /// spacecraft's tanks aside (decision 60 of #668, decided by S. Guillet, 2026-11-23; <c>GetTotalFuel</c> before
+        /// 11.0.0, the same value).
         /// </summary>
-        /// <returns></returns>
-        public double GetTotalFuel()
+        public double GetInitialFuel()
         {
             return FuelTanks.Sum(x => x.InitialQuantity);
+        }
+
+        /// <summary>
+        /// The fuel left in the spacecraft's own tanks, kg: the sum of their quantities, what the last run left (the initial
+        /// fuel before any run and after the re-arm of the next), the child spacecraft's tanks aside (decision 60 of #668).
+        /// </summary>
+        public double GetRemainingFuel()
+        {
+            return FuelTanks.Sum(x => x.Quantity);
         }
 
         /// <summary>
@@ -701,7 +728,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             if (StandbyManeuver != null)
             {
-                _executedManeuvers.Add(StandbyManeuver);
+                // A new list that adds it, swapped in: a list once read never changes (decision 58 of #668)
+                var executed = Volatile.Read(ref _executedManeuvers);
+                var next = new Maneuver.Maneuver[executed.Count + 1];
+                for (int i = 0; i < executed.Count; i++)
+                {
+                    next[i] = executed[i];
+                }
+
+                next[^1] = StandbyManeuver;
+                Volatile.Write(ref _executedManeuvers, Array.AsReadOnly(next));
             }
 
             StandbyManeuver = maneuver;
@@ -737,15 +773,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public StateOrientation GetOrientation(Frame referenceFrame, in Time epoch)
         {
             return referenceFrame.ToFrame(Frame, epoch);
-        }
-
-        /// <summary>
-        /// Get spacecraft summary
-        /// </summary>
-        /// <returns></returns>
-        internal SpacecraftSummary GetSummary()
-        {
-            return new SpacecraftSummary(this, _executedManeuvers);
         }
 
         /// <summary>
@@ -1266,7 +1293,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
             LastForceModel = null;
             DropStoredStatesAndAttitudes();
 
-            _executedManeuvers.Clear();
+            // A new list for the run, empty until it executes a maneuver (decision 58 of #668)
+            Volatile.Write(ref _executedManeuvers, NoManeuver);
             foreach (var fuelTank in FuelTanks)
             {
                 fuelTank.Refuel();

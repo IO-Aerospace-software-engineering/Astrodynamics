@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
@@ -10,12 +11,18 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
-/// One continuous propagation arc (no discontinuities).
-/// Stores accepted integration steps and provides cubic Hermite interpolation.
+/// One continuous propagation arc (no discontinuities): the accepted integration steps from its base epoch.
 /// </summary>
+/// <remarks>
+/// Immutable from outside the library (decision 55 of #668, decided by S. Guillet, 2026-11-23, #796): an
+/// <see cref="Integrators.IIntegrator"/> implemented outside it collects its <see cref="AcceptedStep"/> values and builds
+/// its segment once, with <see cref="PropagationSegment(Time, IEnumerable{AcceptedStep})"/>; <see cref="Steps"/> is a
+/// read-only view. Before 11.0.0 <c>AddStep</c> was public, so the steps of a published solution could be extended.
+/// </remarks>
 public sealed class PropagationSegment
 {
     private readonly List<AcceptedStep> _steps;
+    private readonly ReadOnlyCollection<AcceptedStep> _stepsView;
 
     /// <summary>
     /// Absolute start time of this segment, a TDB label.
@@ -23,9 +30,9 @@ public sealed class PropagationSegment
     public Time BaseEpoch { get; }
 
     /// <summary>
-    /// Ordered accepted steps in this segment.
+    /// Ordered accepted steps in this segment, a read-only view (a cast cannot write it).
     /// </summary>
-    public IReadOnlyList<AcceptedStep> Steps => _steps;
+    public IReadOnlyList<AcceptedStep> Steps => _stepsView;
 
     /// <summary>
     /// Total elapsed time from BaseEpoch to the end of the last step, in seconds of the time argument of the propagation:
@@ -60,22 +67,47 @@ public sealed class PropagationSegment
     /// </summary>
     internal double? EventTime { get; set; }
 
+    /// <summary>
+    /// A segment of no step from <paramref name="baseEpoch"/>: what an integrator returns for a duration of zero.
+    /// </summary>
+    /// <param name="baseEpoch">The start of the segment, a TDB label.</param>
     public PropagationSegment(Time baseEpoch)
     {
         BaseEpoch = baseEpoch;
         _steps = new List<AcceptedStep>();
-    }
-
-    public PropagationSegment(Time baseEpoch, int estimatedStepCount)
-    {
-        BaseEpoch = baseEpoch;
-        _steps = new List<AcceptedStep>(estimatedStepCount);
+        _stepsView = _steps.AsReadOnly();
     }
 
     /// <summary>
-    /// Add an accepted step to this segment.
+    /// A segment of the given steps from <paramref name="baseEpoch"/>, copied: a later change of
+    /// <paramref name="steps"/> does not reach it (decision 55 of #668).
     /// </summary>
-    public void AddStep(in AcceptedStep step)
+    /// <param name="baseEpoch">The start of the segment, a TDB label.</param>
+    /// <param name="steps">The accepted steps, in order, their times counted from <paramref name="baseEpoch"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="steps"/> is null.</exception>
+    public PropagationSegment(Time baseEpoch, IEnumerable<AcceptedStep> steps)
+    {
+        ArgumentNullException.ThrowIfNull(steps);
+        BaseEpoch = baseEpoch;
+        _steps = new List<AcceptedStep>(steps);
+        _stepsView = _steps.AsReadOnly();
+    }
+
+    /// <summary>
+    /// An empty segment with room for <paramref name="estimatedStepCount"/> steps, filled by the library's integrators
+    /// through <see cref="AddStep"/>; internal since 11.0.0 (decision 55 of #668).
+    /// </summary>
+    internal PropagationSegment(Time baseEpoch, int estimatedStepCount)
+    {
+        BaseEpoch = baseEpoch;
+        _steps = new List<AcceptedStep>(estimatedStepCount);
+        _stepsView = _steps.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Add an accepted step to this segment; internal since 11.0.0 (decision 55 of #668).
+    /// </summary>
+    internal void AddStep(in AcceptedStep step)
     {
         _steps.Add(step);
     }
@@ -97,9 +129,10 @@ public sealed class PropagationSegment
     /// The interpolation is exact at the step boundaries only. Between them its error grows as the fourth power of the
     /// step size: about 100 m in LEO for the steps of an RK7(8) integration at its default tolerance. For an RK7(8)
     /// propagation, <see cref="PropagationSolution.InterpolateAt"/> computes the state at the accuracy of the
-    /// integrator instead.
+    /// integrator instead. Internal since 11.0.0 (decision 55 of #668): the reader of a solution is
+    /// <see cref="PropagationSolution.GetStateVector"/>.
     /// </remarks>
-    public (Vector3 position, Vector3 velocity) InterpolateAt(double t)
+    internal (Vector3 position, Vector3 velocity) InterpolateAt(double t)
     {
         if (_steps.Count == 0)
             throw new InvalidOperationException("Segment contains no steps.");
@@ -142,9 +175,9 @@ public sealed class PropagationSegment
     }
 
     /// <summary>
-    /// Cubic Hermite interpolation within an accepted step.
+    /// Cubic Hermite interpolation within an accepted step; internal since 11.0.0 (decision 55 of #668).
     /// </summary>
-    public static (Vector3 position, Vector3 velocity) HermiteInterpolate(in AcceptedStep step, double t)
+    internal static (Vector3 position, Vector3 velocity) HermiteInterpolate(in AcceptedStep step, double t)
     {
         double localT = t - step.CumulativeTime;
         double theta = localT / step.StepSize;

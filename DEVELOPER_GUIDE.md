@@ -1369,9 +1369,10 @@ Represents a spacecraft with components.
 | `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
 | `GetTotalMass()` | Get total mass including fuel |
-| `GetTotalFuel()` | Get total fuel mass |
-| `GetTotalISP()` | Get combined specific impulse |
-| `GetTotalFuelFlow()` | Get combined fuel flow rate |
+| `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run (`GetTotalFuel` before 11.0.0, decision 60 of #668) |
+| `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
+| `GetTotalISP()` | Get combined specific impulse, every engine counted (#801) |
+| `GetTotalFuelFlow()` | Get combined fuel flow rate, every engine counted |
 | `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it |
 | `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
@@ -1420,8 +1421,8 @@ var solution = spacecraft.Propagate(
     }
 );
 
-// Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
-var (positionAtHalfDay, velocityAtHalfDay) = solution.InterpolateAt(epoch.AddHours(12));
+// The state at any epoch within the propagation window, in its frame about its central body: position (m) and velocity (m/s)
+var halfDay = solution.GetStateVector(epoch.AddHours(12));
 
 // Read the stored states relative to an observer, in ICRF without correction: every minute over the first four
 var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, TimeSpan.FromMinutes(1));
@@ -1727,8 +1728,8 @@ var propagator = new CentralBodyPropagator(
     });
 var solution = propagator.Propagate();
 
-// Use dense output for sub-step interpolation
-var (midPosition, midVelocity) = solution.InterpolateAt(epoch.AddHours(12));
+// Use dense output for sub-step reads
+var middle = solution.GetStateVector(epoch.AddHours(12));
 ```
 
 **Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to GMAT reference solutions.
@@ -2917,10 +2918,10 @@ var propagator = new CentralBodyPropagator(
 var solution = propagator.Propagate();
 
 // Get the final position and velocity from the dense output
-var (finalPosition, finalVelocity) = solution.InterpolateAt(epoch.AddDays(1));
+var final = solution.GetStateVector(epoch.AddDays(1));
 
-Console.WriteLine($"Position after 24h: ({finalPosition.X/1000:F3}, " +
-    $"{finalPosition.Y/1000:F3}, {finalPosition.Z/1000:F3}) km");
+Console.WriteLine($"Position after 24h: ({final.Position.X/1000:F3}, " +
+    $"{final.Position.Y/1000:F3}, {final.Position.Z/1000:F3}) km");
 ```
 
 ### Earth Observation with Attitude Maneuvers

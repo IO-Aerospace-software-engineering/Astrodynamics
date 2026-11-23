@@ -259,6 +259,10 @@ public class AttitudeTimelineTests
         /// path.</summary>
         public PropagationSolution Solution { get; private init; }
 
+        /// <summary>The summary of the spacecraft's run: the scenario's on its paths, otherwise the one the scenario builds
+        /// from the records of the solution (decision 59 of #668).</summary>
+        public SpacecraftSummary Summary { get; private init; }
+
         public Maneuver.Maneuver[] Chain { get; private init; }
         public Time[] Given { get; private init; }
         public Dictionary<Maneuver.Maneuver, string> Kinds { get; private init; }
@@ -320,6 +324,7 @@ public class AttitudeTimelineTests
             var options = covariance ? new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = path.EndsWith("Step") } : CovariancePropagationOptions.None;
 
             PropagationSolution solution;
+            SpacecraftSummary summary = null;
             switch (path)
             {
                 case "Propagate":
@@ -341,12 +346,12 @@ public class AttitudeTimelineTests
                     var scenario = new Scenario($"STL{-naifId}", new IO.Astrodynamics.Mission.Mission($"mTL{-naifId}"), window);
                     foreach (var body in bodies) scenario.AddCelestialItem(body);
                     scenario.AddSpacecraft(spacecraft);
-                    scenario.Simulate(path switch
+                    summary = scenario.Simulate(path switch
                     {
                         "ScenarioDefault" => new PropagationOptions { Integrator = new VVIntegratorOptions { Step = step }, OutputStep = step },
                         "Scenario" => new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, CovariancePropagation = CovariancePropagationOptions.None },
                         _ => new PropagationOptions { Integrator = NewIntegrator(), OutputStep = step, CovariancePropagation = options ?? CovariancePropagationOptions.None }
-                    });
+                    }).SpacecraftSummaries.Single();
                     solution = spacecraft.LastPropagation;
                     break;
                 }
@@ -379,12 +384,13 @@ public class AttitudeTimelineTests
                 Assert.Equal(twin.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Scale, x.Position, x.Velocity)), spacecraft.PropagatedStates.Select(x => (x.Epoch.DateTime, x.Epoch.Scale, x.Position, x.Velocity)));
             }
 
+            summary ??= new SpacecraftSummary(spacecraft, solution.Maneuvers);
             var burns = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToList();
             return new TimelineRun
             {
                 Key = key, Letter = letter, Integrator = integrator, Path = path, FrameName = frameName, OutputStep = output, Frame = frame,
                 Center = center, Spacecraft = spacecraft, Window = window, Solution = solution, Chain = chain, Given = given, Kinds = kinds,
-                Burns = burns, InitialIcrf = orbitIcrf
+                Burns = burns, InitialIcrf = orbitIcrf, Summary = summary
             };
         }
 

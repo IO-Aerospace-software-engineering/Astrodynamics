@@ -345,7 +345,7 @@ public class RepropagationTests
                 throw new ArgumentException(path);
         }
 
-        return Capture(sc, solution, window, spacecraft.GetSummary(), covariance?.Mode == CovariancePropagationMode.Covariance);
+        return Capture(sc, solution, window, new SpacecraftSummary(spacecraft, solution.Maneuvers), covariance?.Mode == CovariancePropagationMode.Covariance);
     }
 
     private static Scenario NewScenario(Sc sc, Window window)
@@ -1127,7 +1127,7 @@ public class RepropagationTests
         Assert.Same(solution, reused.Spacecraft.LastPropagation);
         Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)).ToArray());
         Assert.Equal(windows, reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray());
-        var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);
+        var after = Capture(reused, solution, Win(S), new SpacecraftSummary(reused.Spacecraft, solution.Maneuvers), false);
         AssertSame(tag + " run 1 after the rejection against run 1", after, r1);
 
         // A valid run 2 from another state after the rejection
@@ -1244,7 +1244,7 @@ public class RepropagationTests
         Assert.Equal(states, reused.Spacecraft.PropagatedStates.Select(s => (s.Epoch.DateTime, s.Epoch.Scale, s.Position, s.Velocity)).ToArray());
         Assert.Equal(windows, reused.Chain.Select(m => (Labels(m.ManeuverWindow), Labels(m.ThrustWindow))).ToArray());
         Assert.Equal(fuel, reused.Spacecraft.FuelTanks.Single().Quantity);
-        var after = Capture(reused, solution, Win(S), reused.Spacecraft.GetSummary(), false);
+        var after = Capture(reused, solution, Win(S), new SpacecraftSummary(reused.Spacecraft, solution.Maneuvers), false);
         AssertSame(tag + " run 1 after", after, r1);
         var r2 = Propagate(reused, Win(S), "RK", "Direct");
         AssertSame(tag + " run 2 against run 1", r2, r1);

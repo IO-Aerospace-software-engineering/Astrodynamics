@@ -52,6 +52,10 @@ public abstract class PropagatorBase : IPropagator
     // The impulses of the last propagation, in epoch order, their states on either side for the arcs of the stored states
     private readonly List<ImpulseBoundary> _impulses = new();
 
+    // The records of the maneuvers the current run executed, in execution order, a list of each run's own that its solution
+    // keeps (decision 57 of #668)
+    private List<ExecutedManeuver> _executed = new();
+
     /// <summary>
     /// The impulses of the propagation, in epoch order, each with the state of the integrator at its event before the
     /// maneuver executes and the state the maneuver gives, in the frame of the propagation, with their covariance in
@@ -655,7 +659,8 @@ public abstract class PropagatorBase : IPropagator
     /// <remarks>
     /// Once its checks pass, the propagation re-arms the spacecraft, on every path (#583, decided by S. Guillet,
     /// 2026-11-17): the solution, the stored states and the attitude record of the previous propagation are dropped,
-    /// <see cref="Spacecraft.ExecutedManeuvers"/> is cleared, the tanks are refuelled and the chain is reset and put back
+    /// <see cref="Spacecraft.ExecutedManeuvers"/> is a new empty list, which each maneuver the run executes replaces by a
+    /// new list that adds it (decision 58 of #668), the tanks are refuelled and the chain is reset and put back
     /// in standby, so that a spacecraft propagated again, through a <see cref="CentralBodyPropagator"/> built directly or
     /// <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
     /// never propagated; a propagator built and never run, or rejected by its constructor, changes nothing. Before
@@ -820,6 +825,7 @@ public abstract class PropagatorBase : IPropagator
         reArmed = true;
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
+        _executed = new List<ExecutedManeuver>();
         var eventDetectors = BuildEventDetectors();
 
         // 3. Create solution
@@ -927,8 +933,9 @@ public abstract class PropagatorBase : IPropagator
                 var stateBefore = new StateVector(evt.EventPosition, evt.EventVelocity, InitialState.Observer, eventEpoch,
                     InitialState.Frame, _covarianceModel != null ? CovarianceOf(eventY, eventQ) : null);
 
-                // Delegate to the event detector
+                // Delegate to the event detector, the mass before it for the record of an impulse
                 var detector = eventDetectors[evt.DetectorIndex];
+                double massBefore = Spacecraft.GetTotalMass();
                 var eventResult = detector.HandleEvent(eventState, Spacecraft);
 
                 // The next segment starts at the event: from the state after the maneuver on StopAndRestart, from the
@@ -944,7 +951,7 @@ public abstract class PropagatorBase : IPropagator
                 {
                     eventResult = eventResult with
                     {
-                        NextDetector = OnImpulse(executed.Maneuver, eventTau, eventResult.Orientation)
+                        NextDetector = OnImpulse(executed.Maneuver, eventEpoch, eventTau, eventResult.Orientation, massBefore)
                     };
                 }
 
@@ -1019,9 +1026,11 @@ public abstract class PropagatorBase : IPropagator
         solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache, DynamicsSyncRoot);
         solution.Observer = InitialState.Observer;
         solution.Frame = InitialState.Frame;
-        solution.CovariancePropagation = _covariancePropagation;
+        // None when the run propagated neither Φ nor the covariance (decision 56 of #668)
+        solution.CovariancePropagation = _covariancePropagation ?? CovariancePropagationOptions.None;
         solution.Options = ResolvedOptions;
         solution.CovarianceAbsence = CovarianceAbsence;
+        solution.Maneuvers = _executed.AsReadOnly();
         var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
         // 5b. The attitude record, from the timeline, on the solution (#539)
@@ -1174,6 +1183,12 @@ public abstract class PropagatorBase : IPropagator
             attitude.ManeuverWindow = new Window(start, end);
             _timeline.ActivateLaw(start, attitude);
 
+            // Its record: its activation, no delta-V, no fuel, the mass at its activation, which no impulse changes
+            // before it (the next impulse is gated by its end)
+            double mass = Spacecraft.GetTotalMass();
+            _executed.Add(new ExecutedManeuver(attitude, start, attitude.ThrustWindow.Value, attitude.ManeuverWindow.Value,
+                Vector3.Zero, 0.0, mass, mass));
+
             // The attitude is executed: the next maneuver of the chain may start at the end of its hold, in this
             // propagation only (#573)
             Spacecraft.ChainStandbyManeuver(attitude.NextManeuver, end);
@@ -1197,10 +1212,13 @@ public abstract class PropagatorBase : IPropagator
     /// attitude chained after it activates there; then the attitudes chained after it.
     /// </summary>
     /// <param name="impulse">The impulse its detector executed.</param>
+    /// <param name="eventEpoch">The TDB label of its event.</param>
     /// <param name="eventTau">The seconds of the time argument from the start of the window to its event.</param>
     /// <param name="orientation">Its attitude, the front along ΔV; null for none.</param>
+    /// <param name="massBefore">The total mass of the spacecraft before the burn.</param>
     /// <returns>The detector of the next impulse, null if none.</returns>
-    private IEventDetector OnImpulse(ImpulseManeuver impulse, double eventTau, StateOrientation orientation)
+    private IEventDetector OnImpulse(ImpulseManeuver impulse, in Time eventEpoch, double eventTau,
+        StateOrientation orientation, double massBefore)
     {
         // The windows ImpulseManeuver.TryExecute set from the event, in TDB seconds; about the Earth, counted in TT seconds
         // from the event's time argument (#547)
@@ -1227,6 +1245,10 @@ public abstract class PropagatorBase : IPropagator
         }
 
         var maneuverEnd = impulse.ManeuverWindow!.Value.EndDate;
+
+        // Its record, the windows in their final form (in TT seconds about the Earth), before the attitudes chained after it
+        _executed.Add(new ExecutedManeuver(impulse, eventEpoch, impulse.ThrustWindow!.Value, impulse.ManeuverWindow.Value,
+            impulse.DeltaV, impulse.FuelBurned, massBefore, Spacecraft.GetTotalMass()));
 
         // The impulse's attitude from the opening of its thrust window, no earlier than the window or the last activation
         var start = thrust.StartDate;

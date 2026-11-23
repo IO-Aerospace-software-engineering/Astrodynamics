@@ -1,0 +1,349 @@
+// Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Maneuver;
+using IO.Astrodynamics.Mission;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
+using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
+using Xunit;
+
+namespace IO.Astrodynamics.Tests.Propagators;
+
+using Time = IO.Astrodynamics.TimeSystem.Time;
+
+/// <summary>
+/// The results of a run, lot L5a of #668 (R09, decisions 54 to 60, decided by S. Guillet, 2026-11-23): what a caller can
+/// no longer change on a published solution (<see cref="PropagationSegment"/> immutable from outside, read-only
+/// <c>Steps</c>, <c>Segments</c> and <c>StateVectors</c>, the solution's constructor and mutators internal,
+/// <c>Integrator.UpdateStateVector</c> internal, #796), <see cref="PropagationSolution.CovariancePropagation"/>
+/// <see cref="CovariancePropagationOptions.None"/> rather than null, <see cref="Spacecraft.ExecutedManeuvers"/> a new
+/// read-only list per run, the summary of a scenario built from the records, and the fuel accessors (#801).
+/// </summary>
+/// <remarks>
+/// The references are the decided rules. The case of the runs: a 7 000 km orbit, e = 0.01, i = 0.5 rad, about a
+/// point-mass Earth from 2024-03-01 12:00 TDB; 1 000 kg dry, 1 000 kg of fuel, Isp 300 s, 10 kg/s; an apogee raise to
+/// 8 000 km at the first periapsis after the start.
+/// </remarks>
+public class RunResultsSurfaceTests
+{
+    public RunResultsSurfaceTests()
+    {
+        TestKernels.EnsureSolarSystem();
+    }
+
+    private static readonly Time S = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
+    private static readonly TimeSpan Output = TimeSpan.FromSeconds(60.0);
+    private static int _nextId = -868000;
+    private static int NextId() => Interlocked.Decrement(ref _nextId);
+
+    private const BindingFlags Everything = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+
+    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+
+    private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
+    {
+        int id = NextId();
+        var spacecraft = new Spacecraft(id, "RR" + -id, 1000.0, 3000.0, new Clock("RR" + -id, 65536),
+            new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF));
+        var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
+        spacecraft.AddFuelTank(tank);
+        engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
+        spacecraft.AddEngine(engine);
+        return spacecraft;
+    }
+
+    private static PropagationOptions Options(CelestialBody earth, string integrator = "RK",
+        CovariancePropagationOptions covariance = null) => new()
+    {
+        Integrator = integrator == "VV" ? new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) } : new RK78IntegratorOptions(),
+        OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = covariance ?? CovariancePropagationOptions.None
+    };
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Decision 55: a published solution cannot be changed from outside (#796)
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void PropagationSegment_IsImmutableFromOutside()
+    {
+        var type = typeof(PropagationSegment);
+        var constructors = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+            .Select(c => string.Join(",", c.GetParameters().Select(p => p.ParameterType)))
+            .OrderBy(s => s, StringComparer.Ordinal).ToArray();
+        Assert.Equal(new[]
+        {
+            typeof(Time).ToString(),
+            typeof(Time) + "," + typeof(IEnumerable<AcceptedStep>)
+        }.OrderBy(s => s, StringComparer.Ordinal), constructors);
+
+        foreach (var name in new[] { "AddStep", "InterpolateAt", "HermiteInterpolate" })
+        {
+            var method = type.GetMethod(name, Everything);
+            Assert.NotNull(method);
+            Assert.True(method.IsAssembly, name);
+        }
+
+        Assert.DoesNotContain(type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static),
+            m => m.DeclaringType == type && !m.IsSpecialName && m.ReturnType == typeof(void));
+        Assert.All(type.GetProperties(BindingFlags.Public | BindingFlags.Instance),
+            p => Assert.False(p.SetMethod?.IsPublic ?? false, p.Name));
+    }
+
+    [Fact]
+    public void PropagationSolution_HasNoPublicConstructorOrMutator()
+    {
+        var type = typeof(PropagationSolution);
+        Assert.Empty(type.GetConstructors(BindingFlags.Public | BindingFlags.Instance));
+        foreach (var name in new[] { "SetOutputStates", "AddSegment", "InterpolateAt" })
+        {
+            var method = type.GetMethod(name, Everything);
+            Assert.NotNull(method);
+            Assert.True(method.IsAssembly, name);
+        }
+
+        Assert.All(type.GetProperties(BindingFlags.Public | BindingFlags.Instance),
+            p => Assert.False(p.SetMethod?.IsPublic ?? false, p.Name));
+    }
+
+    [Fact]
+    public void IntegratorUpdateStateVector_IsInternal()
+    {
+        var method = typeof(Integrator).GetMethod("UpdateStateVector", Everything);
+        Assert.NotNull(method);
+        Assert.True(method.IsAssembly);
+        Assert.False(method.IsFamily || method.IsFamilyOrAssembly || method.IsPublic);
+    }
+
+    // The collection a getter returns cannot be written through a cast: not the inner list or array, and its IList
+    // indexer and ICollection.Add throw NotSupportedException
+    private static void AssertReadOnly<T>(IReadOnlyList<T> collection)
+    {
+        Assert.IsNotType<List<T>>(collection);
+        Assert.IsNotType<T[]>(collection);
+        var list = Assert.IsAssignableFrom<IList<T>>(collection);
+        Assert.True(list.IsReadOnly);
+        Assert.Throws<NotSupportedException>(() => list[0] = list[0]);
+        Assert.Throws<NotSupportedException>(() => list.Add(list[0]));
+    }
+
+    [Theory]
+    [InlineData("RK")]
+    [InlineData("VV")]
+    public void TheCollectionsOfASolution_AreReadOnly(string integrator)
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out _);
+        var solution = spacecraft.Propagate(new Window(S, S.AddHours(1.0)), Options(earth, integrator));
+
+        AssertReadOnly(solution.Segments);
+        AssertReadOnly(solution.StateVectors);
+        AssertReadOnly(solution.Segments[0].Steps);
+        // Each getter returns the one wrapper of its collection, allocated once
+        Assert.Same(solution.Segments, solution.Segments);
+        Assert.Same(solution.StateVectors, solution.StateVectors);
+        Assert.Same(solution.Segments[0].Steps, solution.Segments[0].Steps);
+    }
+
+    [Fact]
+    public void TheCollectionsOfATLEPropagatorSolution_AreReadOnly()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        int id = NextId();
+        var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, 10000.0, new Clock("RR" + -id, 65536), tle);
+        var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
+
+        AssertReadOnly(solution.Segments);
+        AssertReadOnly(solution.StateVectors);
+        AssertReadOnly(solution.Segments[0].Steps);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Decision 56: CovariancePropagation is None, never null
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("RK")]
+    [InlineData("VV")]
+    public void ASolutionWithoutVariationalEquations_HasCovariancePropagationNone(string integrator)
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out _);
+        var solution = spacecraft.Propagate(new Window(S, S.AddHours(1.0)), Options(earth, integrator));
+
+        Assert.Equal(CovariancePropagationOptions.None, solution.CovariancePropagation);
+        Assert.Equal(CovariancePropagationMode.None, solution.CovariancePropagation.Mode);
+    }
+
+    [Fact]
+    public void ASolutionWithTheStateTransitionMatrix_HasItsOptions()
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out _);
+        var stm = new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly };
+        var solution = spacecraft.Propagate(new Window(S, S.AddHours(1.0)), Options(earth, "RK", stm));
+
+        Assert.Same(stm, solution.CovariancePropagation);
+    }
+
+    [Fact]
+    public void ATLEPropagatorSolutionAndOneBuiltByTheLibrary_HaveCovariancePropagationNone()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        int id = NextId();
+        var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, 10000.0, new Clock("RR" + -id, 65536), tle);
+        var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
+
+        Assert.Equal(CovariancePropagationOptions.None, solution.CovariancePropagation);
+        // A solution built by the library outside a propagator (the conformance runner's straight lines)
+        Assert.Equal(CovariancePropagationOptions.None, new PropagationSolution().CovariancePropagation);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Decision 58: ExecutedManeuvers is a new read-only list per run
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("RK")]
+    [InlineData("VV")]
+    public void AHeldExecutedManeuversList_KeepsItsMembers_AfterTheNextRun(string integrator)
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out var engine);
+        var apogee = new ApogeeHeightManeuver(earth, S.AddSeconds(600.0), TimeSpan.Zero, 8000e3, engine);
+        spacecraft.SetManeuvers(apogee);
+        spacecraft.Propagate(new Window(S, S.AddHours(3.0)), Options(earth, integrator));
+        var held = spacecraft.ExecutedManeuvers;
+        Assert.Same(apogee, Assert.Single(held));
+
+        // A run of 300 s that does not reach the burn: the spacecraft lists nothing, the held list its run's burn
+        spacecraft.Propagate(new Window(S, S.AddSeconds(300.0)), Options(earth, integrator));
+
+        Assert.Empty(spacecraft.ExecutedManeuvers);
+        Assert.Same(apogee, Assert.Single(held));
+        Assert.NotSame(held, spacecraft.ExecutedManeuvers);
+        Assert.IsAssignableFrom<IReadOnlyList<Maneuver.Maneuver>>(held);
+        var collection = Assert.IsAssignableFrom<ICollection<Maneuver.Maneuver>>(held);
+        Assert.True(collection.IsReadOnly);
+        Assert.Throws<NotSupportedException>(() => collection.Add(apogee));
+        Assert.Throws<NotSupportedException>(() => collection.Clear());
+    }
+
+    [Fact]
+    public void ExecutedManeuvers_IsAReadOnlyList()
+    {
+        Assert.Equal(typeof(IReadOnlyList<Maneuver.Maneuver>),
+            typeof(Spacecraft).GetProperty(nameof(Spacecraft.ExecutedManeuvers))!.PropertyType);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Decisions 57 and 59: the records on the solution, the summary built from them
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void TheRecordsAndTheSummary_HaveTheirDecidedShape()
+    {
+        var record = typeof(PropagationSolution).Assembly.GetType("IO.Astrodynamics.Propagator.ExecutedManeuver");
+        Assert.NotNull(record);
+        Assert.True(record.IsSealed);
+        Assert.NotNull(record.GetMethod("<Clone>$", Everything));
+        Assert.Equal(typeof(IReadOnlyList<>).MakeGenericType(record),
+            typeof(PropagationSolution).GetProperty("Maneuvers")?.PropertyType);
+
+        var summary = typeof(SpacecraftSummary);
+        Assert.True(summary.IsSealed);
+        Assert.Empty(summary.GetConstructors(BindingFlags.Public | BindingFlags.Instance));
+        Assert.Equal(typeof(IReadOnlyList<>).MakeGenericType(record), summary.GetProperty("Maneuvers")!.PropertyType);
+        Assert.Equal(typeof(IReadOnlyList<SpacecraftSummary>),
+            typeof(ScenarioSummary).GetProperty(nameof(ScenarioSummary.SpacecraftSummaries))!.PropertyType);
+    }
+
+    [Fact]
+    public void TheSummariesOfAScenario_AreInScenarioOrder()
+    {
+        var earth = Earth();
+        var scenario = new Scenario("RR", new IO.Astrodynamics.Mission.Mission("RR"), new Window(S, S.AddHours(1.0)));
+        scenario.AddCelestialItem(earth);
+        for (int i = 0; i < 3; i++)
+        {
+            scenario.AddSpacecraft(NewSpacecraft(earth, out _));
+        }
+
+        var summary = scenario.Simulate(Options(earth) with { ThirdBodies = null });
+
+        Assert.Equal(scenario.Spacecrafts, summary.SpacecraftSummaries.Select(s => s.Spacecraft));
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Decision 60: the fuel accessors (#801)
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void TheFuelAccessors_ReplaceGetTotalFuel()
+    {
+        var type = typeof(Spacecraft);
+        Assert.Null(type.GetMethod("GetTotalFuel", Everything));
+        Assert.Equal(typeof(double), type.GetMethod("GetInitialFuel", Type.EmptyTypes)?.ReturnType);
+        Assert.Equal(typeof(double), type.GetMethod("GetRemainingFuel", Type.EmptyTypes)?.ReturnType);
+    }
+
+    // The tank emptied from the start, as an empty tank of lot L5b will be, by its initial quantity
+    private static void Empty(FuelTank tank)
+    {
+        var field = typeof(FuelTank).GetField("<InitialQuantity>k__BackingField", Everything)!;
+        field.SetValue(tank, 0.0);
+        typeof(FuelTank).GetProperty(nameof(FuelTank.Quantity))!.SetValue(tank, 0.0);
+    }
+
+    /// <summary>
+    /// #801: with no engine on a tank holding fuel at the start, GetTotalISP was 0/0 = NaN, which made the fuel cost of an
+    /// avoidance option and its trial mass NaN. Every engine counts: Σ thrust / g0 / Σ flow.
+    /// </summary>
+    [Fact]
+    public void GetTotalISP_IsFinite_WhenNoEngineHasFuel()
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out var engine);
+        Empty(engine.FuelTank);
+
+        double isp = spacecraft.GetTotalISP();
+
+        Assert.False(double.IsNaN(isp));
+        Assert.Equal(engine.Thrust / IO.Astrodynamics.Constants.g0 / engine.FuelFlow, isp);
+        Assert.Equal(engine.FuelFlow, spacecraft.GetTotalFuelFlow());
+    }
+
+    /// <summary>
+    /// Decision 60: every engine counts, whatever its tank holds; on a spacecraft mixing an empty tank and a full one the
+    /// mean is over both engines (engines of 300 s at 10 kg/s and 200 s at 30 kg/s: 225 s, where the filter gave 300 s).
+    /// </summary>
+    [Fact]
+    public void GetTotalISPAndGetTotalFuelFlow_CountEveryEngine()
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out var first);
+        var tank = new FuelTank("second", "m", "sn-second", 1000.0, 500.0);
+        spacecraft.AddFuelTank(tank);
+        var second = new Engine("second", "m", "sn-second", 200.0, 30.0, tank);
+        spacecraft.AddEngine(second);
+        Empty(tank);
+
+        Assert.Equal((first.Thrust + second.Thrust) / IO.Astrodynamics.Constants.g0 / (first.FuelFlow + second.FuelFlow), spacecraft.GetTotalISP());
+        Assert.Equal(225.0, spacecraft.GetTotalISP(), 12);
+        Assert.Equal(40.0, spacecraft.GetTotalFuelFlow());
+    }
+}
