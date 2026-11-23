@@ -884,8 +884,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Not enough cached states: the two-body orbit, in ICRF as every reader assumes (#535)
-            if (_propagatedStates.Count < 2)
+            // No stored state: the two-body orbit, in ICRF as every reader assumes (#535); a store of one state is read
+            // through the arcs, at its epoch only (decision 89 of #668, decided by S. Guillet, 2026-11-23)
+            if (_propagatedStates.Count == 0)
                 return InitialOrbitalParameters.ToStateVector(epoch)
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
@@ -924,14 +925,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
 
             // Determine reference body
-            CelestialItem cb = (_propagatedStates.Count >= 2)
+            CelestialItem cb = (_propagatedStates.Count > 0)
                 ? (CelestialItem)_propagatedStates.First.Observer
                 : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
 
             // Short-circuit: observer IS the CB, no aberration, have cached states, the epoch within them (#527: outside,
             // or in a gap between added windows (#792), the reference-body path throws for propagated states, and a TLE
             // spacecraft sampled by TLEPropagator reads SGP4)
-            if (aberration == Aberration.None && _propagatedStates.Count >= 2
+            if (aberration == Aberration.None && _propagatedStates.Count > 0
                                               && cb.NaifId == observer.NaifId && cb.NaifId != 0
                                               && _propagatedStates.InterpolateWithin(epoch, 0.0) is { } read)
             {
@@ -1015,14 +1016,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates, from the first
         /// to the last, the gaps between the windows given to <see cref="AddPropagatedStates"/> included (#792); null when it
         /// reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
-        /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or fewer than two states
-        /// (the initial orbital parameters are then propagated in two-body motion to the epoch).
+        /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or no stored state (the initial
+        /// orbital parameters are then propagated in two-body motion to the epoch). A store of one state is read through the
+        /// arcs, at its epoch only, its window of zero length (decision 89 of #668, decided by S. Guillet, 2026-11-23: before,
+        /// fewer than two states read the two-body orbit).
         /// </summary>
         internal Window? InterpolatedStatesWindow
         {
             get
             {
-                if (_isFromKernel || (InitialOrbitalParameters is TLE && !_holdsPropagatedStates) || _propagatedStates.Count < 2)
+                if (_isFromKernel || (InitialOrbitalParameters is TLE && !_holdsPropagatedStates) || _propagatedStates.Count == 0)
                 {
                     return null;
                 }
@@ -1105,15 +1108,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
         internal PropagationForceModel LastForceModel { get; set; }
 
         /// <summary>
-        /// Adds the states of one window to the stored states: one window per call (decisions 42 and 83 to 87 of #668, #792,
-        /// decided by S. Guillet, 2026-11-23). When the hull of their epochs, closed, meets no stored arc (touching counts as
+        /// Adds the states of one window to the stored states: one window per call (decisions 42, 83 to 87 and 89 to 91 of
+        /// #668, #792, decided by S. Guillet, 2026-11-23). When the hull of their epochs, closed, meets no stored arc (touching counts as
         /// meeting), they make a new arc, inserted in time order; otherwise the arcs it meets are merged where a gap separates
         /// them, so a call over the gap between two windows joins them (arcs that touch at an impulse stay apart), and each
         /// state joins the arc of its epoch among them (the later one at an impulse), replacing a stored state of that arc at
         /// the same epoch. A gap inside the states of one call is not detected: give each window its own call. A read in a
         /// gap between two windows throws as a read outside the stored states (<see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/>),
         /// the light time of a corrected read allowed outside each arc, and a window argument that meets a gap is refused;
-        /// an arc of one state reads at its exact epoch only, and <see cref="WriteEphemeris"/> refuses it. Before 11.0.0
+        /// an arc of one state reads at its exact epoch only, and <see cref="WriteEphemeris"/> refuses it, a spacecraft that
+        /// stores one state only included (the two-body orbit of the initial orbital parameters reads only a spacecraft that
+        /// stores none). An epoch inside an arc is read by that arc; one in a gap within the light time of two arcs by the
+        /// nearer, the later one on a tie. Before 11.0.0
         /// every state joined the arc of its epoch, so two windows made one arc read across the gap between them.
         /// They are kept in ICRF, the frame of the readers (#535). Every propagation replaces every stored state, those
         /// added before it included, on every path (11.0.0, #540: they were merged with the propagated ones before), and so

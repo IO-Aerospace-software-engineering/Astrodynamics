@@ -191,7 +191,8 @@ across the jump:
   a trim, and an SPK read between them threw SPKINSUFFDATA).
   An impulse at the end of the propagation (Velocity-Verlet locates a crossing of its last step at its end, RK7(8)
   a root at the end of the window) is carried by a last segment of zero length (#575): it opens a last arc of one state,
-  the state after it, so the reads at the end give the state after it, as the solution does. An SPK segment needs two
+  the state after it, so the reads at the end give the state after it, as the solution does, and so do the corrected
+  reads within the light time past the end (decision 90 of #668, as before). An SPK segment needs two
   epochs: `WriteEphemeris` ends with the arc before it, and SPICE reads the state before the impulse at that last epoch.
 - **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
@@ -215,18 +216,23 @@ across the jump:
   event, the state after it the covariance after the burn, the covariance of its execution error added
   (`ImpulseManeuver.ExecutionError`), a filled state that of its epoch.
 - **`AddPropagatedStates`** takes one window per call ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792),
-  decisions 42 and 83 to 87 of #668, decided by S. Guillet, 2026-11-23). When the hull of the epochs of a call, closed,
+  decisions 42, 83 to 87 and 89 to 91 of #668, decided by S. Guillet, 2026-11-23). When the hull of the epochs of a call, closed,
   meets no stored arc (touching counts as meeting), its states make a new arc, inserted in time order; otherwise the arcs
   it meets are merged where a gap separates them, so a call over the gap between two windows joins them (arcs that touch
   at an impulse stay apart), and each state goes to the arc of its epoch among them (the later one at an impulse),
   replacing a stored state of that arc at the same epoch. A gap inside the states of one call is not detected: give each
   window its own call. The reads hold at every arc end the rule of the ends of the stored states: a read in a gap between
   two windows throws `InvalidOperationException`, as a read outside them, the light time of a corrected read allowed
-  outside each arc (a corrected epoch in a gap within the light time of the arc after it reads that arc), and a window
+  outside each arc (an epoch inside an arc is read by that arc, as before, bit for bit; a corrected epoch in a gap
+  within the light time of two arcs is read by the nearer, the later one on a tie, decision 91), and a window
   argument that meets a gap (a field-of-view search, the `ILocalizable` overloads of the conjunction analysis) is refused
   up front with `ArgumentException`. An arc of one state (a call of one state apart from every arc) is read at its exact
   epoch only, any other read throwing as in a gap, and `WriteEphemeris` refuses it with `ArgumentException` (a segment
-  needs two epochs). Before 11.0.0 the states of every call joined the arc of their epoch, so the windows of two calls
+  needs two epochs); so is a spacecraft that stores one state only, whose window is that epoch (decision 89: before
+  11.0.0 it read the two-body orbit of its initial orbital parameters, at every epoch, its own one included). Only a
+  spacecraft that stores no state reads the two-body orbit. Decisions 85 and 87 apply to arcs separated by a gap: the
+  last arc of one state that an impulse at the end of a propagation opens (#575), touching the arc before it, is also
+  read within the light time past the end, the state after the impulse (decision 90). Before 11.0.0 the states of every call joined the arc of their epoch, so the windows of two calls
   made one arc read across the gap between them without an error (9.28e9 m off the two-body orbit 2 h 56 min into a gap
   of 4 h between two windows of one hour at 60 s). A propagation, by every path,
   replaces every stored state, those added before it included: before 11.0.0 they were merged with the propagated ones.

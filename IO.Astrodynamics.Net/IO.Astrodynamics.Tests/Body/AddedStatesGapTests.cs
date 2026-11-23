@@ -485,6 +485,127 @@ public class AddedStatesGapTests
         }
     }
 
+    /// <summary>
+    /// A spacecraft that stores one state only reads it through the arcs, as an arc of one state beside others (decision
+    /// 89 of #668, decided by S. Guillet, 2026-11-23): its exact epoch returns the stored state on every reader (the
+    /// short-circuit of <c>GetEphemeris</c>, the reference-body path from the Moon, <c>ToOpm</c>), any other read throws as a
+    /// read in a gap, a window argument wider than its epoch is refused up front, a managed search over a window throws at
+    /// its first read and the SPK refuses it. Before, the two-body orbit of the initial orbital parameters answered: the
+    /// probe of the first review of lot L5a read 1.408e7 m off the stored state at its epoch, and a state 600 s later
+    /// without an error. The state stored here lies off the initial orbit, so that the two-body read cannot pass for it. A
+    /// spacecraft that stores no state keeps the two-body orbit.
+    /// </summary>
+    [Fact]
+    public void AStoreOfOneState_ReadsAtItsEpochOnly_TheTwoBodyOrbitWithoutAState()
+    {
+        var earth = Earth();
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+        var orbit = Orbit(earth);
+        var spacecraft = new Spacecraft(-7985, "GA7985", 1000.0, 3000.0, new Clock("GA7985_CLK", 65536), orbit, cosparId: "2026-001A");
+        spacecraft.AddPropagatedStates(new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 7000.0, 0.0), earth,
+            Start.AddSeconds(3600.0), Frame.ECLIPTIC_J2000));
+        var lone = Assert.Single(Assert.Single(spacecraft.PropagatedArcs));
+        LabelAssert.Equal(new Window(lone.Epoch, lone.Epoch), spacecraft.InterpolatedStatesWindow);
+
+        // Its exact epoch: the stored state, on every reader
+        AssertSameState(lone, spacecraft.GetGeometricStateRelativeTo(lone.Epoch, earth));
+        AssertSameState(lone, spacecraft.GetEphemeris(lone.Epoch, earth, Frame.ICRF, Aberration.None));
+        var moonFromEarth = moon.GetGeometricStateRelativeTo(lone.Epoch, earth);
+        var fromMoon = spacecraft.GetEphemeris(lone.Epoch, moon, Frame.ICRF, Aberration.None);
+        Assert.True((fromMoon.Position - (lone.Position - moonFromEarth.Position)).Magnitude() <= 1.0e-6);
+        var opm = spacecraft.ToOpm(epoch: lone.Epoch);
+        Assert.Equal(lone.Position.X / 1000.0, opm.Data.StateVector.X);
+        Assert.Equal(lone.Velocity.Y / 1000.0, opm.Data.StateVector.YDot);
+
+        // Any other epoch throws, the initial epoch of the two-body orbit included
+        foreach (double ds in new[] { -3600.0, -1.0e-7, 1.0e-7, 600.0 })
+        {
+            var t = lone.Epoch.AddSeconds(ds);
+            Assert.Throws<InvalidOperationException>(() => spacecraft.GetGeometricStateRelativeTo(t, earth));
+            Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None));
+            Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, moon, Frame.ICRF, Aberration.None));
+        }
+
+        Assert.Throws<InvalidOperationException>(() => spacecraft.ToOpm());
+        Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(lone.Epoch, moon, Frame.ICRF, Aberration.LT));
+
+        // A window argument: its epoch alone is covered, any wider is refused before any search
+        spacecraft.CheckInterpolatedStatesCover(new Window(lone.Epoch, lone.Epoch), "search window", "searchWindow");
+        var wider = new Window(lone.Epoch, lone.Epoch.AddSeconds(600.0));
+        Assert.Equal("searchWindow", Assert.Throws<ArgumentException>(() => spacecraft.CheckInterpolatedStatesCover(wider, "search window", "searchWindow")).ParamName);
+        var secondary = NewSpacecraft(-7986, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
+        var profile = new ProtectedSpacecraftProfile(spacecraft);
+        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondary, wider)).ParamName);
+        Assert.Throws<InvalidOperationException>(() => spacecraft.FindWindowsOnDistanceConstraint(wider, moon, RelationnalOperator.Greater, 1.0,
+            Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray());
+
+        // The SPK refuses it
+        var directory = Directory.CreateDirectory(Path.Combine("Data/User/AddedStatesGap", "store-of-one"));
+        var file = new FileInfo(Path.Combine(directory.FullName, "lone.bsp"));
+        try
+        {
+            Assert.Throws<ArgumentException>(() => spacecraft.WriteEphemeris(file));
+        }
+        finally
+        {
+            directory.Delete(true);
+        }
+
+        // No state stored: the two-body orbit of the initial orbital parameters, in ICRF
+        var unpropagated = NewSpacecraft(-7987, orbit);
+        Assert.Null(unpropagated.InterpolatedStatesWindow);
+        foreach (double s in new[] { 0.0, 3600.0, 4200.0 })
+        {
+            var t = Start.AddSeconds(s);
+            AssertSameState(orbit.ToStateVector(t).ToFrame(Frame.ICRF).ToStateVector(), unpropagated.GetGeometricStateRelativeTo(t, earth));
+        }
+    }
+
+    #endregion
+
+    #region Decision 91: the arc that reads an epoch
+
+    /// <summary>
+    /// Two arcs one second apart, [0, 600 s] and [601 s, 1 201 s], read with a margin of 1.5 s (the internal reader of a
+    /// corrected read, #527): an epoch inside an arc is read by that arc, to the bit the spacecraft that holds it alone,
+    /// even within the margin of the other (599.8 s, 601.2 s); an epoch in the gap within the margin of both is read by
+    /// the nearest arc (600.3 s the first, 600.7 s the second), the later one on a tie (600.5 s) (decision 91 of #668,
+    /// decided by S. Guillet, 2026-11-23; before, the arc of the epoch, the first, read every epoch of the gap it reached).
+    /// </summary>
+    [Fact]
+    public void AnEpochInAGapWithinTheMarginOfTwoArcs_IsReadByTheNearest_TheLaterOnATie()
+    {
+        const double margin = 1.5;
+        var earth = Earth();
+        var orbit = Orbit(earth);
+        var first = States(orbit, 0.0, 600.0);
+        var second = States(orbit, 601.0, 1201.0);
+        var both = NewSpacecraft(-7991, orbit);
+        both.AddPropagatedStates(first);
+        both.AddPropagatedStates(second);
+        Assert.Equal(2, both.PropagatedArcs.Count);
+        var firstAlone = NewSpacecraft(-7992, orbit);
+        firstAlone.AddPropagatedStates(first);
+        var secondAlone = NewSpacecraft(-7993, orbit);
+        secondAlone.AddPropagatedStates(second);
+
+        foreach (var (s, alone) in new[] { (300.0, firstAlone), (599.8, firstAlone), (600.3, firstAlone), (600.5, secondAlone), (600.7, secondAlone), (601.2, secondAlone), (900.0, secondAlone) })
+        {
+            var t = Start.AddSeconds(s);
+            AssertSameState(alone.GetGeometricStateRelativeTo(t, earth, margin), both.GetGeometricStateRelativeTo(t, earth, margin));
+        }
+
+        // Inside an arc the margin changes nothing: the read without it, bit for bit
+        foreach (double s in new[] { 599.8, 601.2 })
+        {
+            var t = Start.AddSeconds(s);
+            AssertSameState(both.GetGeometricStateRelativeTo(t, earth), both.GetGeometricStateRelativeTo(t, earth, margin));
+        }
+
+        // Without the margin the gap throws
+        Assert.Throws<InvalidOperationException>(() => both.GetGeometricStateRelativeTo(Start.AddSeconds(600.5), earth));
+    }
+
     #endregion
 
     #region A TLE spacecraft sampled by TLEPropagator
@@ -548,11 +669,13 @@ public class AddedStatesGapTests
 
     /// <summary>
     /// The arcs read by <see cref="PropagatedEphemeris.InterpolateWithin"/> after an impulse at the end of a propagation
-    /// (#575, decisions 85 and 87): the last arc, the state after the impulse alone, reads at its epoch only; a corrected
-    /// read past it within the margin reads the arc before the impulse, as at any arc end; without a margin it reads none.
+    /// (#575): the last arc, the state after the impulse alone, touching the arc before it at the impulse, reads at its
+    /// epoch and, within the margin, past it: the state after the impulse, as before (decision 90 of #668, decided by
+    /// S. Guillet, 2026-11-23; decisions 85 and 87 apply to arcs separated by a gap); without a margin a read past it reads
+    /// none, and one before it reads the arc before the impulse.
     /// </summary>
     [Fact]
-    public void PropagatedEphemeris_AnImpulseAtTheEnd_ItsArcOfOneStateReadsAtItsEpochOnly()
+    public void PropagatedEphemeris_AnImpulseAtTheEnd_ItsArcOfOneStateReadsWithinTheMarginPastIt()
     {
         var earth = Earth();
         var orbit = Orbit(earth);
@@ -567,9 +690,10 @@ public class AddedStatesGapTests
         Assert.Same(after, ephemeris.InterpolateWithin(before.Epoch, 0.0));
         var past = before.Epoch.AddSeconds(1.0);
         Assert.Null(ephemeris.InterpolateWithin(past, 0.0));
-        var read = ephemeris.InterpolateWithin(past, 2.0);
-        var expected = Lagrange.InterpolateSorted(ephemeris.Arcs[0], past);
-        AssertSameState(expected, read);
+        AssertSameState(after, ephemeris.InterpolateWithin(past, 2.0));
+        Assert.Null(ephemeris.InterpolateWithin(before.Epoch.AddSeconds(3.0), 2.0));
+        var earlier = before.Epoch.AddSeconds(-1.0);
+        AssertSameState(Lagrange.InterpolateSorted(ephemeris.Arcs[0], earlier), ephemeris.InterpolateWithin(earlier, 2.0));
         // A single window: the arcs touch at the impulse
         Assert.Single(ephemeris.Windows);
     }

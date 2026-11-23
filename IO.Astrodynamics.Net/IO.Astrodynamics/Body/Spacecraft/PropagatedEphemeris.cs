@@ -425,29 +425,31 @@ internal sealed class PropagatedEphemeris
 
     /// <summary>
     /// The Lagrange interpolation of the 8 states nearest to <paramref name="epoch"/> in the arc that reads it, null when
-    /// none does (decisions 85 and 87 of #668, decided by S. Guillet, 2026-11-23). An arc of two states or more reads an
-    /// epoch within it, widened by <paramref name="margin"/> seconds on each side (<see cref="Slack"/>); an arc of one state
-    /// reads its own epoch only. The arc of the epoch (the last one that starts at or before it, the later one at an
-    /// impulse, the first one before every arc) reads it when it can, so that a read within the stored states is the read
-    /// of before, bit for bit; otherwise the arc that reads it nearest to its hull, the later one on a tie, so that a
-    /// corrected read in a gap within the margin of the arc after it reads that arc. A read in a gap outside every widened
-    /// arc, or beside an arc of one state, gives null.
+    /// none does (decisions 85, 87, 90 and 91 of #668, decided by S. Guillet, 2026-11-23). An epoch inside an arc (from its
+    /// first epoch to its last) is read by that arc, the later one at an impulse, as before, bit for bit (91). Outside every
+    /// arc, an arc of two states or more reads an epoch within it widened by <paramref name="margin"/> seconds on each side
+    /// (<see cref="Slack"/>, 85), and the nearest arc that reads it does, the later one on a tie (91), so that a corrected
+    /// read in a gap within the margin of two arcs reads the nearer. An arc of one state apart from the others reads its own
+    /// epoch only (87); the arc of one state that an impulse at the end of a propagation opens (#575), which touches the arc
+    /// before it at the impulse, also reads within the margin past it: the state after the impulse, as before (90),
+    /// the tie with the arc before it, at the same distance, going to it. A read in a gap outside every widened arc, or
+    /// beside an arc of one state apart from the others, gives null.
     /// </summary>
     internal StateVector InterpolateWithin(in Time epoch, double margin)
     {
         var snapshot = _snapshot;
         var arcs = snapshot.Arcs;
         if (arcs.Length == 0) return null;
-        long slack = Slack(margin);
         var t = epoch.ToTDB();
         int k = snapshot.ArcIndex(epoch);
-        if (!Reads(arcs[k], t, slack, out _))
+        if (!Holds(arcs[k], t))
         {
+            long slack = Slack(margin);
             k = -1;
             long nearest = long.MaxValue;
             for (int j = 0; j < arcs.Length; j++)
             {
-                if (Reads(arcs[j], t, slack, out long distance) && distance <= nearest)
+                if (Reads(arcs, j, t, slack, out long distance) && distance <= nearest)
                 {
                     k = j;
                     nearest = distance;
@@ -460,13 +462,24 @@ internal sealed class PropagatedEphemeris
         return Lagrange.InterpolateSorted(arcs[k], epoch);
     }
 
-    // Whether an arc reads a TDB epoch within slack ticks, and the ticks from its hull
-    private static bool Reads(StateVector[] arc, in Time tdb, long slack, out long distance)
+    // Whether a TDB epoch lies within an arc, its ends included
+    private static bool Holds(StateVector[] arc, in Time tdb) =>
+        (arc[0].Epoch.ToTDB() - tdb).Ticks <= 0 && (tdb - arc[^1].Epoch.ToTDB()).Ticks <= 0;
+
+    // Whether arc j reads a TDB epoch within slack ticks, and the ticks from its hull: an arc of one state its own epoch, and
+    // past it within slack when it touches the arc before it (the arc an impulse at the end of a propagation opens, #575)
+    private static bool Reads(StateVector[][] arcs, int j, in Time tdb, long slack, out long distance)
     {
+        var arc = arcs[j];
         long before = (arc[0].Epoch.ToTDB() - tdb).Ticks;
         long after = (tdb - arc[^1].Epoch.ToTDB()).Ticks;
         distance = System.Math.Max(0L, System.Math.Max(before, after));
-        if (arc.Length == 1) return before == 0;
+        if (arc.Length == 1)
+        {
+            bool touches = j > 0 && arcs[j - 1][^1].Epoch == arc[0].Epoch;
+            return before == 0 && after == 0 || touches && before <= 0 && after <= slack;
+        }
+
         return distance <= slack;
     }
 
