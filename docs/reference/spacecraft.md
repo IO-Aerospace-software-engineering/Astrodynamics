@@ -130,7 +130,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator` and a `CentralBodyPropagator`
 built directly), starts the maneuver chain again from its
-head, the first maneuver of the plan `SetManeuvers` set: it refuels the tanks, swaps in an empty `ExecutedManeuvers` (the run's own list swapped in when it ends, decision 58 of #668), drops the stored states, the
+head, the first maneuver of the plan `SetManeuvers` set: it refuels the tanks, swaps in an empty `ExecutedManeuvers`, each maneuver the run executes then swapping in a new list that adds it, so another thread reads the maneuvers executed so far and a list once read never changes (decision 58 of #668), drops the stored states, the
 attitude record (whatever `IsPropagated` says, those added by hand included, decision 38 of #668), the windows of the
 maneuvers and the gates of the previous propagation (#573), and the spacecraft is then `IsPropagated`.
 `MonteCarloPropagator` runs no plan: it propagates spacecraft built from the template's orbit, dry mass, area and

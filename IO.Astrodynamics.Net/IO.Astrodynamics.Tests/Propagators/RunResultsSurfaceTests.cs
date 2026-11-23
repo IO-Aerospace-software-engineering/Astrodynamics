@@ -288,6 +288,38 @@ public class RunResultsSurfaceTests
         Assert.Equal(scenario.Spacecrafts, summary.SpacecraftSummaries.Select(s => s.Spacecraft));
     }
 
+    /// <summary>
+    /// The maneuver window of a summary is the hull that <see cref="Window.Merge"/> folded over the windows of the records,
+    /// in execution order, gave before 11.0.0, to the label (decision 59): a later window that starts earlier moves the
+    /// start, and on ends that are one instant tagged in different scales the later window's label is kept. Records out of
+    /// order, the ends of the second and third one instant each in TAI and TT (TT = TAI + 32.184 s exactly), and the fuel
+    /// the sum of the records'.
+    /// </summary>
+    [Fact]
+    public void TheManeuverWindowOfASummary_IsTheHullOfWindowMerge_ToTheLabel()
+    {
+        var tt = TimeSpan.FromSeconds(32.184);
+        var first = new Window(S.AddSeconds(600.0), S.AddSeconds(900.0));
+        var earlierStart = new Window(S.AddSeconds(100.0).ToTAI(), S.AddSeconds(1200.0).ToTAI());
+        var tiedEnds = new Window(new Time(earlierStart.StartDate.DateTime + tt, TimeScale.TT),
+            new Time(earlierStart.EndDate.DateTime + tt, TimeScale.TT));
+        Assert.True(tiedEnds.StartDate == earlierStart.StartDate && !tiedEnds.StartDate.EqualsExact(earlierStart.StartDate));
+        Assert.True(tiedEnds.EndDate == earlierStart.EndDate && !tiedEnds.EndDate.EqualsExact(earlierStart.EndDate));
+        var windows = new[] { first, earlierStart, tiedEnds };
+        var fuels = new[] { 12.5, 0.25, 3.0 };
+        var records = windows.Select((w, i) => new ExecutedManeuver(null!, w.StartDate, w, w, IO.Astrodynamics.Math.Vector3.Zero, fuels[i], 0.0, 0.0)).ToArray();
+
+        var summary = new SpacecraftSummary(null!, records);
+
+        var expected = windows.Skip(1).Aggregate(windows[0], (hull, w) => hull.Merge(w));
+        Assert.True(expected.StartDate.EqualsExact(tiedEnds.StartDate) && expected.EndDate.EqualsExact(tiedEnds.EndDate));
+        Assert.NotNull(summary.ManeuverWindow);
+        Assert.True(summary.ManeuverWindow.Value.StartDate.EqualsExact(expected.StartDate), $"{summary.ManeuverWindow.Value.StartDate}");
+        Assert.True(summary.ManeuverWindow.Value.EndDate.EqualsExact(expected.EndDate), $"{summary.ManeuverWindow.Value.EndDate}");
+        Assert.Equal(12.5 + 0.25 + 3.0, summary.FuelConsumption);
+        Assert.Same(records, summary.Maneuvers);
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------
     // Decision 60: the fuel accessors (the drop of the filter of GetTotalISP and GetTotalFuelFlow lands with lot L5b,
     // after the tanks refuse a non-finite quantity: L5-20 as amended, #801)

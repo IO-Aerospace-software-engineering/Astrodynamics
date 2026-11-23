@@ -28,7 +28,9 @@ namespace IO.Astrodynamics.Propagator;
 /// refuelled) and stores its samples, which replace the stored states; a stop or a failure of SGP4 changes nothing
 /// (decision 38 of #668, decided by S. Guillet, 2026-11-23: before 11.0.0 a run added its samples to the stored states,
 /// in one arc with those of earlier runs, and kept the attitude record and the solution of an earlier numerical run). The
-/// spacecraft is then not <see cref="Spacecraft.IsPropagated"/>, and its geometric state reads SGP4 outside the samples.
+/// spacecraft is then not <see cref="Spacecraft.IsPropagated"/>, and its geometric state reads SGP4 at every epoch, within
+/// the samples too; only <c>GetEphemeris</c> from its Earth without aberration interpolates the samples, within them
+/// (#675).
 /// Every run samples the TLE the propagator was built from, into arrays of its own, so the solutions of two runs share no
 /// state (#785, decision 39 of #668; before 11.0.0 they shared one array, its first sample built once at construction).
 /// </para>

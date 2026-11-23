@@ -49,6 +49,8 @@ public class AddedStatesGapTests
     // Largest distance of a Lagrange read of the two-body states every 60 s from the two-body orbit, 8 epochs every 15 s
     // inside a window and within the light time of the Moon outside its ends, m. Measured 3.4e-4 m (worst of the reads of
     // this class, Linux x64, 2026-11-23); the reads one-sided at the ends of an arc set it. Twice the worst, rounded up.
+    // PROVISIONAL: a Linux-only figure; to be set from the MEASURE #792 lines of the CI logs, twice the worst of Linux,
+    // Windows and macOS arm64 (CLAUDE.md, "Validation and Thresholds").
     private const double TwoBodyTolerance = 1.0e-3;
 
     private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frame.ICRF, Start);

@@ -7083,7 +7083,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   spacecraft that stores none keeps the two-body orbit. Before, every state joined the arc of its epoch, so the windows of several calls made one
   arc, read across the gaps without an error: 9.28e9 m off the two-body orbit 2 h 56 min into a gap of 4 h between two
   windows of one hour at 60 s (`AddedStatesGapTests`, with the reads of each window, to the bit those of a spacecraft
-  holding it alone, and within 3.4e-4 m of the two-body orbit, Linux x64), and a TLE spacecraft sampled by
+  holding it alone, and within 3.4e-4 m of the two-body orbit, Linux x64, a provisional figure until the CI logs of the
+  three platforms set it), and a TLE spacecraft sampled by
   `TLEPropagator` and given later states interpolated across the gap where it now reads SGP4. A call within or touching
   the stored states, a propagation and a `TLEPropagator` run are unchanged, bit for bit, as is every read inside the
   stored states, and a corrected read past the end of a propagation that ends with an impulse, within the light time
@@ -7148,7 +7149,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   hold argument.
 - **Breaking: `PlaneAlignmentManeuver.RelativeInclination`, `ApsidalAlignmentManeuver.IntersectsP` and `IntersectsQ`
   are internal** (lot L5a, decision 51 of #668): side results of the execution that nothing read, which the re-arm
-  left. Migration: none in the library; the relative inclination is that of the two orbits' normals.
+  left. Migration: none in the library, as they were run state; the relative inclination is the angle between the two
+  orbits' normals (`SpecificAngularMomentum()` of the state and of the target orbit), and the intersection an apsidal
+  alignment burnt at (P or Q) is the position of its burn, the solution's state at the epoch of its record
+  (`PropagationSolution.GetStateVector(record.Epoch).Position`, `record` in `PropagationSolution.Maneuvers`), the
+  intersection of the two orbits nearest the spacecraft in true anomaly where its g-function crosses.
 - **The values a run writes on a maneuver are the last run's** (lot L5a, decision 52 of #668, decided by S. Guillet,
   2026-11-23): `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow`, `MinimumEpoch`, the node of a
   `PlaneAlignmentManeuver` and the hold of a `PhasingManeuver` hold the values of the last run that executed the

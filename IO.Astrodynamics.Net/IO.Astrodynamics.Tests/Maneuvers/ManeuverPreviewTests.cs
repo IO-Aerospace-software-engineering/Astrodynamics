@@ -215,35 +215,92 @@ public class ManeuverPreviewTests
     }
 
     /// <summary>
-    /// The plane change at both nodes of PlaneAlignmentManeuverTests' case, as a preview: the values of the execution, the
-    /// node by the rule of the state, and no node locked.
+    /// The plane change at both nodes of PlaneAlignmentManeuverTests' case, as a preview, against the closed form of a
+    /// plane change of a circular orbit at a node (review of L5a, #668): the velocity v = √(μ/a) turned from the plane of
+    /// normal ĥ₁ into the plane of normal ĥ₂ about the node direction r̂, ΔV = v (ĥ₂ − ĥ₁) × r̂, of magnitude 2 v sin(θ/2),
+    /// θ the angle between the normals; ĥ = (sin Ω sin i, −cos Ω sin i, cos i), the node ±(ĥ₁ × ĥ₂)/|ĥ₁ × ĥ₂|, μ the kernel
+    /// GM of the Earth (BODY399_GM). The state is that of the orbit at the node, its argument of latitude from the same
+    /// closed form; the node by the rule of the state, and no node locked.
     /// </summary>
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void PlaneAlignment_ComputeDeltaV_TakesTheNodeOfTheState(bool ascending)
     {
-        var orbit = new KeplerianElements(11480000.0, 0.0, 60.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0,
-            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var target = new KeplerianElements(11480000.0, 0.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, 55.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0,
-            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        const double a = 11480000.0;
+        double i1 = 60.0 * IO.Astrodynamics.Constants.Deg2Rad, o1 = 10.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        double i2 = 45.0 * IO.Astrodynamics.Constants.Deg2Rad, o2 = 55.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        var earth = TestHelpers.EarthAtJ2000;
+        var orbit = new KeplerianElements(a, 0.0, i1, o1, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var target = new KeplerianElements(a, 0.0, i2, o2, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spc = new Spacecraft(Interlocked.Decrement(ref _nextId), "PLANEPREV", 1000.0, 3000.0, new Clock("PLANEPREV", 65536), orbit);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 2000.0, 1900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         var plane = new PlaneAlignmentManeuver(new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, target, spc.Engines.First());
-        var dn = 2.197937654;
-        var state = orbit.ToStateVector(ascending ? dn + IO.Astrodynamics.Constants.PI : dn);
 
-        var deltaV = plane.ComputeDeltaV(state);
+        // The closed form: the normals, the node of the case's descending pass (u near 2.198 rad) and its opposite
+        static Vector3 Normal(double i, double o) => new(System.Math.Sin(o) * System.Math.Sin(i), -System.Math.Cos(o) * System.Math.Sin(i), System.Math.Cos(i));
+        var h1 = Normal(i1, o1);
+        var h2 = Normal(i2, o2);
+        var line = h1.Cross(h2);
+        var node = line * (1.0 / line.Magnitude());
+        var ascendingNodeOfTheOrbit = new Vector3(System.Math.Cos(o1), System.Math.Sin(o1), 0.0);
+        double u = System.Math.Atan2(node.Dot(h1.Cross(ascendingNodeOfTheOrbit)), node.Dot(ascendingNodeOfTheOrbit));
+        Assert.True(System.Math.Abs(u - 2.197937654) < 1e-6, $"{u}");
+        if (ascending)
+        {
+            node = -node;
+            u += IO.Astrodynamics.Constants.PI;
+        }
 
-        var expected = ascending
-            ? new Vector3(-1485.9760225904602, 2563.0404801133755, -2458.4753263817515)
-            : new Vector3(1485.9760225904588, -2563.040480113374, 2458.47532638175);
-        Assert.Equal(expected, deltaV, TestHelpers.VectorComparer);
+        double v = System.Math.Sqrt(earth.GM / a);
+        var expected = v * (h2 - h1).Cross(node);
+        double theta = System.Math.Acos(h1.Dot(h2));
+        Assert.True(System.Math.Abs(expected.Magnitude() - 2.0 * v * System.Math.Sin(theta / 2.0)) < 1e-9);
+
+        var deltaV = plane.ComputeDeltaV(orbit.ToStateVector(u));
+
+        double difference = (deltaV - expected).Magnitude();
+        _output.WriteLine($"MEASURE PlaneAlignment ComputeDeltaV ascending={ascending} against the closed form: {difference:E3} m/s of {expected.Magnitude():F6} m/s");
+        Assert.True(difference < PlaneChangeTolerance, $"{difference:E3} m/s");
         Assert.Null(plane.IsAscendingNode);
         Assert.Equal(CrossingDirection.Any, plane.EventCrossingDirection);
         Assert.Equal(1900.0, spc.FuelTanks.First().Quantity);
     }
+
+    // Distance of the plane change from its closed form, m/s, of about 3.85 km/s: the rounding of the state conversion and
+    // of the elements the maneuver reads from the state. Measured 1.98e-8 m/s (worst of the two nodes, Linux x64,
+    // 2026-11-23); twice the worst. PROVISIONAL: a Linux-only figure, to be set from the MEASURE lines of the CI logs,
+    // twice the worst of Linux, Windows and macOS arm64.
+    private const double PlaneChangeTolerance = 4.0e-8;
+
+    /// <summary>
+    /// The apogee raise previewed at the periapsis of the test orbit against vis-viva (review of L5a, #668): from
+    /// rp = a (1 − e), ΔV = √(μ (2/rp − 2/(rp + ra))) − √(μ (2/rp − 1/a)) along the velocity at periapsis, which for
+    /// Ω = ω = 0 is (0, cos i, sin i); μ the kernel GM of the Earth (BODY399_GM), ra the target apogee radius.
+    /// </summary>
+    [Fact]
+    public void ApogeeHeight_ComputeDeltaV_IsTheVisVivaRaise()
+    {
+        var earth = Earth();
+        var spacecraft = NewSpacecraft(earth, out var engine);
+        var apogee = (ApogeeHeightManeuver)Impulse("Apogee", earth, engine);
+        const double a = 7000e3, e = 0.01, i = 0.5, ra = 8000e3;
+        double rp = a * (1.0 - e);
+        double expectedMagnitude = System.Math.Sqrt(earth.GM * (2.0 / rp - 2.0 / (rp + ra))) - System.Math.Sqrt(earth.GM * (2.0 / rp - 1.0 / a));
+        var expected = expectedMagnitude * new Vector3(0.0, System.Math.Cos(i), System.Math.Sin(i));
+
+        var deltaV = apogee.ComputeDeltaV(spacecraft.InitialOrbitalParameters.ToStateVector());
+
+        double difference = (deltaV - expected).Magnitude();
+        _output.WriteLine($"MEASURE ApogeeHeight ComputeDeltaV against vis-viva: {difference:E3} m/s of {expectedMagnitude:F6} m/s");
+        Assert.True(difference < ApogeeRaiseTolerance, $"{difference:E3} m/s");
+    }
+
+    // Distance of the apogee raise from vis-viva, m/s, of about 229 m/s. Measured 0 (Linux x64, 2026-11-23), so the bound
+    // is that of the rounding, about 30 ulps of the delta-V. PROVISIONAL: a Linux-only figure, to be set from the MEASURE
+    // lines of the CI logs, twice the worst of Linux, Windows and macOS arm64 (this bound while the worst stays 0).
+    private const double ApogeeRaiseTolerance = 1.0e-12;
 
     // ---------------------------------------------------------------------------------------------------------------------
     // ComputeEventValue
