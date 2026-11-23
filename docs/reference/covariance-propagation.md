@@ -21,7 +21,7 @@ results and cost do not change, even when the initial state carries a covariance
     options a caller passes to ask for the covariance: its run and its cost are those of that request, the cost the
     covariance propagation always had, not a new one. What changes in 11.0.0 is that a covariance given at the window
     start is propagated without being asked for. Over a LEO day at the RK7(8) defaults it costs 1.4 to 1.5 times the run
-    without covariance about a point-mass Earth, 7.5 to 8.7 times with EGM2008 10×10 and drag, and 1.4 to 1.5 times in
+    without covariance about a point-mass Earth, 7.4 to 8.7 times with EGM2008 10×10 and drag, and 1.4 to 1.5 times in
     SSB mode with the Earth, the Moon and the Sun (the MEASURE lines of `DefaultIntegratorFiguresTests.CovarianceAuto_Cost`,
     lot L4 of #668, best of five, measured alone in the CI of #789 at aefd6c2b on Linux x64, Windows x64 and macOS arm64,
     no threshold; decision 30 of lot L4, decided by S. Guillet, 2026-11-23); the trajectory is the
@@ -80,7 +80,7 @@ of `CentralBodyPropagator` and overload of `Spacecraft.Propagate`, `PropagationT
   for bit (`PropagationOptionsPathTests`): the trajectory is unchanged (the step control follows the state only), at the
   cost of the variational equations that the covariance propagation always had (the figures in "The cost of Auto" at the
   top of this page; the design's 1.8 times holds about a point-mass Earth, 1.4 to 1.5 times measured, and
-  underestimates it with EGM2008 10×10 and drag, 7.5 to 8.7 times; decision 33 of lot L4, decided by S. Guillet,
+  underestimates it with EGM2008 10×10 and drag, 7.4 to 8.7 times; decision 33 of lot L4, decided by S. Guillet,
   2026-11-23). `PropagationSolution.Options.CovariancePropagation` gives the options the run used.
 - `CovariancePropagationOptions.None` (mode `CovariancePropagationMode.None`, 11.0.0) turns the propagation off where a
   null value means another rule: Auto here, and in `ConjunctionAnalysisOptions.CovariancePropagation` the covariance of

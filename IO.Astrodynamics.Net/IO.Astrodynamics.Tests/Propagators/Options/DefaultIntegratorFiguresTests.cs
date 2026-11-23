@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Options;
 /// 2026-11-23): beside them its timings and its GC.GetTotalMemory readings counted their work too (CI of #789 at
 /// 84c38667: covariance Auto 0.96 to 6.7 times, memory 0.87 to 5.0 MB). Measured alone in the CI of #789 at aefd6c2b on
 /// Linux x64, Windows x64 and macOS arm64, the published ranges: covariance Auto 1.4 to 1.5 times about the point-mass
-/// Earth, 7.5 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode; 0.58 MB kept per LEO day at the
+/// Earth, 7.4 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode; 0.58 MB kept per LEO day at the
 /// defaults, 1.04 to 1.07 MB with an initial covariance under Auto; the SSB mode about 1 ms per propagated hour at 1e-9,
 /// 64 to 76 ms at 1e-12, 0.6 to 0.9 ms for Velocity-Verlet.
 /// </summary>

@@ -268,7 +268,7 @@ release are listed under **Known limitations**.
   CovariancePropagationMode.Covariance }`, the options a caller passes to ask for the covariance, so a run of a spacecraft
   whose initial state carries a covariance at the window start costs what the covariance propagation always cost, not a
   new cost: over a LEO day at the RK7(8) defaults, 1.4 to 1.5 times the run without covariance about a point-mass Earth,
-  7.5 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode with the Earth, the Moon and the Sun
+  7.4 to 8.7 times with EGM2008 10×10 and drag, 1.4 to 1.5 times in SSB mode with the Earth, the Moon and the Sun
   (`DefaultIntegratorFiguresTests.CovarianceAuto_Cost`, best of five, measured alone in the CI of #789 at aefd6c2b on
   Linux x64, Windows x64 and macOS arm64, no threshold; decision 30 of lot L4, decided by S. Guillet, 2026-11-23; the
   design's 1.8 times holds about a point-mass Earth and underestimates the cost with EGM2008 10×10 and drag, decision 33
