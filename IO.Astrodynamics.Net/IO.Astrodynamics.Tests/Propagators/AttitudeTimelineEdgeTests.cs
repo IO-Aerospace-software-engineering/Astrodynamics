@@ -166,7 +166,7 @@ public class AttitudeTimelineEdgeTests
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// The public <c>ManeuverEventDetector.HandleEvent</c> on an impulse → attitude → impulse chain: it executes the impulse
+    /// <c>ManeuverEventDetector.HandleEvent</c> (internal since decision 88 of #668) on an impulse → attitude → impulse chain: it executes the impulse
     /// (its ΔV added to the state, its windows set, the fuel burned, the attitude the front along ΔV) and nothing else: the
     /// attitude chained after it is neither executed nor recorded, and no next detector is returned (#539, choice 10).
     /// </summary>

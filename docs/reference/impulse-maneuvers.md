@@ -124,7 +124,7 @@ its g-function in its direction at or after the minimum epoch, searched from the
   steps, up to 0.096 s at a node, 0.18 s at an apsis of the orbit after a Velocity-Verlet burn and 1.5 s at the
   intersection of an apsidal alignment (worsts 0.0953 s, 0.176 s and 1.44 s on Linux x64, Windows and macOS arm64). A
   minimum epoch within that lag of a crossing is decided on that trajectory.
-- The public `ManeuverEventDetector.Evaluate` still returns +1 before the minimum epoch. A custom `Integrator` that compares
+- The maneuver detector's `Evaluate` (internal since decision 88 of #668; a custom `IIntegrator` given to the propagator reads it as an `IEventDetector`) still returns +1 before the minimum epoch. A custom integrator that compares
   that value with the first g-value after the minimum epoch keeps the behaviour before 11.0.0: a false crossing at the
   minimum epoch for a positive-to-negative maneuver whose g is already negative there, and a missed negative-to-positive
   crossing in the step that holds it.
@@ -197,8 +197,10 @@ it. Every propagation runs the plan from its first maneuver, whatever an earlier
 
 `SetManeuvers` claims each maneuver for its spacecraft (decision 46): a maneuver is in one plan at a time, and it throws
 `ArgumentException` (`maneuvers`), changing nothing, for a maneuver in another spacecraft's plan, a maneuver listed
-twice (the chain would be a cycle), an engine whose fuel tank is not one of the spacecraft's, or a target orbit in
-another frame than the one the spacecraft is propagated in (below). The claim is released, and the link cleared, when the
+twice (the chain would be a cycle), an engine that is not one of the spacecraft's `Engines` (added with `AddEngine`,
+compared by reference: an engine built on the spacecraft's tank and never added, or a twin of an added engine, is
+refused; decision 92, decided by S. Guillet, 2026-11-23), an engine whose fuel tank is not one of the spacecraft's, or
+a target orbit in another frame than the one the spacecraft is propagated in (below). The claim is released, and the link cleared, when the
 owner sets another plan without the maneuver. So the tanks and engines are added (`AddFuelTank`, `AddEngine`) and the
 initial orbit set before the plan; the run checks again and throws `InvalidOperationException` for what changed since.
 
@@ -220,7 +222,7 @@ The maneuvers of the plan run as a chain:
 
 1. **Leading attitudes** are laid on the attitude timeline: each activates at the later of its `MinimumEpoch` and the end
    of the previous one's hold, from the start of the propagation; the last one's hold gates the first impulse.
-2. The first `ImpulseManeuver` is wrapped in a `ManeuverEventDetector`.
+2. The first `ImpulseManeuver` is wrapped in the internal maneuver detector (`ManeuverEventDetector`, decision 88 of #668).
 3. When the event fires, the detector executes the burn, and only the burn (`HandleEvent` returns no next detector).
    The propagation then lays the attitudes chained after it on the timeline, each from the end of the previous window,
    and builds the detector of the next impulse.

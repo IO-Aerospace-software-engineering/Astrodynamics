@@ -1,6 +1,6 @@
 # Event Detection
 
-The event detection system uses industry-standard g-function zero-crossing to locate the maneuver trigger points during propagation. The propagation builds its detectors from the maneuver chain only (`ManeuverEventDetector`) and takes no user detector: the epochs of other events of a propagated spacecraft (apsides, nodes, altitude crossings, passes over a site) are found after the propagation by the window searches, `FindWindowsOnDistanceConstraint` (`LocalMin` and `LocalMax` for the apsides) and `FindWindowsOnCoordinateConstraint` (the edges of its windows), located to 1 µs ([Sites](sites.md#window-searches)).
+The event detection system uses industry-standard g-function zero-crossing to locate the maneuver trigger points during propagation. The propagation builds its detectors from the maneuver chain only (an internal maneuver detector, `ManeuverEventDetector`, public before 11.0.0) and takes no user detector: the epochs of other events of a propagated spacecraft (apsides, nodes, altitude crossings, passes over a site) are found after the propagation by the window searches, `FindWindowsOnDistanceConstraint` (`LocalMin` and `LocalMax` for the apsides) and `FindWindowsOnCoordinateConstraint` (the edges of its windows), located to 1 µs ([Sites](sites.md#window-searches)).
 
 ## IEventDetector Interface
 
@@ -9,7 +9,7 @@ The event detection system uses industry-standard g-function zero-crossing to lo
 | `Evaluate(StateVector)` | Compute the scalar g-function value at the given state |
 | `Direction` | `CrossingDirection` specifying which zero-crossing triggers the event |
 | `IsActive` | Whether this detector is currently active |
-| `HandleEvent(StateVector, Spacecraft)` | Execute the event action and return an `EventResult`. `ManeuverEventDetector` executes its impulse only and returns no next detector: the propagation lays the rest of the chain on its attitude timeline and builds the detector of the next impulse (#539) |
+| `HandleEvent(StateVector, Spacecraft)` | Execute the event action and return an `EventResult`. The maneuver detector executes its impulse only and returns no next detector: the propagation lays the rest of the chain on its attitude timeline and builds the detector of the next impulse (#539) |
 
 When `Evaluate` changes sign in the specified `Direction` between two integration steps, the event is triggered. A
 g-value exactly zero at the end of a step, after a non-zero one, is a crossing there, its direction read from the sign
@@ -47,7 +47,7 @@ before the step, or loses that crossing (decided by S. Guillet, 2026-11-17). The
 | `Continue` | Continue past the event with the state unchanged and the detector of `NextDetector`; the occurrence just handled is not detected again |
 
 On `Continue`, the propagation starts a new segment at the event; `ModifiedState` is ignored, and the state
-transition matrix is continuous across the boundary. `ManeuverEventDetector` returns `Continue`, with itself as next
+transition matrix is continuous across the boundary. The maneuver detector returns `Continue`, with itself as next
 detector, when the precondition of its maneuver fails: the maneuver waits for its next crossing. `RK78Integrator`
 locates the event on the 100 ns grid of the epochs, possibly just before the root, so the next segment starts the
 detector from its g-value past that root (the rule Hipparchus applies to a zero at the start of a step);
@@ -61,11 +61,13 @@ detector from its g-value past that root (the rule Hipparchus applies to a zero 
 | `PositiveToNegative` | g-function crosses zero from positive to negative |
 | `Any` | g-function crosses zero in either direction |
 
-## ManeuverEventDetector
+## The maneuver detector
 
-`ManeuverEventDetector` wraps an `ImpulseManeuver` and delegates to `ComputeEventValue()` for the g-function and `EventCrossingDirection` for the trigger direction. When the event fires, it applies the maneuver's delta-V and advances the maneuver chain. When the precondition of the maneuver (`CheckPreconditions`) fails, it returns `Continue` and the maneuver waits for its next crossing; if no crossing satisfies it within the window, the maneuver is not executed.
+The maneuver detector is internal (decision 88 of #668, [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802), decided by S. Guillet, 2026-11-23): the propagation builds it from the maneuver plan (`Spacecraft.SetManeuvers`) and takes no user detector, and its public `HandleEvent` executed a maneuver outside a run before 11.0.0 (fuel burned, `DeltaV` and the windows rewritten after the run). The propagation executes the plan; the previews of a maneuver are `ImpulseManeuver.ComputeDeltaV` and `ComputeEventValue`, pure ([Impulse Maneuvers](impulse-maneuvers.md)). A custom `IIntegrator` given to the propagator still receives it as an `IEventDetector` within the run.
 
-The minimum epoch of the maneuver is the gate of the detector (#569): no crossing counts before it, and the first crossing is searched from the integrated state at it. At the base of a segment, a detector whose gate is open there is evaluated as at the start of a search (`ImpulseManeuver.ComputeEventValueAtSearchStart`, the rule of a gate inside a step), so a `PlaneAlignmentManeuver` whose propagation starts just past a node takes the node ahead (#581; before 11.0.0 it took the node just passed and fired one orbit after it); the detector of an event just handled keeps its g-value past that event's root. `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate, in the step that holds it (RK7(8) by a shortened step from the start of the step, Velocity-Verlet by the cubic Hermite of the step), and compare that value with the g-value at the step end; a g-value exactly zero at the gate is a crossing there when the sign that follows it is the target sign. Every step that does not hold a gate is unchanged. `Evaluate` returns +1 before the gate, for callers outside the library; the library's integrators never compare that value with a g-value after the gate: in the step that holds the gate, they replace it with the g-value at the gate. See [Impulse Maneuvers](impulse-maneuvers.md#minimum-epoch).
+It wraps an `ImpulseManeuver` and delegates to `ComputeEventValue()` for the g-function and `EventCrossingDirection` for the trigger direction. When the event fires, it applies the maneuver's delta-V and advances the maneuver chain. When the precondition of the maneuver (`CheckPreconditions`) fails, it returns `Continue` and the maneuver waits for its next crossing; if no crossing satisfies it within the window, the maneuver is not executed.
+
+The minimum epoch of the maneuver is the gate of the detector (#569): no crossing counts before it, and the first crossing is searched from the integrated state at it. At the base of a segment, a detector whose gate is open there is evaluated as at the start of a search (`ImpulseManeuver.ComputeEventValueAtSearchStart`, the rule of a gate inside a step), so a `PlaneAlignmentManeuver` whose propagation starts just past a node takes the node ahead (#581; before 11.0.0 it took the node just passed and fired one orbit after it); the detector of an event just handled keeps its g-value past that event's root. `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate, in the step that holds it (RK7(8) by a shortened step from the start of the step, Velocity-Verlet by the cubic Hermite of the step), and compare that value with the g-value at the step end; a g-value exactly zero at the gate is a crossing there when the sign that follows it is the target sign. Every step that does not hold a gate is unchanged. `Evaluate` returns +1 before the gate, for an integrator that does not know the gate (a custom `IIntegrator`); the library's integrators never compare that value with a g-value after the gate: in the step that holds the gate, they replace it with the g-value at the gate. See [Impulse Maneuvers](impulse-maneuvers.md#minimum-epoch).
 
 ## BisectionEventFinder
 

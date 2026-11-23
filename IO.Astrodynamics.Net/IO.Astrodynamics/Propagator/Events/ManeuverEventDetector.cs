@@ -20,8 +20,15 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// <see cref="HandleEvent"/> executes the impulse only; the propagation lays the rest of the maneuver chain on its attitude
 /// timeline and builds the detector of the next impulse (#539).
 /// </para>
+/// <para>
+/// Internal since 11.0.0 (decision 88 of #668, #802, decided by S. Guillet, 2026-11-23): the propagation builds its
+/// detectors from the maneuver plan and takes no user detector, and the public <see cref="HandleEvent"/> executed a
+/// maneuver outside a run (fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows rewritten after it). The
+/// propagation executes the plan; the previews are <see cref="ImpulseManeuver.ComputeDeltaV"/> and
+/// <see cref="ImpulseManeuver.ComputeEventValue"/>.
+/// </para>
 /// </remarks>
-public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
+internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetector
 {
     private readonly ImpulseManeuver _maneuver;
 
@@ -45,9 +52,9 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
     /// 2026-11-23).
     /// </summary>
     /// <remarks>
-    /// The +1 before the minimum epoch is kept for callers outside the library, such as a custom
-    /// <see cref="Integrator"/>, which keep the former behaviour: compared with the first g-value after the minimum epoch, it
-    /// gives a false crossing for a positive-to-negative maneuver whose g is already negative there, and misses a
+    /// The +1 before the minimum epoch is what an integrator that does not know the gate reads, such as a custom
+    /// <see cref="IIntegrator"/> given to the propagator: compared with the first g-value after the minimum epoch, it gives
+    /// a false crossing for a positive-to-negative maneuver whose g is already negative there, and misses a
     /// negative-to-positive crossing in the step that holds it (#569). <see cref="VVIntegrator"/> and
     /// <see cref="RK78Integrator"/> never compare it with a g-value after the minimum epoch: in the step that holds it, they
     /// replace it with the g-function evaluated there.

@@ -36,7 +36,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// with <see cref="EventAction.Continue"/>, through the propagator's calls and through <c>Spacecraft.Propagate</c>
 /// (choice 3); two gated detectors through
 /// <see cref="IIntegrator.IntegrateSegment"/>; the search-start rule of <see cref="PlaneAlignmentManeuver"/> (choice 7); the
-/// public <see cref="ManeuverEventDetector.Evaluate"/> (choice 8); <c>EvaluateAvoidance</c> after an impulse whose gate
+/// <see cref="ManeuverEventDetector.Evaluate"/> (choice 8); <c>EvaluateAvoidance</c> after an impulse whose gate
 /// moved its burn; the two-<c>Propagate</c> construction of GMAT in SSB mode.
 /// </summary>
 /// <remarks>
@@ -410,8 +410,8 @@ public class MinimumEpochGateEdgeTests
     }
 
     /// <summary>
-    /// The public <see cref="ManeuverEventDetector.Evaluate"/> keeps its +1 before the minimum epoch (choice 8), for a caller
-    /// outside the library; the gate the integrators read is the minimum epoch, and the g-function there is the maneuver's.
+    /// <see cref="ManeuverEventDetector.Evaluate"/> keeps its +1 before the minimum epoch (choice 8), for an integrator that
+    /// does not know the gate (the detector internal since decision 88 of #668); the gate the integrators read is the minimum epoch, and the g-function there is the maneuver's.
     /// </summary>
     [Fact]
     public void ManeuverEventDetector_EvaluateKeepsItsGuard_TheGateIsTheMinimumEpoch()

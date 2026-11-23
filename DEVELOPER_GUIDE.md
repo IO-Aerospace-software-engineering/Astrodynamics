@@ -1685,8 +1685,8 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Event Detection (`IEventDetector`):**
 - `Evaluate(state)` → continuous scalar g-function
 - `Direction` → `CrossingDirection` (`NegativeToPositive`, `PositiveToNegative`, `Any`)
-- `HandleEvent()` → `EventResult` (modified state, orientation, action, next detector); `ManeuverEventDetector.HandleEvent` executes the impulse only and returns no next detector (#539)
-- `ManeuverEventDetector` wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`
+- `HandleEvent()` → `EventResult` (modified state, orientation, action, next detector); the internal `ManeuverEventDetector.HandleEvent` executes the impulse only and returns no next detector (#539)
+- `ManeuverEventDetector` (internal since 11.0.0, decision 88 of #668: the propagation takes no user detector) wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`
 
 **Force Models:**
 - **Gravitational acceleration** from the central body and each body of `PropagationOptions.ThirdBodies`. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.

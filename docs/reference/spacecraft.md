@@ -116,7 +116,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks, the sum of their quantities: what the last run left |
 | `GetTotalISP()`, `GetTotalFuelFlow()` | The specific impulse of the engines fired together (Σ thrust / g0 / Σ fuel flow) and their total fuel flow, over the engines whose tank holds fuel at the start of a run (an initial quantity above 0); every engine from lot L5b, once the tanks refuse a non-finite quantity ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801), decision 60) |
 | `ExecutedManeuvers` | The maneuvers the last run executed, attitudes included, in execution order: a new read-only list at each run, empty at the re-arm and replaced by a new list at each maneuver the run executes, so a list once read never changes (decision 58 of #668); the definitions, whose values are those of their last run: the stable values of a run are its records, `PropagationSolution.Maneuvers` |
-| `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an engine whose tank is not the spacecraft's or a target orbit in another frame, so the tanks, engines and initial orbit come first; the run checks again (`InvalidOperationException`) ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed) |
+| `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an engine that is not one of its `Engines` (added with `AddEngine`, by reference, decision 92), an engine whose tank is not the spacecraft's or a target orbit in another frame, so the tanks, engines and initial orbit come first; the run checks again (`InvalidOperationException`) ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it, whatever a run executed; empty for none |
 | `Propagate(Window, PropagationOptions)` | Propagate the orbit with the settings of the options, RK7(8) at 1e-9 about the central body alone every 60 s by default ([Propagation Options](propagators.md#propagation-options); 11.0.0, R06 of #668) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
@@ -141,11 +141,14 @@ SGP4 samples, for a spacecraft with one (decision 40). The reset belongs to `Pro
 propagator built directly fired no burn and started with the fuel left by the first). The inputs of a propagation are
 checked when its propagator is built, and its chain again when it runs, before anything is reset: a propagation
 rejected there, or a propagator built and never run, leaves the previous one as it was. A spacecraft propagated again fires
-its chain as a spacecraft never propagated. Among those inputs, each maneuver of the chain draws on a tank of the
-spacecraft: its engine's fuel tank is one of the spacecraft's tank instances, held by it; otherwise the propagation
-throws `InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft (#676, #586; before, an
-impulse threw `NullReferenceException` at its burn or burnt another spacecraft's fuel, and an attitude took the static
-or another spacecraft's body axes). The engine need not be in `Engines`.
+its chain as a spacecraft never propagated. Among those inputs, each maneuver of the chain draws on an engine of the
+spacecraft: an engine of `Engines`, added with `AddEngine`, compared by reference, a twin equal by name, model and
+serial number being another engine (decision 92 of #668, decided by S. Guillet, 2026-11-23: before, the tank alone was
+checked, so an engine built on the spacecraft's tank and never added ran), whose fuel tank is one of the spacecraft's
+tank instances, held by it; otherwise `SetManeuvers` throws `ArgumentException` (`maneuvers`) and the propagation
+`InvalidOperationException`, naming the maneuver, the engine and the spacecraft (#676, #586; before, an impulse on a
+foreign tank threw `NullReferenceException` at its burn or burnt another spacecraft's fuel, and an attitude took the
+static or another spacecraft's body axes).
 
 The exception types of these rules follow one rule (decided by S. Guillet, 2026-11-14, after the .NET Framework Design
 Guidelines: `ArgumentException` for a bad argument, `InvalidOperationException` for the state of an object):

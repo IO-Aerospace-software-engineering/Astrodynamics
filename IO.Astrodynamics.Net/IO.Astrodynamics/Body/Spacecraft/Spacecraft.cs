@@ -486,17 +486,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
         // Whether the tank is one of the tank instances of the spacecraft, by reference: FuelTank compares by value (#676)
         private bool HoldsFuelTank(FuelTank fuelTank) => _fuelTanks.Any(x => ReferenceEquals(x, fuelTank));
 
+        // Whether the engine is one of the engine instances of the spacecraft, by reference: Engine compares by value
+        // (decision 92 of #668)
+        private bool HoldsEngine(Engine engine) => _engines.Any(x => ReferenceEquals(x, engine));
+
         /// <summary>
-        /// Checks, before a propagation, that each maneuver of the chain draws on a tank of this spacecraft (#676, #586):
-        /// its engine's fuel tank is one of the tank instances of the spacecraft and is held by this instance. The engine
-        /// itself need not be in <see cref="Engines"/>. Without it, an impulse on a tank of no spacecraft threw a
-        /// <see cref="NullReferenceException"/> during the run, one on another spacecraft's tank burnt that spacecraft's
-        /// fuel, and an attitude took the body axes of the other spacecraft, or the static ones. And that each is in the
-        /// plan of this spacecraft (<see cref="SetManeuvers"/>): the run's re-check of the claim (decision 46 of #668,
-        /// decided by S. Guillet, 2026-11-23).
+        /// Checks, before a propagation, that each maneuver of the chain draws on an engine of this spacecraft: an engine of
+        /// <see cref="Engines"/>, added with <see cref="AddEngine"/>, compared by reference (decision 92 of #668, decided by
+        /// S. Guillet, 2026-11-23: before, the tank alone was checked, so an engine built on the spacecraft's tank and never
+        /// added ran), whose fuel tank is one of the tank instances of the spacecraft and is held by this instance (#676,
+        /// #586). Without the tank check, an impulse on a tank of no spacecraft threw a <see cref="NullReferenceException"/>
+        /// during the run, one on another spacecraft's tank burnt that spacecraft's fuel, and an attitude took the body axes
+        /// of the other spacecraft, or the static ones. And that each is in the plan of this spacecraft
+        /// (<see cref="SetManeuvers"/>): the run's re-check of the claim (decision 46 of #668, decided by S. Guillet,
+        /// 2026-11-23).
         /// </summary>
-        /// <exception cref="InvalidOperationException">A maneuver draws on a tank that is not this spacecraft's, or is not in
-        /// its plan; nothing changes.</exception>
+        /// <exception cref="InvalidOperationException">A maneuver draws on an engine that is not one of this spacecraft's
+        /// engines or on a tank that is not this spacecraft's, or is not in its plan; nothing changes.</exception>
         internal void CheckManeuverEngines()
         {
             foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
@@ -515,14 +521,22 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
         }
 
-        // Why a maneuver cannot run on this spacecraft: its engine's tank is not one of this spacecraft's (#676, #586); null
-        // otherwise
+        // Why a maneuver cannot run on this spacecraft: its engine's tank is not one of this spacecraft's (#676, #586), or
+        // the engine is not one of its engines, by reference (decision 92 of #668); null otherwise
         private string EngineError(Maneuver.Maneuver maneuver)
         {
-            var tank = maneuver.Engine.FuelTank;
+            var engine = maneuver.Engine;
+            var tank = engine.FuelTank;
             if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
             {
-                return null;
+                if (HoldsEngine(engine))
+                {
+                    return null;
+                }
+
+                return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name} (serial number {engine.SerialNumber}), which is not one of the engines of {Name}: " +
+                       $"an engine of a plan is an engine instance added with AddEngine (an engine equal to one of them by name, model and serial number is another engine). " +
+                       $"Add the engine to {Name} with AddEngine before the plan, or build the maneuver on an engine of {Name}.";
             }
 
             string holder = tank.Spacecraft == null
@@ -650,7 +664,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentNullException"><paramref name="maneuvers"/> is null.</exception>
         /// <exception cref="ArgumentException">Naming <c>maneuvers</c>: a maneuver is null; or appears twice, which would
         /// make the chain a cycle (a repeated burn is a new maneuver, #585); or is in the plan of another spacecraft; or
-        /// draws on an engine whose fuel tank is not one of this spacecraft's (#676); or, for an impulse, has its target
+        /// draws on an engine that is not one of this spacecraft's <see cref="Engines"/>, added with <see cref="AddEngine"/>
+        /// and compared by reference (decision 92 of #668), or whose fuel tank is not one of this spacecraft's (#676); or, for
+        /// an impulse, has its target
         /// orbit in another frame than the one the spacecraft is propagated in (GCRF and ICRF counting as one, #685). Nothing
         /// changes.</exception>
         public void SetManeuvers(params Maneuver.Maneuver[] maneuvers)

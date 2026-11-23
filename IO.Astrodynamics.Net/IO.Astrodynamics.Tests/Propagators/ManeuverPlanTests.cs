@@ -495,4 +495,23 @@ public class ManeuverPlanTests
         Assert.False(typeof(ApsidalAlignmentManeuver).GetProperty("IntersectsQ", Everything)!.GetMethod!.IsPublic);
         Assert.All(typeof(PhasingManeuver).GetConstructors(), c => Assert.DoesNotContain(c.GetParameters(), p => p.ParameterType == typeof(TimeSpan)));
     }
+
+    /// <summary>
+    /// <c>ManeuverEventDetector</c> is internal (decision 88 of #668, decided by S. Guillet, 2026-11-23): the propagation
+    /// takes no user detector, and its public <c>HandleEvent</c> executed a maneuver outside a run (the probe of the review:
+    /// 105.5 kg of fuel burned, <c>DeltaV</c> and the windows rewritten after the run). The event types it implements stay
+    /// public, as they are.
+    /// </summary>
+    [Fact]
+    public void TheManeuverEventDetector_IsInternal()
+    {
+        var detector = typeof(IO.Astrodynamics.Propagator.Events.IEventDetector).Assembly
+            .GetType("IO.Astrodynamics.Propagator.Events.ManeuverEventDetector", throwOnError: true)!;
+        Assert.False(detector.IsVisible);
+        Assert.True(detector.IsNotPublic);
+        Assert.True(typeof(IO.Astrodynamics.Propagator.Events.IEventDetector).IsPublic);
+        Assert.True(typeof(IO.Astrodynamics.Propagator.Events.EventResult).IsPublic);
+        Assert.True(typeof(IO.Astrodynamics.Propagator.Events.EventAction).IsPublic);
+        Assert.True(typeof(IO.Astrodynamics.Propagator.Events.CrossingDirection).IsPublic);
+    }
 }
